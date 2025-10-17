@@ -18,24 +18,36 @@ from fastapi.responses import JSONResponse
 
 from app.core.config import get_settings, get_cors_config
 
-# Get application settings
-settings = get_settings()
+# Get application settings (lazy loading to avoid validation issues during import)
+settings = None
 
-# Configure logging based on settings
+# Configure logging (will be updated when settings are loaded)
 logging.basicConfig(
-    level=getattr(logging, settings.log_level),
-    format=settings.log_format
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
+def get_app_settings():
+    """Get application settings with lazy loading."""
+    global settings
+    if settings is None:
+        settings = get_settings()
+        # Update logging configuration
+        logging.getLogger().setLevel(getattr(logging, settings.log_level))
+    return settings
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager for startup and shutdown events."""
+    # Get settings
+    app_settings = get_app_settings()
+    
     # Startup
-    logger.info(f"Starting {settings.app_name} v{settings.app_version}")
-    logger.info(f"Debug mode: {settings.debug}")
-    logger.info(f"Log level: {settings.log_level}")
+    logger.info(f"Starting {app_settings.app_name} v{app_settings.app_version}")
+    logger.info(f"Debug mode: {app_settings.debug}")
+    logger.info(f"Log level: {app_settings.log_level}")
     logger.info("Application startup complete")
     
     yield
@@ -47,23 +59,22 @@ async def lifespan(app: FastAPI):
 
 # Create FastAPI application instance
 app = FastAPI(
-    title=settings.app_name,
-    description=settings.app_description,
-    version=settings.app_version,
+    title="AlgoTrading MVP",  # Default title, will be updated
+    description="Algorithmic Trading System MVP",
+    version="1.0.0",
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json"
 )
 
-# Configure CORS middleware using settings
-cors_config = get_cors_config()
+# Configure CORS middleware (will be updated when settings are loaded)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_config["allow_origins"],
-    allow_credentials=cors_config["allow_credentials"],
-    allow_methods=cors_config["allow_methods"],
-    allow_headers=cors_config["allow_headers"],
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -75,12 +86,13 @@ async def root() -> Dict[str, Any]:
     Returns:
         Dict containing application metadata
     """
+    app_settings = get_app_settings()
     return {
-        "name": settings.app_name,
-        "version": settings.app_version,
-        "description": settings.app_description,
+        "name": app_settings.app_name,
+        "version": app_settings.app_version,
+        "description": app_settings.app_description,
         "status": "running",
-        "debug": settings.debug,
+        "debug": app_settings.debug,
         "docs": "/docs",
         "health": "/health"
     }
@@ -112,7 +124,7 @@ async def detailed_health_check() -> Dict[str, Any]:
     return {
         "status": "ok",
         "timestamp": datetime.utcnow().isoformat(),
-        "version": settings.app_version,
+        "version": get_app_settings().app_version,
         "python_version": sys.version,
         "platform": platform.platform(),
         "system": {

@@ -31,8 +31,8 @@ class Settings(BaseSettings):
     # API Settings
     api_v1_prefix: str = Field(default="/api/v1", description="API v1 prefix")
     secret_key: str = Field(
-        default="your-secret-key-change-in-production",
-        description="Secret key for JWT tokens and encryption"
+        default="",
+        description="Secret key for JWT tokens and encryption (REQUIRED in production)"
     )
     access_token_expire_minutes: int = Field(
         default=30, 
@@ -220,6 +220,29 @@ class Settings(BaseSettings):
             raise ValueError(f"Log level must be one of {valid_levels}")
         return v.upper()
     
+    @field_validator("secret_key")
+    @classmethod
+    def validate_secret_key(cls, v, info):
+        """Validate secret key is provided in production."""
+        # Check if we're in production mode
+        debug_mode = info.data.get('debug', False) if info.data else False
+        
+        # In production mode, require a valid secret key
+        if not debug_mode and (not v or v == ""):
+            raise ValueError(
+                "SECRET_KEY is required in production. "
+                "Set SECRET_KEY environment variable or enable DEBUG mode."
+            )
+        
+        # In production mode, require minimum length
+        if not debug_mode and v and len(v) < 32:
+            raise ValueError(
+                "SECRET_KEY must be at least 32 characters long for security. "
+                f"Current length: {len(v)}"
+            )
+        
+        return v
+    
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, v):
@@ -292,8 +315,18 @@ class Settings(BaseSettings):
         }
 
 
-# Global settings instance
-settings = Settings()
+# Global settings instance (will be created lazily to avoid validation issues)
+_settings_instance = None
+
+def get_global_settings() -> Settings:
+    """Get or create global settings instance."""
+    global _settings_instance
+    if _settings_instance is None:
+        _settings_instance = Settings()
+    return _settings_instance
+
+# For backward compatibility
+settings = None
 
 
 def get_settings() -> Settings:
@@ -305,35 +338,35 @@ def get_settings() -> Settings:
     Returns:
         Settings: Application settings instance
     """
-    return settings
+    return get_global_settings()
 
 
 # Convenience functions for common settings
 def get_database_url() -> str:
     """Get database URL."""
-    return settings.database_url
+    return get_global_settings().database_url
 
 
 def get_redis_url() -> str:
     """Get Redis URL."""
-    return settings.redis_url
+    return get_global_settings().redis_url
 
 
 def get_secret_key() -> str:
     """Get secret key."""
-    return settings.secret_key
+    return get_global_settings().secret_key
 
 
 def is_debug_mode() -> bool:
     """Check if debug mode is enabled."""
-    return settings.debug
+    return get_global_settings().debug
 
 
 def get_cors_config() -> dict:
     """Get CORS configuration."""
-    return settings.get_cors_config()
+    return get_global_settings().get_cors_config()
 
 
 def get_celery_config() -> dict:
     """Get Celery configuration."""
-    return settings.get_celery_config()
+    return get_global_settings().get_celery_config()

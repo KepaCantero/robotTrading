@@ -6,11 +6,16 @@ Tests the health check endpoints and basic application functionality.
 
 import pytest
 import sys
+import os
 from pathlib import Path
 from fastapi.testclient import TestClient
 
 # Add the project root to the path to avoid circular imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+# Set environment variables for testing
+os.environ['DEBUG'] = 'true'
+os.environ['SECRET_KEY'] = ''
 
 from app.main import app
 
