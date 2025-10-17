@@ -1,0 +1,339 @@
+"""
+Configuration management for AlgoTrading MVP.
+
+This module provides centralized configuration management using Pydantic BaseSettings
+to load environment variables from .env files and provide type-safe configuration.
+"""
+
+import os
+from typing import Optional, List, Union
+from pydantic import Field, field_validator, ConfigDict
+from pydantic_settings import BaseSettings
+
+
+class Settings(BaseSettings):
+    """
+    Application settings loaded from environment variables.
+    
+    Uses Pydantic BaseSettings for automatic environment variable loading,
+    type validation, and default value management.
+    """
+    
+    # Application Settings
+    app_name: str = Field(default="AlgoTrading MVP", description="Application name")
+    app_version: str = Field(default="1.0.0", description="Application version")
+    app_description: str = Field(
+        default="Algorithmic Trading System MVP", 
+        description="Application description"
+    )
+    debug: bool = Field(default=False, description="Debug mode")
+    
+    # API Settings
+    api_v1_prefix: str = Field(default="/api/v1", description="API v1 prefix")
+    secret_key: str = Field(
+        default="your-secret-key-change-in-production",
+        description="Secret key for JWT tokens and encryption"
+    )
+    access_token_expire_minutes: int = Field(
+        default=30, 
+        description="Access token expiration time in minutes"
+    )
+    refresh_token_expire_days: int = Field(
+        default=7, 
+        description="Refresh token expiration time in days"
+    )
+    
+    # Database Settings
+    database_url: str = Field(
+        default="postgresql://algotrading:algotrading@localhost:5432/algotrading",
+        description="PostgreSQL database URL"
+    )
+    database_echo: bool = Field(
+        default=False, 
+        description="Enable SQLAlchemy query logging"
+    )
+    database_pool_size: int = Field(
+        default=10, 
+        description="Database connection pool size"
+    )
+    database_max_overflow: int = Field(
+        default=20, 
+        description="Database connection pool max overflow"
+    )
+    
+    # Redis Settings
+    redis_url: str = Field(
+        default="redis://localhost:6379/0",
+        description="Redis URL for caching and task queue"
+    )
+    redis_password: Optional[str] = Field(
+        default=None, 
+        description="Redis password (optional)"
+    )
+    redis_db: int = Field(default=0, description="Redis database number")
+    redis_max_connections: int = Field(
+        default=10, 
+        description="Redis connection pool size"
+    )
+    
+    # Celery Settings
+    celery_broker_url: str = Field(
+        default="redis://localhost:6379/1",
+        description="Celery broker URL"
+    )
+    celery_result_backend: str = Field(
+        default="redis://localhost:6379/2",
+        description="Celery result backend URL"
+    )
+    celery_task_serializer: str = Field(
+        default="json", 
+        description="Celery task serializer"
+    )
+    celery_result_serializer: str = Field(
+        default="json", 
+        description="Celery result serializer"
+    )
+    celery_accept_content: List[str] = Field(
+        default=["json"], 
+        description="Celery accepted content types"
+    )
+    
+    # Trading API Keys (for production, these should be loaded from secure vault)
+    # Interactive Brokers
+    ib_api_key: Optional[str] = Field(
+        default=None, 
+        description="Interactive Brokers API key"
+    )
+    ib_secret: Optional[str] = Field(
+        default=None, 
+        description="Interactive Brokers API secret"
+    )
+    
+    # Binance
+    binance_api_key: Optional[str] = Field(
+        default=None, 
+        description="Binance API key"
+    )
+    binance_secret: Optional[str] = Field(
+        default=None, 
+        description="Binance API secret"
+    )
+    
+    # Alpha Vantage (Market Data)
+    alpha_vantage_api_key: Optional[str] = Field(
+        default=None, 
+        description="Alpha Vantage API key for market data"
+    )
+    
+    # Trading Settings
+    default_currency: str = Field(
+        default="USD", 
+        description="Default trading currency"
+    )
+    max_position_size: float = Field(
+        default=10000.0, 
+        description="Maximum position size in default currency"
+    )
+    risk_free_rate: float = Field(
+        default=0.02, 
+        description="Risk-free rate for calculations (2% annual)"
+    )
+    
+    # Logging Settings
+    log_level: str = Field(
+        default="INFO", 
+        description="Logging level"
+    )
+    log_format: str = Field(
+        default="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        description="Logging format"
+    )
+    log_file: Optional[str] = Field(
+        default=None, 
+        description="Log file path (optional)"
+    )
+    
+    # CORS Settings
+    cors_origins: List[str] = Field(
+        default=["*"], 
+        description="CORS allowed origins"
+    )
+    cors_allow_credentials: bool = Field(
+        default=True, 
+        description="CORS allow credentials"
+    )
+    cors_allow_methods: List[str] = Field(
+        default=["*"], 
+        description="CORS allowed methods"
+    )
+    cors_allow_headers: List[str] = Field(
+        default=["*"], 
+        description="CORS allowed headers"
+    )
+    
+    # Security Settings
+    password_min_length: int = Field(
+        default=8, 
+        description="Minimum password length"
+    )
+    password_require_uppercase: bool = Field(
+        default=True, 
+        description="Require uppercase letters in password"
+    )
+    password_require_lowercase: bool = Field(
+        default=True, 
+        description="Require lowercase letters in password"
+    )
+    password_require_numbers: bool = Field(
+        default=True, 
+        description="Require numbers in password"
+    )
+    password_require_special: bool = Field(
+        default=True, 
+        description="Require special characters in password"
+    )
+    
+    # Rate Limiting
+    rate_limit_requests: int = Field(
+        default=100, 
+        description="Rate limit requests per minute"
+    )
+    rate_limit_window: int = Field(
+        default=60, 
+        description="Rate limit window in seconds"
+    )
+    
+    model_config = ConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        env_nested_delimiter="__",
+        extra="ignore"
+    )
+    
+    @field_validator("log_level")
+    @classmethod
+    def validate_log_level(cls, v):
+        """Validate log level."""
+        valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+        if v.upper() not in valid_levels:
+            raise ValueError(f"Log level must be one of {valid_levels}")
+        return v.upper()
+    
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v):
+        """Parse CORS origins from string or list."""
+        if isinstance(v, str):
+            return [origin.strip() for origin in v.split(",")]
+        return v
+    
+    @field_validator("cors_allow_methods", mode="before")
+    @classmethod
+    def parse_cors_methods(cls, v):
+        """Parse CORS methods from string or list."""
+        if isinstance(v, str):
+            return [method.strip() for method in v.split(",")]
+        return v
+    
+    @field_validator("cors_allow_headers", mode="before")
+    @classmethod
+    def parse_cors_headers(cls, v):
+        """Parse CORS headers from string or list."""
+        if isinstance(v, str):
+            return [header.strip() for header in v.split(",")]
+        return v
+    
+    @field_validator("celery_accept_content", mode="before")
+    @classmethod
+    def parse_celery_content(cls, v):
+        """Parse Celery content types from string or list."""
+        if isinstance(v, str):
+            return [content.strip() for content in v.split(",")]
+        return v
+    
+    def get_database_url_sync(self) -> str:
+        """Get synchronous database URL."""
+        return self.database_url
+    
+    def get_database_url_async(self) -> str:
+        """Get asynchronous database URL."""
+        if self.database_url.startswith("postgresql://"):
+            return self.database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return self.database_url
+    
+    def is_production(self) -> bool:
+        """Check if running in production mode."""
+        return not self.debug
+    
+    def is_development(self) -> bool:
+        """Check if running in development mode."""
+        return self.debug
+    
+    def get_cors_config(self) -> dict:
+        """Get CORS configuration dictionary."""
+        return {
+            "allow_origins": self.cors_origins,
+            "allow_credentials": self.cors_allow_credentials,
+            "allow_methods": self.cors_allow_methods,
+            "allow_headers": self.cors_allow_headers,
+        }
+    
+    def get_celery_config(self) -> dict:
+        """Get Celery configuration dictionary."""
+        return {
+            "broker_url": self.celery_broker_url,
+            "result_backend": self.celery_result_backend,
+            "task_serializer": self.celery_task_serializer,
+            "result_serializer": self.celery_result_serializer,
+            "accept_content": self.celery_accept_content,
+            "timezone": "UTC",
+            "enable_utc": True,
+        }
+
+
+# Global settings instance
+settings = Settings()
+
+
+def get_settings() -> Settings:
+    """
+    Get application settings instance.
+    
+    This function provides a dependency injection pattern for FastAPI.
+    
+    Returns:
+        Settings: Application settings instance
+    """
+    return settings
+
+
+# Convenience functions for common settings
+def get_database_url() -> str:
+    """Get database URL."""
+    return settings.database_url
+
+
+def get_redis_url() -> str:
+    """Get Redis URL."""
+    return settings.redis_url
+
+
+def get_secret_key() -> str:
+    """Get secret key."""
+    return settings.secret_key
+
+
+def is_debug_mode() -> bool:
+    """Check if debug mode is enabled."""
+    return settings.debug
+
+
+def get_cors_config() -> dict:
+    """Get CORS configuration."""
+    return settings.get_cors_config()
+
+
+def get_celery_config() -> dict:
+    """Get Celery configuration."""
+    return settings.get_celery_config()

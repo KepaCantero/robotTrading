@@ -16,15 +16,15 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-# Application metadata (avoiding circular import)
-__version__ = "1.0.0"
-APP_NAME = "AlgoTrading MVP"
-APP_DESCRIPTION = "Algorithmic Trading System MVP"
+from app.core.config import get_settings, get_cors_config
 
-# Configure logging
+# Get application settings
+settings = get_settings()
+
+# Configure logging based on settings
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=getattr(logging, settings.log_level),
+    format=settings.log_format
 )
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,9 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Application lifespan manager for startup and shutdown events."""
     # Startup
-    logger.info(f"Starting {APP_NAME} v{__version__}")
+    logger.info(f"Starting {settings.app_name} v{settings.app_version}")
+    logger.info(f"Debug mode: {settings.debug}")
+    logger.info(f"Log level: {settings.log_level}")
     logger.info("Application startup complete")
     
     yield
@@ -45,22 +47,23 @@ async def lifespan(app: FastAPI):
 
 # Create FastAPI application instance
 app = FastAPI(
-    title=APP_NAME,
-    description=APP_DESCRIPTION,
-    version=__version__,
+    title=settings.app_name,
+    description=settings.app_description,
+    version=settings.app_version,
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json"
 )
 
-# Configure CORS middleware
+# Configure CORS middleware using settings
+cors_config = get_cors_config()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=cors_config["allow_origins"],
+    allow_credentials=cors_config["allow_credentials"],
+    allow_methods=cors_config["allow_methods"],
+    allow_headers=cors_config["allow_headers"],
 )
 
 
@@ -73,10 +76,11 @@ async def root() -> Dict[str, Any]:
         Dict containing application metadata
     """
     return {
-        "name": APP_NAME,
-        "version": __version__,
-        "description": APP_DESCRIPTION,
+        "name": settings.app_name,
+        "version": settings.app_version,
+        "description": settings.app_description,
         "status": "running",
+        "debug": settings.debug,
         "docs": "/docs",
         "health": "/health"
     }
@@ -108,7 +112,7 @@ async def detailed_health_check() -> Dict[str, Any]:
     return {
         "status": "ok",
         "timestamp": datetime.utcnow().isoformat(),
-        "version": __version__,
+        "version": settings.app_version,
         "python_version": sys.version,
         "platform": platform.platform(),
         "system": {
