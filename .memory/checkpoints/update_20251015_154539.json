@@ -1,0 +1,440 @@
+{
+  "timestamp": "20251015_154539",
+  "changes_made": [
+    "Created 1 lesson entries",
+    "Removed 26 empty directories",
+    "Optimized file structure"
+  ],
+  "lessons_learned": [],
+  "issues_found": [
+    "Agent security_auditor issues: Missing prompts",
+    "Agent base_agent issues: Missing prompts",
+    "Agent testing_reviewer issues: Missing prompts",
+    "Agent __init__ issues: Missing prompts",
+    "Agent lead_reviewer issues: Missing prompts",
+    "Agent cicd_verifier issues: Missing prompts",
+    "Agent code_quality_specialist issues: Missing prompts",
+    "Agent algorithm_expert issues: Missing prompts",
+    "Agent architecture_analyst issues: Missing prompts",
+    "Agent environment_auditor issues: Missing prompts",
+    "Agent auto_fixer_agent issues: Missing prompts",
+    "Agent qa_quality_guardian issues: Missing prompts",
+    "Agent __init__ issues: Missing prompts",
+    "Agent test_executor issues: Missing prompts",
+    "Agent failure_diagnostician issues: Missing prompts",
+    "Agent integration_verifier issues: Missing prompts",
+    "Agent lead_tester issues: Missing prompts",
+    "Agent base_test_agent issues: Missing prompts"
+  ],
+  "recommendations": [],
+  "memory_structure": {
+    "PROJECT_CONDUCTOR.md": {
+      "size": 10542,
+      "modified": "2025-10-15T15:22:21.878298"
+    },
+    "active_context.md": {
+      "size": 2800,
+      "modified": "2025-10-14T15:42:27.671300"
+    },
+    "memory_index.yaml": {
+      "size": 2955,
+      "modified": "2025-10-14T15:42:27.684315"
+    },
+    "update_memory.py": {
+      "size": 2887,
+      "modified": "2025-10-15T15:43:50.554199"
+    },
+    "MEMORY_UPDATE_SYSTEM.md": {
+      "size": 8778,
+      "modified": "2025-10-15T15:45:36.287169"
+    },
+    "project_conductor.py": {
+      "size": 20029,
+      "modified": "2025-10-15T15:25:01.139417"
+    },
+    "memory_updater.py": {
+      "size": 33192,
+      "modified": "2025-10-15T15:42:41.427151"
+    },
+    "00_quick_start.md": {
+      "size": 3041,
+      "modified": "2025-10-14T15:42:27.670262"
+    },
+    "update_memory_demo.py": {
+      "size": 6058,
+      "modified": "2025-10-15T15:44:34.787690"
+    },
+    "project_conductor_demo.py": {
+      "size": 7126,
+      "modified": "2025-10-15T15:22:21.651101"
+    },
+    "core": {
+      "tech_context.md": {
+        "size": 8152,
+        "modified": "2025-10-14T15:42:27.679004"
+      },
+      "project_brief.md": {
+        "size": 4467,
+        "modified": "2025-10-14T15:42:27.676781"
+      },
+      "progress.md": {
+        "size": 9095,
+        "modified": "2025-10-14T15:42:27.675669"
+      },
+      "system_patterns.md": {
+        "size": 10999,
+        "modified": "2025-10-14T15:42:27.677782"
+      }
+    },
+    "cache": {
+      "preload_strategy.yaml": {
+        "size": 2749,
+        "modified": "2025-10-14T15:42:27.674047"
+      }
+    },
+    "specs": {
+      "brokers": {
+        "binance.json": {
+          "size": 6260,
+          "modified": "2025-10-14T15:42:27.708115"
+        },
+        "interactive_brokers.json": {
+          "size": 3800,
+          "modified": "2025-10-14T15:42:27.708601"
+        },
+        "polygon.json": {
+          "size": 5748,
+          "modified": "2025-10-14T15:42:27.709206"
+        }
+      },
+      "tasks": {
+        "r_tasks_list.json": {
+          "size": 6492,
+          "modified": "2025-10-14T15:42:27.715290"
+        },
+        "extended_tasks_t021_t036.json": {
+          "size": 10617,
+          "modified": "2025-10-14T15:42:27.714611"
+        },
+        "complete_task_breakdown.json": {
+          "size": 16248,
+          "modified": "2025-10-15T14:40:49.367584"
+        }
+      },
+      "docker": {
+        "containerization.json": {
+          "size": 7639,
+          "modified": "2025-10-15T14:40:49.886711"
+        },
+        "compose_examples.json": {
+          "size": 8257,
+          "modified": "2025-10-14T15:42:27.710843"
+        }
+      },
+      "market_data": {
+        "feeds_config.json": {
+          "size": 5448,
+          "modified": "2025-10-15T14:40:49.737345"
+        }
+      },
+      "strategies": {
+        "algorithmic_validation_2025.json": {
+          "size": 4526,
+          "modified": "2025-10-15T14:40:49.468779"
+        },
+        "momentum_liquidity_detailed.json": {
+          "size": 6884,
+          "modified": "2025-10-14T15:42:27.713701"
+        }
+      },
+      "ai_ml": {
+        "pipeline_spec.json": {
+          "size": 6462,
+          "modified": "2025-10-14T15:42:27.706330"
+        }
+      },
+      "agents": {
+        "execution_flow.json": {
+          "size": 8338,
+          "modified": "2025-10-15T14:43:39.334624"
+        },
+        "multi_agent_orchestrator.json": {
+          "size": 9155,
+          "modified": "2025-10-15T14:43:39.257322"
+        }
+      },
+      "cicd": {
+        "pipeline_spec.json": {
+          "size": 6359,
+          "modified": "2025-10-15T14:40:49.797400"
+        },
+        "environment_spec.json": {
+          "size": 6042,
+          "modified": "2025-10-14T15:42:27.710010"
+        }
+      },
+      "viability": {
+        "technical_feasibility.json": {
+          "size": 4378,
+          "modified": "2025-10-15T14:43:39.157573"
+        }
+      },
+      "aws": {
+        "infrastructure_spec.json": {
+          "size": 9427,
+          "modified": "2025-10-14T15:42:27.707094"
+        }
+      },
+      "stack": {
+        "environment_matrix.json": {
+          "size": 8747,
+          "modified": "2025-10-15T14:40:49.620766"
+        },
+        "coherence_validation.json": {
+          "size": 2696,
+          "modified": "2025-10-15T14:43:39.071131"
+        }
+      },
+      "risk": {
+        "compliance_parameters.json": {
+          "size": 6685,
+          "modified": "2025-10-14T15:42:27.712795"
+        }
+      }
+    },
+    "projects": {
+      "algoTrading": {
+        "overview.md": {
+          "size": 6784,
+          "modified": "2025-10-14T15:42:27.695126"
+        },
+        "mvp_tasks.md": {
+          "size": 15792,
+          "modified": "2025-10-14T15:42:27.693533"
+        },
+        "current_issue.md": {
+          "size": 7088,
+          "modified": "2025-10-14T15:42:27.686678"
+        },
+        "mvp_detailed_tasks.md": {
+          "size": 24647,
+          "modified": "2025-10-14T15:42:27.691877"
+        },
+        "git_workflow.md": {
+          "size": 14247,
+          "modified": "2025-10-14T15:42:27.688477"
+        },
+        "mvp_timeline.md": {
+          "size": 11261,
+          "modified": "2025-10-14T15:42:27.694264"
+        },
+        "mvp_complete_tasks.md": {
+          "size": 25054,
+          "modified": "2025-10-14T15:42:27.690929"
+        },
+        "decisions.md": {
+          "size": 8874,
+          "modified": "2025-10-14T15:42:27.687479"
+        },
+        "mvp_roadmap.md": {
+          "size": 10949,
+          "modified": "2025-10-14T15:42:27.692663"
+        },
+        "tasks": {
+          "detailed_task_breakdown.md": {
+            "size": 7190,
+            "modified": "2025-10-14T15:42:27.696142"
+          }
+        },
+        "issues": {
+          "CWC-6556-trigger-actions-faltantes.md": {
+            "size": 9252,
+            "modified": "2025-10-14T15:42:27.689850"
+          }
+        }
+      }
+    },
+    "testing": {
+      "__init__.py": {
+        "size": 1135,
+        "modified": "2025-10-15T15:19:16.861206"
+      },
+      "README.md": {
+        "size": 9761,
+        "modified": "2025-10-15T15:19:17.073674"
+      },
+      "report_generator.py": {
+        "size": 23249,
+        "modified": "2025-10-15T15:19:16.870817"
+      },
+      "orchestrator.py": {
+        "size": 10607,
+        "modified": "2025-10-15T15:19:16.856817"
+      },
+      "demo.py": {
+        "size": 8795,
+        "modified": "2025-10-15T15:19:16.857879"
+      },
+      "agents": {
+        "environment_auditor.py": {
+          "size": 18055,
+          "modified": "2025-10-15T15:19:16.861058"
+        },
+        "auto_fixer_agent.py": {
+          "size": 26230,
+          "modified": "2025-10-15T15:06:15.466457"
+        },
+        "qa_quality_guardian.py": {
+          "size": 16220,
+          "modified": "2025-10-15T15:19:16.857795"
+        },
+        "__init__.py": {
+          "size": 758,
+          "modified": "2025-10-15T15:06:15.456340"
+        },
+        "test_executor.py": {
+          "size": 13892,
+          "modified": "2025-10-15T15:06:15.466423"
+        },
+        "failure_diagnostician.py": {
+          "size": 16164,
+          "modified": "2025-10-15T15:06:15.466237"
+        },
+        "integration_verifier.py": {
+          "size": 15285,
+          "modified": "2025-10-15T15:25:01.139060"
+        },
+        "lead_tester.py": {
+          "size": 12126,
+          "modified": "2025-10-15T15:06:15.466188"
+        },
+        "base_test_agent.py": {
+          "size": 9435,
+          "modified": "2025-10-15T15:06:15.464466"
+        }
+      }
+    },
+    "rules": {
+      "00_essentials.md": {
+        "size": 8241,
+        "modified": "2025-10-14T15:42:27.697997"
+      },
+      "patterns": {
+        "error_handling.md": {
+          "size": 17916,
+          "modified": "2025-10-14T15:42:27.700635"
+        },
+        "pagination.md": {
+          "size": 11170,
+          "modified": "2025-10-14T15:42:27.701373"
+        },
+        "type_safety.md": {
+          "size": 22800,
+          "modified": "2025-10-14T15:42:27.702288"
+        }
+      },
+      "cursor": {
+        "algoTrading-specific-rules.md": {
+          "size": 19103,
+          "modified": "2025-10-14T15:42:27.699402"
+        }
+      }
+    },
+    "lessons": {
+      "lesson_T001.md": {
+        "size": 963,
+        "modified": "2025-10-15T15:45:39.644601"
+      }
+    },
+    "templates": {
+      "missing_specs.json": {
+        "size": 13870,
+        "modified": "2025-10-14T15:42:27.716440"
+      }
+    },
+    "manifests": {
+      "audit_manifest.json": {
+        "size": 4041,
+        "modified": "2025-10-14T15:42:27.682815"
+      },
+      "final_system_audit.json": {
+        "size": 5011,
+        "modified": "2025-10-15T14:40:49.961266"
+      },
+      "updated_audit_manifest.json": {
+        "size": 5291,
+        "modified": "2025-10-14T15:42:27.683518"
+      },
+      "multi_agent_orchestrator_summary.json": {
+        "size": 3686,
+        "modified": "2025-10-15T14:43:39.414270"
+      }
+    },
+    "code_review": {
+      "__init__.py": {
+        "size": 1051,
+        "modified": "2025-10-15T15:02:14.702161"
+      },
+      "README.md": {
+        "size": 8953,
+        "modified": "2025-10-15T15:02:14.833773"
+      },
+      "report_generator.py": {
+        "size": 20058,
+        "modified": "2025-10-15T15:02:14.680930"
+      },
+      "orchestrator.py": {
+        "size": 9662,
+        "modified": "2025-10-15T15:02:14.680974"
+      },
+      "demo.py": {
+        "size": 6658,
+        "modified": "2025-10-15T15:02:14.680994"
+      },
+      "agents": {
+        "security_auditor.py": {
+          "size": 17069,
+          "modified": "2025-10-15T15:02:14.674730"
+        },
+        "base_agent.py": {
+          "size": 6045,
+          "modified": "2025-10-15T15:02:14.654931"
+        },
+        "testing_reviewer.py": {
+          "size": 14226,
+          "modified": "2025-10-15T15:02:14.680748"
+        },
+        "__init__.py": {
+          "size": 744,
+          "modified": "2025-10-15T15:02:14.654827"
+        },
+        "lead_reviewer.py": {
+          "size": 9434,
+          "modified": "2025-10-15T15:02:14.655318"
+        },
+        "cicd_verifier.py": {
+          "size": 17559,
+          "modified": "2025-10-15T15:02:14.674714"
+        },
+        "code_quality_specialist.py": {
+          "size": 16126,
+          "modified": "2025-10-15T15:02:14.674677"
+        },
+        "algorithm_expert.py": {
+          "size": 15328,
+          "modified": "2025-10-15T15:02:14.680665"
+        },
+        "architecture_analyst.py": {
+          "size": 13344,
+          "modified": "2025-10-15T15:34:10.760870"
+        }
+      },
+      "templates": {
+        "review_report.md": {
+          "size": 2135,
+          "modified": "2025-10-15T15:02:14.729230"
+        }
+      }
+    }
+  }
+}

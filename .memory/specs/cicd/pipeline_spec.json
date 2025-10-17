@@ -1,0 +1,225 @@
+{
+  "github_actions_workflows": {
+    "build_and_test": {
+      "file": ".github/workflows/build_and_test.yml",
+      "description": "Continuous Integration - Build, test, and quality checks",
+      "triggers": ["push", "pull_request"],
+      "branches": ["main", "develop"],
+      "steps": [
+        {
+          "name": "Checkout Code",
+          "uses": "actions/checkout@v4"
+        },
+        {
+          "name": "Set up Python",
+          "uses": "actions/setup-python@v4",
+          "with": {
+            "python-version": "3.11"
+          }
+        },
+        {
+          "name": "Install Dependencies",
+          "run": "pip install -r requirements.txt"
+        },
+        {
+          "name": "Run Linting",
+          "run": "black --check . && flake8 . && mypy ."
+        },
+        {
+          "name": "Run Tests",
+          "run": "pytest --cov=app --cov-report=xml"
+        },
+        {
+          "name": "Upload Coverage",
+          "uses": "codecov/codecov-action@v3"
+        }
+      ]
+    },
+    "docker_build": {
+      "file": ".github/workflows/docker_build.yml",
+      "description": "Build and push Docker images",
+      "triggers": ["push"],
+      "branches": ["main"],
+      "steps": [
+        {
+          "name": "Set up Docker Buildx",
+          "uses": "docker/setup-buildx-action@v3"
+        },
+        {
+          "name": "Login to Docker Hub",
+          "uses": "docker/login-action@v3",
+          "with": {
+            "username": "${{ secrets.DOCKER_USERNAME }}",
+            "password": "${{ secrets.DOCKER_PASSWORD }}"
+          }
+        },
+        {
+          "name": "Build and Push",
+          "uses": "docker/build-push-action@v5",
+          "with": {
+            "context": ".",
+            "push": true,
+            "tags": "algotrading-mvp:latest"
+          }
+        }
+      ]
+    },
+    "deploy_aws": {
+      "file": ".github/workflows/deploy_aws.yml",
+      "description": "Deploy to AWS ECS",
+      "triggers": ["workflow_dispatch"],
+      "branches": ["main"],
+      "steps": [
+        {
+          "name": "Configure AWS Credentials",
+          "uses": "aws-actions/configure-aws-credentials@v4",
+          "with": {
+            "aws-access-key-id": "${{ secrets.AWS_ACCESS_KEY_ID }}",
+            "aws-secret-access-key": "${{ secrets.AWS_SECRET_ACCESS_KEY }}",
+            "aws-region": "eu-west-1"
+          }
+        },
+        {
+          "name": "Deploy to ECS",
+          "run": "aws ecs update-service --cluster algotrading-cluster --service algotrading-service --force-new-deployment"
+        }
+      ]
+    },
+    "security_scan": {
+      "file": ".github/workflows/security_scan.yml",
+      "description": "Security scanning and vulnerability assessment",
+      "triggers": ["schedule", "workflow_dispatch"],
+      "schedule": "0 2 * * *",
+      "steps": [
+        {
+          "name": "Run Bandit Security Scan",
+          "run": "bandit -r app/"
+        },
+        {
+          "name": "Run Safety Check",
+          "run": "safety check"
+        },
+        {
+          "name": "Run Snyk Security Scan",
+          "uses": "snyk/actions/python@master",
+          "with": {
+            "args": "--severity-threshold=high"
+          }
+        }
+      ]
+    }
+  },
+  "secrets_management": {
+    "required_secrets": [
+      {
+        "name": "DATABASE_URL",
+        "description": "PostgreSQL connection string",
+        "environments": ["staging", "production"]
+      },
+      {
+        "name": "REDIS_URL",
+        "description": "Redis connection string",
+        "environments": ["staging", "production"]
+      },
+      {
+        "name": "JWT_SECRET_KEY",
+        "description": "JWT signing secret",
+        "environments": ["staging", "production"]
+      },
+      {
+        "name": "AWS_ACCESS_KEY_ID",
+        "description": "AWS access key for deployment",
+        "environments": ["staging", "production"]
+      },
+      {
+        "name": "AWS_SECRET_ACCESS_KEY",
+        "description": "AWS secret key for deployment",
+        "environments": ["staging", "production"]
+      },
+      {
+        "name": "OPENAI_API_KEY",
+        "description": "OpenAI API key for LLM integration",
+        "environments": ["staging", "production"]
+      },
+      {
+        "name": "BINANCE_API_KEY",
+        "description": "Binance API key for crypto trading",
+        "environments": ["staging", "production"]
+      },
+      {
+        "name": "BINANCE_SECRET_KEY",
+        "description": "Binance secret key for crypto trading",
+        "environments": ["staging", "production"]
+      },
+      {
+        "name": "IBKR_API_KEY",
+        "description": "Interactive Brokers API key",
+        "environments": ["staging", "production"]
+      },
+      {
+        "name": "IBKR_SECRET_KEY",
+        "description": "Interactive Brokers secret key",
+        "environments": ["staging", "production"]
+      },
+      {
+        "name": "TELEGRAM_BOT_TOKEN",
+        "description": "Telegram bot token for alerts",
+        "environments": ["staging", "production"]
+      },
+      {
+        "name": "TELEGRAM_CHAT_ID",
+        "description": "Telegram chat ID for alerts",
+        "environments": ["staging", "production"]
+      }
+    ]
+  },
+  "quality_gates": {
+    "test_coverage": {
+      "minimum": 90,
+      "enforcement": "fail_build_if_below"
+    },
+    "code_quality": {
+      "black_formatting": "required",
+      "flake8_linting": "required",
+      "mypy_type_checking": "required"
+    },
+    "security_scan": {
+      "bandit_scan": "required",
+      "safety_check": "required",
+      "snyk_scan": "required"
+    },
+    "performance": {
+      "load_testing": "required",
+      "latency_requirements": "required"
+    }
+  },
+  "deployment_strategy": {
+    "staging": {
+      "environment": "staging",
+      "strategy": "rolling_update",
+      "max_unavailable": 1,
+      "max_surge": 1,
+      "health_check_grace_period": 300
+    },
+    "production": {
+      "environment": "production",
+      "strategy": "blue_green",
+      "max_unavailable": 0,
+      "max_surge": 2,
+      "health_check_grace_period": 600
+    }
+  },
+  "rollback_strategy": {
+    "automatic_rollback": true,
+    "rollback_triggers": [
+      "health_check_failure",
+      "error_rate_threshold",
+      "latency_threshold"
+    ],
+    "rollback_thresholds": {
+      "health_check_failures": 3,
+      "error_rate": 0.05,
+      "latency_ms": 2000
+    }
+  }
+}

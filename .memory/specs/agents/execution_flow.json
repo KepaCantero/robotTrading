@@ -1,0 +1,196 @@
+{
+  "command_execution_flow": {
+    "command": "implement <task_id>",
+    "example": "implement T001",
+    "description": "Ejecución completamente autónoma de tarea específica",
+    "phases": {
+      "phase_1_initialization": {
+        "step": "Memory Loader Agent",
+        "actions": [
+          "Cargar .memory completo del proyecto",
+          "Identificar tarea T00X solicitada",
+          "Extraer todas las dependencias previas",
+          "Resumir archivos afectados y propósito",
+          "Verificar completitud de información necesaria"
+        ],
+        "outputs": {
+          "task_context": "Contexto completo de la tarea",
+          "dependencies": "Lista de dependencias previas",
+          "affected_files": "Archivos que serán modificados",
+          "requirements": "Requerimientos técnicos y funcionales",
+          "success_criteria": "Criterios de éxito definidos"
+        },
+        "validation": "Verificar que toda información necesaria está en .memory"
+      },
+      "phase_2_analysis": {
+        "step": "Context Analyzer Agent",
+        "actions": [
+          "Comprender objetivo funcional y técnico de la tarea",
+          "Revisar dependencias cruzadas y patrones arquitectónicos",
+          "Identificar módulos y servicios implicados",
+          "Ajustar contexto temporal o técnico si es necesario",
+          "Resolver ambigüedades técnicas antes de implementar"
+        ],
+        "outputs": {
+          "technical_specifications": "Especificaciones técnicas detalladas",
+          "implementation_plan": "Plan de implementación paso a paso",
+          "architecture_adherence": "Verificación de adherencia a arquitectura",
+          "context_adjustments": "Ajustes de contexto si son necesarios",
+          "ambiguity_resolutions": "Resolución de ambigüedades técnicas"
+        },
+        "validation": "Confirmar que el plan es técnicamente viable"
+      },
+      "phase_3_environment": {
+        "step": "Branch Creator Agent",
+        "actions": [
+          "Crear nueva rama feature/T00X_<descripcion_corta>",
+          "Preparar entorno de desarrollo aislado",
+          "Configurar .venv o Docker Compose local",
+          "Verificar estado del repositorio",
+          "Preparar workspace para implementación"
+        ],
+        "outputs": {
+          "feature_branch": "Rama de feature creada",
+          "development_environment": "Entorno de desarrollo configurado",
+          "isolated_workspace": "Workspace aislado para la tarea",
+          "environment_status": "Estado del entorno de desarrollo"
+        },
+        "validation": "Confirmar que el entorno está listo para implementación"
+      },
+      "phase_4_implementation": {
+        "step": "Implementation Agent",
+        "actions": [
+          "Generar código necesario para la tarea",
+          "Seguir convenciones del proyecto (black, ruff, isort)",
+          "Actualizar docstrings y comentarios técnicos",
+          "Mantener coherencia con arquitectura existente",
+          "Colaborar con Context Analyzer si hay ambigüedades"
+        ],
+        "outputs": {
+          "implementation_code": "Código implementado",
+          "updated_files": "Archivos modificados o creados",
+          "documentation_updates": "Actualizaciones de documentación",
+          "code_quality_metrics": "Métricas de calidad de código"
+        },
+        "validation": "Verificar que el código cumple estándares de calidad"
+      },
+      "phase_5_testing": {
+        "step": "Testing Agent",
+        "actions": [
+          "Crear tests unitarios (pytest) para nueva lógica",
+          "Generar tests de integración si hay comunicación entre servicios",
+          "Asegurar >90% cobertura en módulo afectado",
+          "Generar tests adicionales si hay huecos en cobertura",
+          "Ejecutar todos los tests y validar que pasan"
+        ],
+        "outputs": {
+          "unit_tests": "Tests unitarios creados",
+          "integration_tests": "Tests de integración si aplica",
+          "coverage_report": "Reporte de cobertura de tests",
+          "test_results": "Resultados de ejecución de tests",
+          "quality_metrics": "Métricas de calidad de tests"
+        },
+        "validation": "Confirmar que todos los tests pasan y cobertura >90%"
+      },
+      "phase_6_memory_update": {
+        "step": "Memory Updater Agent",
+        "actions": [
+          "Actualizar .memory con nuevos cambios",
+          "Documentar funciones, clases, tests, endpoints creados",
+          "Añadir entradas en changelog del proyecto",
+          "Mantener trazabilidad de cambios realizados",
+          "Actualizar especificaciones si es necesario"
+        ],
+        "outputs": {
+          "updated_memory": ".memory actualizado con cambios",
+          "changelog_entries": "Entradas en changelog",
+          "documentation_updates": "Actualizaciones de documentación",
+          "traceability_log": "Log de trazabilidad de cambios"
+        },
+        "validation": "Verificar que .memory está actualizado y consistente"
+      },
+      "phase_7_validation": {
+        "step": "Validation Agent",
+        "actions": [
+          "Ejecutar tests localmente (pytest, coverage, lint)",
+          "Validar que todos pasen sin errores",
+          "Corregir fallos iterativamente hasta pasar pipeline",
+          "Generar resumen de validación final",
+          "Confirmar que implementación cumple criterios de éxito"
+        ],
+        "outputs": {
+          "validation_report": "Reporte completo de validación",
+          "test_results": "Resultados finales de tests",
+          "quality_metrics": "Métricas finales de calidad",
+          "success_confirmation": "Confirmación de éxito de implementación"
+        },
+        "validation": "Confirmar que la implementación es exitosa y completa"
+      },
+      "phase_8_review": {
+        "step": "Reviewer Agent (Human)",
+        "actions": [
+          "Revisar implementación completada",
+          "Validar que cumple requerimientos especificados",
+          "Aprobar o rechazar merge a main",
+          "Proporcionar feedback si es necesario",
+          "Confirmar eliminación de rama feature tras merge"
+        ],
+        "outputs": {
+          "review_decision": "Aprobación o rechazo del merge",
+          "feedback": "Feedback sobre la implementación",
+          "merge_confirmation": "Confirmación de merge a main",
+          "branch_cleanup": "Limpieza de rama feature"
+        },
+        "validation": "Confirmación humana final de la implementación"
+      }
+    },
+    "error_handling": {
+      "memory_incomplete": {
+        "condition": "Información faltante en .memory",
+        "action": "Memory Loader Agent formula preguntas específicas",
+        "resolution": "Esperar respuesta del usuario antes de continuar"
+      },
+      "technical_ambiguity": {
+        "condition": "Ambigüedad técnica en implementación",
+        "action": "Context Analyzer Agent colabora con Implementation Agent",
+        "resolution": "Resolver ambigüedad antes de escribir código"
+      },
+      "test_failures": {
+        "condition": "Tests fallan durante validación",
+        "action": "Validation Agent corrige iterativamente",
+        "resolution": "Continuar hasta que todos los tests pasen"
+      },
+      "quality_gate_failure": {
+        "condition": "No se cumplen estándares de calidad",
+        "action": "Validation Agent aplica correcciones",
+        "resolution": "Continuar hasta cumplir todos los estándares"
+      }
+    },
+    "success_criteria": {
+      "code_quality": [
+        "Black formatting aplicado",
+        "Ruff linting sin errores",
+        "MyPy type checking sin errores",
+        "Isort imports organizados"
+      ],
+      "test_quality": [
+        ">90% cobertura de tests",
+        "Todos los tests pasan",
+        "Tests de integración si aplica",
+        "Performance tests si aplica"
+      ],
+      "documentation_quality": [
+        "Docstrings actualizados",
+        ".memory actualizado",
+        "Changelog actualizado",
+        "Documentación técnica actualizada"
+      ],
+      "functional_quality": [
+        "Criterios de éxito de la tarea cumplidos",
+        "Dependencias satisfechas",
+        "Arquitectura mantenida",
+        "Estándares de proyecto seguidos"
+      ]
+    }
+  }
+}

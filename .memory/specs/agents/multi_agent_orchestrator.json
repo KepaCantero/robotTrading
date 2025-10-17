@@ -1,0 +1,263 @@
+{
+  "multi_agent_orchestrator": {
+    "command_definition": {
+      "command": "implement <task_id>",
+      "description": "Ejecuta tarea específica de forma completamente autónoma",
+      "example": "implement T001",
+      "flow": "Completamente autónomo con roles coordinados"
+    },
+    "agent_roles": {
+      "memory_loader_agent": {
+        "role": "Memory Loader Agent",
+        "responsibility": "Carga y contextualiza .memory completo",
+        "tasks": [
+          "Cargar .memory completo del proyecto",
+          "Identificar tarea solicitada (T00X) y dependencias",
+          "Resumir archivos afectados y propósito",
+          "Verificar completitud de información necesaria",
+          "Formular preguntas específicas si falta información"
+        ],
+        "inputs": ["Task ID", ".memory files"],
+        "outputs": ["Task context", "Dependencies", "File list", "Requirements"]
+      },
+      "context_analyzer_agent": {
+        "role": "Context Analyzer Agent",
+        "responsibility": "Interpreta propósito técnico y funcional",
+        "tasks": [
+          "Comprender objetivo funcional y técnico",
+          "Revisar dependencias cruzadas y patrones",
+          "Identificar módulos y servicios implicados",
+          "Ajustar contexto temporal o técnico",
+          "Resolver ambigüedades técnicas"
+        ],
+        "inputs": [
+          "Task context",
+          "Architecture patterns",
+          "Stack specifications"
+        ],
+        "outputs": [
+          "Technical specifications",
+          "Implementation plan",
+          "Context adjustments"
+        ]
+      },
+      "branch_creator_agent": {
+        "role": "Branch Creator Agent",
+        "responsibility": "Automatiza gestión de ramas Git",
+        "tasks": [
+          "Crear rama feature/T00X_<descripcion_corta>",
+          "Preparar entorno de desarrollo aislado",
+          "Configurar .venv o Docker Compose local",
+          "Verificar estado del repositorio",
+          "Preparar entorno para implementación"
+        ],
+        "inputs": ["Task ID", "Task description", "Repository state"],
+        "outputs": [
+          "Feature branch",
+          "Development environment",
+          "Isolated workspace"
+        ]
+      },
+      "implementation_agent": {
+        "role": "Implementation Agent",
+        "responsibility": "Genera código según especificaciones",
+        "tasks": [
+          "Generar código necesario para la tarea",
+          "Seguir convenciones del proyecto (black, ruff, isort)",
+          "Actualizar docstrings y comentarios técnicos",
+          "Colaborar con Context Analyzer para resolver ambigüedades",
+          "Mantener coherencia con arquitectura existente"
+        ],
+        "inputs": [
+          "Technical specifications",
+          "Code conventions",
+          "Architecture patterns"
+        ],
+        "outputs": ["Implementation code", "Updated files", "Documentation"]
+      },
+      "testing_agent": {
+        "role": "Testing Agent",
+        "responsibility": "Garantiza calidad con tests comprehensivos",
+        "tasks": [
+          "Crear tests unitarios (pytest) para nueva lógica",
+          "Generar tests de integración si hay comunicación entre servicios",
+          "Asegurar >90% cobertura en módulo afectado",
+          "Generar tests adicionales si hay huecos en cobertura",
+          "Validar que todos los tests pasan"
+        ],
+        "inputs": [
+          "Implementation code",
+          "Test requirements",
+          "Coverage targets"
+        ],
+        "outputs": [
+          "Unit tests",
+          "Integration tests",
+          "Coverage report",
+          "Test results"
+        ]
+      },
+      "memory_updater_agent": {
+        "role": "Memory Updater Agent",
+        "responsibility": "Mantiene .memory actualizado y vivo",
+        "tasks": [
+          "Actualizar .memory con nuevos cambios",
+          "Documentar funciones, clases, tests, endpoints",
+          "Añadir entradas en changelog del proyecto",
+          "Mantener trazabilidad de cambios",
+          "Actualizar especificaciones si es necesario"
+        ],
+        "inputs": [
+          "Implementation changes",
+          "New components",
+          "Updated specifications"
+        ],
+        "outputs": [
+          "Updated .memory",
+          "Changelog entries",
+          "Documentation updates"
+        ]
+      },
+      "validation_agent": {
+        "role": "Validation Agent",
+        "responsibility": "Verifica build final y integridad",
+        "tasks": [
+          "Ejecutar tests localmente (pytest, coverage, lint)",
+          "Validar que todos pasen sin errores",
+          "Corregir fallos iterativamente hasta pasar pipeline",
+          "Generar resumen de validación final",
+          "Confirmar que implementación cumple criterios de éxito"
+        ],
+        "inputs": ["All tests", "Code quality checks", "Success criteria"],
+        "outputs": [
+          "Validation report",
+          "Test results",
+          "Quality metrics",
+          "Success confirmation"
+        ]
+      },
+      "reviewer_agent": {
+        "role": "Reviewer Agent (Human)",
+        "responsibility": "Control humano final y decisión de merge",
+        "tasks": [
+          "Revisar implementación completada",
+          "Validar que cumple requerimientos",
+          "Aprobar o rechazar merge a main",
+          "Proporcionar feedback si es necesario",
+          "Confirmar eliminación de rama feature"
+        ],
+        "inputs": [
+          "Complete implementation",
+          "Validation report",
+          "Success criteria"
+        ],
+        "outputs": ["Approval/Rejection", "Feedback", "Merge decision"]
+      }
+    },
+    "execution_flow": {
+      "step_1": {
+        "agent": "Memory Loader Agent",
+        "action": "Cargar .memory y identificar tarea T00X",
+        "outputs": ["Task context", "Dependencies", "Requirements"]
+      },
+      "step_2": {
+        "agent": "Context Analyzer Agent",
+        "action": "Analizar contexto técnico y funcional",
+        "outputs": ["Technical specifications", "Implementation plan"]
+      },
+      "step_3": {
+        "agent": "Branch Creator Agent",
+        "action": "Crear rama feature y preparar entorno",
+        "outputs": ["Feature branch", "Development environment"]
+      },
+      "step_4": {
+        "agent": "Implementation Agent",
+        "action": "Generar código según especificaciones",
+        "outputs": ["Implementation code", "Updated files"]
+      },
+      "step_5": {
+        "agent": "Testing Agent",
+        "action": "Crear y ejecutar tests comprehensivos",
+        "outputs": ["Tests", "Coverage report", "Test results"]
+      },
+      "step_6": {
+        "agent": "Memory Updater Agent",
+        "action": "Actualizar .memory con cambios",
+        "outputs": ["Updated .memory", "Documentation"]
+      },
+      "step_7": {
+        "agent": "Validation Agent",
+        "action": "Validar build final y calidad",
+        "outputs": ["Validation report", "Success confirmation"]
+      },
+      "step_8": {
+        "agent": "Reviewer Agent (Human)",
+        "action": "Revisar y aprobar merge",
+        "outputs": ["Approval", "Merge to main"]
+      }
+    },
+    "coordination_mechanisms": {
+      "shared_context": {
+        "description": "Contexto compartido entre agentes",
+        "components": [
+          "Task specifications",
+          "Architecture patterns",
+          "Code conventions",
+          "Success criteria",
+          "Quality standards"
+        ]
+      },
+      "communication_protocol": {
+        "description": "Protocolo de comunicación entre agentes",
+        "methods": [
+          "Structured data exchange",
+          "Status updates",
+          "Error reporting",
+          "Collaboration requests"
+        ]
+      },
+      "error_handling": {
+        "description": "Manejo de errores y recuperación",
+        "strategies": [
+          "Retry mechanisms",
+          "Fallback procedures",
+          "Human intervention triggers",
+          "Rollback capabilities"
+        ]
+      }
+    },
+    "quality_gates": {
+      "code_quality": {
+        "requirements": [
+          "Black formatting",
+          "Ruff linting",
+          "MyPy type checking",
+          "Isort imports"
+        ]
+      },
+      "test_quality": {
+        "requirements": [
+          ">90% coverage",
+          "All tests passing",
+          "Integration tests",
+          "Performance tests"
+        ]
+      },
+      "documentation_quality": {
+        "requirements": [
+          "Updated docstrings",
+          "Memory updates",
+          "Changelog entries",
+          "API documentation"
+        ]
+      }
+    },
+    "restrictions_and_constraints": {
+      "branch_isolation": "Ningún agente implementará cambios fuera de su rama",
+      "human_approval": "Ningún merge se realizará sin confirmación humana",
+      "memory_dependency": "Agentes deben usar información del .memory, nunca asumir",
+      "data_completeness": "Si faltan datos críticos, formular preguntas específicas",
+      "traceability": "Toda actualización al .memory debe ser explícita y trazable"
+    }
+  }
+}

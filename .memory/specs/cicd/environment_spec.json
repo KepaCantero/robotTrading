@@ -1,0 +1,228 @@
+{
+  "github_actions_workflows": [
+    {
+      "name": "ci.yml",
+      "description": "Continuous Integration - Build, test, and quality checks",
+      "triggers": ["push", "pull_request"],
+      "branches": ["main", "develop"],
+      "steps": [
+        "checkout_code",
+        "setup_python",
+        "install_dependencies",
+        "run_linting",
+        "run_type_checking",
+        "run_security_scan",
+        "run_tests",
+        "generate_coverage_report",
+        "upload_artifacts"
+      ]
+    },
+    {
+      "name": "build.yml",
+      "description": "Docker image build and push",
+      "triggers": ["push"],
+      "branches": ["main"],
+      "steps": [
+        "checkout_code",
+        "setup_docker_buildx",
+        "login_to_ecr",
+        "build_docker_image",
+        "push_docker_image",
+        "update_image_tags"
+      ]
+    },
+    {
+      "name": "deploy_staging.yml",
+      "description": "Deploy to staging environment",
+      "triggers": ["workflow_dispatch", "push"],
+      "branches": ["develop"],
+      "steps": [
+        "checkout_code",
+        "configure_aws_credentials",
+        "deploy_to_ecs_staging",
+        "run_health_checks",
+        "run_integration_tests",
+        "update_deployment_status"
+      ]
+    },
+    {
+      "name": "deploy_prod.yml",
+      "description": "Deploy to production environment",
+      "triggers": ["workflow_dispatch"],
+      "branches": ["main"],
+      "steps": [
+        "checkout_code",
+        "configure_aws_credentials",
+        "run_pre_deployment_tests",
+        "deploy_to_ecs_prod",
+        "run_health_checks",
+        "run_smoke_tests",
+        "update_deployment_status",
+        "notify_stakeholders"
+      ]
+    },
+    {
+      "name": "security_scan.yml",
+      "description": "Security scanning and vulnerability assessment",
+      "triggers": ["schedule", "workflow_dispatch"],
+      "schedule": "0 2 * * *",
+      "steps": [
+        "checkout_code",
+        "setup_python",
+        "install_dependencies",
+        "run_bandit_scan",
+        "run_safety_scan",
+        "run_snyk_scan",
+        "generate_security_report",
+        "upload_security_report"
+      ]
+    }
+  ],
+  "secrets_required": [
+    {
+      "name": "DB_URL",
+      "description": "PostgreSQL database connection string",
+      "environments": ["staging", "production"],
+      "encryption": "AES256"
+    },
+    {
+      "name": "REDIS_URL",
+      "description": "Redis connection string",
+      "environments": ["staging", "production"],
+      "encryption": "AES256"
+    },
+    {
+      "name": "JWT_SECRET",
+      "description": "JWT signing secret",
+      "environments": ["staging", "production"],
+      "encryption": "AES256"
+    },
+    {
+      "name": "AWS_ACCESS_KEY_ID",
+      "description": "AWS access key for deployment",
+      "environments": ["staging", "production"],
+      "encryption": "AES256"
+    },
+    {
+      "name": "AWS_SECRET_ACCESS_KEY",
+      "description": "AWS secret key for deployment",
+      "environments": ["staging", "production"],
+      "encryption": "AES256"
+    },
+    {
+      "name": "OPENAI_API_KEY",
+      "description": "OpenAI API key for LLM integration",
+      "environments": ["staging", "production"],
+      "encryption": "AES256"
+    },
+    {
+      "name": "BINANCE_API_KEY",
+      "description": "Binance API key for crypto trading",
+      "environments": ["staging", "production"],
+      "encryption": "AES256"
+    },
+    {
+      "name": "BINANCE_SECRET_KEY",
+      "description": "Binance secret key for crypto trading",
+      "environments": ["staging", "production"],
+      "encryption": "AES256"
+    },
+    {
+      "name": "IBKR_API_KEY",
+      "description": "Interactive Brokers API key",
+      "environments": ["staging", "production"],
+      "encryption": "AES256"
+    },
+    {
+      "name": "IBKR_SECRET_KEY",
+      "description": "Interactive Brokers secret key",
+      "environments": ["staging", "production"],
+      "encryption": "AES256"
+    },
+    {
+      "name": "POLYGON_API_KEY",
+      "description": "Polygon API key for market data",
+      "environments": ["staging", "production"],
+      "encryption": "AES256"
+    },
+    {
+      "name": "SLACK_WEBHOOK_URL",
+      "description": "Slack webhook for notifications",
+      "environments": ["staging", "production"],
+      "encryption": "AES256"
+    }
+  ],
+  "container_build_policy": {
+    "image_tags": "semver",
+    "ecr_path": "algotrading-mvp",
+    "multi_stage_build": true,
+    "security_scan": true,
+    "vulnerability_scan": true,
+    "base_image": "python:3.11-slim",
+    "build_args": ["BUILDKIT_INLINE_CACHE=1", "PYTHONUNBUFFERED=1"]
+  },
+  "test_matrices": {
+    "python_versions": ["3.11"],
+    "db_combinations": [
+      {
+        "postgresql": "15",
+        "redis": "7"
+      }
+    ],
+    "test_types": [
+      "unit_tests",
+      "integration_tests",
+      "security_tests",
+      "performance_tests"
+    ]
+  },
+  "staging_vs_prod_config": {
+    "staging": {
+      "debug": true,
+      "log_level": "DEBUG",
+      "db_pool_size": 5,
+      "redis_ttl": 300,
+      "rate_limiting": false,
+      "caching": true,
+      "monitoring": "detailed",
+      "alerting": "slack_only"
+    },
+    "production": {
+      "debug": false,
+      "log_level": "INFO",
+      "db_pool_size": 20,
+      "redis_ttl": 60,
+      "rate_limiting": true,
+      "caching": true,
+      "monitoring": "comprehensive",
+      "alerting": "all_channels"
+    }
+  },
+  "deployment_strategy": {
+    "staging": {
+      "strategy": "rolling_update",
+      "max_unavailable": 1,
+      "max_surge": 1,
+      "health_check_grace_period": 300
+    },
+    "production": {
+      "strategy": "blue_green",
+      "max_unavailable": 0,
+      "max_surge": 2,
+      "health_check_grace_period": 600
+    }
+  },
+  "rollback_strategy": {
+    "automatic_rollback": true,
+    "rollback_triggers": [
+      "health_check_failure",
+      "error_rate_threshold",
+      "latency_threshold"
+    ],
+    "rollback_thresholds": {
+      "health_check_failures": 3,
+      "error_rate": 0.05,
+      "latency_ms": 2000
+    }
+  }
+}

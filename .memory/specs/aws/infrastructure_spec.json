@@ -1,0 +1,374 @@
+{
+  "rds_config": {
+    "instance_class": "db.r5.xlarge",
+    "engine": "postgres",
+    "engine_version": "15.4",
+    "multi_az": true,
+    "snapshot_policy": "daily_retention_30_days",
+    "backup_retention": 30,
+    "storage_type": "gp3",
+    "allocated_storage": 100,
+    "max_allocated_storage": 1000,
+    "storage_encryption": true,
+    "deletion_protection": true,
+    "performance_insights": true,
+    "monitoring_interval": 60,
+    "parameter_group": "algotrading-postgres-15",
+    "subnet_group": "algotrading-db-subnet-group",
+    "security_groups": ["algotrading-db-sg"]
+  },
+  "elasticache_config": {
+    "node_type": "cache.r5.large",
+    "num_cache_nodes": 2,
+    "engine": "redis",
+    "engine_version": "7.0",
+    "parameter_group": "default.redis7",
+    "subnet_group": "algotrading-cache-subnet-group",
+    "security_groups": ["algotrading-cache-sg"],
+    "backup_retention": 7,
+    "backup_window": "03:00-04:00",
+    "maintenance_window": "sun:04:00-sun:05:00",
+    "notification_topic": "algotrading-cache-alerts"
+  },
+  "ecs_config": {
+    "launch_type": "Fargate",
+    "cpu": 1024,
+    "memory": 2048,
+    "desired_count": 2,
+    "auto_scaling": true,
+    "min_capacity": 2,
+    "max_capacity": 10,
+    "target_cpu_utilization": 70,
+    "target_memory_utilization": 80,
+    "health_check_grace_period": 300,
+    "deployment_configuration": {
+      "maximum_percent": 200,
+      "minimum_healthy_percent": 50
+    },
+    "load_balancer": {
+      "type": "application",
+      "scheme": "internet-facing",
+      "listeners": [
+        {
+          "port": 80,
+          "protocol": "HTTP",
+          "target_group": "algotrading-tg"
+        },
+        {
+          "port": 443,
+          "protocol": "HTTPS",
+          "target_group": "algotrading-tg",
+          "ssl_certificate": "arn:aws:acm:eu-west-1:account:certificate/cert-id"
+        }
+      ]
+    }
+  },
+  "s3_bucket_policies": {
+    "buckets": [
+      {
+        "name": "algotrading-data-lake",
+        "purpose": "Data lake storage",
+        "lifecycle": {
+          "transition_to_ia": 30,
+          "transition_to_glacier": 90,
+          "transition_to_deep_archive": 365,
+          "expiration_days": 2555
+        },
+        "encryption": "AES256",
+        "versioning": true,
+        "mfa_delete": true,
+        "public_access": false
+      },
+      {
+        "name": "algotrading-models",
+        "purpose": "ML model storage",
+        "lifecycle": {
+          "transition_to_ia": 90,
+          "transition_to_glacier": 365,
+          "expiration_days": 2555
+        },
+        "encryption": "AES256",
+        "versioning": true,
+        "mfa_delete": true,
+        "public_access": false
+      },
+      {
+        "name": "algotrading-backups",
+        "purpose": "Database backups",
+        "lifecycle": {
+          "transition_to_ia": 30,
+          "transition_to_glacier": 90,
+          "expiration_days": 2555
+        },
+        "encryption": "AES256",
+        "versioning": true,
+        "mfa_delete": true,
+        "public_access": false
+      }
+    ]
+  },
+  "cloudwatch_log_groups": [
+    {
+      "name": "algotrading-app",
+      "retention_days": 30,
+      "metric_filters": [
+        {
+          "name": "error_count",
+          "pattern": "ERROR",
+          "metric_name": "ErrorCount",
+          "metric_namespace": "AlgoTrading/Application"
+        },
+        {
+          "name": "trade_execution",
+          "pattern": "TRADE_EXECUTED",
+          "metric_name": "TradeExecutionCount",
+          "metric_namespace": "AlgoTrading/Trading"
+        }
+      ]
+    },
+    {
+      "name": "algotrading-trading",
+      "retention_days": 90,
+      "metric_filters": [
+        {
+          "name": "order_placed",
+          "pattern": "ORDER_PLACED",
+          "metric_name": "OrderPlacedCount",
+          "metric_namespace": "AlgoTrading/Trading"
+        },
+        {
+          "name": "risk_violation",
+          "pattern": "RISK_VIOLATION",
+          "metric_name": "RiskViolationCount",
+          "metric_namespace": "AlgoTrading/Risk"
+        }
+      ]
+    },
+    {
+      "name": "algotrading-strategies",
+      "retention_days": 30,
+      "metric_filters": [
+        {
+          "name": "strategy_signal",
+          "pattern": "STRATEGY_SIGNAL",
+          "metric_name": "StrategySignalCount",
+          "metric_namespace": "AlgoTrading/Strategies"
+        }
+      ]
+    },
+    {
+      "name": "algotrading-risk",
+      "retention_days": 90,
+      "metric_filters": [
+        {
+          "name": "risk_check",
+          "pattern": "RISK_CHECK",
+          "metric_name": "RiskCheckCount",
+          "metric_namespace": "AlgoTrading/Risk"
+        }
+      ]
+    }
+  ],
+  "iam_roles": [
+    {
+      "name": "algotrading-ecs-task-role",
+      "description": "ECS task execution role",
+      "policies": [
+        "AmazonECSTaskExecutionRolePolicy",
+        "CloudWatchLogsFullAccess",
+        "SecretsManagerReadWrite"
+      ],
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "ecs-tasks.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      }
+    },
+    {
+      "name": "algotrading-ecs-execution-role",
+      "description": "ECS service execution role",
+      "policies": ["AmazonEC2ContainerServiceRole", "AutoScalingFullAccess"],
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "ecs.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      }
+    },
+    {
+      "name": "algotrading-rds-access-role",
+      "description": "RDS access role",
+      "policies": ["AmazonRDSFullAccess"],
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "rds.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      }
+    },
+    {
+      "name": "algotrading-s3-access-role",
+      "description": "S3 access role",
+      "policies": ["AmazonS3FullAccess"],
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "s3.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      }
+    }
+  ],
+  "vpc_config": {
+    "cidr_block": "10.0.0.0/16",
+    "availability_zones": ["eu-west-1a", "eu-west-1b", "eu-west-1c"],
+    "subnets": [
+      {
+        "name": "algotrading-public-1a",
+        "cidr": "10.0.1.0/24",
+        "az": "eu-west-1a",
+        "type": "public"
+      },
+      {
+        "name": "algotrading-public-1b",
+        "cidr": "10.0.2.0/24",
+        "az": "eu-west-1b",
+        "type": "public"
+      },
+      {
+        "name": "algotrading-private-1a",
+        "cidr": "10.0.3.0/24",
+        "az": "eu-west-1a",
+        "type": "private"
+      },
+      {
+        "name": "algotrading-private-1b",
+        "cidr": "10.0.4.0/24",
+        "az": "eu-west-1b",
+        "type": "private"
+      }
+    ],
+    "nat_gateways": 2,
+    "internet_gateway": true
+  },
+  "security_groups": [
+    {
+      "name": "algotrading-alb-sg",
+      "description": "Security group for Application Load Balancer",
+      "rules": [
+        {
+          "type": "ingress",
+          "protocol": "tcp",
+          "port": 80,
+          "source": "0.0.0.0/0"
+        },
+        {
+          "type": "ingress",
+          "protocol": "tcp",
+          "port": 443,
+          "source": "0.0.0.0/0"
+        }
+      ]
+    },
+    {
+      "name": "algotrading-ecs-sg",
+      "description": "Security group for ECS tasks",
+      "rules": [
+        {
+          "type": "ingress",
+          "protocol": "tcp",
+          "port": 8000,
+          "source": "algotrading-alb-sg"
+        }
+      ]
+    },
+    {
+      "name": "algotrading-db-sg",
+      "description": "Security group for RDS",
+      "rules": [
+        {
+          "type": "ingress",
+          "protocol": "tcp",
+          "port": 5432,
+          "source": "algotrading-ecs-sg"
+        }
+      ]
+    },
+    {
+      "name": "algotrading-cache-sg",
+      "description": "Security group for ElastiCache",
+      "rules": [
+        {
+          "type": "ingress",
+          "protocol": "tcp",
+          "port": 6379,
+          "source": "algotrading-ecs-sg"
+        }
+      ]
+    }
+  ],
+  "monitoring": {
+    "cloudwatch_dashboards": [
+      {
+        "name": "AlgoTrading-Overview",
+        "widgets": [
+          "trading_volume",
+          "active_strategies",
+          "system_health",
+          "error_rate"
+        ]
+      },
+      {
+        "name": "AlgoTrading-Trading",
+        "widgets": [
+          "orders_per_minute",
+          "execution_latency",
+          "profit_loss",
+          "risk_metrics"
+        ]
+      }
+    ],
+    "alarms": [
+      {
+        "name": "HighErrorRate",
+        "metric": "ErrorCount",
+        "threshold": 10,
+        "comparison": "GreaterThanThreshold",
+        "period": 300,
+        "evaluation_periods": 2
+      },
+      {
+        "name": "HighLatency",
+        "metric": "ResponseTime",
+        "threshold": 2000,
+        "comparison": "GreaterThanThreshold",
+        "period": 300,
+        "evaluation_periods": 2
+      }
+    ]
+  }
+}

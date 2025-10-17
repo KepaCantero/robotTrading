@@ -1,0 +1,228 @@
+{
+  "provider_name": "Binance",
+  "api_type": "REST/WebSocket",
+  "base_url": "https://api.binance.com",
+  "testnet_url": "https://testnet.binance.vision",
+  "websocket_url": "wss://stream.binance.com:9443/ws",
+  "endpoints": [
+    {
+      "name": "placeOrder",
+      "method": "POST",
+      "path": "/api/v3/order",
+      "params": ["symbol", "side", "type", "quantity", "price", "timeInForce"],
+      "response_schema": {
+        "symbol": "string",
+        "orderId": "number",
+        "orderListId": "number",
+        "clientOrderId": "string",
+        "price": "string",
+        "origQty": "string",
+        "executedQty": "string",
+        "cummulativeQuoteQty": "string",
+        "status": "string",
+        "timeInForce": "string",
+        "type": "string",
+        "side": "string",
+        "stopPrice": "string",
+        "icebergQty": "string",
+        "time": "number",
+        "updateTime": "number",
+        "isWorking": "boolean",
+        "origQuoteOrderQty": "string"
+      },
+      "example_request": {
+        "symbol": "BTCUSDT",
+        "side": "BUY",
+        "type": "LIMIT",
+        "quantity": "0.001",
+        "price": "50000.00",
+        "timeInForce": "GTC"
+      }
+    },
+    {
+      "name": "cancelOrder",
+      "method": "DELETE",
+      "path": "/api/v3/order",
+      "params": ["symbol", "orderId"],
+      "response_schema": {
+        "symbol": "string",
+        "origClientOrderId": "string",
+        "orderId": "number",
+        "orderListId": "number",
+        "clientOrderId": "string",
+        "price": "string",
+        "origQty": "string",
+        "executedQty": "string",
+        "cummulativeQuoteQty": "string",
+        "status": "string",
+        "timeInForce": "string",
+        "type": "string",
+        "side": "string"
+      }
+    },
+    {
+      "name": "getOrderStatus",
+      "method": "GET",
+      "path": "/api/v3/order",
+      "params": ["symbol", "orderId"],
+      "response_schema": {
+        "symbol": "string",
+        "orderId": "number",
+        "orderListId": "number",
+        "clientOrderId": "string",
+        "price": "string",
+        "origQty": "string",
+        "executedQty": "string",
+        "cummulativeQuoteQty": "string",
+        "status": "string",
+        "timeInForce": "string",
+        "type": "string",
+        "side": "string",
+        "stopPrice": "string",
+        "icebergQty": "string",
+        "time": "number",
+        "updateTime": "number",
+        "isWorking": "boolean",
+        "origQuoteOrderQty": "string"
+      }
+    },
+    {
+      "name": "marketData",
+      "method": "GET",
+      "path": "/api/v3/ticker/price",
+      "params": ["symbol"],
+      "response_schema": {
+        "symbol": "string",
+        "price": "string"
+      }
+    },
+    {
+      "name": "orderBook",
+      "method": "GET",
+      "path": "/api/v3/depth",
+      "params": ["symbol", "limit"],
+      "response_schema": {
+        "lastUpdateId": "number",
+        "bids": [["price", "quantity"]],
+        "asks": [["price", "quantity"]]
+      }
+    },
+    {
+      "name": "getAccount",
+      "method": "GET",
+      "path": "/api/v3/account",
+      "params": [],
+      "response_schema": {
+        "makerCommission": "number",
+        "takerCommission": "number",
+        "buyerCommission": "number",
+        "sellerCommission": "number",
+        "canTrade": "boolean",
+        "canWithdraw": "boolean",
+        "canDeposit": "boolean",
+        "updateTime": "number",
+        "accountType": "string",
+        "balances": [
+          {
+            "asset": "string",
+            "free": "string",
+            "locked": "string"
+          }
+        ],
+        "permissions": ["string"]
+      }
+    }
+  ],
+  "websocket_streams": [
+    {
+      "name": "ticker",
+      "stream": "{symbol}@ticker",
+      "response_schema": {
+        "e": "string",
+        "E": "number",
+        "s": "string",
+        "c": "string",
+        "o": "string",
+        "h": "string",
+        "l": "string",
+        "v": "string",
+        "q": "string",
+        "O": "number",
+        "C": "number",
+        "F": "number",
+        "L": "number",
+        "n": "number",
+        "x": "string",
+        "p": "string",
+        "P": "string",
+        "w": "string",
+        "Q": "string",
+        "b": "string",
+        "a": "string",
+        "B": "string",
+        "A": "string"
+      }
+    },
+    {
+      "name": "depth",
+      "stream": "{symbol}@depth",
+      "response_schema": {
+        "e": "string",
+        "E": "number",
+        "s": "string",
+        "U": "number",
+        "u": "number",
+        "b": [["price", "quantity"]],
+        "a": [["price", "quantity"]]
+      }
+    }
+  ],
+  "rate_limits": {
+    "placeOrder": { "per_minute": 1200, "per_second": 20 },
+    "cancelOrder": { "per_minute": 1200, "per_second": 20 },
+    "getOrderStatus": { "per_minute": 1200, "per_second": 20 },
+    "marketData": { "per_minute": 1200, "per_second": 20 },
+    "orderBook": { "per_minute": 1200, "per_second": 20 },
+    "getAccount": { "per_minute": 1200, "per_second": 20 }
+  },
+  "authentication": {
+    "type": "HMAC_SHA256",
+    "header": "X-MBX-APIKEY",
+    "signature_method": "HMAC_SHA256",
+    "testnet_credentials": {
+      "api_key": "testnet_api_key_placeholder",
+      "api_secret": "testnet_api_secret_placeholder"
+    }
+  },
+  "error_handling": {
+    "retry_pattern": "exponential_backoff",
+    "max_retries": 3,
+    "backoff_factor": 2,
+    "idempotency_keys": true,
+    "status_codes": {
+      "200": "success",
+      "400": "bad_request",
+      "401": "unauthorized",
+      "403": "forbidden",
+      "404": "not_found",
+      "429": "rate_limit_exceeded",
+      "500": "internal_server_error"
+    },
+    "error_responses": {
+      "400": {
+        "code": -1100,
+        "msg": "Illegal characters found in parameter"
+      },
+      "401": {
+        "code": -1022,
+        "msg": "Signature for this request is not valid"
+      },
+      "429": {
+        "code": -1003,
+        "msg": "Too many requests"
+      }
+    }
+  },
+  "sandbox_instructions": "Use testnet endpoint with test credentials. All orders are simulated. Market data is real-time but orders are not executed.",
+  "notes": "Binance API requires API key creation and IP whitelist configuration. Testnet provides realistic market data for development."
+}

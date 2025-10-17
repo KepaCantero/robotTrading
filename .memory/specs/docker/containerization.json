@@ -1,0 +1,238 @@
+{
+  "docker_configuration": {
+    "development": {
+      "file": "docker-compose.dev.yml",
+      "description": "Development environment with hot reload",
+      "services": {
+        "app": {
+          "build": {
+            "context": ".",
+            "dockerfile": "Dockerfile.dev"
+          },
+          "command": "uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload",
+          "volumes": [".:/app", "/app/.venv"],
+          "ports": ["8000:8000"],
+          "environment": {
+            "DATABASE_URL": "postgresql+asyncpg://user:password@db:5432/algotrading_dev",
+            "REDIS_URL": "redis://redis:6379/0",
+            "CELERY_BROKER_URL": "redis://redis:6379/0",
+            "CELERY_RESULT_BACKEND": "redis://redis:6379/0",
+            "JWT_SECRET_KEY": "dev-secret-key",
+            "DEBUG": "true",
+            "LOG_LEVEL": "DEBUG"
+          },
+          "depends_on": ["db", "redis"]
+        },
+        "db": {
+          "image": "postgres:15-alpine",
+          "environment": {
+            "POSTGRES_DB": "algotrading_dev",
+            "POSTGRES_USER": "user",
+            "POSTGRES_PASSWORD": "password"
+          },
+          "volumes": ["pg_data_dev:/var/lib/postgresql/data"],
+          "ports": ["5432:5432"]
+        },
+        "redis": {
+          "image": "redis:7-alpine",
+          "ports": ["6379:6379"],
+          "volumes": ["redis_data_dev:/data"]
+        },
+        "celery_worker": {
+          "build": {
+            "context": ".",
+            "dockerfile": "Dockerfile.dev"
+          },
+          "command": "celery -A app.core.celery_app worker --loglevel=info --reload",
+          "volumes": [".:/app"],
+          "environment": {
+            "DATABASE_URL": "postgresql+asyncpg://user:password@db:5432/algotrading_dev",
+            "REDIS_URL": "redis://redis:6379/0",
+            "CELERY_BROKER_URL": "redis://redis:6379/0",
+            "CELERY_RESULT_BACKEND": "redis://redis:6379/0"
+          },
+          "depends_on": ["db", "redis"]
+        },
+        "streamlit": {
+          "build": {
+            "context": "./dashboard",
+            "dockerfile": "Dockerfile"
+          },
+          "command": "streamlit run app.py --server.port 8501 --server.address 0.0.0.0",
+          "volumes": ["./dashboard:/app"],
+          "ports": ["8501:8501"],
+          "environment": {
+            "API_BASE_URL": "http://app:8000"
+          },
+          "depends_on": ["app"]
+        }
+      },
+      "volumes": {
+        "pg_data_dev": {},
+        "redis_data_dev": {}
+      }
+    },
+    "production": {
+      "file": "docker-compose.prod.yml",
+      "description": "Production environment with high availability",
+      "services": {
+        "app": {
+          "image": "algotrading-mvp:latest",
+          "command": "uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4",
+          "ports": ["8000:8000"],
+          "environment": {
+            "DATABASE_URL": "${PROD_DATABASE_URL}",
+            "REDIS_URL": "${PROD_REDIS_URL}",
+            "CELERY_BROKER_URL": "${PROD_CELERY_BROKER_URL}",
+            "CELERY_RESULT_BACKEND": "${PROD_CELERY_RESULT_BACKEND}",
+            "JWT_SECRET_KEY": "${PROD_JWT_SECRET_KEY}",
+            "DEBUG": "false",
+            "LOG_LEVEL": "INFO"
+          },
+          "depends_on": ["db", "redis"],
+          "restart": "always",
+          "deploy": {
+            "replicas": 2,
+            "resources": {
+              "limits": {
+                "cpus": "1.0",
+                "memory": "2G"
+              },
+              "reservations": {
+                "cpus": "0.5",
+                "memory": "1G"
+              }
+            }
+          }
+        },
+        "db": {
+          "image": "postgres:15-alpine",
+          "environment": {
+            "POSTGRES_DB": "${PROD_DB_NAME}",
+            "POSTGRES_USER": "${PROD_DB_USER}",
+            "POSTGRES_PASSWORD": "${PROD_DB_PASSWORD}"
+          },
+          "volumes": ["pg_data_prod:/var/lib/postgresql/data"],
+          "restart": "always",
+          "deploy": {
+            "resources": {
+              "limits": {
+                "cpus": "2.0",
+                "memory": "4G"
+              },
+              "reservations": {
+                "cpus": "1.0",
+                "memory": "2G"
+              }
+            }
+          }
+        },
+        "redis": {
+          "image": "redis:7-alpine",
+          "volumes": ["redis_data_prod:/data"],
+          "restart": "always",
+          "deploy": {
+            "resources": {
+              "limits": {
+                "cpus": "0.5",
+                "memory": "1G"
+              },
+              "reservations": {
+                "cpus": "0.25",
+                "memory": "512M"
+              }
+            }
+          }
+        },
+        "celery_worker": {
+          "image": "algotrading-mvp:latest",
+          "command": "celery -A app.core.celery_app worker --loglevel=info --concurrency=4",
+          "environment": {
+            "DATABASE_URL": "${PROD_DATABASE_URL}",
+            "REDIS_URL": "${PROD_REDIS_URL}",
+            "CELERY_BROKER_URL": "${PROD_CELERY_BROKER_URL}",
+            "CELERY_RESULT_BACKEND": "${PROD_CELERY_RESULT_BACKEND}"
+          },
+          "depends_on": ["db", "redis"],
+          "restart": "always",
+          "deploy": {
+            "replicas": 2,
+            "resources": {
+              "limits": {
+                "cpus": "1.0",
+                "memory": "2G"
+              },
+              "reservations": {
+                "cpus": "0.5",
+                "memory": "1G"
+              }
+            }
+          }
+        }
+      },
+      "volumes": {
+        "pg_data_prod": {},
+        "redis_data_prod": {}
+      }
+    }
+  },
+  "dockerfile_configuration": {
+    "development": {
+      "file": "Dockerfile.dev",
+      "content": "FROM python:3.11-slim\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install -r requirements.txt\nCOPY . .\nEXPOSE 8000\nCMD [\"uvicorn\", \"app.main:app\", \"--host\", \"0.0.0.0\", \"--port\", \"8000\", \"--reload\"]"
+    },
+    "production": {
+      "file": "Dockerfile",
+      "content": "FROM python:3.11-slim as builder\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt\nFROM python:3.11-slim\nWORKDIR /app\nCOPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages\nCOPY . .\nEXPOSE 8000\nCMD [\"uvicorn\", \"app.main:app\", \"--host\", \"0.0.0.0\", \"--port\", \"8000\", \"--workers\", \"4\"]"
+    }
+  },
+  "container_optimization": {
+    "multi_stage_build": true,
+    "layer_caching": true,
+    "security_scanning": true,
+    "vulnerability_scanning": true,
+    "base_image": "python:3.11-slim",
+    "build_args": ["BUILDKIT_INLINE_CACHE=1", "PYTHONUNBUFFERED=1"]
+  },
+  "health_checks": {
+    "application": {
+      "endpoint": "/health",
+      "interval": "30s",
+      "timeout": "10s",
+      "retries": 3,
+      "start_period": "40s"
+    },
+    "database": {
+      "command": "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}",
+      "interval": "30s",
+      "timeout": "10s",
+      "retries": 3,
+      "start_period": "40s"
+    },
+    "redis": {
+      "command": "redis-cli ping",
+      "interval": "30s",
+      "timeout": "10s",
+      "retries": 3,
+      "start_period": "40s"
+    }
+  },
+  "resource_limits": {
+    "development": {
+      "cpu": "1.0",
+      "memory": "2G",
+      "storage": "10G"
+    },
+    "production": {
+      "cpu": "2.0",
+      "memory": "4G",
+      "storage": "50G"
+    }
+  },
+  "networking": {
+    "internal_network": "algotrading-network",
+    "external_ports": ["8000", "8501"],
+    "internal_ports": ["5432", "6379"],
+    "load_balancer": "nginx"
+  }
+}

@@ -1,0 +1,224 @@
+{
+  "provider_name": "Polygon",
+  "api_type": "REST/WebSocket",
+  "base_url": "https://api.polygon.io",
+  "websocket_url": "wss://socket.polygon.io/stocks",
+  "endpoints": [
+    {
+      "name": "getTicker",
+      "method": "GET",
+      "path": "/v2/snapshot/locale/us/markets/stocks/tickers/{ticker}",
+      "params": ["ticker"],
+      "response_schema": {
+        "status": "string",
+        "ticker": {
+          "ticker": "string",
+          "todaysChange": "number",
+          "todaysChangePerc": "number",
+          "updated": "number",
+          "day": {
+            "o": "number",
+            "h": "number",
+            "l": "number",
+            "c": "number",
+            "v": "number",
+            "vw": "number"
+          },
+          "prevDay": {
+            "o": "number",
+            "h": "number",
+            "l": "number",
+            "c": "number",
+            "v": "number",
+            "vw": "number"
+          }
+        }
+      }
+    },
+    {
+      "name": "getLastTrade",
+      "method": "GET",
+      "path": "/v2/last/trade/{ticker}",
+      "params": ["ticker"],
+      "response_schema": {
+        "status": "string",
+        "symbol": "string",
+        "last": {
+          "price": "number",
+          "size": "number",
+          "exchange": "number",
+          "conditions": [1, 2, 3],
+          "timestamp": "number"
+        }
+      }
+    },
+    {
+      "name": "getLastQuote",
+      "method": "GET",
+      "path": "/v2/last/nbbo/{ticker}",
+      "params": ["ticker"],
+      "response_schema": {
+        "status": "string",
+        "symbol": "string",
+        "last": {
+          "bidprice": "number",
+          "bidsize": "number",
+          "bidexchange": "number",
+          "askprice": "number",
+          "asksize": "number",
+          "askexchange": "number",
+          "timestamp": "number"
+        }
+      }
+    },
+    {
+      "name": "getAggregates",
+      "method": "GET",
+      "path": "/v2/aggs/ticker/{ticker}/range/{multiplier}/{timespan}/{from}/{to}",
+      "params": ["ticker", "multiplier", "timespan", "from", "to"],
+      "response_schema": {
+        "status": "string",
+        "adjusted": "boolean",
+        "queryCount": "number",
+        "request_id": "string",
+        "resultsCount": "number",
+        "results": [
+          {
+            "c": "number",
+            "h": "number",
+            "l": "number",
+            "n": "number",
+            "o": "number",
+            "t": "number",
+            "v": "number",
+            "vw": "number"
+          }
+        ]
+      }
+    },
+    {
+      "name": "getGroupedDaily",
+      "method": "GET",
+      "path": "/v2/aggs/grouped/locale/us/market/stocks/{date}",
+      "params": ["date"],
+      "response_schema": {
+        "status": "string",
+        "queryCount": "number",
+        "resultsCount": "number",
+        "adjusted": "boolean",
+        "results": [
+          {
+            "T": "string",
+            "c": "number",
+            "h": "number",
+            "l": "number",
+            "n": "number",
+            "o": "number",
+            "t": "number",
+            "v": "number",
+            "vw": "number"
+          }
+        ]
+      }
+    }
+  ],
+  "websocket_streams": [
+    {
+      "name": "trades",
+      "stream": "T.{symbol}",
+      "response_schema": {
+        "ev": "string",
+        "sym": "string",
+        "x": "number",
+        "i": "string",
+        "z": "number",
+        "p": "number",
+        "s": "number",
+        "c": [1, 2, 3],
+        "t": "number"
+      }
+    },
+    {
+      "name": "quotes",
+      "stream": "Q.{symbol}",
+      "response_schema": {
+        "ev": "string",
+        "sym": "string",
+        "bx": "number",
+        "bp": "number",
+        "bs": "number",
+        "ax": "number",
+        "ap": "number",
+        "as": "number",
+        "c": "number",
+        "t": "number"
+      }
+    },
+    {
+      "name": "minute_aggregates",
+      "stream": "AM.{symbol}",
+      "response_schema": {
+        "ev": "string",
+        "sym": "string",
+        "v": "number",
+        "av": "number",
+        "op": "number",
+        "vw": "number",
+        "o": "number",
+        "c": "number",
+        "h": "number",
+        "l": "number",
+        "a": "number",
+        "z": "number",
+        "s": "number",
+        "e": "number"
+      }
+    }
+  ],
+  "rate_limits": {
+    "getTicker": { "per_minute": 5, "per_second": 0.083 },
+    "getLastTrade": { "per_minute": 5, "per_second": 0.083 },
+    "getLastQuote": { "per_minute": 5, "per_second": 0.083 },
+    "getAggregates": { "per_minute": 5, "per_second": 0.083 },
+    "getGroupedDaily": { "per_minute": 5, "per_second": 0.083 }
+  },
+  "authentication": {
+    "type": "API_KEY",
+    "header": "Authorization",
+    "format": "Bearer {api_key}",
+    "sandbox_credentials": {
+      "api_key": "polygon_sandbox_api_key_placeholder"
+    }
+  },
+  "error_handling": {
+    "retry_pattern": "exponential_backoff",
+    "max_retries": 3,
+    "backoff_factor": 2,
+    "idempotency_keys": false,
+    "status_codes": {
+      "200": "success",
+      "400": "bad_request",
+      "401": "unauthorized",
+      "403": "forbidden",
+      "404": "not_found",
+      "429": "rate_limit_exceeded",
+      "500": "internal_server_error"
+    },
+    "error_responses": {
+      "400": {
+        "status": "ERROR",
+        "error": "Invalid request parameters"
+      },
+      "401": {
+        "status": "ERROR",
+        "error": "Invalid API key"
+      },
+      "429": {
+        "status": "ERROR",
+        "error": "Rate limit exceeded"
+      }
+    }
+  },
+  "sandbox_instructions": "Use sandbox API key for testing. Market data is delayed by 15 minutes. No real trading capabilities.",
+  "notes": "Polygon provides high-quality market data for US equities. Free tier has limited requests per minute."
+}

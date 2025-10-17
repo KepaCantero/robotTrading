@@ -1,0 +1,126 @@
+{
+  "project_name": "AlgoTrading MVP",
+  "audit_timestamp": "2025-01-14T12:00:00Z",
+  "auditor": "Cursor Memory Bank System",
+  "readiness": {
+    "spec_complete": 65,
+    "missing_items": 12,
+    "critical_gaps": 5,
+    "medium_gaps": 7
+  },
+  "missing_keys": [
+    "memory.project.identity.owner",
+    "memory.brokers.interactive_brokers",
+    "memory.brokers.binance",
+    "memory.market_data.feeds",
+    "memory.strategies.momentum_liquidity",
+    "memory.risk.compliance_parameters",
+    "memory.ai_ml.pipeline_spec",
+    "memory.cicd.environment_spec",
+    "memory.aws.infrastructure_spec",
+    "memory.tasks.r_tasks_list",
+    "memory.tasks.extended_tasks_t021_t036",
+    "memory.docker.compose_examples"
+  ],
+  "tasks_summary": {
+    "total_tasks": 36,
+    "tasks_complete": 10,
+    "tasks_partial": 0,
+    "tasks_missing": 26,
+    "completion_percentage": 28
+  },
+  "brokers_missing": [
+    "Interactive Brokers API specification",
+    "Binance API specification",
+    "Polygon API specification",
+    "Error handling patterns",
+    "Rate limiting configurations",
+    "Sandbox/test credentials setup"
+  ],
+  "market_data_issues": [
+    "Feed types not specified",
+    "Subscription model undefined",
+    "Fallback strategy missing",
+    "Max latency tolerance not defined",
+    "Data normalization schema missing"
+  ],
+  "risk_params_missing": [
+    "Pre-trade limits not quantified",
+    "Exposure limits undefined",
+    "Circuit-breaker rules missing",
+    "Audit log retention policy not specified",
+    "Regulatory report schema incomplete",
+    "Model validation rules (SR 11-7) missing"
+  ],
+  "algorithmic_gaps": [
+    "Strategy hyperparameters not specified",
+    "Transaction cost models missing",
+    "Backtest assumptions undefined",
+    "Evaluation metrics not quantified",
+    "Ensemble strategies not planned",
+    "Adaptive strategies missing"
+  ],
+  "infrastructure_gaps": [
+    "Docker Compose examples missing",
+    "Terraform/CloudFormation stubs not provided",
+    "AWS resource sizing not specified",
+    "IAM roles not defined",
+    "CloudWatch configurations missing",
+    "S3 bucket policies not detailed"
+  ],
+  "cicd_gaps": [
+    "GitHub Actions workflows not fully specified",
+    "Secrets list incomplete",
+    "Container build policy missing",
+    "Test matrices not defined",
+    "Staging vs prod config differences not specified"
+  ],
+  "ai_ml_gaps": [
+    "LLM usage specification missing",
+    "ML training pipeline not defined",
+    "Model registry schema missing",
+    "Explainability requirements not specified",
+    "Drift detection metrics not defined"
+  ],
+  "quality_assessment": {
+    "architecture_completeness": 85,
+    "trading_spec_completeness": 45,
+    "infrastructure_completeness": 60,
+    "security_completeness": 70,
+    "testing_completeness": 80,
+    "documentation_completeness": 75
+  },
+  "recommendations": {
+    "critical": [
+      "Complete broker API specifications",
+      "Define risk and compliance parameters",
+      "Specify algorithmic strategy parameters",
+      "Add market data feed configurations",
+      "Complete AWS infrastructure specifications"
+    ],
+    "high_priority": [
+      "Add Docker Compose examples",
+      "Define CI/CD pipeline configurations",
+      "Specify AI/ML pipeline requirements",
+      "Complete task breakdown T021-T036",
+      "Add R-tasks list R001-R012"
+    ],
+    "medium_priority": [
+      "Add project owner/contact information",
+      "Define staging vs production configurations",
+      "Specify IAM roles and policies",
+      "Add CloudWatch log group configurations",
+      "Define S3 bucket policies"
+    ]
+  },
+  "next_actions": [
+    "Fill in broker API specifications with real endpoints",
+    "Define quantitative risk parameters",
+    "Complete algorithmic strategy specifications",
+    "Add Docker Compose configuration examples",
+    "Specify AWS infrastructure requirements",
+    "Complete CI/CD pipeline configurations",
+    "Add AI/ML pipeline specifications",
+    "Define market data feed configurations"
+  ]
+}
