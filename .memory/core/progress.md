@@ -4,9 +4,9 @@
 
 ### Phase: Foundation Implementation (T001-T010)
 
-- **Status**: 🔄 IN PROGRESS (3/10 tasks completed)
+- **Status**: 🔄 IN PROGRESS (4/10 tasks completed)
 - **Completion Date**: TBD
-- **Next Phase**: T004 Implementation (User Models)
+- **Next Phase**: T005 Implementation (JWT Authentication)
 - **Context Version**: 2025.10
 
 ## Completed Milestones
@@ -37,13 +37,13 @@
 - **Phase 3 Advanced Features**: 10 tareas (T021-T030) - CI/CD, AWS deployment
 - **Phase 4 Production Ready**: 6 tareas (T031-T036) - Testing, documentation, production
 
-### ✅ 4. Phase 1 Foundation Progress (3/10 Completed)
+### ✅ 4. Phase 1 Foundation Progress (4/10 Completed)
 
 - **T001**: ✅ FastAPI Base Structure - Health endpoints, CORS, async setup
 - **T002**: ✅ Configuration System - Pydantic BaseSettings, environment management
 - **T003**: ✅ PostgreSQL Database - SQLAlchemy async connection, session management
-- **T004**: 🔄 User Models - User/Account models with password hashing (NEXT)
-- **T005**: ⏳ JWT Authentication - JWT tokens, OAuth 2.0 flow
+- **T004**: ✅ User & Account Models - bcrypt password hashing, CRUD operations
+- **T005**: 🔄 JWT Authentication - JWT tokens, OAuth 2.0 flow (NEXT)
 - **T006**: ⏳ Base Strategy Class - Abstract strategy with signal evaluation
 - **T007**: ⏳ Momentum Strategy - RSI/EMA/Volume trading strategy
 - **T008**: ⏳ Order Execution - Interactive Brokers/Binance integration
@@ -58,8 +58,8 @@
 - **Task Structure**: ✅ Complete - 36 tareas definidas (T001-T036)
 - **Architecture**: ✅ Complete - AlgoTrading patterns definidos
 - **Technology Stack**: ✅ Complete - Stack completo especificado
-- **Foundation Progress**: ✅ 3/10 tasks completed (T001, T002, T003)
-- **Next Action**: Begin T004 Implementation (User Models)
+- **Foundation Progress**: ✅ 4/10 tasks completed (T001, T002, T003, T004)
+- **Next Action**: Begin T005 Implementation (JWT Authentication)
 
 ### 📋 Next Steps (Phase 1 - Foundation)
 
@@ -83,13 +83,16 @@
    - ✅ Connection pooling and transaction support
    - ✅ 30 comprehensive tests with 86% coverage
 
-4. **T004: User Models** 🔄 NEXT
+4. **T004: User & Account Models** ✅ COMPLETED
 
-   - User y Account models
-   - bcrypt password hashing
-   - Basic user CRUD operations
+   - ✅ User and Account models with SQLAlchemy
+   - ✅ bcrypt password hashing with salt
+   - ✅ Comprehensive CRUD operations
+   - ✅ Role-based access control (ADMIN, TRADER, VIEWER)
+   - ✅ Account status management
+   - ✅ 48 comprehensive tests with 100% coverage
 
-5. **T005: JWT Authentication** ⏳ UPCOMING
+5. **T005: JWT Authentication** 🔄 NEXT
    - JWT token generation y validation
    - OAuth 2.0 password flow
    - Authentication middleware

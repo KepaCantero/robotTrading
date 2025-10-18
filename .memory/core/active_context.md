@@ -1,15 +1,32 @@
 # Active Context - AlgoTrading MVP
 
-## Current Focus: **T004 User Models Implementation** 🔄
+## Current Focus: **T005 JWT Authentication Implementation** 🔄
 
 ### Phase: Foundation Implementation (T001-T010)
 
-- **Status**: 🔄 IN PROGRESS (3/10 tasks completed)
-- **Current Task**: T004 - User Models with bcrypt password hashing
-- **Next Task**: T005 - JWT Authentication
+- **Status**: 🔄 IN PROGRESS (4/10 tasks completed)
+- **Current Task**: T005 - JWT Authentication with OAuth 2.0
+- **Next Task**: T006 - Base Strategy Class
 - **Context Version**: 2025.10
 
 ## Recent Completions
+
+### ✅ T004: User & Account Models (COMPLETED)
+
+- **Completion Date**: 2025-01-17
+- **Merge Commit**: 9059285
+- **Files Added**: 
+  - `app/models/user.py` (382 lines)
+  - `app/services/user_service.py` (451 lines)
+  - `tests/test_user_models.py` (1069 lines)
+- **Test Results**: 48/48 tests passing (100%)
+- **Coverage**: 100% (198 statements)
+- **Key Features**:
+  - User and Account models with SQLAlchemy
+  - bcrypt password hashing with salt
+  - Comprehensive CRUD operations
+  - Role-based access control (ADMIN, TRADER, VIEWER)
+  - Account status management
 
 ### ✅ T003: PostgreSQL Database Setup (COMPLETED)
 
@@ -40,33 +57,35 @@
 
 ## Current Implementation Context
 
-### 🎯 T004: User Models (NEXT)
+### 🎯 T005: JWT Authentication (NEXT)
 
-**Goal**: Create User and Account models with bcrypt password hashing
+**Goal**: Implement OAuth 2.0 + JWT authentication with role-based access
 
 **Requirements**:
-- User model with email, password, profile data
-- Account model for trading accounts
-- bcrypt password hashing for security
-- Basic CRUD operations
-- SQLAlchemy integration with T003 database setup
+- JWT token generation and validation
+- OAuth 2.0 password flow implementation
+- Authentication middleware for FastAPI
+- Role-based access control integration
+- Token refresh and expiration handling
 
 **Dependencies**: 
+- ✅ T004 (User & Account Models) - Ready
 - ✅ T003 (PostgreSQL Database) - Ready
 - ✅ T002 (Configuration System) - Ready
 - ✅ T001 (FastAPI Base) - Ready
 
 **Files to Create**:
-- `app/models/user.py` - User and Account models
-- `app/services/auth.py` - Password hashing service
-- `tests/test_user_models.py` - Comprehensive tests
+- `app/services/auth_service.py` - JWT authentication service
+- `app/middleware/auth.py` - Authentication middleware
+- `tests/test_auth_service.py` - Comprehensive tests
 
 **Success Criteria**:
-- User and Account models defined
-- bcrypt password hashing implemented
-- Basic CRUD operations working
+- JWT token generation and validation working
+- OAuth 2.0 password flow implemented
+- Authentication middleware integrated
+- Role-based access control working
 - >90% test coverage
-- Integration with database from T003
+- Integration with User models from T004
 
 ## Implementation Strategy
 
