@@ -49,3 +49,7 @@ structlog==24.4.0
 # ta-lib==0.4.28
 # ccxt==4.4.25
 # ib-insync==0.9.86
+
+# Authentication
+PyJWT==2.8.0
+python-multipart==0.0.6
