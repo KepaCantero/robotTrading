@@ -129,6 +129,233 @@ class TestSessionFactory:
                 get_session_factory()
 
 
+class TestDatabaseSession:
+    """Test database session management."""
+    
+    def setup_method(self):
+        """Reset global variables before each test."""
+        import app.core.database
+        app.core.database._engine = None
+        app.core.database._session_factory = None
+    
+    @pytest.mark.asyncio
+    async def test_get_db_session_basic(self):
+        """Test basic get_db_session functionality."""
+        # This test verifies the function exists and can be imported
+        assert callable(get_db_session)
+    
+    @pytest.mark.asyncio
+    async def test_get_db_transaction_basic(self):
+        """Test basic get_db_transaction functionality."""
+        # This test verifies the function exists and can be imported
+        assert callable(get_db_transaction)
+    
+    @pytest.mark.asyncio
+    async def test_get_db_session_generator(self):
+        """Test that get_db_session returns an async generator."""
+        with patch('app.core.database.get_session_factory') as mock_get_factory:
+            # Mock session factory to avoid actual database calls
+            mock_factory = MagicMock()
+            mock_get_factory.return_value = mock_factory
+            
+            # Test that the function returns an async generator
+            gen = get_db_session()
+            assert hasattr(gen, '__aiter__')
+            assert hasattr(gen, '__anext__')
+    
+    @pytest.mark.asyncio
+    async def test_get_db_transaction_context_manager(self):
+        """Test that get_db_transaction returns an async context manager."""
+        with patch('app.core.database.get_session_factory') as mock_get_factory:
+            # Mock session factory to avoid actual database calls
+            mock_factory = MagicMock()
+            mock_get_factory.return_value = mock_factory
+            
+            # Test that the function returns an async context manager
+            cm = get_db_transaction()
+            assert hasattr(cm, '__aenter__')
+            assert hasattr(cm, '__aexit__')
+    
+    @pytest.mark.asyncio
+    async def test_get_db_session_execution(self):
+        """Test get_db_session execution with proper mocking."""
+        with patch('app.core.database.get_session_factory') as mock_get_factory:
+            # Create a mock session
+            mock_session = AsyncMock(spec=AsyncSession)
+            mock_session.close = AsyncMock()
+            
+            # Create a mock context manager
+            mock_context_manager = AsyncMock()
+            mock_context_manager.__aenter__ = AsyncMock(return_value=mock_session)
+            mock_context_manager.__aexit__ = AsyncMock(return_value=None)
+            
+            # Mock the session factory
+            mock_factory = MagicMock(return_value=mock_context_manager)
+            mock_get_factory.return_value = mock_factory
+            
+            # Test the async generator
+            gen = get_db_session()
+            session = await gen.__anext__()
+            assert session == mock_session
+            
+            # Test cleanup
+            try:
+                await gen.__anext__()
+            except StopAsyncIteration:
+                pass  # Expected when generator is exhausted
+    
+    @pytest.mark.asyncio
+    async def test_get_db_transaction_execution(self):
+        """Test get_db_transaction execution with proper mocking."""
+        with patch('app.core.database.get_session_factory') as mock_get_factory:
+            # Create a mock session
+            mock_session = AsyncMock(spec=AsyncSession)
+            mock_session.commit = AsyncMock()
+            mock_session.close = AsyncMock()
+            
+            # Create a mock context manager
+            mock_context_manager = AsyncMock()
+            mock_context_manager.__aenter__ = AsyncMock(return_value=mock_session)
+            mock_context_manager.__aexit__ = AsyncMock(return_value=None)
+            
+            # Mock the session factory
+            mock_factory = MagicMock(return_value=mock_context_manager)
+            mock_get_factory.return_value = mock_factory
+            
+            # Test the async context manager
+            async with get_db_transaction() as session:
+                assert session == mock_session
+            
+            # Verify commit was called
+            mock_session.commit.assert_called_once()
+    
+    @pytest.mark.asyncio
+    async def test_get_db_session_error_handling(self):
+        """Test get_db_session error handling."""
+        with patch('app.core.database.get_session_factory') as mock_get_factory:
+            # Create a mock session that raises an error
+            mock_session = AsyncMock(spec=AsyncSession)
+            mock_session.rollback = AsyncMock()
+            
+            # Create a mock context manager that raises an error during execution
+            mock_context_manager = AsyncMock()
+            mock_context_manager.__aenter__ = AsyncMock(side_effect=Exception("Session error"))
+            mock_context_manager.__aexit__ = AsyncMock(return_value=None)
+            
+            # Mock the session factory
+            mock_factory = MagicMock(return_value=mock_context_manager)
+            mock_get_factory.return_value = mock_factory
+            
+            # Test error handling
+            gen = get_db_session()
+            with pytest.raises(Exception, match="Session error"):
+                await gen.__anext__()
+    
+    @pytest.mark.asyncio
+    async def test_get_db_transaction_error_handling(self):
+        """Test get_db_transaction error handling."""
+        with patch('app.core.database.get_session_factory') as mock_get_factory:
+            # Create a mock session that raises an error
+            mock_session = AsyncMock(spec=AsyncSession)
+            mock_session.rollback = AsyncMock()
+            
+            # Create a mock context manager that raises an error
+            mock_context_manager = AsyncMock()
+            mock_context_manager.__aenter__ = AsyncMock(return_value=mock_session)
+            mock_context_manager.__aexit__ = AsyncMock(side_effect=Exception("Transaction error"))
+            
+            # Mock the session factory
+            mock_factory = MagicMock(return_value=mock_context_manager)
+            mock_get_factory.return_value = mock_factory
+            
+            # Test error handling
+            with pytest.raises(Exception, match="Transaction error"):
+                async with get_db_transaction() as session:
+                    pass
+
+
+class TestDatabaseOperations:
+    """Test database operation convenience functions."""
+    
+    def setup_method(self):
+        """Reset global variables before each test."""
+        import app.core.database
+        app.core.database._engine = None
+        app.core.database._session_factory = None
+    
+    def test_execute_query_function_exists(self):
+        """Test that execute_query function exists."""
+        assert callable(execute_query)
+    
+    def test_execute_scalar_function_exists(self):
+        """Test that execute_scalar function exists."""
+        assert callable(execute_scalar)
+    
+    @pytest.mark.asyncio
+    async def test_execute_query_with_mock_session(self):
+        """Test execute_query with mocked session factory."""
+        with patch('app.core.database.get_session_factory') as mock_get_factory:
+            # Create a mock session factory that returns a mock session
+            mock_session = AsyncMock(spec=AsyncSession)
+            mock_result = MagicMock()
+            mock_result.fetchall.return_value = [("test",)]
+            mock_session.execute.return_value = mock_result
+            
+            # Mock the session factory to return a context manager
+            mock_context_manager = AsyncMock()
+            mock_context_manager.__aenter__ = AsyncMock(return_value=mock_session)
+            mock_context_manager.__aexit__ = AsyncMock(return_value=None)
+            mock_factory = MagicMock(return_value=mock_context_manager)
+            mock_get_factory.return_value = mock_factory
+            
+            result = await execute_query("SELECT 1")
+            assert result == [("test",)]
+    
+    @pytest.mark.asyncio
+    async def test_execute_scalar_with_mock_session(self):
+        """Test execute_scalar with mocked session factory."""
+        with patch('app.core.database.get_session_factory') as mock_get_factory:
+            # Create a mock session factory that returns a mock session
+            mock_session = AsyncMock(spec=AsyncSession)
+            mock_result = MagicMock()
+            mock_result.scalar.return_value = 42
+            mock_session.execute.return_value = mock_result
+            
+            # Mock the session factory to return a context manager
+            mock_context_manager = AsyncMock()
+            mock_context_manager.__aenter__ = AsyncMock(return_value=mock_session)
+            mock_context_manager.__aexit__ = AsyncMock(return_value=None)
+            mock_factory = MagicMock(return_value=mock_context_manager)
+            mock_get_factory.return_value = mock_factory
+            
+            result = await execute_scalar("SELECT COUNT(*) FROM test")
+            assert result == 42
+    
+    @pytest.mark.asyncio
+    async def test_execute_query_error_handling(self):
+        """Test execute_query error handling."""
+        with patch('app.core.database.get_session_factory') as mock_get_factory:
+            # Create a mock session factory that raises an error
+            mock_factory = MagicMock()
+            mock_factory.side_effect = Exception("Session factory error")
+            mock_get_factory.return_value = mock_factory
+            
+            with pytest.raises(Exception, match="Session factory error"):
+                await execute_query("SELECT 1")
+    
+    @pytest.mark.asyncio
+    async def test_execute_scalar_error_handling(self):
+        """Test execute_scalar error handling."""
+        with patch('app.core.database.get_session_factory') as mock_get_factory:
+            # Create a mock session factory that raises an error
+            mock_factory = MagicMock()
+            mock_factory.side_effect = Exception("Session factory error")
+            mock_get_factory.return_value = mock_factory
+            
+            with pytest.raises(Exception, match="Session factory error"):
+                await execute_scalar("SELECT COUNT(*) FROM test")
+
+
 class TestDatabaseInitialization:
     """Test database initialization and cleanup."""
     
