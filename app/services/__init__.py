@@ -8,12 +8,12 @@ from .user_service import (
     UserService,
     AccountService,
     get_user_service,
-    get_account_service
+    get_account_service,
 )
 
 __all__ = [
     "UserService",
-    "AccountService", 
+    "AccountService",
     "get_user_service",
-    "get_account_service"
+    "get_account_service",
 ]
