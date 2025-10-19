@@ -1,0 +1,380 @@
+"""
+Momentum strategy models for AlgoTrading system.
+
+This module defines the data models for momentum trading strategies,
+technical indicators, and momentum signals.
+"""
+
+from decimal import Decimal
+from datetime import datetime, timedelta
+from typing import List, Optional, Dict, Any, Tuple
+from enum import Enum
+
+from pydantic import BaseModel, Field, field_validator
+
+
+class MomentumType(str, Enum):
+    """Momentum strategy types."""
+    PRICE_MOMENTUM = "price_momentum"
+    VOLUME_MOMENTUM = "volume_momentum"
+    VOLATILITY_MOMENTUM = "volatility_momentum"
+    COMBINED_MOMENTUM = "combined_momentum"
+
+
+class Timeframe(str, Enum):
+    """Trading timeframes."""
+    DAILY = "1d"
+    HOURLY = "1h"
+    FOUR_HOUR = "4h"
+    WEEKLY = "1w"
+
+
+class TechnicalIndicator(str, Enum):
+    """Technical indicators for momentum analysis."""
+    RSI = "rsi"
+    EMA = "ema"
+    MACD = "macd"
+    STOCHASTIC = "stochastic"
+    BOLLINGER_BANDS = "bollinger_bands"
+    ATR = "atr"
+    VOLUME_SMA = "volume_sma"
+
+
+class MomentumSignal(BaseModel):
+    """Momentum trading signal."""
+    
+    symbol: str = Field(..., description="Asset symbol")
+    signal_type: MomentumType = Field(..., description="Type of momentum signal")
+    timeframe: Timeframe = Field(default=Timeframe.DAILY, description="Trading timeframe")
+    
+    # Signal strength and direction
+    strength: float = Field(ge=0, le=100, description="Signal strength (0-100)")
+    direction: str = Field(..., description="Signal direction (BUY/SELL)")
+    confidence: float = Field(ge=0, le=100, description="Signal confidence (0-100)")
+    
+    # Technical indicators
+    rsi: Optional[float] = Field(None, ge=0, le=100, description="RSI value")
+    ema_short: Optional[float] = Field(None, ge=0, description="Short EMA value")
+    ema_long: Optional[float] = Field(None, ge=0, description="Long EMA value")
+    macd: Optional[float] = Field(None, description="MACD value")
+    macd_signal: Optional[float] = Field(None, description="MACD signal line")
+    macd_histogram: Optional[float] = Field(None, description="MACD histogram")
+    
+    # Price and volume data
+    current_price: Decimal = Field(ge=0, description="Current asset price")
+    price_change: Decimal = Field(description="Price change from previous period")
+    price_change_pct: float = Field(description="Price change percentage")
+    volume: Decimal = Field(ge=0, description="Current volume")
+    volume_change: Decimal = Field(description="Volume change from previous period")
+    volume_change_pct: float = Field(description="Volume change percentage")
+    
+    # Volatility metrics
+    atr: Optional[Decimal] = Field(None, ge=0, description="Average True Range")
+    volatility: Optional[float] = Field(None, ge=0, description="Price volatility")
+    
+    # Signal metadata
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Signal timestamp")
+    expires_at: datetime = Field(description="Signal expiration time")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    
+    @field_validator('symbol')
+    @classmethod
+    def validate_symbol(cls, v):
+        """Validate symbol format."""
+        if not v or len(v.strip()) == 0:
+            raise ValueError("Symbol cannot be empty")
+        return v.strip().upper()
+    
+    @field_validator('direction')
+    @classmethod
+    def validate_direction(cls, v):
+        """Validate signal direction."""
+        if v.upper() not in ['BUY', 'SELL']:
+            raise ValueError("Direction must be BUY or SELL")
+        return v.upper()
+    
+    @property
+    def is_expired(self) -> bool:
+        """Check if signal is expired."""
+        return datetime.utcnow() > self.expires_at
+    
+    @property
+    def time_to_expiry(self) -> timedelta:
+        """Get time until signal expires."""
+        return self.expires_at - datetime.utcnow()
+    
+    @property
+    def momentum_score(self) -> float:
+        """Calculate combined momentum score."""
+        # Weight different components
+        price_weight = 0.4
+        volume_weight = 0.3
+        technical_weight = 0.3
+        
+        # Price momentum score
+        price_score = min(100, max(0, abs(self.price_change_pct) * 10))
+        
+        # Volume momentum score
+        volume_score = min(100, max(0, abs(self.volume_change_pct) * 5))
+        
+        # Technical momentum score (based on RSI and MACD)
+        technical_score = 0
+        if self.rsi is not None:
+            if self.direction == 'BUY' and self.rsi < 30:
+                technical_score += 30  # Oversold
+            elif self.direction == 'SELL' and self.rsi > 70:
+                technical_score += 30  # Overbought
+        
+        if self.macd_histogram is not None:
+            if self.direction == 'BUY' and self.macd_histogram > 0:
+                technical_score += 20  # Bullish MACD
+            elif self.direction == 'SELL' and self.macd_histogram < 0:
+                technical_score += 20  # Bearish MACD
+        
+        return (
+            price_score * price_weight +
+            volume_score * volume_weight +
+            technical_score * technical_weight
+        )
+
+
+class TechnicalIndicators(BaseModel):
+    """Technical indicators for an asset."""
+    
+    symbol: str = Field(..., description="Asset symbol")
+    timeframe: Timeframe = Field(default=Timeframe.DAILY, description="Timeframe")
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Calculation timestamp")
+    
+    # Price indicators
+    rsi: Optional[float] = Field(None, ge=0, le=100, description="Relative Strength Index")
+    ema_9: Optional[float] = Field(None, ge=0, description="9-period EMA")
+    ema_21: Optional[float] = Field(None, ge=0, description="21-period EMA")
+    ema_50: Optional[float] = Field(None, ge=0, description="50-period EMA")
+    ema_200: Optional[float] = Field(None, ge=0, description="200-period EMA")
+    
+    # MACD indicators
+    macd: Optional[float] = Field(None, description="MACD line")
+    macd_signal: Optional[float] = Field(None, description="MACD signal line")
+    macd_histogram: Optional[float] = Field(None, description="MACD histogram")
+    
+    # Stochastic indicators
+    stoch_k: Optional[float] = Field(None, ge=0, le=100, description="Stochastic %K")
+    stoch_d: Optional[float] = Field(None, ge=0, le=100, description="Stochastic %D")
+    
+    # Bollinger Bands
+    bb_upper: Optional[float] = Field(None, ge=0, description="Bollinger Band upper")
+    bb_middle: Optional[float] = Field(None, ge=0, description="Bollinger Band middle")
+    bb_lower: Optional[float] = Field(None, ge=0, description="Bollinger Band lower")
+    bb_width: Optional[float] = Field(None, ge=0, description="Bollinger Band width")
+    
+    # Volatility indicators
+    atr: Optional[float] = Field(None, ge=0, description="Average True Range")
+    volatility: Optional[float] = Field(None, ge=0, description="Price volatility")
+    
+    # Volume indicators
+    volume_sma_20: Optional[Decimal] = Field(None, ge=0, description="20-period volume SMA")
+    volume_ratio: Optional[float] = Field(None, ge=0, description="Volume ratio vs average")
+    
+    @field_validator('symbol')
+    @classmethod
+    def validate_symbol(cls, v):
+        """Validate symbol format."""
+        return v.strip().upper()
+    
+    @property
+    def ema_trend(self) -> Optional[str]:
+        """Determine EMA trend."""
+        if not all([self.ema_9, self.ema_21, self.ema_50]):
+            return None
+        
+        if self.ema_9 > self.ema_21 > self.ema_50:
+            return "BULLISH"
+        elif self.ema_9 < self.ema_21 < self.ema_50:
+            return "BEARISH"
+        else:
+            return "NEUTRAL"
+    
+    @property
+    def rsi_signal(self) -> Optional[str]:
+        """Determine RSI signal."""
+        if self.rsi is None:
+            return None
+        
+        if self.rsi < 30:
+            return "OVERSOLD"
+        elif self.rsi > 70:
+            return "OVERBOUGHT"
+        else:
+            return "NEUTRAL"
+    
+    @property
+    def macd_signal_indicator(self) -> Optional[str]:
+        """Determine MACD signal."""
+        if self.macd_histogram is None:
+            return None
+        
+        if self.macd_histogram > 0:
+            return "BULLISH"
+        elif self.macd_histogram < 0:
+            return "BEARISH"
+        else:
+            return "NEUTRAL"
+
+
+class MomentumStrategy(BaseModel):
+    """Momentum trading strategy configuration."""
+    
+    name: str = Field(..., description="Strategy name")
+    description: str = Field(..., description="Strategy description")
+    momentum_type: MomentumType = Field(..., description="Type of momentum strategy")
+    timeframe: Timeframe = Field(default=Timeframe.DAILY, description="Trading timeframe")
+    
+    # Signal parameters
+    min_strength: float = Field(default=60.0, ge=0, le=100, description="Minimum signal strength")
+    min_confidence: float = Field(default=70.0, ge=0, le=100, description="Minimum signal confidence")
+    signal_duration: int = Field(default=24, ge=1, description="Signal duration in hours")
+    
+    # Technical indicator thresholds
+    rsi_oversold: float = Field(default=30.0, ge=0, le=100, description="RSI oversold threshold")
+    rsi_overbought: float = Field(default=70.0, ge=0, le=100, description="RSI overbought threshold")
+    ema_short_period: int = Field(default=9, ge=1, description="Short EMA period")
+    ema_long_period: int = Field(default=21, ge=1, description="Long EMA period")
+    
+    # Volume requirements
+    min_volume_ratio: float = Field(default=1.2, ge=0, description="Minimum volume ratio")
+    volume_spike_threshold: float = Field(default=2.0, ge=0, description="Volume spike threshold")
+    
+    # Risk management
+    max_position_size: float = Field(default=0.1, ge=0, le=1, description="Maximum position size")
+    stop_loss_pct: float = Field(default=0.05, ge=0, le=1, description="Stop loss percentage")
+    take_profit_pct: float = Field(default=0.15, ge=0, le=1, description="Take profit percentage")
+    
+    # Strategy status
+    is_active: bool = Field(default=True, description="Whether strategy is active")
+    created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
+    updated_at: datetime = Field(default_factory=datetime.utcnow, description="Last update timestamp")
+    
+    @field_validator('name')
+    @classmethod
+    def validate_name(cls, v):
+        """Validate strategy name."""
+        if not v or len(v.strip()) == 0:
+            raise ValueError("Strategy name cannot be empty")
+        return v.strip()
+    
+    @field_validator('description')
+    @classmethod
+    def validate_description(cls, v):
+        """Validate strategy description."""
+        if not v or len(v.strip()) == 0:
+            raise ValueError("Strategy description cannot be empty")
+        return v.strip()
+    
+    def update_timestamp(self):
+        """Update the updated_at timestamp."""
+        self.updated_at = datetime.utcnow()
+
+
+class MomentumAnalysis(BaseModel):
+    """Comprehensive momentum analysis for an asset."""
+    
+    symbol: str = Field(..., description="Asset symbol")
+    timeframe: Timeframe = Field(default=Timeframe.DAILY, description="Analysis timeframe")
+    analysis_date: datetime = Field(default_factory=datetime.utcnow, description="Analysis date")
+    
+    # Technical indicators
+    indicators: TechnicalIndicators = Field(..., description="Technical indicators")
+    
+    # Momentum signals
+    signals: List[MomentumSignal] = Field(default_factory=list, description="Generated signals")
+    
+    # Analysis results
+    overall_momentum: float = Field(ge=0, le=100, description="Overall momentum score")
+    trend_direction: str = Field(description="Trend direction (BULLISH/BEARISH/NEUTRAL)")
+    signal_count: int = Field(default=0, ge=0, description="Number of active signals")
+    
+    # Risk assessment
+    risk_level: str = Field(description="Risk level (LOW/MEDIUM/HIGH)")
+    volatility_level: str = Field(description="Volatility level (LOW/MEDIUM/HIGH)")
+    
+    @field_validator('symbol')
+    @classmethod
+    def validate_symbol(cls, v):
+        """Validate symbol format."""
+        return v.strip().upper()
+    
+    @field_validator('trend_direction')
+    @classmethod
+    def validate_trend_direction(cls, v):
+        """Validate trend direction."""
+        if v.upper() not in ['BULLISH', 'BEARISH', 'NEUTRAL']:
+            raise ValueError("Trend direction must be BULLISH, BEARISH, or NEUTRAL")
+        return v.upper()
+    
+    @field_validator('risk_level')
+    @classmethod
+    def validate_risk_level(cls, v):
+        """Validate risk level."""
+        if v.upper() not in ['LOW', 'MEDIUM', 'HIGH']:
+            raise ValueError("Risk level must be LOW, MEDIUM, or HIGH")
+        return v.upper()
+    
+    @field_validator('volatility_level')
+    @classmethod
+    def validate_volatility_level(cls, v):
+        """Validate volatility level."""
+        if v.upper() not in ['LOW', 'MEDIUM', 'HIGH']:
+            raise ValueError("Volatility level must be LOW, MEDIUM, or HIGH")
+        return v.upper()
+    
+    def add_signal(self, signal: MomentumSignal):
+        """Add a momentum signal to the analysis."""
+        self.signals.append(signal)
+        self.signal_count = len(self.signals)
+    
+    def get_active_signals(self) -> List[MomentumSignal]:
+        """Get active (non-expired) signals."""
+        return [signal for signal in self.signals if not signal.is_expired]
+    
+    def get_signals_by_type(self, signal_type: MomentumType) -> List[MomentumSignal]:
+        """Get signals by type."""
+        return [signal for signal in self.signals if signal.signal_type == signal_type]
+
+
+class MomentumFilter(BaseModel):
+    """Filter criteria for momentum analysis."""
+    
+    symbols: Optional[List[str]] = Field(None, description="Filter by symbols")
+    momentum_types: Optional[List[MomentumType]] = Field(None, description="Filter by momentum types")
+    timeframes: Optional[List[Timeframe]] = Field(None, description="Filter by timeframes")
+    min_strength: float = Field(default=50.0, ge=0, le=100, description="Minimum signal strength")
+    min_confidence: float = Field(default=60.0, ge=0, le=100, description="Minimum signal confidence")
+    active_only: bool = Field(default=True, description="Only active signals")
+    max_age_hours: int = Field(default=24, ge=1, description="Maximum signal age in hours")
+    
+    def matches(self, signal: MomentumSignal) -> bool:
+        """Check if signal matches filter criteria."""
+        if self.symbols and signal.symbol not in self.symbols:
+            return False
+        
+        if self.momentum_types and signal.signal_type not in self.momentum_types:
+            return False
+        
+        if self.timeframes and signal.timeframe not in self.timeframes:
+            return False
+        
+        if signal.strength < self.min_strength:
+            return False
+        
+        if signal.confidence < self.min_confidence:
+            return False
+        
+        if self.active_only and signal.is_expired:
+            return False
+        
+        if self.max_age_hours:
+            age_hours = (datetime.utcnow() - signal.timestamp).total_seconds() / 3600
+            if age_hours > self.max_age_hours:
+                return False
+        
+        return True

@@ -19,6 +19,7 @@ from fastapi.responses import JSONResponse
 from app.core.config import get_settings, get_cors_config
 from app.api.portfolio import router as portfolio_router
 from app.api.signals import router as signals_router
+from app.api.momentum import router as momentum_router
 
 # Get application settings (lazy loading to avoid validation issues during import)
 settings = None
@@ -82,6 +83,7 @@ app.add_middleware(
 # Include API routers
 app.include_router(portfolio_router)
 app.include_router(signals_router)
+app.include_router(momentum_router)
 
 
 @app.get("/", tags=["Root"])

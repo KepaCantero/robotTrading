@@ -1,13 +1,15 @@
 """
-Portfolio and Signal API endpoints.
+Portfolio, Signal, and Asset API endpoints.
 
-This module exports FastAPI routers for portfolio and signal management.
+This module exports FastAPI routers for portfolio, signal, and asset management.
 """
 
 from .portfolio import router as portfolio_router
 from .signals import router as signals_router
+from .momentum import router as momentum_router
 
 __all__ = [
     "portfolio_router",
     "signals_router",
+    "momentum_router"
 ]

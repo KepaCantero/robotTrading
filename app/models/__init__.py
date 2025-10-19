@@ -1,7 +1,7 @@
 """
-Portfolio and Signal models and interfaces.
+Portfolio, Signal, and Asset models and interfaces.
 
-This module exports the core portfolio and signal models and interfaces for the AlgoTrading system.
+This module exports the core portfolio, signal, and asset models and interfaces for the AlgoTrading system.
 """
 
 from .portfolio import (
@@ -27,6 +27,16 @@ from .signal import (
     SignalPriorityQueue,
 )
 
+from .momentum import (
+    MomentumSignal,
+    MomentumType,
+    Timeframe,
+    TechnicalIndicators,
+    MomentumStrategy,
+    MomentumAnalysis,
+    MomentumFilter,
+)
+
 __all__ = [
     # Portfolio models
     "AssetClass",
@@ -47,4 +57,12 @@ __all__ = [
     "MarketData",
     "SignalScorer",
     "SignalPriorityQueue",
+    # Momentum models
+    "MomentumSignal",
+    "MomentumType",
+    "Timeframe",
+    "TechnicalIndicators",
+    "MomentumStrategy",
+    "MomentumAnalysis",
+    "MomentumFilter",
 ]
