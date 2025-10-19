@@ -17,6 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.core.config import get_settings, get_cors_config
+from app.api.portfolio import router as portfolio_router
 
 # Get application settings (lazy loading to avoid validation issues during import)
 settings = None
@@ -76,6 +77,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include API routers
+app.include_router(portfolio_router)
 
 
 @app.get("/", tags=["Root"])

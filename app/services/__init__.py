@@ -1,15 +1,11 @@
 """
-Services package for AlgoTrading MVP.
+Portfolio services.
 
-This package contains service classes for trading business logic.
+This module exports portfolio services with circuit breakers and risk management.
 """
 
-# Services will be added here as we implement trading functionality
-# - StrategyService (T006)
-# - ExecutionService (T008)
-# - RiskService (T011)
-# - PortfolioService (T015)
+from .portfolio_service import PortfolioService
 
 __all__ = [
-    # Trading services will be exported here
+    "PortfolioService",
 ]

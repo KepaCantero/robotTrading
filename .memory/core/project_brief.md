@@ -11,8 +11,11 @@
 ## Business Objectives
 
 - Implementar sistema personal de trading algorítmico para generar dinero
-- Operar acciones, criptomonedas y forex mediante estrategias de momentum y liquidez
-- Incluir análisis técnico, backtesting, alertas y dashboard Streamlit
+- **FUENTE DE VERDAD**: Portfolio actual en JSON/CSV o conexión API a IBKR/Binance
+- **ENFOQUE ÚNICO**: Momentum diario sobre top 20 activos líquidos
+- **MODO ANALÍTICO**: Paper trading antes de ejecución real
+- **SIGNAL SCORER**: Priorizar señales por confianza y liquidez
+- **APLAZAR DEVOPS**: Enfocar en decisiones fiables antes de CI/CD
 - Garantizar código ejecutable, testeado y desplegable en AWS
 - Asegurar consistencia entre tareas, módulos y outputs (T001–T036)
 - **OBJETIVO PRINCIPAL**: Generar dinero con trading algorítmico automatizado
