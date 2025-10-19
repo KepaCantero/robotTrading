@@ -14,10 +14,8 @@ sqlalchemy==2.0.36
 asyncpg==0.30.0
 alembic==1.14.0
 
-# Authentication and security
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-python-multipart==0.0.20
+# Security (basic)
+python-multipart==0.0.6
 
 # Async task processing
 celery==5.4.0
@@ -52,4 +50,3 @@ structlog==24.4.0
 
 # Authentication
 PyJWT==2.8.0
-python-multipart==0.0.6
