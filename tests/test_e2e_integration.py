@@ -638,7 +638,7 @@ class TestIntegrationErrorScenarios:
         # Test with malformed JSON
         response = client.post(
             "/signals/evaluate",
-            data="invalid json",
+            content="invalid json",
             headers={"Content-Type": "application/json"}
         )
         assert response.status_code == 422
