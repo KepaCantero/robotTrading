@@ -10,11 +10,12 @@
 
 ## Business Objectives
 
-- Implementar sistema completo de trading algorítmico con stack Python 3.11, FastAPI, PostgreSQL, Redis, Celery, y Docker
-- Operar acciones, criptomonedas y forex mediante estrategias de liquidez y momentum
-- Incluir análisis técnico, backtesting, alertas, dashboard Streamlit y CI/CD completo
-- Garantizar código ejecutable, testeado y desplegable en GitHub Actions + AWS
+- Implementar sistema personal de trading algorítmico para generar dinero
+- Operar acciones, criptomonedas y forex mediante estrategias de momentum y liquidez
+- Incluir análisis técnico, backtesting, alertas y dashboard Streamlit
+- Garantizar código ejecutable, testeado y desplegable en AWS
 - Asegurar consistencia entre tareas, módulos y outputs (T001–T036)
+- **OBJETIVO PRINCIPAL**: Generar dinero con trading algorítmico automatizado
 
 ## Core Value Proposition
 
@@ -35,10 +36,10 @@
 
 ## Stakeholders
 
-- **Traders**: Usuarios del sistema de trading algorítmico
-- **Desarrolladores**: Equipo de desarrollo y mantenimiento
+- **Trader Principal**: Usuario único del sistema de trading algorítmico (TU)
+- **Desarrollador**: Equipo de desarrollo y mantenimiento
 - **DevOps**: Administradores de infraestructura y despliegue
-- **Analistas**: Usuarios del dashboard Streamlit para análisis
+- **Analista**: Usuario del dashboard Streamlit para análisis personal
 
 ## Project Scope
 

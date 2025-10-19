@@ -1,15 +1,34 @@
 # Active Context - AlgoTrading MVP
 
-## Current Focus: **T005 JWT Authentication Implementation** 🔄
+## Current Focus: **T006 Base Strategy Class Implementation** 🔄
 
 ### Phase: Foundation Implementation (T001-T010)
 
-- **Status**: 🔄 IN PROGRESS (4/10 tasks completed)
-- **Current Task**: T005 - JWT Authentication with OAuth 2.0
-- **Next Task**: T006 - Base Strategy Class
+- **Status**: 🔄 IN PROGRESS (5/10 tasks completed)
+- **Current Task**: T006 - Base Strategy Class with Signal Evaluation
+- **Next Task**: T007 - Momentum Strategy Implementation
 - **Context Version**: 2025.10
 
 ## Recent Completions
+
+### ✅ T005: JWT Authentication Service (COMPLETED)
+
+- **Completion Date**: 2025-01-17
+- **Merge Commit**: Latest merge to main
+- **Files Added**:
+  - `app/services/auth_service.py` (431 lines)
+  - `app/middleware/auth.py` (301 lines)
+  - `app/middleware/__init__.py` (26 lines)
+  - `tests/test_auth_service.py` (587 lines)
+- **Test Results**: 35/35 tests passing (100%)
+- **Coverage**: High coverage with comprehensive test suite
+- **Key Features**:
+  - JWT token generation and validation
+  - OAuth 2.0 password flow implementation
+  - Authentication middleware with path protection
+  - Role-based access control (RBAC) integration
+  - FastAPI dependency injection for auth
+  - Token refresh and expiration handling
 
 ### ✅ T004: User & Account Models (COMPLETED)
 
@@ -57,20 +76,22 @@
 
 ## Current Implementation Context
 
-### 🎯 T005: JWT Authentication (NEXT)
+### 🎯 T006: Base Strategy Class (NEXT)
 
-**Goal**: Implement OAuth 2.0 + JWT authentication with role-based access
+**Goal**: Implement abstract base strategy class with signal evaluation framework
 
 **Requirements**:
 
-- JWT token generation and validation
-- OAuth 2.0 password flow implementation
-- Authentication middleware for FastAPI
-- Role-based access control integration
-- Token refresh and expiration handling
+- Abstract base strategy class with common interface
+- Signal evaluation framework for trading decisions
+- Strategy configuration and parameter management
+- Performance metrics and risk management hooks
+- Integration with market data providers
+- Strategy lifecycle management (initialize, evaluate, cleanup)
 
 **Dependencies**:
 
+- ✅ T005 (JWT Authentication) - Ready
 - ✅ T004 (User & Account Models) - Ready
 - ✅ T003 (PostgreSQL Database) - Ready
 - ✅ T002 (Configuration System) - Ready
@@ -78,26 +99,27 @@
 
 **Files to Create**:
 
-- `app/services/auth_service.py` - JWT authentication service
-- `app/middleware/auth.py` - Authentication middleware
-- `tests/test_auth_service.py` - Comprehensive tests
+- `app/strategies/__init__.py` - Strategy module exports
+- `app/strategies/base.py` - Abstract base strategy class
+- `app/strategies/signals.py` - Signal evaluation framework
+- `tests/test_strategies.py` - Comprehensive tests
 
 **Success Criteria**:
 
-- JWT token generation and validation working
-- OAuth 2.0 password flow implemented
-- Authentication middleware integrated
-- Role-based access control working
+- Abstract base strategy class implemented
+- Signal evaluation framework working
+- Strategy configuration system in place
+- Performance metrics hooks integrated
 - > 90% test coverage
-- Integration with User models from T004
+- Ready for concrete strategy implementations (T007)
 
 ## Implementation Strategy
 
 ### 🔄 Current Approach
 
-1. **Model Design**: Define User and Account SQLAlchemy models
-2. **Password Security**: Implement bcrypt hashing with salt
-3. **Database Integration**: Use T003 database setup
+1. **Strategy Design**: Define abstract base strategy class
+2. **Signal Framework**: Implement signal evaluation system
+3. **Configuration**: Strategy parameter management
 4. **Testing**: Comprehensive test suite with mocking
 5. **Documentation**: Update memory bank with lessons learned
 
@@ -105,27 +127,27 @@
 
 - **Test Coverage**: >90% target
 - **Code Quality**: A-grade with linting
-- **Security**: Strong password hashing
-- **Performance**: Efficient database queries
+- **Strategy Design**: Clean abstraction and extensibility
+- **Performance**: Efficient signal evaluation
 - **Documentation**: Complete implementation report
 
 ## Next Steps
 
 ### 🚀 Immediate Actions
 
-1. **Create User Models**: Define User and Account SQLAlchemy models
-2. **Implement Password Hashing**: bcrypt with salt and verification
-3. **Add CRUD Operations**: Create, read, update, delete operations
+1. **Create Base Strategy**: Define abstract base strategy class
+2. **Implement Signal Framework**: Signal evaluation and scoring system
+3. **Add Configuration**: Strategy parameter management
 4. **Write Tests**: Comprehensive test suite with >90% coverage
-5. **Integration Testing**: Verify with T003 database setup
+5. **Integration Testing**: Verify with existing components
 
 ### 📋 Upcoming Tasks
 
-- **T005**: JWT Authentication (depends on T004)
-- **T006**: Base Strategy Class (depends on T004)
+- **T006**: Base Strategy Class (depends on T005) - NEXT
 - **T007**: Momentum Strategy (depends on T006)
 - **T008**: Order Execution (depends on T007)
 - **T009**: Celery Worker (depends on T008)
+- **T010**: REST API Endpoints (depends on T009)
 
 ## Technical Context
 
@@ -148,12 +170,12 @@
 
 ### ✅ Updated Files
 
-- `.memory/core/progress.md` - Updated with T003 completion
-- `.memory/lessons/lesson_T003.md` - Implementation report
+- `.memory/core/progress.md` - Updated with T005 completion
+- `.memory/lessons/lesson_T005.md` - Implementation report (pending)
 - `.memory/core/active_context.md` - This file (current focus)
 
 ### 📝 Pending Updates
 
-- Update task dependencies after T004 completion
-- Update system patterns with user model patterns
-- Update tech context with authentication stack
+- Create lesson_T005.md implementation report
+- Update system patterns with authentication patterns
+- Update tech context with JWT authentication stack

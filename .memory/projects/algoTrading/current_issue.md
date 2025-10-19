@@ -1,4 +1,4 @@
-# Current Issue - AlgoTrading System
+# Current Issue - AlgoTrading Personal Trading System
 
 ## Issue Status: **MVP ROADMAP COMPLETE** ✅
 
@@ -11,7 +11,7 @@
 
 ## Issue Summary
 
-Execute 8-week MVP development plan to deliver AlgoTrading system to production with core features: user authentication, customer/product management, order processing, basic reporting, and system administration.
+Execute 8-week MVP development plan to deliver personal AlgoTrading system to production with core features: trading strategies, market data integration, broker execution, risk management, backtesting, and monitoring dashboard.
 
 ## Current Context
 
@@ -20,9 +20,9 @@ Execute 8-week MVP development plan to deliver AlgoTrading system to production 
 - **Requirements Analysis**: Complete functional and non-functional requirements
 - **System Architecture**: Microservices + Event-driven architecture defined
 - **Technology Stack**: Python 3.11, FastAPI, PostgreSQL, Redis selected
-- **Data Model**: Complete ERD with all entities and relationships
-- **Security Framework**: OAuth 2.0, JWT, RBAC, AES-256 defined
-- **Performance Targets**: < 1.5s response, 1,000 concurrent users
+- **Trading Data Model**: Complete ERD with trading entities and relationships
+- **Security Framework**: JWT authentication, API security defined
+- **Performance Targets**: < 100ms trading decisions, 99.99% uptime
 - **Infrastructure**: AWS-based deployment architecture
 - **MVP Roadmap**: Complete 8-week development plan
 - **Task Breakdown**: Detailed task list with estimates and dependencies
@@ -31,8 +31,8 @@ Execute 8-week MVP development plan to deliver AlgoTrading system to production 
 ### 🔄 In Progress
 
 - **MVP Development**: Ready to begin Phase 1 (Foundation)
-- **Stakeholder Validation**: Requirements review meeting (deadline: 21/10/2025)
-- **Team Preparation**: Development team onboarding and setup
+- **Strategy Validation**: Momentum and liquidity strategy validation
+- **Broker Setup**: Interactive Brokers and Binance account preparation
 
 ### 📋 Next Steps (MVP Phase 1 - Week 1)
 
@@ -48,7 +48,7 @@ Execute 8-week MVP development plan to deliver AlgoTrading system to production 
 
 - [ ] **Python Environment**
 
-  - Create requirements.txt with production dependencies
+  - Create requirements.txt with trading libraries
   - Create requirements-dev.txt with development dependencies
   - Set up virtual environment and install dependencies
   - **Estimate**: 2 hours
@@ -77,11 +77,11 @@ Execute 8-week MVP development plan to deliver AlgoTrading system to production 
   - Set up migration configuration and scripts
   - **Estimate**: 3 hours
 
-- [ ] **Basic Database Models**
-  - Create User model with authentication fields
-  - Create Customer model with business fields
-  - Create Product model with inventory fields
-  - Create Order and OrderItem models
+- [ ] **Trading Database Models**
+  - Create Strategy model with configuration fields
+  - Create Position model with trading data
+  - Create Order model with execution details
+  - Create MarketData model with price data
   - Set up model relationships
   - **Estimate**: 6 hours
 
@@ -145,9 +145,9 @@ Execute 8-week MVP development plan to deliver AlgoTrading system to production 
 ### Sprint 1 Success Metrics
 
 - [ ] **Environment Setup**: Complete Docker-based development environment
-- [ ] **Authentication**: Working OAuth 2.0 + JWT implementation
-- [ ] **User Management**: Complete CRUD operations for users
-- [ ] **RBAC**: Functional role-based access control
+- [ ] **Authentication**: Working JWT authentication implementation
+- [ ] **Strategy Framework**: Base strategy class with signal evaluation
+- [ ] **Database Models**: Trading entities (Strategy, Position, Order, MarketData)
 - [ ] **Testing**: >90% test coverage for implemented features
 - [ ] **Documentation**: Complete API documentation and setup guides
 
@@ -197,16 +197,16 @@ Execute 8-week MVP development plan to deliver AlgoTrading system to production 
 
 ## Related Issues
 
-- **Sprint 2**: Product and customer management
-- **Sprint 3**: Order processing and payments
-- **Sprint 4**: Notifications and reporting
+- **Sprint 2**: Trading strategy implementation and broker integration
+- **Sprint 3**: Risk management and backtesting engine
+- **Sprint 4**: Dashboard development and monitoring
 - **Infrastructure**: AWS setup and configuration
-- **Security**: Security audit and compliance
+- **Security**: API security and broker authentication
 
 ## Next Actions
 
-1. **Schedule Stakeholder Meeting**: Confirm requirements validation
+1. **Strategy Validation**: Validate momentum and liquidity strategies
 2. **Set Up Development Environment**: Docker and local tools
 3. **Begin Sprint 1 Planning**: Detailed task breakdown
-4. **Prepare Team**: Onboarding and knowledge transfer
-5. **Start Implementation**: Begin authentication system development
+4. **Broker Setup**: Interactive Brokers and Binance accounts
+5. **Start Implementation**: Begin strategy framework development

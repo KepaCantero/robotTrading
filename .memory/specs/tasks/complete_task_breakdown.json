@@ -35,25 +35,25 @@
     },
     "T004": {
       "id": "T004",
-      "title": "User & Account Models",
-      "goal": "Create user authentication and account management models",
-      "inputs": ["Database schema", "User requirements"],
+      "title": "Simple User Authentication",
+      "goal": "Create basic user authentication for personal trading system",
+      "inputs": ["Database schema", "Single user requirements"],
       "outputs": ["app/models/user.py", "app/models/__init__.py"],
       "dependencies": ["T003"],
       "file": "app/models/user.py",
       "stack": ["SQLAlchemy", "bcrypt"],
-      "estimated_effort": "3 hours"
+      "estimated_effort": "2 hours"
     },
     "T005": {
       "id": "T005",
       "title": "JWT Authentication Service",
-      "goal": "Implement OAuth 2.0 + JWT authentication with role-based access",
+      "goal": "Implement simple JWT authentication for personal use",
       "inputs": ["User models", "JWT secret"],
       "outputs": ["app/services/auth_service.py", "JWT middleware"],
       "dependencies": ["T004"],
       "file": "app/services/auth_service.py",
       "stack": ["PyJWT", "OAuth2", "bcrypt"],
-      "estimated_effort": "5 hours"
+      "estimated_effort": "3 hours"
     },
     "T006": {
       "id": "T006",
