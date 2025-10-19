@@ -150,14 +150,14 @@ async def execute_signal(
 ):
     """Execute a trading signal."""
     try:
-        # For now, we'll get the next signal and execute it
-        # In a real implementation, signal_id would be used to identify specific signals
-        signal = await service.get_next_actionable_signal()
+        # Get signals by symbol (using signal_id as symbol)
+        signals = await service.get_signals_by_symbol(signal_id.upper())
         
-        if not signal:
-            raise HTTPException(status_code=404, detail="No actionable signal found")
+        if not signals:
+            raise HTTPException(status_code=404, detail=f"No signals found for {signal_id}")
         
-        # Execute signal
+        # Execute the first signal found
+        signal = signals[0]
         success = await service.execute_signal(signal)
         
         if success:
