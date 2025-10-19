@@ -1,12 +1,12 @@
 # Active Context - AlgoTrading Personal Trading System
 
-## Current Focus: **T004 Portfolio Source of Truth Implementation** 🔄
+## Current Focus: **T005 Signal Scorer System Implementation** 🔄
 
 ### Phase: Foundation Implementation (T001-T010)
 
-- **Status**: 🔄 IN PROGRESS (3/10 tasks completed)
-- **Current Task**: T004 - Portfolio Source of Truth
-- **Next Task**: T005 - Signal Scorer System
+- **Status**: 🔄 IN PROGRESS (4/10 tasks completed)
+- **Current Task**: T005 - Signal Scorer System
+- **Next Task**: T006 - Top 20 Liquid Assets Identification
 - **Context Version**: 2025.10
 
 ## Key Recommendations Applied
@@ -30,7 +30,27 @@
 
 ## Recent Completions
 
-### ✅ T003: PostgreSQL Database Setup (COMPLETED)
+### ✅ T004: Portfolio Source of Truth (COMPLETED)
+
+- **Completion Date**: 2025-10-19
+- **Merge Commit**: 6a8a626
+- **Files Added**:
+  - `app/models/portfolio.py` (219 lines)
+  - `app/providers/paper_trading.py` (239 lines)
+  - `app/services/portfolio_service.py` (250 lines)
+  - `app/api/portfolio.py` (222 lines)
+  - `tests/test_portfolio.py` (387 lines)
+- **Test Results**: 22/22 portfolio tests passing (100%)
+- **Coverage**: 78% overall project coverage
+- **Key Features**:
+  - PortfolioProvider Protocol Interface with async methods
+  - PaperTradingPortfolioProvider for testing without real accounts
+  - Enhanced Portfolio and Position models with P&L calculations
+  - Market Regime Detection for strategy adaptation
+  - Asset Universe Management per broker (EQUITY/CRYPTO)
+  - Circuit Breakers for operational resilience and risk management
+  - FastAPI endpoints for complete portfolio management
+  - Real-time portfolio operations with simulated market data
 
 - **Completion Date**: 2025-01-17
 - **Merge Commit**: 3005a3d
@@ -98,88 +118,37 @@
 
 ## Current Implementation Context
 
-### 🎯 T004: Portfolio Source of Truth (Enhanced Architecture)
+### 🎯 T005: Signal Scorer System (NEXT)
 
-**Goal**: Implement portfolio source of truth with Paper Trading support and robust architecture for testing T005-T008 without real broker accounts.
+**Goal**: Implement signal scoring system with confidence and liquidity ranking for prioritizing trading signals.
 
-**Key Architectural Improvements**:
-
-1. **PortfolioProvider Protocol Interface**:
-
-   ```python
-   class PortfolioProvider(Protocol):
-       async def get_portfolio(self) -> Portfolio: ...
-       async def get_position(self, symbol: str) -> Optional[Position]: ...
-       async def get_asset_universe(self) -> List[AssetUniverse]: ...
-       async def get_market_regime(self, symbol: str) -> Optional[MarketRegimeData]: ...
-   ```
-
-2. **Paper Trading Support**:
-
-   - `PaperTradingPortfolioProvider` for testing T005-T008 without real accounts
-   - Simulated market data and trade execution
-   - Asset universe definitions for different brokers
-
-3. **Enhanced Portfolio Model**:
-
-   ```python
-   class Position(BaseModel):
-       symbol: str
-       asset_class: AssetClass
-       quantity: Decimal
-       avg_price: Decimal
-       market_price: Decimal
-       unrealized_pnl: Decimal
-       realized_pnl: Decimal
-       currency: str
-       broker: str
-   ```
-
-4. **Market Regime Detection**:
-
-   - Early detection of trending vs ranging markets
-   - ATR-based volatility analysis
-   - Strategy adaptation based on market conditions
-
-5. **Asset Universe Management**:
-
-   - IBKR: S&P 500 + ETFs líquidos
-   - Binance: Top 20 por volumen (BTC, ETH, etc.)
-   - Prevents trading on illiquid or unsupported assets
-
-6. **Circuit Breakers**:
-   - API error handling (>3 consecutive errors → pause strategy)
-   - Slippage monitoring (>0.5% average → reduce position size)
-   - Operational resilience and risk management
+**Key Features**:
+- Signal confidence scoring (0-100%)
+- Liquidity ranking based on volume and spread
+- Signal priority queue management
+- Integration with portfolio service for position sizing
+- Real-time signal evaluation and ranking
 
 **Dependencies**:
-
+- ✅ T004 (Portfolio Source of Truth) - Ready
 - ✅ T003 (PostgreSQL Database) - Ready
 - ✅ T002 (Configuration System) - Ready
 - ✅ T001 (FastAPI Base) - Ready
 
 **Files to Create**:
-
-- `app/models/portfolio.py` - Portfolio models and interfaces
-- `app/providers/paper_trading.py` - Paper trading provider
-- `app/services/portfolio_service.py` - Portfolio service with circuit breakers
-- `app/api/portfolio.py` - FastAPI endpoints for portfolio data
-- `tests/test_portfolio.py` - Comprehensive test suite
+- `app/models/signal.py` - Signal models and scoring
+- `app/services/signal_scorer.py` - Signal scoring service
+- `app/api/signals.py` - FastAPI endpoints for signals
+- `tests/test_signal_scorer.py` - Comprehensive test suite
 
 **Success Criteria**:
-
-- PortfolioProvider interface implemented with Protocol
-- PaperTradingPortfolioProvider working with simulated data
-- Market regime detection functional
-- Asset universe management per broker
-- Circuit breakers implemented for error handling
-- FastAPI endpoint `/portfolio` returning portfolio data
-- > 90% test coverage for all portfolio components
-- JSON/CSV file support working
-- API connection to IBKR/Binance functional
-- Data validation and error handling robust
-- > 90% test coverage
-- Ready for signal scorer implementation (T005)
+- Signal scoring algorithm implemented
+- Liquidity ranking functional
+- Priority queue management working
+- Integration with portfolio service
+- FastAPI endpoints for signal management
+- >90% test coverage
+- Ready for T006 implementation
 
 ## Implementation Strategy
 
@@ -215,8 +184,7 @@
 
 ### 📋 Upcoming Tasks (Reordered by Priority)
 
-- **T004**: Portfolio Source of Truth (NEXT)
-- **T005**: Signal Scorer System
+- **T005**: Signal Scorer System (NEXT)
 - **T006**: Top 20 Liquid Assets Identification
 - **T007**: Momentum Strategy Implementation
 - **T008**: Analytic Mode (Paper Trading)
