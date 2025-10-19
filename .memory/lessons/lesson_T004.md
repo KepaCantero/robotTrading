@@ -6,7 +6,7 @@
 **Title**: User & Account Models  
 **Goal**: Create user authentication and account management models  
 **Completion Date**: 2025-01-17  
-**Merge Commit**: 9059285  
+**Merge Commit**: 9059285
 
 ## ✅ Implementation Summary
 
@@ -113,15 +113,15 @@
 ```python
 class User(Base):
     __tablename__ = "users"
-    
+
     # Authentication fields
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
-    
+
     # Profile fields
     first_name: Mapped[str] = mapped_column(String(100), nullable=False)
     last_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    
+
     # Role and permissions
     role: Mapped[UserRole] = mapped_column(SQLEnum(UserRole), default=UserRole.TRADER)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -133,18 +133,18 @@ class User(Base):
 ```python
 class Account(Base):
     __tablename__ = "accounts"
-    
+
     # Foreign key to user
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
-    
+
     # Account identification
     account_name: Mapped[str] = mapped_column(String(100), nullable=False)
     account_type: Mapped[str] = mapped_column(String(50), default="trading")
-    
+
     # Account status and settings
     status: Mapped[AccountStatus] = mapped_column(SQLEnum(AccountStatus), default=AccountStatus.ACTIVE)
     is_primary: Mapped[bool] = mapped_column(Boolean, default=False)
-    
+
     # Trading settings
     default_currency: Mapped[str] = mapped_column(String(3), default="USD")
     risk_tolerance: Mapped[str] = mapped_column(String(20), default="medium")
@@ -170,13 +170,13 @@ def check_password(self, password: str) -> bool:
 ```python
 class UserService:
     """Service class for User CRUD operations."""
-    
+
     async def create_user(self, email: str, password: str, ...) -> User:
         """Create a new user with hashed password."""
-        
+
     async def authenticate_user(self, email: str, password: str) -> Optional[User]:
         """Authenticate user with email and password."""
-        
+
     async def get_user_by_id(self, user_id: int) -> Optional[User]:
         """Get user by ID."""
 ```
