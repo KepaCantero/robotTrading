@@ -57,10 +57,16 @@
 #### **🔴 CRÍTICAS (5 tareas)**
 
 1. **TASK 8**: Análisis de Costos Operativos vs Rendimiento
+   - ✅ Registro de slippage real por orden en backtests
+   - ✅ Métrica Cost Impact Ratio (CIR) = (comisiones + slippage) / ganancia bruta
 2. **TASK 9**: Optimización de Parámetros y Prevención de Overfitting
+   - ✅ Validación cruzada tipo Purged K-Fold CV (evita leakage temporal)
+   - ✅ Resultados de walk-forward como artefactos versionados
 3. **TASK 10**: Centralización de Configuración
 4. **TASK 13**: Tests de Concurrencia
 5. **TASK 17**: Seguridad y Compliance
+   - ✅ Auditoría de logs sensibles (no registrar claves/credenciales)
+   - ✅ Documentación de rotación de API keys y limitación de requests
 
 #### **🟡 ALTAS (4 tareas)**
 
@@ -78,6 +84,8 @@
 #### **🔵 BAJAS (1 tarea)**
 
 13. **TASK 20**: Monitoring y Observabilidad
+    - ✅ Alertas automáticas por Telegram/Discord para errores críticos
+    - ✅ Monitoreo de fallos de órdenes en runtime
 
 ---
 
