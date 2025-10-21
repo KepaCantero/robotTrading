@@ -45,11 +45,11 @@ class CostAnalysisService:
 
     def validate_profitability_threshold(self, net_profit: Decimal) -> bool:
         """Ensure net profit exceeds minimum threshold"""
-    
+
     def calculate_cost_impact_ratio(self, trades: List[Trade]) -> Decimal:
         """Calculate CIR = (commissions + slippage) / gross_profit"""
-        
-    def record_order_slippage(self, order: Order, execution_price: Decimal, 
+
+    def record_order_slippage(self, order: Order, execution_price: Decimal,
                              market_price: Decimal) -> Decimal:
         """Record real slippage per order for backtest analysis"""
 ```
@@ -89,12 +89,12 @@ class ParameterOptimizationService:
 
     def optimize_thresholds(self, strategy: MomentumStrategy) -> OptimizedThresholds:
         """Optimize RSI, confidence, and other thresholds"""
-    
-    def purged_k_fold_cv(self, strategy: MomentumStrategy, 
+
+    def purged_k_fold_cv(self, strategy: MomentumStrategy,
                         data: List[MarketData], k: int = 5) -> CrossValidationResult:
         """Perform Purged K-Fold Cross Validation to avoid temporal leakage"""
-        
-    def save_optimization_artifacts(self, results: OptimizationResult, 
+
+    def save_optimization_artifacts(self, results: OptimizationResult,
                                   version: str) -> str:
         """Save walk-forward results as versioned artifacts for reproducibility"""
 ```
@@ -294,16 +294,16 @@ Estas tareas abordan directamente los problemas críticos identificados en el co
 class SecurityManager:
     def encrypt_sensitive_data(self, data: str) -> str:
         """Encrypt sensitive data using AES-256"""
-        
+
     def implement_rate_limiting(self, endpoint: str, requests_per_minute: int):
         """Implement rate limiting for API endpoints"""
-        
+
     def secure_api_key_storage(self, api_key: str) -> str:
         """Store API keys securely with encryption"""
-        
+
     def audit_logs_for_sensitive_data(self, log_entry: str) -> bool:
         """Audit logs to ensure no sensitive data is logged"""
-        
+
     def rotate_api_keys(self, key_id: str) -> str:
         """Implement API key rotation mechanism"""
 ```
@@ -339,19 +339,19 @@ class SecurityManager:
 class MonitoringService:
     def track_trading_metrics(self, trade: Trade) -> None:
         """Track trading performance metrics"""
-        
+
     def monitor_system_health(self) -> SystemHealthStatus:
         """Monitor system health and performance"""
-        
+
     def setup_alerting_system(self, webhook_url: str) -> None:
         """Setup automated alerting system"""
-        
+
     def send_critical_alert(self, message: str, severity: str) -> None:
         """Send critical alerts via Telegram/Discord"""
-        
+
     def monitor_order_failures(self, order: Order) -> None:
         """Monitor and alert on order failures"""
-        
+
     def track_runtime_errors(self, error: Exception) -> None:
         """Track and alert on runtime errors"""
 ```
@@ -364,10 +364,10 @@ class AlertingManager:
     def __init__(self, telegram_bot_token: str, discord_webhook: str):
         self.telegram_bot = TelegramBot(telegram_bot_token)
         self.discord_webhook = discord_webhook
-        
+
     def send_telegram_alert(self, message: str, chat_id: str):
         """Send alert via Telegram"""
-        
+
     def send_discord_alert(self, message: str, webhook_url: str):
         """Send alert via Discord webhook"""
 ```

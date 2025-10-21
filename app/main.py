@@ -24,6 +24,7 @@ from app.api.assets import router as assets_router
 from app.api.market_data import router as market_data_router
 from app.api.paper_trading import router as paper_trading_router
 from app.api.portfolio_analytics import router as portfolio_analytics_router
+from app.api.cost_analysis import router as cost_analysis_router
 
 # Get application settings (lazy loading to avoid validation issues during import)
 settings = None
@@ -92,6 +93,7 @@ app.include_router(assets_router)
 app.include_router(market_data_router)
 app.include_router(paper_trading_router)
 app.include_router(portfolio_analytics_router)
+app.include_router(cost_analysis_router)
 
 
 @app.get("/", tags=["Root"])
