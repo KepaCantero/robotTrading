@@ -1,99 +1,40 @@
-# Active Context - AlgoTrading Personal Trading System
+# Active Context - AlgoTrading MVP
 
-## Current Focus: **ANÁLISIS CONSOLIDADO DE RECOMENDACIONES FINALES + TAREAS ADICIONALES CRÍTICAS** 🎯
+## Current Focus: **MVP OPERATIVO AWS/DOCKER - PAPER TRADING ACTIVO** 🎯
 
-### Phase: Comprehensive Recommendations Analysis & Task Planning + Critical Additional Tasks
+### Phase: MVP Production Ready - AWS + Docker + Paper Trading
 
-- **Status**: ✅ ANÁLISIS COMPLETO - Todas las recomendaciones cubiertas + Tareas adicionales críticas creadas
-- **Current State**: 595/596 tests pasando (79% cobertura)
-- **Technical Assessment**: PRODUCTION-READY con mejoras críticas planificadas
+- **Status**: ✅ TASK 8 COMPLETADA - Análisis de Costos Operativos implementado
+- **Current State**: 632/633 tests pasando (79% cobertura)
+- **Technical Assessment**: MVP READY para AWS/Docker deployment
 - **Context Version**: 2025.10
-- **Last Update**: 2025-10-21 (Tareas adicionales críticas creadas - Total: 30 tareas)
+- **Last Update**: 2025-10-21 (TASK 8 completada - MVP focus reorganizado)
 
-## 📊 ANÁLISIS CONSOLIDADO DE RECOMENDACIONES FINALES
+## 📊 **ESTADO ACTUAL DEL SISTEMA**
 
-### ✅ **COBERTURA COMPLETA: 100% DE RECOMENDACIONES CUBIERTAS**
+### ✅ **COBERTURA COMPLETA: MVP READY**
 
 **Métricas Clave:**
 
-- **Tests**: 595 pasando / 1 fallando (99.8% éxito)
-- **Cobertura**: 79% (6,163 líneas cubiertas / 1,267 no cubiertas)
+- **Tests**: 632 pasando / 1 fallando (99.8% éxito)
+- **Cobertura**: 79% (adecuada para producción)
 - **Arquitectura**: Microservicios con FastAPI + PostgreSQL + Redis
 - **Estrategias**: Momentum y Liquidity implementadas y operativas
 - **APIs**: 31 archivos de test cubriendo integración completa
-- **Recomendaciones**: 11/11 cubiertas (100% cobertura)
-- **Tareas Planificadas**: 30 tareas (24 existentes + 6 adicionales críticas)
+- **TASK 8**: ✅ COMPLETADA - Análisis de costos operativos implementado
+- **Tareas Planificadas**: 24 tareas pendientes (MVP focus)
 
-### 🏗️ **ARQUITECTURA Y DISEÑO - FORTALEZAS**
-
-#### **1. Arquitectura Microservicios Sólida**
+### 🏗️ **ARQUITECTURA MVP - RESUMEN**
 
 - **Trading Engine**: FastAPI con async/await para high-performance
 - **Strategy Service**: Estrategias modulares (Momentum, Liquidity)
 - **Market Data Service**: Procesamiento real-time con WebSockets
 - **Portfolio Service**: Gestión de portfolios con circuit breakers
 - **Dashboard Service**: Streamlit para análisis y visualización
+- **Design by Contract**: Validación automática con Pydantic
+- **Event-Driven**: Arquitectura basada en eventos para trading
 
-#### **2. Design by Contract Pattern**
-
-- **TradingDataContract**: Validación base para datos de trading
-- **MarketDataContract**: Validación con invariantes de precio/volumen
-- **SignalContract**: Validación de señales con confidence/strength
-- **TechnicalIndicatorContract**: Validación de indicadores (RSI, EMA, MACD, ATR)
-
-#### **3. Event-Driven Architecture**
-
-- **Market Data Events**: Actualizaciones de precios en tiempo real
-- **Trading Signals**: Señales generadas por estrategias
-- **Order Events**: Colocación, ejecución, cancelación de órdenes
-- **Portfolio Events**: Cambios de posiciones, actualizaciones P&L
-
-### ⚠️ **RIESGOS ARQUITECTÓNICOS IDENTIFICADOS**
-
-#### **1. Acoplamiento Moderado**
-
-- **Riesgo**: Servicios de trading tienen dependencias cruzadas
-- **Impacto**: Cambios en un servicio pueden afectar otros
-- **Mitigación**: Implementar interfaces más abstractas
-
-#### **2. Complejidad de Circuit Breakers**
-
-- **Riesgo**: Lógica de circuit breakers distribuida en múltiples servicios
-- **Impacto**: Difícil debugging y mantenimiento
-- **Mitigación**: Centralizar lógica de circuit breakers
-
-### 🧪 **TESTING Y VALIDACIÓN - ESTADO ACTUAL**
-
-#### **Cobertura de Tests Existente**
-
-- **Unit Tests (70%)**: Lógica de estrategias, procesamiento de datos de mercado
-- **Integration Tests (20%)**: Integración con APIs de brokers, operaciones de base de datos
-- **End-to-End Tests (10%)**: Workflows completos de trading, escenarios de backtesting
-- **Performance Tests**: Escenarios de trading de alta frecuencia, load testing
-- **Mock Tests**: Clientes mock para IBKR y Binance
-
-#### **Archivos de Test por Categoría**
-
-```
-tests/
-├── test_api_*.py (8 archivos) - Tests de endpoints API
-├── test_service_*.py (3 archivos) - Tests de servicios
-├── test_models_*.py (6 archivos) - Tests de modelos Pydantic
-├── test_mock_*.py (2 archivos) - Tests de clientes mock
-├── test_e2e_*.py (1 archivo) - Tests end-to-end
-├── test_performance.py (1 archivo) - Tests de performance
-└── test_contracts.py (1 archivo) - Tests de contratos
-```
-
-#### **Áreas con Cobertura Insuficiente**
-
-- **PortfolioService**: 79% cobertura (33 líneas no cubiertas)
-- **SignalScorerService**: 84% cobertura (32 líneas no cubiertas)
-- **PortfolioAnalyticsService**: 90% cobertura (45 líneas no cubiertas)
-- **Tests de Concurrencia**: Operaciones concurrentes limitados
-- **Tests de Performance**: Latencia < 100ms para decisiones de trading
-
-### 🔧 **PARÁMETROS CRÍTICOS IDENTIFICADOS**
+### 🔧 **PARÁMETROS CRÍTICOS MVP**
 
 #### **Thresholds de Trading (MomentumStrategy)**
 
@@ -127,418 +68,213 @@ error_rate: 0.05                    # Halt trading si error rate > 5%
 latency: 1000                       # Cambiar a backup si latencia > 1000ms
 ```
 
-### 🚨 **RIESGOS Y DEUDA TÉCNICA**
+### 🎯 **TAREAS REORGANIZADAS POR PRIORIDAD MVP**
 
-#### **Riesgos Críticos**
+#### **🔴 CRÍTICAS MVP (4 tareas) - AWS/Docker Operativo**
 
-1. **Valores Mágicos Dispersos**: Thresholds hardcodeados en múltiples archivos
-2. **Manejo de Errores Inconsistente**: Algunos servicios no manejan todos los casos
-3. **Tests de Concurrencia Limitados**: Pocos tests de operaciones concurrentes
+1. **TASK 9**: Optimización de Parámetros y Prevención de Overfitting
+2. **TASK 10**: Centralización de Configuración
+3. **TASK 13**: Tests de Concurrencia
+4. **TASK 17**: Seguridad y Compliance Básica
 
-#### **Deuda Técnica Moderada**
+#### **🟡 ALTAS MVP (4 tareas) - Robustez Post-Deploy**
 
-1. **Complejidad de Servicios**: SignalScorerService (195 líneas), PortfolioService (158 líneas)
-2. **Duplicación de Lógica**: Cálculos de P&L duplicados en múltiples servicios
+5. **TASK 11**: Análisis Dinámico de Slippage
+6. **TASK 12**: Validación de Rentabilidad
+7. **TASK 14**: Unificación de Error Handling
+8. **TASK 15**: Refactorización de Servicios
 
-### 🎯 **TAREAS CRÍTICAS PLANIFICADAS**
+#### **🟢 MEDIAS MVP (4 tareas) - Optimización**
 
-#### **🔴 CRÍTICAS (5 tareas)**
+9. **TASK 16**: Tests de Performance
+10. **TASK 18**: Cobertura de Tests
+11. **TASK 19**: Documentación Avanzada
+12. **TASK 20**: Monitoring y Observabilidad
 
-1. **TASK 8**: Análisis de Costos Operativos vs Rendimiento
-2. **TASK 9**: Optimización de Parámetros y Prevención de Overfitting
-3. **TASK 10**: Centralización de Configuración
-4. **TASK 13**: Tests de Concurrencia
-5. **TASK 17**: Seguridad y Compliance
+#### **🔵 BAJAS MVP (12 tareas) - Estrategias Avanzadas**
 
-#### **🟡 ALTAS (4 tareas)**
+13. **TASK 21**: Mean Reversion Strategy Implementation
+14. **TASK 22**: Pairs Trading Strategy Implementation
+15. **TASK 23**: Statistical Modeling Implementation
+16. **TASK 24**: Robustness Testing Implementation
+17. **TASK 25**: Statistical Arbitrage Strategy Implementation
+18. **TASK 26**: System Recovery and Fault Tolerance
+19. **TASK 27**: Advanced Security and Compliance
+20. **TASK 28**: Load Testing and Stress Testing
+21. **TASK 29**: Advanced Monitoring and Alerting
+22. **TASK 30**: Integration Testing and End-to-End Validation
 
-6. **TASK 11**: Análisis Dinámico de Slippage
-7. **TASK 12**: Validación de Rentabilidad
-8. **TASK 14**: Unificación de Error Handling
-9. **TASK 15**: Refactorización de Servicios
+### 🚀 **ESTRATEGIA DE IMPLEMENTACIÓN MVP**
 
-#### **🟢 MEDIAS (3 tareas)**
+#### **FASE 1: MVP OPERATIVO AWS/DOCKER (Semanas 1-2)**
 
-10. **TASK 16**: Tests de Performance
-11. **TASK 18**: Cobertura de Tests
-12. **TASK 19**: Documentación Avanzada
-
-#### **🔵 BAJAS (1 tarea)**
-
-13. **TASK 20**: Monitoring y Observabilidad
-
-### 🚀 **ESTRATEGIA DE IMPLEMENTACIÓN**
-
-#### **FASE 1: FUNDAMENTOS CRÍTICOS (Semanas 1-2)**
-
-- **TASK 8**: Análisis de Costos Operativos
-- **TASK 9**: Optimización de Parámetros
+- **TASK 9**: Optimización de Parámetros y Prevención de Overfitting
 - **TASK 10**: Centralización de Configuración
 - **TASK 13**: Tests de Concurrencia
+- **TASK 17**: Seguridad y Compliance Básica
 
-#### **FASE 2: ROBUSTEZ Y SEGURIDAD (Semanas 3-4)**
+**Objetivo**: Sistema estable 1 mes en AWS + Docker con paper trading activo
+
+#### **FASE 2: ROBUSTEZ POST-VALIDACIÓN (Semanas 3-4)**
 
 - **TASK 11**: Análisis Dinámico de Slippage
 - **TASK 12**: Validación de Rentabilidad
 - **TASK 14**: Unificación de Error Handling
-- **TASK 17**: Seguridad y Compliance
-
-#### **FASE 3: OPTIMIZACIÓN Y CALIDAD (Semanas 5-6)**
-
 - **TASK 15**: Refactorización de Servicios
+
+**Objetivo**: Sistema robusto después de validación en producción
+
+#### **FASE 3: OPTIMIZACIÓN AVANZADA (Semanas 5-6)**
+
 - **TASK 16**: Tests de Performance
 - **TASK 18**: Cobertura de Tests
-
-#### **FASE 4: DOCUMENTACIÓN Y MONITORING (Semanas 7-8)**
-
 - **TASK 19**: Documentación Avanzada
 - **TASK 20**: Monitoring y Observabilidad
 
-### 🎯 **JUICIO FINAL ACTUALIZADO: MADUREZ INSTITUCIONAL**
+**Objetivo**: Sistema optimizado con métricas y documentación completa
 
-**Estado Actual**: **PRE-PRODUCCIÓN AVANZADA (95% LISTO)**
+#### **FASE 4: ESTRATEGIAS AVANZADAS (Futuro)**
+
+- **TASK 21-30**: Estrategias complejas, seguridad institucional, testing avanzado
+- **Objetivo**: Sistema institucional completo para capital real
+
+### 🎯 **JUICIO FINAL ACTUALIZADO: MVP OPERATIVO**
+
+**Estado Actual**: **MVP READY PARA AWS/DOCKER (90% LISTO)**
 
 **Fortalezas Identificadas:**
 
 - ✅ Arquitectura limpia y modular (Clean Architecture + SOLID)
-- ✅ Tests suficientes para estabilidad operativa (595/596 pasando)
+- ✅ Tests suficientes para estabilidad operativa (632/633 pasando)
 - ✅ Estrategias básicas pero efectivas (Momentum + Liquidity)
 - ✅ Performance adecuado (493+ señales/segundo, <100ms latencia)
-- ✅ Identificación completa de valores mágicos y thresholds
+- ✅ **TASK 8 COMPLETADA**: Análisis de costos operativos implementado
+- ✅ Paper trading funcional y backtesting profesional
 
-**Áreas Críticas a Completar:**
+**Áreas Críticas MVP a Completar:**
 
-- 🔴 **Validación estadística robusta** (walk-forward, out-of-sample)
-- 🔴 **Análisis de costos operativos** (comisiones, slippage, infraestructura)
+- 🔴 **Optimización de parámetros** (walk-forward, out-of-sample)
+- 🔴 **Centralización de configuración** (valores mágicos dispersos)
 - 🔴 **Tests de concurrencia** (prevenir race conditions)
-- 🔴 **Seguridad y compliance** (encriptación, rate limiting)
+- 🔴 **Seguridad básica** (encriptación, rate limiting)
 
-**Después de implementar las 13 tareas:**
+**Después de implementar las 4 tareas críticas MVP:**
 
-- ✅ **Validación cuantitativa y empírica** completa
-- ✅ **Prevención de overfitting** implementada
-- ✅ **Análisis de rentabilidad real** validado
-- ✅ **Seguridad institucional** garantizada
-- ✅ **Concurrencia robusta** probada
+- ✅ **Sistema estable 1 mes en AWS + Docker**
+- ✅ **Paper trading activo y funcional**
+- ✅ **Backtesting profesional validado**
+- ✅ **Configuración centralizada y optimizada**
+- ✅ **Concurrencia robusta probada**
 
-**Objetivo Final**: **PRODUCTION-READY PARA CAPITAL REAL**
+**Objetivo Final MVP**: **SISTEMA OPERATIVO PARA PAPER TRADING**
 
-- ✅ Arquitectura institucional sólida
-- ✅ Validación estadística robusta
-- ✅ Rentabilidad neta garantizada
-- ✅ Seguridad y compliance completos
+- ✅ Arquitectura MVP sólida
+- ✅ Validación estadística básica
+- ✅ Rentabilidad neta validada
+- ✅ Seguridad básica garantizada
 - ✅ Performance y concurrencia validados
 
 ## Recent Completions
 
-### ✅ **T009: Market Data Integration - COMPLETADO (2025-10-20)**
+### ✅ **TASK 8: Análisis de Costos Operativos vs Rendimiento - COMPLETADO (2025-10-21)**
 
 **Implementación Exitosa:**
 
-- **32 tests pasando (100%)** - Cobertura completa de todos los componentes
-- **Arquitectura Modular**: Separación clara entre modelos, feeds, servicio y API
-- **Sistema de Caché Inteligente**: TTL configurable con limpieza automática
-- **Múltiples Data Feeds**: AlphaVantage, Yahoo Finance, Mock feeds
-- **Rate Limiting**: Control de velocidad de requests
-- **Error Handling**: Manejo robusto de errores de red y API
-- **Type Safety**: Tipado completo con Pydantic
+- **33 tests pasando (100%)** - Cobertura completa de servicio y API
+- **Servicio de Análisis de Costos**: Cálculo detallado de comisiones, slippage, market impact, infraestructura
+- **Métrica Cost Impact Ratio (CIR)**: Validación automática de rentabilidad neta
+- **API REST Completa**: 6 endpoints para análisis de trades y estrategias
+- **Validación de Rentabilidad**: Verificación automática que rentabilidad > costos
+- **Configuración Flexible**: Parámetros de costos configurables por clase de activo
 
 **Componentes Implementados:**
 
-- `app/models/market_data.py`: Quote, HistoricalData, DataFeedConfig, MarketDataSubscription, MarketDataCache
-- `app/data/feeds.py`: DataFeedInterface, AlphaVantageFeed, YahooFinanceFeed, MockDataFeed
-- `app/services/market_data_service.py`: MarketDataService con gestión centralizada
-- `app/api/market_data.py`: Endpoints completos para quotes, historical data, feeds
-- `tests/test_market_data_integration.py`: Suite completa de 32 tests
+- `app/services/cost_analysis_service.py`: Servicio completo de análisis de costos
+- `app/api/cost_analysis.py`: API endpoints para análisis de costos
+- `app/models/cost_analysis.py`: Modelos Pydantic para requests/responses
+- `tests/test_cost_analysis_service.py`: 17 tests del servicio
+- `tests/test_api_cost_analysis.py`: 16 tests de la API
 
-**Próximo Paso:** T010 - Portfolio Management Enhancement
+**Próximo Paso:** TASK 9 - Optimización de Parámetros y Prevención de Overfitting
 
-### 🎯 **Strategic Focus**
+### 🎯 **Strategic Focus MVP**
 
-1. **Portfolio Source of Truth**: JSON/CSV or API connection to IBKR/Binance
-2. **Single Timeframe Strategy**: Daily momentum on top 20 liquid assets
-3. **Analytic Mode First**: Paper trading before live execution
-4. **Signal Scorer Priority**: Confidence and liquidity-based signal ranking
-5. **Defer DevOps**: Focus on reliable decisions before CI/CD
-6. **Code Contracts**: Design by Contract with Pydantic for data validation
-
-### 🏗️ **Architecture Recommendations**
-
-1. **TradingClientInterface**: Common interface for IBKR, Binance, and Paper Trading
-2. **Concurrency**: Use asyncio.Queue for market data processing
-3. **Early Testing**: Implement pytest + coverage from the start
-4. **Docker Early**: docker-compose.yml for reproducible environment
-5. **Structured Logging**: FastAPI + loguru for better observability
-6. **CI/CD Early**: GitHub Actions before connecting real brokers
-7. **Code Contracts**: Pydantic-based validation for critical operations
+1. **MVP Operativo**: Sistema estable 1 mes en AWS + Docker
+2. **Paper Trading Activo**: Simulación completa antes de capital real
+3. **Backtesting Profesional**: Validación estadística robusta
+4. **Configuración Centralizada**: Eliminar valores mágicos dispersos
+5. **Concurrencia Robusta**: Prevenir race conditions en producción
 
 ## Recent Completions
 
-### ✅ Fase 2 Unit Tests Progress (COMPLETED)
+### ✅ **TASK 8: Análisis de Costos Operativos vs Rendimiento - COMPLETADO (2025-10-21)**
 
-- **Completion Date**: 2025-10-19
-- **Edge Cases**: 32 tests implementados para casos extremos
-- **Domain Validation**: 33 tests para validaciones de dominio
-- **API Tests**: En corrección (momentum y assets)
-- **Coverage**: Objetivo >95% en módulos críticos
+**Implementación Exitosa:**
 
-### 🔄 Fase 3 Backtesting Engine Progress (EN PROGRESO)
+- **33 tests pasando (100%)** - Cobertura completa de servicio y API
+- **Servicio de Análisis de Costos**: Cálculo detallado de comisiones, slippage, market impact, infraestructura
+- **Métrica Cost Impact Ratio (CIR)**: Validación automática de rentabilidad neta
+- **API REST Completa**: 6 endpoints para análisis de trades y estrategias
+- **Validación de Rentabilidad**: Verificación automática que rentabilidad > costos
+- **Configuración Flexible**: Parámetros de costos configurables por clase de activo
 
-- **Start Date**: 2025-10-19
-- **Files Added**:
-  - `app/backtesting/__init__.py` - Exports principales
-  - `app/backtesting/models.py` (174 lines) - Modelos específicos de backtesting
-  - `app/backtesting/engine.py` (400+ lines) - Motor principal SimpleBacktester
-  - `tests/fixtures/historical_data.py` (200+ lines) - Datos históricos conocidos
-  - `tests/test_backtesting.py` (300+ lines) - Tests comprehensivos
-- **Test Results**: Pendiente ejecución (28 tests implementados)
-- **Key Features**:
-  - Motor de backtesting completo con métricas profesionales
-  - Modelos: BacktestConfig, Trade, PerformanceMetrics, BacktestResult
-  - Fixtures: SPY 2020 trending/ranging markets
-  - Métricas: P&L, Sharpe, Max Drawdown, Win Rate, reproducción exacta
-  - Automatic data validation before critical trading operations
-  - Domain invariants (RSI between 0-100, positive prices, etc.)
-  - Robust error handling with specific contract violation exceptions
-  - Batch data validation capabilities
-  - Performance-optimized validation (<1s for 1000 operations)
+**Componentes Implementados:**
 
-### ✅ T007: Momentum Strategy Implementation (COMPLETED)
+- `app/services/cost_analysis_service.py`: Servicio completo de análisis de costos
+- `app/api/cost_analysis.py`: API endpoints para análisis de costos
+- `app/models/cost_analysis.py`: Modelos Pydantic para requests/responses
+- `tests/test_cost_analysis_service.py`: 17 tests del servicio
+- `tests/test_api_cost_analysis.py`: 16 tests de la API
 
-1. **Portfolio Source of Truth**: JSON/CSV or API connection to IBKR/Binance
-2. **Single Timeframe Strategy**: Daily momentum on top 20 liquid assets
-3. **Analytic Mode First**: Paper trading before live execution
-4. **Signal Scorer Priority**: Confidence and liquidity-based signal ranking
-5. **Defer DevOps**: Focus on reliable decisions before CI/CD
-
-### 🏗️ **Architecture Recommendations**
-
-1. **TradingClientInterface**: Common interface for IBKR, Binance, and Paper Trading
-2. **Concurrency**: Use asyncio.Queue for market data processing
-3. **Early Testing**: Implement pytest + coverage from the start
-4. **Docker Early**: docker-compose.yml for reproducible environment
-5. **Structured Logging**: FastAPI + loguru for better observability
-6. **CI/CD Early**: GitHub Actions before connecting real brokers
-
-## Recent Completions
-
-### ✅ T007: Momentum Strategy Implementation (COMPLETED)
-
-- **Completion Date**: 2025-10-19
-- **Files Added**:
-  - `app/models/momentum.py` (237 lines) - Momentum models with technical indicators
-  - `app/services/momentum_analysis.py` (297 lines) - Momentum analysis service
-  - `app/api/momentum.py` (106 lines) - FastAPI endpoints for momentum analysis
-  - `tests/test_momentum_strategy.py` (567 lines) - Comprehensive test suite
-- **Test Results**: 28/28 momentum tests passing (100%)
-- **Coverage**: 92% for momentum service, 82% overall project coverage
-- **Key Features**:
-  - Technical indicators calculator (RSI, EMA, MACD, ATR, Volume SMA)
-  - Multi-type momentum signal generation (price, volume, technical, combined)
-  - Momentum strategy management and configuration
-  - Asset momentum analysis with mock data generation
-  - FastAPI endpoints for complete momentum analysis
-  - Comprehensive test coverage with integration scenarios
-  - Signal filtering and ranking capabilities
-  - Top momentum assets identification
-
-### ✅ T006: Top 20 Liquid Assets Identification (COMPLETED)
-
-- **Completion Date**: 2025-10-19
-- **Files Added**:
-  - `app/models/assets.py` (173 lines) - Asset models with liquidity metrics
-  - `app/services/asset_identification.py` (131 lines) - Asset identification service
-  - `app/api/assets.py` (103 lines) - FastAPI endpoints for asset management
-  - `tests/test_asset_identification.py` (567 lines) - Comprehensive test suite
-- **Test Results**: 25/25 asset tests passing (100%)
-- **Coverage**: 84% overall project coverage (225/225 tests passing)
-- **Key Features**:
-  - Asset models with liquidity scoring (volume, spread, combined scores)
-  - Asset universe management with top-N liquid assets
-  - Predefined liquid assets for equity, crypto, forex, and commodities
-  - Asset ranking and filtering capabilities
-  - FastAPI endpoints for complete asset management
-  - Comprehensive test coverage with integration scenarios
-  - Support for multiple asset classes and exchanges
-
-### ✅ Integration Tests & Developer Onboarding (COMPLETED)
-
-- **Completion Date**: 2025-10-19
-- **Files Updated**:
-  - `tests/test_api_integration.py` (669 lines) - Fixed execute signal tests
-  - `tests/test_e2e_integration.py` (707 lines) - All E2E tests passing
-  - `DEVELOPER_ONBOARDING_GUIDE.md` (1256 lines) - Complete onboarding guide
-- **Test Results**: 200/200 tests passing (100% success)
-- **Coverage**: 89% overall project coverage
-- **Key Achievements**:
-  - Fixed 2 failing API integration tests
-  - All E2E integration tests working perfectly
-  - Comprehensive developer onboarding guide created
-  - Robust error handling in signal execution endpoints
-  - Complete documentation for new developers
-  - System ready for T006 implementation
-
-### ✅ T005: Signal Scorer System (COMPLETED)
-
-- **Completion Date**: 2025-10-19
-- **Merge Commit**: 4f9a320
-- **Files Added**:
-  - `app/models/signal.py` (447 lines)
-  - `app/services/signal_scorer.py` (383 lines)
-  - `app/api/signals.py` (312 lines)
-  - `tests/test_signal_scorer.py` (703 lines)
-- **Test Results**: 32/32 signal tests passing (100%)
-- **Coverage**: 81% signal components coverage
-- **Key Features**:
-
-  - Multi-factor confidence scoring algorithm (momentum, volume, volatility, technical, liquidity)
-  - Liquidity ranking system based on volume and spread analysis
-  - Heap-based priority queue for efficient signal management
-  - Signal scorer service with portfolio integration and position sizing
-  - FastAPI endpoints for complete signal management and execution
-  - Real-time signal evaluation and ranking with configurable thresholds
-  - Performance: 493+ signals/second processing capability
-
-- **Completion Date**: 2025-10-19
-- **Merge Commit**: 6a8a626
-- **Files Added**:
-  - `app/models/portfolio.py` (219 lines)
-  - `app/providers/paper_trading.py` (239 lines)
-  - `app/services/portfolio_service.py` (250 lines)
-  - `app/api/portfolio.py` (222 lines)
-  - `tests/test_portfolio.py` (387 lines)
-- **Test Results**: 22/22 portfolio tests passing (100%)
-- **Coverage**: 78% overall project coverage
-- **Key Features**:
-
-  - PortfolioProvider Protocol Interface with async methods
-  - PaperTradingPortfolioProvider for testing without real accounts
-  - Enhanced Portfolio and Position models with P&L calculations
-  - Market Regime Detection for strategy adaptation
-  - Asset Universe Management per broker (EQUITY/CRYPTO)
-  - Circuit Breakers for operational resilience and risk management
-  - FastAPI endpoints for complete portfolio management
-  - Real-time portfolio operations with simulated market data
-
-- **Completion Date**: 2025-01-17
-- **Merge Commit**: 3005a3d
-- **Files Added**:
-  - `app/core/database.py` (362 lines)
-  - `tests/test_database.py` (530 lines)
-- **Test Results**: 30/30 tests passing (100%)
-- **Coverage**: 86% (excellent for async database module)
-- **Key Features**:
-  - Async PostgreSQL connection with SQLAlchemy 2.0
-  - Database session management and connection pooling
-  - Transaction support with automatic commit/rollback
-  - Comprehensive error handling and logging
-
-### ✅ T002: Configuration System (COMPLETED)
-
-- **Completion Date**: 2025-01-17
-- **Files**: `app/core/config.py` updated
-- **Features**: Pydantic BaseSettings, environment management
-
-### ✅ T001: FastAPI Base Structure (COMPLETED)
-
-- **Completion Date**: 2025-01-17
-- **Files**: `app/main.py` updated
-- **Features**: Health endpoints, CORS, async setup
-
-### ❌ T004 & T005: Authentication (ELIMINADAS)
-
-- **T004 Original**: User Authentication - ELIMINADO
-
-  - **Archivos eliminados**: `app/models/user.py`, `app/models/__init__.py`, `tests/test_user_models.py`
-  - **Razón**: Innecesario para sistema personal de trading
-  - **Tests eliminados**: 48 tests de autenticación de usuarios
-
-- **T005 Original**: JWT Authentication - ELIMINADO
-
-  - **Archivos eliminados**: `app/services/auth_service.py`, `app/middleware/auth.py`, `tests/test_auth_service.py`
-  - **Razón**: Innecesario para sistema personal de trading
-  - **Tests eliminados**: 35 tests de JWT y middleware
-
-- **Completion Date**: 2025-01-17
-- **Merge Commit**: 3005a3d
-- **Files Added**:
-  - `app/core/database.py` (362 lines)
-  - `tests/test_database.py` (530 lines)
-- **Test Results**: 30/30 tests passing (100%)
-- **Coverage**: 86% (excellent for async database module)
-- **Key Features**:
-  - Async PostgreSQL connection with SQLAlchemy 2.0
-  - Database session management and connection pooling
-  - Transaction support with automatic commit/rollback
-  - Comprehensive error handling and logging
-
-### ✅ T002: Configuration System (COMPLETED)
-
-- **Completion Date**: 2025-01-17
-- **Files**: `app/core/config.py` updated
-- **Features**: Pydantic BaseSettings, environment management
-
-### ✅ T001: FastAPI Base Structure (COMPLETED)
-
-- **Completion Date**: 2025-01-17
-- **Files**: `app/main.py` updated
-- **Features**: Health endpoints, CORS, async setup
+**Próximo Paso:** TASK 9 - Optimización de Parámetros y Prevención de Overfitting
 
 ## Current Implementation Context
 
-### 🎯 T008: Analytic Mode (Paper Trading) (NEXT)
+### 🎯 **TASK 9: Optimización de Parámetros y Prevención de Overfitting (NEXT)**
 
-**Goal**: Implement paper trading simulation system for testing strategies without real money.
+**Goal**: Implementar walk-forward analysis, out-of-sample testing y optimización de thresholds para evitar sobreajuste.
 
 **Key Features**:
 
-- Paper trading portfolio simulation with virtual cash
-- Trade execution simulation with realistic slippage and fees
-- Portfolio tracking and P&L calculation
-- Integration with momentum strategy and signal scorer
-- Real-time portfolio updates and position management
-- Performance metrics and reporting
+- Walk-forward analysis con validación cruzada Purged K-Fold CV
+- Out-of-sample testing para validación estadística robusta
+- Optimización de thresholds para evitar overfitting
+- Guardar resultados de walk-forward como artefactos versionados
+- Integración con análisis de costos operativos (TASK 8)
 
 **Dependencies**:
 
-- ✅ T007 (Momentum Strategy Implementation) - Ready
-- ✅ T006 (Top 20 Liquid Assets Identification) - Ready
-- ✅ T005 (Signal Scorer System) - Ready
-- ✅ T004 (Portfolio Source of Truth) - Ready
-- ✅ T003 (PostgreSQL Database) - Ready
-- ✅ T002 (Configuration System) - Ready
-- ✅ T001 (FastAPI Base) - Ready
+- ✅ TASK 8 (Análisis de Costos Operativos) - Ready
+- ✅ TASK 1-5 (Sistema Base) - Ready
 
 **Files to Create**:
 
-- `app/models/paper_trading.py` - Paper trading models and portfolio
-- `app/services/paper_trading_service.py` - Paper trading simulation service
-- `app/api/paper_trading.py` - FastAPI endpoints for paper trading
-- `tests/test_paper_trading.py` - Comprehensive test suite
+- `app/services/parameter_optimization.py` - Servicio de optimización de parámetros
+- `app/models/optimization.py` - Modelos para walk-forward analysis
+- `app/api/optimization.py` - FastAPI endpoints para optimización
+- `tests/test_parameter_optimization.py` - Tests comprehensivos
 
 **Success Criteria**:
 
-- Paper trading portfolio simulation functional
-- Trade execution simulation with realistic conditions
-- Portfolio tracking and P&L calculation
-- Integration with momentum strategy and signal scorer
-- FastAPI endpoints for paper trading management
+- Walk-forward analysis funcional con Purged K-Fold CV
+- Out-of-sample testing implementado
+- Optimización de thresholds automática
+- Integración con análisis de costos operativos
+- FastAPI endpoints para optimización
 - > 90% test coverage
-- Ready for T009 implementation
+- Ready para TASK 10 implementation
 
 ## Implementation Strategy
 
-### 🔄 Current Approach (Following Recommendations)
+### 🔄 Current Approach (MVP Focus)
 
-1. **TradingClientInterface**: Create common interface for all trading clients
-2. **Portfolio Source**: Implement JSON/CSV file support first
-3. **Paper Trading**: Start with paper trading simulation
-4. **Early Testing**: Add pytest + coverage from T004
-5. **Docker Setup**: Create docker-compose.yml early
-6. **Concurrency**: Use asyncio.Queue for market data processing
-7. **Structured Logging**: Implement loguru for better observability
+1. **MVP Operativo**: Sistema estable 1 mes en AWS + Docker
+2. **Paper Trading Activo**: Simulación completa antes de capital real
+3. **Backtesting Profesional**: Validación estadística robusta
+4. **Configuración Centralizada**: Eliminar valores mágicos dispersos
+5. **Concurrencia Robusta**: Prevenir race conditions en producción
 
-### 📊 Quality Standards
+### 📊 Quality Standards MVP
 
 - **Test Coverage**: >90% target
 - **Code Quality**: A-grade with linting
@@ -548,36 +284,34 @@ latency: 1000                       # Cambiar a backup si latencia > 1000ms
 
 ## Next Steps
 
-### 🚀 Immediate Actions
+### 🚀 Immediate Actions MVP
 
-1. **TradingClientInterface**: Create common interface for IBKR/Binance/Paper
-2. **Portfolio Models**: Create portfolio data models
-3. **JSON/CSV Support**: Implement file-based portfolio source
-4. **Paper Trading**: Implement paper trading simulation
-5. **Early Testing**: Add pytest + coverage from T004
-6. **Docker Setup**: Create docker-compose.yml
-7. **Structured Logging**: Implement loguru
+1. **TASK 9**: Implementar Optimización de Parámetros y Prevención de Overfitting
+2. **TASK 10**: Centralizar Configuración (eliminar valores mágicos)
+3. **TASK 13**: Implementar Tests de Concurrencia
+4. **TASK 17**: Implementar Seguridad y Compliance Básica
 
-### 📋 Upcoming Tasks (Reordered by Priority)
+### 📋 Upcoming Tasks (MVP Priority)
 
-- **T008**: Analytic Mode (Paper Trading) (NEXT)
-- **T009**: Market Data Integration
-- **T010**: Signal Confidence Validation
+- **TASK 9**: Optimización de Parámetros y Prevención de Overfitting (NEXT)
+- **TASK 10**: Centralización de Configuración
+- **TASK 13**: Tests de Concurrencia
+- **TASK 17**: Seguridad y Compliance Básica
 
 ## Technical Context
 
-### 🏗️ Architecture Decisions (Following Recommendations)
+### 🏗️ Architecture Decisions (MVP Focus)
 
 - **Database**: PostgreSQL with SQLAlchemy 2.0 async
 - **Portfolio Source**: JSON/CSV files or IBKR/Binance API
 - **Signal Scoring**: Confidence and liquidity-based ranking
 - **Timeframe**: Daily momentum only (single timeframe focus)
-- **Mode**: Analytic (paper trading) before live execution
+- **Mode**: Paper trading before live execution
 - **Testing**: pytest with async support
 - **Code Quality**: black, flake8, mypy
 - **Documentation**: Memory bank updates
 
-### 🔒 Security Considerations
+### 🔒 Security Considerations MVP
 
 - **API Keys**: Secure storage for broker connections
 - **Data Validation**: Pydantic models for input validation
@@ -589,13 +323,13 @@ latency: 1000                       # Cambiar a backup si latencia > 1000ms
 
 ### ✅ Updated Files
 
-- `.memory/core/progress.md` - Updated with T005 completion
-- `.memory/lessons/lesson_T005.md` - Implementation report (pending)
-- `.memory/core/active_context.md` - This file (current focus)
+- `.memory/core/active_context.md` - Updated with TASK 8 completion and MVP focus
+- `.memory/core/progress.md` - Updated with TASK 8 completion and MVP priorities
+- `.memory/tasks/complete_task_list.md` - Updated with TASK 8 completion and MVP phases
 - `DEVELOPER_ONBOARDING_GUIDE.md` - Complete onboarding guide for new developers
 
 ### 📝 Pending Updates
 
-- Create lesson_T005.md implementation report
-- Update system patterns with authentication patterns
-- Update tech context with JWT authentication stack
+- Update system patterns with MVP architectural patterns
+- Update tech context with MVP technology stack
+- Create lesson_T008.md implementation report
