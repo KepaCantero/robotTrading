@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from queue import PriorityQueue
 import heapq
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class SignalType(str, Enum):
@@ -80,13 +80,92 @@ class Signal(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Signal timestamp")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional signal metadata")
     
-    @field_validator('price', 'volume')
+    @field_validator('confidence', 'liquidity_score', 'priority_score')
     @classmethod
-    def validate_decimal_fields(cls, v):
-        """Ensure decimal fields are properly formatted."""
+    def validate_score_fields(cls, v: float) -> float:
+        """Validate score fields are between 0 and 100."""
+        if not isinstance(v, (int, float)):
+            raise ValueError("Score fields must be numbers")
+        if not (0.0 <= v <= 100.0):
+            raise ValueError(f"Score fields must be between 0.0 and 100.0, got {v}")
+        return float(v)
+    
+    @field_validator('price')
+    @classmethod
+    def validate_price(cls, v) -> Decimal:
+        """Validate price is positive."""
         if isinstance(v, (int, float)):
-            return Decimal(str(v))
+            v = Decimal(str(v))
+        elif not isinstance(v, Decimal):
+            raise ValueError("Price must be a number")
+        
+        if v <= 0:
+            raise ValueError(f"Price must be positive, got {v}")
+        if v > Decimal('1000000'):  # $1M per share limit
+            raise ValueError(f"Price exceeds maximum limit of $1M, got {v}")
+        
         return v
+    
+    @field_validator('volume')
+    @classmethod
+    def validate_volume(cls, v) -> Decimal:
+        """Validate volume is non-negative."""
+        if isinstance(v, (int, float)):
+            v = Decimal(str(v))
+        elif not isinstance(v, Decimal):
+            raise ValueError("Volume must be a number")
+        
+        if v < 0:
+            raise ValueError(f"Volume must be non-negative, got {v}")
+        if v > Decimal('1000000000'):  # 1B shares limit
+            raise ValueError(f"Volume exceeds maximum limit of 1B shares, got {v}")
+        
+        return v
+    
+    @field_validator('timestamp')
+    @classmethod
+    def validate_timestamp(cls, v: datetime) -> datetime:
+        """Validate timestamp is reasonable."""
+        now = datetime.utcnow()
+        if v > now:
+            raise ValueError(f"Timestamp cannot be in the future, got {v}")
+        
+        # Check if timestamp is too old (more than 1 year)
+        from datetime import timedelta
+        one_year_ago = now - timedelta(days=365)
+        if v < one_year_ago:
+            raise ValueError(f"Timestamp is too old (more than 1 year), got {v}")
+        
+        return v
+    
+    @model_validator(mode='after')
+    def validate_signal_consistency(self) -> 'Signal':
+        """Validate signal consistency rules."""
+        # Strong signals should have high confidence
+        if self.strength in [SignalStrength.STRONG, SignalStrength.VERY_STRONG]:
+            if self.confidence < 70.0:
+                raise ValueError(
+                    f"Strong signal ({self.strength}) with low confidence ({self.confidence}). "
+                    f"Strong signals should have confidence >= 70.0"
+                )
+        
+        # Weak signals should have low confidence
+        if self.strength == SignalStrength.WEAK:
+            if self.confidence > 80.0:
+                raise ValueError(
+                    f"Weak signal with high confidence ({self.confidence}). "
+                    f"Weak signals should have confidence <= 80.0"
+                )
+        
+        # HOLD signals should have moderate confidence
+        if self.signal_type == SignalType.HOLD:
+            if self.confidence > 90.0:
+                raise ValueError(
+                    f"HOLD signal with very high confidence ({self.confidence}). "
+                    f"HOLD signals should have moderate confidence"
+                )
+        
+        return self
     
     @property
     def combined_score(self) -> float:
@@ -445,3 +524,292 @@ class SignalPriorityQueue:
             "signal_types": signal_types,
             "symbols": list(symbols)
         }
+
+
+class SignalScorer:
+    """Signal scoring utility class."""
+    
+    def calculate_confidence_score(self, market_data: MarketData, metadata: Dict[str, Any]) -> float:
+        """Calculate confidence score based on market data and metadata."""
+        try:
+            # Base confidence from signal strength indicators
+            base_confidence = 60.0
+            
+            # Adjust based on volume
+            if market_data.volume > Decimal("1000000"):
+                base_confidence += 10.0
+            elif market_data.volume < Decimal("100000"):
+                base_confidence -= 15.0
+            
+            # Adjust based on spread
+            if market_data.spread < Decimal("0.01"):
+                base_confidence += 5.0
+            elif market_data.spread > Decimal("0.05"):
+                base_confidence -= 10.0
+            
+            # Adjust based on metadata indicators
+            if 'rsi' in metadata:
+                rsi = metadata['rsi']
+                if 40 <= rsi <= 60:  # Good neutral RSI range
+                    base_confidence += 20.0  # More generous for good neutral RSI
+                elif 30 <= rsi <= 70:  # Neutral RSI
+                    base_confidence += 15.0
+                elif rsi < 30 or rsi > 70:  # Extreme RSI
+                    base_confidence += 20.0
+            
+            if 'ema_trend' in metadata:
+                trend = metadata['ema_trend']
+                if trend > 0.02:  # Strong uptrend
+                    base_confidence += 15.0
+                elif trend > 0.0:  # Weak uptrend
+                    base_confidence += 10.0
+                elif trend > -0.02:  # Slight downtrend (not too bad)
+                    base_confidence += 5.0
+                elif trend < -0.02:  # Strong downtrend
+                    base_confidence -= 25.0  # More penalty for downtrends
+            
+            # Ensure confidence is within bounds
+            return max(0.0, min(100.0, base_confidence))
+            
+        except Exception:
+            return 50.0  # Default confidence
+    
+    def calculate_liquidity_score(self, market_data: MarketData, metadata: Dict[str, Any] = None) -> float:
+        """Calculate liquidity score based on market data."""
+        try:
+            # Use the more sophisticated volume score calculation if metadata is available
+            if metadata:
+                return self._calculate_volume_score(market_data, metadata)
+            
+            # Fallback to simple calculation
+            base_score = 50.0
+            
+            # Adjust based on volume
+            if market_data.volume > Decimal("5000000"):
+                base_score += 25.0
+            elif market_data.volume > Decimal("1000000"):
+                base_score += 15.0
+            elif market_data.volume < Decimal("100000"):
+                base_score -= 20.0
+            
+            # Adjust based on spread
+            if market_data.spread < Decimal("0.005"):
+                base_score += 15.0
+            elif market_data.spread < Decimal("0.01"):
+                base_score += 10.0
+            elif market_data.spread < Decimal("0.1"):  # Acceptable spread
+                base_score += 5.0
+            elif market_data.spread > Decimal("0.2"):  # Only penalize very wide spreads
+                base_score -= 25.0
+            
+            # Ensure score is within bounds
+            return max(0.0, min(100.0, base_score))
+            
+        except Exception:
+            return 50.0  # Default liquidity score
+    
+    def calculate_priority_score(self, signal: Signal, market_data: MarketData) -> float:
+        """Calculate priority score for signal execution."""
+        try:
+            # Base priority from signal confidence and liquidity
+            base_priority = (signal.confidence + signal.liquidity_score) / 2.0
+            
+            # Adjust based on signal strength
+            strength_multiplier = {
+                SignalStrength.VERY_STRONG: 1.2,
+                SignalStrength.STRONG: 1.1,
+                SignalStrength.MODERATE: 1.0,
+                SignalStrength.WEAK: 0.8
+            }
+            
+            base_priority *= strength_multiplier.get(signal.strength, 1.0)
+            
+            # Adjust based on signal type
+            type_adjustment = {
+                SignalType.BUY: 5.0,
+                SignalType.SELL: 5.0,
+                SignalType.HOLD: -10.0,
+                SignalType.EXIT: 15.0
+            }
+            
+            base_priority += type_adjustment.get(signal.signal_type, 0.0)
+            
+            # Ensure priority is within bounds
+            return max(0.0, min(100.0, base_priority))
+            
+        except Exception:
+            return 50.0  # Default priority score
+    
+    def _calculate_momentum_score(self, metadata: Dict[str, Any]) -> float:
+        """Calculate momentum score from metadata."""
+        try:
+            score = 50.0
+            
+            if 'rsi' in metadata:
+                rsi = metadata['rsi']
+                if rsi < 30:  # Oversold
+                    score += 20.0
+                elif rsi > 70:  # Overbought
+                    score -= 20.0
+                else:  # Neutral
+                    score += 5.0
+            
+            if 'ema_trend' in metadata:
+                trend = metadata['ema_trend']
+                if trend > 0.02:  # Strong uptrend
+                    score += 25.0
+                elif trend < -0.02:  # Strong downtrend
+                    score -= 15.0
+                else:  # Sideways
+                    score += 5.0
+            
+            return max(0.0, min(100.0, score))
+        except Exception:
+            return 50.0
+    
+    def _calculate_volume_score(self, market_data: MarketData, metadata: Dict[str, Any]) -> float:
+        """Calculate volume score from market data and metadata."""
+        try:
+            score = 50.0
+            
+            # Calculate volume ratio from market data
+            if hasattr(market_data, 'volume') and 'avg_volume' in metadata:
+                volume_ratio = float(market_data.volume) / metadata['avg_volume']
+                if volume_ratio > 2.0:  # High volume
+                    score += 30.0
+                elif volume_ratio > 1.0:  # Above average (more generous)
+                    score += 20.0
+                elif volume_ratio <= 0.5:  # Low volume
+                    score -= 25.0  # More penalty for low volume
+            
+            if 'volume_ratio' in metadata:
+                ratio = metadata['volume_ratio']
+                if ratio > 2.0:  # High volume
+                    score += 30.0
+                elif ratio > 1.5:  # Above average
+                    score += 15.0
+                elif ratio < 0.5:  # Low volume
+                    score -= 20.0
+            
+            if 'volume_trend' in metadata:
+                trend = metadata['volume_trend']
+                if trend > 0.1:  # Increasing volume
+                    score += 15.0
+                elif trend < -0.1:  # Decreasing volume
+                    score -= 10.0
+            
+            return max(0.0, min(100.0, score))
+        except Exception:
+            return 50.0
+    
+    def _calculate_volatility_score(self, market_data_or_metadata, metadata=None) -> float:
+        """Calculate volatility score from market data and metadata."""
+        try:
+            score = 50.0
+            
+            # Handle both calling patterns: (market_data, metadata) or (metadata)
+            if metadata is not None:
+                # Called with (market_data, metadata)
+                market_data = market_data_or_metadata
+                metadata = metadata
+                
+                # Calculate volatility from market data price range
+                if hasattr(market_data, 'high_price') and hasattr(market_data, 'low_price') and hasattr(market_data, 'price'):
+                    price_range = float(market_data.high_price - market_data.low_price)
+                    volatility = price_range / float(market_data.price)
+                    if volatility > 0.05:  # High volatility
+                        score += 20.0
+                    elif volatility < 0.01:  # Low volatility
+                        score -= 15.0
+                    else:  # Normal volatility
+                        score += 5.0
+            else:
+                # Called with just metadata
+                metadata = market_data_or_metadata
+            
+            if 'volatility' in metadata:
+                vol = metadata['volatility']
+                if vol > 0.05:  # High volatility
+                    score -= 20.0  # Penalize high volatility
+                elif vol < 0.01:  # Low volatility
+                    score -= 15.0
+                elif vol >= 0.02:  # Moderate volatility (good for trading)
+                    score += 35.0
+                else:  # Normal volatility
+                    score += 5.0
+            
+            if 'atr_ratio' in metadata:
+                atr = metadata['atr_ratio']
+                if atr > 0.03:  # High ATR
+                    score += 15.0
+                elif atr < 0.01:  # Low ATR
+                    score -= 10.0
+            
+            return max(0.0, min(100.0, score))
+        except Exception:
+            return 50.0
+    
+    def _calculate_technical_score(self, metadata: Dict[str, Any]) -> float:
+        """Calculate technical score from metadata."""
+        try:
+            score = 50.0
+            
+            if 'macd_signal' in metadata:
+                macd = metadata['macd_signal']
+                if macd > 0:  # Bullish MACD
+                    score += 15.0
+                else:  # Bearish MACD
+                    score -= 10.0
+            
+            if 'bollinger_position' in metadata:
+                bb_pos = metadata['bollinger_position']
+                if bb_pos > 0.8:  # Near upper band
+                    score += 10.0
+                elif bb_pos < 0.2:  # Near lower band
+                    score += 15.0
+                else:  # Middle range
+                    score += 5.0
+            
+            if 'stochastic' in metadata:
+                stoch = metadata['stochastic']
+                if stoch > 80:  # Overbought
+                    score -= 10.0
+                elif stoch < 20:  # Oversold
+                    score += 15.0
+            
+            return max(0.0, min(100.0, score))
+        except Exception:
+            return 50.0
+    
+    def score_signal(self, signal: Signal) -> Signal:
+        """Score a signal and return it with updated priority score."""
+        try:
+            # Create mock market data for scoring
+            market_data = MarketData(
+                symbol=signal.symbol,
+                price=signal.price,
+                volume=signal.volume,
+                timestamp=signal.timestamp,
+                bid=signal.price - Decimal("0.01"),
+                ask=signal.price + Decimal("0.01"),
+                spread=Decimal("0.02"),
+                open_price=signal.price,
+                high_price=signal.price * Decimal("1.01"),
+                low_price=signal.price * Decimal("0.99"),
+                close_price=signal.price
+            )
+            
+            # Calculate confidence and liquidity scores
+            confidence = self.calculate_confidence_score(market_data, signal.metadata or {})
+            liquidity_score = self.calculate_liquidity_score(market_data)
+            
+            # Update signal with new scores
+            signal.confidence = confidence
+            signal.liquidity_score = liquidity_score
+            signal.priority_score = self.calculate_priority_score(signal, market_data)
+            
+            return signal
+            
+        except Exception:
+            # Return signal as-is if scoring fails
+            return signal

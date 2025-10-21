@@ -45,6 +45,9 @@
 - **Type Checking**: mypy strict mode
 - **Docstrings**: Google style docstrings
 - **Pre-commit**: Hooks para quality gates
+- **Code Contracts**: Design by Contract with Pydantic validation
+- **Contract Testing**: Comprehensive contract violation testing
+- **Data Validation**: Automatic validation of critical trading data
 
 ### Frontend & Dashboard
 

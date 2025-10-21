@@ -90,6 +90,81 @@ class PortfolioService:
             await self._handle_error("api_errors")
             return None
     
+    async def add_position(self, position: Position) -> bool:
+        """Add a position to the portfolio."""
+        try:
+            # Get current portfolio
+            portfolio = await self.get_portfolio()
+            if portfolio is None:
+                return False
+            
+            # Create new portfolio with added position
+            new_positions = portfolio.positions.copy()
+            new_positions.append(position)
+            
+            # Create new portfolio instance
+            new_portfolio = Portfolio(
+                cash=portfolio.cash,
+                positions=new_positions,
+                timestamp=datetime.utcnow(),
+                broker=portfolio.broker,
+                currency=portfolio.currency
+            )
+            
+            # Update the provider with new portfolio
+            await self.provider.update_portfolio(new_portfolio)
+            
+            logger.info(f"Added position for {position.symbol}: {position.quantity} shares")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error adding position for {position.symbol}: {e}")
+            await self._handle_error("api_errors")
+            return False
+    
+    async def update_position(self, position: Position) -> bool:
+        """Update an existing position in the portfolio."""
+        try:
+            # Get current portfolio
+            portfolio = await self.get_portfolio()
+            if portfolio is None:
+                return False
+            
+            # Find and update the position
+            new_positions = []
+            position_updated = False
+            
+            for pos in portfolio.positions:
+                if pos.symbol == position.symbol:
+                    new_positions.append(position)
+                    position_updated = True
+                else:
+                    new_positions.append(pos)
+            
+            # If position wasn't found, add it
+            if not position_updated:
+                new_positions.append(position)
+            
+            # Create new portfolio instance
+            new_portfolio = Portfolio(
+                cash=portfolio.cash,
+                positions=new_positions,
+                timestamp=datetime.utcnow(),
+                broker=portfolio.broker,
+                currency=portfolio.currency
+            )
+            
+            # Update the provider with new portfolio
+            await self.provider.update_portfolio(new_portfolio)
+            
+            logger.info(f"Updated position for {position.symbol}: {position.quantity} shares")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error updating position for {position.symbol}: {e}")
+            await self._handle_error("api_errors")
+            return False
+    
     async def get_asset_universe(self) -> List[AssetUniverse]:
         """Get asset universe."""
         try:

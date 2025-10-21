@@ -11,7 +11,7 @@ from decimal import Decimal
 from typing import List, Optional, Protocol
 from enum import Enum
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class AssetClass(str, Enum):
@@ -36,13 +36,77 @@ class Position(BaseModel):
     currency: str = Field(default="USD", description="Position currency")
     broker: str = Field(..., description="Broker identifier")
     
-    @field_validator('quantity', 'avg_price', 'market_price', 'unrealized_pnl', 'realized_pnl')
+    @field_validator('quantity')
     @classmethod
-    def validate_decimal_fields(cls, v):
-        """Ensure decimal fields are properly formatted."""
+    def validate_quantity(cls, v) -> Decimal:
+        """Validate quantity is non-zero."""
         if isinstance(v, (int, float)):
-            return Decimal(str(v))
+            v = Decimal(str(v))
+        elif not isinstance(v, Decimal):
+            raise ValueError("Quantity must be a number")
+        
+        if v == 0:
+            raise ValueError("Position quantity cannot be zero")
+        
+        if v > Decimal('1000000'):  # 1M shares limit
+            raise ValueError(f"Quantity exceeds maximum limit of 1M shares, got {v}")
+        if v < Decimal('-1000000'):  # -1M shares limit
+            raise ValueError(f"Quantity below minimum limit of -1M shares, got {v}")
+        
         return v
+    
+    @field_validator('avg_price', 'market_price')
+    @classmethod
+    def validate_prices(cls, v) -> Decimal:
+        """Validate prices are positive."""
+        if isinstance(v, (int, float)):
+            v = Decimal(str(v))
+        elif not isinstance(v, Decimal):
+            raise ValueError("Price must be a number")
+        
+        if v <= 0:
+            raise ValueError(f"Price must be positive, got {v}")
+        if v > Decimal('1000000'):  # $1M per share limit
+            raise ValueError(f"Price exceeds maximum limit of $1M, got {v}")
+        
+        return v
+    
+    @field_validator('unrealized_pnl', 'realized_pnl')
+    @classmethod
+    def validate_pnl(cls, v) -> Decimal:
+        """Validate P&L fields."""
+        if isinstance(v, (int, float)):
+            v = Decimal(str(v))
+        elif not isinstance(v, Decimal):
+            raise ValueError("P&L must be a number")
+        
+        if v > Decimal('1000000000'):  # $1B limit
+            raise ValueError(f"P&L exceeds maximum limit of $1B, got {v}")
+        if v < Decimal('-1000000000'):  # -$1B limit
+            raise ValueError(f"P&L below minimum limit of -$1B, got {v}")
+        
+        return v
+    
+    @model_validator(mode='after')
+    def validate_position_consistency(self) -> 'Position':
+        """Validate position consistency rules."""
+        # Validate quantity and prices are consistent
+        if self.quantity != 0 and self.avg_price <= 0:
+            raise ValueError("Average price must be positive for non-zero positions")
+        
+        if self.quantity != 0 and self.market_price <= 0:
+            raise ValueError("Market price must be positive for non-zero positions")
+        
+        # Validate unrealized P&L calculation
+        if self.quantity != 0:
+            expected_unrealized = self.quantity * (self.market_price - self.avg_price)
+            if abs(self.unrealized_pnl - expected_unrealized) > Decimal('0.01'):
+                raise ValueError(
+                    f"Unrealized P&L calculation mismatch. "
+                    f"Expected: {expected_unrealized}, Got: {self.unrealized_pnl}"
+                )
+        
+        return self
     
     @property
     def market_value(self) -> Decimal:

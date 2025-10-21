@@ -145,13 +145,14 @@ class PaperTradingPortfolioProvider:
                 del self.positions[symbol]
             else:
                 # Update position
+                unrealized_pnl = total_quantity * (price - (total_cost_basis / total_quantity))
                 self.positions[symbol] = Position(
                     symbol=symbol,
                     asset_class=self._get_asset_class(symbol),
                     quantity=total_quantity,
                     avg_price=total_cost_basis / total_quantity,
                     market_price=price,
-                    unrealized_pnl=Decimal("0"),
+                    unrealized_pnl=unrealized_pnl,
                     realized_pnl=existing_pos.realized_pnl,
                     currency="USD",
                     broker=self.broker
@@ -237,3 +238,16 @@ class PaperTradingPortfolioProvider:
             },
             "timestamp": portfolio.timestamp.isoformat()
         }
+    
+    async def update_portfolio(self, portfolio: Portfolio) -> bool:
+        """Update portfolio state."""
+        try:
+            # Update cash
+            self.cash = portfolio.cash
+            
+            # Update positions
+            self.positions = {pos.symbol: pos for pos in portfolio.positions}
+            
+            return True
+        except Exception:
+            return False

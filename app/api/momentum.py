@@ -53,6 +53,93 @@ async def get_momentum_overview(
         raise HTTPException(status_code=500, detail=f"Error getting momentum overview: {str(e)}")
 
 
+@router.post("/analyze", response_model=Dict[str, Any])
+async def analyze_asset_momentum_post(
+    request_data: Dict[str, Any],
+    service: MomentumAnalysisService = Depends(get_momentum_analysis_service)
+):
+    """Analyze momentum for a specific asset via POST request."""
+    try:
+        symbol = request_data.get("symbol", "").upper()
+        timeframe_str = request_data.get("timeframe", "daily")
+        momentum_types = request_data.get("momentum_types", [])
+        
+        if not symbol:
+            raise HTTPException(status_code=400, detail="Symbol is required")
+        
+        # Convert timeframe string to enum
+        timeframe_mapping = {
+            "daily": Timeframe.DAILY,
+            "1d": Timeframe.DAILY,
+            "hourly": Timeframe.HOURLY,
+            "1h": Timeframe.HOURLY,
+            "4h": Timeframe.FOUR_HOUR,
+            "weekly": Timeframe.WEEKLY,
+            "1w": Timeframe.WEEKLY
+        }
+        
+        timeframe = timeframe_mapping.get(timeframe_str.lower())
+        if not timeframe:
+            raise HTTPException(status_code=400, detail=f"Invalid timeframe: {timeframe_str}")
+        
+        # Analyze asset momentum
+        analysis = await service.analyze_asset_momentum(symbol, timeframe)
+        
+        if not analysis:
+            raise HTTPException(status_code=404, detail=f"No analysis found for {symbol}")
+        
+        return {
+            "success": True,
+            "analysis": {
+                "symbol": analysis.symbol,
+                "timeframe": analysis.timeframe.value,
+                "analysis_date": analysis.analysis_date,
+                "overall_momentum": analysis.overall_momentum,
+                "trend_direction": analysis.trend_direction,
+                "signal_count": analysis.signal_count,
+                "risk_level": analysis.risk_level,
+                "volatility_level": analysis.volatility_level,
+                "indicators": {
+                    "rsi": analysis.indicators.rsi,
+                    "ema_9": analysis.indicators.ema_9,
+                    "ema_21": analysis.indicators.ema_21,
+                    "ema_50": analysis.indicators.ema_50,
+                    "ema_200": analysis.indicators.ema_200,
+                    "macd": analysis.indicators.macd,
+                    "macd_signal": analysis.indicators.macd_signal,
+                    "macd_histogram": analysis.indicators.macd_histogram,
+                    "atr": analysis.indicators.atr,
+                    "volatility": analysis.indicators.volatility,
+                    "volume_ratio": analysis.indicators.volume_ratio,
+                    "ema_trend": analysis.indicators.ema_trend,
+                    "rsi_signal": analysis.indicators.rsi_signal
+                },
+                "signals": [
+                    {
+                        "signal_type": signal.signal_type.value,
+                        "strength": signal.strength,
+                        "direction": signal.direction,
+                        "confidence": signal.confidence,
+                        "momentum_score": signal.momentum_score,
+                        "current_price": float(signal.current_price),
+                        "price_change_pct": signal.price_change_pct,
+                        "volume_change_pct": signal.volume_change_pct,
+                        "timestamp": signal.timestamp,
+                        "expires_at": signal.expires_at,
+                        "is_expired": signal.is_expired
+                    }
+                    for signal in analysis.signals
+                ]
+            },
+            "timestamp": datetime.utcnow()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing momentum for {symbol}: {str(e)}")
+
+
 @router.get("/analyze/{symbol}", response_model=Dict[str, Any])
 async def analyze_asset_momentum(
     symbol: str,
@@ -116,6 +203,46 @@ async def analyze_asset_momentum(
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error analyzing momentum for {symbol}: {str(e)}")
+
+
+@router.get("/signals/{symbol}", response_model=Dict[str, Any])
+async def get_momentum_signals_for_symbol(
+    symbol: str,
+    service: MomentumAnalysisService = Depends(get_momentum_analysis_service)
+):
+    """Get momentum signals for a specific asset."""
+    try:
+        signals = await service.get_momentum_signals_for_symbol(symbol.upper())
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting momentum signals for {symbol}: {str(e)}")
+    
+    if not signals:
+        raise HTTPException(status_code=404, detail=f"No momentum signals found for {symbol.upper()}")
+    
+    return {
+            "success": True,
+            "symbol": symbol.upper(),
+            "signals": [
+                {
+                    "symbol": signal.symbol,
+                    "signal_type": signal.signal_type.value,
+                    "timeframe": signal.timeframe.value,
+                    "strength": signal.strength,
+                    "direction": signal.direction,
+                    "confidence": signal.confidence,
+                    "momentum_score": signal.momentum_score,
+                    "current_price": float(signal.current_price),
+                    "price_change_pct": signal.price_change_pct,
+                    "volume_change_pct": signal.volume_change_pct,
+                    "timestamp": signal.timestamp,
+                    "expires_at": signal.expires_at,
+                    "is_expired": signal.is_expired
+                }
+                for signal in signals
+            ],
+            "count": len(signals),
+            "timestamp": datetime.utcnow()
+        }
 
 
 @router.get("/signals", response_model=Dict[str, Any])
@@ -210,6 +337,247 @@ async def get_top_momentum_signals(
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting top momentum signals: {str(e)}")
+
+
+@router.post("/strategies", response_model=Dict[str, Any])
+async def create_momentum_strategy(
+    strategy_data: Dict[str, Any],
+    service: MomentumAnalysisService = Depends(get_momentum_analysis_service)
+):
+    """Create a new momentum strategy."""
+    try:
+        # Validate required fields
+        required_fields = ["name", "description", "timeframe"]
+        
+        # Check for momentum_type or momentum_types
+        if "momentum_type" not in strategy_data and "momentum_types" not in strategy_data:
+            raise HTTPException(status_code=422, detail="Missing required field: momentum_type or momentum_types")
+        
+        for field in required_fields:
+            if field not in strategy_data:
+                raise HTTPException(status_code=422, detail=f"Missing required field: {field}")
+        
+        # Convert momentum_type string to enum
+        momentum_type_str = strategy_data.get("momentum_type", "price_momentum")
+        
+        # Handle both "momentum_type" and "momentum_types" formats
+        if "momentum_types" in strategy_data and "momentum_type" not in strategy_data:
+            momentum_types_list = strategy_data["momentum_types"]
+            if isinstance(momentum_types_list, list) and len(momentum_types_list) > 0:
+                momentum_type_str = momentum_types_list[0]
+        
+        momentum_type_mapping = {
+            "price": MomentumType.PRICE_MOMENTUM,
+            "price_momentum": MomentumType.PRICE_MOMENTUM,
+            "volume": MomentumType.VOLUME_MOMENTUM,
+            "volume_momentum": MomentumType.VOLUME_MOMENTUM,
+            "volatility": MomentumType.VOLATILITY_MOMENTUM,
+            "volatility_momentum": MomentumType.VOLATILITY_MOMENTUM
+        }
+        momentum_type = momentum_type_mapping.get(momentum_type_str.lower())
+        if not momentum_type:
+            raise HTTPException(status_code=422, detail=f"Invalid momentum_type: {momentum_type_str}")
+        
+        # Convert timeframe string to enum
+        timeframe_str = strategy_data.get("timeframe", "daily")
+        timeframe_mapping = {
+            "daily": Timeframe.DAILY,
+            "1d": Timeframe.DAILY,
+            "hourly": Timeframe.HOURLY,
+            "1h": Timeframe.HOURLY,
+            "4h": Timeframe.FOUR_HOUR,
+            "weekly": Timeframe.WEEKLY,
+            "1w": Timeframe.WEEKLY
+        }
+        timeframe = timeframe_mapping.get(timeframe_str.lower())
+        if not timeframe:
+            raise HTTPException(status_code=422, detail=f"Invalid timeframe: {timeframe_str}")
+        
+        # Create strategy object
+        strategy = MomentumStrategy(
+            name=strategy_data["name"],
+            description=strategy_data["description"],
+            momentum_type=momentum_type,
+            timeframe=timeframe,
+            min_strength=strategy_data.get("min_strength", 0.5),
+            min_confidence=strategy_data.get("min_confidence", 0.7),
+            signal_duration=strategy_data.get("signal_duration", 24),
+            rsi_oversold=strategy_data.get("rsi_oversold", 30),
+            rsi_overbought=strategy_data.get("rsi_overbought", 70),
+            ema_short_period=strategy_data.get("ema_short_period", 9),
+            ema_long_period=strategy_data.get("ema_long_period", 21),
+            min_volume_ratio=strategy_data.get("min_volume_ratio", 1.2),
+            volume_spike_threshold=strategy_data.get("volume_spike_threshold", 2.0),
+            max_position_size=strategy_data.get("max_position_size", 10),
+            stop_loss_pct=strategy_data.get("stop_loss_pct", 0.05),
+            take_profit_pct=strategy_data.get("take_profit_pct", 0.10),
+            is_active=strategy_data.get("is_active", True)
+        )
+        
+        # Create strategy via service
+        created_strategy = await service.create_strategy(strategy)
+        
+        return {
+            "success": True,
+            "strategy": {
+                "name": created_strategy.name,
+                "description": created_strategy.description,
+                "momentum_type": created_strategy.momentum_type.value,
+                "timeframe": created_strategy.timeframe.value,
+                "min_strength": created_strategy.min_strength,
+                "min_confidence": created_strategy.min_confidence,
+                "signal_duration": created_strategy.signal_duration,
+                "rsi_oversold": created_strategy.rsi_oversold,
+                "rsi_overbought": created_strategy.rsi_overbought,
+                "ema_short_period": created_strategy.ema_short_period,
+                "ema_long_period": created_strategy.ema_long_period,
+                "min_volume_ratio": created_strategy.min_volume_ratio,
+                "volume_spike_threshold": created_strategy.volume_spike_threshold,
+                "max_position_size": created_strategy.max_position_size,
+                "stop_loss_pct": created_strategy.stop_loss_pct,
+                "take_profit_pct": created_strategy.take_profit_pct,
+                "is_active": created_strategy.is_active,
+                "created_at": created_strategy.created_at,
+                "updated_at": created_strategy.updated_at
+            },
+            "timestamp": datetime.utcnow()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating momentum strategy: {str(e)}")
+
+
+@router.get("/strategies/{strategy_name}", response_model=Dict[str, Any])
+async def get_momentum_strategy(
+    strategy_name: str,
+    service: MomentumAnalysisService = Depends(get_momentum_analysis_service)
+):
+    """Get a specific momentum strategy."""
+    try:
+        strategy = await service.get_strategy(strategy_name)
+        
+        if not strategy:
+            raise HTTPException(status_code=404, detail=f"Strategy {strategy_name} not found")
+        
+        return {
+            "success": True,
+            "strategy": {
+                "name": strategy.name,
+                "description": strategy.description,
+                "momentum_type": strategy.momentum_type.value,
+                "timeframe": strategy.timeframe.value,
+                "min_strength": strategy.min_strength,
+                "min_confidence": strategy.min_confidence,
+                "signal_duration": strategy.signal_duration,
+                "rsi_oversold": strategy.rsi_oversold,
+                "rsi_overbought": strategy.rsi_overbought,
+                "ema_short_period": strategy.ema_short_period,
+                "ema_long_period": strategy.ema_long_period,
+                "min_volume_ratio": strategy.min_volume_ratio,
+                "volume_spike_threshold": strategy.volume_spike_threshold,
+                "max_position_size": strategy.max_position_size,
+                "stop_loss_pct": strategy.stop_loss_pct,
+                "take_profit_pct": strategy.take_profit_pct,
+                "is_active": strategy.is_active,
+                "created_at": strategy.created_at,
+                "updated_at": strategy.updated_at
+            },
+            "timestamp": datetime.utcnow()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting momentum strategy: {str(e)}")
+
+
+@router.put("/strategies/{strategy_name}", response_model=Dict[str, Any])
+async def update_momentum_strategy(
+    strategy_name: str,
+    strategy_data: Dict[str, Any],
+    service: MomentumAnalysisService = Depends(get_momentum_analysis_service)
+):
+    """Update a momentum strategy."""
+    try:
+        # Get existing strategy
+        existing_strategy = await service.get_strategy(strategy_name)
+        if not existing_strategy:
+            raise HTTPException(status_code=404, detail=f"Strategy {strategy_name} not found")
+        
+        # Update fields if provided
+        updated_fields = {}
+        for field in ["description", "min_strength", "min_confidence", "signal_duration", 
+                      "rsi_oversold", "rsi_overbought", "ema_short_period", "ema_long_period",
+                      "min_volume_ratio", "volume_spike_threshold", "max_position_size",
+                      "stop_loss_pct", "take_profit_pct", "is_active"]:
+            if field in strategy_data:
+                updated_fields[field] = strategy_data[field]
+        
+        # Update strategy via service
+        updated_strategy = await service.update_strategy(strategy_name, updated_fields)
+        
+        return {
+            "success": True,
+            "strategy": {
+                "name": updated_strategy.name,
+                "description": updated_strategy.description,
+                "momentum_type": updated_strategy.momentum_type.value,
+                "timeframe": updated_strategy.timeframe.value,
+                "min_strength": updated_strategy.min_strength,
+                "min_confidence": updated_strategy.min_confidence,
+                "signal_duration": updated_strategy.signal_duration,
+                "rsi_oversold": updated_strategy.rsi_oversold,
+                "rsi_overbought": updated_strategy.rsi_overbought,
+                "ema_short_period": updated_strategy.ema_short_period,
+                "ema_long_period": updated_strategy.ema_long_period,
+                "min_volume_ratio": updated_strategy.min_volume_ratio,
+                "volume_spike_threshold": updated_strategy.volume_spike_threshold,
+                "max_position_size": updated_strategy.max_position_size,
+                "stop_loss_pct": updated_strategy.stop_loss_pct,
+                "take_profit_pct": updated_strategy.take_profit_pct,
+                "is_active": updated_strategy.is_active,
+                "created_at": updated_strategy.created_at,
+                "updated_at": updated_strategy.updated_at
+            },
+            "timestamp": datetime.utcnow()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating momentum strategy: {str(e)}")
+
+
+@router.delete("/strategies/{strategy_name}", response_model=Dict[str, Any])
+async def delete_momentum_strategy(
+    strategy_name: str,
+    service: MomentumAnalysisService = Depends(get_momentum_analysis_service)
+):
+    """Delete a momentum strategy."""
+    try:
+        # Check if strategy exists
+        existing_strategy = await service.get_strategy(strategy_name)
+        if not existing_strategy:
+            raise HTTPException(status_code=404, detail=f"Strategy {strategy_name} not found")
+        
+        # Delete strategy via service
+        success = await service.delete_strategy(strategy_name)
+        
+        if not success:
+            raise HTTPException(status_code=500, detail=f"Failed to delete strategy {strategy_name}")
+        
+        return {
+            "success": True,
+            "message": f"Strategy {strategy_name} deleted successfully",
+            "timestamp": datetime.utcnow()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting momentum strategy: {str(e)}")
 
 
 @router.get("/strategies", response_model=Dict[str, Any])
@@ -358,13 +726,19 @@ async def get_technical_indicators(
     """Get technical indicators for a specific asset."""
     try:
         analysis = await service.analyze_asset_momentum(symbol.upper(), timeframe)
-        indicators = analysis.indicators
-        
-        return {
-            "success": True,
-            "symbol": symbol.upper(),
-            "timeframe": timeframe.value,
-            "indicators": {
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting technical indicators for {symbol}: {str(e)}")
+    
+    if not analysis:
+        raise HTTPException(status_code=404, detail=f"Analysis not found for {symbol.upper()}")
+    
+    indicators = analysis.indicators
+    
+    return {
+        "success": True,
+        "symbol": symbol.upper(),
+        "timeframe": timeframe.value,
+        "indicators": {
                 "rsi": indicators.rsi,
                 "ema_9": indicators.ema_9,
                 "ema_21": indicators.ema_21,
@@ -383,9 +757,6 @@ async def get_technical_indicators(
             },
             "timestamp": datetime.utcnow()
         }
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error getting technical indicators for {symbol}: {str(e)}")
 
 
 @router.get("/health", response_model=Dict[str, Any])
@@ -456,3 +827,160 @@ async def get_momentum_stats(
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting momentum stats: {str(e)}")
+
+
+@router.get("/analyses", response_model=Dict[str, Any])
+async def get_momentum_analyses(
+    service: MomentumAnalysisService = Depends(get_momentum_analysis_service)
+):
+    """Get all momentum analyses."""
+    try:
+        analyses = await service.get_analyses()
+        
+        analyses_data = []
+        for analysis in analyses:
+            analyses_data.append({
+                "symbol": analysis.symbol,
+                "timeframe": analysis.timeframe.value,
+                "analysis_date": analysis.analysis_date,
+                "overall_momentum": analysis.overall_momentum,
+                "trend_direction": analysis.trend_direction,
+                "signal_count": analysis.signal_count,
+                "risk_level": analysis.risk_level,
+                "volatility_level": analysis.volatility_level,
+                "indicators": {
+                    "rsi": analysis.indicators.rsi,
+                    "ema_9": analysis.indicators.ema_9,
+                    "ema_21": analysis.indicators.ema_21,
+                    "ema_50": analysis.indicators.ema_50,
+                    "ema_200": analysis.indicators.ema_200,
+                    "macd": analysis.indicators.macd,
+                    "macd_signal": analysis.indicators.macd_signal,
+                    "macd_histogram": analysis.indicators.macd_histogram,
+                    "atr": analysis.indicators.atr,
+                    "volatility": analysis.indicators.volatility,
+                    "volume_ratio": analysis.indicators.volume_ratio,
+                    "ema_trend": analysis.indicators.ema_trend,
+                    "rsi_signal": analysis.indicators.rsi_signal
+                },
+                "signals": [
+                    {
+                        "signal_type": signal.signal_type.value,
+                        "strength": signal.strength,
+                        "direction": signal.direction,
+                        "confidence": signal.confidence,
+                        "momentum_score": signal.momentum_score,
+                        "current_price": float(signal.current_price),
+                        "price_change_pct": signal.price_change_pct,
+                        "volume_change_pct": signal.volume_change_pct,
+                        "timestamp": signal.timestamp,
+                        "expires_at": signal.expires_at,
+                        "is_expired": signal.is_expired
+                    }
+                    for signal in analysis.signals
+                ]
+            })
+        
+        return {
+            "success": True,
+            "analyses": analyses_data,
+            "count": len(analyses_data),
+            "timestamp": datetime.utcnow()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting momentum analyses: {str(e)}")
+
+
+@router.get("/analyses/{analysis_id}", response_model=Dict[str, Any])
+async def get_momentum_analysis(
+    analysis_id: str,
+    service: MomentumAnalysisService = Depends(get_momentum_analysis_service)
+):
+    """Get a specific momentum analysis."""
+    try:
+        analysis = await service.get_analysis(analysis_id)
+        
+        if not analysis:
+            raise HTTPException(status_code=404, detail=f"Analysis {analysis_id} not found")
+        
+        return {
+            "success": True,
+            "analysis": {
+                "symbol": analysis.symbol,
+                "timeframe": analysis.timeframe.value,
+                "analysis_date": analysis.analysis_date,
+                "overall_momentum": analysis.overall_momentum,
+                "trend_direction": analysis.trend_direction,
+                "signal_count": analysis.signal_count,
+                "risk_level": analysis.risk_level,
+                "volatility_level": analysis.volatility_level,
+                "indicators": {
+                    "rsi": analysis.indicators.rsi,
+                    "ema_9": analysis.indicators.ema_9,
+                    "ema_21": analysis.indicators.ema_21,
+                    "ema_50": analysis.indicators.ema_50,
+                    "ema_200": analysis.indicators.ema_200,
+                    "macd": analysis.indicators.macd,
+                    "macd_signal": analysis.indicators.macd_signal,
+                    "macd_histogram": analysis.indicators.macd_histogram,
+                    "atr": analysis.indicators.atr,
+                    "volatility": analysis.indicators.volatility,
+                    "volume_ratio": analysis.indicators.volume_ratio,
+                    "ema_trend": analysis.indicators.ema_trend,
+                    "rsi_signal": analysis.indicators.rsi_signal
+                },
+                "signals": [
+                    {
+                        "signal_type": signal.signal_type.value,
+                        "strength": signal.strength,
+                        "direction": signal.direction,
+                        "confidence": signal.confidence,
+                        "momentum_score": signal.momentum_score,
+                        "current_price": float(signal.current_price),
+                        "price_change_pct": signal.price_change_pct,
+                        "volume_change_pct": signal.volume_change_pct,
+                        "timestamp": signal.timestamp,
+                        "expires_at": signal.expires_at,
+                        "is_expired": signal.is_expired
+                    }
+                    for signal in analysis.signals
+                ]
+            },
+            "timestamp": datetime.utcnow()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting momentum analysis: {str(e)}")
+
+
+@router.delete("/analyses/{analysis_id}", response_model=Dict[str, Any])
+async def delete_momentum_analysis(
+    analysis_id: str,
+    service: MomentumAnalysisService = Depends(get_momentum_analysis_service)
+):
+    """Delete a momentum analysis."""
+    try:
+        # Check if analysis exists
+        existing_analysis = await service.get_analysis(analysis_id)
+        if not existing_analysis:
+            raise HTTPException(status_code=404, detail=f"Analysis {analysis_id} not found")
+        
+        # Delete analysis via service
+        success = await service.delete_analysis(analysis_id)
+        
+        if not success:
+            raise HTTPException(status_code=500, detail=f"Failed to delete analysis {analysis_id}")
+        
+        return {
+            "success": True,
+            "message": f"Analysis {analysis_id} deleted successfully",
+            "timestamp": datetime.utcnow()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting momentum analysis: {str(e)}")

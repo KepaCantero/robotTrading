@@ -637,6 +637,56 @@ class MomentumAnalysisService:
             })
         
         return top_assets
+    
+    # CRUD methods for strategies
+    async def create_strategy(self, strategy: MomentumStrategy) -> MomentumStrategy:
+        """Create a new momentum strategy."""
+        self.strategies[strategy.name] = strategy
+        return strategy
+    
+    async def get_strategy(self, strategy_name: str) -> Optional[MomentumStrategy]:
+        """Get a momentum strategy by name."""
+        return self.strategies.get(strategy_name)
+    
+    async def update_strategy(self, strategy_name: str, updated_fields: Dict[str, Any]) -> Optional[MomentumStrategy]:
+        """Update a momentum strategy."""
+        if strategy_name not in self.strategies:
+            return None
+        
+        strategy = self.strategies[strategy_name]
+        
+        # Update fields
+        for field, value in updated_fields.items():
+            if hasattr(strategy, field):
+                setattr(strategy, field, value)
+        
+        # Update timestamp
+        strategy.updated_at = datetime.utcnow()
+        
+        return strategy
+    
+    async def delete_strategy(self, strategy_name: str) -> bool:
+        """Delete a momentum strategy."""
+        if strategy_name in self.strategies:
+            del self.strategies[strategy_name]
+            return True
+        return False
+    
+    # CRUD methods for analyses
+    async def get_analyses(self) -> List[MomentumAnalysis]:
+        """Get all momentum analyses."""
+        return list(self.analyses.values())
+    
+    async def get_analysis(self, analysis_id: str) -> Optional[MomentumAnalysis]:
+        """Get a momentum analysis by ID."""
+        return self.analyses.get(analysis_id)
+    
+    async def delete_analysis(self, analysis_id: str) -> bool:
+        """Delete a momentum analysis."""
+        if analysis_id in self.analyses:
+            del self.analyses[analysis_id]
+            return True
+        return False
 
 
 # Global service instance
