@@ -1,0 +1,78 @@
+{
+    "machine_info": {
+        "node": "D74QXV4R37",
+        "processor": "arm",
+        "machine": "arm64",
+        "python_compiler": "Clang 14.0.0 (clang-1400.0.29.202)",
+        "python_implementation": "CPython",
+        "python_implementation_version": "3.9.6",
+        "python_version": "3.9.6",
+        "python_build": [
+            "default",
+            "Oct 18 2022 12:41:40"
+        ],
+        "release": "24.6.0",
+        "system": "Darwin",
+        "cpu": {
+            "python_version": "3.9.6.final.0 (64 bit)",
+            "cpuinfo_version": [
+                9,
+                0,
+                0
+            ],
+            "cpuinfo_version_string": "9.0.0",
+            "arch": "ARM_8",
+            "bits": 64,
+            "count": 10,
+            "arch_string_raw": "arm64",
+            "brand_raw": "Apple M1 Pro"
+        }
+    },
+    "commit_info": {
+        "id": "ded0e752d9bdc35a5d8bb5fff69dd9cd90faac16",
+        "time": "2025-10-19T18:00:42+02:00",
+        "author_time": "2025-10-19T18:00:42+02:00",
+        "dirty": true,
+        "project": "algoTrading",
+        "branch": "main"
+    },
+    "benchmarks": [
+        {
+            "group": null,
+            "name": "test_backtest_baseline",
+            "fullname": "tests/test_performance.py::TestPerformanceBaselines::test_backtest_baseline",
+            "params": null,
+            "param": null,
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 0.0016010840000000304,
+                "max": 0.002125875000000166,
+                "mean": 0.0017197614309278364,
+                "stddev": 0.00011060083326811662,
+                "rounds": 485,
+                "median": 0.0016763749999999522,
+                "iqr": 0.00015526050000003178,
+                "q1": 0.001632489499999945,
+                "q3": 0.0017877499999999769,
+                "iqr_outliers": 7,
+                "stddev_outliers": 119,
+                "outliers": "119;7",
+                "ld15iqr": 0.0016010840000000304,
+                "hd15iqr": 0.002021791000000217,
+                "ops": 581.4760012733193,
+                "total": 0.8340842940000006,
+                "iterations": 1
+            }
+        }
+    ],
+    "datetime": "2025-10-19T16:49:06.409272+00:00",
+    "version": "5.1.0"
+}

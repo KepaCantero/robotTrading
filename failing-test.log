@@ -1,0 +1,2994 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.9.6, pytest-8.3.4, pluggy-1.6.0 -- /Users/kepa.cantero/Projects/algoTrading/.venv/bin/python
+cachedir: .pytest_cache
+benchmark: 5.1.0 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: /Users/kepa.cantero/Projects/algoTrading
+configfile: pytest.ini
+plugins: asyncio-0.24.0, cov-6.0.0, anyio-4.11.0, benchmark-5.1.0
+asyncio: mode=strict, default_loop_scope=None
+collecting ... collected 596 items
+
+tests/test_advanced_backtesting.py::TestAdvancedBacktestingMethods::test_statistical_significance_test PASSED [  0%]
+tests/test_advanced_backtesting.py::TestAdvancedBacktestingMethods::test_monte_carlo_simulation PASSED [  0%]
+tests/test_advanced_backtesting.py::TestAdvancedBacktestingMethods::test_trade_randomization PASSED [  0%]
+tests/test_advanced_backtesting.py::TestAdvancedBacktestingMethods::test_bootstrap_analysis PASSED [  0%]
+tests/test_advanced_backtesting.py::TestAdvancedBacktestingMethods::test_regime_analysis PASSED [  0%]
+tests/test_advanced_backtesting.py::TestAdvancedBacktestingMethods::test_parameter_sensitivity_analysis PASSED [  1%]
+tests/test_api_assets.py::TestAssetAPI::test_get_assets_overview_success PASSED [  1%]
+tests/test_api_assets.py::TestAssetAPI::test_get_assets_overview_service_error PASSED [  1%]
+tests/test_api_assets.py::TestAssetAPI::test_get_liquid_assets_success PASSED [  1%]
+tests/test_api_assets.py::TestAssetAPI::test_get_liquid_assets_invalid_class PASSED [  1%]
+tests/test_api_assets.py::TestAssetAPI::test_get_liquid_assets_service_error FAILED [  1%]
+tests/test_api_assets.py::TestAssetAPI::test_get_asset_details_success FAILED [  2%]
+tests/test_api_assets.py::TestAssetAPI::test_get_asset_details_not_found FAILED [  2%]
+tests/test_api_assets.py::TestAssetAPI::test_get_asset_details_service_error FAILED [  2%]
+tests/test_api_assets.py::TestAssetAPI::test_get_liquidity_metrics_success FAILED [  2%]
+tests/test_api_assets.py::TestAssetAPI::test_get_liquidity_metrics_not_found FAILED [  2%]
+tests/test_api_assets.py::TestAssetAPI::test_get_liquidity_metrics_service_error FAILED [  2%]
+tests/test_api_assets.py::TestAssetAPI::test_get_asset_rankings_success FAILED [  3%]
+tests/test_api_assets.py::TestAssetAPI::test_get_asset_rankings_invalid_class PASSED [  3%]
+tests/test_api_assets.py::TestAssetAPI::test_get_asset_rankings_service_error FAILED [  3%]
+tests/test_api_assets.py::TestAssetAPI::test_filter_assets_success FAILED [  3%]
+tests/test_api_assets.py::TestAssetAPI::test_filter_assets_invalid_filter FAILED [  3%]
+tests/test_api_assets.py::TestAssetAPI::test_filter_assets_service_error FAILED [  3%]
+tests/test_api_assets.py::TestAssetAPI::test_refresh_liquidity_data_success FAILED [  4%]
+tests/test_api_assets.py::TestAssetAPI::test_refresh_liquidity_data_service_error FAILED [  4%]
+tests/test_api_assets.py::TestAssetAPI::test_get_asset_universe_success FAILED [  4%]
+tests/test_api_assets.py::TestAssetAPI::test_get_asset_universe_invalid_class PASSED [  4%]
+tests/test_api_assets.py::TestAssetAPI::test_get_asset_universe_service_error FAILED [  4%]
+tests/test_api_assets.py::TestAssetAPIEdgeCases::test_get_assets_overview_empty_response PASSED [  4%]
+tests/test_api_assets.py::TestAssetAPIEdgeCases::test_get_liquid_assets_empty_universe FAILED [  5%]
+tests/test_api_assets.py::TestAssetAPIEdgeCases::test_get_asset_details_case_sensitivity PASSED [  5%]
+tests/test_api_assets.py::TestAssetAPIEdgeCases::test_get_liquidity_metrics_with_zero_values FAILED [  5%]
+tests/test_api_assets.py::TestAssetAPIEdgeCases::test_filter_assets_with_extreme_values FAILED [  5%]
+tests/test_api_assets.py::TestAssetAPIEdgeCases::test_get_asset_rankings_with_single_asset FAILED [  5%]
+tests/test_api_assets.py::TestAssetAPIEdgeCases::test_refresh_liquidity_data_with_zero_refreshed FAILED [  5%]
+tests/test_api_assets.py::TestAssetAPIEdgeCases::test_get_asset_universe_with_large_dataset FAILED [  6%]
+tests/test_api_integration.py::TestPortfolioAPIIntegration::test_get_portfolio_summary_success PASSED [  6%]
+tests/test_api_integration.py::TestPortfolioAPIIntegration::test_get_full_portfolio_success PASSED [  6%]
+tests/test_api_integration.py::TestPortfolioAPIIntegration::test_get_all_positions_success PASSED [  6%]
+tests/test_api_integration.py::TestPortfolioAPIIntegration::test_get_position_by_symbol_success PASSED [  6%]
+tests/test_api_integration.py::TestPortfolioAPIIntegration::test_get_position_by_symbol_not_found PASSED [  6%]
+tests/test_api_integration.py::TestPortfolioAPIIntegration::test_get_asset_universe_success PASSED [  7%]
+tests/test_api_integration.py::TestPortfolioAPIIntegration::test_get_market_regime_success PASSED [  7%]
+tests/test_api_integration.py::TestPortfolioAPIIntegration::test_get_market_regime_not_found PASSED [  7%]
+tests/test_api_integration.py::TestPortfolioAPIIntegration::test_simulate_trade_buy_success PASSED [  7%]
+tests/test_api_integration.py::TestPortfolioAPIIntegration::test_simulate_trade_sell_success PASSED [  7%]
+tests/test_api_integration.py::TestPortfolioAPIIntegration::test_simulate_trade_insufficient_cash PASSED [  7%]
+tests/test_api_integration.py::TestPortfolioAPIIntegration::test_simulate_trade_invalid_parameters PASSED [  8%]
+tests/test_api_integration.py::TestPortfolioAPIIntegration::test_get_circuit_breaker_status_success PASSED [  8%]
+tests/test_api_integration.py::TestPortfolioAPIIntegration::test_reset_circuit_breaker_success PASSED [  8%]
+tests/test_api_integration.py::TestPortfolioAPIIntegration::test_reset_circuit_breaker_invalid_name PASSED [  8%]
+tests/test_api_integration.py::TestPortfolioAPIIntegration::test_portfolio_health_check_success PASSED [  8%]
+tests/test_api_integration.py::TestSignalsAPIIntegration::test_evaluate_signal_success PASSED [  8%]
+tests/test_api_integration.py::TestSignalsAPIIntegration::test_evaluate_signal_invalid_type PASSED [  9%]
+tests/test_api_integration.py::TestSignalsAPIIntegration::test_evaluate_signal_invalid_market_data PASSED [  9%]
+tests/test_api_integration.py::TestSignalsAPIIntegration::test_get_next_actionable_signal_success PASSED [  9%]
+tests/test_api_integration.py::TestSignalsAPIIntegration::test_get_next_actionable_signal_empty_queue PASSED [  9%]
+tests/test_api_integration.py::TestSignalsAPIIntegration::test_execute_signal_success PASSED [  9%]
+tests/test_api_integration.py::TestSignalsAPIIntegration::test_execute_signal_no_signals PASSED [  9%]
+tests/test_api_integration.py::TestSignalsAPIIntegration::test_get_signal_statistics_success PASSED [ 10%]
+tests/test_api_integration.py::TestSignalsAPIIntegration::test_get_signals_by_symbol_success PASSED [ 10%]
+tests/test_api_integration.py::TestSignalsAPIIntegration::test_get_signals_by_symbol_not_found PASSED [ 10%]
+tests/test_api_integration.py::TestSignalsAPIIntegration::test_clear_expired_signals_success PASSED [ 10%]
+tests/test_api_integration.py::TestSignalsAPIIntegration::test_update_thresholds_success PASSED [ 10%]
+tests/test_api_integration.py::TestSignalsAPIIntegration::test_update_thresholds_invalid_values PASSED [ 10%]
+tests/test_api_integration.py::TestSignalsAPIIntegration::test_update_position_size_limit_success PASSED [ 11%]
+tests/test_api_integration.py::TestSignalsAPIIntegration::test_update_position_size_limit_invalid_value PASSED [ 11%]
+tests/test_api_integration.py::TestSignalsAPIIntegration::test_signals_health_check_success PASSED [ 11%]
+tests/test_api_integration.py::TestMainAPIIntegration::test_root_endpoint_success PASSED [ 11%]
+tests/test_api_integration.py::TestMainAPIIntegration::test_health_endpoint_success PASSED [ 11%]
+tests/test_api_integration.py::TestMainAPIIntegration::test_detailed_health_endpoint_success PASSED [ 11%]
+tests/test_api_integration.py::TestMainAPIIntegration::test_404_error_handler PASSED [ 12%]
+tests/test_api_integration.py::TestMainAPIIntegration::test_openapi_docs_accessible PASSED [ 12%]
+tests/test_api_integration.py::TestMainAPIIntegration::test_openapi_json_accessible PASSED [ 12%]
+tests/test_api_integration.py::TestMainAPIIntegration::test_redoc_accessible PASSED [ 12%]
+tests/test_api_momentum.py::TestMomentumAPI::test_get_momentum_overview_success PASSED [ 12%]
+tests/test_api_momentum.py::TestMomentumAPI::test_get_momentum_overview_service_error PASSED [ 12%]
+tests/test_api_momentum.py::TestMomentumAPI::test_analyze_asset_success FAILED [ 13%]
+tests/test_api_momentum.py::TestMomentumAPI::test_analyze_asset_invalid_data FAILED [ 13%]
+tests/test_api_momentum.py::TestMomentumAPI::test_analyze_asset_service_error FAILED [ 13%]
+tests/test_api_momentum.py::TestMomentumAPI::test_get_technical_indicators_success FAILED [ 13%]
+tests/test_api_momentum.py::TestMomentumAPI::test_get_technical_indicators_not_found FAILED [ 13%]
+tests/test_api_momentum.py::TestMomentumAPI::test_get_technical_indicators_service_error FAILED [ 13%]
+tests/test_api_momentum.py::TestMomentumAPI::test_get_momentum_signals_success FAILED [ 14%]
+tests/test_api_momentum.py::TestMomentumAPI::test_get_momentum_signals_not_found FAILED [ 14%]
+tests/test_api_momentum.py::TestMomentumAPI::test_get_momentum_signals_service_error FAILED [ 14%]
+tests/test_api_momentum.py::TestMomentumAPI::test_create_strategy_success FAILED [ 14%]
+tests/test_api_momentum.py::TestMomentumAPI::test_create_strategy_invalid_data FAILED [ 14%]
+tests/test_api_momentum.py::TestMomentumAPI::test_create_strategy_service_error FAILED [ 14%]
+tests/test_api_momentum.py::TestMomentumAPI::test_get_strategies_success PASSED [ 15%]
+tests/test_api_momentum.py::TestMomentumAPI::test_get_strategies_service_error FAILED [ 15%]
+tests/test_api_momentum.py::TestMomentumAPI::test_get_strategy_success FAILED [ 15%]
+tests/test_api_momentum.py::TestMomentumAPI::test_get_strategy_not_found FAILED [ 15%]
+tests/test_api_momentum.py::TestMomentumAPI::test_get_strategy_service_error FAILED [ 15%]
+tests/test_api_momentum.py::TestMomentumAPI::test_update_strategy_success FAILED [ 15%]
+tests/test_api_momentum.py::TestMomentumAPI::test_update_strategy_invalid_data FAILED [ 16%]
+tests/test_api_momentum.py::TestMomentumAPI::test_update_strategy_service_error FAILED [ 16%]
+tests/test_api_momentum.py::TestMomentumAPI::test_delete_strategy_success FAILED [ 16%]
+tests/test_api_momentum.py::TestMomentumAPI::test_delete_strategy_not_found FAILED [ 16%]
+tests/test_api_momentum.py::TestMomentumAPI::test_delete_strategy_service_error FAILED [ 16%]
+tests/test_api_momentum.py::TestMomentumAPI::test_get_analyses_success FAILED [ 16%]
+tests/test_api_momentum.py::TestMomentumAPI::test_get_analyses_service_error FAILED [ 17%]
+tests/test_api_momentum.py::TestMomentumAPI::test_get_analysis_success FAILED [ 17%]
+tests/test_api_momentum.py::TestMomentumAPI::test_get_analysis_not_found FAILED [ 17%]
+tests/test_api_momentum.py::TestMomentumAPI::test_get_analysis_service_error FAILED [ 17%]
+tests/test_api_momentum.py::TestMomentumAPIEdgeCases::test_get_momentum_overview_empty_response FAILED [ 17%]
+tests/test_api_momentum.py::TestMomentumAPIEdgeCases::test_analyze_asset_with_extreme_values FAILED [ 17%]
+tests/test_api_momentum.py::TestMomentumAPIEdgeCases::test_get_technical_indicators_with_zero_values FAILED [ 18%]
+tests/test_api_momentum.py::TestMomentumAPIEdgeCases::test_get_momentum_signals_with_empty_list FAILED [ 18%]
+tests/test_api_momentum.py::TestMomentumAPIEdgeCases::test_create_strategy_with_extreme_values FAILED [ 18%]
+tests/test_api_momentum.py::TestMomentumAPIEdgeCases::test_get_strategies_with_large_dataset FAILED [ 18%]
+tests/test_api_momentum.py::TestMomentumAPIEdgeCases::test_update_strategy_with_minimal_changes FAILED [ 18%]
+tests/test_api_momentum.py::TestMomentumAPIEdgeCases::test_get_analyses_with_empty_list FAILED [ 18%]
+tests/test_asset_identification.py::TestAssetModels::test_asset_creation PASSED [ 19%]
+tests/test_asset_identification.py::TestAssetModels::test_asset_symbol_validation PASSED [ 19%]
+tests/test_asset_identification.py::TestAssetModels::test_asset_name_validation PASSED [ 19%]
+tests/test_asset_identification.py::TestAssetModels::test_asset_liquidity_score_calculation PASSED [ 19%]
+tests/test_asset_identification.py::TestAssetModels::test_asset_universe_creation PASSED [ 19%]
+tests/test_asset_identification.py::TestAssetModels::test_asset_universe_add_asset PASSED [ 19%]
+tests/test_asset_identification.py::TestAssetModels::test_asset_universe_remove_asset PASSED [ 20%]
+tests/test_asset_identification.py::TestAssetModels::test_asset_universe_top_liquid_assets PASSED [ 20%]
+tests/test_asset_identification.py::TestAssetModels::test_liquidity_metrics_creation PASSED [ 20%]
+tests/test_asset_identification.py::TestAssetModels::test_asset_ranking_creation PASSED [ 20%]
+tests/test_asset_identification.py::TestAssetModels::test_asset_filter_matching PASSED [ 20%]
+tests/test_asset_identification.py::TestAssetIdentificationService::test_service_initialization PASSED [ 20%]
+tests/test_asset_identification.py::TestAssetIdentificationService::test_identify_liquid_equities PASSED [ 21%]
+tests/test_asset_identification.py::TestAssetIdentificationService::test_identify_liquid_cryptos PASSED [ 21%]
+tests/test_asset_identification.py::TestAssetIdentificationService::test_identify_liquid_forex PASSED [ 21%]
+tests/test_asset_identification.py::TestAssetIdentificationService::test_update_asset_universe PASSED [ 21%]
+tests/test_asset_identification.py::TestAssetIdentificationService::test_get_top_liquid_assets PASSED [ 21%]
+tests/test_asset_identification.py::TestAssetIdentificationService::test_get_asset_rankings PASSED [ 21%]
+tests/test_asset_identification.py::TestAssetIdentificationService::test_filter_assets PASSED [ 22%]
+tests/test_asset_identification.py::TestAssetIdentificationService::test_get_asset_by_symbol PASSED [ 22%]
+tests/test_asset_identification.py::TestAssetIdentificationService::test_get_universe_summary PASSED [ 22%]
+tests/test_asset_identification.py::TestAssetServiceIntegration::test_complete_asset_identification_workflow PASSED [ 22%]
+tests/test_asset_identification.py::TestAssetServiceIntegration::test_multiple_asset_classes_workflow PASSED [ 22%]
+tests/test_asset_identification.py::TestAssetServiceIntegration::test_asset_liquidity_score_consistency PASSED [ 22%]
+tests/test_asset_identification.py::TestAssetServiceIntegration::test_error_handling PASSED [ 23%]
+tests/test_automated_execution.py::TestAutomatedExecution::test_signal_to_order_conversion PASSED [ 23%]
+tests/test_automated_execution.py::TestAutomatedExecution::test_real_time_execution_simulation PASSED [ 23%]
+tests/test_automated_execution.py::TestAutomatedExecution::test_market_impact_simulation PASSED [ 23%]
+tests/test_automated_execution.py::TestAutomatedExecution::test_execution_timing_constraints PASSED [ 23%]
+tests/test_automated_execution.py::TestAutomatedExecution::test_partial_fill_simulation PASSED [ 23%]
+tests/test_automated_execution.py::TestAutomatedExecution::test_execution_cost_calculation PASSED [ 24%]
+tests/test_automated_execution.py::TestAutomatedExecution::test_order_priority_and_routing PASSED [ 24%]
+tests/test_automated_execution.py::TestAutomatedExecution::test_execution_error_handling PASSED [ 24%]
+tests/test_backtesting.py::TestSimpleBacktester::test_backtester_initialization PASSED [ 24%]
+tests/test_backtesting.py::TestSimpleBacktester::test_empty_market_data_raises_error PASSED [ 24%]
+tests/test_backtesting.py::TestSimpleBacktester::test_single_day_backtest PASSED [ 25%]
+tests/test_backtesting.py::TestSimpleBacktester::test_trending_market_backtest PASSED [ 25%]
+tests/test_backtesting.py::TestSimpleBacktester::test_ranging_market_backtest PASSED [ 25%]
+tests/test_backtesting.py::TestSimpleBacktester::test_contradictory_signals_handling PASSED [ 25%]
+tests/test_backtesting.py::TestSimpleBacktester::test_reproducibility PASSED [ 25%]
+tests/test_backtesting.py::TestSimpleBacktester::test_date_filtering PASSED [ 25%]
+tests/test_backtesting.py::TestSimpleBacktester::test_slippage_application PASSED [ 26%]
+tests/test_backtesting.py::TestSimpleBacktester::test_commission_calculation PASSED [ 26%]
+tests/test_backtesting.py::TestSimpleBacktester::test_position_size_calculation PASSED [ 26%]
+tests/test_backtesting.py::TestBacktestModels::test_trade_model_validation PASSED [ 26%]
+tests/test_backtesting.py::TestBacktestModels::test_trade_invalid_side PASSED [ 26%]
+tests/test_backtesting.py::TestBacktestModels::test_trade_closed_without_exit_price PASSED [ 26%]
+tests/test_backtesting.py::TestBacktestModels::test_performance_metrics_validation PASSED [ 27%]
+tests/test_backtesting.py::TestBacktestModels::test_performance_metrics_inconsistent_trades PASSED [ 27%]
+tests/test_backtesting.py::TestBacktestModels::test_backtest_config_validation PASSED [ 27%]
+tests/test_backtesting.py::TestBacktestModels::test_backtest_config_high_slippage PASSED [ 27%]
+tests/test_backtesting.py::TestBacktestModels::test_backtest_config_stop_loss_greater_than_take_profit PASSED [ 27%]
+tests/test_backtesting.py::TestBacktestEdgeCases::test_zero_initial_capital PASSED [ 27%]
+tests/test_backtesting.py::TestBacktestEdgeCases::test_very_high_commission PASSED [ 28%]
+tests/test_backtesting.py::TestBacktestEdgeCases::test_no_signals PASSED [ 28%]
+tests/test_backtesting.py::TestBacktestEdgeCases::test_signals_without_matching_market_data PASSED [ 28%]
+tests/test_config.py::TestSettings::test_default_values PASSED           [ 28%]
+tests/test_config.py::TestSettings::test_environment_variable_loading PASSED [ 28%]
+tests/test_config.py::TestSettings::test_log_level_validation PASSED     [ 28%]
+tests/test_config.py::TestSettings::test_secret_key_validation PASSED    [ 29%]
+tests/test_config.py::TestSettings::test_cors_origins_parsing PASSED     [ 29%]
+tests/test_config.py::TestSettings::test_cors_methods_parsing PASSED     [ 29%]
+tests/test_config.py::TestSettings::test_cors_headers_parsing PASSED     [ 29%]
+tests/test_config.py::TestSettings::test_celery_content_parsing PASSED   [ 29%]
+tests/test_config.py::TestSettings::test_database_url_methods PASSED     [ 29%]
+tests/test_config.py::TestSettings::test_environment_detection PASSED    [ 30%]
+tests/test_config.py::TestSettings::test_cors_config PASSED              [ 30%]
+tests/test_config.py::TestSettings::test_celery_config PASSED            [ 30%]
+tests/test_config.py::TestConvenienceFunctions::test_get_settings PASSED [ 30%]
+tests/test_config.py::TestConvenienceFunctions::test_get_database_url PASSED [ 30%]
+tests/test_config.py::TestConvenienceFunctions::test_get_redis_url PASSED [ 30%]
+tests/test_config.py::TestConvenienceFunctions::test_get_secret_key PASSED [ 31%]
+tests/test_config.py::TestConvenienceFunctions::test_is_debug_mode PASSED [ 31%]
+tests/test_config.py::TestConvenienceFunctions::test_get_cors_config PASSED [ 31%]
+tests/test_config.py::TestConvenienceFunctions::test_get_celery_config PASSED [ 31%]
+tests/test_config.py::TestConfigurationIntegration::test_settings_singleton PASSED [ 31%]
+tests/test_config.py::TestConfigurationIntegration::test_configuration_import PASSED [ 31%]
+tests/test_config.py::TestConfigurationIntegration::test_environment_variable_override PASSED [ 32%]
+tests/test_config.py::TestConfigurationIntegration::test_boolean_environment_variables PASSED [ 32%]
+tests/test_config.py::TestConfigurationIntegration::test_numeric_environment_variables PASSED [ 32%]
+tests/test_config.py::TestConfigurationIntegration::test_list_environment_variables PASSED [ 32%]
+tests/test_contracts.py::TestContractViolations::test_contract_violation_error PASSED [ 32%]
+tests/test_contracts.py::TestContractViolations::test_precondition_error PASSED [ 32%]
+tests/test_contracts.py::TestContractViolations::test_postcondition_error PASSED [ 33%]
+tests/test_contracts.py::TestContractViolations::test_invariant_error PASSED [ 33%]
+tests/test_contracts.py::TestMarketDataContract::test_valid_market_data PASSED [ 33%]
+tests/test_contracts.py::TestMarketDataContract::test_invalid_symbol_lowercase PASSED [ 33%]
+tests/test_contracts.py::TestMarketDataContract::test_invalid_symbol_characters PASSED [ 33%]
+tests/test_contracts.py::TestMarketDataContract::test_negative_price PASSED [ 33%]
+tests/test_contracts.py::TestMarketDataContract::test_excessive_price PASSED [ 34%]
+tests/test_contracts.py::TestMarketDataContract::test_excessive_total_value PASSED [ 34%]
+tests/test_contracts.py::TestSignalContract::test_valid_signal PASSED    [ 34%]
+tests/test_contracts.py::TestSignalContract::test_invalid_signal_type PASSED [ 34%]
+tests/test_contracts.py::TestSignalContract::test_invalid_confidence_range PASSED [ 34%]
+tests/test_contracts.py::TestSignalContract::test_strong_signal_low_confidence PASSED [ 34%]
+tests/test_contracts.py::TestSignalContract::test_weak_signal_high_confidence PASSED [ 35%]
+tests/test_contracts.py::TestTechnicalIndicatorContract::test_valid_rsi PASSED [ 35%]
+tests/test_contracts.py::TestTechnicalIndicatorContract::test_invalid_rsi_range PASSED [ 35%]
+tests/test_contracts.py::TestTechnicalIndicatorContract::test_negative_ema PASSED [ 35%]
+tests/test_contracts.py::TestTechnicalIndicatorContract::test_negative_atr PASSED [ 35%]
+tests/test_contracts.py::TestPositionContract::test_valid_position PASSED [ 35%]
+tests/test_contracts.py::TestPositionContract::test_excessive_position_value PASSED [ 36%]
+tests/test_contracts.py::TestPositionContract::test_excessive_quantity PASSED [ 36%]
+tests/test_contracts.py::TestContractDecorator::test_precondition_validation PASSED [ 36%]
+tests/test_contracts.py::TestContractDecorator::test_postcondition_validation PASSED [ 36%]
+tests/test_contracts.py::TestContractDecorator::test_data_contract_validation PASSED [ 36%]
+tests/test_contracts.py::TestContractDecorator::test_multiple_preconditions PASSED [ 36%]
+tests/test_contracts.py::TestPredefinedDecorators::test_trading_operation_decorator PASSED [ 37%]
+tests/test_contracts.py::TestPredefinedDecorators::test_signal_analysis_decorator PASSED [ 37%]
+tests/test_contracts.py::TestPredefinedDecorators::test_risk_calculation_decorator PASSED [ 37%]
+tests/test_contracts.py::TestValidationUtilities::test_validate_trading_data PASSED [ 37%]
+tests/test_contracts.py::TestValidationUtilities::test_validate_batch_trading_data PASSED [ 37%]
+tests/test_contracts.py::TestContractIntegration::test_contract_with_existing_models PASSED [ 37%]
+tests/test_contracts.py::TestContractIntegration::test_contract_performance PASSED [ 38%]
+tests/test_database.py::TestDatabaseEngine::test_get_database_engine_creates_engine PASSED [ 38%]
+tests/test_database.py::TestDatabaseEngine::test_get_database_engine_reuses_existing_engine PASSED [ 38%]
+tests/test_database.py::TestDatabaseEngine::test_get_database_engine_handles_creation_error PASSED [ 38%]
+tests/test_database.py::TestSessionFactory::test_get_session_factory_creates_factory PASSED [ 38%]
+tests/test_database.py::TestSessionFactory::test_get_session_factory_reuses_existing_factory PASSED [ 38%]
+tests/test_database.py::TestSessionFactory::test_get_session_factory_handles_creation_error PASSED [ 39%]
+tests/test_database.py::TestDatabaseSession::test_get_db_session_basic PASSED [ 39%]
+tests/test_database.py::TestDatabaseSession::test_get_db_transaction_basic PASSED [ 39%]
+tests/test_database.py::TestDatabaseSession::test_get_db_session_generator PASSED [ 39%]
+tests/test_database.py::TestDatabaseSession::test_get_db_transaction_context_manager PASSED [ 39%]
+tests/test_database.py::TestDatabaseSession::test_get_db_session_execution PASSED [ 39%]
+tests/test_database.py::TestDatabaseSession::test_get_db_transaction_execution PASSED [ 40%]
+tests/test_database.py::TestDatabaseSession::test_get_db_session_error_handling PASSED [ 40%]
+tests/test_database.py::TestDatabaseSession::test_get_db_transaction_error_handling PASSED [ 40%]
+tests/test_database.py::TestDatabaseOperations::test_execute_query_function_exists PASSED [ 40%]
+tests/test_database.py::TestDatabaseOperations::test_execute_scalar_function_exists PASSED [ 40%]
+tests/test_database.py::TestDatabaseOperations::test_execute_query_with_mock_session PASSED [ 40%]
+tests/test_database.py::TestDatabaseOperations::test_execute_scalar_with_mock_session PASSED [ 41%]
+tests/test_database.py::TestDatabaseOperations::test_execute_query_error_handling PASSED [ 41%]
+tests/test_database.py::TestDatabaseOperations::test_execute_scalar_error_handling PASSED [ 41%]
+tests/test_database.py::TestDatabaseInitialization::test_init_database_creates_tables PASSED [ 41%]
+tests/test_database.py::TestDatabaseInitialization::test_init_database_handles_errors PASSED [ 41%]
+tests/test_database.py::TestDatabaseInitialization::test_close_database_disposes_engine PASSED [ 41%]
+tests/test_database.py::TestDatabaseConnection::test_check_database_connection_success PASSED [ 42%]
+tests/test_database.py::TestDatabaseConnection::test_check_database_connection_failure PASSED [ 42%]
+tests/test_database.py::TestDatabaseInfo::test_get_database_info_success PASSED [ 42%]
+tests/test_database.py::TestDatabaseInfo::test_get_database_info_handles_errors PASSED [ 42%]
+tests/test_database.py::TestBaseModel::test_base_model_has_metadata PASSED [ 42%]
+tests/test_database.py::TestBaseModel::test_base_model_metadata_convention PASSED [ 42%]
+tests/test_database.py::TestDatabaseIntegration::test_database_engine_and_session_integration PASSED [ 43%]
+tests/test_domain_validation.py::TestSignalDomainValidation::test_valid_signal PASSED [ 43%]
+tests/test_domain_validation.py::TestSignalDomainValidation::test_confidence_out_of_range PASSED [ 43%]
+tests/test_domain_validation.py::TestSignalDomainValidation::test_negative_price PASSED [ 43%]
+tests/test_domain_validation.py::TestSignalDomainValidation::test_excessive_price PASSED [ 43%]
+tests/test_domain_validation.py::TestSignalDomainValidation::test_future_timestamp PASSED [ 43%]
+tests/test_domain_validation.py::TestSignalDomainValidation::test_old_timestamp PASSED [ 44%]
+tests/test_domain_validation.py::TestSignalDomainValidation::test_strong_signal_low_confidence PASSED [ 44%]
+tests/test_domain_validation.py::TestSignalDomainValidation::test_weak_signal_high_confidence PASSED [ 44%]
+tests/test_domain_validation.py::TestSignalDomainValidation::test_hold_signal_very_high_confidence PASSED [ 44%]
+tests/test_domain_validation.py::TestPositionDomainValidation::test_valid_position PASSED [ 44%]
+tests/test_domain_validation.py::TestPositionDomainValidation::test_zero_quantity PASSED [ 44%]
+tests/test_domain_validation.py::TestPositionDomainValidation::test_negative_price PASSED [ 45%]
+tests/test_domain_validation.py::TestPositionDomainValidation::test_excessive_value PASSED [ 45%]
+tests/test_domain_validation.py::TestPositionDomainValidation::test_pnl_calculation_mismatch PASSED [ 45%]
+tests/test_domain_validation.py::TestOrderDomainValidation::test_valid_order PASSED [ 45%]
+tests/test_domain_validation.py::TestOrderDomainValidation::test_limit_order_without_price PASSED [ 45%]
+tests/test_domain_validation.py::TestOrderDomainValidation::test_stop_order_without_stop_price PASSED [ 45%]
+tests/test_domain_validation.py::TestOrderDomainValidation::test_stop_limit_order_price_logic PASSED [ 46%]
+tests/test_domain_validation.py::TestOrderDomainValidation::test_filled_quantity_exceeds_order PASSED [ 46%]
+tests/test_domain_validation.py::TestOrderDomainValidation::test_filled_order_without_price PASSED [ 46%]
+tests/test_domain_validation.py::TestMarketDataDomainValidation::test_valid_market_data PASSED [ 46%]
+tests/test_domain_validation.py::TestMarketDataDomainValidation::test_high_less_than_low PASSED [ 46%]
+tests/test_domain_validation.py::TestMarketDataDomainValidation::test_close_price_out_of_range PASSED [ 46%]
+tests/test_domain_validation.py::TestMarketDataDomainValidation::test_open_price_out_of_range PASSED [ 47%]
+tests/test_domain_validation.py::TestMarketDataDomainValidation::test_bid_ask_spread_logic PASSED [ 47%]
+tests/test_domain_validation.py::TestMarketDataDomainValidation::test_excessive_spread PASSED [ 47%]
+tests/test_domain_validation.py::TestMarketDataDomainValidation::test_negative_volume PASSED [ 47%]
+tests/test_domain_validation.py::TestEdgeCases::test_zero_confidence PASSED [ 47%]
+tests/test_domain_validation.py::TestEdgeCases::test_maximum_confidence PASSED [ 47%]
+tests/test_domain_validation.py::TestEdgeCases::test_minimum_price PASSED [ 48%]
+tests/test_domain_validation.py::TestEdgeCases::test_maximum_price PASSED [ 48%]
+tests/test_domain_validation.py::TestEdgeCases::test_zero_volume PASSED  [ 48%]
+tests/test_domain_validation.py::TestEdgeCases::test_maximum_volume PASSED [ 48%]
+tests/test_e2e_integration.py::TestCompleteTradingWorkflow::test_complete_signal_to_execution_workflow PASSED [ 48%]
+tests/test_e2e_integration.py::TestCompleteTradingWorkflow::test_multiple_signals_priority_workflow PASSED [ 48%]
+tests/test_e2e_integration.py::TestCompleteTradingWorkflow::test_portfolio_diversification_workflow PASSED [ 49%]
+tests/test_e2e_integration.py::TestErrorHandlingWorkflows::test_circuit_breaker_workflow PASSED [ 49%]
+tests/test_e2e_integration.py::TestErrorHandlingWorkflows::test_signal_threshold_workflow PASSED [ 49%]
+tests/test_e2e_integration.py::TestErrorHandlingWorkflows::test_position_size_limit_workflow PASSED [ 49%]
+tests/test_e2e_integration.py::TestErrorHandlingWorkflows::test_signal_expiration_workflow PASSED [ 49%]
+tests/test_e2e_integration.py::TestPerformanceWorkflows::test_high_volume_signal_processing PASSED [ 50%]
+tests/test_e2e_integration.py::TestPerformanceWorkflows::test_concurrent_signal_execution PASSED [ 50%]
+tests/test_e2e_integration.py::TestPerformanceWorkflows::test_memory_usage_under_load PASSED [ 50%]
+tests/test_e2e_integration.py::TestIntegrationErrorScenarios::test_invalid_json_payload PASSED [ 50%]
+tests/test_e2e_integration.py::TestIntegrationErrorScenarios::test_missing_required_fields PASSED [ 50%]
+tests/test_e2e_integration.py::TestIntegrationErrorScenarios::test_invalid_data_types PASSED [ 50%]
+tests/test_e2e_integration.py::TestIntegrationErrorScenarios::test_network_timeout_simulation PASSED [ 51%]
+tests/test_edge_cases.py::TestTechnicalIndicatorsEdgeCases::test_rsi_with_zero_volume PASSED [ 51%]
+tests/test_edge_cases.py::TestTechnicalIndicatorsEdgeCases::test_rsi_with_nan_values PASSED [ 51%]
+tests/test_edge_cases.py::TestTechnicalIndicatorsEdgeCases::test_rsi_with_infinite_values PASSED [ 51%]
+tests/test_edge_cases.py::TestTechnicalIndicatorsEdgeCases::test_rsi_with_extreme_price_changes PASSED [ 51%]
+tests/test_edge_cases.py::TestTechnicalIndicatorsEdgeCases::test_rsi_with_insufficient_data PASSED [ 51%]
+tests/test_edge_cases.py::TestTechnicalIndicatorsEdgeCases::test_rsi_boundary_values PASSED [ 52%]
+tests/test_edge_cases.py::TestTechnicalIndicatorsEdgeCases::test_ema_with_zero_values PASSED [ 52%]
+tests/test_edge_cases.py::TestTechnicalIndicatorsEdgeCases::test_ema_with_negative_values PASSED [ 52%]
+tests/test_edge_cases.py::TestTechnicalIndicatorsEdgeCases::test_ema_with_extreme_values PASSED [ 52%]
+tests/test_edge_cases.py::TestTechnicalIndicatorsEdgeCases::test_macd_with_division_by_zero PASSED [ 52%]
+tests/test_edge_cases.py::TestTechnicalIndicatorsEdgeCases::test_atr_with_zero_values PASSED [ 52%]
+tests/test_edge_cases.py::TestTechnicalIndicatorsEdgeCases::test_atr_with_invalid_data PASSED [ 53%]
+tests/test_edge_cases.py::TestTechnicalIndicatorsEdgeCases::test_volume_sma_with_zero_volume PASSED [ 53%]
+tests/test_edge_cases.py::TestTechnicalIndicatorsEdgeCases::test_indicators_with_empty_lists PASSED [ 53%]
+tests/test_edge_cases.py::TestTechnicalIndicatorsEdgeCases::test_indicators_with_single_value PASSED [ 53%]
+tests/test_edge_cases.py::TestTechnicalIndicatorsEdgeCases::test_indicators_with_very_large_periods PASSED [ 53%]
+tests/test_edge_cases.py::TestTechnicalIndicatorsEdgeCases::test_indicators_with_negative_periods PASSED [ 53%]
+tests/test_edge_cases.py::TestTechnicalIndicatorsEdgeCases::test_indicators_with_zero_periods PASSED [ 54%]
+tests/test_edge_cases.py::TestRiskCalculationEdgeCases::test_position_sizing_with_zero_account_balance PASSED [ 54%]
+tests/test_edge_cases.py::TestRiskCalculationEdgeCases::test_position_sizing_with_zero_price PASSED [ 54%]
+tests/test_edge_cases.py::TestRiskCalculationEdgeCases::test_position_sizing_with_zero_stop_loss PASSED [ 54%]
+tests/test_edge_cases.py::TestRiskCalculationEdgeCases::test_position_sizing_with_price_equals_stop_loss PASSED [ 54%]
+tests/test_edge_cases.py::TestRiskCalculationEdgeCases::test_position_sizing_with_negative_values PASSED [ 54%]
+tests/test_edge_cases.py::TestRiskCalculationEdgeCases::test_position_sizing_with_extreme_values PASSED [ 55%]
+tests/test_edge_cases.py::TestSignalEdgeCases::test_signal_with_disordered_timestamps PASSED [ 55%]
+tests/test_edge_cases.py::TestSignalEdgeCases::test_signal_with_future_timestamps PASSED [ 55%]
+tests/test_edge_cases.py::TestSignalEdgeCases::test_signal_with_incomplete_inputs PASSED [ 55%]
+tests/test_edge_cases.py::TestSignalEdgeCases::test_signal_with_extreme_confidence_values PASSED [ 55%]
+tests/test_edge_cases.py::TestMathematicalEdgeCases::test_division_by_zero_in_calculations PASSED [ 55%]
+tests/test_edge_cases.py::TestMathematicalEdgeCases::test_square_root_of_negative_numbers PASSED [ 56%]
+tests/test_edge_cases.py::TestMathematicalEdgeCases::test_logarithm_of_zero_or_negative PASSED [ 56%]
+tests/test_edge_cases.py::TestMathematicalEdgeCases::test_power_calculations_with_extreme_values PASSED [ 56%]
+tests/test_lookahead_bias.py::TestLookAheadBias::test_signal_timing_validation PASSED [ 56%]
+tests/test_lookahead_bias.py::TestLookAheadBias::test_future_price_prevention PASSED [ 56%]
+tests/test_lookahead_bias.py::TestLookAheadBias::test_technical_indicator_lookahead PASSED [ 56%]
+tests/test_lookahead_bias.py::TestLookAheadBias::test_data_availability_validation PASSED [ 57%]
+tests/test_lookahead_bias.py::TestLookAheadBias::test_real_time_simulation PASSED [ 57%]
+tests/test_lookahead_bias.py::TestLookAheadBias::test_news_event_lookahead PASSED [ 57%]
+tests/test_main.py::TestHealthEndpoints::test_health_endpoint_returns_200 PASSED [ 57%]
+tests/test_main.py::TestHealthEndpoints::test_health_endpoint_returns_ok_status PASSED [ 57%]
+tests/test_main.py::TestHealthEndpoints::test_detailed_health_endpoint_returns_200 PASSED [ 57%]
+tests/test_main.py::TestHealthEndpoints::test_detailed_health_endpoint_contains_required_fields PASSED [ 58%]
+tests/test_main.py::TestRootEndpoint::test_root_endpoint_returns_200 PASSED [ 58%]
+tests/test_main.py::TestRootEndpoint::test_root_endpoint_contains_app_info PASSED [ 58%]
+tests/test_main.py::TestErrorHandlers::test_404_error_handler PASSED     [ 58%]
+tests/test_main.py::TestCORSConfiguration::test_cors_headers_present PASSED [ 58%]
+tests/test_main.py::TestApplicationMetadata::test_openapi_docs_accessible PASSED [ 58%]
+tests/test_main.py::TestApplicationMetadata::test_openapi_json_accessible PASSED [ 59%]
+tests/test_main.py::TestApplicationMetadata::test_redoc_accessible PASSED [ 59%]
+tests/test_main_additional.py::TestMainAdditional::test_get_app_settings_first_call PASSED [ 59%]
+tests/test_main_additional.py::TestMainAdditional::test_get_app_settings_subsequent_calls PASSED [ 59%]
+tests/test_main_additional.py::TestMainAdditional::test_lifespan_startup PASSED [ 59%]
+tests/test_main_additional.py::TestMainAdditional::test_lifespan_with_exception PASSED [ 59%]
+tests/test_main_additional.py::TestMainAdditional::test_app_configuration PASSED [ 60%]
+tests/test_main_additional.py::TestMainAdditional::test_cors_middleware_configuration PASSED [ 60%]
+tests/test_main_additional.py::TestMainAdditional::test_router_inclusion PASSED [ 60%]
+tests/test_main_additional.py::TestMainAdditional::test_logging_configuration PASSED [ 60%]
+tests/test_main_additional.py::TestMainAdditional::test_error_handler_coverage PASSED [ 60%]
+tests/test_main_additional.py::TestMainAdditional::test_health_endpoint_coverage PASSED [ 60%]
+tests/test_main_additional.py::TestMainAdditional::test_detailed_health_endpoint_coverage PASSED [ 61%]
+tests/test_main_additional.py::TestMainAdditional::test_root_endpoint_coverage PASSED [ 61%]
+tests/test_market_data_integration.py::TestMarketDataModels::test_quote_model_validation PASSED [ 61%]
+tests/test_market_data_integration.py::TestMarketDataModels::test_quote_model_invalid_prices PASSED [ 61%]
+tests/test_market_data_integration.py::TestMarketDataModels::test_quote_model_inconsistent_prices PASSED [ 61%]
+tests/test_market_data_integration.py::TestMarketDataModels::test_historical_data_model PASSED [ 61%]
+tests/test_market_data_integration.py::TestMarketDataModels::test_data_feed_config_model PASSED [ 62%]
+tests/test_market_data_integration.py::TestDataFeeds::test_mock_feed_connection PASSED [ 62%]
+tests/test_market_data_integration.py::TestDataFeeds::test_mock_feed_quote PASSED [ 62%]
+tests/test_market_data_integration.py::TestDataFeeds::test_mock_feed_historical_data PASSED [ 62%]
+tests/test_market_data_integration.py::TestDataFeeds::test_mock_feed_subscription PASSED [ 62%]
+tests/test_market_data_integration.py::TestDataFeeds::test_create_data_feed_factory PASSED [ 62%]
+tests/test_market_data_integration.py::TestMarketDataService::test_service_initialization PASSED [ 63%]
+tests/test_market_data_integration.py::TestMarketDataService::test_add_feed_config PASSED [ 63%]
+tests/test_market_data_integration.py::TestMarketDataService::test_remove_feed_config PASSED [ 63%]
+tests/test_market_data_integration.py::TestMarketDataService::test_connect_feed PASSED [ 63%]
+tests/test_market_data_integration.py::TestMarketDataService::test_get_quote_with_caching PASSED [ 63%]
+tests/test_market_data_integration.py::TestMarketDataService::test_get_historical_data_with_caching PASSED [ 63%]
+tests/test_market_data_integration.py::TestMarketDataService::test_subscribe_to_symbols PASSED [ 64%]
+tests/test_market_data_integration.py::TestMarketDataService::test_get_top_liquid_assets_quotes PASSED [ 64%]
+tests/test_market_data_integration.py::TestMarketDataService::test_cache_management PASSED [ 64%]
+tests/test_market_data_integration.py::TestMarketDataService::test_service_status PASSED [ 64%]
+tests/test_market_data_integration.py::TestMarketDataAPI::test_get_quote_success PASSED [ 64%]
+tests/test_market_data_integration.py::TestMarketDataAPI::test_get_quote_not_found PASSED [ 64%]
+tests/test_market_data_integration.py::TestMarketDataAPI::test_get_multiple_quotes PASSED [ 65%]
+tests/test_market_data_integration.py::TestMarketDataAPI::test_get_top_liquid_quotes PASSED [ 65%]
+tests/test_market_data_integration.py::TestMarketDataAPI::test_get_historical_data_success PASSED [ 65%]
+tests/test_market_data_integration.py::TestMarketDataAPI::test_get_historical_data_invalid_date_range PASSED [ 65%]
+tests/test_market_data_integration.py::TestMarketDataAPI::test_get_service_status PASSED [ 65%]
+tests/test_market_data_integration.py::TestMarketDataAPI::test_clear_cache PASSED [ 65%]
+tests/test_market_data_integration.py::TestMarketDataAPI::test_get_cache_stats PASSED [ 66%]
+tests/test_market_data_integration.py::TestMarketDataIntegration::test_end_to_end_quote_flow PASSED [ 66%]
+tests/test_market_data_integration.py::TestMarketDataIntegration::test_end_to_end_historical_flow PASSED [ 66%]
+tests/test_market_data_integration.py::TestMarketDataIntegration::test_multiple_feeds_management PASSED [ 66%]
+tests/test_mock_clients.py::TestMockIBKRClient::test_connection_lifecycle PASSED [ 66%]
+tests/test_mock_clients.py::TestMockIBKRClient::test_account_summary PASSED [ 66%]
+tests/test_mock_clients.py::TestMockIBKRClient::test_market_data_subscription PASSED [ 67%]
+tests/test_mock_clients.py::TestMockIBKRClient::test_order_execution_flow FAILED [ 67%]
+tests/test_mock_clients.py::TestMockIBKRClient::test_order_cancellation FAILED [ 67%]
+tests/test_mock_clients.py::TestMockIBKRClient::test_error_handling PASSED [ 67%]
+tests/test_mock_clients.py::TestMockBinanceClient::test_connection_lifecycle PASSED [ 67%]
+tests/test_mock_clients.py::TestMockBinanceClient::test_account_info PASSED [ 67%]
+tests/test_mock_clients.py::TestMockBinanceClient::test_balance_operations PASSED [ 68%]
+tests/test_mock_clients.py::TestMockBinanceClient::test_crypto_order_execution FAILED [ 68%]
+tests/test_mock_clients.py::TestMockBinanceClient::test_klines_data PASSED [ 68%]
+tests/test_mock_clients.py::TestMockBinanceClient::test_insufficient_balance_rejection FAILED [ 68%]
+tests/test_mock_clients.py::TestMockClientIntegration::test_multi_client_operations FAILED [ 68%]
+tests/test_mock_clients.py::TestMockClientIntegration::test_concurrent_operations FAILED [ 68%]
+tests/test_mock_clients.py::TestMockClientIntegration::test_error_recovery PASSED [ 69%]
+tests/test_mock_integration.py::TestTradingWorkflowIntegration::test_equity_trading_workflow FAILED [ 69%]
+tests/test_mock_integration.py::TestTradingWorkflowIntegration::test_crypto_trading_workflow FAILED [ 69%]
+tests/test_mock_integration.py::TestTradingWorkflowIntegration::test_multi_asset_trading_workflow FAILED [ 69%]
+tests/test_mock_integration.py::TestTradingWorkflowIntegration::test_order_rejection_handling FAILED [ 69%]
+tests/test_mock_integration.py::TestTradingWorkflowIntegration::test_order_cancellation_workflow FAILED [ 69%]
+tests/test_mock_integration.py::TestTradingWorkflowIntegration::test_portfolio_synchronization FAILED [ 70%]
+tests/test_mock_integration.py::TestTradingWorkflowIntegration::test_error_recovery_workflow FAILED [ 70%]
+tests/test_momentum_strategy.py::TestMomentumModels::test_momentum_signal_creation PASSED [ 70%]
+tests/test_momentum_strategy.py::TestMomentumModels::test_momentum_signal_validation PASSED [ 70%]
+tests/test_momentum_strategy.py::TestMomentumModels::test_momentum_signal_properties PASSED [ 70%]
+tests/test_momentum_strategy.py::TestMomentumModels::test_momentum_score_calculation PASSED [ 70%]
+tests/test_momentum_strategy.py::TestMomentumModels::test_technical_indicators_creation PASSED [ 71%]
+tests/test_momentum_strategy.py::TestMomentumModels::test_technical_indicators_properties PASSED [ 71%]
+tests/test_momentum_strategy.py::TestMomentumModels::test_momentum_strategy_creation PASSED [ 71%]
+tests/test_momentum_strategy.py::TestMomentumModels::test_momentum_strategy_validation PASSED [ 71%]
+tests/test_momentum_strategy.py::TestMomentumModels::test_momentum_analysis_creation PASSED [ 71%]
+tests/test_momentum_strategy.py::TestMomentumModels::test_momentum_analysis_methods PASSED [ 71%]
+tests/test_momentum_strategy.py::TestMomentumModels::test_momentum_filter_matching PASSED [ 72%]
+tests/test_momentum_strategy.py::TestTechnicalIndicatorCalculator::test_rsi_calculation PASSED [ 72%]
+tests/test_momentum_strategy.py::TestTechnicalIndicatorCalculator::test_ema_calculation PASSED [ 72%]
+tests/test_momentum_strategy.py::TestTechnicalIndicatorCalculator::test_macd_calculation PASSED [ 72%]
+tests/test_momentum_strategy.py::TestTechnicalIndicatorCalculator::test_atr_calculation PASSED [ 72%]
+tests/test_momentum_strategy.py::TestTechnicalIndicatorCalculator::test_volume_sma_calculation PASSED [ 72%]
+tests/test_momentum_strategy.py::TestMomentumAnalysisService::test_service_initialization PASSED [ 73%]
+tests/test_momentum_strategy.py::TestMomentumAnalysisService::test_analyze_asset_momentum PASSED [ 73%]
+tests/test_momentum_strategy.py::TestMomentumAnalysisService::test_get_momentum_signals PASSED [ 73%]
+tests/test_momentum_strategy.py::TestMomentumAnalysisService::test_get_strategy_signals PASSED [ 73%]
+tests/test_momentum_strategy.py::TestMomentumAnalysisService::test_get_top_momentum_assets PASSED [ 73%]
+tests/test_momentum_strategy.py::TestMomentumAnalysisService::test_error_handling PASSED [ 73%]
+tests/test_momentum_strategy.py::TestMomentumServiceIntegration::test_complete_momentum_analysis_workflow PASSED [ 74%]
+tests/test_momentum_strategy.py::TestMomentumServiceIntegration::test_multiple_assets_analysis PASSED [ 74%]
+tests/test_momentum_strategy.py::TestMomentumServiceIntegration::test_signal_filtering_workflow PASSED [ 74%]
+tests/test_momentum_strategy.py::TestMomentumServiceIntegration::test_strategy_comparison PASSED [ 74%]
+tests/test_momentum_strategy.py::TestMomentumServiceIntegration::test_technical_indicators_consistency PASSED [ 74%]
+tests/test_momentum_strategy.py::TestMomentumServiceIntegration::test_signal_expiration_handling PASSED [ 75%]
+tests/test_overfitting_prevention.py::TestOverfittingPrevention::test_out_of_sample_generalization PASSED [ 75%]
+tests/test_overfitting_prevention.py::TestOverfittingPrevention::test_parameter_stability PASSED [ 75%]
+tests/test_overfitting_prevention.py::TestOverfittingPrevention::test_walk_forward_analysis PASSED [ 75%]
+tests/test_overfitting_prevention.py::TestOverfittingPrevention::test_cross_validation_temporal PASSED [ 75%]
+tests/test_paper_trading.py::TestPaperTradingService::test_create_portfolio PASSED [ 75%]
+tests/test_paper_trading.py::TestPaperTradingService::test_create_portfolio_with_custom_cash PASSED [ 76%]
+tests/test_paper_trading.py::TestPaperTradingService::test_create_session PASSED [ 76%]
+tests/test_paper_trading.py::TestPaperTradingService::test_execute_buy_trade PASSED [ 76%]
+tests/test_paper_trading.py::TestPaperTradingService::test_execute_sell_trade PASSED [ 76%]
+tests/test_paper_trading.py::TestPaperTradingService::test_execute_limit_order PASSED [ 76%]
+tests/test_paper_trading.py::TestPaperTradingService::test_insufficient_cash_rejection PASSED [ 76%]
+tests/test_paper_trading.py::TestPaperTradingService::test_position_sizing_limit PASSED [ 77%]
+tests/test_paper_trading.py::TestPaperTradingService::test_partial_fill_simulation PASSED [ 77%]
+tests/test_paper_trading.py::TestPaperTradingService::test_execution_costs_calculation PASSED [ 77%]
+tests/test_paper_trading.py::TestPaperTradingService::test_position_pnl_calculation PASSED [ 77%]
+tests/test_paper_trading.py::TestPaperTradingService::test_portfolio_metrics_update PASSED [ 77%]
+tests/test_paper_trading.py::TestPaperTradingService::test_session_statistics_update PASSED [ 77%]
+tests/test_paper_trading.py::TestPaperTradingService::test_close_session PASSED [ 78%]
+tests/test_paper_trading.py::TestPaperTradingService::test_get_trades_with_filters PASSED [ 78%]
+tests/test_paper_trading.py::TestPaperTradingService::test_short_position PASSED [ 78%]
+tests/test_paper_trading.py::TestPaperTradingService::test_multiple_portfolios PASSED [ 78%]
+tests/test_paper_trading.py::TestPaperTradingService::test_error_handling PASSED [ 78%]
+tests/test_paper_trading.py::TestPaperTradingIntegration::test_complete_trading_workflow PASSED [ 78%]
+tests/test_paper_trading.py::TestPaperTradingIntegration::test_performance_metrics_calculation PASSED [ 79%]
+tests/test_performance.py::TestPerformanceRegression::test_signal_generation_performance PASSED [ 79%]
+tests/test_performance.py::TestPerformanceRegression::test_backtest_performance_small_dataset PASSED [ 79%]
+tests/test_performance.py::TestPerformanceRegression::test_backtest_performance_large_dataset ERROR [ 79%]
+tests/test_performance.py::TestPerformanceRegression::test_technical_indicator_calculation_performance PASSED [ 79%]
+tests/test_performance.py::TestPerformanceRegression::test_position_size_calculation_performance PASSED [ 79%]
+tests/test_performance.py::TestPerformanceRegression::test_slippage_calculation_performance PASSED [ 80%]
+tests/test_performance.py::TestPerformanceRegression::test_performance_regression_detection PASSED [ 80%]
+tests/test_performance.py::TestPerformanceThresholds::test_signal_generation_threshold PASSED [ 80%]
+tests/test_performance.py::TestPerformanceThresholds::test_backtest_threshold_small PASSED [ 80%]
+tests/test_performance.py::TestPerformanceThresholds::test_memory_usage_threshold PASSED [ 80%]
+tests/test_performance.py::TestPerformanceBaselines::test_technical_indicator_baseline PASSED [ 80%]
+tests/test_performance.py::TestPerformanceBaselines::test_backtest_baseline PASSED [ 81%]
+tests/test_portfolio.py::TestPortfolioModels::test_position_creation PASSED [ 81%]
+tests/test_portfolio.py::TestPortfolioModels::test_portfolio_creation PASSED [ 81%]
+tests/test_portfolio.py::TestPortfolioModels::test_asset_universe PASSED [ 81%]
+tests/test_portfolio.py::TestPortfolioModels::test_circuit_breaker PASSED [ 81%]
+tests/test_portfolio.py::TestPaperTradingProvider::test_get_portfolio PASSED [ 81%]
+tests/test_portfolio.py::TestPaperTradingProvider::test_simulate_trade_buy PASSED [ 82%]
+tests/test_portfolio.py::TestPaperTradingProvider::test_simulate_trade_sell PASSED [ 82%]
+tests/test_portfolio.py::TestPaperTradingProvider::test_simulate_trade_close_position PASSED [ 82%]
+tests/test_portfolio.py::TestPaperTradingProvider::test_get_position PASSED [ 82%]
+tests/test_portfolio.py::TestPaperTradingProvider::test_get_asset_universe PASSED [ 82%]
+tests/test_portfolio.py::TestPaperTradingProvider::test_get_market_regime PASSED [ 82%]
+tests/test_portfolio.py::TestPaperTradingProvider::test_insufficient_cash PASSED [ 83%]
+tests/test_portfolio.py::TestPaperTradingProvider::test_unsupported_symbol PASSED [ 83%]
+tests/test_portfolio.py::TestPaperTradingProvider::test_symbol_support PASSED [ 83%]
+tests/test_portfolio.py::TestPortfolioService::test_get_portfolio_success PASSED [ 83%]
+tests/test_portfolio.py::TestPortfolioService::test_get_position_success PASSED [ 83%]
+tests/test_portfolio.py::TestPortfolioService::test_simulate_trade_success PASSED [ 83%]
+tests/test_portfolio.py::TestPortfolioService::test_circuit_breaker_status PASSED [ 84%]
+tests/test_portfolio.py::TestPortfolioService::test_reset_circuit_breaker PASSED [ 84%]
+tests/test_portfolio.py::TestPortfolioService::test_portfolio_summary PASSED [ 84%]
+tests/test_portfolio.py::TestIntegration::test_complete_trading_workflow PASSED [ 84%]
+tests/test_portfolio.py::TestIntegration::test_multiple_asset_classes PASSED [ 84%]
+tests/test_portfolio_analytics.py::TestPortfolioAnalyticsModels::test_performance_metrics_creation PASSED [ 84%]
+tests/test_portfolio_analytics.py::TestPortfolioAnalyticsModels::test_performance_metrics_validation PASSED [ 85%]
+tests/test_portfolio_analytics.py::TestPortfolioAnalyticsModels::test_risk_metrics_creation PASSED [ 85%]
+tests/test_portfolio_analytics.py::TestPortfolioAnalyticsModels::test_portfolio_allocation_creation PASSED [ 85%]
+tests/test_portfolio_analytics.py::TestPortfolioAnalyticsModels::test_portfolio_allocation_validation PASSED [ 85%]
+tests/test_portfolio_analytics.py::TestPortfolioAnalyticsModels::test_portfolio_rebalance_creation PASSED [ 85%]
+tests/test_portfolio_analytics.py::TestPortfolioAnalyticsService::test_calculate_performance_metrics PASSED [ 85%]
+tests/test_portfolio_analytics.py::TestPortfolioAnalyticsService::test_calculate_risk_metrics PASSED [ 86%]
+tests/test_portfolio_analytics.py::TestPortfolioAnalyticsService::test_generate_portfolio_analytics PASSED [ 86%]
+tests/test_portfolio_analytics.py::TestPortfolioAnalyticsService::test_analyze_portfolio_allocation PASSED [ 86%]
+tests/test_portfolio_analytics.py::TestPortfolioAnalyticsService::test_generate_rebalance_recommendation PASSED [ 86%]
+tests/test_portfolio_analytics.py::TestPortfolioAnalyticsService::test_compare_portfolios PASSED [ 86%]
+tests/test_portfolio_analytics.py::TestPortfolioAnalyticsService::test_helper_methods PASSED [ 86%]
+tests/test_portfolio_analytics.py::TestPortfolioAnalyticsService::test_risk_assessment_methods PASSED [ 87%]
+tests/test_portfolio_analytics.py::TestPortfolioAnalyticsService::test_score_calculation_methods PASSED [ 87%]
+tests/test_portfolio_analytics.py::TestPortfolioAnalyticsAPI::test_health_check PASSED [ 87%]
+tests/test_portfolio_analytics.py::TestPortfolioAnalyticsAPI::test_get_performance_metrics PASSED [ 87%]
+tests/test_portfolio_analytics.py::TestPortfolioAnalyticsAPI::test_get_performance_metrics_with_period PASSED [ 87%]
+tests/test_portfolio_analytics.py::TestPortfolioAnalyticsAPI::test_get_risk_metrics PASSED [ 87%]
+tests/test_portfolio_analytics.py::TestPortfolioAnalyticsAPI::test_get_portfolio_analytics PASSED [ 88%]
+tests/test_portfolio_analytics.py::TestPortfolioAnalyticsAPI::test_get_portfolio_allocation PASSED [ 88%]
+tests/test_portfolio_analytics.py::TestPortfolioAnalyticsAPI::test_get_rebalance_recommendation PASSED [ 88%]
+tests/test_portfolio_analytics.py::TestPortfolioAnalyticsAPI::test_compare_portfolios PASSED [ 88%]
+tests/test_portfolio_analytics.py::TestPortfolioAnalyticsAPI::test_get_analytics_summary PASSED [ 88%]
+tests/test_portfolio_analytics.py::TestPortfolioAnalyticsAPI::test_performance_metrics_post_endpoint PASSED [ 88%]
+tests/test_portfolio_analytics.py::TestPortfolioAnalyticsIntegration::test_full_analytics_workflow PASSED [ 89%]
+tests/test_portfolio_analytics.py::TestPortfolioAnalyticsIntegration::test_edge_cases PASSED [ 89%]
+tests/test_service_integration.py::TestPortfolioServiceIntegration::test_get_portfolio_with_error_handling PASSED [ 89%]
+tests/test_service_integration.py::TestPortfolioServiceIntegration::test_get_position_with_error_handling PASSED [ 89%]
+tests/test_service_integration.py::TestPortfolioServiceIntegration::test_simulate_trade_with_error_handling PASSED [ 89%]
+tests/test_service_integration.py::TestPortfolioServiceIntegration::test_circuit_breaker_opening PASSED [ 89%]
+tests/test_service_integration.py::TestPortfolioServiceIntegration::test_circuit_breaker_reset PASSED [ 90%]
+tests/test_service_integration.py::TestPortfolioServiceIntegration::test_circuit_breaker_half_open_recovery PASSED [ 90%]
+tests/test_service_integration.py::TestPortfolioServiceIntegration::test_slippage_monitoring PASSED [ 90%]
+tests/test_service_integration.py::TestPortfolioServiceIntegration::test_portfolio_summary_with_empty_portfolio PASSED [ 90%]
+tests/test_service_integration.py::TestPortfolioServiceIntegration::test_portfolio_summary_with_positions PASSED [ 90%]
+tests/test_service_integration.py::TestPortfolioServiceIntegration::test_get_asset_universe_with_error PASSED [ 90%]
+tests/test_service_integration.py::TestPortfolioServiceIntegration::test_get_market_regime_with_error PASSED [ 91%]
+tests/test_service_integration.py::TestSignalScorerServiceIntegration::test_evaluate_signal_with_portfolio_error PASSED [ 91%]
+tests/test_service_integration.py::TestSignalScorerServiceIntegration::test_execute_signal_with_portfolio_error PASSED [ 91%]
+tests/test_service_integration.py::TestSignalScorerServiceIntegration::test_execute_signal_with_zero_position_size PASSED [ 91%]
+tests/test_service_integration.py::TestSignalScorerServiceIntegration::test_execute_signal_with_trade_failure PASSED [ 91%]
+tests/test_service_integration.py::TestSignalScorerServiceIntegration::test_diversification_score_calculation PASSED [ 91%]
+tests/test_service_integration.py::TestSignalScorerServiceIntegration::test_diversification_score_with_error PASSED [ 92%]
+tests/test_service_integration.py::TestSignalScorerServiceIntegration::test_signal_expiration_handling PASSED [ 92%]
+tests/test_service_integration.py::TestSignalScorerServiceIntegration::test_queue_size_enforcement PASSED [ 92%]
+tests/test_service_integration.py::TestSignalScorerServiceIntegration::test_signal_statistics_with_errors PASSED [ 92%]
+tests/test_service_integration.py::TestSignalScorerServiceIntegration::test_threshold_updates_with_validation PASSED [ 92%]
+tests/test_service_integration.py::TestSignalScorerServiceIntegration::test_position_size_limit_updates_with_validation PASSED [ 92%]
+tests/test_service_integration.py::TestSignalPriorityQueueIntegration::test_signal_comparison_for_heap PASSED [ 93%]
+tests/test_service_integration.py::TestSignalPriorityQueueIntegration::test_heap_rebuilding_after_removal PASSED [ 93%]
+tests/test_service_integration.py::TestSignalPriorityQueueIntegration::test_expired_signal_cleanup PASSED [ 93%]
+tests/test_service_integration.py::TestSignalPriorityQueueIntegration::test_queue_summary_with_empty_queue PASSED [ 93%]
+tests/test_service_integration.py::TestSignalPriorityQueueIntegration::test_queue_summary_with_signals PASSED [ 93%]
+tests/test_signal_scorer.py::TestSignalModels::test_signal_creation PASSED [ 93%]
+tests/test_signal_scorer.py::TestSignalModels::test_signal_properties PASSED [ 94%]
+tests/test_signal_scorer.py::TestSignalModels::test_market_data_creation PASSED [ 94%]
+tests/test_signal_scorer.py::TestSignalModels::test_signal_type_enum PASSED [ 94%]
+tests/test_signal_scorer.py::TestSignalModels::test_signal_strength_enum PASSED [ 94%]
+tests/test_signal_scorer.py::TestSignalModels::test_signal_source_enum PASSED [ 94%]
+tests/test_signal_scorer.py::TestSignalScorer::test_calculate_confidence_score PASSED [ 94%]
+tests/test_signal_scorer.py::TestSignalScorer::test_calculate_liquidity_score PASSED [ 95%]
+tests/test_signal_scorer.py::TestSignalScorer::test_calculate_priority_score PASSED [ 95%]
+tests/test_signal_scorer.py::TestSignalScorer::test_momentum_score_calculation PASSED [ 95%]
+tests/test_signal_scorer.py::TestSignalScorer::test_volume_score_calculation PASSED [ 95%]
+tests/test_signal_scorer.py::TestSignalScorer::test_volatility_score_calculation PASSED [ 95%]
+tests/test_signal_scorer.py::TestSignalScorer::test_technical_score_calculation PASSED [ 95%]
+tests/test_signal_scorer.py::TestSignalPriorityQueue::test_add_signal PASSED [ 96%]
+tests/test_signal_scorer.py::TestSignalPriorityQueue::test_get_next_signal PASSED [ 96%]
+tests/test_signal_scorer.py::TestSignalPriorityQueue::test_peek_next_signal PASSED [ 96%]
+tests/test_signal_scorer.py::TestSignalPriorityQueue::test_get_signals_by_symbol PASSED [ 96%]
+tests/test_signal_scorer.py::TestSignalPriorityQueue::test_queue_size_limit PASSED [ 96%]
+tests/test_signal_scorer.py::TestSignalPriorityQueue::test_clear_signals PASSED [ 96%]
+tests/test_signal_scorer.py::TestSignalPriorityQueue::test_get_queue_summary PASSED [ 97%]
+tests/test_signal_scorer.py::TestSignalScorerService::test_evaluate_signal_success PASSED [ 97%]
+tests/test_signal_scorer.py::TestSignalScorerService::test_evaluate_signal_low_thresholds PASSED [ 97%]
+tests/test_signal_scorer.py::TestSignalScorerService::test_get_next_actionable_signal PASSED [ 97%]
+tests/test_signal_scorer.py::TestSignalScorerService::test_calculate_position_size PASSED [ 97%]
+tests/test_signal_scorer.py::TestSignalScorerService::test_execute_signal PASSED [ 97%]
+tests/test_signal_scorer.py::TestSignalScorerService::test_get_signal_statistics PASSED [ 98%]
+tests/test_signal_scorer.py::TestSignalScorerService::test_get_signals_by_symbol PASSED [ 98%]
+tests/test_signal_scorer.py::TestSignalScorerService::test_clear_expired_signals PASSED [ 98%]
+tests/test_signal_scorer.py::TestSignalScorerService::test_update_thresholds PASSED [ 98%]
+tests/test_signal_scorer.py::TestSignalScorerService::test_update_position_size_limit PASSED [ 98%]
+tests/test_signal_scorer.py::TestIntegration::test_complete_signal_workflow PASSED [ 98%]
+tests/test_signal_scorer.py::TestIntegration::test_multiple_signals_priority PASSED [ 99%]
+tests/test_survivorship_bias.py::TestSurvivorshipBias::test_delisted_assets_inclusion PASSED [ 99%]
+tests/test_survivorship_bias.py::TestSurvivorshipBias::test_dynamic_asset_universe PASSED [ 99%]
+tests/test_survivorship_bias.py::TestSurvivorshipBias::test_historical_delisting_simulation PASSED [ 99%]
+tests/test_survivorship_bias.py::TestSurvivorshipBias::test_survivorship_bias_detection PASSED [ 99%]
+tests/test_survivorship_bias.py::TestSurvivorshipBias::test_asset_liquidity_changes PASSED [100%]
+
+==================================== ERRORS ====================================
+_ ERROR at setup of TestPerformanceRegression.test_backtest_performance_large_dataset _
+
+self = <tests.test_performance.TestPerformanceRegression object at 0x1052b7520>
+
+    @pytest.fixture
+    def large_market_data(self):
+        """Create large dataset for performance testing."""
+        data = []
+        base_date = datetime(2025, 1, 1)
+        base_price = Decimal("320.0")
+    
+        # Create 1000 days of market data
+        for i in range(1000):
+            date = base_date + timedelta(days=i)
+    
+            # Add trend and noise
+            trend_factor = 1 + (i * 0.0001)  # 0.01% daily trend
+            noise_factor = 1 + ((i % 10 - 5) * 0.001)  # ±0.5% noise
+    
+            price = base_price * Decimal(str(trend_factor * noise_factor))
+    
+            # Create OHLC data
+            open_price = price * Decimal("0.999")
+            high_price = price * Decimal("1.005")
+            low_price = price * Decimal("0.995")
+            close_price = price
+    
+            volume = Decimal("50000000")
+    
+            # Bid-ask spread
+            spread = (price * Decimal("0.001")).quantize(Decimal("0.000001"))
+            bid = (price - spread / Decimal("2")).quantize(Decimal("0.000001"))
+            ask = (price + spread / Decimal("2")).quantize(Decimal("0.000001"))
+    
+>           data.append(MarketData(
+                symbol="SPY",
+                timestamp=date,
+                open_price=open_price,
+                high_price=high_price,
+                low_price=low_price,
+                close_price=close_price,
+                volume=volume,
+                bid=bid,
+                ask=ask,
+                spread=spread
+            ))
+E           pydantic_core._pydantic_core.ValidationError: 1 validation error for MarketData
+E             Value error, Calculated spread (0.321568) does not match provided spread (0.321569). [type=value_error, input_value={'symbol': 'SPY', 'timest...d': Decimal('0.321569')}, input_type=dict]
+E               For further information visit https://errors.pydantic.dev/2.10/v/value_error
+
+tests/test_performance.py:70: ValidationError
+=================================== FAILURES ===================================
+______________ TestAssetAPI.test_get_liquid_assets_service_error _______________
+
+self = <tests.test_api_assets.TestAssetAPI object at 0x104380130>
+client = <starlette.testclient.TestClient object at 0x105399b50>
+mock_service = <AsyncMock id='4382627248'>
+
+    def test_get_liquid_assets_service_error(self, client, mock_service):
+        """Test liquid assets with service error."""
+        # Mock service to raise exception
+        mock_service.get_liquid_assets.side_effect = Exception("Service error")
+    
+        with patch('app.api.assets.get_asset_identification_service', return_value=mock_service):
+            response = client.get("/assets/liquid/equity")
+    
+>           assert response.status_code == 500
+E           assert 200 == 500
+E            +  where 200 = <Response [200 OK]>.status_code
+
+tests/test_api_assets.py:165: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:42,807 - httpx - INFO - HTTP Request: GET http://testserver/assets/liquid/equity "HTTP/1.1 200 OK"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/assets/liquid/equity "HTTP/1.1 200 OK"
+_________________ TestAssetAPI.test_get_asset_details_success __________________
+
+self = <tests.test_api_assets.TestAssetAPI object at 0x104374b50>
+client = <starlette.testclient.TestClient object at 0x10541dc70>
+mock_service = <AsyncMock id='4383169504'>
+sample_asset = Asset(symbol='AAPL', name='Apple Inc.', asset_class=<AssetClass.EQUITY: 'equity'>, exchange=<Exchange.NASDAQ: 'NASDAQ'...ck_size=Decimal('0.01'), is_active=True, last_updated=datetime.datetime(2025, 10, 20, 16, 40, 42, 848305), metadata={})
+
+    def test_get_asset_details_success(self, client, mock_service, sample_asset):
+        """Test successful asset details retrieval."""
+        # Mock service response
+        mock_service.get_asset_details.return_value = sample_asset
+    
+        with patch('app.api.assets.get_asset_identification_service', return_value=mock_service):
+            response = client.get("/assets/AAPL")
+    
+>           assert response.status_code == 200
+E           assert 404 == 200
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_assets.py:177: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:42,850 - httpx - INFO - HTTP Request: GET http://testserver/assets/AAPL "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/assets/AAPL "HTTP/1.1 404 Not Found"
+________________ TestAssetAPI.test_get_asset_details_not_found _________________
+
+self = <tests.test_api_assets.TestAssetAPI object at 0x104340940>
+client = <starlette.testclient.TestClient object at 0x104392a60>
+mock_service = <AsyncMock id='4364945920'>
+
+    def test_get_asset_details_not_found(self, client, mock_service):
+        """Test asset details with asset not found."""
+        # Mock service to return None
+        mock_service.get_asset_details.return_value = None
+    
+        with patch('app.api.assets.get_asset_identification_service', return_value=mock_service):
+            response = client.get("/assets/NONEXISTENT")
+    
+            assert response.status_code == 404
+            data = response.json()
+>           assert "Asset not found" in data["detail"]
+E           AssertionError: assert 'Asset not found' in 'Not Found'
+
+tests/test_api_assets.py:193: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:42,858 - httpx - INFO - HTTP Request: GET http://testserver/assets/NONEXISTENT "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/assets/NONEXISTENT "HTTP/1.1 404 Not Found"
+______________ TestAssetAPI.test_get_asset_details_service_error _______________
+
+self = <tests.test_api_assets.TestAssetAPI object at 0x104340c40>
+client = <starlette.testclient.TestClient object at 0x105419160>
+mock_service = <AsyncMock id='4383151200'>
+
+    def test_get_asset_details_service_error(self, client, mock_service):
+        """Test asset details with service error."""
+        # Mock service to raise exception
+        mock_service.get_asset_details.side_effect = Exception("Service error")
+    
+        with patch('app.api.assets.get_asset_identification_service', return_value=mock_service):
+            response = client.get("/assets/AAPL")
+    
+>           assert response.status_code == 500
+E           assert 404 == 500
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_assets.py:203: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:42,867 - httpx - INFO - HTTP Request: GET http://testserver/assets/AAPL "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/assets/AAPL "HTTP/1.1 404 Not Found"
+_______________ TestAssetAPI.test_get_liquidity_metrics_success ________________
+
+self = <tests.test_api_assets.TestAssetAPI object at 0x104370b80>
+client = <starlette.testclient.TestClient object at 0x10541da60>
+mock_service = <AsyncMock id='4383169888'>
+sample_liquidity_metrics = LiquidityMetrics(symbol='AAPL', timestamp=datetime.datetime(2025, 10, 20, 16, 40, 42, 873077), daily_volume=Decimal('5...rent_price=Decimal('150.0'), price_volatility=0.12, volume_score=85.0, spread_score=80.0, overall_liquidity_score=82.5)
+
+    def test_get_liquidity_metrics_success(self, client, mock_service, sample_liquidity_metrics):
+        """Test successful liquidity metrics retrieval."""
+        # Mock service response
+        mock_service.get_liquidity_metrics.return_value = sample_liquidity_metrics
+    
+        with patch('app.api.assets.get_asset_identification_service', return_value=mock_service):
+            response = client.get("/assets/AAPL/liquidity")
+    
+>           assert response.status_code == 200
+E           assert 404 == 200
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_assets.py:215: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:42,874 - httpx - INFO - HTTP Request: GET http://testserver/assets/AAPL/liquidity "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/assets/AAPL/liquidity "HTTP/1.1 404 Not Found"
+______________ TestAssetAPI.test_get_liquidity_metrics_not_found _______________
+
+self = <tests.test_api_assets.TestAssetAPI object at 0x1043873d0>
+client = <starlette.testclient.TestClient object at 0x10548f160>
+mock_service = <AsyncMock id='4383634432'>
+
+    def test_get_liquidity_metrics_not_found(self, client, mock_service):
+        """Test liquidity metrics with asset not found."""
+        # Mock service to return None
+        mock_service.get_liquidity_metrics.return_value = None
+    
+        with patch('app.api.assets.get_asset_identification_service', return_value=mock_service):
+            response = client.get("/assets/NONEXISTENT/liquidity")
+    
+            assert response.status_code == 404
+            data = response.json()
+>           assert "Asset not found" in data["detail"]
+E           AssertionError: assert 'Asset not found' in 'Not Found'
+
+tests/test_api_assets.py:231: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:42,914 - httpx - INFO - HTTP Request: GET http://testserver/assets/NONEXISTENT/liquidity "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/assets/NONEXISTENT/liquidity "HTTP/1.1 404 Not Found"
+____________ TestAssetAPI.test_get_liquidity_metrics_service_error _____________
+
+self = <tests.test_api_assets.TestAssetAPI object at 0x1043879a0>
+client = <starlette.testclient.TestClient object at 0x105419100>
+mock_service = <AsyncMock id='4383153936'>
+
+    def test_get_liquidity_metrics_service_error(self, client, mock_service):
+        """Test liquidity metrics with service error."""
+        # Mock service to raise exception
+        mock_service.get_liquidity_metrics.side_effect = Exception("Service error")
+    
+        with patch('app.api.assets.get_asset_identification_service', return_value=mock_service):
+            response = client.get("/assets/AAPL/liquidity")
+    
+>           assert response.status_code == 500
+E           assert 404 == 500
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_assets.py:241: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:42,922 - httpx - INFO - HTTP Request: GET http://testserver/assets/AAPL/liquidity "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/assets/AAPL/liquidity "HTTP/1.1 404 Not Found"
+_________________ TestAssetAPI.test_get_asset_rankings_success _________________
+
+self = <tests.test_api_assets.TestAssetAPI object at 0x1043874f0>
+client = <starlette.testclient.TestClient object at 0x105409b20>
+asset_service_patch = <AsyncMock id='4383085760'>
+
+    def test_get_asset_rankings_success(self, client, asset_service_patch):
+        """Test successful asset rankings retrieval."""
+        response = client.get("/assets/rankings/equity")
+    
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert "rankings" in data
+>       assert len(data["rankings"]) == 3
+E       assert 0 == 3
+E        +  where 0 = len([])
+
+tests/test_api_assets.py:253: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:42,931 - httpx - INFO - HTTP Request: GET http://testserver/assets/rankings/equity "HTTP/1.1 200 OK"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/assets/rankings/equity "HTTP/1.1 200 OK"
+______________ TestAssetAPI.test_get_asset_rankings_service_error ______________
+
+self = <tests.test_api_assets.TestAssetAPI object at 0x104387f70>
+client = <starlette.testclient.TestClient object at 0x10548a8b0>
+mock_service = <AsyncMock id='4383613712'>
+
+    def test_get_asset_rankings_service_error(self, client, mock_service):
+        """Test asset rankings with service error."""
+        # Mock service to raise exception
+        mock_service.get_asset_rankings.side_effect = Exception("Service error")
+    
+        with patch('app.api.assets.get_asset_identification_service', return_value=mock_service):
+            response = client.get("/assets/rankings/equity")
+    
+>           assert response.status_code == 500
+E           assert 200 == 500
+E            +  where 200 = <Response [200 OK]>.status_code
+
+tests/test_api_assets.py:269: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:42,944 - httpx - INFO - HTTP Request: GET http://testserver/assets/rankings/equity "HTTP/1.1 200 OK"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/assets/rankings/equity "HTTP/1.1 200 OK"
+___________________ TestAssetAPI.test_filter_assets_success ____________________
+
+self = <tests.test_api_assets.TestAssetAPI object at 0x104392190>
+client = <starlette.testclient.TestClient object at 0x1053efe80>
+mock_service = <AsyncMock id='4382980944'>
+sample_asset = Asset(symbol='AAPL', name='Apple Inc.', asset_class=<AssetClass.EQUITY: 'equity'>, exchange=<Exchange.NASDAQ: 'NASDAQ'...ck_size=Decimal('0.01'), is_active=True, last_updated=datetime.datetime(2025, 10, 20, 16, 40, 42, 950197), metadata={})
+
+    def test_filter_assets_success(self, client, mock_service, sample_asset):
+        """Test successful asset filtering."""
+        # Mock service response
+        mock_service.filter_assets.return_value = [sample_asset]
+    
+        with patch('app.api.assets.get_asset_identification_service', return_value=mock_service):
+            response = client.post("/assets/filter", json={
+                "asset_class": "equity",
+                "min_liquidity_score": 80.0,
+                "max_spread": 0.02
+            })
+    
+>           assert response.status_code == 200
+E           assert 404 == 200
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_assets.py:285: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:42,952 - httpx - INFO - HTTP Request: POST http://testserver/assets/filter "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/assets/filter "HTTP/1.1 404 Not Found"
+________________ TestAssetAPI.test_filter_assets_invalid_filter ________________
+
+self = <tests.test_api_assets.TestAssetAPI object at 0x104392310>
+client = <starlette.testclient.TestClient object at 0x1053c02b0>
+
+    def test_filter_assets_invalid_filter(self, client):
+        """Test asset filtering with invalid filter data."""
+        response = client.post("/assets/filter", json={
+            "asset_class": "invalid_class",
+            "min_liquidity_score": -10.0,  # Invalid negative score
+            "max_spread": -0.01  # Invalid negative spread
+        })
+    
+>       assert response.status_code == 422  # Validation error
+E       assert 404 == 422
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_assets.py:299: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:42,959 - httpx - INFO - HTTP Request: POST http://testserver/assets/filter "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/assets/filter "HTTP/1.1 404 Not Found"
+________________ TestAssetAPI.test_filter_assets_service_error _________________
+
+self = <tests.test_api_assets.TestAssetAPI object at 0x1043924c0>
+client = <starlette.testclient.TestClient object at 0x1053de880>
+mock_service = <AsyncMock id='4382911696'>
+
+    def test_filter_assets_service_error(self, client, mock_service):
+        """Test asset filtering with service error."""
+        # Mock service to raise exception
+        mock_service.filter_assets.side_effect = Exception("Service error")
+    
+        with patch('app.api.assets.get_asset_identification_service', return_value=mock_service):
+            response = client.post("/assets/filter", json={
+                "asset_class": "equity",
+                "min_liquidity_score": 80.0
+            })
+    
+>           assert response.status_code == 500
+E           assert 404 == 500
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_assets.py:312: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:42,967 - httpx - INFO - HTTP Request: POST http://testserver/assets/filter "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/assets/filter "HTTP/1.1 404 Not Found"
+_______________ TestAssetAPI.test_refresh_liquidity_data_success _______________
+
+self = <tests.test_api_assets.TestAssetAPI object at 0x104392670>
+client = <starlette.testclient.TestClient object at 0x1053cbd30>
+mock_service = <AsyncMock id='4382833008'>
+
+    def test_refresh_liquidity_data_success(self, client, mock_service):
+        """Test successful liquidity data refresh."""
+        # Mock service response
+        mock_service.refresh_liquidity_data.return_value = {"refreshed": 100}
+    
+        with patch('app.api.assets.get_asset_identification_service', return_value=mock_service):
+            response = client.post("/assets/refresh-liquidity")
+    
+>           assert response.status_code == 200
+E           assert 404 == 200
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_assets.py:324: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:42,975 - httpx - INFO - HTTP Request: POST http://testserver/assets/refresh-liquidity "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/assets/refresh-liquidity "HTTP/1.1 404 Not Found"
+____________ TestAssetAPI.test_refresh_liquidity_data_service_error ____________
+
+self = <tests.test_api_assets.TestAssetAPI object at 0x104392820>
+client = <starlette.testclient.TestClient object at 0x1053f8e20>
+mock_service = <AsyncMock id='4383017568'>
+
+    def test_refresh_liquidity_data_service_error(self, client, mock_service):
+        """Test liquidity data refresh with service error."""
+        # Mock service to raise exception
+        mock_service.refresh_liquidity_data.side_effect = Exception("Service error")
+    
+        with patch('app.api.assets.get_asset_identification_service', return_value=mock_service):
+            response = client.post("/assets/refresh-liquidity")
+    
+>           assert response.status_code == 500
+E           assert 404 == 500
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_assets.py:338: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:42,983 - httpx - INFO - HTTP Request: POST http://testserver/assets/refresh-liquidity "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/assets/refresh-liquidity "HTTP/1.1 404 Not Found"
+_________________ TestAssetAPI.test_get_asset_universe_success _________________
+
+self = <tests.test_api_assets.TestAssetAPI object at 0x104392a30>
+client = <starlette.testclient.TestClient object at 0x1053f4e20>
+mock_service = <AsyncMock id='4383001952'>
+sample_asset_universe = AssetUniverse(asset_class=<AssetClass.EQUITY: 'equity'>, assets=[Asset(symbol='AAPL', name='Apple Inc.', asset_class=<...2025, 10, 20, 16, 40, 42, 989096), total_assets=1, avg_liquidity_score=85.0, total_market_cap=Decimal('3000000000000'))
+
+    def test_get_asset_universe_success(self, client, mock_service, sample_asset_universe):
+        """Test successful asset universe retrieval."""
+        # Mock service response
+        mock_service.get_asset_universe.return_value = sample_asset_universe
+    
+        with patch('app.api.assets.get_asset_identification_service', return_value=mock_service):
+            response = client.get("/assets/universe/equity")
+    
+            assert response.status_code == 200
+            data = response.json()
+            assert data["success"] is True
+>           assert "universe" in data
+E           AssertionError: assert 'universe' in {'success': True, 'timestamp': '2025-10-20T16:40:42.990734', 'universe_summary': {'asset_class': 'equity', 'avg_liquidity_score': 0.0, 'last_updated': '2025-10-20T16:40:42.803074', 'ranking_count': 0, ...}}
+
+tests/test_api_assets.py:353: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:42,991 - httpx - INFO - HTTP Request: GET http://testserver/assets/universe/equity "HTTP/1.1 200 OK"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/assets/universe/equity "HTTP/1.1 200 OK"
+______________ TestAssetAPI.test_get_asset_universe_service_error ______________
+
+self = <tests.test_api_assets.TestAssetAPI object at 0x104392d60>
+client = <starlette.testclient.TestClient object at 0x1053fa970>
+mock_service = <AsyncMock id='4383026768'>
+
+    def test_get_asset_universe_service_error(self, client, mock_service):
+        """Test asset universe with service error."""
+        # Mock service to raise exception
+        mock_service.get_asset_universe.side_effect = Exception("Service error")
+    
+        with patch('app.api.assets.get_asset_identification_service', return_value=mock_service):
+            response = client.get("/assets/universe/equity")
+    
+>           assert response.status_code == 500
+E           assert 200 == 500
+E            +  where 200 = <Response [200 OK]>.status_code
+
+tests/test_api_assets.py:370: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,001 - httpx - INFO - HTTP Request: GET http://testserver/assets/universe/equity "HTTP/1.1 200 OK"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/assets/universe/equity "HTTP/1.1 200 OK"
+_________ TestAssetAPIEdgeCases.test_get_liquid_assets_empty_universe __________
+
+self = <tests.test_api_assets.TestAssetAPIEdgeCases object at 0x104392970>
+client = <starlette.testclient.TestClient object at 0x1054694f0>
+
+    def test_get_liquid_assets_empty_universe(self, client):
+        """Test liquid assets with empty universe."""
+        mock_service = AsyncMock()
+        empty_universe = AssetUniverse(
+            asset_class=AssetClass.EQUITY,
+            assets=[],
+            top_n=20
+        )
+        mock_service.get_liquid_assets.return_value = empty_universe
+    
+        with patch('app.api.assets.get_asset_identification_service', return_value=mock_service):
+            response = client.get("/assets/liquid/equity")
+    
+            assert response.status_code == 200
+            data = response.json()
+            assert data["success"] is True
+>           assert len(data["universe"]["assets"]) == 0
+E           KeyError: 'universe'
+
+tests/test_api_assets.py:412: KeyError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,013 - httpx - INFO - HTTP Request: GET http://testserver/assets/liquid/equity "HTTP/1.1 200 OK"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/assets/liquid/equity "HTTP/1.1 200 OK"
+______ TestAssetAPIEdgeCases.test_get_liquidity_metrics_with_zero_values _______
+
+self = <tests.test_api_assets.TestAssetAPIEdgeCases object at 0x104387df0>
+client = <starlette.testclient.TestClient object at 0x1053cf490>
+
+    def test_get_liquidity_metrics_with_zero_values(self, client):
+        """Test liquidity metrics with zero values."""
+        mock_service = AsyncMock()
+        zero_metrics = LiquidityMetrics(
+            symbol="TEST",
+            daily_volume=Decimal("0"),
+            avg_volume_30d=Decimal("0"),
+            volume_volatility=0.0,
+            current_spread=Decimal("0"),
+            avg_spread_30d=Decimal("0"),
+            spread_volatility=0.0,
+            current_price=Decimal("0"),
+            price_volatility=0.0,
+            volume_score=0.0,
+            spread_score=0.0,
+            overall_liquidity_score=0.0
+        )
+        mock_service.get_liquidity_metrics.return_value = zero_metrics
+    
+        with patch('app.api.assets.get_asset_identification_service', return_value=mock_service):
+            response = client.get("/assets/TEST/liquidity")
+    
+>           assert response.status_code == 200
+E           assert 404 == 200
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_assets.py:450: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,026 - httpx - INFO - HTTP Request: GET http://testserver/assets/TEST/liquidity "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/assets/TEST/liquidity "HTTP/1.1 404 Not Found"
+_________ TestAssetAPIEdgeCases.test_filter_assets_with_extreme_values _________
+
+self = <tests.test_api_assets.TestAssetAPIEdgeCases object at 0x104387400>
+client = <starlette.testclient.TestClient object at 0x10546d460>
+
+    def test_filter_assets_with_extreme_values(self, client):
+        """Test asset filtering with extreme values."""
+        mock_service = AsyncMock()
+        mock_service.filter_assets.return_value = []
+    
+        with patch('app.api.assets.get_asset_identification_service', return_value=mock_service):
+            response = client.post("/assets/filter", json={
+                "asset_class": "equity",
+                "min_liquidity_score": 100.0,  # Maximum possible score
+                "max_spread": 0.0  # Minimum possible spread
+            })
+    
+>           assert response.status_code == 200
+E           assert 404 == 200
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_assets.py:467: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,033 - httpx - INFO - HTTP Request: POST http://testserver/assets/filter "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/assets/filter "HTTP/1.1 404 Not Found"
+_______ TestAssetAPIEdgeCases.test_get_asset_rankings_with_single_asset ________
+
+self = <tests.test_api_assets.TestAssetAPIEdgeCases object at 0x104340d30>
+client = <starlette.testclient.TestClient object at 0x1054442e0>
+
+    def test_get_asset_rankings_with_single_asset(self, client):
+        """Test asset rankings with single asset."""
+        mock_service = AsyncMock()
+        ranking = AssetRanking(asset_class=AssetClass.EQUITY)
+        ranking.add_ranking("AAPL", 85.0, 1, 80.0, 90.0)
+        mock_service.get_asset_rankings.return_value = ranking
+    
+        with patch('app.api.assets.get_asset_identification_service', return_value=mock_service):
+            response = client.get("/assets/rankings/equity")
+    
+            assert response.status_code == 200
+            data = response.json()
+            assert data["success"] is True
+>           assert len(data["rankings"]) == 1
+E           assert 0 == 1
+E            +  where 0 = len([])
+
+tests/test_api_assets.py:484: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,041 - httpx - INFO - HTTP Request: GET http://testserver/assets/rankings/equity "HTTP/1.1 200 OK"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/assets/rankings/equity "HTTP/1.1 200 OK"
+____ TestAssetAPIEdgeCases.test_refresh_liquidity_data_with_zero_refreshed _____
+
+self = <tests.test_api_assets.TestAssetAPIEdgeCases object at 0x10439a070>
+client = <starlette.testclient.TestClient object at 0x105553b80>
+
+    def test_refresh_liquidity_data_with_zero_refreshed(self, client):
+        """Test liquidity data refresh with zero refreshed assets."""
+        mock_service = AsyncMock()
+        mock_service.refresh_liquidity_data.return_value = {"refreshed": 0}
+    
+        with patch('app.api.assets.get_asset_identification_service', return_value=mock_service):
+            response = client.post("/assets/refresh-liquidity")
+    
+>           assert response.status_code == 200
+E           assert 404 == 200
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_assets.py:494: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,049 - httpx - INFO - HTTP Request: POST http://testserver/assets/refresh-liquidity "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/assets/refresh-liquidity "HTTP/1.1 404 Not Found"
+_______ TestAssetAPIEdgeCases.test_get_asset_universe_with_large_dataset _______
+
+self = <tests.test_api_assets.TestAssetAPIEdgeCases object at 0x10439a340>
+client = <starlette.testclient.TestClient object at 0x10546d760>
+
+    def test_get_asset_universe_with_large_dataset(self, client):
+        """Test asset universe with large dataset."""
+        mock_service = AsyncMock()
+        # Create a large universe with 1000 assets
+        large_assets = []
+        for i in range(1000):
+            asset = Asset(
+                symbol=f"ASSET{i:04d}",
+                name=f"Asset {i}",
+                asset_class=AssetClass.EQUITY,
+                exchange=Exchange.NASDAQ,
+                avg_volume=Decimal("1000000"),
+                avg_spread=Decimal("0.01"),
+                liquidity_score=float(i % 100)
+            )
+            large_assets.append(asset)
+    
+        large_universe = AssetUniverse(
+            asset_class=AssetClass.EQUITY,
+            assets=large_assets,
+            top_n=100  # Changed from 1000 to comply with model validation
+        )
+        mock_service.get_asset_universe.return_value = large_universe
+    
+        with patch('app.api.assets.get_asset_identification_service', return_value=mock_service):
+            response = client.get("/assets/universe/equity")
+    
+            assert response.status_code == 200
+            data = response.json()
+            assert data["success"] is True
+>           assert len(data["universe"]["assets"]) == 1000
+E           KeyError: 'universe'
+
+tests/test_api_assets.py:529: KeyError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,060 - httpx - INFO - HTTP Request: GET http://testserver/assets/universe/equity "HTTP/1.1 200 OK"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/assets/universe/equity "HTTP/1.1 200 OK"
+__________________ TestMomentumAPI.test_analyze_asset_success __________________
+
+self = <tests.test_api_momentum.TestMomentumAPI object at 0x1043fb730>
+client = <starlette.testclient.TestClient object at 0x1057bfb80>
+mock_service = <AsyncMock id='4384436528'>
+sample_momentum_analysis = MomentumAnalysis(symbol='AAPL', timeframe=<Timeframe.DAILY: '1d'>, analysis_date=datetime.datetime(2025, 10, 19, 16, 4...{})], overall_momentum=85.0, trend_direction='BULLISH', signal_count=0, risk_level='MEDIUM', volatility_level='MEDIUM')
+
+    def test_analyze_asset_success(self, client, mock_service, sample_momentum_analysis):
+        """Test successful asset analysis."""
+        # Mock service response
+        mock_service.analyze_asset.return_value = sample_momentum_analysis
+    
+        try:
+            self._override_service(mock_service)
+            response = client.post("/momentum/analyze", json={
+                "symbol": "AAPL",
+                "timeframe": "daily",
+                "momentum_types": ["price", "volume"]
+            })
+    
+>           assert response.status_code == 200
+E           assert 404 == 200
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_momentum.py:181: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,308 - httpx - INFO - HTTP Request: POST http://testserver/momentum/analyze "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/momentum/analyze "HTTP/1.1 404 Not Found"
+_______________ TestMomentumAPI.test_analyze_asset_invalid_data ________________
+
+self = <tests.test_api_momentum.TestMomentumAPI object at 0x1043e5a60>
+client = <starlette.testclient.TestClient object at 0x1057ca730>
+
+    def test_analyze_asset_invalid_data(self, client):
+        """Test asset analysis with invalid data."""
+        response = client.post("/momentum/analyze", json={
+            "symbol": "",  # Empty symbol
+            "timeframe": "invalid_timeframe",  # Invalid timeframe
+            "momentum_types": []  # Empty momentum types
+        })
+    
+>       assert response.status_code == 422  # Validation error
+E       assert 404 == 422
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_momentum.py:197: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,318 - httpx - INFO - HTTP Request: POST http://testserver/momentum/analyze "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/momentum/analyze "HTTP/1.1 404 Not Found"
+_______________ TestMomentumAPI.test_analyze_asset_service_error _______________
+
+self = <tests.test_api_momentum.TestMomentumAPI object at 0x1043bb6d0>
+client = <starlette.testclient.TestClient object at 0x105469310>
+mock_service = <AsyncMock id='4383479168'>
+
+    def test_analyze_asset_service_error(self, client, mock_service):
+        """Test asset analysis with service error."""
+        # Mock service to raise exception
+        mock_service.analyze_asset.side_effect = Exception("Service error")
+    
+        try:
+            self._override_service(mock_service)
+            response = client.post("/momentum/analyze", json={
+                "symbol": "AAPL",
+                "timeframe": "daily"
+            })
+    
+>           assert response.status_code == 500
+E           assert 404 == 500
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_momentum.py:211: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,327 - httpx - INFO - HTTP Request: POST http://testserver/momentum/analyze "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/momentum/analyze "HTTP/1.1 404 Not Found"
+____________ TestMomentumAPI.test_get_technical_indicators_success _____________
+
+self = <tests.test_api_momentum.TestMomentumAPI object at 0x1043ef460>
+client = <starlette.testclient.TestClient object at 0x1057c9b20>
+mock_service = <AsyncMock id='4387020272'>
+sample_technical_indicators = TechnicalIndicators(symbol='AAPL', timeframe=<Timeframe.DAILY: '1d'>, timestamp=datetime.datetime(2025, 10, 20, 16, 40...er=None, bb_middle=None, bb_lower=None, bb_width=None, atr=3.0, volatility=None, volume_sma_20=None, volume_ratio=None)
+
+    def test_get_technical_indicators_success(self, client, mock_service, sample_technical_indicators):
+        """Test successful technical indicators retrieval."""
+        # Mock service response
+        mock_service.get_technical_indicators.return_value = sample_technical_indicators
+    
+        try:
+            self._override_service(mock_service)
+            response = client.get("/momentum/indicators/AAPL")
+    
+            assert response.status_code == 200
+            data = response.json()
+            assert data["success"] is True
+            assert "indicators" in data
+>           assert data["indicators"]["rsi"] == 70.0
+E           assert [] == 70.0
+
+tests/test_api_momentum.py:230: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,344 - httpx - INFO - HTTP Request: GET http://testserver/momentum/indicators/AAPL "HTTP/1.1 200 OK"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/momentum/indicators/AAPL "HTTP/1.1 200 OK"
+___________ TestMomentumAPI.test_get_technical_indicators_not_found ____________
+
+self = <tests.test_api_momentum.TestMomentumAPI object at 0x1043ef430>
+client = <starlette.testclient.TestClient object at 0x1058a9e50>
+mock_service = <AsyncMock id='4387937536'>
+
+    def test_get_technical_indicators_not_found(self, client, mock_service):
+        """Test technical indicators with asset not found."""
+        # Mock service to return None
+        mock_service.get_technical_indicators.return_value = None
+    
+        try:
+            self._override_service(mock_service)
+            response = client.get("/momentum/indicators/NONEXISTENT")
+    
+>           assert response.status_code == 404
+E           assert 200 == 404
+E            +  where 200 = <Response [200 OK]>.status_code
+
+tests/test_api_momentum.py:243: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,361 - httpx - INFO - HTTP Request: GET http://testserver/momentum/indicators/NONEXISTENT "HTTP/1.1 200 OK"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/momentum/indicators/NONEXISTENT "HTTP/1.1 200 OK"
+_________ TestMomentumAPI.test_get_technical_indicators_service_error __________
+
+self = <tests.test_api_momentum.TestMomentumAPI object at 0x1043f61f0>
+client = <starlette.testclient.TestClient object at 0x105781a90>
+mock_service = <AsyncMock id='4386724256'>
+
+    def test_get_technical_indicators_service_error(self, client, mock_service):
+        """Test technical indicators with service error."""
+        # Mock service to raise exception
+        mock_service.get_technical_indicators.side_effect = Exception("Service error")
+    
+        try:
+            self._override_service(mock_service)
+            response = client.get("/momentum/indicators/AAPL")
+    
+>           assert response.status_code == 500
+E           assert 200 == 500
+E            +  where 200 = <Response [200 OK]>.status_code
+
+tests/test_api_momentum.py:258: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,377 - httpx - INFO - HTTP Request: GET http://testserver/momentum/indicators/AAPL "HTTP/1.1 200 OK"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/momentum/indicators/AAPL "HTTP/1.1 200 OK"
+______________ TestMomentumAPI.test_get_momentum_signals_success _______________
+
+self = <tests.test_api_momentum.TestMomentumAPI object at 0x104403820>
+client = <starlette.testclient.TestClient object at 0x10559af10>
+mock_service = <AsyncMock id='4384730512'>
+sample_momentum_signal = MomentumSignal(symbol='AAPL', signal_type=<MomentumType.PRICE_MOMENTUM: 'price_momentum'>, timeframe=<Timeframe.DAILY:...atetime(2025, 10, 19, 16, 40, 43, 384783), expires_at=datetime.datetime(2025, 10, 21, 16, 40, 43, 384791), metadata={})
+
+    def test_get_momentum_signals_success(self, client, mock_service, sample_momentum_signal):
+        """Test successful momentum signals retrieval."""
+        # Mock service response
+        mock_service.get_momentum_signals.return_value = [sample_momentum_signal]
+    
+        try:
+            self._override_service(mock_service)
+            response = client.get("/momentum/signals/AAPL")
+    
+>           assert response.status_code == 200
+E           assert 404 == 200
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_momentum.py:273: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,386 - httpx - INFO - HTTP Request: GET http://testserver/momentum/signals/AAPL "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/momentum/signals/AAPL "HTTP/1.1 404 Not Found"
+_____________ TestMomentumAPI.test_get_momentum_signals_not_found ______________
+
+self = <tests.test_api_momentum.TestMomentumAPI object at 0x104403a90>
+client = <starlette.testclient.TestClient object at 0x10558fe20>
+mock_service = <AsyncMock id='4384685216'>
+
+    def test_get_momentum_signals_not_found(self, client, mock_service):
+        """Test momentum signals with asset not found."""
+        # Mock service to return empty list
+        mock_service.get_momentum_signals.return_value = []
+    
+        try:
+            self._override_service(mock_service)
+            response = client.get("/momentum/signals/NONEXISTENT")
+    
+            assert response.status_code == 404
+            data = response.json()
+>           assert "No momentum signals found" in data["detail"]
+E           AssertionError: assert 'No momentum signals found' in 'Not Found'
+
+tests/test_api_momentum.py:292: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,395 - httpx - INFO - HTTP Request: GET http://testserver/momentum/signals/NONEXISTENT "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/momentum/signals/NONEXISTENT "HTTP/1.1 404 Not Found"
+___________ TestMomentumAPI.test_get_momentum_signals_service_error ____________
+
+self = <tests.test_api_momentum.TestMomentumAPI object at 0x104403dc0>
+client = <starlette.testclient.TestClient object at 0x105520d90>
+mock_service = <AsyncMock id='4384230320'>
+
+    def test_get_momentum_signals_service_error(self, client, mock_service):
+        """Test momentum signals with service error."""
+        # Mock service to raise exception
+        mock_service.get_momentum_signals.side_effect = Exception("Service error")
+    
+        try:
+            self._override_service(mock_service)
+            response = client.get("/momentum/signals/AAPL")
+    
+>           assert response.status_code == 500
+E           assert 404 == 500
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_momentum.py:305: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,404 - httpx - INFO - HTTP Request: GET http://testserver/momentum/signals/AAPL "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/momentum/signals/AAPL "HTTP/1.1 404 Not Found"
+_________________ TestMomentumAPI.test_create_strategy_success _________________
+
+self = <tests.test_api_momentum.TestMomentumAPI object at 0x104403fa0>
+client = <starlette.testclient.TestClient object at 0x105521c40>
+mock_service = <AsyncMock id='4384235280'>
+sample_momentum_strategy = MomentumStrategy(name='Daily Momentum', description='Simple daily momentum strategy', momentum_type=<MomentumType.PRIC...at=datetime.datetime(2025, 10, 20, 16, 40, 43, 411982), updated_at=datetime.datetime(2025, 10, 20, 16, 40, 43, 411986))
+
+    def test_create_strategy_success(self, client, mock_service, sample_momentum_strategy):
+        """Test successful strategy creation."""
+        # Mock service response
+        mock_service.create_strategy.return_value = sample_momentum_strategy
+    
+        try:
+            self._override_service(mock_service)
+            response = client.post("/momentum/strategies", json={
+                "name": "Daily Momentum",
+                "description": "Simple daily momentum strategy",
+                "momentum_types": ["price"],
+                "timeframe": "daily",
+                "min_confidence": 0.7,
+                "max_positions": 10,
+                "risk_per_trade": 0.02
+            })
+    
+>           assert response.status_code == 201
+E           assert 405 == 201
+E            +  where 405 = <Response [405 Method Not Allowed]>.status_code
+
+tests/test_api_momentum.py:328: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,413 - httpx - INFO - HTTP Request: POST http://testserver/momentum/strategies "HTTP/1.1 405 Method Not Allowed"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/momentum/strategies "HTTP/1.1 405 Method Not Allowed"
+______________ TestMomentumAPI.test_create_strategy_invalid_data _______________
+
+self = <tests.test_api_momentum.TestMomentumAPI object at 0x10440e160>
+client = <starlette.testclient.TestClient object at 0x105513760>
+
+    def test_create_strategy_invalid_data(self, client):
+        """Test strategy creation with invalid data."""
+        response = client.post("/momentum/strategies", json={
+            "name": "",  # Empty name
+            "momentum_types": [],  # Empty momentum types
+            "min_confidence": -1.0,  # Invalid confidence
+            "max_positions": 0  # Invalid max positions
+        })
+    
+>       assert response.status_code == 422  # Validation error
+E       assert 405 == 422
+E        +  where 405 = <Response [405 Method Not Allowed]>.status_code
+
+tests/test_api_momentum.py:345: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,421 - httpx - INFO - HTTP Request: POST http://testserver/momentum/strategies "HTTP/1.1 405 Method Not Allowed"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/momentum/strategies "HTTP/1.1 405 Method Not Allowed"
+______________ TestMomentumAPI.test_create_strategy_service_error ______________
+
+self = <tests.test_api_momentum.TestMomentumAPI object at 0x10440e310>
+client = <starlette.testclient.TestClient object at 0x1055317f0>
+mock_service = <AsyncMock id='4384299376'>
+
+    def test_create_strategy_service_error(self, client, mock_service):
+        """Test strategy creation with service error."""
+        # Mock service to raise exception
+        mock_service.create_strategy.side_effect = Exception("Service error")
+    
+        try:
+            self._override_service(mock_service)
+            response = client.post("/momentum/strategies", json={
+                "name": "Test Strategy",
+                "momentum_types": ["price"],
+                "timeframe": "daily"
+            })
+    
+>           assert response.status_code == 500
+E           assert 405 == 500
+E            +  where 405 = <Response [405 Method Not Allowed]>.status_code
+
+tests/test_api_momentum.py:360: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,430 - httpx - INFO - HTTP Request: POST http://testserver/momentum/strategies "HTTP/1.1 405 Method Not Allowed"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/momentum/strategies "HTTP/1.1 405 Method Not Allowed"
+______________ TestMomentumAPI.test_get_strategies_service_error _______________
+
+self = <tests.test_api_momentum.TestMomentumAPI object at 0x10440e6a0>
+client = <starlette.testclient.TestClient object at 0x105592dc0>
+mock_service = <AsyncMock id='4384695392'>
+
+    def test_get_strategies_service_error(self, client, mock_service):
+        """Test strategies retrieval with service error."""
+        # Mock service to raise exception
+        mock_service.get_strategies.side_effect = Exception("Service error")
+    
+        try:
+            self._override_service(mock_service)
+            response = client.get("/momentum/strategies")
+    
+>           assert response.status_code == 500
+E           assert 200 == 500
+E            +  where 200 = <Response [200 OK]>.status_code
+
+tests/test_api_momentum.py:392: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,482 - httpx - INFO - HTTP Request: GET http://testserver/momentum/strategies "HTTP/1.1 200 OK"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/momentum/strategies "HTTP/1.1 200 OK"
+__________________ TestMomentumAPI.test_get_strategy_success ___________________
+
+self = <tests.test_api_momentum.TestMomentumAPI object at 0x10440e880>
+client = <starlette.testclient.TestClient object at 0x10578e220>
+mock_service = <AsyncMock id='4386775728'>
+sample_momentum_strategy = MomentumStrategy(name='Daily Momentum', description='Simple daily momentum strategy', momentum_type=<MomentumType.PRIC...at=datetime.datetime(2025, 10, 20, 16, 40, 43, 490011), updated_at=datetime.datetime(2025, 10, 20, 16, 40, 43, 490013))
+
+    def test_get_strategy_success(self, client, mock_service, sample_momentum_strategy):
+        """Test successful strategy retrieval."""
+        # Mock service response
+        mock_service.get_strategy.return_value = sample_momentum_strategy
+    
+        try:
+            self._override_service(mock_service)
+            response = client.get("/momentum/strategies/daily_momentum")
+    
+>           assert response.status_code == 200
+E           assert 404 == 200
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_momentum.py:407: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,491 - httpx - INFO - HTTP Request: GET http://testserver/momentum/strategies/daily_momentum "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/momentum/strategies/daily_momentum "HTTP/1.1 404 Not Found"
+_________________ TestMomentumAPI.test_get_strategy_not_found __________________
+
+self = <tests.test_api_momentum.TestMomentumAPI object at 0x10440ea30>
+client = <starlette.testclient.TestClient object at 0x105786a00>
+mock_service = <AsyncMock id='4386744400'>
+
+    def test_get_strategy_not_found(self, client, mock_service):
+        """Test strategy retrieval with strategy not found."""
+        # Mock service to return None
+        mock_service.get_strategy.return_value = None
+    
+        try:
+            self._override_service(mock_service)
+            response = client.get("/momentum/strategies/nonexistent")
+    
+            assert response.status_code == 404
+            data = response.json()
+>           assert "Strategy not found" in data["detail"]
+E           AssertionError: assert 'Strategy not found' in 'Not Found'
+
+tests/test_api_momentum.py:426: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,500 - httpx - INFO - HTTP Request: GET http://testserver/momentum/strategies/nonexistent "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/momentum/strategies/nonexistent "HTTP/1.1 404 Not Found"
+_______________ TestMomentumAPI.test_get_strategy_service_error ________________
+
+self = <tests.test_api_momentum.TestMomentumAPI object at 0x10440ebe0>
+client = <starlette.testclient.TestClient object at 0x10588bfd0>
+mock_service = <AsyncMock id='4387814896'>
+
+    def test_get_strategy_service_error(self, client, mock_service):
+        """Test strategy retrieval with service error."""
+        # Mock service to raise exception
+        mock_service.get_strategy.side_effect = Exception("Service error")
+    
+        try:
+            self._override_service(mock_service)
+            response = client.get("/momentum/strategies/daily_momentum")
+    
+>           assert response.status_code == 500
+E           assert 404 == 500
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_momentum.py:439: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,509 - httpx - INFO - HTTP Request: GET http://testserver/momentum/strategies/daily_momentum "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/momentum/strategies/daily_momentum "HTTP/1.1 404 Not Found"
+_________________ TestMomentumAPI.test_update_strategy_success _________________
+
+self = <tests.test_api_momentum.TestMomentumAPI object at 0x10440edc0>
+client = <starlette.testclient.TestClient object at 0x1058bf700>
+mock_service = <AsyncMock id='4388026976'>
+sample_momentum_strategy = MomentumStrategy(name='Daily Momentum', description='Simple daily momentum strategy', momentum_type=<MomentumType.PRIC...at=datetime.datetime(2025, 10, 20, 16, 40, 43, 517964), updated_at=datetime.datetime(2025, 10, 20, 16, 40, 43, 517966))
+
+    def test_update_strategy_success(self, client, mock_service, sample_momentum_strategy):
+        """Test successful strategy update."""
+        # Mock service response
+        mock_service.update_strategy.return_value = sample_momentum_strategy
+    
+        try:
+            self._override_service(mock_service)
+            response = client.put("/momentum/strategies/daily_momentum", json={
+                "name": "Updated Daily Momentum",
+                "min_confidence": 0.8
+            })
+    
+>           assert response.status_code == 200
+E           assert 404 == 200
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_momentum.py:457: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,520 - httpx - INFO - HTTP Request: PUT http://testserver/momentum/strategies/daily_momentum "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: PUT http://testserver/momentum/strategies/daily_momentum "HTTP/1.1 404 Not Found"
+______________ TestMomentumAPI.test_update_strategy_invalid_data _______________
+
+self = <tests.test_api_momentum.TestMomentumAPI object at 0x10440ef40>
+client = <starlette.testclient.TestClient object at 0x10588fa60>
+
+    def test_update_strategy_invalid_data(self, client):
+        """Test strategy update with invalid data."""
+        response = client.put("/momentum/strategies/daily_momentum", json={
+            "min_confidence": 2.0,  # Invalid confidence > 1
+            "max_positions": -1  # Invalid negative positions
+        })
+    
+>       assert response.status_code == 422  # Validation error
+E       assert 404 == 422
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_momentum.py:471: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,530 - httpx - INFO - HTTP Request: PUT http://testserver/momentum/strategies/daily_momentum "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: PUT http://testserver/momentum/strategies/daily_momentum "HTTP/1.1 404 Not Found"
+______________ TestMomentumAPI.test_update_strategy_service_error ______________
+
+self = <tests.test_api_momentum.TestMomentumAPI object at 0x10440ed30>
+client = <starlette.testclient.TestClient object at 0x1058b5df0>
+mock_service = <AsyncMock id='4387985152'>
+
+    def test_update_strategy_service_error(self, client, mock_service):
+        """Test strategy update with service error."""
+        # Mock service to raise exception
+        mock_service.update_strategy.side_effect = Exception("Service error")
+    
+        try:
+            self._override_service(mock_service)
+            response = client.put("/momentum/strategies/daily_momentum", json={
+                "min_confidence": 0.8
+            })
+    
+>           assert response.status_code == 500
+E           assert 404 == 500
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_momentum.py:484: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,544 - httpx - INFO - HTTP Request: PUT http://testserver/momentum/strategies/daily_momentum "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: PUT http://testserver/momentum/strategies/daily_momentum "HTTP/1.1 404 Not Found"
+_________________ TestMomentumAPI.test_delete_strategy_success _________________
+
+self = <tests.test_api_momentum.TestMomentumAPI object at 0x10440e7f0>
+client = <starlette.testclient.TestClient object at 0x1058abac0>
+mock_service = <AsyncMock id='4387944816'>
+
+    def test_delete_strategy_success(self, client, mock_service):
+        """Test successful strategy deletion."""
+        # Mock service response
+        mock_service.delete_strategy.return_value = True
+    
+        try:
+            self._override_service(mock_service)
+            response = client.delete("/momentum/strategies/daily_momentum")
+    
+>           assert response.status_code == 200
+E           assert 404 == 200
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_momentum.py:499: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,555 - httpx - INFO - HTTP Request: DELETE http://testserver/momentum/strategies/daily_momentum "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: DELETE http://testserver/momentum/strategies/daily_momentum "HTTP/1.1 404 Not Found"
+________________ TestMomentumAPI.test_delete_strategy_not_found ________________
+
+self = <tests.test_api_momentum.TestMomentumAPI object at 0x10440e2b0>
+client = <starlette.testclient.TestClient object at 0x105aa4610>
+mock_service = <AsyncMock id='4390011520'>
+
+    def test_delete_strategy_not_found(self, client, mock_service):
+        """Test strategy deletion with strategy not found."""
+        # Mock service to return False
+        mock_service.delete_strategy.return_value = False
+    
+        try:
+            self._override_service(mock_service)
+            response = client.delete("/momentum/strategies/nonexistent")
+    
+            assert response.status_code == 404
+            data = response.json()
+>           assert "Strategy not found" in data["detail"]
+E           AssertionError: assert 'Strategy not found' in 'Not Found'
+
+tests/test_api_momentum.py:517: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,565 - httpx - INFO - HTTP Request: DELETE http://testserver/momentum/strategies/nonexistent "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: DELETE http://testserver/momentum/strategies/nonexistent "HTTP/1.1 404 Not Found"
+______________ TestMomentumAPI.test_delete_strategy_service_error ______________
+
+self = <tests.test_api_momentum.TestMomentumAPI object at 0x104403d60>
+client = <starlette.testclient.TestClient object at 0x105aa7f40>
+mock_service = <AsyncMock id='4390025440'>
+
+    def test_delete_strategy_service_error(self, client, mock_service):
+        """Test strategy deletion with service error."""
+        # Mock service to raise exception
+        mock_service.delete_strategy.side_effect = Exception("Service error")
+    
+        try:
+            self._override_service(mock_service)
+            response = client.delete("/momentum/strategies/daily_momentum")
+    
+>           assert response.status_code == 500
+E           assert 404 == 500
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_momentum.py:530: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,575 - httpx - INFO - HTTP Request: DELETE http://testserver/momentum/strategies/daily_momentum "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: DELETE http://testserver/momentum/strategies/daily_momentum "HTTP/1.1 404 Not Found"
+__________________ TestMomentumAPI.test_get_analyses_success ___________________
+
+self = <tests.test_api_momentum.TestMomentumAPI object at 0x1043efcd0>
+client = <starlette.testclient.TestClient object at 0x1058a2370>
+mock_service = <AsyncMock id='4387905744'>
+sample_momentum_analysis = MomentumAnalysis(symbol='AAPL', timeframe=<Timeframe.DAILY: '1d'>, analysis_date=datetime.datetime(2025, 10, 19, 16, 4...{})], overall_momentum=85.0, trend_direction='BULLISH', signal_count=0, risk_level='MEDIUM', volatility_level='MEDIUM')
+
+    def test_get_analyses_success(self, client, mock_service, sample_momentum_analysis):
+        """Test successful analyses retrieval."""
+        # Mock service response
+        mock_service.get_analyses.return_value = [sample_momentum_analysis]
+    
+        try:
+            self._override_service(mock_service)
+            response = client.get("/momentum/analyses")
+    
+>           assert response.status_code == 200
+E           assert 404 == 200
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_momentum.py:545: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,585 - httpx - INFO - HTTP Request: GET http://testserver/momentum/analyses "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/momentum/analyses "HTTP/1.1 404 Not Found"
+_______________ TestMomentumAPI.test_get_analyses_service_error ________________
+
+self = <tests.test_api_momentum.TestMomentumAPI object at 0x1043e5580>
+client = <starlette.testclient.TestClient object at 0x105ab43a0>
+mock_service = <AsyncMock id='4390079360'>
+
+    def test_get_analyses_service_error(self, client, mock_service):
+        """Test analyses retrieval with service error."""
+        # Mock service to raise exception
+        mock_service.get_analyses.side_effect = Exception("Service error")
+    
+        try:
+            self._override_service(mock_service)
+            response = client.get("/momentum/analyses")
+    
+>           assert response.status_code == 500
+E           assert 404 == 500
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_momentum.py:562: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,596 - httpx - INFO - HTTP Request: GET http://testserver/momentum/analyses "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/momentum/analyses "HTTP/1.1 404 Not Found"
+__________________ TestMomentumAPI.test_get_analysis_success ___________________
+
+self = <tests.test_api_momentum.TestMomentumAPI object at 0x104417250>
+client = <starlette.testclient.TestClient object at 0x1059cdb50>
+mock_service = <AsyncMock id='4389132752'>
+sample_momentum_analysis = MomentumAnalysis(symbol='AAPL', timeframe=<Timeframe.DAILY: '1d'>, analysis_date=datetime.datetime(2025, 10, 19, 16, 4...{})], overall_momentum=85.0, trend_direction='BULLISH', signal_count=0, risk_level='MEDIUM', volatility_level='MEDIUM')
+
+    def test_get_analysis_success(self, client, mock_service, sample_momentum_analysis):
+        """Test successful analysis retrieval."""
+        # Mock service response
+        mock_service.get_analysis.return_value = sample_momentum_analysis
+    
+        try:
+            self._override_service(mock_service)
+            response = client.get("/momentum/analyses/AAPL_2024_01_01")
+    
+>           assert response.status_code == 200
+E           assert 404 == 200
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_momentum.py:577: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,643 - httpx - INFO - HTTP Request: GET http://testserver/momentum/analyses/AAPL_2024_01_01 "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/momentum/analyses/AAPL_2024_01_01 "HTTP/1.1 404 Not Found"
+_________________ TestMomentumAPI.test_get_analysis_not_found __________________
+
+self = <tests.test_api_momentum.TestMomentumAPI object at 0x104417400>
+client = <starlette.testclient.TestClient object at 0x105244970>
+mock_service = <AsyncMock id='4381349872'>
+
+    def test_get_analysis_not_found(self, client, mock_service):
+        """Test analysis retrieval with analysis not found."""
+        # Mock service to return None
+        mock_service.get_analysis.return_value = None
+    
+        try:
+            self._override_service(mock_service)
+            response = client.get("/momentum/analyses/nonexistent")
+    
+            assert response.status_code == 404
+            data = response.json()
+>           assert "Analysis not found" in data["detail"]
+E           AssertionError: assert 'Analysis not found' in 'Not Found'
+
+tests/test_api_momentum.py:596: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,654 - httpx - INFO - HTTP Request: GET http://testserver/momentum/analyses/nonexistent "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/momentum/analyses/nonexistent "HTTP/1.1 404 Not Found"
+_______________ TestMomentumAPI.test_get_analysis_service_error ________________
+
+self = <tests.test_api_momentum.TestMomentumAPI object at 0x1044175b0>
+client = <starlette.testclient.TestClient object at 0x105ab4e20>
+mock_service = <AsyncMock id='4390078064'>
+
+    def test_get_analysis_service_error(self, client, mock_service):
+        """Test analysis retrieval with service error."""
+        # Mock service to raise exception
+        mock_service.get_analysis.side_effect = Exception("Service error")
+    
+        try:
+            self._override_service(mock_service)
+            response = client.get("/momentum/analyses/AAPL_2024_01_01")
+    
+>           assert response.status_code == 500
+E           assert 404 == 500
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_momentum.py:609: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,663 - httpx - INFO - HTTP Request: GET http://testserver/momentum/analyses/AAPL_2024_01_01 "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/momentum/analyses/AAPL_2024_01_01 "HTTP/1.1 404 Not Found"
+______ TestMomentumAPIEdgeCases.test_get_momentum_overview_empty_response ______
+
+self = <tests.test_api_momentum.TestMomentumAPIEdgeCases object at 0x1044179a0>
+client = <starlette.testclient.TestClient object at 0x105488b50>
+
+    def test_get_momentum_overview_empty_response(self, client):
+        """Test momentum overview with empty response."""
+        mock_service = AsyncMock()
+        mock_service.get_top_momentum_assets.return_value = []
+    
+        try:
+            self._override_service(mock_service)
+            response = client.get("/momentum/")
+    
+>           assert response.status_code == 200
+E           assert 500 == 200
+E            +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+tests/test_api_momentum.py:642: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,674 - httpx - INFO - HTTP Request: GET http://testserver/momentum/ "HTTP/1.1 500 Internal Server Error"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/momentum/ "HTTP/1.1 500 Internal Server Error"
+_______ TestMomentumAPIEdgeCases.test_analyze_asset_with_extreme_values ________
+
+self = <tests.test_api_momentum.TestMomentumAPIEdgeCases object at 0x104417b20>
+client = <starlette.testclient.TestClient object at 0x105aa7ac0>
+
+    def test_analyze_asset_with_extreme_values(self, client):
+        """Test asset analysis with extreme values."""
+        response = client.post("/momentum/analyze", json={
+            "symbol": "A" * 100,  # Very long symbol
+            "timeframe": "daily",
+            "momentum_types": ["price"] * 50  # Many momentum types
+        })
+    
+        # Should handle gracefully or return validation error
+>       assert response.status_code in [200, 422]
+E       assert 404 in [200, 422]
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_momentum.py:658: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,686 - httpx - INFO - HTTP Request: POST http://testserver/momentum/analyze "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/momentum/analyze "HTTP/1.1 404 Not Found"
+___ TestMomentumAPIEdgeCases.test_get_technical_indicators_with_zero_values ____
+
+self = <tests.test_api_momentum.TestMomentumAPIEdgeCases object at 0x104417cd0>
+client = <starlette.testclient.TestClient object at 0x1054629d0>
+
+    def test_get_technical_indicators_with_zero_values(self, client):
+        """Test technical indicators with zero values."""
+        mock_service = AsyncMock()
+        mock_service.get_technical_indicators.return_value = TechnicalIndicators(
+            symbol="TEST",
+            rsi=0.0,
+            ema_20=Decimal("0.0"),
+            macd=Decimal("0.0"),
+            atr=Decimal("0.0"),
+            volume_sma=Decimal("0.0")
+        )
+    
+        try:
+            self._override_service(mock_service)
+            response = client.get("/momentum/indicators/TEST")
+    
+            assert response.status_code == 200
+            data = response.json()
+            assert data["success"] is True
+>           assert data["indicators"]["rsi"] == 0.0
+E           assert [] == 0.0
+
+tests/test_api_momentum.py:679: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,703 - httpx - INFO - HTTP Request: GET http://testserver/momentum/indicators/TEST "HTTP/1.1 200 OK"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/momentum/indicators/TEST "HTTP/1.1 200 OK"
+______ TestMomentumAPIEdgeCases.test_get_momentum_signals_with_empty_list ______
+
+self = <tests.test_api_momentum.TestMomentumAPIEdgeCases object at 0x104417e80>
+client = <starlette.testclient.TestClient object at 0x104403370>
+
+    def test_get_momentum_signals_with_empty_list(self, client):
+        """Test momentum signals with empty list."""
+        mock_service = AsyncMock()
+        mock_service.get_momentum_signals.return_value = []
+    
+        try:
+            self._override_service(mock_service)
+            response = client.get("/momentum/signals/TEST")
+    
+            assert response.status_code == 404
+            data = response.json()
+>           assert "No momentum signals found" in data["detail"]
+E           AssertionError: assert 'No momentum signals found' in 'Not Found'
+
+tests/test_api_momentum.py:694: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,713 - httpx - INFO - HTTP Request: GET http://testserver/momentum/signals/TEST "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/momentum/signals/TEST "HTTP/1.1 404 Not Found"
+______ TestMomentumAPIEdgeCases.test_create_strategy_with_extreme_values _______
+
+self = <tests.test_api_momentum.TestMomentumAPIEdgeCases object at 0x104420070>
+client = <starlette.testclient.TestClient object at 0x1057ca2e0>
+
+    def test_create_strategy_with_extreme_values(self, client):
+        """Test strategy creation with extreme values."""
+        response = client.post("/momentum/strategies", json={
+            "name": "A" * 1000,  # Very long name
+            "description": "B" * 10000,  # Very long description
+            "momentum_types": ["price"],
+            "timeframe": "daily",
+            "min_confidence": 0.999999,  # Very high confidence
+            "max_positions": 10000,  # Very high max positions
+            "risk_per_trade": 0.999999  # Very high risk
+        })
+    
+        # Should handle gracefully or return validation error
+>       assert response.status_code in [201, 422]
+E       assert 405 in [201, 422]
+E        +  where 405 = <Response [405 Method Not Allowed]>.status_code
+
+tests/test_api_momentum.py:711: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,721 - httpx - INFO - HTTP Request: POST http://testserver/momentum/strategies "HTTP/1.1 405 Method Not Allowed"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/momentum/strategies "HTTP/1.1 405 Method Not Allowed"
+_______ TestMomentumAPIEdgeCases.test_get_strategies_with_large_dataset ________
+
+self = <tests.test_api_momentum.TestMomentumAPIEdgeCases object at 0x104420220>
+client = <starlette.testclient.TestClient object at 0x1053fa670>
+
+    def test_get_strategies_with_large_dataset(self, client):
+        """Test strategies retrieval with large dataset."""
+        mock_service = AsyncMock()
+    
+        # Create many strategies
+        strategies = []
+        for i in range(1000):
+>           strategy = MomentumStrategy(
+                name=f"Strategy_{i}",
+                description=f"Description for strategy {i}",
+                momentum_types=[MomentumType.PRICE_MOMENTUM],
+                timeframe=Timeframe.DAILY,
+                min_confidence=0.7,
+                max_positions=10,
+                risk_per_trade=0.02,
+                is_active=True
+            )
+E           pydantic_core._pydantic_core.ValidationError: 1 validation error for MomentumStrategy
+E           momentum_type
+E             Field required [type=missing, input_value={'name': 'Strategy_0', 'd...0.02, 'is_active': True}, input_type=dict]
+E               For further information visit https://errors.pydantic.dev/2.10/v/missing
+
+tests/test_api_momentum.py:720: ValidationError
+______ TestMomentumAPIEdgeCases.test_update_strategy_with_minimal_changes ______
+
+self = <tests.test_api_momentum.TestMomentumAPIEdgeCases object at 0x1044203d0>
+client = <starlette.testclient.TestClient object at 0x105a46dc0>
+
+    def test_update_strategy_with_minimal_changes(self, client):
+        """Test strategy update with minimal changes."""
+        mock_service = AsyncMock()
+>       mock_service.update_strategy.return_value = MomentumStrategy(
+            name="Updated Strategy",
+            description="Updated description",
+            momentum_types=[MomentumType.PRICE_MOMENTUM],
+            timeframe=Timeframe.DAILY,
+            min_confidence=0.7,
+            max_positions=10,
+            risk_per_trade=0.02,
+            is_active=True
+        )
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for MomentumStrategy
+E       momentum_type
+E         Field required [type=missing, input_value={'name': 'Updated Strateg...0.02, 'is_active': True}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.10/v/missing
+
+tests/test_api_momentum.py:748: ValidationError
+__________ TestMomentumAPIEdgeCases.test_get_analyses_with_empty_list __________
+
+self = <tests.test_api_momentum.TestMomentumAPIEdgeCases object at 0x104420580>
+client = <starlette.testclient.TestClient object at 0x105463be0>
+
+    def test_get_analyses_with_empty_list(self, client):
+        """Test analyses retrieval with empty list."""
+        mock_service = AsyncMock()
+        mock_service.get_analyses.return_value = []
+    
+        try:
+            self._override_service(mock_service)
+            response = client.get("/momentum/analyses")
+    
+>           assert response.status_code == 200
+E           assert 404 == 200
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_momentum.py:780: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-20 18:40:43,748 - httpx - INFO - HTTP Request: GET http://testserver/momentum/analyses "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/momentum/analyses "HTTP/1.1 404 Not Found"
+_________________ TestMockIBKRClient.test_order_execution_flow _________________
+
+self = <tests.test_mock_clients.TestMockIBKRClient object at 0x10520dd90>
+ibkr_client = <app.mocks.MockIBKRClient object at 0x105479820>
+
+    @pytest.mark.asyncio
+    async def test_order_execution_flow(self, ibkr_client):
+        """Test complete order execution flow."""
+        await ibkr_client.connect()
+        await ibkr_client.subscribe_market_data("AAPL")
+    
+        # Create buy order
+        order = Order(
+            id="test_order_1",
+            symbol="AAPL",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("100"),
+            price=Decimal("150.00")
+        )
+    
+        # Place order
+>       order_id = await ibkr_client.place_order(order)
+
+tests/test_mock_clients.py:89: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+app/mocks/__init__.py:106: in place_order
+    await self._execute_order(updated_order)
+app/mocks/__init__.py:176: in _execute_order
+    order.filled_at = datetime.utcnow()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = Order(id='IBKR_000001', symbol='AAPL', side=<OrderSide.BUY: 'buy'>, order_type=<OrderType.MARKET: 'market'>, quantity=...025, 10, 20, 16, 40, 45, 89881), filled_quantity=Decimal('0'), filled_price=None, commission=Decimal('0'), metadata={})
+name = 'filled_at', value = datetime.datetime(2025, 10, 20, 16, 40, 45, 140663)
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if name in self.__class_vars__:
+            raise AttributeError(
+                f'{name!r} is a ClassVar of `{self.__class__.__name__}` and cannot be set on an instance. '
+                f'If you want to set a value on the class, use `{self.__class__.__name__}.{name} = value`.'
+            )
+        elif not _fields.is_valid_field_name(name):
+            if self.__pydantic_private__ is None or name not in self.__private_attributes__:
+                _object_setattr(self, name, value)
+            else:
+                attribute = self.__private_attributes__[name]
+                if hasattr(attribute, '__set__'):
+                    attribute.__set__(self, value)  # type: ignore
+                else:
+                    self.__pydantic_private__[name] = value
+            return
+    
+        self._check_frozen(name, value)
+    
+        attr = getattr(self.__class__, name, None)
+        # NOTE: We currently special case properties and `cached_property`, but we might need
+        # to generalize this to all data/non-data descriptors at some point. For non-data descriptors
+        # (such as `cached_property`), it isn't obvious though. `cached_property` caches the value
+        # to the instance's `__dict__`, but other non-data descriptors might do things differently.
+        if isinstance(attr, property):
+            attr.__set__(self, value)
+        elif isinstance(attr, cached_property):
+            self.__dict__[name] = value
+        elif self.model_config.get('validate_assignment', None):
+            self.__pydantic_validator__.validate_assignment(self, name, value)
+        elif self.model_config.get('extra') != 'allow' and name not in self.__pydantic_fields__:
+            # TODO - matching error
+>           raise ValueError(f'"{self.__class__.__name__}" object has no field "{name}"')
+E           ValueError: "Order" object has no field "filled_at"
+
+.venv/lib/python3.9/site-packages/pydantic/main.py:926: ValueError
+---------------------------- Captured stderr setup -----------------------------
+2025-10-20 18:40:44,988 - asyncio - DEBUG - Using selector: KqueueSelector
+------------------------------ Captured log setup ------------------------------
+DEBUG    asyncio:selector_events.py:59 Using selector: KqueueSelector
+--------------------------- Captured stderr teardown ---------------------------
+2025-10-20 18:40:45,164 - asyncio - DEBUG - Using selector: KqueueSelector
+---------------------------- Captured log teardown -----------------------------
+DEBUG    asyncio:selector_events.py:59 Using selector: KqueueSelector
+__________________ TestMockIBKRClient.test_order_cancellation __________________
+
+self = <tests.test_mock_clients.TestMockIBKRClient object at 0x105214070>
+ibkr_client = <app.mocks.MockIBKRClient object at 0x105397fa0>
+
+    @pytest.mark.asyncio
+    async def test_order_cancellation(self, ibkr_client):
+        """Test order cancellation."""
+        await ibkr_client.connect()
+    
+        # Create limit order that won't execute immediately
+        order = Order(
+            id="test_order_2",
+            symbol="AAPL",
+            side=OrderSide.BUY,
+            order_type=OrderType.LIMIT,
+            quantity=Decimal("100"),
+            price=Decimal("50.00")  # Very low price, won't execute
+        )
+    
+        # Place order
+>       order_id = await ibkr_client.place_order(order)
+
+tests/test_mock_clients.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+app/mocks/__init__.py:109: in place_order
+    updated_order.rejected_reason = "Insufficient funds"
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = Order(id='IBKR_000001', symbol='AAPL', side=<OrderSide.BUY: 'buy'>, order_type=<OrderType.LIMIT: 'limit'>, quantity=De...25, 10, 20, 16, 40, 45, 266891), filled_quantity=Decimal('0'), filled_price=None, commission=Decimal('0'), metadata={})
+name = 'rejected_reason', value = 'Insufficient funds'
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if name in self.__class_vars__:
+            raise AttributeError(
+                f'{name!r} is a ClassVar of `{self.__class__.__name__}` and cannot be set on an instance. '
+                f'If you want to set a value on the class, use `{self.__class__.__name__}.{name} = value`.'
+            )
+        elif not _fields.is_valid_field_name(name):
+            if self.__pydantic_private__ is None or name not in self.__private_attributes__:
+                _object_setattr(self, name, value)
+            else:
+                attribute = self.__private_attributes__[name]
+                if hasattr(attribute, '__set__'):
+                    attribute.__set__(self, value)  # type: ignore
+                else:
+                    self.__pydantic_private__[name] = value
+            return
+    
+        self._check_frozen(name, value)
+    
+        attr = getattr(self.__class__, name, None)
+        # NOTE: We currently special case properties and `cached_property`, but we might need
+        # to generalize this to all data/non-data descriptors at some point. For non-data descriptors
+        # (such as `cached_property`), it isn't obvious though. `cached_property` caches the value
+        # to the instance's `__dict__`, but other non-data descriptors might do things differently.
+        if isinstance(attr, property):
+            attr.__set__(self, value)
+        elif isinstance(attr, cached_property):
+            self.__dict__[name] = value
+        elif self.model_config.get('validate_assignment', None):
+            self.__pydantic_validator__.validate_assignment(self, name, value)
+        elif self.model_config.get('extra') != 'allow' and name not in self.__pydantic_fields__:
+            # TODO - matching error
+>           raise ValueError(f'"{self.__class__.__name__}" object has no field "{name}"')
+E           ValueError: "Order" object has no field "rejected_reason"
+
+.venv/lib/python3.9/site-packages/pydantic/main.py:926: ValueError
+---------------------------- Captured stderr setup -----------------------------
+2025-10-20 18:40:45,165 - asyncio - DEBUG - Using selector: KqueueSelector
+------------------------------ Captured log setup ------------------------------
+DEBUG    asyncio:selector_events.py:59 Using selector: KqueueSelector
+--------------------------- Captured stderr teardown ---------------------------
+2025-10-20 18:40:45,335 - asyncio - DEBUG - Using selector: KqueueSelector
+---------------------------- Captured log teardown -----------------------------
+DEBUG    asyncio:selector_events.py:59 Using selector: KqueueSelector
+______________ TestMockBinanceClient.test_crypto_order_execution _______________
+
+self = <tests.test_mock_clients.TestMockBinanceClient object at 0x105214a30>
+binance_client = <app.mocks.MockBinanceClient object at 0x105caaa90>
+
+    @pytest.mark.asyncio
+    async def test_crypto_order_execution(self, binance_client):
+        """Test crypto order execution."""
+        await binance_client.connect()
+    
+        # Set initial balance
+        binance_client.balances["USDT"] = Decimal("10000.00")
+    
+        # Create buy order
+        order = Order(
+            id="test_crypto_order_1",
+            symbol="BTCUSDT",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("0.1"),
+            price=Decimal("50000.00")
+        )
+    
+        # Place order
+>       order_id = await binance_client.place_order(order)
+
+tests/test_mock_clients.py:216: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+app/mocks/__init__.py:288: in place_order
+    updated_order.rejected_reason = "Insufficient balance"
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = Order(id='BINANCE_000001', symbol='BTCUSDT', side=<OrderSide.BUY: 'buy'>, order_type=<OrderType.MARKET: 'market'>, qua...25, 10, 20, 16, 40, 45, 746751), filled_quantity=Decimal('0'), filled_price=None, commission=Decimal('0'), metadata={})
+name = 'rejected_reason', value = 'Insufficient balance'
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if name in self.__class_vars__:
+            raise AttributeError(
+                f'{name!r} is a ClassVar of `{self.__class__.__name__}` and cannot be set on an instance. '
+                f'If you want to set a value on the class, use `{self.__class__.__name__}.{name} = value`.'
+            )
+        elif not _fields.is_valid_field_name(name):
+            if self.__pydantic_private__ is None or name not in self.__private_attributes__:
+                _object_setattr(self, name, value)
+            else:
+                attribute = self.__private_attributes__[name]
+                if hasattr(attribute, '__set__'):
+                    attribute.__set__(self, value)  # type: ignore
+                else:
+                    self.__pydantic_private__[name] = value
+            return
+    
+        self._check_frozen(name, value)
+    
+        attr = getattr(self.__class__, name, None)
+        # NOTE: We currently special case properties and `cached_property`, but we might need
+        # to generalize this to all data/non-data descriptors at some point. For non-data descriptors
+        # (such as `cached_property`), it isn't obvious though. `cached_property` caches the value
+        # to the instance's `__dict__`, but other non-data descriptors might do things differently.
+        if isinstance(attr, property):
+            attr.__set__(self, value)
+        elif isinstance(attr, cached_property):
+            self.__dict__[name] = value
+        elif self.model_config.get('validate_assignment', None):
+            self.__pydantic_validator__.validate_assignment(self, name, value)
+        elif self.model_config.get('extra') != 'allow' and name not in self.__pydantic_fields__:
+            # TODO - matching error
+>           raise ValueError(f'"{self.__class__.__name__}" object has no field "{name}"')
+E           ValueError: "Order" object has no field "rejected_reason"
+
+.venv/lib/python3.9/site-packages/pydantic/main.py:926: ValueError
+---------------------------- Captured stderr setup -----------------------------
+2025-10-20 18:40:45,645 - asyncio - DEBUG - Using selector: KqueueSelector
+------------------------------ Captured log setup ------------------------------
+DEBUG    asyncio:selector_events.py:59 Using selector: KqueueSelector
+--------------------------- Captured stderr teardown ---------------------------
+2025-10-20 18:40:45,818 - asyncio - DEBUG - Using selector: KqueueSelector
+---------------------------- Captured log teardown -----------------------------
+DEBUG    asyncio:selector_events.py:59 Using selector: KqueueSelector
+__________ TestMockBinanceClient.test_insufficient_balance_rejection ___________
+
+self = <tests.test_mock_clients.TestMockBinanceClient object at 0x105214c40>
+binance_client = <app.mocks.MockBinanceClient object at 0x10548f2b0>
+
+    @pytest.mark.asyncio
+    async def test_insufficient_balance_rejection(self, binance_client):
+        """Test order rejection due to insufficient balance."""
+        await binance_client.connect()
+    
+        # Set low balance
+        binance_client.balances["USDT"] = Decimal("100.00")
+    
+        # Create order requiring more balance
+        order = Order(
+            id="test_crypto_order_2",
+            symbol="BTCUSDT",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("1.0"),  # Requires ~50k USDT
+            price=Decimal("50000.00")
+        )
+    
+        # Place order
+>       order_id = await binance_client.place_order(order)
+
+tests/test_mock_clients.py:261: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+app/mocks/__init__.py:288: in place_order
+    updated_order.rejected_reason = "Insufficient balance"
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = Order(id='BINANCE_000001', symbol='BTCUSDT', side=<OrderSide.BUY: 'buy'>, order_type=<OrderType.MARKET: 'market'>, qua...025, 10, 20, 16, 40, 46, 23274), filled_quantity=Decimal('0'), filled_price=None, commission=Decimal('0'), metadata={})
+name = 'rejected_reason', value = 'Insufficient balance'
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if name in self.__class_vars__:
+            raise AttributeError(
+                f'{name!r} is a ClassVar of `{self.__class__.__name__}` and cannot be set on an instance. '
+                f'If you want to set a value on the class, use `{self.__class__.__name__}.{name} = value`.'
+            )
+        elif not _fields.is_valid_field_name(name):
+            if self.__pydantic_private__ is None or name not in self.__private_attributes__:
+                _object_setattr(self, name, value)
+            else:
+                attribute = self.__private_attributes__[name]
+                if hasattr(attribute, '__set__'):
+                    attribute.__set__(self, value)  # type: ignore
+                else:
+                    self.__pydantic_private__[name] = value
+            return
+    
+        self._check_frozen(name, value)
+    
+        attr = getattr(self.__class__, name, None)
+        # NOTE: We currently special case properties and `cached_property`, but we might need
+        # to generalize this to all data/non-data descriptors at some point. For non-data descriptors
+        # (such as `cached_property`), it isn't obvious though. `cached_property` caches the value
+        # to the instance's `__dict__`, but other non-data descriptors might do things differently.
+        if isinstance(attr, property):
+            attr.__set__(self, value)
+        elif isinstance(attr, cached_property):
+            self.__dict__[name] = value
+        elif self.model_config.get('validate_assignment', None):
+            self.__pydantic_validator__.validate_assignment(self, name, value)
+        elif self.model_config.get('extra') != 'allow' and name not in self.__pydantic_fields__:
+            # TODO - matching error
+>           raise ValueError(f'"{self.__class__.__name__}" object has no field "{name}"')
+E           ValueError: "Order" object has no field "rejected_reason"
+
+.venv/lib/python3.9/site-packages/pydantic/main.py:926: ValueError
+---------------------------- Captured stderr setup -----------------------------
+2025-10-20 18:40:45,921 - asyncio - DEBUG - Using selector: KqueueSelector
+------------------------------ Captured log setup ------------------------------
+DEBUG    asyncio:selector_events.py:59 Using selector: KqueueSelector
+--------------------------- Captured stderr teardown ---------------------------
+2025-10-20 18:40:46,092 - asyncio - DEBUG - Using selector: KqueueSelector
+---------------------------- Captured log teardown -----------------------------
+DEBUG    asyncio:selector_events.py:59 Using selector: KqueueSelector
+____________ TestMockClientIntegration.test_multi_client_operations ____________
+
+self = <tests.test_mock_clients.TestMockClientIntegration object at 0x10521a100>
+
+    @pytest.mark.asyncio
+    async def test_multi_client_operations(self):
+        """Test operations with multiple mock clients."""
+        ibkr_client = create_mock_ibkr_client("DU123456")
+        binance_client = create_mock_binance_client("mock_key", "mock_secret")
+    
+        # Connect both clients
+        await ibkr_client.connect()
+        await binance_client.connect()
+    
+        # Set up market data
+        await ibkr_client.subscribe_market_data("AAPL")
+        binance_client.balances["USDT"] = Decimal("10000.00")
+    
+        # Place orders on both platforms
+        ibkr_order = Order(
+            id="test_multi_order_1",
+            symbol="AAPL",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("100"),
+            price=Decimal("150.00")
+        )
+    
+        binance_order = Order(
+            id="test_multi_order_2",
+            symbol="BTCUSDT",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("0.1"),
+            price=Decimal("50000.00")
+        )
+    
+        # Execute orders
+>       ibkr_order_id = await ibkr_client.place_order(ibkr_order)
+
+tests/test_mock_clients.py:303: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+app/mocks/__init__.py:106: in place_order
+    await self._execute_order(updated_order)
+app/mocks/__init__.py:176: in _execute_order
+    order.filled_at = datetime.utcnow()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = Order(id='IBKR_000001', symbol='AAPL', side=<OrderSide.BUY: 'buy'>, order_type=<OrderType.MARKET: 'market'>, quantity=...25, 10, 20, 16, 40, 46, 296382), filled_quantity=Decimal('0'), filled_price=None, commission=Decimal('0'), metadata={})
+name = 'filled_at', value = datetime.datetime(2025, 10, 20, 16, 40, 46, 346903)
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if name in self.__class_vars__:
+            raise AttributeError(
+                f'{name!r} is a ClassVar of `{self.__class__.__name__}` and cannot be set on an instance. '
+                f'If you want to set a value on the class, use `{self.__class__.__name__}.{name} = value`.'
+            )
+        elif not _fields.is_valid_field_name(name):
+            if self.__pydantic_private__ is None or name not in self.__private_attributes__:
+                _object_setattr(self, name, value)
+            else:
+                attribute = self.__private_attributes__[name]
+                if hasattr(attribute, '__set__'):
+                    attribute.__set__(self, value)  # type: ignore
+                else:
+                    self.__pydantic_private__[name] = value
+            return
+    
+        self._check_frozen(name, value)
+    
+        attr = getattr(self.__class__, name, None)
+        # NOTE: We currently special case properties and `cached_property`, but we might need
+        # to generalize this to all data/non-data descriptors at some point. For non-data descriptors
+        # (such as `cached_property`), it isn't obvious though. `cached_property` caches the value
+        # to the instance's `__dict__`, but other non-data descriptors might do things differently.
+        if isinstance(attr, property):
+            attr.__set__(self, value)
+        elif isinstance(attr, cached_property):
+            self.__dict__[name] = value
+        elif self.model_config.get('validate_assignment', None):
+            self.__pydantic_validator__.validate_assignment(self, name, value)
+        elif self.model_config.get('extra') != 'allow' and name not in self.__pydantic_fields__:
+            # TODO - matching error
+>           raise ValueError(f'"{self.__class__.__name__}" object has no field "{name}"')
+E           ValueError: "Order" object has no field "filled_at"
+
+.venv/lib/python3.9/site-packages/pydantic/main.py:926: ValueError
+---------------------------- Captured stderr setup -----------------------------
+2025-10-20 18:40:46,093 - asyncio - DEBUG - Using selector: KqueueSelector
+------------------------------ Captured log setup ------------------------------
+DEBUG    asyncio:selector_events.py:59 Using selector: KqueueSelector
+--------------------------- Captured stderr teardown ---------------------------
+2025-10-20 18:40:46,368 - asyncio - DEBUG - Using selector: KqueueSelector
+---------------------------- Captured log teardown -----------------------------
+DEBUG    asyncio:selector_events.py:59 Using selector: KqueueSelector
+_____________ TestMockClientIntegration.test_concurrent_operations _____________
+
+self = <tests.test_mock_clients.TestMockClientIntegration object at 0x10521a370>
+
+    @pytest.mark.asyncio
+    async def test_concurrent_operations(self):
+        """Test concurrent operations on mock clients."""
+        ibkr_client = create_mock_ibkr_client("DU123456")
+        await ibkr_client.connect()
+        await ibkr_client.subscribe_market_data("AAPL")
+    
+        # Create multiple orders
+        orders = [
+            Order(
+                id=f"test_concurrent_order_{i}",
+                symbol="AAPL",
+                side=OrderSide.BUY,
+                order_type=OrderType.MARKET,
+                quantity=Decimal("10"),
+                price=Decimal("150.00")
+            )
+            for i in range(5)
+        ]
+    
+        # Execute orders concurrently
+>       order_ids = await asyncio.gather(
+            *[ibkr_client.place_order(order) for order in orders]
+        )
+
+tests/test_mock_clients.py:338: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+app/mocks/__init__.py:106: in place_order
+    await self._execute_order(updated_order)
+app/mocks/__init__.py:176: in _execute_order
+    order.filled_at = datetime.utcnow()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = Order(id='IBKR_000001', symbol='AAPL', side=<OrderSide.BUY: 'buy'>, order_type=<OrderType.MARKET: 'market'>, quantity=...25, 10, 20, 16, 40, 46, 471140), filled_quantity=Decimal('0'), filled_price=None, commission=Decimal('0'), metadata={})
+name = 'filled_at', value = datetime.datetime(2025, 10, 20, 16, 40, 46, 524034)
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if name in self.__class_vars__:
+            raise AttributeError(
+                f'{name!r} is a ClassVar of `{self.__class__.__name__}` and cannot be set on an instance. '
+                f'If you want to set a value on the class, use `{self.__class__.__name__}.{name} = value`.'
+            )
+        elif not _fields.is_valid_field_name(name):
+            if self.__pydantic_private__ is None or name not in self.__private_attributes__:
+                _object_setattr(self, name, value)
+            else:
+                attribute = self.__private_attributes__[name]
+                if hasattr(attribute, '__set__'):
+                    attribute.__set__(self, value)  # type: ignore
+                else:
+                    self.__pydantic_private__[name] = value
+            return
+    
+        self._check_frozen(name, value)
+    
+        attr = getattr(self.__class__, name, None)
+        # NOTE: We currently special case properties and `cached_property`, but we might need
+        # to generalize this to all data/non-data descriptors at some point. For non-data descriptors
+        # (such as `cached_property`), it isn't obvious though. `cached_property` caches the value
+        # to the instance's `__dict__`, but other non-data descriptors might do things differently.
+        if isinstance(attr, property):
+            attr.__set__(self, value)
+        elif isinstance(attr, cached_property):
+            self.__dict__[name] = value
+        elif self.model_config.get('validate_assignment', None):
+            self.__pydantic_validator__.validate_assignment(self, name, value)
+        elif self.model_config.get('extra') != 'allow' and name not in self.__pydantic_fields__:
+            # TODO - matching error
+>           raise ValueError(f'"{self.__class__.__name__}" object has no field "{name}"')
+E           ValueError: "Order" object has no field "filled_at"
+
+.venv/lib/python3.9/site-packages/pydantic/main.py:926: ValueError
+---------------------------- Captured stderr setup -----------------------------
+2025-10-20 18:40:46,369 - asyncio - DEBUG - Using selector: KqueueSelector
+------------------------------ Captured log setup ------------------------------
+DEBUG    asyncio:selector_events.py:59 Using selector: KqueueSelector
+--------------------------- Captured stderr teardown ---------------------------
+2025-10-20 18:40:46,579 - asyncio - DEBUG - Using selector: KqueueSelector
+---------------------------- Captured log teardown -----------------------------
+DEBUG    asyncio:selector_events.py:59 Using selector: KqueueSelector
+_________ TestTradingWorkflowIntegration.test_equity_trading_workflow __________
+
+self = <tests.test_mock_integration.TestTradingWorkflowIntegration object at 0x105227eb0>
+ibkr_client = <app.mocks.MockIBKRClient object at 0x10551bc70>
+signal_scorer = <app.models.signal.SignalScorer object at 0x10551b490>
+portfolio_service = <app.services.portfolio_service.PortfolioService object at 0x10551b430>
+
+    @pytest.mark.asyncio
+    async def test_equity_trading_workflow(self, ibkr_client, signal_scorer, portfolio_service):
+        """Test complete equity trading workflow."""
+        # Setup
+        await ibkr_client.connect()
+        await ibkr_client.subscribe_market_data("AAPL")
+    
+        # Generate trading signal
+        signal = Signal(
+            symbol="AAPL",
+            signal_type=SignalType.BUY,
+            strength=SignalStrength.STRONG,
+            confidence=85.0,
+            liquidity_score=90.0,
+            priority_score=88.0,
+            source=SignalSource.MOMENTUM,
+            price=Decimal("150.00"),
+            volume=Decimal("1000000"),
+            timestamp=datetime.utcnow()
+        )
+    
+        # Score signal
+>       scored_signal = signal_scorer.score_signal(signal)
+E       AttributeError: 'SignalScorer' object has no attribute 'score_signal'
+
+tests/test_mock_integration.py:74: AttributeError
+---------------------------- Captured stderr setup -----------------------------
+2025-10-20 18:40:46,784 - asyncio - DEBUG - Using selector: KqueueSelector
+------------------------------ Captured log setup ------------------------------
+DEBUG    asyncio:selector_events.py:59 Using selector: KqueueSelector
+--------------------------- Captured stderr teardown ---------------------------
+2025-10-20 18:40:46,890 - asyncio - DEBUG - Using selector: KqueueSelector
+---------------------------- Captured log teardown -----------------------------
+DEBUG    asyncio:selector_events.py:59 Using selector: KqueueSelector
+_________ TestTradingWorkflowIntegration.test_crypto_trading_workflow __________
+
+self = <tests.test_mock_integration.TestTradingWorkflowIntegration object at 0x10522d220>
+binance_client = <app.mocks.MockBinanceClient object at 0x1054894f0>
+signal_scorer = <app.models.signal.SignalScorer object at 0x105489520>
+portfolio_service = <app.services.portfolio_service.PortfolioService object at 0x105489df0>
+
+    @pytest.mark.asyncio
+    async def test_crypto_trading_workflow(self, binance_client, signal_scorer, portfolio_service):
+        """Test complete crypto trading workflow."""
+        # Setup
+        await binance_client.connect()
+        binance_client.balances["USDT"] = Decimal("10000.00")
+    
+        # Generate trading signal
+        signal = Signal(
+            symbol="BTCUSDT",
+            signal_type=SignalType.BUY,
+            strength=SignalStrength.STRONG,
+            confidence=80.0,
+            liquidity_score=95.0,
+            priority_score=85.0,
+            source=SignalSource.MOMENTUM,
+            price=Decimal("50000.00"),
+            volume=Decimal("1000"),
+            timestamp=datetime.utcnow()
+        )
+    
+        # Score signal
+>       scored_signal = signal_scorer.score_signal(signal)
+E       AttributeError: 'SignalScorer' object has no attribute 'score_signal'
+
+tests/test_mock_integration.py:125: AttributeError
+---------------------------- Captured stderr setup -----------------------------
+2025-10-20 18:40:46,890 - asyncio - DEBUG - Using selector: KqueueSelector
+------------------------------ Captured log setup ------------------------------
+DEBUG    asyncio:selector_events.py:59 Using selector: KqueueSelector
+--------------------------- Captured stderr teardown ---------------------------
+2025-10-20 18:40:46,996 - asyncio - DEBUG - Using selector: KqueueSelector
+---------------------------- Captured log teardown -----------------------------
+DEBUG    asyncio:selector_events.py:59 Using selector: KqueueSelector
+_______ TestTradingWorkflowIntegration.test_multi_asset_trading_workflow _______
+
+self = <tests.test_mock_integration.TestTradingWorkflowIntegration object at 0x10521a640>
+ibkr_client = <app.mocks.MockIBKRClient object at 0x10588f550>
+binance_client = <app.mocks.MockBinanceClient object at 0x10588f940>
+signal_scorer = <app.models.signal.SignalScorer object at 0x10588f070>
+
+    @pytest.mark.asyncio
+    async def test_multi_asset_trading_workflow(self, ibkr_client, binance_client, signal_scorer):
+        """Test trading workflow across multiple assets and exchanges."""
+        # Setup both clients
+        await ibkr_client.connect()
+        await binance_client.connect()
+    
+        await ibkr_client.subscribe_market_data("AAPL")
+        binance_client.balances["USDT"] = Decimal("20000.00")
+    
+        # Generate signals for different assets
+        equity_signal = Signal(
+            symbol="AAPL",
+            signal_type=SignalType.BUY,
+            strength=SignalStrength.STRONG,
+            confidence=85.0,
+            liquidity_score=90.0,
+            priority_score=88.0,
+            source=SignalSource.MOMENTUM,
+            price=Decimal("150.00"),
+            volume=Decimal("1000000"),
+            timestamp=datetime.utcnow()
+        )
+    
+        crypto_signal = Signal(
+            symbol="BTCUSDT",
+            signal_type=SignalType.BUY,
+            strength=SignalStrength.MODERATE,
+            confidence=75.0,
+            liquidity_score=95.0,
+            priority_score=80.0,
+            source=SignalSource.MOMENTUM,
+            price=Decimal("50000.00"),
+            volume=Decimal("1000"),
+            timestamp=datetime.utcnow()
+        )
+    
+        # Score signals
+>       scored_equity = signal_scorer.score_signal(equity_signal)
+E       AttributeError: 'SignalScorer' object has no attribute 'score_signal'
+
+tests/test_mock_integration.py:187: AttributeError
+---------------------------- Captured stderr setup -----------------------------
+2025-10-20 18:40:46,997 - asyncio - DEBUG - Using selector: KqueueSelector
+------------------------------ Captured log setup ------------------------------
+DEBUG    asyncio:selector_events.py:59 Using selector: KqueueSelector
+--------------------------- Captured stderr teardown ---------------------------
+2025-10-20 18:40:47,203 - asyncio - DEBUG - Using selector: KqueueSelector
+---------------------------- Captured log teardown -----------------------------
+DEBUG    asyncio:selector_events.py:59 Using selector: KqueueSelector
+_________ TestTradingWorkflowIntegration.test_order_rejection_handling _________
+
+self = <tests.test_mock_integration.TestTradingWorkflowIntegration object at 0x10521a1c0>
+ibkr_client = <app.mocks.MockIBKRClient object at 0x105531790>
+binance_client = <app.mocks.MockBinanceClient object at 0x105531dc0>
+
+    @pytest.mark.asyncio
+    async def test_order_rejection_handling(self, ibkr_client, binance_client):
+        """Test handling of order rejections."""
+        # Setup
+        await ibkr_client.connect()
+        await binance_client.connect()
+    
+        await ibkr_client.subscribe_market_data("AAPL")
+        binance_client.balances["USDT"] = Decimal("100.00")  # Low balance
+    
+        # Create orders that should be rejected
+>       equity_order = Order(
+            symbol="AAPL",
+            side=OrderSide.BUY,
+            order_type=OrderType.LIMIT,
+            quantity=Decimal("1000"),
+            price=Decimal("50.00")  # Very low price, should be rejected
+        )
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for Order
+E       id
+E         Field required [type=missing, input_value={'symbol': 'AAPL', 'side'...rice': Decimal('50.00')}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.10/v/missing
+
+tests/test_mock_integration.py:236: ValidationError
+---------------------------- Captured stderr setup -----------------------------
+2025-10-20 18:40:47,204 - asyncio - DEBUG - Using selector: KqueueSelector
+------------------------------ Captured log setup ------------------------------
+DEBUG    asyncio:selector_events.py:59 Using selector: KqueueSelector
+--------------------------- Captured stderr teardown ---------------------------
+2025-10-20 18:40:47,410 - asyncio - DEBUG - Using selector: KqueueSelector
+---------------------------- Captured log teardown -----------------------------
+DEBUG    asyncio:selector_events.py:59 Using selector: KqueueSelector
+_______ TestTradingWorkflowIntegration.test_order_cancellation_workflow ________
+
+self = <tests.test_mock_integration.TestTradingWorkflowIntegration object at 0x105214a90>
+ibkr_client = <app.mocks.MockIBKRClient object at 0x105469d90>
+
+    @pytest.mark.asyncio
+    async def test_order_cancellation_workflow(self, ibkr_client):
+        """Test order cancellation workflow."""
+        # Setup
+        await ibkr_client.connect()
+        await ibkr_client.subscribe_market_data("AAPL")
+    
+        # Create limit order that won't execute immediately
+>       order = Order(
+            symbol="AAPL",
+            side=OrderSide.BUY,
+            order_type=OrderType.LIMIT,
+            quantity=Decimal("100"),
+            price=Decimal("50.00")  # Low price, won't execute
+        )
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for Order
+E       id
+E         Field required [type=missing, input_value={'symbol': 'AAPL', 'side'...rice': Decimal('50.00')}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.10/v/missing
+
+tests/test_mock_integration.py:271: ValidationError
+---------------------------- Captured stderr setup -----------------------------
+2025-10-20 18:40:47,411 - asyncio - DEBUG - Using selector: KqueueSelector
+------------------------------ Captured log setup ------------------------------
+DEBUG    asyncio:selector_events.py:59 Using selector: KqueueSelector
+--------------------------- Captured stderr teardown ---------------------------
+2025-10-20 18:40:47,516 - asyncio - DEBUG - Using selector: KqueueSelector
+---------------------------- Captured log teardown -----------------------------
+DEBUG    asyncio:selector_events.py:59 Using selector: KqueueSelector
+________ TestTradingWorkflowIntegration.test_portfolio_synchronization _________
+
+self = <tests.test_mock_integration.TestTradingWorkflowIntegration object at 0x10520d4c0>
+ibkr_client = <app.mocks.MockIBKRClient object at 0x1057f72e0>
+portfolio_service = <app.services.portfolio_service.PortfolioService object at 0x1057f7ee0>
+
+    @pytest.mark.asyncio
+    async def test_portfolio_synchronization(self, ibkr_client, portfolio_service):
+        """Test portfolio synchronization with mock client."""
+        # Setup
+        await ibkr_client.connect()
+        await ibkr_client.subscribe_market_data("AAPL")
+    
+        # Create and execute order
+>       order = Order(
+            symbol="AAPL",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("100"),
+            price=Decimal("150.00")
+        )
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for Order
+E       id
+E         Field required [type=missing, input_value={'symbol': 'AAPL', 'side'...ice': Decimal('150.00')}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.10/v/missing
+
+tests/test_mock_integration.py:298: ValidationError
+---------------------------- Captured stderr setup -----------------------------
+2025-10-20 18:40:47,517 - asyncio - DEBUG - Using selector: KqueueSelector
+------------------------------ Captured log setup ------------------------------
+DEBUG    asyncio:selector_events.py:59 Using selector: KqueueSelector
+--------------------------- Captured stderr teardown ---------------------------
+2025-10-20 18:40:47,622 - asyncio - DEBUG - Using selector: KqueueSelector
+---------------------------- Captured log teardown -----------------------------
+DEBUG    asyncio:selector_events.py:59 Using selector: KqueueSelector
+_________ TestTradingWorkflowIntegration.test_error_recovery_workflow __________
+
+self = <tests.test_mock_integration.TestTradingWorkflowIntegration object at 0x10522d3d0>
+ibkr_client = <app.mocks.MockIBKRClient object at 0x1051653a0>
+
+    @pytest.mark.asyncio
+    async def test_error_recovery_workflow(self, ibkr_client):
+        """Test error recovery in trading workflow."""
+        # Test operations without connection
+        with pytest.raises(ConnectionError):
+            await ibkr_client.get_account_summary()
+    
+        # Connect and retry
+        await ibkr_client.connect()
+        summary = await ibkr_client.get_account_summary()
+        assert summary is not None
+    
+        # Test order execution
+        await ibkr_client.subscribe_market_data("AAPL")
+    
+>       order = Order(
+            symbol="AAPL",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("100"),
+            price=Decimal("150.00")
+        )
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for Order
+E       id
+E         Field required [type=missing, input_value={'symbol': 'AAPL', 'side'...ice': Decimal('150.00')}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.10/v/missing
+
+tests/test_mock_integration.py:346: ValidationError
+---------------------------- Captured stderr setup -----------------------------
+2025-10-20 18:40:47,623 - asyncio - DEBUG - Using selector: KqueueSelector
+------------------------------ Captured log setup ------------------------------
+DEBUG    asyncio:selector_events.py:59 Using selector: KqueueSelector
+--------------------------- Captured stderr teardown ---------------------------
+2025-10-20 18:40:47,728 - asyncio - DEBUG - Using selector: KqueueSelector
+---------------------------- Captured log teardown -----------------------------
+DEBUG    asyncio:selector_events.py:59 Using selector: KqueueSelector
+=============================== warnings summary ===============================
+tests/test_api_momentum.py::TestMomentumAPIEdgeCases::test_get_momentum_overview_empty_response
+  /Users/kepa.cantero/Projects/algoTrading/app/api/momentum.py:35: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    strategies = list(service.strategies.keys())
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_performance.py::TestPerformanceRegression::test_backtest_performance_large_dataset
+  tests/test_performance.py:163: PytestBenchmarkWarning: Benchmark fixture was not used at all in this test!
+    def test_backtest_performance_large_dataset(self, benchmark, default_config, large_market_data, large_signal_set):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+
+--------------------------------------------------------------------------------------------------------------- benchmark: 11 tests ----------------------------------------------------------------------------------------------------------------
+Name (time in us)                                             Min                     Max                    Mean                StdDev                  Median                   IQR            Outliers          OPS            Rounds  Iterations
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+test_performance_regression_detection                     11.3330 (1.0)          141.1250 (1.40)          11.8052 (1.0)          1.8129 (1.0)           11.6250 (1.0)          0.1670 (1.0)      590;5689  84,708.3223 (1.0)       60303           1
+test_signal_generation_threshold                          15.7090 (1.39)         100.4580 (1.0)           16.5709 (1.40)         2.0641 (1.14)          16.5420 (1.42)         0.5420 (3.25)      397;473  60,346.6901 (0.71)      37915           1
+test_technical_indicator_baseline                         30.2080 (2.67)      11,652.7920 (116.00)        38.8865 (3.29)       126.2411 (69.64)         31.9170 (2.75)         1.0420 (6.24)     207;1608  25,715.8946 (0.30)      24641           1
+test_signal_generation_performance                        54.9580 (4.85)       4,389.5410 (43.70)         71.1358 (6.03)        96.7142 (53.35)         57.4580 (4.94)         0.5840 (3.50)     300;1704  14,057.6184 (0.17)       8824           1
+test_technical_indicator_calculation_performance         928.8750 (81.96)      1,201.5410 (11.96)        975.4300 (82.63)       36.9218 (20.37)        973.4170 (83.73)       40.3130 (241.40)     223;39   1,025.1889 (0.01)        891           1
+test_position_size_calculation_performance             1,320.1250 (116.49)     2,558.4170 (25.47)      1,391.2180 (117.85)      98.0833 (54.10)      1,363.7080 (117.31)      67.4055 (403.63)      34;26     718.7946 (0.01)        689           1
+test_slippage_calculation_performance                  1,353.7920 (119.46)     4,719.7500 (46.98)      1,445.4467 (122.44)     174.8011 (96.42)      1,419.3330 (122.09)      50.5733 (302.83)      20;48     691.8277 (0.01)        683           1
+test_backtest_threshold_small                          1,676.7500 (147.95)     2,086.3750 (20.77)      1,768.4606 (149.80)      78.1225 (43.09)      1,746.1250 (150.20)      97.9790 (586.70)     133;17     565.4635 (0.01)        524           1
+test_backtest_baseline                                 1,682.3750 (148.45)     2,640.0830 (26.28)      1,835.8676 (155.51)     136.1280 (75.09)      1,797.0205 (154.58)     191.5005 (>1000.0)     104;9     544.7016 (0.01)        512           1
+test_backtest_performance_small_dataset                1,935.0830 (170.75)    26,924.0000 (268.01)     2,549.1879 (215.94)   2,643.3297 (>1000.0)    2,052.1875 (176.53)     172.6670 (>1000.0)     16;34     392.2818 (0.00)        450           1
+test_memory_usage_threshold                          179,972.7500 (>1000.0)  188,927.5830 (>1000.0)  182,076.9513 (>1000.0)  3,440.0949 (>1000.0)  180,809.1875 (>1000.0)  1,972.4160 (>1000.0)       1;1       5.4922 (0.00)          6           1
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Legend:
+  Outliers: 1 Standard Deviation from Mean; 1.5 IQR (InterQuartile Range) from 1st Quartile and 3rd Quartile.
+  OPS: Operations Per Second, computed as 1 / Mean
+=========================== short test summary info ============================
+FAILED tests/test_api_assets.py::TestAssetAPI::test_get_liquid_assets_service_error
+FAILED tests/test_api_assets.py::TestAssetAPI::test_get_asset_details_success
+FAILED tests/test_api_assets.py::TestAssetAPI::test_get_asset_details_not_found
+FAILED tests/test_api_assets.py::TestAssetAPI::test_get_asset_details_service_error
+FAILED tests/test_api_assets.py::TestAssetAPI::test_get_liquidity_metrics_success
+FAILED tests/test_api_assets.py::TestAssetAPI::test_get_liquidity_metrics_not_found
+FAILED tests/test_api_assets.py::TestAssetAPI::test_get_liquidity_metrics_service_error
+FAILED tests/test_api_assets.py::TestAssetAPI::test_get_asset_rankings_success
+FAILED tests/test_api_assets.py::TestAssetAPI::test_get_asset_rankings_service_error
+FAILED tests/test_api_assets.py::TestAssetAPI::test_filter_assets_success - a...
+FAILED tests/test_api_assets.py::TestAssetAPI::test_filter_assets_invalid_filter
+FAILED tests/test_api_assets.py::TestAssetAPI::test_filter_assets_service_error
+FAILED tests/test_api_assets.py::TestAssetAPI::test_refresh_liquidity_data_success
+FAILED tests/test_api_assets.py::TestAssetAPI::test_refresh_liquidity_data_service_error
+FAILED tests/test_api_assets.py::TestAssetAPI::test_get_asset_universe_success
+FAILED tests/test_api_assets.py::TestAssetAPI::test_get_asset_universe_service_error
+FAILED tests/test_api_assets.py::TestAssetAPIEdgeCases::test_get_liquid_assets_empty_universe
+FAILED tests/test_api_assets.py::TestAssetAPIEdgeCases::test_get_liquidity_metrics_with_zero_values
+FAILED tests/test_api_assets.py::TestAssetAPIEdgeCases::test_filter_assets_with_extreme_values
+FAILED tests/test_api_assets.py::TestAssetAPIEdgeCases::test_get_asset_rankings_with_single_asset
+FAILED tests/test_api_assets.py::TestAssetAPIEdgeCases::test_refresh_liquidity_data_with_zero_refreshed
+FAILED tests/test_api_assets.py::TestAssetAPIEdgeCases::test_get_asset_universe_with_large_dataset
+FAILED tests/test_api_momentum.py::TestMomentumAPI::test_analyze_asset_success
+FAILED tests/test_api_momentum.py::TestMomentumAPI::test_analyze_asset_invalid_data
+FAILED tests/test_api_momentum.py::TestMomentumAPI::test_analyze_asset_service_error
+FAILED tests/test_api_momentum.py::TestMomentumAPI::test_get_technical_indicators_success
+FAILED tests/test_api_momentum.py::TestMomentumAPI::test_get_technical_indicators_not_found
+FAILED tests/test_api_momentum.py::TestMomentumAPI::test_get_technical_indicators_service_error
+FAILED tests/test_api_momentum.py::TestMomentumAPI::test_get_momentum_signals_success
+FAILED tests/test_api_momentum.py::TestMomentumAPI::test_get_momentum_signals_not_found
+FAILED tests/test_api_momentum.py::TestMomentumAPI::test_get_momentum_signals_service_error
+FAILED tests/test_api_momentum.py::TestMomentumAPI::test_create_strategy_success
+FAILED tests/test_api_momentum.py::TestMomentumAPI::test_create_strategy_invalid_data
+FAILED tests/test_api_momentum.py::TestMomentumAPI::test_create_strategy_service_error
+FAILED tests/test_api_momentum.py::TestMomentumAPI::test_get_strategies_service_error
+FAILED tests/test_api_momentum.py::TestMomentumAPI::test_get_strategy_success
+FAILED tests/test_api_momentum.py::TestMomentumAPI::test_get_strategy_not_found
+FAILED tests/test_api_momentum.py::TestMomentumAPI::test_get_strategy_service_error
+FAILED tests/test_api_momentum.py::TestMomentumAPI::test_update_strategy_success
+FAILED tests/test_api_momentum.py::TestMomentumAPI::test_update_strategy_invalid_data
+FAILED tests/test_api_momentum.py::TestMomentumAPI::test_update_strategy_service_error
+FAILED tests/test_api_momentum.py::TestMomentumAPI::test_delete_strategy_success
+FAILED tests/test_api_momentum.py::TestMomentumAPI::test_delete_strategy_not_found
+FAILED tests/test_api_momentum.py::TestMomentumAPI::test_delete_strategy_service_error
+FAILED tests/test_api_momentum.py::TestMomentumAPI::test_get_analyses_success
+FAILED tests/test_api_momentum.py::TestMomentumAPI::test_get_analyses_service_error
+FAILED tests/test_api_momentum.py::TestMomentumAPI::test_get_analysis_success
+FAILED tests/test_api_momentum.py::TestMomentumAPI::test_get_analysis_not_found
+FAILED tests/test_api_momentum.py::TestMomentumAPI::test_get_analysis_service_error
+FAILED tests/test_api_momentum.py::TestMomentumAPIEdgeCases::test_get_momentum_overview_empty_response
+FAILED tests/test_api_momentum.py::TestMomentumAPIEdgeCases::test_analyze_asset_with_extreme_values
+FAILED tests/test_api_momentum.py::TestMomentumAPIEdgeCases::test_get_technical_indicators_with_zero_values
+FAILED tests/test_api_momentum.py::TestMomentumAPIEdgeCases::test_get_momentum_signals_with_empty_list
+FAILED tests/test_api_momentum.py::TestMomentumAPIEdgeCases::test_create_strategy_with_extreme_values
+FAILED tests/test_api_momentum.py::TestMomentumAPIEdgeCases::test_get_strategies_with_large_dataset
+FAILED tests/test_api_momentum.py::TestMomentumAPIEdgeCases::test_update_strategy_with_minimal_changes
+FAILED tests/test_api_momentum.py::TestMomentumAPIEdgeCases::test_get_analyses_with_empty_list
+FAILED tests/test_mock_clients.py::TestMockIBKRClient::test_order_execution_flow
+FAILED tests/test_mock_clients.py::TestMockIBKRClient::test_order_cancellation
+FAILED tests/test_mock_clients.py::TestMockBinanceClient::test_crypto_order_execution
+FAILED tests/test_mock_clients.py::TestMockBinanceClient::test_insufficient_balance_rejection
+FAILED tests/test_mock_clients.py::TestMockClientIntegration::test_multi_client_operations
+FAILED tests/test_mock_clients.py::TestMockClientIntegration::test_concurrent_operations
+FAILED tests/test_mock_integration.py::TestTradingWorkflowIntegration::test_equity_trading_workflow
+FAILED tests/test_mock_integration.py::TestTradingWorkflowIntegration::test_crypto_trading_workflow
+FAILED tests/test_mock_integration.py::TestTradingWorkflowIntegration::test_multi_asset_trading_workflow
+FAILED tests/test_mock_integration.py::TestTradingWorkflowIntegration::test_order_rejection_handling
+FAILED tests/test_mock_integration.py::TestTradingWorkflowIntegration::test_order_cancellation_workflow
+FAILED tests/test_mock_integration.py::TestTradingWorkflowIntegration::test_portfolio_synchronization
+FAILED tests/test_mock_integration.py::TestTradingWorkflowIntegration::test_error_recovery_workflow
+ERROR tests/test_performance.py::TestPerformanceRegression::test_backtest_performance_large_dataset
+============= 70 failed, 525 passed, 2 warnings, 1 error in 20.78s =============

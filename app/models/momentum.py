@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any, Tuple
 from enum import Enum
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class MomentumType(str, Enum):
@@ -136,6 +136,92 @@ class MomentumSignal(BaseModel):
             volume_score * volume_weight +
             technical_score * technical_weight
         )
+
+
+class MarketData(BaseModel):
+    """Market data for signal evaluation."""
+    symbol: str = Field(..., description="Trading symbol")
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Timestamp of the market data")
+    open_price: Decimal = Field(..., gt=0, description="Opening price")
+    high_price: Decimal = Field(..., gt=0, description="Highest price")
+    low_price: Decimal = Field(..., gt=0, description="Lowest price")
+    close_price: Decimal = Field(..., gt=0, description="Closing price")
+    volume: Decimal = Field(..., ge=0, description="Trading volume")
+    bid: Decimal = Field(..., gt=0, description="Current bid price")
+    ask: Decimal = Field(..., gt=0, description="Current ask price")
+    spread: Decimal = Field(..., ge=0, description="Bid-ask spread")
+    
+    @field_validator('open_price', 'high_price', 'low_price', 'close_price', 'bid', 'ask')
+    @classmethod
+    def validate_price_fields(cls, v) -> Decimal:
+        """Ensure price fields are positive and within reasonable limits."""
+        if isinstance(v, (int, float)):
+            v = Decimal(str(v))
+        elif not isinstance(v, Decimal):
+            raise ValueError("Price fields must be numbers")
+        
+        if v <= 0:
+            raise ValueError(f"Price fields must be positive, got {v}")
+        if v > Decimal('1000000'):  # $1M limit
+            raise ValueError(f"Price exceeds maximum limit of $1M, got {v}")
+        
+        return v
+    
+    @field_validator('volume')
+    @classmethod
+    def validate_volume(cls, v) -> Decimal:
+        """Validate volume is non-negative and within reasonable limits."""
+        if isinstance(v, (int, float)):
+            v = Decimal(str(v))
+        elif not isinstance(v, Decimal):
+            raise ValueError("Volume must be a number")
+        
+        if v < 0:
+            raise ValueError(f"Volume must be non-negative, got {v}")
+        if v > Decimal('1000000000'):  # 1B shares limit
+            raise ValueError(f"Volume exceeds maximum limit of 1B shares, got {v}")
+        
+        return v
+    
+    @field_validator('bid', 'ask')
+    @classmethod
+    def validate_bid_ask(cls, v) -> Decimal:
+        """Validate bid and ask prices are positive."""
+        if isinstance(v, (int, float)):
+            v = Decimal(str(v))
+        elif not isinstance(v, Decimal):
+            raise ValueError("Bid/Ask prices must be numbers")
+        
+        if v <= 0:
+            raise ValueError(f"Bid/Ask prices must be positive, got {v}")
+        
+        return v
+    
+    @model_validator(mode='after')
+    def validate_price_consistency(self) -> 'MarketData':
+        """Validate consistency between high, low, open, and close prices."""
+        if self.high_price < self.low_price:
+            raise ValueError(f"High price ({self.high_price}) cannot be less than low price ({self.low_price}).")
+        
+        if not (self.low_price <= self.open_price <= self.high_price):
+            raise ValueError(f"Open price ({self.open_price}) must be between low ({self.low_price}) and high ({self.high_price}).")
+        
+        if not (self.low_price <= self.close_price <= self.high_price):
+            raise ValueError(f"Close price ({self.close_price}) must be between low ({self.low_price}) and high ({self.high_price}).")
+        
+        if self.bid >= self.ask:
+            raise ValueError(f"Bid price ({self.bid}) must be less than ask price ({self.ask}).")
+        
+        if not (self.ask - self.bid == self.spread):
+            raise ValueError(f"Calculated spread ({self.ask - self.bid}) does not match provided spread ({self.spread}).")
+        
+        if self.spread < 0:
+            raise ValueError(f"Spread cannot be negative, got {self.spread}")
+        
+        if self.spread > self.ask * Decimal('0.1'): # 10% spread limit
+            raise ValueError(f"Excessive spread ({self.spread}) detected for ask price ({self.ask}).")
+        
+        return self
 
 
 class TechnicalIndicators(BaseModel):

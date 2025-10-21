@@ -56,7 +56,7 @@ class SignalScorerService:
             confidence = self.scorer.calculate_confidence_score(market_data, metadata)
             
             # Calculate liquidity score
-            liquidity_score = self.scorer.calculate_liquidity_score(market_data)
+            liquidity_score = self.scorer.calculate_liquidity_score(market_data, metadata)
             
             # Determine signal strength based on confidence
             strength = self._determine_signal_strength(confidence)
@@ -308,7 +308,8 @@ class SignalScorerService:
             
         except Exception as e:
             logger.error(f"Error calculating priority with portfolio context: {e}")
-            return signal.priority_score
+            # Return a reasonable default priority when portfolio service fails
+            return 70.0
     
     def _calculate_diversification_score(self, portfolio: Portfolio, symbol: str) -> float:
         """Calculate diversification score for portfolio optimization."""
