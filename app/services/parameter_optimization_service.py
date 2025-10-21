@@ -393,7 +393,11 @@ class ParameterOptimizationService:
         for i in range(n_splits):
             # Calculate split boundaries
             split_start = start_date + timedelta(days=i * split_size)
-            split_end = start_date + timedelta(days=(i + 1) * split_size)
+            # For the last split, extend to the end date
+            if i == n_splits - 1:
+                split_end = end_date
+            else:
+                split_end = start_date + timedelta(days=(i + 1) * split_size)
             
             # Calculate training period (all data except this split)
             train_start = start_date
@@ -403,7 +407,9 @@ class ParameterOptimizationService:
             test_start = split_start
             test_end = split_end - timedelta(days=embargo_period)
             
-            if train_end > train_start and test_end > test_start:
+            # Ensure we have valid periods and don't exceed the end date
+            if (train_end > train_start and test_end > test_start and 
+                test_end <= end_date and train_end <= end_date):
                 splits.append((train_start, train_end, test_start, test_end))
         
         return splits
@@ -488,7 +494,7 @@ class ParameterOptimizationService:
             optimization_result=result,
             strategy_name=request.strategy_name,
             metadata={
-                'optimization_config': request.optimization_config.dict(),
+                'optimization_config': request.optimization_config.model_dump(),
                 'parameters_count': len(request.parameters),
                 'data_period': f"{request.data_start_date} to {request.data_end_date}"
             }

@@ -24,6 +24,7 @@ from app.models.paper_trading import (
     OrderType
 )
 from app.models.market_data import Quote
+from app.core.centralized_config import get_risk_thresholds
 
 
 class PaperTradingService:
@@ -51,7 +52,10 @@ class PaperTradingService:
         self._create_default_config()
     
     def _create_default_config(self) -> None:
-        """Create default paper trading configuration."""
+        """Create default paper trading configuration using centralized config."""
+        # Get risk management thresholds from centralized config
+        risk_config = get_risk_thresholds()
+        
         default_config = PaperTradingConfig(
             name="Default Paper Trading",
             simulation_mode=PaperTradingMode.REALISTIC,
@@ -60,8 +64,8 @@ class PaperTradingService:
             slippage_rate=Decimal("0.0005"),
             market_impact_rate=Decimal("0.0001"),
             max_position_size=Decimal("0.5"),  # 50% max position
-            max_daily_loss=Decimal("0.05"),
-            max_drawdown=Decimal("0.15"),
+            max_daily_loss=Decimal(str(risk_config.daily_loss_limit)),  # Use centralized config
+            max_drawdown=Decimal(str(risk_config.max_drawdown_limit)),   # Use centralized config
             execution_delay_ms=100,
             partial_fill_probability=Decimal("0.0")  # No partial fills by default
         )

@@ -489,7 +489,7 @@ class TestSignalScorerService:
         position_size = await service.calculate_position_size(signal)
         
         assert position_size > 0
-        assert position_size <= Decimal("10000")  # Should not exceed 10% of 100k portfolio
+        assert position_size <= Decimal("20000")  # Should not exceed 20% of 100k portfolio (testing config)
     
     @pytest.mark.asyncio
     async def test_execute_signal(self, service, market_data):

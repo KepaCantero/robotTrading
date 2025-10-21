@@ -18,6 +18,7 @@ from app.models.momentum import (
 )
 from app.models.assets import Asset, AssetClass
 from app.services.asset_identification import AssetIdentificationService, get_asset_identification_service
+from app.core.centralized_config import get_trading_thresholds
 
 logger = logging.getLogger(__name__)
 
@@ -140,57 +141,60 @@ class MomentumAnalysisService:
         self._initialize_default_strategies()
     
     def _initialize_default_strategies(self):
-        """Initialize default momentum strategies."""
+        """Initialize default momentum strategies using centralized configuration."""
+        # Get trading thresholds from centralized config
+        trading_config = get_trading_thresholds()
+        
         strategies = [
             MomentumStrategy(
                 name="Daily Price Momentum",
                 description="Daily momentum strategy based on price and volume",
                 momentum_type=MomentumType.PRICE_MOMENTUM,
                 timeframe=Timeframe.DAILY,
-                min_strength=60.0,
-                min_confidence=70.0,
+                min_strength=trading_config.min_strength,
+                min_confidence=trading_config.min_confidence,
                 signal_duration=24,
-                rsi_oversold=30.0,
-                rsi_overbought=70.0,
+                rsi_oversold=trading_config.rsi_oversold,
+                rsi_overbought=trading_config.rsi_overbought,
                 ema_short_period=9,
                 ema_long_period=21,
                 min_volume_ratio=1.2,
                 volume_spike_threshold=2.0,
-                max_position_size=0.1,
-                stop_loss_pct=0.05,
-                take_profit_pct=0.15
+                max_position_size=trading_config.max_position_size,
+                stop_loss_pct=trading_config.stop_loss_pct,
+                take_profit_pct=trading_config.take_profit_pct
             ),
             MomentumStrategy(
                 name="Volume Momentum",
                 description="Volume-based momentum strategy",
                 momentum_type=MomentumType.VOLUME_MOMENTUM,
                 timeframe=Timeframe.DAILY,
-                min_strength=70.0,
-                min_confidence=75.0,
+                min_strength=trading_config.min_strength + 10.0,  # Slightly higher threshold
+                min_confidence=trading_config.min_confidence + 5.0,
                 signal_duration=12,
                 min_volume_ratio=1.5,
                 volume_spike_threshold=2.5,
-                max_position_size=0.08,
-                stop_loss_pct=0.04,
-                take_profit_pct=0.12
+                max_position_size=trading_config.max_position_size * 0.8,  # Slightly smaller position
+                stop_loss_pct=trading_config.stop_loss_pct * 0.8,  # Slightly tighter stop loss
+                take_profit_pct=trading_config.take_profit_pct * 0.8  # Slightly lower take profit
             ),
             MomentumStrategy(
                 name="Combined Momentum",
                 description="Combined price, volume, and volatility momentum",
                 momentum_type=MomentumType.COMBINED_MOMENTUM,
                 timeframe=Timeframe.DAILY,
-                min_strength=75.0,
-                min_confidence=80.0,
+                min_strength=trading_config.min_strength + 15.0,  # Higher threshold for combined strategy
+                min_confidence=trading_config.min_confidence + 10.0,
                 signal_duration=18,
-                rsi_oversold=25.0,
-                rsi_overbought=75.0,
+                rsi_oversold=trading_config.rsi_oversold - 5.0,  # More extreme oversold
+                rsi_overbought=trading_config.rsi_overbought + 5.0,  # More extreme overbought
                 ema_short_period=12,
                 ema_long_period=26,
                 min_volume_ratio=1.3,
                 volume_spike_threshold=2.0,
-                max_position_size=0.12,
-                stop_loss_pct=0.06,
-                take_profit_pct=0.18
+                max_position_size=trading_config.max_position_size * 1.2,  # Slightly larger position
+                stop_loss_pct=trading_config.stop_loss_pct * 1.2,  # Slightly wider stop loss
+                take_profit_pct=trading_config.take_profit_pct * 1.2  # Slightly higher take profit
             )
         ]
         

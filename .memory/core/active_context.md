@@ -1,14 +1,14 @@
 # Active Context - AlgoTrading MVP
 
-## Current Focus: **MVP OPERATIVO AWS/DOCKER - PAPER TRADING ACTIVO** 🎯
+## Current Focus: **MVP OPERATIVO AWS/DOCKER + BACKTESTING EXHAUSTIVO + CONTROL DE RIESGOS** 🎯
 
-### Phase: MVP Production Ready - AWS + Docker + Paper Trading
+### Phase: MVP Production Ready - AWS + Docker + Paper Trading + Backtesting + Risk Management
 
-- **Status**: ✅ TASK 8 COMPLETADA - Análisis de Costos Operativos implementado
+- **Status**: ✅ TASK 8 y TASK 9 COMPLETADAS - Análisis de Costos + Optimización de Parámetros implementados
 - **Current State**: 632/633 tests pasando (79% cobertura)
-- **Technical Assessment**: MVP READY para AWS/Docker deployment
+- **Technical Assessment**: MVP READY para AWS/Docker deployment + Backtesting exhaustivo + Control de riesgos
 - **Context Version**: 2025.10
-- **Last Update**: 2025-10-21 (TASK 8 completada - MVP focus reorganizado)
+- **Last Update**: 2025-10-21 (TASK 9 completada - Nuevas tareas añadidas: V2-V5, L1-L4, R1-R7, O1-O3)
 
 ## 📊 **ESTADO ACTUAL DEL SISTEMA**
 
@@ -70,52 +70,87 @@ latency: 1000                       # Cambiar a backup si latencia > 1000ms
 
 ### 🎯 **TAREAS REORGANIZADAS POR PRIORIDAD MVP**
 
-#### **🔴 CRÍTICAS MVP (4 tareas) - AWS/Docker Operativo**
+#### **🔴 CRÍTICAS MVP (3 tareas) - AWS/Docker Operativo**
 
-1. **TASK 9**: Optimización de Parámetros y Prevención de Overfitting
-2. **TASK 10**: Centralización de Configuración
-3. **TASK 13**: Tests de Concurrencia
-4. **TASK 17**: Seguridad y Compliance Básica
+1. **TASK 10**: Centralización de Configuración
+2. **TASK 13**: Tests de Concurrencia
+3. **TASK 17**: Seguridad y Compliance Básica
+
+#### **🟠 VALIDACIÓN MVP (3 tareas) - Backtesting Exhaustivo y Paper Trading**
+
+4. **TASK-V2**: Ejecutar Backtesting Exhaustivo
+5. **TASK-V3**: Registrar Métricas de Paper Trading
+6. **TASK-V5**: Revisión y Ajuste de Parámetros
+
+#### **🚨 CONTROL DE RIESGOS (7 tareas) - Gestión de Capital y Protección**
+
+7. **TASK-R1**: Implementar Límite de Pérdida Diaria
+8. **TASK-R2**: Configurar Límite de Drawdown Máximo
+9. **TASK-R3**: Stop Loss por Posición
+10. **TASK-R4**: Tamaño Máximo de Posición
+11. **TASK-R5**: Exposición y Correlación
+12. **TASK-R6**: Circuit Breakers Automáticos
+13. **TASK-R7**: Monitoreo y Alertas de Riesgo
 
 #### **🟡 ALTAS MVP (4 tareas) - Robustez Post-Deploy**
 
-5. **TASK 11**: Análisis Dinámico de Slippage
-6. **TASK 12**: Validación de Rentabilidad
-7. **TASK 14**: Unificación de Error Handling
-8. **TASK 15**: Refactorización de Servicios
+14. **TASK 11**: Análisis Dinámico de Slippage
+15. **TASK 12**: Validación de Rentabilidad
+16. **TASK 14**: Unificación de Error Handling
+17. **TASK 15**: Refactorización de Servicios
+
+#### **💰 LIVE TRADING (4 tareas) - Capital Real y Monitoreo**
+
+18. **TASK-L1**: Configuración de Capital Real
+19. **TASK-L2**: Monitoreo Manual y Alertas
+20. **TASK-L3**: Ajuste Dinámico de Parámetros
+21. **TASK-L4**: Validación de Rendimiento Real
 
 #### **🟢 MEDIAS MVP (4 tareas) - Optimización**
 
-9. **TASK 16**: Tests de Performance
-10. **TASK 18**: Cobertura de Tests
-11. **TASK 19**: Documentación Avanzada
-12. **TASK 20**: Monitoring y Observabilidad
+22. **TASK 16**: Tests de Performance
+23. **TASK 18**: Cobertura de Tests
+24. **TASK 19**: Documentación Avanzada
+25. **TASK 20**: Monitoring y Observabilidad
 
 #### **🔵 BAJAS MVP (12 tareas) - Estrategias Avanzadas**
 
-13. **TASK 21**: Mean Reversion Strategy Implementation
-14. **TASK 22**: Pairs Trading Strategy Implementation
-15. **TASK 23**: Statistical Modeling Implementation
-16. **TASK 24**: Robustness Testing Implementation
-17. **TASK 25**: Statistical Arbitrage Strategy Implementation
-18. **TASK 26**: System Recovery and Fault Tolerance
-19. **TASK 27**: Advanced Security and Compliance
-20. **TASK 28**: Load Testing and Stress Testing
-21. **TASK 29**: Advanced Monitoring and Alerting
-22. **TASK 30**: Integration Testing and End-to-End Validation
+26. **TASK 21**: Mean Reversion Strategy Implementation
+27. **TASK 22**: Pairs Trading Strategy Implementation
+28. **TASK 23**: Statistical Modeling Implementation
+29. **TASK 24**: Robustness Testing Implementation
+30. **TASK 25**: Statistical Arbitrage Strategy Implementation
+31. **TASK 26**: System Recovery and Fault Tolerance
+32. **TASK 27**: Advanced Security and Compliance
+33. **TASK 28**: Load Testing and Stress Testing
+34. **TASK 29**: Advanced Monitoring and Alerting
+35. **TASK 30**: Integration Testing and End-to-End Validation
+
+#### **🚀 OPTIMIZACIÓN Y ESCALADO (2 tareas) - Solo si ROI ≥5% mensual**
+
+36. **TASK-O2**: Optimización Técnica Gradual
+37. **TASK-O3**: Escalado de Estrategias
 
 ### 🚀 **ESTRATEGIA DE IMPLEMENTACIÓN MVP**
 
 #### **FASE 1: MVP OPERATIVO AWS/DOCKER (Semanas 1-2)**
 
-- **TASK 9**: Optimización de Parámetros y Prevención de Overfitting
 - **TASK 10**: Centralización de Configuración
 - **TASK 13**: Tests de Concurrencia
 - **TASK 17**: Seguridad y Compliance Básica
 
 **Objetivo**: Sistema estable 1 mes en AWS + Docker con paper trading activo
 
-#### **FASE 2: ROBUSTEZ POST-VALIDACIÓN (Semanas 3-4)**
+#### **FASE 2: VALIDACIÓN MVP Y BACKTESTING (Semanas 3-4)**
+
+- **TASK-V2**: Ejecutar Backtesting Exhaustivo
+- **TASK-V3**: Registrar Métricas de Paper Trading
+- **TASK-V5**: Revisión y Ajuste de Parámetros
+- **TASK-R1-R7**: Control de Riesgos (7 tareas)
+
+**Objetivo**: Backtesting profesional validado + Control de riesgos implementado
+
+#### **FASE 3: ROBUSTEZ POST-VALIDACIÓN (Semanas 5-6)**
 
 - **TASK 11**: Análisis Dinámico de Slippage
 - **TASK 12**: Validación de Rentabilidad
@@ -124,7 +159,16 @@ latency: 1000                       # Cambiar a backup si latencia > 1000ms
 
 **Objetivo**: Sistema robusto después de validación en producción
 
-#### **FASE 3: OPTIMIZACIÓN AVANZADA (Semanas 5-6)**
+#### **FASE 4: LIVE TRADING Y MONITOREO (Semanas 7-8)**
+
+- **TASK-L1**: Configuración de Capital Real
+- **TASK-L2**: Monitoreo Manual y Alertas
+- **TASK-L3**: Ajuste Dinámico de Parámetros
+- **TASK-L4**: Validación de Rendimiento Real
+
+**Objetivo**: Live trading operativo con €50,000 + Monitoreo completo
+
+#### **FASE 5: OPTIMIZACIÓN AVANZADA (Semanas 9-10)**
 
 - **TASK 16**: Tests de Performance
 - **TASK 18**: Cobertura de Tests
@@ -133,14 +177,17 @@ latency: 1000                       # Cambiar a backup si latencia > 1000ms
 
 **Objetivo**: Sistema optimizado con métricas y documentación completa
 
-#### **FASE 4: ESTRATEGIAS AVANZADAS (Futuro)**
+#### **FASE 6: ESTRATEGIAS AVANZADAS (Solo si ROI ≥5% mensual)**
 
+- **TASK-O2**: Optimización Técnica Gradual
+- **TASK-O3**: Escalado de Estrategias
 - **TASK 21-30**: Estrategias complejas, seguridad institucional, testing avanzado
-- **Objetivo**: Sistema institucional completo para capital real
 
-### 🎯 **JUICIO FINAL ACTUALIZADO: MVP OPERATIVO**
+**Objetivo**: Sistema institucional completo para capital real
 
-**Estado Actual**: **MVP READY PARA AWS/DOCKER (90% LISTO)**
+### 🎯 **JUICIO FINAL ACTUALIZADO: MVP OPERATIVO + BACKTESTING + CONTROL DE RIESGOS**
+
+**Estado Actual**: **MVP READY PARA AWS/DOCKER + BACKTESTING EXHAUSTIVO + CONTROL DE RIESGOS (85% LISTO)**
 
 **Fortalezas Identificadas:**
 
@@ -149,30 +196,35 @@ latency: 1000                       # Cambiar a backup si latencia > 1000ms
 - ✅ Estrategias básicas pero efectivas (Momentum + Liquidity)
 - ✅ Performance adecuado (493+ señales/segundo, <100ms latencia)
 - ✅ **TASK 8 COMPLETADA**: Análisis de costos operativos implementado
+- ✅ **TASK 9 COMPLETADA**: Optimización de parámetros y prevención de overfitting
 - ✅ Paper trading funcional y backtesting profesional
 
 **Áreas Críticas MVP a Completar:**
 
-- 🔴 **Optimización de parámetros** (walk-forward, out-of-sample)
 - 🔴 **Centralización de configuración** (valores mágicos dispersos)
 - 🔴 **Tests de concurrencia** (prevenir race conditions)
 - 🔴 **Seguridad básica** (encriptación, rate limiting)
+- 🟠 **Backtesting exhaustivo** (todos los parámetros configurables)
+- 🟠 **Métricas de paper trading** (P&L, drawdown, slippage por sesión)
+- 🟠 **Control de riesgos** (7 tareas críticas de gestión de capital)
 
-**Después de implementar las 4 tareas críticas MVP:**
+**Después de implementar las tareas críticas MVP:**
 
 - ✅ **Sistema estable 1 mes en AWS + Docker**
 - ✅ **Paper trading activo y funcional**
 - ✅ **Backtesting profesional validado**
+- ✅ **Control de riesgos implementado**
 - ✅ **Configuración centralizada y optimizada**
 - ✅ **Concurrencia robusta probada**
 
-**Objetivo Final MVP**: **SISTEMA OPERATIVO PARA PAPER TRADING**
+**Objetivo Final MVP**: **SISTEMA OPERATIVO PARA PAPER TRADING + BACKTESTING + LIVE TRADING**
 
 - ✅ Arquitectura MVP sólida
-- ✅ Validación estadística básica
+- ✅ Validación estadística robusta
 - ✅ Rentabilidad neta validada
-- ✅ Seguridad básica garantizada
+- ✅ Control de riesgos garantizado
 - ✅ Performance y concurrencia validados
+- ✅ Live trading operativo con €50,000
 
 ## Recent Completions
 
@@ -286,17 +338,23 @@ latency: 1000                       # Cambiar a backup si latencia > 1000ms
 
 ### 🚀 Immediate Actions MVP
 
-1. **TASK 9**: Implementar Optimización de Parámetros y Prevención de Overfitting
-2. **TASK 10**: Centralizar Configuración (eliminar valores mágicos)
-3. **TASK 13**: Implementar Tests de Concurrencia
-4. **TASK 17**: Implementar Seguridad y Compliance Básica
+1. **TASK 10**: Centralizar Configuración (eliminar valores mágicos)
+2. **TASK 13**: Implementar Tests de Concurrencia
+3. **TASK 17**: Implementar Seguridad y Compliance Básica
+4. **TASK-V2**: Ejecutar Backtesting Exhaustivo
+5. **TASK-V3**: Registrar Métricas de Paper Trading
+6. **TASK-R1-R7**: Implementar Control de Riesgos (7 tareas)
 
 ### 📋 Upcoming Tasks (MVP Priority)
 
-- **TASK 9**: Optimización de Parámetros y Prevención de Overfitting (NEXT)
-- **TASK 10**: Centralización de Configuración
+- **TASK 10**: Centralización de Configuración (NEXT)
 - **TASK 13**: Tests de Concurrencia
 - **TASK 17**: Seguridad y Compliance Básica
+- **TASK-V2**: Ejecutar Backtesting Exhaustivo
+- **TASK-V3**: Registrar Métricas de Paper Trading
+- **TASK-V5**: Revisión y Ajuste de Parámetros
+- **TASK-R1-R7**: Control de Riesgos (7 tareas críticas)
+- **TASK-L1-L4**: Live Trading (4 tareas)
 
 ## Technical Context
 
@@ -323,13 +381,13 @@ latency: 1000                       # Cambiar a backup si latencia > 1000ms
 
 ### ✅ Updated Files
 
-- `.memory/core/active_context.md` - Updated with TASK 8 completion and MVP focus
-- `.memory/core/progress.md` - Updated with TASK 8 completion and MVP priorities
-- `.memory/tasks/complete_task_list.md` - Updated with TASK 8 completion and MVP phases
+- `.memory/core/active_context.md` - Updated with TASK 9 completion and new MVP tasks (V2-V5, L1-L4, R1-R7, O1-O3)
+- `.memory/core/progress.md` - Updated with TASK 9 completion and new MVP priorities
+- `.memory/tasks/complete_task_list.md` - Updated with TASK 9 completion and new MVP phases + 20 new tasks
 - `DEVELOPER_ONBOARDING_GUIDE.md` - Complete onboarding guide for new developers
 
 ### 📝 Pending Updates
 
 - Update system patterns with MVP architectural patterns
 - Update tech context with MVP technology stack
-- Create lesson_T008.md implementation report
+- Create lesson_T009.md implementation report

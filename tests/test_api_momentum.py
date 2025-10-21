@@ -475,8 +475,8 @@ class TestMomentumAPI:
             "max_position_size": -1  # Invalid negative position size
         })
         
-        # Should handle gracefully or return validation error
-        assert response.status_code == 200  # No validation error (endpoint uses Dict[str, Any])
+        # Should return 200 even with invalid data (endpoint uses Dict[str, Any])
+        assert response.status_code == 200
     
     def test_update_strategy_service_error(self, client, mock_service):
         """Test strategy update with service error."""
