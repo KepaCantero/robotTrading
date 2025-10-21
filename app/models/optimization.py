@@ -50,13 +50,11 @@ class OptimizationParameter(BaseModel):
     constraints: ParameterConstraint = Field(..., description="Constraints for optimization")
     description: Optional[str] = Field(None, description="Description of the parameter")
     
-    @validator('current_value')
-    def validate_current_value(cls, v, values):
-        if 'constraints' in values:
-            constraints = values['constraints']
-            if not (constraints.min_value <= v <= constraints.max_value):
-                raise ValueError(f"current_value {v} must be within constraints [{constraints.min_value}, {constraints.max_value}]")
-        return v
+    @model_validator(mode='after')
+    def validate_current_value(self):
+        if not (self.constraints.min_value <= self.current_value <= self.constraints.max_value):
+            raise ValueError(f"current_value {self.current_value} must be within constraints [{self.constraints.min_value}, {self.constraints.max_value}]")
+        return self
 
 
 class WalkForwardConfig(BaseModel):
@@ -126,17 +124,13 @@ class OutOfSampleTest(BaseModel):
     parameters: Dict[str, Union[float, int]] = Field(..., description="Parameters to test")
     strategy_name: str = Field(..., description="Name of the strategy to test")
     
-    @validator('test_end_date')
-    def validate_test_end_date(cls, v, values):
-        if 'test_start_date' in values and v <= values['test_start_date']:
+    @model_validator(mode='after')
+    def validate_dates(self):
+        if self.test_end_date <= self.test_start_date:
             raise ValueError("test_end_date must be after test_start_date")
-        return v
-    
-    @validator('train_end_date')
-    def validate_train_end_date(cls, v, values):
-        if 'train_start_date' in values and v <= values['train_start_date']:
+        if self.train_end_date <= self.train_start_date:
             raise ValueError("train_end_date must be after train_start_date")
-        return v
+        return self
 
 
 class OutOfSampleResult(BaseModel):
@@ -158,17 +152,17 @@ class OutOfSampleResult(BaseModel):
 class ParameterOptimizationRequest(BaseModel):
     """Request model for parameter optimization."""
     strategy_name: str = Field(..., description="Name of the strategy to optimize")
-    parameters: List[OptimizationParameter] = Field(..., min_items=1, description="Parameters to optimize")
+    parameters: List[OptimizationParameter] = Field(..., min_length=1, description="Parameters to optimize")
     optimization_config: OptimizationConfig = Field(..., description="Optimization configuration")
     data_start_date: date = Field(..., description="Start date for optimization data")
     data_end_date: date = Field(..., description="End date for optimization data")
     cost_analysis_enabled: bool = Field(True, description="Whether to include cost analysis")
     
-    @validator('data_end_date')
-    def validate_data_end_date(cls, v, values):
-        if 'data_start_date' in values and v <= values['data_start_date']:
+    @model_validator(mode='after')
+    def validate_data_end_date(self):
+        if self.data_end_date <= self.data_start_date:
             raise ValueError("data_end_date must be after data_start_date")
-        return v
+        return self
 
 
 class OutOfSampleTestRequest(BaseModel):
@@ -224,3 +218,17 @@ class OptimizationSummary(BaseModel):
     best_score: float = Field(..., description="Best optimization score achieved")
     last_optimization_date: datetime = Field(..., description="Date of last optimization")
     artifacts_count: int = Field(..., ge=0, description="Number of optimization artifacts stored")
+    
+    @model_validator(mode='after')
+    def validate_numeric_values(self):
+        """Ensure all numeric values are JSON-serializable."""
+        import math
+        
+        # Replace NaN and infinity with None or default values
+        if math.isnan(self.avg_optimization_time) or math.isinf(self.avg_optimization_time):
+            self.avg_optimization_time = 0.0
+        
+        if math.isnan(self.best_score) or math.isinf(self.best_score):
+            self.best_score = 0.0
+            
+        return self

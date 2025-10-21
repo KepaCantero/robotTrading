@@ -18,6 +18,7 @@ from app.models.signal import (
 )
 from app.services.portfolio_service import PortfolioService
 from app.models.portfolio import Portfolio, Position
+from app.core.centralized_config import get_trading_thresholds
 
 logger = logging.getLogger(__name__)
 
@@ -33,10 +34,13 @@ class SignalScorerService:
         self.signal_history: List[Signal] = []
         self.max_history_size = 10000
         
+        # Get trading thresholds from centralized config
+        trading_config = get_trading_thresholds()
+        
         # Signal processing configuration
-        self.min_confidence_threshold = 60.0
+        self.min_confidence_threshold = trading_config.min_confidence
         self.min_liquidity_threshold = 50.0
-        self.max_position_size_percent = 10.0  # Max 10% of portfolio per position
+        self.max_position_size_percent = trading_config.max_position_size  # Already as decimal (0.1 = 10%)
         
         # Performance tracking
         self.signals_processed = 0
@@ -134,8 +138,10 @@ class SignalScorerService:
             base_size_percent = (signal.confidence + signal.liquidity_score) / 200.0  # 0-1 range
             
             # Apply maximum position size limit
-            max_size_percent = Decimal(str(self.max_position_size_percent / 100.0))
+            max_size_percent = Decimal(str(self.max_position_size_percent))
             size_percent = min(Decimal(str(base_size_percent)), max_size_percent)
+            
+            logger.debug(f"Position size calculation: base={base_size_percent:.3f}, max={max_size_percent}, final={size_percent}")
             
             # Calculate position size in dollars
             total_equity = portfolio.total_equity
@@ -309,7 +315,8 @@ class SignalScorerService:
         except Exception as e:
             logger.error(f"Error calculating priority with portfolio context: {e}")
             # Return a reasonable default priority when portfolio service fails
-            return 70.0
+            trading_config = get_trading_thresholds()
+            return trading_config.min_confidence
     
     def _calculate_diversification_score(self, portfolio: Portfolio, symbol: str) -> float:
         """Calculate diversification score for portfolio optimization."""
