@@ -238,5 +238,48 @@
         "test": true
       }
     }
+  },
+  {
+    "timestamp": "2025-10-22T16:23:18.959132",
+    "event": "signal_executed",
+    "strategy": "unknown",
+    "level": "INFO",
+    "signal_data": {
+      "symbol": "AAPL",
+      "signal_type": "buy",
+      "strength": "strong",
+      "confidence": 80.0,
+      "liquidity_score": 75.0,
+      "priority_score": 85.0,
+      "source": "momentum",
+      "price": "150.00",
+      "volume": "1000000",
+      "timestamp": "2025-10-22T16:23:18.959096",
+      "metadata": {
+        "test": true
+      }
+    },
+    "execution_price": null
+  },
+  {
+    "timestamp": "2025-10-22T16:23:18.965450",
+    "event": "signal_generated",
+    "strategy": "test_strategy",
+    "level": "INFO",
+    "signal_data": {
+      "symbol": "AAPL",
+      "signal_type": "buy",
+      "strength": "strong",
+      "confidence": 80.0,
+      "liquidity_score": 75.0,
+      "priority_score": 85.0,
+      "source": "momentum",
+      "price": "150.00",
+      "volume": "1000000",
+      "timestamp": "2025-10-22T16:23:18.964742",
+      "metadata": {
+        "test": true
+      }
+    }
   }
 ]

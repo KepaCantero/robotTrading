@@ -16,10 +16,15 @@ strategies:
       rsi_period: 14
       ema_period: 20
       lookback_period: 5
-      # Parámetros de riesgo
+      # Parámetros de riesgo específicos para Momentum
       stop_loss: 0.05
       take_profit: 0.10
       max_position_size: 0.1
+      # Thresholds dinámicos por estrategia
+      min_signal_strength: 60.0
+      min_signal_confidence: 70.0
+      max_daily_trades: 10
+      risk_per_trade: 0.02
 
   mean_reversion:
     class: "MeanReversionStrategy"
@@ -33,10 +38,15 @@ strategies:
       lookback_period: 20
       volatility_threshold: 0.02
       mean_reversion_speed: 0.1
-      # Parámetros de riesgo
+      # Parámetros de riesgo específicos para Mean Reversion
       stop_loss: 0.03
       take_profit: 0.06
       max_position_size: 0.08
+      # Thresholds dinámicos por estrategia
+      min_signal_strength: 55.0
+      min_signal_confidence: 65.0
+      max_daily_trades: 8
+      risk_per_trade: 0.015
 
   pairs_trading:
     class: "PairsTradingStrategy"
@@ -52,10 +62,15 @@ strategies:
       hedge_ratio: 1.0
       lookback_period: 30
       pair_symbols: ["AAPL", "MSFT"]
-      # Parámetros de riesgo
+      # Parámetros de riesgo específicos para Pairs Trading
       stop_loss: 0.04
       take_profit: 0.08
       max_position_size: 0.06
+      # Thresholds dinámicos por estrategia
+      min_signal_strength: 50.0
+      min_signal_confidence: 60.0
+      max_daily_trades: 6
+      risk_per_trade: 0.01
 
 # Configuración activa
 active_strategies: ["momentum"]
