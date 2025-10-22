@@ -1,0 +1,242 @@
+[
+  {
+    "timestamp": "2025-10-22T15:45:13.679761",
+    "event": "strategy_error",
+    "strategy": "test_strategy",
+    "level": "ERROR",
+    "error": "6 validation errors for Signal\nsignal_type\n  Field required [type=missing, input_value={'symbol': 'AAPL', 'direc...22, 15, 45, 13, 679168)}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.10/v/missing\nstrength\n  Field required [type=missing, input_value={'symbol': 'AAPL', 'direc...22, 15, 45, 13, 679168)}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.10/v/missing\nliquidity_score\n  Field required [type=missing, input_value={'symbol': 'AAPL', 'direc...22, 15, 45, 13, 679168)}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.10/v/missing\npriority_score\n  Field required [type=missing, input_value={'symbol': 'AAPL', 'direc...22, 15, 45, 13, 679168)}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.10/v/missing\nsource\n  Field required [type=missing, input_value={'symbol': 'AAPL', 'direc...22, 15, 45, 13, 679168)}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.10/v/missing\nvolume\n  Field required [type=missing, input_value={'symbol': 'AAPL', 'direc...22, 15, 45, 13, 679168)}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.10/v/missing",
+    "error_type": "generate_signals"
+  },
+  {
+    "timestamp": "2025-10-22T15:49:17.900719",
+    "event": "strategy_error",
+    "strategy": "test_strategy",
+    "level": "ERROR",
+    "error": "6 validation errors for Signal\nsignal_type\n  Field required [type=missing, input_value={'symbol': 'AAPL', 'direc...22, 15, 49, 17, 899871)}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.10/v/missing\nstrength\n  Field required [type=missing, input_value={'symbol': 'AAPL', 'direc...22, 15, 49, 17, 899871)}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.10/v/missing\nliquidity_score\n  Field required [type=missing, input_value={'symbol': 'AAPL', 'direc...22, 15, 49, 17, 899871)}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.10/v/missing\npriority_score\n  Field required [type=missing, input_value={'symbol': 'AAPL', 'direc...22, 15, 49, 17, 899871)}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.10/v/missing\nsource\n  Field required [type=missing, input_value={'symbol': 'AAPL', 'direc...22, 15, 49, 17, 899871)}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.10/v/missing\nvolume\n  Field required [type=missing, input_value={'symbol': 'AAPL', 'direc...22, 15, 49, 17, 899871)}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.10/v/missing",
+    "error_type": "generate_signals"
+  },
+  {
+    "timestamp": "2025-10-22T15:51:33.938590",
+    "event": "strategy_error",
+    "strategy": "test_strategy",
+    "level": "ERROR",
+    "error": "'Signal' object has no attribute 'direction'",
+    "error_type": "risk_check"
+  },
+  {
+    "timestamp": "2025-10-22T15:54:10.853552",
+    "event": "signal_executed",
+    "strategy": "unknown",
+    "level": "INFO",
+    "signal_data": {
+      "symbol": "AAPL",
+      "signal_type": "buy",
+      "strength": "strong",
+      "confidence": 80.0,
+      "liquidity_score": 75.0,
+      "priority_score": 85.0,
+      "source": "momentum",
+      "price": "150.00",
+      "volume": "1000000",
+      "timestamp": "2025-10-22T15:54:10.853515",
+      "metadata": {
+        "test": true
+      }
+    },
+    "execution_price": null
+  },
+  {
+    "timestamp": "2025-10-22T15:54:10.853984",
+    "event": "execution_error",
+    "strategy": "unknown",
+    "level": "ERROR",
+    "signal_data": {
+      "symbol": "AAPL",
+      "signal_type": "buy",
+      "strength": "strong",
+      "confidence": 80.0,
+      "liquidity_score": 75.0,
+      "priority_score": 85.0,
+      "source": "momentum",
+      "price": "150.00",
+      "volume": "1000000",
+      "timestamp": "2025-10-22T15:54:10.853515",
+      "metadata": {
+        "test": true
+      }
+    },
+    "error": "'Signal' object has no attribute 'direction'"
+  },
+  {
+    "timestamp": "2025-10-22T15:54:10.864724",
+    "event": "signal_generated",
+    "strategy": "test_strategy",
+    "level": "INFO",
+    "signal_data": {
+      "symbol": "AAPL",
+      "signal_type": "buy",
+      "strength": "strong",
+      "confidence": 80.0,
+      "liquidity_score": 75.0,
+      "priority_score": 85.0,
+      "source": "momentum",
+      "price": "150.00",
+      "volume": "1000000",
+      "timestamp": "2025-10-22T15:54:10.864057",
+      "metadata": {
+        "test": true
+      }
+    }
+  },
+  {
+    "timestamp": "2025-10-22T15:54:57.503507",
+    "event": "signal_executed",
+    "strategy": "unknown",
+    "level": "INFO",
+    "signal_data": {
+      "symbol": "AAPL",
+      "signal_type": "buy",
+      "strength": "strong",
+      "confidence": 80.0,
+      "liquidity_score": 75.0,
+      "priority_score": 85.0,
+      "source": "momentum",
+      "price": "150.00",
+      "volume": "1000000",
+      "timestamp": "2025-10-22T15:54:57.503464",
+      "metadata": {
+        "test": true
+      }
+    },
+    "execution_price": null
+  },
+  {
+    "timestamp": "2025-10-22T15:54:57.503860",
+    "event": "execution_error",
+    "strategy": "unknown",
+    "level": "ERROR",
+    "signal_data": {
+      "symbol": "AAPL",
+      "signal_type": "buy",
+      "strength": "strong",
+      "confidence": 80.0,
+      "liquidity_score": 75.0,
+      "priority_score": 85.0,
+      "source": "momentum",
+      "price": "150.00",
+      "volume": "1000000",
+      "timestamp": "2025-10-22T15:54:57.503464",
+      "metadata": {
+        "test": true
+      }
+    },
+    "error": "'Signal' object has no attribute 'direction'"
+  },
+  {
+    "timestamp": "2025-10-22T15:54:57.513300",
+    "event": "signal_generated",
+    "strategy": "test_strategy",
+    "level": "INFO",
+    "signal_data": {
+      "symbol": "AAPL",
+      "signal_type": "buy",
+      "strength": "strong",
+      "confidence": 80.0,
+      "liquidity_score": 75.0,
+      "priority_score": 85.0,
+      "source": "momentum",
+      "price": "150.00",
+      "volume": "1000000",
+      "timestamp": "2025-10-22T15:54:57.512691",
+      "metadata": {
+        "test": true
+      }
+    }
+  },
+  {
+    "timestamp": "2025-10-22T15:55:26.383647",
+    "event": "signal_executed",
+    "strategy": "unknown",
+    "level": "INFO",
+    "signal_data": {
+      "symbol": "AAPL",
+      "signal_type": "buy",
+      "strength": "strong",
+      "confidence": 80.0,
+      "liquidity_score": 75.0,
+      "priority_score": 85.0,
+      "source": "momentum",
+      "price": "150.00",
+      "volume": "1000000",
+      "timestamp": "2025-10-22T15:55:26.383616",
+      "metadata": {
+        "test": true
+      }
+    },
+    "execution_price": null
+  },
+  {
+    "timestamp": "2025-10-22T15:55:26.388541",
+    "event": "signal_generated",
+    "strategy": "test_strategy",
+    "level": "INFO",
+    "signal_data": {
+      "symbol": "AAPL",
+      "signal_type": "buy",
+      "strength": "strong",
+      "confidence": 80.0,
+      "liquidity_score": 75.0,
+      "priority_score": 85.0,
+      "source": "momentum",
+      "price": "150.00",
+      "volume": "1000000",
+      "timestamp": "2025-10-22T15:55:26.387926",
+      "metadata": {
+        "test": true
+      }
+    }
+  },
+  {
+    "timestamp": "2025-10-22T15:56:23.669166",
+    "event": "signal_executed",
+    "strategy": "unknown",
+    "level": "INFO",
+    "signal_data": {
+      "symbol": "AAPL",
+      "signal_type": "buy",
+      "strength": "strong",
+      "confidence": 80.0,
+      "liquidity_score": 75.0,
+      "priority_score": 85.0,
+      "source": "momentum",
+      "price": "150.00",
+      "volume": "1000000",
+      "timestamp": "2025-10-22T15:56:23.669094",
+      "metadata": {
+        "test": true
+      }
+    },
+    "execution_price": null
+  },
+  {
+    "timestamp": "2025-10-22T15:56:23.675402",
+    "event": "signal_generated",
+    "strategy": "test_strategy",
+    "level": "INFO",
+    "signal_data": {
+      "symbol": "AAPL",
+      "signal_type": "buy",
+      "strength": "strong",
+      "confidence": 80.0,
+      "liquidity_score": 75.0,
+      "priority_score": 85.0,
+      "source": "momentum",
+      "price": "150.00",
+      "volume": "1000000",
+      "timestamp": "2025-10-22T15:56:23.674702",
+      "metadata": {
+        "test": true
+      }
+    }
+  }
+]
