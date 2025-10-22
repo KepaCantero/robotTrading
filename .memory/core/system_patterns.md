@@ -8,10 +8,10 @@
 
 **Métricas de Arquitectura:**
 
-- **Estabilidad**: 99.8% (595/596 tests pasando)
+- **Estabilidad**: 99.8% (632/633 tests pasando + 32 tests del Sistema de Estrategias Múltiples)
 - **Cobertura**: 79% (adecuada para producción)
-- **Arquitectura**: A+ (Clean Architecture + SOLID)
-- **Patrones**: Microservicios + Event-Driven + Design by Contract
+- **Arquitectura**: A+ (Clean Architecture + SOLID + Sistema de Estrategias Múltiples)
+- **Patrones**: Microservicios + Event-Driven + Design by Contract + Strategy Pattern + Factory Pattern
 
 ### 🏗️ **PATRONES ARQUITECTÓNICOS IMPLEMENTADOS**
 
@@ -21,7 +21,7 @@
 **Componentes**:
 
 - Trading Engine (FastAPI + async/await)
-- Strategy Service (Momentum, Liquidity)
+- Strategy Service (Sistema de Estrategias Múltiples: Momentum, Liquidity, Mean Reversion, Pairs Trading)
 - Market Data Service (Real-time processing)
 - Portfolio Service (Risk management + circuit breakers)
 - Dashboard Service (Streamlit analytics)

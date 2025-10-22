@@ -1,0 +1,177 @@
+# AWS Infrastructure Configuration - TASK-1
+# Configuración base de AWS para AlgoTrading MVP
+
+# Configuración de región y entorno
+region: "us-east-1"
+environment: "production"
+project_name: "algo-trading"
+version: "1.0.0"
+
+# Configuración de VPC
+vpc:
+  name: "algo-trading-vpc"
+  cidr_block: "10.0.0.0/16"
+  availability_zones: ["us-east-1a", "us-east-1b"]
+  public_subnets:
+    - cidr: "10.0.1.0/24"
+      az: "us-east-1a"
+    - cidr: "10.0.2.0/24"
+      az: "us-east-1b"
+  private_subnets:
+    - cidr: "10.0.10.0/24"
+      az: "us-east-1a"
+    - cidr: "10.0.20.0/24"
+      az: "us-east-1b"
+
+# Configuración de EC2
+ec2:
+  instance_type: "t3.medium"  # 2 vCPU, 4GB RAM
+  ami_id: "ami-0c02fb55956c7d316"  # Amazon Linux 2
+  key_pair: "algo-trading-key"
+  security_groups:
+    - "algo-trading-web-sg"
+    - "algo-trading-ssh-sg"
+  user_data: |
+    #!/bin/bash
+    yum update -y
+    yum install -y docker
+    systemctl start docker
+    systemctl enable docker
+    usermod -a -G docker ec2-user
+    yum install -y python3 python3-pip git
+    pip3 install docker-compose
+
+# Configuración de RDS PostgreSQL
+rds:
+  engine: "postgres"
+  engine_version: "15.4"
+  instance_class: "db.t3.micro"  # Para MVP, escalable después
+  allocated_storage: 20
+  max_allocated_storage: 100
+  storage_type: "gp2"
+  multi_az: false  # Para MVP, habilitar después
+  backup_retention_period: 7
+  backup_window: "03:00-04:00"
+  maintenance_window: "sun:04:00-sun:05:00"
+  database_name: "algotrading"
+  master_username: "algotrading_admin"
+  # master_password se configura via AWS Secrets Manager
+  port: 5432
+  vpc_security_groups:
+    - "algo-trading-db-sg"
+  subnet_group: "algo-trading-db-subnet-group"
+  parameter_group: "algo-trading-postgres-params"
+  monitoring_interval: 60
+  performance_insights_enabled: true
+
+# Configuración de ElastiCache Redis
+elasticache:
+  engine: "redis"
+  engine_version: "7.0"
+  node_type: "cache.t3.micro"  # Para MVP, escalable después
+  num_cache_nodes: 1
+  port: 6379
+  parameter_group: "default.redis7"
+  subnet_group: "algo-trading-cache-subnet-group"
+  security_groups:
+    - "algo-trading-cache-sg"
+  backup_retention_limit: 7
+  backup_window: "03:00-04:00"
+  maintenance_window: "sun:04:00-sun:05:00"
+  snapshot_retention_limit: 7
+  at_rest_encryption_enabled: true
+  transit_encryption_enabled: true
+  automatic_failover_enabled: false  # Para MVP, habilitar después
+
+# Security Groups
+security_groups:
+  web_sg:
+    name: "algo-trading-web-sg"
+    description: "Security group for web application"
+    ingress:
+      - protocol: "tcp"
+        port: 80
+        cidr_blocks: ["0.0.0.0/0"]
+      - protocol: "tcp"
+        port: 443
+        cidr_blocks: ["0.0.0.0/0"]
+      - protocol: "tcp"
+        port: 8000
+        cidr_blocks: ["10.0.0.0/16"]  # Solo desde VPC
+    egress:
+      - protocol: "-1"
+        cidr_blocks: ["0.0.0.0/0"]
+  
+  ssh_sg:
+    name: "algo-trading-ssh-sg"
+    description: "Security group for SSH access"
+    ingress:
+      - protocol: "tcp"
+        port: 22
+        cidr_blocks: ["0.0.0.0/0"]  # Restringir a IPs específicas en producción
+    egress:
+      - protocol: "-1"
+        cidr_blocks: ["0.0.0.0/0"]
+  
+  db_sg:
+    name: "algo-trading-db-sg"
+    description: "Security group for RDS database"
+    ingress:
+      - protocol: "tcp"
+        port: 5432
+        source_security_group_id: "algo-trading-web-sg"
+    egress:
+      - protocol: "-1"
+        cidr_blocks: ["0.0.0.0/0"]
+  
+  cache_sg:
+    name: "algo-trading-cache-sg"
+    description: "Security group for ElastiCache Redis"
+    ingress:
+      - protocol: "tcp"
+        port: 6379
+        source_security_group_id: "algo-trading-web-sg"
+    egress:
+      - protocol: "-1"
+        cidr_blocks: ["0.0.0.0/0"]
+
+# IAM Roles y Políticas
+iam:
+  ec2_role:
+    name: "algo-trading-ec2-role"
+    policies:
+      - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+      - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+      - "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
+    assume_role_policy: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "ec2.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      }
+
+# CloudWatch Logs
+cloudwatch:
+  log_groups:
+    - name: "/aws/ec2/algo-trading"
+      retention_days: 30
+    - name: "/aws/rds/algo-trading"
+      retention_days: 30
+    - name: "/aws/elasticache/algo-trading"
+      retention_days: 30
+
+# Tags globales
+tags:
+  Project: "AlgoTrading"
+  Environment: "production"
+  Owner: "Trading Team"
+  CostCenter: "Trading Operations"
+  Backup: "required"
+  Monitoring: "enabled"

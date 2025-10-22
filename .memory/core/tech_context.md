@@ -20,6 +20,9 @@
 - **Backtesting**: backtrader, zipline-reloaded
 - **Market Data**: yfinance, alpha_vantage, ccxt
 - **Financial Calculations**: quantlib-python, scipy
+- **Strategy Framework**: Sistema de Estrategias Múltiples (BaseStrategy, Factory, Registry)
+- **Walk Forward Analysis**: Implementación custom para validación robusta
+- **Bias Detection**: Sistema de detección de Look-Ahead Bias y Data Snooping
 
 ### Asynchronous Processing
 
