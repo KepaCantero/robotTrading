@@ -22,7 +22,7 @@
 - **Estrategias**: Momentum y Liquidity implementadas y operativas
 - **APIs**: 31 archivos de test cubriendo integración completa
 - **TASK 8**: ✅ COMPLETADA - Análisis de costos operativos implementado
-- **Tareas Planificadas**: 24 tareas pendientes (MVP focus)
+- **Tareas Planificadas**: 32 tareas pendientes (MVP focus: TASK-1 a TASK-40)
 
 ### 🏗️ **ARQUITECTURA MVP - RESUMEN**
 

@@ -1,0 +1,103 @@
+# Trading Strategies Configuration - TASK-31
+# Sistema de Estrategias Múltiples
+
+# Configuración de estrategias disponibles
+strategies:
+  momentum:
+    class: "MomentumStrategy"
+    config:
+      name: "momentum"
+      description: "Estrategia de momentum basada en RSI, EMA y volumen"
+      version: "1.0.0"
+      # Parámetros técnicos
+      rsi_threshold: 40
+      momentum_threshold: 0.02
+      volume_threshold: 1.5
+      rsi_period: 14
+      ema_period: 20
+      lookback_period: 5
+      # Parámetros de riesgo
+      stop_loss: 0.05
+      take_profit: 0.10
+      max_position_size: 0.1
+
+  mean_reversion:
+    class: "MeanReversionStrategy"
+    config:
+      name: "mean_reversion"
+      description: "Estrategia de reversión a la media basada en Z-score"
+      version: "1.0.0"
+      # Parámetros técnicos
+      z_score_threshold: 2.0
+      min_z_score: 1.5
+      lookback_period: 20
+      volatility_threshold: 0.02
+      mean_reversion_speed: 0.1
+      # Parámetros de riesgo
+      stop_loss: 0.03
+      take_profit: 0.06
+      max_position_size: 0.08
+
+  pairs_trading:
+    class: "PairsTradingStrategy"
+    config:
+      name: "pairs_trading"
+      description: "Estrategia de trading de pares basada en cointegración"
+      version: "1.0.0"
+      # Parámetros técnicos
+      cointegration_threshold: 0.05
+      spread_threshold: 2.0
+      max_spread_deviation: 3.0
+      min_correlation: 0.7
+      hedge_ratio: 1.0
+      lookback_period: 30
+      pair_symbols: ["AAPL", "MSFT"]
+      # Parámetros de riesgo
+      stop_loss: 0.04
+      take_profit: 0.08
+      max_position_size: 0.06
+
+# Configuración activa
+active_strategies: ["momentum"]
+backtesting_strategies: ["momentum", "mean_reversion", "pairs_trading"]
+paper_trading_strategy: "momentum"
+
+# Configuración de logging
+logging:
+  level: "INFO"
+  log_path: "logs/strategy_logs.json"
+  max_log_size: "10MB"
+  backup_count: 5
+
+# Configuración de ejecución
+execution:
+  cycle_interval_seconds: 60
+  max_concurrent_signals: 10
+  signal_timeout_seconds: 300
+  risk_check_enabled: true
+  position_sizing_enabled: true
+
+# Configuración de métricas
+metrics:
+  enabled: true
+  collection_interval_seconds: 300
+  export_format: "json"
+  export_path: "logs/strategy_metrics.json"
+  retention_days: 30
+
+# Configuración de alertas
+alerts:
+  enabled: true
+  signal_generated: true
+  signal_executed: true
+  signal_rejected: true
+  strategy_error: true
+  execution_error: true
+  risk_limit_exceeded: true
+
+# Configuración de desarrollo
+development:
+  debug_mode: false
+  mock_execution: false
+  log_all_signals: true
+  performance_monitoring: true
