@@ -1,0 +1,44 @@
+# Elasticsearch Configuration for AlgoTrading
+# TASK-3: Configuración de logging centralizado
+
+cluster.name: algotrading-logs
+node.name: algotrading-node-1
+node.roles: [master, data, ingest]
+
+# Network settings
+network.host: 0.0.0.0
+http.port: 9200
+transport.port: 9300
+
+# Discovery settings
+discovery.seed_hosts: ["elasticsearch:9300"]
+cluster.initial_master_nodes: ["algotrading-node-1"]
+
+# Memory settings
+bootstrap.memory_lock: true
+ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+
+# Security settings
+xpack.security.enabled: false
+xpack.security.transport.ssl.enabled: false
+
+# Index settings
+action.auto_create_index: true
+action.destructive_requires_name: true
+
+# Logging settings
+logger.level: INFO
+logger.org.elasticsearch.transport: WARN
+logger.org.elasticsearch.discovery: WARN
+
+# Performance settings
+indices.memory.index_buffer_size: 20%
+indices.queries.cache.size: 10%
+indices.fielddata.cache.size: 20%
+
+# Monitoring settings
+xpack.monitoring.enabled: true
+xpack.monitoring.collection.enabled: true
+
+# License settings
+xpack.license.self_generated.type: basic

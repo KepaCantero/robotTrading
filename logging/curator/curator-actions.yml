@@ -1,0 +1,58 @@
+# Curator Actions for AlgoTrading Log Rotation
+# TASK-3: Configuración de logging centralizado
+
+actions:
+  # Delete logs older than 30 days
+  1:
+    action: delete_indices
+    description: "Delete indices older than 30 days"
+    options:
+      ignore_empty_list: True
+      disable_action: False
+    filters:
+    - filtertype: pattern
+      kind: prefix
+      value: algotrading-logs-
+    - filtertype: age
+      source: name
+      direction: older
+      timestring: '%Y.%m.%d'
+      unit: days
+      unit_count: 30
+
+  # Close indices older than 7 days
+  2:
+    action: close
+    description: "Close indices older than 7 days"
+    options:
+      ignore_empty_list: True
+      disable_action: False
+    filters:
+    - filtertype: pattern
+      kind: prefix
+      value: algotrading-logs-
+    - filtertype: age
+      source: name
+      direction: older
+      timestring: '%Y.%m.%d'
+      unit: days
+      unit_count: 7
+
+  # Force merge indices older than 1 day
+  3:
+    action: forcemerge
+    description: "Force merge indices older than 1 day"
+    options:
+      max_num_segments: 1
+      ignore_empty_list: True
+      disable_action: False
+    filters:
+    - filtertype: pattern
+      kind: prefix
+      value: algotrading-logs-
+    - filtertype: age
+      source: name
+      direction: older
+      timestring: '%Y.%m.%d'
+      unit: days
+      unit_count: 1

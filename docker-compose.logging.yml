@@ -1,0 +1,143 @@
+# Docker Compose for ELK Stack - AlgoTrading Logging
+# TASK-3: Configuración de logging centralizado
+
+version: "3.8"
+
+services:
+  # Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: algotrading-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+      - ./logging/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+    networks:
+      - algotrading-network
+    healthcheck:
+      test:
+        ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  # Logstash
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: algotrading-logstash
+    ports:
+      - "5044:5044"
+      - "5045:5045"
+      - "5046:5046"
+      - "5047:5047"
+      - "5048:5048"
+      - "5049:5049"
+    volumes:
+      - ./logging/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+      - app_logs:/app/logs:ro
+    networks:
+      - algotrading-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - APP_VERSION=${APP_VERSION:-1.0.0}
+    restart: unless-stopped
+
+  # Kibana
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: algotrading-kibana
+    ports:
+      - "5601:5601"
+    volumes:
+      - ./logging/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+    networks:
+      - algotrading-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    restart: unless-stopped
+
+  # Filebeat
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.11.0
+    container_name: algotrading-filebeat
+    user: root
+    volumes:
+      - ./logging/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - app_logs:/app/logs:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - algotrading-network
+    depends_on:
+      logstash:
+        condition: service_started
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - APP_VERSION=${APP_VERSION:-1.0.0}
+    restart: unless-stopped
+
+  # Metricbeat (for system metrics)
+  metricbeat:
+    image: docker.elastic.co/beats/metricbeat:8.11.0
+    container_name: algotrading-metricbeat
+    user: root
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+      - /proc:/hostfs/proc:ro
+      - /:/hostfs:ro
+    networks:
+      - algotrading-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      - ELASTICSEARCH_HOSTS=elasticsearch:9200
+      - KIBANA_HOST=kibana:5601
+    restart: unless-stopped
+
+  # Curator (for log rotation and cleanup)
+  curator:
+    image: docker.elastic.co/elasticsearch/curator:5.8.4
+    container_name: algotrading-curator
+    volumes:
+      - ./logging/curator/curator.yml:/usr/share/curator/curator.yml:ro
+      - ./logging/curator/curator-actions.yml:/usr/share/curator/curator-actions.yml:ro
+    networks:
+      - algotrading-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      - ELASTICSEARCH_HOST=elasticsearch
+      - ELASTICSEARCH_PORT=9200
+    restart: unless-stopped
+
+# Networks
+networks:
+  algotrading-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+
+# Volumes
+volumes:
+  elasticsearch_data:
+    driver: local
+  app_logs:
+    driver: local

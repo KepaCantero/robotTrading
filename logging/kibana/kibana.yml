@@ -1,0 +1,61 @@
+# Kibana Configuration for AlgoTrading
+# TASK-3: Configuración de logging centralizado
+
+server.name: algotrading-kibana
+server.host: 0.0.0.0
+server.port: 5601
+
+# Elasticsearch connection
+elasticsearch.hosts: ["http://elasticsearch:9200"]
+elasticsearch.username: kibana_system
+elasticsearch.password: kibana_password
+
+# Security settings
+xpack.security.enabled: false
+xpack.encryptedSavedObjects.encryptionKey: "algotrading-encryption-key-32-chars"
+
+# Monitoring settings
+xpack.monitoring.enabled: true
+xpack.monitoring.collection.enabled: true
+
+# Logging settings
+logging.appenders:
+  console:
+    type: console
+    layout:
+      type: pattern
+      pattern: "[%d{ISO8601}][%-5p][%-25c] %m%n"
+
+logging.loggers:
+  - name: algotrading
+    level: info
+    appenders: [console]
+
+# Index patterns
+kibana.defaultAppId: "discover"
+kibana.index: ".kibana-algotrading"
+
+# Performance settings
+optimize.bundleFilter: "!tests"
+optimize.useBundleCache: true
+optimize.bundleDir: "/opt/kibana/optimize/bundles"
+
+# Data views
+data.search.aggs.shardDelay.enabled: true
+data.search.aggs.shardDelay.shardDelay: 5
+
+# UI settings
+uiSettings.overrides:
+  "discover:searchOnPageLoad": false
+  "discover:sampleSize": 100
+  "discover:sort": [["@timestamp", "desc"]]
+  "timepicker:timeDefaults": "{ \"from\": \"now-1h\", \"to\": \"now\" }"
+  "timepicker:refreshIntervalDefaults": "{ \"pause\": false, \"value\": 30000 }"
+
+# Saved objects
+savedObjects.maxImportPayloadBytes: 26214400
+savedObjects.maxImportExportSize: 10000
+
+# Feature flags
+xpack.fleet.enabled: true
+xpack.encryptedSavedObjects.encryptionKey: "algotrading-encryption-key-32-chars"
