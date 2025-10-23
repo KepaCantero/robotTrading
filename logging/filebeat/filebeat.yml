@@ -1,0 +1,124 @@
+# Filebeat Configuration for AlgoTrading
+# TASK-3: Configuración de logging centralizado
+
+filebeat.inputs:
+  # FastAPI application logs
+  - type: log
+    enabled: true
+    paths:
+      - /app/logs/fastapi/*.log
+    fields:
+      service: fastapi
+      environment: ${ENVIRONMENT}
+    fields_under_root: true
+    multiline.pattern: '^\d{4}-\d{2}-\d{2}'
+    multiline.negate: true
+    multiline.match: after
+    processors:
+      - add_host_metadata:
+          when.not.contains.tags: forwarded
+
+  # Trading service logs
+  - type: log
+    enabled: true
+    paths:
+      - /app/logs/trading/*.log
+    fields:
+      service: trading
+      environment: ${ENVIRONMENT}
+    fields_under_root: true
+    multiline.pattern: '^\d{4}-\d{2}-\d{2}'
+    multiline.negate: true
+    multiline.match: after
+
+  # Market data logs
+  - type: log
+    enabled: true
+    paths:
+      - /app/logs/market_data/*.log
+    fields:
+      service: market_data
+      environment: ${ENVIRONMENT}
+    fields_under_root: true
+    multiline.pattern: '^\d{4}-\d{2}-\d{2}'
+    multiline.negate: true
+    multiline.match: after
+
+  # Portfolio logs
+  - type: log
+    enabled: true
+    paths:
+      - /app/logs/portfolio/*.log
+    fields:
+      service: portfolio
+      environment: ${ENVIRONMENT}
+    fields_under_root: true
+    multiline.pattern: '^\d{4}-\d{2}-\d{2}'
+    multiline.negate: true
+    multiline.match: after
+
+  # Error logs
+  - type: log
+    enabled: true
+    paths:
+      - /app/logs/errors/*.log
+    fields:
+      service: error_handler
+      environment: ${ENVIRONMENT}
+    fields_under_root: true
+    multiline.pattern: '^\d{4}-\d{2}-\d{2}'
+    multiline.negate: true
+    multiline.match: after
+
+  # Performance logs
+  - type: log
+    enabled: true
+    paths:
+      - /app/logs/performance/*.log
+    fields:
+      service: performance_monitor
+      environment: ${ENVIRONMENT}
+    fields_under_root: true
+    multiline.pattern: '^\d{4}-\d{2}-\d{2}'
+    multiline.negate: true
+    multiline.match: after
+
+# Processors
+processors:
+  - add_host_metadata:
+      when.not.contains.tags: forwarded
+  - add_docker_metadata: ~
+  - add_kubernetes_metadata: ~
+
+# Output to Logstash
+output.logstash:
+  hosts: ["logstash:5044", "logstash:5045", "logstash:5046", "logstash:5047", "logstash:5048", "logstash:5049"]
+
+# Logging
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat
+  keepfiles: 7
+  permissions: 0644
+
+# Monitoring
+monitoring.enabled: true
+monitoring.elasticsearch:
+  hosts: ["elasticsearch:9200"]
+
+# Setup
+setup.template.enabled: true
+setup.template.name: "algotrading-logs"
+setup.template.pattern: "algotrading-logs-*"
+setup.template.settings:
+  index.number_of_shards: 1
+  index.number_of_replicas: 0
+  index.refresh_interval: 5s
+
+# ILM
+setup.ilm.enabled: true
+setup.ilm.rollover_alias: "algotrading-logs"
+setup.ilm.pattern: "{now/d}-000001"
+setup.ilm.policy: "algotrading-logs-policy"
