@@ -1,0 +1,212 @@
+# Docker Compose for AlgoTrading Development Environment
+# TASK-2: Dockerización completa
+
+version: "3.8"
+
+services:
+  # FastAPI Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: algotrading-app-dev
+    environment:
+      DATABASE_URL: postgresql://algotrading_dev:dev_password@postgres:5432/algotrading_dev
+      REDIS_URL: redis://redis:6379/0
+      ENVIRONMENT: development
+      LOG_LEVEL: DEBUG
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app/app:ro
+      - ./config:/app/config:ro
+      - app_logs:/app/logs
+      - app_data:/app/data
+    networks:
+      - algotrading-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: algotrading-postgres-dev
+    environment:
+      POSTGRES_DB: algotrading_dev
+      POSTGRES_USER: algotrading_dev
+      POSTGRES_PASSWORD: dev_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    networks:
+      - algotrading-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U algotrading_dev -d algotrading_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: algotrading-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - algotrading-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass dev_redis_password
+
+  # Celery Worker
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: worker
+    container_name: algotrading-worker-dev
+    environment:
+      DATABASE_URL: postgresql://algotrading_dev:dev_password@postgres:5432/algotrading_dev
+      REDIS_URL: redis://:dev_redis_password@redis:6379/0
+      ENVIRONMENT: development
+      DEBUG: "true"
+      LOG_LEVEL: DEBUG
+    volumes:
+      - .:/app
+      - app_logs:/app/logs
+      - app_data:/app/data
+    networks:
+      - algotrading-network
+    depends_on:
+      - redis
+      - postgres
+    restart: unless-stopped
+
+  # Celery Beat Scheduler
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: scheduler
+    container_name: algotrading-scheduler-dev
+    environment:
+      DATABASE_URL: postgresql://algotrading_dev:dev_password@postgres:5432/algotrading_dev
+      REDIS_URL: redis://:dev_redis_password@redis:6379/0
+      ENVIRONMENT: development
+      DEBUG: "true"
+      LOG_LEVEL: DEBUG
+    volumes:
+      - .:/app
+      - app_logs:/app/logs
+      - app_data:/app/data
+    networks:
+      - algotrading-network
+    depends_on:
+      - redis
+      - postgres
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: algotrading-nginx-dev
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx-dev.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    networks:
+      - algotrading-network
+    depends_on:
+      - app
+    restart: unless-stopped
+
+  # Flower (Celery Monitoring)
+  flower:
+    image: mher/flower:1.0
+    container_name: algotrading-flower-dev
+    ports:
+      - "5555:5555"
+    environment:
+      CELERY_BROKER_URL: redis://:dev_redis_password@redis:6379/0
+      FLOWER_PORT: 5555
+    networks:
+      - algotrading-network
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  # Prometheus (Metrics)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: algotrading-prometheus-dev
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - algotrading-network
+    restart: unless-stopped
+
+  # Grafana (Dashboards)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: algotrading-grafana-dev
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - algotrading-network
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+# Networks
+networks:
+  algotrading-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# Volumes
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  app_logs:
+    driver: local
+  app_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
