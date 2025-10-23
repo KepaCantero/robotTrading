@@ -1,0 +1,96 @@
+# Prometheus Configuration for AlgoTrading Production
+# TASK-2: Dockerización completa
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: "algotrading-prod"
+    replica: "prometheus-1"
+
+rule_files:
+  - "rules/*.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+    scrape_interval: 30s
+
+  # FastAPI Application
+  - job_name: "algotrading-app"
+    static_configs:
+      - targets: ["app:8000"]
+    metrics_path: "/metrics"
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    honor_labels: true
+
+  # Nginx
+  - job_name: "nginx"
+    static_configs:
+      - targets: ["nginx:9113"]
+    scrape_interval: 30s
+
+  # Redis (ElastiCache)
+  - job_name: "redis"
+    static_configs:
+      - targets: ["redis:6379"]
+    scrape_interval: 30s
+
+  # PostgreSQL (RDS)
+  - job_name: "postgres"
+    static_configs:
+      - targets: ["postgres:5432"]
+    scrape_interval: 30s
+
+  # Celery Workers
+  - job_name: "celery-workers"
+    static_configs:
+      - targets: ["worker:9540"]
+    scrape_interval: 30s
+
+  # Celery Beat Scheduler
+  - job_name: "celery-beat"
+    static_configs:
+      - targets: ["scheduler:9540"]
+    scrape_interval: 30s
+
+  # Node Exporter
+  - job_name: "node-exporter"
+    static_configs:
+      - targets: ["node-exporter:9100"]
+    scrape_interval: 30s
+
+  # Docker containers
+  - job_name: "docker"
+    static_configs:
+      - targets: ["docker:9323"]
+    scrape_interval: 30s
+
+  # Elasticsearch
+  - job_name: "elasticsearch"
+    static_configs:
+      - targets: ["elasticsearch:9200"]
+    metrics_path: "/_prometheus/metrics"
+    scrape_interval: 30s
+
+  # Logstash
+  - job_name: "logstash"
+    static_configs:
+      - targets: ["logstash:9600"]
+    scrape_interval: 30s
+
+  # Grafana
+  - job_name: "grafana"
+    static_configs:
+      - targets: ["grafana:3000"]
+    metrics_path: "/metrics"
+    scrape_interval: 30s
