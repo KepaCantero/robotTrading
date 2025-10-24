@@ -1,72 +1,88 @@
-# Multi-stage Dockerfile for AlgoTrading FastAPI Application
-# TASK-2: Dockerización completa
+# Multi-stage Dockerfile for AlgoTrading
+# TASK-7: Configuración de CI/CD pipeline
 
-# Stage 1: Build stage
-FROM python:3.11-slim as builder
+# Build stage
+FROM python:3.9-slim as builder
+
+# Set build arguments
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VERSION
 
 # Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Install system dependencies for building
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
-    gcc \
-    g++ \
-    libpq-dev \
     curl \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Create and set working directory
 WORKDIR /app
 
 # Copy requirements first for better caching
-COPY requirements.txt .
+COPY requirements.txt requirements-dev.txt ./
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Stage 2: Production stage
-FROM python:3.11-slim as production
+# Copy source code
+COPY . .
+
+# Install application in development mode
+RUN pip install -e .
+
+# Production stage
+FROM python:3.9-slim as production
+
+# Set build arguments
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VERSION
+
+# Set labels
+LABEL org.opencontainers.image.title="AlgoTrading API" \
+      org.opencontainers.image.description="Algorithmic Trading API" \
+      org.opencontainers.image.version="${VERSION}" \
+      org.opencontainers.image.created="${BUILD_DATE}" \
+      org.opencontainers.image.revision="${VCS_REF}" \
+      org.opencontainers.image.vendor="AlgoTrading Team" \
+      org.opencontainers.image.licenses="MIT"
 
 # Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app \
-    PATH="/app/.local/bin:$PATH"
-
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y \
-    libpq5 \
-    curl \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    ENVIRONMENT=production
 
 # Create non-root user
 RUN groupadd -r algotrading && useradd -r -g algotrading algotrading
 
-# Create necessary directories
-RUN mkdir -p /app/logs /app/data /app/backups /app/config \
-    && chown -R algotrading:algotrading /app
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
-# Set working directory
+# Create application directory
 WORKDIR /app
 
-# Copy Python packages from builder stage
-COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+# Copy Python dependencies from builder stage
+COPY --from=builder /usr/local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
-COPY --chown=algotrading:algotrading . .
+COPY --from=builder /app /app
 
-# Create virtual environment and install dependencies
-RUN python -m venv /app/.venv \
-    && /app/.venv/bin/pip install --no-cache-dir -r requirements.txt
-
-# Set proper permissions
-RUN chmod +x /app/scripts/*.sh 2>/dev/null || true
+# Create necessary directories
+RUN mkdir -p /app/logs /app/data /app/config && \
+    chown -R algotrading:algotrading /app
 
 # Switch to non-root user
 USER algotrading
@@ -75,67 +91,48 @@ USER algotrading
 EXPOSE 8000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 # Default command
-CMD ["/app/.venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
-# Stage 3: Development stage
+# Development stage
 FROM production as development
 
-# Switch back to root for development tools
+# Switch back to root for development
 USER root
 
 # Install development dependencies
+RUN pip install --no-cache-dir -r requirements-dev.txt
+
+# Install additional development tools
 RUN apt-get update && apt-get install -y \
-    git \
     vim \
     htop \
     && rm -rf /var/lib/apt/lists/*
-
-# Install development Python packages
-RUN /app/.venv/bin/pip install --no-cache-dir \
-    pytest \
-    pytest-asyncio \
-    pytest-cov \
-    black \
-    flake8 \
-    mypy \
-    pre-commit
 
 # Switch back to non-root user
 USER algotrading
 
 # Override command for development
-CMD ["/app/.venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
-# Stage 4: Testing stage
-FROM development as testing
+# Testing stage
+FROM builder as testing
 
-# Install additional testing dependencies
-RUN /app/.venv/bin/pip install --no-cache-dir \
-    pytest-benchmark \
-    pytest-mock \
-    httpx \
-    factory-boy
+# Install testing dependencies
+RUN pip install --no-cache-dir -r requirements-dev.txt
 
-# Override command for testing
-CMD ["/app/.venv/bin/pytest", "tests/", "-v", "--cov=app", "--cov-report=html"]
+# Set environment for testing
+ENV ENVIRONMENT=testing \
+    PYTEST_CURRENT_TEST=true
 
-# Stage 5: Worker stage (for background tasks)
-FROM production as worker
+# Create test directories
+RUN mkdir -p /app/tests /app/.pytest_cache
 
-# Install additional dependencies for background tasks
-RUN /app/.venv/bin/pip install --no-cache-dir \
-    celery \
-    redis
+# Copy test files
+COPY tests/ /app/tests/
 
-# Override command for worker
-CMD ["/app/.venv/bin/celery", "-A", "app.workers.celery_app", "worker", "--loglevel=info"]
-
-# Stage 6: Scheduler stage (for scheduled tasks)
-FROM worker as scheduler
-
-# Override command for scheduler
-CMD ["/app/.venv/bin/celery", "-A", "app.workers.celery_app", "beat", "--loglevel=info"]
+# Default command for testing
+CMD ["python", "-m", "pytest", "tests/", "-v", "--cov=app", "--cov-report=xml"]
