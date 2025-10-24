@@ -15,7 +15,7 @@ from contextlib import contextmanager
 import asyncio
 from functools import wraps
 
-from app.core.environment_config import get_settings
+from app.core.centralized_config import get_config
 
 
 class LogLevel(Enum):

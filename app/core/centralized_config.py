@@ -10,7 +10,7 @@ from enum import Enum
 from pathlib import Path
 import yaml
 import json
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -59,13 +59,15 @@ class TradingThresholds(BaseModel):
     max_latency_ms: int = Field(default=1000, ge=0)
     max_execution_time_ms: int = Field(default=500, ge=0)
     
-    @validator('max_position_size')
+    @field_validator('max_position_size')
+    @classmethod
     def validate_max_position_size(cls, v):
         if v <= 0 or v > 1:
             raise ValueError("max_position_size must be between 0 and 1")
         return v
     
-    @validator('stop_loss_pct')
+    @field_validator('stop_loss_pct')
+    @classmethod
     def validate_stop_loss(cls, v):
         if v <= 0 or v > 0.5:
             raise ValueError("stop_loss_pct must be between 0 and 0.5")
@@ -154,7 +156,8 @@ class APIConfig(BaseModel):
     cors_origins: List[str] = Field(default=["*"])
     cors_methods: List[str] = Field(default=["GET", "POST", "PUT", "DELETE"])
     
-    @validator('secret_key')
+    @field_validator('secret_key')
+    @classmethod
     def validate_secret_key(cls, v):
         if len(v) < 32:
             raise ValueError("secret_key must be at least 32 characters")
@@ -218,10 +221,12 @@ class CentralizedConfig(BaseSettings):
     # Strategies configuration
     strategies: Dict[str, StrategyConfig] = Field(default_factory=dict)
     
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
+    model_config = {
+        "env_file": "config/centralized.env",
+        "env_file_encoding": "utf-8",
+        "case_sensitive": False,
+        "extra": "ignore"
+    }
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

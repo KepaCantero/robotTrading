@@ -6,12 +6,12 @@ TASK-5: Configuración de variables de entorno
 import os
 from typing import Optional, Dict, Any, List
 from enum import Enum
-from pydantic import Field, validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 from pathlib import Path
 import logging
 
-from app.exceptions import ConfigurationError, raise_configuration_error
+from app.core.exceptions import ConfigurationError, raise_configuration_error
 
 
 class Environment(str, Enum):
@@ -40,7 +40,7 @@ class DatabaseConfig(BaseSettings):
     db_name: str = Field(default="algotrading", env="DB_NAME")
     db_user: str = Field(default="postgres", env="DB_USER")
     db_password: str = Field(default="", env="DB_PASSWORD")
-    db_url: Optional[str] = Field(default=None, env="DATABASE_URL")
+    db_url: Optional[str] = Field(default=None)
     
     # Connection pool
     db_pool_size: int = Field(default=10, env="DB_POOL_SIZE")
@@ -49,17 +49,19 @@ class DatabaseConfig(BaseSettings):
     
     # SSL
     db_ssl_mode: str = Field(default="prefer", env="DB_SSL_MODE")
-    db_ssl_cert: Optional[str] = Field(default=None, env="DB_SSL_CERT")
-    db_ssl_key: Optional[str] = Field(default=None, env="DB_SSL_KEY")
-    db_ssl_root_cert: Optional[str] = Field(default=None, env="DB_SSL_ROOT_CERT")
+    db_ssl_cert: Optional[str] = Field(default=None)
+    db_ssl_key: Optional[str] = Field(default=None)
+    db_ssl_root_cert: Optional[str] = Field(default=None)
     
-    @validator('db_port')
+    @field_validator('db_port')
+    @classmethod
     def validate_port(cls, v):
         if not 1 <= v <= 65535:
             raise ValueError("Port must be between 1 and 65535")
         return v
     
-    @validator('db_pool_size')
+    @field_validator('db_pool_size')
+    @classmethod
     def validate_pool_size(cls, v):
         if v < 1:
             raise ValueError("Pool size must be at least 1")
@@ -83,9 +85,9 @@ class RedisConfig(BaseSettings):
     
     redis_host: str = Field(default="localhost", env="REDIS_HOST")
     redis_port: int = Field(default=6379, env="REDIS_PORT")
-    redis_password: Optional[str] = Field(default=None, env="REDIS_PASSWORD")
+    redis_password: Optional[str] = Field(default=None)
     redis_db: int = Field(default=0, env="REDIS_DB")
-    redis_url: Optional[str] = Field(default=None, env="REDIS_URL")
+    redis_url: Optional[str] = Field(default=None)
     
     # Connection settings
     redis_max_connections: int = Field(default=10, env="REDIS_MAX_CONNECTIONS")
@@ -96,7 +98,8 @@ class RedisConfig(BaseSettings):
     redis_ssl: bool = Field(default=False, env="REDIS_SSL")
     redis_ssl_cert_reqs: str = Field(default="required", env="REDIS_SSL_CERT_REQS")
     
-    @validator('redis_port')
+    @field_validator('redis_port')
+    @classmethod
     def validate_port(cls, v):
         if not 1 <= v <= 65535:
             raise ValueError("Port must be between 1 and 65535")
@@ -128,21 +131,23 @@ class APIConfig(BaseSettings):
     refresh_token_expire_days: int = Field(default=7, env="REFRESH_TOKEN_EXPIRE_DAYS")
     
     # CORS
-    cors_origins: List[str] = Field(default=["*"], env="CORS_ORIGINS")
-    cors_methods: List[str] = Field(default=["*"], env="CORS_METHODS")
-    cors_headers: List[str] = Field(default=["*"], env="CORS_HEADERS")
+    cors_origins: List[str] = Field(default=["*"])
+    cors_methods: List[str] = Field(default=["*"])
+    cors_headers: List[str] = Field(default=["*"])
     
     # Rate limiting
     rate_limit_requests: int = Field(default=100, env="RATE_LIMIT_REQUESTS")
     rate_limit_window: int = Field(default=60, env="RATE_LIMIT_WINDOW")
     
-    @validator('api_port')
+    @field_validator('api_port')
+    @classmethod
     def validate_port(cls, v):
         if not 1 <= v <= 65535:
             raise ValueError("Port must be between 1 and 65535")
         return v
     
-    @validator('secret_key')
+    @field_validator('secret_key')
+    @classmethod
     def validate_secret_key(cls, v):
         if len(v) < 32:
             raise ValueError("Secret key must be at least 32 characters")
@@ -165,28 +170,31 @@ class TradingConfig(BaseSettings):
     
     # Market data
     market_data_provider: str = Field(default="yahoo", env="MARKET_DATA_PROVIDER")
-    market_data_api_key: Optional[str] = Field(default=None, env="MARKET_DATA_API_KEY")
+    market_data_api_key: Optional[str] = Field(default=None)
     market_data_rate_limit: int = Field(default=1000, env="MARKET_DATA_RATE_LIMIT")
     
     # Broker settings
     broker_name: str = Field(default="paper", env="BROKER_NAME")
-    broker_api_key: Optional[str] = Field(default=None, env="BROKER_API_KEY")
-    broker_secret_key: Optional[str] = Field(default=None, env="BROKER_SECRET_KEY")
+    broker_api_key: Optional[str] = Field(default=None)
+    broker_secret_key: Optional[str] = Field(default=None)
     broker_sandbox: bool = Field(default=True, env="BROKER_SANDBOX")
     
-    @validator('max_position_size')
+    @field_validator('max_position_size')
+    @classmethod
     def validate_position_size(cls, v):
         if not 0 < v <= 1:
             raise ValueError("Position size must be between 0 and 1")
         return v
     
-    @validator('max_daily_loss')
+    @field_validator('max_daily_loss')
+    @classmethod
     def validate_daily_loss(cls, v):
         if not 0 < v <= 1:
             raise ValueError("Daily loss limit must be between 0 and 1")
         return v
     
-    @validator('stop_loss_percentage')
+    @field_validator('stop_loss_percentage')
+    @classmethod
     def validate_stop_loss(cls, v):
         if not 0 < v <= 1:
             raise ValueError("Stop loss must be between 0 and 1")
@@ -199,7 +207,7 @@ class LoggingConfig(BaseSettings):
     # Log levels
     log_level: LogLevel = Field(default=LogLevel.INFO, env="LOG_LEVEL")
     log_format: str = Field(
-        default="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        default="%(asctime, env="LOG_FORMAT")s - %(name)s - %(levelname)s - %(message)s",
         env="LOG_FORMAT"
     )
     
@@ -219,7 +227,8 @@ class LoggingConfig(BaseSettings):
     elk_port: int = Field(default=9200, env="ELK_PORT")
     elk_index: str = Field(default="algotrading", env="ELK_INDEX")
     
-    @validator('log_file_max_size')
+    @field_validator('log_file_max_size')
+    @classmethod
     def validate_file_size(cls, v):
         if v < 1024:  # At least 1KB
             raise ValueError("Log file max size must be at least 1KB")
@@ -240,10 +249,11 @@ class MonitoringConfig(BaseSettings):
     
     # Alerts
     alerts_enabled: bool = Field(default=False, env="ALERTS_ENABLED")
-    alerts_webhook_url: Optional[str] = Field(default=None, env="ALERTS_WEBHOOK_URL")
-    alerts_email: Optional[str] = Field(default=None, env="ALERTS_EMAIL")
+    alerts_webhook_url: Optional[str] = Field(default=None)
+    alerts_email: Optional[str] = Field(default=None)
     
-    @validator('prometheus_port')
+    @field_validator('prometheus_port')
+    @classmethod
     def validate_port(cls, v):
         if not 1 <= v <= 65535:
             raise ValueError("Port must be between 1 and 65535")
@@ -260,17 +270,18 @@ class CentralizedConfig(BaseSettings):
     app_version: str = Field(default="1.0.0", env="APP_VERSION")
     
     # Sub-configurations
-    database: DatabaseConfig = Field(default_factory=DatabaseConfig)
-    redis: RedisConfig = Field(default_factory=RedisConfig)
-    api: APIConfig = Field(default_factory=APIConfig)
-    trading: TradingConfig = Field(default_factory=TradingConfig)
-    logging: LoggingConfig = Field(default_factory=LoggingConfig)
-    monitoring: MonitoringConfig = Field(default_factory=MonitoringConfig)
+    database: DatabaseConfig = Field(default_factory=DatabaseConfig, env="DATABASE")
+    redis: RedisConfig = Field(default_factory=RedisConfig, env="REDIS")
+    api: APIConfig = Field(default_factory=APIConfig, env="API")
+    trading: TradingConfig = Field(default_factory=TradingConfig, env="TRADING")
+    logging: LoggingConfig = Field(default_factory=LoggingConfig, env="LOGGING")
+    monitoring: MonitoringConfig = Field(default_factory=MonitoringConfig, env="MONITORING")
     
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
+    model_config = {
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+        "case_sensitive": False
+    }
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -378,6 +389,11 @@ def load_config_from_file(file_path: str) -> CentralizedConfig:
     # Set environment variable to load from specific file
     os.environ["ENV_FILE"] = file_path
     return CentralizedConfig()
+
+
+def get_settings() -> CentralizedConfig:
+    """Get the global settings instance."""
+    return get_config()
 
 
 def create_config_for_environment(env: Environment) -> CentralizedConfig:

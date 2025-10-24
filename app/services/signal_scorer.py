@@ -18,7 +18,7 @@ from app.models.signal import (
 )
 from app.services.portfolio_service import PortfolioService
 from app.models.portfolio import Portfolio, Position
-from app.core.environment_config import get_settings
+from app.core.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class SignalScorerService:
         self.max_history_size = 10000
         
         # Get trading thresholds from centralized config
-        trading_config = get_trading_thresholds()
+        trading_config = get_config().trading
         
         # Signal processing configuration
         self.min_confidence_threshold = trading_config.min_confidence
@@ -315,7 +315,7 @@ class SignalScorerService:
         except Exception as e:
             logger.error(f"Error calculating priority with portfolio context: {e}")
             # Return a reasonable default priority when portfolio service fails
-            trading_config = get_trading_thresholds()
+            trading_config = get_config().trading
             return trading_config.min_confidence
     
     def _calculate_diversification_score(self, portfolio: Portfolio, symbol: str) -> float:
