@@ -207,7 +207,7 @@ class LoggingConfig(BaseSettings):
     # Log levels
     log_level: LogLevel = Field(default=LogLevel.INFO, env="LOG_LEVEL")
     log_format: str = Field(
-        default="%(asctime, env="LOG_FORMAT")s - %(name)s - %(levelname)s - %(message)s",
+        default="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         env="LOG_FORMAT"
     )
     
