@@ -1,0 +1,23 @@
+# Pairs Trading Strategy Configuration
+pairs_trading:
+  name: "pairs_trading"
+  enabled: true
+  weight: 0.6
+  
+  # Strategy-specific parameters
+  parameters:
+    cointegration_threshold: 0.05
+    min_correlation: 0.7
+    max_pair_exposure: 0.2
+    lookback_period: 30
+    hedge_ratio_threshold: 0.1
+    
+  # Risk parameters (override global if needed)
+  max_position_size: 0.15
+  stop_loss_pct: 0.04
+  take_profit_pct: 0.08
+  
+  # Performance thresholds
+  min_sharpe_ratio: 1.5
+  max_drawdown: 0.10
+  min_win_rate: 0.50
