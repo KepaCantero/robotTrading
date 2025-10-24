@@ -18,7 +18,7 @@ from app.models.signal import (
 )
 from app.services.portfolio_service import PortfolioService
 from app.models.portfolio import Portfolio, Position
-from app.core.centralized_config import get_trading_thresholds
+from app.core.environment_config import get_settings
 
 logger = logging.getLogger(__name__)
 

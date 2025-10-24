@@ -13,6 +13,7 @@ from .base import BaseStrategy
 from app.models.market_data import Quote
 from app.models.signal import Signal
 from app.models.portfolio import Portfolio
+from app.core.centralized_config import get_strategy_config, get_trading_threshold
 
 logger = logging.getLogger(__name__)
 
@@ -29,13 +30,26 @@ class MomentumStrategy(BaseStrategy):
         """
         super().__init__(config)
         
-        # Parámetros de la estrategia
-        self.rsi_threshold = Decimal(str(config.get("rsi_threshold", 40)))
-        self.momentum_threshold = Decimal(str(config.get("momentum_threshold", 0.02)))
-        self.stop_loss = Decimal(str(config.get("stop_loss", 0.05)))
-        self.take_profit = Decimal(str(config.get("take_profit", 0.10)))
-        self.max_position_size = Decimal(str(config.get("max_position_size", 0.1)))
-        self.volume_threshold = Decimal(str(config.get("volume_threshold", 1.5)))
+        # Load strategy-specific configuration
+        strategy_config = get_strategy_config("momentum")
+        if strategy_config:
+            params = strategy_config.parameters
+            self.rsi_threshold = Decimal(str(params.get("rsi_threshold", 40)))
+            self.momentum_threshold = Decimal(str(params.get("momentum_threshold", 0.02)))
+            self.volume_threshold = Decimal(str(params.get("volume_threshold", 1.5)))
+            
+            # Use strategy-specific risk parameters or fallback to global
+            self.stop_loss = Decimal(str(strategy_config.stop_loss_pct or get_trading_threshold("stop_loss_pct")))
+            self.take_profit = Decimal(str(strategy_config.take_profit_pct or get_trading_threshold("take_profit_pct")))
+            self.max_position_size = Decimal(str(strategy_config.max_position_size or get_trading_threshold("max_position_size")))
+        else:
+            # Fallback to config or defaults
+            self.rsi_threshold = Decimal(str(config.get("rsi_threshold", 40)))
+            self.momentum_threshold = Decimal(str(config.get("momentum_threshold", 0.02)))
+            self.stop_loss = Decimal(str(config.get("stop_loss", get_trading_threshold("stop_loss_pct"))))
+            self.take_profit = Decimal(str(config.get("take_profit", get_trading_threshold("take_profit_pct"))))
+            self.max_position_size = Decimal(str(config.get("max_position_size", get_trading_threshold("max_position_size"))))
+            self.volume_threshold = Decimal(str(config.get("volume_threshold", 1.5)))
         
         # Parámetros técnicos
         self.rsi_period = config.get("rsi_period", 14)

@@ -1,523 +1,557 @@
 """
-Tests for centralized configuration system.
-
-This module contains comprehensive tests for the centralized configuration
-system that eliminates hardcoded values throughout the application.
+Tests for Centralized Configuration System
+TASK-10: Centralización de Configuración
 """
 
 import pytest
-import json
-import os
 import tempfile
+import os
 from pathlib import Path
 from unittest.mock import patch, mock_open
+import yaml
 
 from app.core.centralized_config import (
-    ConfigEnvironment, TradingThresholds, RiskManagementThresholds,
-    CircuitBreakerThresholds, DatabaseConfig, RedisConfig, APIConfig,
-    MonitoringConfig, CentralizedConfig, ConfigManager,
-    get_config, get_trading_thresholds, get_risk_thresholds,
-    get_circuit_breaker_thresholds, get_database_config, get_redis_config,
-    get_api_config, get_monitoring_config, load_config, save_config
+    CentralizedConfig,
+    TradingThresholds,
+    StrategyConfig,
+    DatabaseConfig,
+    RedisConfig,
+    APIConfig,
+    LoggingConfig,
+    MonitoringConfig,
+    Environment,
+    get_config,
+    reload_config,
+    set_config,
+    get_trading_threshold,
+    get_strategy_config,
+    update_strategy_config,
+    save_strategy_config,
+    validate_configuration,
+    get_config_summary
 )
+from app.exceptions import ConfigurationError
 
 
-class TestConfigModels:
-    """Test configuration models validation."""
+class TestTradingThresholds:
+    """Test TradingThresholds configuration."""
     
-    def test_trading_thresholds_validation(self):
-        """Test trading thresholds validation."""
-        # Valid configuration
-        config = TradingThresholds(
-            min_strength=60.0,
-            min_confidence=70.0,
-            rsi_oversold=30.0,
-            rsi_overbought=70.0,
+    def test_default_values(self):
+        """Test default threshold values."""
+        thresholds = TradingThresholds()
+        
+        assert thresholds.min_signal_strength == 60.0
+        assert thresholds.min_signal_confidence == 70.0
+        assert thresholds.min_liquidity_score == 50.0
+        assert thresholds.rsi_oversold == 30.0
+        assert thresholds.rsi_overbought == 70.0
+        assert thresholds.max_position_size == 0.1
+        assert thresholds.stop_loss_pct == 0.05
+        assert thresholds.take_profit_pct == 0.15
+        assert thresholds.daily_loss_limit == 0.05
+        assert thresholds.max_drawdown_limit == 0.15
+        assert thresholds.max_total_exposure == 0.8
+        assert thresholds.max_sector_exposure == 0.3
+        assert thresholds.max_correlation == 0.7
+        assert thresholds.circuit_breaker_daily_loss == 0.03
+        assert thresholds.circuit_breaker_drawdown == 0.1
+        assert thresholds.circuit_breaker_volatility == 0.05
+        assert thresholds.circuit_breaker_error_rate == 0.05
+        assert thresholds.max_latency_ms == 1000
+        assert thresholds.max_execution_time_ms == 500
+    
+    def test_validation_max_position_size(self):
+        """Test max_position_size validation."""
+        # Valid values
+        TradingThresholds(max_position_size=0.1)
+        TradingThresholds(max_position_size=0.5)
+        TradingThresholds(max_position_size=1.0)
+        
+        # Invalid values
+        with pytest.raises(ValueError, match="max_position_size must be between 0 and 1"):
+            TradingThresholds(max_position_size=1.1)
+        
+        with pytest.raises(ValueError, match="max_position_size must be between 0 and 1"):
+            TradingThresholds(max_position_size=-0.1)
+    
+    def test_validation_stop_loss(self):
+        """Test stop_loss_pct validation."""
+        # Valid values
+        TradingThresholds(stop_loss_pct=0.01)
+        TradingThresholds(stop_loss_pct=0.05)
+        TradingThresholds(stop_loss_pct=0.5)
+        
+        # Invalid values
+        with pytest.raises(ValueError, match="stop_loss_pct must be between 0 and 0.5"):
+            TradingThresholds(stop_loss_pct=0.6)
+        
+        with pytest.raises(ValueError, match="stop_loss_pct must be between 0 and 0.5"):
+            TradingThresholds(stop_loss_pct=-0.1)
+
+
+class TestStrategyConfig:
+    """Test StrategyConfig configuration."""
+    
+    def test_default_values(self):
+        """Test default strategy config values."""
+        config = StrategyConfig(name="test_strategy")
+        
+        assert config.name == "test_strategy"
+        assert config.enabled is True
+        assert config.weight == 1.0
+        assert config.parameters == {}
+        assert config.max_position_size is None
+        assert config.stop_loss_pct is None
+        assert config.take_profit_pct is None
+        assert config.min_sharpe_ratio == 1.0
+        assert config.max_drawdown == 0.15
+        assert config.min_win_rate == 0.4
+    
+    def test_custom_values(self):
+        """Test custom strategy config values."""
+        config = StrategyConfig(
+            name="momentum",
+            enabled=False,
+            weight=1.5,
+            parameters={"rsi_threshold": 40, "momentum_threshold": 0.02},
             max_position_size=0.1,
             stop_loss_pct=0.05,
-            take_profit_pct=0.15
+            take_profit_pct=0.10,
+            min_sharpe_ratio=1.2,
+            max_drawdown=0.12,
+            min_win_rate=0.45
         )
-        assert config.min_strength == 60.0
-        assert config.rsi_oversold == 30.0
-        assert config.rsi_overbought == 70.0
+        
+        assert config.name == "momentum"
+        assert config.enabled is False
+        assert config.weight == 1.5
+        assert config.parameters["rsi_threshold"] == 40
+        assert config.parameters["momentum_threshold"] == 0.02
+        assert config.max_position_size == 0.1
+        assert config.stop_loss_pct == 0.05
+        assert config.take_profit_pct == 0.10
+        assert config.min_sharpe_ratio == 1.2
+        assert config.max_drawdown == 0.12
+        assert config.min_win_rate == 0.45
+
+
+class TestDatabaseConfig:
+    """Test DatabaseConfig configuration."""
     
-    def test_trading_thresholds_invalid_rsi_oversold(self):
-        """Test invalid RSI oversold threshold."""
-        with pytest.raises(ValueError, match="RSI oversold threshold must be below 50"):
-            TradingThresholds(
-                min_strength=60.0,
-                min_confidence=70.0,
-                rsi_oversold=60.0,  # Invalid: above 50
-                rsi_overbought=70.0,
-                max_position_size=0.1,
-                stop_loss_pct=0.05,
-                take_profit_pct=0.15
-            )
-    
-    def test_trading_thresholds_invalid_rsi_overbought(self):
-        """Test invalid RSI overbought threshold."""
-        with pytest.raises(ValueError, match="RSI overbought threshold must be above 50"):
-            TradingThresholds(
-                min_strength=60.0,
-                min_confidence=70.0,
-                rsi_oversold=30.0,
-                rsi_overbought=40.0,  # Invalid: below 50
-                max_position_size=0.1,
-                stop_loss_pct=0.05,
-                take_profit_pct=0.15
-            )
-    
-    def test_risk_management_thresholds_validation(self):
-        """Test risk management thresholds validation."""
-        config = RiskManagementThresholds(
-            daily_loss_limit=0.05,
-            max_drawdown_limit=0.15,
-            single_trade_risk_pct=0.02,
-            correlation_limit=0.7,
-            sector_exposure_limit=0.3
-        )
-        assert config.daily_loss_limit == 0.05
-        assert config.max_drawdown_limit == 0.15
-    
-    def test_risk_management_thresholds_invalid_daily_loss(self):
-        """Test invalid daily loss limit."""
-        with pytest.raises(ValueError, match="Daily loss limit should not exceed 10%"):
-            RiskManagementThresholds(
-                daily_loss_limit=0.15,  # Invalid: exceeds 10%
-                max_drawdown_limit=0.15,
-                single_trade_risk_pct=0.02,
-                correlation_limit=0.7,
-                sector_exposure_limit=0.3
-            )
-    
-    def test_circuit_breaker_thresholds_validation(self):
-        """Test circuit breaker thresholds validation."""
-        config = CircuitBreakerThresholds(
-            daily_loss=0.03,
-            drawdown=0.1,
-            volatility=0.05,
-            error_rate=0.05,
-            latency_ms=1000
-        )
-        assert config.daily_loss == 0.03
-        assert config.latency_ms == 1000
-    
-    def test_database_config_validation(self):
-        """Test database configuration validation."""
-        config = DatabaseConfig(
-            host="localhost",
-            port=5432,
-            database="algotrading",
-            username="postgres",
-            password="",
-            pool_size=10,
-            max_overflow=20
-        )
+    def test_default_values(self):
+        """Test default database config values."""
+        config = DatabaseConfig()
+        
         assert config.host == "localhost"
         assert config.port == 5432
+        assert config.name == "algotrading"
+        assert config.user == "postgres"
+        assert config.password == "password"
+        assert config.pool_size == 10
+        assert config.max_overflow == 20
+        assert config.pool_timeout == 30
+        assert config.ssl_mode == "prefer"
     
-    def test_redis_config_validation(self):
-        """Test Redis configuration validation."""
-        config = RedisConfig(
-            host="localhost",
-            port=6379,
-            password=None,
-            db=0,
-            max_connections=20
+    def test_connection_string(self):
+        """Test database connection string generation."""
+        config = DatabaseConfig(
+            host="db.example.com",
+            port=5433,
+            name="trading_db",
+            user="trader",
+            password="secret123"
         )
+        
+        expected = "postgresql://trader:secret123@db.example.com:5433/trading_db"
+        assert config.connection_string == expected
+
+
+class TestRedisConfig:
+    """Test RedisConfig configuration."""
+    
+    def test_default_values(self):
+        """Test default Redis config values."""
+        config = RedisConfig()
+        
         assert config.host == "localhost"
         assert config.port == 6379
+        assert config.password is None
+        assert config.db == 0
+        assert config.max_connections == 20
+        assert config.socket_timeout == 5
     
-    def test_api_config_validation(self):
-        """Test API configuration validation."""
-        config = APIConfig(
-            host="0.0.0.0",
-            port=8000,
-            workers=1,
-            reload=False,
-            log_level="INFO",
-            cors_origins=["*"]
+    def test_connection_string_without_password(self):
+        """Test Redis connection string without password."""
+        config = RedisConfig(host="redis.example.com", port=6380, db=1)
+        
+        expected = "redis://redis.example.com:6380/1"
+        assert config.connection_string == expected
+    
+    def test_connection_string_with_password(self):
+        """Test Redis connection string with password."""
+        config = RedisConfig(
+            host="redis.example.com",
+            port=6380,
+            password="secret",
+            db=1
         )
+        
+        expected = "redis://:secret@redis.example.com:6380/1"
+        assert config.connection_string == expected
+
+
+class TestAPIConfig:
+    """Test APIConfig configuration."""
+    
+    def test_default_values(self):
+        """Test default API config values."""
+        config = APIConfig()
+        
         assert config.host == "0.0.0.0"
         assert config.port == 8000
+        assert config.workers == 1
+        assert config.secret_key == "your-secret-key-change-in-production"
+        assert config.access_token_expire_minutes == 30
+        assert config.rate_limit_per_minute == 100
+        assert config.cors_origins == ["*"]
+        assert config.cors_methods == ["GET", "POST", "PUT", "DELETE"]
     
-    def test_monitoring_config_validation(self):
-        """Test monitoring configuration validation."""
-        config = MonitoringConfig(
-            enable_metrics=True,
-            metrics_port=9090,
-            health_check_interval=30,
-            alert_email=None,
-            slack_webhook=None
-        )
-        assert config.enable_metrics is True
-        assert config.metrics_port == 9090
-
-
-class TestConfigManager:
-    """Test configuration manager functionality."""
-    
-    def test_config_manager_initialization(self):
-        """Test configuration manager initialization."""
-        manager = ConfigManager()
-        assert manager.config_path is not None
-        assert manager._config is None
-    
-    def test_config_manager_with_custom_path(self):
-        """Test configuration manager with custom path."""
-        custom_path = "/custom/path/config.json"
-        manager = ConfigManager(custom_path)
-        assert manager.config_path == custom_path
-    
-    def test_load_config_default(self):
-        """Test loading default configuration."""
-        manager = ConfigManager()
-        config = manager.load_config()
+    def test_secret_key_validation(self):
+        """Test secret key validation."""
+        # Valid secret key
+        APIConfig(secret_key="a" * 32)
         
-        assert isinstance(config, CentralizedConfig)
-        assert config.environment == ConfigEnvironment.DEVELOPMENT
-        assert isinstance(config.trading, TradingThresholds)
-        assert isinstance(config.risk_management, RiskManagementThresholds)
-        assert isinstance(config.circuit_breakers, CircuitBreakerThresholds)
+        # Invalid secret key
+        with pytest.raises(ValueError, match="secret_key must be at least 32 characters"):
+            APIConfig(secret_key="short")
+
+
+class TestCentralizedConfig:
+    """Test CentralizedConfig main configuration."""
     
-    def test_load_config_from_file(self):
-        """Test loading configuration from file."""
-        test_config = {
-            "environment": "production",
-            "trading": {
-                "min_strength": 65.0,
-                "min_confidence": 75.0,
-                "rsi_oversold": 25.0,
-                "rsi_overbought": 75.0,
-                "max_position_size": 0.08,
-                "stop_loss_pct": 0.03,
-                "take_profit_pct": 0.12
-            },
-            "risk_management": {
-                "daily_loss_limit": 0.03,
-                "max_drawdown_limit": 0.10,
-                "single_trade_risk_pct": 0.015,
-                "correlation_limit": 0.6,
-                "sector_exposure_limit": 0.25
+    def test_default_values(self):
+        """Test default centralized config values."""
+        config = CentralizedConfig()
+        
+        assert config.environment == Environment.DEVELOPMENT
+        assert config.debug is False
+        assert isinstance(config.trading, TradingThresholds)
+        assert isinstance(config.database, DatabaseConfig)
+        assert isinstance(config.redis, RedisConfig)
+        assert isinstance(config.api, APIConfig)
+        assert isinstance(config.logging, LoggingConfig)
+        assert isinstance(config.monitoring, MonitoringConfig)
+        assert isinstance(config.strategies, dict)
+    
+    def test_environment_enum(self):
+        """Test environment enum values."""
+        config = CentralizedConfig(environment=Environment.PRODUCTION)
+        assert config.environment == Environment.PRODUCTION
+        
+        config = CentralizedConfig(environment=Environment.STAGING)
+        assert config.environment == Environment.STAGING
+        
+        config = CentralizedConfig(environment=Environment.TESTING)
+        assert config.environment == Environment.TESTING
+    
+    @patch('app.core.centralized_config.Path')
+    def test_load_strategy_configs_success(self, mock_path):
+        """Test successful loading of strategy configurations."""
+        # Mock strategy config file
+        mock_config_data = {
+            "momentum": {
+                "enabled": True,
+                "weight": 1.0,
+                "parameters": {
+                    "rsi_threshold": 40,
+                    "momentum_threshold": 0.02
+                }
             }
         }
         
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            json.dump(test_config, f)
-            temp_path = f.name
+        mock_file = mock_open(read_data=yaml.dump(mock_config_data))
+        mock_path.return_value.exists.return_value = True
+        mock_path.return_value.glob.return_value = [Path("momentum.yaml")]
         
-        try:
-            manager = ConfigManager(temp_path)
-            config = manager.load_config()
+        with patch("builtins.open", mock_file):
+            config = CentralizedConfig()
             
-            assert config.environment == ConfigEnvironment.PRODUCTION
-            assert config.trading.min_strength == 65.0
-            assert config.trading.min_confidence == 75.0
-            assert config.risk_management.daily_loss_limit == 0.03
-        finally:
-            os.unlink(temp_path)
+            assert "momentum" in config.strategies
+            assert config.strategies["momentum"].name == "momentum"
+            assert config.strategies["momentum"].enabled is True
+            assert config.strategies["momentum"].weight == 1.0
+            assert config.strategies["momentum"].parameters["rsi_threshold"] == 40
     
-    def test_save_config(self):
-        """Test saving configuration to file."""
+    @patch('app.core.centralized_config.Path')
+    def test_load_strategy_configs_file_not_found(self, mock_path):
+        """Test loading strategy configs when directory doesn't exist."""
+        mock_path.return_value.exists.return_value = False
+        
+        config = CentralizedConfig()
+        assert config.strategies == {}
+    
+    def test_get_strategy_config(self):
+        """Test getting strategy configuration."""
         config = CentralizedConfig()
         
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            temp_path = f.name
+        # Add a test strategy
+        test_strategy = StrategyConfig(name="test", enabled=True)
+        config.strategies["test"] = test_strategy
         
-        try:
-            manager = ConfigManager(temp_path)
-            manager.save_config(config)
+        # Get existing strategy
+        result = config.get_strategy_config("test")
+        assert result == test_strategy
+        
+        # Get non-existing strategy
+        result = config.get_strategy_config("nonexistent")
+        assert result is None
+    
+    def test_get_trading_threshold(self):
+        """Test getting trading threshold values."""
+        config = CentralizedConfig()
+        
+        # Valid threshold
+        result = config.get_trading_threshold("max_position_size")
+        assert result == 0.1
+        
+        # Invalid threshold
+        with pytest.raises(ConfigurationError):
+            config.get_trading_threshold("invalid_threshold")
+    
+    def test_update_strategy_config(self):
+        """Test updating strategy configuration."""
+        config = CentralizedConfig()
+        
+        # Update existing strategy
+        config.update_strategy_config("momentum", {"enabled": False, "weight": 1.5})
+        assert "momentum" in config.strategies
+        assert config.strategies["momentum"].enabled is False
+        assert config.strategies["momentum"].weight == 1.5
+        
+        # Update non-existing strategy
+        config.update_strategy_config("new_strategy", {"enabled": True})
+        assert "new_strategy" in config.strategies
+        assert config.strategies["new_strategy"].enabled is True
+    
+    @patch('app.core.centralized_config.Path')
+    def test_save_strategy_config(self, mock_path):
+        """Test saving strategy configuration."""
+        config = CentralizedConfig()
+        
+        # Add a test strategy
+        test_strategy = StrategyConfig(name="test", enabled=True, weight=1.0)
+        config.strategies["test"] = test_strategy
+        
+        mock_file = mock_open()
+        mock_path.return_value.mkdir.return_value = None
+        mock_path.return_value.__truediv__.return_value = Path("test.yaml")
+        
+        with patch("builtins.open", mock_file):
+            config.save_strategy_config("test")
             
-            # Verify file was created and contains valid JSON
-            assert os.path.exists(temp_path)
-            with open(temp_path, 'r') as f:
-                saved_data = json.load(f)
-            
-            assert saved_data["environment"] == "development"
-            assert "trading" in saved_data
-            assert "risk_management" in saved_data
-        finally:
-            os.unlink(temp_path)
+            # Verify file was opened for writing
+            mock_file.assert_called_once()
     
-    def test_update_config(self):
-        """Test updating configuration."""
-        manager = ConfigManager()
-        config = manager.load_config()
+    def test_validate_configuration_success(self):
+        """Test successful configuration validation."""
+        config = CentralizedConfig()
         
-        # Update trading thresholds
-        updates = {
-            "trading": TradingThresholds(
-                min_strength=65.0,
-                min_confidence=75.0,
-                rsi_oversold=25.0,
-                rsi_overbought=75.0,
-                max_position_size=0.08,
-                stop_loss_pct=0.03,
-                take_profit_pct=0.12
-            )
-        }
-        
-        updated_config = manager.update_config(updates)
-        assert updated_config.trading.min_strength == 65.0
-        assert updated_config.trading.min_confidence == 75.0
+        # Should not raise any exception
+        result = config.validate_configuration()
+        assert result is True
     
-    def test_validate_config(self):
-        """Test configuration validation."""
-        manager = ConfigManager()
-        config = manager.load_config()
+    def test_get_config_summary(self):
+        """Test getting configuration summary."""
+        config = CentralizedConfig()
         
-        # Valid configuration should pass
-        assert manager.validate_config(config) is True
+        summary = config.get_config_summary()
         
-        # Invalid configuration should fail
-        invalid_config = CentralizedConfig()
-        invalid_config.trading.rsi_oversold = 60.0  # Invalid value
-        assert manager.validate_config(invalid_config) is False
-    
-    def test_get_specific_configs(self):
-        """Test getting specific configuration sections."""
-        manager = ConfigManager()
-        config = manager.load_config()
+        assert "environment" in summary
+        assert "debug" in summary
+        assert "trading_thresholds" in summary
+        assert "database" in summary
+        assert "redis" in summary
+        assert "api" in summary
+        assert "strategies" in summary
         
-        trading = manager.get_trading_thresholds()
-        assert isinstance(trading, TradingThresholds)
-        
-        risk = manager.get_risk_thresholds()
-        assert isinstance(risk, RiskManagementThresholds)
-        
-        circuit_breakers = manager.get_circuit_breaker_thresholds()
-        assert isinstance(circuit_breakers, CircuitBreakerThresholds)
-        
-        database = manager.get_database_config()
-        assert isinstance(database, DatabaseConfig)
-        
-        redis = manager.get_redis_config()
-        assert isinstance(redis, RedisConfig)
-        
-        api = manager.get_api_config()
-        assert isinstance(api, APIConfig)
-        
-        monitoring = manager.get_monitoring_config()
-        assert isinstance(monitoring, MonitoringConfig)
+        assert summary["environment"] == "development"
+        assert summary["debug"] is False
 
 
-class TestGlobalFunctions:
+class TestGlobalConfigFunctions:
     """Test global configuration functions."""
     
-    def test_get_config(self):
-        """Test getting global configuration."""
-        config = get_config()
-        assert isinstance(config, CentralizedConfig)
+    def test_get_config_singleton(self):
+        """Test get_config returns singleton instance."""
+        config1 = get_config()
+        config2 = get_config()
+        
+        assert config1 is config2
     
-    def test_get_trading_thresholds(self):
-        """Test getting trading thresholds."""
-        thresholds = get_trading_thresholds()
-        assert isinstance(thresholds, TradingThresholds)
-        assert thresholds.min_strength == 60.0
+    def test_reload_config(self):
+        """Test reloading configuration."""
+        config1 = get_config()
+        config2 = reload_config()
+        
+        assert config1 is not config2
     
-    def test_get_risk_thresholds(self):
-        """Test getting risk management thresholds."""
-        thresholds = get_risk_thresholds()
-        assert isinstance(thresholds, RiskManagementThresholds)
-        assert thresholds.daily_loss_limit == 0.05
+    def test_set_config(self):
+        """Test setting global configuration."""
+        new_config = CentralizedConfig(environment=Environment.PRODUCTION)
+        set_config(new_config)
+        
+        current_config = get_config()
+        assert current_config is new_config
+        assert current_config.environment == Environment.PRODUCTION
     
-    def test_get_circuit_breaker_thresholds(self):
-        """Test getting circuit breaker thresholds."""
-        thresholds = get_circuit_breaker_thresholds()
-        assert isinstance(thresholds, CircuitBreakerThresholds)
-        assert thresholds.daily_loss == 0.03
+    def test_get_trading_threshold_function(self):
+        """Test get_trading_threshold function."""
+        threshold = get_trading_threshold("max_position_size")
+        assert threshold == 0.1
+        
+        with pytest.raises(ConfigurationError):
+            get_trading_threshold("invalid")
     
-    def test_get_database_config(self):
-        """Test getting database configuration."""
-        config = get_database_config()
-        assert isinstance(config, DatabaseConfig)
-        assert config.host == "localhost"
+    def test_get_strategy_config_function(self):
+        """Test get_strategy_config function."""
+        config = get_strategy_config("nonexistent")
+        assert config is None
     
-    def test_get_redis_config(self):
-        """Test getting Redis configuration."""
-        config = get_redis_config()
-        assert isinstance(config, RedisConfig)
-        assert config.host == "localhost"
+    def test_update_strategy_config_function(self):
+        """Test update_strategy_config function."""
+        update_strategy_config("test", {"enabled": True})
+        
+        config = get_strategy_config("test")
+        assert config is not None
+        assert config.enabled is True
     
-    def test_get_api_config(self):
-        """Test getting API configuration."""
-        config = get_api_config()
-        assert isinstance(config, APIConfig)
-        assert config.host == "0.0.0.0"
+    def test_validate_configuration_function(self):
+        """Test validate_configuration function."""
+        result = validate_configuration()
+        assert result is True
     
-    def test_get_monitoring_config(self):
-        """Test getting monitoring configuration."""
-        config = get_monitoring_config()
-        assert isinstance(config, MonitoringConfig)
-        assert config.enable_metrics is True
+    def test_get_config_summary_function(self):
+        """Test get_config_summary function."""
+        summary = get_config_summary()
+        
+        assert isinstance(summary, dict)
+        assert "environment" in summary
+        assert "trading_thresholds" in summary
+
+
+class TestConfigurationErrorHandling:
+    """Test configuration error handling."""
     
-    def test_load_config_with_environment(self):
-        """Test loading configuration for specific environment."""
-        config = load_config(ConfigEnvironment.PRODUCTION)
-        assert isinstance(config, CentralizedConfig)
+    def test_strategy_config_loading_error(self):
+        """Test error handling in strategy config loading."""
+        with patch('app.core.centralized_config.Path') as mock_path:
+            mock_path.return_value.exists.return_value = True
+            mock_path.return_value.glob.return_value = [Path("invalid.yaml")]
+            
+            with patch("builtins.open", side_effect=Exception("File error")):
+                with pytest.raises(ConfigurationError, match="Failed to load strategy configurations"):
+                    CentralizedConfig()
     
-    def test_save_config(self):
-        """Test saving configuration."""
+    def test_strategy_config_save_error(self):
+        """Test error handling in strategy config saving."""
+        config = CentralizedConfig()
+        config.strategies["test"] = StrategyConfig(name="test")
+        
+        with patch("builtins.open", side_effect=Exception("Save error")):
+            with pytest.raises(ConfigurationError, match="Failed to save strategy configuration"):
+                config.save_strategy_config("test")
+    
+    def test_config_validation_error(self):
+        """Test configuration validation error handling."""
         config = CentralizedConfig()
         
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            temp_path = f.name
-        
-        try:
-            save_config(config, temp_path)
-            assert os.path.exists(temp_path)
-        finally:
-            os.unlink(temp_path)
-
-
-class TestEnvironmentSpecificConfigs:
-    """Test environment-specific configuration loading."""
-    
-    def test_development_config(self):
-        """Test development configuration."""
-        config = load_config(ConfigEnvironment.DEVELOPMENT)
-        assert config.environment == ConfigEnvironment.DEVELOPMENT
-        assert config.api.reload is False  # Default value
-    
-    def test_production_config(self):
-        """Test production configuration."""
-        config = load_config(ConfigEnvironment.PRODUCTION)
-        assert config.environment == ConfigEnvironment.PRODUCTION
-    
-    def test_testing_config(self):
-        """Test testing configuration."""
-        config = load_config(ConfigEnvironment.TESTING)
-        assert config.environment == ConfigEnvironment.TESTING
+        # Mock validation failure
+        with patch.object(config.trading, 'validate', side_effect=Exception("Validation error")):
+            with pytest.raises(ConfigurationError, match="Configuration validation failed"):
+                config.validate_configuration()
 
 
 class TestConfigurationIntegration:
-    """Test configuration integration with services."""
+    """Test configuration integration with strategies."""
     
-    def test_trading_thresholds_integration(self):
-        """Test trading thresholds integration."""
-        thresholds = get_trading_thresholds()
-        
-        # Verify all required fields are present
-        assert hasattr(thresholds, 'min_strength')
-        assert hasattr(thresholds, 'min_confidence')
-        assert hasattr(thresholds, 'rsi_oversold')
-        assert hasattr(thresholds, 'rsi_overbought')
-        assert hasattr(thresholds, 'max_position_size')
-        assert hasattr(thresholds, 'stop_loss_pct')
-        assert hasattr(thresholds, 'take_profit_pct')
-        
-        # Verify values are within expected ranges
-        assert 0 <= thresholds.min_strength <= 100
-        assert 0 <= thresholds.min_confidence <= 100
-        assert 0 <= thresholds.rsi_oversold < 50
-        assert 50 < thresholds.rsi_overbought <= 100
-        assert 0 <= thresholds.max_position_size <= 1
-        assert 0 <= thresholds.stop_loss_pct <= 1
-        assert 0 <= thresholds.take_profit_pct <= 1
-    
-    def test_risk_management_integration(self):
-        """Test risk management thresholds integration."""
-        thresholds = get_risk_thresholds()
-        
-        # Verify all required fields are present
-        assert hasattr(thresholds, 'daily_loss_limit')
-        assert hasattr(thresholds, 'max_drawdown_limit')
-        assert hasattr(thresholds, 'single_trade_risk_pct')
-        assert hasattr(thresholds, 'correlation_limit')
-        assert hasattr(thresholds, 'sector_exposure_limit')
-        
-        # Verify values are within expected ranges
-        assert 0 <= thresholds.daily_loss_limit <= 0.1
-        assert 0 <= thresholds.max_drawdown_limit <= 1
-        assert 0 <= thresholds.single_trade_risk_pct <= 1
-        assert 0 <= thresholds.correlation_limit <= 1
-        assert 0 <= thresholds.sector_exposure_limit <= 1
-    
-    def test_circuit_breaker_integration(self):
-        """Test circuit breaker thresholds integration."""
-        thresholds = get_circuit_breaker_thresholds()
-        
-        # Verify all required fields are present
-        assert hasattr(thresholds, 'daily_loss')
-        assert hasattr(thresholds, 'drawdown')
-        assert hasattr(thresholds, 'volatility')
-        assert hasattr(thresholds, 'error_rate')
-        assert hasattr(thresholds, 'latency_ms')
-        
-        # Verify values are within expected ranges
-        assert 0 <= thresholds.daily_loss <= 1
-        assert 0 <= thresholds.drawdown <= 1
-        assert 0 <= thresholds.volatility <= 1
-        assert 0 <= thresholds.error_rate <= 1
-        assert 0 <= thresholds.latency_ms
-
-
-class TestConfigurationEdgeCases:
-    """Test configuration edge cases and error handling."""
-    
-    def test_missing_config_file(self):
-        """Test behavior when config file is missing."""
-        manager = ConfigManager("/nonexistent/path/config.json")
-        config = manager.load_config()
-        
-        # Should load default configuration
-        assert isinstance(config, CentralizedConfig)
-        assert config.environment == ConfigEnvironment.DEVELOPMENT
-    
-    def test_invalid_json_config(self):
-        """Test behavior with invalid JSON in config file."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            f.write("invalid json content")
-            temp_path = f.name
-        
-        try:
-            manager = ConfigManager(temp_path)
-            # Should raise an exception for invalid JSON
-            with pytest.raises(Exception):
-                manager.load_config()
-        finally:
-            os.unlink(temp_path)
-    
-    def test_partial_config_override(self):
-        """Test partial configuration override."""
-        test_config = {
-            "trading": {
-                "min_strength": 65.0,
-                "min_confidence": 75.0
-                # Other fields should use defaults
-            }
-        }
-        
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            json.dump(test_config, f)
-            temp_path = f.name
-        
-        try:
-            manager = ConfigManager(temp_path)
-            config = manager.load_config()
-            
-            # Overridden values
-            assert config.trading.min_strength == 65.0
-            assert config.trading.min_confidence == 75.0
-            
-            # Default values should still be present
-            assert config.trading.rsi_oversold == 30.0
-            assert config.trading.rsi_overbought == 70.0
-        finally:
-            os.unlink(temp_path)
-    
-    def test_config_serialization(self):
-        """Test configuration serialization to dict."""
+    def test_momentum_strategy_config_integration(self):
+        """Test momentum strategy configuration integration."""
+        # Create config with momentum strategy
         config = CentralizedConfig()
-        config_dict = config.dict()
+        config.update_strategy_config("momentum", {
+            "enabled": True,
+            "weight": 1.2,
+            "parameters": {
+                "rsi_threshold": 35,
+                "momentum_threshold": 0.03,
+                "volume_threshold": 2.0
+            },
+            "max_position_size": 0.12,
+            "stop_loss_pct": 0.04,
+            "take_profit_pct": 0.12
+        })
         
-        assert isinstance(config_dict, dict)
-        assert "environment" in config_dict
-        assert "trading" in config_dict
-        assert "risk_management" in config_dict
-        assert "circuit_breakers" in config_dict
-        assert "database" in config_dict
-        assert "redis" in config_dict
-        assert "api" in config_dict
-        assert "monitoring" in config_dict
+        # Test getting strategy config
+        strategy_config = get_strategy_config("momentum")
+        assert strategy_config is not None
+        assert strategy_config.enabled is True
+        assert strategy_config.weight == 1.2
+        assert strategy_config.parameters["rsi_threshold"] == 35
+        assert strategy_config.max_position_size == 0.12
+        assert strategy_config.stop_loss_pct == 0.04
+        assert strategy_config.take_profit_pct == 0.12
+    
+    def test_mean_reversion_strategy_config_integration(self):
+        """Test mean reversion strategy configuration integration."""
+        config = CentralizedConfig()
+        config.update_strategy_config("mean_reversion", {
+            "enabled": True,
+            "weight": 0.8,
+            "parameters": {
+                "z_score_threshold": 2.5,
+                "lookback_period": 25,
+                "volatility_threshold": 0.06,
+                "mean_reversion_speed": 0.12
+            },
+            "max_position_size": 0.08,
+            "stop_loss_pct": 0.03,
+            "take_profit_pct": 0.06
+        })
+        
+        strategy_config = get_strategy_config("mean_reversion")
+        assert strategy_config is not None
+        assert strategy_config.enabled is True
+        assert strategy_config.weight == 0.8
+        assert strategy_config.parameters["z_score_threshold"] == 2.5
+        assert strategy_config.parameters["lookback_period"] == 25
+        assert strategy_config.max_position_size == 0.08
+    
+    def test_pairs_trading_strategy_config_integration(self):
+        """Test pairs trading strategy configuration integration."""
+        config = CentralizedConfig()
+        config.update_strategy_config("pairs_trading", {
+            "enabled": True,
+            "weight": 0.6,
+            "parameters": {
+                "cointegration_threshold": 0.04,
+                "min_correlation": 0.75,
+                "max_pair_exposure": 0.25,
+                "lookback_period": 35,
+                "hedge_ratio_threshold": 0.12
+            },
+            "max_position_size": 0.15,
+            "stop_loss_pct": 0.04,
+            "take_profit_pct": 0.08
+        })
+        
+        strategy_config = get_strategy_config("pairs_trading")
+        assert strategy_config is not None
+        assert strategy_config.enabled is True
+        assert strategy_config.weight == 0.6
+        assert strategy_config.parameters["cointegration_threshold"] == 0.04
+        assert strategy_config.parameters["min_correlation"] == 0.75
+        assert strategy_config.max_position_size == 0.15
 
+
+if __name__ == "__main__":
+    pytest.main([__file__])

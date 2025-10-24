@@ -14,6 +14,7 @@ from .base import BaseStrategy
 from app.models.market_data import Quote
 from app.models.signal import Signal
 from app.models.portfolio import Portfolio
+from app.core.centralized_config import get_strategy_config, get_trading_threshold
 
 logger = logging.getLogger(__name__)
 
@@ -30,17 +31,31 @@ class MeanReversionStrategy(BaseStrategy):
         """
         super().__init__(config)
         
-        # Parámetros de la estrategia
-        self.z_score_threshold = Decimal(str(config.get("z_score_threshold", 2.0)))
-        self.lookback_period = config.get("lookback_period", 20)
-        self.stop_loss = Decimal(str(config.get("stop_loss", 0.03)))
-        self.take_profit = Decimal(str(config.get("take_profit", 0.06)))
-        self.max_position_size = Decimal(str(config.get("max_position_size", 0.08)))
-        self.min_z_score = Decimal(str(config.get("min_z_score", 1.5)))
+        # Load strategy-specific configuration
+        strategy_config = get_strategy_config("mean_reversion")
+        if strategy_config:
+            params = strategy_config.parameters
+            self.z_score_threshold = Decimal(str(params.get("z_score_threshold", 2.0)))
+            self.lookback_period = params.get("lookback_period", 20)
+            self.volatility_threshold = Decimal(str(params.get("volatility_threshold", 0.05)))
+            self.mean_reversion_speed = Decimal(str(params.get("mean_reversion_speed", 0.1)))
+            
+            # Use strategy-specific risk parameters or fallback to global
+            self.stop_loss = Decimal(str(strategy_config.stop_loss_pct or get_trading_threshold("stop_loss_pct")))
+            self.take_profit = Decimal(str(strategy_config.take_profit_pct or get_trading_threshold("take_profit_pct")))
+            self.max_position_size = Decimal(str(strategy_config.max_position_size or get_trading_threshold("max_position_size")))
+        else:
+            # Fallback to config or defaults
+            self.z_score_threshold = Decimal(str(config.get("z_score_threshold", 2.0)))
+            self.lookback_period = config.get("lookback_period", 20)
+            self.stop_loss = Decimal(str(config.get("stop_loss", get_trading_threshold("stop_loss_pct"))))
+            self.take_profit = Decimal(str(config.get("take_profit", get_trading_threshold("take_profit_pct"))))
+            self.max_position_size = Decimal(str(config.get("max_position_size", get_trading_threshold("max_position_size"))))
+            self.volatility_threshold = Decimal(str(config.get("volatility_threshold", 0.02)))
+            self.mean_reversion_speed = Decimal(str(config.get("mean_reversion_speed", 0.1)))
         
         # Parámetros adicionales
-        self.volatility_threshold = Decimal(str(config.get("volatility_threshold", 0.02)))
-        self.mean_reversion_speed = Decimal(str(config.get("mean_reversion_speed", 0.1)))
+        self.min_z_score = Decimal(str(config.get("min_z_score", 1.5)))
         
         logger.info(f"MeanReversionStrategy initialized: {self.name}")
     

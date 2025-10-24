@@ -13,6 +13,7 @@ from .base import BaseStrategy
 from app.models.market_data import Quote
 from app.models.signal import Signal
 from app.models.portfolio import Portfolio
+from app.core.centralized_config import get_strategy_config, get_trading_threshold
 
 logger = logging.getLogger(__name__)
 
@@ -29,17 +30,33 @@ class PairsTradingStrategy(BaseStrategy):
         """
         super().__init__(config)
         
-        # Parámetros de la estrategia
-        self.cointegration_threshold = Decimal(str(config.get("cointegration_threshold", 0.05)))
-        self.spread_threshold = Decimal(str(config.get("spread_threshold", 2.0)))
-        self.stop_loss = Decimal(str(config.get("stop_loss", 0.04)))
-        self.take_profit = Decimal(str(config.get("take_profit", 0.08)))
-        self.max_position_size = Decimal(str(config.get("max_position_size", 0.06)))
+        # Load strategy-specific configuration
+        strategy_config = get_strategy_config("pairs_trading")
+        if strategy_config:
+            params = strategy_config.parameters
+            self.cointegration_threshold = Decimal(str(params.get("cointegration_threshold", 0.05)))
+            self.spread_threshold = Decimal(str(params.get("spread_threshold", 2.0)))
+            self.lookback_period = params.get("lookback_period", 30)
+            self.min_correlation = Decimal(str(params.get("min_correlation", 0.7)))
+            self.max_pair_exposure = Decimal(str(params.get("max_pair_exposure", 0.2)))
+            self.hedge_ratio_threshold = Decimal(str(params.get("hedge_ratio_threshold", 0.1)))
+            
+            # Use strategy-specific risk parameters or fallback to global
+            self.stop_loss = Decimal(str(strategy_config.stop_loss_pct or get_trading_threshold("stop_loss_pct")))
+            self.take_profit = Decimal(str(strategy_config.take_profit_pct or get_trading_threshold("take_profit_pct")))
+            self.max_position_size = Decimal(str(strategy_config.max_position_size or get_trading_threshold("max_position_size")))
+        else:
+            # Fallback to config or defaults
+            self.cointegration_threshold = Decimal(str(config.get("cointegration_threshold", 0.05)))
+            self.spread_threshold = Decimal(str(config.get("spread_threshold", 2.0)))
+            self.stop_loss = Decimal(str(config.get("stop_loss", get_trading_threshold("stop_loss_pct"))))
+            self.take_profit = Decimal(str(config.get("take_profit", get_trading_threshold("take_profit_pct"))))
+            self.max_position_size = Decimal(str(config.get("max_position_size", get_trading_threshold("max_position_size"))))
+            self.lookback_period = config.get("lookback_period", 30)
+            self.min_correlation = Decimal(str(config.get("min_correlation", 0.7)))
         
         # Parámetros de pares
         self.pair_symbols = config.get("pair_symbols", ["AAPL", "MSFT"])
-        self.lookback_period = config.get("lookback_period", 30)
-        self.min_correlation = Decimal(str(config.get("min_correlation", 0.7)))
         
         # Parámetros adicionales
         self.hedge_ratio = Decimal(str(config.get("hedge_ratio", 1.0)))
