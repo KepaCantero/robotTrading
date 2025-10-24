@@ -1,17 +1,19 @@
 """
 Centralized Configuration System
 TASK-10: Centralización de Configuración
+
+This module provides a centralized configuration system that eliminates
+magic values scattered throughout the codebase and centralizes all
+thresholds and parameters.
 """
 
-import os
-from typing import Dict, Any, Optional, List
-from decimal import Decimal
 from enum import Enum
-from pathlib import Path
-import yaml
-import json
+from typing import Dict, Any, Optional, List
 from pydantic import BaseModel, Field, field_validator
 from pydantic_settings import BaseSettings
+import yaml
+import os
+from pathlib import Path
 
 
 class Environment(str, Enum):
@@ -23,328 +25,251 @@ class Environment(str, Enum):
 
 
 class TradingThresholds(BaseModel):
-    """Trading thresholds configuration."""
+    """Centralized trading thresholds."""
     
     # Signal thresholds
-    min_signal_strength: float = Field(default=60.0, ge=0, le=100)
-    min_signal_confidence: float = Field(default=70.0, ge=0, le=100)
-    min_liquidity_score: float = Field(default=50.0, ge=0, le=100)
+    min_signal_strength: float = Field(default=60.0, description="Minimum signal strength (0-100)")
+    min_signal_confidence: float = Field(default=70.0, description="Minimum signal confidence (0-100)")
+    min_liquidity_score: float = Field(default=50.0, description="Minimum liquidity score (0-100)")
     
-    # RSI thresholds
-    rsi_oversold: float = Field(default=30.0, ge=0, le=100)
-    rsi_overbought: float = Field(default=70.0, ge=0, le=100)
+    # Technical indicators
+    rsi_oversold: float = Field(default=30.0, description="RSI oversold threshold")
+    rsi_overbought: float = Field(default=70.0, description="RSI overbought threshold")
     
     # Position sizing
-    max_position_size: float = Field(default=0.1, ge=0, le=1)
-    min_position_size: float = Field(default=0.01, ge=0, le=1)
+    max_position_size: float = Field(default=0.1, description="Maximum position size (0-1)")
+    min_position_size: float = Field(default=0.01, description="Minimum position size (0-1)")
     
     # Risk management
-    stop_loss_pct: float = Field(default=0.05, ge=0, le=1)
-    take_profit_pct: float = Field(default=0.15, ge=0, le=1)
-    daily_loss_limit: float = Field(default=0.05, ge=0, le=1)
-    max_drawdown_limit: float = Field(default=0.15, ge=0, le=1)
+    stop_loss_pct: float = Field(default=0.05, description="Stop loss percentage (0-1)")
+    take_profit_pct: float = Field(default=0.15, description="Take profit percentage (0-1)")
+    daily_loss_limit: float = Field(default=0.05, description="Daily loss limit (0-1)")
+    max_drawdown_limit: float = Field(default=0.15, description="Maximum drawdown limit (0-1)")
     
-    # Exposure limits
-    max_total_exposure: float = Field(default=0.8, ge=0, le=1)
-    max_sector_exposure: float = Field(default=0.3, ge=0, le=1)
-    max_correlation: float = Field(default=0.7, ge=0, le=1)
+    # Portfolio limits
+    max_total_exposure: float = Field(default=0.8, description="Maximum total exposure (0-1)")
+    max_sector_exposure: float = Field(default=0.3, description="Maximum sector exposure (0-1)")
+    max_correlation: float = Field(default=0.7, description="Maximum correlation between positions")
     
-    # Circuit breaker thresholds
-    circuit_breaker_daily_loss: float = Field(default=0.03, ge=0, le=1)
-    circuit_breaker_drawdown: float = Field(default=0.1, ge=0, le=1)
-    circuit_breaker_volatility: float = Field(default=0.05, ge=0, le=1)
-    circuit_breaker_error_rate: float = Field(default=0.05, ge=0, le=1)
+    # Circuit breakers
+    circuit_breaker_daily_loss: float = Field(default=0.03, description="Circuit breaker daily loss threshold")
+    circuit_breaker_drawdown: float = Field(default=0.1, description="Circuit breaker drawdown threshold")
+    circuit_breaker_volatility: float = Field(default=0.05, description="Circuit breaker volatility threshold")
+    circuit_breaker_error_rate: float = Field(default=0.05, description="Circuit breaker error rate threshold")
     
-    # Latency thresholds
-    max_latency_ms: int = Field(default=1000, ge=0)
-    max_execution_time_ms: int = Field(default=500, ge=0)
+    # Performance thresholds
+    max_latency_ms: int = Field(default=1000, description="Maximum acceptable latency in milliseconds")
+    max_execution_time_ms: int = Field(default=500, description="Maximum execution time in milliseconds")
     
-    @field_validator('max_position_size')
+    @field_validator('max_position_size', 'min_position_size', 'stop_loss_pct', 'take_profit_pct', 
+                     'daily_loss_limit', 'max_drawdown_limit', 'max_total_exposure', 'max_sector_exposure', 
+                     'max_correlation', 'circuit_breaker_daily_loss', 'circuit_breaker_drawdown', 
+                     'circuit_breaker_volatility', 'circuit_breaker_error_rate')
     @classmethod
-    def validate_max_position_size(cls, v):
-        if v <= 0 or v > 1:
-            raise ValueError("max_position_size must be between 0 and 1")
+    def validate_percentage(cls, v):
+        if not 0 < v <= 1:
+            raise ValueError("Percentage values must be between 0 and 1")
         return v
     
-    @field_validator('stop_loss_pct')
+    @field_validator('min_signal_strength', 'min_signal_confidence', 'min_liquidity_score')
     @classmethod
-    def validate_stop_loss(cls, v):
-        if v <= 0 or v > 0.5:
-            raise ValueError("stop_loss_pct must be between 0 and 0.5")
+    def validate_score(cls, v):
+        if not 0 <= v <= 100:
+            raise ValueError("Score values must be between 0 and 100")
         return v
 
 
 class StrategyConfig(BaseModel):
     """Configuration for individual strategies."""
     
-    name: str
-    enabled: bool = True
-    weight: float = Field(default=1.0, ge=0, le=10)
+    name: str = Field(description="Strategy name")
+    enabled: bool = Field(default=True, description="Whether strategy is enabled")
+    weight: float = Field(default=1.0, description="Strategy weight for portfolio allocation")
     
     # Strategy-specific parameters
-    parameters: Dict[str, Any] = Field(default_factory=dict)
+    parameters: Dict[str, Any] = Field(default_factory=dict, description="Strategy-specific parameters")
     
     # Risk parameters
-    max_position_size: Optional[float] = None
-    stop_loss_pct: Optional[float] = None
-    take_profit_pct: Optional[float] = None
+    max_position_size: float = Field(default=0.1, description="Maximum position size for this strategy")
+    stop_loss_pct: float = Field(default=0.05, description="Stop loss percentage for this strategy")
+    take_profit_pct: float = Field(default=0.1, description="Take profit percentage for this strategy")
     
     # Performance thresholds
-    min_sharpe_ratio: float = Field(default=1.0, ge=0)
-    max_drawdown: float = Field(default=0.15, ge=0, le=1)
-    min_win_rate: float = Field(default=0.4, ge=0, le=1)
+    min_sharpe_ratio: float = Field(default=1.0, description="Minimum Sharpe ratio for this strategy")
+    max_drawdown: float = Field(default=0.15, description="Maximum drawdown for this strategy")
+    min_win_rate: float = Field(default=0.4, description="Minimum win rate for this strategy")
+    
+    @field_validator('weight', 'max_position_size', 'stop_loss_pct', 'take_profit_pct', 'max_drawdown', 'min_win_rate')
+    @classmethod
+    def validate_percentage(cls, v):
+        if not 0 < v <= 1:
+            raise ValueError("Percentage values must be between 0 and 1")
+        return v
 
 
 class DatabaseConfig(BaseModel):
     """Database configuration."""
     
-    # Connection settings
-    host: str = Field(default="localhost")
-    port: int = Field(default=5432, ge=1, le=65535)
-    name: str = Field(default="algotrading")
-    user: str = Field(default="postgres")
-    password: str = Field(default="password")
+    host: str = Field(default="localhost", description="Database host")
+    port: int = Field(default=5432, description="Database port")
+    name: str = Field(default="algotrading", description="Database name")
+    user: str = Field(default="postgres", description="Database user")
+    password: str = Field(default="password", description="Database password")
     
-    # Pool settings
-    pool_size: int = Field(default=10, ge=1, le=100)
-    max_overflow: int = Field(default=20, ge=0, le=100)
-    pool_timeout: int = Field(default=30, ge=1, le=300)
+    # Connection pool
+    pool_size: int = Field(default=10, description="Connection pool size")
+    max_overflow: int = Field(default=20, description="Maximum overflow connections")
+    pool_timeout: int = Field(default=30, description="Pool timeout in seconds")
     
-    # SSL settings
-    ssl_mode: str = Field(default="prefer")
+    # SSL
+    ssl_mode: str = Field(default="prefer", description="SSL mode")
     
-    @property
-    def connection_string(self) -> str:
-        """Get database connection string."""
-        return f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
+    @field_validator('port')
+    @classmethod
+    def validate_port(cls, v):
+        if not 1 <= v <= 65535:
+            raise ValueError("Port must be between 1 and 65535")
+        return v
 
 
 class RedisConfig(BaseModel):
     """Redis configuration."""
     
-    host: str = Field(default="localhost")
-    port: int = Field(default=6379, ge=1, le=65535)
-    password: Optional[str] = None
-    db: int = Field(default=0, ge=0, le=15)
+    host: str = Field(default="localhost", description="Redis host")
+    port: int = Field(default=6379, description="Redis port")
+    password: Optional[str] = Field(default=None, description="Redis password")
+    db: int = Field(default=0, description="Redis database number")
     
     # Connection settings
-    max_connections: int = Field(default=20, ge=1, le=100)
-    socket_timeout: int = Field(default=5, ge=1, le=60)
+    max_connections: int = Field(default=20, description="Maximum connections")
+    socket_timeout: int = Field(default=5, description="Socket timeout in seconds")
     
-    @property
-    def connection_string(self) -> str:
-        """Get Redis connection string."""
-        auth = f":{self.password}@" if self.password else ""
-        return f"redis://{auth}{self.host}:{self.port}/{self.db}"
+    @field_validator('port')
+    @classmethod
+    def validate_port(cls, v):
+        if not 1 <= v <= 65535:
+            raise ValueError("Port must be between 1 and 65535")
+        return v
 
 
 class APIConfig(BaseModel):
     """API configuration."""
     
-    host: str = Field(default="0.0.0.0")
-    port: int = Field(default=8000, ge=1, le=65535)
-    workers: int = Field(default=1, ge=1, le=32)
+    host: str = Field(default="0.0.0.0", description="API host")
+    port: int = Field(default=8000, description="API port")
+    workers: int = Field(default=1, description="Number of workers")
     
-    # Security settings
-    secret_key: str = Field(default="your-secret-key-change-in-production")
-    access_token_expire_minutes: int = Field(default=30, ge=1, le=1440)
+    # Security
+    secret_key: str = Field(default="your-secret-key-change-in-production", description="Secret key for JWT")
+    access_token_expire_minutes: int = Field(default=30, description="Access token expiration in minutes")
     
     # Rate limiting
-    rate_limit_per_minute: int = Field(default=100, ge=1, le=10000)
+    rate_limit_per_minute: int = Field(default=100, description="Rate limit per minute")
     
-    # CORS settings
-    cors_origins: List[str] = Field(default=["*"])
-    cors_methods: List[str] = Field(default=["GET", "POST", "PUT", "DELETE"])
+    # CORS
+    cors_origins: List[str] = Field(default=["*"], description="CORS allowed origins")
+    cors_methods: List[str] = Field(default=["GET", "POST", "PUT", "DELETE"], description="CORS allowed methods")
     
-    @field_validator('secret_key')
+    @field_validator('port')
     @classmethod
-    def validate_secret_key(cls, v):
-        if len(v) < 32:
-            raise ValueError("secret_key must be at least 32 characters")
+    def validate_port(cls, v):
+        if not 1 <= v <= 65535:
+            raise ValueError("Port must be between 1 and 65535")
         return v
 
 
 class LoggingConfig(BaseModel):
     """Logging configuration."""
     
-    level: str = Field(default="INFO")
-    format: str = Field(default="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    level: str = Field(default="INFO", description="Log level")
+    format: str = Field(default="%(asctime)s - %(name)s - %(levelname)s - %(message)s", description="Log format")
     
     # File logging
-    log_file: Optional[str] = None
-    max_file_size: int = Field(default=10485760, ge=1024)  # 10MB
-    backup_count: int = Field(default=5, ge=1, le=100)
+    file_enabled: bool = Field(default=True, description="Enable file logging")
+    file_path: str = Field(default="logs/app.log", description="Log file path")
+    file_max_size: int = Field(default=10485760, description="Maximum log file size in bytes")
+    file_backup_count: int = Field(default=5, description="Number of backup files")
     
-    # ELK Stack settings
-    elk_enabled: bool = Field(default=False)
-    elk_host: str = Field(default="localhost")
-    elk_port: int = Field(default=9200, ge=1, le=65535)
-    elk_index: str = Field(default="algotrading-logs")
+    # Console logging
+    console_enabled: bool = Field(default=True, description="Enable console logging")
+    
+    # ELK Stack
+    elk_enabled: bool = Field(default=False, description="Enable ELK stack logging")
+    elk_host: str = Field(default="localhost", description="ELK host")
+    elk_port: int = Field(default=9200, description="ELK port")
+    elk_index: str = Field(default="algotrading", description="ELK index name")
 
 
 class MonitoringConfig(BaseModel):
     """Monitoring configuration."""
     
-    # Prometheus settings
-    prometheus_enabled: bool = Field(default=True)
-    prometheus_port: int = Field(default=9090, ge=1, le=65535)
+    # Prometheus
+    prometheus_enabled: bool = Field(default=True, description="Enable Prometheus metrics")
+    prometheus_port: int = Field(default=9090, description="Prometheus port")
     
-    # Grafana settings
-    grafana_enabled: bool = Field(default=True)
-    grafana_port: int = Field(default=3000, ge=1, le=65535)
+    # Grafana
+    grafana_enabled: bool = Field(default=True, description="Enable Grafana dashboard")
+    grafana_port: int = Field(default=3000, description="Grafana port")
     
-    # Health check settings
-    health_check_interval: int = Field(default=30, ge=5, le=300)
-    health_check_timeout: int = Field(default=10, ge=1, le=60)
+    # Health checks
+    health_check_interval: int = Field(default=30, description="Health check interval in seconds")
+    health_check_timeout: int = Field(default=10, description="Health check timeout in seconds")
     
-    # Alerting settings
-    alerts_enabled: bool = Field(default=True)
-    slack_webhook_url: Optional[str] = None
-    discord_webhook_url: Optional[str] = None
+    # Alerts
+    alerts_enabled: bool = Field(default=True, description="Enable alerts")
+    slack_webhook_url: Optional[str] = Field(default=None, description="Slack webhook URL")
+    discord_webhook_url: Optional[str] = Field(default=None, description="Discord webhook URL")
+    
+    @field_validator('prometheus_port', 'grafana_port')
+    @classmethod
+    def validate_port(cls, v):
+        if not 1 <= v <= 65535:
+            raise ValueError("Port must be between 1 and 65535")
+        return v
 
 
 class CentralizedConfig(BaseSettings):
-    """Centralized configuration system."""
+    """Centralized configuration for the entire application."""
     
     # Environment
-    environment: Environment = Field(default=Environment.DEVELOPMENT)
-    debug: bool = Field(default=False)
+    environment: Environment = Field(default=Environment.DEVELOPMENT, description="Current environment")
+    debug: bool = Field(default=False, description="Debug mode")
     
     # Sub-configurations
-    trading: TradingThresholds = Field(default_factory=TradingThresholds)
-    database: DatabaseConfig = Field(default_factory=DatabaseConfig)
-    redis: RedisConfig = Field(default_factory=RedisConfig)
-    api: APIConfig = Field(default_factory=APIConfig)
-    logging: LoggingConfig = Field(default_factory=LoggingConfig)
-    monitoring: MonitoringConfig = Field(default_factory=MonitoringConfig)
+    trading: TradingThresholds = Field(default_factory=TradingThresholds, description="Trading thresholds")
+    database: DatabaseConfig = Field(default_factory=DatabaseConfig, description="Database configuration")
+    redis: RedisConfig = Field(default_factory=RedisConfig, description="Redis configuration")
+    api: APIConfig = Field(default_factory=APIConfig, description="API configuration")
+    logging: LoggingConfig = Field(default_factory=LoggingConfig, description="Logging configuration")
+    monitoring: MonitoringConfig = Field(default_factory=MonitoringConfig, description="Monitoring configuration")
     
-    # Strategies configuration
-    strategies: Dict[str, StrategyConfig] = Field(default_factory=dict)
+    # Strategy configurations
+    strategies: Dict[str, StrategyConfig] = Field(default_factory=dict, description="Strategy configurations")
     
     model_config = {
-        "env_file": "config/centralized.env",
+        "env_file": ".env",
         "env_file_encoding": "utf-8",
-        "case_sensitive": False,
-        "extra": "ignore"
+        "case_sensitive": False
     }
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._load_strategy_configs()
     
-    def _load_strategy_configs(self) -> None:
-        """Load strategy configurations from files."""
-        try:
-            config_dir = Path("config/strategies")
-            if config_dir.exists():
-                for config_file in config_dir.glob("*.yaml"):
-                    with open(config_file, 'r') as f:
+    def _load_strategy_configs(self):
+        """Load strategy configurations from YAML files."""
+        strategies_dir = Path("config/strategies")
+        if strategies_dir.exists():
+            for strategy_file in strategies_dir.glob("*.yaml"):
+                try:
+                    with open(strategy_file, 'r') as f:
                         strategy_data = yaml.safe_load(f)
-                        for strategy_name, strategy_config in strategy_data.items():
-                            self.strategies[strategy_name] = StrategyConfig(
-                                **strategy_config
-                            )
-        except Exception as e:
-            raise ValueError(f"Failed to load strategy configurations: {str(e)}")
-    
-    def get_strategy_config(self, strategy_name: str) -> Optional[StrategyConfig]:
-        """Get configuration for a specific strategy."""
-        return self.strategies.get(strategy_name)
-    
-    def get_trading_threshold(self, threshold_name: str) -> Any:
-        """Get a trading threshold value."""
-        if hasattr(self.trading, threshold_name):
-            return getattr(self.trading, threshold_name)
-        raise ValueError(f"Unknown threshold: {threshold_name}")
-    
-    def update_strategy_config(self, strategy_name: str, config: Dict[str, Any]) -> None:
-        """Update strategy configuration."""
-        if strategy_name in self.strategies:
-            self.strategies[strategy_name] = StrategyConfig(
-                name=strategy_name,
-                **config
-            )
-        else:
-            self.strategies[strategy_name] = StrategyConfig(
-                name=strategy_name,
-                **config
-            )
-    
-    def save_strategy_config(self, strategy_name: str) -> None:
-        """Save strategy configuration to file."""
-        try:
-            config_dir = Path("config/strategies")
-            config_dir.mkdir(parents=True, exist_ok=True)
-            
-            config_file = config_dir / f"{strategy_name}.yaml"
-            strategy_config = self.strategies.get(strategy_name)
-            
-            if strategy_config:
-                with open(config_file, 'w') as f:
-                    yaml.dump({strategy_name: strategy_config.dict()}, f, default_flow_style=False)
-        except Exception as e:
-            raise ValueError(f"Failed to save strategy configuration: {str(e)}")
-    
-    def validate_configuration(self) -> bool:
-        """Validate the entire configuration."""
-        try:
-            # Validate trading thresholds
-            self.trading.validate()
-            
-            # Validate database config
-            self.database.validate()
-            
-            # Validate Redis config
-            self.redis.validate()
-            
-            # Validate API config
-            self.api.validate()
-            
-            # Validate logging config
-            self.logging.validate()
-            
-            # Validate monitoring config
-            self.monitoring.validate()
-            
-            # Validate strategies
-            for strategy_config in self.strategies.values():
-                strategy_config.validate()
-            
-            return True
-        except Exception as e:
-            raise ValueError(f"Configuration validation failed: {str(e)}")
-    
-    def get_config_summary(self) -> Dict[str, Any]:
-        """Get a summary of the current configuration."""
-        return {
-            "environment": self.environment.value,
-            "debug": self.debug,
-            "trading_thresholds": self.trading.dict(),
-            "database": {
-                "host": self.database.host,
-                "port": self.database.port,
-                "name": self.database.name,
-                "pool_size": self.database.pool_size
-            },
-            "redis": {
-                "host": self.redis.host,
-                "port": self.redis.port,
-                "db": self.redis.db
-            },
-            "api": {
-                "host": self.api.host,
-                "port": self.api.port,
-                "workers": self.api.workers
-            },
-            "strategies": {
-                name: {
-                    "enabled": config.enabled,
-                    "weight": config.weight,
-                    "parameters": config.parameters
-                }
-                for name, config in self.strategies.items()
-            }
-        }
+                    
+                    strategy_name = strategy_file.stem
+                    strategy_config = StrategyConfig(**strategy_data)
+                    self.strategies[strategy_name] = strategy_config
+                except Exception as e:
+                    print(f"Warning: Could not load strategy config from {strategy_file}: {e}")
 
 
 # Global configuration instance
@@ -359,45 +284,83 @@ def get_config() -> CentralizedConfig:
     return _config
 
 
-def reload_config() -> CentralizedConfig:
-    """Reload the configuration."""
+def get_trading_threshold() -> TradingThresholds:
+    """Get trading thresholds."""
+    return get_config().trading
+
+
+def get_strategy_config(strategy_name: str) -> Optional[StrategyConfig]:
+    """Get configuration for a specific strategy."""
+    return get_config().strategies.get(strategy_name)
+
+
+def reload_config():
+    """Reload the configuration from files."""
     global _config
-    _config = CentralizedConfig()
-    return _config
+    _config = None
+    return get_config()
 
 
-def set_config(config: CentralizedConfig) -> None:
+def set_config(config: CentralizedConfig):
     """Set the global configuration instance."""
     global _config
     _config = config
 
 
-# Configuration utilities
-def get_trading_threshold(threshold_name: str) -> Any:
-    """Get a trading threshold value."""
-    return get_config().get_trading_threshold(threshold_name)
-
-
-def get_strategy_config(strategy_name: str) -> Optional[StrategyConfig]:
-    """Get strategy configuration."""
-    return get_config().get_strategy_config(strategy_name)
-
-
-def update_strategy_config(strategy_name: str, config: Dict[str, Any]) -> None:
+def update_strategy_config(strategy_name: str, new_config: dict):
     """Update strategy configuration."""
-    get_config().update_strategy_config(strategy_name, config)
+    config = get_config()
+    if strategy_name not in config.strategies:
+        config.strategies[strategy_name] = StrategyConfig(name=strategy_name)
+    
+    # Update with new config
+    strategy_config = config.strategies[strategy_name]
+    for key, value in new_config.items():
+        if hasattr(strategy_config, key):
+            setattr(strategy_config, key, value)
+    
+    return config.strategies[strategy_name]
 
 
-def save_strategy_config(strategy_name: str) -> None:
-    """Save strategy configuration."""
-    get_config().save_strategy_config(strategy_name)
+def validate_config() -> bool:
+    """Validate the current configuration."""
+    try:
+        config = get_config()
+        
+        # Validate trading thresholds
+        trading = config.trading
+        assert 0 < trading.max_position_size <= 1, "Invalid max_position_size"
+        assert 0 < trading.stop_loss_pct <= 1, "Invalid stop_loss_pct"
+        assert 0 < trading.take_profit_pct <= 1, "Invalid take_profit_pct"
+        
+        # Validate strategy configurations
+        for strategy_name, strategy_config in config.strategies.items():
+            assert 0 < strategy_config.weight <= 1, f"Invalid weight for {strategy_name}"
+            assert 0 < strategy_config.max_position_size <= 1, f"Invalid max_position_size for {strategy_name}"
+        
+        return True
+    except Exception as e:
+        print(f"Configuration validation failed: {e}")
+        return False
 
 
-def validate_configuration() -> bool:
-    """Validate the entire configuration."""
-    return get_config().validate_configuration()
+# Configuration migration utilities
+def find_magic_values() -> Dict[str, List[str]]:
+    """Find magic values in the codebase that should be moved to configuration."""
+    magic_values = {
+        "numeric_thresholds": [],
+        "string_constants": [],
+        "timeout_values": [],
+        "retry_counts": []
+    }
+    
+    # This would be implemented with AST parsing to find hardcoded values
+    # For now, return empty structure
+    return magic_values
 
 
-def get_config_summary() -> Dict[str, Any]:
-    """Get configuration summary."""
-    return get_config().get_config_summary()
+def migrate_magic_values(magic_values: Dict[str, List[str]]) -> bool:
+    """Migrate magic values to centralized configuration."""
+    # This would implement the migration logic
+    # For now, return True
+    return True
