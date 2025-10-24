@@ -64,7 +64,7 @@ class CentralizedLogger:
         self.config = get_config()
         self.environment = os.getenv("ENVIRONMENT", "development")
         self.app_version = os.getenv("APP_VERSION", "1.0.0")
-        self.log_dir = Path("/app/logs")
+        self.log_dir = Path(os.getenv("LOG_DIR", "logs"))
         self._setup_log_directories()
         self._setup_loggers()
 

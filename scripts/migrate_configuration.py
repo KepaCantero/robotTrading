@@ -1,334 +1,335 @@
-#!/usr/bin/env python3
 """
-Configuration Migration Script
+Configuration Migration Service
 TASK-10: Centralización de Configuración
 
-Este script migra valores mágicos dispersos en el código a la configuración centralizada.
+This service helps migrate magic values from the codebase to the
+centralized configuration system.
 """
 
-import os
-import sys
+import ast
 import re
 from pathlib import Path
-from typing import Dict, List, Tuple
-import ast
-import argparse
+from typing import Dict, List, Set, Tuple, Any
+from dataclasses import dataclass
+import json
 
-# Add app directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.core.centralized_config import (
-    CentralizedConfig,
-    TradingThresholds,
-    StrategyConfig,
-    get_config,
-    update_strategy_config,
-    save_strategy_config
-)
+@dataclass
+class MagicValue:
+    """Represents a magic value found in the code."""
+    file_path: str
+    line_number: int
+    value: Any
+    context: str
+    category: str
+    suggested_config_key: str
+
+
+class MagicValueDetector:
+    """Detects magic values in Python code."""
+    
+    def __init__(self):
+        self.numeric_patterns = [
+            r'\b\d+\.\d+\b',  # Float numbers
+            r'\b\d+\b',       # Integer numbers
+        ]
+        
+        self.string_patterns = [
+            r'"[^"]*"',        # Double quoted strings
+            r"'[^']*'",        # Single quoted strings
+        ]
+        
+        self.timeout_patterns = [
+            r'timeout\s*=\s*(\d+)',
+            r'timeout\s*:\s*(\d+)',
+            r'timeout\s*=\s*(\d+\.\d+)',
+        ]
+        
+        self.retry_patterns = [
+            r'retry\s*=\s*(\d+)',
+            r'retries\s*=\s*(\d+)',
+            r'max_retries\s*=\s*(\d+)',
+        ]
+    
+    def scan_file(self, file_path: Path) -> List[MagicValue]:
+        """Scan a single file for magic values."""
+        magic_values = []
+        
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+                lines = content.split('\n')
+            
+            # Parse AST for better analysis
+            try:
+                tree = ast.parse(content)
+                magic_values.extend(self._analyze_ast(tree, file_path, lines))
+            except SyntaxError:
+                # Fallback to regex analysis
+                magic_values.extend(self._analyze_regex(content, file_path, lines))
+                
+        except Exception as e:
+            print(f"Error scanning {file_path}: {e}")
+        
+        return magic_values
+    
+    def _analyze_ast(self, tree: ast.AST, file_path: Path, lines: List[str]) -> List[MagicValue]:
+        """Analyze AST for magic values."""
+        magic_values = []
+        
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Assign):
+                for target in node.targets:
+                    if isinstance(target, ast.Name):
+                        magic_values.extend(self._check_assignment(node, target.id, file_path, lines))
+            elif isinstance(node, ast.Call):
+                magic_values.extend(self._check_function_call(node, file_path, lines))
+        
+        return magic_values
+    
+    def _check_assignment(self, node: ast.Assign, var_name: str, file_path: Path, lines: List[str]) -> List[MagicValue]:
+        """Check assignment for magic values."""
+        magic_values = []
+        
+        # Check for numeric assignments
+        if isinstance(node.value, ast.Constant):
+            if isinstance(node.value.value, (int, float)):
+                category = self._categorize_numeric(var_name, node.value.value)
+                if category:
+                    magic_values.append(MagicValue(
+                        file_path=str(file_path),
+                        line_number=node.lineno,
+                        value=node.value.value,
+                        context=lines[node.lineno - 1].strip(),
+                        category=category,
+                        suggested_config_key=self._suggest_config_key(var_name, node.value.value)
+                    ))
+        
+        return magic_values
+    
+    def _check_function_call(self, node: ast.Call, file_path: Path, lines: List[str]) -> List[MagicValue]:
+        """Check function calls for magic values."""
+        magic_values = []
+        
+        # Check keyword arguments
+        for keyword in node.keywords:
+            if isinstance(keyword.value, ast.Constant):
+                if isinstance(keyword.value.value, (int, float)):
+                    category = self._categorize_numeric(keyword.arg, keyword.value.value)
+                    if category:
+                        magic_values.append(MagicValue(
+                            file_path=str(file_path),
+                            line_number=node.lineno,
+                            value=keyword.value.value,
+                            context=lines[node.lineno - 1].strip(),
+                            category=category,
+                            suggested_config_key=self._suggest_config_key(keyword.arg, keyword.value.value)
+                        ))
+        
+        return magic_values
+    
+    def _analyze_regex(self, content: str, file_path: Path, lines: List[str]) -> List[MagicValue]:
+        """Fallback regex analysis for magic values."""
+        magic_values = []
+        
+        for i, line in enumerate(lines):
+            # Check for timeout patterns
+            for pattern in self.timeout_patterns:
+                matches = re.finditer(pattern, line, re.IGNORECASE)
+                for match in matches:
+                    magic_values.append(MagicValue(
+                        file_path=str(file_path),
+                        line_number=i + 1,
+                        value=int(match.group(1)),
+                        context=line.strip(),
+                        category="timeout",
+                        suggested_config_key=f"timeout_{match.group(1)}"
+                    ))
+            
+            # Check for retry patterns
+            for pattern in self.retry_patterns:
+                matches = re.finditer(pattern, line, re.IGNORECASE)
+                for match in matches:
+                    magic_values.append(MagicValue(
+                        file_path=str(file_path),
+                        line_number=i + 1,
+                        value=int(match.group(1)),
+                        context=line.strip(),
+                        category="retry",
+                        suggested_config_key=f"retry_{match.group(1)}"
+                    ))
+        
+        return magic_values
+    
+    def _categorize_numeric(self, var_name: str, value: Any) -> str:
+        """Categorize numeric values based on variable name and value."""
+        var_lower = var_name.lower()
+        
+        # Thresholds
+        if any(keyword in var_lower for keyword in ['threshold', 'limit', 'max', 'min']):
+            return "threshold"
+        
+        # Percentages
+        if any(keyword in var_lower for keyword in ['pct', 'percent', 'ratio']) or (isinstance(value, float) and 0 < value <= 1):
+            return "percentage"
+        
+        # Timeouts
+        if any(keyword in var_lower for keyword in ['timeout', 'delay', 'wait']):
+            return "timeout"
+        
+        # Retries
+        if any(keyword in var_lower for keyword in ['retry', 'attempt', 'max_retries']):
+            return "retry"
+        
+        # Ports
+        if 'port' in var_lower and isinstance(value, int) and 1 <= value <= 65535:
+            return "port"
+        
+        # Sizes
+        if any(keyword in var_lower for keyword in ['size', 'count', 'number']):
+            return "size"
+        
+        return ""
+    
+    def _suggest_config_key(self, var_name: str, value: Any) -> str:
+        """Suggest a configuration key for a magic value."""
+        var_lower = var_name.lower()
+        
+        # Convert snake_case to UPPER_CASE
+        config_key = var_name.upper()
+        
+        # Add prefixes based on category
+        if any(keyword in var_lower for keyword in ['threshold', 'limit']):
+            config_key = f"THRESHOLD_{config_key}"
+        elif any(keyword in var_lower for keyword in ['timeout', 'delay']):
+            config_key = f"TIMEOUT_{config_key}"
+        elif any(keyword in var_lower for keyword in ['retry', 'attempt']):
+            config_key = f"RETRY_{config_key}"
+        
+        return config_key
 
 
 class ConfigurationMigrator:
-    """Migrates hardcoded values to centralized configuration."""
+    """Migrates magic values to centralized configuration."""
     
     def __init__(self):
-        self.config = get_config()
-        self.magic_values_found: Dict[str, List[Tuple[str, int, str]]] = {}
-        self.migration_log: List[str] = []
+        self.detector = MagicValueDetector()
+        self.magic_values: List[MagicValue] = []
     
-    def scan_for_magic_values(self, directory: str = "app") -> None:
-        """Scan directory for magic values."""
-        print(f"🔍 Scanning {directory} for magic values...")
-        
-        patterns = {
-            "decimal_values": r"Decimal\(['\"](0\.\d+)['\"]\)",
-            "float_values": r"(\d+\.\d+)(?![a-zA-Z])",
-            "threshold_patterns": r"(threshold|limit|max_|min_|pct|ratio)",
-            "hardcoded_percentages": r"(\d+\.\d+)(?=\s*%)",
-            "hardcoded_ratios": r"(\d+\.\d+)(?=\s*ratio)",
+    def scan_codebase(self, root_path: Path) -> Dict[str, List[MagicValue]]:
+        """Scan the entire codebase for magic values."""
+        results = {
+            "threshold": [],
+            "percentage": [],
+            "timeout": [],
+            "retry": [],
+            "port": [],
+            "size": [],
+            "other": []
         }
         
-        for file_path in Path(directory).rglob("*.py"):
-            if "test_" in file_path.name or "__pycache__" in str(file_path):
+        # Scan Python files
+        for py_file in root_path.rglob("*.py"):
+            if "test" in str(py_file) or "__pycache__" in str(py_file):
                 continue
-                
-            try:
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                    lines = content.split('\n')
-                    
-                    for i, line in enumerate(lines, 1):
-                        for pattern_name, pattern in patterns.items():
-                            matches = re.finditer(pattern, line, re.IGNORECASE)
-                            for match in matches:
-                                value = match.group(1) if match.groups() else match.group(0)
-                                
-                                if pattern_name not in self.magic_values_found:
-                                    self.magic_values_found[pattern_name] = []
-                                
-                                self.magic_values_found[pattern_name].append((
-                                    str(file_path),
-                                    i,
-                                    line.strip()
-                                ))
-                                
-            except Exception as e:
-                print(f"⚠️  Error scanning {file_path}: {e}")
-    
-    def analyze_magic_values(self) -> None:
-        """Analyze found magic values and categorize them."""
-        print("\n📊 Analysis of Magic Values:")
-        
-        for category, values in self.magic_values_found.items():
-            print(f"\n{category.upper()}:")
-            unique_values = set()
             
-            for file_path, line_num, line_content in values:
-                # Extract numeric values
-                numeric_matches = re.findall(r'\d+\.\d+', line_content)
-                for match in numeric_matches:
-                    unique_values.add(match)
-                
-                print(f"  📄 {file_path}:{line_num}")
-                print(f"     {line_content}")
+            magic_values = self.detector.scan_file(py_file)
+            self.magic_values.extend(magic_values)
             
-            print(f"  🔢 Unique values found: {sorted(unique_values)}")
+            for mv in magic_values:
+                category = mv.category or "other"
+                results[category].append(mv)
+        
+        return results
     
-    def create_migration_plan(self) -> Dict[str, any]:
-        """Create a migration plan for identified magic values."""
-        print("\n📋 Creating Migration Plan...")
-        
-        migration_plan = {
-            "trading_thresholds": {},
-            "strategy_configs": {},
-            "file_modifications": []
-        }
-        
-        # Common threshold values found
-        common_thresholds = {
-            "0.05": "stop_loss_pct",
-            "0.1": "max_position_size", 
-            "0.15": "max_drawdown_limit",
-            "0.2": "max_sector_exposure",
-            "0.3": "max_sector_exposure",
-            "0.7": "max_correlation",
-            "0.8": "max_total_exposure",
-            "30.0": "rsi_oversold",
-            "70.0": "rsi_overbought",
-            "40": "rsi_threshold",
-            "2.0": "z_score_threshold",
-            "1.5": "volume_threshold"
-        }
-        
-        # Map found values to configuration
-        for category, values in self.magic_values_found.items():
-            for file_path, line_num, line_content in values:
-                numeric_matches = re.findall(r'\d+\.\d+|\d+', line_content)
-                
-                for match in numeric_matches:
-                    if match in common_thresholds:
-                        threshold_name = common_thresholds[match]
-                        
-                        if threshold_name not in migration_plan["trading_thresholds"]:
-                            migration_plan["trading_thresholds"][threshold_name] = {
-                                "current_value": match,
-                                "files": []
-                            }
-                        
-                        migration_plan["trading_thresholds"][threshold_name]["files"].append({
-                            "file": file_path,
-                            "line": line_num,
-                            "content": line_content
-                        })
-        
-        return migration_plan
-    
-    def apply_migration_plan(self, migration_plan: Dict[str, any]) -> None:
-        """Apply the migration plan."""
-        print("\n🚀 Applying Migration Plan...")
-        
-        # Update trading thresholds
-        for threshold_name, data in migration_plan["trading_thresholds"].items():
-            print(f"  📝 Updating {threshold_name} = {data['current_value']}")
-            
-            # Update configuration
-            if hasattr(self.config.trading, threshold_name):
-                setattr(self.config.trading, threshold_name, float(data['current_value']))
-                self.migration_log.append(f"Updated {threshold_name} to {data['current_value']}")
-        
-        # Update strategy configurations
-        self.update_strategy_configurations()
-        
-        print(f"✅ Migration completed. {len(self.migration_log)} changes applied.")
-    
-    def update_strategy_configurations(self) -> None:
-        """Update strategy configurations with centralized values."""
-        print("\n🔧 Updating Strategy Configurations...")
-        
-        # Momentum strategy
-        momentum_config = {
-            "enabled": True,
-            "weight": 1.0,
-            "parameters": {
-                "rsi_threshold": 40,
-                "momentum_threshold": 0.02,
-                "volume_threshold": 1.5,
-                "lookback_period": 14
-            },
-            "max_position_size": self.config.trading.max_position_size,
-            "stop_loss_pct": self.config.trading.stop_loss_pct,
-            "take_profit_pct": self.config.trading.take_profit_pct,
-            "min_sharpe_ratio": 1.2,
-            "max_drawdown": self.config.trading.max_drawdown_limit,
-            "min_win_rate": 0.45
-        }
-        
-        update_strategy_config("momentum", momentum_config)
-        save_strategy_config("momentum")
-        self.migration_log.append("Updated momentum strategy configuration")
-        
-        # Mean reversion strategy
-        mean_reversion_config = {
-            "enabled": True,
-            "weight": 0.8,
-            "parameters": {
-                "z_score_threshold": 2.0,
-                "lookback_period": 20,
-                "volatility_threshold": 0.05,
-                "mean_reversion_speed": 0.1
-            },
-            "max_position_size": self.config.trading.max_position_size * 0.8,
-            "stop_loss_pct": self.config.trading.stop_loss_pct * 0.6,
-            "take_profit_pct": self.config.trading.take_profit_pct * 0.4,
-            "min_sharpe_ratio": 1.0,
-            "max_drawdown": self.config.trading.max_drawdown_limit,
-            "min_win_rate": 0.40
-        }
-        
-        update_strategy_config("mean_reversion", mean_reversion_config)
-        save_strategy_config("mean_reversion")
-        self.migration_log.append("Updated mean reversion strategy configuration")
-        
-        # Pairs trading strategy
-        pairs_trading_config = {
-            "enabled": True,
-            "weight": 0.6,
-            "parameters": {
-                "cointegration_threshold": 0.05,
-                "min_correlation": 0.7,
-                "max_pair_exposure": 0.2,
-                "lookback_period": 30,
-                "hedge_ratio_threshold": 0.1
-            },
-            "max_position_size": self.config.trading.max_position_size * 1.5,
-            "stop_loss_pct": self.config.trading.stop_loss_pct * 0.8,
-            "take_profit_pct": self.config.trading.take_profit_pct * 0.53,
-            "min_sharpe_ratio": 1.5,
-            "max_drawdown": self.config.trading.max_drawdown_limit * 0.67,
-            "min_win_rate": 0.50
-        }
-        
-        update_strategy_config("pairs_trading", pairs_trading_config)
-        save_strategy_config("pairs_trading")
-        self.migration_log.append("Updated pairs trading strategy configuration")
-    
-    def generate_migration_report(self) -> None:
+    def generate_migration_report(self, results: Dict[str, List[MagicValue]]) -> str:
         """Generate a migration report."""
-        print("\n📊 Migration Report:")
-        print("=" * 50)
+        report = []
+        report.append("# Magic Values Migration Report")
+        report.append("=" * 50)
+        report.append("")
         
-        print(f"Total magic values found: {sum(len(v) for v in self.magic_values_found.values())}")
-        print(f"Categories analyzed: {len(self.magic_values_found)}")
-        print(f"Changes applied: {len(self.migration_log)}")
+        total_values = sum(len(values) for values in results.values())
+        report.append(f"Total magic values found: {total_values}")
+        report.append("")
         
-        print("\n📝 Changes Applied:")
-        for change in self.migration_log:
-            print(f"  ✅ {change}")
+        for category, values in results.items():
+            if not values:
+                continue
+            
+            report.append(f"## {category.title()} Values ({len(values)})")
+            report.append("")
+            
+            for mv in values[:10]:  # Show first 10
+                report.append(f"- **{mv.file_path}:{mv.line_number}**")
+                report.append(f"  - Value: `{mv.value}`")
+                report.append(f"  - Context: `{mv.context}`")
+                report.append(f"  - Suggested config: `{mv.suggested_config_key}`")
+                report.append("")
+            
+            if len(values) > 10:
+                report.append(f"... and {len(values) - 10} more")
+                report.append("")
         
-        print("\n🔧 Configuration Files Updated:")
-        print("  📄 config/strategies/momentum.yaml")
-        print("  📄 config/strategies/mean_reversion.yaml")
-        print("  📄 config/strategies/pairs_trading.yaml")
-        print("  📄 config/centralized.env")
-        
-        print("\n📋 Next Steps:")
-        print("  1. Review updated configuration files")
-        print("  2. Test strategies with new configuration")
-        print("  3. Update environment variables if needed")
-        print("  4. Run tests to ensure everything works")
+        return "\n".join(report)
     
-    def validate_migration(self) -> bool:
-        """Validate that migration was successful."""
-        print("\n🔍 Validating Migration...")
+    def generate_config_additions(self, results: Dict[str, List[MagicValue]]) -> str:
+        """Generate configuration additions for .env file."""
+        config_lines = []
+        config_lines.append("# Additional configuration from magic values migration")
+        config_lines.append("")
         
-        try:
-            # Validate configuration
-            is_valid = self.config.validate_configuration()
-            
-            if is_valid:
-                print("✅ Configuration validation passed")
-            else:
-                print("❌ Configuration validation failed")
-                return False
-            
-            # Check strategy configurations
-            strategies = ["momentum", "mean_reversion", "pairs_trading"]
-            for strategy_name in strategies:
-                strategy_config = self.config.get_strategy_config(strategy_name)
-                if strategy_config:
-                    print(f"✅ {strategy_name} strategy configuration loaded")
-                else:
-                    print(f"❌ {strategy_name} strategy configuration not found")
-                    return False
-            
-            print("✅ Migration validation passed")
-            return True
-            
-        except Exception as e:
-            print(f"❌ Migration validation failed: {e}")
-            return False
+        # Group by suggested config key to avoid duplicates
+        unique_configs = {}
+        
+        for category, values in results.items():
+            for mv in values:
+                key = mv.suggested_config_key
+                if key not in unique_configs:
+                    unique_configs[key] = mv.value
+        
+        for key, value in sorted(unique_configs.items()):
+            config_lines.append(f"{key}={value}")
+        
+        return "\n".join(config_lines)
+    
+    def save_migration_report(self, output_path: Path):
+        """Save migration report to file."""
+        results = self.scan_codebase(Path("."))
+        report = self.generate_migration_report(results)
+        config_additions = self.generate_config_additions(results)
+        
+        with open(output_path, 'w') as f:
+            f.write(report)
+            f.write("\n\n")
+            f.write("## Configuration Additions\n")
+            f.write("=" * 30)
+            f.write("\n\n")
+            f.write("Add these to your .env file:\n\n")
+            f.write(config_additions)
 
 
 def main():
-    """Main migration function."""
-    parser = argparse.ArgumentParser(description="Migrate magic values to centralized configuration")
-    parser.add_argument("--scan-only", action="store_true", help="Only scan for magic values, don't migrate")
-    parser.add_argument("--directory", default="app", help="Directory to scan (default: app)")
-    parser.add_argument("--validate-only", action="store_true", help="Only validate current configuration")
-    
-    args = parser.parse_args()
-    
+    """Main function for configuration migration."""
     migrator = ConfigurationMigrator()
     
-    if args.validate_only:
-        print("🔍 Validating current configuration...")
-        is_valid = migrator.validate_migration()
-        sys.exit(0 if is_valid else 1)
-    
-    print("🚀 Starting Configuration Migration")
-    print("=" * 50)
-    
-    # Scan for magic values
-    migrator.scan_for_magic_values(args.directory)
-    
-    if args.scan_only:
-        migrator.analyze_magic_values()
-        return
-    
-    # Create and apply migration plan
-    migration_plan = migrator.create_migration_plan()
-    migrator.apply_migration_plan(migration_plan)
-    
-    # Validate migration
-    is_valid = migrator.validate_migration()
+    # Scan codebase
+    print("Scanning codebase for magic values...")
+    results = migrator.scan_codebase(Path("."))
     
     # Generate report
-    migrator.generate_migration_report()
+    print("Generating migration report...")
+    migrator.save_migration_report(Path("magic_values_report.md"))
     
-    if not is_valid:
-        print("\n❌ Migration validation failed. Please check the configuration.")
-        sys.exit(1)
+    # Print summary
+    total_values = sum(len(values) for values in results.values())
+    print(f"\nMigration complete!")
+    print(f"Total magic values found: {total_values}")
+    print(f"Report saved to: magic_values_report.md")
     
-    print("\n🎉 Migration completed successfully!")
+    for category, values in results.items():
+        if values:
+            print(f"- {category}: {len(values)} values")
 
 
 if __name__ == "__main__":

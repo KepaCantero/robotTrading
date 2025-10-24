@@ -126,7 +126,7 @@ class APIConfig(BaseSettings):
     api_workers: int = Field(default=1, env="API_WORKERS")
     
     # Security
-    secret_key: str = Field(default="your-secret-key-here", env="SECRET_KEY")
+    secret_key: str = Field(default="12345678901234567890123456789012", env="SECRET_KEY")
     access_token_expire_minutes: int = Field(default=30, env="ACCESS_TOKEN_EXPIRE_MINUTES")
     refresh_token_expire_days: int = Field(default=7, env="REFRESH_TOKEN_EXPIRE_DAYS")
     
@@ -298,7 +298,7 @@ class CentralizedConfig(BaseSettings):
                         "debug"
                     )
                 
-                if self.api.secret_key == "your-secret-key-here":
+                if self.api.secret_key == "12345678901234567890123456789012":
                     raise_configuration_error(
                         "Default secret key cannot be used in production",
                         "secret_key"

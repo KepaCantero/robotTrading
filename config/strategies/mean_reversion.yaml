@@ -1,22 +1,23 @@
 # Mean Reversion Strategy Configuration
-mean_reversion:
-  name: "mean_reversion"
-  enabled: true
-  weight: 0.8
-  
-  # Strategy-specific parameters
-  parameters:
-    z_score_threshold: 2.0
-    lookback_period: 20
-    mean_reversion_speed: 0.1
-    volatility_threshold: 0.05
-    
-  # Risk parameters (override global if needed)
-  max_position_size: 0.08
-  stop_loss_pct: 0.03
-  take_profit_pct: 0.06
-  
-  # Performance thresholds
-  min_sharpe_ratio: 1.0
-  max_drawdown: 0.15
-  min_win_rate: 0.40
+name: mean_reversion
+enabled: true
+weight: 0.8
+
+# Strategy-specific parameters
+parameters:
+  z_score_threshold: 2.0
+  lookback_period: 20
+  mean_reversion_speed: 0.1
+  volatility_threshold: 0.05
+  min_reversion_signal: 0.02
+  max_reversion_signal: 0.15
+
+# Risk parameters
+max_position_size: 0.08
+stop_loss_pct: 0.03
+take_profit_pct: 0.06
+
+# Performance thresholds
+min_sharpe_ratio: 1.0
+max_drawdown: 0.15
+min_win_rate: 0.4
