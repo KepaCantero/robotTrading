@@ -1,0 +1,35 @@
+# Codecov Configuration
+# TASK-7: Configuración de CI/CD pipeline
+
+coverage:
+  status:
+    project:
+      default:
+        target: 80%
+        threshold: 5%
+    patch:
+      default:
+        target: 70%
+        threshold: 5%
+
+codecov:
+  require_ci_to_pass: yes
+
+comment:
+  layout: "header,diff,files,footer"
+  behavior: default
+  require_changes: false
+
+github_checks:
+  annotations: true
+
+ignore:
+  - "tests/"
+  - "docs/"
+  - "*.md"
+  - "requirements*.txt"
+  - "Dockerfile"
+  - "docker-compose*.yml"
+  - ".github/"
+  - "scripts/"
+  - "config/"
