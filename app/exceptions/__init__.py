@@ -14,7 +14,25 @@ from app.exceptions.error_handler import (
     starlette_http_exception_handler,
     generic_exception_handler
 )
-from app.exceptions.trading_exceptions import AlgoTradingError
+# Import from core exceptions to avoid circular dependencies
+from app.core.exceptions import (
+    AlgoTradingError,
+    ConfigurationError,
+    ValidationError,
+    BusinessLogicError,
+    MarketDataError,
+    TradingError,
+    PortfolioError,
+    SignalError,
+    BacktestError,
+    DatabaseError,
+    APIError,
+    raise_configuration_error,
+    raise_validation_error,
+    raise_business_logic_error,
+    raise_market_data_error,
+    raise_trading_error
+)
 from app.middleware.error_middleware import (
     ErrorHandlingMiddleware,
     RequestContextMiddleware,
@@ -57,25 +75,23 @@ def create_error_handling_app() -> FastAPI:
 
 
 # Export main classes and functions
-from app.exceptions.trading_exceptions import (
+from app.core.exceptions import (
     AlgoTradingError,
+    ConfigurationError,
     ValidationError,
     BusinessLogicError,
-    ExternalAPIError,
-    DatabaseError,
-    NetworkError,
-    ConfigurationError,
-    SecurityError,
-    PerformanceError,
-    SystemError,
-    ErrorSeverity,
-    ErrorCategory,
-    TradingError,
-    SignalError,
-    PortfolioError,
-    RiskManagementError,
     MarketDataError,
-    BrokerError
+    TradingError,
+    PortfolioError,
+    SignalError,
+    BacktestError,
+    DatabaseError,
+    APIError,
+    raise_configuration_error,
+    raise_validation_error,
+    raise_business_logic_error,
+    raise_market_data_error,
+    raise_trading_error
 )
 
 from app.exceptions.error_handler import (
@@ -92,25 +108,23 @@ from app.exceptions.error_handler import (
 __all__ = [
     # Main classes
     "AlgoTradingError",
+    "ConfigurationError",
     "ValidationError",
     "BusinessLogicError",
-    "ExternalAPIError",
-    "DatabaseError",
-    "NetworkError",
-    "ConfigurationError",
-    "SecurityError",
-    "PerformanceError",
-    "SystemError",
-    "TradingError",
-    "SignalError",
-    "PortfolioError",
-    "RiskManagementError",
     "MarketDataError",
-    "BrokerError",
+    "TradingError",
+    "PortfolioError",
+    "SignalError",
+    "BacktestError",
+    "DatabaseError",
+    "APIError",
     
-    # Enums
-    "ErrorSeverity",
-    "ErrorCategory",
+    # Helper functions
+    "raise_configuration_error",
+    "raise_validation_error",
+    "raise_business_logic_error",
+    "raise_market_data_error",
+    "raise_trading_error",
     
     # Handler
     "ErrorHandler",
@@ -118,11 +132,6 @@ __all__ = [
     
     # Functions
     "create_error_response",
-    "raise_validation_error",
-    "raise_business_logic_error",
-    "raise_external_api_error",
-    "raise_database_error",
-    "raise_configuration_error",
     
     # FastAPI integration
     "setup_error_handling",

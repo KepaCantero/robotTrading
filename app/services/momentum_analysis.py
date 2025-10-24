@@ -18,7 +18,7 @@ from app.models.momentum import (
 )
 from app.models.assets import Asset, AssetClass
 from app.services.asset_identification import AssetIdentificationService, get_asset_identification_service
-from app.core.centralized_config import get_trading_thresholds
+from app.core.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +143,7 @@ class MomentumAnalysisService:
     def _initialize_default_strategies(self):
         """Initialize default momentum strategies using centralized configuration."""
         # Get trading thresholds from centralized config
-        trading_config = get_trading_thresholds()
+        trading_config = get_config().trading
         
         strategies = [
             MomentumStrategy(

@@ -24,7 +24,7 @@ from app.models.paper_trading import (
     OrderType
 )
 from app.models.market_data import Quote
-from app.core.centralized_config import get_risk_thresholds
+from app.core.centralized_config import get_config
 
 
 class PaperTradingService:
@@ -54,7 +54,7 @@ class PaperTradingService:
     def _create_default_config(self) -> None:
         """Create default paper trading configuration using centralized config."""
         # Get risk management thresholds from centralized config
-        risk_config = get_risk_thresholds()
+        risk_config = get_config().trading
         
         default_config = PaperTradingConfig(
             name="Default Paper Trading",
