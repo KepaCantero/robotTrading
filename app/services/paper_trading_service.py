@@ -25,6 +25,8 @@ from app.models.paper_trading import (
 )
 from app.models.market_data import Quote
 from app.core.centralized_config import get_config
+from app.services.slippage_analysis_service import DynamicSlippageService
+from app.models.slippage_analysis import SlippageCalculationParams
 
 
 class PaperTradingService:
@@ -44,6 +46,10 @@ class PaperTradingService:
         self.configs: Dict[UUID, PaperTradingConfig] = {}
         self.trades: Dict[UUID, PaperTrade] = {}
         self.positions: Dict[str, Dict[UUID, PaperPosition]] = {}  # symbol -> portfolio_id -> position
+        
+        # Servicio de análisis de slippage dinámico
+        slippage_params = SlippageCalculationParams()
+        self.slippage_service = DynamicSlippageService(slippage_params)
         
         # Market data cache for realistic pricing
         self.market_data_cache: Dict[str, Quote] = {}
@@ -268,8 +274,10 @@ class PaperTradingService:
         else:
             # Realistic mode: calculate costs
             
-            # Calculate slippage
-            slippage_amount = trade.quantity * market_price * config.slippage_rate
+            # Calculate dynamic slippage
+            slippage_amount = self._calculate_dynamic_slippage(
+                trade, market_price, quote, config
+            )
             trade.slippage = slippage_amount
             
             # Calculate commission
@@ -478,6 +486,66 @@ class PaperTradingService:
         session.ended_at = datetime.utcnow()
         
         return session
+    
+    def _calculate_dynamic_slippage(
+        self, 
+        trade: PaperTrade, 
+        market_price: Decimal, 
+        quote: Quote, 
+        config: PaperTradingConfig
+    ) -> Decimal:
+        """Calcular slippage dinámico basado en volatilidad y liquidez."""
+        try:
+            # Obtener datos necesarios para el análisis
+            asset_symbol = trade.symbol
+            order_side = trade.order_type.value if hasattr(trade.order_type, 'value') else str(trade.order_type)
+            order_size = trade.quantity * market_price
+            
+            # Simular datos históricos de precios (en producción vendrían del market data service)
+            price_history = self._get_price_history(asset_symbol, days=30)
+            
+            # Simular métricas de mercado (en producción vendrían de APIs reales)
+            volume_24h = Decimal('1000000')  # Simulado
+            order_book_depth = Decimal('500000')  # Simulado
+            market_cap = Decimal('10000000000')  # Simulado
+            
+            # Calcular slippage dinámico
+            slippage_analysis = self.slippage_service.calculate_dynamic_slippage(
+                asset_symbol=asset_symbol,
+                base_price=market_price,
+                order_side=order_side,
+                order_size=order_size,
+                quote=quote,
+                price_history=price_history,
+                volume_24h=volume_24h,
+                order_book_depth=order_book_depth,
+                market_cap=market_cap
+            )
+            
+            # Convertir slippage porcentual a cantidad absoluta
+            slippage_amount = order_size * slippage_analysis.total_slippage / Decimal('100')
+            
+            return slippage_amount
+            
+        except Exception as e:
+            # Fallback al slippage fijo si hay error
+            return trade.quantity * market_price * config.slippage_rate
+    
+    def _get_price_history(self, symbol: str, days: int = 30) -> List[Decimal]:
+        """Obtener historial de precios para cálculo de volatilidad."""
+        # En producción, esto vendría del market data service
+        # Por ahora, simulamos datos históricos
+        base_price = Decimal('100.0')
+        prices = []
+        
+        for i in range(days):
+            # Simular variación de precios con tendencia aleatoria
+            variation = Decimal(str(random.uniform(-0.05, 0.05)))  # ±5% variación
+            price = base_price * (1 + variation)
+            prices.append(price)
+            base_price = price  # Usar precio anterior como base
+        
+        return prices
 
 
 # Global service instance

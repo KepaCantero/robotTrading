@@ -9,6 +9,7 @@ thresholds and parameters.
 
 from enum import Enum
 from typing import Dict, Any, Optional, List
+from decimal import Decimal
 from pydantic import BaseModel, Field, field_validator
 from pydantic_settings import BaseSettings
 import yaml
@@ -61,6 +62,13 @@ class TradingThresholds(BaseModel):
     max_latency_ms: int = Field(default=1000, description="Maximum acceptable latency in milliseconds")
     max_execution_time_ms: int = Field(default=500, description="Maximum execution time in milliseconds")
     
+    # Slippage analysis parameters
+    volatility_threshold_high: Decimal = Field(default=Decimal('30.0'), description="High volatility threshold (%)")
+    volatility_threshold_extreme: Decimal = Field(default=Decimal('50.0'), description="Extreme volatility threshold (%)")
+    min_liquidity_score: float = Field(default=0.3, description="Minimum liquidity score (0-1)")
+    max_spread_threshold: Decimal = Field(default=Decimal('2.0'), description="Maximum spread threshold (%)")
+    base_slippage: Decimal = Field(default=Decimal('0.1'), description="Base slippage rate (%)")
+    
     @field_validator('max_position_size', 'min_position_size', 'stop_loss_pct', 'take_profit_pct', 
                      'daily_loss_limit', 'max_drawdown_limit', 'max_total_exposure', 'max_sector_exposure', 
                      'max_correlation', 'circuit_breaker_daily_loss', 'circuit_breaker_drawdown', 
@@ -69,6 +77,14 @@ class TradingThresholds(BaseModel):
     def validate_percentage(cls, v):
         if not 0 < v <= 1:
             raise ValueError("Percentage values must be between 0 and 1")
+        return v
+    
+    @field_validator('volatility_threshold_high', 'volatility_threshold_extreme', 
+                     'max_spread_threshold', 'base_slippage')
+    @classmethod
+    def validate_decimal_percentage(cls, v):
+        if not 0 < v <= 100:
+            raise ValueError("Decimal percentage values must be between 0 and 100")
         return v
     
     @field_validator('min_signal_strength', 'min_signal_confidence', 'min_liquidity_score')

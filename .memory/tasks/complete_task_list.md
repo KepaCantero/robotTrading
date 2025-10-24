@@ -4,8 +4,8 @@
 
 ### **TOTAL DE TAREAS: 40**
 
-- **Tareas Completadas**: 11 (TASK-1 a TASK-7, TASK-8, TASK-9, TASK-31)
-- **Tareas Pendientes**: 29 (TASK-10 a TASK-30, TASK-32 a TASK-40)
+- **Tareas Completadas**: 12 (TASK-1 a TASK-7, TASK-8, TASK-9, TASK-10, TASK-31)
+- **Tareas Pendientes**: 28 (TASK-11 a TASK-30, TASK-32 a TASK-40)
 - **Estado General**: MVP READY para AWS/Docker deployment + Sistema de base de datos + CI/CD automatizado + Backtesting Exhaustivo + Control de Riesgos + Sistema de Estrategias Múltiples
 - **Prioridad Actual**: Sistema estable 1 mes en AWS + Docker con paper trading activo + Backtesting profesional + Control de riesgos implementado + Estrategias múltiples operativas + Infraestructura completa
 
@@ -30,11 +30,11 @@ Las tareas están organizadas por el número de archivos que requieren modificar
 
 ### 🔴 **FASE 1: TAREAS CON MÁS ARCHIVOS (15+ archivos) - Cambios Estructurales**
 
-| ID          | Tarea                            | Estado       | Archivos | Descripción                                                                                                                                                                                                                                           |
-| ----------- | -------------------------------- | ------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **TASK-31** | Sistema de Estrategias Múltiples | ⏳ Pendiente | 20+      | Implementar Strategy Protocol, Factory, Registry y Config-driven selection para ejecutar diferentes estrategias en backtesting y paper trading sin modificar código, basado en principio "Build a machine that can build, test, and run any strategy" |
-| **TASK 10** | Centralización de Configuración  | ⏳ Pendiente | 15+      | Extraer todos los valores mágicos y thresholds hardcodeados a configuración externa para facilitar optimización                                                                                                                                       |
-| **TASK 15** | Refactorización de Servicios     | ⏳ Pendiente | 15+      | Dividir SignalScorerService y PortfolioService en componentes menores para mejorar mantenibilidad                                                                                                                                                     |
+| ID          | Tarea                            | Estado        | Archivos | Descripción                                                                                                                                                                                                                                           |
+| ----------- | -------------------------------- | ------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **TASK-31** | Sistema de Estrategias Múltiples | ✅ Completada | 20+      | Implementar Strategy Protocol, Factory, Registry y Config-driven selection para ejecutar diferentes estrategias en backtesting y paper trading sin modificar código, basado en principio "Build a machine that can build, test, and run any strategy" |
+| **TASK 10** | Centralización de Configuración  | ✅ Completada | 15+      | Extraer todos los valores mágicos y thresholds hardcodeados a configuración externa para facilitar optimización                                                                                                                                       |
+| **TASK 15** | Refactorización de Servicios     | ⏳ Pendiente  | 15+      | Dividir SignalScorerService y PortfolioService en componentes menores para mejorar mantenibilidad                                                                                                                                                     |
 
 ### 🟠 **FASE 2: TAREAS CON ARCHIVOS MEDIOS (5-14 archivos) - Funcionalidades Core**
 
@@ -80,8 +80,8 @@ Las tareas están organizadas por el número de archivos que requieren modificar
 
 ### **🔴 Críticas MVP (Fase 1-2)**
 
-- **TASK-31**: Sistema de Estrategias Múltiples (20+ archivos)
-- **TASK-10**: Centralización de Configuración (15+ archivos)
+- **TASK-31**: ✅ COMPLETADA - Sistema de Estrategias Múltiples (20+ archivos)
+- **TASK-10**: ✅ COMPLETADA - Centralización de Configuración (15+ archivos)
 - **TASK-15**: Refactorización de Servicios (15+ archivos)
 - **TASK-V2**: Backtesting Exhaustivo (8-10 archivos)
 - **TASK-V3**: Métricas de Paper Trading (6-8 archivos)
@@ -105,8 +105,8 @@ Las tareas están organizadas por el número de archivos que requieren modificar
 
 ### **FASE 1: MVP OPERATIVO AWS/DOCKER (Tareas Críticas)**
 
-1. **TASK-31**: Sistema de Estrategias Múltiples
-2. **TASK-10**: Centralización de Configuración
+1. **TASK-31**: ✅ COMPLETADA - Sistema de Estrategias Múltiples
+2. **TASK-10**: ✅ COMPLETADA - Centralización de Configuración
 3. **TASK-15**: Refactorización de Servicios
 4. **TASK-V2**: Backtesting Exhaustivo
 5. **TASK-V3**: Métricas de Paper Trading
