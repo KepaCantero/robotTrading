@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/api/signals.py
+# hypothesis_version: 6.141.1
+
+[0.0, 10.0, 50.0, 60.0, 100, 400, 404, 500, '/clear-expired', '/evaluate', '/execute/{signal_id}', '/health', '/next', '/position-size-limit', '/signals', '/statistics', '/symbol/{symbol}', '/thresholds', 'confidence', 'healthy', 'liquidity', 'max_position_size', 'message', 'queue_size', 'queue_summary', 'signal', 'signals', 'signals_executed', 'signals_processed', 'statistics', 'status', 'success', 'success_rate', 'total_pnl', 'unhealthy']

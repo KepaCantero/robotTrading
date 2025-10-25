@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/api/market_data.py
+# hypothesis_version: 6.141.1
+
+[0.1, 1.0, 60.0, 100, 300, 365, 400, 404, 500, 3600, 3650, '/cache/clear', '/cache/stats', '/feeds', '/feeds/{config_id}', '/historical/{symbol}', '/market-data', '/quotes', '/quotes/top-liquid', '/quotes/{symbol}', '/status', '/subscribe', 'API key for the feed', 'Base URL for the API', 'Data frequency', 'Error message if any', 'Feed configuration', 'Feed configurations', 'Historical data', 'Quote data', 'Response timestamp', 'Service status data', 'Trading symbol', 'Trading symbols', 'Type of data feed', 'data', 'frequency', 'market-data', 'message', 'success', 'symbols']

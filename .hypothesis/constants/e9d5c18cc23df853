@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/strategies/pairs_trading.py
+# hypothesis_version: 6.141.1
+
+[0.05, 0.1, 0.2, 0.7, 1.0, 2.0, 3.0, 65.0, 70.0, 75.0, '0', '0.2', '0.4', '0.85', '0.9', '0.95', '1.1', '50', 'AAPL', 'MSFT', 'buy_asset1', 'hedge_ratio', 'lookback_period', 'max_pair_exposure', 'max_position_size', 'max_spread_deviation', 'min_correlation', 'pair_symbols', 'pair_type', 'pairs_trading', 'sell_asset1', 'spread', 'spread_threshold', 'stop_loss', 'stop_loss_pct', 'strategy', 'take_profit', 'take_profit_pct']

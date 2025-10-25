@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/database/repositories.py
+# hypothesis_version: 6.141.1
+
+['0', 'COMPLETED', 'T', 'assets', 'backtests', 'bulk_insert', 'count', 'create', 'delete', 'get_active_assets', 'get_active_by_user', 'get_active_users', 'get_all', 'get_by_asset', 'get_by_asset_class', 'get_by_date_range', 'get_by_email', 'get_by_id', 'get_by_level', 'get_by_portfolio', 'get_by_service', 'get_by_strategy', 'get_by_symbol', 'get_by_user', 'get_by_username', 'get_latest_price', 'get_recent_logs', 'get_recent_signals', 'get_trade_summary', 'market_data', 'portfolios', 'positions', 'risk_metrics', 'search_by_name', 'signals', 'system_logs', 'total_commission', 'total_cost', 'total_slippage', 'total_trades', 'total_value', 'trades', 'update', 'update_total_value', 'users']

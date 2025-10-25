@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/services/portfolio_analytics_service.py
+# hypothesis_version: 6.141.1
+
+[-0.1, 0.001, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 0.95, 0.99, 1.2, 100, 252, 365, '-1', '-10', '0', '0.02', '0.05', '0.08', '0.1', '0.25', '0.3', '0.5', '0.75', '1', '10', '100', '100000', '15', '20', '3', '30', '40', '40000', '5', '50', '60', '60000', 'action', 'amount', 'buy_equity', 'market_value', 'quantity', 'reason', 'sell_equity', 'symbol', 'weight']

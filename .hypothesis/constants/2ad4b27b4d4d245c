@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/models/order.py
+# hypothesis_version: 6.141.1
+
+[100, 365, '0', '1000000', '1000000000', 'Average filled price', 'Best ask price', 'Best bid price', 'Closing price', 'Commission paid', 'Data timestamp', 'Filled quantity', 'High price', 'Low price', 'MarketData', 'Opening price', 'Order', 'Order quantity', 'Order status', 'Order timestamp', 'Order type', 'Trading symbol', 'Trading volume', 'after', 'ask', 'bid', 'buy', 'cancelled', 'close_price', 'commission', 'filled', 'filled_price', 'filled_quantity', 'high_price', 'limit', 'low_price', 'market', 'open_price', 'partially_filled', 'pending', 'price', 'quantity', 'rejected', 'sell', 'stop', 'stop_limit', 'stop_price', 'submitted', 'timestamp', 'volume']

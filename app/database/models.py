@@ -40,6 +40,7 @@ class User(Base):
         Index('idx_users_email', 'email'),
         Index('idx_users_username', 'username'),
         Index('idx_users_created_at', 'created_at'),
+        {'extend_existing': True}
     )
 
 
@@ -236,7 +237,7 @@ class Signal(Base):
     confidence: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)  # 0-100
     price: Mapped[Decimal] = mapped_column(Numeric(15, 4), nullable=False)
     volume: Mapped[Optional[Decimal]] = mapped_column(Numeric(15, 8), nullable=True)
-    metadata: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    meta_data: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     
     # Relationships
@@ -327,7 +328,7 @@ class SystemLog(Base):
     level: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
     service: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     message: Mapped[str] = mapped_column(Text, nullable=False)
-    metadata: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    meta_data: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
     timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     

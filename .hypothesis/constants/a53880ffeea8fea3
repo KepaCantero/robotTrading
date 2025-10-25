@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/models/assets.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.4, 0.6, 50.0, 100.0, 100, '0.01', '100000', '1000000', 'Additional metadata', 'Allowed exchanges', 'Asset class', 'Asset class category', 'Asset symbol', 'Average daily volume', 'BINANCE', 'CME', 'COINBASE', 'Current market price', 'Daily trading volume', 'FXCM', 'Full asset name', 'ICE', 'KRAKEN', 'LSE', 'Maximum spread', 'Maximum trade size', 'Metrics timestamp', 'Minimum daily volume', 'Minimum trade size', 'NASDAQ', 'NYSE', 'Name cannot be empty', 'OANDA', 'Only active assets', 'Primary exchange', 'Ranked assets', 'Ranking date', 'TSE', 'bond', 'commodity', 'crypto', 'equity', 'forex', 'liquidity_score', 'name', 'rank', 'spread_score', 'symbol', 'timestamp', 'volume_score']

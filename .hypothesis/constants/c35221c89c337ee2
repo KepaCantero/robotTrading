@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/exceptions/__init__.py
+# hypothesis_version: 6.141.1
+
+[100, '1.0.0', 'APIError', 'AlgoTrading API', 'AlgoTradingError', 'BacktestError', 'BusinessLogicError', 'ConfigurationError', 'DatabaseError', 'ErrorHandler', 'MarketDataError', 'PortfolioError', 'SignalError', 'TradingError', 'ValidationError', 'error_handler', 'raise_trading_error', 'setup_error_handling']

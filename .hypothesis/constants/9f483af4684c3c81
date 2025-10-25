@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/services/profitability_validation_service.py
+# hypothesis_version: 6.141.1
+
+[100, '0', '0.0002', '0.0005', '0.001', '0.4', '0.5', '1.0', '1.3', '10', '1000', '15', '20', '40', '45', '50', 'consistency', 'declining', 'excellent', 'fair', 'final_capital', 'good', 'high', 'improving', 'initial_capital', 'insufficient_data', 'low', 'margin_trend', 'max_drawdown', 'max_drawdown_limit', 'medium', 'min_net_profit', 'min_profit_factor', 'min_profit_margin', 'min_roi', 'min_sharpe_ratio', 'min_win_rate', 'net_profit', 'net_profit_trend', 'period', 'pnl', 'poor', 'profit_margin', 'rank', 'risk_level', 'roi', 'status', 'strategy', 'strategy_name', 'timestamp', 'volatility', 'win_rate', 'win_rate_trend']

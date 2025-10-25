@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/strategies/execution_engine.py
+# hypothesis_version: 6.141.1
+
+['Risk check failed', 'active_strategy', 'created_at', 'cycle_count', 'execution_rate', 'generate_signals', 'is_running', 'risk_check', 'running', 'stopped', 'unknown']

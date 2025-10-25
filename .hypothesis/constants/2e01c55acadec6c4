@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/database/__init__.py
+# hypothesis_version: 6.141.1
+
+['SELECT 1', 'checkin', 'checkout', 'connect', 'create_tables', 'drop_tables', 'host', 'max_overflow', 'name', 'pool_size', 'pool_timeout', 'port', 'postgresql', 'postgresql://', 'ssl_mode', 'user']

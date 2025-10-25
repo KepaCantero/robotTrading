@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/strategies/mean_reversion.py
+# hypothesis_version: 6.141.1
+
+[0.02, 0.05, 0.1, 1.5, 2.0, 70.0, 75.0, 80.0, '0', '0.015', '0.05', '0.6', '0.95', '80', 'lookback_period', 'max_position_size', 'mean_reversion', 'mean_reversion_speed', 'min_z_score', 'stop_loss', 'stop_loss_pct', 'strategy', 'take_profit', 'take_profit_pct', 'volatility_threshold', 'z_score', 'z_score_threshold']

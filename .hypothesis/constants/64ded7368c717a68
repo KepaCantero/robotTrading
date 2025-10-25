@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/services/portfolio_service.py
+# hypothesis_version: 6.141.1
+
+[-10.0, 0.005, 300, 600, 1800, '0.5', 'api_errors', 'broker', 'cash', 'circuit_breakers', 'cooldown_seconds', 'error', 'error_count', 'last_error_time', 'max_errors', 'performance', 'positions_count', 'simulate_trade', 'slippage', 'state', 'timestamp', 'total_equity', 'total_pnl', 'total_pnl_percentage']

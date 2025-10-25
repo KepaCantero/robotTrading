@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/strategies/strategy_logger.py
+# hypothesis_version: 6.141.1
+
+['ERROR', 'INFO', 'WARNING', 'confidence', 'error_count', 'error_rate', 'event', 'execution_error', 'execution_rate', 'first_log', 'last_log', 'level', 'liquidity_score', 'logger_created_at', 'metadata', 'price', 'priority_score', 'r', 'rejection_rate', 'signal_executed', 'signal_generated', 'signal_rejected', 'signal_type', 'signals_executed', 'signals_generated', 'signals_rejected', 'source', 'strategies', 'strategy', 'strategy_activated', 'strategy_deactivated', 'strategy_error', 'strategy_loaded', 'strategy_unloaded', 'strength', 'symbol', 'timestamp', 'total_logs', 'total_strategies', 'utf-8', 'volume', 'w']

@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/api/optimization.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.5, 1.0, 200, 400, 404, 500, 2020, 2023, '/artifacts', '/health', '/methods', '/optimization', '/optimize-parameters', '/out-of-sample-test', '/parameter-types', '/summary', '/validate-config', 'Artifact not found', 'best_parameters', 'best_score', 'healthy', 'message', 'method_used', 'optimization_date', 'service', 'status', 'strategy_name', 'test_param', 'test_strategy', 'timestamp', 'valid']

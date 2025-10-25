@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/models/market_data.py
+# hypothesis_version: 6.141.1
+
+[0.1, 1.0, 60.0, 300, 365, 3600, 3650, '0', '1000', '1000000', '1000000000', '15m', '1d', '1h', '1m', '1s', '5m', 'API key for the feed', 'Additional metadata', 'Ask price', 'Base URL for the API', 'Bid price', 'Bid-ask spread', 'Cache timestamp', 'Closing price', 'Data feed source', 'Data frequency', 'Data timestamp', 'Dividend amount', 'High price', 'HistoricalData', 'Last data update', 'Last traded price', 'Low price', 'Opening price', 'Price change', 'Price volatility', 'Quote', 'Quote status', 'Quote timestamp', 'Trading symbol', 'Trading volume', 'Type of data feed', 'active', 'adjusted_close', 'after', 'alpha_vantage', 'ask', 'bid', 'binance', 'close', 'error', 'high', 'ibkr_tws', 'inactive', 'last', 'low', 'mock', 'open', 'real_time', 'spread', 'suspended', 'volume', 'yahoo_finance']

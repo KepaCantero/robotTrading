@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/backtesting/models.py
+# hypothesis_version: 6.141.1
+
+[100, '0', '0.01', '0.02', '0.1', '1.0', '100000', '5.0', 'Average losing trade', 'Backtest end date', 'Backtest start date', 'BacktestConfig', 'BacktestResult', 'Commission paid', 'Commission per trade', 'Entry price', 'Entry timestamp', 'Exit price', 'Exit timestamp', 'Final capital', 'Gross loss', 'Gross profit', 'Initial capital', 'Largest losing trade', 'Maximum drawdown', 'Net profit', 'P&L percentage', 'Performance metrics', 'PerformanceMetrics', 'Profit/Loss', 'Sharpe ratio', 'Slippage cost', 'Slippage percentage', 'Sortino ratio', 'Stop loss percentage', 'Total P&L percentage', 'Total profit/loss', 'Total trading days', 'Trade', 'Trade quantity', 'Trade status', 'Trading symbol', 'Win rate percentage', 'after', 'buy', 'cancelled', 'closed', 'open', 'partially_filled', 'sell', 'side', 'slippage_percentage']

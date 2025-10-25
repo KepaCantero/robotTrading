@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/middleware/error_middleware.py
+# hypothesis_version: 6.141.1
+
+[5.0, 400, 429, 500, '*', '/health', '/healthz', '/live', '/ready', '1; mode=block', '60', 'DENY', 'RATE_LIMIT_EXCEEDED', 'Referrer-Policy', 'Retry-After', 'Too many requests', 'X-Frame-Options', 'X-Process-Time', 'X-Request-ID', 'X-XSS-Protection', 'client_ip', 'code', 'content-length', 'content-type', 'content_length', 'content_type', 'details', 'error', 'exception_message', 'exception_type', 'message', 'method', 'nosniff', 'path', 'process_time', 'query_params', 'rate_limit', 'request_id', 'response_size', 'retry_after', 'status_code', 'unknown', 'user-agent', 'user_agent']

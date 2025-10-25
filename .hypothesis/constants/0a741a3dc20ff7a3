@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/api/profitability_validation.py
+# hypothesis_version: 6.141.1
+
+[200, 400, 404, 500, 503, '/analyze/historical', '/compare', '/criteria/default', '/health', '/metrics/summary', '/report', '/validate', '/validate/batch', '0.3', '1.0', '1.0.0', '1.5', '10', '100', '15', '2025-01-27T00:00:00Z', '5', '50', 'cost_impact_ratio', 'error', 'failed', 'gross_profit', 'healthy', 'high', 'low', 'max_drawdown', 'max_drawdown_limit', 'medium', 'min_net_profit', 'min_profit_factor', 'min_profit_margin', 'min_roi', 'min_sharpe_ratio', 'min_win_rate', 'net_profit', 'passed', 'pending', 'profit_factor', 'profit_margin', 'return_on_investment', 'risk_levels', 'service', 'sharpe_ratio', 'status', 'timestamp', 'total_costs', 'unhealthy', 'validation_criteria', 'validation_statuses', 'version', 'warning', 'win_rate']

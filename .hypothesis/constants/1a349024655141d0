@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/core/contracts.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.7, 0.8, 1.0, 100, '-', '.', '0.01', '1000000', '10000000', '100000000', '1000000000', 'ATR', 'BATCH_VALIDATION', 'DATA_CONTRACT', 'DATA_VALIDATION', 'EMA', 'INVARIANT', 'MarketDataContract', 'POSTCONDITION', 'PRECONDITION', 'PositionContract', 'RSI', 'STRONG', 'SignalContract', 'WEAK', '^(BUY|SELL|HOLD)$', 'confidence', 'price', 'symbol']

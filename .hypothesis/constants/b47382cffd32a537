@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/middleware/logging_middleware.py
+# hypothesis_version: 6.141.1
+
+[1000, '/api/market-data/', '/api/portfolio/', '/api/trading/', 'X-Request-ID', 'client_ip', 'content-length', 'content-type', 'content_length', 'content_type', 'duration_ms', 'error_type', 'method', 'path', 'query_params', 'request_id', 'response_size', 'status_code', 'user-agent', 'user_agent']

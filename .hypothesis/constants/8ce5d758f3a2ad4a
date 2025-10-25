@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/services/market_data_service.py
+# hypothesis_version: 6.141.1
+
+[0.0, 1.0, 2.0, 100, 365, 730, 1000, 'AAPL', 'ADBE', 'AMZN', 'BRK.A', 'CRM', 'Cache cleared', 'DIS', 'GOOGL', 'HD', 'JNJ', 'JPM', 'MA', 'META', 'MSFT', 'Mock Data Feed', 'NFLX', 'NVDA', 'PG', 'PYPL', 'TSLA', 'UNH', 'V', 'Yahoo Finance', '_', 'active_entries', 'active_feeds', 'active_subscriptions', 'cache_entries', 'cache_hit_ratio', 'cache_stats', 'expired_entries', 'historical', 'max_size', 'mock://localhost', 'quote', 'total_configs', 'total_entries']

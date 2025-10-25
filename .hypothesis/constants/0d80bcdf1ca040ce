@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/api/portfolio.py
+# hypothesis_version: 6.141.1
+
+[404, 500, 503, '/', '/asset-universe', '/circuit-breakers', '/health', '/portfolio', '/positions', '/positions/{symbol}', '/simulate-trade', 'circuit_breakers', 'degraded', 'healthy', 'message', 'open', 'portfolio', 'portfolio_equity', 'positions_count', 'state', 'status', 'unhealthy']

@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/exceptions/trading_exceptions.py
+# hypothesis_version: 6.141.1
+
+['BUSINESS_ERROR', 'CONFIG_ERROR', 'DB_ERROR', 'NETWORK_ERROR', 'PERF_ERROR', 'SECURITY_ERROR', 'SYSTEM_ERROR', 'VALIDATION_ERROR', 'api_name', 'broker', 'business_logic', 'category', 'component', 'config_key', 'configuration', 'critical', 'current_value', 'data_type', 'database', 'details', 'duration', 'endpoint', 'error_code', 'external_api', 'field', 'high', 'limit', 'low', 'market_data', 'medium', 'message', 'network', 'operation', 'order_id', 'original_error', 'performance', 'portfolio_id', 'risk_management', 'risk_type', 'security', 'severity', 'signal_generation', 'signal_type', 'status_code', 'strategy', 'symbol', 'system', 'table', 'threshold', 'timeout', 'validation', 'value', 'violation_type']

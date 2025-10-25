@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/models/portfolio.py
+# hypothesis_version: 6.141.1
+
+[0.0, 1.0, 100, 300, '-1000000', '-1000000000', '0', '0.01', '1000000', '1000000000', 'ATR to price ratio', 'Asset class', 'Asset class category', 'Average entry price', 'Broker identifier', 'Current market price', 'Current state', 'Detection timestamp', 'Last error timestamp', 'List of positions', 'P&L must be a number', 'Position', 'Position currency', 'Realized profit/loss', 'USD', 'after', 'avg_price', 'bond', 'cash', 'closed', 'commodity', 'crypto', 'equity', 'forex', 'half_open', 'market_price', 'open', 'quantity', 'ranging', 'realized_pnl', 'trending_down', 'trending_up', 'unknown', 'unrealized_pnl', 'volatile']

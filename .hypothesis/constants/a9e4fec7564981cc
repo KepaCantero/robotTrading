@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/strategies/config_loader.py
+# hypothesis_version: 6.141.1
+
+['.json', '.yaml', '.yml', '10MB', 'INFO', 'Reloading config...', 'active_strategies', 'backup_count', 'config', 'config_path', 'is_valid', 'last_loaded', 'level', 'log_path', 'logging', 'max_log_size', 'r', 'strategies', 'strategy_names', 'total_strategies', 'utf-8', 'w']

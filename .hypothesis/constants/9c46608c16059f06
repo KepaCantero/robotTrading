@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/scripts/deployment_manager.py
+# hypothesis_version: 6.141.1
+
+[200, 401, 403, '--action', '--commit', '--environment', '--image', '--status', '--version', '/api/v1/assets', '/api/v1/portfolios', '/api/v1/strategies', '/health', 'Docker image URI', 'ERROR', 'GITHUB_ACTOR', 'GITHUB_REF', 'GITHUB_RUN_ID', 'Git commit hash', 'INFO', 'LoadBalancerArn', 'LoadBalancers', 'Service not found', 'State', 'TargetGroupArn', 'TargetGroupName', 'TargetGroups', 'TargetHealth', 'Version to deploy', '__main__', 'actor', 'commit', 'completed_at', 'create', 'deployment', 'deployments', 'desiredCount', 'desired_count', 'ecs', 'elbv2', 'environment', 'error', 'git_ref', 'health', 'healthy', 'healthy_count', 'image_uri', 'in_progress', 'metadata', 'runningCount', 'running_count', 'services', 'started_at', 'status', 'success', 'targets', 'taskDefinition', 'task_definition', 'update', 'updated_at', 'version', 'workflow_run']

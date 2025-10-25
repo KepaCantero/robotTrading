@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/core/config.py
+# hypothesis_version: 6.141.1
+
+[0.02, 10000.0, 100, '*', ',', '.env', '/api/v1', '1.0.0', 'API v1 prefix', 'AlgoTrading MVP', 'Application name', 'Application version', 'Binance API key', 'Binance API secret', 'CORS allowed headers', 'CORS allowed methods', 'CORS allowed origins', 'CRITICAL', 'Celery broker URL', 'DEBUG', 'Debug mode', 'ERROR', 'INFO', 'Logging format', 'Logging level', 'USD', 'UTC', 'WARNING', '__', 'accept_content', 'allow_credentials', 'allow_headers', 'allow_methods', 'allow_origins', 'before', 'broker_url', 'cors_allow_headers', 'cors_allow_methods', 'cors_origins', 'debug', 'enable_utc', 'ignore', 'json', 'log_level', 'postgresql://', 'result_backend', 'result_serializer', 'secret_key', 'task_serializer', 'timezone', 'utf-8']

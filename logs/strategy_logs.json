@@ -324,5 +324,91 @@
         "test": true
       }
     }
+  },
+  {
+    "timestamp": "2025-10-25T09:01:03.269701",
+    "event": "signal_executed",
+    "strategy": "unknown",
+    "level": "INFO",
+    "signal_data": {
+      "symbol": "AAPL",
+      "signal_type": "buy",
+      "strength": "strong",
+      "confidence": 80.0,
+      "liquidity_score": 75.0,
+      "priority_score": 85.0,
+      "source": "momentum",
+      "price": "150.00",
+      "volume": "1000000",
+      "timestamp": "2025-10-25T09:01:03.269668",
+      "metadata": {
+        "test": true
+      }
+    },
+    "execution_price": null
+  },
+  {
+    "timestamp": "2025-10-25T09:01:03.277172",
+    "event": "signal_generated",
+    "strategy": "test_strategy",
+    "level": "INFO",
+    "signal_data": {
+      "symbol": "AAPL",
+      "signal_type": "buy",
+      "strength": "strong",
+      "confidence": 80.0,
+      "liquidity_score": 75.0,
+      "priority_score": 85.0,
+      "source": "momentum",
+      "price": "150.00",
+      "volume": "1000000",
+      "timestamp": "2025-10-25T09:01:03.276315",
+      "metadata": {
+        "test": true
+      }
+    }
+  },
+  {
+    "timestamp": "2025-10-25T09:01:24.017663",
+    "event": "signal_executed",
+    "strategy": "unknown",
+    "level": "INFO",
+    "signal_data": {
+      "symbol": "AAPL",
+      "signal_type": "buy",
+      "strength": "strong",
+      "confidence": 80.0,
+      "liquidity_score": 75.0,
+      "priority_score": 85.0,
+      "source": "momentum",
+      "price": "150.00",
+      "volume": "1000000",
+      "timestamp": "2025-10-25T09:01:24.017628",
+      "metadata": {
+        "test": true
+      }
+    },
+    "execution_price": null
+  },
+  {
+    "timestamp": "2025-10-25T09:01:24.024789",
+    "event": "signal_generated",
+    "strategy": "test_strategy",
+    "level": "INFO",
+    "signal_data": {
+      "symbol": "AAPL",
+      "signal_type": "buy",
+      "strength": "strong",
+      "confidence": 80.0,
+      "liquidity_score": 75.0,
+      "priority_score": 85.0,
+      "source": "momentum",
+      "price": "150.00",
+      "volume": "1000000",
+      "timestamp": "2025-10-25T09:01:24.023797",
+      "metadata": {
+        "test": true
+      }
+    }
   }
 ]

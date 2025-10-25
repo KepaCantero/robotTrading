@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/services/signal_scorer.py
+# hypothesis_version: 6.141.1
+
+[-5.0, 0.0, 5.0, 10.0, 15.0, 50.0, 100.0, 200.0, 100, 1000, 10000, '0', '0.01', 'USDT', 'avg_volume', 'bollinger_position', 'crypto', 'ema_trend', 'equity', 'macd_signal', 'quantity', 'queue_size', 'queue_summary', 'rsi', 'signal', 'signals_executed', 'signals_processed', 'success', 'success_rate', 'timestamp', 'total_pnl', 'volatility', 'volume']

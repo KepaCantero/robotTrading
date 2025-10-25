@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/strategies/registry.py
+# hypothesis_version: 6.141.1
+
+['None', 'active_strategy', 'available_strategies', 'created_at', 'description', 'is_active', 'is_currently_active', 'loaded_strategies', 'name', 'parameters', 'registry_created_at', 'total_loaded', 'version']

@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/main.py
+# hypothesis_version: 6.141.1
+
+[404, 500, 8000, '*', '/', '/docs', '/health', '/health/detailed', '/openapi.json', '/redoc', '0.0.0.0', '1.0.0', 'AlgoTrading MVP', 'Health', 'Not Found', 'Root', '__main__', 'app.main:app', 'debug', 'description', 'docs', 'error', 'health', 'info', 'machine', 'message', 'name', 'ok', 'path', 'platform', 'python_version', 'release', 'running', 'status', 'system', 'timestamp', 'version']

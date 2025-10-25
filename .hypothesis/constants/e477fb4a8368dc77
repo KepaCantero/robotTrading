@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/services/centralized_logging.py
+# hypothesis_version: 6.141.1
+
+[1000, '1.0.0', 'APP_VERSION', 'CRITICAL', 'DEBUG', 'ENVIRONMENT', 'ERROR', 'INFO', 'LOG_DIR', 'WARNING', 'alert_system', 'algotrading', 'development', 'error_handler', 'fastapi', 'logs', 'market_data', 'performance_monitor', 'portfolio', 'trading']

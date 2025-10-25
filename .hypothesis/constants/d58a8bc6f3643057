@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/strategies/momentum.py
+# hypothesis_version: 6.141.1
+
+[0.02, 1.5, 75.0, 80.0, 85.0, 100, '0', '0.8', '100', '1000000', '40', '60', 'ema_period', 'lookback_period', 'max_position_size', 'momentum', 'momentum_threshold', 'rsi_period', 'rsi_threshold', 'stop_loss', 'stop_loss_pct', 'strategy', 'take_profit', 'take_profit_pct', 'volume_threshold']

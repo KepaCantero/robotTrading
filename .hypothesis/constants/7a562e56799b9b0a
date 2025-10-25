@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/services/slippage_analysis_service.py
+# hypothesis_version: 6.141.1
+
+[0.001, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.5, 5.0, 50.0, 100, 252, 100000, 1000000, '0', '0.01', '0.2', '1.0', '100', '2', '2.0', 'decreasing', 'increasing', 'insufficient_data', 'liquidity_cost_v1', 'market_impact_v1', 'stable', 'timing_delay_v1']

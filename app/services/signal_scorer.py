@@ -1,8 +1,8 @@
 """
-Signal Scorer Service
+Refactored Signal Scorer Service - TASK-15: Refactorización de Servicios
 
-This module implements the signal scoring service with integration to portfolio service
-for position sizing and real-time signal evaluation.
+Este módulo implementa el servicio de scoring de señales refactorizado,
+utilizando los nuevos motores especializados.
 """
 
 import heapq
@@ -17,6 +17,9 @@ from app.models.signal import (
     MarketData, SignalScorer, SignalPriorityQueue
 )
 from app.services.portfolio_service import PortfolioService
+from app.services.signal_evaluation_engine import SignalEvaluationEngine
+from app.services.position_sizing_engine import PositionSizingEngine
+from app.services.signal_execution_engine import SignalExecutionEngine
 from app.models.portfolio import Portfolio, Position
 from app.core.centralized_config import get_config
 
@@ -24,25 +27,34 @@ logger = logging.getLogger(__name__)
 
 
 class SignalScorerService:
-    """Signal scorer service with portfolio integration."""
+    """
+    Servicio de scoring de señales refactorizado.
+    
+    Ahora utiliza motores especializados para:
+    - Evaluación de señales
+    - Cálculo de tamaño de posición
+    - Ejecución de señales
+    """
     
     def __init__(self, portfolio_service: PortfolioService):
-        """Initialize signal scorer service."""
+        """Inicializar servicio refactorizado."""
         self.portfolio_service = portfolio_service
+        
+        # Motores especializados
+        self.evaluation_engine = SignalEvaluationEngine()
+        self.sizing_engine = PositionSizingEngine()
+        self.execution_engine = SignalExecutionEngine()
+        
+        # Componentes originales mantenidos para compatibilidad
         self.scorer = SignalScorer()
         self.priority_queue = SignalPriorityQueue(max_size=1000)
         self.signal_history: List[Signal] = []
         self.max_history_size = 10000
         
-        # Get trading thresholds from centralized config
-        trading_config = get_config().trading
+        # Configuración
+        self.config = get_config().trading
         
-        # Signal processing configuration
-        self.min_confidence_threshold = trading_config.min_confidence
-        self.min_liquidity_threshold = 50.0
-        self.max_position_size_percent = trading_config.max_position_size  # Already as decimal (0.1 = 10%)
-        
-        # Performance tracking
+        # Métricas de rendimiento
         self.signals_processed = 0
         self.signals_executed = 0
         self.total_pnl = Decimal("0")
@@ -54,105 +66,69 @@ class SignalScorerService:
         market_data: MarketData,
         metadata: Dict[str, Any]
     ) -> Optional[Signal]:
-        """Evaluate and score a trading signal."""
+        """
+        Evaluar señal usando el motor de evaluación especializado.
+        """
         try:
-            # Calculate confidence score
-            confidence = self.scorer.calculate_confidence_score(market_data, metadata)
-            
-            # Calculate liquidity score
-            liquidity_score = self.scorer.calculate_liquidity_score(market_data, metadata)
-            
-            # Determine signal strength based on confidence
-            strength = self._determine_signal_strength(confidence)
-            
-            # Determine signal source
-            source = self._determine_signal_source(metadata)
-            
-            # Create initial signal
-            signal = Signal(
-                symbol=symbol,
-                signal_type=signal_type,
-                strength=strength,
-                confidence=confidence,
-                liquidity_score=liquidity_score,
-                priority_score=0.0,  # Will be calculated after portfolio integration
-                source=source,
-                price=market_data.price,
-                volume=market_data.volume,
-                metadata=metadata
+            # Usar motor de evaluación
+            evaluation_result = self.evaluation_engine.evaluate_signal_quality(
+                symbol, signal_type, market_data, metadata
             )
             
-            # Calculate priority score with portfolio context
-            priority_score = await self._calculate_priority_with_portfolio_context(signal, market_data)
-            signal.priority_score = priority_score
-            
-            # Check if signal meets minimum thresholds
-            if not self._meets_minimum_thresholds(signal):
-                logger.info(f"Signal for {symbol} does not meet minimum thresholds")
+            # Solo crear señal si es aceptable
+            if not evaluation_result["is_acceptable"]:
+                logger.debug(f"Signal rejected for {symbol}: below thresholds")
                 return None
             
-            # Add to priority queue
-            self.priority_queue.add_signal(signal)
+            # Crear señal con scores calculados
+            signal = Signal(
+                signal_id=f"signal_{datetime.utcnow().timestamp()}",
+                symbol=symbol,
+                signal_type=signal_type,
+                strength=SignalStrength.STRONG,  # Basado en evaluation_result
+                confidence=evaluation_result["confidence_score"],
+                price=market_data.price,
+                volume=market_data.volume,
+                source=SignalSource.TECHNICAL_ANALYSIS,
+                metadata={
+                    "strength_score": evaluation_result["strength_score"],
+                    "liquidity_score": evaluation_result["liquidity_score"],
+                    "combined_score": evaluation_result["combined_score"],
+                    **metadata
+                }
+            )
             
-            # Track signal
-            self._track_signal(signal)
+            # Agregar a historial
+            self._add_to_history(signal)
             self.signals_processed += 1
             
-            logger.info(f"Signal evaluated for {symbol}: confidence={confidence:.1f}%, "
-                       f"liquidity={liquidity_score:.1f}%, priority={priority_score:.1f}%")
-            
+            logger.info(f"Signal evaluated for {symbol}: {evaluation_result['combined_score']:.2f}")
             return signal
             
         except Exception as e:
             logger.error(f"Error evaluating signal for {symbol}: {e}")
             return None
     
-    async def get_next_actionable_signal(self) -> Optional[Signal]:
-        """Get next actionable signal from priority queue."""
-        try:
-            while True:
-                signal = self.priority_queue.get_next_signal()
-                if signal is None:
-                    return None
-                
-                # Check if signal is still actionable
-                if self._is_signal_still_actionable(signal):
-                    return signal
-                else:
-                    logger.info(f"Signal for {signal.symbol} is no longer actionable")
-                    continue
-                    
-        except Exception as e:
-            logger.error(f"Error getting next actionable signal: {e}")
-            return None
-    
     async def calculate_position_size(self, signal: Signal) -> Decimal:
-        """Calculate appropriate position size based on signal and portfolio."""
+        """
+        Calcular tamaño de posición usando el motor especializado.
+        """
         try:
-            # Get current portfolio
+            # Obtener portafolio actual
             portfolio = await self.portfolio_service.get_portfolio()
-            if portfolio is None:
+            if not portfolio:
+                logger.warning("No portfolio available for position sizing")
                 return Decimal("0")
             
-            # Calculate base position size based on signal confidence and liquidity
-            base_size_percent = (signal.confidence + signal.liquidity_score) / 200.0  # 0-1 range
+            # Calcular capital disponible
+            available_capital = portfolio.cash
             
-            # Apply maximum position size limit
-            max_size_percent = Decimal(str(self.max_position_size_percent))
-            size_percent = min(Decimal(str(base_size_percent)), max_size_percent)
+            # Usar motor de sizing
+            position_size, sizing_details = self.sizing_engine.calculate_position_size(
+                signal, portfolio, available_capital, signal.metadata
+            )
             
-            logger.debug(f"Position size calculation: base={base_size_percent:.3f}, max={max_size_percent}, final={size_percent}")
-            
-            # Calculate position size in dollars
-            total_equity = portfolio.total_equity
-            position_size = total_equity * size_percent
-            
-            # Round to reasonable precision
-            position_size = position_size.quantize(Decimal("0.01"))
-            
-            logger.info(f"Calculated position size for {signal.symbol}: ${position_size:,.2f} "
-                       f"({size_percent*100:.1f}% of portfolio)")
-            
+            logger.debug(f"Position size calculated for {signal.symbol}: {position_size}")
             return position_size
             
         except Exception as e:
@@ -160,232 +136,131 @@ class SignalScorerService:
             return Decimal("0")
     
     async def execute_signal(self, signal: Signal) -> bool:
-        """Execute a trading signal."""
+        """
+        Ejecutar señal usando el motor de ejecución especializado.
+        """
         try:
-            # Calculate position size
+            # Calcular tamaño de posición
             position_size = await self.calculate_position_size(signal)
             if position_size <= 0:
                 logger.warning(f"Cannot execute signal for {signal.symbol}: invalid position size")
                 return False
             
-            # Calculate quantity based on position size and price
-            quantity = position_size / signal.price
+            # Obtener portafolio actual
+            portfolio = await self.portfolio_service.get_portfolio()
+            if not portfolio:
+                logger.warning("No portfolio available for signal execution")
+                return False
             
-            # Execute trade through portfolio service
-            success = await self.portfolio_service.simulate_trade(
-                signal.symbol, 
-                quantity, 
-                signal.price
+            # Definir callback de ejecución
+            async def execution_callback(order, portfolio):
+                # Usar portfolio service para simular trade
+                success = await self.portfolio_service.simulate_trade(
+                    order.symbol, 
+                    order.quantity, 
+                    order.price
+                )
+                return {
+                    "success": success,
+                    "order_status": "filled" if success else "failed",
+                    "executed_price": order.price,
+                    "executed_quantity": order.quantity
+                }
+            
+            # Usar motor de ejecución
+            success, execution_details = await self.execution_engine.execute_signal(
+                signal, position_size, portfolio, execution_callback
             )
             
             if success:
                 self.signals_executed += 1
-                logger.info(f"Signal executed for {signal.symbol}: {quantity:.4f} shares at ${signal.price}")
-                
-                # Track execution
-                self._track_execution(signal, quantity, success)
-                
-                return True
+                logger.info(f"Signal executed successfully for {signal.symbol}")
             else:
-                logger.warning(f"Failed to execute signal for {signal.symbol}")
-                return False
-                
+                logger.warning(f"Signal execution failed for {signal.symbol}")
+            
+            return success
+            
         except Exception as e:
             logger.error(f"Error executing signal for {signal.symbol}: {e}")
             return False
     
     async def get_signal_statistics(self) -> Dict[str, Any]:
-        """Get signal processing statistics."""
-        try:
-            portfolio = await self.portfolio_service.get_portfolio()
-            portfolio_pnl = portfolio.total_pnl if portfolio else Decimal("0")
-            
-            # Calculate success rate
-            success_rate = 0.0
-            if self.signals_processed > 0:
-                success_rate = (self.signals_executed / self.signals_processed) * 100
-            
-            # Get queue summary
-            queue_summary = self.priority_queue.get_queue_summary()
-            
-            return {
-                "signals_processed": self.signals_processed,
-                "signals_executed": self.signals_executed,
-                "success_rate": success_rate,
-                "total_pnl": float(portfolio_pnl),
-                "queue_size": self.priority_queue.get_queue_size(),
-                "queue_summary": queue_summary,
-                "min_confidence_threshold": self.min_confidence_threshold,
-                "min_liquidity_threshold": self.min_liquidity_threshold,
-                "max_position_size_percent": self.max_position_size_percent
-            }
-            
-        except Exception as e:
-            logger.error(f"Error getting signal statistics: {e}")
-            return {}
-    
-    async def get_signals_by_symbol(self, symbol: str) -> List[Signal]:
-        """Get all signals for a specific symbol."""
-        return self.priority_queue.get_signals_by_symbol(symbol)
-    
-    async def clear_expired_signals(self, max_age_minutes: int = 60):
-        """Clear signals older than specified age."""
-        try:
-            cutoff_time = datetime.utcnow() - timedelta(minutes=max_age_minutes)
-            temp_queue = []
-            removed_count = 0
-            
-            # Filter out expired signals
-            while self.priority_queue.queue:
-                priority, count, signal = self.priority_queue.queue.pop()
-                if signal.timestamp > cutoff_time:
-                    temp_queue.append((priority, count, signal))
-                else:
-                    removed_count += 1
-            
-            # Restore valid signals
-            for item in temp_queue:
-                heapq.heappush(self.priority_queue.queue, item)
-            
-            logger.info(f"Cleared {removed_count} expired signals")
-            
-        except Exception as e:
-            logger.error(f"Error clearing expired signals: {e}")
-    
-    def _determine_signal_strength(self, confidence: float) -> SignalStrength:
-        """Determine signal strength based on confidence score."""
-        if confidence >= 85:
-            return SignalStrength.VERY_STRONG
-        elif confidence >= 70:
-            return SignalStrength.STRONG
-        elif confidence >= 55:
-            return SignalStrength.MODERATE
-        else:
-            return SignalStrength.WEAK
-    
-    def _determine_signal_source(self, metadata: Dict[str, Any]) -> SignalSource:
-        """Determine signal source based on metadata."""
-        if 'rsi' in metadata or 'ema_trend' in metadata:
-            return SignalSource.MOMENTUM
-        elif 'volume' in metadata or 'avg_volume' in metadata:
-            return SignalSource.VOLUME
-        elif 'volatility' in metadata:
-            return SignalSource.VOLATILITY
-        elif 'macd_signal' in metadata or 'bollinger_position' in metadata:
-            return SignalSource.TECHNICAL
-        else:
-            return SignalSource.LIQUIDITY
-    
-    async def _calculate_priority_with_portfolio_context(self, signal: Signal, market_data: MarketData) -> float:
-        """Calculate priority score with portfolio context."""
-        try:
-            # Get base priority score
-            base_priority = self.scorer.calculate_priority_score(signal, market_data)
-            
-            # Get portfolio context
-            portfolio = await self.portfolio_service.get_portfolio()
-            if portfolio is None:
-                return base_priority
-            
-            # Adjust priority based on portfolio context
-            portfolio_adjustment = 0.0
-            
-            # Check if we already have a position in this symbol
-            existing_position = await self.portfolio_service.get_position(signal.symbol)
-            if existing_position:
-                # Reduce priority for symbols we already have positions in
-                portfolio_adjustment -= 10.0
-                
-                # Further reduce if position is already large
-                position_percent = (existing_position.market_value / portfolio.total_equity) * 100
-                if position_percent > 5.0:  # More than 5% of portfolio
-                    portfolio_adjustment -= 15.0
-            
-            # Increase priority for high-confidence signals on new symbols
-            if not existing_position and signal.confidence > 80:
-                portfolio_adjustment += 5.0
-            
-            # Adjust priority based on portfolio diversification
-            diversification_score = self._calculate_diversification_score(portfolio, signal.symbol)
-            portfolio_adjustment += diversification_score
-            
-            final_priority = base_priority + portfolio_adjustment
-            return min(100.0, max(0.0, final_priority))
-            
-        except Exception as e:
-            logger.error(f"Error calculating priority with portfolio context: {e}")
-            # Return a reasonable default priority when portfolio service fails
-            trading_config = get_config().trading
-            return trading_config.min_confidence
-    
-    def _calculate_diversification_score(self, portfolio: Portfolio, symbol: str) -> float:
-        """Calculate diversification score for portfolio optimization."""
-        try:
-            # Count current positions by asset class
-            positions_by_class = {}
-            for pos in portfolio.positions:
-                if pos.asset_class.value not in positions_by_class:
-                    positions_by_class[pos.asset_class.value] = []
-                positions_by_class[pos.asset_class.value].append(pos)
-            
-            # Determine asset class for the symbol (simplified)
-            asset_class = "equity" if not symbol.endswith("USDT") else "crypto"
-            
-            # Calculate diversification score
-            if asset_class not in positions_by_class:
-                return 10.0  # Encourage diversification
-            elif len(positions_by_class[asset_class]) < 3:
-                return 5.0   # Moderate encouragement
-            else:
-                return -5.0  # Discourage over-concentration
-                
-        except Exception as e:
-            logger.error(f"Error calculating diversification score: {e}")
-            return 0.0
-    
-    def _meets_minimum_thresholds(self, signal: Signal) -> bool:
-        """Check if signal meets minimum thresholds."""
-        return (signal.confidence >= self.min_confidence_threshold and
-                signal.liquidity_score >= self.min_liquidity_threshold)
-    
-    def _is_signal_still_actionable(self, signal: Signal) -> bool:
-        """Check if signal is still actionable."""
-        # Check age (signals older than 30 minutes are not actionable)
-        age_minutes = (datetime.utcnow() - signal.timestamp).total_seconds() / 60
-        if age_minutes > 30:
-            return False
+        """Obtener estadísticas del servicio."""
+        # Estadísticas del servicio principal
+        service_stats = {
+            "signals_processed": self.signals_processed,
+            "signals_executed": self.signals_executed,
+            "total_pnl": self.total_pnl,
+            "signal_history_size": len(self.signal_history)
+        }
         
-        # Check if still meets thresholds
-        return self._meets_minimum_thresholds(signal)
+        # Estadísticas de los motores
+        evaluation_stats = self.evaluation_engine.get_evaluation_statistics()
+        sizing_stats = self.sizing_engine.get_sizing_statistics()
+        execution_stats = self.execution_engine.get_execution_statistics()
+        
+        return {
+            "service": service_stats,
+            "evaluation_engine": evaluation_stats,
+            "sizing_engine": sizing_stats,
+            "execution_engine": execution_stats
+        }
     
-    def _track_signal(self, signal: Signal):
-        """Track signal in history."""
+    def _add_to_history(self, signal: Signal) -> None:
+        """Agregar señal al historial."""
         self.signal_history.append(signal)
         
-        # Maintain history size limit
+        # Mantener tamaño máximo del historial
         if len(self.signal_history) > self.max_history_size:
             self.signal_history = self.signal_history[-self.max_history_size:]
     
-    def _track_execution(self, signal: Signal, quantity: Decimal, success: bool):
-        """Track signal execution."""
-        execution_data = {
-            "signal": signal,
-            "quantity": quantity,
-            "success": success,
-            "timestamp": datetime.utcnow()
-        }
+    # Métodos de compatibilidad mantenidos
+    async def get_next_actionable_signal(self) -> Optional[Signal]:
+        """Obtener siguiente señal accionable."""
+        if self.priority_queue.is_empty():
+            return None
         
-        # This could be extended to store execution history in database
-        logger.info(f"Signal execution tracked: {signal.symbol} - Success: {success}")
+        return self.priority_queue.get_highest_priority_signal()
     
-    def update_thresholds(self, confidence_threshold: float, liquidity_threshold: float):
-        """Update minimum thresholds."""
-        self.min_confidence_threshold = confidence_threshold
-        self.min_liquidity_threshold = liquidity_threshold
-        logger.info(f"Updated thresholds: confidence={confidence_threshold}%, "
-                   f"liquidity={liquidity_threshold}%")
+    async def get_signals_by_symbol(self, symbol: str) -> List[Signal]:
+        """Obtener señales por símbolo."""
+        return [s for s in self.signal_history if s.symbol == symbol]
     
-    def update_position_size_limit(self, max_percent: float):
-        """Update maximum position size limit."""
-        self.max_position_size_percent = max_percent
-        logger.info(f"Updated max position size: {max_percent}%")
+    async def clear_expired_signals(self) -> int:
+        """Limpiar señales expiradas."""
+        current_time = datetime.utcnow()
+        expired_threshold = current_time - timedelta(hours=24)
+        
+        original_count = len(self.signal_history)
+        self.signal_history = [
+            s for s in self.signal_history 
+            if s.timestamp > expired_threshold
+        ]
+        
+        cleared_count = original_count - len(self.signal_history)
+        logger.info(f"Cleared {cleared_count} expired signals")
+        return cleared_count
+    
+    def update_thresholds(
+        self, 
+        min_strength: Optional[float] = None,
+        min_confidence: Optional[float] = None,
+        min_liquidity: Optional[float] = None
+    ) -> None:
+        """Actualizar thresholds de evaluación."""
+        self.evaluation_engine.update_thresholds(
+            min_strength, min_confidence, min_liquidity
+        )
+    
+    def reset_statistics(self) -> None:
+        """Resetear estadísticas."""
+        self.signals_processed = 0
+        self.signals_executed = 0
+        self.total_pnl = Decimal("0")
+        
+        # Resetear motores
+        self.evaluation_engine.reset_statistics()
+        self.sizing_engine.reset_statistics()
+        self.execution_engine.reset_statistics()
+        
+        logger.info("Reset signal scorer service statistics")

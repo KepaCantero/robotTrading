@@ -1,0 +1,4 @@
+# file: /Users/kepa.cantero/Projects/algoTrading/app/api/trading_error_handler.py
+# hypothesis_version: 6.141.1
+
+['/actions', '/circuit-breakers', '/contexts', '/handle-error', '/health', '/rules/{context}', '/statistics', 'Actions taken', 'Additional metadata', 'Context name', 'Context to reset', 'Current error count', 'Error context', 'Error details', 'Error message', 'Last error times', 'Last error timestamp', 'Operation identifier', 'Retry counts', 'Statistics timestamp', 'Type of error', '_circuit_breaker', 'actions', 'circuit_breakers', 'context', 'contexts', 'count', 'degraded', 'description', 'error_counts', 'healthy', 'last_error_times', 'message', 'name', 'rules', 'status', 'timestamp', 'total_errors']
