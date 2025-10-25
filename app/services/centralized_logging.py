@@ -35,6 +35,7 @@ class LogService(Enum):
     PORTFOLIO = "portfolio"
     ERROR_HANDLER = "error_handler"
     PERFORMANCE_MONITOR = "performance_monitor"
+    ALERT_SYSTEM = "alert_system"
 
 
 @dataclass
