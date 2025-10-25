@@ -8,7 +8,7 @@ tests de integración end-to-end para validar la concurrencia del sistema comple
 import pytest
 import asyncio
 from decimal import Decimal
-from datetime import datetime, date
+from datetime import datetime, timedelta, date
 from typing import List, Dict, Any
 from unittest.mock import Mock, patch
 import threading
@@ -17,13 +17,13 @@ import time
 from app.models.order import Order, OrderType, OrderSide, OrderStatus
 from app.models.signal import Signal, SignalType, SignalStrength
 from app.models.portfolio import Portfolio, Position
-from app.models.market_data import Quote, MarketData
-from app.models.backtesting import BacktestConfig, BacktestResult
+from app.models.market_data import Quote, HistoricalData
+from app.backtesting.models import BacktestConfig, BacktestResult
 from app.services.paper_trading_service import PaperTradingService
 from app.services.signal_scorer import SignalScorer
 from app.services.portfolio_service import PortfolioService
 from app.services.market_data_service import MarketDataService
-from app.backtesting.engine import BacktestingEngine
+from app.backtesting.engine import SimpleBacktester
 from app.core.centralized_config import get_config
 
 
@@ -32,12 +32,20 @@ class TestSystemConcurrency:
     
     def setup_method(self):
         """Setup para cada test."""
+        self.config = get_config()
         self.paper_trading_service = PaperTradingService()
         self.signal_scorer_service = SignalScorer()
         self.portfolio_service = PortfolioService()
         self.market_data_service = MarketDataService()
-        self.backtesting_engine = BacktestingEngine()
-        self.config = get_config()
+        # Crear BacktestConfig para el engine
+        backtest_config = BacktestConfig(
+            initial_capital=Decimal("100000"),
+            start_date=datetime.now() - timedelta(days=30),
+            end_date=datetime.now(),
+            commission_rate=Decimal("0.001"),
+            slippage_rate=Decimal("0.0005")
+        )
+        self.backtesting_engine = SimpleBacktester(backtest_config)
     
     @pytest.mark.asyncio
     async def test_end_to_end_concurrent_trading_flow(self):

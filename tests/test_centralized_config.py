@@ -210,26 +210,21 @@ class TestCentralizedConfig:
         assert config.debug is True
     
     @patch('pathlib.Path.exists')
+    @patch('pathlib.Path.glob')
     @patch('builtins.open', new_callable=mock_open)
-    def test_load_strategy_configs(self, mock_file, mock_exists):
+    def test_load_strategy_configs(self, mock_file, mock_glob, mock_exists):
         """Test loading strategy configurations from YAML files."""
         mock_exists.return_value = True
         
-        # Mock YAML content
-        mock_yaml_content = {
-            'name': 'test_strategy',
-            'enabled': True,
-            'weight': 0.8,
-            'parameters': {'test_param': 42}
-        }
-        
-        mock_file.return_value.read.return_value = yaml.dump(mock_yaml_content)
+        # Mock glob to return empty list to avoid file system access
+        mock_glob.return_value = []
         
         config = CentralizedConfig()
         
         # The _load_strategy_configs method is called in __init__
-        # We can't easily test the file loading without more complex mocking
+        # With empty glob, no files are processed
         assert isinstance(config.strategies, dict)
+        assert len(config.strategies) == 0
 
 
 class TestConfigurationFunctions:

@@ -1,8 +1,8 @@
 """
-Portfolio Service with Circuit Breakers
+Refactored Portfolio Service - TASK-15: Refactorización de Servicios
 
-This module implements the portfolio service with circuit breakers for
-operational resilience and risk management.
+Este módulo implementa el servicio de portafolio refactorizado,
+utilizando el gestor centralizado de circuit breakers y el gestor de riesgos.
 """
 
 import asyncio
@@ -15,311 +15,292 @@ from app.models.portfolio import (
     Portfolio, Position, AssetUniverse, MarketRegimeData,
     CircuitBreaker, CircuitBreakerState, PortfolioProvider
 )
+from app.services.circuit_breaker_manager import CircuitBreakerManager, CircuitBreakerType
+from app.services.portfolio_risk_manager import PortfolioRiskManager
 from app.providers.paper_trading import PaperTradingPortfolioProvider
 
 logger = logging.getLogger(__name__)
 
 
 class PortfolioService:
-    """Portfolio service with circuit breakers and risk management."""
+    """Servicio de portafolio refactorizado con gestión centralizada de riesgos."""
     
     def __init__(self, provider: PortfolioProvider):
-        """Initialize portfolio service with a provider."""
+        """Inicializar servicio refactorizado."""
         self.provider = provider
-        self.circuit_breakers: Dict[str, CircuitBreaker] = {
-            "api_errors": CircuitBreaker(
-                name="api_errors",
-                max_errors=3,
-                cooldown_seconds=300
-            ),
-            "slippage": CircuitBreaker(
-                name="slippage",
-                max_errors=5,
-                cooldown_seconds=600
-            ),
-            "performance": CircuitBreaker(
-                name="performance",
-                max_errors=3,
-                cooldown_seconds=1800
-            )
-        }
-        self.slippage_history: List[float] = []
-        self.error_count = 0
-        self.last_error_time: Optional[datetime] = None
+        
+        # Gestores especializados
+        self.circuit_breaker_manager = CircuitBreakerManager()
+        self.risk_manager = PortfolioRiskManager()
+        
+        # Métricas de rendimiento
+        self.operations_count = 0
+        self.successful_operations = 0
+        self.failed_operations = 0
+        self.last_operation_time: Optional[datetime] = None
     
     async def get_portfolio(self) -> Optional[Portfolio]:
-        """Get portfolio with circuit breaker protection."""
+        """Obtener portafolio con protección de circuit breaker."""
         try:
-            # Check if API error circuit breaker is open
-            if self.circuit_breakers["api_errors"].state == CircuitBreakerState.OPEN:
-                if self._should_attempt_reset("api_errors"):
-                    self.circuit_breakers["api_errors"].state = CircuitBreakerState.HALF_OPEN
-                else:
-                    logger.warning("API circuit breaker is OPEN, skipping portfolio request")
-                    return None
+            # Verificar circuit breaker de API
+            if self.circuit_breaker_manager.is_breaker_open(CircuitBreakerType.API_ERRORS.value):
+                logger.warning("API circuit breaker is open, skipping portfolio fetch")
+                return None
             
-            # Attempt to get portfolio
+            # Obtener portafolio del provider
             portfolio = await self.provider.get_portfolio()
             
-            # Reset error count on success
-            self.circuit_breakers["api_errors"].error_count = 0
-            self.error_count = 0
+            if portfolio:
+                # Registrar éxito
+                self.circuit_breaker_manager.record_success(CircuitBreakerType.API_ERRORS.value)
+                self.successful_operations += 1
+                
+                # Evaluar riesgo del portafolio
+                risk_assessment = self.risk_manager.assess_portfolio_risk(portfolio)
+                
+                logger.debug(f"Portfolio retrieved: {portfolio.portfolio_id}, risk level: {risk_assessment['risk_level']}")
+            else:
+                logger.warning("Provider returned None portfolio")
             
-            # Check performance circuit breaker
-            await self._check_performance_circuit_breaker(portfolio)
+            self.operations_count += 1
+            self.last_operation_time = datetime.utcnow()
             
             return portfolio
             
         except Exception as e:
+            # Registrar error en circuit breaker
+            self.circuit_breaker_manager.record_error(
+                CircuitBreakerType.API_ERRORS.value, 
+                str(e)
+            )
+            self.failed_operations += 1
+            
             logger.error(f"Error getting portfolio: {e}")
-            await self._handle_error("api_errors")
             return None
     
     async def get_position(self, symbol: str) -> Optional[Position]:
-        """Get position with circuit breaker protection."""
+        """Obtener posición con protección de circuit breaker."""
         try:
-            if self.circuit_breakers["api_errors"].state == CircuitBreakerState.OPEN:
+            if self.circuit_breaker_manager.is_breaker_open(CircuitBreakerType.API_ERRORS.value):
                 return None
             
             position = await self.provider.get_position(symbol)
-            self.circuit_breakers["api_errors"].error_count = 0
+            
+            if position:
+                self.circuit_breaker_manager.record_success(CircuitBreakerType.API_ERRORS.value)
+                self.successful_operations += 1
+            else:
+                self.failed_operations += 1
+            
+            self.operations_count += 1
             return position
             
         except Exception as e:
+            self.circuit_breaker_manager.record_error(
+                CircuitBreakerType.API_ERRORS.value, 
+                str(e)
+            )
+            self.failed_operations += 1
+            
             logger.error(f"Error getting position {symbol}: {e}")
-            await self._handle_error("api_errors")
             return None
     
     async def add_position(self, position: Position) -> bool:
-        """Add a position to the portfolio."""
+        """Agregar posición al portafolio con evaluación de riesgo."""
         try:
-            # Get current portfolio
+            # Obtener portafolio actual
             portfolio = await self.get_portfolio()
-            if portfolio is None:
+            if not portfolio:
+                logger.warning("No portfolio available for adding position")
                 return False
             
-            # Create new portfolio with added position
-            new_positions = portfolio.positions.copy()
-            new_positions.append(position)
+            # Evaluar riesgo con nueva posición
+            risk_assessment = self.risk_manager.assess_portfolio_risk(portfolio, position)
             
-            # Create new portfolio instance
-            new_portfolio = Portfolio(
-                cash=portfolio.cash,
-                positions=new_positions,
-                timestamp=datetime.utcnow(),
-                broker=portfolio.broker,
-                currency=portfolio.currency
-            )
+            # Verificar si hay violaciones críticas
+            critical_violations = [
+                v for v in risk_assessment["violations"] 
+                if v["severity"] == "critical"
+            ]
             
-            # Update the provider with new portfolio
-            await self.provider.update_portfolio(new_portfolio)
-            
-            logger.info(f"Added position for {position.symbol}: {position.quantity} shares")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Error adding position for {position.symbol}: {e}")
-            await self._handle_error("api_errors")
-            return False
-    
-    async def update_position(self, position: Position) -> bool:
-        """Update an existing position in the portfolio."""
-        try:
-            # Get current portfolio
-            portfolio = await self.get_portfolio()
-            if portfolio is None:
+            if critical_violations:
+                logger.warning(f"Cannot add position {position.symbol}: critical risk violations detected")
                 return False
             
-            # Find and update the position
-            new_positions = []
-            position_updated = False
+            # Agregar posición
+            success = await self.provider.add_position(position)
             
-            for pos in portfolio.positions:
-                if pos.symbol == position.symbol:
-                    new_positions.append(position)
-                    position_updated = True
-                else:
-                    new_positions.append(pos)
+            if success:
+                self.successful_operations += 1
+                logger.info(f"Position added: {position.symbol}")
+            else:
+                self.failed_operations += 1
             
-            # If position wasn't found, add it
-            if not position_updated:
-                new_positions.append(position)
-            
-            # Create new portfolio instance
-            new_portfolio = Portfolio(
-                cash=portfolio.cash,
-                positions=new_positions,
-                timestamp=datetime.utcnow(),
-                broker=portfolio.broker,
-                currency=portfolio.currency
-            )
-            
-            # Update the provider with new portfolio
-            await self.provider.update_portfolio(new_portfolio)
-            
-            logger.info(f"Updated position for {position.symbol}: {position.quantity} shares")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Error updating position for {position.symbol}: {e}")
-            await self._handle_error("api_errors")
-            return False
-    
-    async def get_asset_universe(self) -> List[AssetUniverse]:
-        """Get asset universe."""
-        try:
-            return await self.provider.get_asset_universe()
-        except Exception as e:
-            logger.error(f"Error getting asset universe: {e}")
-            await self._handle_error("api_errors")
-            return []
-    
-    async def get_market_regime(self, symbol: str) -> Optional[MarketRegimeData]:
-        """Get market regime data."""
-        try:
-            return await self.provider.get_market_regime(symbol)
-        except Exception as e:
-            logger.error(f"Error getting market regime for {symbol}: {e}")
-            await self._handle_error("api_errors")
-            return None
-    
-    async def simulate_trade(self, symbol: str, quantity: Decimal, price: Optional[Decimal] = None) -> bool:
-        """Simulate trade with slippage monitoring."""
-        try:
-            # Check slippage circuit breaker
-            if self.circuit_breakers["slippage"].state == CircuitBreakerState.OPEN:
-                logger.warning("Slippage circuit breaker is OPEN, reducing trade size")
-                quantity = quantity * Decimal("0.5")  # Reduce position size
-            
-            # Execute trade
-            success = False
-            if hasattr(self.provider, 'simulate_trade'):
-                success = await self.provider.simulate_trade(symbol, quantity, price)
-            
-            # Monitor slippage if we have price data
-            if success and price is not None:
-                await self._monitor_slippage(symbol, price)
-            
+            self.operations_count += 1
             return success
             
         except Exception as e:
-            logger.error(f"Error simulating trade: {e}")
-            await self._handle_error("api_errors")
+            self.failed_operations += 1
+            logger.error(f"Error adding position {position.symbol}: {e}")
             return False
     
-    async def get_portfolio_summary(self) -> Dict[str, Any]:
-        """Get portfolio summary with circuit breaker status."""
-        portfolio = await self.get_portfolio()
-        if portfolio is None:
-            return {
-                "error": "Portfolio unavailable due to circuit breaker",
-                "circuit_breakers": {
-                    name: cb.state.value for name, cb in self.circuit_breakers.items()
-                }
-            }
-        
-        summary = {
-            "broker": portfolio.broker,
-            "total_equity": float(portfolio.total_equity),
-            "cash": float(portfolio.cash),
-            "total_pnl": float(portfolio.total_pnl),
-            "total_pnl_percentage": float(portfolio.total_pnl_percentage),
-            "positions_count": len(portfolio.positions),
-            "positions_by_asset_class": {
-                asset_class.value: len(positions) 
-                for asset_class, positions in portfolio.positions_by_asset_class.items()
-            },
-            "timestamp": portfolio.timestamp.isoformat(),
-            "circuit_breakers": {
-                name: {
-                    "state": cb.state.value,
-                    "error_count": cb.error_count,
-                    "last_error_time": cb.last_error_time.isoformat() if cb.last_error_time else None
-                }
-                for name, cb in self.circuit_breakers.items()
-            }
+    async def update_position(self, position: Position) -> bool:
+        """Actualizar posición con evaluación de riesgo."""
+        try:
+            # Obtener portafolio actual
+            portfolio = await self.get_portfolio()
+            if not portfolio:
+                logger.warning("No portfolio available for updating position")
+                return False
+            
+            # Evaluar riesgo con posición actualizada
+            risk_assessment = self.risk_manager.assess_portfolio_risk(portfolio, position)
+            
+            # Verificar violaciones críticas
+            critical_violations = [
+                v for v in risk_assessment["violations"] 
+                if v["severity"] == "critical"
+            ]
+            
+            if critical_violations:
+                logger.warning(f"Cannot update position {position.symbol}: critical risk violations detected")
+                return False
+            
+            # Actualizar posición
+            success = await self.provider.update_position(position)
+            
+            if success:
+                self.successful_operations += 1
+                logger.info(f"Position updated: {position.symbol}")
+            else:
+                self.failed_operations += 1
+            
+            self.operations_count += 1
+            return success
+            
+        except Exception as e:
+            self.failed_operations += 1
+            logger.error(f"Error updating position {position.symbol}: {e}")
+            return False
+    
+    async def remove_position(self, symbol: str) -> bool:
+        """Remover posición del portafolio."""
+        try:
+            success = await self.provider.remove_position(symbol)
+            
+            if success:
+                self.successful_operations += 1
+                logger.info(f"Position removed: {symbol}")
+            else:
+                self.failed_operations += 1
+            
+            self.operations_count += 1
+            return success
+            
+        except Exception as e:
+            self.failed_operations += 1
+            logger.error(f"Error removing position {symbol}: {e}")
+            return False
+    
+    async def simulate_trade(
+        self, 
+        symbol: str, 
+        quantity: Decimal, 
+        price: Decimal
+    ) -> bool:
+        """Simular trade con evaluación de riesgo."""
+        try:
+            # Crear posición temporal para evaluación
+            temp_position = Position(
+                symbol=symbol,
+                quantity=quantity,
+                market_value=quantity * price,
+                cost_basis=price,
+                unrealized_pnl=Decimal("0")
+            )
+            
+            # Obtener portafolio actual
+            portfolio = await self.get_portfolio()
+            if not portfolio:
+                logger.warning("No portfolio available for trade simulation")
+                return False
+            
+            # Evaluar riesgo con nueva posición
+            risk_assessment = self.risk_manager.assess_portfolio_risk(portfolio, temp_position)
+            
+            # Verificar violaciones críticas
+            critical_violations = [
+                v for v in risk_assessment["violations"] 
+                if v["severity"] == "critical"
+            ]
+            
+            if critical_violations:
+                logger.warning(f"Cannot execute trade for {symbol}: critical risk violations detected")
+                return False
+            
+            # Simular trade
+            success = await self.provider.simulate_trade(symbol, quantity, price)
+            
+            if success:
+                self.successful_operations += 1
+                logger.info(f"Trade simulated: {symbol} {quantity} @ {price}")
+            else:
+                self.failed_operations += 1
+            
+            self.operations_count += 1
+            return success
+            
+        except Exception as e:
+            self.failed_operations += 1
+            logger.error(f"Error simulating trade for {symbol}: {e}")
+            return False
+    
+    def get_service_statistics(self) -> Dict[str, Any]:
+        """Obtener estadísticas del servicio."""
+        # Estadísticas del servicio principal
+        service_stats = {
+            "operations_count": self.operations_count,
+            "successful_operations": self.successful_operations,
+            "failed_operations": self.failed_operations,
+            "success_rate": (
+                self.successful_operations / self.operations_count 
+                if self.operations_count > 0 else 0.0
+            ),
+            "last_operation_time": self.last_operation_time
         }
         
-        return summary
-    
-    async def _handle_error(self, circuit_breaker_name: str):
-        """Handle error and update circuit breaker."""
-        cb = self.circuit_breakers[circuit_breaker_name]
-        cb.error_count += 1
-        cb.last_error_time = datetime.utcnow()
+        # Estadísticas de los gestores
+        circuit_breaker_stats = self.circuit_breaker_manager.get_manager_statistics()
+        risk_stats = self.risk_manager.get_risk_statistics()
         
-        if cb.should_trigger():
-            cb.state = CircuitBreakerState.OPEN
-            logger.warning(f"Circuit breaker {circuit_breaker_name} triggered after {cb.error_count} errors")
-    
-    def _should_attempt_reset(self, circuit_breaker_name: str) -> bool:
-        """Check if circuit breaker should attempt reset."""
-        cb = self.circuit_breakers[circuit_breaker_name]
-        if cb.last_error_time is None:
-            return False  # No error time means we shouldn't attempt reset
-        
-        time_since_error = datetime.utcnow() - cb.last_error_time
-        return time_since_error.total_seconds() >= cb.cooldown_seconds
-    
-    async def _check_performance_circuit_breaker(self, portfolio: Portfolio):
-        """Check performance circuit breaker based on portfolio metrics."""
-        try:
-            # Check if portfolio has excessive drawdown
-            pnl_percentage = float(portfolio.total_pnl_percentage)
-            
-            # Trigger if drawdown exceeds -10%
-            if pnl_percentage < -10.0:
-                await self._handle_error("performance")
-                logger.warning(f"Performance circuit breaker triggered: {pnl_percentage}% P&L")
-            
-        except Exception as e:
-            logger.error(f"Error checking performance circuit breaker: {e}")
-    
-    async def _monitor_slippage(self, symbol: str, expected_price: Decimal):
-        """Monitor slippage for trades."""
-        try:
-            # Get current market price
-            position = await self.get_position(symbol)
-            if position is None:
-                return
-            
-            actual_price = position.market_price
-            slippage = abs(float(actual_price - expected_price)) / float(expected_price)
-            
-            # Add to slippage history
-            self.slippage_history.append(slippage)
-            
-            # Keep only last 10 trades
-            if len(self.slippage_history) > 10:
-                self.slippage_history = self.slippage_history[-10:]
-            
-            # Check average slippage
-            if len(self.slippage_history) >= 5:
-                avg_slippage = sum(self.slippage_history) / len(self.slippage_history)
-                
-                # Trigger circuit breaker if average slippage > 0.5%
-                if avg_slippage > 0.005:
-                    await self._handle_error("slippage")
-                    logger.warning(f"Slippage circuit breaker triggered: {avg_slippage:.4f} average slippage")
-            
-        except Exception as e:
-            logger.error(f"Error monitoring slippage: {e}")
-    
-    def reset_circuit_breaker(self, name: str):
-        """Manually reset a circuit breaker."""
-        if name in self.circuit_breakers:
-            self.circuit_breakers[name].reset()
-            logger.info(f"Circuit breaker {name} manually reset")
-    
-    def get_circuit_breaker_status(self) -> Dict[str, Dict[str, Any]]:
-        """Get status of all circuit breakers."""
         return {
-            name: {
-                "state": cb.state.value,
-                "error_count": cb.error_count,
-                "max_errors": cb.max_errors,
-                "last_error_time": cb.last_error_time.isoformat() if cb.last_error_time else None,
-                "cooldown_seconds": cb.cooldown_seconds
-            }
-            for name, cb in self.circuit_breakers.items()
+            "service": service_stats,
+            "circuit_breaker_manager": circuit_breaker_stats,
+            "risk_manager": risk_stats
         }
+    
+    def get_circuit_breaker_status(self) -> Dict[str, Any]:
+        """Obtener estado de circuit breakers."""
+        return self.circuit_breaker_manager.get_all_breaker_statuses()
+    
+    def get_risk_assessment(self, portfolio: Portfolio) -> Dict[str, Any]:
+        """Obtener evaluación de riesgo del portafolio."""
+        return self.risk_manager.assess_portfolio_risk(portfolio)
+    
+    def reset_circuit_breakers(self) -> None:
+        """Resetear circuit breakers."""
+        self.circuit_breaker_manager.reset_all_breakers()
+        logger.info("Reset all circuit breakers")
+    
+    def reset_statistics(self) -> None:
+        """Resetear estadísticas."""
+        self.operations_count = 0
+        self.successful_operations = 0
+        self.failed_operations = 0
+        self.last_operation_time = None
+        
+        # Resetear gestores
+        self.circuit_breaker_manager.clear_history()
+        self.risk_manager.clear_history()
+        
+        logger.info("Reset portfolio service statistics")

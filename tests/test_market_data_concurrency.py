@@ -14,7 +14,7 @@ from unittest.mock import Mock, patch
 import threading
 import time
 
-from app.models.market_data import Quote, MarketData
+from app.models.market_data import Quote, HistoricalData
 from app.services.market_data_service import MarketDataService
 from app.core.centralized_config import get_config
 
