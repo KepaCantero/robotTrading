@@ -4,12 +4,15 @@ Signal Management API Endpoints
 FastAPI endpoints for signal scoring, evaluation, and management.
 """
 
+import logging
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel
+
+logger = logging.getLogger(__name__)
 
 from app.models.signal import MarketData, Signal, SignalType
 from app.providers.paper_trading import PaperTradingPortfolioProvider
