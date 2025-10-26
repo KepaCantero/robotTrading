@@ -74,9 +74,11 @@ class CostBreakdownModel(BaseModel):
     def validate_total_cost(cls, v, info=None):
         """Validate that total cost equals sum of components."""
         if (
-            "commission" in values
-            and "slippage" in values
-            and "market_impact" in values
+            info
+            and hasattr(info, "data")
+            and "commission" in info.data
+            and "slippage" in info.data
+            and "market_impact" in info.data
         ):
             expected_total = (
                 info.data["commission"]
@@ -110,9 +112,11 @@ class CostBreakdownModel(BaseModel):
     def validate_cost_percentage(cls, v, info=None):
         """Validate cost percentage calculation."""
         if (
-            "total_cost" in values
-            and "execution_price" in values
-            and "quantity" in values
+            info
+            and hasattr(info, "data")
+            and "total_cost" in info.data
+            and "execution_price" in info.data
+            and "quantity" in info.data
         ):
             trade_value = (
                 info.data["execution_price"]
@@ -200,15 +204,19 @@ class CostAnalysisResultModel(BaseModel):
     @classmethod
     def validate_total_costs(cls, v, info=None):
         """Validate that total costs equal sum of components."""
-        if all(
-            key in values
-            for key in [
-                "total_commission",
-                "total_slippage",
-                "total_market_impact",
-                "total_infrastructure",
-                "total_borrowing",
-            ]
+        if (
+            info
+            and hasattr(info, "data")
+            and all(
+                key in info.data
+                for key in [
+                    "total_commission",
+                    "total_slippage",
+                    "total_market_impact",
+                    "total_infrastructure",
+                    "total_borrowing",
+                ]
+            )
         ):
             expected_total = (
                 info.data["total_commission"]
@@ -245,7 +253,12 @@ class CostAnalysisResultModel(BaseModel):
     @classmethod
     def validate_net_profit(cls, v, info=None):
         """Validate net profit calculation."""
-        if "gross_profit" in values and "total_costs" in values:
+        if (
+            info
+            and hasattr(info, "data")
+            and "gross_profit" in info.data
+            and "total_costs" in info.data
+        ):
             expected_net = (
                 info.data["gross_profit"]
                 if info and hasattr(info, "data") and "gross_profit" in info.data
@@ -263,7 +276,12 @@ class CostAnalysisResultModel(BaseModel):
     @classmethod
     def validate_cost_impact_ratio(cls, v, info=None):
         """Validate Cost Impact Ratio calculation."""
-        if "total_costs" in values and "gross_profit" in values:
+        if (
+            info
+            and hasattr(info, "data")
+            and "total_costs" in info.data
+            and "gross_profit" in info.data
+        ):
             if (
                 info.data["gross_profit"]
                 if info and hasattr(info, "data") and "gross_profit" in info.data
