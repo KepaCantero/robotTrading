@@ -8,13 +8,11 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, Generic, List, Optional, TypeVar
 
-from sqlalchemy import and_, delete, func, or_, select, update
+from sqlalchemy import and_, func
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
 from app.database.models import (
-    APIKey,
     Asset,
     Backtest,
     MarketData,
@@ -26,7 +24,7 @@ from app.database.models import (
     Trade,
     User,
 )
-from app.exceptions import DatabaseError, raise_database_error
+from app.core.exceptions import raise_database_error
 
 T = TypeVar("T")
 
