@@ -6,96 +6,99 @@ Servicio para calcular slippage dinámico basado en volatilidad del mercado y li
 """
 
 import math
+from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
-from datetime import datetime, timedelta
+
 import numpy as np
 
+from app.core.centralized_config import get_config
+from app.models.market_data import Quote
 from app.models.slippage_analysis import (
     DynamicSlippageAnalysis,
-    SlippageComponent,
-    SlippageType,
-    MarketCondition,
-    VolatilityMetrics,
     LiquidityMetrics,
+    MarketCondition,
     OrderSizeImpact,
     SlippageCalculationParams,
-    SlippageHistory
+    SlippageComponent,
+    SlippageHistory,
+    SlippageType,
+    VolatilityMetrics,
 )
-from app.models.market_data import Quote
-from app.core.centralized_config import get_config
 
 
 class VolatilityCalculator:
     """Calculadora de volatilidad del mercado."""
-    
+
     def __init__(self, lookback_days: int = 30):
         self.lookback_days = lookback_days
-    
+
     def calculate_volatility(self, price_history: List[Decimal]) -> VolatilityMetrics:
         """Calcular métricas de volatilidad."""
         if len(price_history) < 2:
             raise ValueError("Insufficient price history for volatility calculation")
-        
+
         # Convertir a numpy para cálculos
         prices = np.array([float(p) for p in price_history])
-        
+
         # Calcular returns
         returns = np.diff(np.log(prices))
-        
+
         # Volatilidad actual (últimos 5 días)
         recent_returns = returns[-5:] if len(returns) >= 5 else returns
         current_volatility = Decimal(str(np.std(recent_returns) * np.sqrt(252) * 100))
-        
+
         # Volatilidad histórica (todo el período)
         historical_volatility = Decimal(str(np.std(returns) * np.sqrt(252) * 100))
-        
+
         # Percentil de volatilidad
-        volatility_percentile = self._calculate_percentile(current_volatility, historical_volatility)
-        
+        volatility_percentile = self._calculate_percentile(
+            current_volatility, historical_volatility
+        )
+
         # Tendencia de volatilidad
         volatility_trend = self._calculate_trend(returns)
-        
+
         # Regimen de volatilidad
         volatility_regime = self._determine_volatility_regime(current_volatility)
-        
+
         return VolatilityMetrics(
             current_volatility=current_volatility,
             historical_volatility=historical_volatility,
             volatility_percentile=volatility_percentile,
             volatility_trend=volatility_trend,
-            volatility_regime=volatility_regime
+            volatility_regime=volatility_regime,
         )
-    
+
     def _calculate_percentile(self, current: Decimal, historical: Decimal) -> float:
         """Calcular percentil de volatilidad actual."""
         if historical == 0:
             return 50.0
         return float((current / historical) * 100)
-    
+
     def _calculate_trend(self, returns: np.ndarray) -> str:
         """Calcular tendencia de volatilidad."""
         if len(returns) < 10:
             return "insufficient_data"
-        
+
         # Calcular volatilidad móvil
         window_size = min(10, len(returns) // 2)
         recent_vol = np.std(returns[-window_size:])
-        previous_vol = np.std(returns[-window_size*2:-window_size])
-        
+        previous_vol = np.std(returns[-window_size * 2 : -window_size])
+
         if recent_vol > previous_vol * 1.1:
             return "increasing"
         elif recent_vol < previous_vol * 0.9:
             return "decreasing"
         else:
             return "stable"
-    
+
     def _determine_volatility_regime(self, volatility: Decimal) -> MarketCondition:
         """Determinar régimen de volatilidad."""
         config = get_config()
         high_threshold = config.trading.volatility_threshold_high
         extreme_threshold = config.trading.volatility_threshold_extreme
-        
+
         if volatility >= extreme_threshold:
             return MarketCondition.EXTREME_EVENTS
         elif volatility >= high_threshold:
@@ -106,49 +109,57 @@ class VolatilityCalculator:
 
 class LiquidityCalculator:
     """Calculadora de liquidez del mercado."""
-    
-    def calculate_liquidity(self, quote: Quote, volume_24h: Decimal, order_book_depth: Decimal) -> LiquidityMetrics:
+
+    def calculate_liquidity(
+        self, quote: Quote, volume_24h: Decimal, order_book_depth: Decimal
+    ) -> LiquidityMetrics:
         """Calcular métricas de liquidez."""
         # Calcular spread bid-ask
         if quote.bid and quote.ask and quote.bid > 0:
-            spread = ((quote.ask - quote.bid) / quote.bid) * Decimal('100')
+            spread = ((quote.ask - quote.bid) / quote.bid) * Decimal("100")
         else:
-            spread = Decimal('1.0')  # Spread por defecto
-        
+            spread = Decimal("1.0")  # Spread por defecto
+
         # Calcular score de liquidez
-        liquidity_score = self._calculate_liquidity_score(spread, volume_24h, order_book_depth)
-        
+        liquidity_score = self._calculate_liquidity_score(
+            spread, volume_24h, order_book_depth
+        )
+
         # Determinar régimen de liquidez
         liquidity_regime = self._determine_liquidity_regime(liquidity_score, spread)
-        
+
         return LiquidityMetrics(
             bid_ask_spread=spread,
             volume_24h=volume_24h,
             order_book_depth=order_book_depth,
             liquidity_score=liquidity_score,
-            liquidity_regime=liquidity_regime
+            liquidity_regime=liquidity_regime,
         )
-    
-    def _calculate_liquidity_score(self, spread: Decimal, volume: Decimal, depth: Decimal) -> float:
+
+    def _calculate_liquidity_score(
+        self, spread: Decimal, volume: Decimal, depth: Decimal
+    ) -> float:
         """Calcular score de liquidez (0-1)."""
         # Normalizar spread (menor es mejor)
         spread_score = max(0, 1 - float(spread) / 5.0)  # Máximo 5% spread
-        
+
         # Normalizar volumen (mayor es mejor)
         volume_score = min(1.0, float(volume) / 1000000)  # Normalizar a 1M
-        
+
         # Normalizar profundidad (mayor es mejor)
         depth_score = min(1.0, float(depth) / 100000)  # Normalizar a 100K
-        
+
         # Score combinado con pesos
-        return (spread_score * 0.4 + volume_score * 0.4 + depth_score * 0.2)
-    
-    def _determine_liquidity_regime(self, liquidity_score: float, spread: Decimal) -> MarketCondition:
+        return spread_score * 0.4 + volume_score * 0.4 + depth_score * 0.2
+
+    def _determine_liquidity_regime(
+        self, liquidity_score: float, spread: Decimal
+    ) -> MarketCondition:
         """Determinar régimen de liquidez."""
         config = get_config()
         min_liquidity = config.trading.min_liquidity_score
         max_spread = config.trading.max_spread_threshold
-        
+
         if liquidity_score < min_liquidity or spread > max_spread:
             return MarketCondition.LOW_LIQUIDITY
         elif liquidity_score < min_liquidity * 1.5:
@@ -159,22 +170,23 @@ class LiquidityCalculator:
 
 class OrderSizeCalculator:
     """Calculadora de impacto del tamaño de orden."""
-    
-    def calculate_order_impact(self, order_size: Decimal, market_cap: Decimal, 
-                             current_price: Decimal) -> OrderSizeImpact:
+
+    def calculate_order_impact(
+        self, order_size: Decimal, market_cap: Decimal, current_price: Decimal
+    ) -> OrderSizeImpact:
         """Calcular impacto del tamaño de orden."""
         # Calcular ratio orden/capitalización
-        market_cap_ratio = order_size / market_cap if market_cap > 0 else Decimal('0')
-        
+        market_cap_ratio = order_size / market_cap if market_cap > 0 else Decimal("0")
+
         # Calcular multiplicador de impacto
         impact_multiplier = self._calculate_impact_multiplier(market_cap_ratio)
-        
+
         return OrderSizeImpact(
             order_size=order_size,
             market_cap_ratio=market_cap_ratio,
-            impact_multiplier=impact_multiplier
+            impact_multiplier=impact_multiplier,
         )
-    
+
     def _calculate_impact_multiplier(self, market_cap_ratio: Decimal) -> float:
         """Calcular multiplicador de impacto basado en el ratio."""
         # Función exponencial para capturar impacto no lineal
@@ -189,14 +201,16 @@ class OrderSizeCalculator:
 
 class DynamicSlippageService:
     """Servicio principal para análisis de slippage dinámico."""
-    
+
     def __init__(self, params: Optional[SlippageCalculationParams] = None):
         self.params = params or SlippageCalculationParams()
-        self.volatility_calculator = VolatilityCalculator(self.params.volatility_lookback_days)
+        self.volatility_calculator = VolatilityCalculator(
+            self.params.volatility_lookback_days
+        )
         self.liquidity_calculator = LiquidityCalculator()
         self.order_size_calculator = OrderSizeCalculator()
         self.slippage_history: Dict[str, SlippageHistory] = {}
-    
+
     def calculate_dynamic_slippage(
         self,
         asset_symbol: str,
@@ -207,35 +221,37 @@ class DynamicSlippageService:
         price_history: List[Decimal],
         volume_24h: Decimal,
         order_book_depth: Decimal,
-        market_cap: Decimal
+        market_cap: Decimal,
     ) -> DynamicSlippageAnalysis:
         """Calcular slippage dinámico completo."""
-        
+
         # Calcular métricas de entrada
-        volatility_metrics = self.volatility_calculator.calculate_volatility(price_history)
+        volatility_metrics = self.volatility_calculator.calculate_volatility(
+            price_history
+        )
         liquidity_metrics = self.liquidity_calculator.calculate_liquidity(
             quote, volume_24h, order_book_depth
         )
         order_size_impact = self.order_size_calculator.calculate_order_impact(
             order_size, market_cap, base_price
         )
-        
+
         # Calcular componentes de slippage
         slippage_components = self._calculate_slippage_components(
             volatility_metrics, liquidity_metrics, order_size_impact
         )
-        
+
         # Calcular slippage total
         total_slippage = self._calculate_total_slippage(slippage_components)
-        
+
         # Determinar condición del mercado
         market_condition = self._determine_market_condition(
             volatility_metrics, liquidity_metrics
         )
-        
+
         # Calcular confianza
         confidence = self._calculate_confidence(slippage_components)
-        
+
         # Crear análisis
         analysis = DynamicSlippageAnalysis(
             asset_symbol=asset_symbol,
@@ -248,159 +264,177 @@ class DynamicSlippageService:
             slippage_components=slippage_components,
             total_slippage=total_slippage,
             slippage_confidence=confidence,
-            market_condition=market_condition
+            market_condition=market_condition,
         )
-        
+
         # Guardar en historial
         self._add_to_history(analysis)
-        
+
         return analysis
-    
+
     def _calculate_slippage_components(
         self,
         volatility_metrics: VolatilityMetrics,
         liquidity_metrics: LiquidityMetrics,
-        order_size_impact: OrderSizeImpact
+        order_size_impact: OrderSizeImpact,
     ) -> List[SlippageComponent]:
         """Calcular componentes individuales de slippage."""
         components = []
-        
+
         # 1. Market Impact (impacto del tamaño de orden)
-        market_impact = self._calculate_market_impact(order_size_impact, liquidity_metrics)
+        market_impact = self._calculate_market_impact(
+            order_size_impact, liquidity_metrics
+        )
         components.append(market_impact)
-        
+
         # 2. Timing Delay (delay en ejecución)
         timing_delay = self._calculate_timing_delay(volatility_metrics)
         components.append(timing_delay)
-        
+
         # 3. Liquidity Cost (costo de liquidez)
         liquidity_cost = self._calculate_liquidity_cost(liquidity_metrics)
         components.append(liquidity_cost)
-        
+
         # 4. Volatility Adjustment (ajuste por volatilidad)
-        volatility_adjustment = self._calculate_volatility_adjustment(volatility_metrics)
+        volatility_adjustment = self._calculate_volatility_adjustment(
+            volatility_metrics
+        )
         components.append(volatility_adjustment)
-        
+
         return components
-    
+
     def _calculate_market_impact(
-        self, 
-        order_size_impact: OrderSizeImpact, 
-        liquidity_metrics: LiquidityMetrics
+        self, order_size_impact: OrderSizeImpact, liquidity_metrics: LiquidityMetrics
     ) -> SlippageComponent:
         """Calcular impacto del mercado."""
         base_impact = float(order_size_impact.market_cap_ratio) * 100
         liquidity_adjustment = 1 / max(0.1, liquidity_metrics.liquidity_score)
         impact_value = Decimal(str(base_impact * liquidity_adjustment))
-        
+
+        # Determinar condición del mercado basada en el impacto
+        if order_size_impact.market_cap_ratio > Decimal("0.01"):
+            market_condition = MarketCondition.MARKET_STRESS
+        else:
+            market_condition = MarketCondition.NORMAL
+
         return SlippageComponent(
             slippage_type=SlippageType.MARKET_IMPACT,
             value=impact_value,
             confidence=0.8,
-            market_condition=order_size_impact.market_cap_ratio > Decimal('0.01'),
-            calculation_method="market_impact_v1"
+            market_condition=market_condition,
+            calculation_method="market_impact_v1",
         )
-    
-    def _calculate_timing_delay(self, volatility_metrics: VolatilityMetrics) -> SlippageComponent:
+
+    def _calculate_timing_delay(
+        self, volatility_metrics: VolatilityMetrics
+    ) -> SlippageComponent:
         """Calcular delay de timing."""
         delay_value = Decimal(str(float(volatility_metrics.current_volatility) * 0.01))
-        
+
         return SlippageComponent(
             slippage_type=SlippageType.TIMING_DELAY,
             value=delay_value,
             confidence=0.7,
             market_condition=volatility_metrics.volatility_regime,
-            calculation_method="timing_delay_v1"
+            calculation_method="timing_delay_v1",
         )
-    
-    def _calculate_liquidity_cost(self, liquidity_metrics: LiquidityMetrics) -> SlippageComponent:
+
+    def _calculate_liquidity_cost(
+        self, liquidity_metrics: LiquidityMetrics
+    ) -> SlippageComponent:
         """Calcular costo de liquidez."""
-        cost_value = liquidity_metrics.bid_ask_spread / Decimal('2')  # Mitad del spread
-        
+        cost_value = liquidity_metrics.bid_ask_spread / Decimal("2")  # Mitad del spread
+
         return SlippageComponent(
             slippage_type=SlippageType.LIQUIDITY_COST,
             value=cost_value,
             confidence=0.9,
             market_condition=liquidity_metrics.liquidity_regime,
-            calculation_method="liquidity_cost_v1"
+            calculation_method="liquidity_cost_v1",
         )
-    
-    def _calculate_volatility_adjustment(self, volatility_metrics: VolatilityMetrics) -> SlippageComponent:
+
+    def _calculate_volatility_adjustment(
+        self, volatility_metrics: VolatilityMetrics
+    ) -> SlippageComponent:
         """Calcular ajuste por volatilidad."""
         if volatility_metrics.volatility_regime == MarketCondition.EXTREME_EVENTS:
-            adjustment = Decimal('2.0')
+            adjustment = Decimal("2.0")
         elif volatility_metrics.volatility_regime == MarketCondition.HIGH_VOLATILITY:
-            adjustment = Decimal('1.0')
+            adjustment = Decimal("1.0")
         else:
-            adjustment = Decimal('0.2')
-        
+            adjustment = Decimal("0.2")
+
         return SlippageComponent(
             slippage_type=SlippageType.VOLATILITY_ADJUSTMENT,
             value=adjustment,
             confidence=0.6,
             market_condition=volatility_metrics.volatility_regime,
-            calculation_method="volatility_adjustment_v1"
+            calculation_method="volatility_adjustment_v1",
         )
-    
+
     def _calculate_total_slippage(self, components: List[SlippageComponent]) -> Decimal:
         """Calcular slippage total."""
         # Sumar componentes con pesos
-        total = Decimal('0')
+        total = Decimal("0")
         weights = {
             SlippageType.MARKET_IMPACT: 0.4,
             SlippageType.TIMING_DELAY: 0.2,
             SlippageType.LIQUIDITY_COST: 0.3,
-            SlippageType.VOLATILITY_ADJUSTMENT: 0.1
+            SlippageType.VOLATILITY_ADJUSTMENT: 0.1,
         }
-        
+
         for component in components:
             weight = weights.get(component.slippage_type, 0.1)
             total += component.value * Decimal(str(weight))
-        
+
         # Aplicar slippage base
         base_slippage = self.params.base_slippage
         total += base_slippage
-        
+
         return total
-    
+
     def _determine_market_condition(
-        self, 
-        volatility_metrics: VolatilityMetrics, 
-        liquidity_metrics: LiquidityMetrics
+        self, volatility_metrics: VolatilityMetrics, liquidity_metrics: LiquidityMetrics
     ) -> MarketCondition:
         """Determinar condición general del mercado."""
-        if (volatility_metrics.volatility_regime == MarketCondition.EXTREME_EVENTS or
-            liquidity_metrics.liquidity_regime == MarketCondition.LOW_LIQUIDITY):
+        if (
+            volatility_metrics.volatility_regime == MarketCondition.EXTREME_EVENTS
+            or liquidity_metrics.liquidity_regime == MarketCondition.LOW_LIQUIDITY
+        ):
             return MarketCondition.MARKET_STRESS
-        elif (volatility_metrics.volatility_regime == MarketCondition.HIGH_VOLATILITY or
-              liquidity_metrics.liquidity_regime == MarketCondition.MARKET_STRESS):
+        elif (
+            volatility_metrics.volatility_regime == MarketCondition.HIGH_VOLATILITY
+            or liquidity_metrics.liquidity_regime == MarketCondition.MARKET_STRESS
+        ):
             return MarketCondition.HIGH_VOLATILITY
         else:
             return MarketCondition.NORMAL
-    
+
     def _calculate_confidence(self, components: List[SlippageComponent]) -> float:
         """Calcular confianza en el cálculo."""
         if not components:
             return 0.5
-        
+
         # Promedio ponderado de confianzas
         total_confidence = sum(c.confidence for c in components)
         return total_confidence / len(components)
-    
+
     def _add_to_history(self, analysis: DynamicSlippageAnalysis):
         """Agregar análisis al historial."""
         if analysis.asset_symbol not in self.slippage_history:
             self.slippage_history[analysis.asset_symbol] = SlippageHistory(
                 asset_symbol=analysis.asset_symbol
             )
-        
+
         self.slippage_history[analysis.asset_symbol].add_analysis(analysis)
-    
+
     def get_slippage_history(self, asset_symbol: str) -> Optional[SlippageHistory]:
         """Obtener historial de slippage para un activo."""
         return self.slippage_history.get(asset_symbol)
-    
-    def get_average_slippage(self, asset_symbol: str, days: int = 7) -> Optional[Decimal]:
+
+    def get_average_slippage(
+        self, asset_symbol: str, days: int = 7
+    ) -> Optional[Decimal]:
         """Obtener slippage promedio para un activo."""
         history = self.get_slippage_history(asset_symbol)
         if history:

@@ -10,33 +10,34 @@ Version: 1.0.0
 
 import logging
 from contextlib import asynccontextmanager
-from typing import Dict, Any
+from typing import Any, Dict
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.core.config import get_settings, get_cors_config
-from app.api.portfolio import router as portfolio_router
-from app.api.signals import router as signals_router
-from app.api.momentum import router as momentum_router
 from app.api.assets import router as assets_router
-from app.api.market_data import router as market_data_router
-from app.api.paper_trading import router as paper_trading_router
-from app.api.portfolio_analytics import router as portfolio_analytics_router
 from app.api.cost_analysis import router as cost_analysis_router
+from app.api.market_data import router as market_data_router
+from app.api.momentum import router as momentum_router
 from app.api.optimization import router as optimization_router
+from app.api.paper_trading import router as paper_trading_router
+from app.api.portfolio import router as portfolio_router
+from app.api.portfolio_analytics import router as portfolio_analytics_router
+from app.api.signals import router as signals_router
 from app.api.trading_error_handler import router as trading_error_handler_router
+from app.core.config import get_cors_config, get_settings
 
-# Get application settings (lazy loading to avoid validation issues during import)
+# Get application settings (lazy loading to avoid validation issues during
+# import)
 settings = None
 
 # Configure logging (will be updated when settings are loaded)
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
 
 def get_app_settings():
     """Get application settings with lazy loading."""
@@ -53,15 +54,15 @@ async def lifespan(app: FastAPI):
     """Application lifespan manager for startup and shutdown events."""
     # Get settings
     app_settings = get_app_settings()
-    
+
     # Startup
     logger.info(f"Starting {app_settings.app_name} v{app_settings.app_version}")
     logger.info(f"Debug mode: {app_settings.debug}")
     logger.info(f"Log level: {app_settings.log_level}")
     logger.info("Application startup complete")
-    
+
     yield
-    
+
     # Shutdown
     logger.info("Application shutdown initiated")
     logger.info("Application shutdown complete")
@@ -75,7 +76,7 @@ app = FastAPI(
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
-    openapi_url="/openapi.json"
+    openapi_url="/openapi.json",
 )
 
 # Configure CORS middleware (will be updated when settings are loaded)
@@ -97,14 +98,18 @@ app.include_router(paper_trading_router)
 app.include_router(portfolio_analytics_router)
 app.include_router(cost_analysis_router)
 app.include_router(optimization_router)
-app.include_router(trading_error_handler_router, prefix="/trading-error-handler", tags=["Trading Error Handler"])
+app.include_router(
+    trading_error_handler_router,
+    prefix="/trading-error-handler",
+    tags=["Trading Error Handler"],
+)
 
 
 @app.get("/", tags=["Root"])
 async def root() -> Dict[str, Any]:
     """
     Root endpoint providing basic application information.
-    
+
     Returns:
         Dict containing application metadata
     """
@@ -116,7 +121,7 @@ async def root() -> Dict[str, Any]:
         "status": "running",
         "debug": app_settings.debug,
         "docs": "/docs",
-        "health": "/health"
+        "health": "/health",
     }
 
 
@@ -124,7 +129,7 @@ async def root() -> Dict[str, Any]:
 async def health_check() -> Dict[str, str]:
     """
     Health check endpoint for monitoring and load balancers.
-    
+
     Returns:
         Dict with status information
     """
@@ -135,14 +140,14 @@ async def health_check() -> Dict[str, str]:
 async def detailed_health_check() -> Dict[str, Any]:
     """
     Detailed health check endpoint with system information.
-    
+
     Returns:
         Dict with detailed health information
     """
     import platform
     import sys
     from datetime import datetime
-    
+
     return {
         "status": "ok",
         "timestamp": datetime.utcnow().isoformat(),
@@ -152,8 +157,8 @@ async def detailed_health_check() -> Dict[str, Any]:
         "system": {
             "name": platform.system(),
             "release": platform.release(),
-            "machine": platform.machine()
-        }
+            "machine": platform.machine(),
+        },
     }
 
 
@@ -165,8 +170,8 @@ async def not_found_handler(request, exc):
         content={
             "error": "Not Found",
             "message": "The requested resource was not found",
-            "path": str(request.url.path)
-        }
+            "path": str(request.url.path),
+        },
     )
 
 
@@ -178,18 +183,14 @@ async def internal_error_handler(request, exc):
         status_code=500,
         content={
             "error": "Internal Server Error",
-            "message": "An internal server error occurred"
-        }
+            "message": "An internal server error occurred",
+        },
     )
 
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     uvicorn.run(
-        "app.main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True,
-        log_level="info"
+        "app.main:app", host="0.0.0.0", port=8000, reload=True, log_level="info"
     )

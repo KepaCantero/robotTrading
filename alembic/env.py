@@ -5,14 +5,16 @@ TASK-6: Configuración de base de datos
 
 import os
 from logging.config import fileConfig
+
 from sqlalchemy import engine_from_config, pool
+
 from alembic import context
 from alembic.config import Config
+from app.core.environment_config import get_config
 
 # Import your models here
 from app.database import Base
 from app.database.models import *  # Import all models
-from app.core.environment_config import get_config
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -72,11 +74,11 @@ def run_migrations_online():
     """
     # Get database configuration
     db_config = get_config().database
-    
+
     # Create configuration for SQLAlchemy engine
     configuration = config.get_section(config.config_ini_section)
     configuration["sqlalchemy.url"] = db_config.connection_string
-    
+
     connectable = engine_from_config(
         configuration,
         prefix="sqlalchemy.",
@@ -84,10 +86,7 @@ def run_migrations_online():
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, 
-            target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

@@ -18,4 +18,3 @@ __description__ = "Algorithmic Trading System MVP"
 APP_NAME = "AlgoTrading MVP"
 APP_VERSION = __version__
 APP_DESCRIPTION = __description__
-
