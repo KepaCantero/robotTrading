@@ -7,25 +7,18 @@ conditions including fees, slippage, and market impact for the algorithmic tradi
 
 import asyncio
 import random
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 
 from app.core.centralized_config import get_config
 from app.models.market_data import Quote
 from app.models.order import Order
-from app.models.paper_trading import (
-    OrderSide,
-    OrderType,
-    PaperPortfolio,
-    PaperPosition,
-    PaperTrade,
-    PaperTradingConfig,
-    PaperTradingMode,
-    PaperTradingSession,
-    TradeStatus,
-)
+from app.models.paper_trading import (OrderSide, OrderType, PaperPortfolio,
+                                      PaperPosition, PaperTrade,
+                                      PaperTradingConfig, PaperTradingMode,
+                                      PaperTradingSession, TradeStatus)
 from app.models.slippage_analysis import SlippageCalculationParams
 from app.services.slippage_analysis_service import DynamicSlippageService
 
@@ -559,7 +552,7 @@ class PaperTradingService:
 
             return slippage_amount
 
-        except Exception as e:
+        except Exception:
             # Fallback al slippage fijo si hay error
             return trade.quantity * market_price * config.slippage_rate
 

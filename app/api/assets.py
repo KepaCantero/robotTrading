@@ -6,25 +6,13 @@ identifying liquid assets, and retrieving asset rankings.
 """
 
 from datetime import datetime
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
-from fastapi.responses import JSONResponse
 
-from app.models.assets import (
-    Asset,
-    AssetClass,
-    AssetFilter,
-    AssetRanking,
-    AssetUniverse,
-    Exchange,
-    LiquidityMetrics,
-)
+from app.models.assets import AssetClass, AssetFilter, Exchange
 from app.services.asset_identification import (
-    AssetIdentificationService,
-    get_asset_identification_service,
-)
+    AssetIdentificationService, get_asset_identification_service)
 
 router = APIRouter(prefix="/assets", tags=["assets"])
 

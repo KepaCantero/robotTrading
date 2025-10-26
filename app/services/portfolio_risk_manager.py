@@ -6,14 +6,13 @@ de gestión de riesgo de los servicios de portafolio.
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from app.core.centralized_config import get_config
 from app.models.portfolio import Portfolio, Position
-from app.models.signal import Signal
 
 logger = logging.getLogger(__name__)
 

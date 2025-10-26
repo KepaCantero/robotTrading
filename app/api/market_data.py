@@ -5,24 +5,17 @@ This module provides FastAPI endpoints for market data management,
 including quotes, historical data, and feed configuration.
 """
 
-from datetime import datetime, timedelta
-from decimal import Decimal
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from pydantic import BaseModel, Field
 
-from app.models.market_data import (
-    DataFeedConfig,
-    DataFeedType,
-    DataFrequency,
-    HistoricalData,
-    MarketDataStatus,
-    MarketDataSubscription,
-    Quote,
-)
-from app.services.market_data_service import MarketDataService, get_market_data_service
+from app.models.market_data import (DataFeedConfig, DataFeedType,
+                                    DataFrequency, HistoricalData, Quote)
+from app.services.market_data_service import (MarketDataService,
+                                              get_market_data_service)
 
 router = APIRouter(prefix="/market-data", tags=["market-data"])
 

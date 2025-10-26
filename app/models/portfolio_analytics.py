@@ -14,7 +14,6 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.models.portfolio import Portfolio as BasePortfolio
-from app.models.portfolio import Position
 
 
 class ExtendedPortfolio(BasePortfolio):

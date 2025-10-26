@@ -9,23 +9,15 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
-from app.exceptions.trading_exceptions import (
-    AlgoTradingError,
-    ErrorCategory,
-    ErrorSeverity,
-)
-from app.services.trading_error_handler import (
-    ErrorAction,
-    ErrorContext,
-    execute_with_retry,
-    get_error_statistics,
-    handle_trading_error,
-    reset_circuit_breaker,
-    trading_error_handler,
-)
+from app.exceptions.trading_exceptions import ErrorCategory
+from app.services.trading_error_handler import (ErrorAction, ErrorContext,
+                                                get_error_statistics,
+                                                handle_trading_error,
+                                                reset_circuit_breaker,
+                                                trading_error_handler)
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

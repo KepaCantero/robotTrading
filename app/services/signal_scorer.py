@@ -5,24 +5,15 @@ Este módulo implementa el servicio de scoring de señales refactorizado,
 utilizando los nuevos motores especializados.
 """
 
-import asyncio
-import heapq
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from app.core.centralized_config import get_config
-from app.models.portfolio import Portfolio, Position
-from app.models.signal import (
-    MarketData,
-    Signal,
-    SignalPriorityQueue,
-    SignalScorer,
-    SignalSource,
-    SignalStrength,
-    SignalType,
-)
+from app.models.signal import (MarketData, Signal, SignalPriorityQueue,
+                               SignalScorer, SignalSource, SignalStrength,
+                               SignalType)
 from app.services.portfolio_service import PortfolioService
 from app.services.position_sizing_engine import PositionSizingEngine
 from app.services.signal_evaluation_engine import SignalEvaluationEngine

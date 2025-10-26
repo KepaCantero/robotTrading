@@ -13,7 +13,7 @@ import inspect
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Callable, Dict, List, Optional, Type, Union, get_type_hints
+from typing import Any, Callable, Dict, List, Optional, Type
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 

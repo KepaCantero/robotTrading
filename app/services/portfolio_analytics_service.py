@@ -5,29 +5,24 @@ This service provides comprehensive portfolio analytics including performance
 metrics calculation, risk analysis, and portfolio management features.
 """
 
-import asyncio
 import statistics
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Optional
 from uuid import UUID
 
 from loguru import logger
 
-from app.models.market_data import DataFrequency, HistoricalData, Quote
-from app.models.portfolio import Portfolio, Position
-from app.models.portfolio_analytics import (
-    ExtendedPortfolio,
-    PerformanceMetrics,
-    PerformancePeriod,
-    PortfolioAllocation,
-    PortfolioAnalytics,
-    PortfolioComparison,
-    PortfolioRebalance,
-    RiskLevel,
-    RiskMetrics,
-)
-from app.services.market_data_service import MarketDataService, get_market_data_service
+from app.models.portfolio import Portfolio
+from app.models.portfolio_analytics import (ExtendedPortfolio,
+                                            PerformanceMetrics,
+                                            PerformancePeriod,
+                                            PortfolioAllocation,
+                                            PortfolioAnalytics,
+                                            PortfolioComparison,
+                                            PortfolioRebalance, RiskLevel,
+                                            RiskMetrics)
+from app.services.market_data_service import MarketDataService
 
 
 class PortfolioAnalyticsService:

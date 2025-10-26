@@ -3,7 +3,6 @@ Centralized Configuration System
 TASK-5: Configuración de variables de entorno
 """
 
-import logging
 import os
 from enum import Enum
 from pathlib import Path

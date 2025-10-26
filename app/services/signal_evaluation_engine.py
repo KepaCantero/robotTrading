@@ -7,17 +7,10 @@ de evaluación de la gestión de señales y ejecución.
 
 import logging
 from datetime import datetime
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from app.core.centralized_config import get_config
-from app.models.signal import (
-    MarketData,
-    Signal,
-    SignalSource,
-    SignalStrength,
-    SignalType,
-)
+from app.models.signal import MarketData, SignalType
 
 logger = logging.getLogger(__name__)
 

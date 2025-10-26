@@ -6,24 +6,22 @@ generen rentabilidad neta positiva después de todos los costos operativos.
 """
 
 import logging
-from datetime import date
 from decimal import Decimal
-from typing import List, Optional
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 
 from app.core.centralized_config import get_config
-from app.models.profitability_validation import (
-    HistoricalValidation,
-    ProfitabilityValidation,
-    StrategyComparison,
-    ValidationCriteria,
-    ValidationReport,
-    ValidationRequest,
-    ValidationResponse,
-)
-from app.services.profitability_validation_service import ProfitabilityValidationService
+from app.models.profitability_validation import (HistoricalValidation,
+                                                 ProfitabilityValidation,
+                                                 StrategyComparison,
+                                                 ValidationCriteria,
+                                                 ValidationReport,
+                                                 ValidationRequest,
+                                                 ValidationResponse)
+from app.services.profitability_validation_service import \
+    ProfitabilityValidationService
 
 logger = logging.getLogger(__name__)
 
@@ -333,7 +331,7 @@ async def get_default_validation_criteria() -> ValidationCriteria:
         logger.info("Retrieving default validation criteria")
 
         # Obtener configuración
-        config = get_config()
+        get_config()
 
         # Crear criterios basados en configuración
         criteria = ValidationCriteria(
@@ -367,7 +365,7 @@ async def health_check() -> JSONResponse:
     """
     try:
         # Verificar que el servicio esté funcionando
-        test_criteria = ValidationCriteria()
+        ValidationCriteria()
 
         return JSONResponse(
             status_code=200,

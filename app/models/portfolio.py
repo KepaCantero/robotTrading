@@ -5,13 +5,13 @@ This module defines the core interfaces and models for portfolio management
 across different brokers (IBKR, Binance, Paper Trading).
 """
 
-from abc import ABC, abstractmethod
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import List, Optional, Protocol
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import (BaseModel, ConfigDict, Field, field_validator,
+                      model_validator)
 
 
 class AssetClass(str, Enum):

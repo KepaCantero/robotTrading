@@ -12,7 +12,7 @@ import logging
 from contextlib import asynccontextmanager
 from typing import Any, Dict
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -25,8 +25,9 @@ from app.api.paper_trading import router as paper_trading_router
 from app.api.portfolio import router as portfolio_router
 from app.api.portfolio_analytics import router as portfolio_analytics_router
 from app.api.signals import router as signals_router
-from app.api.trading_error_handler import router as trading_error_handler_router
-from app.core.config import get_cors_config, get_settings
+from app.api.trading_error_handler import \
+    router as trading_error_handler_router
+from app.core.config import get_settings
 
 # Get application settings (lazy loading to avoid validation issues during
 # import)

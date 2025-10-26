@@ -5,7 +5,7 @@ This module defines models for paper trading simulation, virtual portfolio manag
 and trade execution simulation for the algorithmic trading system.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional

@@ -5,8 +5,7 @@ This module provides centralized configuration management using Pydantic BaseSet
 to load environment variables from .env files and provide type-safe configuration.
 """
 
-import os
-from typing import List, Optional, Union
+from typing import List, Optional
 
 from pydantic import ConfigDict, Field, field_validator
 from pydantic_settings import BaseSettings

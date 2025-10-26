@@ -12,19 +12,10 @@ from sqlalchemy import and_, func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.database.models import (
-    Asset,
-    Backtest,
-    MarketData,
-    Portfolio,
-    Position,
-    RiskMetrics,
-    Signal,
-    SystemLog,
-    Trade,
-    User,
-)
 from app.core.exceptions import raise_database_error
+from app.database.models import (Asset, Backtest, MarketData, Portfolio,
+                                 Position, RiskMetrics, Signal, SystemLog,
+                                 Trade, User)
 
 T = TypeVar("T")
 

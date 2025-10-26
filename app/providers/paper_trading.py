@@ -5,21 +5,13 @@ This module implements a paper trading portfolio provider for testing
 and simulation without real broker connections.
 """
 
-import asyncio
 import random
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from app.models.portfolio import (
-    AssetClass,
-    AssetUniverse,
-    MarketRegime,
-    MarketRegimeData,
-    Portfolio,
-    PortfolioProvider,
-    Position,
-)
+from app.models.portfolio import (AssetClass, AssetUniverse, MarketRegime,
+                                  MarketRegimeData, Portfolio, Position)
 
 
 class PaperTradingPortfolioProvider:
@@ -129,7 +121,7 @@ class PaperTradingPortfolioProvider:
         regime = random.choice(regimes)
 
         # Calculate simple indicators
-        price = self.market_prices[symbol]
+        self.market_prices[symbol]
         atr_ratio = random.uniform(0.01, 0.05)  # Simulated ATR ratio
         trend_strength = random.uniform(0.3, 0.9)
         volatility_level = random.uniform(0.1, 0.8)

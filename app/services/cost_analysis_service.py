@@ -9,11 +9,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 from app.backtesting.models import Trade, TradeStatus
-from app.models.order import Order, OrderStatus, OrderType
-from app.models.signal import Signal
+from app.models.order import OrderType
 
 
 class CostType(str, Enum):
@@ -168,7 +167,7 @@ class CostAnalysisService:
                 timestamp=trade.entry_time,
             )
 
-        except Exception as e:
+        except Exception:
             # Return zero costs if calculation fails
             return CostBreakdown(
                 trade_id=trade.trade_id,
@@ -263,7 +262,7 @@ class CostAnalysisService:
                 recommendations=recommendations,
             )
 
-        except Exception as e:
+        except Exception:
             return self._create_empty_analysis_result(strategy_name)
 
     def validate_profitability(self, analysis_result: CostAnalysisResult) -> bool:

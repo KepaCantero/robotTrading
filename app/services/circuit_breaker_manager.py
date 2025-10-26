@@ -6,7 +6,7 @@ la lógica de circuit breakers de los servicios individuales.
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 

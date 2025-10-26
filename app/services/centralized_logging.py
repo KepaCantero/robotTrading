@@ -3,7 +3,6 @@ Centralized Logging Service for AlgoTrading
 TASK-3: Configuración de logging centralizado
 """
 
-import asyncio
 import json
 import logging
 import os

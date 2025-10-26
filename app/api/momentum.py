@@ -5,25 +5,15 @@ This module provides REST API endpoints for momentum analysis,
 technical indicators, and momentum strategy management.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
-from fastapi.responses import JSONResponse
 
-from app.models.momentum import (
-    MomentumAnalysis,
-    MomentumFilter,
-    MomentumSignal,
-    MomentumStrategy,
-    MomentumType,
-    TechnicalIndicators,
-    Timeframe,
-)
-from app.services.momentum_analysis import (
-    MomentumAnalysisService,
-    get_momentum_analysis_service,
-)
+from app.models.momentum import (MomentumFilter, MomentumStrategy,
+                                 MomentumType, Timeframe)
+from app.services.momentum_analysis import (MomentumAnalysisService,
+                                            get_momentum_analysis_service)
 
 router = APIRouter(prefix="/momentum", tags=["momentum"])
 
@@ -70,7 +60,7 @@ async def analyze_asset_momentum_post(
     try:
         symbol = request_data.get("symbol", "").upper()
         timeframe_str = request_data.get("timeframe", "daily")
-        momentum_types = request_data.get("momentum_types", [])
+        request_data.get("momentum_types", [])
 
         if not symbol:
             raise HTTPException(status_code=400, detail="Symbol is required")

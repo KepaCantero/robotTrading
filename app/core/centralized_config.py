@@ -7,7 +7,6 @@ magic values scattered throughout the codebase and centralizes all
 thresholds and parameters.
 """
 
-import os
 from decimal import Decimal
 from enum import Enum
 from pathlib import Path
