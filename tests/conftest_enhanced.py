@@ -3,27 +3,27 @@ Enhanced Test Fixtures and Categories
 Testing Reviewer Audit - Phase 1: Critical Fixes
 """
 
-import pytest
-import tempfile
 import asyncio
-from pathlib import Path
-from typing import Dict, Any, Generator, AsyncGenerator
-from unittest.mock import Mock, MagicMock, patch
-from decimal import Decimal
+import tempfile
 import uuid
 from datetime import datetime, timedelta
+from decimal import Decimal
+from pathlib import Path
+from typing import Any, AsyncGenerator, Dict, Generator
+from unittest.mock import MagicMock, Mock, patch
 
-from app.core.test_config import (
-    TestConfigManager, 
-    TestEnvironmentConfig,
-    setup_test_environment,
-    cleanup_test_environment,
-    get_test_config,
-    get_test_temp_dir
-)
+import pytest
+
 from app.core.centralized_config import CentralizedConfig, get_config, set_config
 from app.core.exceptions import ConfigurationError
-
+from app.core.test_config import (
+    TestConfigManager,
+    TestEnvironmentConfig,
+    cleanup_test_environment,
+    get_test_config,
+    get_test_temp_dir,
+    setup_test_environment,
+)
 
 # Test Categories
 pytestmark = [
@@ -34,7 +34,7 @@ pytestmark = [
     pytest.mark.configuration,
     pytest.mark.strategy,
     pytest.mark.database,
-    pytest.mark.error_handling
+    pytest.mark.error_handling,
 ]
 
 
@@ -52,13 +52,13 @@ def isolated_config() -> Generator[CentralizedConfig, None, None]:
     """Provide isolated configuration for each test."""
     # Store original config
     original_config = get_config()
-    
+
     # Create fresh config for test
     test_config = CentralizedConfig()
     set_config(test_config)
-    
+
     yield test_config
-    
+
     # Restore original config
     set_config(original_config)
 
@@ -83,7 +83,7 @@ def mock_market_data() -> Dict[str, Any]:
         "spread": Decimal("0.10"),
         "high": Decimal("151.00"),
         "low": Decimal("149.00"),
-        "open": Decimal("149.50")
+        "open": Decimal("149.50"),
     }
 
 
@@ -100,7 +100,7 @@ def mock_portfolio() -> Dict[str, Any]:
         "total_pnl": Decimal("0.00"),
         "max_drawdown": Decimal("0.00"),
         "created_at": datetime.now(),
-        "updated_at": datetime.now()
+        "updated_at": datetime.now(),
     }
 
 
@@ -119,7 +119,7 @@ def mock_signal() -> Dict[str, Any]:
         "strategy": "momentum",
         "liquidity_score": 85.0,
         "priority_score": 90.0,
-        "source": "technical_analysis"
+        "source": "technical_analysis",
     }
 
 
@@ -136,7 +136,7 @@ def mock_order() -> Dict[str, Any]:
         "status": "PENDING",
         "timestamp": datetime.now(),
         "strategy": "momentum",
-        "portfolio_id": str(uuid.uuid4())
+        "portfolio_id": str(uuid.uuid4()),
     }
 
 
@@ -153,7 +153,7 @@ def mock_trade() -> Dict[str, Any]:
         "commission": Decimal("1.50"),
         "slippage": Decimal("0.05"),
         "timestamp": datetime.now(),
-        "status": "FILLED"
+        "status": "FILLED",
     }
 
 
@@ -167,14 +167,14 @@ def mock_strategy_config() -> Dict[str, Any]:
         "parameters": {
             "rsi_threshold": 40,
             "momentum_threshold": 0.02,
-            "volume_threshold": 1.5
+            "volume_threshold": 1.5,
         },
         "max_position_size": 0.1,
         "stop_loss_pct": 0.05,
         "take_profit_pct": 0.10,
         "min_sharpe_ratio": 1.0,
         "max_drawdown": 0.15,
-        "min_win_rate": 0.4
+        "min_win_rate": 0.4,
     }
 
 
@@ -190,7 +190,7 @@ def mock_database_config() -> Dict[str, Any]:
         "pool_size": 5,
         "max_overflow": 10,
         "pool_timeout": 30,
-        "ssl_mode": "prefer"
+        "ssl_mode": "prefer",
     }
 
 
@@ -203,7 +203,7 @@ def mock_redis_config() -> Dict[str, Any]:
         "password": None,
         "db": 15,
         "max_connections": 10,
-        "socket_timeout": 5
+        "socket_timeout": 5,
     }
 
 
@@ -218,7 +218,7 @@ def mock_api_config() -> Dict[str, Any]:
         "access_token_expire_minutes": 30,
         "rate_limit_per_minute": 100,
         "cors_origins": ["http://localhost:3000"],
-        "cors_methods": ["GET", "POST", "PUT", "DELETE"]
+        "cors_methods": ["GET", "POST", "PUT", "DELETE"],
     }
 
 
@@ -234,7 +234,7 @@ def mock_logging_config() -> Dict[str, Any]:
         "elk_enabled": False,
         "elk_host": "localhost",
         "elk_port": 9200,
-        "elk_index": "algotrading-test-logs"
+        "elk_index": "algotrading-test-logs",
     }
 
 
@@ -250,7 +250,7 @@ def mock_monitoring_config() -> Dict[str, Any]:
         "health_check_timeout": 5,
         "alerts_enabled": False,
         "slack_webhook_url": None,
-        "discord_webhook_url": None
+        "discord_webhook_url": None,
     }
 
 
@@ -277,7 +277,7 @@ def mock_trading_thresholds() -> Dict[str, Any]:
         "circuit_breaker_volatility": 0.03,
         "circuit_breaker_error_rate": 0.02,
         "max_latency_ms": 500,
-        "max_execution_time_ms": 250
+        "max_execution_time_ms": 250,
     }
 
 
@@ -290,12 +290,12 @@ def mock_centralized_logger():
     mock_logger.error = Mock()
     mock_logger.debug = Mock()
     mock_logger.critical = Mock()
-    
+
     # Mock context managers
     mock_logger.performance_timer = Mock()
     mock_logger.performance_timer.return_value.__enter__ = Mock(return_value=None)
     mock_logger.performance_timer.return_value.__exit__ = Mock(return_value=None)
-    
+
     return mock_logger
 
 
@@ -309,7 +309,7 @@ def mock_database_session():
     mock_session.close = Mock()
     mock_session.query = Mock()
     mock_session.execute = Mock()
-    
+
     return mock_session
 
 
@@ -323,7 +323,7 @@ def mock_redis_client():
     mock_redis.exists = Mock(return_value=False)
     mock_redis.expire = Mock(return_value=True)
     mock_redis.ping = Mock(return_value=True)
-    
+
     return mock_redis
 
 
@@ -335,12 +335,12 @@ def mock_http_client():
     mock_response.status_code = 200
     mock_response.json = Mock(return_value={})
     mock_response.text = "OK"
-    
+
     mock_client.get = Mock(return_value=mock_response)
     mock_client.post = Mock(return_value=mock_response)
     mock_client.put = Mock(return_value=mock_response)
     mock_client.delete = Mock(return_value=mock_response)
-    
+
     return mock_client
 
 
@@ -355,7 +355,7 @@ def mock_fastapi_app():
     mock_app.post = Mock()
     mock_app.put = Mock()
     mock_app.delete = Mock()
-    
+
     return mock_app
 
 
@@ -369,7 +369,7 @@ def mock_strategy():
     mock_strategy.generate_signals = Mock(return_value=[])
     mock_strategy.risk_check = Mock(return_value=True)
     mock_strategy.get_required_parameters = Mock(return_value=["param1", "param2"])
-    
+
     return mock_strategy
 
 
@@ -384,7 +384,7 @@ def mock_portfolio_service():
     mock_service.get_positions = Mock(return_value=[])
     mock_service.add_position = Mock(return_value=None)
     mock_service.remove_position = Mock(return_value=None)
-    
+
     return mock_service
 
 
@@ -396,7 +396,7 @@ def mock_signal_service():
     mock_service.score_signal = Mock(return_value=75.0)
     mock_service.filter_signals = Mock(return_value=[])
     mock_service.get_signal_history = Mock(return_value=[])
-    
+
     return mock_service
 
 
@@ -409,7 +409,7 @@ def mock_market_data_service():
     mock_service.get_top_liquid_assets = Mock(return_value=[])
     mock_service.subscribe_to_updates = Mock(return_value=None)
     mock_service.unsubscribe_from_updates = Mock(return_value=None)
-    
+
     return mock_service
 
 
@@ -422,7 +422,7 @@ def mock_paper_trading_service():
     mock_service.get_trade_history = Mock(return_value=[])
     mock_service.get_performance_metrics = Mock(return_value={})
     mock_service.reset_portfolio = Mock(return_value=None)
-    
+
     return mock_service
 
 
@@ -434,7 +434,7 @@ def mock_backtest_service():
     mock_service.get_backtest_results = Mock(return_value=None)
     mock_service.get_backtest_history = Mock(return_value=[])
     mock_service.cancel_backtest = Mock(return_value=None)
-    
+
     return mock_service
 
 
@@ -446,7 +446,7 @@ def mock_cost_analysis_service():
     mock_service.analyze_portfolio_costs = Mock(return_value=None)
     mock_service.get_cost_recommendations = Mock(return_value=[])
     mock_service.calculate_cost_impact_ratio = Mock(return_value=Decimal("0.15"))
-    
+
     return mock_service
 
 
@@ -458,7 +458,7 @@ def mock_optimization_service():
     mock_service.run_walk_forward_analysis = Mock(return_value=None)
     mock_service.run_purged_k_fold = Mock(return_value=None)
     mock_service.get_optimization_results = Mock(return_value=None)
-    
+
     return mock_service
 
 
@@ -470,7 +470,7 @@ def mock_asset_identification_service():
     mock_service.get_asset_universe = Mock(return_value=None)
     mock_service.filter_assets = Mock(return_value=[])
     mock_service.rank_assets = Mock(return_value=[])
-    
+
     return mock_service
 
 
@@ -482,7 +482,7 @@ def mock_momentum_analysis_service():
     mock_service.generate_momentum_signals = Mock(return_value=[])
     mock_service.get_top_momentum_assets = Mock(return_value=[])
     mock_service.calculate_technical_indicators = Mock(return_value=None)
-    
+
     return mock_service
 
 
@@ -494,7 +494,7 @@ def mock_portfolio_analytics_service():
     mock_service.calculate_risk_metrics = Mock(return_value=None)
     mock_service.generate_performance_report = Mock(return_value=None)
     mock_service.calculate_correlation_matrix = Mock(return_value=None)
-    
+
     return mock_service
 
 
@@ -504,13 +504,13 @@ async def async_mock_service():
     """Async mock service for testing."""
     mock_service = Mock()
     mock_service.async_method = Mock(return_value=None)
-    
+
     # Make it async
     async def async_mock(*args, **kwargs):
         return None
-    
+
     mock_service.async_method.side_effect = async_mock
-    
+
     return mock_service
 
 
@@ -528,55 +528,56 @@ def event_loop():
 def performance_timer():
     """Timer for performance testing."""
     import time
-    
+
     class Timer:
         def __init__(self):
             self.start_time = None
             self.end_time = None
-        
+
         def start(self):
             self.start_time = time.perf_counter()
-        
+
         def stop(self):
             self.end_time = time.perf_counter()
-        
+
         @property
         def elapsed(self):
             if self.start_time and self.end_time:
                 return self.end_time - self.start_time
             return None
-    
+
     return Timer()
 
 
 @pytest.fixture(scope="function")
 def memory_profiler():
     """Memory profiler for testing."""
-    import psutil
     import os
-    
+
+    import psutil
+
     class MemoryProfiler:
         def __init__(self):
             self.process = psutil.Process(os.getpid())
             self.start_memory = None
             self.end_memory = None
-        
+
         def start(self):
             self.start_memory = self.process.memory_info().rss
-        
+
         def stop(self):
             self.end_memory = self.process.memory_info().rss
-        
+
         @property
         def memory_delta(self):
             if self.start_memory and self.end_memory:
                 return self.end_memory - self.start_memory
             return None
-        
+
         @property
         def current_memory(self):
             return self.process.memory_info().rss
-    
+
     return MemoryProfiler()
 
 
@@ -584,61 +585,67 @@ def memory_profiler():
 @pytest.fixture(scope="function")
 def sample_market_data_generator():
     """Generate sample market data for testing."""
+
     def generate_data(symbol: str = "AAPL", count: int = 100):
         data = []
         base_price = Decimal("150.00")
-        
+
         for i in range(count):
             price_change = Decimal(str(0.01 * (i % 10 - 5)))  # Oscillating price
             price = base_price + price_change
-            
-            data.append({
-                "symbol": symbol,
-                "price": price,
-                "volume": 1000000 + (i * 1000),
-                "timestamp": datetime.now() - timedelta(minutes=count-i),
-                "bid": price - Decimal("0.05"),
-                "ask": price + Decimal("0.05"),
-                "spread": Decimal("0.10"),
-                "high": price + Decimal("0.50"),
-                "low": price - Decimal("0.50"),
-                "open": price
-            })
-        
+
+            data.append(
+                {
+                    "symbol": symbol,
+                    "price": price,
+                    "volume": 1000000 + (i * 1000),
+                    "timestamp": datetime.now() - timedelta(minutes=count - i),
+                    "bid": price - Decimal("0.05"),
+                    "ask": price + Decimal("0.05"),
+                    "spread": Decimal("0.10"),
+                    "high": price + Decimal("0.50"),
+                    "low": price - Decimal("0.50"),
+                    "open": price,
+                }
+            )
+
         return data
-    
+
     return generate_data
 
 
 @pytest.fixture(scope="function")
 def sample_signals_generator():
     """Generate sample signals for testing."""
+
     def generate_signals(count: int = 50):
         signals = []
         symbols = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]
-        
+
         for i in range(count):
             symbol = symbols[i % len(symbols)]
             signal_types = ["BUY", "SELL", "HOLD"]
             signal_type = signal_types[i % len(signal_types)]
-            
-            signals.append({
-                "id": str(uuid.uuid4()),
-                "symbol": symbol,
-                "signal_type": signal_type,
-                "strength": 60.0 + (i % 40),
-                "confidence": 70.0 + (i % 30),
-                "price": Decimal("150.00") + Decimal(str(i * 0.1)),
-                "volume": Decimal("100.00") + Decimal(str(i * 10)),
-                "timestamp": datetime.now() - timedelta(minutes=count-i),
-                "strategy": "test_strategy",
-                "liquidity_score": 80.0 + (i % 20),
-                "priority_score": 75.0 + (i % 25),
-                "source": "technical_analysis"
-            })
-        
+
+            signals.append(
+                {
+                    "id": str(uuid.uuid4()),
+                    "symbol": symbol,
+                    "signal_type": signal_type,
+                    "strength": 60.0 + (i % 40),
+                    "confidence": 70.0 + (i % 30),
+                    "price": Decimal("150.00") + Decimal(str(i * 0.1)),
+                    "volume": Decimal("100.00") + Decimal(str(i * 10)),
+                    "timestamp": datetime.now() - timedelta(minutes=count - i),
+                    "strategy": "test_strategy",
+                    "liquidity_score": 80.0 + (i % 20),
+                    "priority_score": 75.0 + (i % 25),
+                    "source": "technical_analysis",
+                }
+            )
+
         return signals
-    
+
     return generate_signals
 
 
@@ -646,19 +653,26 @@ def sample_signals_generator():
 @pytest.fixture(scope="function")
 def test_utils():
     """Test utilities for common operations."""
+
     class TestUtils:
         @staticmethod
-        def assert_decimal_equal(actual: Decimal, expected: Decimal, precision: int = 2):
+        def assert_decimal_equal(
+            actual: Decimal, expected: Decimal, precision: int = 2
+        ):
             """Assert two decimals are equal within precision."""
             actual_rounded = actual.quantize(Decimal(f"0.{'0' * precision}"))
             expected_rounded = expected.quantize(Decimal(f"0.{'0' * precision}"))
             assert actual_rounded == expected_rounded
-        
+
         @staticmethod
-        def assert_datetime_close(actual: datetime, expected: datetime, delta: timedelta = timedelta(seconds=1)):
+        def assert_datetime_close(
+            actual: datetime,
+            expected: datetime,
+            delta: timedelta = timedelta(seconds=1),
+        ):
             """Assert two datetimes are close within delta."""
             assert abs(actual - expected) <= delta
-        
+
         @staticmethod
         def create_mock_config(**overrides):
             """Create mock configuration with overrides."""
@@ -669,9 +683,9 @@ def test_utils():
                 "stop_loss_pct": 0.02,
                 "take_profit_pct": 0.08,
                 "daily_loss_limit": 0.02,
-                "max_drawdown_limit": 0.10
+                "max_drawdown_limit": 0.10,
             }
             config.update(overrides)
             return config
-    
+
     return TestUtils()
