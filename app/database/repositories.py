@@ -4,7 +4,7 @@ TASK-6: Configuración de base de datos
 """
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any, Dict, Generic, List, Optional, TypeVar
 
