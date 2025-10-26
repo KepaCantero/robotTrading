@@ -11,8 +11,13 @@ from decimal import ROUND_HALF_UP, Decimal
 from typing import Dict, List, Optional, Tuple
 from uuid import uuid4
 
-from app.backtesting.models import (BacktestConfig, BacktestResult,
-                                    PerformanceMetrics, Trade, TradeStatus)
+from app.backtesting.models import (
+    BacktestConfig,
+    BacktestResult,
+    PerformanceMetrics,
+    Trade,
+    TradeStatus,
+)
 from app.models.momentum import MarketData
 from app.models.signal import Signal, SignalType
 
@@ -77,10 +82,7 @@ class SimpleBacktester:
             self._update_equity_curve(md.timestamp)
 
             # Process signals for this timestamp
-            while (
-                signal_index < len(signals)
-                and signals[signal_index].timestamp <= md.timestamp
-            ):
+            while signal_index < len(signals) and signals[signal_index].timestamp <= md.timestamp:
                 signal = signals[signal_index]
                 if signal.symbol == md.symbol:
                     self._process_signal(signal, md)
@@ -104,10 +106,7 @@ class SimpleBacktester:
         days = (market_data[-1].timestamp - market_data[0].timestamp).days
         years = Decimal(str(days / 365.25))
         annualized_return = (
-            (
-                (self.capital / self.config.initial_capital) ** (Decimal("1") / years)
-                - Decimal("1")
-            )
+            ((self.capital / self.config.initial_capital) ** (Decimal("1") / years) - Decimal("1"))
             * Decimal("100")
             if years > 0
             else Decimal("0")
@@ -147,25 +146,25 @@ class SimpleBacktester:
         """Execute a buy signal."""
         # Calculate position size based on signal confidence and available
         # capital
-        position_size = self._calculate_position_size(signal, market_data.close_price)
+        position_size = self._calculate_position_size(signal, market_data.close)
 
         if position_size <= 0:
             return
 
         # Check if we have enough capital
-        total_cost = position_size * market_data.close_price
+        total_cost = position_size * market_data.close
         if total_cost > self.capital:
-            position_size = self.capital / market_data.close_price
+            position_size = self.capital / market_data.close
 
         if position_size <= 0:
             return
 
         # Apply slippage
-        execution_price = self._apply_slippage(market_data.close_price, True)
+        execution_price = self._apply_slippage(market_data.close, True)
 
         # Calculate costs
         commission = self.config.commission_per_trade
-        slippage_cost = abs(position_size * (execution_price - market_data.close_price))
+        slippage_cost = abs(position_size * (execution_price - market_data.close))
         total_cost = position_size * execution_price + commission + slippage_cost
 
         if total_cost > self.capital:
@@ -201,18 +200,18 @@ class SimpleBacktester:
         # Calculate sell quantity (can be partial)
         sell_quantity = min(
             current_position,
-            self._calculate_position_size(signal, market_data.close_price),
+            self._calculate_position_size(signal, market_data.close),
         )
 
         if sell_quantity <= 0:
             return
 
         # Apply slippage
-        execution_price = self._apply_slippage(market_data.close_price, False)
+        execution_price = self._apply_slippage(market_data.close, False)
 
         # Calculate proceeds
         commission = self.config.commission_per_trade
-        slippage_cost = abs(sell_quantity * (execution_price - market_data.close_price))
+        slippage_cost = abs(sell_quantity * (execution_price - market_data.close))
         proceeds = sell_quantity * execution_price - commission - slippage_cost
 
         # Execute trade
@@ -268,9 +267,7 @@ class SimpleBacktester:
         recent_trades = [
             t
             for t in self.trades
-            if t.symbol == market_data.symbol
-            and t.side == "buy"
-            and t.status == TradeStatus.OPEN
+            if t.symbol == market_data.symbol and t.side == "buy" and t.status == TradeStatus.OPEN
         ]
 
         if not recent_trades:
@@ -278,7 +275,7 @@ class SimpleBacktester:
 
         # Use the most recent trade's entry price
         entry_price = recent_trades[-1].entry_price
-        current_price = market_data.close_price
+        current_price = market_data.close
 
         # Check stop loss
         if self.config.stop_loss_percentage:
@@ -286,9 +283,7 @@ class SimpleBacktester:
                 Decimal("1") - self.config.stop_loss_percentage / Decimal("100")
             )
             if current_price <= stop_loss_price:
-                self._close_position(
-                    market_data.symbol, market_data.timestamp, "stop_loss"
-                )
+                self._close_position(market_data.symbol, market_data.timestamp, "stop_loss")
                 return
 
         # Check take profit
@@ -297,9 +292,7 @@ class SimpleBacktester:
                 Decimal("1") + self.config.take_profit_percentage / Decimal("100")
             )
             if current_price >= take_profit_price:
-                self._close_position(
-                    market_data.symbol, market_data.timestamp, "take_profit"
-                )
+                self._close_position(market_data.symbol, market_data.timestamp, "take_profit")
                 return
 
     def _close_position(self, symbol: str, timestamp: datetime, reason: str):
@@ -355,9 +348,7 @@ class SimpleBacktester:
         """Close all remaining positions at the end of backtest."""
         for symbol in list(self.positions.keys()):
             if self.positions[symbol] > 0:
-                self._close_position(
-                    symbol, final_market_data.timestamp, "end_of_backtest"
-                )
+                self._close_position(symbol, final_market_data.timestamp, "end_of_backtest")
 
     def _update_equity_curve(self, timestamp: datetime):
         """Update equity curve with current portfolio value."""
@@ -402,33 +393,21 @@ class SimpleBacktester:
         losing_count = len(losing_trades)
 
         # Calculate win rate
-        win_rate = (
-            (winning_count / total_trades * 100) if total_trades > 0 else Decimal("0")
-        )
+        win_rate = (winning_count / total_trades * 100) if total_trades > 0 else Decimal("0")
 
         # Calculate P&L metrics
         total_pnl = sum(trade.pnl for trade in winning_trades + losing_trades)
         gross_profit = (
-            sum(trade.pnl for trade in winning_trades)
-            if winning_trades
-            else Decimal("0")
+            sum(trade.pnl for trade in winning_trades) if winning_trades else Decimal("0")
         )
-        gross_loss = (
-            sum(trade.pnl for trade in losing_trades) if losing_trades else Decimal("0")
-        )
+        gross_loss = sum(trade.pnl for trade in losing_trades) if losing_trades else Decimal("0")
         net_profit = gross_profit + gross_loss
 
         # Calculate trade statistics
         avg_win = gross_profit / winning_count if winning_count > 0 else Decimal("0")
         avg_loss = gross_loss / losing_count if losing_count > 0 else Decimal("0")
-        largest_win = (
-            max(trade.pnl for trade in winning_trades)
-            if winning_trades
-            else Decimal("0")
-        )
-        largest_loss = (
-            min(trade.pnl for trade in losing_trades) if losing_trades else Decimal("0")
-        )
+        largest_win = max(trade.pnl for trade in winning_trades) if winning_trades else Decimal("0")
+        largest_loss = min(trade.pnl for trade in losing_trades) if losing_trades else Decimal("0")
 
         # Calculate Sharpe ratio (simplified)
         sharpe_ratio = self._calculate_sharpe_ratio()
@@ -439,9 +418,7 @@ class SimpleBacktester:
             last_trade = max(self.trades, key=lambda t: t.exit_time or t.entry_time)
             last_time = last_trade.exit_time or last_trade.entry_time
             total_days = (last_time - first_trade.entry_time).days
-            avg_trade_duration = (
-                total_days / total_trades if total_trades > 0 else Decimal("0")
-            )
+            avg_trade_duration = total_days / total_trades if total_trades > 0 else Decimal("0")
         else:
             total_days = 0
             avg_trade_duration = Decimal("0")

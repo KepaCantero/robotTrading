@@ -12,8 +12,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import (BaseModel, ConfigDict, Field, field_validator,
-                      model_validator)
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class SignalType(str, Enum):
@@ -87,24 +86,14 @@ class Signal(BaseModel):
     symbol: str = Field(..., description="Trading symbol")
     signal_type: SignalType = Field(..., description="Signal type (buy/sell/hold)")
     strength: SignalStrength = Field(..., description="Signal strength")
-    confidence: float = Field(
-        ..., ge=0.0, le=100.0, description="Confidence score (0-100%)"
-    )
-    liquidity_score: float = Field(
-        ..., ge=0.0, le=100.0, description="Liquidity score (0-100%)"
-    )
-    priority_score: float = Field(
-        ..., ge=0.0, le=100.0, description="Priority score (0-100%)"
-    )
+    confidence: float = Field(..., ge=0.0, le=100.0, description="Confidence score (0-100%)")
+    liquidity_score: float = Field(..., ge=0.0, le=100.0, description="Liquidity score (0-100%)")
+    priority_score: float = Field(..., ge=0.0, le=100.0, description="Priority score (0-100%)")
     source: SignalSource = Field(..., description="Signal source")
     price: Decimal = Field(..., description="Signal price")
     volume: Decimal = Field(..., description="Signal volume")
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Signal timestamp"
-    )
-    metadata: Dict[str, Any] = Field(
-        default_factory=dict, description="Additional signal metadata"
-    )
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Signal timestamp")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional signal metadata")
 
     @field_validator("confidence", "liquidity_score", "priority_score")
     @classmethod
@@ -156,12 +145,12 @@ class Signal(BaseModel):
         if v > now:
             raise ValueError(f"Timestamp cannot be in the future, got {v}")
 
-        # Check if timestamp is too old (more than 1 year)
-        from datetime import timedelta
-
-        one_year_ago = now - timedelta(days=365)
-        if v < one_year_ago:
-            raise ValueError(f"Timestamp is too old (more than 1 year), got {v}")
+        # Allow historical data for backtesting - don't check age
+        # Commented out to allow historical backtesting
+        # from datetime import timedelta
+        # one_year_ago = now - timedelta(days=365)
+        # if v < one_year_ago:
+        #     raise ValueError(f"Timestamp is too old (more than 1 year), got {v}")
 
         return v
 
@@ -246,21 +235,15 @@ class SignalScorer:
 
         # Volatility factor
         volatility_score = self._calculate_volatility_score(signal_metadata)
-        confidence_factors.append(
-            volatility_score * self.confidence_weights["volatility"]
-        )
+        confidence_factors.append(volatility_score * self.confidence_weights["volatility"])
 
         # Technical indicators factor
         technical_score = self._calculate_technical_score(signal_metadata)
-        confidence_factors.append(
-            technical_score * self.confidence_weights["technical"]
-        )
+        confidence_factors.append(technical_score * self.confidence_weights["technical"])
 
         # Liquidity factor
         liquidity_score = self._calculate_liquidity_score(market_data)
-        confidence_factors.append(
-            liquidity_score * self.confidence_weights["liquidity"]
-        )
+        confidence_factors.append(liquidity_score * self.confidence_weights["liquidity"])
 
         # Calculate weighted average
         total_confidence = sum(confidence_factors)
@@ -280,23 +263,17 @@ class SignalScorer:
 
         # Price stability factor
         price_stability_score = self._calculate_price_stability_score(market_data)
-        liquidity_factors.append(
-            price_stability_score * self.liquidity_weights["price_stability"]
-        )
+        liquidity_factors.append(price_stability_score * self.liquidity_weights["price_stability"])
 
         # Market depth factor (simulated)
         market_depth_score = self._calculate_market_depth_score(market_data)
-        liquidity_factors.append(
-            market_depth_score * self.liquidity_weights["market_depth"]
-        )
+        liquidity_factors.append(market_depth_score * self.liquidity_weights["market_depth"])
 
         # Calculate weighted average
         total_liquidity = sum(liquidity_factors)
         return min(100.0, max(0.0, total_liquidity))
 
-    def calculate_priority_score(
-        self, signal: Signal, market_data: MarketData
-    ) -> float:
+    def calculate_priority_score(self, signal: Signal, market_data: MarketData) -> float:
         """Calculate priority score based on urgency and opportunity."""
         priority_factors = []
 
@@ -335,9 +312,7 @@ class SignalScorer:
 
         return (rsi_score + ema_score) / 2
 
-    def _calculate_volume_score(
-        self, market_data: MarketData, metadata: Dict[str, Any]
-    ) -> float:
+    def _calculate_volume_score(self, market_data: MarketData, metadata: Dict[str, Any]) -> float:
         """Calculate volume score."""
         current_volume = float(market_data.volume)
         avg_volume = metadata.get("avg_volume", current_volume)
@@ -672,9 +647,7 @@ class SignalScorer:
         except Exception:
             return 50.0  # Default liquidity score
 
-    def calculate_priority_score(
-        self, signal: Signal, market_data: MarketData
-    ) -> float:
+    def calculate_priority_score(self, signal: Signal, market_data: MarketData) -> float:
         """Calculate priority score for signal execution."""
         try:
             # Base priority from signal confidence and liquidity
@@ -733,9 +706,7 @@ class SignalScorer:
         except Exception:
             return 50.0
 
-    def _calculate_volume_score(
-        self, market_data: MarketData, metadata: Dict[str, Any]
-    ) -> float:
+    def _calculate_volume_score(self, market_data: MarketData, metadata: Dict[str, Any]) -> float:
         """Calculate volume score from market data and metadata."""
         try:
             score = 50.0
@@ -770,9 +741,7 @@ class SignalScorer:
         except Exception:
             return 50.0
 
-    def _calculate_volatility_score(
-        self, market_data_or_metadata, metadata=None
-    ) -> float:
+    def _calculate_volatility_score(self, market_data_or_metadata, metadata=None) -> float:
         """Calculate volatility score from market data and metadata."""
         try:
             score = 50.0
@@ -875,9 +844,7 @@ class SignalScorer:
             )
 
             # Calculate confidence and liquidity scores
-            confidence = self.calculate_confidence_score(
-                market_data, signal.metadata or {}
-            )
+            confidence = self.calculate_confidence_score(market_data, signal.metadata or {})
             liquidity_score = self.calculate_liquidity_score(market_data)
 
             # Update signal with new scores

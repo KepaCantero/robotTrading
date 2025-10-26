@@ -71,30 +71,34 @@ class DataLoader:
             return self._load_from_yfinance(symbol, start_date, end_date)
 
         try:
-            df = pd.read_csv(
-                file_path,
-                parse_dates=["timestamp"],
-                index_col="timestamp",
-            )
+            # Read CSV and handle both 'date' and 'timestamp' column names
+            df = pd.read_csv(file_path)
+            
+            # Normalize column names to lowercase
+            df.columns = df.columns.str.lower()
+            
+            # Handle 'date' or 'timestamp' column
+            date_col = 'date' if 'date' in df.columns else 'timestamp'
+            df[date_col] = pd.to_datetime(df[date_col])
 
             # Filter by date range
-            df = df[(df.index >= start_date) & (df.index <= end_date)]
+            df = df[(df[date_col] >= start_date) & (df[date_col] <= end_date)]
 
             quotes = []
-            for idx, row in df.iterrows():
+            for _, row in df.iterrows():
+                timestamp = row[date_col] if isinstance(row[date_col], datetime) else pd.to_datetime(row[date_col]).to_pydatetime()
+                
                 quote = Quote(
                     symbol=symbol,
-                    bid=Decimal(str(row.get("bid", row.get("close", 100)))),
-                    ask=Decimal(str(row.get("ask", row.get("close", 100)))),
-                    last=Decimal(str(row.get("close", 100))),
-                    volume=Decimal(str(row.get("volume", 0))),
-                    timestamp=(
-                        idx if isinstance(idx, datetime) else datetime.fromisoformat(str(idx))
-                    ),
-                    high=Decimal(str(row.get("high", row.get("close", 100)))),
-                    low=Decimal(str(row.get("low", row.get("close", 100)))),
-                    open=Decimal(str(row.get("open", row.get("close", 100)))),
-                    close=Decimal(str(row.get("close", 100))),
+                    bid=Decimal(str(row["close"])),
+                    ask=Decimal(str(row["close"])),
+                    last=Decimal(str(row["close"])),
+                    volume=Decimal(str(row["volume"])),
+                    timestamp=timestamp,
+                    high=Decimal(str(row["high"])),
+                    low=Decimal(str(row["low"])),
+                    open=Decimal(str(row["open"])),
+                    close=Decimal(str(row["close"])),
                 )
                 quotes.append(quote)
 
