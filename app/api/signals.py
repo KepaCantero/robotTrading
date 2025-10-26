@@ -12,12 +12,12 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel
 
-logger = logging.getLogger(__name__)
-
 from app.models.signal import MarketData, Signal, SignalType
 from app.providers.paper_trading import PaperTradingPortfolioProvider
 from app.services.portfolio_service import PortfolioService
 from app.services.signal_scorer import SignalScorerService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/signals", tags=["signals"])
 
