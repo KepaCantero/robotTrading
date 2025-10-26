@@ -10,11 +10,16 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from app.models.portfolio import (AssetClass, AssetUniverse, MarketRegime,
-                                  MarketRegimeData, Portfolio,
-                                  PortfolioProvider, Position)
-from app.services.circuit_breaker_manager import (CircuitBreakerManager,
-                                                  CircuitBreakerType)
+from app.models.portfolio import (
+    AssetClass,
+    AssetUniverse,
+    MarketRegime,
+    MarketRegimeData,
+    Portfolio,
+    PortfolioProvider,
+    Position,
+)
+from app.services.circuit_breaker_manager import CircuitBreakerManager, CircuitBreakerType
 from app.services.portfolio_risk_manager import PortfolioRiskManager
 
 logger = logging.getLogger(__name__)
@@ -44,9 +49,7 @@ class PortfolioService:
         """Obtener portafolio con protección de circuit breaker."""
         try:
             # Verificar circuit breaker de API
-            if self.circuit_breaker_manager.is_breaker_open(
-                CircuitBreakerType.API_ERRORS.value
-            ):
+            if self.circuit_breaker_manager.is_breaker_open(CircuitBreakerType.API_ERRORS.value):
                 logger.warning("API circuit breaker is open, skipping portfolio fetch")
                 return None
 
@@ -55,9 +58,7 @@ class PortfolioService:
 
             if portfolio:
                 # Registrar éxito
-                self.circuit_breaker_manager.record_success(
-                    CircuitBreakerType.API_ERRORS.value
-                )
+                self.circuit_breaker_manager.record_success(CircuitBreakerType.API_ERRORS.value)
                 self.successful_operations += 1
 
                 # Evaluar riesgo del portafolio
@@ -76,9 +77,7 @@ class PortfolioService:
 
         except Exception as e:
             # Registrar error en circuit breaker
-            self.circuit_breaker_manager.record_error(
-                CircuitBreakerType.API_ERRORS.value, str(e)
-            )
+            self.circuit_breaker_manager.record_error(CircuitBreakerType.API_ERRORS.value, str(e))
             self.failed_operations += 1
 
             logger.error(f"Error getting portfolio: {e}")
@@ -87,17 +86,13 @@ class PortfolioService:
     async def get_position(self, symbol: str) -> Optional[Position]:
         """Obtener posición con protección de circuit breaker."""
         try:
-            if self.circuit_breaker_manager.is_breaker_open(
-                CircuitBreakerType.API_ERRORS.value
-            ):
+            if self.circuit_breaker_manager.is_breaker_open(CircuitBreakerType.API_ERRORS.value):
                 return None
 
             position = await self.provider.get_position(symbol)
 
             if position:
-                self.circuit_breaker_manager.record_success(
-                    CircuitBreakerType.API_ERRORS.value
-                )
+                self.circuit_breaker_manager.record_success(CircuitBreakerType.API_ERRORS.value)
                 self.successful_operations += 1
             else:
                 self.failed_operations += 1
@@ -106,9 +101,7 @@ class PortfolioService:
             return position
 
         except Exception as e:
-            self.circuit_breaker_manager.record_error(
-                CircuitBreakerType.API_ERRORS.value, str(e)
-            )
+            self.circuit_breaker_manager.record_error(CircuitBreakerType.API_ERRORS.value, str(e))
             self.failed_operations += 1
 
             logger.error(f"Error getting position {symbol}: {e}")
@@ -124,9 +117,7 @@ class PortfolioService:
                 return False
 
             # Evaluar riesgo con nueva posición
-            risk_assessment = self.risk_manager.assess_portfolio_risk(
-                portfolio, position
-            )
+            risk_assessment = self.risk_manager.assess_portfolio_risk(portfolio, position)
 
             # Verificar si hay violaciones críticas
             critical_violations = [
@@ -166,9 +157,7 @@ class PortfolioService:
                 return False
 
             # Evaluar riesgo con posición actualizada
-            risk_assessment = self.risk_manager.assess_portfolio_risk(
-                portfolio, position
-            )
+            risk_assessment = self.risk_manager.assess_portfolio_risk(portfolio, position)
 
             # Verificar violaciones críticas
             critical_violations = [
@@ -217,9 +206,7 @@ class PortfolioService:
             logger.error(f"Error removing position {symbol}: {e}")
             return False
 
-    async def simulate_trade(
-        self, symbol: str, quantity: Decimal, price: Decimal
-    ) -> bool:
+    async def simulate_trade(self, symbol: str, quantity: Decimal, price: Decimal) -> bool:
         """Simular trade con evaluación de riesgo."""
         try:
             # Crear posición temporal para evaluación
@@ -242,9 +229,7 @@ class PortfolioService:
                 return False
 
             # Evaluar riesgo con nueva posición
-            risk_assessment = self.risk_manager.assess_portfolio_risk(
-                portfolio, temp_position
-            )
+            risk_assessment = self.risk_manager.assess_portfolio_risk(portfolio, temp_position)
 
             # Verificar violaciones críticas
             critical_violations = [

@@ -71,9 +71,7 @@ class SignalExecutionEngine:
 
         try:
             # Validar señal antes de ejecutar
-            validation_result = self._validate_signal_for_execution(
-                signal, position_size
-            )
+            validation_result = self._validate_signal_for_execution(signal, position_size)
             if not validation_result["is_valid"]:
                 return False, validation_result
 
@@ -81,9 +79,7 @@ class SignalExecutionEngine:
             order = self._create_order(signal, position_size)
 
             # Ejecutar orden
-            execution_result = await self._execute_order(
-                order, portfolio, execution_callback
-            )
+            execution_result = await self._execute_order(order, portfolio, execution_callback)
 
             # Calcular tiempo de ejecución
             execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
@@ -212,9 +208,7 @@ class SignalExecutionEngine:
                 "order_status": OrderStatus.FAILED,
             }
 
-    async def _simulate_order_execution(
-        self, order: Order, portfolio: Portfolio
-    ) -> Dict[str, Any]:
+    async def _simulate_order_execution(self, order: Order, portfolio: Portfolio) -> Dict[str, Any]:
         """Simular ejecución de orden."""
         # Simular latencia de ejecución
         import asyncio
@@ -238,21 +232,17 @@ class SignalExecutionEngine:
 
         # Mantener tamaño máximo del historial
         if len(self.execution_history) > self.max_history_size:
-            self.execution_history = self.execution_history[-self.max_history_size:]
+            self.execution_history = self.execution_history[-self.max_history_size :]
 
     def get_execution_statistics(self) -> Dict[str, Any]:
         """Obtener estadísticas de ejecución."""
         total_executions = self.executions_attempted
         success_rate = (
-            self.executions_successful / total_executions
-            if total_executions > 0
-            else 0.0
+            self.executions_successful / total_executions if total_executions > 0 else 0.0
         )
 
         avg_execution_time = (
-            self.total_execution_time_ms / total_executions
-            if total_executions > 0
-            else 0.0
+            self.total_execution_time_ms / total_executions if total_executions > 0 else 0.0
         )
 
         return {
@@ -273,9 +263,7 @@ class SignalExecutionEngine:
     def get_executions_by_symbol(self, symbol: str) -> List[Dict[str, Any]]:
         """Obtener ejecuciones por símbolo."""
         return [
-            execution
-            for execution in self.execution_history
-            if execution.get("symbol") == symbol
+            execution for execution in self.execution_history if execution.get("symbol") == symbol
         ]
 
     def clear_history(self) -> None:

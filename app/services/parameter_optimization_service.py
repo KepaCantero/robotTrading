@@ -10,12 +10,18 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from app.models.optimization import (OptimizationArtifact, OptimizationMethod,
-                                     OptimizationMetrics,
-                                     OptimizationParameter, OptimizationResult,
-                                     OptimizationSummary, OutOfSampleResult,
-                                     OutOfSampleTest, OutOfSampleTestRequest,
-                                     ParameterOptimizationRequest)
+from app.models.optimization import (
+    OptimizationArtifact,
+    OptimizationMethod,
+    OptimizationMetrics,
+    OptimizationParameter,
+    OptimizationResult,
+    OptimizationSummary,
+    OutOfSampleResult,
+    OutOfSampleTest,
+    OutOfSampleTestRequest,
+    ParameterOptimizationRequest,
+)
 from app.services.cost_analysis_service import CostAnalysisService
 
 
@@ -111,14 +117,10 @@ class ParameterOptimizationService:
             self.optimization_summary.failed_optimizations += 1
             raise RuntimeError(f"Parameter optimization failed: {str(e)}")
 
-    async def _validate_optimization_request(
-        self, request: ParameterOptimizationRequest
-    ) -> None:
+    async def _validate_optimization_request(self, request: ParameterOptimizationRequest) -> None:
         """Validate the optimization request."""
         if not request.parameters:
-            raise ValueError(
-                "At least one parameter must be specified for optimization"
-            )
+            raise ValueError("At least one parameter must be specified for optimization")
 
         if request.data_end_date <= request.data_start_date:
             raise ValueError("data_end_date must be after data_start_date")
@@ -126,28 +128,20 @@ class ParameterOptimizationService:
         # Validate optimization config based on method
         if request.optimization_config.method == OptimizationMethod.WALK_FORWARD:
             if not request.optimization_config.walk_forward_config:
-                raise ValueError(
-                    "walk_forward_config is required for walk-forward optimization"
-                )
+                raise ValueError("walk_forward_config is required for walk-forward optimization")
 
         elif request.optimization_config.method == OptimizationMethod.PURGED_K_FOLD:
             if not request.optimization_config.purged_k_fold_config:
-                raise ValueError(
-                    "purged_k_fold_config is required for purged K-fold optimization"
-                )
+                raise ValueError("purged_k_fold_config is required for purged K-fold optimization")
 
     async def _walk_forward_optimization(
         self, request: ParameterOptimizationRequest, state: OptimizationState
     ) -> OptimizationResult:
         """Perform walk-forward optimization."""
         config = request.optimization_config.walk_forward_config
-        current_date = request.data_start_date + timedelta(
-            days=config.initial_train_period
-        )
+        current_date = request.data_start_date + timedelta(days=config.initial_train_period)
 
-        while (
-            current_date + timedelta(days=config.test_period) <= request.data_end_date
-        ):
+        while current_date + timedelta(days=config.test_period) <= request.data_end_date:
             # Define training and test periods
             train_start = current_date - timedelta(days=config.initial_train_period)
             train_end = current_date - timedelta(days=config.purged_period)
@@ -210,9 +204,7 @@ class ParameterOptimizationService:
             config.embargo_period,
         )
 
-        for fold_idx, (train_start, train_end, test_start, test_end) in enumerate(
-            splits
-        ):
+        for fold_idx, (train_start, train_end, test_start, test_end) in enumerate(splits):
             # Optimize parameters for this fold
             fold_result = await self._optimize_period(
                 request, train_start, train_end, test_start, test_end
@@ -495,9 +487,7 @@ class ParameterOptimizationService:
         self, request: ParameterOptimizationRequest, result: OptimizationResult
     ) -> None:
         """Store optimization artifact."""
-        artifact_id = (
-            f"{request.strategy_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        )
+        artifact_id = f"{request.strategy_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
         artifact = OptimizationArtifact(
             artifact_id=artifact_id,

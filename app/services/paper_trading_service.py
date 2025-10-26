@@ -15,10 +15,17 @@ from uuid import UUID, uuid4
 from app.core.centralized_config import get_config
 from app.models.market_data import Quote
 from app.models.order import Order
-from app.models.paper_trading import (OrderSide, OrderType, PaperPortfolio,
-                                      PaperPosition, PaperTrade,
-                                      PaperTradingConfig, PaperTradingMode,
-                                      PaperTradingSession, TradeStatus)
+from app.models.paper_trading import (
+    OrderSide,
+    OrderType,
+    PaperPortfolio,
+    PaperPosition,
+    PaperTrade,
+    PaperTradingConfig,
+    PaperTradingMode,
+    PaperTradingSession,
+    TradeStatus,
+)
 from app.models.slippage_analysis import SlippageCalculationParams
 from app.services.slippage_analysis_service import DynamicSlippageService
 
@@ -231,9 +238,7 @@ class PaperTradingService:
     ) -> bool:
         """Check if trade can be executed based on risk limits."""
         # Use current price for calculations
-        trade_price = (
-            trade.price if trade.order_type == OrderType.LIMIT else current_price
-        )
+        trade_price = trade.price if trade.order_type == OrderType.LIMIT else current_price
 
         # Check cash availability for buy orders
         if trade.side == OrderSide.BUY:
@@ -283,18 +288,14 @@ class PaperTradingService:
                 timestamp=datetime.now(),
             )
 
-            slippage_amount = self._calculate_dynamic_slippage(
-                trade, market_price, quote, config
-            )
+            slippage_amount = self._calculate_dynamic_slippage(trade, market_price, quote, config)
             trade.slippage = slippage_amount
 
             # Calculate commission
             trade.commission = trade.quantity * trade.price * config.commission_rate
 
             # Calculate market impact
-            trade.market_impact = (
-                trade.quantity * market_price * config.market_impact_rate
-            )
+            trade.market_impact = trade.quantity * market_price * config.market_impact_rate
 
             # Adjust execution price based on slippage
             if trade.order_type == OrderType.LIMIT:
@@ -337,9 +338,7 @@ class PaperTradingService:
         # Update portfolio metrics
         await self._update_portfolio_metrics(portfolio)
 
-    async def _update_position(
-        self, portfolio: PaperPortfolio, trade: PaperTrade
-    ) -> None:
+    async def _update_position(self, portfolio: PaperPortfolio, trade: PaperTrade) -> None:
         """Update portfolio position after trade execution."""
         symbol = trade.symbol
 
@@ -367,18 +366,14 @@ class PaperTradingService:
                 position.quantity -= trade.filled_quantity
 
                 # Calculate realized P&L
-                realized_pnl = trade.filled_quantity * (
-                    trade.filled_price - position.avg_price
-                )
+                realized_pnl = trade.filled_quantity * (trade.filled_price - position.avg_price)
                 position.realized_pnl += realized_pnl
         else:
             # Create new position
             position = PaperPosition(
                 symbol=symbol,
                 quantity=(
-                    trade.filled_quantity
-                    if trade.side == OrderSide.BUY
-                    else -trade.filled_quantity
+                    trade.filled_quantity if trade.side == OrderSide.BUY else -trade.filled_quantity
                 ),
                 avg_price=trade.filled_price,
                 current_price=trade.filled_price,
@@ -416,9 +411,7 @@ class PaperTradingService:
 
         # Calculate total return
         if portfolio.initial_cash > 0:
-            portfolio.total_return = (
-                portfolio.total_pnl / portfolio.initial_cash
-            ) * Decimal("100")
+            portfolio.total_return = (portfolio.total_pnl / portfolio.initial_cash) * Decimal("100")
 
         # Update last updated timestamp
         portfolio.last_updated = datetime.utcnow()
@@ -546,9 +539,7 @@ class PaperTradingService:
             )
 
             # Convertir slippage porcentual a cantidad absoluta
-            slippage_amount = (
-                order_size * slippage_analysis.total_slippage / Decimal("100")
-            )
+            slippage_amount = order_size * slippage_analysis.total_slippage / Decimal("100")
 
             return slippage_amount
 

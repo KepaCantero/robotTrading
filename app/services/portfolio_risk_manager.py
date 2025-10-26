@@ -160,9 +160,7 @@ class PortfolioRiskManager:
             "position_count": len(portfolio.positions) + (1 if new_position else 0),
         }
 
-    def _detect_risk_violations(
-        self, risk_metrics: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    def _detect_risk_violations(self, risk_metrics: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Detectar violaciones de riesgo."""
         violations = []
 
@@ -338,13 +336,11 @@ class PortfolioRiskManager:
 
         # Calcular correlaciones por pares
         for i, pos1 in enumerate(positions):
-            for j, pos2 in enumerate(positions[i + 1:], i + 1):
+            for j, pos2 in enumerate(positions[i + 1 :], i + 1):
                 pair = f"{pos1.symbol}-{pos2.symbol}"
                 # Correlación simulada basada en sector
                 correlation = (
-                    0.3
-                    if getattr(pos1, "sector", "") == getattr(pos2, "sector", "")
-                    else 0.1
+                    0.3 if getattr(pos1, "sector", "") == getattr(pos2, "sector", "") else 0.1
                 )
                 correlations[pair] = correlation
 
@@ -382,7 +378,7 @@ class PortfolioRiskManager:
 
         # Mantener tamaño máximo del historial
         if len(self.violation_history) > self.max_history_size:
-            self.violation_history = self.violation_history[-self.max_history_size:]
+            self.violation_history = self.violation_history[-self.max_history_size :]
 
     def get_risk_statistics(self) -> Dict[str, Any]:
         """Obtener estadísticas de riesgo."""

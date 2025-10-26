@@ -12,16 +12,18 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
 from app.core.centralized_config import get_config
-from app.models.profitability_validation import (CostBreakdown,
-                                                 HistoricalValidation,
-                                                 ProfitabilityMetrics,
-                                                 ProfitabilityValidation,
-                                                 StrategyComparison,
-                                                 ValidationCriteria,
-                                                 ValidationReport,
-                                                 ValidationRequest,
-                                                 ValidationResponse,
-                                                 ValidationStatus)
+from app.models.profitability_validation import (
+    CostBreakdown,
+    HistoricalValidation,
+    ProfitabilityMetrics,
+    ProfitabilityValidation,
+    StrategyComparison,
+    ValidationCriteria,
+    ValidationReport,
+    ValidationRequest,
+    ValidationResponse,
+    ValidationStatus,
+)
 from app.services.cost_analysis_service import CostAnalysisService
 
 logger = logging.getLogger(__name__)
@@ -52,9 +54,7 @@ class ProfitabilityCalculator:
 
         # Calcular métricas adicionales
         profit_margin = (
-            (net_profit / initial_capital) * 100
-            if initial_capital > 0
-            else Decimal("0")
+            (net_profit / initial_capital) * 100 if initial_capital > 0 else Decimal("0")
         )
         roi = profit_margin  # ROI es igual al profit margin en este contexto
 
@@ -68,9 +68,7 @@ class ProfitabilityCalculator:
 
         # Calcular Cost Impact Ratio
         cost_impact_ratio = (
-            (cost_breakdown.total_costs / gross_profit)
-            if gross_profit > 0
-            else Decimal("0")
+            (cost_breakdown.total_costs / gross_profit) if gross_profit > 0 else Decimal("0")
         )
 
         metrics = ProfitabilityMetrics(
@@ -88,9 +86,7 @@ class ProfitabilityCalculator:
 
         return metrics, cost_breakdown
 
-    def _estimate_costs_from_trades(
-        self, trades_data: List[Dict[str, Any]]
-    ) -> CostBreakdown:
+    def _estimate_costs_from_trades(self, trades_data: List[Dict[str, Any]]) -> CostBreakdown:
         """Estimar costos basados en datos de trades."""
 
         total_commissions = Decimal("0")
@@ -160,18 +156,12 @@ class ProfitabilityCalculator:
 
         # Calcular win rate
         total_trades = len(trades_data)
-        win_rate = (
-            (len(winning_trades) / total_trades * 100)
-            if total_trades > 0
-            else Decimal("0")
-        )
+        win_rate = (len(winning_trades) / total_trades * 100) if total_trades > 0 else Decimal("0")
 
         # Calcular profit factor
         total_wins = sum(winning_trades) if winning_trades else Decimal("0")
         total_losses = sum(losing_trades) if losing_trades else Decimal("0")
-        profit_factor = (
-            (total_wins / total_losses) if total_losses > 0 else Decimal("0")
-        )
+        profit_factor = (total_wins / total_losses) if total_losses > 0 else Decimal("0")
 
         # Calcular max drawdown
         max_drawdown = self._calculate_max_drawdown(trades_data, initial_capital)
@@ -203,17 +193,13 @@ class ProfitabilityCalculator:
             if current_capital > peak:
                 peak = current_capital
 
-            drawdown = (
-                ((peak - current_capital) / peak * 100) if peak > 0 else Decimal("0")
-            )
+            drawdown = ((peak - current_capital) / peak * 100) if peak > 0 else Decimal("0")
             if drawdown > max_dd:
                 max_dd = drawdown
 
         return max_dd
 
-    def _calculate_sharpe_ratio(
-        self, trades_data: List[Dict[str, Any]]
-    ) -> Optional[Decimal]:
+    def _calculate_sharpe_ratio(self, trades_data: List[Dict[str, Any]]) -> Optional[Decimal]:
         """Calcular Sharpe ratio simplificado."""
 
         if len(trades_data) < 2:
@@ -266,9 +252,7 @@ class ProfitabilityValidator:
         if metrics.net_profit >= criteria.min_net_profit:
             passed_tests.append("min_net_profit")
         else:
-            failed_tests.append(
-                f"min_net_profit: {metrics.net_profit} < {criteria.min_net_profit}"
-            )
+            failed_tests.append(f"min_net_profit: {metrics.net_profit} < {criteria.min_net_profit}")
 
         # Test 2: Margen de ganancia mínimo
         if metrics.profit_margin >= criteria.min_profit_margin:
@@ -282,9 +266,7 @@ class ProfitabilityValidator:
         if metrics.return_on_investment >= criteria.min_roi:
             passed_tests.append("min_roi")
         else:
-            failed_tests.append(
-                f"min_roi: {metrics.return_on_investment}% < {criteria.min_roi}%"
-            )
+            failed_tests.append(f"min_roi: {metrics.return_on_investment}% < {criteria.min_roi}%")
 
         # Test 4: Sharpe ratio mínimo
         if metrics.sharpe_ratio and metrics.sharpe_ratio >= criteria.min_sharpe_ratio:
@@ -308,9 +290,7 @@ class ProfitabilityValidator:
         if metrics.win_rate >= criteria.min_win_rate:
             passed_tests.append("min_win_rate")
         else:
-            failed_tests.append(
-                f"min_win_rate: {metrics.win_rate}% < {criteria.min_win_rate}%"
-            )
+            failed_tests.append(f"min_win_rate: {metrics.win_rate}% < {criteria.min_win_rate}%")
 
         # Test 7: Factor de ganancia mínimo
         if metrics.profit_factor >= criteria.min_profit_factor:
@@ -348,17 +328,15 @@ class ProfitabilityValidator:
         """Generar recomendación y nivel de riesgo."""
 
         if status == ValidationStatus.PASSED:
-            recommendation = (
-                "Estrategia rentable y robusta. Considerar escalado gradual."
-            )
+            recommendation = "Estrategia rentable y robusta. Considerar escalado gradual."
             risk_level = "low"
         elif status == ValidationStatus.WARNING:
-            recommendation = "Estrategia rentable con algunas áreas de mejora. Monitorear métricas críticas."
+            recommendation = (
+                "Estrategia rentable con algunas áreas de mejora. Monitorear métricas críticas."
+            )
             risk_level = "medium"
         else:
-            recommendation = (
-                "Estrategia no rentable. Revisar parámetros y considerar optimización."
-            )
+            recommendation = "Estrategia no rentable. Revisar parámetros y considerar optimización."
             risk_level = "high"
 
         # Recomendaciones específicas basadas en métricas
@@ -382,9 +360,7 @@ class ProfitabilityValidationService:
         self.validator = ProfitabilityValidator()
         self.config = get_config()
 
-    def validate_strategy_profitability(
-        self, request: ValidationRequest
-    ) -> ValidationResponse:
+    def validate_strategy_profitability(self, request: ValidationRequest) -> ValidationResponse:
         """Validar rentabilidad de una estrategia específica."""
 
         logger.info(f"Validating profitability for strategy: {request.strategy_name}")
@@ -393,9 +369,7 @@ class ProfitabilityValidationService:
         criteria = request.criteria or ValidationCriteria()
 
         # Calcular capital final basado en trades
-        final_capital = self._calculate_final_capital(
-            request.initial_capital, request.trades_data
-        )
+        final_capital = self._calculate_final_capital(request.initial_capital, request.trades_data)
 
         # Calcular métricas de rentabilidad
         metrics, cost_breakdown = self.calculator.calculate_metrics(
@@ -403,8 +377,8 @@ class ProfitabilityValidationService:
         )
 
         # Validar contra criterios
-        status, passed_tests, failed_tests, warnings = (
-            self.validator.validate_profitability(metrics, criteria)
+        status, passed_tests, failed_tests, warnings = self.validator.validate_profitability(
+            metrics, criteria
         )
 
         # Generar recomendación
@@ -457,9 +431,7 @@ class ProfitabilityValidationService:
             next_steps=next_steps,
         )
 
-    def compare_strategies(
-        self, validations: List[ProfitabilityValidation]
-    ) -> StrategyComparison:
+    def compare_strategies(self, validations: List[ProfitabilityValidation]) -> StrategyComparison:
         """Comparar múltiples estrategias."""
 
         if not validations:
@@ -489,9 +461,7 @@ class ProfitabilityValidationService:
         """Analizar rendimiento histórico de una estrategia."""
 
         if not validations:
-            raise ValueError(
-                "At least one validation is required for historical analysis"
-            )
+            raise ValueError("At least one validation is required for historical analysis")
 
         # Análisis de tendencias
         trend_analysis = self._analyze_trends(validations)
@@ -537,9 +507,7 @@ class ProfitabilityValidationService:
             for strategy_name, strategy_validations in strategy_groups.items():
                 if len(strategy_validations) > 1:
                     historical_analyses.append(
-                        self.analyze_historical_performance(
-                            strategy_name, strategy_validations
-                        )
+                        self.analyze_historical_performance(strategy_name, strategy_validations)
                     )
 
         # Evaluación general
@@ -595,9 +563,7 @@ class ProfitabilityValidationService:
 
         # Calcular Sharpe ratio promedio (solo si todos tienen valor)
         sharpe_ratios = [
-            v.metrics.sharpe_ratio
-            for v in validations
-            if v.metrics.sharpe_ratio is not None
+            v.metrics.sharpe_ratio for v in validations if v.metrics.sharpe_ratio is not None
         ]
         avg_sharpe_ratio = (
             Decimal(str(statistics.mean([float(sr) for sr in sharpe_ratios])))
@@ -624,9 +590,7 @@ class ProfitabilityValidationService:
         """Crear ranking de estrategias."""
 
         # Ordenar por ganancia neta
-        sorted_validations = sorted(
-            validations, key=lambda v: v.metrics.net_profit, reverse=True
-        )
+        sorted_validations = sorted(validations, key=lambda v: v.metrics.net_profit, reverse=True)
 
         ranking = []
         for i, validation in enumerate(sorted_validations):
@@ -646,9 +610,7 @@ class ProfitabilityValidationService:
 
         return ranking
 
-    def _analyze_trends(
-        self, validations: List[ProfitabilityValidation]
-    ) -> Dict[str, Any]:
+    def _analyze_trends(self, validations: List[ProfitabilityValidation]) -> Dict[str, Any]:
         """Analizar tendencias en el rendimiento histórico."""
 
         if len(validations) < 2:
@@ -663,12 +625,8 @@ class ProfitabilityValidationService:
         win_rates = [float(v.metrics.win_rate) for v in sorted_validations]
 
         # Calcular tendencias (simplificado)
-        net_profit_trend = (
-            "improving" if net_profits[-1] > net_profits[0] else "declining"
-        )
-        margin_trend = (
-            "improving" if profit_margins[-1] > profit_margins[0] else "declining"
-        )
+        net_profit_trend = "improving" if net_profits[-1] > net_profits[0] else "declining"
+        margin_trend = "improving" if profit_margins[-1] > profit_margins[0] else "declining"
         win_rate_trend = "improving" if win_rates[-1] > win_rates[0] else "declining"
 
         return {
@@ -679,9 +637,7 @@ class ProfitabilityValidationService:
             "consistency": "high" if statistics.stdev(net_profits) < 100 else "low",
         }
 
-    def _calculate_stability_score(
-        self, validations: List[ProfitabilityValidation]
-    ) -> Decimal:
+    def _calculate_stability_score(self, validations: List[ProfitabilityValidation]) -> Decimal:
         """Calcular score de estabilidad (0-100)."""
 
         if len(validations) < 2:
@@ -720,9 +676,7 @@ class ProfitabilityValidationService:
         else:
             return "poor"
 
-    def _generate_recommendations(
-        self, validation: ProfitabilityValidation
-    ) -> List[str]:
+    def _generate_recommendations(self, validation: ProfitabilityValidation) -> List[str]:
         """Generar recomendaciones específicas para una validación."""
 
         recommendations = []
@@ -733,19 +687,13 @@ class ProfitabilityValidationService:
             )
 
         if validation.metrics.max_drawdown > Decimal("15"):
-            recommendations.append(
-                "Implementar stop-loss más agresivo para reducir drawdown"
-            )
+            recommendations.append("Implementar stop-loss más agresivo para reducir drawdown")
 
         if validation.metrics.win_rate < Decimal("45"):
-            recommendations.append(
-                "Mejorar criterios de entrada para aumentar tasa de ganancia"
-            )
+            recommendations.append("Mejorar criterios de entrada para aumentar tasa de ganancia")
 
         if validation.metrics.profit_factor < Decimal("1.3"):
-            recommendations.append(
-                "Revisar gestión de pérdidas para mejorar profit factor"
-            )
+            recommendations.append("Revisar gestión de pérdidas para mejorar profit factor")
 
         if validation.status == ValidationStatus.PASSED:
             recommendations.append("Estrategia rentable - considerar escalado gradual")
@@ -787,17 +735,13 @@ class ProfitabilityValidationService:
 
         return next_steps
 
-    def _generate_overall_assessment(
-        self, validations: List[ProfitabilityValidation]
-    ) -> str:
+    def _generate_overall_assessment(self, validations: List[ProfitabilityValidation]) -> str:
         """Generar evaluación general de todas las validaciones."""
 
         if not validations:
             return "No validations available for assessment"
 
-        passed_count = sum(
-            1 for v in validations if v.status == ValidationStatus.PASSED
-        )
+        passed_count = sum(1 for v in validations if v.status == ValidationStatus.PASSED)
         total_count = len(validations)
 
         if passed_count == total_count:
@@ -807,9 +751,7 @@ class ProfitabilityValidationService:
         else:
             return "Multiple strategies require optimization before proceeding"
 
-    def _generate_risk_assessment(
-        self, validations: List[ProfitabilityValidation]
-    ) -> str:
+    def _generate_risk_assessment(self, validations: List[ProfitabilityValidation]) -> str:
         """Generar evaluación de riesgo general."""
 
         if not validations:
@@ -839,14 +781,10 @@ class ProfitabilityValidationService:
         high_drawdown_strategies = [
             v for v in validations if v.metrics.max_drawdown > Decimal("15")
         ]
-        low_win_rate_strategies = [
-            v for v in validations if v.metrics.win_rate < Decimal("45")
-        ]
+        low_win_rate_strategies = [v for v in validations if v.metrics.win_rate < Decimal("45")]
 
         if high_cost_strategies:
-            recommendations.append(
-                "Optimizar costos operativos en múltiples estrategias"
-            )
+            recommendations.append("Optimizar costos operativos en múltiples estrategias")
 
         if high_drawdown_strategies:
             recommendations.append("Implementar gestión de riesgo más agresiva")
@@ -857,16 +795,10 @@ class ProfitabilityValidationService:
             )
 
         # Recomendación general
-        passed_count = sum(
-            1 for v in validations if v.status == ValidationStatus.PASSED
-        )
+        passed_count = sum(1 for v in validations if v.status == ValidationStatus.PASSED)
         if passed_count == len(validations):
-            recommendations.append(
-                "Todas las estrategias están validadas - proceder con confianza"
-            )
+            recommendations.append("Todas las estrategias están validadas - proceder con confianza")
         else:
-            recommendations.append(
-                "Implementar mejoras antes de proceder con live trading"
-            )
+            recommendations.append("Implementar mejoras antes de proceder con live trading")
 
         return recommendations

@@ -12,12 +12,17 @@ import numpy as np
 
 from app.core.centralized_config import get_config
 from app.models.market_data import Quote
-from app.models.slippage_analysis import (DynamicSlippageAnalysis,
-                                          LiquidityMetrics, MarketCondition,
-                                          OrderSizeImpact,
-                                          SlippageCalculationParams,
-                                          SlippageComponent, SlippageHistory,
-                                          SlippageType, VolatilityMetrics)
+from app.models.slippage_analysis import (
+    DynamicSlippageAnalysis,
+    LiquidityMetrics,
+    MarketCondition,
+    OrderSizeImpact,
+    SlippageCalculationParams,
+    SlippageComponent,
+    SlippageHistory,
+    SlippageType,
+    VolatilityMetrics,
+)
 
 
 class VolatilityCalculator:
@@ -77,7 +82,7 @@ class VolatilityCalculator:
         # Calcular volatilidad móvil
         window_size = min(10, len(returns) // 2)
         recent_vol = np.std(returns[-window_size:])
-        previous_vol = np.std(returns[-window_size * 2:-window_size])
+        previous_vol = np.std(returns[-window_size * 2 : -window_size])
 
         if recent_vol > previous_vol * 1.1:
             return "increasing"
@@ -114,9 +119,7 @@ class LiquidityCalculator:
             spread = Decimal("1.0")  # Spread por defecto
 
         # Calcular score de liquidez
-        liquidity_score = self._calculate_liquidity_score(
-            spread, volume_24h, order_book_depth
-        )
+        liquidity_score = self._calculate_liquidity_score(spread, volume_24h, order_book_depth)
 
         # Determinar régimen de liquidez
         liquidity_regime = self._determine_liquidity_regime(liquidity_score, spread)
@@ -129,9 +132,7 @@ class LiquidityCalculator:
             liquidity_regime=liquidity_regime,
         )
 
-    def _calculate_liquidity_score(
-        self, spread: Decimal, volume: Decimal, depth: Decimal
-    ) -> float:
+    def _calculate_liquidity_score(self, spread: Decimal, volume: Decimal, depth: Decimal) -> float:
         """Calcular score de liquidez (0-1)."""
         # Normalizar spread (menor es mejor)
         spread_score = max(0, 1 - float(spread) / 5.0)  # Máximo 5% spread
@@ -197,9 +198,7 @@ class DynamicSlippageService:
 
     def __init__(self, params: Optional[SlippageCalculationParams] = None):
         self.params = params or SlippageCalculationParams()
-        self.volatility_calculator = VolatilityCalculator(
-            self.params.volatility_lookback_days
-        )
+        self.volatility_calculator = VolatilityCalculator(self.params.volatility_lookback_days)
         self.liquidity_calculator = LiquidityCalculator()
         self.order_size_calculator = OrderSizeCalculator()
         self.slippage_history: Dict[str, SlippageHistory] = {}
@@ -219,9 +218,7 @@ class DynamicSlippageService:
         """Calcular slippage dinámico completo."""
 
         # Calcular métricas de entrada
-        volatility_metrics = self.volatility_calculator.calculate_volatility(
-            price_history
-        )
+        volatility_metrics = self.volatility_calculator.calculate_volatility(price_history)
         liquidity_metrics = self.liquidity_calculator.calculate_liquidity(
             quote, volume_24h, order_book_depth
         )
@@ -238,9 +235,7 @@ class DynamicSlippageService:
         total_slippage = self._calculate_total_slippage(slippage_components)
 
         # Determinar condición del mercado
-        market_condition = self._determine_market_condition(
-            volatility_metrics, liquidity_metrics
-        )
+        market_condition = self._determine_market_condition(volatility_metrics, liquidity_metrics)
 
         # Calcular confianza
         confidence = self._calculate_confidence(slippage_components)
@@ -275,9 +270,7 @@ class DynamicSlippageService:
         components = []
 
         # 1. Market Impact (impacto del tamaño de orden)
-        market_impact = self._calculate_market_impact(
-            order_size_impact, liquidity_metrics
-        )
+        market_impact = self._calculate_market_impact(order_size_impact, liquidity_metrics)
         components.append(market_impact)
 
         # 2. Timing Delay (delay en ejecución)
@@ -289,9 +282,7 @@ class DynamicSlippageService:
         components.append(liquidity_cost)
 
         # 4. Volatility Adjustment (ajuste por volatilidad)
-        volatility_adjustment = self._calculate_volatility_adjustment(
-            volatility_metrics
-        )
+        volatility_adjustment = self._calculate_volatility_adjustment(volatility_metrics)
         components.append(volatility_adjustment)
 
         return components
@@ -318,9 +309,7 @@ class DynamicSlippageService:
             calculation_method="market_impact_v1",
         )
 
-    def _calculate_timing_delay(
-        self, volatility_metrics: VolatilityMetrics
-    ) -> SlippageComponent:
+    def _calculate_timing_delay(self, volatility_metrics: VolatilityMetrics) -> SlippageComponent:
         """Calcular delay de timing."""
         delay_value = Decimal(str(float(volatility_metrics.current_volatility) * 0.01))
 
@@ -332,9 +321,7 @@ class DynamicSlippageService:
             calculation_method="timing_delay_v1",
         )
 
-    def _calculate_liquidity_cost(
-        self, liquidity_metrics: LiquidityMetrics
-    ) -> SlippageComponent:
+    def _calculate_liquidity_cost(self, liquidity_metrics: LiquidityMetrics) -> SlippageComponent:
         """Calcular costo de liquidez."""
         cost_value = liquidity_metrics.bid_ask_spread / Decimal("2")  # Mitad del spread
 
@@ -425,9 +412,7 @@ class DynamicSlippageService:
         """Obtener historial de slippage para un activo."""
         return self.slippage_history.get(asset_symbol)
 
-    def get_average_slippage(
-        self, asset_symbol: str, days: int = 7
-    ) -> Optional[Decimal]:
+    def get_average_slippage(self, asset_symbol: str, days: int = 7) -> Optional[Decimal]:
         """Obtener slippage promedio para un activo."""
         history = self.get_slippage_history(asset_symbol)
         if history:

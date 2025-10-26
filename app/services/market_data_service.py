@@ -12,10 +12,15 @@ from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from app.data.feeds import DataFeedInterface, create_data_feed
-from app.models.market_data import (DataFeedConfig, DataFeedType,
-                                    DataFrequency, HistoricalData,
-                                    MarketDataCache, MarketDataSubscription,
-                                    Quote)
+from app.models.market_data import (
+    DataFeedConfig,
+    DataFeedType,
+    DataFrequency,
+    HistoricalData,
+    MarketDataCache,
+    MarketDataSubscription,
+    Quote,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -150,9 +155,7 @@ class MarketDataService:
             return success
         return False
 
-    async def get_quote(
-        self, symbol: str, feed_id: Optional[UUID] = None
-    ) -> Optional[Quote]:
+    async def get_quote(self, symbol: str, feed_id: Optional[UUID] = None) -> Optional[Quote]:
         """Get real-time quote for a symbol."""
         # Check cache first
         cached_quote = await self._get_cached_quote(symbol)
@@ -283,9 +286,7 @@ class MarketDataService:
 
         return quotes
 
-    async def _get_active_feed(
-        self, feed_id: Optional[UUID] = None
-    ) -> Optional[DataFeedInterface]:
+    async def _get_active_feed(self, feed_id: Optional[UUID] = None) -> Optional[DataFeedInterface]:
         """Get an active feed, preferring the specified one."""
         if feed_id and feed_id in self.active_feeds:
             return self.active_feeds[feed_id]
@@ -306,9 +307,7 @@ class MarketDataService:
                 # Convert dict back to Quote object
                 quote_data = cache_item.data
                 # Convert string enum values back to enum objects
-                if "feed_type" in quote_data and isinstance(
-                    quote_data["feed_type"], str
-                ):
+                if "feed_type" in quote_data and isinstance(quote_data["feed_type"], str):
                     from app.models.market_data import DataFeedType
 
                     quote_data["feed_type"] = DataFeedType(quote_data["feed_type"])
@@ -334,9 +333,7 @@ class MarketDataService:
             # Cleanup old cache entries if needed
             await self._cleanup_cache()
 
-    async def _get_cached_historical_data(
-        self, cache_key: str
-    ) -> Optional[List[HistoricalData]]:
+    async def _get_cached_historical_data(self, cache_key: str) -> Optional[List[HistoricalData]]:
         """Get cached historical data."""
         async with self._cache_lock:
             cache_item = self.cache.get(cache_key)
@@ -353,8 +350,7 @@ class MarketDataService:
                 symbol=cache_key.split("_")[0],
                 data_type="historical",
                 data=[item.model_dump() for item in data],  # Convert to list of dicts
-                ttl_seconds=self.default_cache_ttl
-                * 60,  # Longer TTL for historical data
+                ttl_seconds=self.default_cache_ttl * 60,  # Longer TTL for historical data
                 feed_type=data[0].feed_type if data else DataFeedType.MOCK,
             )
 
@@ -388,9 +384,7 @@ class MarketDataService:
         async with self._cache_lock:
             total_entries = len(self.cache)
             expired_entries = sum(
-                1
-                for cache_item in self.cache.values()
-                if not cache_item.is_cache_valid()
+                1 for cache_item in self.cache.values() if not cache_item.is_cache_valid()
             )
 
             return {
