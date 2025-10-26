@@ -671,3 +671,247 @@ jobs:
 - Linting with flake8
 - Test coverage with pytest-cov
 - Security scanning with bandit
+
+---
+
+## 🧩 CURSOR STRICT PYTHON POLICY – NIVEL PROFESIONAL
+
+**⚠️ ESTA POLÍTICA SE APLICA AUTOMÁTICAMENTE A TODO CÓDIGO PYTHON**
+
+### 🧩 1. Sintaxis impecable
+
+Antes de mostrar o modificar cualquier archivo `.py`, valida con:
+
+```python
+import ast
+ast.parse(code)
+```
+
+**Reglas de aplicación:**
+
+- ✅ **SI FALLA**: No muestres el código hasta corregirlo internamente
+- ✅ **NUNCA**: Generes código que produzca `SyntaxError`, `IndentationError`, `NameError` ni `ImportError`
+- ✅ **VALIDAR**: Siempre con `ast.parse()` antes de aplicar cambios
+
+### 🧱 2. Indentación y estructura
+
+```python
+# ✅ USAR: 4 espacios por nivel (prohibido tabs)
+def my_function():
+    if condition:  # 4 espacios
+        return result  # 8 espacios
+
+# ❌ BLOQUEAR: Tabs o indentación inconsistente
+```
+
+**Reglas de aplicación:**
+
+- ✅ Cada bloque (`def`, `class`, `if`, `for`, `while`, `try`, `with`) debe tener cuerpo y cierre válidos
+- ✅ Si modificas código existente, mantén la indentación previa
+- ✅ Si hay riesgo de romper la estructura, regenera el archivo completo, no fragmentos
+
+### 📦 3. Imports verificados
+
+Antes de añadir un import, verifica que el módulo existe:
+
+```bash
+python -c "from importlib.util import find_spec; print(find_spec('module_name'))"
+```
+
+**Reglas de aplicación:**
+
+- ✅ Verifica en la stdlib con `importlib.util.find_spec`
+- ✅ Verifica instalado vía `pip freeze`
+- ✅ Prohibido inventar módulos, dependencias o rutas que no existan
+- ✅ Usa `isort` para ordenar los imports automáticamente
+
+### 🔍 4. Post-validación automática
+
+Después de cualquier cambio, Cursor debe internamente ejecutar:
+
+```bash
+python -m ast file.py
+black file.py --line-length 100
+isort file.py
+flake8 file.py --max-line-length=100
+```
+
+**Si algo falla, autocorrige con:**
+
+```bash
+autopep8 --in-place --aggressive file.py
+```
+
+**Reglas de aplicación:**
+
+- ✅ Garantizar 0 errores antes de mostrar el resultado
+- ✅ Si falla, autocorregir con `autopep8 --in-place --aggressive file.py`
+- ✅ Solo entregar el archivo si pasa todas las verificaciones
+
+### ⚙️ 5. Consistencia estructural
+
+```python
+# ✅ CORRECTO: Estructura completa
+class MyClass:
+    def __init__(self):
+        self.value = 0
+
+    def method(self):
+        return self.value
+
+# ❌ BLOQUEAR: Bloques incompletos
+class MyClass:
+    def __init__(self):
+        pass  # NO dejar pass vacíos sin lógica
+
+class MyClass:
+    def method(self):
+        try:  # NO usar try sin except/finally
+            pass
+```
+
+**Reglas de aplicación:**
+
+- ✅ Cada clase o función debe tener su cuerpo correctamente indentado y cerrado
+- ✅ No dejes `pass` vacíos donde debería haber lógica
+- ✅ No uses bloques `try:` sin `except:` o `finally:` válidos
+- ✅ No introduzcas cambios parciales que rompan la jerarquía de clases
+
+### 🧪 6. Formateo y linting obligatorio
+
+Antes de guardar o mostrar el código:
+
+```bash
+# Formatea con black
+black --line-length 100 file.py
+
+# Ordena imports con isort
+isort file.py
+
+# Verifica errores de estilo con flake8
+flake8 --max-line-length=100 file.py
+
+# Y pylint
+pylint file.py --disable=C0114,C0116
+```
+
+**Reglas de aplicación:**
+
+- ✅ Solo entrega el archivo si pasa todas las verificaciones sin errores
+- ✅ No hay excepciones a esta regla
+
+### 🚫 7. Seguridad y estilo
+
+```python
+# ❌ PROHIBIDO: eval, exec, os.system
+result = eval(user_input)  # NUNCA
+
+# ✅ USAR: Manejo seguro de archivos
+with open(path, "r") as f:
+    data = f.read()
+
+# ✅ USAR: Tipado estático
+from typing import List, Dict
+
+def process_data(data: List[Dict[str, int]]) -> None:
+    pass
+
+# ❌ PROHIBIDO: except vacío
+try:
+    risky_operation()
+except:  # NUNCA - especificar la excepción
+    pass
+
+# ✅ CORRECTO:
+try:
+    risky_operation()
+except ValueError as e:
+    handle_error(e)
+```
+
+**Reglas de aplicación:**
+
+- ✅ No uses `eval`, `exec`, `os.system`, ni comandos shell directos
+- ✅ No uses variables no inicializadas ni tipos dinámicos no anotados
+- ✅ Siempre usa manejo de archivos seguro: `with open(path, "r") as f:`
+- ✅ Usa tipado estático (`typing`) en todas las funciones nuevas
+- ✅ No uses `except:` vacío. Especifica la excepción: `except Exception as e:`
+
+### 🧾 8. Validación incremental
+
+**Proceso OBLIGATORIO:**
+
+```python
+# PASO 1: Genera solo la estructura mínima
+import ast
+
+# PASO 2: Verifica con ast.parse
+code = """
+def my_function():
+    pass
+"""
+ast.parse(code)  # ✅ Si pasa, continúa
+
+# PASO 3: Rellena el cuerpo
+code = """
+def my_function(x: int) -> int:
+    return x * 2
+"""
+ast.parse(code)  # ✅ Verifica nuevamente
+```
+
+**Reglas de aplicación:**
+
+- ✅ Primero genera solo la estructura mínima (`imports`, `class`, `def`) y verifica con `ast.parse`
+- ✅ Luego rellena el cuerpo con lógica validada
+- ✅ Si una validación falla, corrige automáticamente antes de continuar
+
+### 🛠 9. Modo reparación activa
+
+Si detectas un archivo roto:
+
+```bash
+# Ejecuta reparación automática
+black .
+autopep8 --in-place --aggressive .
+
+# Valida con
+python -c "import ast; ast.parse(open('file.py').read())"
+```
+
+**Reglas de aplicación:**
+
+- ✅ Solo tras validarlo, reanuda modificaciones
+- ✅ No continúes con código roto
+
+### 📊 10. Integración con el proyecto actual
+
+```yaml
+# Estas reglas aplican SOLO a:
+applies_to:
+  - "app/**/*.py" # Código de aplicación
+  - "tests/**/*.py" # Tests
+
+# NO aplican a:
+excludes:
+  - ".memory/**"
+  - "docs/**"
+  - "*.yaml"
+  - "*.json"
+```
+
+**Reglas de aplicación:**
+
+- ✅ Solo a archivos Python del proyecto de trading
+- ✅ NO a `.memory`, `docs/`, ni archivos de configuración YAML o JSON
+- ✅ NO crear ni modificar tareas de `.memory` automáticamente sin aprobación
+
+### 💬 Mensaje recordatorio final (obligatorio)
+
+> **⚠️ "Nunca priorices la velocidad de generación sobre la integridad del código. Cada archivo Python debe poder ejecutarse sin errores inmediatamente después de ser guardado."**
+
+---
+
+**APLICACIÓN AUTOMÁTICA:**
+
+Estas reglas se aplican AUTOMÁTICAMENTE en cada interacción con código Python. El sistema de validación interno de Cursor las ejecuta antes de mostrar cualquier sugerencia de código.
