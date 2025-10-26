@@ -106,9 +106,7 @@ class CostAnalysisService:
         self.min_profitability_threshold = Decimal("0.02")  # 2% minimum profit
         self.max_cost_impact_ratio = Decimal("0.30")  # 30% max cost impact
 
-    def analyze_trade_costs(
-        self, trade: Trade, market_data: Dict[str, Any]
-    ) -> CostBreakdown:
+    def analyze_trade_costs(self, trade: Trade, market_data: Dict[str, Any]) -> CostBreakdown:
         """Analyze costs for a single trade."""
         try:
             # Determine asset class for cost calculation
@@ -131,18 +129,12 @@ class CostAnalysisService:
 
             # Calculate total cost
             total_cost = (
-                commission
-                + slippage
-                + market_impact
-                + infrastructure_cost
-                + borrowing_cost
+                commission + slippage + market_impact + infrastructure_cost + borrowing_cost
             )
 
             # Calculate cost percentage
             trade_value = trade.quantity * trade.entry_price
-            cost_percentage = (
-                (total_cost / trade_value) * 100 if trade_value > 0 else Decimal("0")
-            )
+            cost_percentage = (total_cost / trade_value) * 100 if trade_value > 0 else Decimal("0")
 
             # Calculate Cost Impact Ratio (CIR)
             gross_profit = trade.pnl if trade.pnl else Decimal("0")
@@ -267,9 +259,7 @@ class CostAnalysisService:
 
     def validate_profitability(self, analysis_result: CostAnalysisResult) -> bool:
         """Validate that strategy is profitable after all costs."""
-        return (
-            analysis_result.is_profitable and not analysis_result.exceeds_cost_threshold
-        )
+        return analysis_result.is_profitable and not analysis_result.exceeds_cost_threshold
 
     def _determine_asset_class(self, symbol: str) -> str:
         """Determine asset class from symbol."""
@@ -282,9 +272,7 @@ class CostAnalysisService:
 
     def _calculate_commission(self, trade: Trade, asset_class: str) -> Decimal:
         """Calculate commission for a trade."""
-        commission_rate = self.commission_rates.get(
-            asset_class, self.commission_rates["equity"]
-        )
+        commission_rate = self.commission_rates.get(asset_class, self.commission_rates["equity"])
         trade_value = trade.quantity * trade.entry_price
         return trade_value * commission_rate
 
@@ -299,18 +287,14 @@ class CostAnalysisService:
             # Calculate slippage based on order type and market conditions
             # Since Trade model doesn't have order_type, we'll assume MARKET
             # orders
-            base_slippage = self.slippage_rates.get(
-                asset_class, self.slippage_rates["equity"]
-            )
+            base_slippage = self.slippage_rates.get(asset_class, self.slippage_rates["equity"])
 
             # Adjust for market volatility
             volatility = symbol_data.get("volatility", 0.02)
             volatility_multiplier = Decimal(str(1 + volatility))
 
             # Adjust for order size
-            order_size_impact = min(
-                Decimal("2.0"), Decimal(str(trade.quantity)) / Decimal("1000")
-            )
+            order_size_impact = min(Decimal("2.0"), Decimal(str(trade.quantity)) / Decimal("1000"))
 
             slippage = base_slippage * volatility_multiplier * order_size_impact
 
@@ -322,17 +306,11 @@ class CostAnalysisService:
 
         except Exception:
             # Fallback to base slippage rate
-            base_slippage = self.slippage_rates.get(
-                asset_class, self.slippage_rates["equity"]
-            )
+            base_slippage = self.slippage_rates.get(asset_class, self.slippage_rates["equity"])
             trade_value = trade.quantity * trade.entry_price
-            return (trade_value * base_slippage).quantize(
-                Decimal("0.01"), rounding=ROUND_HALF_UP
-            )
+            return (trade_value * base_slippage).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
-    def _calculate_market_impact(
-        self, trade: Trade, market_data: Dict[str, Any]
-    ) -> Decimal:
+    def _calculate_market_impact(self, trade: Trade, market_data: Dict[str, Any]) -> Decimal:
         """Calculate market impact cost."""
         try:
             symbol_data = market_data.get(trade.symbol, {})
@@ -340,12 +318,11 @@ class CostAnalysisService:
 
             # Market impact is proportional to order size relative to average
             # volume
-            volume_ratio = (
-                trade.quantity / avg_volume if avg_volume > 0 else Decimal("0")
-            )
+            volume_ratio = trade.quantity / avg_volume if avg_volume > 0 else Decimal("0")
 
             # Market impact increases with order size
-            if volume_ratio > Decimal("0.1"):  # Large order (>10% of avg volume)
+            # Large order (>10% of avg volume)
+            if volume_ratio > Decimal("0.1"):
                 impact_rate = Decimal("0.005")  # 0.5%
             # Medium order (>5% of avg volume)
             elif volume_ratio > Decimal("0.05"):
@@ -354,9 +331,7 @@ class CostAnalysisService:
                 impact_rate = Decimal("0.0005")  # 0.05%
 
             trade_value = trade.quantity * trade.entry_price
-            return (trade_value * impact_rate).quantize(
-                Decimal("0.01"), rounding=ROUND_HALF_UP
-            )
+            return (trade_value * impact_rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
         except Exception:
             return Decimal("0")
@@ -376,9 +351,7 @@ class CostAnalysisService:
 
                 # Calculate borrowing cost
                 position_value = trade.quantity * trade.entry_price
-                borrowing_cost = (
-                    position_value * daily_rate * Decimal(str(duration_days))
-                )
+                borrowing_cost = position_value * daily_rate * Decimal(str(duration_days))
 
                 return borrowing_cost.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
@@ -430,9 +403,7 @@ class CostAnalysisService:
             )
 
         # Check for high-cost trades
-        high_cost_trades = [
-            bd for bd in cost_breakdowns if bd.cost_percentage > Decimal("5")
-        ]
+        high_cost_trades = [bd for bd in cost_breakdowns if bd.cost_percentage > Decimal("5")]
         if len(high_cost_trades) > len(cost_breakdowns) * Decimal("0.2"):
             recommendations.append(
                 "More than 20% of trades have high costs (>5%). Review execution strategy."
@@ -459,7 +430,5 @@ class CostAnalysisService:
             cost_breakdowns=[],
             is_profitable=False,
             exceeds_cost_threshold=True,
-            recommendations=[
-                "No trades to analyze. Strategy needs more trading activity."
-            ],
+            recommendations=["No trades to analyze. Strategy needs more trading activity."],
         )

@@ -96,9 +96,7 @@ class SignalEvaluationEngine:
         logger.debug(f"Signal evaluation for {symbol}: {evaluation_result}")
         return evaluation_result
 
-    def _calculate_strength_score(
-        self, market_data: MarketData, metadata: Dict[str, Any]
-    ) -> float:
+    def _calculate_strength_score(self, market_data: MarketData, metadata: Dict[str, Any]) -> float:
         """Calcular score de fuerza de la señal."""
         # Implementación simplificada basada en volatilidad y volumen
         volatility = metadata.get("volatility", 0.0)

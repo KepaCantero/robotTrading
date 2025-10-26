@@ -67,9 +67,7 @@ class PositionSizingEngine:
         asset_info = self._get_asset_info(signal.symbol, metadata)
 
         # Calcular tamaño base usando Kelly Criterion simplificado
-        base_size = self._calculate_base_position_size(
-            signal, asset_info, available_capital
-        )
+        base_size = self._calculate_base_position_size(signal, asset_info, available_capital)
 
         # Aplicar límites de riesgo
         risk_adjusted_size = self._apply_risk_limits(
@@ -139,9 +137,7 @@ class PositionSizingEngine:
 
         # Ajustar por volatilidad del activo
         volatility = asset_info["volatility"]
-        volatility_adjustment = Decimal("1.0") / (
-            Decimal(str(volatility)) + Decimal("0.1")
-        )
+        volatility_adjustment = Decimal("1.0") / (Decimal(str(volatility)) + Decimal("0.1"))
         base_size = base_size * volatility_adjustment
 
         return max(base_size, Decimal("0"))
@@ -177,9 +173,7 @@ class PositionSizingEngine:
     ) -> Decimal:
         """Aplicar límites de diversificación."""
         # Calcular exposición actual por sector
-        current_sector_exposure = self._calculate_sector_exposure(
-            signal.symbol, portfolio
-        )
+        current_sector_exposure = self._calculate_sector_exposure(signal.symbol, portfolio)
 
         # Límite de exposición por sector
         max_sector_value = available_capital * Decimal(str(self.max_sector_exposure))

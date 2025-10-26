@@ -247,9 +247,7 @@ class CircuitBreakerManager:
 
     def get_all_breaker_statuses(self) -> Dict[str, Dict[str, Any]]:
         """Obtener estado de todos los circuit breakers."""
-        return {
-            name: self.get_breaker_status(name) for name in self.circuit_breakers.keys()
-        }
+        return {name: self.get_breaker_status(name) for name in self.circuit_breakers.keys()}
 
     def get_active_breakers(self) -> List[str]:
         """Obtener lista de circuit breakers activos."""
@@ -281,7 +279,7 @@ class CircuitBreakerManager:
 
         # Mantener tamaño máximo del historial
         if len(self.event_history) > self.max_history_size:
-            self.event_history = self.event_history[-self.max_history_size:]
+            self.event_history = self.event_history[-self.max_history_size :]
 
     def reset_breaker(self, breaker_name: str) -> bool:
         """Resetear circuit breaker manualmente."""

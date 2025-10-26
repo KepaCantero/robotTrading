@@ -92,9 +92,7 @@ class CentralizedLogger:
             file_handler.setLevel(logging.DEBUG)
 
             # Create formatter
-            formatter = logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-            )
+            formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
             file_handler.setFormatter(formatter)
 
             logger.addHandler(file_handler)
@@ -190,9 +188,7 @@ class CentralizedLogger:
         error_message: Optional[str] = None,
     ) -> None:
         """Log error message."""
-        self.log(
-            LogLevel.ERROR, service, message, metadata, error_message=error_message
-        )
+        self.log(LogLevel.ERROR, service, message, metadata, error_message=error_message)
 
     def critical(
         self,
@@ -202,9 +198,7 @@ class CentralizedLogger:
         error_message: Optional[str] = None,
     ) -> None:
         """Log critical message."""
-        self.log(
-            LogLevel.CRITICAL, service, message, metadata, error_message=error_message
-        )
+        self.log(LogLevel.CRITICAL, service, message, metadata, error_message=error_message)
 
     def log_performance(
         self,
@@ -313,29 +307,21 @@ def log_async_performance(service: LogService, operation: str):
 
 
 # Convenience functions
-def log_trading_signal(
-    signal_data: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None
-):
+def log_trading_signal(signal_data: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None):
     """Log trading signal generation."""
     centralized_logger.log_trading_signal(signal_data, metadata)
 
 
-def log_trade_execution(
-    trade_data: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None
-):
+def log_trade_execution(trade_data: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None):
     """Log trade execution."""
     centralized_logger.log_trade_execution(trade_data, metadata)
 
 
-def log_portfolio_update(
-    portfolio_data: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None
-):
+def log_portfolio_update(portfolio_data: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None):
     """Log portfolio update."""
     centralized_logger.log_portfolio_update(portfolio_data, metadata)
 
 
-def log_market_data(
-    market_data: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None
-):
+def log_market_data(market_data: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None):
     """Log market data processing."""
     centralized_logger.log_market_data(market_data, metadata)

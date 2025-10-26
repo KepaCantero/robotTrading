@@ -12,11 +12,19 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
 from app.core.centralized_config import get_config
-from app.models.momentum import (MomentumAnalysis, MomentumFilter,
-                                 MomentumSignal, MomentumStrategy,
-                                 MomentumType, TechnicalIndicators, Timeframe)
+from app.models.momentum import (
+    MomentumAnalysis,
+    MomentumFilter,
+    MomentumSignal,
+    MomentumStrategy,
+    MomentumType,
+    TechnicalIndicators,
+    Timeframe,
+)
 from app.services.asset_identification import (
-    AssetIdentificationService, get_asset_identification_service)
+    AssetIdentificationService,
+    get_asset_identification_service,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -100,11 +108,7 @@ class TechnicalIndicatorCalculator:
         highs: List[float], lows: List[float], closes: List[float], period: int = 14
     ) -> Optional[float]:
         """Calculate Average True Range."""
-        if (
-            len(highs) < period + 1
-            or len(lows) < period + 1
-            or len(closes) < period + 1
-        ):
+        if len(highs) < period + 1 or len(lows) < period + 1 or len(closes) < period + 1:
             return None
 
         true_ranges = []
@@ -128,9 +132,7 @@ class TechnicalIndicatorCalculator:
         return round(atr, 4)
 
     @staticmethod
-    def calculate_volume_sma(
-        volumes: List[Decimal], period: int = 20
-    ) -> Optional[Decimal]:
+    def calculate_volume_sma(volumes: List[Decimal], period: int = 20) -> Optional[Decimal]:
         """Calculate Volume Simple Moving Average."""
         if len(volumes) < period:
             return None
@@ -143,9 +145,7 @@ class MomentumAnalysisService:
     """Service for momentum analysis and signal generation."""
 
     def __init__(self):
-        self.asset_service: AssetIdentificationService = (
-            get_asset_identification_service()
-        )
+        self.asset_service: AssetIdentificationService = get_asset_identification_service()
         self.strategies: Dict[str, MomentumStrategy] = {}
         self.analyses: Dict[str, MomentumAnalysis] = {}
         self.indicator_calculator = TechnicalIndicatorCalculator()
@@ -182,18 +182,15 @@ class MomentumAnalysisService:
                 description="Volume-based momentum strategy",
                 momentum_type=MomentumType.VOLUME_MOMENTUM,
                 timeframe=Timeframe.DAILY,
-                min_strength=trading_config.min_signal_strength
-                + 10.0,  # Slightly higher threshold
+                min_strength=trading_config.min_signal_strength + 10.0,  # Slightly higher threshold
                 min_confidence=trading_config.min_signal_confidence + 5.0,
                 signal_duration=12,
                 min_volume_ratio=1.5,
                 volume_spike_threshold=2.5,
                 max_position_size=trading_config.max_position_size
                 * 0.8,  # Slightly smaller position
-                stop_loss_pct=trading_config.stop_loss_pct
-                * 0.8,  # Slightly tighter stop loss
-                take_profit_pct=trading_config.take_profit_pct
-                * 0.8,  # Slightly lower take profit
+                stop_loss_pct=trading_config.stop_loss_pct * 0.8,  # Slightly tighter stop loss
+                take_profit_pct=trading_config.take_profit_pct * 0.8,  # Slightly lower take profit
             ),
             MomentumStrategy(
                 name="Combined Momentum",
@@ -205,18 +202,15 @@ class MomentumAnalysisService:
                 min_confidence=trading_config.min_signal_confidence + 10.0,
                 signal_duration=18,
                 rsi_oversold=trading_config.rsi_oversold - 5.0,  # More extreme oversold
-                rsi_overbought=trading_config.rsi_overbought
-                + 5.0,  # More extreme overbought
+                rsi_overbought=trading_config.rsi_overbought + 5.0,  # More extreme overbought
                 ema_short_period=12,
                 ema_long_period=26,
                 min_volume_ratio=1.3,
                 volume_spike_threshold=2.0,
                 max_position_size=trading_config.max_position_size
                 * 1.2,  # Slightly larger position
-                stop_loss_pct=trading_config.stop_loss_pct
-                * 1.2,  # Slightly wider stop loss
-                take_profit_pct=trading_config.take_profit_pct
-                * 1.2,  # Slightly higher take profit
+                stop_loss_pct=trading_config.stop_loss_pct * 1.2,  # Slightly wider stop loss
+                take_profit_pct=trading_config.take_profit_pct * 1.2,  # Slightly higher take profit
             ),
         ]
 
@@ -242,9 +236,7 @@ class MomentumAnalysisService:
             indicators = await self._calculate_technical_indicators(symbol, price_data)
 
             # Generate momentum signals
-            signals = await self._generate_momentum_signals(
-                symbol, indicators, timeframe
-            )
+            signals = await self._generate_momentum_signals(symbol, indicators, timeframe)
 
             # Calculate overall momentum score
             overall_momentum = self._calculate_overall_momentum(signals)
@@ -325,9 +317,7 @@ class MomentumAnalysisService:
         ema_200 = self.indicator_calculator.calculate_ema(prices, 200)
 
         # Calculate MACD
-        macd, macd_signal, macd_histogram = self.indicator_calculator.calculate_macd(
-            prices
-        )
+        macd, macd_signal, macd_histogram = self.indicator_calculator.calculate_macd(prices)
 
         # Calculate ATR
         atr = self.indicator_calculator.calculate_atr(highs, lows, prices, 14)
@@ -338,10 +328,7 @@ class MomentumAnalysisService:
         # Calculate volatility (standard deviation of returns)
         volatility = None
         if len(prices) > 1:
-            returns = [
-                (prices[i] - prices[i - 1]) / prices[i - 1]
-                for i in range(1, len(prices))
-            ]
+            returns = [(prices[i] - prices[i - 1]) / prices[i - 1] for i in range(1, len(prices))]
             if returns:
                 volatility = math.sqrt(sum(r**2 for r in returns) / len(returns)) * 100
 
@@ -380,17 +367,13 @@ class MomentumAnalysisService:
             and indicators.ema_9 is not None
             and indicators.ema_21 is not None
         ):
-            signal = await self._create_price_momentum_signal(
-                symbol, indicators, timeframe
-            )
+            signal = await self._create_price_momentum_signal(symbol, indicators, timeframe)
             if signal:
                 signals.append(signal)
 
         # Volume momentum signal
         if indicators.volume_ratio is not None:
-            signal = await self._create_volume_momentum_signal(
-                symbol, indicators, timeframe
-            )
+            signal = await self._create_volume_momentum_signal(symbol, indicators, timeframe)
             if signal:
                 signals.append(signal)
 
@@ -684,9 +667,7 @@ class MomentumAnalysisService:
                 asset_signals[signal.symbol] = signal
 
         # Sort by momentum score
-        sorted_assets = sorted(
-            asset_signals.values(), key=lambda x: x.momentum_score, reverse=True
-        )
+        sorted_assets = sorted(asset_signals.values(), key=lambda x: x.momentum_score, reverse=True)
 
         # Return top assets
         top_assets = []

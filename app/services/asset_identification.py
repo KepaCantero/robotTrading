@@ -9,8 +9,15 @@ import logging
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from app.models.assets import (Asset, AssetClass, AssetFilter, AssetRanking,
-                               AssetUniverse, Exchange, LiquidityMetrics)
+from app.models.assets import (
+    Asset,
+    AssetClass,
+    AssetFilter,
+    AssetRanking,
+    AssetUniverse,
+    Exchange,
+    LiquidityMetrics,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -29,14 +36,10 @@ class AssetIdentificationService:
     def _initialize_default_universes(self):
         """Initialize default asset universes."""
         for asset_class in AssetClass:
-            self.asset_universes[asset_class] = AssetUniverse(
-                asset_class=asset_class, top_n=20
-            )
+            self.asset_universes[asset_class] = AssetUniverse(asset_class=asset_class, top_n=20)
             self.rankings[asset_class] = AssetRanking(asset_class=asset_class)
 
-    async def identify_liquid_assets(
-        self, asset_class: AssetClass, limit: int = 20
-    ) -> List[Asset]:
+    async def identify_liquid_assets(self, asset_class: AssetClass, limit: int = 20) -> List[Asset]:
         """Identify the most liquid assets for a given asset class."""
         try:
             # Get predefined liquid assets for each class
@@ -47,18 +50,14 @@ class AssetIdentificationService:
                 await self._calculate_liquidity_score(asset)
 
             # Sort by liquidity score and return top N
-            sorted_assets = sorted(
-                liquid_assets, key=lambda x: x.liquidity_score, reverse=True
-            )
+            sorted_assets = sorted(liquid_assets, key=lambda x: x.liquidity_score, reverse=True)
             return sorted_assets[:limit]
 
         except Exception as e:
             logger.error(f"Error identifying liquid assets for {asset_class}: {e}")
             return []
 
-    async def _get_predefined_liquid_assets(
-        self, asset_class: AssetClass
-    ) -> List[Asset]:
+    async def _get_predefined_liquid_assets(self, asset_class: AssetClass) -> List[Asset]:
         """Get predefined liquid assets for each asset class."""
         if asset_class == AssetClass.EQUITY:
             return await self._get_liquid_equities()
@@ -534,9 +533,7 @@ class AssetIdentificationService:
             logger.error(f"Error calculating liquidity score for {asset.symbol}: {e}")
             asset.liquidity_score = 0.0
 
-    async def update_asset_universe(
-        self, asset_class: AssetClass, assets: List[Asset]
-    ) -> bool:
+    async def update_asset_universe(self, asset_class: AssetClass, assets: List[Asset]) -> bool:
         """Update asset universe with new assets."""
         try:
             universe = self.asset_universes[asset_class]
@@ -582,9 +579,7 @@ class AssetIdentificationService:
         except Exception as e:
             logger.error(f"Error updating rankings for {asset_class}: {e}")
 
-    async def get_top_liquid_assets(
-        self, asset_class: AssetClass, limit: int = 20
-    ) -> List[Asset]:
+    async def get_top_liquid_assets(self, asset_class: AssetClass, limit: int = 20) -> List[Asset]:
         """Get top liquid assets for a given class."""
         try:
             universe = self.asset_universes[asset_class]
@@ -653,9 +648,7 @@ class AssetIdentificationService:
                 "top_n": universe.top_n,
                 "avg_liquidity_score": universe.avg_liquidity_score,
                 "total_market_cap": (
-                    float(universe.total_market_cap)
-                    if universe.total_market_cap
-                    else None
+                    float(universe.total_market_cap) if universe.total_market_cap else None
                 ),
                 "last_updated": universe.last_updated,
                 "top_assets": [

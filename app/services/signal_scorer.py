@@ -11,9 +11,15 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from app.core.centralized_config import get_config
-from app.models.signal import (MarketData, Signal, SignalPriorityQueue,
-                               SignalScorer, SignalSource, SignalStrength,
-                               SignalType)
+from app.models.signal import (
+    MarketData,
+    Signal,
+    SignalPriorityQueue,
+    SignalScorer,
+    SignalSource,
+    SignalStrength,
+    SignalType,
+)
 from app.services.portfolio_service import PortfolioService
 from app.services.position_sizing_engine import PositionSizingEngine
 from app.services.signal_evaluation_engine import SignalEvaluationEngine
@@ -98,9 +104,7 @@ class SignalScorerService:
             self._add_to_history(signal)
             self.signals_processed += 1
 
-            logger.info(
-                f"Signal evaluated for {symbol}: {evaluation_result['combined_score']:.2f}"
-            )
+            logger.info(f"Signal evaluated for {symbol}: {evaluation_result['combined_score']:.2f}")
             return signal
 
         except Exception as e:
@@ -126,9 +130,7 @@ class SignalScorerService:
                 signal, portfolio, available_capital, signal.metadata
             )
 
-            logger.debug(
-                f"Position size calculated for {signal.symbol}: {position_size}"
-            )
+            logger.debug(f"Position size calculated for {signal.symbol}: {position_size}")
             return position_size
 
         except Exception as e:
@@ -143,9 +145,7 @@ class SignalScorerService:
             # Calcular tamaño de posición
             position_size = await self.calculate_position_size(signal)
             if position_size <= 0:
-                logger.warning(
-                    f"Cannot execute signal for {signal.symbol}: invalid position size"
-                )
+                logger.warning(f"Cannot execute signal for {signal.symbol}: invalid position size")
                 return False
 
             # Obtener portafolio actual
@@ -212,7 +212,7 @@ class SignalScorerService:
 
         # Mantener tamaño máximo del historial
         if len(self.signal_history) > self.max_history_size:
-            self.signal_history = self.signal_history[-self.max_history_size:]
+            self.signal_history = self.signal_history[-self.max_history_size :]
 
     # Métodos de compatibilidad mantenidos
     async def get_next_actionable_signal(self) -> Optional[Signal]:
@@ -232,9 +232,7 @@ class SignalScorerService:
         expired_threshold = current_time - timedelta(minutes=max_age_minutes)
 
         original_count = len(self.signal_history)
-        self.signal_history = [
-            s for s in self.signal_history if s.timestamp > expired_threshold
-        ]
+        self.signal_history = [s for s in self.signal_history if s.timestamp > expired_threshold]
 
         cleared_count = original_count - len(self.signal_history)
         logger.info(f"Cleared {cleared_count} expired signals")
@@ -247,9 +245,7 @@ class SignalScorerService:
         min_liquidity: Optional[float] = None,
     ) -> None:
         """Actualizar thresholds de evaluación."""
-        self.evaluation_engine.update_thresholds(
-            min_strength, min_confidence, min_liquidity
-        )
+        self.evaluation_engine.update_thresholds(min_strength, min_confidence, min_liquidity)
 
     def reset_statistics(self) -> None:
         """Resetear estadísticas."""

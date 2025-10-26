@@ -13,13 +13,17 @@ from enum import Enum
 from typing import Any, Callable, Dict, Optional
 
 from app.core.centralized_config import get_config
-from app.exceptions.trading_exceptions import (AlgoTradingError, ErrorCategory,
-                                               ErrorSeverity, NetworkError,
-                                               PerformanceError,
-                                               RiskManagementError,
-                                               SystemError, ValidationError)
-from app.services.centralized_logging import (LogLevel, LogService,
-                                              centralized_logger)
+from app.exceptions.trading_exceptions import (
+    AlgoTradingError,
+    ErrorCategory,
+    ErrorSeverity,
+    NetworkError,
+    PerformanceError,
+    RiskManagementError,
+    SystemError,
+    ValidationError,
+)
+from app.services.centralized_logging import LogLevel, LogService, centralized_logger
 
 
 class ErrorAction(Enum):
@@ -234,9 +238,7 @@ class TradingErrorHandler:
                 )
                 results[action.value] = result
             except Exception as action_error:
-                self.logger.error(
-                    f"Failed to execute action {action.value}: {action_error}"
-                )
+                self.logger.error(f"Failed to execute action {action.value}: {action_error}")
                 results[action.value] = {"success": False, "error": str(action_error)}
 
         # Check for circuit breaker activation
@@ -332,9 +334,7 @@ class TradingErrorHandler:
         elif isinstance(error, ConnectionError):
             return NetworkError(message=str(error), details=metadata)
         elif isinstance(error, TimeoutError):
-            return PerformanceError(
-                message=str(error), operation=context.value, details=metadata
-            )
+            return PerformanceError(message=str(error), operation=context.value, details=metadata)
         else:
             return SystemError(
                 message=str(error),
@@ -486,10 +486,7 @@ class TradingErrorHandler:
         """Check if kill switch should be activated."""
 
         # Critical errors in live trading should activate kill switch
-        if (
-            context == ErrorContext.LIVE_TRADING
-            and error.severity == ErrorSeverity.CRITICAL
-        ):
+        if context == ErrorContext.LIVE_TRADING and error.severity == ErrorSeverity.CRITICAL:
             return {
                 "success": True,
                 "kill_switch_should_activate": True,
@@ -567,9 +564,7 @@ class TradingErrorHandler:
                 "message": f"No rollback available for {context.value}",
             }
 
-    def _should_activate_circuit_breaker(
-        self, context: ErrorContext, operation_id: str
-    ) -> bool:
+    def _should_activate_circuit_breaker(self, context: ErrorContext, operation_id: str) -> bool:
         """Check if circuit breaker should be activated."""
         rules = self.error_rules.get(context.value, {})
         threshold = rules.get("circuit_breaker_threshold", 5)
@@ -579,16 +574,11 @@ class TradingErrorHandler:
 
         return error_count >= threshold
 
-    def _should_activate_kill_switch(
-        self, error: AlgoTradingError, context: ErrorContext
-    ) -> bool:
+    def _should_activate_kill_switch(self, error: AlgoTradingError, context: ErrorContext) -> bool:
         """Check if kill switch should be activated."""
 
         # Critical errors in live trading
-        if (
-            context == ErrorContext.LIVE_TRADING
-            and error.severity == ErrorSeverity.CRITICAL
-        ):
+        if context == ErrorContext.LIVE_TRADING and error.severity == ErrorSeverity.CRITICAL:
             return True
 
         # Security violations
@@ -601,9 +591,7 @@ class TradingErrorHandler:
 
         return False
 
-    async def _activate_circuit_breaker(
-        self, context: ErrorContext, operation_id: str
-    ) -> None:
+    async def _activate_circuit_breaker(self, context: ErrorContext, operation_id: str) -> None:
         """Activate circuit breaker for a context."""
         key = f"{context.value}_circuit_breaker"
         self.circuit_breakers[key] = True
@@ -678,9 +666,7 @@ class TradingErrorHandler:
         return {
             "error_counts": self.error_counts.copy(),
             "circuit_breakers": self.circuit_breakers.copy(),
-            "last_error_times": {
-                k: v.isoformat() for k, v in self.last_error_times.items()
-            },
+            "last_error_times": {k: v.isoformat() for k, v in self.last_error_times.items()},
             "retry_counts": self.retry_counts.copy(),
             "timestamp": datetime.now().isoformat(),
         }
@@ -713,9 +699,7 @@ async def handle_trading_error(
     metadata: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Handle a trading error with unified processing."""
-    return await trading_error_handler.handle_error(
-        error, context, operation_id, metadata
-    )
+    return await trading_error_handler.handle_error(error, context, operation_id, metadata)
 
 
 async def execute_with_retry(

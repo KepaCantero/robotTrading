@@ -14,14 +14,17 @@ from uuid import UUID
 from loguru import logger
 
 from app.models.portfolio import Portfolio
-from app.models.portfolio_analytics import (ExtendedPortfolio,
-                                            PerformanceMetrics,
-                                            PerformancePeriod,
-                                            PortfolioAllocation,
-                                            PortfolioAnalytics,
-                                            PortfolioComparison,
-                                            PortfolioRebalance, RiskLevel,
-                                            RiskMetrics)
+from app.models.portfolio_analytics import (
+    ExtendedPortfolio,
+    PerformanceMetrics,
+    PerformancePeriod,
+    PortfolioAllocation,
+    PortfolioAnalytics,
+    PortfolioComparison,
+    PortfolioRebalance,
+    RiskLevel,
+    RiskMetrics,
+)
 from app.services.market_data_service import MarketDataService
 
 
@@ -51,9 +54,7 @@ class PortfolioAnalyticsService:
             start_date = self._get_period_start_date(end_date, period)
 
         # Get historical portfolio values
-        portfolio_values = await self._get_portfolio_values(
-            portfolio, start_date, end_date
-        )
+        portfolio_values = await self._get_portfolio_values(portfolio, start_date, end_date)
 
         if len(portfolio_values) < 2:
             raise ValueError("Insufficient data for performance calculation")
@@ -88,12 +89,8 @@ class PortfolioAnalyticsService:
 
         # Benchmark comparison
         benchmark_return = await self._get_benchmark_return(start_date, end_date)
-        excess_return = (
-            annualized_return - benchmark_return if benchmark_return else None
-        )
-        tracking_error = (
-            self._calculate_tracking_error(returns) if benchmark_return else None
-        )
+        excess_return = annualized_return - benchmark_return if benchmark_return else None
+        tracking_error = self._calculate_tracking_error(returns) if benchmark_return else None
 
         return PerformanceMetrics(
             portfolio_id=portfolio.id,
@@ -130,9 +127,7 @@ class PortfolioAnalyticsService:
         end_date = datetime.utcnow()
         start_date = end_date - timedelta(days=252)  # 1 year of trading days
 
-        portfolio_values = await self._get_portfolio_values(
-            portfolio, start_date, end_date
-        )
+        portfolio_values = await self._get_portfolio_values(portfolio, start_date, end_date)
         returns = self._calculate_returns(portfolio_values)
 
         if len(returns) < 30:
@@ -197,9 +192,7 @@ class PortfolioAnalyticsService:
         risk_score = self._calculate_risk_score(risk_metrics)
 
         # Calculate health scores
-        health_score = self._calculate_health_score(
-            portfolio, performance_metrics, risk_metrics
-        )
+        health_score = self._calculate_health_score(portfolio, performance_metrics, risk_metrics)
         diversification_score = self._calculate_diversification_score(portfolio)
         liquidity_score = self._calculate_liquidity_score(portfolio)
 
@@ -233,12 +226,8 @@ class PortfolioAnalyticsService:
         equity_value = sum(pos.market_value for pos in portfolio.positions)
         cash_value = portfolio.cash_balance
 
-        equity_allocation = (
-            (equity_value / total_value * 100) if total_value > 0 else Decimal("0")
-        )
-        cash_allocation = (
-            (cash_value / total_value * 100) if total_value > 0 else Decimal("0")
-        )
+        equity_allocation = (equity_value / total_value * 100) if total_value > 0 else Decimal("0")
+        cash_allocation = (cash_value / total_value * 100) if total_value > 0 else Decimal("0")
 
         # For now, assume all positions are equity (can be enhanced later)
         fixed_income_allocation = Decimal("0")
@@ -253,9 +242,9 @@ class PortfolioAnalyticsService:
 
         # Top holdings
         top_holdings = []
-        for position in sorted(
-            portfolio.positions, key=lambda p: p.market_value, reverse=True
-        )[:10]:
+        for position in sorted(portfolio.positions, key=lambda p: p.market_value, reverse=True)[
+            :10
+        ]:
             top_holdings.append(
                 {
                     "symbol": position.symbol,
@@ -307,16 +296,11 @@ class PortfolioAnalyticsService:
         equity_deviation = abs(
             current_allocation.equity_allocation - target_allocation.equity_allocation
         )
-        cash_deviation = abs(
-            current_allocation.cash_allocation - target_allocation.cash_allocation
-        )
+        cash_deviation = abs(current_allocation.cash_allocation - target_allocation.cash_allocation)
 
         rebalance_threshold = Decimal("5")  # 5% threshold
 
-        if (
-            equity_deviation < rebalance_threshold
-            and cash_deviation < rebalance_threshold
-        ):
+        if equity_deviation < rebalance_threshold and cash_deviation < rebalance_threshold:
             logger.info("Portfolio is within rebalancing thresholds")
             return None
 
@@ -324,16 +308,10 @@ class PortfolioAnalyticsService:
         rebalance_actions = []
 
         if equity_deviation >= rebalance_threshold:
-            if (
-                current_allocation.equity_allocation
-                > target_allocation.equity_allocation
-            ):
+            if current_allocation.equity_allocation > target_allocation.equity_allocation:
                 # Reduce equity exposure
                 excess_equity = (
-                    (
-                        current_allocation.equity_allocation
-                        - target_allocation.equity_allocation
-                    )
+                    (current_allocation.equity_allocation - target_allocation.equity_allocation)
                     / 100
                     * portfolio.total_value
                 )
@@ -347,10 +325,7 @@ class PortfolioAnalyticsService:
             else:
                 # Increase equity exposure
                 deficit_equity = (
-                    (
-                        target_allocation.equity_allocation
-                        - current_allocation.equity_allocation
-                    )
+                    (target_allocation.equity_allocation - current_allocation.equity_allocation)
                     / 100
                     * portfolio.total_value
                 )
@@ -365,9 +340,7 @@ class PortfolioAnalyticsService:
         # Estimate costs and impacts
         # Simplified - would need transaction cost data
         estimated_cost = Decimal("0")
-        risk_impact = self._estimate_rebalance_risk_impact(
-            current_allocation, target_allocation
-        )
+        risk_impact = self._estimate_rebalance_risk_impact(current_allocation, target_allocation)
         return_impact = self._estimate_rebalance_return_impact(
             current_allocation, target_allocation
         )
@@ -384,9 +357,7 @@ class PortfolioAnalyticsService:
             return_impact=return_impact,
         )
 
-    async def compare_portfolios(
-        self, portfolio_ids: List[UUID]
-    ) -> PortfolioComparison:
+    async def compare_portfolios(self, portfolio_ids: List[UUID]) -> PortfolioComparison:
         """Compare multiple portfolios."""
         logger.info(f"Comparing portfolios: {portfolio_ids}")
 
@@ -480,9 +451,7 @@ class PortfolioAnalyticsService:
 
     # Helper methods for calculations
 
-    def _get_period_start_date(
-        self, end_date: datetime, period: PerformancePeriod
-    ) -> datetime:
+    def _get_period_start_date(self, end_date: datetime, period: PerformancePeriod) -> datetime:
         """Get start date based on period."""
         if period == PerformancePeriod.DAILY:
             return end_date - timedelta(days=1)
@@ -509,9 +478,7 @@ class PortfolioAnalyticsService:
             # Mock portfolio value calculation
             base_value = portfolio.total_value
             daily_return = Decimal(str(0.001))  # 0.1% daily return
-            value = base_value * (1 + daily_return) ** (
-                (current_date - start_date).days
-            )
+            value = base_value * (1 + daily_return) ** ((current_date - start_date).days)
             values.append(value)
             current_date += timedelta(days=1)
 
@@ -614,9 +581,7 @@ class PortfolioAnalyticsService:
         if downside_deviation == 0:
             return Decimal("0")
 
-        return (avg_return - self._risk_free_rate / 252) / Decimal(
-            str(downside_deviation)
-        )
+        return (avg_return - self._risk_free_rate / 252) / Decimal(str(downside_deviation))
 
     def _calculate_max_drawdown(self, values: List[Decimal]) -> Decimal:
         """Calculate maximum drawdown."""
@@ -649,9 +614,7 @@ class PortfolioAnalyticsService:
 
         return sorted_returns[index] * 100
 
-    def _calculate_calmar_ratio(
-        self, annualized_return: Decimal, max_drawdown: Decimal
-    ) -> Decimal:
+    def _calculate_calmar_ratio(self, annualized_return: Decimal, max_drawdown: Decimal) -> Decimal:
         """Calculate Calmar ratio."""
         if max_drawdown == 0:
             return Decimal("0")
@@ -739,9 +702,7 @@ class PortfolioAnalyticsService:
     def _calculate_semi_variance(self, returns: List[Decimal]) -> Decimal:
         """Calculate semi-variance."""
         mean_return = sum(returns) / len(returns) if returns else Decimal("0")
-        negative_deviations = [
-            (r - mean_return) ** 2 for r in returns if r < mean_return
-        ]
+        negative_deviations = [(r - mean_return) ** 2 for r in returns if r < mean_return]
 
         if not negative_deviations:
             return Decimal("0")
@@ -751,9 +712,7 @@ class PortfolioAnalyticsService:
     def _calculate_lower_partial_moment(self, returns: List[Decimal]) -> Decimal:
         """Calculate lower partial moment."""
         target_return = Decimal("0")  # Risk-free rate
-        negative_deviations = [
-            (target_return - r) ** 2 for r in returns if r < target_return
-        ]
+        negative_deviations = [(target_return - r) ** 2 for r in returns if r < target_return]
 
         if not negative_deviations:
             return Decimal("0")
@@ -771,9 +730,7 @@ class PortfolioAnalyticsService:
         if std_dev == 0:
             return Decimal("0")
 
-        skewness = sum(((r - mean_return) / std_dev) ** 3 for r in returns) / len(
-            returns
-        )
+        skewness = sum(((r - mean_return) / std_dev) ** 3 for r in returns) / len(returns)
         return Decimal(str(skewness))
 
     def _calculate_kurtosis(self, returns: List[Decimal]) -> Decimal:
@@ -787,9 +744,7 @@ class PortfolioAnalyticsService:
         if std_dev == 0:
             return Decimal("0")
 
-        kurtosis = sum(((r - mean_return) / std_dev) ** 4 for r in returns) / len(
-            returns
-        )
+        kurtosis = sum(((r - mean_return) / std_dev) ** 4 for r in returns) / len(returns)
         return Decimal(str(kurtosis))
 
     def _calculate_tail_ratio(self, returns: List[Decimal]) -> Decimal:
@@ -867,9 +822,7 @@ class PortfolioAnalyticsService:
 
     def _assess_risk_level(self, risk_metrics: RiskMetrics) -> RiskLevel:
         """Assess overall risk level."""
-        volatility_score = min(
-            risk_metrics.annualized_volatility / 20, Decimal("1")
-        )  # 20% = max
+        volatility_score = min(risk_metrics.annualized_volatility / 20, Decimal("1"))  # 20% = max
         concentration_score = risk_metrics.largest_position_weight / 20  # 20% = max
         correlation_score = risk_metrics.average_correlation
 
@@ -890,9 +843,7 @@ class PortfolioAnalyticsService:
             min(risk_metrics.annualized_volatility, Decimal("50")) / Decimal("50") * 40
         )
         concentration_score = (
-            min(risk_metrics.largest_position_weight, Decimal("50"))
-            / Decimal("50")
-            * 30
+            min(risk_metrics.largest_position_weight, Decimal("50")) / Decimal("50") * 30
         )
         correlation_score = risk_metrics.average_correlation * 30
 
@@ -910,9 +861,9 @@ class PortfolioAnalyticsService:
         )
 
         # Risk component (30%)
-        risk_score = max(
-            Decimal("100") - self._calculate_risk_score(risk), Decimal("0")
-        ) * Decimal("0.3")
+        risk_score = max(Decimal("100") - self._calculate_risk_score(risk), Decimal("0")) * Decimal(
+            "0.3"
+        )
 
         # Diversification component (30%)
         diversification_score = (
@@ -951,20 +902,14 @@ class PortfolioAnalyticsService:
 
         # Performance recommendations
         if performance.annualized_return < Decimal("5"):
-            recommendations.append(
-                "Consider increasing equity exposure for better returns"
-            )
+            recommendations.append("Consider increasing equity exposure for better returns")
 
         if performance.sharpe_ratio < Decimal("0.5"):
-            recommendations.append(
-                "Portfolio risk-adjusted returns are low - consider rebalancing"
-            )
+            recommendations.append("Portfolio risk-adjusted returns are low - consider rebalancing")
 
         # Risk recommendations
         if risk.annualized_volatility > Decimal("20"):
-            recommendations.append(
-                "High volatility detected - consider reducing position sizes"
-            )
+            recommendations.append("High volatility detected - consider reducing position sizes")
 
         if risk.largest_position_weight > Decimal("20"):
             recommendations.append(
@@ -973,9 +918,7 @@ class PortfolioAnalyticsService:
 
         # Diversification recommendations
         if len(portfolio.positions) < 5:
-            recommendations.append(
-                "Low diversification - consider adding more positions"
-            )
+            recommendations.append("Low diversification - consider adding more positions")
 
         return recommendations
 
@@ -994,9 +937,7 @@ class PortfolioAnalyticsService:
 
         # Risk warnings
         if risk.annualized_volatility > Decimal("30"):
-            warnings.append(
-                f"Extremely high volatility: {risk.annualized_volatility:.2f}%"
-            )
+            warnings.append(f"Extremely high volatility: {risk.annualized_volatility:.2f}%")
 
         if risk.largest_position_weight > Decimal("30"):
             warnings.append(
@@ -1028,9 +969,7 @@ class PortfolioAnalyticsService:
             kurtosis=Decimal("3"),
             tail_ratio=Decimal("1"),
             herfindahl_index=self._calculate_herfindahl_index(portfolio),
-            effective_number_of_positions=self._calculate_effective_positions(
-                portfolio
-            ),
+            effective_number_of_positions=self._calculate_effective_positions(portfolio),
             largest_position_weight=self._calculate_largest_position_weight(portfolio),
             average_correlation=Decimal("0.3"),
             diversification_ratio=self._calculate_diversification_ratio(portfolio),
