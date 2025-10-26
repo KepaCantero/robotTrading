@@ -292,8 +292,6 @@ class MeanReversionStrategy(BaseStrategy):
         Returns:
             Señal de compra
         """
-        quantity = Decimal("80")  # Cantidad menor que momentum (más conservador)
-
         return Signal(
             symbol=market_data.symbol,
             signal_type=SignalType.BUY,
@@ -326,8 +324,6 @@ class MeanReversionStrategy(BaseStrategy):
         Returns:
             Señal de venta
         """
-        quantity = Decimal("80")  # Cantidad menor que momentum (más conservador)
-
         return Signal(
             symbol=market_data.symbol,
             signal_type=SignalType.SELL,

@@ -292,8 +292,6 @@ class MomentumStrategy(BaseStrategy):
         Returns:
             Señal de compra
         """
-        quantity = Decimal("100")  # Cantidad fija por simplicidad
-
         return Signal(
             symbol=market_data.symbol,
             signal_type=SignalType.BUY,
@@ -324,8 +322,6 @@ class MomentumStrategy(BaseStrategy):
         Returns:
             Señal de venta
         """
-        quantity = Decimal("100")  # Cantidad fija por simplicidad
-
         return Signal(
             symbol=market_data.symbol,
             signal_type=SignalType.SELL,
