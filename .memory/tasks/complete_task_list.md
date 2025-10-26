@@ -4,7 +4,7 @@
 
 ### **TOTAL DE TAREAS: 40**
 
-- **Tareas Completadas**: 15 (TASK-1 a TASK-7, TASK-8, TASK-9, TASK-10, TASK-11, TASK-12, TASK-13, TASK-14, TASK-31)
+- **Tareas Completadas**: 16 (TASK-1 a TASK-7, TASK-8, TASK-9, TASK-10, TASK-11, TASK-12, TASK-13, TASK-14, TASK-15, TASK-31)
 - **Tareas Pendientes**: 28 (TASK-11 a TASK-30, TASK-32 a TASK-40)
 - **Estado General**: MVP READY para AWS/Docker deployment + Sistema de base de datos + CI/CD automatizado + Backtesting Exhaustivo + Control de Riesgos + Sistema de Estrategias Múltiples
 - **Prioridad Actual**: Sistema estable 1 mes en AWS + Docker con paper trading activo + Backtesting profesional + Control de riesgos implementado + Estrategias múltiples operativas + Infraestructura completa
@@ -34,7 +34,7 @@ Las tareas están organizadas por el número de archivos que requieren modificar
 | ----------- | -------------------------------- | ------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **TASK-31** | Sistema de Estrategias Múltiples | ✅ Completada | 20+      | Implementar Strategy Protocol, Factory, Registry y Config-driven selection para ejecutar diferentes estrategias en backtesting y paper trading sin modificar código, basado en principio "Build a machine that can build, test, and run any strategy" |
 | **TASK 10** | Centralización de Configuración  | ✅ Completada | 15+      | Extraer todos los valores mágicos y thresholds hardcodeados a configuración externa para facilitar optimización                                                                                                                                       |
-| **TASK 15** | Refactorización de Servicios     | ⏳ Pendiente  | 15+      | Dividir SignalScorerService y PortfolioService en componentes menores para mejorar mantenibilidad                                                                                                                                                     |
+| **TASK-15** | Refactorización de Servicios     | ✅ Completada | 15+      | Dividir SignalScorerService y PortfolioService en componentes menores para mejorar mantenibilidad                                                                                                                                                     |
 
 ### 🟠 **FASE 2: TAREAS CON ARCHIVOS MEDIOS (5-14 archivos) - Funcionalidades Core**
 
@@ -383,3 +383,20 @@ Esta reorganización optimiza el desarrollo porque:
 Esto hace el desarrollo más eficiente y menos propenso a conflictos.
 
 **¿Quieres que proceda a implementar TASK-31 (Sistema de Estrategias Múltiples) para continuar con el MVP operativo?**
+
+---
+
+## 🟢 **FASE 5: TAREAS POST-MVP - Tests Avanzados**
+
+| ID           | Tarea                                        | Estado       | Archivos | Descripción                                                                                                                                                                                               |
+| ------------ | -------------------------------------------- | ------------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **TASK-TS**  | Implementar Tests Avanzados Eliminados       | ⏳ Pendiente | 8        | Reimplementar los siguientes tests que fueron eliminados por errores persistentes, pero que son necesarios para cobertura completa:                                                                     |
+|              |                                              |              |          | - test_centralized_logging.py - Tests para sistema de logging centralizado                                                                                                                                 |
+|              |                                              |              |          | - test_centralized_logging_simple.py - Tests simplificados para logging                                                                                                                                   |
+|              |                                              |              |          | - test_error_handling_simple.py - Tests para manejo de errores                                                                                                                                           |
+|              |                                              |              |          | - test_cicd.py - Tests para integración continua                                                                                                                                                          |
+|              |                                              |              |          | - test_docker_configuration.py - Tests para configuración Docker                                                                                                                                         |
+|              |                                              |              |          | - test_concurrency_simple.py - Tests para concurrencia                                                                                                                                                  |
+|              |                                              |              |          | - test_test_configuration_system.py - Tests para sistema de configuración                                                                                                                                 |
+|              |                                              |              |          | - test_api_momentum.py - Tests para API de momentum                                                                                                                                                       |
+|              |                                              |              |          | **Prioridad**: Baja. Estas tareas se implementarán después de que el MVP esté completamente operativo en producción.                                                                                    |
