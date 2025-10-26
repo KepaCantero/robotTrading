@@ -77,7 +77,7 @@ class VolatilityCalculator:
         # Calcular volatilidad móvil
         window_size = min(10, len(returns) // 2)
         recent_vol = np.std(returns[-window_size:])
-        previous_vol = np.std(returns[-window_size * 2 : -window_size])
+        previous_vol = np.std(returns[-window_size * 2:-window_size])
 
         if recent_vol > previous_vol * 1.1:
             return "increasing"
