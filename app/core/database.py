@@ -6,15 +6,15 @@ with asyncpg driver, including session management and connection pooling.
 """
 
 import logging
-from typing import AsyncGenerator, Optional
 from contextlib import asynccontextmanager
+from typing import AsyncGenerator, Optional
 
 from sqlalchemy import MetaData
 from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
     AsyncSession,
     async_sessionmaker,
     create_async_engine,
-    AsyncEngine,
 )
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.pool import NullPool, QueuePool
@@ -81,9 +81,9 @@ def get_database_engine() -> AsyncEngine:
             )
 
             url_part = (
-                settings.database_url.split('@')[1]
-                if '@' in settings.database_url
-                else 'localhost'
+                settings.database_url.split("@")[1]
+                if "@" in settings.database_url
+                else "localhost"
             )
             logger.info(f"Database engine created successfully. URL: {url_part}")
 

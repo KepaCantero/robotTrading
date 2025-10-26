@@ -6,24 +6,25 @@ API endpoints para gestionar el manejo unificado de errores del trading.
 """
 
 import logging
-from typing import Dict, Any, Optional, List
 from datetime import datetime
-from fastapi import APIRouter, HTTPException, status, Depends
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
-from app.services.trading_error_handler import (
-    trading_error_handler,
-    ErrorContext,
-    ErrorAction,
-    handle_trading_error,
-    execute_with_retry,
-    get_error_statistics,
-    reset_circuit_breaker
-)
 from app.exceptions.trading_exceptions import (
     AlgoTradingError,
+    ErrorCategory,
     ErrorSeverity,
-    ErrorCategory
+)
+from app.services.trading_error_handler import (
+    ErrorAction,
+    ErrorContext,
+    execute_with_retry,
+    get_error_statistics,
+    handle_trading_error,
+    reset_circuit_breaker,
+    trading_error_handler,
 )
 
 router = APIRouter()
@@ -32,15 +33,19 @@ logger = logging.getLogger(__name__)
 
 class ErrorHandlingRequest(BaseModel):
     """Request model for error handling."""
+
     error_message: str = Field(..., description="Error message")
     error_type: str = Field(..., description="Type of error")
     context: ErrorContext = Field(..., description="Context where error occurred")
     operation_id: Optional[str] = Field(None, description="Operation identifier")
-    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Additional metadata")
+    metadata: Optional[Dict[str, Any]] = Field(
+        default_factory=dict, description="Additional metadata"
+    )
 
 
 class ErrorHandlingResponse(BaseModel):
     """Response model for error handling."""
+
     operation_id: str = Field(..., description="Operation identifier")
     context: str = Field(..., description="Error context")
     error: Dict[str, Any] = Field(..., description="Error details")
@@ -50,6 +55,7 @@ class ErrorHandlingResponse(BaseModel):
 
 class CircuitBreakerStatus(BaseModel):
     """Circuit breaker status model."""
+
     context: str = Field(..., description="Context name")
     is_open: bool = Field(..., description="Whether circuit breaker is open")
     error_count: int = Field(..., description="Current error count")
@@ -58,8 +64,13 @@ class CircuitBreakerStatus(BaseModel):
 
 class ErrorStatistics(BaseModel):
     """Error statistics model."""
-    error_counts: Dict[str, int] = Field(..., description="Error counts by context and category")
-    circuit_breakers: Dict[str, bool] = Field(..., description="Circuit breaker statuses")
+
+    error_counts: Dict[str, int] = Field(
+        ..., description="Error counts by context and category"
+    )
+    circuit_breakers: Dict[str, bool] = Field(
+        ..., description="Circuit breaker statuses"
+    )
     last_error_times: Dict[str, str] = Field(..., description="Last error times")
     retry_counts: Dict[str, int] = Field(..., description="Retry counts")
     timestamp: str = Field(..., description="Statistics timestamp")
@@ -67,14 +78,19 @@ class ErrorStatistics(BaseModel):
 
 class CircuitBreakerResetRequest(BaseModel):
     """Request model for circuit breaker reset."""
+
     context: ErrorContext = Field(..., description="Context to reset")
 
 
-@router.post("/handle-error", response_model=ErrorHandlingResponse, status_code=status.HTTP_200_OK)
+@router.post(
+    "/handle-error",
+    response_model=ErrorHandlingResponse,
+    status_code=status.HTTP_200_OK,
+)
 async def handle_error_endpoint(request: ErrorHandlingRequest):
     """
     Handle a trading error with unified processing.
-    
+
     This endpoint processes errors according to configured rules and takes
     appropriate actions (retry, circuit breaker, alerts, etc.).
     """
@@ -85,52 +101,58 @@ async def handle_error_endpoint(request: ErrorHandlingRequest):
             def __init__(self, message: str):
                 self.message = message
                 super().__init__(message)
-        
+
         error = MockError(request.error_message)
-        
+
         # Handle the error
         result = await handle_trading_error(
             error=error,
             context=request.context,
             operation_id=request.operation_id,
-            metadata=request.metadata
+            metadata=request.metadata,
         )
-        
+
         return ErrorHandlingResponse(**result)
-        
+
     except Exception as e:
         logger.error(f"Error in handle_error_endpoint: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to handle error: {str(e)}"
+            detail=f"Failed to handle error: {str(e)}",
         )
 
 
-@router.get("/statistics", response_model=ErrorStatistics, status_code=status.HTTP_200_OK)
+@router.get(
+    "/statistics", response_model=ErrorStatistics, status_code=status.HTTP_200_OK
+)
 async def get_error_statistics_endpoint():
     """
     Get current error statistics and monitoring data.
-    
+
     Returns comprehensive statistics about error occurrences,
     circuit breaker statuses, and retry counts.
     """
     try:
         stats = get_error_statistics()
         return ErrorStatistics(**stats)
-        
+
     except Exception as e:
         logger.error(f"Error in get_error_statistics_endpoint: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get error statistics: {str(e)}"
+            detail=f"Failed to get error statistics: {str(e)}",
         )
 
 
-@router.get("/circuit-breakers", response_model=List[CircuitBreakerStatus], status_code=status.HTTP_200_OK)
+@router.get(
+    "/circuit-breakers",
+    response_model=List[CircuitBreakerStatus],
+    status_code=status.HTTP_200_OK,
+)
 async def get_circuit_breaker_status_endpoint():
     """
     Get status of all circuit breakers.
-    
+
     Returns the current status of circuit breakers for all contexts.
     """
     try:
@@ -138,33 +160,35 @@ async def get_circuit_breaker_status_endpoint():
         circuit_breakers = stats["circuit_breakers"]
         error_counts = stats["error_counts"]
         last_error_times = stats["last_error_times"]
-        
+
         statuses = []
         for context_name, is_open in circuit_breakers.items():
             # Extract context from key (format: "context_name_circuit_breaker")
             context = context_name.replace("_circuit_breaker", "")
-            
+
             # Get error count for this context
             error_key = f"{context}_{ErrorCategory.SYSTEM.value}"
             error_count = error_counts.get(error_key, 0)
-            
+
             # Get last error time
             last_error_time = last_error_times.get(error_key)
-            
-            statuses.append(CircuitBreakerStatus(
-                context=context,
-                is_open=is_open,
-                error_count=error_count,
-                last_error_time=last_error_time
-            ))
-        
+
+            statuses.append(
+                CircuitBreakerStatus(
+                    context=context,
+                    is_open=is_open,
+                    error_count=error_count,
+                    last_error_time=last_error_time,
+                )
+            )
+
         return statuses
-        
+
     except Exception as e:
         logger.error(f"Error in get_circuit_breaker_status_endpoint: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get circuit breaker status: {str(e)}"
+            detail=f"Failed to get circuit breaker status: {str(e)}",
         )
 
 
@@ -172,23 +196,23 @@ async def get_circuit_breaker_status_endpoint():
 async def reset_circuit_breaker_endpoint(request: CircuitBreakerResetRequest):
     """
     Reset a circuit breaker for a specific context.
-    
+
     This will close the circuit breaker and reset error counts for the context.
     """
     try:
         reset_circuit_breaker(request.context)
-        
+
         return {
             "message": f"Circuit breaker reset for {request.context.value}",
             "context": request.context.value,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
-        
+
     except Exception as e:
         logger.error(f"Error in reset_circuit_breaker_endpoint: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to reset circuit breaker: {str(e)}"
+            detail=f"Failed to reset circuit breaker: {str(e)}",
         )
 
 
@@ -196,28 +220,25 @@ async def reset_circuit_breaker_endpoint(request: CircuitBreakerResetRequest):
 async def get_error_contexts_endpoint():
     """
     Get list of available error contexts.
-    
+
     Returns all available error contexts that can be used for error handling.
     """
     try:
         contexts = [
             {
                 "name": context.value,
-                "description": f"Error context for {context.value.replace('_', ' ')}"
+                "description": f"Error context for {context.value.replace('_', ' ')}",
             }
             for context in ErrorContext
         ]
-        
-        return {
-            "contexts": contexts,
-            "count": len(contexts)
-        }
-        
+
+        return {"contexts": contexts, "count": len(contexts)}
+
     except Exception as e:
         logger.error(f"Error in get_error_contexts_endpoint: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get error contexts: {str(e)}"
+            detail=f"Failed to get error contexts: {str(e)}",
         )
 
 
@@ -225,28 +246,25 @@ async def get_error_contexts_endpoint():
 async def get_error_actions_endpoint():
     """
     Get list of available error actions.
-    
+
     Returns all available error actions that can be taken when errors occur.
     """
     try:
         actions = [
             {
                 "name": action.value,
-                "description": f"Error action: {action.value.replace('_', ' ')}"
+                "description": f"Error action: {action.value.replace('_', ' ')}",
             }
             for action in ErrorAction
         ]
-        
-        return {
-            "actions": actions,
-            "count": len(actions)
-        }
-        
+
+        return {"actions": actions, "count": len(actions)}
+
     except Exception as e:
         logger.error(f"Error in get_error_actions_endpoint: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get error actions: {str(e)}"
+            detail=f"Failed to get error actions: {str(e)}",
         )
 
 
@@ -254,23 +272,23 @@ async def get_error_actions_endpoint():
 async def get_error_rules_endpoint(context: ErrorContext):
     """
     Get error handling rules for a specific context.
-    
+
     Returns the configured error handling rules for the specified context.
     """
     try:
         rules = trading_error_handler.error_rules.get(context.value, {})
-        
+
         return {
             "context": context.value,
             "rules": rules,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
-        
+
     except Exception as e:
         logger.error(f"Error in get_error_rules_endpoint: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get error rules: {str(e)}"
+            detail=f"Failed to get error rules: {str(e)}",
         )
 
 
@@ -278,18 +296,17 @@ async def get_error_rules_endpoint(context: ErrorContext):
 async def health_check_endpoint():
     """
     Health check for the error handling system.
-    
+
     Returns the health status of the error handling system.
     """
     try:
         stats = get_error_statistics()
-        
+
         # Check if any circuit breakers are open
         open_circuit_breakers = [
-            context for context, is_open in stats["circuit_breakers"].items()
-            if is_open
+            context for context, is_open in stats["circuit_breakers"].items() if is_open
         ]
-        
+
         # Determine health status
         if open_circuit_breakers:
             health_status = "degraded"
@@ -297,18 +314,18 @@ async def health_check_endpoint():
         else:
             health_status = "healthy"
             message = "All systems operational"
-        
+
         return {
             "status": health_status,
             "message": message,
             "open_circuit_breakers": open_circuit_breakers,
             "total_errors": sum(stats["error_counts"].values()),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
-        
+
     except Exception as e:
         logger.error(f"Error in health_check_endpoint: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Health check failed: {str(e)}"
+            detail=f"Health check failed: {str(e)}",
         )

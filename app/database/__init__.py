@@ -3,14 +3,15 @@ Database Configuration and Setup
 TASK-6: Configuración de base de datos
 """
 
-import os
-from typing import Optional, AsyncGenerator
-from sqlalchemy import create_engine, MetaData, event
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.pool import QueuePool
 import logging
+import os
+from typing import AsyncGenerator, Optional
+
+from sqlalchemy import MetaData, create_engine, event
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import QueuePool
 
 from app.core.environment_config import get_config
 from app.exceptions import DatabaseError, raise_database_error
@@ -60,7 +61,7 @@ class DatabaseManager:
                 bind=self.sync_engine,
                 autocommit=False,
                 autoflush=False,
-                expire_on_commit=False
+                expire_on_commit=False,
             )
 
             # Add connection event listeners
@@ -71,7 +72,7 @@ class DatabaseManager:
         except Exception as e:
             raise_database_error(
                 f"Failed to initialize sync database engine: {str(e)}",
-                "engine_initialization"
+                "engine_initialization",
             )
 
     def initialize_async_engine(self) -> None:
@@ -100,7 +101,7 @@ class DatabaseManager:
                 class_=AsyncSession,
                 autocommit=False,
                 autoflush=False,
-                expire_on_commit=False
+                expire_on_commit=False,
             )
 
             logger.info("Asynchronous database engine initialized successfully")
@@ -108,7 +109,7 @@ class DatabaseManager:
         except Exception as e:
             raise_database_error(
                 f"Failed to initialize async database engine: {str(e)}",
-                "async_engine_initialization"
+                "async_engine_initialization",
             )
 
     def _convert_to_async_url(self, sync_url: str) -> str:
@@ -116,13 +117,15 @@ class DatabaseManager:
         if sync_url.startswith("postgresql://"):
             return sync_url.replace("postgresql://", "postgresql+asyncpg://", 1)
         elif sync_url.startswith("postgresql+psycopg2://"):
-            return sync_url.replace("postgresql+psycopg2://", "postgresql+asyncpg://", 1)
+            return sync_url.replace(
+                "postgresql+psycopg2://", "postgresql+asyncpg://", 1
+            )
         else:
             return sync_url
 
     def _add_connection_listeners(self) -> None:
         """Add database connection event listeners."""
-        
+
         @event.listens_for(self.sync_engine, "connect")
         def set_sqlite_pragma(dbapi_connection, connection_record):
             """Set database connection parameters."""
@@ -148,14 +151,13 @@ class DatabaseManager:
         try:
             if not self.sync_engine:
                 self.initialize_sync_engine()
-            
+
             Base.metadata.create_all(bind=self.sync_engine)
             logger.info("Database tables created successfully")
 
         except Exception as e:
             raise_database_error(
-                f"Failed to create database tables: {str(e)}",
-                "create_tables"
+                f"Failed to create database tables: {str(e)}", "create_tables"
             )
 
     def drop_tables(self) -> None:
@@ -163,28 +165,27 @@ class DatabaseManager:
         try:
             if not self.sync_engine:
                 self.initialize_sync_engine()
-            
+
             Base.metadata.drop_all(bind=self.sync_engine)
             logger.info("Database tables dropped successfully")
 
         except Exception as e:
             raise_database_error(
-                f"Failed to drop database tables: {str(e)}",
-                "drop_tables"
+                f"Failed to drop database tables: {str(e)}", "drop_tables"
             )
 
     def get_sync_session(self) -> Session:
         """Get synchronous database session."""
         if not self.session_factory:
             self.initialize_sync_engine()
-        
+
         return self.session_factory()
 
     def get_async_session(self) -> AsyncSession:
         """Get asynchronous database session."""
         if not self.async_session_factory:
             self.initialize_async_engine()
-        
+
         return self.async_session_factory()
 
     def close_connections(self) -> None:
@@ -193,11 +194,12 @@ class DatabaseManager:
             if self.sync_engine:
                 self.sync_engine.dispose()
                 logger.info("Synchronous database connections closed")
-            
+
             if self.async_engine:
-                # Note: async engine disposal should be done with await in async context
+                # Note: async engine disposal should be done with await in
+                # async context
                 logger.info("Asynchronous database engine marked for disposal")
-                
+
         except Exception as e:
             logger.error(f"Error closing database connections: {e}")
 
@@ -230,16 +232,16 @@ def initialize_database() -> None:
     """Initialize database with all engines and create tables."""
     try:
         logger.info("Initializing database...")
-        
+
         # Initialize engines
         db_manager.initialize_sync_engine()
         db_manager.initialize_async_engine()
-        
+
         # Create tables
         db_manager.create_tables()
-        
+
         logger.info("Database initialization completed successfully")
-        
+
     except Exception as e:
         logger.error(f"Database initialization failed: {e}")
         raise
@@ -249,12 +251,12 @@ def initialize_database_async() -> None:
     """Initialize database for async operations."""
     try:
         logger.info("Initializing async database...")
-        
+
         # Initialize async engine
         db_manager.initialize_async_engine()
-        
+
         logger.info("Async database initialization completed successfully")
-        
+
     except Exception as e:
         logger.error(f"Async database initialization failed: {e}")
         raise
@@ -308,24 +310,24 @@ def get_database_config() -> dict:
         "pool_size": config.db_pool_size,
         "max_overflow": config.db_max_overflow,
         "pool_timeout": config.db_pool_timeout,
-        "ssl_mode": config.db_ssl_mode
+        "ssl_mode": config.db_ssl_mode,
     }
 
 
 # Context managers for database sessions
 class DatabaseSession:
     """Context manager for database sessions."""
-    
+
     def __init__(self, async_mode: bool = False):
         self.async_mode = async_mode
         self.session = None
-    
+
     def __enter__(self):
         if self.async_mode:
             raise RuntimeError("Use async context manager for async sessions")
         self.session = db_manager.get_sync_session()
         return self.session
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.session:
             if exc_type:
@@ -333,13 +335,13 @@ class DatabaseSession:
             else:
                 self.session.commit()
             self.session.close()
-    
+
     async def __aenter__(self):
         if not self.async_mode:
             raise RuntimeError("Use sync context manager for sync sessions")
         self.session = db_manager.get_async_session()
         return self.session
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if self.session:
             if exc_type:
@@ -352,15 +354,19 @@ class DatabaseSession:
 # Database transaction decorators
 def database_transaction(func):
     """Decorator for database transactions."""
+
     def wrapper(*args, **kwargs):
         with DatabaseSession() as session:
             return func(session, *args, **kwargs)
+
     return wrapper
 
 
 def async_database_transaction(func):
     """Decorator for async database transactions."""
+
     async def wrapper(*args, **kwargs):
         async with DatabaseSession(async_mode=True) as session:
             return await func(session, *args, **kwargs)
+
     return wrapper

@@ -6,6 +6,7 @@ TASK-3: Configuración de logging centralizado
 import time
 import uuid
 from typing import Callable
+
 from fastapi import Request, Response
 
 try:
@@ -16,10 +17,10 @@ except ImportError:
 from starlette.middleware.base import RequestResponseEndpoint
 
 from app.services.centralized_logging import (
-    centralized_logger,
-    LogService,
     LogLevel,
-    log_performance
+    LogService,
+    centralized_logger,
+    log_performance,
 )
 
 
@@ -32,10 +33,10 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         """Log HTTP requests and responses."""
         # Generate request ID
         request_id = str(uuid.uuid4())
-        
+
         # Start timing
         start_time = time.time()
-        
+
         # Log request
         centralized_logger.info(
             LogService.FASTAPI,
@@ -49,16 +50,16 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                 "user_agent": request.headers.get("user-agent"),
                 "content_type": request.headers.get("content-type"),
                 "content_length": request.headers.get("content-length"),
-            }
+            },
         )
-        
+
         # Process request
         try:
             response = await call_next(request)
-            
+
             # Calculate duration
             duration = (time.time() - start_time) * 1000
-            
+
             # Log response
             centralized_logger.info(
                 LogService.FASTAPI,
@@ -70,18 +71,18 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                     "status_code": response.status_code,
                     "duration_ms": duration,
                     "response_size": response.headers.get("content-length"),
-                }
+                },
             )
-            
+
             # Add request ID to response headers
             response.headers["X-Request-ID"] = request_id
-            
+
             return response
-            
+
         except Exception as e:
             # Calculate duration
             duration = (time.time() - start_time) * 1000
-            
+
             # Log error
             centralized_logger.error(
                 LogService.FASTAPI,
@@ -93,9 +94,9 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                     "duration_ms": duration,
                     "error_type": type(e).__name__,
                 },
-                error_message=str(e)
+                error_message=str(e),
             )
-            
+
             raise
 
 
@@ -117,12 +118,12 @@ class TradingLoggingMiddleware(BaseHTTPMiddleware):
                     "path": request.url.path,
                     "query_params": str(request.query_params),
                     "client_ip": request.client.host if request.client else None,
-                }
+                },
             )
-        
+
         # Process request
         response = await call_next(request)
-        
+
         # Log trading response
         if request.url.path.startswith("/api/trading/"):
             centralized_logger.info(
@@ -132,9 +133,9 @@ class TradingLoggingMiddleware(BaseHTTPMiddleware):
                     "method": request.method,
                     "path": request.url.path,
                     "status_code": response.status_code,
-                }
+                },
             )
-        
+
         return response
 
 
@@ -156,12 +157,12 @@ class PortfolioLoggingMiddleware(BaseHTTPMiddleware):
                     "path": request.url.path,
                     "query_params": str(request.query_params),
                     "client_ip": request.client.host if request.client else None,
-                }
+                },
             )
-        
+
         # Process request
         response = await call_next(request)
-        
+
         # Log portfolio response
         if request.url.path.startswith("/api/portfolio/"):
             centralized_logger.info(
@@ -171,9 +172,9 @@ class PortfolioLoggingMiddleware(BaseHTTPMiddleware):
                     "method": request.method,
                     "path": request.url.path,
                     "status_code": response.status_code,
-                }
+                },
             )
-        
+
         return response
 
 
@@ -195,12 +196,12 @@ class MarketDataLoggingMiddleware(BaseHTTPMiddleware):
                     "path": request.url.path,
                     "query_params": str(request.query_params),
                     "client_ip": request.client.host if request.client else None,
-                }
+                },
             )
-        
+
         # Process request
         response = await call_next(request)
-        
+
         # Log market data response
         if request.url.path.startswith("/api/market-data/"):
             centralized_logger.info(
@@ -210,9 +211,9 @@ class MarketDataLoggingMiddleware(BaseHTTPMiddleware):
                     "method": request.method,
                     "path": request.url.path,
                     "status_code": response.status_code,
-                }
+                },
             )
-        
+
         return response
 
 

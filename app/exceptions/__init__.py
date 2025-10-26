@@ -7,50 +7,58 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.exceptions.error_handler import (
-    algotrading_exception_handler,
-    validation_exception_handler,
-    http_exception_handler,
-    starlette_http_exception_handler,
-    generic_exception_handler
-)
 # Import from core exceptions to avoid circular dependencies
 from app.core.exceptions import (
     AlgoTradingError,
-    ConfigurationError,
-    ValidationError,
+    APIError,
+    BacktestError,
     BusinessLogicError,
+    ConfigurationError,
+    DatabaseError,
     MarketDataError,
-    TradingError,
     PortfolioError,
     SignalError,
-    BacktestError,
-    DatabaseError,
-    APIError,
-    raise_configuration_error,
-    raise_validation_error,
+    TradingError,
+    ValidationError,
     raise_business_logic_error,
+    raise_configuration_error,
     raise_market_data_error,
-    raise_trading_error
+    raise_trading_error,
+    raise_validation_error,
+)
+from app.exceptions.error_handler import (
+    ErrorHandler,
+    algotrading_exception_handler,
+    create_error_response,
+    error_handler,
+    generic_exception_handler,
+    http_exception_handler,
+    raise_business_logic_error,
+    raise_configuration_error,
+    raise_database_error,
+    raise_external_api_error,
+    raise_validation_error,
+    starlette_http_exception_handler,
+    validation_exception_handler,
 )
 from app.middleware.error_middleware import (
     ErrorHandlingMiddleware,
+    HealthCheckMiddleware,
+    RateLimitingMiddleware,
     RequestContextMiddleware,
     SecurityHeadersMiddleware,
-    RateLimitingMiddleware,
-    HealthCheckMiddleware
 )
 
 
 def setup_error_handling(app: FastAPI) -> None:
     """Setup error handling for FastAPI application."""
-    
+
     # Add exception handlers
     app.add_exception_handler(AlgoTradingError, algotrading_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
     app.add_exception_handler(StarletteHTTPException, starlette_http_exception_handler)
     app.add_exception_handler(Exception, generic_exception_handler)
-    
+
     # Add middleware (order matters!)
     app.add_middleware(HealthCheckMiddleware)
     app.add_middleware(SecurityHeadersMiddleware, enable_cors=True)
@@ -61,49 +69,20 @@ def setup_error_handling(app: FastAPI) -> None:
 
 def create_error_handling_app() -> FastAPI:
     """Create FastAPI app with error handling configured."""
-    
+
     app = FastAPI(
         title="AlgoTrading API",
         description="Algorithmic Trading API with comprehensive error handling",
-        version="1.0.0"
+        version="1.0.0",
     )
-    
+
     # Setup error handling
     setup_error_handling(app)
-    
+
     return app
 
 
 # Export main classes and functions
-from app.core.exceptions import (
-    AlgoTradingError,
-    ConfigurationError,
-    ValidationError,
-    BusinessLogicError,
-    MarketDataError,
-    TradingError,
-    PortfolioError,
-    SignalError,
-    BacktestError,
-    DatabaseError,
-    APIError,
-    raise_configuration_error,
-    raise_validation_error,
-    raise_business_logic_error,
-    raise_market_data_error,
-    raise_trading_error
-)
-
-from app.exceptions.error_handler import (
-    ErrorHandler,
-    error_handler,
-    create_error_response,
-    raise_validation_error,
-    raise_business_logic_error,
-    raise_external_api_error,
-    raise_database_error,
-    raise_configuration_error
-)
 
 __all__ = [
     # Main classes
@@ -118,22 +97,18 @@ __all__ = [
     "BacktestError",
     "DatabaseError",
     "APIError",
-    
     # Helper functions
     "raise_configuration_error",
     "raise_validation_error",
     "raise_business_logic_error",
     "raise_market_data_error",
     "raise_trading_error",
-    
     # Handler
     "ErrorHandler",
     "error_handler",
-    
     # Functions
     "create_error_response",
-    
     # FastAPI integration
     "setup_error_handling",
-    "create_error_handling_app"
+    "create_error_handling_app",
 ]

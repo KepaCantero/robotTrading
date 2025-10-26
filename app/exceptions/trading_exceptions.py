@@ -3,12 +3,13 @@ Custom Exceptions for AlgoTrading
 TASK-4: Sistema de manejo de errores unificado
 """
 
-from typing import Optional, Dict, Any
 from enum import Enum
+from typing import Any, Dict, Optional
 
 
 class ErrorSeverity(Enum):
     """Severity levels for errors."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -17,6 +18,7 @@ class ErrorSeverity(Enum):
 
 class ErrorCategory(Enum):
     """Categories of errors."""
+
     VALIDATION = "validation"
     BUSINESS_LOGIC = "business_logic"
     EXTERNAL_API = "external_api"
@@ -38,7 +40,7 @@ class AlgoTradingError(Exception):
         category: ErrorCategory,
         severity: ErrorSeverity = ErrorSeverity.MEDIUM,
         details: Optional[Dict[str, Any]] = None,
-        original_error: Optional[Exception] = None
+        original_error: Optional[Exception] = None,
     ):
         self.message = message
         self.error_code = error_code
@@ -56,7 +58,7 @@ class AlgoTradingError(Exception):
             "category": self.category.value,
             "severity": self.severity.value,
             "details": self.details,
-            "original_error": str(self.original_error) if self.original_error else None
+            "original_error": str(self.original_error) if self.original_error else None,
         }
 
 
@@ -68,9 +70,11 @@ class ValidationError(AlgoTradingError):
         message: str,
         field: Optional[str] = None,
         value: Optional[Any] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
-        error_code = f"VALIDATION_ERROR_{field.upper()}" if field else "VALIDATION_ERROR"
+        error_code = (
+            f"VALIDATION_ERROR_{field.upper()}" if field else "VALIDATION_ERROR"
+        )
         super().__init__(
             message=message,
             error_code=error_code,
@@ -79,8 +83,8 @@ class ValidationError(AlgoTradingError):
             details={
                 "field": field,
                 "value": str(value) if value is not None else None,
-                **(details or {})
-            }
+                **(details or {}),
+            },
         )
 
 
@@ -91,18 +95,17 @@ class BusinessLogicError(AlgoTradingError):
         self,
         message: str,
         operation: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
-        error_code = f"BUSINESS_ERROR_{operation.upper()}" if operation else "BUSINESS_ERROR"
+        error_code = (
+            f"BUSINESS_ERROR_{operation.upper()}" if operation else "BUSINESS_ERROR"
+        )
         super().__init__(
             message=message,
             error_code=error_code,
             category=ErrorCategory.BUSINESS_LOGIC,
             severity=ErrorSeverity.MEDIUM,
-            details={
-                "operation": operation,
-                **(details or {})
-            }
+            details={"operation": operation, **(details or {})},
         )
 
 
@@ -114,7 +117,7 @@ class ExternalAPIError(AlgoTradingError):
         message: str,
         api_name: str,
         status_code: Optional[int] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         error_code = f"API_ERROR_{api_name.upper()}"
         super().__init__(
@@ -125,8 +128,8 @@ class ExternalAPIError(AlgoTradingError):
             details={
                 "api_name": api_name,
                 "status_code": status_code,
-                **(details or {})
-            }
+                **(details or {}),
+            },
         )
 
 
@@ -138,7 +141,7 @@ class DatabaseError(AlgoTradingError):
         message: str,
         operation: Optional[str] = None,
         table: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         error_code = f"DB_ERROR_{operation.upper()}" if operation else "DB_ERROR"
         super().__init__(
@@ -146,11 +149,7 @@ class DatabaseError(AlgoTradingError):
             error_code=error_code,
             category=ErrorCategory.DATABASE,
             severity=ErrorSeverity.HIGH,
-            details={
-                "operation": operation,
-                "table": table,
-                **(details or {})
-            }
+            details={"operation": operation, "table": table, **(details or {})},
         )
 
 
@@ -162,18 +161,14 @@ class NetworkError(AlgoTradingError):
         message: str,
         endpoint: Optional[str] = None,
         timeout: Optional[float] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         super().__init__(
             message=message,
             error_code="NETWORK_ERROR",
             category=ErrorCategory.NETWORK,
             severity=ErrorSeverity.HIGH,
-            details={
-                "endpoint": endpoint,
-                "timeout": timeout,
-                **(details or {})
-            }
+            details={"endpoint": endpoint, "timeout": timeout, **(details or {})},
         )
 
 
@@ -184,18 +179,17 @@ class ConfigurationError(AlgoTradingError):
         self,
         message: str,
         config_key: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
-        error_code = f"CONFIG_ERROR_{config_key.upper()}" if config_key else "CONFIG_ERROR"
+        error_code = (
+            f"CONFIG_ERROR_{config_key.upper()}" if config_key else "CONFIG_ERROR"
+        )
         super().__init__(
             message=message,
             error_code=error_code,
             category=ErrorCategory.CONFIGURATION,
             severity=ErrorSeverity.CRITICAL,
-            details={
-                "config_key": config_key,
-                **(details or {})
-            }
+            details={"config_key": config_key, **(details or {})},
         )
 
 
@@ -206,18 +200,19 @@ class SecurityError(AlgoTradingError):
         self,
         message: str,
         violation_type: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
-        error_code = f"SECURITY_ERROR_{violation_type.upper()}" if violation_type else "SECURITY_ERROR"
+        error_code = (
+            f"SECURITY_ERROR_{violation_type.upper()}"
+            if violation_type
+            else "SECURITY_ERROR"
+        )
         super().__init__(
             message=message,
             error_code=error_code,
             category=ErrorCategory.SECURITY,
             severity=ErrorSeverity.CRITICAL,
-            details={
-                "violation_type": violation_type,
-                **(details or {})
-            }
+            details={"violation_type": violation_type, **(details or {})},
         )
 
 
@@ -230,7 +225,7 @@ class PerformanceError(AlgoTradingError):
         operation: Optional[str] = None,
         duration: Optional[float] = None,
         threshold: Optional[float] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         error_code = f"PERF_ERROR_{operation.upper()}" if operation else "PERF_ERROR"
         super().__init__(
@@ -242,8 +237,8 @@ class PerformanceError(AlgoTradingError):
                 "operation": operation,
                 "duration": duration,
                 "threshold": threshold,
-                **(details or {})
-            }
+                **(details or {}),
+            },
         )
 
 
@@ -254,18 +249,17 @@ class SystemError(AlgoTradingError):
         self,
         message: str,
         component: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
-        error_code = f"SYSTEM_ERROR_{component.upper()}" if component else "SYSTEM_ERROR"
+        error_code = (
+            f"SYSTEM_ERROR_{component.upper()}" if component else "SYSTEM_ERROR"
+        )
         super().__init__(
             message=message,
             error_code=error_code,
             category=ErrorCategory.SYSTEM,
             severity=ErrorSeverity.CRITICAL,
-            details={
-                "component": component,
-                **(details or {})
-            }
+            details={"component": component, **(details or {})},
         )
 
 
@@ -278,15 +272,12 @@ class TradingError(BusinessLogicError):
         message: str,
         symbol: Optional[str] = None,
         operation: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         super().__init__(
             message=message,
             operation=operation,
-            details={
-                "symbol": symbol,
-                **(details or {})
-            }
+            details={"symbol": symbol, **(details or {})},
         )
 
 
@@ -298,7 +289,7 @@ class SignalError(BusinessLogicError):
         message: str,
         signal_type: Optional[str] = None,
         strategy: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         super().__init__(
             message=message,
@@ -306,8 +297,8 @@ class SignalError(BusinessLogicError):
             details={
                 "signal_type": signal_type,
                 "strategy": strategy,
-                **(details or {})
-            }
+                **(details or {}),
+            },
         )
 
 
@@ -319,15 +310,12 @@ class PortfolioError(BusinessLogicError):
         message: str,
         operation: Optional[str] = None,
         portfolio_id: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         super().__init__(
             message=message,
             operation=operation,
-            details={
-                "portfolio_id": portfolio_id,
-                **(details or {})
-            }
+            details={"portfolio_id": portfolio_id, **(details or {})},
         )
 
 
@@ -340,7 +328,7 @@ class RiskManagementError(BusinessLogicError):
         risk_type: Optional[str] = None,
         limit: Optional[float] = None,
         current_value: Optional[float] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         super().__init__(
             message=message,
@@ -349,8 +337,8 @@ class RiskManagementError(BusinessLogicError):
                 "risk_type": risk_type,
                 "limit": limit,
                 "current_value": current_value,
-                **(details or {})
-            }
+                **(details or {}),
+            },
         )
 
 
@@ -362,16 +350,12 @@ class MarketDataError(ExternalAPIError):
         message: str,
         symbol: Optional[str] = None,
         data_type: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         super().__init__(
             message=message,
             api_name="market_data",
-            details={
-                "symbol": symbol,
-                "data_type": data_type,
-                **(details or {})
-            }
+            details={"symbol": symbol, "data_type": data_type, **(details or {})},
         )
 
 
@@ -384,7 +368,7 @@ class BrokerError(ExternalAPIError):
         broker: Optional[str] = None,
         operation: Optional[str] = None,
         order_id: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         super().__init__(
             message=message,
@@ -393,6 +377,6 @@ class BrokerError(ExternalAPIError):
                 "broker": broker,
                 "operation": operation,
                 "order_id": order_id,
-                **(details or {})
-            }
+                **(details or {}),
+            },
         )

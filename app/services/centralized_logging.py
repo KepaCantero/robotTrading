@@ -3,23 +3,24 @@ Centralized Logging Service for AlgoTrading
 TASK-3: Configuración de logging centralizado
 """
 
-import logging
-import json
-import os
-from datetime import datetime
-from typing import Dict, Any, Optional
-from pathlib import Path
-from enum import Enum
-from dataclasses import dataclass, asdict
-from contextlib import contextmanager
 import asyncio
+import json
+import logging
+import os
+from contextlib import contextmanager
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from enum import Enum
 from functools import wraps
+from pathlib import Path
+from typing import Any, Dict, Optional
 
 from app.core.centralized_config import get_config
 
 
 class LogLevel(Enum):
     """Log levels for centralized logging."""
+
     DEBUG = "DEBUG"
     INFO = "INFO"
     WARNING = "WARNING"
@@ -29,6 +30,7 @@ class LogLevel(Enum):
 
 class LogService(Enum):
     """Services that can generate logs."""
+
     FASTAPI = "fastapi"
     TRADING = "trading"
     MARKET_DATA = "market_data"
@@ -41,6 +43,7 @@ class LogService(Enum):
 @dataclass
 class LogEntry:
     """Structured log entry."""
+
     timestamp: str
     level: str
     service: str
@@ -79,22 +82,22 @@ class CentralizedLogger:
     def _setup_loggers(self) -> None:
         """Setup loggers for each service."""
         self.loggers = {}
-        
+
         for service in LogService:
             logger = logging.getLogger(f"algotrading.{service.value}")
             logger.setLevel(logging.DEBUG)
-            
+
             # Create file handler
             log_file = self.log_dir / service.value / f"{service.value}.log"
             file_handler = logging.FileHandler(log_file)
             file_handler.setLevel(logging.DEBUG)
-            
+
             # Create formatter
             formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
             )
             file_handler.setFormatter(formatter)
-            
+
             logger.addHandler(file_handler)
             self.loggers[service.value] = logger
 
@@ -106,7 +109,7 @@ class CentralizedLogger:
         metadata: Optional[Dict[str, Any]] = None,
         duration: Optional[float] = None,
         operation: Optional[str] = None,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
     ) -> LogEntry:
         """Create a structured log entry."""
         return LogEntry(
@@ -120,7 +123,7 @@ class CentralizedLogger:
             metadata=metadata,
             duration=duration,
             operation=operation,
-            error_message=error_message
+            error_message=error_message,
         )
 
     def log(
@@ -131,17 +134,17 @@ class CentralizedLogger:
         metadata: Optional[Dict[str, Any]] = None,
         duration: Optional[float] = None,
         operation: Optional[str] = None,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
     ) -> None:
         """Log a message with structured data."""
         log_entry = self._create_log_entry(
             level, service, message, metadata, duration, operation, error_message
         )
-        
+
         # Log to file
         logger = self.loggers[service.value]
         log_message = json.dumps(log_entry.to_dict())
-        
+
         if level == LogLevel.DEBUG:
             logger.debug(log_message)
         elif level == LogLevel.INFO:
@@ -157,7 +160,7 @@ class CentralizedLogger:
         self,
         service: LogService,
         message: str,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Log debug message."""
         self.log(LogLevel.DEBUG, service, message, metadata)
@@ -166,7 +169,7 @@ class CentralizedLogger:
         self,
         service: LogService,
         message: str,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Log info message."""
         self.log(LogLevel.INFO, service, message, metadata)
@@ -175,7 +178,7 @@ class CentralizedLogger:
         self,
         service: LogService,
         message: str,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Log warning message."""
         self.log(LogLevel.WARNING, service, message, metadata)
@@ -185,27 +188,31 @@ class CentralizedLogger:
         service: LogService,
         message: str,
         metadata: Optional[Dict[str, Any]] = None,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
     ) -> None:
         """Log error message."""
-        self.log(LogLevel.ERROR, service, message, metadata, error_message=error_message)
+        self.log(
+            LogLevel.ERROR, service, message, metadata, error_message=error_message
+        )
 
     def critical(
         self,
         service: LogService,
         message: str,
         metadata: Optional[Dict[str, Any]] = None,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
     ) -> None:
         """Log critical message."""
-        self.log(LogLevel.CRITICAL, service, message, metadata, error_message=error_message)
+        self.log(
+            LogLevel.CRITICAL, service, message, metadata, error_message=error_message
+        )
 
     def log_performance(
         self,
         service: LogService,
         operation: str,
         duration: float,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Log performance metrics."""
         self.log(
@@ -214,7 +221,7 @@ class CentralizedLogger:
             f"Performance: {operation} took {duration}ms",
             metadata=metadata,
             duration=duration,
-            operation=operation
+            operation=operation,
         )
 
     @contextmanager
@@ -222,7 +229,7 @@ class CentralizedLogger:
         self,
         service: LogService,
         operation: str,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ):
         """Context manager for performance timing."""
         start_time = datetime.utcnow()
@@ -234,51 +241,43 @@ class CentralizedLogger:
             self.log_performance(service, operation, duration, metadata)
 
     def log_trading_signal(
-        self,
-        signal_data: Dict[str, Any],
-        metadata: Optional[Dict[str, Any]] = None
+        self, signal_data: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None
     ) -> None:
         """Log trading signal generation."""
         self.info(
             LogService.TRADING,
             f"Signal generated: {signal_data.get('symbol', 'unknown')}",
-            metadata={**signal_data, **(metadata or {})}
+            metadata={**signal_data, **(metadata or {})},
         )
 
     def log_trade_execution(
-        self,
-        trade_data: Dict[str, Any],
-        metadata: Optional[Dict[str, Any]] = None
+        self, trade_data: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None
     ) -> None:
         """Log trade execution."""
         self.info(
             LogService.TRADING,
             f"Trade executed: {trade_data.get('symbol', 'unknown')}",
-            metadata={**trade_data, **(metadata or {})}
+            metadata={**trade_data, **(metadata or {})},
         )
 
     def log_portfolio_update(
-        self,
-        portfolio_data: Dict[str, Any],
-        metadata: Optional[Dict[str, Any]] = None
+        self, portfolio_data: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None
     ) -> None:
         """Log portfolio update."""
         self.info(
             LogService.PORTFOLIO,
             f"Portfolio updated: {portfolio_data.get('total_value', 0)}",
-            metadata={**portfolio_data, **(metadata or {})}
+            metadata={**portfolio_data, **(metadata or {})},
         )
 
     def log_market_data(
-        self,
-        market_data: Dict[str, Any],
-        metadata: Optional[Dict[str, Any]] = None
+        self, market_data: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None
     ) -> None:
         """Log market data processing."""
         self.info(
             LogService.MARKET_DATA,
             f"Market data processed: {market_data.get('symbol', 'unknown')}",
-            metadata={**market_data, **(metadata or {})}
+            metadata={**market_data, **(metadata or {})},
         )
 
 
@@ -288,42 +287,56 @@ centralized_logger = CentralizedLogger()
 
 def log_performance(service: LogService, operation: str):
     """Decorator for logging function performance."""
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             with centralized_logger.performance_timer(service, operation):
                 return func(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
 def log_async_performance(service: LogService, operation: str):
     """Decorator for logging async function performance."""
+
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
             with centralized_logger.performance_timer(service, operation):
                 return await func(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
 # Convenience functions
-def log_trading_signal(signal_data: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None):
+def log_trading_signal(
+    signal_data: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None
+):
     """Log trading signal generation."""
     centralized_logger.log_trading_signal(signal_data, metadata)
 
 
-def log_trade_execution(trade_data: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None):
+def log_trade_execution(
+    trade_data: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None
+):
     """Log trade execution."""
     centralized_logger.log_trade_execution(trade_data, metadata)
 
 
-def log_portfolio_update(portfolio_data: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None):
+def log_portfolio_update(
+    portfolio_data: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None
+):
     """Log portfolio update."""
     centralized_logger.log_portfolio_update(portfolio_data, metadata)
 
 
-def log_market_data(market_data: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None):
+def log_market_data(
+    market_data: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None
+):
     """Log market data processing."""
     centralized_logger.log_market_data(market_data, metadata)
