@@ -23,7 +23,7 @@ class TestDivisionByZeroRiskCalculator:
     def test_calculate_returns_with_zero_previous_value(self, service):
         """Test return calculation when previous value is zero."""
         values = [Decimal("100"), Decimal("0"), Decimal("105")]
-        
+
         # Should not crash on division by zero
         returns = service._calculate_returns(values)
         assert isinstance(returns, list)
@@ -63,7 +63,7 @@ class TestEdgeCasesRiskCalculator:
     def test_calculate_returns_with_single_value(self, service):
         """Test return calculation with insufficient data."""
         values = [Decimal("100")]
-        
+
         # Should return empty list or handle gracefully
         returns = service._calculate_returns(values)
         assert isinstance(returns, list)
@@ -71,7 +71,7 @@ class TestEdgeCasesRiskCalculator:
     def test_calculate_cumulative_return_with_single_value(self, service):
         """Test cumulative return with single value."""
         values = [Decimal("100")]
-        
+
         # Should handle gracefully
         try:
             cumulative = service._calculate_cumulative_return(values)

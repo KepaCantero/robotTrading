@@ -2,7 +2,7 @@
 Tests for mock trading clients.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 
 import pytest

@@ -12,12 +12,8 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.models.assets import Asset, AssetClass, AssetRanking, Exchange
-from app.models.momentum import (
-    MomentumStrategy,
-    MomentumType,
-    TechnicalIndicators,
-    Timeframe,
-)
+from app.models.momentum import (MomentumStrategy, TechnicalIndicators,
+                                 Timeframe)
 
 
 @pytest.fixture
@@ -112,7 +108,8 @@ def mock_momentum_service():
     service.get_technical_indicators.return_value = indicators
 
     # Mock analyze_asset_momentum
-    from app.models.momentum import MomentumAnalysis, MomentumSignal, MomentumType
+    from app.models.momentum import (MomentumAnalysis, MomentumSignal,
+                                     MomentumType)
 
     analysis = MomentumAnalysis(
         symbol="AAPL",

@@ -2,7 +2,6 @@
 Tests for Domain Validation in Models
 """
 
-from datetime import datetime, timedelta
 from decimal import Decimal
 
 import pytest

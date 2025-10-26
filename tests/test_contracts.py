@@ -8,9 +8,8 @@ Author: AlgoTrading MVP Team
 Version: 1.0.0
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
-from unittest.mock import patch
 
 import pytest
 
@@ -20,11 +19,9 @@ from app.core.contracts import (ContractViolationError, InvariantError,
                                 SignalContract, TechnicalIndicatorContract,
                                 contract, risk_calculation, signal_analysis,
                                 trading_operation, validate_batch_trading_data,
-                                validate_non_zero_quantity,
                                 validate_position_size,
-                                validate_positive_amount, validate_profit_loss,
+                                validate_positive_amount,
                                 validate_reasonable_price,
-                                validate_signal_confidence,
                                 validate_trading_data)
 
 
@@ -487,7 +484,9 @@ class TestValidationUtilities:
                 "timestamp": datetime.utcnow(),
             },
         ]
-        with pytest.raises(ContractViolationError, match="Batch validation failed at index 1"):
+        with pytest.raises(
+            ContractViolationError, match="Batch validation failed at index 1"
+        ):
             validate_batch_trading_data(invalid_batch, MarketDataContract)
 
 

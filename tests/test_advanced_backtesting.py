@@ -11,13 +11,12 @@ import random
 import statistics
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Tuple
-from unittest.mock import Mock, patch
+from typing import List
 
 import pytest
 
 from app.backtesting.engine import SimpleBacktester
-from app.backtesting.models import BacktestConfig, BacktestResult
+from app.backtesting.models import BacktestConfig
 from app.models.momentum import MarketData
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
@@ -196,7 +195,7 @@ class TestAdvancedBacktestingMethods:
 
         # Analyze bootstrap results
         float_bootstrap_results = [float(r) for r in bootstrap_results]
-        bootstrap_mean = statistics.mean(float_bootstrap_results)
+        statistics.mean(float_bootstrap_results)
         bootstrap_std = statistics.stdev(float_bootstrap_results)
 
         # Calculate confidence intervals
@@ -205,7 +204,9 @@ class TestAdvancedBacktestingMethods:
         ci_upper = sorted_bootstrap[int(0.975 * len(sorted_bootstrap))]
 
         # Verify bootstrap analysis
-        assert len(bootstrap_results) == num_bootstrap_samples, "Should run all bootstrap samples"
+        assert (
+            len(bootstrap_results) == num_bootstrap_samples
+        ), "Should run all bootstrap samples"
         assert bootstrap_std > 0, "Should have variation in bootstrap results"
 
         # Check that original result is within confidence interval
@@ -244,13 +245,17 @@ class TestAdvancedBacktestingMethods:
 
         # Verify that strategy performs differently across regimes
         float_returns = [float(r) for r in regime_results.values()]
-        return_variance = statistics.variance(float_returns) if len(float_returns) > 1 else 0
+        return_variance = (
+            statistics.variance(float_returns) if len(float_returns) > 1 else 0
+        )
 
         assert return_variance > 0, "Strategy should perform differently across regimes"
 
         # Check that strategy doesn't fail catastrophically in any regime
         for regime, return_value in regime_results.items():
-            assert float(return_value) > -50, f"Strategy failed in {regime} market: {return_value}"
+            assert (
+                float(return_value) > -50
+            ), f"Strategy failed in {regime} market: {return_value}"
 
     def test_parameter_sensitivity_analysis(self, config):
         """
@@ -288,10 +293,14 @@ class TestAdvancedBacktestingMethods:
                 test_config = BacktestConfig(
                     initial_capital=config.initial_capital,
                     commission_per_trade=(
-                        param_value if param_name == "commission" else config.commission_per_trade
+                        param_value
+                        if param_name == "commission"
+                        else config.commission_per_trade
                     ),
                     slippage_percentage=(
-                        param_value if param_name == "slippage" else config.slippage_percentage
+                        param_value
+                        if param_name == "slippage"
+                        else config.slippage_percentage
                     ),
                     risk_free_rate=config.risk_free_rate,
                     max_position_size=(
@@ -312,7 +321,9 @@ class TestAdvancedBacktestingMethods:
             # Calculate coefficient of variation
             float_results = [float(r) for r in results]
             mean_result = statistics.mean(float_results)
-            std_result = statistics.stdev(float_results) if len(float_results) > 1 else 0
+            std_result = (
+                statistics.stdev(float_results) if len(float_results) > 1 else 0
+            )
 
             if mean_result != 0:
                 cv = std_result / abs(mean_result)
@@ -404,7 +415,9 @@ class TestAdvancedBacktestingMethods:
 
         return data
 
-    def _generate_random_market_scenario(self, base_data: List[MarketData]) -> List[MarketData]:
+    def _generate_random_market_scenario(
+        self, base_data: List[MarketData]
+    ) -> List[MarketData]:
         """Generate random market scenario for Monte Carlo."""
         random_data = []
 
@@ -438,7 +451,9 @@ class TestAdvancedBacktestingMethods:
 
         return random_data
 
-    def _create_signals_for_scenario(self, market_data: List[MarketData]) -> List[Signal]:
+    def _create_signals_for_scenario(
+        self, market_data: List[MarketData]
+    ) -> List[Signal]:
         """Create signals for Monte Carlo scenario."""
         signals = []
 
@@ -447,9 +462,9 @@ class TestAdvancedBacktestingMethods:
 
             # Simple momentum signal
             if i > 0:
-                price_change = (md.close_price - market_data[i - 1].close_price) / market_data[
-                    i - 1
-                ].close_price
+                price_change = (
+                    md.close_price - market_data[i - 1].close_price
+                ) / market_data[i - 1].close_price
 
                 if price_change > Decimal("0.01"):  # 1% increase
                     signal_type = SignalType.BUY
@@ -508,7 +523,9 @@ class TestAdvancedBacktestingMethods:
 
         return data
 
-    def _create_original_strategy_signals(self, market_data: List[MarketData]) -> List[Signal]:
+    def _create_original_strategy_signals(
+        self, market_data: List[MarketData]
+    ) -> List[Signal]:
         """Create original strategy signals."""
         signals = []
 
@@ -809,7 +826,9 @@ class TestAdvancedBacktestingMethods:
 
         return data
 
-    def _create_sensitivity_signals(self, market_data: List[MarketData]) -> List[Signal]:
+    def _create_sensitivity_signals(
+        self, market_data: List[MarketData]
+    ) -> List[Signal]:
         """Create signals for sensitivity analysis."""
         signals = []
 

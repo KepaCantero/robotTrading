@@ -12,19 +12,12 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional
 
-from app.core.contracts import (
-    ContractViolationError,
-    MarketDataContract,
-    PositionContract,
-    SignalContract,
-    TechnicalIndicatorContract,
-    contract,
-    risk_calculation,
-    signal_analysis,
-    trading_operation,
-    validate_batch_trading_data,
-    validate_trading_data,
-)
+from app.core.contracts import (ContractViolationError, MarketDataContract,
+                                PositionContract, SignalContract,
+                                TechnicalIndicatorContract, contract,
+                                risk_calculation, signal_analysis,
+                                trading_operation, validate_batch_trading_data,
+                                validate_trading_data)
 
 
 class TradingOperationsWithContracts:

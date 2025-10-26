@@ -3,7 +3,6 @@ Tests for Database System
 TASK-6: Configuración de base de datos
 """
 
-import uuid
 from datetime import datetime, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
@@ -13,20 +12,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.database import (Base, DatabaseManager, DatabaseSession,
-                          async_database_transaction, check_database_health,
-                          database_transaction, get_async_db, get_sync_db,
-                          initialize_database)
-from app.database.models import (APIKey, Asset, Backtest, MarketData,
-                                 Portfolio, Position, RiskMetrics, Signal,
-                                 SystemLog, Trade, User)
-from app.database.repositories import (AssetRepository, BacktestRepository,
-                                       BaseRepository, MarketDataRepository,
-                                       PortfolioRepository, PositionRepository,
-                                       RiskMetricsRepository, SignalRepository,
-                                       SystemLogRepository, TradeRepository,
-                                       UserRepository)
-from app.exceptions import DatabaseError
-from app.models.signal import SignalSource, SignalStrength, SignalType
+                          check_database_health, database_transaction,
+                          get_sync_db, initialize_database)
+from app.database.models import (Asset, Backtest, MarketData, Portfolio,
+                                 Position, Signal, Trade, User)
+from app.database.repositories import (AssetRepository, BaseRepository,
+                                       PortfolioRepository, UserRepository)
 
 
 class TestDatabaseManager:

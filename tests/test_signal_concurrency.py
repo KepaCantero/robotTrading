@@ -2,12 +2,12 @@
 Tests for signal concurrency operations.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 
 import pytest
 
-from app.models.momentum import MarketData, MomentumSignal, MomentumType
+from app.models.momentum import MarketData
 from app.services.signal_scorer import SignalScorer
 
 

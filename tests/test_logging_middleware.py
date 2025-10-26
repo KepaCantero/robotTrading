@@ -2,8 +2,6 @@
 Tests for logging middleware.
 """
 
-import pytest
-
 
 class TestLoggingMiddleware:
     """Test logging middleware functionality."""

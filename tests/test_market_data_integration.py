@@ -5,8 +5,6 @@ Tests for market data integration.
 from datetime import datetime
 from decimal import Decimal
 
-import pytest
-
 from app.models.momentum import MarketData
 
 

@@ -3,12 +3,9 @@ Tests for Centralized Configuration System
 TASK-10: Centralización de Configuración
 """
 
-import tempfile
-from pathlib import Path
 from unittest.mock import mock_open, patch
 
 import pytest
-import yaml
 
 from app.core.centralized_config import (APIConfig, CentralizedConfig,
                                          DatabaseConfig, Environment,
@@ -47,10 +44,14 @@ class TestTradingThresholds:
 
     def test_validation_percentage(self):
         """Test percentage validation."""
-        with pytest.raises(ValueError, match="Percentage values must be between 0 and 1"):
+        with pytest.raises(
+            ValueError, match="Percentage values must be between 0 and 1"
+        ):
             TradingThresholds(max_position_size=1.5)
 
-        with pytest.raises(ValueError, match="Stop loss percentage must be between 0 and 0.5"):
+        with pytest.raises(
+            ValueError, match="Stop loss percentage must be between 0 and 0.5"
+        ):
             TradingThresholds(stop_loss_pct=-0.1)
 
     def test_validation_score(self):
@@ -101,7 +102,9 @@ class TestStrategyConfig:
         with pytest.raises(ValueError, match="Weight must be between 0 and 2"):
             StrategyConfig(name="test", weight=2.5)
 
-        with pytest.raises(ValueError, match="Percentage values must be between 0 and 1"):
+        with pytest.raises(
+            ValueError, match="Percentage values must be between 0 and 1"
+        ):
             StrategyConfig(name="test", max_position_size=1.5)
 
 
@@ -277,7 +280,9 @@ class TestConfigurationIntegration:
         assert config1 is not config2
 
         # But should have same default values
-        assert config1.trading.min_signal_strength == config2.trading.min_signal_strength
+        assert (
+            config1.trading.min_signal_strength == config2.trading.min_signal_strength
+        )
 
     def test_configuration_persistence(self):
         """Test configuration persistence across function calls."""
@@ -305,7 +310,7 @@ class TestConfigurationValidation:
 
     def test_valid_configuration(self):
         """Test validation of valid configuration."""
-        config = CentralizedConfig()
+        CentralizedConfig()
         assert validate_config() is True
 
     def test_invalid_trading_thresholds(self):

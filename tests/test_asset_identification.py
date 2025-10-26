@@ -4,9 +4,7 @@ Test suite for T006: Top 20 Liquid Assets Identification.
 This module contains comprehensive tests for asset models, services, and API endpoints.
 """
 
-from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List
 
 import pytest
 
@@ -402,7 +400,9 @@ class TestAssetIdentificationService:
             active_only=True,
         )
         # Filter assets
-        filtered_assets = await service.filter_assets(AssetClass.EQUITY, filter_criteria)
+        filtered_assets = await service.filter_assets(
+            AssetClass.EQUITY, filter_criteria
+        )
 
         assert len(filtered_assets) <= 10
         assert all(asset.liquidity_score >= 80.0 for asset in filtered_assets)
@@ -475,8 +475,12 @@ class TestAssetServiceIntegration:
         assert summary["total_assets"] == 10
 
         # Step 6: Filter assets
-        filter_criteria = AssetFilter(asset_class=AssetClass.EQUITY, min_liquidity_score=70.0)
-        filtered_assets = await service.filter_assets(AssetClass.EQUITY, filter_criteria)
+        filter_criteria = AssetFilter(
+            asset_class=AssetClass.EQUITY, min_liquidity_score=70.0
+        )
+        filtered_assets = await service.filter_assets(
+            AssetClass.EQUITY, filter_criteria
+        )
         assert len(filtered_assets) > 0
 
     @pytest.mark.asyncio

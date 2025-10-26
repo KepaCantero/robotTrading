@@ -4,7 +4,6 @@ Testing Reviewer Audit - Phase 1: Critical Fixes
 """
 
 # Coverage configuration for pytest-cov
-import os
 import sys
 from pathlib import Path
 
