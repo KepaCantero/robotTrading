@@ -24,61 +24,41 @@ class AlgoTradingError(Exception):
 class ConfigurationError(AlgoTradingError):
     """Exception raised for configuration-related errors."""
 
-    pass
-
 
 class ValidationError(AlgoTradingError):
     """Exception raised for validation errors."""
-
-    pass
 
 
 class BusinessLogicError(AlgoTradingError):
     """Exception raised for business logic errors."""
 
-    pass
-
 
 class MarketDataError(AlgoTradingError):
     """Exception raised for market data errors."""
-
-    pass
 
 
 class TradingError(AlgoTradingError):
     """Exception raised for trading-related errors."""
 
-    pass
-
 
 class PortfolioError(AlgoTradingError):
     """Exception raised for portfolio-related errors."""
-
-    pass
 
 
 class SignalError(AlgoTradingError):
     """Exception raised for signal-related errors."""
 
-    pass
-
 
 class BacktestError(AlgoTradingError):
     """Exception raised for backtesting errors."""
-
-    pass
 
 
 class DatabaseError(AlgoTradingError):
     """Exception raised for database errors."""
 
-    pass
-
 
 class APIError(AlgoTradingError):
     """Exception raised for API errors."""
-
-    pass
 
 
 def raise_configuration_error(
@@ -114,3 +94,10 @@ def raise_trading_error(
 ):
     """Helper function to raise trading errors."""
     raise TradingError(message, error_code, details)
+
+
+def raise_database_error(
+    message: str, error_code: str = None, details: Dict[str, Any] = None
+):
+    """Helper function to raise database errors."""
+    raise DatabaseError(message, error_code, details)

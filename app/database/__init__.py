@@ -4,7 +4,6 @@ TASK-6: Configuración de base de datos
 """
 
 import logging
-import os
 from typing import AsyncGenerator, Optional
 
 from sqlalchemy import MetaData, create_engine, event
@@ -14,7 +13,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import QueuePool
 
 from app.core.environment_config import get_config
-from app.exceptions import DatabaseError, raise_database_error
+from app.core.exceptions import DatabaseError, raise_database_error
 
 logger = logging.getLogger(__name__)
 
