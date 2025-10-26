@@ -35,7 +35,7 @@ COVERAGE_CONFIG = {
         "*/htmlcov/*",
         "*/logs/*",
         "*/tmp/*",
-        "*/temp/*"
+        "*/temp/*",
     ],
     "branch": True,
     "show_missing": True,
@@ -53,8 +53,8 @@ COVERAGE_CONFIG = {
         "if 0:",
         "if __name__ == .__main__.:",
         "class .*\\bProtocol\\):",
-        "@(abc\\.)?abstractmethod"
-    ]
+        "@(abc\\.)?abstractmethod",
+    ],
 }
 
 # HTML report configuration
@@ -62,27 +62,21 @@ HTML_REPORT_CONFIG = {
     "directory": "htmlcov",
     "title": "AlgoTrading Test Coverage Report",
     "show_contexts": True,
-    "skip_empty": True
+    "skip_empty": True,
 }
 
 # XML report configuration
-XML_REPORT_CONFIG = {
-    "output": "coverage.xml",
-    "skip_empty": True
-}
+XML_REPORT_CONFIG = {"output": "coverage.xml", "skip_empty": True}
 
 # JSON report configuration
-JSON_REPORT_CONFIG = {
-    "output": "coverage.json",
-    "skip_empty": True
-}
+JSON_REPORT_CONFIG = {"output": "coverage.json", "skip_empty": True}
 
 # Terminal report configuration
 TERMINAL_REPORT_CONFIG = {
     "show_missing": True,
     "skip_covered": False,
     "precision": 2,
-    "sort": "Cover"
+    "sort": "Cover",
 }
 
 # Coverage thresholds by module
@@ -96,7 +90,7 @@ MODULE_THRESHOLDS = {
     "app.middleware": 75,
     "app.database": 80,
     "app.backtesting": 75,
-    "app.data": 70
+    "app.data": 70,
 }
 
 # Critical files that must have high coverage
@@ -110,7 +104,7 @@ CRITICAL_FILES = [
     "app/models/order.py",
     "app/services/portfolio_service.py",
     "app/services/signal_scorer.py",
-    "app/services/paper_trading_service.py"
+    "app/services/paper_trading_service.py",
 ]
 
 # Files that can have lower coverage
@@ -119,8 +113,9 @@ LOW_PRIORITY_FILES = [
     "app/api/__init__.py",
     "app/strategies/__init__.py",
     "app/models/__init__.py",
-    "app/services/__init__.py"
+    "app/services/__init__.py",
 ]
+
 
 def get_coverage_command():
     """Get the coverage command for pytest."""
@@ -132,14 +127,15 @@ def get_coverage_command():
         "--cov-report=xml",
         "--cov-report=json",
         "--cov-report=term-missing",
-        "--cov-fail-under=80"
+        "--cov-fail-under=80",
     ]
-    
+
     # Add omit patterns
     for omit_pattern in COVERAGE_CONFIG["omit"]:
         cmd.extend(["--cov-omit", omit_pattern])
-    
+
     return cmd
+
 
 def get_coverage_summary():
     """Get coverage summary information."""
@@ -150,8 +146,9 @@ def get_coverage_summary():
         "low_priority_files": LOW_PRIORITY_FILES,
         "html_report": HTML_REPORT_CONFIG["directory"],
         "xml_report": XML_REPORT_CONFIG["output"],
-        "json_report": JSON_REPORT_CONFIG["output"]
+        "json_report": JSON_REPORT_CONFIG["output"],
     }
+
 
 if __name__ == "__main__":
     print("Coverage Configuration:")
