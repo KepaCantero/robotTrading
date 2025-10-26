@@ -279,7 +279,7 @@ class CircuitBreakerManager:
 
         # Mantener tamaño máximo del historial
         if len(self.event_history) > self.max_history_size:
-            self.event_history = self.event_history[-self.max_history_size :]
+            self.event_history = self.event_history[-self.max_history_size:]
 
     def reset_breaker(self, breaker_name: str) -> bool:
         """Resetear circuit breaker manualmente."""
