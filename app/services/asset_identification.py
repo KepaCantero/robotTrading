@@ -5,21 +5,12 @@ This service handles the identification, ranking, and management of liquid asset
 for momentum trading strategies.
 """
 
-import asyncio
 import logging
-from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
-from app.models.assets import (
-    Asset,
-    AssetClass,
-    AssetFilter,
-    AssetRanking,
-    AssetUniverse,
-    Exchange,
-    LiquidityMetrics,
-)
+from app.models.assets import (Asset, AssetClass, AssetFilter, AssetRanking,
+                               AssetUniverse, Exchange, LiquidityMetrics)
 
 logger = logging.getLogger(__name__)
 

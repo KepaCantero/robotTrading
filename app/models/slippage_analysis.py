@@ -9,9 +9,8 @@ no solo 0.1% fijo.
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional
 
-import numpy as np
 from pydantic import BaseModel, Field, field_validator
 
 

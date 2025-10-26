@@ -6,15 +6,15 @@ TASK-4: Sistema de manejo de errores unificado
 import logging
 import time
 import uuid
-from typing import Callable, Optional
+from typing import Callable
 
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.exceptions.error_handler import error_handler
-from app.exceptions.trading_exceptions import ErrorCategory, ErrorSeverity, SystemError
-from app.services.centralized_logging import LogLevel, LogService, centralized_logger
+from app.services.centralized_logging import (LogLevel, LogService,
+                                              centralized_logger)
 
 
 class ErrorHandlingMiddleware(BaseHTTPMiddleware):

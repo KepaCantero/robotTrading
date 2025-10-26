@@ -11,7 +11,7 @@ from decimal import Decimal
 from typing import Any, Dict, Optional, Tuple
 
 from app.core.centralized_config import get_config
-from app.models.portfolio import Portfolio, Position
+from app.models.portfolio import Portfolio
 from app.models.signal import Signal
 
 logger = logging.getLogger(__name__)

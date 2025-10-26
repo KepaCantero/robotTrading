@@ -5,7 +5,6 @@ TASK-3: Configuración de logging centralizado
 
 import time
 import uuid
-from typing import Callable
 
 from fastapi import Request, Response
 
@@ -16,12 +15,8 @@ except ImportError:
 
 from starlette.middleware.base import RequestResponseEndpoint
 
-from app.services.centralized_logging import (
-    LogLevel,
-    LogService,
-    centralized_logger,
-    log_performance,
-)
+from app.services.centralized_logging import (LogService, centralized_logger,
+                                              log_performance)
 
 
 class LoggingMiddleware(BaseHTTPMiddleware):

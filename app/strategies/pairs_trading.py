@@ -7,9 +7,10 @@ cointegrados y comercia cuando el spread entre ellos se desvía significativamen
 
 import logging
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
-from app.core.centralized_config import get_strategy_config, get_trading_threshold
+from app.core.centralized_config import (get_strategy_config,
+                                         get_trading_threshold)
 from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
 from app.models.signal import Signal
@@ -297,7 +298,7 @@ class PairsTradingStrategy(BaseStrategy):
         """
         signals = []
         # Cantidad menor (pairs trading es más conservador)
-        quantity = Decimal("50")
+        Decimal("50")
 
         if market_data.symbol == self.pair_symbols[0]:
             # Primer activo del par

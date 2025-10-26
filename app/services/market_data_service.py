@@ -6,24 +6,16 @@ caching, and real-time data subscriptions.
 """
 
 import asyncio
-import json
 import logging
-from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Set
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from app.data.feeds import DataFeedInterface, create_data_feed
-from app.models.market_data import (
-    DataFeedConfig,
-    DataFeedType,
-    DataFrequency,
-    HistoricalData,
-    MarketDataCache,
-    MarketDataStatus,
-    MarketDataSubscription,
-    Quote,
-)
+from app.models.market_data import (DataFeedConfig, DataFeedType,
+                                    DataFrequency, HistoricalData,
+                                    MarketDataCache, MarketDataSubscription,
+                                    Quote)
 
 logger = logging.getLogger(__name__)
 

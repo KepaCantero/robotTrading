@@ -7,13 +7,13 @@ including cost breakdown, profitability validation, and Cost Impact Ratio (CIR) 
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.backtesting.models import Trade, TradeStatus
-from app.models.order import OrderSide, OrderType
-from app.services.cost_analysis_service import CostAnalysisResult, CostAnalysisService
+from app.services.cost_analysis_service import (CostAnalysisResult,
+                                                CostAnalysisService)
 
 router = APIRouter(prefix="/cost-analysis", tags=["cost-analysis"])
 

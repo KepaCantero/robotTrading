@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from app.models.portfolio import AssetUniverse, MarketRegimeData, Portfolio, Position
+from app.models.portfolio import AssetUniverse, MarketRegimeData, Position
 from app.providers.paper_trading import PaperTradingPortfolioProvider
 from app.services.portfolio_service import PortfolioService
 

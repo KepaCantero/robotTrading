@@ -5,7 +5,7 @@ This module provides FastAPI endpoints for portfolio analytics including
 performance metrics, risk analysis, and portfolio management features.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 from uuid import UUID
@@ -13,21 +13,15 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
-from app.models.portfolio import Portfolio
-from app.models.portfolio_analytics import (
-    ExtendedPortfolio,
-    PerformanceMetrics,
-    PerformancePeriod,
-    PortfolioAllocation,
-    PortfolioAnalytics,
-    PortfolioComparison,
-    PortfolioRebalance,
-    RiskMetrics,
-)
+from app.models.portfolio_analytics import (ExtendedPortfolio,
+                                            PerformanceMetrics,
+                                            PerformancePeriod,
+                                            PortfolioAllocation,
+                                            PortfolioAnalytics,
+                                            PortfolioComparison,
+                                            PortfolioRebalance, RiskMetrics)
 from app.services.portfolio_analytics_service import (
-    PortfolioAnalyticsService,
-    get_portfolio_analytics_service,
-)
+    PortfolioAnalyticsService, get_portfolio_analytics_service)
 
 router = APIRouter(prefix="/portfolio-analytics", tags=["Portfolio Analytics"])
 

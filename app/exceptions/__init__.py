@@ -3,51 +3,33 @@ FastAPI Error Handling Integration
 TASK-4: Sistema de manejo de errores unificado
 """
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 # Import from core exceptions to avoid circular dependencies
-from app.core.exceptions import (
-    AlgoTradingError,
-    APIError,
-    BacktestError,
-    BusinessLogicError,
-    ConfigurationError,
-    DatabaseError,
-    MarketDataError,
-    PortfolioError,
-    SignalError,
-    TradingError,
-    ValidationError,
-    raise_business_logic_error,
-    raise_configuration_error,
-    raise_market_data_error,
-    raise_trading_error,
-    raise_validation_error,
-)
-from app.exceptions.error_handler import (
-    ErrorHandler,
-    algotrading_exception_handler,
-    create_error_response,
-    error_handler,
-    generic_exception_handler,
-    http_exception_handler,
-    raise_business_logic_error,
-    raise_configuration_error,
-    raise_database_error,
-    raise_external_api_error,
-    raise_validation_error,
-    starlette_http_exception_handler,
-    validation_exception_handler,
-)
-from app.middleware.error_middleware import (
-    ErrorHandlingMiddleware,
-    HealthCheckMiddleware,
-    RateLimitingMiddleware,
-    RequestContextMiddleware,
-    SecurityHeadersMiddleware,
-)
+from app.core.exceptions import (AlgoTradingError, APIError, BacktestError,
+                                 BusinessLogicError, ConfigurationError,
+                                 DatabaseError, MarketDataError,
+                                 PortfolioError, SignalError, TradingError,
+                                 ValidationError, raise_business_logic_error,
+                                 raise_configuration_error,
+                                 raise_market_data_error, raise_trading_error,
+                                 raise_validation_error)
+from app.exceptions.error_handler import (ErrorHandler,
+                                          algotrading_exception_handler,
+                                          create_error_response, error_handler,
+                                          generic_exception_handler,
+                                          raise_business_logic_error,
+                                          raise_configuration_error,
+                                          raise_validation_error,
+                                          starlette_http_exception_handler,
+                                          validation_exception_handler)
+from app.middleware.error_middleware import (ErrorHandlingMiddleware,
+                                             HealthCheckMiddleware,
+                                             RateLimitingMiddleware,
+                                             RequestContextMiddleware,
+                                             SecurityHeadersMiddleware)
 
 
 def setup_error_handling(app: FastAPI) -> None:

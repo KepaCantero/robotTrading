@@ -6,29 +6,22 @@ and parameter optimization to prevent overfitting in trading strategies.
 """
 
 from datetime import date, datetime
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.responses import JSONResponse
 
-from app.models.optimization import (
-    OptimizationArtifact,
-    OptimizationConfig,
-    OptimizationMethod,
-    OptimizationMetrics,
-    OptimizationParameter,
-    OptimizationResult,
-    OptimizationSummary,
-    OutOfSampleResult,
-    OutOfSampleTestRequest,
-    ParameterConstraint,
-    ParameterOptimizationRequest,
-    ParameterType,
-    PurgedKFoldConfig,
-    WalkForwardConfig,
-)
+from app.models.optimization import (OptimizationArtifact, OptimizationConfig,
+                                     OptimizationMethod, OptimizationMetrics,
+                                     OptimizationParameter, OptimizationResult,
+                                     OptimizationSummary, OutOfSampleResult,
+                                     OutOfSampleTestRequest,
+                                     ParameterConstraint,
+                                     ParameterOptimizationRequest,
+                                     ParameterType)
 from app.services.cost_analysis_service import CostAnalysisService
-from app.services.parameter_optimization_service import ParameterOptimizationService
+from app.services.parameter_optimization_service import \
+    ParameterOptimizationService
 
 router = APIRouter(prefix="/optimization", tags=["Parameter Optimization"])
 

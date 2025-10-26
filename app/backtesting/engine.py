@@ -6,20 +6,14 @@ historical data simulation, trade execution, and performance metrics calculation
 """
 
 import math
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 from uuid import uuid4
 
-from app.backtesting.models import (
-    BacktestConfig,
-    BacktestResult,
-    PerformanceMetrics,
-    Trade,
-    TradeStatus,
-)
+from app.backtesting.models import (BacktestConfig, BacktestResult,
+                                    PerformanceMetrics, Trade, TradeStatus)
 from app.models.momentum import MarketData
-from app.models.order import Order, OrderStatus, OrderType
 from app.models.signal import Signal, SignalType
 
 

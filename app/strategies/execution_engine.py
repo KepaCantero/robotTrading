@@ -14,7 +14,6 @@ from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
 from app.models.signal import Signal
 
-from .base import BaseStrategy
 from .registry import StrategyRegistry
 from .strategy_logger import StrategyLogger
 

@@ -6,9 +6,9 @@ Testing Reviewer Audit - Phase 1: Critical Fixes
 import os
 import tempfile
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
 from app.core.exceptions import ConfigurationError

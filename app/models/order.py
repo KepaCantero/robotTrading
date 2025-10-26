@@ -10,7 +10,8 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import (BaseModel, ConfigDict, Field, field_validator,
+                      model_validator)
 
 
 class OrderType(str, Enum):

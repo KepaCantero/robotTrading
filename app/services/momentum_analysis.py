@@ -5,7 +5,6 @@ This service handles momentum analysis, technical indicator calculations,
 and momentum signal generation for trading strategies.
 """
 
-import asyncio
 import logging
 import math
 from datetime import datetime, timedelta
@@ -13,20 +12,11 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
 from app.core.centralized_config import get_config
-from app.models.assets import Asset, AssetClass
-from app.models.momentum import (
-    MomentumAnalysis,
-    MomentumFilter,
-    MomentumSignal,
-    MomentumStrategy,
-    MomentumType,
-    TechnicalIndicators,
-    Timeframe,
-)
+from app.models.momentum import (MomentumAnalysis, MomentumFilter,
+                                 MomentumSignal, MomentumStrategy,
+                                 MomentumType, TechnicalIndicators, Timeframe)
 from app.services.asset_identification import (
-    AssetIdentificationService,
-    get_asset_identification_service,
-)
+    AssetIdentificationService, get_asset_identification_service)
 
 logger = logging.getLogger(__name__)
 

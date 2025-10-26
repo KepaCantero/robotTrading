@@ -5,28 +5,16 @@ Este módulo implementa el servicio de portafolio refactorizado,
 utilizando el gestor centralizado de circuit breakers y el gestor de riesgos.
 """
 
-import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from app.models.portfolio import (
-    AssetClass,
-    AssetUniverse,
-    CircuitBreaker,
-    CircuitBreakerState,
-    MarketRegime,
-    MarketRegimeData,
-    Portfolio,
-    PortfolioProvider,
-    Position,
-)
-from app.providers.paper_trading import PaperTradingPortfolioProvider
-from app.services.circuit_breaker_manager import (
-    CircuitBreakerManager,
-    CircuitBreakerType,
-)
+from app.models.portfolio import (AssetClass, AssetUniverse, MarketRegime,
+                                  MarketRegimeData, Portfolio,
+                                  PortfolioProvider, Position)
+from app.services.circuit_breaker_manager import (CircuitBreakerManager,
+                                                  CircuitBreakerType)
 from app.services.portfolio_risk_manager import PortfolioRiskManager
 
 logger = logging.getLogger(__name__)

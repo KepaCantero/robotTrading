@@ -43,7 +43,6 @@ class BaseStrategy(ABC):
         Returns:
             Lista de señales generadas
         """
-        pass
 
     @abstractmethod
     def risk_check(self, signal: Signal, portfolio: Portfolio) -> bool:
@@ -57,7 +56,6 @@ class BaseStrategy(ABC):
         Returns:
             True si la señal pasa el risk check, False en caso contrario
         """
-        pass
 
     def get_parameters(self) -> Dict[str, Any]:
         """
@@ -95,7 +93,6 @@ class BaseStrategy(ABC):
         Returns:
             Lista de nombres de parámetros requeridos
         """
-        pass
 
     def get_position_size(self, signal: Signal, portfolio: Portfolio) -> Decimal:
         """

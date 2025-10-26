@@ -5,26 +5,19 @@ TASK-11: Análisis Dinámico de Slippage
 Servicio para calcular slippage dinámico basado en volatilidad del mercado y liquidez.
 """
 
-import math
-from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 
 from app.core.centralized_config import get_config
 from app.models.market_data import Quote
-from app.models.slippage_analysis import (
-    DynamicSlippageAnalysis,
-    LiquidityMetrics,
-    MarketCondition,
-    OrderSizeImpact,
-    SlippageCalculationParams,
-    SlippageComponent,
-    SlippageHistory,
-    SlippageType,
-    VolatilityMetrics,
-)
+from app.models.slippage_analysis import (DynamicSlippageAnalysis,
+                                          LiquidityMetrics, MarketCondition,
+                                          OrderSizeImpact,
+                                          SlippageCalculationParams,
+                                          SlippageComponent, SlippageHistory,
+                                          SlippageType, VolatilityMetrics)
 
 
 class VolatilityCalculator:

@@ -8,25 +8,20 @@ market impact e infraestructura.
 
 import logging
 import statistics
-from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
 from app.core.centralized_config import get_config
-from app.models.cost_analysis import CostAnalysisResultModel
-from app.models.profitability_validation import (
-    CostBreakdown,
-    HistoricalValidation,
-    ProfitabilityMetric,
-    ProfitabilityMetrics,
-    ProfitabilityValidation,
-    StrategyComparison,
-    ValidationCriteria,
-    ValidationReport,
-    ValidationRequest,
-    ValidationResponse,
-    ValidationStatus,
-)
+from app.models.profitability_validation import (CostBreakdown,
+                                                 HistoricalValidation,
+                                                 ProfitabilityMetrics,
+                                                 ProfitabilityValidation,
+                                                 StrategyComparison,
+                                                 ValidationCriteria,
+                                                 ValidationReport,
+                                                 ValidationRequest,
+                                                 ValidationResponse,
+                                                 ValidationStatus)
 from app.services.cost_analysis_service import CostAnalysisService
 
 logger = logging.getLogger(__name__)

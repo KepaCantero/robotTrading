@@ -8,20 +8,9 @@ from datetime import datetime
 from decimal import Decimal
 from typing import List, Optional
 
-from sqlalchemy import (
-    JSON,
-    Boolean,
-    CheckConstraint,
-    Column,
-    DateTime,
-    ForeignKey,
-    Index,
-    Integer,
-    Numeric,
-    String,
-    Text,
-    UniqueConstraint,
-)
+from sqlalchemy import (JSON, Boolean, CheckConstraint, DateTime, ForeignKey,
+                        Index, Integer, Numeric, String, Text,
+                        UniqueConstraint)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 

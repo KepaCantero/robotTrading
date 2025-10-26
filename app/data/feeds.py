@@ -6,7 +6,6 @@ market data feeds from various providers.
 """
 
 import asyncio
-import json
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
@@ -15,14 +14,8 @@ from typing import Any, Dict, List, Optional
 
 import aiohttp
 
-from app.models.market_data import (
-    DataFeedConfig,
-    DataFeedType,
-    DataFrequency,
-    HistoricalData,
-    MarketDataStatus,
-    Quote,
-)
+from app.models.market_data import (DataFeedConfig, DataFeedType,
+                                    DataFrequency, HistoricalData, Quote)
 
 logger = logging.getLogger(__name__)
 
@@ -47,17 +40,14 @@ class DataFeedInterface(ABC):
     @abstractmethod
     async def connect(self) -> bool:
         """Connect to the data feed."""
-        pass
 
     @abstractmethod
     async def disconnect(self) -> bool:
         """Disconnect from the data feed."""
-        pass
 
     @abstractmethod
     async def get_quote(self, symbol: str) -> Optional[Quote]:
         """Get real-time quote for a symbol."""
-        pass
 
     @abstractmethod
     async def get_historical_data(
@@ -68,12 +58,10 @@ class DataFeedInterface(ABC):
         frequency: DataFrequency = DataFrequency.DAILY,
     ) -> List[HistoricalData]:
         """Get historical data for a symbol."""
-        pass
 
     @abstractmethod
     async def subscribe_to_symbols(self, symbols: List[str]) -> bool:
         """Subscribe to real-time updates for symbols."""
-        pass
 
     async def _make_request(
         self, url: str, params: Dict[str, Any] = None

@@ -5,30 +5,17 @@ This service implements walk-forward analysis, out-of-sample testing,
 and parameter optimization to prevent overfitting in trading strategies.
 """
 
-import asyncio
 import random
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from app.models.cost_analysis import CostAnalysisResultModel, CostBreakdownModel
-from app.models.optimization import (
-    OptimizationArtifact,
-    OptimizationConfig,
-    OptimizationMethod,
-    OptimizationMetrics,
-    OptimizationParameter,
-    OptimizationResult,
-    OptimizationSummary,
-    OutOfSampleResult,
-    OutOfSampleTest,
-    OutOfSampleTestRequest,
-    ParameterConstraint,
-    ParameterOptimizationRequest,
-    PurgedKFoldConfig,
-    WalkForwardConfig,
-)
+from app.models.optimization import (OptimizationArtifact, OptimizationMethod,
+                                     OptimizationMetrics,
+                                     OptimizationParameter, OptimizationResult,
+                                     OptimizationSummary, OutOfSampleResult,
+                                     OutOfSampleTest, OutOfSampleTestRequest,
+                                     ParameterOptimizationRequest)
 from app.services.cost_analysis_service import CostAnalysisService
 
 
@@ -268,7 +255,7 @@ class ParameterOptimizationService:
         # Split data into training and testing periods
         total_days = (request.data_end_date - request.data_start_date).days
         train_days = int(total_days * 0.7)  # 70% for training
-        test_days = total_days - train_days
+        total_days - train_days
 
         train_start = request.data_start_date
         train_end = train_start + timedelta(days=train_days)
