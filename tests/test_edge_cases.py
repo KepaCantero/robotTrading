@@ -5,9 +5,7 @@ This module tests technical indicators with extreme data conditions,
 division by zero scenarios, and edge cases for mathematical calculations.
 """
 
-import math
 from decimal import Decimal
-from typing import List
 
 import pytest
 
@@ -338,14 +336,19 @@ class TestTechnicalIndicatorsEdgeCases:
 
         # All indicators should handle empty lists gracefully
         assert TechnicalIndicatorCalculator.calculate_rsi(empty_prices) is None
-        assert TechnicalIndicatorCalculator.calculate_ema(empty_prices, period=10) is None
+        assert (
+            TechnicalIndicatorCalculator.calculate_ema(empty_prices, period=10) is None
+        )
         assert TechnicalIndicatorCalculator.calculate_macd(empty_prices) == (
             None,
             None,
             None,
         )
         assert TechnicalIndicatorCalculator.calculate_atr([], [], []) is None
-        assert TechnicalIndicatorCalculator.calculate_volume_sma(empty_volumes, period=10) is None
+        assert (
+            TechnicalIndicatorCalculator.calculate_volume_sma(empty_volumes, period=10)
+            is None
+        )
 
     def test_indicators_with_single_value(self):
         """Test all indicators with single value."""
@@ -354,13 +357,18 @@ class TestTechnicalIndicatorsEdgeCases:
 
         # All indicators should handle single values gracefully
         assert TechnicalIndicatorCalculator.calculate_rsi(single_price) is None
-        assert TechnicalIndicatorCalculator.calculate_ema(single_price, period=1) == 100.0
+        assert (
+            TechnicalIndicatorCalculator.calculate_ema(single_price, period=1) == 100.0
+        )
         assert TechnicalIndicatorCalculator.calculate_macd(single_price) == (
             None,
             None,
             None,
         )
-        assert TechnicalIndicatorCalculator.calculate_atr([100.0], [100.0], [100.0]) is None
+        assert (
+            TechnicalIndicatorCalculator.calculate_atr([100.0], [100.0], [100.0])
+            is None
+        )
         assert TechnicalIndicatorCalculator.calculate_volume_sma(
             single_volume, period=1
         ) == Decimal("1000.0")
@@ -390,7 +398,10 @@ class TestTechnicalIndicatorsEdgeCases:
             )
             is None
         )
-        assert TechnicalIndicatorCalculator.calculate_volume_sma(volumes, period=100) is None
+        assert (
+            TechnicalIndicatorCalculator.calculate_volume_sma(volumes, period=100)
+            is None
+        )
 
     def test_indicators_with_negative_periods(self):
         """Test indicators with negative periods."""
@@ -475,7 +486,9 @@ class TestRiskCalculationEdgeCases:
         # ZeroDivisionError
         risk_amount = account_balance * risk_per_trade
         position_size = risk_amount / (price - stop_loss)
-        assert position_size == Decimal("-1.052631578947368421052631579")  # Negative result
+        assert position_size == Decimal(
+            "-1.052631578947368421052631579"
+        )  # Negative result
 
     def test_position_sizing_with_zero_stop_loss(self):
         """Test position sizing with zero stop loss."""
@@ -500,7 +513,7 @@ class TestRiskCalculationEdgeCases:
         # Should handle equal price and stop loss gracefully
         risk_amount = account_balance * risk_per_trade
         with pytest.raises(ZeroDivisionError):  # Division by zero in Decimal
-            position_size = risk_amount / (price - stop_loss)
+            risk_amount / (price - stop_loss)
 
     def test_position_sizing_with_negative_values(self):
         """Test position sizing with negative values."""
@@ -563,7 +576,9 @@ class TestSignalEdgeCases:
         for timestamp in timestamps:
             # Future timestamps should be rejected
             if timestamp > datetime.utcnow():
-                with pytest.raises(ValueError, match="Timestamp cannot be in the future"):
+                with pytest.raises(
+                    ValueError, match="Timestamp cannot be in the future"
+                ):
                     from app.models.signal import (Signal, SignalSource,
                                                    SignalStrength, SignalType)
 
@@ -663,18 +678,18 @@ class TestMathematicalEdgeCases:
         """Test division by zero scenarios in calculations."""
         # Test division by zero in percentage calculations
         with pytest.raises(ZeroDivisionError):
-            result = 100 / 0
+            100 / 0
 
         # Test division by zero in average calculations
         with pytest.raises(ZeroDivisionError):
             values = [100, 200, 300]
-            average = sum(values) / 0
+            sum(values) / 0
 
         # Test division by zero in ratio calculations
         with pytest.raises(ZeroDivisionError):
             numerator = 100
             denominator = 0
-            ratio = numerator / denominator
+            numerator / denominator
 
     def test_square_root_of_negative_numbers(self):
         """Test square root calculations with negative numbers."""
@@ -710,7 +725,6 @@ class TestMathematicalEdgeCases:
 
     def test_power_calculations_with_extreme_values(self):
         """Test power calculations with extreme values."""
-        import math
 
         # Test very large base
         result = 1e10**2

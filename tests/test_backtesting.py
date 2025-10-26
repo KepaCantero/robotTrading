@@ -7,14 +7,12 @@ including trending markets, ranging markets, and edge cases.
 
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import List
 
 import pytest
 
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import (BacktestConfig, BacktestResult,
                                     PerformanceMetrics, Trade, TradeStatus)
-from app.models.momentum import MarketData
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from tests.fixtures.historical_data import (
     create_contradictory_signals, create_single_day_market_data,
@@ -305,7 +303,9 @@ class TestBacktestModels:
 
     def test_performance_metrics_inconsistent_trades(self):
         """Test PerformanceMetrics with inconsistent trade counts."""
-        with pytest.raises(ValueError, match="Total trades must equal winning \\+ losing trades"):
+        with pytest.raises(
+            ValueError, match="Total trades must equal winning \\+ losing trades"
+        ):
             PerformanceMetrics(
                 total_trades=10,
                 winning_trades=6,

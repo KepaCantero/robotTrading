@@ -2,7 +2,6 @@
 Tests for error handling system.
 """
 
-import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -25,7 +24,7 @@ class TestFastAPIIntegration:
 
     def test_error_handling_in_fastapi(self):
         """Test error handling in FastAPI."""
-        response = client.get("/")
+        client.get("/")
         # Should not raise exception
         assert True
 

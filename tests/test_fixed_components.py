@@ -3,12 +3,7 @@ Fixed Logging Tests - Avoiding File System Issues
 Testing Reviewer Audit - Phase 2: Test Fixes
 """
 
-import tempfile
-from pathlib import Path
-from typing import Any, Dict
-from unittest.mock import MagicMock, Mock, patch
-
-import pytest
+from unittest.mock import MagicMock, patch
 
 
 class TestLoggingSystemFixed:
@@ -37,7 +32,9 @@ class TestLoggingSystemFixed:
             from app.services.centralized_logging import LogService
 
             # Mock the file system operations
-            with patch("pathlib.Path.mkdir"), patch("pathlib.Path.exists", return_value=True):
+            with patch("pathlib.Path.mkdir"), patch(
+                "pathlib.Path.exists", return_value=True
+            ):
                 service = LogService()
                 assert service is not None
 
@@ -134,10 +131,7 @@ class TestErrorHandlingFixed:
     def test_custom_exceptions(self):
         """Test custom exceptions."""
         try:
-            from app.core.exceptions import (BusinessLogicError,
-                                             ConfigurationError,
-                                             MarketDataError, PortfolioError,
-                                             TradingError, ValidationError)
+            from app.core.exceptions import ConfigurationError, ValidationError
 
             # Test exception creation
             config_error = ConfigurationError("Config error", "CONFIG_001")
@@ -161,10 +155,12 @@ class TestDatabaseFixed:
     def test_database_models(self):
         """Test database models."""
         try:
-            from app.database.models import Asset, Portfolio, Trade, User
+            from app.database.models import User
 
             # Test model creation
-            user = User(id=1, username="test_user", email="test@example.com", is_active=True)
+            user = User(
+                id=1, username="test_user", email="test@example.com", is_active=True
+            )
             assert user.username == "test_user"
             assert user.email == "test@example.com"
 
@@ -177,8 +173,7 @@ class TestDatabaseFixed:
     def test_repository_pattern(self):
         """Test repository pattern."""
         try:
-            from app.database.repositories import (BaseRepository,
-                                                   UserRepository)
+            from app.database.repositories import UserRepository
 
             # Test repository creation
             repo = UserRepository()
@@ -201,7 +196,6 @@ class TestCICDFixed:
     def test_github_workflows(self):
         """Test GitHub workflow files exist."""
         try:
-            import os
             from pathlib import Path
 
             # Check if workflow files exist
@@ -211,7 +205,9 @@ class TestCICDFixed:
                 assert len(workflow_files) > 0, "No workflow files found"
 
                 for workflow_file in workflow_files:
-                    assert workflow_file.exists(), f"Workflow file {workflow_file} does not exist"
+                    assert (
+                        workflow_file.exists()
+                    ), f"Workflow file {workflow_file} does not exist"
 
             print("✅ GitHub workflows test passed")
             return True

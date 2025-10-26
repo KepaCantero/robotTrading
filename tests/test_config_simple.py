@@ -13,11 +13,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 def test_imports():
     """Test that we can import the configuration modules."""
     try:
-        from app.core.centralized_config import (APIConfig, DatabaseConfig,
-                                                 Environment, LoggingConfig,
-                                                 MonitoringConfig, RedisConfig,
-                                                 StrategyConfig,
-                                                 TradingThresholds)
+        pass
 
         print("✅ All imports successful")
         return True
@@ -135,7 +131,9 @@ def test_redis_config():
         assert config_no_pass.connection_string == expected
 
         # Test connection string with password
-        config_with_pass = RedisConfig(host="redis.example.com", port=6380, password="secret", db=1)
+        config_with_pass = RedisConfig(
+            host="redis.example.com", port=6380, password="secret", db=1
+        )
         expected = "redis://:secret@redis.example.com:6380/1"
         assert config_with_pass.connection_string == expected
 

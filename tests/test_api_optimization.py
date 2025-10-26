@@ -5,9 +5,7 @@ This module contains comprehensive tests for the optimization API endpoints
 including walk-forward analysis, out-of-sample testing, and parameter optimization.
 """
 
-import asyncio
-from datetime import date, datetime, timedelta
-from typing import Any, Dict
+from datetime import date, datetime
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -15,15 +13,12 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app.api.optimization import router
-from app.models.optimization import (OptimizationArtifact, OptimizationConfig,
-                                     OptimizationMethod, OptimizationMetrics,
+from app.models.optimization import (OptimizationArtifact, OptimizationMethod,
+                                     OptimizationMetrics,
                                      OptimizationParameter, OptimizationResult,
                                      OptimizationSummary, OutOfSampleResult,
-                                     OutOfSampleTest, OutOfSampleTestRequest,
-                                     ParameterConstraint,
-                                     ParameterOptimizationRequest,
-                                     ParameterType, PurgedKFoldConfig,
-                                     WalkForwardConfig)
+                                     OutOfSampleTest, ParameterConstraint,
+                                     ParameterType)
 from app.services.parameter_optimization_service import \
     ParameterOptimizationService
 
@@ -135,7 +130,9 @@ class TestOptimizationEndpoints(TestOptimizationAPI):
     """Test cases for optimization API endpoints."""
 
     @patch("app.api.optimization.get_optimization_service")
-    def test_optimize_parameters_success(self, mock_service, client, optimization_request_data):
+    def test_optimize_parameters_success(
+        self, mock_service, client, optimization_request_data
+    ):
         """Test successful parameter optimization."""
         # Mock service response
         mock_result = OptimizationResult(
@@ -158,7 +155,9 @@ class TestOptimizationEndpoints(TestOptimizationAPI):
         mock_service.return_value = mock_service_instance
 
         # Make request
-        response = client.post("/optimization/optimize-parameters", json=optimization_request_data)
+        response = client.post(
+            "/optimization/optimize-parameters", json=optimization_request_data
+        )
 
         # Verify response
         assert response.status_code == 200
@@ -214,7 +213,9 @@ class TestOptimizationEndpoints(TestOptimizationAPI):
         mock_service.return_value = mock_service_instance
 
         # Make request
-        response = client.post("/optimization/optimize-parameters", json=optimization_request_data)
+        response = client.post(
+            "/optimization/optimize-parameters", json=optimization_request_data
+        )
 
         # Verify error response - since mock isn't working, just verify the
         # endpoint works
@@ -247,11 +248,15 @@ class TestOptimizationEndpoints(TestOptimizationAPI):
             sortino_ratio=1.5,
         )
         mock_service_instance = Mock(spec=ParameterOptimizationService)
-        mock_service_instance.perform_out_of_sample_test = AsyncMock(return_value=mock_result)
+        mock_service_instance.perform_out_of_sample_test = AsyncMock(
+            return_value=mock_result
+        )
         mock_service.return_value = mock_service_instance
 
         # Make request
-        response = client.post("/optimization/out-of-sample-test", json=out_of_sample_test_data)
+        response = client.post(
+            "/optimization/out-of-sample-test", json=out_of_sample_test_data
+        )
 
         # Verify response
         assert response.status_code == 200
@@ -316,7 +321,9 @@ class TestOptimizationEndpoints(TestOptimizationAPI):
         ]
 
         mock_service_instance = Mock(spec=ParameterOptimizationService)
-        mock_service_instance.get_optimization_artifacts = AsyncMock(return_value=mock_artifacts)
+        mock_service_instance.get_optimization_artifacts = AsyncMock(
+            return_value=mock_artifacts
+        )
         mock_service.return_value = mock_service_instance
 
         # Make request
@@ -328,7 +335,9 @@ class TestOptimizationEndpoints(TestOptimizationAPI):
         assert isinstance(data, list)  # Should return a list of artifacts
 
     @patch("app.api.optimization.get_optimization_service")
-    def test_get_optimization_artifacts_with_strategy_filter(self, mock_service, client):
+    def test_get_optimization_artifacts_with_strategy_filter(
+        self, mock_service, client
+    ):
         """Test getting optimization artifacts with strategy filter."""
         # Mock service response
         mock_artifacts = [
@@ -349,7 +358,9 @@ class TestOptimizationEndpoints(TestOptimizationAPI):
         ]
 
         mock_service_instance = Mock(spec=ParameterOptimizationService)
-        mock_service_instance.get_optimization_artifacts = AsyncMock(return_value=mock_artifacts)
+        mock_service_instance.get_optimization_artifacts = AsyncMock(
+            return_value=mock_artifacts
+        )
         mock_service.return_value = mock_service_instance
 
         # Make request with strategy filter
@@ -382,11 +393,15 @@ class TestOptimizationEndpoints(TestOptimizationAPI):
         ]
 
         mock_service_instance = Mock(spec=ParameterOptimizationService)
-        mock_service_instance.get_optimization_artifacts = AsyncMock(return_value=mock_artifacts)
+        mock_service_instance.get_optimization_artifacts = AsyncMock(
+            return_value=mock_artifacts
+        )
         mock_service.return_value = mock_service_instance
 
         # Make request
-        response = client.get("/optimization/artifacts/momentum_strategy_20231201_120000")
+        response = client.get(
+            "/optimization/artifacts/momentum_strategy_20231201_120000"
+        )
 
         # Verify response - should return 404 since no artifacts exist
         assert response.status_code == 404
@@ -421,7 +436,9 @@ class TestOptimizationEndpoints(TestOptimizationAPI):
             artifacts_count=4,
         )
         mock_service_instance = Mock(spec=ParameterOptimizationService)
-        mock_service_instance.get_optimization_summary = AsyncMock(return_value=mock_summary)
+        mock_service_instance.get_optimization_summary = AsyncMock(
+            return_value=mock_summary
+        )
         mock_service.return_value = mock_service_instance
 
         # Make request
@@ -468,12 +485,18 @@ class TestOptimizationEndpoints(TestOptimizationAPI):
             profit_factor=1.8,
         )
         mock_service_instance = Mock(spec=ParameterOptimizationService)
-        mock_service_instance.get_optimization_artifacts = AsyncMock(return_value=mock_artifacts)
-        mock_service_instance.calculate_optimization_metrics = AsyncMock(return_value=mock_metrics)
+        mock_service_instance.get_optimization_artifacts = AsyncMock(
+            return_value=mock_artifacts
+        )
+        mock_service_instance.calculate_optimization_metrics = AsyncMock(
+            return_value=mock_metrics
+        )
         mock_service.return_value = mock_service_instance
 
         # Make request
-        response = client.get("/optimization/artifacts/momentum_strategy_20231201_120000/metrics")
+        response = client.get(
+            "/optimization/artifacts/momentum_strategy_20231201_120000/metrics"
+        )
 
         # Verify response - should return 404 since no artifacts exist
         assert response.status_code == 404
@@ -591,11 +614,15 @@ class TestOptimizationUtilityEndpoints(TestOptimizationAPI):
         ]
 
         mock_service_instance = Mock(spec=ParameterOptimizationService)
-        mock_service_instance.get_optimization_artifacts = AsyncMock(return_value=mock_artifacts)
+        mock_service_instance.get_optimization_artifacts = AsyncMock(
+            return_value=mock_artifacts
+        )
         mock_service.return_value = mock_service_instance
 
         # Make request
-        response = client.get("/optimization/strategies/momentum_strategy/best-parameters")
+        response = client.get(
+            "/optimization/strategies/momentum_strategy/best-parameters"
+        )
 
         # Verify response - should return 404 since no artifacts exist
         assert response.status_code == 404
@@ -609,7 +636,9 @@ class TestOptimizationUtilityEndpoints(TestOptimizationAPI):
         mock_service.return_value = mock_service_instance
 
         # Make request
-        response = client.get("/optimization/strategies/nonexistent_strategy/best-parameters")
+        response = client.get(
+            "/optimization/strategies/nonexistent_strategy/best-parameters"
+        )
 
         # Verify error response
         assert response.status_code == 404
@@ -661,7 +690,9 @@ class TestOptimizationAPIErrorHandling(TestOptimizationAPI):
     """Test error handling in optimization API."""
 
     @patch("app.api.optimization.get_optimization_service")
-    def test_unexpected_error_handling(self, mock_service, client, optimization_request_data):
+    def test_unexpected_error_handling(
+        self, mock_service, client, optimization_request_data
+    ):
         """Test handling of unexpected errors."""
         # Mock service to raise unexpected error
         mock_service_instance = Mock(spec=ParameterOptimizationService)
@@ -671,7 +702,9 @@ class TestOptimizationAPIErrorHandling(TestOptimizationAPI):
         mock_service.return_value = mock_service_instance
 
         # Make request
-        response = client.post("/optimization/optimize-parameters", json=optimization_request_data)
+        response = client.post(
+            "/optimization/optimize-parameters", json=optimization_request_data
+        )
 
         # Verify error response - since mock isn't working, just verify the
         # endpoint works
@@ -696,7 +729,9 @@ class TestOptimizationAPIErrorHandling(TestOptimizationAPI):
             # Missing parameters, optimization_config, etc.
         }
 
-        response = client.post("/optimization/optimize-parameters", json=incomplete_data)
+        response = client.post(
+            "/optimization/optimize-parameters", json=incomplete_data
+        )
 
         # Verify error response
         assert response.status_code == 422  # Unprocessable Entity
