@@ -99,6 +99,9 @@ latency: 1000                       # Cambiar a backup si latencia > 1000ms
 - **TASK-AUDIT-01**: Añadir tests para divisiones por cero en RiskCalculator
 - **TASK-AUDIT-02**: Validar coherencia de señales con inputs incompletos
 - **TASK-AUDIT-03**: Stress Testing de Circuit Breakers y Drawdowns
+- **TASK-HT-01**: Tests para mean_reversion.py (0% cobertura → >= 95%) 🔴 CRÍTICO
+- **TASK-HT-02**: Tests para momentum.py (0% cobertura → >= 95%) 🔴 CRÍTICO
+- **TASK-HT-03**: Tests para market_data_service.py (22% → >= 70%) 🔴 CRÍTICO
 
 ### 🟠 **ALTAS** (Impactan estabilidad de cálculos - Implementar en 1-2 semanas)
 
@@ -443,12 +446,13 @@ Estas dos tareas (TASK-57 y TASK-58) representan las **últimas tareas críticas
 - `44f139a` - fix: correct E203 whitespace errors and remove unused variables
 - `ea33f32` - fix: correct remaining E203 whitespace errors
 
-### 🔴 **TAREAS PENDIENTES - ALTA PRIORIDAD**
+### 🔴 **TAREAS PENDIENTES - CRÍTICAS** (Afectan integridad financiera)
 
 #### TAREA-HT-01: Tests para mean_reversion.py
 
 - **Estado**: ⚠️ Pendiente
-- **Prioridad**: 🔴 ALTA
+- **Prioridad**: 🔴 CRÍTICA (Afecta integridad financiera)
+- **Riesgo**: ⚠️ Sin tests = riesgo de pérdidas financieras
 - **Cobertura actual**: 0% (0/112 líneas)
 - **Objetivo**: >= 95% cobertura
 - **Archivo**: `tests/strategies/test_mean_reversion.py` (crear)
@@ -456,7 +460,8 @@ Estas dos tareas (TASK-57 y TASK-58) representan las **últimas tareas críticas
 #### TAREA-HT-02: Tests para momentum.py
 
 - **Estado**: ⚠️ Pendiente
-- **Prioridad**: 🔴 ALTA
+- **Prioridad**: 🔴 CRÍTICA (Afecta integridad financiera)
+- **Riesgo**: ⚠️ Sin tests = riesgo de pérdidas financieras
 - **Cobertura actual**: 0% (0/107 líneas)
 - **Objetivo**: >= 95% cobertura
 - **Archivo**: `tests/strategies/test_momentum.py` (crear)
@@ -464,7 +469,8 @@ Estas dos tareas (TASK-57 y TASK-58) representan las **últimas tareas críticas
 #### TAREA-HT-03: Tests para market_data_service.py
 
 - **Estado**: ⚠️ Pendiente
-- **Prioridad**: 🔴 ALTA
+- **Prioridad**: 🔴 CRÍTICA (Afecta integridad financiera)
+- **Riesgo**: ⚠️ Datos incorrectos = decisiones de trading erróneas
 - **Cobertura actual**: 22% (45/203 líneas)
 - **Objetivo**: >= 70% cobertura
 - **Archivo**: `tests/services/test_market_data_service.py` (expandir)
