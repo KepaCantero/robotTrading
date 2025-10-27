@@ -30,6 +30,7 @@ from app.backtesting.data_loader import DataLoader
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig
 from app.strategies.momentum import MomentumStrategy
+from app.strategies.mean_reversion import MeanReversionStrategy
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -127,11 +128,23 @@ if execute_button:
                 st.error("❌ No data available for selected period")
                 st.stop()
             
-            # Create strategy
-            strategy = MomentumStrategy({
+            # Create strategy based on selected module
+            strategy_config = {
                 "name": selected_module.lower(),
                 **config_presets[selected_preset],
-            })
+            }
+            
+            if selected_module == "Momentum":
+                strategy = MomentumStrategy(strategy_config)
+            elif selected_module == "MeanReversion":
+                strategy = MeanReversionStrategy(strategy_config)
+            elif selected_module == "TechnicalAnalyst":
+                # Use MomentumStrategy for TechnicalAnalyst (RSI-MACD)
+                strategy = MomentumStrategy(strategy_config)
+            else:
+                # Default to MomentumStrategy for other modules
+                st.warning(f"⚠️ Module '{selected_module}' not fully implemented, using MomentumStrategy")
+                strategy = MomentumStrategy(strategy_config)
             
             # Generate signals
             signals = []
