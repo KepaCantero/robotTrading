@@ -615,19 +615,28 @@ if session_state.backtest_results:
     all_keys = list(session_state.backtest_results.keys())
     
     # Filter by selected module AND strategy
-    # Try both case-sensitive and case-insensitive matching
-    combined_key_lower = f"{selected_module.lower()}_{selected_strategy.lower()}"
-    combined_key_exact = f"{selected_module}_{selected_strategy}"
-    
-    filtered_keys = [
-        k for k in all_keys 
-        if k.lower().startswith(combined_key_lower) or k.startswith(combined_key_exact)
-    ]
-    
-    # If no results for this specific combination, show message and no results
-    if not filtered_keys:
-        st.warning(f"⚠️ No results for {selected_module} + {selected_strategy}. Execute backtest to see results.")
-        st.stop()  # Don't show any results
+    if selected_module == "all":
+        # Show ALL results when "all" is selected
+        combined_key_lower = f"_{selected_strategy.lower()}"
+        filtered_keys = [k for k in all_keys if combined_key_lower in k.lower()]
+        
+        if not filtered_keys:
+            st.warning(f"⚠️ No results for any module with strategy '{selected_strategy}'. Execute backtest to see results.")
+            st.stop()
+    else:
+        # Try both case-sensitive and case-insensitive matching
+        combined_key_lower = f"{selected_module.lower()}_{selected_strategy.lower()}"
+        combined_key_exact = f"{selected_module}_{selected_strategy}"
+        
+        filtered_keys = [
+            k for k in all_keys 
+            if k.lower().startswith(combined_key_lower) or k.startswith(combined_key_exact)
+        ]
+        
+        # If no results for this specific combination, show message and no results
+        if not filtered_keys:
+            st.warning(f"⚠️ No results for {selected_module} + {selected_strategy}. Execute backtest to see results.")
+            st.stop()  # Don't show any results
     
     available_keys = filtered_keys
     
