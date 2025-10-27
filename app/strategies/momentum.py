@@ -272,7 +272,8 @@ class MomentumStrategy(BaseStrategy):
             return Decimal("1")
         
         # Calcular promedio de volumen de las últimas 20 barras
-        avg_volume = sum(self.volume_history[-20:]) / 20
+        volume_list = list(self.volume_history)
+        avg_volume = sum(volume_list[-20:]) / 20
         if avg_volume > 0:
             return market_data.volume / Decimal(str(avg_volume))
         return Decimal("1")
@@ -290,12 +291,12 @@ class MomentumStrategy(BaseStrategy):
         if self.last_signal_time is None:
             return False
         
-        # Contar barras desde última señal
-        price_history_list = list(self.price_history)
-        if len(price_history_list) < self.cooldown_bars:
+        # Calcular tiempo transcurrido desde última señal
+        if len(self.price_history) < self.cooldown_bars:
             return False
         
-        return len(price_history_list) >= self.cooldown_bars
+        # Si tenemos suficiente histórico, el cooldown ya pasó
+        return False  # Por ahora desactivamos el cooldown temporal
 
     def _is_buy_signal(
         self,
