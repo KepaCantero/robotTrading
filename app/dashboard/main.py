@@ -213,12 +213,77 @@ if session_state.backtest_results:
                 "Exit Time": trade.exit_time,
                 "PnL": float(trade.pnl) if trade.pnl else 0,
                 "Status": trade.status.value,
+                "Reason": trade.reason if trade.reason else "N/A",
             }
             for trade in result.trades
         ]
     )
     
     st.dataframe(trades_df, use_container_width=True, height=400)
+    
+    # Comparison section
+    st.subheader("📊 Compare Configurations")
+    
+    if len(session_state.backtest_results) > 1:
+        # Multi-select for comparison
+        all_keys = list(session_state.backtest_results.keys())
+        compare_keys = st.multiselect(
+            "Select configurations to compare",
+            options=all_keys,
+            default=all_keys[-2:] if len(all_keys) >= 2 else all_keys,
+            help="Compare multiple module configurations"
+        )
+        
+        if len(compare_keys) >= 2:
+            # Create comparison DataFrame
+            comparison_data = []
+            for key in compare_keys:
+                result = session_state.backtest_results[key]
+                comparison_data.append({
+                    "Configuration": key,
+                    "Total Trades": result.performance.total_trades,
+                    "Win Rate": f"{float(result.performance.win_rate):.1f}%",
+                    "Total Return": f"{float(result.total_return):.2f}%",
+                    "Final Capital": f"${float(result.final_capital):,.2f}",
+                    "Max Drawdown": f"{float(result.performance.max_drawdown):.2f}%",
+                })
+            
+            comparison_df = pd.DataFrame(comparison_data)
+            st.dataframe(comparison_df, use_container_width=True, hide_index=True)
+            
+            # Comparison chart (equity curves)
+            st.subheader("📈 Equity Curve Comparison")
+            fig = go.Figure()
+            
+            colors = px.colors.qualitative.Set3[:len(compare_keys)]
+            for idx, key in enumerate(compare_keys):
+                result = session_state.backtest_results[key]
+                if result.equity_curve:
+                    dates = [point[0] for point in result.equity_curve]
+                    values = [float(point[1]) for point in result.equity_curve]
+                    fig.add_trace(go.Scatter(
+                        x=dates,
+                        y=values,
+                        mode='lines',
+                        name=key,
+                        line=dict(color=colors[idx]),
+                    ))
+            
+            fig.update_layout(
+                title="Portfolio Value Over Time - Comparison",
+                xaxis_title="Date",
+                yaxis_title="Portfolio Value ($)",
+                height=400,
+                legend=dict(
+                    yanchor="top",
+                    y=0.99,
+                    xanchor="left",
+                    x=0.01
+                ),
+            )
+            st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("⚠️ Run at least 2 backtests to compare configurations")
     
     # Export button
     if st.button("📥 Export Results"):
@@ -244,6 +309,7 @@ if session_state.backtest_results:
                     "exit_price": float(trade.exit_price) if trade.exit_price else None,
                     "pnl": float(trade.pnl) if trade.pnl else 0,
                     "status": trade.status.value,
+                    "reason": trade.reason if trade.reason else "N/A",
                 }
                 for trade in result.trades
             ],
