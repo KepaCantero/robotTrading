@@ -837,12 +837,15 @@ if session_state.backtest_results:
         )
     
     with col2:
-        csv_str = trades_df.to_csv(index=False)
-        st.download_button(
-            label="📥 Download CSV",
-            data=csv_str,
-            file_name=f"backtest_{result_key}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-            mime="text/csv",
-            use_container_width=True,
-        )
+        if result.trades and len(result.trades) > 0 and not trades_df.empty:
+            csv_str = trades_df.to_csv(index=False)
+            st.download_button(
+                label="📥 Download CSV",
+                data=csv_str,
+                file_name=f"backtest_{result_key}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                mime="text/csv",
+                use_container_width=True,
+            )
+        else:
+            st.info("No CSV to download (no trades)")
 
