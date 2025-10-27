@@ -16,8 +16,8 @@
   "volatility_annualized": 0,
   "sharpe_ratio": -5.89455897094911,
   "sortino_ratio": 0,
-  "timestamp_utc": "2025-10-27T09:44:56.233698",
-  "code_hash": "24fb67da593c",
-  "commit_sha": "24fb67da593c",
+  "timestamp_utc": "2025-10-27T09:57:47.882403",
+  "code_hash": "82b0b682db28",
+  "commit_sha": "82b0b682db28",
   "environment": "local"
 }
