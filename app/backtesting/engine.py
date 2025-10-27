@@ -157,27 +157,30 @@ class SimpleBacktester:
 
     def _execute_buy_signal(self, signal: Signal, market_data: Any):
         """Execute a buy signal."""
+        # Get price using helper function
+        current_price = get_price(market_data)
+        
         # Calculate position size based on signal confidence and available
         # capital
-        position_size = self._calculate_position_size(signal, market_data.close)
+        position_size = self._calculate_position_size(signal, current_price)
 
         if position_size <= 0:
             return
 
         # Check if we have enough capital
-        total_cost = position_size * market_data.close
+        total_cost = position_size * current_price
         if total_cost > self.capital:
-            position_size = self.capital / market_data.close
+            position_size = self.capital / current_price
 
         if position_size <= 0:
             return
 
         # Apply slippage
-        execution_price = self._apply_slippage(market_data.close, True)
+        execution_price = self._apply_slippage(current_price, True)
 
         # Calculate costs
         commission = self.config.commission_per_trade
-        slippage_cost = abs(position_size * (execution_price - market_data.close))
+        slippage_cost = abs(position_size * (execution_price - current_price))
         total_cost = position_size * execution_price + commission + slippage_cost
 
         if total_cost > self.capital:
@@ -214,21 +217,24 @@ class SimpleBacktester:
         if current_position <= 0:
             return  # No position to sell
 
+        # Get price using helper function
+        current_price = get_price(market_data)
+
         # Calculate sell quantity (can be partial)
         sell_quantity = min(
             current_position,
-            self._calculate_position_size(signal, market_data.close),
+            self._calculate_position_size(signal, current_price),
         )
 
         if sell_quantity <= 0:
             return
 
         # Apply slippage
-        execution_price = self._apply_slippage(market_data.close, False)
+        execution_price = self._apply_slippage(current_price, False)
 
         # Calculate proceeds
         commission = self.config.commission_per_trade
-        slippage_cost = abs(sell_quantity * (execution_price - market_data.close))
+        slippage_cost = abs(sell_quantity * (execution_price - current_price))
         proceeds = sell_quantity * execution_price - commission - slippage_cost
 
         # Find the most recent buy trade for this symbol to calculate PnL
@@ -445,7 +451,7 @@ class SimpleBacktester:
         """Close all remaining positions at the end of backtest."""
         for symbol in list(self.positions.keys()):
             if self.positions[symbol] > 0:
-                self._close_position(symbol, final_market_data.timestamp, "end_of_backtest", final_market_data.close)
+                self._close_position(symbol, final_market_data.timestamp, "end_of_backtest", get_price(final_market_data))
 
     def _update_equity_curve(self, timestamp: datetime):
         """Update equity curve with current portfolio value."""
