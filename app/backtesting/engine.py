@@ -129,6 +129,7 @@ class SimpleBacktester:
             config=self.config,
             trades=self.trades,
             performance=performance,
+            equity_curve=self.equity_curve,
             start_date=market_data[0].timestamp,
             end_date=market_data[-1].timestamp,
             final_capital=self.capital,

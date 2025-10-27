@@ -8,7 +8,7 @@ including trade records, performance metrics, and backtest configuration.
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -189,6 +189,9 @@ class BacktestResult(BaseModel):
     )
     performance: Optional[PerformanceMetrics] = Field(
         default=None, description="Performance metrics"
+    )
+    equity_curve: List[Tuple[datetime, Decimal]] = Field(
+        default_factory=list, description="Portfolio equity over time"
     )
     start_date: datetime = Field(..., description="Backtest start date")
     end_date: datetime = Field(..., description="Backtest end date")
