@@ -312,11 +312,14 @@ class SimpleBacktester:
         reason_parts = []
         
         # Add signal type and strength
-        reason_parts.append(f"{signal.signal_type.value.upper()}")
+        # Handle both SignalType enum and string
+        signal_type_str = signal.signal_type.value if hasattr(signal.signal_type, 'value') else str(signal.signal_type)
+        reason_parts.append(signal_type_str.upper())
         
         # Add source information
-        if signal.source.value:
-            reason_parts.append(f"via {signal.source.value}")
+        source_str = signal.source.value if hasattr(signal.source, 'value') else str(signal.source)
+        if source_str:
+            reason_parts.append(f"via {source_str}")
         
         # Extract and format metadata
         if signal.metadata:
