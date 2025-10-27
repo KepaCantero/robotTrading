@@ -275,6 +275,55 @@ if execute_button:
             st.error(f"❌ Error: {e}")
             logger.exception("Backtest failed")
 
+# Module Information Panel
+st.header(f"📦 Module: {selected_module}")
+module_info = {
+    "all": {
+        "description": "Execute backtests across all system modules",
+        "metrics": ["All modules", "Cross-comparison"],
+        "good_metrics": "Compare performance across modules",
+    },
+    "TechnicalAnalyst": {
+        "description": "Technical analysis module using RSI, EMA, and volume indicators",
+        "metrics": ["RSI", "EMA trend", "Volume ratio", "Signal strength"],
+        "good_metrics": "RSI < 40 (oversold), EMA trend > 0, Volume > 1.0x",
+    },
+    "RiskManager": {
+        "description": "Risk management module for position sizing and exposure control",
+        "metrics": ["Position size", "Exposure", "Risk per trade", "Stop loss"],
+        "good_metrics": "Max exposure < 60%, Risk per trade < 2%",
+    },
+    "SignalCombiner": {
+        "description": "Multi-signal combination module for signal aggregation",
+        "metrics": ["Signal count", "Agreement rate", "Combined strength"],
+        "good_metrics": "High agreement rate, Strong combined signals",
+    },
+    "Executor": {
+        "description": "Trade execution module with slippage and commission handling",
+        "metrics": ["Execution price", "Slippage", "Commission", "Fill rate"],
+        "good_metrics": "Low slippage < 0.5%, High fill rate > 95%",
+    },
+}
+
+if selected_module in module_info:
+    info = module_info[selected_module]
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        st.markdown(f"**Description**: {info['description']}")
+        st.markdown(f"**Metrics**: {', '.join(info['metrics'])}")
+        st.markdown(f"**Good Indicators**: {info['good_metrics']}")
+    with col2:
+        if "backtest_results" in session_state and session_state.backtest_results:
+            module_results = [k for k in session_state.backtest_results.keys() if k.startswith(selected_module)]
+            if module_results:
+                st.success(f"✅ {len(module_results)} result(s) available")
+            else:
+                st.warning("⚠️ No results yet")
+        else:
+            st.info("ℹ️ No backtests executed")
+
+st.divider()
+
 # Display results with module/preset selector
 if session_state.backtest_results:
     # Let user select which result to view
@@ -296,7 +345,7 @@ if session_state.backtest_results:
             options=available_keys,
             index=len(available_keys)-1,  # Default to most recent
             help="Select which backtest result to display",
-            key=f"result_selector_{selected_strategy}"
+            key=f"result_selector_{selected_module}_{selected_strategy}"
         )
     else:
         result_key = available_keys[0] if available_keys else all_keys[-1]
