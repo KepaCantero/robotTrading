@@ -50,6 +50,10 @@ st.set_page_config(
 st.title("📊 AlgoTrading Backtest Dashboard")
 st.markdown("**Interactive backtesting analysis and module comparison**")
 
+# Initialize session state
+if "backtest_results" not in session_state:
+    session_state.backtest_results = {}
+
 # Sidebar for module selection
 with st.sidebar:
     st.header("⚙️ Configuration")
@@ -154,9 +158,84 @@ with st.sidebar:
     # Execute button
     execute_button = st.button("🚀 Execute Backtest", type="primary", use_container_width=True)
 
+# Auto-load saved backtest results
+# This loads results AFTER the user selects module/strategy
+results_dir = project_root / "docs" / "BACKTEST_RESULTS"
+if results_dir.exists():
+    for module_dir in results_dir.iterdir():
+        if module_dir.is_dir() and module_dir.name != "all":
+            for json_file in module_dir.glob("metrics_*.json"):
+                try:
+                    with open(json_file, 'r') as f:
+                        metrics_data = json.load(f)
+                    
+                    # Extract module name from directory
+                    module_name = module_dir.name
+                    
+                    # Extract config name from filename
+                    # Format: metrics_Conservative_20251027_101028.json
+                    parts = json_file.stem.split('_')
+                    config_name = parts[1] if len(parts) > 1 else 'default'
+                    timestamp = parts[2] if len(parts) > 2 else None
+                    
+                    # Create keys for each strategy (since we don't know which strategy was used)
+                    for strategy_key in ["momentum", "mean_reversion", "pairs_trading"]:
+                        key = f"{module_name}_{strategy_key}_{config_name}_{timestamp}" if timestamp else f"{module_name}_{strategy_key}_{config_name}"
+                        
+                        if key not in session_state.backtest_results:
+                            # Try to create a basic BacktestResult from the metrics
+                            try:
+                                from app.backtesting.models import BacktestResult, PerformanceMetrics, Trade
+                                
+                                # Convert metrics JSON to BacktestResult
+                                perf_metrics = PerformanceMetrics(
+                                    total_trades=int(metrics_data.get('total_trades', 0)),
+                                    win_rate=float(metrics_data.get('win_rate', 0)),
+                                    total_pnl=float(metrics_data.get('total_pnl', 0)),
+                                    sharpe_ratio=float(metrics_data.get('sharpe_ratio', 0)) if metrics_data.get('sharpe_ratio') else None,
+                                    max_drawdown=float(metrics_data.get('max_drawdown', 0)),
+                                    final_capital=float(metrics_data.get('final_capital', 0)),
+                                    cagr=float(metrics_data.get('cagr', 0)) if metrics_data.get('cagr') else None,
+                                    sortino_ratio=float(metrics_data.get('sortino_ratio', 0)) if metrics_data.get('sortino_ratio') else None,
+                                    profit_factor=float(metrics_data.get('profit_factor', 0)) if metrics_data.get('profit_factor') else None,
+                                )
+                                
+                                # Load trades if available
+                                trades = []
+                                trade_log_file = module_dir / f"trade_log_{config_name}_{timestamp}.csv" if timestamp else module_dir / f"trade_log_{config_name}.csv"
+                                if trade_log_file.exists():
+                                    df = pd.read_csv(trade_log_file)
+                                    for _, row in df.iterrows():
+                                        trades.append(Trade(
+                                            timestamp=datetime.fromisoformat(str(row['timestamp'])),
+                                            type=row['type'],
+                                            price=float(row['price']),
+                                            quantity=float(row['quantity']),
+                                            reason=row.get('reason', ''),
+                                            pnl=float(row.get('pnl', 0)),
+                                            status='CLOSED'
+                                        ))
+                                
+                                result = BacktestResult(
+                                    symbol=metrics_data.get('symbol', 'UNKNOWN'),
+                                    start_date=datetime.fromisoformat(metrics_data['start_date']) if 'start_date' in metrics_data else datetime.now(),
+                                    end_date=datetime.fromisoformat(metrics_data['end_date']) if 'end_date' in metrics_data else datetime.now(),
+                                    initial_capital=float(metrics_data.get('initial_capital', 100000)),
+                                    final_capital=float(metrics_data.get('final_capital', 0)),
+                                    trades=trades,
+                                    performance=perf_metrics,
+                                    equity_curve=[],  # Would need to load separately
+                                )
+                                
+                                session_state.backtest_results[key] = result
+                                
+                            except Exception as e:
+                                logger.warning(f"Failed to convert metrics to BacktestResult: {e}")
+                                
+                except Exception as e:
+                    logger.warning(f"Failed to load {json_file}: {e}")
+
 # Main content area
-if "backtest_results" not in session_state:
-    session_state.backtest_results = {}
 
 # Execute backtest
 if execute_button:
