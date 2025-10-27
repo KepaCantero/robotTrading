@@ -179,11 +179,28 @@ if execute_button:
             st.error(f"❌ Error: {e}")
             logger.exception("Backtest failed")
 
-# Display results
+# Display results with module/preset selector
 if session_state.backtest_results:
-    # Get the most recent result
-    last_key = list(session_state.backtest_results.keys())[-1]
-    result = session_state.backtest_results[last_key]
+    # Let user select which result to view
+    all_keys = list(session_state.backtest_results.keys())
+    
+    # Filter by selected module if results exist
+    module_keys = [k for k in all_keys if k.startswith(selected_module)]
+    available_keys = module_keys if module_keys else all_keys
+    
+    # Create selector for results
+    if len(available_keys) > 1:
+        result_key = st.selectbox(
+            "📊 Select Backtest Result",
+            options=available_keys,
+            index=len(available_keys)-1,  # Default to most recent
+            help="Select which backtest result to display",
+            key="result_selector"
+        )
+    else:
+        result_key = available_keys[0] if available_keys else all_keys[-1]
+    
+    result = session_state.backtest_results[result_key]
     
     # Metrics dashboard with 6 cards
     col1, col2, col3, col4, col5, col6 = st.columns(6)
