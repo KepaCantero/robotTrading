@@ -183,6 +183,9 @@ class SimpleBacktester:
         if total_cost > self.capital:
             return
 
+        # Build reason from signal metadata
+        reason = self._build_trade_reason(signal, market_data)
+
         # Execute trade
         trade_id = str(uuid4())
         trade = Trade(
@@ -195,6 +198,7 @@ class SimpleBacktester:
             status=TradeStatus.OPEN,
             commission=commission,
             slippage=slippage_cost,
+            reason=reason,
         )
 
         self.trades.append(trade)
@@ -240,6 +244,9 @@ class SimpleBacktester:
             total_cost = avg_buy_price * sell_quantity + commission
             pnl = proceeds - total_cost
 
+        # Build reason from signal metadata
+        reason = self._build_trade_reason(signal, market_data)
+
         # Execute trade
         trade_id = str(uuid4())
         trade = Trade(
@@ -256,6 +263,7 @@ class SimpleBacktester:
             pnl_percentage=(pnl / (avg_buy_price * sell_quantity) * 100) if buy_trades else Decimal("0"),
             commission=commission,
             slippage=slippage_cost,
+            reason=reason,
         )
 
         # Close the matching buy trades
@@ -298,6 +306,32 @@ class SimpleBacktester:
         else:
             # Sell orders execute at lower price (unfavorable)
             return price * (Decimal("1") - slippage_factor)
+
+    def _build_trade_reason(self, signal: Signal, market_data: Any) -> str:
+        """Build human-readable reason for the trade from signal metadata."""
+        reason_parts = []
+        
+        # Add signal type and strength
+        reason_parts.append(f"{signal.signal_type.value.upper()}")
+        
+        # Add source information
+        if signal.source.value:
+            reason_parts.append(f"via {signal.source.value}")
+        
+        # Extract and format metadata
+        if signal.metadata:
+            metadata_strs = []
+            for key, value in signal.metadata.items():
+                if key in ["rsi", "ema_trend", "volume_ratio", "z_score", "spread"]:
+                    # Technical indicators
+                    metadata_strs.append(f"{key}={value}")
+            if metadata_strs:
+                reason_parts.append("(" + ", ".join(metadata_strs) + ")")
+        
+        # Add confidence
+        reason_parts.append(f"conf={signal.confidence:.1f}%")
+        
+        return " ".join(reason_parts)
 
     def _check_exit_conditions(self, market_data: Any):
         """Check for stop loss and take profit conditions."""

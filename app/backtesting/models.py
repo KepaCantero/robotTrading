@@ -40,6 +40,9 @@ class Trade(BaseModel):
         default=Decimal("0"), ge=0, description="Commission paid"
     )
     slippage: Decimal = Field(default=Decimal("0"), ge=0, description="Slippage cost")
+    reason: Optional[str] = Field(
+        None, description="Reason or signal that triggered the trade"
+    )
 
     @field_validator("side")
     @classmethod
