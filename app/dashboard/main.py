@@ -10,10 +10,15 @@ This module provides an interactive dashboard for:
 
 import json
 import logging
+import sys
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Dict, List, Optional
+
+# Add project root to path
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
 
 import pandas as pd
 import plotly.express as px
