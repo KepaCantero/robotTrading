@@ -332,11 +332,13 @@ if session_state.backtest_results:
     # Filter by selected module AND strategy
     combined_key = f"{selected_module}_{selected_strategy}"
     filtered_keys = [k for k in all_keys if k.startswith(combined_key)]
-    available_keys = filtered_keys if filtered_keys else all_keys
     
-    # Show info if no results for selected module+strategy
-    if not filtered_keys and all_keys:
-        st.info(f"ℹ️ No results for {selected_module} + {selected_strategy}. Showing all results.")
+    # If no results for this specific combination, show message and no results
+    if not filtered_keys:
+        st.warning(f"⚠️ No results for {selected_module} + {selected_strategy}. Execute backtest to see results.")
+        st.stop()  # Don't show any results
+    
+    available_keys = filtered_keys
     
     # Create selector for results
     if len(available_keys) > 1:
