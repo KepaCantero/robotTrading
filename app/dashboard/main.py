@@ -54,31 +54,47 @@ st.markdown("**Interactive backtesting analysis and module comparison**")
 with st.sidebar:
     st.header("⚙️ Configuration")
     
-    st.subheader("📊 Module Selection")
+    # MODULE SELECTOR
+    st.subheader("📦 Select Module")
     
-    # Module selector (only implemented strategies)
-    modules = {
-        "Momentum": "Momentum Strategy (RSI + EMA + Volume)",
-        "MeanReversion": "Mean Reversion Strategy (Z-score)",
-        "PairsTrading": "Pairs Trading Strategy (Cointegration)",
-    }
-    
+    modules = ["all", "TechnicalAnalyst", "RiskManager", "SignalCombiner", "Executor"]
     selected_module = st.selectbox(
-        "🎯 Select Strategy Module",
-        options=list(modules.keys()),
-        help="Choose which trading module to backtest",
+        "Select Module",
+        options=modules,
+        help="Choose which system module to use",
         key="module_selector"
     )
     
-    st.markdown(f"**Selected**: `{modules[selected_module]}`")
+    st.markdown(f"**Selected Module**: `{selected_module}`")
     
-    # Show available results for this module
+    st.divider()
+    
+    # STRATEGY SELECTOR
+    st.subheader("🎯 Select Strategy")
+    
+    strategies = {
+        "momentum": "Momentum Strategy (RSI + EMA + Volume)",
+        "mean_reversion": "Mean Reversion (Z-score)",
+        "pairs_trading": "Pairs Trading (Cointegration)",
+    }
+    
+    selected_strategy = st.selectbox(
+        "Select Strategy",
+        options=list(strategies.keys()),
+        help="Choose which trading strategy to backtest",
+        key="strategy_selector",
+        format_func=lambda x: strategies[x]
+    )
+    
+    st.markdown(f"**Selected Strategy**: `{strategies[selected_strategy]}`")
+    
+    # Show available results for this strategy
     if "backtest_results" in session_state and session_state.backtest_results:
-        module_results = [k for k in session_state.backtest_results.keys() if k.startswith(selected_module)]
-        if module_results:
-            st.success(f"✓ {len(module_results)} backtest(s) for {selected_module}")
+        strategy_results = [k for k in session_state.backtest_results.keys() if selected_strategy in k.lower()]
+        if strategy_results:
+            st.success(f"✓ {len(strategy_results)} backtest(s) for {selected_strategy}")
         else:
-            st.warning(f"⚠ No backtests yet for {selected_module}")
+            st.warning(f"⚠ No backtests yet for {selected_strategy}")
     
     st.divider()
     st.subheader("⚙️ Configuration Preset")
@@ -149,23 +165,23 @@ if execute_button:
                 st.error("❌ No data available for selected period")
                 st.stop()
             
-            # Create strategy based on selected module
+            # Create strategy based on selected strategy
             strategy_config = {
-                "name": selected_module.lower(),
+                "name": selected_strategy.lower(),
                 **config_presets[selected_preset],
             }
             
-            if selected_module == "Momentum":
+            if selected_strategy == "momentum":
                 strategy = MomentumStrategy(strategy_config)
-            elif selected_module == "MeanReversion":
+            elif selected_strategy == "mean_reversion":
                 strategy = MeanReversionStrategy(strategy_config)
-            elif selected_module == "PairsTrading":
+            elif selected_strategy == "pairs_trading":
                 # Note: PairsTrading needs pair_symbols, set default
                 if "pair_symbols" not in strategy_config:
                     strategy_config["pair_symbols"] = ["AAPL", "MSFT"]
                 strategy = PairsTradingStrategy(strategy_config)
             else:
-                st.error(f"❌ Unknown module: {selected_module}")
+                st.error(f"❌ Unknown strategy: {selected_strategy}")
                 st.stop()
             
             # Generate signals
@@ -191,8 +207,8 @@ if execute_button:
             backtester = SimpleBacktester(config)
             result = backtester.run_backtest(quotes, signals)
             
-            # Store result
-            key = f"{selected_module}_{selected_preset}"
+            # Store result with module and strategy
+            key = f"{selected_strategy}_{selected_preset}"
             session_state.backtest_results[key] = result
             
             # Auto-save to /docs
@@ -219,7 +235,7 @@ if execute_button:
                             for t in result.trades
                         ],
                     },
-                    module=selected_module,
+                    module=selected_strategy,  # Use strategy instead of module
                     config=selected_preset,
                     symbol=symbol,
                     start_date=datetime.combine(start_date, datetime.min.time()),
@@ -243,13 +259,13 @@ if session_state.backtest_results:
     # Let user select which result to view
     all_keys = list(session_state.backtest_results.keys())
     
-    # Filter by selected module if results exist
-    module_keys = [k for k in all_keys if k.startswith(selected_module)]
-    available_keys = module_keys if module_keys else all_keys
+    # Filter by selected strategy
+    strategy_keys = [k for k in all_keys if k.startswith(selected_strategy)]
+    available_keys = strategy_keys if strategy_keys else all_keys
     
-    # Show info if no results for selected module
-    if not module_keys and all_keys:
-        st.info(f"ℹ️ No results for {selected_module}. Showing all results.")
+    # Show info if no results for selected strategy
+    if not strategy_keys and all_keys:
+        st.info(f"ℹ️ No results for {selected_strategy}. Showing all results.")
     
     # Create selector for results
     if len(available_keys) > 1:
@@ -258,7 +274,7 @@ if session_state.backtest_results:
             options=available_keys,
             index=len(available_keys)-1,  # Default to most recent
             help="Select which backtest result to display",
-            key=f"result_selector_{selected_module}"
+            key=f"result_selector_{selected_strategy}"
         )
     else:
         result_key = available_keys[0] if available_keys else all_keys[-1]
@@ -426,6 +442,22 @@ if session_state.backtest_results:
         st.download_button(
             label="📥 Download JSON",
             data=json_str,
+            file_name=f"backtest_{result_key}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+            mime="application/json",
+            use_container_width=True,
+        )
+    
+    with col2:
+        csv_str = trades_df.to_csv(index=False)
+        st.download_button(
+            label="📥 Download CSV",
+            data=csv_str,
+            file_name=f"backtest_{result_key}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+            mime="text/csv",
+            use_container_width=True,
+        )
+
+
             file_name=f"backtest_{result_key}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
             mime="application/json",
             use_container_width=True,
