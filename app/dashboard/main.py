@@ -184,13 +184,16 @@ if execute_button:
                 st.error(f"❌ Unknown strategy: {selected_strategy}")
                 st.stop()
             
-            # Generate signals
+            # Generate signals (collect all quotes first for strategies that need history)
             signals = []
             for quote in quotes:
                 try:
                     signals.extend(strategy.generate_signals(quote))
                 except Exception as e:
                     logger.debug(f"Signal error: {e}")
+            
+            if not signals:
+                st.warning(f"⚠️ Strategy '{selected_strategy}' generated 0 signals. Try different parameters or data period.")
             
             # Create config
             config = BacktestConfig(
