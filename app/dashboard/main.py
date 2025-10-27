@@ -106,18 +106,27 @@ with st.sidebar:
             "momentum_threshold": 0.01,
             "stop_loss": 2.0,
             "take_profit": 5.0,
+            "z_score_threshold": 2.5,  # For mean_reversion
+            "min_z_score": 1.5,  # For mean_reversion
+            "volatility_threshold": 0.05,  # For mean_reversion
         },
         "Moderate": {
             "rsi_threshold": 40,
             "momentum_threshold": 0.005,
             "stop_loss": 3.0,
             "take_profit": 7.0,
+            "z_score_threshold": 1.5,  # For mean_reversion - more permissive
+            "min_z_score": 1.0,  # For mean_reversion - more permissive
+            "volatility_threshold": 0.10,  # For mean_reversion - more permissive
         },
         "Aggressive": {
             "rsi_threshold": 50,
             "momentum_threshold": 0.001,
             "stop_loss": 5.0,
             "take_profit": 10.0,
+            "z_score_threshold": 1.0,  # For mean_reversion - very permissive
+            "min_z_score": 0.5,  # For mean_reversion - very permissive
+            "volatility_threshold": 0.20,  # For mean_reversion - very permissive
         },
     }
     
