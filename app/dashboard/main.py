@@ -174,93 +174,102 @@ if execute_button:
                 st.error("❌ No data available for selected period")
                 st.stop()
             
-            # Create strategy based on selected strategy
-            strategy_config = {
-                "name": selected_strategy.lower(),
-                **config_presets[selected_preset],
-            }
-            
-            if selected_strategy == "momentum":
-                strategy = MomentumStrategy(strategy_config)
-            elif selected_strategy == "mean_reversion":
-                strategy = MeanReversionStrategy(strategy_config)
-            elif selected_strategy == "pairs_trading":
-                # Note: PairsTrading needs pair_symbols, set default
-                if "pair_symbols" not in strategy_config:
-                    strategy_config["pair_symbols"] = ["AAPL", "MSFT"]
-                strategy = PairsTradingStrategy(strategy_config)
+            # Determine which modules to run backtests for
+            if selected_module == "all":
+                # Run for all modules
+                modules_to_run = ["TechnicalAnalyst", "RiskManager", "SignalCombiner", "Executor"]
             else:
-                st.error(f"❌ Unknown strategy: {selected_strategy}")
-                st.stop()
+                # Run for selected module only
+                modules_to_run = [selected_module]
             
-            # Generate signals (collect all quotes first for strategies that need history)
-            signals = []
-            for quote in quotes:
-                try:
-                    signals.extend(strategy.generate_signals(quote))
-                except Exception as e:
-                    logger.debug(f"Signal error: {e}")
-            
-            if not signals:
-                st.warning(f"⚠️ Strategy '{selected_strategy}' generated 0 signals. Try different parameters or data period.")
-            
-            # Create config with module and strategy info
-            config = BacktestConfig(
-                strategy_name=f"{selected_module}_{selected_strategy}".lower(),
-                initial_capital=Decimal(str(initial_capital)),
-                commission_per_trade=Decimal("1.0"),
-                slippage_percentage=Decimal("0.05"),
-                stop_loss_percentage=Decimal(str(config_presets[selected_preset]["stop_loss"])),
-                take_profit_percentage=Decimal(str(config_presets[selected_preset]["take_profit"])),
-                max_position_size=Decimal("0.05"),
-            )
-            
-            # Run backtest
-            backtester = SimpleBacktester(config)
-            result = backtester.run_backtest(quotes, signals)
-            
-            # Store result with module and strategy
-            key = f"{selected_module}_{selected_strategy}_{selected_preset}"
-            session_state.backtest_results[key] = result
-            
-            # Auto-save to /docs
-            try:
-                saved_files = save_backtest_result(
-                    result_key=key,
-                    result={
-                        "total_trades": result.performance.total_trades,
-                        "win_rate": result.performance.win_rate,
-                        "total_return": result.total_return,
-                        "final_capital": result.final_capital,
-                        "trades": [
-                            {
-                                "trade_id": t.trade_id,
-                                "symbol": t.symbol,
-                                "side": t.side,
-                                "quantity": float(t.quantity),
-                                "entry_price": float(t.entry_price),
-                                "exit_price": float(t.exit_price) if t.exit_price else None,
-                                "pnl": float(t.pnl) if t.pnl else 0,
-                                "status": t.status.value,
-                                "reason": t.reason if t.reason else "N/A",
-                            }
-                            for t in result.trades
-                        ],
-                    },
-                    module=selected_strategy,  # Use strategy instead of module
-                    config=selected_preset,
-                    symbol=symbol,
-                    start_date=datetime.combine(start_date, datetime.min.time()),
-                    end_date=datetime.combine(end_date, datetime.max.time()),
-                    project_root=project_root,
+            # Run backtests for each module
+            for current_module in modules_to_run:
+                # Create strategy based on selected strategy
+                strategy_config = {
+                    "name": selected_strategy.lower(),
+                    **config_presets[selected_preset],
+                }
+                
+                if selected_strategy == "momentum":
+                    strategy = MomentumStrategy(strategy_config)
+                elif selected_strategy == "mean_reversion":
+                    strategy = MeanReversionStrategy(strategy_config)
+                elif selected_strategy == "pairs_trading":
+                    # Note: PairsTrading needs pair_symbols, set default
+                    if "pair_symbols" not in strategy_config:
+                        strategy_config["pair_symbols"] = ["AAPL", "MSFT"]
+                    strategy = PairsTradingStrategy(strategy_config)
+                else:
+                    st.error(f"❌ Unknown strategy: {selected_strategy}")
+                    st.stop()
+                
+                # Generate signals (collect all quotes first for strategies that need history)
+                signals = []
+                for quote in quotes:
+                    try:
+                        signals.extend(strategy.generate_signals(quote))
+                    except Exception as e:
+                        logger.debug(f"Signal error: {e}")
+                
+                if not signals:
+                    st.warning(f"⚠️ Strategy '{selected_strategy}' for {current_module} generated 0 signals.")
+                    continue
+                
+                # Create config with module and strategy info
+                config = BacktestConfig(
+                    strategy_name=f"{current_module}_{selected_strategy}".lower(),
+                    initial_capital=Decimal(str(initial_capital)),
+                    commission_per_trade=Decimal("1.0"),
+                    slippage_percentage=Decimal("0.05"),
+                    stop_loss_percentage=Decimal(str(config_presets[selected_preset]["stop_loss"])),
+                    take_profit_percentage=Decimal(str(config_presets[selected_preset]["take_profit"])),
+                    max_position_size=Decimal("0.05"),
                 )
                 
-                st.success(f"✅ Backtest completed: {result.performance.total_trades} trades")
-                st.info(f"📁 Results saved to: {saved_files['report'].relative_to(project_root)}")
-            except Exception as save_error:
-                logger.warning(f"Failed to save report: {save_error}")
-                st.success(f"✅ Backtest completed: {result.performance.total_trades} trades")
-                st.warning(f"⚠️ Auto-save failed, but results are in session")
+                # Run backtest
+                backtester = SimpleBacktester(config)
+                result = backtester.run_backtest(quotes, signals)
+                
+                # Store result with module and strategy
+                key = f"{current_module}_{selected_strategy}_{selected_preset}"
+                session_state.backtest_results[key] = result
+                
+                # Auto-save each result
+                try:
+                    saved_files = save_backtest_result(
+                        result_key=key,
+                        result={
+                            "total_trades": result.performance.total_trades,
+                            "win_rate": result.performance.win_rate,
+                            "total_return": result.total_return,
+                            "final_capital": result.final_capital,
+                            "trades": [
+                                {
+                                    "trade_id": t.trade_id,
+                                    "symbol": t.symbol,
+                                    "side": t.side,
+                                    "quantity": float(t.quantity),
+                                    "entry_price": float(t.entry_price),
+                                    "exit_price": float(t.exit_price) if t.exit_price else None,
+                                    "pnl": float(t.pnl) if t.pnl else 0,
+                                    "status": t.status.value,
+                                    "reason": t.reason if t.reason else "N/A",
+                                }
+                                for t in result.trades
+                            ],
+                        },
+                        module=current_module,
+                        config=selected_preset,
+                        symbol=symbol,
+                        start_date=datetime.combine(start_date, datetime.min.time()),
+                        end_date=datetime.combine(end_date, datetime.max.time()),
+                        project_root=project_root,
+                    )
+                except Exception as save_error:
+                    logger.warning(f"Failed to save report for {current_module}: {save_error}")
+            
+            # Show summary
+            st.success(f"✅ Backtests completed for {len(modules_to_run)} module(s)")
             
         except Exception as e:
             st.error(f"❌ Error: {e}")
