@@ -476,6 +476,8 @@ module_info = {
 if selected_module in module_info or selected_module == "all":
     if selected_module != "all":
         info = module_info[selected_module]
+        
+        # Show static module info
         st.info(f"""
 **Description**: {info['description']}
 
@@ -483,6 +485,44 @@ if selected_module in module_info or selected_module == "all":
 
 **Good Indicators**: {info['indicators']}
         """)
+        
+        # Count available results for this module
+        if "backtest_results" in session_state and session_state.backtest_results:
+            module_results_count = sum(
+                1 for key in session_state.backtest_results.keys()
+                if key.lower().startswith(selected_module.lower() + "_")
+            )
+            
+            if module_results_count > 0:
+                st.success(f"✅ {module_results_count} result(s) available for {selected_module}")
+                
+                # Show key metrics from first result
+                for key in session_state.backtest_results.keys():
+                    if key.lower().startswith(selected_module.lower() + "_"):
+                        result = session_state.backtest_results[key]
+                        
+                        st.markdown("---")
+                        st.markdown("### 📊 Latest Backtest Results")
+                        
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.metric("Total Trades", result.performance.total_trades)
+                        with col2:
+                            st.metric("Win Rate", f"{float(result.performance.win_rate):.1f}%")
+                        with col3:
+                            st.metric("Total PnL", f"${float(result.performance.total_pnl):,.2f}")
+                        
+                        col4, col5, col6 = st.columns(3)
+                        with col4:
+                            sharpe = f"{float(result.performance.sharpe_ratio):.2f}" if result.performance.sharpe_ratio else "N/A"
+                            st.metric("Sharpe Ratio", sharpe)
+                        with col5:
+                            st.metric("Max Drawdown", f"{float(result.performance.max_drawdown_percentage):.2f}%")
+                        with col6:
+                            st.metric("Final Capital", f"${float(result.final_capital):,.2f}")
+                        
+                        break  # Show only first result
+                        
     else:
         st.info("Showing results from all modules. Select a specific module to see detailed information.")
         
