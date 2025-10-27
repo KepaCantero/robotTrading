@@ -61,7 +61,17 @@ with st.sidebar:
     # MODULE SELECTOR
     st.subheader("📦 Select Module")
     
-    modules = ["all", "TechnicalAnalyst", "RiskManager", "SignalCombiner", "Executor"]
+    # All available modules from the system
+    modules = [
+        "all",
+        "momentum",
+        "mean_reversion",
+        "pairs_trading",
+        "technicalanalyst",
+        "RiskManager",
+        "SignalCombiner",
+        "Executor",
+    ]
     selected_module = st.selectbox(
         "Select Module",
         options=modules,
@@ -256,7 +266,15 @@ if execute_button:
             # Determine which modules to run backtests for
             if selected_module == "all":
                 # Run for all modules
-                modules_to_run = ["TechnicalAnalyst", "RiskManager", "SignalCombiner", "Executor"]
+                modules_to_run = [
+                    "momentum",
+                    "mean_reversion",
+                    "pairs_trading",
+                    "technicalanalyst",
+                    "RiskManager",
+                    "SignalCombiner",
+                    "Executor",
+                ]
             else:
                 # Run for selected module only
                 modules_to_run = [selected_module]
@@ -400,6 +418,76 @@ if selected_module in module_info:
                 st.warning("⚠️ No results yet")
         else:
             st.info("ℹ️ No backtests executed")
+
+st.divider()
+
+# MODULE INFO PANEL
+st.subheader(f"📦 Module Information: {selected_module}")
+
+# Module descriptions
+module_info = {
+    "momentum": {
+        "description": "Estrategia de momentum basada en RSI, EMA y análisis de volumen",
+        "metrics": "RSI, EMA trend, Volume ratio, Signal strength",
+        "indicators": "RSI < 40 (oversold), EMA trend > 0, Volume > 1.0x",
+    },
+    "mean_reversion": {
+        "description": "Estrategia de reversión a la media usando Z-score y volatilidad",
+        "metrics": "Z-score, Mean price, Volatility, Mean reversion speed",
+        "indicators": "Z-score < -1.5 (buy), Z-score > +1.5 (sell), Low volatility",
+    },
+    "pairs_trading": {
+        "description": "Estrategia de trading de pares basada en cointegración y spread",
+        "metrics": "Spread, Correlation, Cointegration, Hedge ratio",
+        "indicators": "Spread > 2σ (buy low, sell high), Correlation > 0.7",
+    },
+    "technicalanalyst": {
+        "description": "Análisis técnico usando múltiples indicadores (RSI, EMA, Volume)",
+        "metrics": "RSI, EMA trend, Volume ratio, Signal strength",
+        "indicators": "RSI < 40 (oversold), EMA trend > 0, Volume > 1.0x",
+    },
+    "RiskManager": {
+        "description": "Gestión de riesgo con control de exposición y tamaño de posición",
+        "metrics": "Position size, Exposure, Risk per trade, Stop loss",
+        "indicators": "Max exposure < 60%, Risk per trade < 2%",
+    },
+    "SignalCombiner": {
+        "description": "Combina señales de múltiples estrategias con ponderación",
+        "metrics": "Signal weight, Consensus strength, Multi-strategy score",
+        "indicators": "Consensus > 70%, Multiple confirmations",
+    },
+    "Executor": {
+        "description": "Motor de ejecución con control de slippage y comisiones",
+        "metrics": "Execution rate, Slippage impact, Commission cost",
+        "indicators": "Slippage < 0.1%, Execution success > 95%",
+    },
+}
+
+if selected_module in module_info or selected_module == "all":
+    if selected_module != "all":
+        info = module_info[selected_module]
+        st.info(f"""
+**Description**: {info['description']}
+
+**Metrics**: {info['metrics']}
+
+**Good Indicators**: {info['indicators']}
+        """)
+    else:
+        st.info("Showing results from all modules. Select a specific module to see detailed information.")
+        
+        # Show summary of available modules
+        available_modules = set()
+        if "backtest_results" in session_state:
+            for key in session_state.backtest_results.keys():
+                parts = key.split('_')
+                if parts:
+                    available_modules.add(parts[0])
+        
+        if available_modules:
+            st.write(f"**Available results for**: {', '.join(sorted(available_modules))}")
+else:
+    st.warning(f"⚠️ No information available for module: {selected_module}")
 
 st.divider()
 
