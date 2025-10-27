@@ -364,13 +364,14 @@ if execute_button:
                 
                 # Auto-save each result
                 try:
+                    # Convert all Decimal to float for JSON serialization
                     saved_files = save_backtest_result(
                         result_key=key,
                         result={
                             "total_trades": result.performance.total_trades,
-                            "win_rate": result.performance.win_rate,
-                            "total_return": result.total_return,
-                            "final_capital": result.final_capital,
+                            "win_rate": float(result.performance.win_rate),
+                            "total_return": float(result.total_return),
+                            "final_capital": float(result.final_capital),
                             "trades": [
                                 {
                                     "trade_id": t.trade_id,
