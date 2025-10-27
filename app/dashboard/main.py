@@ -167,17 +167,22 @@ if session_state.backtest_results:
     last_key = list(session_state.backtest_results.keys())[-1]
     result = session_state.backtest_results[last_key]
     
-    # Metrics dashboard
-    col1, col2, col3, col4 = st.columns(4)
+    # Metrics dashboard with 6 cards
+    col1, col2, col3, col4, col5, col6 = st.columns(6)
     
     with col1:
-        st.metric("Total Trades", result.performance.total_trades)
+        st.metric("📊 Total Trades", result.performance.total_trades)
     with col2:
-        st.metric("Win Rate", f"{result.performance.win_rate:.2f}%")
+        st.metric("✅ Win Rate", f"{float(result.performance.win_rate):.1f}%")
     with col3:
-        st.metric("Total Return", f"{result.total_return:.2f}%")
+        st.metric("💰 Total PnL", f"${float(result.performance.total_pnl):,.2f}")
     with col4:
-        st.metric("Final Capital", f"${result.final_capital:,.2f}")
+        sharpe = f"{float(result.performance.sharpe_ratio):.2f}" if result.performance.sharpe_ratio else "N/A"
+        st.metric("📈 Sharpe Ratio", sharpe)
+    with col5:
+        st.metric("📉 Max Drawdown", f"{float(result.performance.max_drawdown_percentage):.2f}%")
+    with col6:
+        st.metric("💼 Capital Final", f"${float(result.final_capital):,.2f}")
     
     # Equity curve
     st.subheader("📈 Equity Curve")
@@ -285,41 +290,56 @@ if session_state.backtest_results:
     else:
         st.info("⚠️ Run at least 2 backtests to compare configurations")
     
-    # Export button
-    if st.button("📥 Export Results"):
-        export_data = {
-            "module": last_key.split("_")[0],
-            "config": last_key.split("_")[1],
-            "symbol": symbol,
-            "start_date": start_date.isoformat(),
-            "end_date": end_date.isoformat(),
-            "metrics": {
-                "total_trades": result.performance.total_trades,
-                "win_rate": float(result.performance.win_rate),
-                "total_return": float(result.total_return),
-                "final_capital": float(result.final_capital),
-            },
-            "trades": [
-                {
-                    "trade_id": trade.trade_id,
-                    "symbol": trade.symbol,
-                    "side": trade.side,
-                    "quantity": float(trade.quantity),
-                    "entry_price": float(trade.entry_price),
-                    "exit_price": float(trade.exit_price) if trade.exit_price else None,
-                    "pnl": float(trade.pnl) if trade.pnl else 0,
-                    "status": trade.status.value,
-                    "reason": trade.reason if trade.reason else "N/A",
-                }
-                for trade in result.trades
-            ],
-        }
-        
+    # Export section
+    st.subheader("💾 Export Results")
+    col1, col2 = st.columns(2)
+    
+    export_data = {
+        "module": last_key.split("_")[0],
+        "config": last_key.split("_")[1],
+        "symbol": symbol,
+        "start_date": start_date.isoformat(),
+        "end_date": end_date.isoformat(),
+        "metrics": {
+            "total_trades": result.performance.total_trades,
+            "win_rate": float(result.performance.win_rate),
+            "total_return": float(result.total_return),
+            "final_capital": float(result.final_capital),
+        },
+        "trades": [
+            {
+                "trade_id": trade.trade_id,
+                "symbol": trade.symbol,
+                "side": trade.side,
+                "quantity": float(trade.quantity),
+                "entry_price": float(trade.entry_price),
+                "exit_price": float(trade.exit_price) if trade.exit_price else None,
+                "pnl": float(trade.pnl) if trade.pnl else 0,
+                "status": trade.status.value,
+                "reason": trade.reason if trade.reason else "N/A",
+            }
+            for trade in result.trades
+        ],
+    }
+    
+    # Export trades DataFrame
+    with col1:
         json_str = json.dumps(export_data, indent=2, default=str)
         st.download_button(
-            label="Download JSON",
+            label="📥 Download JSON",
             data=json_str,
             file_name=f"backtest_{last_key}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
             mime="application/json",
+            use_container_width=True,
+        )
+    
+    with col2:
+        csv_str = trades_df.to_csv(index=False)
+        st.download_button(
+            label="📥 Download CSV",
+            data=csv_str,
+            file_name=f"backtest_{last_key}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+            mime="text/csv",
+            use_container_width=True,
         )
 
