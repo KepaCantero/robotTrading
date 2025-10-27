@@ -217,9 +217,10 @@ class MeanReversionStrategy(BaseStrategy):
         # Por ahora, simulamos Z-score basado en precio vs media móvil
 
         # Simular precio promedio y desviación estándar
-        avg_price = market_data.last * Decimal("0.95")  # Precio promedio simulado
-        # Desviación estándar simulada
-        std_dev = market_data.last * Decimal("0.05")
+        # Use wider range to generate more signals for demo
+        avg_price = market_data.last * Decimal("0.98")  # Closer to current price
+        # Increased std dev to allow for more variation
+        std_dev = market_data.last * Decimal("0.03")  # Smaller std for more sensitive detection
 
         if std_dev == 0:
             return Decimal("0")
