@@ -161,14 +161,15 @@ class BacktestRunner:
         if result.trades:
             trades_df = pd.DataFrame([
                 {
-                    'timestamp': t.timestamp,
-                    'type': t.type,
+                    'timestamp': t.entry_time,
+                    'type': t.side,
                     'symbol': t.symbol,
-                    'price': float(t.price),
+                    'entry_price': float(t.entry_price),
+                    'exit_price': float(t.exit_price) if t.exit_price else 0,
                     'quantity': float(t.quantity),
                     'pnl': float(t.pnl) if t.pnl else 0,
                     'reason': t.reason if t.reason else '',
-                    'status': t.status,
+                    'status': t.status.value,
                 }
                 for t in result.trades
             ])
@@ -290,10 +291,12 @@ Automated backtesting of all available strategies.
 """
         
         for result in results:
-            metrics = result['result']
-            perf = metrics.performance
+            backtest_result = result['result']
+            perf = backtest_result.performance
             
-            summary += f"""| {result['strategy_name']} | {metrics.start_date.year}-{metrics.end_date.year} | {perf.total_trades} | {perf.win_rate:.1f}% | ${perf.total_pnl:,.2f} | {perf.sharpe_ratio:.2f if perf.sharpe_ratio else 'N/A'} | {perf.max_drawdown_percentage:.2f}% | {metrics.total_return:.2f}% | ${metrics.final_capital:,.2f} |\n"""
+            sharpe = f"{perf.sharpe_ratio:.2f}" if perf.sharpe_ratio else "N/A"
+            
+            summary += f"""| {result['strategy_name']} | {backtest_result.start_date.year}-{backtest_result.end_date.year} | {perf.total_trades} | {perf.win_rate:.1f}% | ${perf.total_pnl:,.2f} | {sharpe} | {perf.max_drawdown_percentage:.2f}% | {backtest_result.total_return:.2f}% | ${backtest_result.final_capital:,.2f} |\n"""
         
         with open(summary_path, 'w') as f:
             f.write(summary)
