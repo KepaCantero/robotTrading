@@ -75,6 +75,11 @@ class MomentumStrategy(BaseStrategy):
         self.volume_history = deque(maxlen=200)
         self.last_rsi = None
         self.last_ema = None
+        
+        # Cooldown para evitar señales repetidas
+        self.last_signal_time = None
+        self.last_signal_type = None
+        self.cooldown_bars = config.get("cooldown_bars", 5)  # Número de barras para cooldown
 
         logger.info(f"MomentumStrategy initialized: {self.name}")
 
@@ -123,17 +128,25 @@ class MomentumStrategy(BaseStrategy):
             self.last_rsi = rsi
             self.last_ema = ema
 
-            # Generar señal de compra con condiciones robustas
-            if self._is_buy_signal(rsi, ema, volume_ratio, market_data):
-                signal = self._create_buy_signal(market_data, rsi, ema, volume_ratio)
-                signals.append(signal)
-                logger.debug(f"Generated BUY signal for {market_data.symbol}: RSI={rsi:.2f}, EMA={ema:.2f}")
-
-            # Generar señal de venta con condiciones robustas
-            elif self._is_sell_signal(rsi, ema, volume_ratio, market_data):
-                signal = self._create_sell_signal(market_data, rsi, ema, volume_ratio)
-                signals.append(signal)
-                logger.debug(f"Generated SELL signal for {market_data.symbol}: RSI={rsi:.2f}, EMA={ema:.2f}")
+            # Verificar cooldown
+            if not self._is_cooldown_active(market_data):
+                # Generar señal de compra con condiciones robustas
+                if self._is_buy_signal(rsi, ema, volume_ratio, market_data):
+                    signal = self._create_buy_signal(market_data, rsi, ema, volume_ratio)
+                    signals.append(signal)
+                    self.last_signal_time = market_data.timestamp
+                    self.last_signal_type = "buy"
+                    logger.debug(f"Generated BUY signal for {market_data.symbol}: RSI={rsi:.2f}, EMA={ema:.2f}")
+                
+                # Generar señal de venta con condiciones robustas
+                elif self._is_sell_signal(rsi, ema, volume_ratio, market_data):
+                    signal = self._create_sell_signal(market_data, rsi, ema, volume_ratio)
+                    signals.append(signal)
+                    self.last_signal_time = market_data.timestamp
+                    self.last_signal_type = "sell"
+                    logger.debug(f"Generated SELL signal for {market_data.symbol}: RSI={rsi:.2f}, EMA={ema:.2f}")
+            else:
+                logger.debug(f"Signal suppressed due to cooldown period")
 
         except Exception as e:
             logger.error(f"Error generating signals for {market_data.symbol}: {e}")
@@ -224,7 +237,7 @@ class MomentumStrategy(BaseStrategy):
 
     def _calculate_real_ema(self) -> Optional[float]:
         """
-        Calcular EMA real usando histórico de precios.
+        Calcular EMA real usando toda la historia de precios.
 
         Returns:
             Valor de EMA o None si no hay suficiente histórico
@@ -234,18 +247,19 @@ class MomentumStrategy(BaseStrategy):
 
         prices = list(self.price_history)
 
-        # Calcular EMA
+        # Calcular EMA usando todos los datos disponibles (no solo ema_period)
         multiplier = 2 / (self.ema_period + 1)
         ema = prices[0]
 
-        for price in prices[1:self.ema_period]:
+        # Iterar sobre toda la historia para un EMA más estable
+        for price in prices[1:]:
             ema = (price * multiplier) + (ema * (1 - multiplier))
 
         return round(ema, 2)
 
     def _calculate_volume_ratio(self, market_data: Quote) -> Decimal:
         """
-        Calcular ratio de volumen.
+        Calcular ratio de volumen dinámicamente usando histórico.
 
         Args:
             market_data: Datos de mercado
@@ -253,11 +267,35 @@ class MomentumStrategy(BaseStrategy):
         Returns:
             Ratio de volumen
         """
-        # Implementación simplificada
-        avg_volume = Decimal("5000000")  # Volumen promedio más realista
+        if len(self.volume_history) < 20:
+            # No hay suficiente histórico, usar valor conservador
+            return Decimal("1")
+        
+        # Calcular promedio de volumen de las últimas 20 barras
+        avg_volume = sum(self.volume_history[-20:]) / 20
         if avg_volume > 0:
-            return market_data.volume / avg_volume
+            return market_data.volume / Decimal(str(avg_volume))
         return Decimal("1")
+    
+    def _is_cooldown_active(self, market_data: Quote) -> bool:
+        """
+        Verificar si el cooldown está activo para evitar señales repetidas.
+
+        Args:
+            market_data: Datos de mercado actuales
+
+        Returns:
+            True si el cooldown está activo
+        """
+        if self.last_signal_time is None:
+            return False
+        
+        # Contar barras desde última señal
+        price_history_list = list(self.price_history)
+        if len(price_history_list) < self.cooldown_bars:
+            return False
+        
+        return len(price_history_list) >= self.cooldown_bars
 
     def _is_buy_signal(
         self,
@@ -380,7 +418,7 @@ class MomentumStrategy(BaseStrategy):
             symbol=market_data.symbol,
             signal_type=SignalType.SELL,
             strength=SignalStrength.MODERATE,  # Más conservador
-            confidence=100.0 - float(rsi),  # Usar (100 - RSI) como confidence
+            confidence=abs(50.0 - float(rsi)),  # Usar distancia de RSI desde 50 como confidence
             liquidity_score=80.0,
             priority_score=85.0,
             source=SignalSource.MOMENTUM,
