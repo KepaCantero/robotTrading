@@ -31,6 +31,7 @@ from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig
 from app.strategies.momentum import MomentumStrategy
 from app.strategies.mean_reversion import MeanReversionStrategy
+from app.dashboard.report_generator import save_backtest_result, update_summary_index
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -52,6 +53,8 @@ st.markdown("**Interactive backtesting analysis and module comparison**")
 with st.sidebar:
     st.header("⚙️ Configuration")
     
+    st.subheader("📊 Module Selection")
+    
     # Module selector
     modules = {
         "TechnicalAnalyst": "RSI-MACD Technical Analysis",
@@ -62,13 +65,24 @@ with st.sidebar:
     }
     
     selected_module = st.selectbox(
-        "Select Module",
+        "🎯 Select Strategy Module",
         options=list(modules.keys()),
         help="Choose which trading module to backtest",
         key="module_selector"
     )
     
-    st.markdown(f"**Module**: {modules[selected_module]}")
+    st.markdown(f"**Selected**: `{modules[selected_module]}`")
+    
+    # Show available results for this module
+    if "backtest_results" in session_state and session_state.backtest_results:
+        module_results = [k for k in session_state.backtest_results.keys() if k.startswith(selected_module)]
+        if module_results:
+            st.success(f"✓ {len(module_results)} backtest(s) for {selected_module}")
+        else:
+            st.warning(f"⚠ No backtests yet for {selected_module}")
+    
+    st.divider()
+    st.subheader("⚙️ Configuration Preset")
     
     # Configuration presets
     config_presets = {
@@ -93,10 +107,17 @@ with st.sidebar:
     }
     
     selected_preset = st.selectbox(
-        "Configuration Preset",
+        "🎛️ Select Configuration Preset",
         options=list(config_presets.keys()),
         help="Choose a preset configuration",
+        key="config_selector"
     )
+    
+    # Show preset details
+    with st.expander(f"View {selected_preset} Preset Parameters"):
+        st.json(config_presets[selected_preset])
+    
+    st.divider()
     
     # Symbol and date range
     symbol = st.text_input("Symbol", value="AAPL")
@@ -174,7 +195,44 @@ if execute_button:
             key = f"{selected_module}_{selected_preset}"
             session_state.backtest_results[key] = result
             
-            st.success(f"✅ Backtest completed: {result.performance.total_trades} trades")
+            # Auto-save to /docs
+            try:
+                saved_files = save_backtest_result(
+                    result_key=key,
+                    result={
+                        "total_trades": result.performance.total_trades,
+                        "win_rate": result.performance.win_rate,
+                        "total_return": result.total_return,
+                        "final_capital": result.final_capital,
+                        "trades": [
+                            {
+                                "trade_id": t.trade_id,
+                                "symbol": t.symbol,
+                                "side": t.side,
+                                "quantity": float(t.quantity),
+                                "entry_price": float(t.entry_price),
+                                "exit_price": float(t.exit_price) if t.exit_price else None,
+                                "pnl": float(t.pnl) if t.pnl else 0,
+                                "status": t.status.value,
+                                "reason": t.reason if t.reason else "N/A",
+                            }
+                            for t in result.trades
+                        ],
+                    },
+                    module=selected_module,
+                    config=selected_preset,
+                    symbol=symbol,
+                    start_date=datetime.combine(start_date, datetime.min.time()),
+                    end_date=datetime.combine(end_date, datetime.max.time()),
+                    project_root=project_root,
+                )
+                
+                st.success(f"✅ Backtest completed: {result.performance.total_trades} trades")
+                st.info(f"📁 Results saved to: {saved_files['report'].relative_to(project_root)}")
+            except Exception as save_error:
+                logger.warning(f"Failed to save report: {save_error}")
+                st.success(f"✅ Backtest completed: {result.performance.total_trades} trades")
+                st.warning(f"⚠️ Auto-save failed, but results are in session")
             
         except Exception as e:
             st.error(f"❌ Error: {e}")
@@ -335,8 +393,8 @@ if session_state.backtest_results:
     col1, col2 = st.columns(2)
     
     export_data = {
-        "module": last_key.split("_")[0],
-        "config": last_key.split("_")[1],
+        "module": result_key.split("_")[0],
+        "config": result_key.split("_")[1],
         "symbol": symbol,
         "start_date": start_date.isoformat(),
         "end_date": end_date.isoformat(),
@@ -368,7 +426,7 @@ if session_state.backtest_results:
         st.download_button(
             label="📥 Download JSON",
             data=json_str,
-            file_name=f"backtest_{last_key}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+            file_name=f"backtest_{result_key}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
             mime="application/json",
             use_container_width=True,
         )
@@ -378,7 +436,7 @@ if session_state.backtest_results:
         st.download_button(
             label="📥 Download CSV",
             data=csv_str,
-            file_name=f"backtest_{last_key}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+            file_name=f"backtest_{result_key}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
             mime="text/csv",
             use_container_width=True,
         )
