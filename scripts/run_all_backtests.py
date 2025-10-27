@@ -185,22 +185,23 @@ class BacktestRunner:
     def extract_detailed_metrics(self, result: BacktestResult) -> Dict[str, Any]:
         """Extraer métricas detalladas del resultado."""
         performance = result.performance
+        config = result.config
         
         metrics = {
             # General Performance
-            'strategy': result.symbol,
+            'strategy': result.strategy_name,
             'period': f"{result.start_date} to {result.end_date}",
-            'initial_capital': float(result.initial_capital),
+            'initial_capital': float(config.initial_capital) if config else 100000,
             'final_capital': float(result.final_capital),
             'total_pnl': float(performance.total_pnl),
-            'total_return_pct': float(performance.total_return_percentage),
-            'annualized_return_pct': float(performance.cagr) if performance.cagr else 0,
+            'total_return_pct': float(result.total_return),
+            'annualized_return_pct': float(result.annualized_return) if result.annualized_return else 0,
             'total_trades': performance.total_trades,
-            'winning_trades': performance.winning_trades if hasattr(performance, 'winning_trades') else 0,
-            'losing_trades': performance.total_trades - (performance.winning_trades if hasattr(performance, 'winning_trades') else 0),
+            'winning_trades': performance.winning_trades,
+            'losing_trades': performance.losing_trades,
             'win_rate_pct': float(performance.win_rate),
             'avg_trade_pnl': float(performance.total_pnl) / performance.total_trades if performance.total_trades > 0 else 0,
-            'profit_factor': float(performance.profit_factor) if performance.profit_factor else 0,
+            'profit_factor': float(performance.profit_factor) if hasattr(performance, 'profit_factor') and performance.profit_factor else 0,
             
             # Risk and Volatility
             'max_drawdown_pct': float(performance.max_drawdown_percentage),
@@ -236,7 +237,7 @@ class BacktestRunner:
 
 **Generated:** {metrics['timestamp_utc']}
 **Period:** {metrics['period']}
-**Symbol:** {result.symbol}
+**Strategy:** {result.strategy_name}
 
 ## Executive Summary
 
