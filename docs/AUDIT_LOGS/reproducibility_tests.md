@@ -75,6 +75,7 @@ result = backtester.run_backtest(quotes, signals)
 ### 5. Verify Results
 
 **Compare hashes:**
+
 ```bash
 # Generate hash of metrics
 sha256sum docs/BACKTEST_RESULTS/momentum/metrics_moderate.json
@@ -83,6 +84,7 @@ sha256sum docs/BACKTEST_RESULTS/momentum/metrics_moderate.json
 ```
 
 **Compare metrics:**
+
 - Total trades must match exactly
 - Win rate within 0.01% tolerance
 - Sharpe ratio within 0.001 tolerance
@@ -91,11 +93,13 @@ sha256sum docs/BACKTEST_RESULTS/momentum/metrics_moderate.json
 ## Tolerances
 
 **Exact Matches Required:**
+
 - Total trades (must be identical)
 - Trade entry/exit times (must be identical)
 - Signals generated (must be identical)
 
 **Allowable Tolerances:**
+
 - Win rate: <0.01% difference
 - Total PnL: <$0.01 difference
 - Sharpe ratio: <0.001 difference
@@ -106,11 +110,13 @@ sha256sum docs/BACKTEST_RESULTS/momentum/metrics_moderate.json
 ### Local vs AWS
 
 **Differences:**
+
 - Platform: macOS vs Linux
 - Python minor version: 3.9.x vs 3.9.y (acceptable if y >= x)
 - File paths: relative paths maintained
 
 **Verification:**
+
 - Same commit SHA
 - Same dependency versions
 - Same data hash
@@ -133,17 +139,20 @@ sha256sum docs/BACKTEST_RESULTS/momentum/metrics_moderate.json
 ### Results Don't Match
 
 1. **Check Commit SHA:**
+
    ```bash
    git rev-parse HEAD
    git log --oneline -5
    ```
 
 2. **Check Data File:**
+
    ```bash
    sha256sum data/historical/AAPL.csv
    ```
 
 3. **Check Configuration:**
+
    - Verify all parameters match
    - Check for environment variables
    - Verify random seeds (if any)
@@ -168,4 +177,3 @@ sha256sum docs/BACKTEST_RESULTS/momentum/metrics_moderate.json
 ## Contact
 
 For reproducibility questions, see audit logs and commit history.
-

@@ -65,6 +65,7 @@ with st.sidebar:
         "Select Module",
         options=list(modules.keys()),
         help="Choose which trading module to backtest",
+        key="module_selector"
     )
     
     st.markdown(f"**Module**: {modules[selected_module]}")
@@ -188,6 +189,10 @@ if session_state.backtest_results:
     module_keys = [k for k in all_keys if k.startswith(selected_module)]
     available_keys = module_keys if module_keys else all_keys
     
+    # Show info if no results for selected module
+    if not module_keys and all_keys:
+        st.info(f"ℹ️ No results for {selected_module}. Showing all results.")
+    
     # Create selector for results
     if len(available_keys) > 1:
         result_key = st.selectbox(
@@ -195,7 +200,7 @@ if session_state.backtest_results:
             options=available_keys,
             index=len(available_keys)-1,  # Default to most recent
             help="Select which backtest result to display",
-            key="result_selector"
+            key=f"result_selector_{selected_module}"
         )
     else:
         result_key = available_keys[0] if available_keys else all_keys[-1]
