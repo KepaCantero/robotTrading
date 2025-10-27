@@ -341,7 +341,7 @@ class MomentumStrategy(BaseStrategy):
         return Signal(
             symbol=market_data.symbol,
             signal_type=SignalType.BUY,
-            strength=SignalStrength.MEDIUM,  # Más conservador
+            strength=SignalStrength.MODERATE,  # Más conservador
             confidence=float(rsi),  # Usar RSI como confidence
             liquidity_score=80.0,
             priority_score=85.0,
@@ -379,7 +379,7 @@ class MomentumStrategy(BaseStrategy):
         return Signal(
             symbol=market_data.symbol,
             signal_type=SignalType.SELL,
-            strength=SignalStrength.MEDIUM,  # Más conservador
+            strength=SignalStrength.MODERATE,  # Más conservador
             confidence=100.0 - float(rsi),  # Usar (100 - RSI) como confidence
             liquidity_score=80.0,
             priority_score=85.0,
