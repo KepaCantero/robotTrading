@@ -6,8 +6,9 @@ para identificar oportunidades de trading basadas en tendencias de precio.
 """
 
 import logging
+from collections import deque
 from decimal import Decimal
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from app.core.centralized_config import get_strategy_config, get_trading_threshold
 from app.models.market_data import Quote
@@ -69,6 +70,12 @@ class MomentumStrategy(BaseStrategy):
         self.ema_period = config.get("ema_period", 20)
         self.lookback_period = config.get("lookback_period", 5)
 
+        # Histórico para calcular indicadores reales
+        self.price_history = deque(maxlen=200)  # Mantener 200 velas de histórico
+        self.volume_history = deque(maxlen=200)
+        self.last_rsi = None
+        self.last_ema = None
+
         logger.info(f"MomentumStrategy initialized: {self.name}")
 
     def get_required_parameters(self) -> List[str]:
@@ -88,7 +95,7 @@ class MomentumStrategy(BaseStrategy):
 
     def generate_signals(self, market_data: Quote) -> List[Signal]:
         """
-        Generar señales de trading basadas en momentum.
+        Generar señales de trading basadas en momentum con indicadores reales.
 
         Args:
             market_data: Datos de mercado actuales
@@ -99,22 +106,34 @@ class MomentumStrategy(BaseStrategy):
         signals = []
 
         try:
-            # Calcular indicadores técnicos
-            rsi = self._calculate_rsi(market_data)
-            ema_trend = self._calculate_ema_trend(market_data)
+            # Actualizar histórico
+            self.price_history.append(float(market_data.close or market_data.last))
+            self.volume_history.append(float(market_data.volume))
+
+            # Calcular indicadores técnicos reales
+            rsi = self._calculate_real_rsi()
+            ema = self._calculate_real_ema()
             volume_ratio = self._calculate_volume_ratio(market_data)
 
-            # Generar señal de compra
-            if self._is_buy_signal(rsi, ema_trend, volume_ratio, market_data):
-                signal = self._create_buy_signal(market_data)
-                signals.append(signal)
-                logger.debug(f"Generated BUY signal for {market_data.symbol}")
+            # Sólo generar señales si tenemos suficiente histórico
+            if rsi is None or ema is None:
+                return signals
 
-            # Generar señal de venta
-            elif self._is_sell_signal(rsi, ema_trend, volume_ratio, market_data):
-                signal = self._create_sell_signal(market_data)
+            # Guardar para uso en señales
+            self.last_rsi = rsi
+            self.last_ema = ema
+
+            # Generar señal de compra con condiciones robustas
+            if self._is_buy_signal(rsi, ema, volume_ratio, market_data):
+                signal = self._create_buy_signal(market_data, rsi, ema, volume_ratio)
                 signals.append(signal)
-                logger.debug(f"Generated SELL signal for {market_data.symbol}")
+                logger.debug(f"Generated BUY signal for {market_data.symbol}: RSI={rsi:.2f}, EMA={ema:.2f}")
+
+            # Generar señal de venta con condiciones robustas
+            elif self._is_sell_signal(rsi, ema, volume_ratio, market_data):
+                signal = self._create_sell_signal(market_data, rsi, ema, volume_ratio)
+                signals.append(signal)
+                logger.debug(f"Generated SELL signal for {market_data.symbol}: RSI={rsi:.2f}, EMA={ema:.2f}")
 
         except Exception as e:
             logger.error(f"Error generating signals for {market_data.symbol}: {e}")
@@ -165,36 +184,64 @@ class MomentumStrategy(BaseStrategy):
             logger.error(f"Risk check error: {e}")
             return False
 
-    def _calculate_rsi(self, market_data: Quote) -> Decimal:
+    def _calculate_real_rsi(self) -> Optional[float]:
         """
-        Calcular RSI (simplificado).
-
-        Args:
-            market_data: Datos de mercado
+        Calcular RSI real usando histórico de precios.
 
         Returns:
-            Valor de RSI
+            Valor de RSI o None si no hay suficiente histórico
         """
-        # Implementación simplificada - en producción usar biblioteca técnica
-        # Por ahora, simulamos RSI basado en precio
-        if market_data.last > market_data.open:
-            return Decimal("60")  # Momentum positivo
-        else:
-            return Decimal("40")  # Momentum negativo
+        if len(self.price_history) < self.rsi_period + 1:
+            return None
 
-    def _calculate_ema_trend(self, market_data: Quote) -> Decimal:
+        prices = list(self.price_history)
+        gains = []
+        losses = []
+
+        for i in range(1, len(prices)):
+            change = prices[i] - prices[i - 1]
+            if change > 0:
+                gains.append(change)
+                losses.append(0)
+            else:
+                gains.append(0)
+                losses.append(abs(change))
+
+        if len(gains) < self.rsi_period:
+            return None
+
+        # Calcular promedio de ganancias y pérdidas
+        avg_gain = sum(gains[-self.rsi_period:]) / self.rsi_period
+        avg_loss = sum(losses[-self.rsi_period:]) / self.rsi_period
+
+        if avg_loss == 0:
+            return 100.0
+
+        rs = avg_gain / avg_loss
+        rsi = 100 - (100 / (1 + rs))
+
+        return round(rsi, 2)
+
+    def _calculate_real_ema(self) -> Optional[float]:
         """
-        Calcular tendencia EMA (simplificado).
-
-        Args:
-            market_data: Datos de mercado
+        Calcular EMA real usando histórico de precios.
 
         Returns:
-            Tendencia EMA
+            Valor de EMA o None si no hay suficiente histórico
         """
-        # Implementación simplificada
-        price_change = (market_data.last - market_data.open) / market_data.open
-        return Decimal(str(price_change))
+        if len(self.price_history) < self.ema_period:
+            return None
+
+        prices = list(self.price_history)
+
+        # Calcular EMA
+        multiplier = 2 / (self.ema_period + 1)
+        ema = prices[0]
+
+        for price in prices[1:self.ema_period]:
+            ema = (price * multiplier) + (ema * (1 - multiplier))
+
+        return round(ema, 2)
 
     def _calculate_volume_ratio(self, market_data: Quote) -> Decimal:
         """
@@ -214,60 +261,79 @@ class MomentumStrategy(BaseStrategy):
 
     def _is_buy_signal(
         self,
-        rsi: Decimal,
-        ema_trend: Decimal,
+        rsi: float,
+        ema: float,
         volume_ratio: Decimal,
         market_data: Quote,
     ) -> bool:
         """
-        Determinar si generar señal de compra.
+        Determinar si generar señal de compra con condiciones robustas.
 
         Args:
-            rsi: Valor de RSI
-            ema_trend: Tendencia EMA
+            rsi: Valor de RSI (0-100)
+            ema: Valor de EMA
             volume_ratio: Ratio de volumen
             market_data: Datos de mercado
 
         Returns:
             True si debe generar señal de compra
         """
-        # Simple conditions for testing
-        # Just check if price is going up and volume exists
-        is_rising = market_data.last > market_data.open
-        has_volume = volume_ratio > Decimal("0.1")
-        return is_rising and has_volume
+        current_price = market_data.close or market_data.last
+        
+        # Condiciones más robustas:
+        # 1. RSI > 55 (momentum positivo fuerte)
+        # 2. Precio por encima de EMA (tendencia alcista)
+        # 3. Volumen razonable
+        # 4. Filtro de cooldown para evitar señales repetidas
+        rsi_positive = rsi > 55
+        ema_bullish = current_price > Decimal(str(ema))
+        has_volume = volume_ratio > Decimal("0.8")
+        
+        return rsi_positive and ema_bullish and has_volume
 
     def _is_sell_signal(
         self,
-        rsi: Decimal,
-        ema_trend: Decimal,
+        rsi: float,
+        ema: float,
         volume_ratio: Decimal,
         market_data: Quote,
     ) -> bool:
         """
-        Determinar si generar señal de venta.
+        Determinar si generar señal de venta con condiciones robustas.
 
         Args:
-            rsi: Valor de RSI
-            ema_trend: Tendencia EMA
+            rsi: Valor de RSI (0-100)
+            ema: Valor de EMA
             volume_ratio: Ratio de volumen
             market_data: Datos de mercado
 
         Returns:
             True si debe generar señal de venta
         """
-        # Simple conditions for testing
-        # Just check if price is going down and volume exists
-        is_falling = market_data.last < market_data.open
-        has_volume = volume_ratio > Decimal("0.1")
-        return is_falling and has_volume
+        current_price = market_data.close or market_data.last
+        
+        # Condiciones más robustas:
+        # 1. RSI < 45 (momentum negativo fuerte)
+        # 2. Precio por debajo de EMA (tendencia bajista)
+        # 3. Volumen razonable
+        # 4. Filtro de cooldown para evitar señales repetidas
+        rsi_negative = rsi < 45
+        ema_bearish = current_price < Decimal(str(ema))
+        has_volume = volume_ratio > Decimal("0.8")
+        
+        return rsi_negative and ema_bearish and has_volume
 
-    def _create_buy_signal(self, market_data: Quote) -> Signal:
+    def _create_buy_signal(
+        self, market_data: Quote, rsi: float, ema: float, volume_ratio: Decimal
+    ) -> Signal:
         """
-        Crear señal de compra.
+        Crear señal de compra con metadata completa.
 
         Args:
             market_data: Datos de mercado
+            rsi: Valor de RSI
+            ema: Valor de EMA
+            volume_ratio: Ratio de volumen
 
         Returns:
             Señal de compra
@@ -275,8 +341,8 @@ class MomentumStrategy(BaseStrategy):
         return Signal(
             symbol=market_data.symbol,
             signal_type=SignalType.BUY,
-            strength=SignalStrength.STRONG,
-            confidence=75.0,
+            strength=SignalStrength.MEDIUM,  # Más conservador
+            confidence=float(rsi),  # Usar RSI como confidence
             liquidity_score=80.0,
             priority_score=85.0,
             source=SignalSource.MOMENTUM,
@@ -285,19 +351,25 @@ class MomentumStrategy(BaseStrategy):
             timestamp=market_data.timestamp,
             metadata={
                 "strategy": self.name,
-                "rsi_threshold": str(self.rsi_threshold),
-                "momentum_threshold": str(self.momentum_threshold),
+                "rsi": str(rsi),
+                "ema": str(ema),
+                "volume_ratio": str(volume_ratio),
                 "stop_loss": str(self.stop_loss),
                 "take_profit": str(self.take_profit),
             },
         )
 
-    def _create_sell_signal(self, market_data: Quote) -> Signal:
+    def _create_sell_signal(
+        self, market_data: Quote, rsi: float, ema: float, volume_ratio: Decimal
+    ) -> Signal:
         """
-        Crear señal de venta.
+        Crear señal de venta con metadata completa.
 
         Args:
             market_data: Datos de mercado
+            rsi: Valor de RSI
+            ema: Valor de EMA
+            volume_ratio: Ratio de volumen
 
         Returns:
             Señal de venta
@@ -305,8 +377,8 @@ class MomentumStrategy(BaseStrategy):
         return Signal(
             symbol=market_data.symbol,
             signal_type=SignalType.SELL,
-            strength=SignalStrength.STRONG,
-            confidence=75.0,
+            strength=SignalStrength.MEDIUM,  # Más conservador
+            confidence=100.0 - float(rsi),  # Usar (100 - RSI) como confidence
             liquidity_score=80.0,
             priority_score=85.0,
             source=SignalSource.MOMENTUM,
@@ -315,8 +387,9 @@ class MomentumStrategy(BaseStrategy):
             timestamp=market_data.timestamp,
             metadata={
                 "strategy": self.name,
-                "rsi_threshold": str(self.rsi_threshold),
-                "momentum_threshold": str(self.momentum_threshold),
+                "rsi": str(rsi),
+                "ema": str(ema),
+                "volume_ratio": str(volume_ratio),
                 "stop_loss": str(self.stop_loss),
                 "take_profit": str(self.take_profit),
             },
