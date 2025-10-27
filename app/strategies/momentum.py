@@ -356,6 +356,8 @@ class MomentumStrategy(BaseStrategy):
                 "volume_ratio": str(volume_ratio),
                 "stop_loss": str(self.stop_loss),
                 "take_profit": str(self.take_profit),
+                "momentum_type": "positive_breakout",
+                "reason": f"momentum_positive_breakout: rsi={rsi:.2f} ema_trend=above volume={float(volume_ratio):.2f}x",
             },
         )
 
@@ -392,6 +394,8 @@ class MomentumStrategy(BaseStrategy):
                 "volume_ratio": str(volume_ratio),
                 "stop_loss": str(self.stop_loss),
                 "take_profit": str(self.take_profit),
+                "momentum_type": "negative_reversal",
+                "reason": f"momentum_negative_reversal: rsi={rsi:.2f} ema_trend=below volume={float(volume_ratio):.2f}x",
             },
         )
 
