@@ -8,7 +8,7 @@ historical data simulation, trade execution, and performance metrics calculation
 import math
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Any
 from uuid import uuid4
 
 from app.backtesting.models import (
@@ -18,8 +18,21 @@ from app.backtesting.models import (
     Trade,
     TradeStatus,
 )
-from app.models.momentum import MarketData
+from app.models.market_data import Quote
+from typing import Union, Any
 from app.models.signal import Signal, SignalType
+
+
+def get_price(md) -> Decimal:
+    """Get closing price from MarketData or Quote object."""
+    # Try Quote first (has 'close' attribute)
+    if hasattr(md, 'close'):
+        return md.close
+    # Try MarketData (has 'close_price' attribute)
+    elif hasattr(md, 'close_price'):
+        return md.close_price
+    else:
+        raise AttributeError(f"MarketData object has no 'close' or 'close_price' attribute: {type(md)}")
 
 
 class SimpleBacktester:
@@ -42,7 +55,7 @@ class SimpleBacktester:
 
     def run_backtest(
         self,
-        market_data: List[MarketData],
+        market_data: List,
         signals: List[Signal],
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
@@ -132,7 +145,7 @@ class SimpleBacktester:
         self.max_drawdown = Decimal("0")
         self.peak_equity = self.config.initial_capital
 
-    def _process_signal(self, signal: Signal, market_data: MarketData):
+    def _process_signal(self, signal: Signal, market_data: Any):
         """Process a trading signal."""
         if signal.signal_type == SignalType.BUY:
             self._execute_buy_signal(signal, market_data)
@@ -142,7 +155,7 @@ class SimpleBacktester:
             # Hold signals don't generate trades
             pass
 
-    def _execute_buy_signal(self, signal: Signal, market_data: MarketData):
+    def _execute_buy_signal(self, signal: Signal, market_data: Any):
         """Execute a buy signal."""
         # Calculate position size based on signal confidence and available
         # capital
@@ -190,7 +203,7 @@ class SimpleBacktester:
         )
         self.capital -= total_cost
 
-    def _execute_sell_signal(self, signal: Signal, market_data: MarketData):
+    def _execute_sell_signal(self, signal: Signal, market_data: Any):
         """Execute a sell signal."""
         current_position = self.positions.get(signal.symbol, Decimal("0"))
 
@@ -286,7 +299,7 @@ class SimpleBacktester:
             # Sell orders execute at lower price (unfavorable)
             return price * (Decimal("1") - slippage_factor)
 
-    def _check_exit_conditions(self, market_data: MarketData):
+    def _check_exit_conditions(self, market_data: Any):
         """Check for stop loss and take profit conditions."""
         if market_data.symbol not in self.positions:
             return
@@ -307,7 +320,7 @@ class SimpleBacktester:
 
         # Use the most recent trade's entry price
         entry_price = recent_trades[-1].entry_price
-        current_price = market_data.close
+        current_price = get_price(market_data)
 
         # Check stop loss
         if self.config.stop_loss_percentage:
@@ -391,7 +404,7 @@ class SimpleBacktester:
         self.capital += total_sell_proceeds - self.config.commission_per_trade
         self.positions[symbol] = Decimal("0")
 
-    def _close_all_positions(self, final_market_data: MarketData):
+    def _close_all_positions(self, final_market_data: Any):
         """Close all remaining positions at the end of backtest."""
         for symbol in list(self.positions.keys()):
             if self.positions[symbol] > 0:
