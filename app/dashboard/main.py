@@ -253,7 +253,7 @@ if results_dir.exists():
                             
                         except Exception as e:
                             logger.warning(f"Failed to convert metrics to BacktestResult: {e}")
-                                
+                
                 except Exception as e:
                     logger.warning(f"Failed to load {json_file}: {e}")
 
