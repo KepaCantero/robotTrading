@@ -204,9 +204,9 @@ if execute_button:
             if not signals:
                 st.warning(f"⚠️ Strategy '{selected_strategy}' generated 0 signals. Try different parameters or data period.")
             
-            # Create config
+            # Create config with module and strategy info
             config = BacktestConfig(
-                strategy_name=selected_module.lower(),
+                strategy_name=f"{selected_module}_{selected_strategy}".lower(),
                 initial_capital=Decimal(str(initial_capital)),
                 commission_per_trade=Decimal("1.0"),
                 slippage_percentage=Decimal("0.05"),
@@ -220,7 +220,7 @@ if execute_button:
             result = backtester.run_backtest(quotes, signals)
             
             # Store result with module and strategy
-            key = f"{selected_strategy}_{selected_preset}"
+            key = f"{selected_module}_{selected_strategy}_{selected_preset}"
             session_state.backtest_results[key] = result
             
             # Auto-save to /docs
@@ -271,13 +271,14 @@ if session_state.backtest_results:
     # Let user select which result to view
     all_keys = list(session_state.backtest_results.keys())
     
-    # Filter by selected strategy
-    strategy_keys = [k for k in all_keys if k.startswith(selected_strategy)]
-    available_keys = strategy_keys if strategy_keys else all_keys
+    # Filter by selected module AND strategy
+    combined_key = f"{selected_module}_{selected_strategy}"
+    filtered_keys = [k for k in all_keys if k.startswith(combined_key)]
+    available_keys = filtered_keys if filtered_keys else all_keys
     
-    # Show info if no results for selected strategy
-    if not strategy_keys and all_keys:
-        st.info(f"ℹ️ No results for {selected_strategy}. Showing all results.")
+    # Show info if no results for selected module+strategy
+    if not filtered_keys and all_keys:
+        st.info(f"ℹ️ No results for {selected_module} + {selected_strategy}. Showing all results.")
     
     # Create selector for results
     if len(available_keys) > 1:
