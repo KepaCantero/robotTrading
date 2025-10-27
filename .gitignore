@@ -47,4 +47,16 @@ Thumbs.db
 backup/
 *.bak
 *.backup
+.cursor/
+.cursorrules
+.memory/
+borrar_espacios.sh
+
+# Temporary scripts
+fix_*.py
+repair_*.py
+test_*.sh
+check_all_output.log
+simple_check.log
+DASHBOARD_SUMMARY.md
 

@@ -205,6 +205,11 @@ if results_dir.exists():
                     
                     # Load once per JSON file (not per strategy)
                     if key not in session_state.backtest_results:
+                        # Skip if final_capital is 0 or missing (invalid data)
+                        final_capital = metrics_data.get('final_capital', 0)
+                        if final_capital <= 0:
+                            continue
+                        
                         # Try to create a basic BacktestResult from the metrics
                         try:
                             from app.backtesting.models import BacktestResult, PerformanceMetrics, Trade
@@ -673,45 +678,57 @@ if session_state.backtest_results:
     
     # Equity curve
     st.subheader("📈 Equity Curve")
-    equity_df = pd.DataFrame(
-        [
-            {"Date": eq[0], "Equity": float(eq[1])}
-            for eq in result.equity_curve
-        ]
-    )
-    
-    fig = px.line(
-        equity_df,
-        x="Date",
-        y="Equity",
-        title="Portfolio Value Over Time",
-        labels={"Equity": "Portfolio Value ($)"},
-    )
-    fig.update_layout(height=400)
-    st.plotly_chart(fig, use_container_width=True)
+    if result.equity_curve and len(result.equity_curve) > 0:
+        equity_df = pd.DataFrame(
+            [
+                {"Date": eq[0], "Equity": float(eq[1])}
+                for eq in result.equity_curve
+            ]
+        )
+        
+        if not equity_df.empty:
+            fig = px.line(
+                equity_df,
+                x="Date",
+                y="Equity",
+                title="Portfolio Value Over Time",
+                labels={"Equity": "Portfolio Value ($)"},
+            )
+            fig.update_layout(height=400)
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("No equity curve data available")
+    else:
+        st.info("No equity curve data available")
     
     # Trade log
     st.subheader("📋 Trade Log")
-    trades_df = pd.DataFrame(
-        [
-            {
-                "Trade ID": trade.trade_id[:8],
-                "Symbol": trade.symbol,
-                "Side": trade.side,
-                "Quantity": float(trade.quantity),
-                "Entry Price": float(trade.entry_price),
-                "Exit Price": float(trade.exit_price) if trade.exit_price else None,
-                "Entry Time": trade.entry_time,
-                "Exit Time": trade.exit_time,
-                "PnL": float(trade.pnl) if trade.pnl else 0,
-                "Status": trade.status.value,
-                "Reason": trade.reason if trade.reason else "N/A",
-            }
-            for trade in result.trades
-        ]
-    )
-    
-    st.dataframe(trades_df, use_container_width=True, height=400)
+    if result.trades and len(result.trades) > 0:
+        trades_df = pd.DataFrame(
+            [
+                {
+                    "Trade ID": trade.trade_id[:8],
+                    "Symbol": trade.symbol,
+                    "Side": trade.side,
+                    "Quantity": float(trade.quantity),
+                    "Entry Price": float(trade.entry_price),
+                    "Exit Price": float(trade.exit_price) if trade.exit_price else None,
+                    "Entry Time": trade.entry_time,
+                    "Exit Time": trade.exit_time,
+                    "PnL": float(trade.pnl) if trade.pnl else 0,
+                    "Status": trade.status.value,
+                    "Reason": trade.reason if trade.reason else "N/A",
+                }
+                for trade in result.trades
+            ]
+        )
+        
+        if not trades_df.empty:
+            st.dataframe(trades_df, use_container_width=True, height=400)
+        else:
+            st.info("No trades recorded")
+    else:
+        st.info("No trades recorded")
     
     # Comparison section
     st.subheader("📊 Compare Configurations")
