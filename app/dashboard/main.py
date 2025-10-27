@@ -61,16 +61,16 @@ with st.sidebar:
     # MODULE SELECTOR
     st.subheader("📦 Select Module")
     
-    # All available modules from the system
+    # Actual system modules (NOT strategies!)
     modules = [
         "all",
-        "momentum",
-        "mean_reversion",
-        "pairs_trading",
-        "technicalanalyst",
+        "TechnicalAnalyst",
         "RiskManager",
-        "SignalCombiner",
-        "Executor",
+        "SignalScorer",
+        "PortfolioService",
+        "ExecutionEngine",
+        "CircuitBreakerManager",
+        "PaperTradingService",
     ]
     selected_module = st.selectbox(
         "Select Module",
@@ -265,15 +265,13 @@ if execute_button:
             
             # Determine which modules to run backtests for
             if selected_module == "all":
-                # Run for all modules
+                # Run for all system modules
                 modules_to_run = [
-                    "momentum",
-                    "mean_reversion",
-                    "pairs_trading",
-                    "technicalanalyst",
+                    "TechnicalAnalyst",
                     "RiskManager",
-                    "SignalCombiner",
-                    "Executor",
+                    "SignalScorer",
+                    "PortfolioService",
+                    "ExecutionEngine",
                 ]
             else:
                 # Run for selected module only
@@ -426,40 +424,40 @@ st.subheader(f"📦 Module Information: {selected_module}")
 
 # Module descriptions
 module_info = {
-    "momentum": {
-        "description": "Estrategia de momentum basada en RSI, EMA y análisis de volumen",
-        "metrics": "RSI, EMA trend, Volume ratio, Signal strength",
-        "indicators": "RSI < 40 (oversold), EMA trend > 0, Volume > 1.0x",
-    },
-    "mean_reversion": {
-        "description": "Estrategia de reversión a la media usando Z-score y volatilidad",
-        "metrics": "Z-score, Mean price, Volatility, Mean reversion speed",
-        "indicators": "Z-score < -1.5 (buy), Z-score > +1.5 (sell), Low volatility",
-    },
-    "pairs_trading": {
-        "description": "Estrategia de trading de pares basada en cointegración y spread",
-        "metrics": "Spread, Correlation, Cointegration, Hedge ratio",
-        "indicators": "Spread > 2σ (buy low, sell high), Correlation > 0.7",
-    },
-    "technicalanalyst": {
-        "description": "Análisis técnico usando múltiples indicadores (RSI, EMA, Volume)",
+    "TechnicalAnalyst": {
+        "description": "Análisis técnico usando múltiples indicadores (RSI, EMA, Volume). Genera señales de compra/venta basadas en análisis técnico.",
         "metrics": "RSI, EMA trend, Volume ratio, Signal strength",
         "indicators": "RSI < 40 (oversold), EMA trend > 0, Volume > 1.0x",
     },
     "RiskManager": {
-        "description": "Gestión de riesgo con control de exposición y tamaño de posición",
+        "description": "Gestión de riesgo con control de exposición y tamaño de posición. Valida señales según límites de riesgo.",
         "metrics": "Position size, Exposure, Risk per trade, Stop loss",
         "indicators": "Max exposure < 60%, Risk per trade < 2%",
     },
-    "SignalCombiner": {
-        "description": "Combina señales de múltiples estrategias con ponderación",
-        "metrics": "Signal weight, Consensus strength, Multi-strategy score",
-        "indicators": "Consensus > 70%, Multiple confirmations",
+    "SignalScorer": {
+        "description": "Scoring de señales basado en calidad y prioridad. Evalúa y clasifica señales según múltiples criterios.",
+        "metrics": "Signal score, Priority, Quality metrics, Confidence",
+        "indicators": "Score > 70, High confidence, Multiple confirmations",
     },
-    "Executor": {
-        "description": "Motor de ejecución con control de slippage y comisiones",
+    "PortfolioService": {
+        "description": "Gestión del portfolio con tracking de posiciones, P&L y exposición total.",
+        "metrics": "Total exposure, Position count, P&L, Cash balance",
+        "indicators": "Diversification > 5 positions, Cash > 20%, Balanced exposure",
+    },
+    "ExecutionEngine": {
+        "description": "Motor de ejecución con control de slippage y comisiones. Ejecuta órdenes con gestión de errores.",
         "metrics": "Execution rate, Slippage impact, Commission cost",
         "indicators": "Slippage < 0.1%, Execution success > 95%",
+    },
+    "CircuitBreakerManager": {
+        "description": "Gestión de circuit breakers para protección del sistema. Monitorea errores y activa protecciones.",
+        "metrics": "Circuit breaker state, Error rate, Recovery time",
+        "indicators": "Error rate < 5%, State = CLOSED",
+    },
+    "PaperTradingService": {
+        "description": "Simulación de trading en tiempo real. Ejecuta trades virtuales para validación.",
+        "metrics": "Simulated trades, Virtual P&L, Execution accuracy",
+        "indicators": "Execution accuracy > 95%, Positive virtual P&L",
     },
 }
 
