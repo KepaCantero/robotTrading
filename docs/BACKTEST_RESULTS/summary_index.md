@@ -4,15 +4,16 @@
 
 This table tracks all backtest executions performed on the AlgoTrading system.
 
-| Módulo | Configuración | Periodo | Total Trades | Win Rate | Total PnL | Sharpe | Max Drawdown | Capital Final | Fecha | Reporte |
-|--------|---------------|---------|------------|----------|-----------|--------|--------------|---------------|-------|---------|
-| *No backtests executed yet* | | | | | | | | | | |
+| Módulo                      | Configuración | Periodo | Total Trades | Win Rate | Total PnL | Sharpe | Max Drawdown | Capital Final | Fecha | Reporte |
+| --------------------------- | ------------- | ------- | ------------ | -------- | --------- | ------ | ------------ | ------------- | ----- | ------- |
+| _No backtests executed yet_ |               |         |              |          |           |        |              |               |       |         |
 
 ## Adding New Results
 
 Results are automatically added when backtests are executed via the dashboard.
 
 Each entry includes:
+
 - Module name
 - Configuration used
 - Date range
@@ -39,4 +40,3 @@ Each entry includes:
 - Each module gets its own subdirectory
 - Reports are generated in Markdown format
 - Trade logs and metrics are exported as CSV/JSON
-

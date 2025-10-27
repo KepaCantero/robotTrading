@@ -16,6 +16,7 @@
 ### Module Integrity
 
 **Verified Modules:**
+
 - ✅ `app/backtesting/engine.py`
 - ✅ `app/backtesting/models.py`
 - ✅ `app/backtesting/data_loader.py`
@@ -30,6 +31,7 @@ Run `python scripts/generate_audit_report.py` to generate hashes.
 ### Dataset Verification
 
 **Data Sources:**
+
 - `data/historical/AAPL.csv` - Verified
 - Format: Stooq CSV
 - Columns: Date, Open, High, Low, Close, Volume
@@ -47,6 +49,7 @@ Version constraints satisfied
 ### Execution Logs
 
 **Last Backtest:**
+
 - Module: (none yet)
 - Configuration: (none yet)
 - Timestamp: (run backtest to populate)
@@ -62,4 +65,3 @@ Version constraints satisfied
 - Audit reports are generated automatically on backtest execution
 - See `scripts/generate_audit_report.py` for automated audit generation
 - Integrity checks stored in `integrity_checks.json`
-
