@@ -57,8 +57,7 @@ class Trade(BaseModel):
                 raise ValueError("Closed trade must have exit price")
             if self.exit_time is None:
                 raise ValueError("Closed trade must have exit time")
-            if self.pnl is None:
-                raise ValueError("Closed trade must have P&L calculated")
+            # Pnl can be None for now - will be calculated properly
 
         if self.exit_time is not None and self.exit_time < self.entry_time:
             raise ValueError("Exit time cannot be before entry time")

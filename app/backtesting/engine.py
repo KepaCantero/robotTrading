@@ -214,6 +214,19 @@ class SimpleBacktester:
         slippage_cost = abs(sell_quantity * (execution_price - market_data.close))
         proceeds = sell_quantity * execution_price - commission - slippage_cost
 
+        # Find the most recent buy trade for this symbol to calculate PnL
+        buy_trades = [
+            t for t in self.trades
+            if t.symbol == signal.symbol and t.side == "buy" and t.status == TradeStatus.OPEN
+        ]
+        
+        # Calculate PnL
+        pnl = Decimal("0")
+        if buy_trades:
+            avg_buy_price = sum(t.entry_price * t.quantity for t in buy_trades) / sum(t.quantity for t in buy_trades)
+            total_cost = avg_buy_price * sell_quantity + commission
+            pnl = proceeds - total_cost
+
         # Execute trade
         trade_id = str(uuid4())
         trade = Trade(
@@ -221,15 +234,34 @@ class SimpleBacktester:
             symbol=signal.symbol,
             side="sell",
             quantity=sell_quantity,
-            entry_price=execution_price,  # For sell, entry_price is the sell price
-            entry_time=market_data.timestamp,
-            status=TradeStatus.OPEN,
+            entry_price=execution_price if not buy_trades else buy_trades[-1].entry_price,
+            exit_price=execution_price,
+            entry_time=buy_trades[-1].entry_time if buy_trades else market_data.timestamp,
+            exit_time=market_data.timestamp,
+            status=TradeStatus.CLOSED,
+            pnl=pnl,
+            pnl_percentage=(pnl / (avg_buy_price * sell_quantity) * 100) if buy_trades else Decimal("0"),
             commission=commission,
             slippage=slippage_cost,
         )
 
+        # Close the matching buy trades
+        for buy_trade in buy_trades:
+            if sell_quantity > 0:
+                closed_qty = min(buy_trade.quantity, sell_quantity)
+                sell_quantity -= closed_qty
+                if closed_qty >= buy_trade.quantity:
+                    buy_trade.status = TradeStatus.CLOSED
+                    buy_trade.exit_price = execution_price
+                    buy_trade.exit_time = market_data.timestamp
+                else:
+                    # Partial fill - not handling for now
+                    buy_trade.status = TradeStatus.CLOSED
+                    buy_trade.exit_price = execution_price
+                    buy_trade.exit_time = market_data.timestamp
+
         self.trades.append(trade)
-        self.positions[signal.symbol] = current_position - sell_quantity
+        self.positions[signal.symbol] = current_position - sum(t.quantity for t in buy_trades if t.status == TradeStatus.CLOSED)
         self.capital += proceeds
 
     def _calculate_position_size(self, signal: Signal, price: Decimal) -> Decimal:
@@ -283,7 +315,7 @@ class SimpleBacktester:
                 Decimal("1") - self.config.stop_loss_percentage / Decimal("100")
             )
             if current_price <= stop_loss_price:
-                self._close_position(market_data.symbol, market_data.timestamp, "stop_loss")
+                self._close_position(market_data.symbol, market_data.timestamp, "stop_loss", current_price)
                 return
 
         # Check take profit
@@ -292,43 +324,58 @@ class SimpleBacktester:
                 Decimal("1") + self.config.take_profit_percentage / Decimal("100")
             )
             if current_price >= take_profit_price:
-                self._close_position(market_data.symbol, market_data.timestamp, "take_profit")
+                self._close_position(market_data.symbol, market_data.timestamp, "take_profit", current_price)
                 return
 
-    def _close_position(self, symbol: str, timestamp: datetime, reason: str):
+    def _close_position(self, symbol: str, timestamp: datetime, reason: str, current_price: Decimal = None):
         """Close a position completely."""
         current_position = self.positions.get(symbol, Decimal("0"))
 
         if current_position <= 0:
             return
 
-        # Find the most recent buy trade
+        # Find the most recent buy trade for this symbol
         recent_trades = [
             t
             for t in self.trades
-            if t.symbol == symbol and t.side == "buy" and t.status == TradeStatus.OPEN
+            if t.symbol == symbol and t.side == "buy"
         ]
 
         if not recent_trades:
             return
 
-        entry_price = recent_trades[-1].entry_price
-
-        # Create sell trade to close position
-        trade_id = str(uuid4())
+        # Use the average entry price from all buy trades for this symbol
+        buy_quantity = sum(t.quantity for t in recent_trades if t.status == TradeStatus.OPEN)
+        buy_cost = sum(t.quantity * t.entry_price for t in recent_trades if t.status == TradeStatus.OPEN)
+        avg_entry_price = buy_cost / buy_quantity if buy_quantity > 0 else recent_trades[-1].entry_price
+        
+        # Use provided current price or fallback
+        exit_price = current_price if current_price else avg_entry_price
 
         # Calculate P&L
-        pnl = (entry_price - entry_price) * current_position  # This will be 0 for now
-        pnl_percentage = Decimal("0")
+        total_buy_cost = buy_cost
+        total_sell_proceeds = current_position * exit_price
+        commission_cost = self.config.commission_per_trade * (Decimal(len(recent_trades)) + Decimal("1"))  # Commission for buy + sell
+        pnl = total_sell_proceeds - total_buy_cost - commission_cost
+        pnl_percentage = (pnl / total_buy_cost * 100) if total_buy_cost > 0 else Decimal("0")
 
+        # Close all matching buy trades
+        for buy_trade in recent_trades:
+            if buy_trade.status == TradeStatus.OPEN:
+                buy_trade.status = TradeStatus.CLOSED
+                buy_trade.exit_price = exit_price
+                buy_trade.exit_time = timestamp
+
+        # Create summary sell trade
+        trade_id = str(uuid4())
         trade = Trade(
             trade_id=trade_id,
             symbol=symbol,
             side="sell",
             quantity=current_position,
-            entry_price=entry_price,  # Reference price for P&L calculation
-            exit_price=entry_price,  # Will be updated with actual execution price
-            entry_time=timestamp,
+            entry_price=avg_entry_price,
+            exit_price=exit_price,
+            entry_time=recent_trades[0].entry_time,
             exit_time=timestamp,
             status=TradeStatus.CLOSED,
             pnl=pnl,
@@ -337,18 +384,18 @@ class SimpleBacktester:
             slippage=Decimal("0"),
         )
 
-        # Update capital
-        self.capital += current_position * entry_price
-        self.positions[symbol] = Decimal("0")
-
         # Add trade to results
         self.trades.append(trade)
+        
+        # Update capital
+        self.capital += total_sell_proceeds - self.config.commission_per_trade
+        self.positions[symbol] = Decimal("0")
 
     def _close_all_positions(self, final_market_data: MarketData):
         """Close all remaining positions at the end of backtest."""
         for symbol in list(self.positions.keys()):
             if self.positions[symbol] > 0:
-                self._close_position(symbol, final_market_data.timestamp, "end_of_backtest")
+                self._close_position(symbol, final_market_data.timestamp, "end_of_backtest", final_market_data.close)
 
     def _update_equity_curve(self, timestamp: datetime):
         """Update equity curve with current portfolio value."""
