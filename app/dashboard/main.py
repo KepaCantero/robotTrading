@@ -496,32 +496,38 @@ if selected_module in module_info or selected_module == "all":
             if module_results_count > 0:
                 st.success(f"✅ {module_results_count} result(s) available for {selected_module}")
                 
-                # Show key metrics from first result
+                # Collect all results for this module
+                module_results = []
                 for key in session_state.backtest_results.keys():
                     if key.lower().startswith(selected_module.lower() + "_"):
                         result = session_state.backtest_results[key]
+                        module_results.append((key, result))
+                
+                # Show summary table of all results
+                if module_results:
+                    st.markdown("---")
+                    st.markdown("### 📊 All Backtest Results Summary")
+                    
+                    # Create table data
+                    table_data = []
+                    for key, result in module_results:
+                        # Extract config and timestamp from key
+                        parts = key.split('_')
+                        config_name = parts[1] if len(parts) > 1 else 'unknown'
                         
-                        st.markdown("---")
-                        st.markdown("### 📊 Latest Backtest Results")
-                        
-                        col1, col2, col3 = st.columns(3)
-                        with col1:
-                            st.metric("Total Trades", result.performance.total_trades)
-                        with col2:
-                            st.metric("Win Rate", f"{float(result.performance.win_rate):.1f}%")
-                        with col3:
-                            st.metric("Total PnL", f"${float(result.performance.total_pnl):,.2f}")
-                        
-                        col4, col5, col6 = st.columns(3)
-                        with col4:
-                            sharpe = f"{float(result.performance.sharpe_ratio):.2f}" if result.performance.sharpe_ratio else "N/A"
-                            st.metric("Sharpe Ratio", sharpe)
-                        with col5:
-                            st.metric("Max Drawdown", f"{float(result.performance.max_drawdown_percentage):.2f}%")
-                        with col6:
-                            st.metric("Final Capital", f"${float(result.final_capital):,.2f}")
-                        
-                        break  # Show only first result
+                        table_data.append({
+                            "Config": config_name,
+                            "Trades": result.performance.total_trades,
+                            "Win Rate": f"{float(result.performance.win_rate):.1f}%",
+                            "PnL": f"${float(result.performance.total_pnl):,.2f}",
+                            "Sharpe": f"{float(result.performance.sharpe_ratio):.2f}" if result.performance.sharpe_ratio else "N/A",
+                            "Max DD": f"{float(result.performance.max_drawdown_percentage):.2f}%",
+                            "Final Capital": f"${float(result.final_capital):,.2f}",
+                        })
+                    
+                    # Display as dataframe
+                    df = pd.DataFrame(table_data)
+                    st.dataframe(df, use_container_width=True, hide_index=True)
                         
     else:
         st.info("Showing results from all modules. Select a specific module to see detailed information.")
