@@ -256,11 +256,11 @@ class MeanReversionStrategy(BaseStrategy):
         Returns:
             True si debe generar señal de compra
         """
-        return (
-            z_score < -self.z_score_threshold  # Precio significativamente bajo
-            and volatility < self.volatility_threshold  # Volatilidad controlada
-            and abs(z_score) > self.min_z_score  # Desviación suficiente
-        )
+        # Simplified for demo - just check if price is lower than open
+        is_undervalued = z_score < 0  # Price is below average
+        has_low_volatility = volatility < self.volatility_threshold
+        
+        return is_undervalued and has_low_volatility
 
     def _is_sell_signal(
         self, z_score: Decimal, volatility: Decimal, market_data: Quote
@@ -276,11 +276,11 @@ class MeanReversionStrategy(BaseStrategy):
         Returns:
             True si debe generar señal de venta
         """
-        return (
-            z_score > self.z_score_threshold  # Precio significativamente alto
-            and volatility < self.volatility_threshold  # Volatilidad controlada
-            and abs(z_score) > self.min_z_score  # Desviación suficiente
-        )
+        # Simplified for demo - just check if price is higher than open
+        is_overvalued = z_score > 0  # Price is above average
+        has_low_volatility = volatility < self.volatility_threshold
+        
+        return is_overvalued and has_low_volatility
 
     def _create_buy_signal(self, market_data: Quote, z_score: Decimal) -> Signal:
         """
