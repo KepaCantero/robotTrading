@@ -23,17 +23,20 @@ graph TB
 **Purpose**: Simulate historical trading strategies
 
 **Key Functions**:
+
 - `run_backtest()`: Executes complete backtest simulation
 - `_execute_buy_signal()`: Processes buy orders
 - `_execute_sell_signal()`: Processes sell orders
 - `_build_trade_reason()`: Extracts decision rationale
 
 **Dependencies**:
+
 - `pydantic`: Model validation
 - `decimal`: Financial calculations
 - `datetime`: Timestamp handling
 
 **Storage**:
+
 - Local: `/data/results/`
 - AWS: `s3://algo-trading-docs/{run_id}/`
 
@@ -42,6 +45,7 @@ graph TB
 **Purpose**: Interactive visualization and module comparison
 
 **Features**:
+
 - Module selector (Momentum, Mean Reversion, Technical Analysis)
 - Configuration presets (Conservative, Moderate, Aggressive)
 - Real-time backtest execution
@@ -55,6 +59,7 @@ graph TB
 ### 3. Storage Layer
 
 **Local Structure**:
+
 ```
 /docs
   /BACKTEST_RESULTS
@@ -68,6 +73,7 @@ graph TB
 **Naming Convention**: `{module}_{config}_{timestamp}.{ext}`
 
 **AWS Synchronization**:
+
 - Auto-sync on completion
 - S3 bucket: `s3://algo-trading-docs/`
 - Path: `{run_id}/{module}/{config}/`
@@ -75,6 +81,7 @@ graph TB
 ### 4. Audit Layer
 
 **Components**:
+
 - SHA256 hashing of code files
 - Commit tracking (git rev-parse HEAD)
 - Dependency versioning (requirements.txt)
@@ -82,6 +89,7 @@ graph TB
 - Integrity verification
 
 **Files**:
+
 - `system_audit.md`: System-wide audit report
 - `integrity_checks.json`: Hash verification results
 - `reproducibility_tests.md`: Reproduction instructions
@@ -89,16 +97,19 @@ graph TB
 ## Version Control
 
 **Current Status**:
+
 ```bash
 git rev-parse HEAD  # Returns current commit SHA
 ```
 
 **Key Files**:
+
 - `requirements.txt`: Dependency versions
 - `.git/config`: Repository configuration
 - `app/backtesting/`: Core backtesting logic
 
 **Tracking**:
+
 - Every backtest records:
   - Commit SHA
   - Git branch
@@ -111,16 +122,19 @@ git rev-parse HEAD  # Returns current commit SHA
 ### Execution Flow
 
 1. **User Input** (Dashboard)
+
    - Select module
    - Select configuration
    - Set symbol, dates, capital
 
 2. **Data Loading**
+
    - Load historical data from CSV
    - Format: `data/historical/{SYMBOL}.csv`
    - Columns: timestamp, open, high, low, close, volume
 
 3. **Signal Generation**
+
    - Strategy module generates signals
    - Each signal includes:
      - Type (BUY/SELL/HOLD)
@@ -129,11 +143,13 @@ git rev-parse HEAD  # Returns current commit SHA
      - Metadata (reason)
 
 4. **Backtest Execution**
+
    - Execute signals with slippage/commission
    - Track positions and equity
    - Record all trades with reasons
 
 5. **Results Storage**
+
    - Save metrics
    - Save equity curve
    - Save trade log
@@ -148,11 +164,13 @@ git rev-parse HEAD  # Returns current commit SHA
 ### Audit Flow
 
 1. **Pre-Execution**
+
    - Record system state
    - Hash critical files
    - Note dependencies
 
 2. **During Execution**
+
    - Log parameter values
    - Track data lineage
    - Monitor performance
@@ -172,6 +190,7 @@ git rev-parse HEAD  # Returns current commit SHA
 **Future**: Automatic S3 sync on execution complete
 
 **Code Path**:
+
 ```python
 # Detect environment
 import os
@@ -186,6 +205,7 @@ else:
 ### Reproducibility
 
 **Key Elements**:
+
 - Exact parameter values
 - Random seeds (if applicable)
 - Data source and version
@@ -193,6 +213,7 @@ else:
 - Environment details
 
 **Verification**:
+
 - Compare result hashes
 - Re-run with same inputs
 - Validate outputs match
@@ -200,15 +221,18 @@ else:
 ## Security & Integrity
 
 **Hashing**:
+
 - SHA256 of all code files
 - SHA256 of result files
 - Verification on load
 
 **Access Control**:
+
 - Local: File system permissions
 - AWS: IAM roles and policies
 
 **Audit Trail**:
+
 - Who executed (user/system)
 - When executed (timestamp)
 - What was executed (parameters)
@@ -221,4 +245,3 @@ else:
 3. Advanced risk analytics
 4. ML model integration
 5. Portfolio optimization
-
