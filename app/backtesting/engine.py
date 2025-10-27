@@ -158,6 +158,18 @@ class SimpleBacktester:
 
     def _execute_buy_signal(self, signal: Signal, market_data: Any):
         """Execute a buy signal."""
+        # CRITICAL FIX: Close existing position before opening new one
+        # This prevents position accumulation and reduces drawdown
+        current_position = self.positions.get(signal.symbol, Decimal("0"))
+        if current_position > 0:
+            # Close existing position first (with loss/profit)
+            self._close_position(
+                signal.symbol, 
+                market_data.timestamp, 
+                "signal_reverse", 
+                get_price(market_data)
+            )
+        
         # Get price using helper function
         current_price = get_price(market_data)
         
