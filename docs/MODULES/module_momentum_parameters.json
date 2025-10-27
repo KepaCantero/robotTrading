@@ -1,0 +1,108 @@
+{
+  "module": "MomentumStrategy",
+  "description": "Momentum-based trading with RSI, EMA and Volume indicators",
+  "parameters": {
+    "rsi_threshold": {
+      "name": "RSI Threshold",
+      "type": "int",
+      "range": [1, 99],
+      "default": 40,
+      "unit": "points",
+      "description": "Threshold for RSI-based signals. Lower values = more buy signals (oversold). Higher values = more sell signals (overbought).",
+      "impact": "Primary signal filter. Affects trade frequency and quality."
+    },
+    "momentum_threshold": {
+      "name": "Momentum Threshold",
+      "type": "float",
+      "range": [0.0, 1.0],
+      "default": 0.005,
+      "unit": "ratio",
+      "description": "Minimum momentum required for signals. Lower = more sensitive to price changes.",
+      "impact": "Filters weak signals. Reduces noise but may miss opportunities."
+    },
+    "stop_loss": {
+      "name": "Stop Loss",
+      "type": "float",
+      "range": [0.0, 10.0],
+      "default": 3.0,
+      "unit": "percent",
+      "description": "Maximum loss before position is closed automatically.",
+      "impact": "Risk management. Limits downside on losing trades."
+    },
+    "take_profit": {
+      "name": "Take Profit",
+      "type": "float",
+      "range": [0.0, 20.0],
+      "default": 7.0,
+      "unit": "percent",
+      "description": "Target profit before position is closed automatically.",
+      "impact": "Profit targeting. Locks in gains before reversals."
+    },
+    "max_position_size": {
+      "name": "Max Position Size",
+      "type": "float",
+      "range": [0.0, 1.0],
+      "default": 0.05,
+      "unit": "ratio",
+      "description": "Maximum fraction of capital allocated per trade.",
+      "impact": "Capital allocation. Diversification and risk management."
+    },
+    "ema_fast": {
+      "name": "EMA Fast Period",
+      "type": "int",
+      "range": [1, 50],
+      "default": 12,
+      "unit": "periods",
+      "description": "Short-term EMA period for trend detection.",
+      "impact": "Trend sensitivity. Lower = more reactive to price changes."
+    },
+    "ema_slow": {
+      "name": "EMA Slow Period",
+      "type": "int",
+      "range": [1, 200],
+      "default": 26,
+      "unit": "periods",
+      "description": "Long-term EMA period for trend detection.",
+      "impact": "Trend sensitivity. Higher = smoother, less noise."
+    },
+    "rsi_period": {
+      "name": "RSI Period",
+      "type": "int",
+      "range": [1, 50],
+      "default": 14,
+      "unit": "periods",
+      "description": "Lookback period for RSI calculation.",
+      "impact": "Oscillator sensitivity. Standard is 14 periods."
+    }
+  },
+  "presets": {
+    "Conservative": {
+      "description": "Low risk, fewer signals",
+      "values": {
+        "rsi_threshold": 30,
+        "momentum_threshold": 0.01,
+        "stop_loss": 2.0,
+        "take_profit": 5.0
+      }
+    },
+    "Moderate": {
+      "description": "Balanced risk/reward",
+      "values": {
+        "rsi_threshold": 40,
+        "momentum_threshold": 0.005,
+        "stop_loss": 3.0,
+        "take_profit": 7.0
+      }
+    },
+    "Aggressive": {
+      "description": "Higher risk, more signals",
+      "values": {
+        "rsi_threshold": 50,
+        "momentum_threshold": 0.001,
+        "stop_loss": 5.0,
+        "take_profit": 10.0
+      }
+    }
+  }
+}
+
