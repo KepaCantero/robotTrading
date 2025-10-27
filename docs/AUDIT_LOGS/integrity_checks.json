@@ -26,6 +26,20 @@
       "environment": "local",
       "status": "PASSED",
       "note": "Initial audit structure created"
+    },
+    {
+      "timestamp": "2025-10-27T10:05:56.352302",
+      "module": "momentum",
+      "config": "Conservative",
+      "integrity_status": "PASSED",
+      "commit_hash": "3d3fefce87e401027043e8d2ac653ca40853c27c"
+    },
+    {
+      "timestamp": "2025-10-27T10:05:56.425159",
+      "module": "pairs_trading",
+      "config": "Conservative",
+      "integrity_status": "PASSED",
+      "commit_hash": "3d3fefce87e401027043e8d2ac653ca40853c27c"
     }
   ]
 }

@@ -1,0 +1,23 @@
+{
+  "strategy": "default_strategy",
+  "period": "2023-01-03 00:00:00 to 2024-12-31 00:00:00",
+  "initial_capital": 100000.0,
+  "final_capital": 921.011109909074,
+  "total_pnl": 1015.9136514837611,
+  "total_return_pct": -99.07898889009093,
+  "annualized_return_pct": -90.47999864560445,
+  "total_trades": 212,
+  "winning_trades": 105,
+  "losing_trades": 107,
+  "win_rate_pct": 49.528301886792455,
+  "avg_trade_pnl": 4.792045525866798,
+  "profit_factor": 0,
+  "max_drawdown_pct": -99.60840938280408,
+  "volatility_annualized": 0,
+  "sharpe_ratio": -22.190640382342,
+  "sortino_ratio": 0,
+  "timestamp_utc": "2025-10-27T10:04:34.706224",
+  "code_hash": "3d3fefce87e4",
+  "commit_sha": "3d3fefce87e4",
+  "environment": "local"
+}
