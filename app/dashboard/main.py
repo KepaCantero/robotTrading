@@ -210,16 +210,37 @@ if results_dir.exists():
                             from app.backtesting.models import BacktestResult, PerformanceMetrics, Trade
                             
                             # Convert metrics JSON to BacktestResult
+                            # Calculate missing fields
+                            total_trades = int(metrics_data.get('total_trades', 0))
+                            win_rate = float(metrics_data.get('win_rate_pct', 0))
+                            winning_trades = metrics_data.get('winning_trades', 0)
+                            losing_trades = metrics_data.get('losing_trades', 0)
+                            
+                            # If missing, calculate from win_rate
+                            if total_trades > 0 and (winning_trades == 0 and losing_trades == 0):
+                                winning_trades = int(total_trades * win_rate / 100)
+                                losing_trades = total_trades - winning_trades
+                            
                             perf_metrics = PerformanceMetrics(
-                                total_trades=int(metrics_data.get('total_trades', 0)),
-                                win_rate=float(metrics_data.get('win_rate', 0)),
-                                total_pnl=float(metrics_data.get('total_pnl', 0)),
-                                sharpe_ratio=float(metrics_data.get('sharpe_ratio', 0)) if metrics_data.get('sharpe_ratio') else None,
-                                max_drawdown=float(metrics_data.get('max_drawdown', 0)),
-                                final_capital=float(metrics_data.get('final_capital', 0)),
-                                cagr=float(metrics_data.get('cagr', 0)) if metrics_data.get('cagr') else None,
-                                sortino_ratio=float(metrics_data.get('sortino_ratio', 0)) if metrics_data.get('sortino_ratio') else None,
-                                profit_factor=float(metrics_data.get('profit_factor', 0)) if metrics_data.get('profit_factor') else None,
+                                total_trades=total_trades,
+                                winning_trades=winning_trades,
+                                losing_trades=losing_trades,
+                                win_rate=Decimal(str(win_rate)),
+                                total_pnl=Decimal(str(metrics_data.get('total_pnl', 0))),
+                                total_pnl_percentage=Decimal(str(metrics_data.get('total_return_pct', 0))),
+                                gross_profit=Decimal(str(max(metrics_data.get('total_pnl', 0), 0))),
+                                gross_loss=Decimal(str(min(metrics_data.get('total_pnl', 0), 0))),
+                                net_profit=Decimal(str(metrics_data.get('total_pnl', 0))),
+                                max_drawdown=Decimal(str(metrics_data.get('max_drawdown_pct', 0))),
+                                max_drawdown_percentage=Decimal(str(metrics_data.get('max_drawdown_pct', 0))),
+                                sharpe_ratio=Decimal(str(metrics_data.get('sharpe_ratio', 0))) if metrics_data.get('sharpe_ratio') else None,
+                                sortino_ratio=Decimal(str(metrics_data.get('sortino_ratio', 0))) if metrics_data.get('sortino_ratio') else None,
+                                avg_win=Decimal(str(0)),
+                                avg_loss=Decimal(str(0)),
+                                largest_win=Decimal(str(0)),
+                                largest_loss=Decimal(str(0)),
+                                total_days=365,
+                                avg_trade_duration=Decimal(str(1)),
                             )
                             
                             # Load trades if available
@@ -239,14 +260,14 @@ if results_dir.exists():
                                     ))
                             
                             result = BacktestResult(
-                                symbol=metrics_data.get('symbol', 'UNKNOWN'),
-                                start_date=datetime.fromisoformat(metrics_data['start_date']) if 'start_date' in metrics_data else datetime.now(),
-                                end_date=datetime.fromisoformat(metrics_data['end_date']) if 'end_date' in metrics_data else datetime.now(),
-                                initial_capital=float(metrics_data.get('initial_capital', 100000)),
-                                final_capital=float(metrics_data.get('final_capital', 0)),
+                                strategy_name=metrics_data.get('strategy', 'unknown'),
+                                start_date=datetime.fromisoformat(metrics_data['period'].split(' to ')[0]) if 'period' in metrics_data else datetime.now(),
+                                end_date=datetime.fromisoformat(metrics_data['period'].split(' to ')[1]) if 'period' in metrics_data and ' to ' in metrics_data['period'] else datetime.now(),
+                                final_capital=Decimal(str(metrics_data.get('final_capital', 0))),
+                                total_return=Decimal(str(metrics_data.get('total_return_pct', 0))),
                                 trades=trades,
                                 performance=perf_metrics,
-                                equity_curve=[],  # Would need to load separately
+                                equity_curve=[],
                             )
                             
                             session_state.backtest_results[key] = result
