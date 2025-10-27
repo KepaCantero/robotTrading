@@ -444,23 +444,6 @@ if session_state.backtest_results:
             data=json_str,
             file_name=f"backtest_{result_key}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
             mime="application/json",
-            use_container_width=True,
-        )
-    
-    with col2:
-        csv_str = trades_df.to_csv(index=False)
-        st.download_button(
-            label="📥 Download CSV",
-            data=csv_str,
-            file_name=f"backtest_{result_key}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-            mime="text/csv",
-            use_container_width=True,
-        )
-
-
-            file_name=f"backtest_{result_key}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
-            mime="application/json",
-            use_container_width=True,
         )
     
     with col2:
