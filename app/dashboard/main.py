@@ -31,6 +31,7 @@ from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig
 from app.strategies.momentum import MomentumStrategy
 from app.strategies.mean_reversion import MeanReversionStrategy
+from app.strategies.pairs_trading import PairsTradingStrategy
 from app.dashboard.report_generator import save_backtest_result, update_summary_index
 
 # Configure logging
@@ -55,13 +56,11 @@ with st.sidebar:
     
     st.subheader("📊 Module Selection")
     
-    # Module selector
+    # Module selector (only implemented strategies)
     modules = {
-        "TechnicalAnalyst": "RSI-MACD Technical Analysis",
-        "RiskManager": "Portfolio Risk Management", 
-        "SignalCombiner": "Multi-Signal Combination",
-        "Momentum": "Momentum Strategy",
-        "MeanReversion": "Mean Reversion Strategy",
+        "Momentum": "Momentum Strategy (RSI + EMA + Volume)",
+        "MeanReversion": "Mean Reversion Strategy (Z-score)",
+        "PairsTrading": "Pairs Trading Strategy (Cointegration)",
     }
     
     selected_module = st.selectbox(
@@ -160,13 +159,14 @@ if execute_button:
                 strategy = MomentumStrategy(strategy_config)
             elif selected_module == "MeanReversion":
                 strategy = MeanReversionStrategy(strategy_config)
-            elif selected_module == "TechnicalAnalyst":
-                # Use MomentumStrategy for TechnicalAnalyst (RSI-MACD)
-                strategy = MomentumStrategy(strategy_config)
+            elif selected_module == "PairsTrading":
+                # Note: PairsTrading needs pair_symbols, set default
+                if "pair_symbols" not in strategy_config:
+                    strategy_config["pair_symbols"] = ["AAPL", "MSFT"]
+                strategy = PairsTradingStrategy(strategy_config)
             else:
-                # Default to MomentumStrategy for other modules
-                st.warning(f"⚠️ Module '{selected_module}' not fully implemented, using MomentumStrategy")
-                strategy = MomentumStrategy(strategy_config)
+                st.error(f"❌ Unknown module: {selected_module}")
+                st.stop()
             
             # Generate signals
             signals = []
