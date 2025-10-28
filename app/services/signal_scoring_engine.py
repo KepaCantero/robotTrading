@@ -355,12 +355,13 @@ class SignalScoringEngine:
         self.priority_ranker = SignalPriorityRanker()
         self.portfolio_filter = PortfolioSignalFilter()
 
-    def process_signals(self, signals: List[Signal]) -> List[Signal]:
+    def process_signals(self, signals: List[Signal], apply_cooldown: bool = True) -> List[Signal]:
         """
         Process signals through the complete scoring pipeline.
         
         Args:
             signals: Raw signals from strategies
+            apply_cooldown: Whether to apply cooldown (False for backtesting)
             
         Returns:
             Processed and filtered signals
@@ -371,8 +372,8 @@ class SignalScoringEngine:
         processed_signals = []
 
         for signal in signals:
-            # Check cooldown
-            if self.cooldown_manager.is_in_cooldown(signal.symbol):
+            # Check cooldown (skip in backtesting mode)
+            if apply_cooldown and self.cooldown_manager.is_in_cooldown(signal.symbol):
                 logger.debug(f"Signal suppressed for {signal.symbol}: in cooldown")
                 continue
 
@@ -386,13 +387,17 @@ class SignalScoringEngine:
             priority = self.priority_ranker.get_priority(compound_score)
             signal.metadata["priority"] = priority
 
-            # Set cooldown after processing
-            self.cooldown_manager.set_cooldown(signal.symbol)
+            # Set cooldown after processing (only if enabled)
+            if apply_cooldown:
+                self.cooldown_manager.set_cooldown(signal.symbol)
 
             processed_signals.append(signal)
 
-        # Filter portfolio conflicts
-        filtered_signals = self.portfolio_filter.filter_signals(processed_signals)
+        # Filter portfolio conflicts (only if not backtesting)
+        if apply_cooldown:
+            filtered_signals = self.portfolio_filter.filter_signals(processed_signals)
+        else:
+            filtered_signals = processed_signals
 
         # Rank by priority
         ranked_signals = self.priority_ranker.rank_signals(filtered_signals)
