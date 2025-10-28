@@ -94,6 +94,74 @@ class TradingThresholds(BaseModel):
         default=60.0, description="Minimum strength threshold for momentum analysis"
     )
 
+    # Signal Scoring Engine (TASK-SC-1 to SC-5)
+    signal_cooldown_minutes: int = Field(default=10, description="Signal cooldown period in minutes")
+    signal_compound_weights: Dict[str, float] = Field(
+        default_factory=lambda: {
+            "confidence": 0.30,
+            "volume_ratio": 0.25,
+            "volatility": 0.20,
+            "liquidity": 0.15,
+            "timing": 0.10,
+        },
+        description="Weights for compound signal scoring"
+    )
+    signal_high_priority_threshold: float = Field(
+        default=80.0, description="High priority threshold (0-100)"
+    )
+    signal_medium_priority_threshold: float = Field(
+        default=50.0, description="Medium priority threshold (0-100)"
+    )
+
+    # Multi-Strategy Allocation (TASK-PA-1, PA-2)
+    momentum_target_weight: float = Field(default=0.50, description="Momentum strategy target weight")
+    mean_reversion_target_weight: float = Field(
+        default=0.25, description="Mean reversion strategy target weight"
+    )
+    pairs_trading_target_weight: float = Field(
+        default=0.25, description="Pairs trading strategy target weight"
+    )
+    
+    # Risk Management (TASK-RM-1 to RM-5)
+    max_risk_per_trade: float = Field(default=0.02, description="Maximum risk per trade (0-1)")
+    min_risk_reward_ratio: float = Field(default=3.0, description="Minimum risk/reward ratio")
+    max_momentum_exposure: float = Field(default=0.50, description="Max momentum exposure (0-1)")
+    max_mean_reversion_exposure: float = Field(
+        default=0.30, description="Max mean reversion exposure (0-1)"
+    )
+    max_pairs_trading_exposure: float = Field(
+        default=0.30, description="Max pairs trading exposure (0-1)"
+    )
+    max_consecutive_stops: int = Field(default=5, description="Max consecutive stops before pause")
+
+    # Portfolio Rebalancing (TASK-REB-1, REB-2)
+    rebalance_frequency_days: int = Field(default=30, description="Rebalancing frequency in days")
+    rebalance_drift_threshold: float = Field(default=0.05, description="Rebalance drift threshold (0-1)")
+    min_allocation_weight: float = Field(default=0.10, description="Minimum allocation weight (0-1)")
+    max_allocation_weight: float = Field(default=0.70, description="Maximum allocation weight (0-1)")
+    capital_adjustment_factor: float = Field(
+        default=0.20, description="Capital adjustment factor per negative streak (0-1)"
+    )
+
+    @field_validator(
+        "momentum_target_weight",
+        "mean_reversion_target_weight",
+        "pairs_trading_target_weight",
+        "max_momentum_exposure",
+        "max_mean_reversion_exposure",
+        "max_pairs_trading_exposure",
+        "max_risk_per_trade",
+        "rebalance_drift_threshold",
+        "min_allocation_weight",
+        "max_allocation_weight",
+        "capital_adjustment_factor",
+    )
+    @classmethod
+    def validate_percentage(cls, v):
+        if not 0 <= v <= 1:
+            raise ValueError("Percentage values must be between 0 and 1")
+        return v
+
     @field_validator(
         "max_position_size",
         "min_position_size",
@@ -540,14 +608,21 @@ def update_strategy_config(strategy_name: str, new_config: dict):
 def find_magic_values() -> Dict[str, List[str]]:
     """Find magic values in the codebase that should be moved to configuration."""
     magic_values = {
-        "numeric_thresholds": [],
+        "numeric_thresholds": [
+            "Signal cooldown: 10 minutes",
+            "Compound score weights: 30/25/20/15/10",
+            "Priority thresholds: 80/50",
+            "Risk per trade: 2%",
+            "Risk/reward ratio: 3:1",
+            "Max consecutive stops: 5",
+            "Rebalance frequency: 30 days",
+            "Allocation weights: 50/25/25",
+        ],
         "string_constants": [],
         "timeout_values": [],
         "retry_counts": [],
     }
 
-    # This would be implemented with AST parsing to find hardcoded values
-    # For now, return empty structure
     return magic_values
 
 
