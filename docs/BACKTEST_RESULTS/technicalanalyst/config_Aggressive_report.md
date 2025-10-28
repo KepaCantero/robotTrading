@@ -1,12 +1,12 @@
-# Backtest Report: TechnicalAnalyst - Conservative
+# Backtest Report: TechnicalAnalyst - Aggressive
 
 ## Executive Summary
 
 **Module:** TechnicalAnalyst
-**Configuration:** Conservative
+**Configuration:** Aggressive
 **Symbol:** AAPL
 **Period:** 2023-01-01 to 2024-12-31
-**Execution Date:** 2025-10-28 18:37:09
+**Execution Date:** 2025-10-28 14:37:06
 
 ### Performance Overview
 
@@ -30,8 +30,8 @@ with a Sharpe ratio of N/A and maximum drawdown of 0.00%.
 ### Decision Patterns
 
 
-- Buy signals: 1
-- Sell signals: 1
+- Buy signals: 19
+- Sell signals: 19
 - Most frequent reason: (analyze from trade reasons)
 
 
@@ -48,8 +48,8 @@ The strategy was tested during a period characterized by:
 
 ## Attachments
 
-- Trade log: `trade_log_Conservative_<timestamp>.csv`
-- Metrics: `metrics_Conservative_<timestamp>.json`
+- Trade log: `trade_log_Aggressive_<timestamp>.csv`
+- Metrics: `metrics_Aggressive_<timestamp>.json`
 
 ## Audit Trail
 

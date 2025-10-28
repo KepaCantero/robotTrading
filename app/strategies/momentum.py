@@ -134,7 +134,7 @@ class MomentumStrategy(BaseStrategy):
 
             # Sólo generar señales si tenemos suficiente histórico
             if rsi is None or ema is None:
-                return signals
+                return raw_signals
 
             # Guardar para uso en señales
             self.last_rsi = rsi
