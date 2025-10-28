@@ -6,7 +6,7 @@
 **Configuration:** Conservative
 **Symbol:** AAPL
 **Period:** 2023-01-01 to 2024-12-31
-**Execution Date:** 2025-10-28 18:45:38
+**Execution Date:** 2025-10-28 19:41:22
 
 ### Performance Overview
 
@@ -30,8 +30,8 @@ with a Sharpe ratio of N/A and maximum drawdown of 0.00%.
 ### Decision Patterns
 
 
-- Buy signals: 1
-- Sell signals: 1
+- Buy signals: 9
+- Sell signals: 9
 - Most frequent reason: (analyze from trade reasons)
 
 

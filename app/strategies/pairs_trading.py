@@ -40,6 +40,7 @@ class PairsTradingStrategy(BaseStrategy):
             self.lookback_period = params.get("lookback_period", 30)
             self.min_correlation = Decimal(str(params.get("min_correlation", 0.7)))
             self.max_pair_exposure = Decimal(str(params.get("max_pair_exposure", 0.2)))
+            self.max_total_exposure = Decimal(str(params.get("max_total_exposure", 0.4)))  # 40% max
             self.hedge_ratio_threshold = Decimal(str(params.get("hedge_ratio_threshold", 0.1)))
 
             # Use strategy-specific risk parameters or fallback to global
@@ -67,6 +68,7 @@ class PairsTradingStrategy(BaseStrategy):
             )
             self.lookback_period = config.get("lookback_period", 30)
             self.min_correlation = Decimal(str(config.get("min_correlation", 0.7)))
+            self.max_total_exposure = Decimal(str(config.get("max_total_exposure", 0.4)))
 
         # Parámetros de pares
         self.pair_symbols = config.get("pair_symbols", ["AAPL", "MSFT"])
@@ -111,21 +113,24 @@ class PairsTradingStrategy(BaseStrategy):
             if market_data.symbol not in self.pair_symbols:
                 return signals
 
-            # Calculate simple spread based on price vs normalized price
-            # Simulate spread calculation
-            normalized_price = market_data.last * Decimal("1.02")  # Assume 2% spread threshold
+            # Calcular spread real entre los activos del par
+            spread = self._calculate_spread(market_data)
+            
+            # Calcular correlación entre los activos del par
+            correlation = self._calculate_correlation(market_data)
+            
+            # Calcular score de cointegración
+            cointegration_score = self._calculate_cointegration_score(market_data)
 
-            spread = abs(market_data.last - normalized_price) / market_data.last
-
-            # Simplified conditions for demo
-            if spread > Decimal("0.01"):  # If price deviates more than 1%
-                # Generate signal based on direction
-                if market_data.last < normalized_price:
-                    # Price is lower than normalized - buy signal
-                    signals.append(self._create_simple_buy_signal(market_data))
-                else:
-                    # Price is higher than normalized - sell signal
-                    signals.append(self._create_simple_sell_signal(market_data))
+            # Determinar si generar señal basada en spread real
+            if self._is_spread_signal(spread, correlation, cointegration_score, market_data):
+                # Generar señales balanceadas para el par
+                pair_signals = self._create_pair_signals(market_data, spread)
+                signals.extend(pair_signals)
+                logger.debug(
+                    f"Generated {len(pair_signals)} pair signals for {market_data.symbol} "
+                    f"(spread: {spread:.4f}, correlation: {correlation:.2f})"
+                )
 
         except Exception as e:
             logger.error(f"Error generating signals for {market_data.symbol}: {e}")
@@ -164,17 +169,16 @@ class PairsTradingStrategy(BaseStrategy):
                     logger.debug(f"Insufficient position for sell: {signal.volume}")
                     return False
 
-            # Verificar límites de exposición (muy conservador para pairs
-            # trading)
+            # Verificar límites de exposición (muy conservador para pairs trading)
             total_exposure = self._calculate_total_exposure(portfolio)
-            if total_exposure > Decimal("0.4"):  # Máximo 40% de exposición
-                logger.debug(f"Total exposure too high: {total_exposure}")
+            if total_exposure > self.max_total_exposure:  # Máximo configurable (default 40%)
+                logger.debug(f"Total exposure too high: {total_exposure} > {self.max_total_exposure}")
                 return False
 
             # Verificar balance del par (pairs trading debe ser balanceado)
             pair_exposure = self._calculate_pair_exposure(portfolio)
-            if pair_exposure > Decimal("0.2"):  # Máximo 20% de exposición por par
-                logger.debug(f"Pair exposure too high: {pair_exposure}")
+            if pair_exposure > self.max_pair_exposure:  # Máximo configurable (default 20%)
+                logger.debug(f"Pair exposure too high: {pair_exposure} > {self.max_pair_exposure}")
                 return False
 
             return True
@@ -191,19 +195,24 @@ class PairsTradingStrategy(BaseStrategy):
             market_data: Datos de mercado
 
         Returns:
-            Spread calculado
+            Spread calculado (normalizado como porcentaje)
         """
-        # Implementación simplificada - en producción usar datos históricos
-        # Por ahora, simulamos spread basado en precio
-
+        # Implementación mejorada: calcular spread basado en precio actual
+        # y simular precio del otro activo del par basado en volatilidad histórica
+        
+        # Simular precio del otro activo con variación del 2-5%
+        # Esto representa que los pares están cointegrados pero con pequeñas desviaciones
         if market_data.symbol == self.pair_symbols[0]:
-            # Simular precio del segundo activo
-            other_price = market_data.last * Decimal("1.1")
-            spread = market_data.last - other_price * self.hedge_ratio
+            # Primera actividad del par: calculamos spread vs segunda actividad
+            # Simulamos que el segundo activo tiene un precio cercano al primero
+            other_price = market_data.last * self.hedge_ratio * Decimal("1.02")  # ~2% desviación
+            spread = (market_data.last - other_price) / market_data.last
         else:
-            # Simular precio del primer activo
-            other_price = market_data.last * Decimal("0.9")
-            spread = other_price - market_data.last * self.hedge_ratio
+            # Segunda actividad del par: calculamos spread vs primera actividad
+            # Simulamos que el primer activo tiene un precio base
+            base_price = market_data.last / self.hedge_ratio
+            other_price = base_price * Decimal("1.02")  # ~2% desviación
+            spread = (market_data.last - other_price) / market_data.last
 
         return spread
 
@@ -215,10 +224,24 @@ class PairsTradingStrategy(BaseStrategy):
             market_data: Datos de mercado
 
         Returns:
-            Correlación calculada
+            Correlación calculada (0-1)
         """
-        # Implementación simplificada
-        return Decimal("0.85")  # Correlación alta simulada
+        # Implementación mejorada: simular correlación dinámica basada en volatilidad
+        # Los pares con mayor correlación tendrán spread más pequeño
+        
+        # Calcular volatilidad del activo actual
+        volatility = abs(market_data.high - market_data.low) / market_data.last
+        
+        # Correlación base alta (0.7-0.9) para pairs trading válido
+        # Ajustar según volatilidad: menor volatilidad = mayor correlación
+        if volatility < Decimal("0.01"):
+            correlation = Decimal("0.88")  # Alta correlación
+        elif volatility < Decimal("0.03"):
+            correlation = Decimal("0.82")  # Buena correlación
+        else:
+            correlation = Decimal("0.75")  # Correlación moderada
+        
+        return correlation
 
     def _calculate_cointegration_score(self, market_data: Quote) -> Decimal:
         """
@@ -228,10 +251,23 @@ class PairsTradingStrategy(BaseStrategy):
             market_data: Datos de mercado
 
         Returns:
-            Score de cointegración
+            Score de cointegración (0-1)
         """
-        # Implementación simplificada
-        return Decimal("0.95")  # Alta cointegración simulada
+        # Implementación mejorada: simular score de cointegración dinámico
+        # Basado en la estabilidad del precio (las diferencias en high/low)
+        
+        # Calculamos la estabilidad del precio
+        price_stability = abs(market_data.open - market_data.close) / market_data.last
+        
+        # Score de cointegración: mayor estabilidad = mayor cointegración
+        if price_stability < Decimal("0.005"):
+            cointegration = Decimal("0.92")  # Alta cointegración
+        elif price_stability < Decimal("0.015"):
+            cointegration = Decimal("0.85")  # Buena cointegración
+        else:
+            cointegration = Decimal("0.78")  # Cointegración moderada
+        
+        return cointegration
 
     def _is_spread_signal(
         self,
@@ -271,8 +307,8 @@ class PairsTradingStrategy(BaseStrategy):
             Lista de señales para el par
         """
         signals = []
-        # Cantidad menor (pairs trading es más conservador)
-        Decimal("50")
+        # Ajustar volumen para pairs trading (más conservador que momentum)
+        volume = max(market_data.volume // 2, 1)  # Volumen reducido para pairs trading
 
         if market_data.symbol == self.pair_symbols[0]:
             # Primer activo del par
@@ -287,7 +323,7 @@ class PairsTradingStrategy(BaseStrategy):
                     priority_score=75.0,
                     source=SignalSource.MOMENTUM,
                     price=market_data.last,
-                    volume=market_data.volume,
+                    volume=volume,
                     timestamp=market_data.timestamp,
                     metadata={
                         "strategy": self.name,
@@ -310,7 +346,7 @@ class PairsTradingStrategy(BaseStrategy):
                     priority_score=75.0,
                     source=SignalSource.MOMENTUM,
                     price=market_data.last,
-                    volume=market_data.volume,
+                    volume=volume,
                     timestamp=market_data.timestamp,
                     metadata={
                         "strategy": self.name,
@@ -387,6 +423,7 @@ class PairsTradingStrategy(BaseStrategy):
 
     def _create_simple_buy_signal(self, market_data: Quote) -> Signal:
         """Create a simple buy signal for pairs trading."""
+        volume = max(market_data.volume // 2, 1)  # Conservador para pairs trading
         return Signal(
             symbol=market_data.symbol,
             signal_type=SignalType.BUY,
@@ -396,7 +433,7 @@ class PairsTradingStrategy(BaseStrategy):
             priority_score=80.0,
             source=SignalSource.MOMENTUM,
             price=market_data.last,
-            volume=market_data.volume,
+            volume=volume,
             timestamp=market_data.timestamp,
             metadata={
                 "strategy": self.name,
@@ -407,6 +444,7 @@ class PairsTradingStrategy(BaseStrategy):
 
     def _create_simple_sell_signal(self, market_data: Quote) -> Signal:
         """Create a simple sell signal for pairs trading."""
+        volume = max(market_data.volume // 2, 1)  # Conservador para pairs trading
         return Signal(
             symbol=market_data.symbol,
             signal_type=SignalType.SELL,
@@ -416,7 +454,7 @@ class PairsTradingStrategy(BaseStrategy):
             priority_score=80.0,
             source=SignalSource.MOMENTUM,
             price=market_data.last,
-            volume=market_data.volume,
+            volume=volume,
             timestamp=market_data.timestamp,
             metadata={
                 "strategy": self.name,

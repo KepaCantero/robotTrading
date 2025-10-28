@@ -4,8 +4,8 @@
 
 ### **TOTAL DE TAREAS: 94** (40 previas + 54 nuevas críticas MVP)
 
-- **Tareas Completadas**: 28 (TASK-1-15, 31, TASK-57, TASK-TS, TASK-HT-01-03, TASK-DV-1-4, TASK-IND-1-5, TASK-IND-ROC-1-2, TASK-IND-OBV-1-2, Linting)
-- **Tareas Pendientes**: 70 (incluye tareas de Signal Scoring, Risk Management, Backtesting, etc.)
+- **Tareas Completadas**: 44 (TASK-1-15, 31, TASK-57, TASK-TS, TASK-HT-01-03, TASK-DV-1-4, TASK-IND-1-5, TASK-IND-ROC-1-2, TASK-IND-OBV-1-2, TASK-IND-STOCH-1-2, TASK-IND-VWAP-1, TASK-IND-EXP-1, TASK-MET-RUNTIME-1, TASK-MET-FILL-1, TASK-MET-MULTI-1, TASK-SC-1-5, TASK-RM-1-5, BACKTEST-SUMMARY-1, ATR-FILTER-1, TRAILING-STOP-1, CVaR-METRIC-1, BENCHMARK-1, MONTE-CARLO-1, Linting)
+- **Tareas Pendientes**: 56 (incluye tareas de Backtesting, Portfolio, etc.)
 - **Estado General**: MVP READY + **Data Validation operativo** + **Advanced Technical Indicators** (ADX, ATR, MACD) + Linting corregido
 - **Prioridad Actual**: Completar Signal Scoring + Risk Management + Backtesting + Portfolio Multi-Strategy + Nuevos Indicadores Momentum
 - **Nuevas Tareas Críticas**:
@@ -458,13 +458,13 @@ Esto hace el desarrollo más eficiente y menos propenso a conflictos.
 | **TASK-IND-ROC-2**     | Integrar ROC en Momentum     | ✅ Completada | 2-3      | Integrar ROC en MomentumStrategy para reforzar detección de momentum real                   |
 | **TASK-IND-OBV-1**     | Implementar OBV              | ✅ Completada | 2-3      | Implementar OBV (On Balance Volume) para confirmación de volumen en momentum                |
 | **TASK-IND-OBV-2**     | Integrar OBV en Momentum     | ✅ Completada | 2-3      | Integrar OBV en MomentumStrategy para confirmar flujo de volumen                            |
-| **TASK-IND-STOCH-1**   | Implementar Stochastic RSI   | ⏳ Pendiente  | 2-3      | Implementar Stochastic RSI para detectar pérdida de momentum y reversiones                  |
-| **TASK-IND-STOCH-2**   | Usar Stochastic RSI          | ⏳ Pendiente  | 2-3      | Usar Stochastic RSI en MomentumStrategy para filtrar falsas señales                         |
-| **TASK-IND-VWAP-1**    | Implementar VWAP             | ⏳ Pendiente  | 3-4      | Implementar VWAP para referencia de precio ponderado por volumen intradía                   |
-| **TASK-IND-EXP-1**     | Métrica Expectancy           | ⏳ Pendiente  | 2-3      | Añadir cálculo de Expectancy como métrica de consistencia del sistema                       |
-| **TASK-MET-RUNTIME-1** | Runtime Performance          | ⏳ Pendiente  | 2-3      | Añadir tracking de performance runtime (tiempo ejecución por ciclo data→signal→order)       |
-| **TASK-MET-FILL-1**    | Order Fill Ratio             | ⏳ Pendiente  | 3-4      | Implementar tracking de order fill ratio para medir calidad de ejecución                    |
-| **TASK-MET-MULTI-1**   | Multi-Timeframe Confirmation | ⏳ Pendiente  | 4-5      | Implementar confirmación multi-timeframe (15m, 1h, 4h, diario) para MomentumStrategy        |
+| **TASK-IND-STOCH-1**   | Implementar Stochastic RSI   | ✅ Completada | 2-3      | Implementar Stochastic RSI para detectar pérdida de momentum y reversiones                  |
+| **TASK-IND-STOCH-2**   | Usar Stochastic RSI          | ✅ Completada | 2-3      | Usar Stochastic RSI en MomentumStrategy para filtrar falsas señales                         |
+| **TASK-IND-VWAP-1**    | Implementar VWAP             | ✅ Completada | 3-4      | Implementar VWAP para referencia de precio ponderado por volumen intradía                   |
+| **TASK-IND-EXP-1**     | Métrica Expectancy           | ✅ Completada | 2-3      | Añadir cálculo de Expectancy como métrica de consistencia del sistema                       |
+| **TASK-MET-RUNTIME-1** | Runtime Performance          | ✅ Completada | 2-3      | Añadir tracking de performance runtime (tiempo ejecución por ciclo data→signal→order)       |
+| **TASK-MET-FILL-1**    | Order Fill Ratio             | ✅ Completada | 3-4      | Implementar tracking de order fill ratio para medir calidad de ejecución                    |
+| **TASK-MET-MULTI-1**   | Multi-Timeframe Confirmation | ✅ Completada | 4-5      | Implementar confirmación multi-timeframe (15m, 1h, 4h, diario) para MomentumStrategy        |
 
 ### ✅ **Validación de Datos & Outliers (4 tareas críticas)**
 

@@ -18,6 +18,25 @@ from app.services.signal_scoring_engine import get_signal_scoring_engine
 
 from .base import BaseStrategy
 
+
+def calculate_atr(highs: List[float], lows: List[float], closes: List[float], period: int = 14) -> Optional[float]:
+    """Calculate Average True Range for volatility filtering."""
+    if len(highs) < period + 1 or len(lows) < period + 1 or len(closes) < period + 1:
+        return None
+    
+    true_ranges = []
+    for i in range(1, len(highs)):
+        tr1 = highs[i] - lows[i]
+        tr2 = abs(highs[i] - closes[i - 1])
+        tr3 = abs(lows[i] - closes[i - 1])
+        true_ranges.append(max(tr1, tr2, tr3))
+    
+    if len(true_ranges) < period:
+        return None
+    
+    atr = sum(true_ranges[-period:]) / period
+    return round(atr / closes[-1] * 100, 4) if closes[-1] > 0 else None  # Return as percentage
+
 logger = logging.getLogger(__name__)
 
 
@@ -73,10 +92,17 @@ class MomentumStrategy(BaseStrategy):
 
         # Histórico para calcular indicadores reales
         self.price_history = deque(maxlen=200)  # Mantener 200 velas de histórico
+        self.high_history = deque(maxlen=200)
+        self.low_history = deque(maxlen=200)
         self.volume_history = deque(maxlen=200)
         self.last_rsi = None
         self.last_ema = None
         self.rsi_history = deque(maxlen=50)  # TASK-IND-STOCH-2: Histórico para Stochastic RSI
+        
+        # ATR volatility filter settings
+        self.atr_history = deque(maxlen=14)  # ATR history for volatility filtering
+        self.min_atr_threshold = Decimal(str(config.get("min_atr_threshold", 0.015)))  # 1.5% min ATR
+        self.atr_filter_enabled = config.get("atr_filter_enabled", True)
 
         # Cooldown para evitar señales repetidas
         self.last_signal_bar_index = None
@@ -119,6 +145,8 @@ class MomentumStrategy(BaseStrategy):
         try:
             # Actualizar histórico
             self.price_history.append(float(market_data.close or market_data.last))
+            self.high_history.append(float(market_data.high or market_data.close or market_data.last))
+            self.low_history.append(float(market_data.low or market_data.close or market_data.last))
             self.volume_history.append(float(market_data.volume))
             self.current_bar_index += 1
 
@@ -131,6 +159,11 @@ class MomentumStrategy(BaseStrategy):
             
             # TASK-IND-STOCH-2: Calcular Stochastic RSI para filtrar falsas señales
             stoch_rsi, stoch_rsi_signal = self._calculate_stochastic_rsi()
+            
+            # NEW: Calculate ATR for volatility filtering
+            atr = self._calculate_atr()
+            if atr is not None:
+                self.atr_history.append(atr)
 
             # Sólo generar señales si tenemos suficiente histórico
             if rsi is None or ema is None:
@@ -149,7 +182,8 @@ class MomentumStrategy(BaseStrategy):
             # Verificar cooldown
             if not self._is_cooldown_active(market_data):
                 # TASK-IND-STOCH-2: Filtrar falsas señales con Stochastic RSI
-                if self._should_generate_signal(stoch_rsi, stoch_rsi_signal):
+                # NEW: ATR volatility filter to avoid choppy markets
+                if self._should_generate_signal(stoch_rsi, stoch_rsi_signal) and self._passes_atr_filter():
                     # Generar señal de compra con condiciones robustas
                     if self._is_buy_signal(rsi, ema, volume_ratio, roc, obv_trend, market_data):
                         signal = self._create_buy_signal(market_data, rsi, ema, volume_ratio, roc)
@@ -648,6 +682,33 @@ class MomentumStrategy(BaseStrategy):
         invested_value = total_value - portfolio.cash
         return invested_value / total_value
 
+    def _calculate_atr(self) -> Optional[float]:
+        """Calculate ATR (Average True Range) for volatility filtering."""
+        if len(self.high_history) < 15 or len(self.low_history) < 15 or len(self.price_history) < 15:
+            return None
+        
+        return calculate_atr(
+            list(self.high_history),
+            list(self.low_history),
+            list(self.price_history),
+            period=14
+        )
+    
+    def _passes_atr_filter(self) -> bool:
+        """Check if current market passes ATR volatility filter."""
+        if not self.atr_filter_enabled:
+            return True
+        
+        if len(self.atr_history) == 0:
+            return True
+        
+        current_atr = self.atr_history[-1] if self.atr_history else None
+        if current_atr is None:
+            return True
+        
+        # Only generate signals in markets with sufficient volatility (ATR > threshold)
+        return float(current_atr) > float(self.min_atr_threshold)
+    
     def _calculate_stochastic_rsi(self, period: int = 14) -> Tuple[Optional[float], Optional[float]]:
         """
         TASK-IND-STOCH-2: Calcular Stochastic RSI para filtrar falsas señales.
