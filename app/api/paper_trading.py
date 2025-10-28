@@ -14,12 +14,17 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from app.models.market_data import Quote
-from app.models.paper_trading import (OrderSide, OrderType, PaperPortfolio,
-                                      PaperPosition, PaperTrade,
-                                      PaperTradingConfig, PaperTradingSession,
-                                      TradeStatus)
-from app.services.paper_trading_service import (PaperTradingService,
-                                                get_paper_trading_service)
+from app.models.paper_trading import (
+    OrderSide,
+    OrderType,
+    PaperPortfolio,
+    PaperPosition,
+    PaperTrade,
+    PaperTradingConfig,
+    PaperTradingSession,
+    TradeStatus,
+)
+from app.services.paper_trading_service import PaperTradingService, get_paper_trading_service
 
 router = APIRouter(prefix="/paper-trading", tags=["Paper Trading"])
 
@@ -49,9 +54,7 @@ class ExecuteTradeRequest(BaseModel):
     side: OrderSide = Field(..., description="Order side")
     order_type: OrderType = Field(..., description="Order type")
     quantity: Decimal = Field(..., gt=0, description="Trade quantity")
-    price: Optional[Decimal] = Field(
-        None, gt=0, description="Order price (for limit orders)"
-    )
+    price: Optional[Decimal] = Field(None, gt=0, description="Order price (for limit orders)")
     strategy_id: Optional[str] = Field(None, description="Strategy ID")
     signal_id: Optional[UUID] = Field(None, description="Signal ID")
 
@@ -67,9 +70,7 @@ class PortfolioResponse(BaseModel):
 
     success: bool = Field(True, description="Success status")
     portfolio: PaperPortfolio = Field(..., description="Portfolio data")
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Response timestamp"
-    )
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
 
 
 class SessionResponse(BaseModel):
@@ -77,9 +78,7 @@ class SessionResponse(BaseModel):
 
     success: bool = Field(True, description="Success status")
     session: PaperTradingSession = Field(..., description="Session data")
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Response timestamp"
-    )
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
 
 
 class TradeResponse(BaseModel):
@@ -87,9 +86,7 @@ class TradeResponse(BaseModel):
 
     success: bool = Field(True, description="Success status")
     trade: PaperTrade = Field(..., description="Trade data")
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Response timestamp"
-    )
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
 
 
 class TradesResponse(BaseModel):
@@ -98,9 +95,7 @@ class TradesResponse(BaseModel):
     success: bool = Field(True, description="Success status")
     trades: List[PaperTrade] = Field(..., description="List of trades")
     count: int = Field(..., description="Number of trades")
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Response timestamp"
-    )
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
 
 
 class PositionsResponse(BaseModel):
@@ -109,9 +104,7 @@ class PositionsResponse(BaseModel):
     success: bool = Field(True, description="Success status")
     positions: List[PaperPosition] = Field(..., description="List of positions")
     count: int = Field(..., description="Number of positions")
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Response timestamp"
-    )
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
 
 
 class MarketUpdateResponse(BaseModel):
@@ -120,9 +113,7 @@ class MarketUpdateResponse(BaseModel):
     success: bool = Field(True, description="Success status")
     updated_symbols: List[str] = Field(..., description="Updated symbols")
     count: int = Field(..., description="Number of updated symbols")
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Response timestamp"
-    )
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
 
 
 # Portfolio Management Endpoints
@@ -295,9 +286,7 @@ async def get_positions(
     return PositionsResponse(positions=positions, count=len(positions))
 
 
-@router.get(
-    "/portfolios/{portfolio_id}/positions/{symbol}", response_model=PositionsResponse
-)
+@router.get("/portfolios/{portfolio_id}/positions/{symbol}", response_model=PositionsResponse)
 async def get_position(
     portfolio_id: UUID,
     symbol: str,
@@ -320,9 +309,7 @@ async def update_market_prices(
     try:
         await service.update_market_prices(request.quotes)
         updated_symbols = list(request.quotes.keys())
-        return MarketUpdateResponse(
-            updated_symbols=updated_symbols, count=len(updated_symbols)
-        )
+        return MarketUpdateResponse(updated_symbols=updated_symbols, count=len(updated_symbols))
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 

@@ -11,13 +11,31 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.database import (Base, DatabaseManager, DatabaseSession,
-                          check_database_health, database_transaction,
-                          get_sync_db, initialize_database)
-from app.database.models import (Asset, Backtest, MarketData, Portfolio,
-                                 Position, Signal, Trade, User)
-from app.database.repositories import (AssetRepository, BaseRepository,
-                                       PortfolioRepository, UserRepository)
+from app.database import (
+    Base,
+    DatabaseManager,
+    DatabaseSession,
+    check_database_health,
+    database_transaction,
+    get_sync_db,
+    initialize_database,
+)
+from app.database.models import (
+    Asset,
+    Backtest,
+    MarketData,
+    Portfolio,
+    Position,
+    Signal,
+    Trade,
+    User,
+)
+from app.database.repositories import (
+    AssetRepository,
+    BaseRepository,
+    PortfolioRepository,
+    UserRepository,
+)
 
 
 class TestDatabaseManager:

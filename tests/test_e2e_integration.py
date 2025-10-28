@@ -169,9 +169,7 @@ class TestCompleteTradingWorkflow:
 
         if next_data["success"]:
             # Execute highest priority signal using symbol
-            execute_response = client.post(
-                f"/signals/execute/{next_data['signal']['symbol']}"
-            )
+            execute_response = client.post(f"/signals/execute/{next_data['signal']['symbol']}")
             # May fail due to portfolio constraints or server errors
             assert execute_response.status_code in [200, 400, 422, 500]
 
@@ -267,9 +265,7 @@ class TestCompleteTradingWorkflow:
 
             if eval_data["success"]:
                 # Execute signal using symbol
-                execute_response = client.post(
-                    f"/signals/execute/{eval_data['signal']['symbol']}"
-                )
+                execute_response = client.post(f"/signals/execute/{eval_data['signal']['symbol']}")
                 # May fail due to portfolio constraints, but should not be 500
                 assert execute_response.status_code in [200, 400, 422]
 
@@ -379,9 +375,7 @@ class TestErrorHandlingWorkflows:
     def test_position_size_limit_workflow(self, client):
         """Test position size limit adjustment workflow."""
         # Set small position size limit
-        limit_response = client.post(
-            "/signals/position-size-limit", params={"max_percent": 1.0}
-        )
+        limit_response = client.post("/signals/position-size-limit", params={"max_percent": 1.0})
         assert limit_response.status_code == 200
 
         # Evaluate high quality signal
@@ -413,9 +407,7 @@ class TestErrorHandlingWorkflows:
 
         if eval_data["success"]:
             # Execute signal with small position size using symbol
-            execute_response = client.post(
-                f"/signals/execute/{eval_data['signal']['symbol']}"
-            )
+            execute_response = client.post(f"/signals/execute/{eval_data['signal']['symbol']}")
             assert execute_response.status_code == 200
 
             # Check portfolio for small position
@@ -458,9 +450,7 @@ class TestErrorHandlingWorkflows:
             signal_symbol = eval_data["signal"]["symbol"]
 
             # Clear expired signals (simulate expiration)
-            clear_response = client.post(
-                "/signals/clear-expired", params={"max_age_minutes": 0}
-            )
+            clear_response = client.post("/signals/clear-expired", params={"max_age_minutes": 0})
             assert clear_response.status_code == 200
 
             # Try to execute expired signal using symbol

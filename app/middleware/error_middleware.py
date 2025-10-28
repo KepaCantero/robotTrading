@@ -13,8 +13,7 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.exceptions.error_handler import error_handler
-from app.services.centralized_logging import (LogLevel, LogService,
-                                              centralized_logger)
+from app.services.centralized_logging import LogLevel, LogService, centralized_logger
 
 
 class ErrorHandlingMiddleware(BaseHTTPMiddleware):
@@ -203,19 +202,13 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
-        response.headers["Strict-Transport-Security"] = (
-            "max-age=31536000; includeSubDomains"
-        )
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
 
         if self.enable_cors:
             response.headers["Access-Control-Allow-Origin"] = "*"
-            response.headers["Access-Control-Allow-Methods"] = (
-                "GET, POST, PUT, DELETE, OPTIONS"
-            )
-            response.headers["Access-Control-Allow-Headers"] = (
-                "Content-Type, Authorization"
-            )
+            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+            response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
 
         return response
 

@@ -13,8 +13,14 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app.api.assets import router
-from app.models.assets import (Asset, AssetClass, AssetRanking, AssetUniverse,
-                               Exchange, LiquidityMetrics)
+from app.models.assets import (
+    Asset,
+    AssetClass,
+    AssetRanking,
+    AssetUniverse,
+    Exchange,
+    LiquidityMetrics,
+)
 from app.services.asset_identification import get_asset_identification_service
 
 # Create test app
@@ -44,9 +50,7 @@ class TestAssetAPI:
 
     def _override_service(self, mock_service):
         """Helper to override the service dependency."""
-        app.dependency_overrides[get_asset_identification_service] = (
-            lambda: mock_service
-        )
+        app.dependency_overrides[get_asset_identification_service] = lambda: mock_service
         return mock_service
 
     def _cleanup_overrides(self):
@@ -88,9 +92,7 @@ class TestAssetAPI:
     @pytest.fixture
     def sample_asset_universe(self, sample_asset):
         """Sample asset universe for testing."""
-        universe = AssetUniverse(
-            asset_class=AssetClass.EQUITY, assets=[sample_asset], top_n=20
-        )
+        universe = AssetUniverse(asset_class=AssetClass.EQUITY, assets=[sample_asset], top_n=20)
         return universe
 
     @pytest.fixture
@@ -135,9 +137,7 @@ class TestAssetAPI:
         finally:
             self._cleanup_overrides()
 
-    def test_get_liquid_assets_success(
-        self, client, mock_service, sample_asset_universe
-    ):
+    def test_get_liquid_assets_success(self, client, mock_service, sample_asset_universe):
         """Test successful liquid assets retrieval."""
         # Mock service response - the API calls get_top_liquid_assets, not
         # get_liquid_assets
@@ -224,9 +224,7 @@ class TestAssetAPI:
         finally:
             self._cleanup_overrides()
 
-    def test_get_liquidity_metrics_success(
-        self, client, mock_service, sample_liquidity_metrics
-    ):
+    def test_get_liquidity_metrics_success(self, client, mock_service, sample_liquidity_metrics):
         """Test successful liquidity metrics retrieval."""
         # Mock service response
         mock_service.get_liquidity_metrics.return_value = sample_liquidity_metrics
@@ -402,18 +400,14 @@ class TestAssetAPI:
         # Mock service to raise exception
         mock_service.refresh_liquidity_data.side_effect = Exception("Service error")
 
-        with patch(
-            "app.api.assets.get_asset_identification_service", return_value=mock_service
-        ):
+        with patch("app.api.assets.get_asset_identification_service", return_value=mock_service):
             response = client.post("/assets/refresh-liquidity")
 
             assert response.status_code == 500
             data = response.json()
             assert "Error refreshing liquidity data" in data["detail"]
 
-    def test_get_asset_universe_success(
-        self, client, mock_service, sample_asset_universe
-    ):
+    def test_get_asset_universe_success(self, client, mock_service, sample_asset_universe):
         """Test successful asset universe retrieval."""
         # Mock service response
         mock_service.get_asset_universe.return_value = sample_asset_universe
@@ -462,9 +456,7 @@ class TestAssetAPIEdgeCases:
 
     def _override_service(self, mock_service):
         """Helper to override the service dependency."""
-        app.dependency_overrides[get_asset_identification_service] = (
-            lambda: mock_service
-        )
+        app.dependency_overrides[get_asset_identification_service] = lambda: mock_service
         return mock_service
 
     def _cleanup_overrides(self):
@@ -476,9 +468,7 @@ class TestAssetAPIEdgeCases:
         mock_service = AsyncMock()
         mock_service.get_universe_summary.return_value = {}
 
-        with patch(
-            "app.api.assets.get_asset_identification_service", return_value=mock_service
-        ):
+        with patch("app.api.assets.get_asset_identification_service", return_value=mock_service):
             response = client.get("/assets/")
 
             assert response.status_code == 200
@@ -489,9 +479,7 @@ class TestAssetAPIEdgeCases:
     def test_get_liquid_assets_empty_universe(self, client):
         """Test liquid assets with empty universe."""
         mock_service = AsyncMock()
-        empty_universe = AssetUniverse(
-            asset_class=AssetClass.EQUITY, assets=[], top_n=20
-        )
+        empty_universe = AssetUniverse(asset_class=AssetClass.EQUITY, assets=[], top_n=20)
         mock_service.get_top_liquid_assets.return_value = []
 
         try:
@@ -557,9 +545,7 @@ class TestAssetAPIEdgeCases:
         mock_service = AsyncMock()
         mock_service.filter_assets.return_value = []
 
-        with patch(
-            "app.api.assets.get_asset_identification_service", return_value=mock_service
-        ):
+        with patch("app.api.assets.get_asset_identification_service", return_value=mock_service):
             response = client.post(
                 "/assets/filter",
                 json={

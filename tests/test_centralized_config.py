@@ -7,14 +7,22 @@ from unittest.mock import mock_open, patch
 
 import pytest
 
-from app.core.centralized_config import (APIConfig, CentralizedConfig,
-                                         DatabaseConfig, Environment,
-                                         LoggingConfig, MonitoringConfig,
-                                         RedisConfig, StrategyConfig,
-                                         TradingThresholds, get_config,
-                                         get_strategy_config,
-                                         get_trading_threshold, reload_config,
-                                         validate_config)
+from app.core.centralized_config import (
+    APIConfig,
+    CentralizedConfig,
+    DatabaseConfig,
+    Environment,
+    LoggingConfig,
+    MonitoringConfig,
+    RedisConfig,
+    StrategyConfig,
+    TradingThresholds,
+    get_config,
+    get_strategy_config,
+    get_trading_threshold,
+    reload_config,
+    validate_config,
+)
 
 
 class TestTradingThresholds:
@@ -44,14 +52,10 @@ class TestTradingThresholds:
 
     def test_validation_percentage(self):
         """Test percentage validation."""
-        with pytest.raises(
-            ValueError, match="Percentage values must be between 0 and 1"
-        ):
+        with pytest.raises(ValueError, match="Percentage values must be between 0 and 1"):
             TradingThresholds(max_position_size=1.5)
 
-        with pytest.raises(
-            ValueError, match="Stop loss percentage must be between 0 and 0.5"
-        ):
+        with pytest.raises(ValueError, match="Stop loss percentage must be between 0 and 0.5"):
             TradingThresholds(stop_loss_pct=-0.1)
 
     def test_validation_score(self):
@@ -102,9 +106,7 @@ class TestStrategyConfig:
         with pytest.raises(ValueError, match="Weight must be between 0 and 2"):
             StrategyConfig(name="test", weight=2.5)
 
-        with pytest.raises(
-            ValueError, match="Percentage values must be between 0 and 1"
-        ):
+        with pytest.raises(ValueError, match="Percentage values must be between 0 and 1"):
             StrategyConfig(name="test", max_position_size=1.5)
 
 
@@ -280,9 +282,7 @@ class TestConfigurationIntegration:
         assert config1 is not config2
 
         # But should have same default values
-        assert (
-            config1.trading.min_signal_strength == config2.trading.min_signal_strength
-        )
+        assert config1.trading.min_signal_strength == config2.trading.min_signal_strength
 
     def test_configuration_persistence(self):
         """Test configuration persistence across function calls."""

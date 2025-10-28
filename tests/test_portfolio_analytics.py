@@ -12,14 +12,17 @@ from uuid import uuid4
 import pytest
 
 from app.models.portfolio import Position
-from app.models.portfolio_analytics import (ExtendedPortfolio,
-                                            PerformanceMetrics,
-                                            PerformancePeriod,
-                                            PortfolioAllocation,
-                                            PortfolioAnalytics,
-                                            PortfolioComparison,
-                                            PortfolioRebalance, RiskLevel,
-                                            RiskMetrics)
+from app.models.portfolio_analytics import (
+    ExtendedPortfolio,
+    PerformanceMetrics,
+    PerformancePeriod,
+    PortfolioAllocation,
+    PortfolioAnalytics,
+    PortfolioComparison,
+    PortfolioRebalance,
+    RiskLevel,
+    RiskMetrics,
+)
 from app.services.portfolio_analytics_service import PortfolioAnalyticsService
 
 
@@ -275,9 +278,7 @@ class TestPortfolioAnalyticsService:
         return PortfolioAnalyticsService()
 
     @pytest.mark.asyncio
-    async def test_calculate_performance_metrics(
-        self, analytics_service, mock_portfolio
-    ):
+    async def test_calculate_performance_metrics(self, analytics_service, mock_portfolio):
         """Test performance metrics calculation."""
         metrics = await analytics_service.calculate_performance_metrics(
             portfolio=mock_portfolio, period=PerformancePeriod.MONTHLY
@@ -303,9 +304,7 @@ class TestPortfolioAnalyticsService:
         assert risk_metrics.effective_number_of_positions >= 0
 
     @pytest.mark.asyncio
-    async def test_generate_portfolio_analytics(
-        self, analytics_service, mock_portfolio
-    ):
+    async def test_generate_portfolio_analytics(self, analytics_service, mock_portfolio):
         """Test comprehensive portfolio analytics generation."""
         analytics = await analytics_service.generate_portfolio_analytics(mock_portfolio)
 
@@ -327,24 +326,16 @@ class TestPortfolioAnalyticsService:
         assert isinstance(analytics.warnings, list)
 
     @pytest.mark.asyncio
-    async def test_analyze_portfolio_allocation(
-        self, analytics_service, mock_portfolio
-    ):
+    async def test_analyze_portfolio_allocation(self, analytics_service, mock_portfolio):
         """Test portfolio allocation analysis."""
-        allocation = await analytics_service.analyze_portfolio_allocation(
-            mock_portfolio
-        )
+        allocation = await analytics_service.analyze_portfolio_allocation(mock_portfolio)
 
         assert isinstance(allocation, PortfolioAllocation)
         assert allocation.portfolio_id == mock_portfolio.id
         assert allocation.equity_allocation >= 0
         assert allocation.cash_allocation >= 0
-        assert allocation.domestic_allocation == Decimal(
-            "100"
-        )  # Simplified implementation
-        assert allocation.international_allocation == Decimal(
-            "0"
-        )  # Simplified implementation
+        assert allocation.domestic_allocation == Decimal("100")  # Simplified implementation
+        assert allocation.international_allocation == Decimal("0")  # Simplified implementation
 
         # Check that allocations sum to 100%
         total = (
@@ -356,14 +347,10 @@ class TestPortfolioAnalyticsService:
         assert total == Decimal("100.0")
 
     @pytest.mark.asyncio
-    async def test_generate_rebalance_recommendation(
-        self, analytics_service, mock_portfolio
-    ):
+    async def test_generate_rebalance_recommendation(self, analytics_service, mock_portfolio):
         """Test rebalancing recommendation generation."""
         # Test without target allocation (should use default)
-        rebalance = await analytics_service.generate_rebalance_recommendation(
-            mock_portfolio
-        )
+        rebalance = await analytics_service.generate_rebalance_recommendation(mock_portfolio)
 
         if rebalance:  # May be None if no rebalancing needed
             assert isinstance(rebalance, PortfolioRebalance)
@@ -396,14 +383,10 @@ class TestPortfolioAnalyticsService:
         # Test period start date calculation
         end_date = datetime.utcnow()
 
-        daily_start = analytics_service._get_period_start_date(
-            end_date, PerformancePeriod.DAILY
-        )
+        daily_start = analytics_service._get_period_start_date(end_date, PerformancePeriod.DAILY)
         assert (end_date - daily_start).days == 1
 
-        weekly_start = analytics_service._get_period_start_date(
-            end_date, PerformancePeriod.WEEKLY
-        )
+        weekly_start = analytics_service._get_period_start_date(end_date, PerformancePeriod.WEEKLY)
         assert (end_date - weekly_start).days == 7
 
         monthly_start = analytics_service._get_period_start_date(
@@ -443,24 +426,18 @@ class TestPortfolioAnalyticsService:
         assert herfindahl <= 1
 
         # Test effective positions calculation
-        effective_positions = analytics_service._calculate_effective_positions(
-            mock_portfolio
-        )
+        effective_positions = analytics_service._calculate_effective_positions(mock_portfolio)
         assert effective_positions >= 0
         # Effective positions can be greater than actual positions when there's
         # concentration
 
         # Test largest position weight calculation
-        largest_weight = analytics_service._calculate_largest_position_weight(
-            mock_portfolio
-        )
+        largest_weight = analytics_service._calculate_largest_position_weight(mock_portfolio)
         assert largest_weight >= 0
         assert largest_weight <= 100
 
         # Test diversification ratio calculation
-        diversification_ratio = analytics_service._calculate_diversification_ratio(
-            mock_portfolio
-        )
+        diversification_ratio = analytics_service._calculate_diversification_ratio(mock_portfolio)
         assert diversification_ratio >= 0
 
     def test_score_calculation_methods(self, analytics_service, mock_portfolio):
@@ -526,9 +503,7 @@ class TestPortfolioAnalyticsService:
         assert 0 <= health_score <= 100
 
         # Test diversification score calculation
-        diversification_score = analytics_service._calculate_diversification_score(
-            mock_portfolio
-        )
+        diversification_score = analytics_service._calculate_diversification_score(mock_portfolio)
         assert 0 <= diversification_score <= 100
 
         # Test liquidity score calculation
@@ -560,9 +535,7 @@ class TestPortfolioAnalyticsAPI:
     def test_get_performance_metrics(self, client):
         """Test performance metrics endpoint."""
         portfolio_id = str(uuid4())
-        response = client.get(
-            f"/portfolio-analytics/performance-metrics/{portfolio_id}"
-        )
+        response = client.get(f"/portfolio-analytics/performance-metrics/{portfolio_id}")
 
         assert response.status_code == 200
         data = response.json()
@@ -845,12 +818,8 @@ class TestPortfolioAnalyticsIntegration:
             total_value=Decimal("100000.00"),
             cash_balance=Decimal("100000.00"),
         )
-        analytics = await analytics_service.generate_portfolio_analytics(
-            empty_portfolio
-        )
-        allocation = await analytics_service.analyze_portfolio_allocation(
-            empty_portfolio
-        )
+        analytics = await analytics_service.generate_portfolio_analytics(empty_portfolio)
+        allocation = await analytics_service.analyze_portfolio_allocation(empty_portfolio)
 
         assert analytics.performance_metrics.position_count == 0
         assert analytics.performance_metrics.equity_value == Decimal("0")
@@ -890,12 +859,8 @@ class TestPortfolioAnalyticsIntegration:
             total_value=total_value,
             cash_balance=cash_amount,
         )
-        analytics = await analytics_service.generate_portfolio_analytics(
-            single_portfolio
-        )
-        allocation = await analytics_service.analyze_portfolio_allocation(
-            single_portfolio
-        )
+        analytics = await analytics_service.generate_portfolio_analytics(single_portfolio)
+        allocation = await analytics_service.analyze_portfolio_allocation(single_portfolio)
 
         assert analytics.performance_metrics.position_count == 1
         assert analytics.performance_metrics.cash_value == Decimal("0")

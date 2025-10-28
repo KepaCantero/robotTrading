@@ -11,17 +11,22 @@ from typing import List, Optional
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.responses import JSONResponse
 
-from app.models.optimization import (OptimizationArtifact, OptimizationConfig,
-                                     OptimizationMethod, OptimizationMetrics,
-                                     OptimizationParameter, OptimizationResult,
-                                     OptimizationSummary, OutOfSampleResult,
-                                     OutOfSampleTestRequest,
-                                     ParameterConstraint,
-                                     ParameterOptimizationRequest,
-                                     ParameterType)
+from app.models.optimization import (
+    OptimizationArtifact,
+    OptimizationConfig,
+    OptimizationMethod,
+    OptimizationMetrics,
+    OptimizationParameter,
+    OptimizationResult,
+    OptimizationSummary,
+    OutOfSampleResult,
+    OutOfSampleTestRequest,
+    ParameterConstraint,
+    ParameterOptimizationRequest,
+    ParameterType,
+)
 from app.services.cost_analysis_service import CostAnalysisService
-from app.services.parameter_optimization_service import \
-    ParameterOptimizationService
+from app.services.parameter_optimization_service import ParameterOptimizationService
 
 router = APIRouter(prefix="/optimization", tags=["Parameter Optimization"])
 
@@ -286,9 +291,7 @@ async def validate_optimization_config(
         )
 
     except ValueError as e:
-        return JSONResponse(
-            status_code=400, content={"message": str(e), "valid": False}
-        )
+        return JSONResponse(status_code=400, content={"message": str(e), "valid": False})
     except Exception as e:
         return JSONResponse(
             status_code=500,
@@ -361,9 +364,7 @@ async def delete_optimization_artifact(
     try:
         if artifact_id in service.optimization_artifacts:
             del service.optimization_artifacts[artifact_id]
-            service.optimization_summary.artifacts_count = len(
-                service.optimization_artifacts
-            )
+            service.optimization_summary.artifacts_count = len(service.optimization_artifacts)
 
             return JSONResponse(
                 status_code=200,

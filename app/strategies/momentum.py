@@ -75,7 +75,7 @@ class MomentumStrategy(BaseStrategy):
         self.volume_history = deque(maxlen=200)
         self.last_rsi = None
         self.last_ema = None
-        
+
         # Cooldown para evitar señales repetidas
         self.last_signal_bar_index = None
         self.last_signal_type = None
@@ -138,15 +138,19 @@ class MomentumStrategy(BaseStrategy):
                     signals.append(signal)
                     self.last_signal_bar_index = self.current_bar_index
                     self.last_signal_type = "buy"
-                    logger.debug(f"Generated BUY signal for {market_data.symbol}: RSI={rsi:.2f}, EMA={ema:.2f}")
-                
+                    logger.debug(
+                        f"Generated BUY signal for {market_data.symbol}: RSI={rsi:.2f}, EMA={ema:.2f}"
+                    )
+
                 # Generar señal de venta con condiciones robustas
                 elif self._is_sell_signal(rsi, ema, volume_ratio, market_data):
                     signal = self._create_sell_signal(market_data, rsi, ema, volume_ratio)
                     signals.append(signal)
                     self.last_signal_bar_index = self.current_bar_index
                     self.last_signal_type = "sell"
-                    logger.debug(f"Generated SELL signal for {market_data.symbol}: RSI={rsi:.2f}, EMA={ema:.2f}")
+                    logger.debug(
+                        f"Generated SELL signal for {market_data.symbol}: RSI={rsi:.2f}, EMA={ema:.2f}"
+                    )
             else:
                 logger.debug("Signal suppressed due to cooldown period")
 
@@ -226,8 +230,8 @@ class MomentumStrategy(BaseStrategy):
             return None
 
         # Calcular promedio de ganancias y pérdidas
-        avg_gain = sum(gains[-self.rsi_period:]) / self.rsi_period
-        avg_loss = sum(losses[-self.rsi_period:]) / self.rsi_period
+        avg_gain = sum(gains[-self.rsi_period :]) / self.rsi_period
+        avg_loss = sum(losses[-self.rsi_period :]) / self.rsi_period
 
         if avg_loss == 0:
             return 100.0
@@ -272,14 +276,14 @@ class MomentumStrategy(BaseStrategy):
         if len(self.volume_history) < 20:
             # No hay suficiente histórico, usar valor conservador
             return Decimal("1")
-        
+
         # Calcular promedio de volumen de las últimas 20 barras
         volume_list = list(self.volume_history)
         avg_volume = sum(volume_list[-20:]) / 20
         if avg_volume > 0:
             return market_data.volume / Decimal(str(avg_volume))
         return Decimal("1")
-    
+
     def _is_cooldown_active(self, market_data: Quote) -> bool:
         """
         Verificar si el cooldown está activo para evitar señales repetidas.
@@ -293,17 +297,17 @@ class MomentumStrategy(BaseStrategy):
         if self.last_signal_bar_index is None:
             # No ha habido señales aún, no hay cooldown
             return False
-        
+
         # Calcular barras transcurridas desde última señal
         bars_since_last_signal = self.current_bar_index - self.last_signal_bar_index
-        
+
         # Si han pasado menos barras que cooldown_bars, el cooldown está activo
         if bars_since_last_signal < self.cooldown_bars:
             logger.debug(
                 f"Cooldown active: {bars_since_last_signal}/{self.cooldown_bars} bars since last signal"
             )
             return True
-        
+
         return False
 
     def _is_buy_signal(
@@ -326,7 +330,7 @@ class MomentumStrategy(BaseStrategy):
             True si debe generar señal de compra
         """
         current_price = market_data.close or market_data.last
-        
+
         # Condiciones más robustas:
         # 1. RSI > 55 (momentum positivo fuerte)
         # 2. Precio por encima de EMA (tendencia alcista)
@@ -335,7 +339,7 @@ class MomentumStrategy(BaseStrategy):
         rsi_positive = rsi > 55
         ema_bullish = current_price > Decimal(str(ema))
         has_volume = volume_ratio > Decimal("0.8")
-        
+
         return rsi_positive and ema_bullish and has_volume
 
     def _is_sell_signal(
@@ -358,7 +362,7 @@ class MomentumStrategy(BaseStrategy):
             True si debe generar señal de venta
         """
         current_price = market_data.close or market_data.last
-        
+
         # Condiciones más robustas:
         # 1. RSI < 45 (momentum negativo fuerte)
         # 2. Precio por debajo de EMA (tendencia bajista)
@@ -367,7 +371,7 @@ class MomentumStrategy(BaseStrategy):
         rsi_negative = rsi < 45
         ema_bearish = current_price < Decimal(str(ema))
         has_volume = volume_ratio > Decimal("0.8")
-        
+
         return rsi_negative and ema_bearish and has_volume
 
     def _create_buy_signal(

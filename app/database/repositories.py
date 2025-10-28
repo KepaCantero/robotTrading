@@ -13,9 +13,18 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import raise_database_error
-from app.database.models import (Asset, Backtest, MarketData, Portfolio,
-                                 Position, RiskMetrics, Signal, SystemLog,
-                                 Trade, User)
+from app.database.models import (
+    Asset,
+    Backtest,
+    MarketData,
+    Portfolio,
+    Position,
+    RiskMetrics,
+    Signal,
+    SystemLog,
+    Trade,
+    User,
+)
 
 T = TypeVar("T")
 
@@ -46,11 +55,7 @@ class BaseRepository(Generic[T]):
     def get_by_id(self, id: uuid.UUID) -> Optional[T]:
         """Get record by ID."""
         try:
-            return (
-                self.session.query(self.model_class)
-                .filter(self.model_class.id == id)
-                .first()
-            )
+            return self.session.query(self.model_class).filter(self.model_class.id == id).first()
         except Exception as e:
             raise_database_error(
                 f"Failed to get {self.model_class.__name__} by ID: {str(e)}",
@@ -58,9 +63,7 @@ class BaseRepository(Generic[T]):
                 self.model_class.__tablename__,
             )
 
-    def get_all(
-        self, limit: Optional[int] = None, offset: Optional[int] = None
-    ) -> List[T]:
+    def get_all(self, limit: Optional[int] = None, offset: Optional[int] = None) -> List[T]:
         """Get all records with optional pagination."""
         try:
             query = self.session.query(self.model_class)
@@ -145,9 +148,7 @@ class UserRepository(BaseRepository[User]):
         try:
             return self.session.query(User).filter(User.email == email).first()
         except Exception as e:
-            raise_database_error(
-                f"Failed to get user by email: {str(e)}", "get_by_email", "users"
-            )
+            raise_database_error(f"Failed to get user by email: {str(e)}", "get_by_email", "users")
 
     def get_active_users(self) -> List[User]:
         """Get all active users."""
@@ -165,9 +166,7 @@ class PortfolioRepository(BaseRepository[Portfolio]):
     def get_by_user(self, user_id: uuid.UUID) -> List[Portfolio]:
         """Get portfolios by user ID."""
         try:
-            return (
-                self.session.query(Portfolio).filter(Portfolio.user_id == user_id).all()
-            )
+            return self.session.query(Portfolio).filter(Portfolio.user_id == user_id).all()
         except Exception as e:
             raise_database_error(
                 f"Failed to get portfolios by user: {str(e)}",
@@ -222,9 +221,7 @@ class AssetRepository(BaseRepository[Asset]):
     def get_by_asset_class(self, asset_class: str) -> List[Asset]:
         """Get assets by asset class."""
         try:
-            return (
-                self.session.query(Asset).filter(Asset.asset_class == asset_class).all()
-            )
+            return self.session.query(Asset).filter(Asset.asset_class == asset_class).all()
         except Exception as e:
             raise_database_error(
                 f"Failed to get assets by class: {str(e)}",
@@ -244,11 +241,7 @@ class AssetRepository(BaseRepository[Asset]):
     def search_by_name(self, name_pattern: str) -> List[Asset]:
         """Search assets by name pattern."""
         try:
-            return (
-                self.session.query(Asset)
-                .filter(Asset.name.ilike(f"%{name_pattern}%"))
-                .all()
-            )
+            return self.session.query(Asset).filter(Asset.name.ilike(f"%{name_pattern}%")).all()
         except Exception as e:
             raise_database_error(
                 f"Failed to search assets by name: {str(e)}", "search_by_name", "assets"
@@ -261,11 +254,7 @@ class PositionRepository(BaseRepository[Position]):
     def get_by_portfolio(self, portfolio_id: uuid.UUID) -> List[Position]:
         """Get positions by portfolio ID."""
         try:
-            return (
-                self.session.query(Position)
-                .filter(Position.portfolio_id == portfolio_id)
-                .all()
-            )
+            return self.session.query(Position).filter(Position.portfolio_id == portfolio_id).all()
         except Exception as e:
             raise_database_error(
                 f"Failed to get positions by portfolio: {str(e)}",
@@ -300,9 +289,7 @@ class PositionRepository(BaseRepository[Position]):
         try:
             return (
                 self.session.query(Position)
-                .filter(
-                    and_(Position.portfolio_id == portfolio_id, Position.quantity != 0)
-                )
+                .filter(and_(Position.portfolio_id == portfolio_id, Position.quantity != 0))
                 .all()
             )
         except Exception as e:
@@ -312,9 +299,7 @@ class PositionRepository(BaseRepository[Position]):
                 "positions",
             )
 
-    def update_position_price(
-        self, position_id: uuid.UUID, current_price: Decimal
-    ) -> bool:
+    def update_position_price(self, position_id: uuid.UUID, current_price: Decimal) -> bool:
         """Update position current price and unrealized PnL."""
         try:
             position = self.get_by_id(position_id)
@@ -322,9 +307,7 @@ class PositionRepository(BaseRepository[Position]):
                 return False
 
             position.current_price = current_price
-            position.unrealized_pnl = (
-                current_price - position.average_price
-            ) * position.quantity
+            position.unrealized_pnl = (current_price - position.average_price) * position.quantity
 
             self.session.commit()
             return True
@@ -340,9 +323,7 @@ class PositionRepository(BaseRepository[Position]):
 class TradeRepository(BaseRepository[Trade]):
     """Repository for Trade model."""
 
-    def get_by_portfolio(
-        self, portfolio_id: uuid.UUID, limit: Optional[int] = None
-    ) -> List[Trade]:
+    def get_by_portfolio(self, portfolio_id: uuid.UUID, limit: Optional[int] = None) -> List[Trade]:
         """Get trades by portfolio ID."""
         try:
             query = (
@@ -362,9 +343,7 @@ class TradeRepository(BaseRepository[Trade]):
                 "trades",
             )
 
-    def get_by_asset(
-        self, asset_id: uuid.UUID, limit: Optional[int] = None
-    ) -> List[Trade]:
+    def get_by_asset(self, asset_id: uuid.UUID, limit: Optional[int] = None) -> List[Trade]:
         """Get trades by asset ID."""
         try:
             query = (
@@ -382,16 +361,12 @@ class TradeRepository(BaseRepository[Trade]):
                 f"Failed to get trades by asset: {str(e)}", "get_by_asset", "trades"
             )
 
-    def get_by_date_range(
-        self, start_date: datetime, end_date: datetime
-    ) -> List[Trade]:
+    def get_by_date_range(self, start_date: datetime, end_date: datetime) -> List[Trade]:
         """Get trades within date range."""
         try:
             return (
                 self.session.query(Trade)
-                .filter(
-                    and_(Trade.executed_at >= start_date, Trade.executed_at <= end_date)
-                )
+                .filter(and_(Trade.executed_at >= start_date, Trade.executed_at <= end_date))
                 .order_by(Trade.executed_at.desc())
                 .all()
             )
@@ -489,9 +464,7 @@ class MarketDataRepository(BaseRepository[MarketData]):
 class SignalRepository(BaseRepository[Signal]):
     """Repository for Signal model."""
 
-    def get_by_strategy(
-        self, strategy_name: str, limit: Optional[int] = None
-    ) -> List[Signal]:
+    def get_by_strategy(self, strategy_name: str, limit: Optional[int] = None) -> List[Signal]:
         """Get signals by strategy name."""
         try:
             query = (
@@ -511,9 +484,7 @@ class SignalRepository(BaseRepository[Signal]):
                 "signals",
             )
 
-    def get_by_asset(
-        self, asset_id: uuid.UUID, limit: Optional[int] = None
-    ) -> List[Signal]:
+    def get_by_asset(self, asset_id: uuid.UUID, limit: Optional[int] = None) -> List[Signal]:
         """Get signals by asset ID."""
         try:
             query = (
@@ -666,9 +637,7 @@ class SystemLogRepository(BaseRepository[SystemLog]):
                 f"Failed to get logs by level: {str(e)}", "get_by_level", "system_logs"
             )
 
-    def get_by_service(
-        self, service: str, limit: Optional[int] = None
-    ) -> List[SystemLog]:
+    def get_by_service(self, service: str, limit: Optional[int] = None) -> List[SystemLog]:
         """Get logs by service."""
         try:
             query = (
@@ -688,9 +657,7 @@ class SystemLogRepository(BaseRepository[SystemLog]):
                 "system_logs",
             )
 
-    def get_recent_logs(
-        self, hours: int = 24, limit: Optional[int] = None
-    ) -> List[SystemLog]:
+    def get_recent_logs(self, hours: int = 24, limit: Optional[int] = None) -> List[SystemLog]:
         """Get recent logs within specified hours."""
         try:
             cutoff_time = datetime.utcnow() - timedelta(hours=hours)

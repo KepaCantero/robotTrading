@@ -14,8 +14,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from app.core.centralized_config import (CentralizedConfig, get_config,
-                                         set_config)
+from app.core.centralized_config import CentralizedConfig, get_config, set_config
 from app.core.test_config import TestConfigManager
 
 # Test Categories
@@ -649,9 +648,7 @@ def test_utils():
 
     class TestUtils:
         @staticmethod
-        def assert_decimal_equal(
-            actual: Decimal, expected: Decimal, precision: int = 2
-        ):
+        def assert_decimal_equal(actual: Decimal, expected: Decimal, precision: int = 2):
             """Assert two decimals are equal within precision."""
             actual_rounded = actual.quantize(Decimal(f"0.{'0' * precision}"))
             expected_rounded = expected.quantize(Decimal(f"0.{'0' * precision}"))

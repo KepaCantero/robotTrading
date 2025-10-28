@@ -7,8 +7,7 @@ import logging
 from typing import AsyncGenerator, Optional
 
 from sqlalchemy import MetaData, create_engine, event
-from sqlalchemy.ext.asyncio import (AsyncSession, async_sessionmaker,
-                                    create_async_engine)
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import QueuePool
@@ -117,9 +116,7 @@ class DatabaseManager:
         if sync_url.startswith("postgresql://"):
             return sync_url.replace("postgresql://", "postgresql+asyncpg://", 1)
         elif sync_url.startswith("postgresql+psycopg2://"):
-            return sync_url.replace(
-                "postgresql+psycopg2://", "postgresql+asyncpg://", 1
-            )
+            return sync_url.replace("postgresql+psycopg2://", "postgresql+asyncpg://", 1)
         else:
             return sync_url
 
@@ -156,9 +153,7 @@ class DatabaseManager:
             logger.info("Database tables created successfully")
 
         except Exception as e:
-            raise_database_error(
-                f"Failed to create database tables: {str(e)}", "create_tables"
-            )
+            raise_database_error(f"Failed to create database tables: {str(e)}", "create_tables")
 
     def drop_tables(self) -> None:
         """Drop all database tables."""
@@ -170,9 +165,7 @@ class DatabaseManager:
             logger.info("Database tables dropped successfully")
 
         except Exception as e:
-            raise_database_error(
-                f"Failed to drop database tables: {str(e)}", "drop_tables"
-            )
+            raise_database_error(f"Failed to drop database tables: {str(e)}", "drop_tables")
 
     def get_sync_session(self) -> Session:
         """Get synchronous database session."""

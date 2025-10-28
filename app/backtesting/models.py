@@ -36,13 +36,9 @@ class Trade(BaseModel):
     status: TradeStatus = Field(TradeStatus.OPEN, description="Trade status")
     pnl: Optional[Decimal] = Field(None, description="Profit/Loss")
     pnl_percentage: Optional[Decimal] = Field(None, description="P&L percentage")
-    commission: Decimal = Field(
-        default=Decimal("0"), ge=0, description="Commission paid"
-    )
+    commission: Decimal = Field(default=Decimal("0"), ge=0, description="Commission paid")
     slippage: Decimal = Field(default=Decimal("0"), ge=0, description="Slippage cost")
-    reason: Optional[str] = Field(
-        None, description="Reason or signal that triggered the trade"
-    )
+    reason: Optional[str] = Field(None, description="Reason or signal that triggered the trade")
 
     @field_validator("side")
     @classmethod
@@ -86,9 +82,7 @@ class PerformanceMetrics(BaseModel):
 
     # Risk metrics
     max_drawdown: Decimal = Field(..., le=0, description="Maximum drawdown")
-    max_drawdown_percentage: Decimal = Field(
-        ..., le=0, description="Maximum drawdown percentage"
-    )
+    max_drawdown_percentage: Decimal = Field(..., le=0, description="Maximum drawdown percentage")
     sharpe_ratio: Optional[Decimal] = Field(None, description="Sharpe ratio")
     sortino_ratio: Optional[Decimal] = Field(None, description="Sortino ratio")
 
@@ -100,9 +94,7 @@ class PerformanceMetrics(BaseModel):
 
     # Time metrics
     total_days: int = Field(..., ge=0, description="Total trading days")
-    avg_trade_duration: Decimal = Field(
-        ..., ge=0, description="Average trade duration in days"
-    )
+    avg_trade_duration: Decimal = Field(..., ge=0, description="Average trade duration in days")
 
     @model_validator(mode="after")
     def validate_metrics_consistency(self) -> "PerformanceMetrics":
@@ -111,9 +103,7 @@ class PerformanceMetrics(BaseModel):
             raise ValueError("Total trades must equal winning + losing trades")
 
         if self.total_trades > 0:
-            expected_win_rate = Decimal(
-                str((self.winning_trades / self.total_trades) * 100)
-            )
+            expected_win_rate = Decimal(str((self.winning_trades / self.total_trades) * 100))
             if abs(self.win_rate - expected_win_rate) > Decimal("0.01"):
                 raise ValueError(
                     f"Win rate calculation mismatch: {self.win_rate} vs {expected_win_rate}"
@@ -129,9 +119,7 @@ class BacktestConfig(BaseModel):
     """Configuration for backtesting runs."""
 
     strategy_name: str = Field(default="default_strategy", description="Strategy name")
-    initial_capital: Decimal = Field(
-        default=Decimal("100000"), gt=0, description="Initial capital"
-    )
+    initial_capital: Decimal = Field(default=Decimal("100000"), gt=0, description="Initial capital")
     commission_per_trade: Decimal = Field(
         default=Decimal("1.0"), ge=0, description="Commission per trade"
     )
@@ -165,14 +153,9 @@ class BacktestConfig(BaseModel):
     @model_validator(mode="after")
     def validate_config_logic(self) -> "BacktestConfig":
         """Validate configuration logic."""
-        if (
-            self.stop_loss_percentage is not None
-            and self.take_profit_percentage is not None
-        ):
+        if self.stop_loss_percentage is not None and self.take_profit_percentage is not None:
             if self.stop_loss_percentage >= self.take_profit_percentage:
-                raise ValueError(
-                    "Stop loss percentage must be less than take profit percentage"
-                )
+                raise ValueError("Stop loss percentage must be less than take profit percentage")
 
         return self
 
@@ -181,12 +164,8 @@ class BacktestResult(BaseModel):
     """Complete backtest result."""
 
     strategy_name: str = Field(default="default_strategy", description="Strategy name")
-    config: Optional[BacktestConfig] = Field(
-        default=None, description="Backtest configuration"
-    )
-    trades: List[Trade] = Field(
-        default_factory=list, description="List of executed trades"
-    )
+    config: Optional[BacktestConfig] = Field(default=None, description="Backtest configuration")
+    trades: List[Trade] = Field(default_factory=list, description="List of executed trades")
     performance: Optional[PerformanceMetrics] = Field(
         default=None, description="Performance metrics"
     )
@@ -213,9 +192,7 @@ class BacktestResult(BaseModel):
         # Validate that all trades are within the backtest period
         for trade in self.trades:
             if trade.entry_time < self.start_date or trade.entry_time > self.end_date:
-                raise ValueError(
-                    f"Trade {trade.trade_id} entry time outside backtest period"
-                )
+                raise ValueError(f"Trade {trade.trade_id} entry time outside backtest period")
 
             if trade.exit_time is not None and trade.exit_time > self.end_date:
                 raise ValueError(f"Trade {trade.trade_id} exit time after backtest end")

@@ -8,16 +8,25 @@ from pathlib import Path
 
 import pytest
 
-from app.core.centralized_config import (APIConfig, CentralizedConfig,
-                                         DatabaseConfig, Environment,
-                                         LoggingConfig, MonitoringConfig,
-                                         RedisConfig, StrategyConfig,
-                                         TradingThresholds, get_config,
-                                         get_config_summary,
-                                         get_strategy_config,
-                                         get_trading_threshold, reload_config,
-                                         set_config, update_strategy_config,
-                                         validate_configuration)
+from app.core.centralized_config import (
+    APIConfig,
+    CentralizedConfig,
+    DatabaseConfig,
+    Environment,
+    LoggingConfig,
+    MonitoringConfig,
+    RedisConfig,
+    StrategyConfig,
+    TradingThresholds,
+    get_config,
+    get_config_summary,
+    get_strategy_config,
+    get_trading_threshold,
+    reload_config,
+    set_config,
+    update_strategy_config,
+    validate_configuration,
+)
 
 # Add the project root to the path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -58,14 +67,10 @@ class TestTradingThresholds:
         TradingThresholds(max_position_size=1.0)
 
         # Invalid values
-        with pytest.raises(
-            ValueError, match="Percentage values must be between 0 and 1"
-        ):
+        with pytest.raises(ValueError, match="Percentage values must be between 0 and 1"):
             TradingThresholds(max_position_size=1.1)
 
-        with pytest.raises(
-            ValueError, match="Percentage values must be between 0 and 1"
-        ):
+        with pytest.raises(ValueError, match="Percentage values must be between 0 and 1"):
             TradingThresholds(max_position_size=-0.1)
 
     def test_validation_stop_loss(self):
@@ -76,14 +81,10 @@ class TestTradingThresholds:
         TradingThresholds(stop_loss_pct=0.5)
 
         # Invalid values
-        with pytest.raises(
-            ValueError, match="Stop loss percentage must be between 0 and 0.5"
-        ):
+        with pytest.raises(ValueError, match="Stop loss percentage must be between 0 and 0.5"):
             TradingThresholds(stop_loss_pct=0.6)
 
-        with pytest.raises(
-            ValueError, match="Stop loss percentage must be between 0 and 0.5"
-        ):
+        with pytest.raises(ValueError, match="Stop loss percentage must be between 0 and 0.5"):
             TradingThresholds(stop_loss_pct=-0.1)
 
 
@@ -185,9 +186,7 @@ class TestRedisConfig:
 
     def test_connection_string_with_password(self):
         """Test Redis connection string with password."""
-        config = RedisConfig(
-            host="redis.example.com", port=6380, password="secret", db=1
-        )
+        config = RedisConfig(host="redis.example.com", port=6380, password="secret", db=1)
         expected = "redis://:secret@redis.example.com:6380/1"
         assert config.connection_string == expected
 
@@ -214,9 +213,7 @@ class TestAPIConfig:
         APIConfig(secret_key="a" * 32)
 
         # Invalid secret key
-        with pytest.raises(
-            ValueError, match="Secret key must be at least 16 characters long"
-        ):
+        with pytest.raises(ValueError, match="Secret key must be at least 16 characters long"):
             APIConfig(secret_key="short")
 
 

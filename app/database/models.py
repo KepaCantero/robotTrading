@@ -8,9 +8,19 @@ from datetime import datetime
 from decimal import Decimal
 from typing import List, Optional
 
-from sqlalchemy import (JSON, Boolean, CheckConstraint, DateTime, ForeignKey,
-                        Index, Integer, Numeric, String, Text,
-                        UniqueConstraint)
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -22,21 +32,13 @@ class User(Base):
 
     __tablename__ = "users"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
-    username: Mapped[str] = mapped_column(
-        String(50), unique=True, nullable=False, index=True
-    )
-    email: Mapped[str] = mapped_column(
-        String(255), unique=True, nullable=False, index=True
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
+    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
@@ -63,23 +65,17 @@ class APIKey(Base):
 
     __tablename__ = "api_keys"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
     )
     name: Mapped[str] = mapped_column(String(100), nullable=False)
-    key_hash: Mapped[str] = mapped_column(
-        String(255), nullable=False, unique=True, index=True
-    )
+    key_hash: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
     permissions: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     last_used: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships
     user: Mapped["User"] = relationship("User", back_populates="api_keys")
@@ -96,9 +92,7 @@ class Portfolio(Base):
 
     __tablename__ = "portfolios"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
     )
@@ -108,9 +102,7 @@ class Portfolio(Base):
     current_cash: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
     total_value: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
@@ -140,33 +132,23 @@ class Asset(Base):
 
     __tablename__ = "assets"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
-    symbol: Mapped[str] = mapped_column(
-        String(20), unique=True, nullable=False, index=True
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    symbol: Mapped[str] = mapped_column(String(20), unique=True, nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     # stock, etf, crypto, etc.
     asset_class: Mapped[str] = mapped_column(String(50), nullable=False)
     exchange: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     currency: Mapped[str] = mapped_column(String(3), nullable=False, default="USD")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
 
     # Relationships
-    positions: Mapped[List["Position"]] = relationship(
-        "Position", back_populates="asset"
-    )
+    positions: Mapped[List["Position"]] = relationship("Position", back_populates="asset")
     trades: Mapped[List["Trade"]] = relationship("Trade", back_populates="asset")
-    market_data: Mapped[List["MarketData"]] = relationship(
-        "MarketData", back_populates="asset"
-    )
+    market_data: Mapped[List["MarketData"]] = relationship("MarketData", back_populates="asset")
 
     __table_args__ = (
         Index("idx_assets_symbol", "symbol"),
@@ -181,9 +163,7 @@ class Position(Base):
 
     __tablename__ = "positions"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     portfolio_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("portfolios.id"), nullable=False
     )
@@ -192,35 +172,25 @@ class Position(Base):
     )
     quantity: Mapped[Decimal] = mapped_column(Numeric(15, 8), nullable=False)
     average_price: Mapped[Decimal] = mapped_column(Numeric(15, 4), nullable=False)
-    current_price: Mapped[Optional[Decimal]] = mapped_column(
-        Numeric(15, 4), nullable=True
-    )
-    unrealized_pnl: Mapped[Optional[Decimal]] = mapped_column(
-        Numeric(15, 2), nullable=True
-    )
+    current_price: Mapped[Optional[Decimal]] = mapped_column(Numeric(15, 4), nullable=True)
+    unrealized_pnl: Mapped[Optional[Decimal]] = mapped_column(Numeric(15, 2), nullable=True)
     realized_pnl: Mapped[Decimal] = mapped_column(
         Numeric(15, 2), default=Decimal("0"), nullable=False
     )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
 
     # Relationships
-    portfolio: Mapped["Portfolio"] = relationship(
-        "Portfolio", back_populates="positions"
-    )
+    portfolio: Mapped["Portfolio"] = relationship("Portfolio", back_populates="positions")
     asset: Mapped["Asset"] = relationship("Asset", back_populates="positions")
 
     __table_args__ = (
         Index("idx_positions_portfolio_id", "portfolio_id"),
         Index("idx_positions_asset_id", "asset_id"),
         Index("idx_positions_updated_at", "updated_at"),
-        UniqueConstraint(
-            "portfolio_id", "asset_id", name="uq_positions_portfolio_asset"
-        ),
+        UniqueConstraint("portfolio_id", "asset_id", name="uq_positions_portfolio_asset"),
         CheckConstraint("quantity != 0", name="ck_positions_quantity_nonzero"),
     )
 
@@ -230,37 +200,27 @@ class Trade(Base):
 
     __tablename__ = "trades"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     portfolio_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("portfolios.id"), nullable=False
     )
     asset_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("assets.id"), nullable=False
     )
-    order_id: Mapped[Optional[str]] = mapped_column(
-        String(100), nullable=True, index=True
-    )
+    order_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)
     side: Mapped[str] = mapped_column(String(4), nullable=False)  # BUY, SELL
     quantity: Mapped[Decimal] = mapped_column(Numeric(15, 8), nullable=False)
     price: Mapped[Decimal] = mapped_column(Numeric(15, 4), nullable=False)
     commission: Mapped[Decimal] = mapped_column(
         Numeric(15, 4), default=Decimal("0"), nullable=False
     )
-    slippage: Mapped[Decimal] = mapped_column(
-        Numeric(15, 4), default=Decimal("0"), nullable=False
-    )
+    slippage: Mapped[Decimal] = mapped_column(Numeric(15, 4), default=Decimal("0"), nullable=False)
     total_cost: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default="FILLED"
     )  # PENDING, FILLED, CANCELLED
-    executed_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False
-    )
+    executed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships
     portfolio: Mapped["Portfolio"] = relationship("Portfolio", back_populates="trades")
@@ -283,9 +243,7 @@ class MarketData(Base):
 
     __tablename__ = "market_data"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     asset_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("assets.id"), nullable=False
     )
@@ -295,12 +253,8 @@ class MarketData(Base):
     low_price: Mapped[Decimal] = mapped_column(Numeric(15, 4), nullable=False)
     close_price: Mapped[Decimal] = mapped_column(Numeric(15, 4), nullable=False)
     volume: Mapped[Decimal] = mapped_column(Numeric(20, 0), nullable=False)
-    adjusted_close: Mapped[Optional[Decimal]] = mapped_column(
-        Numeric(15, 4), nullable=True
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False
-    )
+    adjusted_close: Mapped[Optional[Decimal]] = mapped_column(Numeric(15, 4), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships
     asset: Mapped["Asset"] = relationship("Asset", back_populates="market_data")
@@ -309,9 +263,7 @@ class MarketData(Base):
         Index("idx_market_data_asset_id", "asset_id"),
         Index("idx_market_data_timestamp", "timestamp"),
         Index("idx_market_data_asset_timestamp", "asset_id", "timestamp"),
-        UniqueConstraint(
-            "asset_id", "timestamp", name="uq_market_data_asset_timestamp"
-        ),
+        UniqueConstraint("asset_id", "timestamp", name="uq_market_data_asset_timestamp"),
         CheckConstraint("open_price > 0", name="ck_market_data_open_positive"),
         CheckConstraint("high_price > 0", name="ck_market_data_high_positive"),
         CheckConstraint("low_price > 0", name="ck_market_data_low_positive"),
@@ -326,26 +278,18 @@ class Signal(Base):
 
     __tablename__ = "signals"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     asset_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("assets.id"), nullable=False
     )
     strategy_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    signal_type: Mapped[str] = mapped_column(
-        String(10), nullable=False
-    )  # BUY, SELL, HOLD
-    strength: Mapped[str] = mapped_column(
-        String(20), nullable=False
-    )  # WEAK, MODERATE, STRONG
+    signal_type: Mapped[str] = mapped_column(String(10), nullable=False)  # BUY, SELL, HOLD
+    strength: Mapped[str] = mapped_column(String(20), nullable=False)  # WEAK, MODERATE, STRONG
     confidence: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)  # 0-100
     price: Mapped[Decimal] = mapped_column(Numeric(15, 4), nullable=False)
     volume: Mapped[Optional[Decimal]] = mapped_column(Numeric(15, 8), nullable=True)
     meta_data: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships
     asset: Mapped["Asset"] = relationship("Asset")
@@ -355,15 +299,9 @@ class Signal(Base):
         Index("idx_signals_strategy_name", "strategy_name"),
         Index("idx_signals_signal_type", "signal_type"),
         Index("idx_signals_created_at", "created_at"),
-        CheckConstraint(
-            "signal_type IN ('BUY', 'SELL', 'HOLD')", name="ck_signals_signal_type"
-        ),
-        CheckConstraint(
-            "strength IN ('WEAK', 'MODERATE', 'STRONG')", name="ck_signals_strength"
-        ),
-        CheckConstraint(
-            "confidence >= 0 AND confidence <= 100", name="ck_signals_confidence"
-        ),
+        CheckConstraint("signal_type IN ('BUY', 'SELL', 'HOLD')", name="ck_signals_signal_type"),
+        CheckConstraint("strength IN ('WEAK', 'MODERATE', 'STRONG')", name="ck_signals_strength"),
+        CheckConstraint("confidence >= 0 AND confidence <= 100", name="ck_signals_confidence"),
         CheckConstraint("price > 0", name="ck_signals_price_positive"),
     )
 
@@ -373,9 +311,7 @@ class Backtest(Base):
 
     __tablename__ = "backtests"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     portfolio_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("portfolios.id"), nullable=False
     )
@@ -384,33 +320,21 @@ class Backtest(Base):
     end_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     initial_capital: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
     final_capital: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
-    total_return: Mapped[Decimal] = mapped_column(
-        Numeric(8, 4), nullable=False
-    )  # Percentage
-    sharpe_ratio: Mapped[Optional[Decimal]] = mapped_column(
-        Numeric(8, 4), nullable=True
-    )
-    max_drawdown: Mapped[Optional[Decimal]] = mapped_column(
-        Numeric(8, 4), nullable=True
-    )
-    win_rate: Mapped[Optional[Decimal]] = mapped_column(
-        Numeric(5, 2), nullable=True
-    )  # Percentage
+    total_return: Mapped[Decimal] = mapped_column(Numeric(8, 4), nullable=False)  # Percentage
+    sharpe_ratio: Mapped[Optional[Decimal]] = mapped_column(Numeric(8, 4), nullable=True)
+    max_drawdown: Mapped[Optional[Decimal]] = mapped_column(Numeric(8, 4), nullable=True)
+    win_rate: Mapped[Optional[Decimal]] = mapped_column(Numeric(5, 2), nullable=True)  # Percentage
     total_trades: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     parameters: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     results: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default="COMPLETED"
     )  # RUNNING, COMPLETED, FAILED
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     # Relationships
-    portfolio: Mapped["Portfolio"] = relationship(
-        "Portfolio", back_populates="backtests"
-    )
+    portfolio: Mapped["Portfolio"] = relationship("Portfolio", back_populates="backtests")
 
     __table_args__ = (
         Index("idx_backtests_portfolio_id", "portfolio_id"),
@@ -418,9 +342,7 @@ class Backtest(Base):
         Index("idx_backtests_start_date", "start_date"),
         Index("idx_backtests_end_date", "end_date"),
         Index("idx_backtests_status", "status"),
-        CheckConstraint(
-            "status IN ('RUNNING', 'COMPLETED', 'FAILED')", name="ck_backtests_status"
-        ),
+        CheckConstraint("status IN ('RUNNING', 'COMPLETED', 'FAILED')", name="ck_backtests_status"),
         CheckConstraint("start_date < end_date", name="ck_backtests_date_range"),
         CheckConstraint("initial_capital > 0", name="ck_backtests_initial_capital"),
     )
@@ -431,32 +353,24 @@ class RiskMetrics(Base):
 
     __tablename__ = "risk_metrics"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     portfolio_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("portfolios.id"), nullable=False
     )
-    calculation_date: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, index=True
-    )
+    calculation_date: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)
     var_95: Mapped[Optional[Decimal]] = mapped_column(
         Numeric(15, 2), nullable=True
     )  # Value at Risk 95%
     var_99: Mapped[Optional[Decimal]] = mapped_column(
         Numeric(15, 2), nullable=True
     )  # Value at Risk 99%
-    expected_shortfall: Mapped[Optional[Decimal]] = mapped_column(
-        Numeric(15, 2), nullable=True
-    )
+    expected_shortfall: Mapped[Optional[Decimal]] = mapped_column(Numeric(15, 2), nullable=True)
     volatility: Mapped[Optional[Decimal]] = mapped_column(
         Numeric(8, 4), nullable=True
     )  # Annualized volatility
     beta: Mapped[Optional[Decimal]] = mapped_column(Numeric(8, 4), nullable=True)
     correlation_matrix: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships
     portfolio: Mapped["Portfolio"] = relationship("Portfolio")
@@ -473,17 +387,13 @@ class SystemLog(Base):
 
     __tablename__ = "system_logs"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     level: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
     service: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     message: Mapped[str] = mapped_column(Text, nullable=False)
     meta_data: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
     timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     __table_args__ = (
         Index("idx_system_logs_level", "level"),

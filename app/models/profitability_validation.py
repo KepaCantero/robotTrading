@@ -44,12 +44,8 @@ class CostBreakdown(BaseModel):
     slippage: Decimal = Field(..., description="Slippage total")
     market_impact: Decimal = Field(..., description="Impacto en el mercado")
     infrastructure: Decimal = Field(..., description="Costos de infraestructura")
-    data_fees: Decimal = Field(
-        default=Decimal("0"), description="Costos de datos de mercado"
-    )
-    financing: Decimal = Field(
-        default=Decimal("0"), description="Costos de financiación"
-    )
+    data_fees: Decimal = Field(default=Decimal("0"), description="Costos de datos de mercado")
+    financing: Decimal = Field(default=Decimal("0"), description="Costos de financiación")
     other: Decimal = Field(default=Decimal("0"), description="Otros costos")
 
     @property
@@ -95,9 +91,7 @@ class ProfitabilityMetrics(BaseModel):
     profit_factor: Decimal = Field(..., description="Factor de ganancia")
     cost_impact_ratio: Decimal = Field(..., description="Ratio de impacto de costos")
 
-    @field_validator(
-        "profit_margin", "return_on_investment", "max_drawdown", "win_rate"
-    )
+    @field_validator("profit_margin", "return_on_investment", "max_drawdown", "win_rate")
     @classmethod
     def validate_percentage(cls, v):
         if not -100 <= v <= 1000:  # Permitir hasta 1000% para casos extremos
@@ -115,22 +109,12 @@ class ProfitabilityMetrics(BaseModel):
 class ValidationCriteria(BaseModel):
     """Criterios de validación de rentabilidad."""
 
-    min_net_profit: Decimal = Field(
-        default=Decimal("100"), description="Ganancia neta mínima"
-    )
-    min_profit_margin: Decimal = Field(
-        default=Decimal("5"), description="Margen mínimo (%)"
-    )
+    min_net_profit: Decimal = Field(default=Decimal("100"), description="Ganancia neta mínima")
+    min_profit_margin: Decimal = Field(default=Decimal("5"), description="Margen mínimo (%)")
     min_roi: Decimal = Field(default=Decimal("10"), description="ROI mínimo (%)")
-    min_sharpe_ratio: Decimal = Field(
-        default=Decimal("1.0"), description="Sharpe ratio mínimo"
-    )
-    max_drawdown_limit: Decimal = Field(
-        default=Decimal("15"), description="Drawdown máximo (%)"
-    )
-    min_win_rate: Decimal = Field(
-        default=Decimal("50"), description="Tasa de ganancia mínima (%)"
-    )
+    min_sharpe_ratio: Decimal = Field(default=Decimal("1.0"), description="Sharpe ratio mínimo")
+    max_drawdown_limit: Decimal = Field(default=Decimal("15"), description="Drawdown máximo (%)")
+    min_win_rate: Decimal = Field(default=Decimal("50"), description="Tasa de ganancia mínima (%)")
     min_profit_factor: Decimal = Field(
         default=Decimal("1.5"), description="Factor de ganancia mínimo"
     )
@@ -138,9 +122,7 @@ class ValidationCriteria(BaseModel):
         default=Decimal("0.3"), description="Ratio máximo de impacto de costos"
     )
 
-    @field_validator(
-        "min_profit_margin", "min_roi", "max_drawdown_limit", "min_win_rate"
-    )
+    @field_validator("min_profit_margin", "min_roi", "max_drawdown_limit", "min_win_rate")
     @classmethod
     def validate_percentage(cls, v):
         if not 0 <= v <= 100:
@@ -169,19 +151,13 @@ class ProfitabilityValidation(BaseModel):
 
     # Resultado de la validación
     status: ValidationStatus = Field(..., description="Estado de la validación")
-    passed_tests: List[str] = Field(
-        default_factory=list, description="Tests que pasaron"
-    )
-    failed_tests: List[str] = Field(
-        default_factory=list, description="Tests que fallaron"
-    )
+    passed_tests: List[str] = Field(default_factory=list, description="Tests que pasaron")
+    failed_tests: List[str] = Field(default_factory=list, description="Tests que fallaron")
     warnings: List[str] = Field(default_factory=list, description="Advertencias")
 
     # Análisis adicional
     is_profitable: bool = Field(..., description="¿Es rentable la estrategia?")
-    recommendation: str = Field(
-        ..., description="Recomendación basada en la validación"
-    )
+    recommendation: str = Field(..., description="Recomendación basada en la validación")
     risk_level: str = Field(..., description="Nivel de riesgo (low, medium, high)")
 
     @field_validator("initial_capital", "final_capital")
@@ -200,9 +176,7 @@ class ValidationRequest(BaseModel):
     period_end: date = Field(..., description="Fin del período")
     initial_capital: Decimal = Field(..., description="Capital inicial")
     trades_data: List[Dict[str, Any]] = Field(..., description="Datos de trades")
-    criteria: Optional[ValidationCriteria] = Field(
-        None, description="Criterios personalizados"
-    )
+    criteria: Optional[ValidationCriteria] = Field(None, description="Criterios personalizados")
 
     @field_validator("initial_capital")
     @classmethod
@@ -215,9 +189,7 @@ class ValidationRequest(BaseModel):
 class ValidationResponse(BaseModel):
     """Response de validación de rentabilidad."""
 
-    validation: ProfitabilityValidation = Field(
-        ..., description="Resultado de la validación"
-    )
+    validation: ProfitabilityValidation = Field(..., description="Resultado de la validación")
     summary: Dict[str, Any] = Field(..., description="Resumen de la validación")
     recommendations: List[str] = Field(..., description="Recomendaciones")
     next_steps: List[str] = Field(..., description="Próximos pasos")
@@ -242,9 +214,7 @@ class HistoricalValidation(BaseModel):
     """Validación histórica de una estrategia."""
 
     strategy_name: str = Field(..., description="Nombre de la estrategia")
-    validations: List[ProfitabilityValidation] = Field(
-        ..., description="Validaciones históricas"
-    )
+    validations: List[ProfitabilityValidation] = Field(..., description="Validaciones históricas")
     trend_analysis: Dict[str, Any] = Field(..., description="Análisis de tendencias")
     stability_score: Decimal = Field(..., description="Score de estabilidad (0-100)")
     consistency_rating: str = Field(..., description="Rating de consistencia")
@@ -253,9 +223,7 @@ class HistoricalValidation(BaseModel):
 class ValidationReport(BaseModel):
     """Reporte completo de validación de rentabilidad."""
 
-    report_date: datetime = Field(
-        default_factory=datetime.now, description="Fecha del reporte"
-    )
+    report_date: datetime = Field(default_factory=datetime.now, description="Fecha del reporte")
     strategy_validations: List[ProfitabilityValidation] = Field(
         ..., description="Validaciones de estrategias"
     )

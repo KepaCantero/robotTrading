@@ -11,18 +11,24 @@ from unittest.mock import Mock
 import pytest
 from pydantic import ValidationError
 
-from app.models.optimization import (OptimizationConfig, OptimizationMethod,
-                                     OptimizationMetrics,
-                                     OptimizationParameter, OptimizationResult,
-                                     OptimizationSummary, OutOfSampleResult,
-                                     OutOfSampleTest, OutOfSampleTestRequest,
-                                     ParameterConstraint,
-                                     ParameterOptimizationRequest,
-                                     ParameterType, PurgedKFoldConfig,
-                                     WalkForwardConfig)
+from app.models.optimization import (
+    OptimizationConfig,
+    OptimizationMethod,
+    OptimizationMetrics,
+    OptimizationParameter,
+    OptimizationResult,
+    OptimizationSummary,
+    OutOfSampleResult,
+    OutOfSampleTest,
+    OutOfSampleTestRequest,
+    ParameterConstraint,
+    ParameterOptimizationRequest,
+    ParameterType,
+    PurgedKFoldConfig,
+    WalkForwardConfig,
+)
 from app.services.cost_analysis_service import CostAnalysisService
-from app.services.parameter_optimization_service import \
-    ParameterOptimizationService
+from app.services.parameter_optimization_service import ParameterOptimizationService
 
 
 class TestParameterOptimizationService:
@@ -76,9 +82,7 @@ class TestParameterOptimizationService:
     @pytest.fixture
     def purged_k_fold_config(self):
         """Create purged K-fold configuration for testing."""
-        return PurgedKFoldConfig(
-            n_splits=5, purged_period=2, embargo_period=1, shuffle=False
-        )
+        return PurgedKFoldConfig(n_splits=5, purged_period=2, embargo_period=1, shuffle=False)
 
     @pytest.fixture
     def optimization_request(self, sample_parameters, walk_forward_config):
@@ -141,18 +145,12 @@ class TestOptimizationModels(TestParameterOptimizationService):
             min_value=50.0, max_value=80.0, parameter_type=ParameterType.THRESHOLD
         )
         # Valid parameter
-        param = OptimizationParameter(
-            name="test_param", current_value=65.0, constraints=constraint
-        )
+        param = OptimizationParameter(name="test_param", current_value=65.0, constraints=constraint)
         assert param.current_value == 65.0
 
         # Invalid parameter (outside constraints)
-        with pytest.raises(
-            ValueError, match="current_value .* must be within constraints"
-        ):
-            OptimizationParameter(
-                name="test_param", current_value=90.0, constraints=constraint
-            )
+        with pytest.raises(ValueError, match="current_value .* must be within constraints"):
+            OptimizationParameter(name="test_param", current_value=90.0, constraints=constraint)
 
     def test_walk_forward_config_validation(self):
         """Test walk-forward configuration validation."""
@@ -166,9 +164,7 @@ class TestOptimizationModels(TestParameterOptimizationService):
         assert config.initial_train_period == 90
 
         # Invalid config (test_period >= initial_train_period)
-        with pytest.raises(
-            ValueError, match="test_period must be less than initial_train_period"
-        ):
+        with pytest.raises(ValueError, match="test_period must be less than initial_train_period"):
             WalkForwardConfig(
                 initial_train_period=30,
                 retrain_frequency=10,
@@ -193,9 +189,7 @@ class TestOptimizationModels(TestParameterOptimizationService):
 
         # Invalid config (missing walk_forward_config)
         with pytest.raises(ValueError, match="walk_forward_config is required"):
-            OptimizationConfig(
-                method=OptimizationMethod.WALK_FORWARD, walk_forward_config=None
-            )
+            OptimizationConfig(method=OptimizationMethod.WALK_FORWARD, walk_forward_config=None)
 
     def test_out_of_sample_test_validation(self):
         """Test out-of-sample test validation."""
@@ -211,9 +205,7 @@ class TestOptimizationModels(TestParameterOptimizationService):
         assert test.test_start_date == date(2023, 1, 1)
 
         # Invalid test (test_end_date <= test_start_date)
-        with pytest.raises(
-            ValueError, match="test_end_date must be after test_start_date"
-        ):
+        with pytest.raises(ValueError, match="test_end_date must be after test_start_date"):
             OutOfSampleTest(
                 test_start_date=date(2023, 12, 31),
                 test_end_date=date(2023, 1, 1),
@@ -228,9 +220,7 @@ class TestParameterOptimizationServiceMethods(TestParameterOptimizationService):
     """Test cases for ParameterOptimizationService methods."""
 
     @pytest.mark.asyncio
-    async def test_optimize_parameters_walk_forward(
-        self, service, optimization_request
-    ):
+    async def test_optimize_parameters_walk_forward(self, service, optimization_request):
         """Test walk-forward parameter optimization."""
         result = await service.optimize_parameters(optimization_request)
 
@@ -312,9 +302,7 @@ class TestParameterOptimizationServiceMethods(TestParameterOptimizationService):
     async def test_optimize_parameters_invalid_request(self, service):
         """Test optimization with invalid request."""
         # Test with invalid date range - should fail at model creation
-        with pytest.raises(
-            ValidationError, match="data_end_date must be after data_start_date"
-        ):
+        with pytest.raises(ValidationError, match="data_end_date must be after data_start_date"):
             ParameterOptimizationRequest(
                 strategy_name="test_strategy",
                 parameters=[
@@ -343,9 +331,7 @@ class TestParameterOptimizationServiceMethods(TestParameterOptimizationService):
             )
 
     @pytest.mark.asyncio
-    async def test_perform_out_of_sample_test(
-        self, service, out_of_sample_test_request
-    ):
+    async def test_perform_out_of_sample_test(self, service, out_of_sample_test_request):
         """Test out-of-sample testing."""
         result = await service.perform_out_of_sample_test(out_of_sample_test_request)
 
@@ -366,9 +352,7 @@ class TestParameterOptimizationServiceMethods(TestParameterOptimizationService):
     async def test_perform_out_of_sample_test_invalid_config(self, service):
         """Test out-of-sample testing with invalid configuration."""
         # Test with invalid date range - should fail at model creation
-        with pytest.raises(
-            ValidationError, match="test_end_date must be after test_start_date"
-        ):
+        with pytest.raises(ValidationError, match="test_end_date must be after test_start_date"):
             OutOfSampleTestRequest(
                 test_config=OutOfSampleTest(
                     test_start_date=date(2023, 12, 31),
@@ -580,9 +564,7 @@ class TestOptimizationServiceEdgeCases(TestParameterOptimizationService):
         assert "single_param" in result.optimized_parameters
 
     @pytest.mark.asyncio
-    async def test_optimization_with_convergence_failure(
-        self, service, sample_parameters
-    ):
+    async def test_optimization_with_convergence_failure(self, service, sample_parameters):
         """Test optimization with convergence failure."""
         request = ParameterOptimizationRequest(
             strategy_name="convergence_test",
@@ -602,9 +584,7 @@ class TestOptimizationServiceEdgeCases(TestParameterOptimizationService):
         assert result.convergence_achieved is False
 
     @pytest.mark.asyncio
-    async def test_optimization_with_minimal_data_period(
-        self, service, sample_parameters
-    ):
+    async def test_optimization_with_minimal_data_period(self, service, sample_parameters):
         """Test optimization with minimal data period."""
         request = ParameterOptimizationRequest(
             strategy_name="minimal_data_strategy",

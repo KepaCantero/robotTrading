@@ -32,9 +32,7 @@ class TestLoggingSystemFixed:
             from app.services.centralized_logging import LogService
 
             # Mock the file system operations
-            with patch("pathlib.Path.mkdir"), patch(
-                "pathlib.Path.exists", return_value=True
-            ):
+            with patch("pathlib.Path.mkdir"), patch("pathlib.Path.exists", return_value=True):
                 service = LogService()
                 assert service is not None
 
@@ -50,9 +48,11 @@ class TestLoggingSystemFixed:
             from app.services.centralized_logging import LogService
 
             # Mock the file system operations
-            with patch("pathlib.Path.mkdir"), patch(
-                "pathlib.Path.exists", return_value=True
-            ), patch("builtins.open", mock_open()):
+            with (
+                patch("pathlib.Path.mkdir"),
+                patch("pathlib.Path.exists", return_value=True),
+                patch("builtins.open", mock_open()),
+            ):
                 service = LogService()
 
                 # Test log methods
@@ -72,9 +72,11 @@ class TestLoggingSystemFixed:
             from app.services.centralized_logging import LogService
 
             # Mock the file system operations
-            with patch("pathlib.Path.mkdir"), patch(
-                "pathlib.Path.exists", return_value=True
-            ), patch("builtins.open", mock_open()):
+            with (
+                patch("pathlib.Path.mkdir"),
+                patch("pathlib.Path.exists", return_value=True),
+                patch("builtins.open", mock_open()),
+            ):
                 service = LogService()
 
                 # Test performance timer
@@ -114,8 +116,10 @@ class TestErrorHandlingFixed:
         """Test exception handlers."""
         try:
             from app.exceptions.error_handler import (
-                algotrading_exception_handler, generic_exception_handler,
-                validation_exception_handler)
+                algotrading_exception_handler,
+                generic_exception_handler,
+                validation_exception_handler,
+            )
 
             # Test that handlers are callable
             assert callable(algotrading_exception_handler)
@@ -158,9 +162,7 @@ class TestDatabaseFixed:
             from app.database.models import User
 
             # Test model creation
-            user = User(
-                id=1, username="test_user", email="test@example.com", is_active=True
-            )
+            user = User(id=1, username="test_user", email="test@example.com", is_active=True)
             assert user.username == "test_user"
             assert user.email == "test@example.com"
 
@@ -205,9 +207,7 @@ class TestCICDFixed:
                 assert len(workflow_files) > 0, "No workflow files found"
 
                 for workflow_file in workflow_files:
-                    assert (
-                        workflow_file.exists()
-                    ), f"Workflow file {workflow_file} does not exist"
+                    assert workflow_file.exists(), f"Workflow file {workflow_file} does not exist"
 
             print("✅ GitHub workflows test passed")
             return True

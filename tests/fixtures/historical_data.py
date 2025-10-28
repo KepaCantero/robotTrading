@@ -124,9 +124,7 @@ def create_spy_2020_ranging_market_data() -> List[MarketData]:
         date = base_date + timedelta(days=i)
 
         # Add cyclical movement (ranging)
-        cycle_factor = 1 + Decimal(
-            str(0.02 * math.sin(i * math.pi / 30))
-        )  # 30-day cycle
+        cycle_factor = 1 + Decimal(str(0.02 * math.sin(i * math.pi / 30)))  # 30-day cycle
 
         price = base_price * cycle_factor
 
@@ -171,9 +169,7 @@ def create_spy_2020_ranging_signals() -> List[Signal]:
 
     for day_offset in buy_dates:
         signal_date = base_date + timedelta(days=day_offset)
-        price = Decimal("320.0") * Decimal(
-            str(1 + 0.02 * math.sin(day_offset * math.pi / 30))
-        )
+        price = Decimal("320.0") * Decimal(str(1 + 0.02 * math.sin(day_offset * math.pi / 30)))
 
         signals.append(
             Signal(
@@ -195,9 +191,7 @@ def create_spy_2020_ranging_signals() -> List[Signal]:
 
     for day_offset in sell_dates:
         signal_date = base_date + timedelta(days=day_offset)
-        price = Decimal("320.0") * Decimal(
-            str(1 + 0.02 * math.sin(day_offset * math.pi / 30))
-        )
+        price = Decimal("320.0") * Decimal(str(1 + 0.02 * math.sin(day_offset * math.pi / 30)))
 
         signals.append(
             Signal(

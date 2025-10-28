@@ -34,9 +34,7 @@ class StrategyConfigLoader:
     def _validate_config_path(self) -> None:
         """Validar que la ruta de configuración sea válida."""
         if not self.config_path.parent.exists():
-            logger.warning(
-                f"Config directory does not exist: {self.config_path.parent}"
-            )
+            logger.warning(f"Config directory does not exist: {self.config_path.parent}")
             logger.info(f"Creating config directory: {self.config_path.parent}")
             self.config_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -62,9 +60,7 @@ class StrategyConfigLoader:
                 with open(self.config_path, "r", encoding="utf-8") as f:
                     self.config = json.load(f)
             else:
-                raise ValueError(
-                    f"Unsupported config file format: {self.config_path.suffix}"
-                )
+                raise ValueError(f"Unsupported config file format: {self.config_path.suffix}")
 
             self.last_loaded = datetime.utcnow()
             logger.info(f"Loaded config from: {self.config_path}")
@@ -202,9 +198,7 @@ class StrategyConfigLoader:
         logger.info("Config validation passed")
         return True
 
-    def add_strategy_config(
-        self, strategy_name: str, strategy_config: Dict[str, Any]
-    ) -> None:
+    def add_strategy_config(self, strategy_name: str, strategy_config: Dict[str, Any]) -> None:
         """
         Añadir configuración de estrategia.
 
@@ -231,9 +225,7 @@ class StrategyConfigLoader:
         else:
             logger.warning(f"Strategy config not found: {strategy_name}")
 
-    def update_strategy_config(
-        self, strategy_name: str, updates: Dict[str, Any]
-    ) -> None:
+    def update_strategy_config(self, strategy_name: str, updates: Dict[str, Any]) -> None:
         """
         Actualizar configuración de estrategia.
 

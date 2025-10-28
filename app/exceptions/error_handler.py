@@ -12,14 +12,18 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.exceptions.trading_exceptions import (AlgoTradingError,
-                                               BusinessLogicError,
-                                               ConfigurationError,
-                                               DatabaseError, ErrorCategory,
-                                               ErrorSeverity, ExternalAPIError,
-                                               SystemError, ValidationError)
-from app.services.centralized_logging import (LogLevel, LogService,
-                                              centralized_logger)
+from app.exceptions.trading_exceptions import (
+    AlgoTradingError,
+    BusinessLogicError,
+    ConfigurationError,
+    DatabaseError,
+    ErrorCategory,
+    ErrorSeverity,
+    ExternalAPIError,
+    SystemError,
+    ValidationError,
+)
+from app.services.centralized_logging import LogLevel, LogService, centralized_logger
 
 
 class ErrorHandler:
@@ -113,9 +117,7 @@ class ErrorHandler:
 
         return self.handle_algotrading_error(algotrading_error, request)
 
-    def _log_error(
-        self, error: AlgoTradingError, request: Optional[Request] = None
-    ) -> None:
+    def _log_error(self, error: AlgoTradingError, request: Optional[Request] = None) -> None:
         """Log error using centralized logging."""
 
         # Determine log level based on severity
@@ -151,13 +153,9 @@ class ErrorHandler:
         elif log_level == LogLevel.WARNING:
             centralized_logger.warning(service, error.message, metadata)
         elif log_level == LogLevel.ERROR:
-            centralized_logger.error(
-                service, error.message, metadata, str(error.original_error)
-            )
+            centralized_logger.error(service, error.message, metadata, str(error.original_error))
         elif log_level == LogLevel.CRITICAL:
-            centralized_logger.critical(
-                service, error.message, metadata, str(error.original_error)
-            )
+            centralized_logger.critical(service, error.message, metadata, str(error.original_error))
 
     def _get_http_status_code(self, severity: ErrorSeverity) -> int:
         """Get HTTP status code based on error severity."""
@@ -218,9 +216,7 @@ error_handler = ErrorHandler()
 
 
 # FastAPI exception handlers
-async def algotrading_exception_handler(
-    request: Request, exc: AlgoTradingError
-) -> JSONResponse:
+async def algotrading_exception_handler(request: Request, exc: AlgoTradingError) -> JSONResponse:
     """Handle AlgoTrading custom exceptions."""
     return error_handler.handle_algotrading_error(exc, request)
 

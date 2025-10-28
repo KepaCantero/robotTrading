@@ -10,8 +10,7 @@ from unittest.mock import patch
 import pytest
 from pydantic import ValidationError
 
-from app.core.config import (Settings, get_database_url, get_redis_url,
-                             get_settings)
+from app.core.config import Settings, get_database_url, get_redis_url, get_settings
 
 
 class TestSettings:
@@ -25,9 +24,7 @@ class TestSettings:
         assert settings.app_name == "AlgoTrading MVP"
         assert settings.app_version == "1.0.0"
         assert settings.app_description == "Algorithmic Trading System MVP"
-        assert (
-            settings.debug is True
-        )  # Changed because DEBUG=true is set in test_main.py
+        assert settings.debug is True  # Changed because DEBUG=true is set in test_main.py
 
         # API settings
         assert settings.api_v1_prefix == "/api/v1"
@@ -65,10 +62,7 @@ class TestSettings:
 
         # Logging settings
         assert settings.log_level == "INFO"
-        assert (
-            settings.log_format
-            == "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )
+        assert settings.log_format == "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
         assert settings.log_file is None
 
         # CORS settings
@@ -139,9 +133,7 @@ class TestSettings:
         with patch.dict(os.environ, {"DEBUG": "false", "SECRET_KEY": "short"}):
             with pytest.raises(ValidationError) as exc_info:
                 Settings()
-            assert "SECRET_KEY must be at least 32 characters long" in str(
-                exc_info.value
-            )
+            assert "SECRET_KEY must be at least 32 characters long" in str(exc_info.value)
 
         # Test with valid secret key (should pass)
         valid_key = "a" * 32  # 32 character key
@@ -165,18 +157,14 @@ class TestSettings:
     def test_cors_methods_parsing(self):
         """Test CORS methods parsing from string."""
         # Test with JSON array format (Pydantic v2 preferred)
-        with patch.dict(
-            os.environ, {"CORS_ALLOW_METHODS": '["GET","POST","PUT","DELETE"]'}
-        ):
+        with patch.dict(os.environ, {"CORS_ALLOW_METHODS": '["GET","POST","PUT","DELETE"]'}):
             settings = Settings()
             assert settings.cors_allow_methods == ["GET", "POST", "PUT", "DELETE"]
 
     def test_cors_headers_parsing(self):
         """Test CORS headers parsing from string."""
         # Test with JSON array format (Pydantic v2 preferred)
-        with patch.dict(
-            os.environ, {"CORS_ALLOW_HEADERS": '["Authorization","Content-Type"]'}
-        ):
+        with patch.dict(os.environ, {"CORS_ALLOW_HEADERS": '["Authorization","Content-Type"]'}):
             settings = Settings()
             assert settings.cors_allow_headers == ["Authorization", "Content-Type"]
 
@@ -193,16 +181,12 @@ class TestSettings:
 
         # Sync URL
         sync_url = settings.get_database_url_sync()
-        assert (
-            sync_url
-            == "postgresql://algotrading:algotrading@localhost:5432/algotrading"
-        )
+        assert sync_url == "postgresql://algotrading:algotrading@localhost:5432/algotrading"
 
         # Async URL
         async_url = settings.get_database_url_async()
         assert (
-            async_url
-            == "postgresql+asyncpg://algotrading:algotrading@localhost:5432/algotrading"
+            async_url == "postgresql+asyncpg://algotrading:algotrading@localhost:5432/algotrading"
         )
 
     def test_environment_detection(self):
@@ -335,10 +319,7 @@ class TestConfigurationIntegration:
 
             assert settings.app_name == "Override Test"
             assert settings.secret_key == "override-secret"
-            assert (
-                settings.database_url
-                == "postgresql://override:override@localhost:5432/override"
-            )
+            assert settings.database_url == "postgresql://override:override@localhost:5432/override"
 
     def test_boolean_environment_variables(self):
         """Test boolean environment variable parsing."""

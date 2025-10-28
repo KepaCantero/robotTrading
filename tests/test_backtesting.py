@@ -11,14 +11,23 @@ from decimal import Decimal
 import pytest
 
 from app.backtesting.engine import SimpleBacktester
-from app.backtesting.models import (BacktestConfig, BacktestResult,
-                                    PerformanceMetrics, Trade, TradeStatus)
+from app.backtesting.models import (
+    BacktestConfig,
+    BacktestResult,
+    PerformanceMetrics,
+    Trade,
+    TradeStatus,
+)
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from tests.fixtures.historical_data import (
-    create_contradictory_signals, create_single_day_market_data,
-    create_single_day_signals, create_spy_2020_ranging_market_data,
-    create_spy_2020_ranging_signals, create_spy_2020_trending_market_data,
-    create_spy_2020_trending_signals)
+    create_contradictory_signals,
+    create_single_day_market_data,
+    create_single_day_signals,
+    create_spy_2020_ranging_market_data,
+    create_spy_2020_ranging_signals,
+    create_spy_2020_trending_market_data,
+    create_spy_2020_trending_signals,
+)
 
 
 class TestSimpleBacktester:
@@ -303,9 +312,7 @@ class TestBacktestModels:
 
     def test_performance_metrics_inconsistent_trades(self):
         """Test PerformanceMetrics with inconsistent trade counts."""
-        with pytest.raises(
-            ValueError, match="Total trades must equal winning \\+ losing trades"
-        ):
+        with pytest.raises(ValueError, match="Total trades must equal winning \\+ losing trades"):
             PerformanceMetrics(
                 total_trades=10,
                 winning_trades=6,

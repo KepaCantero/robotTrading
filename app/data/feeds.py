@@ -14,8 +14,13 @@ from typing import Any, Dict, List, Optional
 
 import aiohttp
 
-from app.models.market_data import (DataFeedConfig, DataFeedType,
-                                    DataFrequency, HistoricalData, Quote)
+from app.models.market_data import (
+    DataFeedConfig,
+    DataFeedType,
+    DataFrequency,
+    HistoricalData,
+    Quote,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -63,9 +68,7 @@ class DataFeedInterface(ABC):
     async def subscribe_to_symbols(self, symbols: List[str]) -> bool:
         """Subscribe to real-time updates for symbols."""
 
-    async def _make_request(
-        self, url: str, params: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+    async def _make_request(self, url: str, params: Dict[str, Any] = None) -> Dict[str, Any]:
         """Make HTTP request with rate limiting and error handling."""
         async with self._rate_limiter:
             if not self.session:
@@ -153,9 +156,7 @@ class AlphaVantageFeed(DataFeedInterface):
                 volume=Decimal(quote_data.get("06. volume", "0")),
                 spread=Decimal("0.01"),  # Default spread
                 change=Decimal(quote_data.get("09. change", "0")),
-                change_percent=Decimal(
-                    quote_data.get("10. change percent", "0").replace("%", "")
-                ),
+                change_percent=Decimal(quote_data.get("10. change percent", "0").replace("%", "")),
                 feed_type=DataFeedType.ALPHA_VANTAGE,
                 metadata={"raw_data": quote_data},
             )
@@ -186,9 +187,7 @@ class AlphaVantageFeed(DataFeedInterface):
         params = {"function": function, "symbol": symbol, "apikey": self.config.api_key}
 
         if frequency in [DataFrequency.HOURLY, DataFrequency.FIVE_MINUTES]:
-            params["interval"] = (
-                "5min" if frequency == DataFrequency.FIVE_MINUTES else "60min"
-            )
+            params["interval"] = "5min" if frequency == DataFrequency.FIVE_MINUTES else "60min"
 
         try:
             data = await self._make_request(self.base_url, params)
@@ -494,9 +493,7 @@ class MockDataFeed(DataFeedInterface):
 
         while current_date <= end_date:
             # Generate realistic price movement
-            price_change = Decimal(
-                str(0.01 * (hash(str(current_date)) % 20 - 10))
-            )  # ±10%
+            price_change = Decimal(str(0.01 * (hash(str(current_date)) % 20 - 10)))  # ±10%
             price = base_price * (Decimal("1") + price_change)
 
             historical_data.append(

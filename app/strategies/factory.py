@@ -33,7 +33,7 @@ class StrategyFactory:
             ValueError: Si la clase no hereda de BaseStrategy
         """
         if not issubclass(strategy_class, BaseStrategy):
-            raise ValueError(f"Strategy class must inherit from BaseStrategy")
+            raise ValueError("Strategy class must inherit from BaseStrategy")
 
         self.strategy_registry[name] = strategy_class
         logger.info(f"Registered strategy: {name} -> {strategy_class.__name__}")
@@ -68,9 +68,7 @@ class StrategyFactory:
                     f"Invalid configuration for strategy '{name}'. Required: {required_params}"
                 )
 
-            logger.info(
-                f"Created strategy: {name} with config keys: {list(config.keys())}"
-            )
+            logger.info(f"Created strategy: {name} with config keys: {list(config.keys())}")
             return strategy
 
         except Exception as e:
@@ -146,15 +144,11 @@ class StrategyFactory:
             self.register_strategy("mean_reversion", MeanReversionStrategy)
             self.register_strategy("pairs_trading", PairsTradingStrategy)
 
-            logger.info(
-                "Registered default strategies: momentum, mean_reversion, pairs_trading"
-            )
+            logger.info("Registered default strategies: momentum, mean_reversion, pairs_trading")
 
         except ImportError as e:
             logger.warning(f"Could not import default strategies: {e}")
-            logger.info(
-                "Default strategies will be registered when their modules are available"
-            )
+            logger.info("Default strategies will be registered when their modules are available")
 
     def reload_strategies(self) -> None:
         """Recargar estrategias por defecto."""

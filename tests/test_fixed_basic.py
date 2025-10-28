@@ -207,8 +207,7 @@ def test_configuration_loading():
 def test_model_validation():
     """Test model validation."""
     try:
-        from app.core.centralized_config import (StrategyConfig,
-                                                 TradingThresholds)
+        from app.core.centralized_config import StrategyConfig, TradingThresholds
 
         # Test TradingThresholds validation
         thresholds = TradingThresholds()

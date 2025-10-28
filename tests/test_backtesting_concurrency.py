@@ -107,17 +107,11 @@ class TestBacktestingConcurrency:
 
         self.backtesting_service.analyze_backtest_result = mock_analyze_backtest_result
         self.backtesting_service.optimize_parameters = mock_optimize_parameters
-        self.backtesting_service.compare_backtest_results = (
-            mock_compare_backtest_results
-        )
+        self.backtesting_service.compare_backtest_results = mock_compare_backtest_results
         self.backtesting_service._execute_backtest_sync = mock_execute_backtest_sync
         self.backtesting_service.load_backtest_data = mock_load_backtest_data
-        self.backtesting_service.validate_backtest_config = (
-            mock_validate_backtest_config
-        )
-        self.backtesting_service.generate_backtest_report = (
-            mock_generate_backtest_report
-        )
+        self.backtesting_service.validate_backtest_config = mock_validate_backtest_config
+        self.backtesting_service.generate_backtest_report = mock_generate_backtest_report
 
     @pytest.mark.asyncio
     async def test_concurrent_backtest_execution(self):
@@ -150,18 +144,12 @@ class TestBacktestingConcurrency:
                     "win_rate": Decimal("0.6"),
                     "sharpe_ratio": Decimal("1.2"),
                 }
-                results.append(
-                    {"config_id": id(config), "result": result, "success": True}
-                )
+                results.append({"config_id": id(config), "result": result, "success": True})
             except Exception as e:
-                results.append(
-                    {"config_id": id(config), "error": str(e), "success": False}
-                )
+                results.append({"config_id": id(config), "error": str(e), "success": False})
 
         # Crear tareas concurrentes
-        tasks = [
-            asyncio.create_task(execute_backtest(config)) for config in backtest_configs
-        ]
+        tasks = [asyncio.create_task(execute_backtest(config)) for config in backtest_configs]
         await asyncio.gather(*tasks)
 
         # Verificar resultados
@@ -205,18 +193,13 @@ class TestBacktestingConcurrency:
         async def optimize_parameters(config: BacktestConfig):
             try:
                 optimized = await self.backtesting_service.optimize_parameters(config)
-                results.append(
-                    {"config_id": id(config), "optimized": optimized, "success": True}
-                )
+                results.append({"config_id": id(config), "optimized": optimized, "success": True})
             except Exception as e:
-                results.append(
-                    {"config_id": id(config), "error": str(e), "success": False}
-                )
+                results.append({"config_id": id(config), "error": str(e), "success": False})
 
         # Crear tareas concurrentes
         tasks = [
-            asyncio.create_task(optimize_parameters(config))
-            for config in optimization_configs
+            asyncio.create_task(optimize_parameters(config)) for config in optimization_configs
         ]
         await asyncio.gather(*tasks)
 
@@ -261,9 +244,7 @@ class TestBacktestingConcurrency:
 
         async def analyze_backtest_result(result: BacktestResult):
             try:
-                analysis = await self.backtesting_service.analyze_backtest_result(
-                    result
-                )
+                analysis = await self.backtesting_service.analyze_backtest_result(result)
                 results.append(
                     {
                         "strategy": result.strategy_name,
@@ -282,8 +263,7 @@ class TestBacktestingConcurrency:
 
         # Crear tareas concurrentes
         tasks = [
-            asyncio.create_task(analyze_backtest_result(result))
-            for result in backtest_results
+            asyncio.create_task(analyze_backtest_result(result)) for result in backtest_results
         ]
         await asyncio.gather(*tasks)
 
@@ -416,9 +396,7 @@ class TestBacktestingConcurrency:
         assert len(errors) == 0
 
         # Verificar que no hay duplicados
-        strategy_names = [
-            r.get("strategy_name") for r in results if isinstance(r, dict)
-        ]
+        strategy_names = [r.get("strategy_name") for r in results if isinstance(r, dict)]
         assert len(set(strategy_names)) == 12
 
     @pytest.mark.asyncio
@@ -453,15 +431,10 @@ class TestBacktestingConcurrency:
                     }
                 )
             except Exception as e:
-                results.append(
-                    {"symbol": config["symbol"], "error": str(e), "success": False}
-                )
+                results.append({"symbol": config["symbol"], "error": str(e), "success": False})
 
         # Crear tareas concurrentes
-        tasks = [
-            asyncio.create_task(load_backtest_data(config))
-            for config in data_loading_configs
-        ]
+        tasks = [asyncio.create_task(load_backtest_data(config)) for config in data_loading_configs]
         await asyncio.gather(*tasks)
 
         # Verificar resultados
@@ -529,9 +502,7 @@ class TestBacktestingConcurrency:
 
         async def validate_backtest_config(config: BacktestConfig):
             try:
-                is_valid = await self.backtesting_service.validate_backtest_config(
-                    config
-                )
+                is_valid = await self.backtesting_service.validate_backtest_config(config)
                 results.append(
                     {
                         "strategy_name": config.strategy_name,
@@ -551,10 +522,7 @@ class TestBacktestingConcurrency:
                 )
 
         # Crear tareas concurrentes
-        tasks = [
-            asyncio.create_task(validate_backtest_config(config))
-            for config in all_configs
-        ]
+        tasks = [asyncio.create_task(validate_backtest_config(config)) for config in all_configs]
         await asyncio.gather(*tasks)
 
         # Verificar resultados
@@ -621,8 +589,7 @@ class TestBacktestingConcurrency:
 
         # Crear tareas concurrentes
         tasks = [
-            asyncio.create_task(generate_backtest_report(result))
-            for result in backtest_results
+            asyncio.create_task(generate_backtest_report(result)) for result in backtest_results
         ]
         await asyncio.gather(*tasks)
 

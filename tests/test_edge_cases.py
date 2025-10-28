@@ -336,19 +336,14 @@ class TestTechnicalIndicatorsEdgeCases:
 
         # All indicators should handle empty lists gracefully
         assert TechnicalIndicatorCalculator.calculate_rsi(empty_prices) is None
-        assert (
-            TechnicalIndicatorCalculator.calculate_ema(empty_prices, period=10) is None
-        )
+        assert TechnicalIndicatorCalculator.calculate_ema(empty_prices, period=10) is None
         assert TechnicalIndicatorCalculator.calculate_macd(empty_prices) == (
             None,
             None,
             None,
         )
         assert TechnicalIndicatorCalculator.calculate_atr([], [], []) is None
-        assert (
-            TechnicalIndicatorCalculator.calculate_volume_sma(empty_volumes, period=10)
-            is None
-        )
+        assert TechnicalIndicatorCalculator.calculate_volume_sma(empty_volumes, period=10) is None
 
     def test_indicators_with_single_value(self):
         """Test all indicators with single value."""
@@ -357,18 +352,13 @@ class TestTechnicalIndicatorsEdgeCases:
 
         # All indicators should handle single values gracefully
         assert TechnicalIndicatorCalculator.calculate_rsi(single_price) is None
-        assert (
-            TechnicalIndicatorCalculator.calculate_ema(single_price, period=1) == 100.0
-        )
+        assert TechnicalIndicatorCalculator.calculate_ema(single_price, period=1) == 100.0
         assert TechnicalIndicatorCalculator.calculate_macd(single_price) == (
             None,
             None,
             None,
         )
-        assert (
-            TechnicalIndicatorCalculator.calculate_atr([100.0], [100.0], [100.0])
-            is None
-        )
+        assert TechnicalIndicatorCalculator.calculate_atr([100.0], [100.0], [100.0]) is None
         assert TechnicalIndicatorCalculator.calculate_volume_sma(
             single_volume, period=1
         ) == Decimal("1000.0")
@@ -398,10 +388,7 @@ class TestTechnicalIndicatorsEdgeCases:
             )
             is None
         )
-        assert (
-            TechnicalIndicatorCalculator.calculate_volume_sma(volumes, period=100)
-            is None
-        )
+        assert TechnicalIndicatorCalculator.calculate_volume_sma(volumes, period=100) is None
 
     def test_indicators_with_negative_periods(self):
         """Test indicators with negative periods."""
@@ -486,9 +473,7 @@ class TestRiskCalculationEdgeCases:
         # ZeroDivisionError
         risk_amount = account_balance * risk_per_trade
         position_size = risk_amount / (price - stop_loss)
-        assert position_size == Decimal(
-            "-1.052631578947368421052631579"
-        )  # Negative result
+        assert position_size == Decimal("-1.052631578947368421052631579")  # Negative result
 
     def test_position_sizing_with_zero_stop_loss(self):
         """Test position sizing with zero stop loss."""
@@ -576,11 +561,8 @@ class TestSignalEdgeCases:
         for timestamp in timestamps:
             # Future timestamps should be rejected
             if timestamp > datetime.utcnow():
-                with pytest.raises(
-                    ValueError, match="Timestamp cannot be in the future"
-                ):
-                    from app.models.signal import (Signal, SignalSource,
-                                                   SignalStrength, SignalType)
+                with pytest.raises(ValueError, match="Timestamp cannot be in the future"):
+                    from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
                     Signal(
                         symbol="TEST_SYMBOL",
@@ -599,8 +581,7 @@ class TestSignalEdgeCases:
         """Test signal generation with future timestamps."""
         from datetime import datetime, timedelta
 
-        from app.models.signal import (Signal, SignalSource, SignalStrength,
-                                       SignalType)
+        from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
         future_time = datetime.utcnow() + timedelta(days=1)
 
@@ -620,8 +601,7 @@ class TestSignalEdgeCases:
 
     def test_signal_with_incomplete_inputs(self):
         """Test signal generation with incomplete inputs."""
-        from app.models.signal import (Signal, SignalSource, SignalStrength,
-                                       SignalType)
+        from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
         # Test with complete signal - should work
         signal = Signal(
@@ -639,8 +619,7 @@ class TestSignalEdgeCases:
 
     def test_signal_with_extreme_confidence_values(self):
         """Test signal generation with extreme confidence values."""
-        from app.models.signal import (Signal, SignalSource, SignalStrength,
-                                       SignalType)
+        from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
         # Test with confidence = 0
         signal = Signal(

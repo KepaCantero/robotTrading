@@ -57,12 +57,8 @@ class VolatilityMetrics(BaseModel):
     """Métricas de volatilidad del mercado."""
 
     current_volatility: Decimal = Field(..., ge=0, description="Volatilidad actual")
-    historical_volatility: Decimal = Field(
-        ..., ge=0, description="Volatilidad histórica"
-    )
-    volatility_percentile: float = Field(
-        ..., ge=0, le=100, description="Percentil de volatilidad"
-    )
+    historical_volatility: Decimal = Field(..., ge=0, description="Volatilidad histórica")
+    volatility_percentile: float = Field(..., ge=0, le=100, description="Percentil de volatilidad")
     volatility_trend: str = Field(..., description="Tendencia de volatilidad")
     volatility_regime: MarketCondition
 
@@ -80,12 +76,8 @@ class LiquidityMetrics(BaseModel):
 
     bid_ask_spread: Decimal = Field(..., ge=0, description="Spread bid-ask")
     volume_24h: Decimal = Field(..., ge=0, description="Volumen 24h")
-    order_book_depth: Decimal = Field(
-        ..., ge=0, description="Profundidad del order book"
-    )
-    liquidity_score: float = Field(
-        ..., ge=0, le=1, description="Score de liquidez (0-1)"
-    )
+    order_book_depth: Decimal = Field(..., ge=0, description="Profundidad del order book")
+    liquidity_score: float = Field(..., ge=0, le=1, description="Score de liquidez (0-1)")
     liquidity_regime: MarketCondition
 
     @field_validator("bid_ask_spread")
@@ -101,9 +93,7 @@ class OrderSizeImpact(BaseModel):
     """Impacto del tamaño de la orden en el slippage."""
 
     order_size: Decimal = Field(..., gt=0, description="Tamaño de la orden")
-    market_cap_ratio: Decimal = Field(
-        ..., ge=0, le=1, description="Ratio orden/capitalización"
-    )
+    market_cap_ratio: Decimal = Field(..., ge=0, le=1, description="Ratio orden/capitalización")
     impact_multiplier: float = Field(..., ge=1, description="Multiplicador de impacto")
 
     @field_validator("market_cap_ratio")
@@ -133,9 +123,7 @@ class DynamicSlippageAnalysis(BaseModel):
 
     # Resultados
     total_slippage: Decimal = Field(..., ge=0, description="Slippage total calculado")
-    slippage_confidence: float = Field(
-        ..., ge=0, le=1, description="Confianza en el cálculo"
-    )
+    slippage_confidence: float = Field(..., ge=0, le=1, description="Confianza en el cálculo")
     market_condition: MarketCondition
     calculation_timestamp: datetime = Field(default_factory=datetime.now)
 
@@ -151,9 +139,7 @@ class DynamicSlippageAnalysis(BaseModel):
             raise ValueError("Total slippage cannot exceed 15%")
         return v
 
-    def get_slippage_by_type(
-        self, slippage_type: SlippageType
-    ) -> Optional[SlippageComponent]:
+    def get_slippage_by_type(self, slippage_type: SlippageType) -> Optional[SlippageComponent]:
         """Obtener componente de slippage por tipo."""
         for component in self.slippage_components:
             if component.slippage_type == slippage_type:
@@ -199,9 +185,7 @@ class SlippageCalculationParams(BaseModel):
         """Validar que el threshold extremo sea mayor que el alto."""
         if "volatility_threshold_high" in info.data:
             if v <= info.data["volatility_threshold_high"]:
-                raise ValueError(
-                    "Extreme threshold must be greater than high threshold"
-                )
+                raise ValueError("Extreme threshold must be greater than high threshold")
         return v
 
 
@@ -227,9 +211,7 @@ class SlippageHistory(BaseModel):
     def get_average_slippage(self, days: int = 7) -> Optional[Decimal]:
         """Obtener slippage promedio de los últimos N días."""
         cutoff_date = datetime.now() - timedelta(days=days)
-        recent_analyses = [
-            a for a in self.analyses if a.calculation_timestamp >= cutoff_date
-        ]
+        recent_analyses = [a for a in self.analyses if a.calculation_timestamp >= cutoff_date]
 
         if not recent_analyses:
             return None

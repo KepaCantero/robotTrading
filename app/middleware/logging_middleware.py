@@ -15,16 +15,13 @@ except ImportError:
 
 from starlette.middleware.base import RequestResponseEndpoint
 
-from app.services.centralized_logging import (LogService, centralized_logger,
-                                              log_performance)
+from app.services.centralized_logging import LogService, centralized_logger, log_performance
 
 
 class LoggingMiddleware(BaseHTTPMiddleware):
     """Middleware for logging HTTP requests and responses."""
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         """Log HTTP requests and responses."""
         # Generate request ID
         request_id = str(uuid.uuid4())
@@ -98,9 +95,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 class TradingLoggingMiddleware(BaseHTTPMiddleware):
     """Middleware for logging trading-specific requests."""
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         """Log trading-specific requests."""
         # Check if this is a trading endpoint
         if request.url.path.startswith("/api/trading/"):
@@ -137,9 +132,7 @@ class TradingLoggingMiddleware(BaseHTTPMiddleware):
 class PortfolioLoggingMiddleware(BaseHTTPMiddleware):
     """Middleware for logging portfolio-specific requests."""
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         """Log portfolio-specific requests."""
         # Check if this is a portfolio endpoint
         if request.url.path.startswith("/api/portfolio/"):
@@ -176,9 +169,7 @@ class PortfolioLoggingMiddleware(BaseHTTPMiddleware):
 class MarketDataLoggingMiddleware(BaseHTTPMiddleware):
     """Middleware for logging market data requests."""
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         """Log market data requests."""
         # Check if this is a market data endpoint
         if request.url.path.startswith("/api/market-data/"):

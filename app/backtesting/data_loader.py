@@ -8,7 +8,7 @@ Provides functionality to load historical market data from various sources:
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import List, Optional
@@ -16,7 +16,7 @@ from typing import List, Optional
 import pandas as pd
 import yfinance as yf
 
-from app.models.market_data import DataFrequency, Quote
+from app.models.market_data import Quote
 
 logger = logging.getLogger(__name__)
 
@@ -73,10 +73,10 @@ class DataLoader:
         try:
             # Read CSV and handle both 'date' and 'timestamp' column names
             df = pd.read_csv(file_path)
-            
+
             # Normalize column names to lowercase
             df.columns = df.columns.str.lower()
-            
+
             # Handle 'date' or 'timestamp' column
             date_col = 'date' if 'date' in df.columns else 'timestamp'
             df[date_col] = pd.to_datetime(df[date_col])
@@ -86,8 +86,12 @@ class DataLoader:
 
             quotes = []
             for _, row in df.iterrows():
-                timestamp = row[date_col] if isinstance(row[date_col], datetime) else pd.to_datetime(row[date_col]).to_pydatetime()
-                
+                timestamp = (
+                    row[date_col]
+                    if isinstance(row[date_col], datetime)
+                    else pd.to_datetime(row[date_col]).to_pydatetime()
+                )
+
                 quote = Quote(
                     symbol=symbol,
                     bid=Decimal(str(row["close"])),

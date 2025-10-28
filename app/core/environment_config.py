@@ -94,9 +94,7 @@ class RedisConfig(BaseSettings):
     # Connection settings
     redis_max_connections: int = Field(default=10, env="REDIS_MAX_CONNECTIONS")
     redis_socket_timeout: int = Field(default=5, env="REDIS_SOCKET_TIMEOUT")
-    redis_socket_connect_timeout: int = Field(
-        default=5, env="REDIS_SOCKET_CONNECT_TIMEOUT"
-    )
+    redis_socket_connect_timeout: int = Field(default=5, env="REDIS_SOCKET_CONNECT_TIMEOUT")
 
     # SSL
     redis_ssl: bool = Field(default=False, env="REDIS_SSL")
@@ -130,12 +128,8 @@ class APIConfig(BaseSettings):
     api_workers: int = Field(default=1, env="API_WORKERS")
 
     # Security
-    secret_key: str = Field(
-        default="12345678901234567890123456789012", env="SECRET_KEY"
-    )
-    access_token_expire_minutes: int = Field(
-        default=30, env="ACCESS_TOKEN_EXPIRE_MINUTES"
-    )
+    secret_key: str = Field(default="12345678901234567890123456789012", env="SECRET_KEY")
+    access_token_expire_minutes: int = Field(default=30, env="ACCESS_TOKEN_EXPIRE_MINUTES")
     refresh_token_expire_days: int = Field(default=7, env="REFRESH_TOKEN_EXPIRE_DAYS")
 
     # CORS
@@ -282,9 +276,7 @@ class CentralizedConfig(BaseSettings):
     api: APIConfig = Field(default_factory=APIConfig, env="API")
     trading: TradingConfig = Field(default_factory=TradingConfig, env="TRADING")
     logging: LoggingConfig = Field(default_factory=LoggingConfig, env="LOGGING")
-    monitoring: MonitoringConfig = Field(
-        default_factory=MonitoringConfig, env="MONITORING"
-    )
+    monitoring: MonitoringConfig = Field(default_factory=MonitoringConfig, env="MONITORING")
 
     model_config = {
         "env_file": ".env",
@@ -302,9 +294,7 @@ class CentralizedConfig(BaseSettings):
             # Validate environment-specific settings
             if self.environment == Environment.PRODUCTION:
                 if self.debug:
-                    raise_configuration_error(
-                        "Debug mode cannot be enabled in production", "debug"
-                    )
+                    raise_configuration_error("Debug mode cannot be enabled in production", "debug")
 
                 if self.api.secret_key == "12345678901234567890123456789012":
                     raise_configuration_error(
@@ -318,10 +308,7 @@ class CentralizedConfig(BaseSettings):
                 )
 
             # Validate database configuration
-            if (
-                not self.database.db_password
-                and self.environment == Environment.PRODUCTION
-            ):
+            if not self.database.db_password and self.environment == Environment.PRODUCTION:
                 raise_configuration_error(
                     "Database password is required in production", "db_password"
                 )
@@ -391,9 +378,7 @@ def set_config(config: CentralizedConfig) -> None:
 def load_config_from_file(file_path: str) -> CentralizedConfig:
     """Load configuration from a specific file."""
     if not Path(file_path).exists():
-        raise_configuration_error(
-            f"Configuration file not found: {file_path}", "file_path"
-        )
+        raise_configuration_error(f"Configuration file not found: {file_path}", "file_path")
 
     # Set environment variable to load from specific file
     os.environ["ENV_FILE"] = file_path

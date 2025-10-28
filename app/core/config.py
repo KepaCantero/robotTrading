@@ -45,12 +45,8 @@ class Settings(BaseSettings):
         default="postgresql://algotrading:algotrading@localhost:5432/algotrading",
         description="PostgreSQL database URL",
     )
-    database_echo: bool = Field(
-        default=False, description="Enable SQLAlchemy query logging"
-    )
-    database_pool_size: int = Field(
-        default=10, description="Database connection pool size"
-    )
+    database_echo: bool = Field(default=False, description="Enable SQLAlchemy query logging")
+    database_pool_size: int = Field(default=10, description="Database connection pool size")
     database_max_overflow: int = Field(
         default=20, description="Database connection pool max overflow"
     )
@@ -60,13 +56,9 @@ class Settings(BaseSettings):
         default="redis://localhost:6379/0",
         description="Redis URL for caching and task queue",
     )
-    redis_password: Optional[str] = Field(
-        default=None, description="Redis password (optional)"
-    )
+    redis_password: Optional[str] = Field(default=None, description="Redis password (optional)")
     redis_db: int = Field(default=0, description="Redis database number")
-    redis_max_connections: int = Field(
-        default=10, description="Redis connection pool size"
-    )
+    redis_max_connections: int = Field(default=10, description="Redis connection pool size")
 
     # Celery Settings
     celery_broker_url: str = Field(
@@ -75,30 +67,20 @@ class Settings(BaseSettings):
     celery_result_backend: str = Field(
         default="redis://localhost:6379/2", description="Celery result backend URL"
     )
-    celery_task_serializer: str = Field(
-        default="json", description="Celery task serializer"
-    )
-    celery_result_serializer: str = Field(
-        default="json", description="Celery result serializer"
-    )
+    celery_task_serializer: str = Field(default="json", description="Celery task serializer")
+    celery_result_serializer: str = Field(default="json", description="Celery result serializer")
     celery_accept_content: List[str] = Field(
         default=["json"], description="Celery accepted content types"
     )
 
     # Trading API Keys (for production, these should be loaded from secure vault)
     # Interactive Brokers
-    ib_api_key: Optional[str] = Field(
-        default=None, description="Interactive Brokers API key"
-    )
-    ib_secret: Optional[str] = Field(
-        default=None, description="Interactive Brokers API secret"
-    )
+    ib_api_key: Optional[str] = Field(default=None, description="Interactive Brokers API key")
+    ib_secret: Optional[str] = Field(default=None, description="Interactive Brokers API secret")
 
     # Binance
     binance_api_key: Optional[str] = Field(default=None, description="Binance API key")
-    binance_secret: Optional[str] = Field(
-        default=None, description="Binance API secret"
-    )
+    binance_secret: Optional[str] = Field(default=None, description="Binance API secret")
 
     # Alpha Vantage (Market Data)
     alpha_vantage_api_key: Optional[str] = Field(
@@ -120,21 +102,13 @@ class Settings(BaseSettings):
         default="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         description="Logging format",
     )
-    log_file: Optional[str] = Field(
-        default=None, description="Log file path (optional)"
-    )
+    log_file: Optional[str] = Field(default=None, description="Log file path (optional)")
 
     # CORS Settings
     cors_origins: List[str] = Field(default=["*"], description="CORS allowed origins")
-    cors_allow_credentials: bool = Field(
-        default=True, description="CORS allow credentials"
-    )
-    cors_allow_methods: List[str] = Field(
-        default=["*"], description="CORS allowed methods"
-    )
-    cors_allow_headers: List[str] = Field(
-        default=["*"], description="CORS allowed headers"
-    )
+    cors_allow_credentials: bool = Field(default=True, description="CORS allow credentials")
+    cors_allow_methods: List[str] = Field(default=["*"], description="CORS allowed methods")
+    cors_allow_headers: List[str] = Field(default=["*"], description="CORS allowed headers")
 
     # Security Settings
     password_min_length: int = Field(default=8, description="Minimum password length")
@@ -144,20 +118,14 @@ class Settings(BaseSettings):
     password_require_lowercase: bool = Field(
         default=True, description="Require lowercase letters in password"
     )
-    password_require_numbers: bool = Field(
-        default=True, description="Require numbers in password"
-    )
+    password_require_numbers: bool = Field(default=True, description="Require numbers in password")
     password_require_special: bool = Field(
         default=True, description="Require special characters in password"
     )
 
     # Rate Limiting
-    rate_limit_requests: int = Field(
-        default=100, description="Rate limit requests per minute"
-    )
-    rate_limit_window: int = Field(
-        default=60, description="Rate limit window in seconds"
-    )
+    rate_limit_requests: int = Field(default=100, description="Rate limit requests per minute")
+    rate_limit_window: int = Field(default=60, description="Rate limit window in seconds")
 
     model_config = ConfigDict(
         env_file=".env",
@@ -238,9 +206,7 @@ class Settings(BaseSettings):
     def get_database_url_async(self) -> str:
         """Get asynchronous database URL."""
         if self.database_url.startswith("postgresql://"):
-            return self.database_url.replace(
-                "postgresql://", "postgresql+asyncpg://", 1
-            )
+            return self.database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
         return self.database_url
 
     def is_production(self) -> bool:

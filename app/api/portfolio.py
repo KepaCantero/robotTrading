@@ -63,9 +63,7 @@ async def get_portfolio_summary(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting portfolio: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting portfolio: {str(e)}")
 
 
 @router.get("/positions", response_model=List[Position])
@@ -81,15 +79,11 @@ async def get_positions(service: PortfolioService = Depends(get_portfolio_servic
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting positions: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting positions: {str(e)}")
 
 
 @router.get("/positions/{symbol}", response_model=Position)
-async def get_position(
-    symbol: str, service: PortfolioService = Depends(get_portfolio_service)
-):
+async def get_position(symbol: str, service: PortfolioService = Depends(get_portfolio_service)):
     """Get specific position by symbol."""
     try:
         position = await service.get_position(symbol.upper())
@@ -111,9 +105,7 @@ async def get_asset_universe(
         universe = await service.get_asset_universe()
         return universe
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting asset universe: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting asset universe: {str(e)}")
 
 
 @router.get("/market-regime/{symbol}", response_model=MarketRegimeData)
@@ -131,9 +123,7 @@ async def get_market_regime(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting market regime: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting market regime: {str(e)}")
 
 
 @router.post("/simulate-trade", response_model=TradeResponse)
@@ -144,15 +134,9 @@ async def simulate_trade(
     """Simulate a trade execution."""
     try:
         quantity = Decimal(str(trade_request.quantity))
-        price = (
-            Decimal(str(trade_request.price))
-            if trade_request.price is not None
-            else None
-        )
+        price = Decimal(str(trade_request.price)) if trade_request.price is not None else None
 
-        success = await service.simulate_trade(
-            trade_request.symbol.upper(), quantity, price
-        )
+        success = await service.simulate_trade(trade_request.symbol.upper(), quantity, price)
 
         if success:
             return TradeResponse(
@@ -197,9 +181,7 @@ async def reset_circuit_breaker(
         service.reset_circuit_breaker(name)
         return {"message": f"Circuit breaker {name} reset successfully"}
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error resetting circuit breaker: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error resetting circuit breaker: {str(e)}")
 
 
 @router.get("/health")
@@ -210,9 +192,7 @@ async def portfolio_health_check(
     try:
         # Check if any circuit breakers are open
         status = service.get_circuit_breaker_status()
-        open_breakers = [
-            name for name, info in status.items() if info["state"] == "open"
-        ]
+        open_breakers = [name for name, info in status.items() if info["state"] == "open"]
 
         if open_breakers:
             return {

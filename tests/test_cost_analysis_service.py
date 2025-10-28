@@ -9,8 +9,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 
 from app.backtesting.models import Trade, TradeStatus
-from app.services.cost_analysis_service import (CostAnalysisResult,
-                                                CostAnalysisService)
+from app.services.cost_analysis_service import CostAnalysisResult, CostAnalysisService
 
 
 class TestCostAnalysisService:
@@ -48,9 +47,7 @@ class TestCostAnalysisService:
 
     def test_analyze_trade_costs_market_order(self):
         """Test cost analysis for market order."""
-        breakdown = self.service.analyze_trade_costs(
-            self.sample_trade, self.sample_market_data
-        )
+        breakdown = self.service.analyze_trade_costs(self.sample_trade, self.sample_market_data)
 
         assert breakdown.trade_id == "test_trade_1"
         assert breakdown.symbol == "AAPL"
@@ -77,9 +74,7 @@ class TestCostAnalysisService:
             commission=Decimal("0.75"),
             slippage=Decimal("0.00"),  # Limit orders have no slippage
         )
-        breakdown = self.service.analyze_trade_costs(
-            limit_trade, self.sample_market_data
-        )
+        breakdown = self.service.analyze_trade_costs(limit_trade, self.sample_market_data)
 
         # Still calculates slippage based on market conditions
         assert breakdown.slippage > Decimal("0")
@@ -102,13 +97,9 @@ class TestCostAnalysisService:
             commission=Decimal("0.75"),
             slippage=Decimal("0.15"),
         )
-        breakdown = self.service.analyze_trade_costs(
-            short_trade, self.sample_market_data
-        )
+        breakdown = self.service.analyze_trade_costs(short_trade, self.sample_market_data)
 
-        assert breakdown.borrowing_cost > Decimal(
-            "0"
-        )  # Short position has borrowing cost
+        assert breakdown.borrowing_cost > Decimal("0")  # Short position has borrowing cost
         assert breakdown.total_cost > Decimal("0")
 
     def test_analyze_strategy_costs_profitable(self):
@@ -156,9 +147,7 @@ class TestCostAnalysisService:
 
     def test_analyze_strategy_costs_empty_trades(self):
         """Test cost analysis with empty trades list."""
-        result = self.service.analyze_strategy_costs(
-            [], "Empty Strategy", self.sample_market_data
-        )
+        result = self.service.analyze_strategy_costs([], "Empty Strategy", self.sample_market_data)
 
         assert result.strategy_name == "Empty Strategy"
         assert result.total_trades == 0
@@ -215,9 +204,7 @@ class TestCostAnalysisService:
     def test_cost_impact_ratio_calculation(self):
         """Test Cost Impact Ratio (CIR) calculation."""
         trades = [self.sample_trade]
-        result = self.service.analyze_strategy_costs(
-            trades, "CIR Test", self.sample_market_data
-        )
+        result = self.service.analyze_strategy_costs(trades, "CIR Test", self.sample_market_data)
 
         # CIR should be (total_costs / gross_profit) * 100
         expected_cir = (result.total_costs / result.gross_profit) * 100
@@ -260,12 +247,8 @@ class TestCostAnalysisService:
             commission=Decimal("5.00"),
             slippage=Decimal("25.00"),
         )
-        equity_breakdown = self.service.analyze_trade_costs(
-            equity_trade, self.sample_market_data
-        )
-        crypto_breakdown = self.service.analyze_trade_costs(
-            crypto_trade, self.sample_market_data
-        )
+        equity_breakdown = self.service.analyze_trade_costs(equity_trade, self.sample_market_data)
+        crypto_breakdown = self.service.analyze_trade_costs(crypto_trade, self.sample_market_data)
 
         # Crypto should have lower commission rate
         assert crypto_breakdown.commission < equity_breakdown.commission
@@ -295,9 +278,7 @@ class TestCostAnalysisService:
         high_vol_breakdown = self.service.analyze_trade_costs(
             self.sample_trade, high_vol_market_data
         )
-        low_vol_breakdown = self.service.analyze_trade_costs(
-            self.sample_trade, low_vol_market_data
-        )
+        low_vol_breakdown = self.service.analyze_trade_costs(self.sample_trade, low_vol_market_data)
 
         # High volatility should result in higher slippage
         assert high_vol_breakdown.slippage > low_vol_breakdown.slippage
@@ -394,17 +375,13 @@ class TestCostAnalysisService:
         # cost is always applied)
         # Infrastructure cost is always applied
         assert breakdown.total_cost > Decimal("0")
-        assert breakdown.infrastructure_cost == Decimal(
-            "0.50"
-        )  # Fixed infrastructure cost
+        assert breakdown.infrastructure_cost == Decimal("0.50")  # Fixed infrastructure cost
         assert breakdown.cost_percentage > Decimal("0")  # Should calculate percentage
         assert breakdown.cost_impact_ratio == Decimal("0")  # No profit, so CIR is 0
 
     def test_cost_breakdown_serialization(self):
         """Test that cost breakdown can be serialized."""
-        breakdown = self.service.analyze_trade_costs(
-            self.sample_trade, self.sample_market_data
-        )
+        breakdown = self.service.analyze_trade_costs(self.sample_trade, self.sample_market_data)
 
         # Test that all fields are present and have correct types
         assert isinstance(breakdown.trade_id, str)

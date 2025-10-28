@@ -355,11 +355,7 @@ class TestAWSInfrastructureConfig:
             user_data = f.read()
 
         # Check that error handling is in place
-        assert (
-            "set -e" in user_data
-            or "set -o errexit" in user_data
-            or "exec > >(tee" in user_data
-        )
+        assert "set -e" in user_data or "set -o errexit" in user_data or "exec > >(tee" in user_data
 
     def test_resource_cleanup(self):
         """Test resource cleanup configuration."""
@@ -463,12 +459,8 @@ class TestAWSInfrastructureConfig:
             content = f.read()
 
         # Basic syntax checks
-        assert content.count("{") == content.count(
-            "}"
-        ), "Unmatched braces in Terraform file"
-        assert content.count("[") == content.count(
-            "]"
-        ), "Unmatched brackets in Terraform file"
+        assert content.count("{") == content.count("}"), "Unmatched braces in Terraform file"
+        assert content.count("[") == content.count("]"), "Unmatched brackets in Terraform file"
 
     def test_script_readability(self):
         """Test that scripts are readable."""

@@ -10,8 +10,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, Optional
 
-from pydantic import (BaseModel, ConfigDict, Field, field_validator,
-                      model_validator)
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class OrderType(str, Enum):
@@ -59,30 +58,16 @@ class Order(BaseModel):
     order_type: OrderType = Field(..., description="Order type")
     quantity: Decimal = Field(..., description="Order quantity")
     price: Optional[Decimal] = Field(None, description="Order price (for limit orders)")
-    stop_price: Optional[Decimal] = Field(
-        None, description="Stop price (for stop orders)"
-    )
+    stop_price: Optional[Decimal] = Field(None, description="Stop price (for stop orders)")
     status: OrderStatus = Field(default=OrderStatus.PENDING, description="Order status")
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Order timestamp"
-    )
-    filled_quantity: Decimal = Field(
-        default=Decimal("0"), description="Filled quantity"
-    )
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Order timestamp")
+    filled_quantity: Decimal = Field(default=Decimal("0"), description="Filled quantity")
     filled_price: Optional[Decimal] = Field(None, description="Average filled price")
-    filled_at: Optional[datetime] = Field(
-        None, description="Timestamp when order was filled"
-    )
-    cancelled_at: Optional[datetime] = Field(
-        None, description="Timestamp when order was cancelled"
-    )
-    rejected_reason: Optional[str] = Field(
-        None, description="Reason for order rejection"
-    )
+    filled_at: Optional[datetime] = Field(None, description="Timestamp when order was filled")
+    cancelled_at: Optional[datetime] = Field(None, description="Timestamp when order was cancelled")
+    rejected_reason: Optional[str] = Field(None, description="Reason for order rejection")
     commission: Decimal = Field(default=Decimal("0"), description="Commission paid")
-    metadata: Dict[str, Any] = Field(
-        default_factory=dict, description="Additional order metadata"
-    )
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional order metadata")
 
     @field_validator("quantity", "filled_quantity", "commission")
     @classmethod
@@ -160,15 +145,11 @@ class Order(BaseModel):
 
         elif self.order_type == OrderType.STOP_LIMIT:
             if self.price is None or self.stop_price is None:
-                raise ValueError(
-                    "Stop-limit orders must have both price and stop price"
-                )
+                raise ValueError("Stop-limit orders must have both price and stop price")
             if self.price <= 0 or self.stop_price <= 0:
                 raise ValueError("Stop-limit order prices must be positive")
             if self.price <= self.stop_price:
-                raise ValueError(
-                    "Stop-limit order price must be greater than stop price"
-                )
+                raise ValueError("Stop-limit order price must be greater than stop price")
 
         # Validate stop price logic
         if self.stop_price is not None:
@@ -228,13 +209,9 @@ class MarketData(BaseModel):
     volume: Decimal = Field(..., description="Trading volume")
     bid: Optional[Decimal] = Field(None, description="Best bid price")
     ask: Optional[Decimal] = Field(None, description="Best ask price")
-    metadata: Dict[str, Any] = Field(
-        default_factory=dict, description="Additional market data"
-    )
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional market data")
 
-    @field_validator(
-        "open_price", "high_price", "low_price", "close_price", "volume", "bid", "ask"
-    )
+    @field_validator("open_price", "high_price", "low_price", "close_price", "volume", "bid", "ask")
     @classmethod
     def validate_price_fields(cls, v) -> Optional[Decimal]:
         """Validate price fields are positive."""
@@ -312,9 +289,7 @@ class MarketData(BaseModel):
         # Validate bid-ask spread
         if self.bid is not None and self.ask is not None:
             if self.bid >= self.ask:
-                raise ValueError(
-                    f"Bid price ({self.bid}) must be less than ask price ({self.ask})"
-                )
+                raise ValueError(f"Bid price ({self.bid}) must be less than ask price ({self.ask})")
 
             # Check for excessive spread (>50% of mid price)
             mid_price = (self.bid + self.ask) / 2

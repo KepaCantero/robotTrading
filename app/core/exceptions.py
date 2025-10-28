@@ -61,16 +61,12 @@ class APIError(AlgoTradingError):
     """Exception raised for API errors."""
 
 
-def raise_configuration_error(
-    message: str, error_code: str = None, details: Dict[str, Any] = None
-):
+def raise_configuration_error(message: str, error_code: str = None, details: Dict[str, Any] = None):
     """Helper function to raise configuration errors."""
     raise ConfigurationError(message, error_code, details)
 
 
-def raise_validation_error(
-    message: str, error_code: str = None, details: Dict[str, Any] = None
-):
+def raise_validation_error(message: str, error_code: str = None, details: Dict[str, Any] = None):
     """Helper function to raise validation errors."""
     raise ValidationError(message, error_code, details)
 
@@ -82,22 +78,16 @@ def raise_business_logic_error(
     raise BusinessLogicError(message, error_code, details)
 
 
-def raise_market_data_error(
-    message: str, error_code: str = None, details: Dict[str, Any] = None
-):
+def raise_market_data_error(message: str, error_code: str = None, details: Dict[str, Any] = None):
     """Helper function to raise market data errors."""
     raise MarketDataError(message, error_code, details)
 
 
-def raise_trading_error(
-    message: str, error_code: str = None, details: Dict[str, Any] = None
-):
+def raise_trading_error(message: str, error_code: str = None, details: Dict[str, Any] = None):
     """Helper function to raise trading errors."""
     raise TradingError(message, error_code, details)
 
 
-def raise_database_error(
-    message: str, error_code: str = None, details: Dict[str, Any] = None
-):
+def raise_database_error(message: str, error_code: str = None, details: Dict[str, Any] = None):
     """Helper function to raise database errors."""
     raise DatabaseError(message, error_code, details)

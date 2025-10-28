@@ -9,8 +9,7 @@ import logging
 from decimal import Decimal
 from typing import Any, Dict, List
 
-from app.core.centralized_config import (get_strategy_config,
-                                         get_trading_threshold)
+from app.core.centralized_config import get_strategy_config, get_trading_threshold
 from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
@@ -36,41 +35,26 @@ class PairsTradingStrategy(BaseStrategy):
         strategy_config = get_strategy_config("pairs_trading")
         if strategy_config:
             params = strategy_config.parameters
-            self.cointegration_threshold = Decimal(
-                str(params.get("cointegration_threshold", 0.05))
-            )
+            self.cointegration_threshold = Decimal(str(params.get("cointegration_threshold", 0.05)))
             self.spread_threshold = Decimal(str(params.get("spread_threshold", 2.0)))
             self.lookback_period = params.get("lookback_period", 30)
             self.min_correlation = Decimal(str(params.get("min_correlation", 0.7)))
             self.max_pair_exposure = Decimal(str(params.get("max_pair_exposure", 0.2)))
-            self.hedge_ratio_threshold = Decimal(
-                str(params.get("hedge_ratio_threshold", 0.1))
-            )
+            self.hedge_ratio_threshold = Decimal(str(params.get("hedge_ratio_threshold", 0.1)))
 
             # Use strategy-specific risk parameters or fallback to global
             self.stop_loss = Decimal(
-                str(
-                    strategy_config.stop_loss_pct
-                    or get_trading_threshold("stop_loss_pct")
-                )
+                str(strategy_config.stop_loss_pct or get_trading_threshold("stop_loss_pct"))
             )
             self.take_profit = Decimal(
-                str(
-                    strategy_config.take_profit_pct
-                    or get_trading_threshold("take_profit_pct")
-                )
+                str(strategy_config.take_profit_pct or get_trading_threshold("take_profit_pct"))
             )
             self.max_position_size = Decimal(
-                str(
-                    strategy_config.max_position_size
-                    or get_trading_threshold("max_position_size")
-                )
+                str(strategy_config.max_position_size or get_trading_threshold("max_position_size"))
             )
         else:
             # Fallback to config or defaults
-            self.cointegration_threshold = Decimal(
-                str(config.get("cointegration_threshold", 0.05))
-            )
+            self.cointegration_threshold = Decimal(str(config.get("cointegration_threshold", 0.05)))
             self.spread_threshold = Decimal(str(config.get("spread_threshold", 2.0)))
             self.stop_loss = Decimal(
                 str(config.get("stop_loss", get_trading_threshold("stop_loss_pct")))
@@ -79,11 +63,7 @@ class PairsTradingStrategy(BaseStrategy):
                 str(config.get("take_profit", get_trading_threshold("take_profit_pct")))
             )
             self.max_position_size = Decimal(
-                str(
-                    config.get(
-                        "max_position_size", get_trading_threshold("max_position_size")
-                    )
-                )
+                str(config.get("max_position_size", get_trading_threshold("max_position_size")))
             )
             self.lookback_period = config.get("lookback_period", 30)
             self.min_correlation = Decimal(str(config.get("min_correlation", 0.7)))
@@ -93,9 +73,7 @@ class PairsTradingStrategy(BaseStrategy):
 
         # Parámetros adicionales
         self.hedge_ratio = Decimal(str(config.get("hedge_ratio", 1.0)))
-        self.max_spread_deviation = Decimal(
-            str(config.get("max_spread_deviation", 3.0))
-        )
+        self.max_spread_deviation = Decimal(str(config.get("max_spread_deviation", 3.0)))
 
         logger.info(f"PairsTradingStrategy initialized: {self.name}")
         logger.info(f"Trading pair: {self.pair_symbols}")
@@ -136,9 +114,9 @@ class PairsTradingStrategy(BaseStrategy):
             # Calculate simple spread based on price vs normalized price
             # Simulate spread calculation
             normalized_price = market_data.last * Decimal("1.02")  # Assume 2% spread threshold
-            
+
             spread = abs(market_data.last - normalized_price) / market_data.last
-            
+
             # Simplified conditions for demo
             if spread > Decimal("0.01"):  # If price deviates more than 1%
                 # Generate signal based on direction
@@ -176,16 +154,12 @@ class PairsTradingStrategy(BaseStrategy):
             if signal.signal_type == SignalType.BUY:
                 required_cash = signal.price * signal.volume
                 if required_cash > portfolio.cash:
-                    logger.debug(
-                        f"Insufficient cash: {required_cash} > {portfolio.cash}"
-                    )
+                    logger.debug(f"Insufficient cash: {required_cash} > {portfolio.cash}")
                     return False
 
             # Verificar posición existente para ventas
             elif signal.signal_type == SignalType.SELL:
-                existing_position = self._get_existing_position(
-                    portfolio, signal.symbol
-                )
+                existing_position = self._get_existing_position(portfolio, signal.symbol)
                 if not existing_position or existing_position.quantity < signal.volume:
                     logger.debug(f"Insufficient position for sell: {signal.volume}")
                     return False
@@ -281,8 +255,7 @@ class PairsTradingStrategy(BaseStrategy):
         return (
             abs(spread) > self.spread_threshold  # Spread significativo
             and correlation > self.min_correlation  # Correlación suficiente
-            and cointegration_score
-            > self.cointegration_threshold  # Cointgración válida
+            and cointegration_score > self.cointegration_threshold  # Cointgración válida
             and abs(spread) < self.max_spread_deviation  # Spread no extremo
         )
 
@@ -411,7 +384,7 @@ class PairsTradingStrategy(BaseStrategy):
                 pair_value += position.market_value
 
         return pair_value / total_value
-    
+
     def _create_simple_buy_signal(self, market_data: Quote) -> Signal:
         """Create a simple buy signal for pairs trading."""
         return Signal(
@@ -431,7 +404,7 @@ class PairsTradingStrategy(BaseStrategy):
                 "spread": str(Decimal("0.02")),
             },
         )
-    
+
     def _create_simple_sell_signal(self, market_data: Quote) -> Signal:
         """Create a simple sell signal for pairs trading."""
         return Signal(

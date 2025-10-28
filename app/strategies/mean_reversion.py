@@ -10,8 +10,7 @@ import logging
 from decimal import Decimal
 from typing import Any, Dict, List
 
-from app.core.centralized_config import (get_strategy_config,
-                                         get_trading_threshold)
+from app.core.centralized_config import get_strategy_config, get_trading_threshold
 from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
@@ -39,31 +38,18 @@ class MeanReversionStrategy(BaseStrategy):
             params = strategy_config.parameters
             self.z_score_threshold = Decimal(str(params.get("z_score_threshold", 2.0)))
             self.lookback_period = params.get("lookback_period", 20)
-            self.volatility_threshold = Decimal(
-                str(params.get("volatility_threshold", 0.05))
-            )
-            self.mean_reversion_speed = Decimal(
-                str(params.get("mean_reversion_speed", 0.1))
-            )
+            self.volatility_threshold = Decimal(str(params.get("volatility_threshold", 0.05)))
+            self.mean_reversion_speed = Decimal(str(params.get("mean_reversion_speed", 0.1)))
 
             # Use strategy-specific risk parameters or fallback to global
             self.stop_loss = Decimal(
-                str(
-                    strategy_config.stop_loss_pct
-                    or get_trading_threshold("stop_loss_pct")
-                )
+                str(strategy_config.stop_loss_pct or get_trading_threshold("stop_loss_pct"))
             )
             self.take_profit = Decimal(
-                str(
-                    strategy_config.take_profit_pct
-                    or get_trading_threshold("take_profit_pct")
-                )
+                str(strategy_config.take_profit_pct or get_trading_threshold("take_profit_pct"))
             )
             self.max_position_size = Decimal(
-                str(
-                    strategy_config.max_position_size
-                    or get_trading_threshold("max_position_size")
-                )
+                str(strategy_config.max_position_size or get_trading_threshold("max_position_size"))
             )
         else:
             # Fallback to config or defaults
@@ -76,18 +62,10 @@ class MeanReversionStrategy(BaseStrategy):
                 str(config.get("take_profit", get_trading_threshold("take_profit_pct")))
             )
             self.max_position_size = Decimal(
-                str(
-                    config.get(
-                        "max_position_size", get_trading_threshold("max_position_size")
-                    )
-                )
+                str(config.get("max_position_size", get_trading_threshold("max_position_size")))
             )
-            self.volatility_threshold = Decimal(
-                str(config.get("volatility_threshold", 0.02))
-            )
-            self.mean_reversion_speed = Decimal(
-                str(config.get("mean_reversion_speed", 0.1))
-            )
+            self.volatility_threshold = Decimal(str(config.get("volatility_threshold", 0.02)))
+            self.mean_reversion_speed = Decimal(str(config.get("mean_reversion_speed", 0.1)))
 
         # Parámetros adicionales
         self.min_z_score = Decimal(str(config.get("min_z_score", 1.5)))
@@ -130,17 +108,13 @@ class MeanReversionStrategy(BaseStrategy):
             if self._is_buy_signal(z_score, volatility, market_data):
                 signal = self._create_buy_signal(market_data, z_score)
                 signals.append(signal)
-                logger.debug(
-                    f"Generated BUY signal for {market_data.symbol} (Z-score: {z_score})"
-                )
+                logger.debug(f"Generated BUY signal for {market_data.symbol} (Z-score: {z_score})")
 
             # Generar señal de venta (precio alto, esperamos bajada)
             elif self._is_sell_signal(z_score, volatility, market_data):
                 signal = self._create_sell_signal(market_data, z_score)
                 signals.append(signal)
-                logger.debug(
-                    f"Generated SELL signal for {market_data.symbol} (Z-score: {z_score})"
-                )
+                logger.debug(f"Generated SELL signal for {market_data.symbol} (Z-score: {z_score})")
 
         except Exception as e:
             logger.error(f"Error generating signals for {market_data.symbol}: {e}")
@@ -169,16 +143,12 @@ class MeanReversionStrategy(BaseStrategy):
             if signal.signal_type == SignalType.BUY:
                 required_cash = signal.price * signal.volume
                 if required_cash > portfolio.cash:
-                    logger.debug(
-                        f"Insufficient cash: {required_cash} > {portfolio.cash}"
-                    )
+                    logger.debug(f"Insufficient cash: {required_cash} > {portfolio.cash}")
                     return False
 
             # Verificar posición existente para ventas
             elif signal.signal_type == SignalType.SELL:
-                existing_position = self._get_existing_position(
-                    portfolio, signal.symbol
-                )
+                existing_position = self._get_existing_position(portfolio, signal.symbol)
                 if not existing_position or existing_position.quantity < signal.volume:
                     logger.debug(f"Insufficient position for sell: {signal.volume}")
                     return False
@@ -191,9 +161,7 @@ class MeanReversionStrategy(BaseStrategy):
 
             # Verificar volatilidad del activo
             volatility = self._calculate_volatility_from_signal(signal)
-            if (
-                volatility > self.volatility_threshold * 2
-            ):  # Evitar activos muy volátiles
+            if volatility > self.volatility_threshold * 2:  # Evitar activos muy volátiles
                 logger.debug(f"Asset too volatile: {volatility}")
                 return False
 
@@ -242,9 +210,7 @@ class MeanReversionStrategy(BaseStrategy):
         price_range = (market_data.high - market_data.low) / market_data.last
         return price_range
 
-    def _is_buy_signal(
-        self, z_score: Decimal, volatility: Decimal, market_data: Quote
-    ) -> bool:
+    def _is_buy_signal(self, z_score: Decimal, volatility: Decimal, market_data: Quote) -> bool:
         """
         Determinar si generar señal de compra.
 
@@ -259,12 +225,10 @@ class MeanReversionStrategy(BaseStrategy):
         # Simplified for demo - just check if price is lower than open
         is_undervalued = z_score < 0  # Price is below average
         has_low_volatility = volatility < self.volatility_threshold
-        
+
         return is_undervalued and has_low_volatility
 
-    def _is_sell_signal(
-        self, z_score: Decimal, volatility: Decimal, market_data: Quote
-    ) -> bool:
+    def _is_sell_signal(self, z_score: Decimal, volatility: Decimal, market_data: Quote) -> bool:
         """
         Determinar si generar señal de venta.
 
@@ -279,7 +243,7 @@ class MeanReversionStrategy(BaseStrategy):
         # Simplified for demo - just check if price is higher than open
         is_overvalued = z_score > 0  # Price is above average
         has_low_volatility = volatility < self.volatility_threshold
-        
+
         return is_overvalued and has_low_volatility
 
     def _create_buy_signal(self, market_data: Quote, z_score: Decimal) -> Signal:
