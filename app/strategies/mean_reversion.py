@@ -182,18 +182,21 @@ class MeanReversionStrategy(BaseStrategy):
             Z-score calculado
         """
         # Implementación simplificada - en producción usar datos históricos
-        # Por ahora, simulamos Z-score basado en precio vs media móvil
-
-        # Simular precio promedio y desviación estándar
-        # Use wider range to generate more signals for demo
-        avg_price = market_data.last * Decimal("0.98")  # Closer to current price
-        # Increased std dev to allow for more variation
-        std_dev = market_data.last * Decimal("0.03")  # Smaller std for more sensitive detection
-
+        # Simula Z-score basado en variación diaria del precio
+        
+        # Calculate price change vs open
+        price_change = (market_data.last - market_data.open) / market_data.open
+        
+        # Simulate Z-score based on price movement
+        # More variation = higher z-score magnitude
+        std_dev = Decimal("0.02")  # 2% standard deviation
+        
         if std_dev == 0:
             return Decimal("0")
-
-        z_score = (market_data.last - avg_price) / std_dev
+        
+        # Use price change as proxy for Z-score
+        z_score = price_change / std_dev
+        
         return z_score
 
     def _calculate_volatility(self, market_data: Quote) -> Decimal:
@@ -222,11 +225,14 @@ class MeanReversionStrategy(BaseStrategy):
         Returns:
             True si debe generar señal de compra
         """
-        # Simplified for demo - just check if price is lower than open
-        is_undervalued = z_score < 0  # Price is below average
-        has_low_volatility = volatility < self.volatility_threshold
-
-        return is_undervalued and has_low_volatility
+        # Check if z-score indicates undervaluation
+        is_undervalued = z_score < -self.z_score_threshold
+        
+        # Allow any volatility to generate signals
+        # Only block if volatility is extremely high
+        acceptable_volatility = volatility < Decimal("0.20")  # Allow up to 20% volatility
+        
+        return is_undervalued and acceptable_volatility
 
     def _is_sell_signal(self, z_score: Decimal, volatility: Decimal, market_data: Quote) -> bool:
         """
@@ -240,11 +246,14 @@ class MeanReversionStrategy(BaseStrategy):
         Returns:
             True si debe generar señal de venta
         """
-        # Simplified for demo - just check if price is higher than open
-        is_overvalued = z_score > 0  # Price is above average
-        has_low_volatility = volatility < self.volatility_threshold
-
-        return is_overvalued and has_low_volatility
+        # Check if z-score indicates overvaluation
+        is_overvalued = z_score > self.z_score_threshold
+        
+        # Allow any volatility to generate signals
+        # Only block if volatility is extremely high
+        acceptable_volatility = volatility < Decimal("0.20")  # Allow up to 20% volatility
+        
+        return is_overvalued and acceptable_volatility
 
     def _create_buy_signal(self, market_data: Quote, z_score: Decimal) -> Signal:
         """
