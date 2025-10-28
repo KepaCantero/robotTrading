@@ -12,10 +12,14 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from pydantic import BaseModel, Field
 
-from app.models.market_data import (DataFeedConfig, DataFeedType,
-                                    DataFrequency, HistoricalData, Quote)
-from app.services.market_data_service import (MarketDataService,
-                                              get_market_data_service)
+from app.models.market_data import (
+    DataFeedConfig,
+    DataFeedType,
+    DataFrequency,
+    HistoricalData,
+    Quote,
+)
+from app.services.market_data_service import MarketDataService, get_market_data_service
 
 router = APIRouter(prefix="/market-data", tags=["market-data"])
 
@@ -27,23 +31,17 @@ class QuoteResponse(BaseModel):
     success: bool = Field(..., description="Whether the request was successful")
     data: Optional[Quote] = Field(None, description="Quote data")
     error: Optional[str] = Field(None, description="Error message if any")
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Response timestamp"
-    )
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
 
 
 class HistoricalDataResponse(BaseModel):
     """Historical data response model."""
 
     success: bool = Field(..., description="Whether the request was successful")
-    data: List[HistoricalData] = Field(
-        default_factory=list, description="Historical data"
-    )
+    data: List[HistoricalData] = Field(default_factory=list, description="Historical data")
     count: int = Field(default=0, description="Number of data points")
     error: Optional[str] = Field(None, description="Error message if any")
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Response timestamp"
-    )
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
 
 
 class FeedConfigResponse(BaseModel):
@@ -52,36 +50,26 @@ class FeedConfigResponse(BaseModel):
     success: bool = Field(..., description="Whether the request was successful")
     data: Optional[DataFeedConfig] = Field(None, description="Feed configuration")
     error: Optional[str] = Field(None, description="Error message if any")
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Response timestamp"
-    )
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
 
 
 class FeedConfigsResponse(BaseModel):
     """Multiple feed configurations response model."""
 
     success: bool = Field(..., description="Whether the request was successful")
-    data: List[DataFeedConfig] = Field(
-        default_factory=list, description="Feed configurations"
-    )
+    data: List[DataFeedConfig] = Field(default_factory=list, description="Feed configurations")
     count: int = Field(default=0, description="Number of configurations")
     error: Optional[str] = Field(None, description="Error message if any")
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Response timestamp"
-    )
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
 
 
 class ServiceStatusResponse(BaseModel):
     """Service status response model."""
 
     success: bool = Field(..., description="Whether the request was successful")
-    data: Dict[str, Any] = Field(
-        default_factory=dict, description="Service status data"
-    )
+    data: Dict[str, Any] = Field(default_factory=dict, description="Service status data")
     error: Optional[str] = Field(None, description="Error message if any")
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Response timestamp"
-    )
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
 
 
 class CreateFeedConfigRequest(BaseModel):
@@ -91,9 +79,7 @@ class CreateFeedConfigRequest(BaseModel):
     feed_type: DataFeedType = Field(..., description="Type of data feed")
     api_key: Optional[str] = Field(None, description="API key for the feed")
     base_url: str = Field(..., description="Base URL for the API")
-    rate_limit: int = Field(
-        default=60, ge=1, le=3600, description="Rate limit per minute"
-    )
+    rate_limit: int = Field(default=60, ge=1, le=3600, description="Rate limit per minute")
     supported_symbols: List[str] = Field(
         default_factory=list, description="Supported trading symbols"
     )
@@ -103,12 +89,8 @@ class CreateFeedConfigRequest(BaseModel):
     max_history_days: int = Field(
         default=365, ge=1, le=3650, description="Maximum historical data days"
     )
-    timeout_seconds: int = Field(
-        default=30, ge=1, le=300, description="Request timeout in seconds"
-    )
-    retry_attempts: int = Field(
-        default=3, ge=0, le=10, description="Number of retry attempts"
-    )
+    timeout_seconds: int = Field(default=30, ge=1, le=300, description="Request timeout in seconds")
+    retry_attempts: int = Field(default=3, ge=0, le=10, description="Number of retry attempts")
     retry_delay: float = Field(
         default=1.0, ge=0.1, le=60.0, description="Delay between retries in seconds"
     )
@@ -145,9 +127,7 @@ async def get_quote(
                 timestamp=datetime.utcnow(),
             )
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting quote for {symbol}: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting quote for {symbol}: {str(e)}")
 
 
 @router.get("/quotes", response_model=List[QuoteResponse])
@@ -177,9 +157,7 @@ async def get_multiple_quotes(
 
 @router.get("/quotes/top-liquid", response_model=List[QuoteResponse])
 async def get_top_liquid_quotes(
-    limit: int = Query(
-        default=20, ge=1, le=100, description="Number of quotes to return"
-    ),
+    limit: int = Query(default=20, ge=1, le=100, description="Number of quotes to return"),
     service: MarketDataService = Depends(get_market_data_service),
 ):
     """Get quotes for top liquid assets."""
@@ -187,13 +165,10 @@ async def get_top_liquid_quotes(
         quotes = await service.get_top_liquid_assets_quotes(limit)
 
         return [
-            QuoteResponse(success=True, data=quote, timestamp=datetime.utcnow())
-            for quote in quotes
+            QuoteResponse(success=True, data=quote, timestamp=datetime.utcnow()) for quote in quotes
         ]
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting top liquid quotes: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting top liquid quotes: {str(e)}")
 
 
 @router.get("/historical/{symbol}", response_model=HistoricalDataResponse)
@@ -201,9 +176,7 @@ async def get_historical_data(
     symbol: str = Path(..., description="Trading symbol"),
     start_date: datetime = Query(..., description="Start date for historical data"),
     end_date: datetime = Query(..., description="End date for historical data"),
-    frequency: DataFrequency = Query(
-        default=DataFrequency.DAILY, description="Data frequency"
-    ),
+    frequency: DataFrequency = Query(default=DataFrequency.DAILY, description="Data frequency"),
     feed_id: Optional[UUID] = Query(None, description="Specific feed ID to use"),
     service: MarketDataService = Depends(get_market_data_service),
 ):
@@ -211,14 +184,10 @@ async def get_historical_data(
     try:
         # Validate date range
         if start_date >= end_date:
-            raise HTTPException(
-                status_code=400, detail="Start date must be before end date"
-            )
+            raise HTTPException(status_code=400, detail="Start date must be before end date")
 
         if (end_date - start_date).days > 365:
-            raise HTTPException(
-                status_code=400, detail="Date range cannot exceed 365 days"
-            )
+            raise HTTPException(status_code=400, detail="Date range cannot exceed 365 days")
 
         historical_data = await service.get_historical_data(
             symbol, start_date, end_date, frequency, feed_id
@@ -264,13 +233,9 @@ async def create_feed_config(
         config_id = await service.add_feed_config(config)
         config.id = config_id
 
-        return FeedConfigResponse(
-            success=True, data=config, timestamp=datetime.utcnow()
-        )
+        return FeedConfigResponse(success=True, data=config, timestamp=datetime.utcnow())
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error creating feed configuration: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error creating feed configuration: {str(e)}")
 
 
 @router.get("/feeds", response_model=FeedConfigsResponse)
@@ -285,9 +250,7 @@ async def list_feed_configs(
             success=True, data=configs, count=len(configs), timestamp=datetime.utcnow()
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error listing feed configurations: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error listing feed configurations: {str(e)}")
 
 
 @router.get("/feeds/{config_id}", response_model=FeedConfigResponse)
@@ -300,9 +263,7 @@ async def get_feed_config(
         config = await service.get_feed_config(config_id)
 
         if config:
-            return FeedConfigResponse(
-                success=True, data=config, timestamp=datetime.utcnow()
-            )
+            return FeedConfigResponse(success=True, data=config, timestamp=datetime.utcnow())
         else:
             raise HTTPException(
                 status_code=404, detail=f"Feed configuration not found: {config_id}"
@@ -310,9 +271,7 @@ async def get_feed_config(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting feed configuration: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting feed configuration: {str(e)}")
 
 
 @router.post("/feeds/{config_id}/connect")
@@ -327,15 +286,11 @@ async def connect_feed(
         if success:
             return {"success": True, "message": f"Connected to feed {config_id}"}
         else:
-            raise HTTPException(
-                status_code=500, detail=f"Failed to connect to feed {config_id}"
-            )
+            raise HTTPException(status_code=500, detail=f"Failed to connect to feed {config_id}")
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error connecting to feed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error connecting to feed: {str(e)}")
 
 
 @router.post("/feeds/{config_id}/disconnect")
@@ -356,9 +311,7 @@ async def disconnect_feed(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error disconnecting from feed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error disconnecting from feed: {str(e)}")
 
 
 @router.post("/subscribe")
@@ -385,9 +338,7 @@ async def subscribe_to_symbols(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error subscribing to symbols: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error subscribing to symbols: {str(e)}")
 
 
 @router.get("/status", response_model=ServiceStatusResponse)
@@ -398,13 +349,9 @@ async def get_service_status(
     try:
         status = await service.get_service_status()
 
-        return ServiceStatusResponse(
-            success=True, data=status, timestamp=datetime.utcnow()
-        )
+        return ServiceStatusResponse(success=True, data=status, timestamp=datetime.utcnow())
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting service status: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting service status: {str(e)}")
 
 
 @router.post("/cache/clear")
@@ -426,6 +373,4 @@ async def get_cache_stats(
         stats = await service.get_cache_stats()
         return {"success": True, "data": stats}
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting cache stats: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting cache stats: {str(e)}")

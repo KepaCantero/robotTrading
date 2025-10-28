@@ -24,9 +24,7 @@ class ExtendedPortfolio(BasePortfolio):
     description: Optional[str] = Field(None, description="Portfolio description")
     total_value: Decimal = Field(..., description="Total portfolio value")
     cash_balance: Decimal = Field(..., description="Cash balance")
-    created_at: datetime = Field(
-        default_factory=datetime.utcnow, description="Creation timestamp"
-    )
+    created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
     updated_at: datetime = Field(
         default_factory=datetime.utcnow, description="Last update timestamp"
     )
@@ -99,9 +97,7 @@ class PerformanceMetrics(BaseModel):
     cumulative_return: Decimal = Field(..., description="Cumulative return")
 
     # Risk Metrics
-    volatility: Decimal = Field(
-        ..., description="Portfolio volatility (standard deviation)"
-    )
+    volatility: Decimal = Field(..., description="Portfolio volatility (standard deviation)")
     sharpe_ratio: Decimal = Field(..., description="Sharpe ratio")
     sortino_ratio: Decimal = Field(..., description="Sortino ratio")
     max_drawdown: Decimal = Field(..., description="Maximum drawdown percentage")
@@ -122,9 +118,7 @@ class PerformanceMetrics(BaseModel):
 
     # Benchmark Comparison
     benchmark_return: Optional[Decimal] = Field(None, description="Benchmark return")
-    excess_return: Optional[Decimal] = Field(
-        None, description="Excess return vs benchmark"
-    )
+    excess_return: Optional[Decimal] = Field(None, description="Excess return vs benchmark")
     tracking_error: Optional[Decimal] = Field(None, description="Tracking error")
 
     # Timestamps
@@ -189,9 +183,7 @@ class PerformanceMetrics(BaseModel):
 class RiskMetrics(BaseModel):
     """Portfolio risk metrics."""
 
-    id: UUID = Field(
-        default_factory=uuid4, description="Unique risk metrics identifier"
-    )
+    id: UUID = Field(default_factory=uuid4, description="Unique risk metrics identifier")
     portfolio_id: UUID = Field(..., description="Portfolio identifier")
     calculated_at: datetime = Field(
         default_factory=datetime.utcnow, description="Calculation timestamp"
@@ -214,17 +206,11 @@ class RiskMetrics(BaseModel):
 
     # Concentration Risk
     herfindahl_index: Decimal = Field(..., description="Herfindahl concentration index")
-    effective_number_of_positions: Decimal = Field(
-        ..., description="Effective number of positions"
-    )
-    largest_position_weight: Decimal = Field(
-        ..., description="Weight of largest position"
-    )
+    effective_number_of_positions: Decimal = Field(..., description="Effective number of positions")
+    largest_position_weight: Decimal = Field(..., description="Weight of largest position")
 
     # Correlation Risk
-    average_correlation: Decimal = Field(
-        ..., description="Average correlation between positions"
-    )
+    average_correlation: Decimal = Field(..., description="Average correlation between positions")
     diversification_ratio: Decimal = Field(..., description="Diversification ratio")
 
     @field_validator(
@@ -254,14 +240,10 @@ class PortfolioAnalytics(BaseModel):
 
     id: UUID = Field(default_factory=uuid4, description="Unique analytics identifier")
     portfolio_id: UUID = Field(..., description="Portfolio identifier")
-    analysis_date: datetime = Field(
-        default_factory=datetime.utcnow, description="Analysis date"
-    )
+    analysis_date: datetime = Field(default_factory=datetime.utcnow, description="Analysis date")
 
     # Performance Summary
-    performance_metrics: PerformanceMetrics = Field(
-        ..., description="Performance metrics"
-    )
+    performance_metrics: PerformanceMetrics = Field(..., description="Performance metrics")
     risk_metrics: RiskMetrics = Field(..., description="Risk metrics")
 
     # Risk Assessment
@@ -270,9 +252,7 @@ class PortfolioAnalytics(BaseModel):
 
     # Portfolio Health
     health_score: Decimal = Field(..., description="Portfolio health score (0-100)")
-    diversification_score: Decimal = Field(
-        ..., description="Diversification score (0-100)"
-    )
+    diversification_score: Decimal = Field(..., description="Diversification score (0-100)")
     liquidity_score: Decimal = Field(..., description="Liquidity score (0-100)")
 
     # Recommendations
@@ -283,13 +263,9 @@ class PortfolioAnalytics(BaseModel):
 
     # Metadata
     analysis_version: str = Field(default="1.0", description="Analysis version")
-    metadata: Dict[str, Any] = Field(
-        default_factory=dict, description="Additional metadata"
-    )
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
-    @field_validator(
-        "risk_score", "health_score", "diversification_score", "liquidity_score"
-    )
+    @field_validator("risk_score", "health_score", "diversification_score", "liquidity_score")
     @classmethod
     def validate_score_fields(cls, v) -> Decimal:
         """Validate score fields are between 0 and 100."""
@@ -309,24 +285,18 @@ class PortfolioAllocation(BaseModel):
 
     id: UUID = Field(default_factory=uuid4, description="Unique allocation identifier")
     portfolio_id: UUID = Field(..., description="Portfolio identifier")
-    analysis_date: datetime = Field(
-        default_factory=datetime.utcnow, description="Analysis date"
-    )
+    analysis_date: datetime = Field(default_factory=datetime.utcnow, description="Analysis date")
 
     # Asset Class Allocation
     equity_allocation: Decimal = Field(..., description="Equity allocation percentage")
-    fixed_income_allocation: Decimal = Field(
-        ..., description="Fixed income allocation percentage"
-    )
+    fixed_income_allocation: Decimal = Field(..., description="Fixed income allocation percentage")
     cash_allocation: Decimal = Field(..., description="Cash allocation percentage")
     alternative_allocation: Decimal = Field(
         ..., description="Alternative investments allocation percentage"
     )
 
     # Geographic Allocation
-    domestic_allocation: Decimal = Field(
-        ..., description="Domestic allocation percentage"
-    )
+    domestic_allocation: Decimal = Field(..., description="Domestic allocation percentage")
     international_allocation: Decimal = Field(
         ..., description="International allocation percentage"
     )
@@ -337,14 +307,10 @@ class PortfolioAllocation(BaseModel):
     )
 
     # Top Holdings
-    top_holdings: List[Dict[str, Any]] = Field(
-        default_factory=list, description="Top holdings"
-    )
+    top_holdings: List[Dict[str, Any]] = Field(default_factory=list, description="Top holdings")
 
     # Allocation Quality
-    target_allocation: Optional[Dict[str, Decimal]] = Field(
-        None, description="Target allocation"
-    )
+    target_allocation: Optional[Dict[str, Decimal]] = Field(None, description="Target allocation")
     allocation_deviation: Optional[Dict[str, Decimal]] = Field(
         None, description="Allocation deviation from target"
     )
@@ -381,9 +347,7 @@ class PortfolioAllocation(BaseModel):
         )
 
         if abs(total_allocation - Decimal("100")) > Decimal("0.01"):
-            raise ValueError(
-                f"Asset class allocations must sum to 100%, got {total_allocation}"
-            )
+            raise ValueError(f"Asset class allocations must sum to 100%, got {total_allocation}")
 
         return self
 
@@ -393,29 +357,21 @@ class PortfolioRebalance(BaseModel):
 
     id: UUID = Field(default_factory=uuid4, description="Unique rebalance identifier")
     portfolio_id: UUID = Field(..., description="Portfolio identifier")
-    rebalance_date: datetime = Field(
-        default_factory=datetime.utcnow, description="Rebalance date"
-    )
+    rebalance_date: datetime = Field(default_factory=datetime.utcnow, description="Rebalance date")
 
     # Rebalancing Triggers
     trigger_reason: str = Field(..., description="Reason for rebalancing")
-    trigger_threshold: Decimal = Field(
-        ..., description="Threshold that triggered rebalancing"
-    )
+    trigger_threshold: Decimal = Field(..., description="Threshold that triggered rebalancing")
 
     # Current vs Target
-    current_allocation: PortfolioAllocation = Field(
-        ..., description="Current allocation"
-    )
+    current_allocation: PortfolioAllocation = Field(..., description="Current allocation")
     target_allocation: PortfolioAllocation = Field(..., description="Target allocation")
 
     # Rebalancing Actions
     rebalance_actions: List[Dict[str, Any]] = Field(
         default_factory=list, description="Rebalancing actions"
     )
-    estimated_cost: Decimal = Field(
-        default=Decimal("0"), description="Estimated rebalancing cost"
-    )
+    estimated_cost: Decimal = Field(default=Decimal("0"), description="Estimated rebalancing cost")
 
     # Risk Impact
     risk_impact: Decimal = Field(..., description="Expected risk impact")
@@ -425,9 +381,7 @@ class PortfolioRebalance(BaseModel):
     execution_date: Optional[datetime] = Field(None, description="Execution date")
     execution_status: str = Field(default="pending", description="Execution status")
 
-    @field_validator(
-        "trigger_threshold", "estimated_cost", "risk_impact", "return_impact"
-    )
+    @field_validator("trigger_threshold", "estimated_cost", "risk_impact", "return_impact")
     @classmethod
     def validate_impact_fields(cls, v) -> Decimal:
         """Validate impact fields are reasonable."""
@@ -455,13 +409,9 @@ class PortfolioComparison(BaseModel):
     risk_comparison: Dict[str, RiskMetrics] = Field(..., description="Risk comparison")
 
     # Ranking
-    performance_ranking: List[Tuple[UUID, Decimal]] = Field(
-        ..., description="Performance ranking"
-    )
+    performance_ranking: List[Tuple[UUID, Decimal]] = Field(..., description="Performance ranking")
     risk_ranking: List[Tuple[UUID, Decimal]] = Field(..., description="Risk ranking")
-    sharpe_ranking: List[Tuple[UUID, Decimal]] = Field(
-        ..., description="Sharpe ratio ranking"
-    )
+    sharpe_ranking: List[Tuple[UUID, Decimal]] = Field(..., description="Sharpe ratio ranking")
 
     # Analysis
     best_performer: UUID = Field(..., description="Best performing portfolio")
@@ -470,9 +420,7 @@ class PortfolioComparison(BaseModel):
 
     # Summary
     comparison_summary: str = Field(..., description="Comparison summary")
-    recommendations: List[str] = Field(
-        default_factory=list, description="Recommendations"
-    )
+    recommendations: List[str] = Field(default_factory=list, description="Recommendations")
 
     @model_validator(mode="after")
     def validate_comparison_data(self) -> "PortfolioComparison":

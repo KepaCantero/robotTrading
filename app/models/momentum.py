@@ -48,9 +48,7 @@ class MomentumSignal(BaseModel):
 
     symbol: str = Field(..., description="Asset symbol")
     signal_type: MomentumType = Field(..., description="Type of momentum signal")
-    timeframe: Timeframe = Field(
-        default=Timeframe.DAILY, description="Trading timeframe"
-    )
+    timeframe: Timeframe = Field(default=Timeframe.DAILY, description="Trading timeframe")
 
     # Signal strength and direction
     strength: float = Field(ge=0, le=100, description="Signal strength (0-100)")
@@ -78,13 +76,9 @@ class MomentumSignal(BaseModel):
     volatility: Optional[float] = Field(None, ge=0, description="Price volatility")
 
     # Signal metadata
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Signal timestamp"
-    )
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Signal timestamp")
     expires_at: datetime = Field(description="Signal expiration time")
-    metadata: Dict[str, Any] = Field(
-        default_factory=dict, description="Additional metadata"
-    )
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
     @field_validator("symbol")
     @classmethod
@@ -163,9 +157,7 @@ class MarketData(BaseModel):
     ask: Decimal = Field(..., gt=0, description="Current ask price")
     spread: Decimal = Field(..., ge=0, description="Bid-ask spread")
 
-    @field_validator(
-        "open_price", "high_price", "low_price", "close_price", "bid", "ask"
-    )
+    @field_validator("open_price", "high_price", "low_price", "close_price", "bid", "ask")
     @classmethod
     def validate_price_fields(cls, v) -> Decimal:
         """Ensure price fields are positive and within reasonable limits."""
@@ -230,9 +222,7 @@ class MarketData(BaseModel):
             )
 
         if self.bid >= self.ask:
-            raise ValueError(
-                f"Bid price ({self.bid}) must be less than ask price ({self.ask})."
-            )
+            raise ValueError(f"Bid price ({self.bid}) must be less than ask price ({self.ask}).")
 
         if not (self.ask - self.bid == self.spread):
             raise ValueError(
@@ -260,9 +250,7 @@ class TechnicalIndicators(BaseModel):
     )
 
     # Price indicators
-    rsi: Optional[float] = Field(
-        None, ge=0, le=100, description="Relative Strength Index"
-    )
+    rsi: Optional[float] = Field(None, ge=0, le=100, description="Relative Strength Index")
     ema_9: Optional[float] = Field(None, ge=0, description="9-period EMA")
     ema_21: Optional[float] = Field(None, ge=0, description="21-period EMA")
     ema_50: Optional[float] = Field(None, ge=0, description="50-period EMA")
@@ -288,12 +276,8 @@ class TechnicalIndicators(BaseModel):
     volatility: Optional[float] = Field(None, ge=0, description="Price volatility")
 
     # Volume indicators
-    volume_sma_20: Optional[Decimal] = Field(
-        None, ge=0, description="20-period volume SMA"
-    )
-    volume_ratio: Optional[float] = Field(
-        None, ge=0, description="Volume ratio vs average"
-    )
+    volume_sma_20: Optional[Decimal] = Field(None, ge=0, description="20-period volume SMA")
+    volume_ratio: Optional[float] = Field(None, ge=0, description="Volume ratio vs average")
 
     @field_validator("symbol")
     @classmethod
@@ -347,25 +331,17 @@ class MomentumStrategy(BaseModel):
     name: str = Field(..., description="Strategy name")
     description: str = Field(..., description="Strategy description")
     momentum_type: MomentumType = Field(..., description="Type of momentum strategy")
-    timeframe: Timeframe = Field(
-        default=Timeframe.DAILY, description="Trading timeframe"
-    )
+    timeframe: Timeframe = Field(default=Timeframe.DAILY, description="Trading timeframe")
 
     # Signal parameters
-    min_strength: float = Field(
-        default=60.0, ge=0, le=100, description="Minimum signal strength"
-    )
+    min_strength: float = Field(default=60.0, ge=0, le=100, description="Minimum signal strength")
     min_confidence: float = Field(
         default=70.0, ge=0, le=100, description="Minimum signal confidence"
     )
-    signal_duration: int = Field(
-        default=24, ge=1, description="Signal duration in hours"
-    )
+    signal_duration: int = Field(default=24, ge=1, description="Signal duration in hours")
 
     # Technical indicator thresholds
-    rsi_oversold: float = Field(
-        default=30.0, ge=0, le=100, description="RSI oversold threshold"
-    )
+    rsi_oversold: float = Field(default=30.0, ge=0, le=100, description="RSI oversold threshold")
     rsi_overbought: float = Field(
         default=70.0, ge=0, le=100, description="RSI overbought threshold"
     )
@@ -373,29 +349,17 @@ class MomentumStrategy(BaseModel):
     ema_long_period: int = Field(default=21, ge=1, description="Long EMA period")
 
     # Volume requirements
-    min_volume_ratio: float = Field(
-        default=1.2, ge=0, description="Minimum volume ratio"
-    )
-    volume_spike_threshold: float = Field(
-        default=2.0, ge=0, description="Volume spike threshold"
-    )
+    min_volume_ratio: float = Field(default=1.2, ge=0, description="Minimum volume ratio")
+    volume_spike_threshold: float = Field(default=2.0, ge=0, description="Volume spike threshold")
 
     # Risk management
-    max_position_size: float = Field(
-        default=0.1, ge=0, le=1, description="Maximum position size"
-    )
-    stop_loss_pct: float = Field(
-        default=0.05, ge=0, le=1, description="Stop loss percentage"
-    )
-    take_profit_pct: float = Field(
-        default=0.15, ge=0, le=1, description="Take profit percentage"
-    )
+    max_position_size: float = Field(default=0.1, ge=0, le=1, description="Maximum position size")
+    stop_loss_pct: float = Field(default=0.05, ge=0, le=1, description="Stop loss percentage")
+    take_profit_pct: float = Field(default=0.15, ge=0, le=1, description="Take profit percentage")
 
     # Strategy status
     is_active: bool = Field(default=True, description="Whether strategy is active")
-    created_at: datetime = Field(
-        default_factory=datetime.utcnow, description="Creation timestamp"
-    )
+    created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
     updated_at: datetime = Field(
         default_factory=datetime.utcnow, description="Last update timestamp"
     )
@@ -425,26 +389,18 @@ class MomentumAnalysis(BaseModel):
     """Comprehensive momentum analysis for an asset."""
 
     symbol: str = Field(..., description="Asset symbol")
-    timeframe: Timeframe = Field(
-        default=Timeframe.DAILY, description="Analysis timeframe"
-    )
-    analysis_date: datetime = Field(
-        default_factory=datetime.utcnow, description="Analysis date"
-    )
+    timeframe: Timeframe = Field(default=Timeframe.DAILY, description="Analysis timeframe")
+    analysis_date: datetime = Field(default_factory=datetime.utcnow, description="Analysis date")
 
     # Technical indicators
     indicators: TechnicalIndicators = Field(..., description="Technical indicators")
 
     # Momentum signals
-    signals: List[MomentumSignal] = Field(
-        default_factory=list, description="Generated signals"
-    )
+    signals: List[MomentumSignal] = Field(default_factory=list, description="Generated signals")
 
     # Analysis results
     overall_momentum: float = Field(ge=0, le=100, description="Overall momentum score")
-    trend_direction: str = Field(
-        description="Trend direction (BULLISH/BEARISH/NEUTRAL)"
-    )
+    trend_direction: str = Field(description="Trend direction (BULLISH/BEARISH/NEUTRAL)")
     signal_count: int = Field(default=0, ge=0, description="Number of active signals")
 
     # Risk assessment
@@ -502,19 +458,13 @@ class MomentumFilter(BaseModel):
     momentum_types: Optional[List[MomentumType]] = Field(
         None, description="Filter by momentum types"
     )
-    timeframes: Optional[List[Timeframe]] = Field(
-        None, description="Filter by timeframes"
-    )
-    min_strength: float = Field(
-        default=50.0, ge=0, le=100, description="Minimum signal strength"
-    )
+    timeframes: Optional[List[Timeframe]] = Field(None, description="Filter by timeframes")
+    min_strength: float = Field(default=50.0, ge=0, le=100, description="Minimum signal strength")
     min_confidence: float = Field(
         default=60.0, ge=0, le=100, description="Minimum signal confidence"
     )
     active_only: bool = Field(default=True, description="Only active signals")
-    max_age_hours: int = Field(
-        default=24, ge=1, description="Maximum signal age in hours"
-    )
+    max_age_hours: int = Field(default=24, ge=1, description="Maximum signal age in hours")
 
     def matches(self, signal: MomentumSignal) -> bool:
         """Check if signal matches filter criteria."""

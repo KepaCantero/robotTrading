@@ -13,15 +13,16 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 
 from app.core.centralized_config import get_config
-from app.models.profitability_validation import (HistoricalValidation,
-                                                 ProfitabilityValidation,
-                                                 StrategyComparison,
-                                                 ValidationCriteria,
-                                                 ValidationReport,
-                                                 ValidationRequest,
-                                                 ValidationResponse)
-from app.services.profitability_validation_service import \
-    ProfitabilityValidationService
+from app.models.profitability_validation import (
+    HistoricalValidation,
+    ProfitabilityValidation,
+    StrategyComparison,
+    ValidationCriteria,
+    ValidationReport,
+    ValidationRequest,
+    ValidationResponse,
+)
+from app.services.profitability_validation_service import ProfitabilityValidationService
 
 logger = logging.getLogger(__name__)
 
@@ -63,14 +64,10 @@ async def validate_strategy_profitability(
             )
 
         if request.initial_capital <= 0:
-            raise HTTPException(
-                status_code=400, detail="Initial capital must be positive"
-            )
+            raise HTTPException(status_code=400, detail="Initial capital must be positive")
 
         if request.period_start >= request.period_end:
-            raise HTTPException(
-                status_code=400, detail="Period start must be before period end"
-            )
+            raise HTTPException(status_code=400, detail="Period start must be before period end")
 
         # Ejecutar validación
         result = profitability_service.validate_strategy_profitability(request)
@@ -130,15 +127,11 @@ async def validate_multiple_strategies(
                 result = profitability_service.validate_strategy_profitability(request)
                 results.append(result)
             except Exception as e:
-                logger.error(
-                    f"Error validating strategy {request.strategy_name}: {str(e)}"
-                )
+                logger.error(f"Error validating strategy {request.strategy_name}: {str(e)}")
                 # Continuar con otras estrategias en caso de error individual
                 continue
 
-        logger.info(
-            f"Batch validation completed: {len(results)}/{len(requests)} successful"
-        )
+        logger.info(f"Batch validation completed: {len(results)}/{len(requests)} successful")
 
         return results
 
@@ -233,9 +226,7 @@ async def analyze_historical_performance(
             )
 
         # Filtrar validaciones por estrategia
-        strategy_validations = [
-            v for v in validations if v.strategy_name == strategy_name
-        ]
+        strategy_validations = [v for v in validations if v.strategy_name == strategy_name]
 
         if not strategy_validations:
             raise HTTPException(
@@ -268,9 +259,7 @@ async def generate_validation_report(
     include_comparison: bool = Query(
         default=True, description="Incluir comparación de estrategias"
     ),
-    include_historical: bool = Query(
-        default=True, description="Incluir análisis histórico"
-    ),
+    include_historical: bool = Query(default=True, description="Incluir análisis histórico"),
 ) -> ValidationReport:
     """
     Generar reporte completo de validación de rentabilidad.

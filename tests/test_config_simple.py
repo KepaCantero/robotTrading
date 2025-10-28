@@ -131,9 +131,7 @@ def test_redis_config():
         assert config_no_pass.connection_string == expected
 
         # Test connection string with password
-        config_with_pass = RedisConfig(
-            host="redis.example.com", port=6380, password="secret", db=1
-        )
+        config_with_pass = RedisConfig(host="redis.example.com", port=6380, password="secret", db=1)
         expected = "redis://:secret@redis.example.com:6380/1"
         assert config_with_pass.connection_string == expected
 

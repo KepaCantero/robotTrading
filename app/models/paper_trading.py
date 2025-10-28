@@ -59,27 +59,17 @@ class PaperTrade(BaseModel):
     # Trade details
     quantity: Decimal = Field(..., gt=0, description="Trade quantity")
     price: Decimal = Field(..., gt=0, description="Execution price")
-    filled_quantity: Decimal = Field(
-        default=Decimal("0"), ge=0, description="Filled quantity"
-    )
-    filled_price: Optional[Decimal] = Field(
-        None, gt=0, description="Average fill price"
-    )
+    filled_quantity: Decimal = Field(default=Decimal("0"), ge=0, description="Filled quantity")
+    filled_price: Optional[Decimal] = Field(None, gt=0, description="Average fill price")
 
     # Simulation details
     slippage: Decimal = Field(default=Decimal("0"), ge=0, description="Slippage amount")
-    commission: Decimal = Field(
-        default=Decimal("0"), ge=0, description="Commission paid"
-    )
-    market_impact: Decimal = Field(
-        default=Decimal("0"), ge=0, description="Market impact cost"
-    )
+    commission: Decimal = Field(default=Decimal("0"), ge=0, description="Commission paid")
+    market_impact: Decimal = Field(default=Decimal("0"), ge=0, description="Market impact cost")
 
     # Status and timing
     status: TradeStatus = Field(default=TradeStatus.PENDING, description="Trade status")
-    created_at: datetime = Field(
-        default_factory=datetime.utcnow, description="Trade creation time"
-    )
+    created_at: datetime = Field(default_factory=datetime.utcnow, description="Trade creation time")
     filled_at: Optional[datetime] = Field(None, description="Fill time")
     cancelled_at: Optional[datetime] = Field(None, description="Cancellation time")
 
@@ -88,15 +78,9 @@ class PaperTrade(BaseModel):
     realized_pnl: Decimal = Field(default=Decimal("0"), description="Realized P&L")
 
     # Metadata
-    strategy_id: Optional[str] = Field(
-        None, description="Strategy that generated the trade"
-    )
-    signal_id: Optional[UUID] = Field(
-        None, description="Signal that triggered the trade"
-    )
-    metadata: Dict[str, Any] = Field(
-        default_factory=dict, description="Additional trade metadata"
-    )
+    strategy_id: Optional[str] = Field(None, description="Strategy that generated the trade")
+    signal_id: Optional[UUID] = Field(None, description="Signal that triggered the trade")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional trade metadata")
 
     @field_validator("quantity", "price", "filled_quantity", "filled_price")
     @classmethod
@@ -129,9 +113,7 @@ class PaperTrade(BaseModel):
         if hasattr(info, "data") and "quantity" in info.data:
             quantity = Decimal(str(info.data["quantity"]))
             if v > quantity:
-                raise ValueError(
-                    f"Filled quantity ({v}) cannot exceed order quantity ({quantity})"
-                )
+                raise ValueError(f"Filled quantity ({v}) cannot exceed order quantity ({quantity})")
 
         return v
 
@@ -144,17 +126,10 @@ class PaperTrade(BaseModel):
             )
 
         if self.status == TradeStatus.FILLED and self.filled_quantity != self.quantity:
-            raise ValueError(
-                f"Filled trade must have filled_quantity equal to quantity"
-            )
+            raise ValueError("Filled trade must have filled_quantity equal to quantity")
 
-        if (
-            self.status == TradeStatus.PARTIALLY_FILLED
-            and self.filled_quantity >= self.quantity
-        ):
-            raise ValueError(
-                f"Partially filled trade must have filled_quantity less than quantity"
-            )
+        if self.status == TradeStatus.PARTIALLY_FILLED and self.filled_quantity >= self.quantity:
+            raise ValueError("Partially filled trade must have filled_quantity less than quantity")
 
         if self.filled_at and self.filled_at < self.created_at:
             raise ValueError(
@@ -190,9 +165,7 @@ class PaperPosition(BaseModel):
     opened_at: datetime = Field(
         default_factory=datetime.utcnow, description="Position opening time"
     )
-    last_updated: datetime = Field(
-        default_factory=datetime.utcnow, description="Last update time"
-    )
+    last_updated: datetime = Field(default_factory=datetime.utcnow, description="Last update time")
 
     # Metadata
     metadata: Dict[str, Any] = Field(
@@ -240,9 +213,7 @@ class PaperPosition(BaseModel):
         if self.quantity > 0:  # Long position
             self.unrealized_pnl = self.quantity * (self.current_price - self.avg_price)
         elif self.quantity < 0:  # Short position
-            self.unrealized_pnl = abs(self.quantity) * (
-                self.avg_price - self.current_price
-            )
+            self.unrealized_pnl = abs(self.quantity) * (self.avg_price - self.current_price)
         else:  # No position
             self.unrealized_pnl = Decimal("0")
 
@@ -263,9 +234,7 @@ class PaperPosition(BaseModel):
         if self.quantity > 0:  # Long position
             self.unrealized_pnl = self.quantity * (self.current_price - self.avg_price)
         elif self.quantity < 0:  # Short position
-            self.unrealized_pnl = abs(self.quantity) * (
-                self.avg_price - self.current_price
-            )
+            self.unrealized_pnl = abs(self.quantity) * (self.avg_price - self.current_price)
         else:  # No position
             self.unrealized_pnl = Decimal("0")
 
@@ -285,28 +254,18 @@ class PaperPortfolio(BaseModel):
     total_equity: Decimal = Field(..., ge=0, description="Total portfolio equity")
 
     # Positions
-    positions: List[PaperPosition] = Field(
-        default_factory=list, description="Current positions"
-    )
+    positions: List[PaperPosition] = Field(default_factory=list, description="Current positions")
 
     # Performance metrics
     total_pnl: Decimal = Field(default=Decimal("0"), description="Total portfolio P&L")
-    total_return: Decimal = Field(
-        default=Decimal("0"), description="Total return percentage"
-    )
+    total_return: Decimal = Field(default=Decimal("0"), description="Total return percentage")
     daily_pnl: Decimal = Field(default=Decimal("0"), description="Daily P&L")
-    daily_return: Decimal = Field(
-        default=Decimal("0"), description="Daily return percentage"
-    )
+    daily_return: Decimal = Field(default=Decimal("0"), description="Daily return percentage")
 
     # Risk metrics
-    max_drawdown: Decimal = Field(
-        default=Decimal("0"), ge=0, description="Maximum drawdown"
-    )
+    max_drawdown: Decimal = Field(default=Decimal("0"), ge=0, description="Maximum drawdown")
     sharpe_ratio: Optional[Decimal] = Field(None, description="Sharpe ratio")
-    volatility: Optional[Decimal] = Field(
-        None, ge=0, description="Portfolio volatility"
-    )
+    volatility: Optional[Decimal] = Field(None, ge=0, description="Portfolio volatility")
 
     # Settings
     simulation_mode: PaperTradingMode = Field(
@@ -327,9 +286,7 @@ class PaperPortfolio(BaseModel):
     created_at: datetime = Field(
         default_factory=datetime.utcnow, description="Portfolio creation time"
     )
-    last_updated: datetime = Field(
-        default_factory=datetime.utcnow, description="Last update time"
-    )
+    last_updated: datetime = Field(default_factory=datetime.utcnow, description="Last update time")
 
     # Metadata
     metadata: Dict[str, Any] = Field(
@@ -451,9 +408,7 @@ class PaperTradingConfig(BaseModel):
     created_at: datetime = Field(
         default_factory=datetime.utcnow, description="Configuration creation time"
     )
-    last_updated: datetime = Field(
-        default_factory=datetime.utcnow, description="Last update time"
-    )
+    last_updated: datetime = Field(default_factory=datetime.utcnow, description="Last update time")
 
     # Metadata
     metadata: Dict[str, Any] = Field(
@@ -491,9 +446,7 @@ class PaperTradingSession(BaseModel):
     status: str = Field(default="running", description="Session status")
 
     # Timing
-    started_at: datetime = Field(
-        default_factory=datetime.utcnow, description="Session start time"
-    )
+    started_at: datetime = Field(default_factory=datetime.utcnow, description="Session start time")
     ended_at: Optional[datetime] = Field(None, description="Session end time")
     last_activity: datetime = Field(
         default_factory=datetime.utcnow, description="Last activity time"
@@ -501,16 +454,12 @@ class PaperTradingSession(BaseModel):
 
     # Statistics
     total_trades: int = Field(default=0, ge=0, description="Total number of trades")
-    successful_trades: int = Field(
-        default=0, ge=0, description="Number of successful trades"
-    )
+    successful_trades: int = Field(default=0, ge=0, description="Number of successful trades")
     failed_trades: int = Field(default=0, ge=0, description="Number of failed trades")
 
     # Performance
     session_pnl: Decimal = Field(default=Decimal("0"), description="Session P&L")
-    session_return: Decimal = Field(
-        default=Decimal("0"), description="Session return percentage"
-    )
+    session_return: Decimal = Field(default=Decimal("0"), description="Session return percentage")
 
     # Metadata
     metadata: Dict[str, Any] = Field(

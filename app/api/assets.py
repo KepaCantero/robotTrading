@@ -12,7 +12,9 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 
 from app.models.assets import AssetClass, AssetFilter, Exchange
 from app.services.asset_identification import (
-    AssetIdentificationService, get_asset_identification_service)
+    AssetIdentificationService,
+    get_asset_identification_service,
+)
 
 router = APIRouter(prefix="/assets", tags=["assets"])
 
@@ -32,9 +34,7 @@ async def get_assets_overview(
         return {"success": True, "overview": overview, "timestamp": datetime.utcnow()}
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting assets overview: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting assets overview: {str(e)}")
 
 
 @router.get("/liquid/{asset_class}", response_model=Dict[str, Any])
@@ -71,13 +71,11 @@ async def get_liquid_assets(
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting liquid assets: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting liquid assets: {str(e)}")
 
 
 @router.get("/rankings/{asset_class}", response_model=Dict[str, Any])
-async def get_asset_rankings(
+async def get_asset_rankings_by_class(
     asset_class: AssetClass,
     service: AssetIdentificationService = Depends(get_asset_identification_service),
 ):
@@ -95,9 +93,7 @@ async def get_asset_rankings(
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting asset rankings: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting asset rankings: {str(e)}")
 
 
 @router.get("/{symbol}", response_model=Dict[str, Any])
@@ -136,9 +132,7 @@ async def get_asset_details(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting asset details: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting asset details: {str(e)}")
 
 
 @router.get("/{symbol}/liquidity", response_model=Dict[str, Any])
@@ -151,9 +145,7 @@ async def get_liquidity_metrics(
         metrics = await service.get_liquidity_metrics(symbol.upper())
 
         if not metrics:
-            raise HTTPException(
-                status_code=404, detail=f"Liquidity metrics for {symbol} not found"
-            )
+            raise HTTPException(status_code=404, detail=f"Liquidity metrics for {symbol} not found")
 
         return {
             "success": True,
@@ -175,16 +167,12 @@ async def get_liquidity_metrics(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting liquidity metrics: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting liquidity metrics: {str(e)}")
 
 
 @router.get("/rankings", response_model=Dict[str, Any])
 async def get_asset_rankings(
-    asset_class: Optional[AssetClass] = Query(
-        None, description="Filter by asset class"
-    ),
+    asset_class: Optional[AssetClass] = Query(None, description="Filter by asset class"),
     service: AssetIdentificationService = Depends(get_asset_identification_service),
 ):
     """Get asset rankings."""
@@ -200,9 +188,7 @@ async def get_asset_rankings(
         return {"success": True, "rankings": rankings, "timestamp": datetime.utcnow()}
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting asset rankings: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting asset rankings: {str(e)}")
 
 
 @router.post("/filter", response_model=Dict[str, Any])
@@ -264,16 +250,12 @@ async def refresh_liquidity_data(
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error refreshing liquidity data: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error refreshing liquidity data: {str(e)}")
 
 
 @router.get("/universe", response_model=Dict[str, Any])
 async def get_asset_universe(
-    asset_class: Optional[AssetClass] = Query(
-        None, description="Filter by asset class"
-    ),
+    asset_class: Optional[AssetClass] = Query(None, description="Filter by asset class"),
     service: AssetIdentificationService = Depends(get_asset_identification_service),
 ):
     """Get asset universe."""
@@ -289,9 +271,7 @@ async def get_asset_universe(
         return {"success": True, "universe": universe, "timestamp": datetime.utcnow()}
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting asset universe: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting asset universe: {str(e)}")
 
 
 @router.post("/identify/{asset_class}", response_model=Dict[str, Any])
@@ -331,18 +311,16 @@ async def identify_liquid_assets(
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error identifying liquid assets: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error identifying liquid assets: {str(e)}")
 
 
 @router.post("/filter/{asset_class}", response_model=Dict[str, Any])
-async def filter_assets(
+async def filter_assets_by_class(
     asset_class: AssetClass,
     filter_criteria: AssetFilter,
     service: AssetIdentificationService = Depends(get_asset_identification_service),
 ):
-    """Filter assets based on criteria."""
+    """Filter assets based on criteria for a specific asset class."""
     try:
         filtered_assets = await service.filter_assets(asset_class, filter_criteria)
 
@@ -396,9 +374,7 @@ async def get_universe_summary(
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting universe summary: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting universe summary: {str(e)}")
 
 
 @router.get("/classes", response_model=Dict[str, Any])
@@ -420,9 +396,7 @@ async def get_asset_classes():
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting asset classes: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting asset classes: {str(e)}")
 
 
 @router.get("/exchanges", response_model=Dict[str, Any])
@@ -444,9 +418,7 @@ async def get_exchanges():
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting exchanges: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting exchanges: {str(e)}")
 
 
 @router.get("/health", response_model=Dict[str, Any])
@@ -498,9 +470,7 @@ async def get_asset_stats(
             )
 
         if total_assets > 0:
-            stats["overall_stats"]["avg_liquidity_score"] = (
-                total_liquidity / total_assets
-            )
+            stats["overall_stats"]["avg_liquidity_score"] = total_liquidity / total_assets
 
         stats["overall_stats"]["total_assets"] = total_assets
         stats["overall_stats"]["active_assets"] = active_assets
@@ -508,6 +478,4 @@ async def get_asset_stats(
         return {"success": True, "stats": stats, "timestamp": datetime.utcnow()}
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting asset stats: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting asset stats: {str(e)}")

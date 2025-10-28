@@ -8,8 +8,15 @@ from decimal import Decimal
 
 import pytest
 
-from app.models.assets import (Asset, AssetClass, AssetFilter, AssetRanking,
-                               AssetUniverse, Exchange, LiquidityMetrics)
+from app.models.assets import (
+    Asset,
+    AssetClass,
+    AssetFilter,
+    AssetRanking,
+    AssetUniverse,
+    Exchange,
+    LiquidityMetrics,
+)
 from app.services.asset_identification import AssetIdentificationService
 
 
@@ -400,9 +407,7 @@ class TestAssetIdentificationService:
             active_only=True,
         )
         # Filter assets
-        filtered_assets = await service.filter_assets(
-            AssetClass.EQUITY, filter_criteria
-        )
+        filtered_assets = await service.filter_assets(AssetClass.EQUITY, filter_criteria)
 
         assert len(filtered_assets) <= 10
         assert all(asset.liquidity_score >= 80.0 for asset in filtered_assets)
@@ -475,12 +480,8 @@ class TestAssetServiceIntegration:
         assert summary["total_assets"] == 10
 
         # Step 6: Filter assets
-        filter_criteria = AssetFilter(
-            asset_class=AssetClass.EQUITY, min_liquidity_score=70.0
-        )
-        filtered_assets = await service.filter_assets(
-            AssetClass.EQUITY, filter_criteria
-        )
+        filter_criteria = AssetFilter(asset_class=AssetClass.EQUITY, min_liquidity_score=70.0)
+        filtered_assets = await service.filter_assets(AssetClass.EQUITY, filter_criteria)
         assert len(filtered_assets) > 0
 
     @pytest.mark.asyncio

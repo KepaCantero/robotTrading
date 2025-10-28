@@ -6,7 +6,6 @@ Automatically generates documentation for backtest results.
 
 import json
 from datetime import datetime
-from decimal import Decimal
 from pathlib import Path
 from typing import Dict
 
@@ -25,52 +24,54 @@ def save_backtest_result(
 ) -> Dict[str, Path]:
     """
     Save backtest result to /docs directory structure.
-    
+
     Returns dict of saved file paths.
     """
     # Create directory structure
     results_dir = project_root / "docs" / "BACKTEST_RESULTS" / module.lower()
     results_dir.mkdir(parents=True, exist_ok=True)
-    
+
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    
+
     # File paths
     files = {}
-    
+
     # 1. Metrics JSON
     metrics_file = results_dir / f"metrics_{config}_{timestamp}.json"
     with open(metrics_file, "w") as f:
-        json.dump({
-            "module": module,
-            "config": config,
-            "symbol": symbol,
-            "start_date": start_date.isoformat(),
-            "end_date": end_date.isoformat(),
-            "metrics": {
-                "total_trades": result["total_trades"],
-                "win_rate": result["win_rate"],
-                "total_return": result["total_return"],
-                "final_capital": result["final_capital"],
+        json.dump(
+            {
+                "module": module,
+                "config": config,
+                "symbol": symbol,
+                "start_date": start_date.isoformat(),
+                "end_date": end_date.isoformat(),
+                "metrics": {
+                    "total_trades": result["total_trades"],
+                    "win_rate": result["win_rate"],
+                    "total_return": result["total_return"],
+                    "final_capital": result["final_capital"],
+                },
             },
-        }, f, indent=2)
+            f,
+            indent=2,
+        )
     files["metrics"] = metrics_file
-    
+
     # 2. Trade log CSV
     if result.get("trades"):
         trade_log_file = results_dir / f"trade_log_{config}_{timestamp}.csv"
         trades_df = pd.DataFrame(result["trades"])
         trades_df.to_csv(trade_log_file, index=False)
         files["trade_log"] = trade_log_file
-    
+
     # 3. Report Markdown
     report_file = results_dir / f"config_{config}_report.md"
-    report_content = generate_report_markdown(
-        module, config, symbol, start_date, end_date, result
-    )
+    report_content = generate_report_markdown(module, config, symbol, start_date, end_date, result)
     with open(report_file, "w") as f:
         f.write(report_content)
     files["report"] = report_file
-    
+
     return files
 
 
@@ -83,18 +84,18 @@ def generate_report_markdown(
     result: Dict,
 ) -> str:
     """Generate markdown report for backtest result."""
-    
+
     metrics = result.get("metrics", {})
-    
+
     report = f"""# Backtest Report: {module} - {config}
 
 ## Executive Summary
 
-**Module:** {module}  
-**Configuration:** {config}  
-**Symbol:** {symbol}  
-**Period:** {start_date.date()} to {end_date.date()}  
-**Execution Date:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}  
+**Module:** {module}
+**Configuration:** {config}
+**Symbol:** {symbol}
+**Period:** {start_date.date()} to {end_date.date()}
+**Execution Date:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
 ### Performance Overview
 
@@ -131,17 +132,17 @@ def generate_report_markdown(
 - Execution environment: local
 - Python version: (auto-detected)
 """
-    
+
     return report
 
 
 def _generate_performance_summary(metrics: Dict) -> str:
     """Generate textual performance summary."""
-    
+
     win_rate = float(metrics.get('win_rate', 0))
     sharpe = metrics.get('sharpe_ratio', 0)
     drawdown = float(metrics.get('max_drawdown_percentage', 0))
-    
+
     if sharpe and float(sharpe) > 2:
         performance = "excellent"
     elif sharpe and float(sharpe) > 1:
@@ -150,25 +151,25 @@ def _generate_performance_summary(metrics: Dict) -> str:
         performance = "positive"
     else:
         performance = "poor"
-    
+
     summary = f"""
-The {performance} strategy performance shows a win rate of {win_rate:.1f}% 
+The {performance} strategy performance shows a win rate of {win_rate:.1f}%
 with a Sharpe ratio of {sharpe or 'N/A'} and maximum drawdown of {drawdown:.2f}%.
 
 """
-    
+
     return summary
 
 
 def _generate_decision_analysis(result: Dict) -> str:
     """Generate decision pattern analysis."""
-    
+
     if not result.get("trades"):
         return "No trades executed."
-    
+
     buy_count = sum(1 for t in result["trades"] if t.get("side") == "buy")
     sell_count = sum(1 for t in result["trades"] if t.get("side") == "sell")
-    
+
     return f"""
 - Buy signals: {buy_count}
 - Sell signals: {sell_count}
@@ -179,7 +180,7 @@ def _generate_decision_analysis(result: Dict) -> str:
 
 def _generate_market_analysis(result: Dict) -> str:
     """Generate market condition analysis."""
-    
+
     return """
 The strategy was tested during a period characterized by:
 - Market volatility: (analyze from data)
@@ -197,26 +198,26 @@ def update_summary_index(
     project_root: Path,
 ):
     """Update the summary_index.md with new backtest result."""
-    
+
     index_file = project_root / "docs" / "BACKTEST_RESULTS" / "summary_index.md"
-    
+
     # Read current index
     if index_file.exists():
         with open(index_file, "r") as f:
             content = f.read()
     else:
         content = ""
-    
+
     # Extract table lines
     lines = content.split('\n')
     insert_index = len(lines)
-    
+
     # Find table start
     for i, line in enumerate(lines):
         if line.startswith('| Módulo') or line.startswith('| Module'):
             insert_index = i + 2  # After header and separator
             break
-    
+
     # Generate new table row
     new_row = (
         f"| {module} | {config} | {period} | "
@@ -229,11 +230,10 @@ def update_summary_index(
         f"{datetime.now().strftime('%Y-%m-%d')} | "
         f"[View](./{module.lower()}/config_{config}_report.md) |"
     )
-    
+
     # Insert new row
     lines.insert(insert_index, new_row)
-    
+
     # Write back
     with open(index_file, "w") as f:
         f.write('\n'.join(lines))
-

@@ -523,9 +523,7 @@ class TestSignalsAPIIntegration:
 
     def test_update_position_size_limit_success(self, client):
         """Test POST /signals/position-size-limit endpoint success."""
-        response = client.post(
-            "/signals/position-size-limit", params={"max_percent": 15.0}
-        )
+        response = client.post("/signals/position-size-limit", params={"max_percent": 15.0})
         assert response.status_code == 200
         data = response.json()
 
@@ -535,9 +533,7 @@ class TestSignalsAPIIntegration:
 
     def test_update_position_size_limit_invalid_value(self, client):
         """Test POST /signals/position-size-limit endpoint with invalid value."""
-        response = client.post(
-            "/signals/position-size-limit", params={"max_percent": 150.0}
-        )
+        response = client.post("/signals/position-size-limit", params={"max_percent": 150.0})
         assert response.status_code == 500
         data = response.json()
         assert "detail" in data

@@ -10,8 +10,14 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from app.models.portfolio import (AssetClass, AssetUniverse, MarketRegime,
-                                  MarketRegimeData, Portfolio, Position)
+from app.models.portfolio import (
+    AssetClass,
+    AssetUniverse,
+    MarketRegime,
+    MarketRegimeData,
+    Portfolio,
+    Position,
+)
 
 
 class PaperTradingPortfolioProvider:
@@ -158,9 +164,7 @@ class PaperTradingPortfolioProvider:
             # Update existing position
             existing_pos = self.positions[symbol]
             total_quantity = existing_pos.quantity + quantity
-            total_cost_basis = (existing_pos.quantity * existing_pos.avg_price) + (
-                quantity * price
-            )
+            total_cost_basis = (existing_pos.quantity * existing_pos.avg_price) + (quantity * price)
 
             if total_quantity == 0:
                 # Close position
@@ -168,9 +172,7 @@ class PaperTradingPortfolioProvider:
                 del self.positions[symbol]
             else:
                 # Update position
-                unrealized_pnl = total_quantity * (
-                    price - (total_cost_basis / total_quantity)
-                )
+                unrealized_pnl = total_quantity * (price - (total_cost_basis / total_quantity))
                 self.positions[symbol] = Position(
                     symbol=symbol,
                     asset_class=self._get_asset_class(symbol),

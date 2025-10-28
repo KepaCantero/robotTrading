@@ -17,7 +17,7 @@ import pytest
 
 from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
-from app.models.signal import Signal, SignalType, SignalStrength, SignalSource
+from app.models.signal import SignalSource, SignalType
 from app.strategies.momentum import MomentumStrategy
 
 logger = logging.getLogger(__name__)
@@ -139,7 +139,7 @@ class TestTechnicalIndicators:
                 close=Decimal(str(200 + i)),
             )
             strategy.generate_signals(mock_quote)
-        
+
         rsi = strategy._calculate_real_rsi()
         assert rsi is not None
         assert isinstance(rsi, float)
@@ -162,7 +162,7 @@ class TestTechnicalIndicators:
                 close=Decimal(str(180 - i)),
             )
             strategy.generate_signals(mock_quote)
-        
+
         rsi = strategy._calculate_real_rsi()
         assert rsi is not None
         assert isinstance(rsi, float)
@@ -185,7 +185,7 @@ class TestTechnicalIndicators:
                 close=Decimal(str(200 + i)),
             )
             strategy.generate_signals(mock_quote)
-        
+
         ema = strategy._calculate_real_ema()
         assert ema is not None
         assert isinstance(ema, float)
@@ -208,7 +208,7 @@ class TestTechnicalIndicators:
                 close=Decimal(str(200 + i)),
             )
             strategy.generate_signals(mock_quote)
-        
+
         volume_ratio = strategy._calculate_volume_ratio(bullish_quote)
         assert isinstance(volume_ratio, Decimal)
         assert volume_ratio > 0
@@ -223,7 +223,7 @@ class TestBuySignalGeneration:
         rsi = 60.0  # Bullish RSI
         ema = 205.0  # Price above EMA
         volume_ratio = Decimal("1.5")  # Above threshold
-        
+
         signal = strategy._create_buy_signal(bullish_quote, rsi, ema, volume_ratio)
 
         assert signal.signal_type == SignalType.BUY
@@ -247,7 +247,7 @@ class TestSellSignalGeneration:
         rsi = 40.0  # Bearish RSI
         ema = 175.0  # Price below EMA
         volume_ratio = Decimal("1.5")  # Above threshold
-        
+
         signal = strategy._create_sell_signal(bearish_quote, rsi, ema, volume_ratio)
 
         assert signal.signal_type == SignalType.SELL
@@ -403,7 +403,7 @@ class TestEdgeCases:
                 close=Decimal("100.00"),
             )
             strategy.generate_signals(quote)
-        
+
         rsi = strategy._calculate_real_rsi()
         # RSI should be 50 (neutral) when price is completely stable
         assert rsi is not None

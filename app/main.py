@@ -25,8 +25,7 @@ from app.api.paper_trading import router as paper_trading_router
 from app.api.portfolio import router as portfolio_router
 from app.api.portfolio_analytics import router as portfolio_analytics_router
 from app.api.signals import router as signals_router
-from app.api.trading_error_handler import \
-    router as trading_error_handler_router
+from app.api.trading_error_handler import router as trading_error_handler_router
 from app.core.config import get_settings
 
 # Get application settings (lazy loading to avoid validation issues during
@@ -192,6 +191,4 @@ async def internal_error_handler(request, exc):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(
-        "app.main:app", host="0.0.0.0", port=8000, reload=True, log_level="info"
-    )
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True, log_level="info")

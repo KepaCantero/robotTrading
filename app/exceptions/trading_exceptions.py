@@ -72,9 +72,7 @@ class ValidationError(AlgoTradingError):
         value: Optional[Any] = None,
         details: Optional[Dict[str, Any]] = None,
     ):
-        error_code = (
-            f"VALIDATION_ERROR_{field.upper()}" if field else "VALIDATION_ERROR"
-        )
+        error_code = f"VALIDATION_ERROR_{field.upper()}" if field else "VALIDATION_ERROR"
         super().__init__(
             message=message,
             error_code=error_code,
@@ -97,9 +95,7 @@ class BusinessLogicError(AlgoTradingError):
         operation: Optional[str] = None,
         details: Optional[Dict[str, Any]] = None,
     ):
-        error_code = (
-            f"BUSINESS_ERROR_{operation.upper()}" if operation else "BUSINESS_ERROR"
-        )
+        error_code = f"BUSINESS_ERROR_{operation.upper()}" if operation else "BUSINESS_ERROR"
         super().__init__(
             message=message,
             error_code=error_code,
@@ -181,9 +177,7 @@ class ConfigurationError(AlgoTradingError):
         config_key: Optional[str] = None,
         details: Optional[Dict[str, Any]] = None,
     ):
-        error_code = (
-            f"CONFIG_ERROR_{config_key.upper()}" if config_key else "CONFIG_ERROR"
-        )
+        error_code = f"CONFIG_ERROR_{config_key.upper()}" if config_key else "CONFIG_ERROR"
         super().__init__(
             message=message,
             error_code=error_code,
@@ -203,9 +197,7 @@ class SecurityError(AlgoTradingError):
         details: Optional[Dict[str, Any]] = None,
     ):
         error_code = (
-            f"SECURITY_ERROR_{violation_type.upper()}"
-            if violation_type
-            else "SECURITY_ERROR"
+            f"SECURITY_ERROR_{violation_type.upper()}" if violation_type else "SECURITY_ERROR"
         )
         super().__init__(
             message=message,
@@ -251,9 +243,7 @@ class SystemError(AlgoTradingError):
         component: Optional[str] = None,
         details: Optional[Dict[str, Any]] = None,
     ):
-        error_code = (
-            f"SYSTEM_ERROR_{component.upper()}" if component else "SYSTEM_ERROR"
-        )
+        error_code = f"SYSTEM_ERROR_{component.upper()}" if component else "SYSTEM_ERROR"
         super().__init__(
             message=message,
             error_code=error_code,

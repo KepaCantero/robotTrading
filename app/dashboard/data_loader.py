@@ -6,11 +6,8 @@ Loads data from backtesting results and paper trading logs.
 
 import json
 import logging
-from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
-
-import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -81,4 +78,3 @@ class DashboardDataLoader:
         """Get last PnL for strategy."""
         # TODO: Implement actual PnL retrieval
         return 0.0
-

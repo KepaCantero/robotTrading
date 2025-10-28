@@ -8,7 +8,7 @@ historical data simulation, trade execution, and performance metrics calculation
 import math
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
-from typing import Any, Dict, List, Optional, Tuple, Any
+from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
 from app.backtesting.models import (
@@ -18,8 +18,6 @@ from app.backtesting.models import (
     Trade,
     TradeStatus,
 )
-from app.models.market_data import Quote
-from typing import Union, Any
 from app.models.signal import Signal, SignalType
 
 
@@ -32,7 +30,9 @@ def get_price(md) -> Decimal:
     elif hasattr(md, 'close_price'):
         return md.close_price
     else:
-        raise AttributeError(f"MarketData object has no 'close' or 'close_price' attribute: {type(md)}")
+        raise AttributeError(
+            f"MarketData object has no 'close' or 'close_price' attribute: {type(md)}"
+        )
 
 
 class SimpleBacktester:
@@ -164,15 +164,12 @@ class SimpleBacktester:
         if current_position > 0:
             # Close existing position first (with loss/profit)
             self._close_position(
-                signal.symbol, 
-                market_data.timestamp, 
-                "signal_reverse", 
-                get_price(market_data)
+                signal.symbol, market_data.timestamp, "signal_reverse", get_price(market_data)
             )
-        
+
         # Get price using helper function
         current_price = get_price(market_data)
-        
+
         # Calculate position size based on signal confidence and available
         # capital
         position_size = self._calculate_position_size(signal, current_price)
@@ -252,14 +249,17 @@ class SimpleBacktester:
 
         # Find the most recent buy trade for this symbol to calculate PnL
         buy_trades = [
-            t for t in self.trades
+            t
+            for t in self.trades
             if t.symbol == signal.symbol and t.side == "buy" and t.status == TradeStatus.OPEN
         ]
-        
+
         # Calculate PnL
         pnl = Decimal("0")
         if buy_trades:
-            avg_buy_price = sum(t.entry_price * t.quantity for t in buy_trades) / sum(t.quantity for t in buy_trades)
+            avg_buy_price = sum(t.entry_price * t.quantity for t in buy_trades) / sum(
+                t.quantity for t in buy_trades
+            )
             total_cost = avg_buy_price * sell_quantity + commission
             pnl = proceeds - total_cost
 
@@ -279,7 +279,9 @@ class SimpleBacktester:
             exit_time=market_data.timestamp,
             status=TradeStatus.CLOSED,
             pnl=pnl,
-            pnl_percentage=(pnl / (avg_buy_price * sell_quantity) * 100) if buy_trades else Decimal("0"),
+            pnl_percentage=(
+                (pnl / (avg_buy_price * sell_quantity) * 100) if buy_trades else Decimal("0")
+            ),
             commission=commission,
             slippage=slippage_cost,
             reason=reason,
@@ -301,7 +303,9 @@ class SimpleBacktester:
                     buy_trade.exit_time = market_data.timestamp
 
         self.trades.append(trade)
-        self.positions[signal.symbol] = current_position - sum(t.quantity for t in buy_trades if t.status == TradeStatus.CLOSED)
+        self.positions[signal.symbol] = current_position - sum(
+            t.quantity for t in buy_trades if t.status == TradeStatus.CLOSED
+        )
         self.capital += proceeds
 
     def _calculate_position_size(self, signal: Signal, price: Decimal) -> Decimal:
@@ -329,17 +333,21 @@ class SimpleBacktester:
     def _build_trade_reason(self, signal: Signal, market_data: Any) -> str:
         """Build human-readable reason for the trade from signal metadata."""
         reason_parts = []
-        
+
         # Add signal type and strength
         # Handle both SignalType enum and string
-        signal_type_str = signal.signal_type.value if hasattr(signal.signal_type, 'value') else str(signal.signal_type)
+        signal_type_str = (
+            signal.signal_type.value
+            if hasattr(signal.signal_type, 'value')
+            else str(signal.signal_type)
+        )
         reason_parts.append(signal_type_str.upper())
-        
+
         # Add source information
         source_str = signal.source.value if hasattr(signal.source, 'value') else str(signal.source)
         if source_str:
             reason_parts.append(f"via {source_str}")
-        
+
         # Extract and format metadata
         if signal.metadata:
             metadata_strs = []
@@ -349,10 +357,10 @@ class SimpleBacktester:
                     metadata_strs.append(f"{key}={value}")
             if metadata_strs:
                 reason_parts.append("(" + ", ".join(metadata_strs) + ")")
-        
+
         # Add confidence
         reason_parts.append(f"conf={signal.confidence:.1f}%")
-        
+
         return " ".join(reason_parts)
 
     def _check_exit_conditions(self, market_data: Any):
@@ -384,7 +392,9 @@ class SimpleBacktester:
                 Decimal("1") - self.config.stop_loss_percentage / Decimal("100")
             )
             if current_price <= stop_loss_price:
-                self._close_position(market_data.symbol, market_data.timestamp, "stop_loss", current_price)
+                self._close_position(
+                    market_data.symbol, market_data.timestamp, "stop_loss", current_price
+                )
                 return
 
         # Check take profit
@@ -393,10 +403,14 @@ class SimpleBacktester:
                 Decimal("1") + self.config.take_profit_percentage / Decimal("100")
             )
             if current_price >= take_profit_price:
-                self._close_position(market_data.symbol, market_data.timestamp, "take_profit", current_price)
+                self._close_position(
+                    market_data.symbol, market_data.timestamp, "take_profit", current_price
+                )
                 return
 
-    def _close_position(self, symbol: str, timestamp: datetime, reason: str, current_price: Decimal = None):
+    def _close_position(
+        self, symbol: str, timestamp: datetime, reason: str, current_price: Decimal = None
+    ):
         """Close a position completely."""
         current_position = self.positions.get(symbol, Decimal("0"))
 
@@ -404,27 +418,29 @@ class SimpleBacktester:
             return
 
         # Find the most recent buy trade for this symbol
-        recent_trades = [
-            t
-            for t in self.trades
-            if t.symbol == symbol and t.side == "buy"
-        ]
+        recent_trades = [t for t in self.trades if t.symbol == symbol and t.side == "buy"]
 
         if not recent_trades:
             return
 
         # Use the average entry price from all buy trades for this symbol
         buy_quantity = sum(t.quantity for t in recent_trades if t.status == TradeStatus.OPEN)
-        buy_cost = sum(t.quantity * t.entry_price for t in recent_trades if t.status == TradeStatus.OPEN)
-        avg_entry_price = buy_cost / buy_quantity if buy_quantity > 0 else recent_trades[-1].entry_price
-        
+        buy_cost = sum(
+            t.quantity * t.entry_price for t in recent_trades if t.status == TradeStatus.OPEN
+        )
+        avg_entry_price = (
+            buy_cost / buy_quantity if buy_quantity > 0 else recent_trades[-1].entry_price
+        )
+
         # Use provided current price or fallback
         exit_price = current_price if current_price else avg_entry_price
 
         # Calculate P&L
         total_buy_cost = buy_cost
         total_sell_proceeds = current_position * exit_price
-        commission_cost = self.config.commission_per_trade * (Decimal(len(recent_trades)) + Decimal("1"))  # Commission for buy + sell
+        commission_cost = self.config.commission_per_trade * (
+            Decimal(len(recent_trades)) + Decimal("1")
+        )  # Commission for buy + sell
         pnl = total_sell_proceeds - total_buy_cost - commission_cost
         pnl_percentage = (pnl / total_buy_cost * 100) if total_buy_cost > 0 else Decimal("0")
 
@@ -455,7 +471,7 @@ class SimpleBacktester:
 
         # Add trade to results
         self.trades.append(trade)
-        
+
         # Update capital
         self.capital += total_sell_proceeds - self.config.commission_per_trade
         self.positions[symbol] = Decimal("0")
@@ -464,7 +480,12 @@ class SimpleBacktester:
         """Close all remaining positions at the end of backtest."""
         for symbol in list(self.positions.keys()):
             if self.positions[symbol] > 0:
-                self._close_position(symbol, final_market_data.timestamp, "end_of_backtest", get_price(final_market_data))
+                self._close_position(
+                    symbol,
+                    final_market_data.timestamp,
+                    "end_of_backtest",
+                    get_price(final_market_data),
+                )
 
     def _update_equity_curve(self, timestamp: datetime):
         """Update equity curve with current portfolio value."""

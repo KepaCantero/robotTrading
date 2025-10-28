@@ -10,10 +10,8 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 
-from app.models.momentum import (MomentumFilter, MomentumStrategy,
-                                 MomentumType, Timeframe)
-from app.services.momentum_analysis import (MomentumAnalysisService,
-                                            get_momentum_analysis_service)
+from app.models.momentum import MomentumFilter, MomentumStrategy, MomentumType, Timeframe
+from app.services.momentum_analysis import MomentumAnalysisService, get_momentum_analysis_service
 
 router = APIRouter(prefix="/momentum", tags=["momentum"])
 
@@ -46,9 +44,7 @@ async def get_momentum_overview(
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting momentum overview: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting momentum overview: {str(e)}")
 
 
 @router.post("/analyze", response_model=Dict[str, Any])
@@ -78,17 +74,13 @@ async def analyze_asset_momentum_post(
 
         timeframe = timeframe_mapping.get(timeframe_str.lower())
         if not timeframe:
-            raise HTTPException(
-                status_code=400, detail=f"Invalid timeframe: {timeframe_str}"
-            )
+            raise HTTPException(status_code=400, detail=f"Invalid timeframe: {timeframe_str}")
 
         # Analyze asset momentum
         analysis = await service.analyze_asset_momentum(symbol, timeframe)
 
         if not analysis:
-            raise HTTPException(
-                status_code=404, detail=f"No analysis found for {symbol}"
-            )
+            raise HTTPException(status_code=404, detail=f"No analysis found for {symbol}")
 
         return {
             "success": True,
@@ -178,7 +170,6 @@ async def analyze_asset_momentum(
                 "volume_ratio": analysis.indicators.volume_ratio,
                 "ema_trend": analysis.indicators.ema_trend,
                 "rsi_signal": analysis.indicators.rsi_signal,
-                "macd_signal": analysis.indicators.macd_signal,
             },
             "signals": [
                 {
@@ -261,20 +252,12 @@ async def get_momentum_signals(
     momentum_types: Optional[List[MomentumType]] = Query(
         None, description="Filter by momentum types"
     ),
-    timeframes: Optional[List[Timeframe]] = Query(
-        None, description="Filter by timeframes"
-    ),
-    min_strength: float = Query(
-        50.0, ge=0, le=100, description="Minimum signal strength"
-    ),
-    min_confidence: float = Query(
-        60.0, ge=0, le=100, description="Minimum signal confidence"
-    ),
+    timeframes: Optional[List[Timeframe]] = Query(None, description="Filter by timeframes"),
+    min_strength: float = Query(50.0, ge=0, le=100, description="Minimum signal strength"),
+    min_confidence: float = Query(60.0, ge=0, le=100, description="Minimum signal confidence"),
     active_only: bool = Query(True, description="Only active signals"),
     max_age_hours: int = Query(24, ge=1, description="Maximum signal age in hours"),
-    limit: int = Query(
-        50, ge=1, le=200, description="Maximum number of signals to return"
-    ),
+    limit: int = Query(50, ge=1, le=200, description="Maximum number of signals to return"),
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
 ):
     """Get momentum signals with filtering options."""
@@ -298,9 +281,7 @@ async def get_momentum_signals(
         return {
             "success": True,
             "filter_criteria": {
-                "momentum_types": (
-                    [mt.value for mt in momentum_types] if momentum_types else None
-                ),
+                "momentum_types": ([mt.value for mt in momentum_types] if momentum_types else None),
                 "timeframes": [tf.value for tf in timeframes] if timeframes else None,
                 "min_strength": min_strength,
                 "min_confidence": min_confidence,
@@ -330,9 +311,7 @@ async def get_momentum_signals(
                     "expires_at": signal.expires_at,
                     "is_expired": signal.is_expired,
                     "time_to_expiry": (
-                        signal.time_to_expiry.total_seconds() / 3600
-                        if not signal.is_expired
-                        else 0
+                        signal.time_to_expiry.total_seconds() / 3600 if not signal.is_expired else 0
                     ),
                 }
                 for signal in signals
@@ -342,9 +321,7 @@ async def get_momentum_signals(
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting momentum signals: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting momentum signals: {str(e)}")
 
 
 @router.get("/signals/top", response_model=Dict[str, Any])
@@ -365,9 +342,7 @@ async def get_top_momentum_signals(
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting top momentum signals: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting top momentum signals: {str(e)}")
 
 
 @router.post("/strategies", response_model=Dict[str, Any])
@@ -381,10 +356,7 @@ async def create_momentum_strategy(
         required_fields = ["name", "description", "timeframe"]
 
         # Check for momentum_type or momentum_types
-        if (
-            "momentum_type" not in strategy_data
-            and "momentum_types" not in strategy_data
-        ):
+        if "momentum_type" not in strategy_data and "momentum_types" not in strategy_data:
             raise HTTPException(
                 status_code=422,
                 detail="Missing required field: momentum_type or momentum_types",
@@ -392,9 +364,7 @@ async def create_momentum_strategy(
 
         for field in required_fields:
             if field not in strategy_data:
-                raise HTTPException(
-                    status_code=422, detail=f"Missing required field: {field}"
-                )
+                raise HTTPException(status_code=422, detail=f"Missing required field: {field}")
 
         # Convert momentum_type string to enum
         momentum_type_str = strategy_data.get("momentum_type", "price_momentum")
@@ -432,9 +402,7 @@ async def create_momentum_strategy(
         }
         timeframe = timeframe_mapping.get(timeframe_str.lower())
         if not timeframe:
-            raise HTTPException(
-                status_code=422, detail=f"Invalid timeframe: {timeframe_str}"
-            )
+            raise HTTPException(status_code=422, detail=f"Invalid timeframe: {timeframe_str}")
 
         # Create strategy object
         strategy = MomentumStrategy(
@@ -489,9 +457,7 @@ async def create_momentum_strategy(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error creating momentum strategy: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error creating momentum strategy: {str(e)}")
 
 
 @router.get("/strategies/{strategy_name}", response_model=Dict[str, Any])
@@ -504,9 +470,7 @@ async def get_momentum_strategy(
         strategy = await service.get_strategy(strategy_name)
 
         if not strategy:
-            raise HTTPException(
-                status_code=404, detail=f"Strategy {strategy_name} not found"
-            )
+            raise HTTPException(status_code=404, detail=f"Strategy {strategy_name} not found")
 
         return {
             "success": True,
@@ -537,9 +501,7 @@ async def get_momentum_strategy(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting momentum strategy: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting momentum strategy: {str(e)}")
 
 
 @router.put("/strategies/{strategy_name}", response_model=Dict[str, Any])
@@ -553,9 +515,7 @@ async def update_momentum_strategy(
         # Get existing strategy
         existing_strategy = await service.get_strategy(strategy_name)
         if not existing_strategy:
-            raise HTTPException(
-                status_code=404, detail=f"Strategy {strategy_name} not found"
-            )
+            raise HTTPException(status_code=404, detail=f"Strategy {strategy_name} not found")
 
         # Update fields if provided
         updated_fields = {}
@@ -610,9 +570,7 @@ async def update_momentum_strategy(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error updating momentum strategy: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error updating momentum strategy: {str(e)}")
 
 
 @router.delete("/strategies/{strategy_name}", response_model=Dict[str, Any])
@@ -625,9 +583,7 @@ async def delete_momentum_strategy(
         # Check if strategy exists
         existing_strategy = await service.get_strategy(strategy_name)
         if not existing_strategy:
-            raise HTTPException(
-                status_code=404, detail=f"Strategy {strategy_name} not found"
-            )
+            raise HTTPException(status_code=404, detail=f"Strategy {strategy_name} not found")
 
         # Delete strategy via service
         success = await service.delete_strategy(strategy_name)
@@ -646,9 +602,7 @@ async def delete_momentum_strategy(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error deleting momentum strategy: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error deleting momentum strategy: {str(e)}")
 
 
 @router.get("/strategies", response_model=Dict[str, Any])
@@ -692,9 +646,7 @@ async def get_momentum_strategies(
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting momentum strategies: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting momentum strategies: {str(e)}")
 
 
 @router.get("/strategies/{strategy_name}/signals", response_model=Dict[str, Any])
@@ -758,18 +710,14 @@ async def analyze_multiple_assets(
     """Analyze momentum for multiple assets."""
     try:
         if len(symbols) > 20:
-            raise HTTPException(
-                status_code=400, detail="Maximum 20 symbols allowed per batch"
-            )
+            raise HTTPException(status_code=400, detail="Maximum 20 symbols allowed per batch")
 
         analyses = []
         errors = []
 
         for symbol in symbols:
             try:
-                analysis = await service.analyze_asset_momentum(
-                    symbol.upper(), timeframe
-                )
+                analysis = await service.analyze_asset_momentum(symbol.upper(), timeframe)
                 analyses.append(
                     {
                         "symbol": analysis.symbol,
@@ -795,9 +743,7 @@ async def analyze_multiple_assets(
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error analyzing multiple assets: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error analyzing multiple assets: {str(e)}")
 
 
 @router.get("/indicators/{symbol}", response_model=Dict[str, Any])
@@ -816,9 +762,7 @@ async def get_technical_indicators(
         )
 
     if not analysis:
-        raise HTTPException(
-            status_code=404, detail=f"Analysis not found for {symbol.upper()}"
-        )
+        raise HTTPException(status_code=404, detail=f"Analysis not found for {symbol.upper()}")
 
     indicators = analysis.indicators
 
@@ -843,7 +787,6 @@ async def get_technical_indicators(
             "volume_ratio": indicators.volume_ratio,
             "ema_trend": indicators.ema_trend,
             "rsi_signal": indicators.rsi_signal,
-            "macd_signal": indicators.macd_signal,
         },
         "timestamp": datetime.utcnow(),
     }
@@ -861,9 +804,7 @@ async def momentum_health_check():
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Momentum health check failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Momentum health check failed: {str(e)}")
 
 
 @router.get("/stats", response_model=Dict[str, Any])
@@ -892,19 +833,13 @@ async def get_momentum_stats(
 
         # Average scores
         avg_strength = (
-            sum(s.strength for s in all_signals) / total_signals
-            if total_signals > 0
-            else 0
+            sum(s.strength for s in all_signals) / total_signals if total_signals > 0 else 0
         )
         avg_confidence = (
-            sum(s.confidence for s in all_signals) / total_signals
-            if total_signals > 0
-            else 0
+            sum(s.confidence for s in all_signals) / total_signals if total_signals > 0 else 0
         )
         avg_momentum_score = (
-            sum(s.momentum_score for s in all_signals) / total_signals
-            if total_signals > 0
-            else 0
+            sum(s.momentum_score for s in all_signals) / total_signals if total_signals > 0 else 0
         )
 
         return {
@@ -930,9 +865,7 @@ async def get_momentum_stats(
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting momentum stats: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting momentum stats: {str(e)}")
 
 
 @router.get("/analyses", response_model=Dict[str, Any])
@@ -997,9 +930,7 @@ async def get_momentum_analyses(
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting momentum analyses: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting momentum analyses: {str(e)}")
 
 
 @router.get("/analyses/{analysis_id}", response_model=Dict[str, Any])
@@ -1012,9 +943,7 @@ async def get_momentum_analysis(
         analysis = await service.get_analysis(analysis_id)
 
         if not analysis:
-            raise HTTPException(
-                status_code=404, detail=f"Analysis {analysis_id} not found"
-            )
+            raise HTTPException(status_code=404, detail=f"Analysis {analysis_id} not found")
 
         return {
             "success": True,
@@ -1065,9 +994,7 @@ async def get_momentum_analysis(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting momentum analysis: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting momentum analysis: {str(e)}")
 
 
 @router.delete("/analyses/{analysis_id}", response_model=Dict[str, Any])
@@ -1080,17 +1007,13 @@ async def delete_momentum_analysis(
         # Check if analysis exists
         existing_analysis = await service.get_analysis(analysis_id)
         if not existing_analysis:
-            raise HTTPException(
-                status_code=404, detail=f"Analysis {analysis_id} not found"
-            )
+            raise HTTPException(status_code=404, detail=f"Analysis {analysis_id} not found")
 
         # Delete analysis via service
         success = await service.delete_analysis(analysis_id)
 
         if not success:
-            raise HTTPException(
-                status_code=500, detail=f"Failed to delete analysis {analysis_id}"
-            )
+            raise HTTPException(status_code=500, detail=f"Failed to delete analysis {analysis_id}")
 
         return {
             "success": True,
@@ -1101,6 +1024,4 @@ async def delete_momentum_analysis(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error deleting momentum analysis: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error deleting momentum analysis: {str(e)}")

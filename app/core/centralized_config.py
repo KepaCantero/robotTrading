@@ -30,48 +30,30 @@ class TradingThresholds(BaseModel):
     """Centralized trading thresholds."""
 
     # Signal thresholds
-    min_signal_strength: float = Field(
-        default=60.0, description="Minimum signal strength (0-100)"
-    )
+    min_signal_strength: float = Field(default=60.0, description="Minimum signal strength (0-100)")
     min_signal_confidence: float = Field(
         default=70.0, description="Minimum signal confidence (0-100)"
     )
-    min_liquidity_score: float = Field(
-        default=50.0, description="Minimum liquidity score (0-100)"
-    )
+    min_liquidity_score: float = Field(default=50.0, description="Minimum liquidity score (0-100)")
 
     # Technical indicators
     rsi_oversold: float = Field(default=30.0, description="RSI oversold threshold")
     rsi_overbought: float = Field(default=70.0, description="RSI overbought threshold")
 
     # Position sizing
-    max_position_size: float = Field(
-        default=0.1, description="Maximum position size (0-1)"
-    )
-    min_position_size: float = Field(
-        default=0.01, description="Minimum position size (0-1)"
-    )
+    max_position_size: float = Field(default=0.1, description="Maximum position size (0-1)")
+    min_position_size: float = Field(default=0.01, description="Minimum position size (0-1)")
 
     # Risk management
     stop_loss_pct: float = Field(default=0.05, description="Stop loss percentage (0-1)")
-    take_profit_pct: float = Field(
-        default=0.15, description="Take profit percentage (0-1)"
-    )
+    take_profit_pct: float = Field(default=0.15, description="Take profit percentage (0-1)")
     daily_loss_limit: float = Field(default=0.05, description="Daily loss limit (0-1)")
-    max_drawdown_limit: float = Field(
-        default=0.15, description="Maximum drawdown limit (0-1)"
-    )
+    max_drawdown_limit: float = Field(default=0.15, description="Maximum drawdown limit (0-1)")
 
     # Portfolio limits
-    max_total_exposure: float = Field(
-        default=0.8, description="Maximum total exposure (0-1)"
-    )
-    max_sector_exposure: float = Field(
-        default=0.3, description="Maximum sector exposure (0-1)"
-    )
-    max_correlation: float = Field(
-        default=0.7, description="Maximum correlation between positions"
-    )
+    max_total_exposure: float = Field(default=0.8, description="Maximum total exposure (0-1)")
+    max_sector_exposure: float = Field(default=0.3, description="Maximum sector exposure (0-1)")
+    max_correlation: float = Field(default=0.7, description="Maximum correlation between positions")
 
     # Circuit breakers
     circuit_breaker_daily_loss: float = Field(
@@ -105,9 +87,7 @@ class TradingThresholds(BaseModel):
     max_spread_threshold: Decimal = Field(
         default=Decimal("2.0"), description="Maximum spread threshold (%)"
     )
-    base_slippage: Decimal = Field(
-        default=Decimal("0.1"), description="Base slippage rate (%)"
-    )
+    base_slippage: Decimal = Field(default=Decimal("0.1"), description="Base slippage rate (%)")
 
     # Additional thresholds for momentum analysis
     min_strength: float = Field(
@@ -171,9 +151,7 @@ class StrategyConfig(BaseModel):
 
     name: str = Field(description="Strategy name")
     enabled: bool = Field(default=True, description="Whether strategy is enabled")
-    weight: float = Field(
-        default=1.0, description="Strategy weight for portfolio allocation"
-    )
+    weight: float = Field(default=1.0, description="Strategy weight for portfolio allocation")
 
     # Strategy-specific parameters
     parameters: Dict[str, Any] = Field(
@@ -195,12 +173,8 @@ class StrategyConfig(BaseModel):
     min_sharpe_ratio: float = Field(
         default=1.0, description="Minimum Sharpe ratio for this strategy"
     )
-    max_drawdown: float = Field(
-        default=0.15, description="Maximum drawdown for this strategy"
-    )
-    min_win_rate: float = Field(
-        default=0.4, description="Minimum win rate for this strategy"
-    )
+    max_drawdown: float = Field(default=0.15, description="Maximum drawdown for this strategy")
+    min_win_rate: float = Field(default=0.4, description="Minimum win rate for this strategy")
 
     @field_validator("max_drawdown", "min_win_rate")
     @classmethod
@@ -333,9 +307,7 @@ class LoggingConfig(BaseModel):
     # File logging
     file_enabled: bool = Field(default=True, description="Enable file logging")
     file_path: str = Field(default="logs/app.log", description="Log file path")
-    file_max_size: int = Field(
-        default=10485760, description="Maximum log file size in bytes"
-    )
+    file_max_size: int = Field(default=10485760, description="Maximum log file size in bytes")
     file_backup_count: int = Field(default=5, description="Number of backup files")
 
     # Console logging
@@ -352,9 +324,7 @@ class MonitoringConfig(BaseModel):
     """Monitoring configuration."""
 
     # Prometheus
-    prometheus_enabled: bool = Field(
-        default=True, description="Enable Prometheus metrics"
-    )
+    prometheus_enabled: bool = Field(default=True, description="Enable Prometheus metrics")
     prometheus_port: int = Field(default=9090, description="Prometheus port")
 
     # Grafana
@@ -362,21 +332,13 @@ class MonitoringConfig(BaseModel):
     grafana_port: int = Field(default=3000, description="Grafana port")
 
     # Health checks
-    health_check_interval: int = Field(
-        default=30, description="Health check interval in seconds"
-    )
-    health_check_timeout: int = Field(
-        default=10, description="Health check timeout in seconds"
-    )
+    health_check_interval: int = Field(default=30, description="Health check interval in seconds")
+    health_check_timeout: int = Field(default=10, description="Health check timeout in seconds")
 
     # Alerts
     alerts_enabled: bool = Field(default=True, description="Enable alerts")
-    slack_webhook_url: Optional[str] = Field(
-        default=None, description="Slack webhook URL"
-    )
-    discord_webhook_url: Optional[str] = Field(
-        default=None, description="Discord webhook URL"
-    )
+    slack_webhook_url: Optional[str] = Field(default=None, description="Slack webhook URL")
+    discord_webhook_url: Optional[str] = Field(default=None, description="Discord webhook URL")
 
     @field_validator("prometheus_port", "grafana_port")
     @classmethod
@@ -402,9 +364,7 @@ class CentralizedConfig(BaseSettings):
     database: DatabaseConfig = Field(
         default_factory=DatabaseConfig, description="Database configuration"
     )
-    redis: RedisConfig = Field(
-        default_factory=RedisConfig, description="Redis configuration"
-    )
+    redis: RedisConfig = Field(default_factory=RedisConfig, description="Redis configuration")
     api: APIConfig = Field(default_factory=APIConfig, description="API configuration")
     logging: LoggingConfig = Field(
         default_factory=LoggingConfig, description="Logging configuration"
@@ -441,9 +401,7 @@ class CentralizedConfig(BaseSettings):
                     strategy_config = StrategyConfig(**strategy_data)
                     self.strategies[strategy_name] = strategy_config
                 except Exception as e:
-                    print(
-                        f"Warning: Could not load strategy config from {strategy_file}: {e}"
-                    )
+                    print(f"Warning: Could not load strategy config from {strategy_file}: {e}")
 
     def get_strategy_config(self, strategy_name: str) -> Optional[StrategyConfig]:
         """Get configuration for a specific strategy."""
@@ -455,9 +413,7 @@ class CentralizedConfig(BaseSettings):
             raise AttributeError(f"Trading threshold '{threshold_name}' does not exist")
         return getattr(self.trading, threshold_name)
 
-    def update_strategy_config(
-        self, strategy_name: str, updates: Dict[str, Any]
-    ) -> bool:
+    def update_strategy_config(self, strategy_name: str, updates: Dict[str, Any]) -> bool:
         """Update configuration for a specific strategy."""
         if strategy_name in self.strategies:
             current_config = self.strategies[strategy_name]
@@ -500,9 +456,7 @@ class CentralizedConfig(BaseSettings):
             },
             "strategies": {
                 "count": len(self.strategies),
-                "enabled": [
-                    name for name, config in self.strategies.items() if config.enabled
-                ],
+                "enabled": [name for name, config in self.strategies.items() if config.enabled],
                 "all": list(self.strategies.keys()),
             },
             "database": {

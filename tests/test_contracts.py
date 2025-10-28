@@ -13,16 +13,25 @@ from decimal import Decimal
 
 import pytest
 
-from app.core.contracts import (ContractViolationError, InvariantError,
-                                MarketDataContract, PositionContract,
-                                PostconditionError, PreconditionError,
-                                SignalContract, TechnicalIndicatorContract,
-                                contract, risk_calculation, signal_analysis,
-                                trading_operation, validate_batch_trading_data,
-                                validate_position_size,
-                                validate_positive_amount,
-                                validate_reasonable_price,
-                                validate_trading_data)
+from app.core.contracts import (
+    ContractViolationError,
+    InvariantError,
+    MarketDataContract,
+    PositionContract,
+    PostconditionError,
+    PreconditionError,
+    SignalContract,
+    TechnicalIndicatorContract,
+    contract,
+    risk_calculation,
+    signal_analysis,
+    trading_operation,
+    validate_batch_trading_data,
+    validate_position_size,
+    validate_positive_amount,
+    validate_reasonable_price,
+    validate_trading_data,
+)
 
 
 class TestContractViolations:
@@ -484,9 +493,7 @@ class TestValidationUtilities:
                 "timestamp": datetime.utcnow(),
             },
         ]
-        with pytest.raises(
-            ContractViolationError, match="Batch validation failed at index 1"
-        ):
+        with pytest.raises(ContractViolationError, match="Batch validation failed at index 1"):
             validate_batch_trading_data(invalid_batch, MarketDataContract)
 
 

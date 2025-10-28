@@ -222,9 +222,7 @@ def contract(
                                 function_name,
                             )
                     except Exception as e:
-                        raise PreconditionError(
-                            f"Precondition error: {str(e)}", function_name
-                        )
+                        raise PreconditionError(f"Precondition error: {str(e)}", function_name)
 
             # Validate data contract if provided
             if data_contract:
@@ -281,9 +279,7 @@ def contract(
                                 function_name,
                             )
                     except Exception as e:
-                        raise PostconditionError(
-                            f"Postcondition error: {str(e)}", function_name
-                        )
+                        raise PostconditionError(f"Postcondition error: {str(e)}", function_name)
 
             return result
 
@@ -362,9 +358,7 @@ def trading_operation(data_contract: Type[TradingDataContract]):
 
 def signal_analysis(data_contract: Type[TradingDataContract]):
     """Decorator for signal analysis operations."""
-    return contract(
-        preconditions=[validate_signal_confidence], data_contract=data_contract
-    )
+    return contract(preconditions=[validate_signal_confidence], data_contract=data_contract)
 
 
 def risk_calculation():
@@ -378,9 +372,7 @@ def risk_calculation():
 # Contract validation utilities
 
 
-def validate_trading_data(
-    data: Dict[str, Any], contract_type: Type[TradingDataContract]
-) -> bool:
+def validate_trading_data(data: Dict[str, Any], contract_type: Type[TradingDataContract]) -> bool:
     """
     Validate trading data against a contract.
 

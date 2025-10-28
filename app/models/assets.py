@@ -60,31 +60,21 @@ class Asset(BaseModel):
     )
     avg_volume: Decimal = Field(..., description="Average daily volume")
     avg_spread: Decimal = Field(..., description="Average bid-ask spread")
-    market_cap: Optional[Decimal] = Field(
-        None, ge=0, description="Market capitalization"
-    )
+    market_cap: Optional[Decimal] = Field(None, ge=0, description="Market capitalization")
 
     # Trading characteristics
-    min_trade_size: Decimal = Field(
-        default=Decimal("0.01"), ge=0, description="Minimum trade size"
-    )
+    min_trade_size: Decimal = Field(default=Decimal("0.01"), ge=0, description="Minimum trade size")
     max_trade_size: Decimal = Field(
         default=Decimal("1000000"), ge=0, description="Maximum trade size"
     )
-    tick_size: Decimal = Field(
-        default=Decimal("0.01"), ge=0, description="Minimum price increment"
-    )
+    tick_size: Decimal = Field(default=Decimal("0.01"), ge=0, description="Minimum price increment")
 
     # Status and metadata
-    is_active: bool = Field(
-        default=True, description="Whether asset is actively traded"
-    )
+    is_active: bool = Field(default=True, description="Whether asset is actively traded")
     last_updated: datetime = Field(
         default_factory=datetime.utcnow, description="Last update timestamp"
     )
-    metadata: Dict[str, Any] = Field(
-        default_factory=dict, description="Additional metadata"
-    )
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
     @field_validator("symbol")
     @classmethod
@@ -140,12 +130,8 @@ class AssetUniverse(BaseModel):
     """Asset universe representing a collection of assets for trading."""
 
     asset_class: AssetClass = Field(..., description="Asset class for this universe")
-    assets: List[Asset] = Field(
-        default_factory=list, description="List of assets in universe"
-    )
-    top_n: int = Field(
-        default=20, ge=1, le=100, description="Number of top assets to maintain"
-    )
+    assets: List[Asset] = Field(default_factory=list, description="List of assets in universe")
+    top_n: int = Field(default=20, ge=1, le=100, description="Number of top assets to maintain")
     last_updated: datetime = Field(
         default_factory=datetime.utcnow, description="Last update timestamp"
     )
@@ -168,13 +154,11 @@ class AssetUniverse(BaseModel):
         self.total_assets = len(self.assets)
 
         if self.assets:
-            self.avg_liquidity_score = sum(
-                asset.liquidity_score for asset in self.assets
-            ) / len(self.assets)
+            self.avg_liquidity_score = sum(asset.liquidity_score for asset in self.assets) / len(
+                self.assets
+            )
 
-            market_caps = [
-                asset.market_cap for asset in self.assets if asset.market_cap
-            ]
+            market_caps = [asset.market_cap for asset in self.assets if asset.market_cap]
             if market_caps:
                 self.total_market_cap = sum(market_caps)
         else:
@@ -211,9 +195,7 @@ class AssetUniverse(BaseModel):
             n = self.top_n
 
         # Sort by liquidity score (descending)
-        sorted_assets = sorted(
-            self.assets, key=lambda x: x.liquidity_score, reverse=True
-        )
+        sorted_assets = sorted(self.assets, key=lambda x: x.liquidity_score, reverse=True)
         return sorted_assets[:n]
 
     def get_asset_by_symbol(self, symbol: str) -> Optional[Asset]:
@@ -248,9 +230,7 @@ class LiquidityMetrics(BaseModel):
     """Liquidity metrics for asset analysis."""
 
     symbol: str = Field(..., description="Asset symbol")
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Metrics timestamp"
-    )
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Metrics timestamp")
 
     # Volume metrics
     daily_volume: Decimal = Field(ge=0, description="Daily trading volume")
@@ -273,15 +253,9 @@ class LiquidityMetrics(BaseModel):
     )
 
     # Calculated scores
-    volume_score: float = Field(
-        ge=0, le=100, description="Volume-based liquidity score"
-    )
-    spread_score: float = Field(
-        ge=0, le=100, description="Spread-based liquidity score"
-    )
-    overall_liquidity_score: float = Field(
-        ge=0, le=100, description="Overall liquidity score"
-    )
+    volume_score: float = Field(ge=0, le=100, description="Volume-based liquidity score")
+    spread_score: float = Field(ge=0, le=100, description="Spread-based liquidity score")
+    overall_liquidity_score: float = Field(ge=0, le=100, description="Overall liquidity score")
 
     @field_validator("symbol")
     @classmethod
@@ -294,12 +268,8 @@ class AssetRanking(BaseModel):
     """Asset ranking based on liquidity metrics."""
 
     asset_class: AssetClass = Field(..., description="Asset class")
-    ranking_date: datetime = Field(
-        default_factory=datetime.utcnow, description="Ranking date"
-    )
-    rankings: List[Dict[str, Any]] = Field(
-        default_factory=list, description="Ranked assets"
-    )
+    ranking_date: datetime = Field(default_factory=datetime.utcnow, description="Ranking date")
+    rankings: List[Dict[str, Any]] = Field(default_factory=list, description="Ranked assets")
 
     def add_ranking(
         self,
@@ -333,12 +303,8 @@ class AssetFilter(BaseModel):
     min_liquidity_score: float = Field(
         default=50.0, ge=0, le=100, description="Minimum liquidity score"
     )
-    min_volume: Decimal = Field(
-        default=Decimal("100000"), ge=0, description="Minimum daily volume"
-    )
-    max_spread: Decimal = Field(
-        default=Decimal("0.01"), ge=0, description="Maximum spread"
-    )
+    min_volume: Decimal = Field(default=Decimal("100000"), ge=0, description="Minimum daily volume")
+    max_spread: Decimal = Field(default=Decimal("0.01"), ge=0, description="Maximum spread")
     exchanges: Optional[List[Exchange]] = Field(None, description="Allowed exchanges")
     active_only: bool = Field(default=True, description="Only active assets")
 

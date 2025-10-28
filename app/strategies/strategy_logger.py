@@ -43,9 +43,7 @@ class StrategyLogger:
             try:
                 with open(self.log_path, "r", encoding="utf-8") as f:
                     self.logs = json.load(f)
-                logger.info(
-                    f"Loaded {len(self.logs)} existing logs from {self.log_path}"
-                )
+                logger.info(f"Loaded {len(self.logs)} existing logs from {self.log_path}")
             except Exception as e:
                 logger.warning(f"Could not load existing logs: {e}")
                 self.logs = []
@@ -102,9 +100,7 @@ class StrategyLogger:
         self._save_logs()
         logger.debug(f"Strategy '{strategy_name}' generated signal: {signal.symbol}")
 
-    def log_signal_rejected(
-        self, strategy_name: str, signal: Signal, reason: str
-    ) -> None:
+    def log_signal_rejected(self, strategy_name: str, signal: Signal, reason: str) -> None:
         """
         Log de señal rechazada.
 
@@ -167,9 +163,7 @@ class StrategyLogger:
         self._save_logs()
         logger.error(f"Strategy '{strategy_name}' error: {error}")
 
-    def log_execution_error(
-        self, strategy_name: str, signal: Signal, error: str
-    ) -> None:
+    def log_execution_error(self, strategy_name: str, signal: Signal, error: str) -> None:
         """
         Log de error de ejecución.
 
@@ -235,9 +229,7 @@ class StrategyLogger:
         Args:
             strategy_name: Nombre de la estrategia
         """
-        log_entry = self._create_log_entry(
-            "strategy_deactivated", strategy_name, "INFO"
-        )
+        log_entry = self._create_log_entry("strategy_deactivated", strategy_name, "INFO")
         self.logs.append(log_entry)
         self._save_logs()
         logger.info(f"Strategy '{strategy_name}' deactivated")
@@ -276,31 +268,21 @@ class StrategyLogger:
         Returns:
             Diccionario con métricas de la estrategia
         """
-        strategy_logs = [
-            log for log in self.logs if log.get("strategy") == strategy_name
-        ]
+        strategy_logs = [log for log in self.logs if log.get("strategy") == strategy_name]
 
         signals_generated = len(
             [log for log in strategy_logs if log["event"] == "signal_generated"]
         )
-        signals_executed = len(
-            [log for log in strategy_logs if log["event"] == "signal_executed"]
-        )
-        signals_rejected = len(
-            [log for log in strategy_logs if log["event"] == "signal_rejected"]
-        )
+        signals_executed = len([log for log in strategy_logs if log["event"] == "signal_executed"])
+        signals_rejected = len([log for log in strategy_logs if log["event"] == "signal_rejected"])
         errors = len([log for log in strategy_logs if log["event"] == "strategy_error"])
-        execution_errors = len(
-            [log for log in strategy_logs if log["event"] == "execution_error"]
-        )
+        execution_errors = len([log for log in strategy_logs if log["event"] == "execution_error"])
 
         # Calcular métricas adicionales
         total_signals = signals_generated
         execution_rate = signals_executed / total_signals if total_signals > 0 else 0
         rejection_rate = signals_rejected / total_signals if total_signals > 0 else 0
-        error_rate = (
-            (errors + execution_errors) / total_signals if total_signals > 0 else 0
-        )
+        error_rate = (errors + execution_errors) / total_signals if total_signals > 0 else 0
 
         return {
             "strategy": strategy_name,
@@ -323,9 +305,7 @@ class StrategyLogger:
         Returns:
             Diccionario con métricas de todas las estrategias
         """
-        strategies = set(
-            log.get("strategy") for log in self.logs if log.get("strategy")
-        )
+        strategies = set(log.get("strategy") for log in self.logs if log.get("strategy"))
 
         metrics = {}
         for strategy_name in strategies:

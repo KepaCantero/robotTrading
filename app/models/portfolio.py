@@ -10,8 +10,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import List, Optional, Protocol
 
-from pydantic import (BaseModel, ConfigDict, Field, field_validator,
-                      model_validator)
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class AssetClass(str, Enum):
@@ -37,15 +36,11 @@ class Position(BaseModel):
 
     symbol: str = Field(..., description="Trading symbol (e.g., AAPL, BTCUSDT)")
     asset_class: AssetClass = Field(..., description="Asset class category")
-    quantity: Decimal = Field(
-        ..., description="Position quantity (positive=long, negative=short)"
-    )
+    quantity: Decimal = Field(..., description="Position quantity (positive=long, negative=short)")
     avg_price: Decimal = Field(..., description="Average entry price")
     market_price: Decimal = Field(..., description="Current market price")
     unrealized_pnl: Decimal = Field(..., description="Unrealized profit/loss")
-    realized_pnl: Decimal = Field(
-        default=Decimal("0"), description="Realized profit/loss"
-    )
+    realized_pnl: Decimal = Field(default=Decimal("0"), description="Realized profit/loss")
     currency: str = Field(default="USD", description="Position currency")
     broker: str = Field(..., description="Broker identifier")
 
@@ -157,9 +152,7 @@ class Portfolio(BaseModel):
 
     portfolio_id: str = Field(default="", description="Unique portfolio identifier")
     cash: Decimal = Field(..., description="Available cash balance")
-    positions: List[Position] = Field(
-        default_factory=list, description="List of positions"
-    )
+    positions: List[Position] = Field(default_factory=list, description="List of positions")
     timestamp: datetime = Field(
         default_factory=datetime.utcnow, description="Portfolio snapshot timestamp"
     )
@@ -226,9 +219,7 @@ class MarketRegimeData(BaseModel):
     atr_ratio: float = Field(..., description="ATR to price ratio")
     trend_strength: float = Field(..., description="Trend strength indicator")
     volatility_level: float = Field(..., description="Volatility level indicator")
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Detection timestamp"
-    )
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Detection timestamp")
 
 
 class AssetUniverse(BaseModel):
@@ -237,9 +228,7 @@ class AssetUniverse(BaseModel):
     broker: str = Field(..., description="Broker identifier")
     asset_class: AssetClass = Field(..., description="Asset class")
     symbols: List[str] = Field(..., description="List of supported symbols")
-    min_volume: Optional[Decimal] = Field(
-        None, description="Minimum daily volume requirement"
-    )
+    min_volume: Optional[Decimal] = Field(None, description="Minimum daily volume requirement")
     max_spread: Optional[Decimal] = Field(None, description="Maximum bid-ask spread")
 
     def is_supported(self, symbol: str) -> bool:
@@ -264,12 +253,8 @@ class CircuitBreaker(BaseModel):
     )
     error_count: int = Field(default=0, description="Consecutive error count")
     max_errors: int = Field(default=3, description="Maximum errors before triggering")
-    last_error_time: Optional[datetime] = Field(
-        None, description="Last error timestamp"
-    )
-    last_success_time: Optional[datetime] = Field(
-        None, description="Last success timestamp"
-    )
+    last_error_time: Optional[datetime] = Field(None, description="Last error timestamp")
+    last_success_time: Optional[datetime] = Field(None, description="Last success timestamp")
     cooldown_seconds: int = Field(default=300, description="Cooldown period in seconds")
     success_count: int = Field(default=0, description="Consecutive success count")
     success_threshold: int = Field(

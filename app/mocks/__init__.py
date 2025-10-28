@@ -314,9 +314,7 @@ class MockBinanceClient:
     Simulates Binance API behavior without requiring actual connection.
     """
 
-    def __init__(
-        self, api_key: str = "mock_api_key", api_secret: str = "mock_api_secret"
-    ):
+    def __init__(self, api_key: str = "mock_api_key", api_secret: str = "mock_api_secret"):
         self.api_key = api_key
         self.api_secret = api_secret
         self.connection_status = MockConnectionStatus.DISCONNECTED
@@ -500,8 +498,7 @@ class MockBinanceClient:
             klines.append(
                 {
                     "open_time": int(
-                        (datetime.utcnow() - timedelta(days=limit - i)).timestamp()
-                        * 1000
+                        (datetime.utcnow() - timedelta(days=limit - i)).timestamp() * 1000
                     ),
                     "open": str(price),
                     "high": str(price * Decimal("1.02")),
@@ -509,8 +506,7 @@ class MockBinanceClient:
                     "close": str(price),
                     "volume": "100.00000000",
                     "close_time": int(
-                        (datetime.utcnow() - timedelta(days=limit - i - 1)).timestamp()
-                        * 1000
+                        (datetime.utcnow() - timedelta(days=limit - i - 1)).timestamp() * 1000
                     ),
                     "quote_asset_volume": "5000000.00000000",
                     "number_of_trades": 1000,
@@ -575,15 +571,13 @@ class MockBinanceClient:
 
         # Update balances
         base_asset = order.symbol.split("USDT")[0] if "USDT" in order.symbol else "USDT"
-        quote_asset = (
-            "USDT" if "USDT" in order.symbol else order.symbol.split("USDT")[0]
-        )
+        quote_asset = "USDT" if "USDT" in order.symbol else order.symbol.split("USDT")[0]
 
         if order.side == OrderSide.BUY:
             # Buy: reduce quote asset, increase base asset
-            self.balances[quote_asset] = self.balances.get(
-                quote_asset, Decimal("0")
-            ) - (order.filled_quantity * order.filled_price)
+            self.balances[quote_asset] = self.balances.get(quote_asset, Decimal("0")) - (
+                order.filled_quantity * order.filled_price
+            )
             self.balances[base_asset] = (
                 self.balances.get(base_asset, Decimal("0")) + order.filled_quantity
             )
@@ -592,9 +586,9 @@ class MockBinanceClient:
             self.balances[base_asset] = (
                 self.balances.get(base_asset, Decimal("0")) - order.filled_quantity
             )
-            self.balances[quote_asset] = self.balances.get(
-                quote_asset, Decimal("0")
-            ) + (order.filled_quantity * order.filled_price)
+            self.balances[quote_asset] = self.balances.get(quote_asset, Decimal("0")) + (
+                order.filled_quantity * order.filled_price
+            )
 
     def _get_market_price(self, symbol: str) -> Decimal:
         """Get mock market price."""

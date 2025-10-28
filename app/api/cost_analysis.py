@@ -12,8 +12,7 @@ from typing import Any, Dict
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.backtesting.models import Trade, TradeStatus
-from app.services.cost_analysis_service import (CostAnalysisResult,
-                                                CostAnalysisService)
+from app.services.cost_analysis_service import CostAnalysisResult, CostAnalysisService
 
 router = APIRouter(prefix="/cost-analysis", tags=["cost-analysis"])
 
@@ -37,13 +36,9 @@ async def analyze_trade_costs(
             side=trade_data["side"],  # Use string directly
             quantity=Decimal(str(trade_data["quantity"])),
             entry_price=Decimal(str(trade_data["entry_price"])),
-            exit_price=Decimal(
-                str(trade_data.get("exit_price", trade_data["entry_price"]))
-            ),
+            exit_price=Decimal(str(trade_data.get("exit_price", trade_data["entry_price"]))),
             entry_time=datetime.fromisoformat(trade_data["entry_time"]),
-            exit_time=datetime.fromisoformat(
-                trade_data.get("exit_time", trade_data["entry_time"])
-            ),
+            exit_time=datetime.fromisoformat(trade_data.get("exit_time", trade_data["entry_time"])),
             pnl=Decimal(str(trade_data.get("pnl", 0))),
             status=TradeStatus(trade_data.get("status", "closed")),
             commission=Decimal(str(trade_data.get("commission", 0))),
@@ -76,9 +71,7 @@ async def analyze_trade_costs(
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=400, detail=f"Error analyzing trade costs: {str(e)}"
-        )
+        raise HTTPException(status_code=400, detail=f"Error analyzing trade costs: {str(e)}")
 
 
 @router.post("/analyze-strategy")
@@ -101,9 +94,7 @@ async def analyze_strategy_costs(
                 side=trade_data["side"],  # Use string directly
                 quantity=Decimal(str(trade_data["quantity"])),
                 entry_price=Decimal(str(trade_data["entry_price"])),
-                exit_price=Decimal(
-                    str(trade_data.get("exit_price", trade_data["entry_price"]))
-                ),
+                exit_price=Decimal(str(trade_data.get("exit_price", trade_data["entry_price"]))),
                 entry_time=datetime.fromisoformat(trade_data["entry_time"]),
                 exit_time=datetime.fromisoformat(
                     trade_data.get("exit_time", trade_data["entry_time"])
@@ -157,9 +148,7 @@ async def analyze_strategy_costs(
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=400, detail=f"Error analyzing strategy costs: {str(e)}"
-        )
+        raise HTTPException(status_code=400, detail=f"Error analyzing strategy costs: {str(e)}")
 
 
 @router.post("/validate-profitability")
@@ -179,12 +168,8 @@ async def validate_profitability(
             total_trades=analysis_data["total_trades"],
             total_commission=Decimal(str(analysis_data.get("total_commission", 0))),
             total_slippage=Decimal(str(analysis_data.get("total_slippage", 0))),
-            total_market_impact=Decimal(
-                str(analysis_data.get("total_market_impact", 0))
-            ),
-            total_infrastructure=Decimal(
-                str(analysis_data.get("total_infrastructure", 0))
-            ),
+            total_market_impact=Decimal(str(analysis_data.get("total_market_impact", 0))),
+            total_infrastructure=Decimal(str(analysis_data.get("total_infrastructure", 0))),
             total_borrowing=Decimal(str(analysis_data.get("total_borrowing", 0))),
             total_costs=Decimal(str(analysis_data["total_costs"])),
             gross_profit=Decimal(str(analysis_data["gross_profit"])),
@@ -210,9 +195,7 @@ async def validate_profitability(
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=400, detail=f"Error validating profitability: {str(e)}"
-        )
+        raise HTTPException(status_code=400, detail=f"Error validating profitability: {str(e)}")
 
 
 @router.get("/cost-parameters")
@@ -222,12 +205,10 @@ async def get_cost_parameters(
     """Get current cost parameters configuration."""
     return {
         "commission_rates": {
-            asset_class: float(rate)
-            for asset_class, rate in service.commission_rates.items()
+            asset_class: float(rate) for asset_class, rate in service.commission_rates.items()
         },
         "slippage_rates": {
-            asset_class: float(rate)
-            for asset_class, rate in service.slippage_rates.items()
+            asset_class: float(rate) for asset_class, rate in service.slippage_rates.items()
         },
         "infrastructure_cost_per_trade": float(service.infrastructure_cost_per_trade),
         "borrowing_cost_rate": float(service.borrowing_cost_rate),
@@ -273,9 +254,7 @@ async def update_cost_parameters(
             )
 
         if "borrowing_cost_rate" in parameters:
-            service.borrowing_cost_rate = Decimal(
-                str(parameters["borrowing_cost_rate"])
-            )
+            service.borrowing_cost_rate = Decimal(str(parameters["borrowing_cost_rate"]))
 
         if "profitability_thresholds" in parameters:
             thresholds = parameters["profitability_thresholds"]
@@ -284,9 +263,7 @@ async def update_cost_parameters(
                     str(thresholds["min_profitability_threshold"])
                 )
             if "max_cost_impact_ratio" in thresholds:
-                service.max_cost_impact_ratio = Decimal(
-                    str(thresholds["max_cost_impact_ratio"])
-                )
+                service.max_cost_impact_ratio = Decimal(str(thresholds["max_cost_impact_ratio"]))
 
         return {
             "message": "Cost parameters updated successfully",
@@ -294,9 +271,7 @@ async def update_cost_parameters(
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=400, detail=f"Error updating cost parameters: {str(e)}"
-        )
+        raise HTTPException(status_code=400, detail=f"Error updating cost parameters: {str(e)}")
 
 
 @router.get("/cost-breakdown/{trade_id}")

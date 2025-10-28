@@ -14,18 +14,22 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app.api.profitability_validation import router
-from app.models.profitability_validation import (CostBreakdown,
-                                                 HistoricalValidation,
-                                                 ProfitabilityMetrics,
-                                                 ProfitabilityValidation,
-                                                 StrategyComparison,
-                                                 ValidationCriteria,
-                                                 ValidationRequest,
-                                                 ValidationResponse,
-                                                 ValidationStatus)
+from app.models.profitability_validation import (
+    CostBreakdown,
+    HistoricalValidation,
+    ProfitabilityMetrics,
+    ProfitabilityValidation,
+    StrategyComparison,
+    ValidationCriteria,
+    ValidationRequest,
+    ValidationResponse,
+    ValidationStatus,
+)
 from app.services.profitability_validation_service import (
-    ProfitabilityCalculator, ProfitabilityValidationService,
-    ProfitabilityValidator)
+    ProfitabilityCalculator,
+    ProfitabilityValidationService,
+    ProfitabilityValidator,
+)
 
 
 class TestCostBreakdown:
@@ -92,9 +96,7 @@ class TestProfitabilityMetrics:
 
     def test_profitability_metrics_validation(self):
         """Test validación de porcentajes."""
-        with pytest.raises(
-            ValueError, match="Percentage values must be between -100 and 1000"
-        ):
+        with pytest.raises(ValueError, match="Percentage values must be between -100 and 1000"):
             ProfitabilityMetrics(
                 gross_profit=Decimal("1000.0"),
                 net_profit=Decimal("800.0"),
@@ -171,8 +173,8 @@ class TestProfitabilityCalculator:
             {"pnl": Decimal("-25.0")},
         ]
 
-        win_rate, profit_factor, max_drawdown = (
-            self.calculator._calculate_trading_metrics(trades_data, Decimal("10000.0"))
+        win_rate, profit_factor, max_drawdown = self.calculator._calculate_trading_metrics(
+            trades_data, Decimal("10000.0")
         )
         assert win_rate == Decimal("50.0")  # 2 wins out of 4 trades
         assert profit_factor == Decimal("4.0")  # 300 / 75 (corregido)
@@ -186,9 +188,7 @@ class TestProfitabilityCalculator:
             {"pnl": Decimal("-150.0"), "timestamp": "2025-01-04"},
         ]
 
-        max_drawdown = self.calculator._calculate_max_drawdown(
-            trades_data, Decimal("10000.0")
-        )
+        max_drawdown = self.calculator._calculate_max_drawdown(trades_data, Decimal("10000.0"))
         # El drawdown máximo debería ser cuando el capital baja de 10100 a 9900
         assert max_drawdown > Decimal("0")
 
@@ -238,8 +238,8 @@ class TestProfitabilityValidator:
         )
         criteria = ValidationCriteria()
 
-        status, passed_tests, failed_tests, warnings = (
-            self.validator.validate_profitability(metrics, criteria)
+        status, passed_tests, failed_tests, warnings = self.validator.validate_profitability(
+            metrics, criteria
         )
         assert status == ValidationStatus.PASSED
         assert len(failed_tests) == 0
@@ -261,8 +261,8 @@ class TestProfitabilityValidator:
         )
         criteria = ValidationCriteria()
 
-        status, passed_tests, failed_tests, warnings = (
-            self.validator.validate_profitability(metrics, criteria)
+        status, passed_tests, failed_tests, warnings = self.validator.validate_profitability(
+            metrics, criteria
         )
         assert status == ValidationStatus.FAILED
         assert len(failed_tests) > 0
@@ -521,9 +521,7 @@ class TestProfitabilityValidationAPI:
             ],
         }
 
-        with patch(
-            "app.api.profitability_validation.profitability_service"
-        ) as mock_service:
+        with patch("app.api.profitability_validation.profitability_service") as mock_service:
             mock_response = ValidationResponse(
                 validation=ProfitabilityValidation(
                     strategy_name="Test Strategy",
@@ -567,9 +565,7 @@ class TestProfitabilityValidationAPI:
             )
             mock_service.validate_strategy_profitability.return_value = mock_response
 
-            response = self.client.post(
-                "/api/v1/profitability/validate", json=request_data
-            )
+            response = self.client.post("/api/v1/profitability/validate", json=request_data)
 
             assert response.status_code == 200
             data = response.json()
@@ -668,9 +664,7 @@ class TestProfitabilityValidationAPI:
             },
         ]
 
-        with patch(
-            "app.api.profitability_validation.profitability_service"
-        ) as mock_service:
+        with patch("app.api.profitability_validation.profitability_service") as mock_service:
             mock_comparison = StrategyComparison(
                 comparison_date=datetime.utcnow(),
                 strategies=[],
@@ -692,9 +686,7 @@ class TestProfitabilityValidationAPI:
             )
             mock_service.compare_strategies.return_value = mock_comparison
 
-            response = self.client.post(
-                "/api/v1/profitability/compare", json=validations_data
-            )
+            response = self.client.post("/api/v1/profitability/compare", json=validations_data)
 
             assert response.status_code == 200
             data = response.json()
@@ -857,10 +849,7 @@ class TestIntegrationTests:
 
         # Verificar que el ranking está ordenado correctamente
         for i in range(len(comparison.ranking) - 1):
-            assert (
-                comparison.ranking[i]["net_profit"]
-                >= comparison.ranking[i + 1]["net_profit"]
-            )
+            assert comparison.ranking[i]["net_profit"] >= comparison.ranking[i + 1]["net_profit"]
 
     def test_historical_analysis(self):
         """Test de análisis histórico de una estrategia."""

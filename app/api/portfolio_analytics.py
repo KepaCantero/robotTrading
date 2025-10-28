@@ -13,15 +13,20 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
-from app.models.portfolio_analytics import (ExtendedPortfolio,
-                                            PerformanceMetrics,
-                                            PerformancePeriod,
-                                            PortfolioAllocation,
-                                            PortfolioAnalytics,
-                                            PortfolioComparison,
-                                            PortfolioRebalance, RiskMetrics)
+from app.models.portfolio_analytics import (
+    ExtendedPortfolio,
+    PerformanceMetrics,
+    PerformancePeriod,
+    PortfolioAllocation,
+    PortfolioAnalytics,
+    PortfolioComparison,
+    PortfolioRebalance,
+    RiskMetrics,
+)
 from app.services.portfolio_analytics_service import (
-    PortfolioAnalyticsService, get_portfolio_analytics_service)
+    PortfolioAnalyticsService,
+    get_portfolio_analytics_service,
+)
 
 router = APIRouter(prefix="/portfolio-analytics", tags=["Portfolio Analytics"])
 
@@ -34,9 +39,7 @@ class PerformanceMetricsRequest(BaseModel):
     period: PerformancePeriod = Field(
         default=PerformancePeriod.MONTHLY, description="Performance period"
     )
-    start_date: Optional[datetime] = Field(
-        None, description="Start date for calculation"
-    )
+    start_date: Optional[datetime] = Field(None, description="Start date for calculation")
     end_date: Optional[datetime] = Field(None, description="End date for calculation")
 
 
@@ -44,9 +47,7 @@ class PerformanceMetricsResponse(BaseModel):
     """Response model for performance metrics."""
 
     success: bool = Field(..., description="Success status")
-    data: Optional[PerformanceMetrics] = Field(
-        None, description="Performance metrics data"
-    )
+    data: Optional[PerformanceMetrics] = Field(None, description="Performance metrics data")
     error: Optional[str] = Field(None, description="Error message if any")
 
 
@@ -62,9 +63,7 @@ class PortfolioAnalyticsResponse(BaseModel):
     """Response model for portfolio analytics."""
 
     success: bool = Field(..., description="Success status")
-    data: Optional[PortfolioAnalytics] = Field(
-        None, description="Portfolio analytics data"
-    )
+    data: Optional[PortfolioAnalytics] = Field(None, description="Portfolio analytics data")
     error: Optional[str] = Field(None, description="Error message if any")
 
 
@@ -72,9 +71,7 @@ class PortfolioAllocationResponse(BaseModel):
     """Response model for portfolio allocation."""
 
     success: bool = Field(..., description="Success status")
-    data: Optional[PortfolioAllocation] = Field(
-        None, description="Portfolio allocation data"
-    )
+    data: Optional[PortfolioAllocation] = Field(None, description="Portfolio allocation data")
     error: Optional[str] = Field(None, description="Error message if any")
 
 
@@ -97,9 +94,7 @@ class RebalanceResponse(BaseModel):
     """Response model for rebalancing recommendations."""
 
     success: bool = Field(..., description="Success status")
-    data: Optional[PortfolioRebalance] = Field(
-        None, description="Rebalancing recommendations"
-    )
+    data: Optional[PortfolioRebalance] = Field(None, description="Rebalancing recommendations")
     error: Optional[str] = Field(None, description="Error message if any")
 
 
@@ -113,9 +108,7 @@ class PortfolioComparisonResponse(BaseModel):
     """Response model for portfolio comparison."""
 
     success: bool = Field(..., description="Success status")
-    data: Optional[PortfolioComparison] = Field(
-        None, description="Portfolio comparison data"
-    )
+    data: Optional[PortfolioComparison] = Field(None, description="Portfolio comparison data")
     error: Optional[str] = Field(None, description="Error message if any")
 
 
@@ -193,9 +186,7 @@ def _get_mock_portfolio(portfolio_id: UUID) -> ExtendedPortfolio:
 @router.post("/performance-metrics", response_model=PerformanceMetricsResponse)
 async def calculate_performance_metrics(
     request: PerformanceMetricsRequest,
-    analytics_service: PortfolioAnalyticsService = Depends(
-        get_portfolio_analytics_service
-    ),
+    analytics_service: PortfolioAnalyticsService = Depends(get_portfolio_analytics_service),
 ):
     """Calculate performance metrics for a portfolio."""
     try:
@@ -218,17 +209,13 @@ async def calculate_performance_metrics(
         )
 
 
-@router.get(
-    "/performance-metrics/{portfolio_id}", response_model=PerformanceMetricsResponse
-)
+@router.get("/performance-metrics/{portfolio_id}", response_model=PerformanceMetricsResponse)
 async def get_performance_metrics(
     portfolio_id: UUID,
     period: PerformancePeriod = Query(default=PerformancePeriod.MONTHLY),
     start_date: Optional[datetime] = Query(None),
     end_date: Optional[datetime] = Query(None),
-    analytics_service: PortfolioAnalyticsService = Depends(
-        get_portfolio_analytics_service
-    ),
+    analytics_service: PortfolioAnalyticsService = Depends(get_portfolio_analytics_service),
 ):
     """Get performance metrics for a portfolio."""
     try:
@@ -251,9 +238,7 @@ async def get_performance_metrics(
 @router.get("/risk-metrics/{portfolio_id}", response_model=RiskMetricsResponse)
 async def get_risk_metrics(
     portfolio_id: UUID,
-    analytics_service: PortfolioAnalyticsService = Depends(
-        get_portfolio_analytics_service
-    ),
+    analytics_service: PortfolioAnalyticsService = Depends(get_portfolio_analytics_service),
 ):
     """Get risk metrics for a portfolio."""
     try:
@@ -266,17 +251,13 @@ async def get_risk_metrics(
         return RiskMetricsResponse(success=True, data=metrics)
 
     except Exception as e:
-        return RiskMetricsResponse(
-            success=False, error=f"Failed to get risk metrics: {str(e)}"
-        )
+        return RiskMetricsResponse(success=False, error=f"Failed to get risk metrics: {str(e)}")
 
 
 @router.get("/analytics/{portfolio_id}", response_model=PortfolioAnalyticsResponse)
 async def get_portfolio_analytics(
     portfolio_id: UUID,
-    analytics_service: PortfolioAnalyticsService = Depends(
-        get_portfolio_analytics_service
-    ),
+    analytics_service: PortfolioAnalyticsService = Depends(get_portfolio_analytics_service),
 ):
     """Get comprehensive portfolio analytics."""
     try:
@@ -297,9 +278,7 @@ async def get_portfolio_analytics(
 @router.get("/allocation/{portfolio_id}", response_model=PortfolioAllocationResponse)
 async def get_portfolio_allocation(
     portfolio_id: UUID,
-    analytics_service: PortfolioAnalyticsService = Depends(
-        get_portfolio_analytics_service
-    ),
+    analytics_service: PortfolioAnalyticsService = Depends(get_portfolio_analytics_service),
 ):
     """Get portfolio allocation analysis."""
     try:
@@ -320,9 +299,7 @@ async def get_portfolio_allocation(
 @router.post("/rebalance", response_model=RebalanceResponse)
 async def get_rebalance_recommendation(
     request: RebalanceRequest,
-    analytics_service: PortfolioAnalyticsService = Depends(
-        get_portfolio_analytics_service
-    ),
+    analytics_service: PortfolioAnalyticsService = Depends(get_portfolio_analytics_service),
 ):
     """Get portfolio rebalancing recommendations."""
     try:
@@ -366,9 +343,7 @@ async def get_rebalance_recommendation(
 @router.post("/compare", response_model=PortfolioComparisonResponse)
 async def compare_portfolios(
     request: PortfolioComparisonRequest,
-    analytics_service: PortfolioAnalyticsService = Depends(
-        get_portfolio_analytics_service
-    ),
+    analytics_service: PortfolioAnalyticsService = Depends(get_portfolio_analytics_service),
 ):
     """Compare multiple portfolios."""
     try:
@@ -386,9 +361,7 @@ async def compare_portfolios(
 @router.get("/summary/{portfolio_id}", response_model=AnalyticsSummaryResponse)
 async def get_analytics_summary(
     portfolio_id: UUID,
-    analytics_service: PortfolioAnalyticsService = Depends(
-        get_portfolio_analytics_service
-    ),
+    analytics_service: PortfolioAnalyticsService = Depends(get_portfolio_analytics_service),
 ):
     """Get portfolio analytics summary."""
     try:

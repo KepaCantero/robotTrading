@@ -13,11 +13,14 @@ from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
 from app.exceptions.trading_exceptions import ErrorCategory
-from app.services.trading_error_handler import (ErrorAction, ErrorContext,
-                                                get_error_statistics,
-                                                handle_trading_error,
-                                                reset_circuit_breaker,
-                                                trading_error_handler)
+from app.services.trading_error_handler import (
+    ErrorAction,
+    ErrorContext,
+    get_error_statistics,
+    handle_trading_error,
+    reset_circuit_breaker,
+    trading_error_handler,
+)
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -57,12 +60,8 @@ class CircuitBreakerStatus(BaseModel):
 class ErrorStatistics(BaseModel):
     """Error statistics model."""
 
-    error_counts: Dict[str, int] = Field(
-        ..., description="Error counts by context and category"
-    )
-    circuit_breakers: Dict[str, bool] = Field(
-        ..., description="Circuit breaker statuses"
-    )
+    error_counts: Dict[str, int] = Field(..., description="Error counts by context and category")
+    circuit_breakers: Dict[str, bool] = Field(..., description="Circuit breaker statuses")
     last_error_times: Dict[str, str] = Field(..., description="Last error times")
     retry_counts: Dict[str, int] = Field(..., description="Retry counts")
     timestamp: str = Field(..., description="Statistics timestamp")
@@ -114,9 +113,7 @@ async def handle_error_endpoint(request: ErrorHandlingRequest):
         )
 
 
-@router.get(
-    "/statistics", response_model=ErrorStatistics, status_code=status.HTTP_200_OK
-)
+@router.get("/statistics", response_model=ErrorStatistics, status_code=status.HTTP_200_OK)
 async def get_error_statistics_endpoint():
     """
     Get current error statistics and monitoring data.

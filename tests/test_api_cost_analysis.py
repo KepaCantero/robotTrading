@@ -62,9 +62,7 @@ class TestCostAnalysisAPI:
 
     def test_analyze_trade_costs_success(self):
         """Test successful trade cost analysis."""
-        response = self.client.post(
-            "/cost-analysis/analyze-trade", json=self.sample_trade_data
-        )
+        response = self.client.post("/cost-analysis/analyze-trade", json=self.sample_trade_data)
 
         assert response.status_code == 200
         data = response.json()
@@ -165,9 +163,7 @@ class TestCostAnalysisAPI:
             "market_data": {},
         }
 
-        response = self.client.post(
-            "/cost-analysis/analyze-strategy", json=empty_strategy_data
-        )
+        response = self.client.post("/cost-analysis/analyze-strategy", json=empty_strategy_data)
 
         assert response.status_code == 200
         data = response.json()
@@ -227,9 +223,7 @@ class TestCostAnalysisAPI:
             "recommendations": ["Strategy is not profitable"],
         }
 
-        response = self.client.post(
-            "/cost-analysis/validate-profitability", json=unprofitable_data
-        )
+        response = self.client.post("/cost-analysis/validate-profitability", json=unprofitable_data)
 
         assert response.status_code == 200
         data = response.json()
@@ -290,9 +284,7 @@ class TestCostAnalysisAPI:
             },
         }
 
-        response = self.client.post(
-            "/cost-analysis/cost-parameters", json=new_parameters
-        )
+        response = self.client.post("/cost-analysis/cost-parameters", json=new_parameters)
 
         assert response.status_code == 200
         data = response.json()
@@ -310,9 +302,7 @@ class TestCostAnalysisAPI:
             }
         }
 
-        response = self.client.post(
-            "/cost-analysis/cost-parameters", json=invalid_parameters
-        )
+        response = self.client.post("/cost-analysis/cost-parameters", json=invalid_parameters)
 
         assert response.status_code == 400
         assert "Error updating cost parameters" in response.json()["detail"]
@@ -347,9 +337,7 @@ class TestCostAnalysisAPI:
             # Missing required fields
         }
 
-        response = self.client.post(
-            "/cost-analysis/analyze-trade", json=incomplete_data
-        )
+        response = self.client.post("/cost-analysis/analyze-trade", json=incomplete_data)
 
         assert response.status_code == 400
         assert "Error analyzing trade costs" in response.json()["detail"]
@@ -361,9 +349,7 @@ class TestCostAnalysisAPI:
             # Missing trades field
         }
 
-        response = self.client.post(
-            "/cost-analysis/analyze-strategy", json=incomplete_data
-        )
+        response = self.client.post("/cost-analysis/analyze-strategy", json=incomplete_data)
 
         assert response.status_code == 400
         assert "Error analyzing strategy costs" in response.json()["detail"]
@@ -375,9 +361,7 @@ class TestCostAnalysisAPI:
             # Missing required fields
         }
 
-        response = self.client.post(
-            "/cost-analysis/validate-profitability", json=incomplete_data
-        )
+        response = self.client.post("/cost-analysis/validate-profitability", json=incomplete_data)
 
         assert response.status_code == 400
         assert "Error validating profitability" in response.json()["detail"]
@@ -388,9 +372,7 @@ class TestCostAnalysisAPI:
         equity_trade = self.sample_trade_data.copy()
         equity_trade["symbol"] = "AAPL"
 
-        equity_response = self.client.post(
-            "/cost-analysis/analyze-trade", json=equity_trade
-        )
+        equity_response = self.client.post("/cost-analysis/analyze-trade", json=equity_trade)
         assert equity_response.status_code == 200
 
         # Test crypto trade
@@ -400,9 +382,7 @@ class TestCostAnalysisAPI:
         crypto_trade["entry_price"] = 50000.00
         crypto_trade["exit_price"] = 51000.00
 
-        crypto_response = self.client.post(
-            "/cost-analysis/analyze-trade", json=crypto_trade
-        )
+        crypto_response = self.client.post("/cost-analysis/analyze-trade", json=crypto_trade)
         assert crypto_response.status_code == 200
 
         # Test forex trade
@@ -412,9 +392,7 @@ class TestCostAnalysisAPI:
         forex_trade["entry_price"] = 1.1000
         forex_trade["exit_price"] = 1.1100
 
-        forex_response = self.client.post(
-            "/cost-analysis/analyze-trade", json=forex_trade
-        )
+        forex_response = self.client.post("/cost-analysis/analyze-trade", json=forex_trade)
         assert forex_response.status_code == 200
 
         # Compare costs - crypto should have lower commission rate

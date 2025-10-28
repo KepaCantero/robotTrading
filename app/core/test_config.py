@@ -98,9 +98,7 @@ class TestConfigManager:
         """Create temporary directories for test isolation."""
         import uuid
 
-        temp_base = (
-            Path(tempfile.gettempdir()) / f"algotrading_tests_{uuid.uuid4().hex[:8]}"
-        )
+        temp_base = Path(tempfile.gettempdir()) / f"algotrading_tests_{uuid.uuid4().hex[:8]}"
         temp_base.mkdir(exist_ok=True)
 
         self._temp_dirs = {

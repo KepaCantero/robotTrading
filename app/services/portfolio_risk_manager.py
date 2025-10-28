@@ -336,7 +336,7 @@ class PortfolioRiskManager:
 
         # Calcular correlaciones por pares
         for i, pos1 in enumerate(positions):
-            for j, pos2 in enumerate(positions[i + 1:], i + 1):
+            for j, pos2 in enumerate(positions[i + 1 :], i + 1):
                 pair = f"{pos1.symbol}-{pos2.symbol}"
                 # Correlación simulada basada en sector
                 correlation = (
@@ -378,7 +378,7 @@ class PortfolioRiskManager:
 
         # Mantener tamaño máximo del historial
         if len(self.violation_history) > self.max_history_size:
-            self.violation_history = self.violation_history[-self.max_history_size:]
+            self.violation_history = self.violation_history[-self.max_history_size :]
 
     def get_risk_statistics(self) -> Dict[str, Any]:
         """Obtener estadísticas de riesgo."""

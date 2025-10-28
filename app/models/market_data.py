@@ -11,8 +11,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 
-from pydantic import (BaseModel, ConfigDict, Field, field_validator,
-                      model_validator)
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class DataFeedType(str, Enum):
@@ -59,26 +58,16 @@ class Quote(BaseModel):
 
     id: UUID = Field(default_factory=uuid4, description="Unique quote identifier")
     symbol: str = Field(..., description="Trading symbol")
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Quote timestamp"
-    )
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Quote timestamp")
 
     # Price data
     bid: Decimal = Field(..., gt=0, description="Bid price")
     ask: Decimal = Field(..., gt=0, description="Ask price")
     last: Decimal = Field(..., gt=0, description="Last traded price")
-    open: Decimal = Field(
-        default_factory=lambda: Decimal("0"), ge=0, description="Opening price"
-    )
-    high: Decimal = Field(
-        default_factory=lambda: Decimal("0"), ge=0, description="High price"
-    )
-    low: Decimal = Field(
-        default_factory=lambda: Decimal("0"), ge=0, description="Low price"
-    )
-    close: Decimal = Field(
-        default_factory=lambda: Decimal("0"), ge=0, description="Closing price"
-    )
+    open: Decimal = Field(default_factory=lambda: Decimal("0"), ge=0, description="Opening price")
+    high: Decimal = Field(default_factory=lambda: Decimal("0"), ge=0, description="High price")
+    low: Decimal = Field(default_factory=lambda: Decimal("0"), ge=0, description="Low price")
+    close: Decimal = Field(default_factory=lambda: Decimal("0"), ge=0, description="Closing price")
 
     # Volume and spread
     volume: Decimal = Field(..., ge=0, description="Trading volume")
@@ -88,21 +77,13 @@ class Quote(BaseModel):
 
     # Additional metrics
     change: Decimal = Field(default=Decimal("0"), description="Price change")
-    change_percent: Decimal = Field(
-        default=Decimal("0"), description="Price change percentage"
-    )
+    change_percent: Decimal = Field(default=Decimal("0"), description="Price change percentage")
     volatility: Optional[Decimal] = Field(None, ge=0, description="Price volatility")
 
     # Metadata
-    feed_type: DataFeedType = Field(
-        default=DataFeedType.MOCK, description="Data feed source"
-    )
-    status: MarketDataStatus = Field(
-        default=MarketDataStatus.ACTIVE, description="Quote status"
-    )
-    metadata: Dict[str, Any] = Field(
-        default_factory=dict, description="Additional metadata"
-    )
+    feed_type: DataFeedType = Field(default=DataFeedType.MOCK, description="Data feed source")
+    status: MarketDataStatus = Field(default=MarketDataStatus.ACTIVE, description="Quote status")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
     @field_validator("bid", "ask", "last")
     @classmethod
@@ -218,22 +199,14 @@ class HistoricalData(BaseModel):
     volume: Decimal = Field(..., ge=0, description="Trading volume")
 
     # Additional metrics
-    adjusted_close: Optional[Decimal] = Field(
-        None, gt=0, description="Adjusted closing price"
-    )
-    dividend_amount: Optional[Decimal] = Field(
-        None, ge=0, description="Dividend amount"
-    )
-    split_coefficient: Optional[Decimal] = Field(
-        None, gt=0, description="Stock split coefficient"
-    )
+    adjusted_close: Optional[Decimal] = Field(None, gt=0, description="Adjusted closing price")
+    dividend_amount: Optional[Decimal] = Field(None, ge=0, description="Dividend amount")
+    split_coefficient: Optional[Decimal] = Field(None, gt=0, description="Stock split coefficient")
 
     # Metadata
     feed_type: DataFeedType = Field(..., description="Data feed source")
     frequency: DataFrequency = Field(..., description="Data frequency")
-    metadata: Dict[str, Any] = Field(
-        default_factory=dict, description="Additional metadata"
-    )
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
     @field_validator("open", "high", "low", "close", "adjusted_close")
     @classmethod
@@ -283,9 +256,7 @@ class DataFeedConfig(BaseModel):
     # API configuration
     api_key: Optional[str] = Field(None, description="API key for the feed")
     base_url: str = Field(..., description="Base URL for the API")
-    rate_limit: int = Field(
-        default=60, ge=1, le=3600, description="Rate limit per minute"
-    )
+    rate_limit: int = Field(default=60, ge=1, le=3600, description="Rate limit per minute")
 
     # Data configuration
     supported_symbols: List[str] = Field(
@@ -299,12 +270,8 @@ class DataFeedConfig(BaseModel):
     )
 
     # Connection settings
-    timeout_seconds: int = Field(
-        default=30, ge=1, le=300, description="Request timeout in seconds"
-    )
-    retry_attempts: int = Field(
-        default=3, ge=0, le=10, description="Number of retry attempts"
-    )
+    timeout_seconds: int = Field(default=30, ge=1, le=300, description="Request timeout in seconds")
+    retry_attempts: int = Field(default=3, ge=0, le=10, description="Number of retry attempts")
     retry_delay: float = Field(
         default=1.0, ge=0.1, le=60.0, description="Delay between retries in seconds"
     )
@@ -312,9 +279,7 @@ class DataFeedConfig(BaseModel):
     # Status
     is_active: bool = Field(default=True, description="Whether the feed is active")
     last_updated: Optional[datetime] = Field(None, description="Last successful update")
-    error_count: int = Field(
-        default=0, ge=0, description="Number of consecutive errors"
-    )
+    error_count: int = Field(default=0, ge=0, description="Number of consecutive errors")
 
     # Metadata
     metadata: Dict[str, Any] = Field(
@@ -325,9 +290,7 @@ class DataFeedConfig(BaseModel):
 class MarketDataSubscription(BaseModel):
     """Market data subscription."""
 
-    id: UUID = Field(
-        default_factory=uuid4, description="Unique subscription identifier"
-    )
+    id: UUID = Field(default_factory=uuid4, description="Unique subscription identifier")
     symbol: str = Field(..., description="Trading symbol to subscribe to")
     feed_config_id: UUID = Field(..., description="Data feed configuration ID")
 
@@ -342,17 +305,11 @@ class MarketDataSubscription(BaseModel):
         default_factory=datetime.utcnow, description="Subscription creation time"
     )
     last_update: Optional[datetime] = Field(None, description="Last data update")
-    expires_at: Optional[datetime] = Field(
-        None, description="Subscription expiration time"
-    )
+    expires_at: Optional[datetime] = Field(None, description="Subscription expiration time")
 
     # Statistics
-    total_updates: int = Field(
-        default=0, ge=0, description="Total number of updates received"
-    )
-    error_count: int = Field(
-        default=0, ge=0, description="Number of errors encountered"
-    )
+    total_updates: int = Field(default=0, ge=0, description="Total number of updates received")
+    error_count: int = Field(default=0, ge=0, description="Number of errors encountered")
 
     # Metadata
     metadata: Dict[str, Any] = Field(
@@ -369,21 +326,15 @@ class MarketDataCache(BaseModel):
 
     # Cache data
     data: Any = Field(..., description="Cached market data (can be dict or list)")
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Cache timestamp"
-    )
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Cache timestamp")
 
     # Cache settings
-    ttl_seconds: int = Field(
-        default=60, ge=1, le=3600, description="Time to live in seconds"
-    )
+    ttl_seconds: int = Field(default=60, ge=1, le=3600, description="Time to live in seconds")
     is_expired: bool = Field(default=False, description="Whether cache is expired")
 
     # Metadata
     feed_type: DataFeedType = Field(..., description="Data feed source")
-    metadata: Dict[str, Any] = Field(
-        default_factory=dict, description="Additional cache metadata"
-    )
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional cache metadata")
 
     def is_cache_valid(self) -> bool:
         """Check if cache is still valid."""

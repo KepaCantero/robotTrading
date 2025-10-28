@@ -35,15 +35,9 @@ class ParameterType(str, Enum):
 class ParameterConstraint(BaseModel):
     """Constraints for parameter optimization."""
 
-    min_value: Union[float, int] = Field(
-        ..., description="Minimum value for the parameter"
-    )
-    max_value: Union[float, int] = Field(
-        ..., description="Maximum value for the parameter"
-    )
-    step_size: Optional[Union[float, int]] = Field(
-        None, description="Step size for optimization"
-    )
+    min_value: Union[float, int] = Field(..., description="Minimum value for the parameter")
+    max_value: Union[float, int] = Field(..., description="Maximum value for the parameter")
+    step_size: Optional[Union[float, int]] = Field(None, description="Step size for optimization")
     parameter_type: ParameterType = Field(
         ..., description="Type of parameter", env="PARAMETER_TYPE"
     )
@@ -59,9 +53,7 @@ class OptimizationParameter(BaseModel):
     """Parameter to be optimized."""
 
     name: str = Field(..., description="Name of the parameter", env="NAME")
-    current_value: Union[float, int] = Field(
-        ..., description="Current value of the parameter"
-    )
+    current_value: Union[float, int] = Field(..., description="Current value of the parameter")
     constraints: ParameterConstraint = Field(
         ..., description="Constraints for optimization", env="CONSTRAINTS"
     )
@@ -69,11 +61,7 @@ class OptimizationParameter(BaseModel):
 
     @model_validator(mode="after")
     def validate_current_value(self):
-        if not (
-            self.constraints.min_value
-            <= self.current_value
-            <= self.constraints.max_value
-        ):
+        if not (self.constraints.min_value <= self.current_value <= self.constraints.max_value):
             raise ValueError(
                 f"current_value {self.current_value} must be within constraints [{self.constraints.min_value}, {self.constraints.max_value}]"
             )
@@ -92,18 +80,14 @@ class WalkForwardConfig(BaseModel):
     retrain_frequency: int = Field(
         ..., ge=1, description="Retraining frequency in days", env="RETRAIN_FREQUENCY"
     )
-    test_period: int = Field(
-        ..., ge=7, description="Test period in days", env="TEST_PERIOD"
-    )
+    test_period: int = Field(..., ge=7, description="Test period in days", env="TEST_PERIOD")
     min_train_period: int = Field(
         ...,
         ge=30,
         description="Minimum training period in days",
         env="MIN_TRAIN_PERIOD",
     )
-    max_train_period: Optional[int] = Field(
-        None, description="Maximum training period in days"
-    )
+    max_train_period: Optional[int] = Field(None, description="Maximum training period in days")
     purged_period: int = Field(
         0,
         ge=0,
@@ -126,9 +110,7 @@ class WalkForwardConfig(BaseModel):
 class PurgedKFoldConfig(BaseModel):
     """Configuration for Purged K-Fold Cross Validation."""
 
-    n_splits: int = Field(
-        5, ge=2, le=10, description="Number of splits for K-Fold", env="N_SPLITS"
-    )
+    n_splits: int = Field(5, ge=2, le=10, description="Number of splits for K-Fold", env="N_SPLITS")
     purged_period: int = Field(
         1,
         ge=0,
@@ -141,17 +123,13 @@ class PurgedKFoldConfig(BaseModel):
         description="Embargo period to avoid look-ahead bias",
         env="EMBARGO_PERIOD",
     )
-    shuffle: bool = Field(
-        False, description="Whether to shuffle the data", env="SHUFFLE"
-    )
+    shuffle: bool = Field(False, description="Whether to shuffle the data", env="SHUFFLE")
 
 
 class OptimizationConfig(BaseModel):
     """Configuration for parameter optimization."""
 
-    method: OptimizationMethod = Field(
-        ..., description="Optimization method to use", env="METHOD"
-    )
+    method: OptimizationMethod = Field(..., description="Optimization method to use", env="METHOD")
     walk_forward_config: Optional[WalkForwardConfig] = Field(
         None, description="Walk-forward configuration"
     )
@@ -172,9 +150,7 @@ class OptimizationConfig(BaseModel):
         description="Convergence threshold",
         env="CONVERGENCE_THRESHOLD",
     )
-    random_seed: Optional[int] = Field(
-        None, description="Random seed for reproducibility"
-    )
+    random_seed: Optional[int] = Field(None, description="Random seed for reproducibility")
 
     @field_validator("walk_forward_config")
     @classmethod
@@ -184,9 +160,7 @@ class OptimizationConfig(BaseModel):
             and info.data.get("method") == OptimizationMethod.WALK_FORWARD
             and v is None
         ):
-            raise ValueError(
-                "walk_forward_config is required when method is walk_forward"
-            )
+            raise ValueError("walk_forward_config is required when method is walk_forward")
         return v
 
     @field_validator("purged_k_fold_config")
@@ -197,9 +171,7 @@ class OptimizationConfig(BaseModel):
             and info.data.get("method") == OptimizationMethod.PURGED_K_FOLD
             and v is None
         ):
-            raise ValueError(
-                "purged_k_fold_config is required when method is purged_k_fold"
-            )
+            raise ValueError("purged_k_fold_config is required when method is purged_k_fold")
         return v
 
 
@@ -209,9 +181,7 @@ class OptimizationResult(BaseModel):
     optimized_parameters: Dict[str, Union[float, int]] = Field(
         ..., description="Optimized parameter values"
     )
-    best_score: float = Field(
-        ..., description="Best optimization score", env="BEST_SCORE"
-    )
+    best_score: float = Field(..., description="Best optimization score", env="BEST_SCORE")
     optimization_history: List[Dict[str, Any]] = Field(
         default_factory=list, description="Optimization history"
     )
@@ -247,12 +217,8 @@ class OutOfSampleTest(BaseModel):
     train_end_date: date = Field(
         ..., description="End date for training data", env="TRAIN_END_DATE"
     )
-    parameters: Dict[str, Union[float, int]] = Field(
-        ..., description="Parameters to test"
-    )
-    strategy_name: str = Field(
-        ..., description="Name of the strategy to test", env="STRATEGY_NAME"
-    )
+    parameters: Dict[str, Union[float, int]] = Field(..., description="Parameters to test")
+    strategy_name: str = Field(..., description="Name of the strategy to test", env="STRATEGY_NAME")
 
     @model_validator(mode="after")
     def validate_dates(self):
@@ -266,9 +232,7 @@ class OutOfSampleTest(BaseModel):
 class OutOfSampleResult(BaseModel):
     """Results of out-of-sample testing."""
 
-    test_config: OutOfSampleTest = Field(
-        ..., description="Test configuration", env="TEST_CONFIG"
-    )
+    test_config: OutOfSampleTest = Field(..., description="Test configuration", env="TEST_CONFIG")
     total_return: float = Field(
         ..., description="Total return during test period", env="TOTAL_RETURN"
     )
@@ -284,9 +248,7 @@ class OutOfSampleResult(BaseModel):
     profit_factor: float = Field(
         ..., description="Profit factor during test period", env="PROFIT_FACTOR"
     )
-    total_trades: int = Field(
-        ..., ge=0, description="Total number of trades", env="TOTAL_TRADES"
-    )
+    total_trades: int = Field(..., ge=0, description="Total number of trades", env="TOTAL_TRADES")
     avg_trade_duration: float = Field(
         ...,
         ge=0,
@@ -354,9 +316,7 @@ class OutOfSampleTestRequest(BaseModel):
 class OptimizationArtifact(BaseModel):
     """Artifact for storing optimization results."""
 
-    artifact_id: str = Field(
-        ..., description="Unique artifact identifier", env="ARTIFACT_ID"
-    )
+    artifact_id: str = Field(..., description="Unique artifact identifier", env="ARTIFACT_ID")
     optimization_result: OptimizationResult = Field(
         ..., description="Optimization result", env="OPTIMIZATION_RESULT"
     )
@@ -372,9 +332,7 @@ class OptimizationArtifact(BaseModel):
         env="OPTIMIZATION_DATE",
     )
     version: str = Field("1.0", description="Artifact version", env="VERSION")
-    metadata: Dict[str, Any] = Field(
-        default_factory=dict, description="Additional metadata"
-    )
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
     class Config:
         json_encoders = {
@@ -445,9 +403,7 @@ class OptimizationSummary(BaseModel):
     best_strategy: str = Field(
         ..., description="Name of the best performing strategy", env="BEST_STRATEGY"
     )
-    best_score: float = Field(
-        ..., description="Best optimization score achieved", env="BEST_SCORE"
-    )
+    best_score: float = Field(..., description="Best optimization score achieved", env="BEST_SCORE")
     last_optimization_date: datetime = Field(
         ..., description="Date of last optimization", env="LAST_OPTIMIZATION_DATE"
     )
@@ -464,9 +420,7 @@ class OptimizationSummary(BaseModel):
         import math
 
         # Replace NaN and infinity with None or default values
-        if math.isnan(self.avg_optimization_time) or math.isinf(
-            self.avg_optimization_time
-        ):
+        if math.isnan(self.avg_optimization_time) or math.isinf(self.avg_optimization_time):
             self.avg_optimization_time = 0.0
 
         if math.isnan(self.best_score) or math.isinf(self.best_score):

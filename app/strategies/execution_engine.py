@@ -96,9 +96,7 @@ class ExecutionEngine:
                     if active_strategy.risk_check(signal, portfolio):
                         signals.append(signal)
                         self.logger.log_signal_generated(active_strategy.name, signal)
-                        logger.debug(
-                            f"Signal validated: {signal.symbol} {signal.signal_type}"
-                        )
+                        logger.debug(f"Signal validated: {signal.symbol} {signal.signal_type}")
                     else:
                         self.logger.log_signal_rejected(
                             active_strategy.name, signal, "Risk check failed"
@@ -106,27 +104,17 @@ class ExecutionEngine:
                         logger.debug(f"Signal rejected by risk check: {signal.symbol}")
 
                 except Exception as e:
-                    self.logger.log_strategy_error(
-                        active_strategy.name, str(e), "risk_check"
-                    )
+                    self.logger.log_strategy_error(active_strategy.name, str(e), "risk_check")
                     logger.error(f"Risk check error for signal {signal.symbol}: {e}")
 
         except Exception as e:
-            self.logger.log_strategy_error(
-                active_strategy.name, str(e), "generate_signals"
-            )
-            logger.error(
-                f"Error generating signals for strategy '{active_strategy.name}': {e}"
-            )
+            self.logger.log_strategy_error(active_strategy.name, str(e), "generate_signals")
+            logger.error(f"Error generating signals for strategy '{active_strategy.name}': {e}")
 
-        logger.debug(
-            f"Cycle {self.cycle_count} completed: {len(signals)} signals validated"
-        )
+        logger.debug(f"Cycle {self.cycle_count} completed: {len(signals)} signals validated")
         return signals
 
-    def execute_signal(
-        self, signal: Signal, execution_price: Optional[Decimal] = None
-    ) -> bool:
+    def execute_signal(self, signal: Signal, execution_price: Optional[Decimal] = None) -> bool:
         """
         Ejecutar señal de trading.
 
@@ -188,9 +176,7 @@ class ExecutionEngine:
             success = self.execute_signal(signal, execution_price)
             results[f"{signal.symbol}_{signal.direction}"] = success
 
-        logger.info(
-            f"Executed {len(signals)} signals: {sum(results.values())} successful"
-        )
+        logger.info(f"Executed {len(signals)} signals: {sum(results.values())} successful")
         return results
 
     def get_execution_stats(self) -> Dict[str, Any]:
@@ -240,15 +226,11 @@ class ExecutionEngine:
                 return False
 
             if not market_data.price or market_data.price <= 0:
-                logger.error(
-                    f"Invalid price for {market_data.symbol}: {market_data.price}"
-                )
+                logger.error(f"Invalid price for {market_data.symbol}: {market_data.price}")
                 return False
 
             if not market_data.volume or market_data.volume < 0:
-                logger.error(
-                    f"Invalid volume for {market_data.symbol}: {market_data.volume}"
-                )
+                logger.error(f"Invalid volume for {market_data.symbol}: {market_data.volume}")
                 return False
 
             return True
@@ -287,9 +269,7 @@ class ExecutionEngine:
             logger.error(f"Portfolio validation error: {e}")
             return False
 
-    def run_cycle_with_validation(
-        self, market_data: Quote, portfolio: Portfolio
-    ) -> List[Signal]:
+    def run_cycle_with_validation(self, market_data: Quote, portfolio: Portfolio) -> List[Signal]:
         """
         Ejecutar ciclo con validación completa.
 

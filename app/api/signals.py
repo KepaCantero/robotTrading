@@ -120,9 +120,7 @@ async def evaluate_signal(
             )
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error evaluating signal: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error evaluating signal: {str(e)}")
 
 
 @router.get("/next", response_model=SignalResponse)
@@ -145,9 +143,7 @@ async def get_next_actionable_signal(
             )
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting next signal: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting next signal: {str(e)}")
 
 
 @router.post("/execute/{signal_id}")
@@ -217,9 +213,7 @@ async def get_signal_statistics(
         )
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting statistics: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting statistics: {str(e)}")
 
 
 @router.get("/symbol/{symbol}", response_model=List[Signal])
@@ -232,9 +226,7 @@ async def get_signals_by_symbol(
         return signals
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting signals for {symbol}: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting signals for {symbol}: {str(e)}")
 
 
 @router.post("/clear-expired")
@@ -251,9 +243,7 @@ async def clear_expired_signals(
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error clearing expired signals: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error clearing expired signals: {str(e)}")
 
 
 @router.post("/thresholds")
@@ -282,9 +272,7 @@ async def update_thresholds(
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error updating thresholds: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error updating thresholds: {str(e)}")
 
 
 @router.post("/position-size-limit")
@@ -307,9 +295,7 @@ async def update_position_size_limit(
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error updating position size limit: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error updating position size limit: {str(e)}")
 
 
 @router.get("/health")

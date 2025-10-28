@@ -8,11 +8,12 @@ Calculates comprehensive performance metrics including:
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from typing import List, Optional
 
 import numpy as np
+
 from app.backtesting.models import PerformanceMetrics, Trade
 
 logger = logging.getLogger(__name__)

@@ -10,8 +10,12 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional
 
 from sqlalchemy import MetaData
-from sqlalchemy.ext.asyncio import (AsyncEngine, AsyncSession,
-                                    async_sessionmaker, create_async_engine)
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.pool import NullPool, QueuePool
 
@@ -77,9 +81,7 @@ def get_database_engine() -> AsyncEngine:
             )
 
             url_part = (
-                settings.database_url.split("@")[1]
-                if "@" in settings.database_url
-                else "localhost"
+                settings.database_url.split("@")[1] if "@" in settings.database_url else "localhost"
             )
             logger.info(f"Database engine created successfully. URL: {url_part}")
 
@@ -280,9 +282,7 @@ async def get_database_info() -> dict:
 
         return {
             "url": (
-                settings.database_url.split("@")[1]
-                if "@" in settings.database_url
-                else "localhost"
+                settings.database_url.split("@")[1] if "@" in settings.database_url else "localhost"
             ),
             "echo": settings.database_echo,
             "pool_size": settings.database_pool_size,
