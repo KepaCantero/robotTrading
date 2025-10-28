@@ -77,8 +77,9 @@ class MomentumStrategy(BaseStrategy):
         self.last_ema = None
         
         # Cooldown para evitar señales repetidas
-        self.last_signal_time = None
+        self.last_signal_bar_index = None
         self.last_signal_type = None
+        self.current_bar_index = 0
         self.cooldown_bars = config.get("cooldown_bars", 5)  # Número de barras para cooldown
 
         logger.info(f"MomentumStrategy initialized: {self.name}")
@@ -114,6 +115,7 @@ class MomentumStrategy(BaseStrategy):
             # Actualizar histórico
             self.price_history.append(float(market_data.close or market_data.last))
             self.volume_history.append(float(market_data.volume))
+            self.current_bar_index += 1
 
             # Calcular indicadores técnicos reales
             rsi = self._calculate_real_rsi()
@@ -134,7 +136,7 @@ class MomentumStrategy(BaseStrategy):
                 if self._is_buy_signal(rsi, ema, volume_ratio, market_data):
                     signal = self._create_buy_signal(market_data, rsi, ema, volume_ratio)
                     signals.append(signal)
-                    self.last_signal_time = market_data.timestamp
+                    self.last_signal_bar_index = self.current_bar_index
                     self.last_signal_type = "buy"
                     logger.debug(f"Generated BUY signal for {market_data.symbol}: RSI={rsi:.2f}, EMA={ema:.2f}")
                 
@@ -142,11 +144,11 @@ class MomentumStrategy(BaseStrategy):
                 elif self._is_sell_signal(rsi, ema, volume_ratio, market_data):
                     signal = self._create_sell_signal(market_data, rsi, ema, volume_ratio)
                     signals.append(signal)
-                    self.last_signal_time = market_data.timestamp
+                    self.last_signal_bar_index = self.current_bar_index
                     self.last_signal_type = "sell"
                     logger.debug(f"Generated SELL signal for {market_data.symbol}: RSI={rsi:.2f}, EMA={ema:.2f}")
             else:
-                logger.debug(f"Signal suppressed due to cooldown period")
+                logger.debug("Signal suppressed due to cooldown period")
 
         except Exception as e:
             logger.error(f"Error generating signals for {market_data.symbol}: {e}")
@@ -286,17 +288,23 @@ class MomentumStrategy(BaseStrategy):
             market_data: Datos de mercado actuales
 
         Returns:
-            True si el cooldown está activo
+            True si el cooldown está activo (no debe generar señales)
         """
-        if self.last_signal_time is None:
+        if self.last_signal_bar_index is None:
+            # No ha habido señales aún, no hay cooldown
             return False
         
-        # Calcular tiempo transcurrido desde última señal
-        if len(self.price_history) < self.cooldown_bars:
-            return False
+        # Calcular barras transcurridas desde última señal
+        bars_since_last_signal = self.current_bar_index - self.last_signal_bar_index
         
-        # Si tenemos suficiente histórico, el cooldown ya pasó
-        return False  # Por ahora desactivamos el cooldown temporal
+        # Si han pasado menos barras que cooldown_bars, el cooldown está activo
+        if bars_since_last_signal < self.cooldown_bars:
+            logger.debug(
+                f"Cooldown active: {bars_since_last_signal}/{self.cooldown_bars} bars since last signal"
+            )
+            return True
+        
+        return False
 
     def _is_buy_signal(
         self,
