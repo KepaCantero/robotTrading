@@ -199,11 +199,11 @@ latency: 1000                       # Cambiar a backup si latencia > 1000ms
 
 **Risk Management:**
 
-- **TASK-RM-1**: Riesgo por Operación <2% - Limitar riesgo individual por trade
-- **TASK-RM-2**: Ratio Riesgo/Recompensa ≥1:3 - Arriesgar 1 para ganar 3
-- **TASK-RM-3**: Exposición Máxima por Estrategia - 50% Momentum, 25-30% Mean Reversion, 20-30% Pairs
-- **TASK-RM-4**: Límite Drawdown Máximo 15% - Stop general si portafolio cae >15%
-- **TASK-RM-5**: Circuit Breakers 3-5 Stops - Pausar estrategia tras 3-5 stops consecutivos
+- **TASK-RM-1**: ✅ COMPLETADA - Riesgo por Operación <2% - Limitar riesgo individual por trade
+- **TASK-RM-2**: ✅ COMPLETADA - Ratio Riesgo/Recompensa ≥1:3 - Arriesgar 1 para ganar 3
+- **TASK-RM-3**: ✅ COMPLETADA - Exposición Máxima por Estrategia - 50% Momentum, 25-30% Mean Reversion, 20-30% Pairs
+- **TASK-RM-4**: ✅ COMPLETADA - Límite Drawdown Máximo 15% - Stop general si portafolio cae >15%
+- **TASK-RM-5**: ✅ COMPLETADA - Circuit Breakers 3-5 Stops - Pausar estrategia tras 3-5 stops consecutivos
 
 **Rebalancing:**
 
