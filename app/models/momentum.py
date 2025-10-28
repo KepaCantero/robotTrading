@@ -62,6 +62,9 @@ class MomentumSignal(BaseModel):
     macd: Optional[float] = Field(None, description="MACD value")
     macd_signal: Optional[float] = Field(None, description="MACD signal line")
     macd_histogram: Optional[float] = Field(None, description="MACD histogram")
+    macd_divergence: Optional[str] = Field(
+        None, description="TASK-IND-3: MACD divergence detected (bullish/bearish)"
+    )
 
     # Price and volume data
     current_price: Decimal = Field(ge=0, description="Current asset price")

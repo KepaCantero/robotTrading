@@ -85,7 +85,18 @@ class TechnicalIndicatorCalculator:
         slow_period: int = 26,
         signal_period: int = 9,
     ) -> Tuple[Optional[float], Optional[float], Optional[float]]:
-        """Calculate MACD (Moving Average Convergence Divergence)."""
+        """
+        Calculate MACD (Moving Average Convergence Divergence).
+
+        Args:
+            prices: List of prices
+            fast_period: Fast EMA period (default 12)
+            slow_period: Slow EMA period (default 26)
+            signal_period: Signal line period (default 9)
+
+        Returns:
+            Tuple of (macd_line, signal_line, histogram)
+        """
         if len(prices) < slow_period:
             return None, None, None
 
@@ -102,6 +113,60 @@ class TechnicalIndicatorCalculator:
         histogram = macd_line - signal_line
 
         return round(macd_line, 4), round(signal_line, 4), round(histogram, 4)
+
+    @staticmethod
+    def detect_macd_divergence(
+        prices: List[float], macd_histograms: List[float], lookback: int = 5
+    ) -> Optional[str]:
+        """
+        TASK-IND-3: Detect MACD histogram divergence patterns.
+
+        Detects bullish and bearish divergences in MACD histogram:
+        - Bullish divergence: Price making lower lows, histogram making higher lows
+        - Bearish divergence: Price making higher highs, histogram making lower highs
+
+        Args:
+            prices: List of recent prices
+            macd_histograms: List of recent MACD histogram values
+            lookback: Number of periods to analyze
+
+        Returns:
+            "bullish" if bullish divergence detected
+            "bearish" if bearish divergence detected
+            None if no divergence
+        """
+        if len(prices) < lookback * 2 or len(macd_histograms) < lookback * 2:
+            return None
+
+        # Get recent data for comparison
+        recent_prices = prices[-lookback:]
+        recent_histograms = macd_histograms[-lookback:]
+
+        # Bullish divergence: price down, histogram up
+        price_trend_down = recent_prices[-1] < recent_prices[0]
+        histogram_trend_up = recent_histograms[-1] > recent_histograms[0]
+
+        if price_trend_down and histogram_trend_up:
+            # Check if price made lower low but histogram made higher low
+            if (
+                recent_prices[-1] < min(recent_prices[:-1])
+                and recent_histograms[-1] > recent_histograms[-2]
+            ):
+                return "bullish"
+
+        # Bearish divergence: price up, histogram down
+        price_trend_up = recent_prices[-1] > recent_prices[0]
+        histogram_trend_down = recent_histograms[-1] < recent_histograms[0]
+
+        if price_trend_up and histogram_trend_down:
+            # Check if price made higher high but histogram made lower high
+            if (
+                recent_prices[-1] > max(recent_prices[:-1])
+                and recent_histograms[-1] < recent_histograms[-2]
+            ):
+                return "bearish"
+
+        return None
 
     @staticmethod
     def calculate_atr(
