@@ -104,6 +104,7 @@ with st.sidebar:
     selected_strategy = st.selectbox(
         "Select Strategy",
         options=list(strategies.keys()),
+        index=3,  # Default to "all_strategies"
         help="Choose which trading strategy to backtest",
         key="strategy_selector",
         format_func=lambda x: strategies[x],
@@ -120,6 +121,17 @@ with st.sidebar:
             st.success(f"✓ {len(strategy_results)} backtest(s) for {selected_strategy}")
         else:
             st.warning(f"⚠ No backtests yet for {selected_strategy}")
+
+    # Symbol and date range
+    st.divider()
+    st.subheader("📊 Backtest Parameters")
+    
+    symbol = st.text_input("Symbol", value="AAPL")
+    start_date = st.date_input("Start Date", value=datetime(2023, 1, 1))
+    end_date = st.date_input("End Date", value=datetime(2024, 12, 31))
+    initial_capital = st.number_input(
+        "Initial Capital ($)", min_value=1000, value=100000, step=1000
+    )
 
     st.divider()
     st.subheader("⚙️ Configuration Preset")
@@ -167,14 +179,6 @@ with st.sidebar:
         st.json(config_presets[selected_preset])
 
     st.divider()
-
-    # Symbol and date range
-    symbol = st.text_input("Symbol", value="AAPL")
-    start_date = st.date_input("Start Date", value=datetime(2023, 1, 1))
-    end_date = st.date_input("End Date", value=datetime(2024, 12, 31))
-    initial_capital = st.number_input(
-        "Initial Capital ($)", min_value=1000, value=100000, step=1000
-    )
 
     # Execute button
     execute_button = st.button("🚀 Execute Backtest", type="primary", use_container_width=True)
