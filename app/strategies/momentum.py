@@ -134,7 +134,11 @@ class MomentumStrategy(BaseStrategy):
 
             # Sólo generar señales si tenemos suficiente histórico
             if rsi is None or ema is None:
-                return raw_signals
+                return []
+
+            # Convertir None a valores seguros para logging
+            roc_safe = roc if roc is not None else 0.0
+            stoch_rsi_safe = stoch_rsi if stoch_rsi is not None else 0.0
 
             # Guardar para uso en señales
             self.last_rsi = rsi
@@ -153,7 +157,7 @@ class MomentumStrategy(BaseStrategy):
                         self.last_signal_bar_index = self.current_bar_index
                         self.last_signal_type = "buy"
                         logger.debug(
-                            f"Generated BUY signal for {market_data.symbol}: RSI={rsi:.2f}, EMA={ema:.2f}, ROC={roc:.2f}, OBV={obv_trend}, StochRSI={stoch_rsi:.2f}"
+                            f"Generated BUY signal for {market_data.symbol}: RSI={rsi:.2f}, EMA={ema:.2f}, ROC={roc_safe:.2f}, OBV={obv_trend}, StochRSI={stoch_rsi_safe:.2f}"
                         )
 
                     # Generar señal de venta con condiciones robustas
@@ -163,7 +167,7 @@ class MomentumStrategy(BaseStrategy):
                         self.last_signal_bar_index = self.current_bar_index
                         self.last_signal_type = "sell"
                         logger.debug(
-                            f"Generated SELL signal for {market_data.symbol}: RSI={rsi:.2f}, EMA={ema:.2f}, ROC={roc:.2f}, OBV={obv_trend}, StochRSI={stoch_rsi:.2f}"
+                            f"Generated SELL signal for {market_data.symbol}: RSI={rsi:.2f}, EMA={ema:.2f}, ROC={roc_safe:.2f}, OBV={obv_trend}, StochRSI={stoch_rsi_safe:.2f}"
                         )
                 else:
                     logger.debug("Signal suppressed by Stochastic RSI filter")
