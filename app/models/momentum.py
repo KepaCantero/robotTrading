@@ -273,6 +273,9 @@ class TechnicalIndicators(BaseModel):
 
     # Volatility indicators
     atr: Optional[float] = Field(None, ge=0, description="Average True Range")
+    adx: Optional[float] = Field(
+        None, ge=0, le=100, description="Average Directional Index (>25=strong trend)"
+    )
     volatility: Optional[float] = Field(None, ge=0, description="Price volatility")
 
     # Volume indicators
