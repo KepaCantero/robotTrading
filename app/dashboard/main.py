@@ -350,40 +350,41 @@ if execute_button:
                 # Run for selected module only
                 modules_to_run = [selected_module]
 
-            # Run backtests for each module
+            # Create strategy once for all modules (shares state/history)
+            strategy_config = {
+                "name": selected_strategy.lower(),
+                **config_presets[selected_preset],
+            }
+
+            if selected_strategy == "momentum":
+                strategy = MomentumStrategy(strategy_config)
+            elif selected_strategy == "mean_reversion":
+                strategy = MeanReversionStrategy(strategy_config)
+            elif selected_strategy == "pairs_trading":
+                # Note: PairsTrading needs pair_symbols, set default
+                if "pair_symbols" not in strategy_config:
+                    strategy_config["pair_symbols"] = ["AAPL", "MSFT"]
+                strategy = PairsTradingStrategy(strategy_config)
+            else:
+                st.error(f"❌ Unknown strategy: {selected_strategy}")
+                st.stop()
+
+            # Generate signals ONCE for all modules (strategy has history)
+            signals = []
+            for quote in quotes:
+                try:
+                    signals.extend(strategy.generate_signals(quote))
+                except Exception as e:
+                    logger.debug(f"Signal error: {e}")
+
+            if not signals:
+                st.warning(f"⚠️ Strategy '{selected_strategy}' generated 0 signals.")
+                st.stop()
+
+            # Run backtests for each module using the SAME signals
             for current_module in modules_to_run:
-                # Create strategy based on selected strategy
-                strategy_config = {
-                    "name": selected_strategy.lower(),
-                    **config_presets[selected_preset],
-                }
-
-                if selected_strategy == "momentum":
-                    strategy = MomentumStrategy(strategy_config)
-                elif selected_strategy == "mean_reversion":
-                    strategy = MeanReversionStrategy(strategy_config)
-                elif selected_strategy == "pairs_trading":
-                    # Note: PairsTrading needs pair_symbols, set default
-                    if "pair_symbols" not in strategy_config:
-                        strategy_config["pair_symbols"] = ["AAPL", "MSFT"]
-                    strategy = PairsTradingStrategy(strategy_config)
-                else:
-                    st.error(f"❌ Unknown strategy: {selected_strategy}")
-                    st.stop()
-
-                # Generate signals (collect all quotes first for strategies that need history)
-                signals = []
-                for quote in quotes:
-                    try:
-                        signals.extend(strategy.generate_signals(quote))
-                    except Exception as e:
-                        logger.debug(f"Signal error: {e}")
-
-                if not signals:
-                    st.warning(
-                        f"⚠️ Strategy '{selected_strategy}' for {current_module} generated 0 signals."
-                    )
-                    continue
+                # Skip if module has no signals (they're already generated once above)
+                # This should not happen due to the check before the loop
 
                 # Create config with module and strategy info
                 config = BacktestConfig(
