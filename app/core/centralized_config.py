@@ -93,7 +93,13 @@ class TradingThresholds(BaseModel):
     min_strength: float = Field(
         default=60.0, description="Minimum strength threshold for momentum analysis"
     )
-
+    
+    # ATR Volatility Filter (NEW)
+    min_atr_threshold: float = Field(default=0.015, description="Minimum ATR threshold for volatility filtering (0-1)")
+    atr_filter_enabled: bool = Field(default=True, description="Enable ATR volatility filter to avoid choppy markets")
+    trailing_stop_distance_pct: float = Field(default=0.02, description="Trailing stop distance percentage (0-1)")
+    trailing_stop_enabled: bool = Field(default=True, description="Enable trailing stop for dynamic exits")
+    
     # Signal Scoring Engine (TASK-SC-1 to SC-5)
     signal_cooldown_minutes: int = Field(default=10, description="Signal cooldown period in minutes")
     signal_compound_weights: Dict[str, float] = Field(

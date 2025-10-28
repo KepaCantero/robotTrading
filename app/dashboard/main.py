@@ -28,7 +28,16 @@ from streamlit import session_state
 from app.backtesting.data_loader import DataLoader
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig
-from app.dashboard.report_generator import save_backtest_result
+from app.dashboard.report_generator import (
+    save_backtest_result,
+    generate_backend_test_summary,
+)
+from app.backtesting.multi_strategy_engine import MultiStrategyBacktester
+from app.dashboard.multi_strategy_utils import (
+    generate_multi_strategy_summary_text,
+    save_multi_strategy_results,
+)
+from app.services.multi_strategy_allocation import MultiStrategyAllocationManager
 from app.strategies.mean_reversion import MeanReversionStrategy
 from app.strategies.momentum import MomentumStrategy
 from app.strategies.pairs_trading import PairsTradingStrategy
@@ -89,6 +98,7 @@ with st.sidebar:
         "momentum": "Momentum Strategy (RSI + EMA + Volume)",
         "mean_reversion": "Mean Reversion (Z-score)",
         "pairs_trading": "Pairs Trading (Cointegration)",
+        "all_strategies": "All Strategies (Multi-Strategy with Capital Allocation)",
     }
 
     selected_strategy = st.selectbox(
@@ -350,6 +360,73 @@ if execute_button:
                 # Run for selected module only
                 modules_to_run = [selected_module]
 
+            # Option: Check if we should run all strategies with capital allocation
+            run_all_strategies = selected_strategy == "all_strategies"
+            
+            if run_all_strategies:
+                # Multi-strategy mode: allocate capital across strategies
+                from decimal import Decimal
+                
+                allocation_manager = MultiStrategyAllocationManager(
+                    total_capital=Decimal(str(initial_capital))
+                )
+                
+                all_strategies = {}
+                for strategy_type in ["momentum", "mean_reversion", "pairs_trading"]:
+                    config = {"name": strategy_type, **config_presets[selected_preset]}
+                    if strategy_type == "momentum":
+                        all_strategies[strategy_type] = MomentumStrategy(config)
+                    elif strategy_type == "mean_reversion":
+                        all_strategies[strategy_type] = MeanReversionStrategy(config)
+                    elif strategy_type == "pairs_trading":
+                        if "pair_symbols" not in config:
+                            config["pair_symbols"] = ["AAPL", "MSFT"]
+                        all_strategies[strategy_type] = PairsTradingStrategy(config)
+                
+                multi_backtester = MultiStrategyBacktester(
+                    allocation_manager=allocation_manager,
+                    strategies=all_strategies,
+                    config_params={
+                        "commission": Decimal("1.0"),
+                        "slippage": Decimal("0.05"),
+                        "stop_loss": Decimal(str(config_presets[selected_preset]["stop_loss"])),
+                        "take_profit": Decimal(str(config_presets[selected_preset]["take_profit"])),
+                        "max_position_size": Decimal("0.05"),
+                    },
+                )
+                
+                consolidated = multi_backtester.run_multi_strategy_backtest(
+                    quotes=quotes,
+                    start_date=datetime.combine(start_date, datetime.min.time()),
+                    end_date=datetime.combine(end_date, datetime.max.time()),
+                )
+                
+                st.success(f"✅ Multi-strategy backtest completed ({len(all_strategies)} strategies)")
+                
+                # Generate unique ID
+                backtest_id = f"{selected_module}_{selected_strategy}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                
+                # Save JSON results
+                results_dir = project_root / "docs" / "BACKTEST_RESULTS" / "multi_strategy"
+                json_file = save_multi_strategy_results(consolidated, results_dir, backtest_id)
+                
+                # Generate markdown summary
+                summary_text = generate_multi_strategy_summary_text(consolidated)
+                
+                # Display summary in dashboard
+                st.markdown("## 📊 Multi-Strategy Results")
+                st.markdown(summary_text)
+                
+                # Also display as JSON
+                with st.expander("📄 View JSON Results"):
+                    import json
+                    with open(json_file, "r") as f:
+                        st.json(json.load(f))
+                
+                st.success(f"✅ Results saved to {json_file}")
+                st.stop()
+            
+            # Single strategy mode (existing behavior)
             # Create strategy once for all modules (shares state/history)
             strategy_config = {
                 "name": selected_strategy.lower(),
@@ -444,6 +521,60 @@ if execute_button:
 
             # Show summary
             st.success(f"✅ Backtests completed for {len(modules_to_run)} module(s)")
+            
+            # Generate comprehensive Backend Test Result Summary
+            try:
+                # Collect all backtest results
+                all_backtest_results = []
+                for current_module in modules_to_run:
+                    key = f"{current_module}_{selected_strategy}_{selected_preset}"
+                    if key in session_state.backtest_results:
+                        result = session_state.backtest_results[key]
+                        all_backtest_results.append({
+                            "module": current_module,
+                            "total_trades": result.performance.total_trades,
+                            "win_rate": float(result.performance.win_rate),
+                            "total_return": float(result.total_return),
+                            "final_capital": float(result.final_capital),
+                            "sharpe_ratio": float(result.performance.sharpe_ratio) if result.performance.sharpe_ratio else None,
+                            "max_drawdown": float(result.performance.max_drawdown) if result.performance.max_drawdown else 0,
+                        })
+                
+                # Generate comprehensive summary if we have results
+                if all_backtest_results:
+                    summary_file = generate_backend_test_summary(
+                        all_results=all_backtest_results,
+                        strategy=selected_strategy,
+                        preset=selected_preset,
+                        symbol=symbol,
+                        start_date=datetime.combine(start_date, datetime.min.time()),
+                        end_date=datetime.combine(end_date, datetime.max.time()),
+                        initial_capital=initial_capital,
+                        project_root=project_root,
+                    )
+                    
+                    # Show link to summary
+                    st.markdown("---")
+                    st.success("📄 **Backend Test Result Summary Generated**")
+                    st.markdown(f"""
+                    **Location:** `{summary_file.relative_to(project_root)}`
+                    
+                    **To view:** Open the file in your editor or download it.
+                    """)
+                    
+                    # Add download button
+                    with open(summary_file, "r") as f:
+                        summary_content = f.read()
+                        st.download_button(
+                            label="📥 Download Backend Test Summary",
+                            data=summary_content,
+                            file_name=summary_file.name,
+                            mime="text/markdown",
+                        )
+                    
+            except Exception as summary_error:
+                logger.warning(f"Failed to generate backend test summary: {summary_error}")
+                st.warning("⚠️ Could not generate comprehensive summary report")
 
         except Exception as e:
             st.error(f"❌ Error: {e}")

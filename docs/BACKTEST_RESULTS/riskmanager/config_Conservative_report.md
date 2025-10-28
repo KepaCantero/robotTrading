@@ -1,8 +1,8 @@
-# Backtest Report: TechnicalAnalyst - Conservative
+# Backtest Report: RiskManager - Conservative
 
 ## Executive Summary
 
-**Module:** TechnicalAnalyst
+**Module:** RiskManager
 **Configuration:** Conservative
 **Symbol:** AAPL
 **Period:** 2023-01-01 to 2024-12-31
