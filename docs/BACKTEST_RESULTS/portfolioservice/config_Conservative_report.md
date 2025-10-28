@@ -2,16 +2,16 @@
 
 ## Executive Summary
 
-**Module:** PortfolioService  
-**Configuration:** Conservative  
-**Symbol:** AAPL  
-**Period:** 2023-01-01 to 2024-12-31  
-**Execution Date:** 2025-10-27 17:16:07  
+**Module:** PortfolioService
+**Configuration:** Conservative
+**Symbol:** AAPL
+**Period:** 2023-01-01 to 2024-12-31
+**Execution Date:** 2025-10-28 15:09:19
 
 ### Performance Overview
 
 
-The poor strategy performance shows a win rate of 0.0% 
+The poor strategy performance shows a win rate of 0.0%
 with a Sharpe ratio of N/A and maximum drawdown of 0.00%.
 
 
@@ -30,8 +30,8 @@ with a Sharpe ratio of N/A and maximum drawdown of 0.00%.
 ### Decision Patterns
 
 
-- Buy signals: 1
-- Sell signals: 1
+- Buy signals: 19
+- Sell signals: 19
 - Most frequent reason: (analyze from trade reasons)
 
 

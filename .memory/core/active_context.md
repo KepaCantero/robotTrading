@@ -207,8 +207,8 @@ latency: 1000                       # Cambiar a backup si latencia > 1000ms
 
 **Rebalancing:**
 
-- **TASK-REB-1**: Rebalanceo Mensual - Mantener asignaciones objetivo
-- **TASK-REB-2**: Ajustes Dinámicos Capital - Reducir capital de estrategias con rachas negativas
+- **TASK-REB-1**: ✅ COMPLETADA - Rebalanceo Mensual - Mantener asignaciones objetivo
+- **TASK-REB-2**: ✅ COMPLETADA - Ajustes Dinámicos Capital - Reducir capital de estrategias con rachas negativas
 
 **Razón**: Gestión de riesgo es crítica para preservar capital y diversificar exposición.
 
