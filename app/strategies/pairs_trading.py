@@ -123,7 +123,7 @@ class PairsTradingStrategy(BaseStrategy):
             cointegration_score = self._calculate_cointegration_score(market_data)
 
             # Determinar si generar señal basada en spread real
-            # NOW VERY PERMISSIVE - generate signals on any spread movement
+            # ONLY generate signals if proper pair conditions are met
             if self._is_spread_signal(spread, correlation, cointegration_score, market_data):
                 # Generar señales balanceadas para el par
                 pair_signals = self._create_pair_signals(market_data, spread)
@@ -132,13 +132,7 @@ class PairsTradingStrategy(BaseStrategy):
                     f"Generated {len(pair_signals)} pair signals for {market_data.symbol} "
                     f"(spread: {spread:.4f}, correlation: {correlation:.2f})"
                 )
-            else:
-                # ALWAYS generate signals for pairs trading - very permissive
-                # Just alternate between buy and sell based on price movement
-                price_change = (market_data.last - market_data.open) / market_data.open
-                if abs(price_change) > Decimal("0.001"):  # Any price movement
-                    signals.append(self._create_simple_buy_signal(market_data))
-                    logger.debug(f"Generated simple pair signal for {market_data.symbol}")
+            # Removed destructive fallback - if no valid pair conditions, return empty list
 
         except Exception as e:
             logger.error(f"Error generating signals for {market_data.symbol}: {e}")
