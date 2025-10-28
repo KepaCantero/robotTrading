@@ -2,18 +2,18 @@
 
 ## 🎯 **RESUMEN EJECUTIVO**
 
-### **TOTAL DE TAREAS: 83** (40 previas + 43 nuevas críticas MVP)
+### **TOTAL DE TAREAS: 94** (40 previas + 54 nuevas críticas MVP)
 
-- **Tareas Completadas**: 19 (TASK-1-15, 31, TASK-57, TASK-TS, TASK-HT-01-03, TASK-DV-1-4, TASK-IND-1-2+4, Linting)
-- **Tareas Pendientes**: 64 (incluye tareas de Signal Scoring, Risk Management, Backtesting, etc.)
-- **Estado General**: MVP READY + **Data Validation operativo** + **Advanced Technical Indicators** (ADX, ATR stop loss) + Linting corregido
-- **Prioridad Actual**: Completar Signal Scoring + Risk Management + Backtesting + Portfolio Multi-Strategy
+- **Tareas Completadas**: 28 (TASK-1-15, 31, TASK-57, TASK-TS, TASK-HT-01-03, TASK-DV-1-4, TASK-IND-1-5, TASK-IND-ROC-1-2, TASK-IND-OBV-1-2, Linting)
+- **Tareas Pendientes**: 70 (incluye tareas de Signal Scoring, Risk Management, Backtesting, etc.)
+- **Estado General**: MVP READY + **Data Validation operativo** + **Advanced Technical Indicators** (ADX, ATR, MACD) + Linting corregido
+- **Prioridad Actual**: Completar Signal Scoring + Risk Management + Backtesting + Portfolio Multi-Strategy + Nuevos Indicadores Momentum
 - **Nuevas Tareas Críticas**:
   - Portfolio Allocation & Risk Management (10 tareas)
   - Estrategias Complementarias (8 tareas)
   - Backtesting & Validation (5 tareas)
   - Costos Realistas (2 tareas)
-  - Indicadores Técnicos Avanzados & Sizing (5 tareas)
+  - Indicadores Técnicos Avanzados & Sizing (16 tareas - 5 completadas, 11 pendientes: ROC, OBV, Stochastic RSI, VWAP, Expectancy, Runtime tracking, Fill ratio, Multi-timeframe)
   - Validación de Datos & Outliers (4 tareas)
   - Signal Scoring & Cooldown (5 tareas)
   - Simulación Realista de Ejecución (4 tareas)
@@ -445,15 +445,26 @@ Esto hace el desarrollo más eficiente y menos propenso a conflictos.
 | **TASK-CST-1** | Ajustar Costos Backtesting | ⏳ Pendiente | 2-3      | Incorporar spreads (0.01-0.03%), comisiones (0.01-0.05%) y slippage realistas en backtesting |
 | **TASK-CST-2** | Cálculo Costos Totales     | ⏳ Pendiente | 2-3      | Implementar cálculo de costos totales por trade (0.02-0.1% adicional por transacción)        |
 
-### 🔬 **Indicadores Técnicos Avanzados & Sizing (5 tareas críticas)**
+### 🔬 **Indicadores Técnicos Avanzados & Sizing (16 tareas - 5 completadas, 11 pendientes)**
 
-| ID             | Tarea                       | Estado       | Archivos | Descripción                                                                                 |
-| -------------- | --------------------------- | ------------ | -------- | ------------------------------------------------------------------------------------------- |
-| **TASK-IND-1** | ADX para Detectar Tendencia | ⏳ Pendiente | 3-4      | Implementar ADX para distinguir tendencia fuerte (>25) vs. rango                            |
-| **TASK-IND-2** | ATR para Stop Loss Dinámico | ⏳ Pendiente | 4-5      | Usar ATR (2x valor) para calcular stop loss dinámico que se ajusta a volatilidad del activo |
-| **TASK-IND-3** | MACD para Confirmación      | ⏳ Pendiente | 3-4      | Integrar MACD histogram divergence como confirmador de señales (bullish/bearish crossover)  |
-| **TASK-IND-4** | ATR-Based Position Sizing   | ⏳ Pendiente | 4-6      | Calcular tamaño de posición basado en ATR: riesgo por trade = 2% capital / (ATR \* 2)       |
-| **TASK-IND-5** | Interfaz Filtros Volumen    | ⏳ Pendiente | 3-4      | Implementar filtro dinámico de volumen: volume_ratio > 1.2 para confirmar liquidez          |
+| ID                     | Tarea                        | Estado        | Archivos | Descripción                                                                                 |
+| ---------------------- | ---------------------------- | ------------- | -------- | ------------------------------------------------------------------------------------------- |
+| **TASK-IND-1**         | ADX para Detectar Tendencia  | ✅ Completada | 3-4      | Implementar ADX para distinguir tendencia fuerte (>25) vs. rango                            |
+| **TASK-IND-2**         | ATR para Stop Loss Dinámico  | ✅ Completada | 4-5      | Usar ATR (2x valor) para calcular stop loss dinámico que se ajusta a volatilidad del activo |
+| **TASK-IND-3**         | MACD para Confirmación       | ✅ Completada | 3-4      | Integrar MACD histogram divergence como confirmador de señales (bullish/bearish crossover)  |
+| **TASK-IND-4**         | ATR-Based Position Sizing    | ✅ Completada | 4-6      | Calcular tamaño de posición basado en ATR: riesgo por trade = 2% capital / (ATR \* 2)       |
+| **TASK-IND-5**         | Filtros Volumen Dinámico     | ✅ Completada | 3-4      | Implementar filtro dinámico de volumen: volume_ratio > 1.2 para confirmar liquidez          |
+| **TASK-IND-ROC-1**     | Implementar ROC              | ✅ Completada | 2-3      | Implementar ROC (Rate of Change) para detectar aceleración de precio                        |
+| **TASK-IND-ROC-2**     | Integrar ROC en Momentum     | ✅ Completada | 2-3      | Integrar ROC en MomentumStrategy para reforzar detección de momentum real                   |
+| **TASK-IND-OBV-1**     | Implementar OBV              | ✅ Completada | 2-3      | Implementar OBV (On Balance Volume) para confirmación de volumen en momentum                |
+| **TASK-IND-OBV-2**     | Integrar OBV en Momentum     | ✅ Completada | 2-3      | Integrar OBV en MomentumStrategy para confirmar flujo de volumen                            |
+| **TASK-IND-STOCH-1**   | Implementar Stochastic RSI   | ⏳ Pendiente  | 2-3      | Implementar Stochastic RSI para detectar pérdida de momentum y reversiones                  |
+| **TASK-IND-STOCH-2**   | Usar Stochastic RSI          | ⏳ Pendiente  | 2-3      | Usar Stochastic RSI en MomentumStrategy para filtrar falsas señales                         |
+| **TASK-IND-VWAP-1**    | Implementar VWAP             | ⏳ Pendiente  | 3-4      | Implementar VWAP para referencia de precio ponderado por volumen intradía                   |
+| **TASK-IND-EXP-1**     | Métrica Expectancy           | ⏳ Pendiente  | 2-3      | Añadir cálculo de Expectancy como métrica de consistencia del sistema                       |
+| **TASK-MET-RUNTIME-1** | Runtime Performance          | ⏳ Pendiente  | 2-3      | Añadir tracking de performance runtime (tiempo ejecución por ciclo data→signal→order)       |
+| **TASK-MET-FILL-1**    | Order Fill Ratio             | ⏳ Pendiente  | 3-4      | Implementar tracking de order fill ratio para medir calidad de ejecución                    |
+| **TASK-MET-MULTI-1**   | Multi-Timeframe Confirmation | ⏳ Pendiente  | 4-5      | Implementar confirmación multi-timeframe (15m, 1h, 4h, diario) para MomentumStrategy        |
 
 ### ✅ **Validación de Datos & Outliers (4 tareas críticas)**
 

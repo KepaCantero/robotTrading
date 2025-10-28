@@ -169,6 +169,128 @@ class TechnicalIndicatorCalculator:
         return None
 
     @staticmethod
+    def calculate_roc(prices: List[float], period: int = 12) -> Optional[float]:
+        """
+        TASK-IND-ROC-1: Calculate ROC (Rate of Change).
+
+        ROC measures the rate of change of price over a specified period.
+        It shows the percentage change in price from 'period' periods ago.
+
+        Args:
+            prices: List of prices
+            period: Period for ROC calculation (default 12)
+
+        Returns:
+            ROC value as percentage, or None if insufficient data
+        """
+        if len(prices) < period + 1:
+            return None
+
+        current_price = prices[-1]
+        price_periods_ago = prices[-period - 1]
+
+        if price_periods_ago == 0:
+            return None
+
+        roc = ((current_price - price_periods_ago) / price_periods_ago) * 100
+
+        return round(roc, 4)
+
+    @staticmethod
+    def calculate_obv(prices: List[float], volumes: List[float]) -> Optional[float]:
+        """
+        TASK-IND-OBV-1: Calculate OBV (On Balance Volume).
+
+        OBV is a cumulative volume indicator that:
+        - Adds volume when price closes higher
+        - Subtracts volume when price closes lower
+        - Remains unchanged when price doesn't change
+
+        This helps confirm if volume is backing price trends.
+
+        Args:
+            prices: List of closing prices
+            volumes: List of corresponding volumes
+
+        Returns:
+            Current OBV value, or None if insufficient data
+        """
+        if len(prices) < 2 or len(volumes) < 2 or len(prices) != len(volumes):
+            return None
+
+        obv = 0.0
+
+        for i in range(1, len(prices)):
+            current_price = prices[i]
+            previous_price = prices[i - 1]
+            current_volume = volumes[i]
+
+            if current_price > previous_price:
+                # Price increased: add volume
+                obv += current_volume
+            elif current_price < previous_price:
+                # Price decreased: subtract volume
+                obv -= current_volume
+            # If price unchanged, OBV stays the same (no change)
+
+        return round(obv, 2)
+
+    @staticmethod
+    def calculate_stochastic_rsi(rsi_values: List[float], period: int = 14) -> Tuple[Optional[float], Optional[float]]:
+        """
+        TASK-IND-STOCH-1: Calculate Stochastic RSI.
+
+        Stochastic RSI applies Stochastic Oscillator formula to RSI values instead of prices.
+        This helps identify overbought/oversold conditions more accurately than RSI alone.
+
+        Formula:
+        - %K = (Current RSI - Lowest RSI in period) / (Highest RSI in period - Lowest RSI in period) * 100
+        - %D = 3-period SMA of %K
+
+        Args:
+            rsi_values: List of RSI values
+            period: Period for Stochastic RSI calculation (default 14)
+
+        Returns:
+            Tuple of (stoch_rsi, stoch_rsi_signal) or (None, None) if insufficient data
+        """
+        if len(rsi_values) < period:
+            return None, None
+
+        # Get the most recent period of RSI values
+        recent_rsi = rsi_values[-period:]
+
+        # Calculate %K (raw Stochastic RSI)
+        highest_rsi = max(recent_rsi)
+        lowest_rsi = min(recent_rsi)
+        current_rsi = recent_rsi[-1]
+
+        if highest_rsi == lowest_rsi:
+            return None, None  # All RSI values are the same
+
+        stoch_rsi_k = ((current_rsi - lowest_rsi) / (highest_rsi - lowest_rsi)) * 100
+
+        # Calculate %D (signal line) as 3-period SMA of %K
+        if len(rsi_values) >= period + 2:
+            # Calculate %K for the last 3 periods and average them
+            k_values = []
+            for i in range(-3, 0):
+                if i < -(len(rsi_values)):
+                    break
+                recent = rsi_values[i - period : i] if i < 0 else rsi_values[-period + i :]
+                if len(recent) == period:
+                    h = max(recent)
+                    l = min(recent)
+                    if h != l:
+                        k = ((recent[-1] - l) / (h - l)) * 100
+                        k_values.append(k)
+            stoch_rsi_d = sum(k_values) / len(k_values) if k_values else stoch_rsi_k
+        else:
+            stoch_rsi_d = stoch_rsi_k
+
+        return round(stoch_rsi_k, 2), round(stoch_rsi_d, 2)
+
+    @staticmethod
     def calculate_atr(
         highs: List[float], lows: List[float], closes: List[float], period: int = 14
     ) -> Optional[float]:
@@ -291,6 +413,88 @@ class TechnicalIndicatorCalculator:
 
         avg_volume = sum(volumes[-period:]) / period
         return Decimal(str(round(float(avg_volume), 2)))
+
+    @staticmethod
+    def calculate_vwap(
+        prices: List[float], volumes: List[float], period: Optional[int] = None
+    ) -> Optional[float]:
+        """
+        TASK-IND-VWAP-1: Calculate VWAP (Volume-Weighted Average Price).
+        
+        VWAP is the average price of an asset weighted by volume over a specified period.
+        Used as a reference for intraday trading and to identify fair value.
+        
+        Args:
+            prices: List of prices (typically close or typical price)
+            volumes: List of corresponding volumes
+            period: Optional period for calculation. If None, uses all available data.
+        
+        Returns:
+            VWAP value or None if insufficient data
+        """
+        if len(prices) < 2 or len(volumes) < 2 or len(prices) != len(volumes):
+            return None
+        
+        # Determine the data range to use
+        if period is None:
+            # Use all available data
+            data_range = list(range(len(prices)))
+        elif len(prices) < period:
+            return None  # Not enough data
+        else:
+            # Use the most recent period
+            data_range = list(range(-period, 0))
+        
+        # Calculate cumulative volume-weighted price and cumulative volume
+        cumulative_pv = 0.0
+        cumulative_volume = 0.0
+        
+        for i in data_range:
+            price = prices[i]
+            volume = volumes[i]
+            
+            cumulative_pv += price * volume
+            cumulative_volume += volume
+        
+        if cumulative_volume == 0:
+            return None
+        
+        vwap = cumulative_pv / cumulative_volume
+        return round(vwap, 4)
+
+    @staticmethod
+    def calculate_expectancy(
+        winning_trades: int,
+        losing_trades: int,
+        avg_win_amount: float,
+        avg_loss_amount: float,
+    ) -> Optional[float]:
+        """
+        TASK-IND-EXP-1: Calculate Expectancy metric for system consistency.
+        
+        Expectancy measures the expected value of a trading system per trade.
+        Positive expectancy indicates a profitable system over the long term.
+        
+        Formula: E = (Win Rate * Avg Win) - (Loss Rate * Avg Loss)
+        
+        Args:
+            winning_trades: Number of winning trades
+            losing_trades: Number of losing trades
+            avg_win_amount: Average winning trade amount
+            avg_loss_amount: Average losing trade amount (positive value expected)
+        
+        Returns:
+            Expectancy value (>0 indicates profitable system) or None if no trades
+        """
+        total_trades = winning_trades + losing_trades
+        if total_trades == 0:
+            return None
+        
+        win_rate = winning_trades / total_trades
+        loss_rate = losing_trades / total_trades
+        
+        expectancy = (win_rate * avg_win_amount) - (loss_rate * avg_loss_amount)
+        return round(expectancy, 4)
 
 
 class MomentumAnalysisService:
