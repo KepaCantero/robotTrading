@@ -178,8 +178,11 @@ class MomentumStrategy(BaseStrategy):
             logger.error(f"Error generating signals for {market_data.symbol}: {e}")
 
         # TASK-SC-5: Process signals through Signal Scoring Engine
-        # For backtesting, disable cooldown to allow all signals through
+        # NOTE: Cooldown is managed internally by the strategy's cooldown logic
+        # Don't apply additional cooldown from scoring engine for backtesting
         if raw_signals:
+            # In backtesting, we want to evaluate all signals without cooldown
+            # But we still want scoring and ranking
             processed_signals = self.signal_scoring_engine.process_signals(raw_signals, apply_cooldown=False)
             return processed_signals
 
