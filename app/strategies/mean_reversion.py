@@ -225,14 +225,16 @@ class MeanReversionStrategy(BaseStrategy):
         Returns:
             True si debe generar señal de compra
         """
-        # Check if z-score indicates undervaluation
+        # Check if z-score indicates undervaluation (more restrictive)
         is_undervalued = z_score < -self.z_score_threshold
         
-        # Allow any volatility to generate signals
-        # Only block if volatility is extremely high
-        acceptable_volatility = volatility < Decimal("0.20")  # Allow up to 20% volatility
+        # Require confirmation: price closed significantly below open
+        price_drop = (market_data.close - market_data.open) / market_data.open < Decimal("-0.005")  # > 0.5% drop
         
-        return is_undervalued and acceptable_volatility
+        # Only allow moderate volatility
+        acceptable_volatility = volatility < self.volatility_threshold
+        
+        return is_undervalued and price_drop and acceptable_volatility
 
     def _is_sell_signal(self, z_score: Decimal, volatility: Decimal, market_data: Quote) -> bool:
         """
@@ -246,14 +248,16 @@ class MeanReversionStrategy(BaseStrategy):
         Returns:
             True si debe generar señal de venta
         """
-        # Check if z-score indicates overvaluation
+        # Check if z-score indicates overvaluation (more restrictive)
         is_overvalued = z_score > self.z_score_threshold
         
-        # Allow any volatility to generate signals
-        # Only block if volatility is extremely high
-        acceptable_volatility = volatility < Decimal("0.20")  # Allow up to 20% volatility
+        # Require confirmation: price closed significantly above open
+        price_rise = (market_data.close - market_data.open) / market_data.open > Decimal("0.005")  # > 0.5% rise
         
-        return is_overvalued and acceptable_volatility
+        # Only allow moderate volatility
+        acceptable_volatility = volatility < self.volatility_threshold
+        
+        return is_overvalued and price_rise and acceptable_volatility
 
     def _create_buy_signal(self, market_data: Quote, z_score: Decimal) -> Signal:
         """
