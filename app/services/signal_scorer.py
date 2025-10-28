@@ -186,24 +186,44 @@ class SignalScorerService:
 
     async def get_signal_statistics(self) -> Dict[str, Any]:
         """Obtener estadísticas del servicio."""
-        # Estadísticas del servicio principal
-        service_stats = {
-            "signals_processed": self.signals_processed,
-            "signals_executed": self.signals_executed,
-            "total_pnl": self.total_pnl,
-            "signal_history_size": len(self.signal_history),
+        # Calcular success rate
+        success_rate = (
+            (self.signals_executed / self.signals_processed * 100)
+            if self.signals_processed > 0
+            else 0.0
+        )
+
+        # Queue size from priority queue
+        queue_size = 0
+        queue_summary = {}
+        if hasattr(self, "priority_queue") and self.priority_queue:
+            queue_size = len(self.priority_queue.queue)
+            queue_summary = {
+                "high_priority": sum(1 for s in self.priority_queue.queue if s.priority_score > 80),
+                "medium_priority": sum(
+                    1 for s in self.priority_queue.queue if 50 <= s.priority_score <= 80
+                ),
+                "low_priority": sum(1 for s in self.priority_queue.queue if s.priority_score < 50),
+            }
+
+        # Thresholds from config
+        config = get_config()
+        thresholds = {
+            "confidence": config.get("signal", {}).get("min_signal_confidence", 60.0),
+            "liquidity": config.get("signal", {}).get("min_liquidity_score", 50.0),
+            "max_position_size": config.get("signal", {}).get("max_position_size", 10.0),
         }
 
-        # Estadísticas de los motores
-        evaluation_stats = self.evaluation_engine.get_evaluation_statistics()
-        sizing_stats = self.sizing_engine.get_sizing_statistics()
-        execution_stats = self.execution_engine.get_execution_statistics()
-
         return {
-            "service": service_stats,
-            "evaluation_engine": evaluation_stats,
-            "sizing_engine": sizing_stats,
-            "execution_engine": execution_stats,
+            "signals_processed": self.signals_processed,
+            "signals_executed": self.signals_executed,
+            "success_rate": success_rate,
+            "total_pnl": float(self.total_pnl),
+            "queue_size": queue_size,
+            "queue_summary": queue_summary,
+            "min_confidence_threshold": thresholds["confidence"],
+            "min_liquidity_threshold": thresholds["liquidity"],
+            "max_position_size_percent": thresholds["max_position_size"],
         }
 
     def _add_to_history(self, signal: Signal) -> None:
