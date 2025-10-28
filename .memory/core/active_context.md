@@ -1,14 +1,14 @@
 # Active Context - AlgoTrading MVP
 
-## Current Focus: **COMPLETAR MVP - PORTFOLIO MULTI-STRATEGY** 🎯
+## Current Focus: **COMPLETAR MVP - PORTFOLIO MULTI-STRATEGY + DATA QUALITY + TECHNICAL INDICATORS** 🎯
 
-### Phase: MVP Finalization - Portfolio Multi-Strategy Implementation + Risk Management + Data Quality + Technical Indicators
+### Phase: MVP Finalization - Data Validation + Advanced Technical Indicators Implementation
 
-- **Status**: ✅ TASK-1 a TASK-15, TASK-57, TASK-TS, TASK-AUDIT-01, TASK-AUDIT-02, TASK-AUDIT-03, TASK-HT-01, TASK-HT-02, TASK-HT-03, BACKTESTING COMPLETADAS
-- **Current State**: Sistema completo de infraestructura, deployment automatizado, configuración centralizada, análisis de costos, tests de concurrencia, manejo unificado de errores, servicios refactorizados operativo + Todos los tests validados (686 pasando, 0 fallando) + Errores críticos de linting corregidos (F821, E203, F841) + Tests críticos para estrategias y servicios completados + **Backtesting infrastructure funcional con datos históricos reales + Plan de ejecución 70 tareas pendientes definido**
-- **Technical Assessment**: MVP CORE READY para AWS/Docker deployment + Sistema de base de datos + CI/CD automatizado + Configuración centralizada robusta + Análisis de costos completo + Tests de concurrencia validados + Manejo unificado de errores con circuit breakers y kill switches + Servicios refactorizados con motores especializados + Tests reescritos con código de producción + Linting 100% corregido + **Backtesting operativo con Stooq data (1984-2025) + Plan de implementación Portfolio Multi-Strategy definido (70 tareas organizadas en 12 fases)**
-- **Context Version**: 2025.14
-- **Last Update**: 2025-10-27 (Plan de ejecución completo MVP + Mejoras adicionales identificadas: TASK-58 enhanced, QA automatizado, documentación visual, performance benchmarks)
+- **Status**: ✅ TASK-1 a TASK-15, TASK-57, TASK-TS, TASK-AUDIT-01-03, TASK-HT-01-03, BACKTESTING, **TASK-DV-1-DV-4 COMPLETADAS** (Data Validation), **TASK-IND-1-2 COMPLETADAS** (ADX, ATR Stop Loss), Linting crítico corregido
+- **Current State**: Sistema completo de infraestructura + **Data Validation Service operativo** + **Advanced Technical Indicators** (ADX, ATR-based stop loss) + Todos los tests validados (686 pasando, 0 fallando) + **Errores críticos de linting corregidos (28 errores)** + Backtesting infrastructure funcional + **Posición sizing basado en ATR implementado**
+- **Technical Assessment**: MVP CORE READY para AWS/Docker deployment + Sistema de base de datos + CI/CD automatizado + **Data quality checks completos** (gaps, outliers, consistency) + **ADX para detección de tendencias** + **Stop loss dinámico basado en ATR** + Linting 100% corregido + Backtesting operativo
+- **Context Version**: 2025.15
+- **Last Update**: 2025-10-27 (Data Validation Service + Advanced Technical Indicators implementados: TASK-DV-1 a DV-4, TASK-IND-1, TASK-IND-2, IND-4)
 
 ## 📊 **ESTADO ACTUAL DEL SISTEMA**
 
@@ -73,7 +73,9 @@ latency: 1000                       # Cambiar a backup si latencia > 1000ms
 
 ## 🎯 **TAREAS COMPLETADAS**
 
-### ✅ **TAREAS CRÍTICAS COMPLETADAS (18 tareas)**
+### ✅ **TAREAS CRÍTICAS COMPLETADAS (25 tareas)**
+
+**Infrastructure & Core (13 tareas):**
 
 - **TASK-1**: ✅ COMPLETADA - Configuración base de AWS implementada
 - **TASK-2**: ✅ COMPLETADA - Dockerización completa implementada
@@ -88,11 +90,25 @@ latency: 1000                       # Cambiar a backup si latencia > 1000ms
 - **TASK-13**: ✅ COMPLETADA - Tests de Concurrencia
 - **TASK-14**: ✅ COMPLETADA - Unificación de Error Handling
 - **TASK-15**: ✅ COMPLETADA - Refactorización de Servicios
+
+**Testing & Quality (6 tareas):**
+
 - **TASK-57**: ✅ COMPLETADA - Migración a Pydantic 2.x y Reforzamiento de Validación de Datos
 - **TASK-TS**: ✅ COMPLETADA - Tests validados y reescritos (12 archivos)
 - **TASK-HT-01**: ✅ COMPLETADA - Tests para mean_reversion.py (16 tests)
 - **TASK-HT-02**: ✅ COMPLETADA - Tests para momentum.py (20 tests)
 - **TASK-HT-03**: ✅ COMPLETADA - Tests para market_data_service.py (19 tests)
+- **LINTING**: ✅ COMPLETADA - 28 errores críticos corregidos (E203, F601, F541, F811, W291)
+
+**Data Quality & Technical Indicators (6 tareas):**
+
+- **TASK-DV-1**: ✅ COMPLETADA - Detección de Gaps de Precios (>5%)
+- **TASK-DV-2**: ✅ COMPLETADA - Identificación de Outliers (z-score >3)
+- **TASK-DV-3**: ✅ COMPLETADA - Validación de Consistencia OHLC
+- **TASK-DV-4**: ✅ COMPLETADA - Calidad de Datos Pre-Backtest
+- **TASK-IND-1**: ✅ COMPLETADA - ADX para Detectar Tendencia (>25=strong trend)
+- **TASK-IND-2**: ✅ COMPLETADA - ATR para Stop Loss Dinámico (2x ATR multiplier)
+- **TASK-IND-4**: ✅ COMPLETADA - ATR-Based Position Sizing (riesgo = 2% capital / ATR\*2)
 
 ### 🔄 **PLAN DE EJECUCIÓN FINAL MVP - ORDEN DE IMPLEMENTACIÓN**
 
@@ -102,26 +118,33 @@ latency: 1000                       # Cambiar a backup si latencia > 1000ms
 
 **Orden de Ejecución Propuesto:**
 
-##### **FASE 1: LIMPIEZA Y VALIDACIÓN DE DATOS** (4 tareas) 🔴
+##### **FASE 1: LIMPIEZA Y VALIDACIÓN DE DATOS** (4 tareas) ✅ **COMPLETADA**
 
 **Prioridad**: CRÍTICA - Debe hacerse primero para garantizar calidad de datos
 
-- **TASK-DV-1**: Detección de Gaps de Precios (>5%) - Detectar gaps inesperados
-- **TASK-DV-2**: Identificación de Outliers (z-score >3) - Filtrar datos anómalos
-- **TASK-DV-3**: Validación de Consistencia OHLC - Verificar consistencia de precios
-- **TASK-DV-4**: Calidad de Datos Pre-Backtest - Ejecutar checks completos antes de cada backtest
+- **TASK-DV-1**: ✅ COMPLETADA - Detección de Gaps de Precios (>5%) - Implementado en DataValidationService
+- **TASK-DV-2**: ✅ COMPLETADA - Identificación de Outliers (z-score >3) - Implementado en DataValidationService
+- **TASK-DV-3**: ✅ COMPLETADA - Validación de Consistencia OHLC - Implementado en DataValidationService
+- **TASK-DV-4**: ✅ COMPLETADA - Calidad de Datos Pre-Backtest - Checks completos implementados
 
-**Razón**: Sin datos limpios, todos los análisis posteriores estarán contaminados.
+**Archivo**: `app/services/data_validation_service.py`
+**Funcionalidades**: Gap detection, outlier identification, OHLC validation, bulk data quality checks
 
-##### **FASE 2: INDICADORES TÉCNICOS AVANZADOS** (5 tareas) 🔴
+##### **FASE 2: INDICADORES TÉCNICOS AVANZADOS** (5 tareas) - 3/5 COMPLETADAS 🟡
 
 **Prioridad**: ALTA - Base para todas las estrategias
 
-- **TASK-IND-1**: ADX para Detectar Tendencia - Distinguir tendencia (>25) vs. rango
-- **TASK-IND-2**: ATR para Stop Loss Dinámico - Usar ATR (2x) para stops adaptativos
-- **TASK-IND-3**: MACD para Confirmación - Integrar MACD histogram divergence
-- **TASK-IND-4**: ATR-Based Position Sizing - Calcular tamaño basado en ATR: riesgo = 2% capital / (ATR \* 2)
-- **TASK-IND-5**: Filtros Volumen Dinámico - volume_ratio > 1.2 para confirmar liquidez
+- **TASK-IND-1**: ✅ COMPLETADA - ADX para Detectar Tendencia - Implementado en TechnicalIndicatorCalculator.calculate_adx()
+- **TASK-IND-2**: ✅ COMPLETADA - ATR para Stop Loss Dinámico - Implementado en BaseStrategy.get_stop_loss_price()
+- **TASK-IND-3**: ⏳ PENDIENTE - MACD para Confirmación - Integrar MACD histogram divergence
+- **TASK-IND-4**: ✅ COMPLETADA - ATR-Based Position Sizing - Implementado en DynamicStopLossCalculator
+- **TASK-IND-5**: ⏳ PENDIENTE - Filtros Volumen Dinámico - volume_ratio > 1.2 para confirmar liquidez
+
+**Archivos**:
+
+- `app/services/momentum_analysis.py` (ADX calculation)
+- `app/strategies/base.py` (Dynamic stop loss)
+- `app/services/position_sizing_engine.py` (ATR-based position sizing)
 
 **Razón**: Indicadores técnicos son la base de todas las decisiones de trading.
 
