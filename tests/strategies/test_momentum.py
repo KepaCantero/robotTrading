@@ -223,14 +223,18 @@ class TestBuySignalGeneration:
         rsi = 60.0  # Bullish RSI
         ema = 205.0  # Price above EMA
         volume_ratio = Decimal("1.5")  # Above threshold
+        roc = 5.0  # TASK-IND-ROC-2: Positive ROC (acceleration)
 
-        signal = strategy._create_buy_signal(bullish_quote, rsi, ema, volume_ratio)
+        signal = strategy._create_buy_signal(bullish_quote, rsi, ema, volume_ratio, roc)
 
         assert signal.signal_type == SignalType.BUY
         assert signal.symbol == "TSLA"
         assert signal.source == SignalSource.MOMENTUM
         assert signal.confidence > 0
         assert signal.price > 0
+        # Verify ROC is included in metadata
+        assert "roc" in signal.metadata
+        assert signal.metadata["roc"] == "5.0"
 
     def test_generate_signals_creates_signals(self, strategy, bullish_quote):
         """Test that generate_signals creates signals."""
@@ -247,14 +251,18 @@ class TestSellSignalGeneration:
         rsi = 40.0  # Bearish RSI
         ema = 175.0  # Price below EMA
         volume_ratio = Decimal("1.5")  # Above threshold
+        roc = -5.0  # TASK-IND-ROC-2: Negative ROC (deceleration)
 
-        signal = strategy._create_sell_signal(bearish_quote, rsi, ema, volume_ratio)
+        signal = strategy._create_sell_signal(bearish_quote, rsi, ema, volume_ratio, roc)
 
         assert signal.signal_type == SignalType.SELL
         assert signal.symbol == "TSLA"
         assert signal.source == SignalSource.MOMENTUM
         assert signal.confidence > 0
         assert signal.price > 0
+        # Verify ROC is included in metadata
+        assert "roc" in signal.metadata
+        assert signal.metadata["roc"] == "-5.0"
 
     def test_generate_signals_creates_sell_signals(self, strategy, bearish_quote):
         """Test that generate_signals creates appropriate sell signals."""
@@ -271,6 +279,7 @@ class TestSignalConditions:
         rsi = 60.0  # Above 55 (bullish threshold)
         ema = 200.0  # EMA value
         volume_ratio = Decimal("2.0")  # Above threshold
+        roc = 3.0  # TASK-IND-ROC-2: Positive ROC confirms bullish acceleration
         quote = Quote(
             symbol="TSLA",
             bid=Decimal("205.00"),  # Price above EMA
@@ -284,7 +293,8 @@ class TestSignalConditions:
             close=Decimal("205.00"),
         )
 
-        is_buy = strategy._is_buy_signal(rsi, ema, volume_ratio, quote)
+        obv_trend = "rising"  # TASK-IND-OBV-1: OBV rising confirms buying pressure
+        is_buy = strategy._is_buy_signal(rsi, ema, volume_ratio, roc, obv_trend, quote)
         assert isinstance(is_buy, bool)
 
     def test_is_sell_signal_conditions(self, strategy):
@@ -293,6 +303,7 @@ class TestSignalConditions:
         rsi = 40.0  # Below 45 (bearish threshold)
         ema = 210.0  # EMA value
         volume_ratio = Decimal("2.0")  # Above threshold
+        roc = -3.0  # TASK-IND-ROC-2: Negative ROC confirms bearish acceleration
         quote = Quote(
             symbol="TSLA",
             bid=Decimal("200.00"),  # Price below EMA
@@ -306,7 +317,8 @@ class TestSignalConditions:
             close=Decimal("200.00"),
         )
 
-        is_sell = strategy._is_sell_signal(rsi, ema, volume_ratio, quote)
+        obv_trend = "falling"  # TASK-IND-OBV-1: OBV falling confirms selling pressure
+        is_sell = strategy._is_sell_signal(rsi, ema, volume_ratio, roc, obv_trend, quote)
         assert isinstance(is_sell, bool)
 
 
@@ -319,7 +331,8 @@ class TestRiskManagement:
         rsi = 60.0
         ema = 205.0
         volume_ratio = Decimal("1.5")
-        signal = strategy._create_buy_signal(bullish_quote, rsi, ema, volume_ratio)
+        roc = 2.0  # TASK-IND-ROC-2: Positive ROC
+        signal = strategy._create_buy_signal(bullish_quote, rsi, ema, volume_ratio, roc)
 
         risk_passed = strategy.risk_check(signal, portfolio)
         # With $100k cash, should pass for buy signal
@@ -343,7 +356,8 @@ class TestRiskManagement:
         rsi = 40.0
         ema = 155.0
         volume_ratio = Decimal("1.5")
-        signal = strategy._create_sell_signal(bearish_quote, rsi, ema, volume_ratio)
+        roc = -2.0  # TASK-IND-ROC-2: Negative ROC
+        signal = strategy._create_sell_signal(bearish_quote, rsi, ema, volume_ratio, roc)
 
         risk_passed = strategy.risk_check(signal, portfolio)
         # Should fail because no position exists
@@ -408,3 +422,224 @@ class TestEdgeCases:
         # RSI should be 50 (neutral) when price is completely stable
         assert rsi is not None
         assert isinstance(rsi, (float, type(None)))
+
+
+class TestROCFunctionality:
+    """TASK-IND-ROC-2: Tests for ROC (Rate of Change) indicator functionality."""
+
+    def test_calculate_real_roc_bullish_acceleration(self, strategy):
+        """Test ROC calculation with bullish price acceleration."""
+        # Populate price history with increasing prices (bullish momentum)
+        for i in range(25):
+            quote = Quote(
+                symbol="TSLA",
+                bid=Decimal(str(100 + i * 2)),  # Increasing price
+                ask=Decimal(str(100.10 + i * 2)),
+                last=Decimal(str(100.05 + i * 2)),
+                volume=Decimal("2000000"),
+                timestamp=datetime.utcnow(),
+                high=Decimal(str(105 + i * 2)),
+                low=Decimal(str(95 + i * 2)),
+                open=Decimal(str(98 + i * 2)),
+                close=Decimal(str(100 + i * 2)),
+            )
+            strategy.generate_signals(quote)
+
+        roc = strategy._calculate_real_roc()
+        assert roc is not None
+        assert isinstance(roc, (float, type(None)))
+        # With increasing prices, ROC should be positive
+        if roc is not None:
+            assert roc > 0
+
+    def test_calculate_real_roc_bearish_deceleration(self, strategy):
+        """Test ROC calculation with bearish price deceleration."""
+        # Populate price history with decreasing prices (bearish momentum)
+        for i in range(25):
+            quote = Quote(
+                symbol="TSLA",
+                bid=Decimal(str(150 - i * 2)),  # Decreasing price
+                ask=Decimal(str(150.10 - i * 2)),
+                last=Decimal(str(150.05 - i * 2)),
+                volume=Decimal("2000000"),
+                timestamp=datetime.utcnow(),
+                high=Decimal(str(155 - i * 2)),
+                low=Decimal(str(145 - i * 2)),
+                open=Decimal(str(148 - i * 2)),
+                close=Decimal(str(150 - i * 2)),
+            )
+            strategy.generate_signals(quote)
+
+        roc = strategy._calculate_real_roc()
+        assert roc is not None
+        assert isinstance(roc, (float, type(None)))
+        # With decreasing prices, ROC should be negative
+        if roc is not None:
+            assert roc < 0
+
+    def test_calculate_real_roc_stable_price(self, strategy):
+        """Test ROC calculation with stable price."""
+        # Populate price history with stable prices
+        for i in range(25):
+            quote = Quote(
+                symbol="TSLA",
+                bid=Decimal("100.00"),  # Stable price
+                ask=Decimal("100.10"),
+                last=Decimal("100.05"),
+                volume=Decimal("2000000"),
+                timestamp=datetime.utcnow(),
+                high=Decimal("100.00"),
+                low=Decimal("100.00"),
+                open=Decimal("100.00"),
+                close=Decimal("100.00"),
+            )
+            strategy.generate_signals(quote)
+
+        roc = strategy._calculate_real_roc()
+        # With stable prices, ROC should be 0 or close to 0
+        assert roc is not None
+        if roc is not None:
+            assert abs(roc) < 0.5  # Very close to zero
+
+    def test_calculate_real_roc_insufficient_data(self, strategy):
+        """Test ROC calculation with insufficient historical data."""
+        # Don't populate enough history
+        quote = Quote(
+            symbol="TSLA",
+            bid=Decimal("100.00"),
+            ask=Decimal("100.10"),
+            last=Decimal("100.05"),
+            volume=Decimal("2000000"),
+            timestamp=datetime.utcnow(),
+            high=Decimal("100.00"),
+            low=Decimal("100.00"),
+            open=Decimal("100.00"),
+            close=Decimal("100.00"),
+        )
+        strategy.generate_signals(quote)
+
+        roc = strategy._calculate_real_roc()
+        # With insufficient data, ROC should be None
+        assert roc is None
+
+    def test_is_buy_signal_with_positive_roc(self, strategy):
+        """Test buy signal generation with positive ROC (acceleration)."""
+        rsi = 60.0  # Bullish RSI
+        ema = 200.0
+        volume_ratio = Decimal("2.0")
+        roc = 5.0  # Strong bullish acceleration
+        obv_trend = "rising"  # TASK-IND-OBV-1: OBV rising
+        quote = Quote(
+            symbol="TSLA",
+            bid=Decimal("205.00"),
+            ask=Decimal("205.10"),
+            last=Decimal("205.05"),
+            volume=Decimal("2000000"),
+            timestamp=datetime.utcnow(),
+            high=Decimal("210.00"),
+            low=Decimal("200.00"),
+            open=Decimal("203.00"),
+            close=Decimal("205.00"),
+        )
+
+        is_buy = strategy._is_buy_signal(rsi, ema, volume_ratio, roc, obv_trend, quote)
+        # With positive ROC, should generate buy signal
+        assert is_buy is True
+
+    def test_is_buy_signal_with_negative_roc(self, strategy):
+        """Test buy signal generation with negative ROC (should fail)."""
+        rsi = 60.0  # Bullish RSI
+        ema = 200.0
+        volume_ratio = Decimal("2.0")
+        roc = -5.0  # Negative ROC (deceleration) - should prevent buy signal
+        obv_trend = "rising"  # TASK-IND-OBV-1: OBV rising (pero ROC negativo bloquea)
+        quote = Quote(
+            symbol="TSLA",
+            bid=Decimal("205.00"),
+            ask=Decimal("205.10"),
+            last=Decimal("205.05"),
+            volume=Decimal("2000000"),
+            timestamp=datetime.utcnow(),
+            high=Decimal("210.00"),
+            low=Decimal("200.00"),
+            open=Decimal("203.00"),
+            close=Decimal("205.00"),
+        )
+
+        is_buy = strategy._is_buy_signal(rsi, ema, volume_ratio, roc, obv_trend, quote)
+        # With negative ROC, should NOT generate buy signal
+        assert is_buy is False
+
+    def test_is_sell_signal_with_negative_roc(self, strategy):
+        """Test sell signal generation with negative ROC (deceleration)."""
+        rsi = 40.0  # Bearish RSI
+        ema = 210.0
+        volume_ratio = Decimal("2.0")
+        roc = -5.0  # Strong bearish acceleration
+        obv_trend = "falling"  # TASK-IND-OBV-1: OBV falling
+        quote = Quote(
+            symbol="TSLA",
+            bid=Decimal("200.00"),
+            ask=Decimal("200.10"),
+            last=Decimal("200.05"),
+            volume=Decimal("2000000"),
+            timestamp=datetime.utcnow(),
+            high=Decimal("205.00"),
+            low=Decimal("195.00"),
+            open=Decimal("200.00"),
+            close=Decimal("200.00"),
+        )
+
+        is_sell = strategy._is_sell_signal(rsi, ema, volume_ratio, roc, obv_trend, quote)
+        # With negative ROC, should generate sell signal
+        assert is_sell is True
+
+    def test_is_sell_signal_with_positive_roc(self, strategy):
+        """Test sell signal generation with positive ROC (should fail)."""
+        rsi = 40.0  # Bearish RSI
+        ema = 210.0
+        volume_ratio = Decimal("2.0")
+        roc = 5.0  # Positive ROC (acceleration) - should prevent sell signal
+        obv_trend = "falling"  # TASK-IND-OBV-1: OBV falling (pero ROC positivo bloquea)
+        quote = Quote(
+            symbol="TSLA",
+            bid=Decimal("200.00"),
+            ask=Decimal("200.10"),
+            last=Decimal("200.05"),
+            volume=Decimal("2000000"),
+            timestamp=datetime.utcnow(),
+            high=Decimal("205.00"),
+            low=Decimal("195.00"),
+            open=Decimal("200.00"),
+            close=Decimal("200.00"),
+        )
+
+        is_sell = strategy._is_sell_signal(rsi, ema, volume_ratio, roc, obv_trend, quote)
+        # With positive ROC, should NOT generate sell signal
+        assert is_sell is False
+
+    def test_roc_in_signal_metadata(self, strategy, bullish_quote):
+        """Test that ROC value is properly stored in signal metadata."""
+        rsi = 60.0
+        ema = 205.0
+        volume_ratio = Decimal("1.5")
+        roc = 7.5  # Positive ROC
+
+        signal = strategy._create_buy_signal(bullish_quote, rsi, ema, volume_ratio, roc)
+
+        assert "roc" in signal.metadata
+        assert signal.metadata["roc"] == "7.5"
+        assert "momentum_positive_breakout: rsi=60.00 ema_trend=above volume=1.50x roc=7.50" in signal.metadata["reason"]
+
+    def test_roc_none_handling(self, strategy, bullish_quote):
+        """Test that None ROC values are handled gracefully."""
+        rsi = 60.0
+        ema = 205.0
+        volume_ratio = Decimal("1.5")
+        roc = None  # No ROC available
+
+        signal = strategy._create_buy_signal(bullish_quote, rsi, ema, volume_ratio, roc)
+
+        assert signal.metadata["roc"] == "N/A"
+        # Reason should not include ROC when None
+        assert "roc=" not in signal.metadata["reason"] or "roc=N/A" in signal.metadata["reason"]
