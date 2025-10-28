@@ -127,13 +127,16 @@ def generate_multi_strategy_summary_text(
     summary += "|----------|---------|--------|----------|--------|--------|--------|\n"
     
     for strategy_name, result in per_strategy.items():
+        sharpe = result.get('sharpe_ratio', 0) or 0
+        max_dd = result.get('max_drawdown', 0) or 0
+        
         summary += f"| {strategy_name} | "
         summary += f"${result.get('initial_capital', 0):,.0f} | "
         summary += f"{result.get('total_trades', 0)} | "
         summary += f"{result.get('win_rate', 0):.1f}% | "
         summary += f"{result.get('total_return', 0):.2f}% | "
-        summary += f"{result.get('sharpe_ratio', 0):.3f} | "
-        summary += f"{result.get('max_drawdown', 0):.2f}% |\n"
+        summary += f"{sharpe:.3f} | "
+        summary += f"{max_dd:.2f}% |\n"
     
     summary += "\n"
     
