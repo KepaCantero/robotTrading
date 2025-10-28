@@ -269,21 +269,49 @@ def generate_backend_test_summary(
     Returns:
         Path to generated summary file
     """
-    # Aggregate metrics from all modules
-    aggregated = _aggregate_metrics(all_results)
+    # If this is a multi-strategy backtest, generate different summary
+    if multi_strategy_results and strategy == "all_strategies":
+        from app.dashboard.multi_strategy_utils import generate_multi_strategy_summary_text
+        
+        # Generate multi-strategy specific summary
+        summary_text = generate_multi_strategy_summary_text(multi_strategy_results)
+        
+        # Add header
+        report = f"""# 🧩 Multi-Strategy Backend Test Result Summary
+
+**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}  
+**Audit Level:** Multi-Strategy Portfolio Analysis  
+**Classification:** Technical Backend Audit Report
+**Strategy:** {strategy}
+**Preset:** {preset}
+**Symbol:** {symbol}
+**Period:** {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}
+**Initial Capital:** ${initial_capital:,.2f}
+
+---
+
+{summary_text}
+
+---
+*End of Multi-Strategy Backend Test Result Summary*
+"""
     
-    # Generate comprehensive report
-    report = _generate_comprehensive_backend_report(
-        aggregated,
-        strategy,
-        preset,
-        symbol,
-        start_date,
-        end_date,
-        initial_capital,
-        all_results,
-        multi_strategy_results,
-    )
+    else:
+        # Aggregate metrics from all modules
+        aggregated = _aggregate_metrics(all_results)
+        
+        # Generate comprehensive report
+        report = _generate_comprehensive_backend_report(
+            aggregated,
+            strategy,
+            preset,
+            symbol,
+            start_date,
+            end_date,
+            initial_capital,
+            all_results,
+            multi_strategy_results,
+        )
     
     # Save to dedicated directory
     summary_dir = project_root / "docs" / "BACKTEST_RESULTS" / "summaries"
