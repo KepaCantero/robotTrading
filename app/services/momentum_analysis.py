@@ -132,6 +132,93 @@ class TechnicalIndicatorCalculator:
         return round(atr, 4)
 
     @staticmethod
+    def calculate_adx(
+        highs: List[float], lows: List[float], closes: List[float], period: int = 14
+    ) -> Optional[float]:
+        """
+        TASK-IND-1: Calculate ADX (Average Directional Index).
+
+        ADX measures trend strength:
+        - >25: Strong trend
+        - <25: Ranging market (no clear trend)
+
+        Args:
+            highs: List of high prices
+            lows: List of low prices
+            closes: List of close prices
+            period: Period for ADX calculation (default 14)
+
+        Returns:
+            ADX value (0-100) or None if insufficient data
+        """
+        if len(highs) < period + 1 or len(lows) < period + 1 or len(closes) < period + 1:
+            return None
+
+        # Calculate directional movement
+        plus_dm_list = []  # +DM
+        minus_dm_list = []  # -DM
+
+        for i in range(1, len(highs)):
+            up_move = highs[i] - highs[i - 1]
+            down_move = lows[i - 1] - lows[i]
+
+            plus_dm = up_move if (up_move > down_move) and (up_move > 0) else 0
+            minus_dm = down_move if (down_move > up_move) and (down_move > 0) else 0
+
+            plus_dm_list.append(plus_dm)
+            minus_dm_list.append(minus_dm)
+
+        # Calculate TR (True Range) for smoothing
+        tr_list = []
+        for i in range(1, len(highs)):
+            tr1 = highs[i] - lows[i]
+            tr2 = abs(highs[i] - closes[i - 1])
+            tr3 = abs(lows[i] - closes[i - 1])
+            true_range = max(tr1, tr2, tr3)
+            tr_list.append(true_range)
+
+        if len(tr_list) < period:
+            return None
+
+        # Calculate smoothed values using Wilder's smoothing
+        plus_di_list = []
+        minus_di_list = []
+
+        for i in range(period - 1, len(plus_dm_list)):
+            plus_dm_smooth = sum(plus_dm_list[i - period + 1 : i + 1])
+            minus_dm_smooth = sum(minus_dm_list[i - period + 1 : i + 1])
+            tr_smooth = sum(tr_list[i - period + 1 : i + 1])
+
+            if tr_smooth == 0:
+                plus_di = 0
+                minus_di = 0
+            else:
+                plus_di = 100 * (plus_dm_smooth / tr_smooth)
+                minus_di = 100 * (minus_dm_smooth / tr_smooth)
+
+            plus_di_list.append(plus_di)
+            minus_di_list.append(minus_di)
+
+        # Calculate DX (Directional Index)
+        dx_list = []
+        for i in range(len(plus_di_list)):
+            di_diff = abs(plus_di_list[i] - minus_di_list[i])
+            di_sum = plus_di_list[i] + minus_di_list[i]
+
+            if di_sum == 0:
+                dx = 0
+            else:
+                dx = 100 * (di_diff / di_sum)
+            dx_list.append(dx)
+
+        # Calculate ADX as smoothed average of DX
+        if len(dx_list) < period:
+            return None
+
+        adx = sum(dx_list[-period:]) / period
+        return round(adx, 2)
+
+    @staticmethod
     def calculate_volume_sma(volumes: List[Decimal], period: int = 20) -> Optional[Decimal]:
         """Calculate Volume Simple Moving Average."""
         if len(volumes) < period:
@@ -322,6 +409,9 @@ class MomentumAnalysisService:
         # Calculate ATR
         atr = self.indicator_calculator.calculate_atr(highs, lows, prices, 14)
 
+        # TASK-IND-1: Calculate ADX
+        adx = self.indicator_calculator.calculate_adx(highs, lows, prices, 14)
+
         # Calculate volume SMA
         volume_sma_20 = self.indicator_calculator.calculate_volume_sma(volumes, 20)
 
@@ -350,6 +440,7 @@ class MomentumAnalysisService:
             macd_signal=macd_signal,
             macd_histogram=macd_histogram,
             atr=atr,
+            adx=adx,
             volatility=volatility,
             volume_sma_20=volume_sma_20,
             volume_ratio=volume_ratio,
