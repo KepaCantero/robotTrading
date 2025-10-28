@@ -9,12 +9,13 @@ from decimal import Decimal
 from typing import Optional
 
 
-class DynamicStopLossCalculator:
+class PositionSizingEngine:
     """
-    TASK-IND-2: Calculates dynamic stop loss based on ATR.
+    TASK-IND-2, IND-4: Calculates dynamic stop loss and position sizing based on ATR.
 
     Stop Loss Formula: stop_loss_distance = ATR * multiplier
     Default multiplier: 2.0 (2x ATR)
+    Position Sizing: risk_per_trade = 2% capital / (ATR * 2)
     """
 
     def __init__(self, atr_multiplier: float = 2.0):
