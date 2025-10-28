@@ -188,13 +188,11 @@ class MultiStrategyBacktester:
         total_final = sum(r.final_capital for r in results_by_strategy.values())
         total_return = ((total_final - total_initial) / total_initial * 100) if total_initial > 0 else Decimal("0")
 
-        # Aggregate trades
+        # Aggregate trades (Trade objects don't have mutable metadata, so we just track them)
         all_trades = []
         for strategy_name, result in results_by_strategy.items():
             for trade in result.trades:
-                # Add strategy name to trade metadata
-                trade.metadata = trade.metadata or {}
-                trade.metadata["strategy"] = strategy_name
+                # Just add the trade - metadata is not mutable in Trade model
                 all_trades.append(trade)
 
         # Calculate weighted metrics
