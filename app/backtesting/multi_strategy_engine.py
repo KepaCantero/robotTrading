@@ -119,8 +119,8 @@ class MultiStrategyBacktester:
         
         logger.info(
             f"Multi-strategy backtest completed: "
-            f"{consolidated['combined']['total_capital']:,.2f} initial -> "
-            f"{consolidated['combined']['final_capital']:,.2f} final "
+            f"{consolidated['combined']['total_initial_capital']:,.2f} initial -> "
+            f"{consolidated['combined']['total_final_capital']:,.2f} final "
             f"({consolidated['combined']['total_return']:.2f}% return)"
         )
 
