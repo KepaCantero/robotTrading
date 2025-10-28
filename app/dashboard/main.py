@@ -127,8 +127,14 @@ with st.sidebar:
     st.subheader("📊 Backtest Parameters")
     
     symbol = st.text_input("Symbol", value="AAPL")
-    start_date = st.date_input("Start Date", value=datetime(2023, 1, 1))
-    end_date = st.date_input("End Date", value=datetime(2024, 12, 31))
+    
+    # Default to 10 years of data
+    from datetime import timedelta
+    default_start = datetime.now() - timedelta(days=365*10)
+    default_end = datetime.now() - timedelta(days=1)
+    
+    start_date = st.date_input("Start Date", value=default_start.date())
+    end_date = st.date_input("End Date", value=default_end.date())
     initial_capital = st.number_input(
         "Initial Capital ($)", min_value=1000, value=100000, step=1000
     )
