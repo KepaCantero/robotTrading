@@ -1,14 +1,14 @@
 # Active Context - AlgoTrading MVP
 
-## Current Focus: **MVP OPERATIVO AWS/DOCKER + BACKTESTING EXHAUSTIVO + CONTROL DE RIESGOS** 🎯
+## Current Focus: **COMPLETAR MVP - PORTFOLIO MULTI-STRATEGY** 🎯
 
-### Phase: MVP Production Ready - AWS + Docker + Paper Trading + Backtesting Funcional + Risk Management + Tests Validados + Linting Completo
+### Phase: MVP Finalization - Portfolio Multi-Strategy Implementation + Risk Management + Data Quality + Technical Indicators
 
 - **Status**: ✅ TASK-1 a TASK-15, TASK-57, TASK-TS, TASK-AUDIT-01, TASK-AUDIT-02, TASK-AUDIT-03, TASK-HT-01, TASK-HT-02, TASK-HT-03, BACKTESTING COMPLETADAS
-- **Current State**: Sistema completo de infraestructura, deployment automatizado, configuración centralizada, análisis de costos, tests de concurrencia, manejo unificado de errores, servicios refactorizados operativo + Todos los tests validados (686 pasando, 0 fallando) + Errores críticos de linting corregidos (F821, E203, F841) + Tests críticos para estrategias y servicios completados + **Backtesting infrastructure funcional con datos históricos reales**
-- **Technical Assessment**: MVP READY para AWS/Docker deployment + Sistema de base de datos + CI/CD automatizado + Configuración centralizada robusta + Análisis de costos completo + Tests de concurrencia validados + Manejo unificado de errores con circuit breakers y kill switches + Servicios refactorizados con motores especializados + Tests reescritos con código de producción + Linting 100% corregido + **Backtesting operativo con Stooq data (1984-2025)**
-- **Context Version**: 2025.12
-- **Last Update**: 2025-10-26 (Backtesting infrastructure funcional con datos reales)
+- **Current State**: Sistema completo de infraestructura, deployment automatizado, configuración centralizada, análisis de costos, tests de concurrencia, manejo unificado de errores, servicios refactorizados operativo + Todos los tests validados (686 pasando, 0 fallando) + Errores críticos de linting corregidos (F821, E203, F841) + Tests críticos para estrategias y servicios completados + **Backtesting infrastructure funcional con datos históricos reales + Plan de ejecución 70 tareas pendientes definido**
+- **Technical Assessment**: MVP CORE READY para AWS/Docker deployment + Sistema de base de datos + CI/CD automatizado + Configuración centralizada robusta + Análisis de costos completo + Tests de concurrencia validados + Manejo unificado de errores con circuit breakers y kill switches + Servicios refactorizados con motores especializados + Tests reescritos con código de producción + Linting 100% corregido + **Backtesting operativo con Stooq data (1984-2025) + Plan de implementación Portfolio Multi-Strategy definido (70 tareas organizadas en 12 fases)**
+- **Context Version**: 2025.14
+- **Last Update**: 2025-10-27 (Plan de ejecución completo MVP + Mejoras adicionales identificadas: TASK-58 enhanced, QA automatizado, documentación visual, performance benchmarks)
 
 ## 📊 **ESTADO ACTUAL DEL SISTEMA**
 
@@ -94,9 +94,176 @@ latency: 1000                       # Cambiar a backup si latencia > 1000ms
 - **TASK-HT-02**: ✅ COMPLETADA - Tests para momentum.py (20 tests)
 - **TASK-HT-03**: ✅ COMPLETADA - Tests para market_data_service.py (19 tests)
 
-### 🔄 **TAREAS PENDIENTES CRÍTICAS**
+### 🔄 **PLAN DE EJECUCIÓN FINAL MVP - ORDEN DE IMPLEMENTACIÓN**
 
-#### **🔥 ALTA PRIORIDAD** (Bloquean features o afectan muchos tests)
+#### **📋 ORDEN CRÍTICO DE IMPLEMENTACIÓN (70 tareas pendientes)**
+
+**Estado**: 13 tareas completadas / 83 tareas totales (16% completado)
+
+**Orden de Ejecución Propuesto:**
+
+##### **FASE 1: LIMPIEZA Y VALIDACIÓN DE DATOS** (4 tareas) 🔴
+
+**Prioridad**: CRÍTICA - Debe hacerse primero para garantizar calidad de datos
+
+- **TASK-DV-1**: Detección de Gaps de Precios (>5%) - Detectar gaps inesperados
+- **TASK-DV-2**: Identificación de Outliers (z-score >3) - Filtrar datos anómalos
+- **TASK-DV-3**: Validación de Consistencia OHLC - Verificar consistencia de precios
+- **TASK-DV-4**: Calidad de Datos Pre-Backtest - Ejecutar checks completos antes de cada backtest
+
+**Razón**: Sin datos limpios, todos los análisis posteriores estarán contaminados.
+
+##### **FASE 2: INDICADORES TÉCNICOS AVANZADOS** (5 tareas) 🔴
+
+**Prioridad**: ALTA - Base para todas las estrategias
+
+- **TASK-IND-1**: ADX para Detectar Tendencia - Distinguir tendencia (>25) vs. rango
+- **TASK-IND-2**: ATR para Stop Loss Dinámico - Usar ATR (2x) para stops adaptativos
+- **TASK-IND-3**: MACD para Confirmación - Integrar MACD histogram divergence
+- **TASK-IND-4**: ATR-Based Position Sizing - Calcular tamaño basado en ATR: riesgo = 2% capital / (ATR \* 2)
+- **TASK-IND-5**: Filtros Volumen Dinámico - volume_ratio > 1.2 para confirmar liquidez
+
+**Razón**: Indicadores técnicos son la base de todas las decisiones de trading.
+
+##### **FASE 3: SIGNAL SCORING Y COOLDOWN** (5 tareas) 🔴
+
+**Prioridad**: ALTA - Prioriza y filtra señales correctamente
+
+- **TASK-SC-1**: Sistema de Cooldown - Cooldown period por símbolo (5-15 min) para evitar sobre-trading
+- **TASK-SC-2**: Signal Compound Score - Score compuesto: confidence (30%), volume_ratio (25%), volatility (20%), liquidity (15%), timing (10%)
+- **TASK-SC-3**: Signal Priority Ranking - Priorizar: >80=high, 50-80=medium, <50=low
+- **TASK-SC-4**: Portfolio Signal Filtering - PortfolioManager filtra señales conflictivas por estrategia/símbolo
+- **TASK-SC-5**: Signal Scoring Integration - Integrar scoring engine en todas las estrategias
+
+**Razón**: Scoring permite priorizar señales de calidad y evitar ruido de mercado.
+
+##### **FASE 4: GESTIÓN DE CAPITAL Y RIESGO** (12 tareas) 🔴
+
+**Prioridad**: CRÍTICA - Protege el capital y gestiona exposición
+
+**Portfolio Allocation:**
+
+- **TASK-PA-1**: Asignación Multi-Estrategia - 50% Momentum, 25% Mean Reversion, 25% Pairs Trading
+- **TASK-PA-2**: Portfolio Manager - Distribuir capital entre estrategias
+- **TASK-PORT-SEL-1**: Selector de Portfolio Dinámico - Ajustar pesos según performance rolling 30 días
+
+**Risk Management:**
+
+- **TASK-RM-1**: Riesgo por Operación <2% - Limitar riesgo individual por trade
+- **TASK-RM-2**: Ratio Riesgo/Recompensa ≥1:3 - Arriesgar 1 para ganar 3
+- **TASK-RM-3**: Exposición Máxima por Estrategia - 50% Momentum, 25-30% Mean Reversion, 20-30% Pairs
+- **TASK-RM-4**: Límite Drawdown Máximo 15% - Stop general si portafolio cae >15%
+- **TASK-RM-5**: Circuit Breakers 3-5 Stops - Pausar estrategia tras 3-5 stops consecutivos
+
+**Rebalancing:**
+
+- **TASK-REB-1**: Rebalanceo Mensual - Mantener asignaciones objetivo
+- **TASK-REB-2**: Ajustes Dinámicos Capital - Reducir capital de estrategias con rachas negativas
+
+**Razón**: Gestión de riesgo es crítica para preservar capital y diversificar exposición.
+
+##### **FASE 5: VALIDACIÓN Y BACKTESTING** (6 tareas) 🟠
+
+**Prioridad**: ALTA - Valida estrategias antes de live trading
+
+**Backtesting:**
+
+- **TASK-BV-1**: Walk-Forward Validation - Entrenar en ventana histórica, probar en período siguiente
+- **TASK-BV-2**: Cross-Validation Temporal - Evaluar consistencia de estrategias
+- **TASK-MET-1**: Sharpe y Sortino Ratio - Calcular ratios de riesgo-ajustados
+- **TASK-MET-2**: Risk/Reward Ratio - Ratio promedio por operación (target ≥1:3)
+
+**Costos:**
+
+- **TASK-CST-1**: Ajustar Costos Backtesting - Spreads (0.01-0.03%), comisiones (0.01-0.05%), slippage
+- **TASK-CST-2**: Cálculo Costos Totales - Costos por trade (0.02-0.1% adicional)
+
+**Razón**: Backtesting robusto valida estrategias antes de arriesgar capital real.
+
+##### **FASE 6: OPTIMIZACIÓN DE PARÁMETROS** (4 tareas) 🟠
+
+**Prioridad**: MEDIA - Optimiza rendimiento después de validación
+
+- **TASK-PARAM-1**: Definir Presets de Parámetros - Presets conservadores/agresivos/balanceados
+- **TASK-PARAM-2**: Grid Search de Parámetros - Optimizar con walk-forward
+- **TASK-PARAM-3**: Sensible Ranges por Indicador - Rangos para RSI (20-80), ATR (1.5-3.0), Volume ratio (>1.0)
+- **TASK-MOM-OPT-1**: Momentum Auto-Optimization Engine - Recalibrar RSI/EMA/MACD cada mes
+
+**Razón**: Optimización mejora rendimiento sin comprometer robustez.
+
+##### **FASE 7: SIMULACIÓN REALISTA DE EJECUCIÓN** (4 tareas) 🟠
+
+**Prioridad**: ALTA - Simula condiciones reales de mercado
+
+- **TASK-EX-1**: Slippage por Símbolo - Dinámico (0.05-0.15% crypto, 0.1-0.3% stocks)
+- **TASK-EX-2**: Latencia de Ejecución - 50-200ms limit orders, 100-500ms market
+- **TASK-EX-3**: Verificación de Fills - Validar precio ejecución dentro de spread
+- **TASK-EX-4**: Partial Fills Simulation - Simular fills parciales para órdenes grandes
+
+**Razón**: Simulación realista valida ejecución en condiciones reales.
+
+##### **FASE 8: LOGGING Y REPRODUCIBILIDAD** (5 tareas) 🟡
+
+**Prioridad**: MEDIA - Auditabilidad y trazabilidad
+
+- **TASK-LOG-1**: Structured Logging con Hashes - Hash único por señal/trade
+- **TASK-LOG-2**: Commit SHA & Run Metadata - Incluir SHA, timestamp, branch, seed
+- **TASK-LOG-3**: Seed-Based Reproducibilidad - Seeds determinísticos para procesos aleatorios
+- **TASK-LOG-4**: Audit Trail Completo - Decisión, razones, parámetros, resultados
+- **TASK-LOG-5**: Export Resultados Versionados - Automático a /docs/BACKTEST_RESULTS
+
+**Razón**: Reproducibilidad y auditabilidad son críticas para debugging y compliance.
+
+##### **FASE 9: DASHBOARD Y MONITORING** (4 tareas) 🟡
+
+**Prioridad**: MEDIA - Observabilidad del sistema
+
+- **TASK-DASH-1**: Integración Dashboard - Visualizar asignaciones por estrategia en tiempo real
+- **TASK-DASH-2**: Kill-Switch por Drawdown - Detener trading si drawdown > 15%
+- **TASK-DASH-3**: Alertas Infraestructura - Errores críticos, timeouts, API failures con Telegram/Discord
+- **TASK-DASH-4**: Monitoring Dashboard Live - P&L por estrategia, exposure, drawdown, error rate, latencia
+
+**Razón**: Observabilidad permite detectar problemas antes de que afecten capital.
+
+##### **FASE 10: TESTS AUTOMATIZADOS Y CI** (3 tareas) 🟡
+
+**Prioridad**: MEDIA - Garantiza calidad continua
+
+- **TASK-TEST-1**: Tests Automatizados Portfolio - Allocation, rebalancing, risk limits, signal filtering
+- **TASK-TEST-2**: CI Integration - Ejecutar tests antes de merge, cobertura >80%
+- **TASK-TEST-3**: Data Quality Checks Automation - Automatizar checks (TASK-DV-1 a DV-4) en CI/CD
+
+**Razón**: Tests automatizados mantienen calidad con cada commit.
+
+##### **FASE 11: DOCUMENTACIÓN AUTOMÁTICA** (3 tareas) 🟢
+
+**Prioridad**: BAJA - Documenta sistema final
+
+- **TASK-DOC-1**: Generación Automática de Docs - Estrategias, parámetros, métricas en /docs
+- **TASK-DOC-2**: Reportes Auditables Post-Backtest - Configuración, resultados, métricas, artefactos
+- **TASK-DOC-3**: Strategy Cards Documentation - Descripción, parámetros, risk profile, performance esperada
+
+**Razón**: Documentación es crítica para mantenimiento y onboarding.
+
+##### **FASE 12: ESTRATEGIAS COMPLEMENTARIAS** (8 tareas) 🟠
+
+**Prioridad**: MEDIA - Expande cobertura de estrategias
+
+**Mean Reversion:**
+
+- **TASK-MR-1**: Mean Reversion Señal Compra - RSI < 30 y precio cerca banda inferior Bollinger
+- **TASK-MR-2**: Mean Reversion Señal Venta - RSI > 70 y precio cerca banda superior Bollinger
+
+**Pairs Trading:**
+
+- **TASK-PT-1**: Pairs Trading Correlación - Detección correlación > 0.7 entre pares
+- **TASK-PT-2**: Pairs Trading Spread - Cálculo spread y divergencia temporal
+- **TASK-PT-3**: Pairs Trading Apertura Simultánea - Short sobrevalorado + long subvalorado
+- **TASK-PT-4**: Pairs Trading Cierre - Cierre cuando spread normaliza o take-profit
+
+**Razón**: Estrategias complementarias diversifican exposición y capturan más oportunidades.
+
+#### **🔥 OTROS PRIORITARIOS** (Bloquean features o afectan muchos tests)
 
 ## 📊 **PLAN DE TAREAS - AUDIT REPORT IMPLEMENTATION**
 
@@ -607,3 +774,159 @@ Initial Capital: $100,000
 - **Cobertura servicios**: 22% → >=70%
 - **Total tests**: 631 → 686
 - **Integridad financiera**: ✅ Garantizada
+
+---
+
+## 🔧 **MEJORAS ADICIONALES IDENTIFICADAS**
+
+### 📦 **TASK-58 Enhanced: Self-Healing Dependency Management**
+
+**Mejora Propuesta:**
+
+- ✅ **Check automático de versiones** en CI/CD para que el sistema sea "self-healing"
+- ✅ **Dependabot/GitHub Actions** para actualizaciones automáticas de dependencias
+- ✅ **Validación de compatibilidad** con Pydantic 2.x antes de cada merge
+- ✅ **Rollback automático** si actualización rompe tests
+
+**Implementación:**
+
+```yaml
+# .github/workflows/dependency-check.yml
+- name: Check Dependencies
+  run: |
+    pip check
+    poetry check
+    pytest tests/test_dependencies.py
+
+- name: Auto-update if safe
+  run: |
+    poetry update --dry-run
+    if [ $? -eq 0 ]; then poetry update; fi
+```
+
+### 🎨 **Quality Assurance: Errores de Estilo Automatizados**
+
+**Errores Pendientes (39 total):**
+
+- **E501** (line too long): 24 errores
+- **F811** (redefinition): 7 errores
+- **F601** (dict key repeated): 4 errores
+- **F541** (f-string missing placeholders): 4 errores
+
+**Solución Propuesta:**
+
+- ✅ **GitHub Actions pre-commit** con black, isort, flake8
+- ✅ **Automatización**: `black --line-length 100`, `isort`, `flake8 --max-line-length 100`
+- ✅ **Prevención de deuda técnica** acumulada
+
+**Setup:**
+
+```bash
+# .pre-commit-config.yaml
+- repo: https://github.com/psf/black
+  args: [--line-length=100]
+- repo: https://github.com/pycqa/isort
+  args: [--profile=black]
+- repo: https://github.com/pycqa/flake8
+  args: [--max-line-length=100]
+```
+
+### 📊 **Documentación de Backtesting Visual**
+
+**Mejora Propuesta:**
+
+- ✅ **Resumen visual de resultados** (tabla o gráfico)
+- ✅ **Comparación estratégias** vs rendimiento histórico
+- ✅ **Referencia rápida** para toma de decisiones
+
+**Implementación Sugerida:**
+
+```python
+# app/backtesting/report_generator.py
+def generate_visual_report(results):
+    """
+    Genera reporte visual con:
+    - Tabla comparativa de estrategias
+    - Gráficos de equity curve
+    - Heatmap de Sharpe/DD por estrategia
+    - Distribución de retornos
+    """
+```
+
+**Output:**
+
+- `/docs/BACKTEST_RESULTS/comparison_table.md` - Tabla comparativa
+- `/docs/BACKTEST_RESULTS/equity_curves.html` - Gráficos interactivos
+- `/docs/BACKTEST_RESULTS/heatmap_performance.png` - Heatmap rendimiento
+
+### ⚡ **Métricas de Performance Detalladas**
+
+**Métricas Actuales:**
+
+- ✅ **493+ señales/segundo** - Throughput
+- ✅ **<100ms latencia** - Latencia end-to-end
+
+**Métricas Adicionales Propuestas:**
+
+- ✅ **CPU promedio**: % uso durante simulación
+- ✅ **RAM promedio**: MB utilizados durante simulación
+- ✅ **P95 latency**: Latencia percentil 95
+- ✅ **Memory footprint**: Growth del uso de memoria por estrategia
+
+**Benchmark Completo:**
+
+```python
+# tests/performance/test_resource_usage.py
+@pytest.mark.performance
+def test_performance_benchmark():
+    """
+    Benchmark completo:
+    - Throughput: >450 signals/sec
+    - Latency P95: <100ms
+    - CPU: <30% avg
+    - RAM: <512MB avg
+    """
+```
+
+**KPIs Adicionales:**
+
+- ⏱️ **Tiempo promedio de test suite**: <5 minutos (CI)
+- 📈 **Tiempo medio latencia real**: 50-100ms medido en producción
+- 🚀 **Throughput esperado**: 450-500 signals/sec (target performance)
+- 🔄 **CPU/RAM durante simulación**: <30% CPU, <512MB RAM
+
+### 📈 **Mapa de Dependencias entre Fases**
+
+**Dependencias Críticas:**
+
+- **Fase 1 (DV-\*)**: Base para todas las demás - Sin datos limpios, todo está contaminado
+- **Fase 2 (IND-\*)**: Requiere datos limpios (Fase 1) - Indicadores técnicos necesitan datos válidos
+- **Fase 3 (SC-\*)**: Requiere indicadores (Fase 2) - Scoring necesita indicadores calculados
+- **Fase 4 (PA-_, RM-_)**: Requiere scoring (Fase 3) - Portfolio Manager necesita señales priorizadas
+- **Fase 5 (BV-_, CST-_)**: Requiere gestión de riesgo (Fase 4) - Backtesting necesita PortfolioManager
+- **Fase 6 (PARAM-\*)**+: Requiere validación (Fase 5) - Optimización requiere backtesting válido
+
+**Orden de Ejecución Obligatorio:**
+
+```
+FASE 1 (DV) → FASE 2 (IND) → FASE 3 (SC) → FASE 4 (PA/RM) → FASE 5 (BV/CST) → FASE 6-12
+   ↓              ↓              ↓              ↓                  ↓
+Base        Indicadores    Scoring      Risk Mgmt        Backtesting
+```
+
+### 🎯 **Resumen de Mejoras**
+
+**Completadas:**
+
+- ✅ Plan de ejecución 12 fases definido
+- ✅ Orden crítico de implementación documentado
+- ✅ Dependencias entre fases mapeadas
+- ✅ Tests de momentum corregidos
+
+**Pendientes (Mejoras Menores):**
+
+- 🔄 TASK-58 Enhanced: Self-healing dependencies
+- 🔄 Automatización errores de estilo (E501, F811, F601, F541)
+- 🔄 Documentación visual de backtesting
+- 🔄 Métricas de performance detalladas (CPU/RAM)
+- 🔄 Mapa visual de dependencias entre fases
