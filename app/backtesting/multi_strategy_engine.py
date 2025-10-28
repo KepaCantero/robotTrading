@@ -134,8 +134,10 @@ class MultiStrategyBacktester:
         end_date: datetime,
     ) -> BacktestResult:
         """Create empty backtest result when no signals generated."""
-        from app.backtesting.models import PerformanceMetrics, TradeStatus
+        from app.backtesting.models import PerformanceMetrics
 
+        total_days = (end_date - start_date).days or 1
+        
         return BacktestResult(
             strategy_name=strategy_name,
             start_date=start_date,
@@ -149,15 +151,21 @@ class MultiStrategyBacktester:
                 winning_trades=0,
                 losing_trades=0,
                 win_rate=Decimal("0"),
-                profit_factor=None,
-                expectancy=None,
+                total_pnl=Decimal("0"),
+                total_pnl_percentage=Decimal("0"),
+                gross_profit=Decimal("0"),
+                gross_loss=Decimal("0"),
+                net_profit=Decimal("0"),
+                max_drawdown=Decimal("0"),
+                max_drawdown_percentage=Decimal("0"),
                 sharpe_ratio=None,
                 sortino_ratio=None,
-                calmar_ratio=None,
-                max_drawdown=Decimal("0"),
-                volatility=None,
-                skewness=None,
-                kurtosis=None,
+                avg_win=Decimal("0"),
+                avg_loss=Decimal("0"),
+                largest_win=Decimal("0"),
+                largest_loss=Decimal("0"),
+                total_days=total_days,
+                avg_trade_duration=Decimal("0"),
             ),
         )
 
