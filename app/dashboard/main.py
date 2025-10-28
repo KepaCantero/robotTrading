@@ -424,6 +424,21 @@ if execute_button:
                         st.json(json.load(f))
                 
                 st.success(f"✅ Results saved to {json_file}")
+                
+                # Generate backend test summary for multi-strategy
+                summary_file = generate_backend_test_summary(
+                    all_results=[],  # Empty for multi-strategy as it has its own format
+                    strategy=selected_strategy,
+                    preset=selected_preset,
+                    symbol=symbol,
+                    start_date=datetime.combine(start_date, datetime.min.time()),
+                    end_date=datetime.combine(end_date, datetime.max.time()),
+                    initial_capital=initial_capital,
+                    project_root=project_root,
+                    multi_strategy_results=consolidated,
+                )
+                
+                st.info(f"📄 Backend test summary generated: {summary_file}")
                 st.stop()
             
             # Single strategy mode (existing behavior)
