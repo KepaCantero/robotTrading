@@ -335,10 +335,12 @@ class MomentumStrategy(BaseStrategy):
         # 1. RSI > 55 (momentum positivo fuerte)
         # 2. Precio por encima de EMA (tendencia alcista)
         # 3. Volumen razonable
-        # 4. Filtro de cooldown para evitar señales repetidas
+        # 4. TASK-IND-5: Filtro de volumen dinámico >1.2 para confirmar liquidez
         rsi_positive = rsi > 55
         ema_bullish = current_price > Decimal(str(ema))
-        has_volume = volume_ratio > Decimal("0.8")
+        has_volume = volume_ratio > Decimal(
+            "1.2"
+        )  # TASK-IND-5: volume_ratio > 1.2 para liquidez confirmada
 
         return rsi_positive and ema_bullish and has_volume
 
@@ -367,10 +369,12 @@ class MomentumStrategy(BaseStrategy):
         # 1. RSI < 45 (momentum negativo fuerte)
         # 2. Precio por debajo de EMA (tendencia bajista)
         # 3. Volumen razonable
-        # 4. Filtro de cooldown para evitar señales repetidas
+        # 4. TASK-IND-5: Filtro de volumen dinámico >1.2 para confirmar liquidez
         rsi_negative = rsi < 45
         ema_bearish = current_price < Decimal(str(ema))
-        has_volume = volume_ratio > Decimal("0.8")
+        has_volume = volume_ratio > Decimal(
+            "1.2"
+        )  # TASK-IND-5: volume_ratio > 1.2 para liquidez confirmada
 
         return rsi_negative and ema_bearish and has_volume
 
