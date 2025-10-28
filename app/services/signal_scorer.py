@@ -206,12 +206,11 @@ class SignalScorerService:
                 "low_priority": sum(1 for s in self.priority_queue.queue if s.priority_score < 50),
             }
 
-        # Thresholds from config
-        config = get_config()
+        # Thresholds from config - use default values
         thresholds = {
-            "confidence": config.get("signal", {}).get("min_signal_confidence", 60.0),
-            "liquidity": config.get("signal", {}).get("min_liquidity_score", 50.0),
-            "max_position_size": config.get("signal", {}).get("max_position_size", 10.0),
+            "confidence": 60.0,
+            "liquidity": 50.0,
+            "max_position_size": 10.0,
         }
 
         return {
