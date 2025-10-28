@@ -5,13 +5,13 @@ weight: 0.6
 
 # Strategy-specific parameters
 parameters:
-  cointegration_threshold: 0.03  # More sensitive (was 0.05)
-  min_correlation: 0.65  # Lower correlation requirement (was 0.7)
+  cointegration_threshold: 0.03 # More sensitive (was 0.05)
+  min_correlation: 0.65 # Lower correlation requirement (was 0.7)
   max_pair_exposure: 0.2
   max_total_exposure: 0.4
   lookback_period: 30
   hedge_ratio_threshold: 0.1
-  spread_threshold: 1.0  # More sensitive to spread (was 2.0)
+  spread_threshold: 1.0 # More sensitive to spread (was 2.0)
 
 # Risk parameters
 max_position_size: 0.15
