@@ -118,7 +118,10 @@ class BaseStrategy(ABC):
 
     def get_stop_loss_price(self, signal: Signal) -> Optional[Decimal]:
         """
-        Calcular precio de stop loss.
+        TASK-IND-2: Calcular precio de stop loss dinámico basado en ATR.
+
+        Usa ATR * 2 para calcular stop loss adaptativo a la volatilidad.
+        Si ATR no está disponible, usa stop loss porcentual fijo.
 
         Args:
             signal: Señal de trading
@@ -126,6 +129,22 @@ class BaseStrategy(ABC):
         Returns:
             Precio de stop loss o None si no aplica
         """
+        # TASK-IND-2: Intentar usar ATR dinámico si está disponible
+        atr_multiplier = Decimal(str(self.config.get("atr_multiplier", 2.0)))
+
+        # Verificar si tenemos ATR en los metadatos de la señal
+        if hasattr(signal, 'metadata') and signal.metadata:
+            atr = signal.metadata.get('atr')
+            if atr is not None:
+                atr_value = Decimal(str(atr))
+                stop_distance = atr_value * atr_multiplier
+
+                if signal.direction == "buy":
+                    return signal.price - stop_distance
+                elif signal.direction == "sell":
+                    return signal.price + stop_distance
+
+        # Fallback: usar stop loss porcentual fijo si no hay ATR
         stop_loss_pct = Decimal(str(self.config.get("stop_loss", 0.05)))
 
         if signal.direction == "buy":
