@@ -193,9 +193,9 @@ latency: 1000                       # Cambiar a backup si latencia > 1000ms
 
 **Portfolio Allocation:**
 
-- **TASK-PA-1**: Asignación Multi-Estrategia - 50% Momentum, 25% Mean Reversion, 25% Pairs Trading
-- **TASK-PA-2**: Portfolio Manager - Distribuir capital entre estrategias
-- **TASK-PORT-SEL-1**: Selector de Portfolio Dinámico - Ajustar pesos según performance rolling 30 días
+- **TASK-PA-1**: ✅ COMPLETADA - Asignación Multi-Estrategia - 50% Momentum, 25% Mean Reversion, 25% Pairs Trading
+- **TASK-PA-2**: ✅ COMPLETADA - Portfolio Manager - Distribuir capital entre estrategias
+- **TASK-PORT-SEL-1**: ✅ COMPLETADA - Selector de Portfolio Dinámico - Ajustar pesos según performance rolling 30 días
 
 **Risk Management:**
 
