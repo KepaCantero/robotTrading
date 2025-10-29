@@ -46,7 +46,7 @@ class SimpleBacktester:
     commission, and risk management parameters.
     """
 
-    def __init__(self, config: BacktestConfig):
+    def __init__(self, config: BacktestConfig, diagnostic_logger=None):
         """Initialize the backtesting engine."""
         self.config = config
         self.capital = config.initial_capital
@@ -54,6 +54,7 @@ class SimpleBacktester:
         self.trades: List[Trade] = []
         self.equity_curve: List[Tuple[datetime, Decimal]] = []
         self.max_drawdown = Decimal("0")
+        self.diagnostic_logger = diagnostic_logger
         self.peak_equity = config.initial_capital
 
     def run_backtest(
@@ -253,6 +254,15 @@ class SimpleBacktester:
             self.positions.get(signal.symbol, Decimal("0")) + position_size
         )
         self.capital -= total_cost
+
+        # Log execution to diagnostic logger
+        if self.diagnostic_logger:
+            strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
+            self.diagnostic_logger.log_signal_executed(
+                strategy_name=strategy_name,
+                symbol=signal.symbol,
+                metadata=signal.metadata if signal.metadata else {},
+            )
 
     def _execute_sell_signal(self, signal: Signal, market_data: Any):
         """Execute a sell signal."""
