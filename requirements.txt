@@ -1,0 +1,37 @@
+# Core Web Framework
+fastapi>=0.104.0,<0.110.0
+uvicorn[standard]>=0.24.0,<0.30.0
+pydantic>=2.0.0,<3.0.0
+pydantic-settings>=2.0.0,<3.0.0
+
+# Database
+sqlalchemy>=2.0.0,<3.0.0
+alembic>=1.12.0,<2.0.0
+psycopg2-binary>=2.9.0,<3.0.0
+
+# Data Processing & Analysis
+pandas>=2.0.0,<3.0.0
+numpy>=1.24.0,<2.0.0
+
+# Market Data
+yfinance>=0.2.0,<1.0.0
+
+# Configuration
+pyyaml>=6.0,<7.0
+
+# Optimization (NEW - Multi-Strategy Optimizer)
+optuna>=3.4.0,<4.0.0
+
+# HTTP & API Clients
+httpx>=0.25.0,<1.0.0
+requests>=2.31.0,<3.0.0
+
+# Redis (for caching if used)
+redis>=5.0.0,<6.0.0
+
+# Logging & Monitoring
+python-json-logger>=2.0.0,<3.0.0
+
+# CORS & Security
+python-multipart>=0.0.6,<1.0.0
+
