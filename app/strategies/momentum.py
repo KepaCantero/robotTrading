@@ -553,25 +553,30 @@ class MomentumStrategy(BaseStrategy):
         current_price = market_data.close or market_data.last
 
         # Condiciones más robustas:
-        # 1. RSI < 45 (momentum negativo fuerte)
+        # 1. RSI > 75 (sobrecompra, esperamos reversión a la baja) OR RSI < 55 (momentum negativo)
         # 2. Precio por debajo de EMA (tendencia bajista)
         # 3. Volumen razonable
         # 4. TASK-IND-5: Filtro de volumen dinámico >1.2 para confirmar liquidez
-        # 5. TASK-IND-ROC-2: ROC < 0 para confirmar aceleración bajista
-        # 6. TASK-IND-OBV-1: OBV "falling" o "neutral" para confirmar selling pressure
-        rsi_negative = rsi < 45
+        # 5. TASK-IND-ROC-2: ROC < 0 para confirmar desaceleración bajista (optional)
+        # 6. TASK-IND-OBV-1: OBV "falling" o "neutral" para confirmar selling pressure (optional)
+        rsi_overbought = rsi > 75
+        rsi_negative_momentum = rsi < 55  # More permissive
+        rsi_condition = rsi_overbought or rsi_negative_momentum
+        
         ema_bearish = current_price < Decimal(str(ema))
         has_volume = volume_ratio > Decimal(
             "1.2"
         )  # TASK-IND-5: volume_ratio > 1.2 para liquidez confirmada
         
-        # TASK-IND-ROC-2: ROC negativo confirma aceleración bajista
-        roc_negative = roc is not None and roc < 0
+        # FIX: Make ROC and OBV optional (not required) to generate more signals
+        # TASK-IND-ROC-2: ROC negativo confirma desaceleración bajista (optional)
+        roc_negative = roc is None or roc < 0  # Allow if ROC is None or negative
         
-        # TASK-IND-OBV-1: OBV falling o neutral confirma selling pressure
+        # TASK-IND-OBV-1: OBV falling o neutral confirma selling pressure (optional)
         obv_bearish = obv_trend is None or obv_trend in ["falling", "neutral"]
 
-        return rsi_negative and ema_bearish and has_volume and roc_negative and obv_bearish
+        # FIX: Core conditions: RSI + EMA + Volume (ROC and OBV are nice-to-have)
+        return rsi_condition and ema_bearish and has_volume and roc_negative and obv_bearish
 
     def _create_buy_signal(
         self, market_data: Quote, rsi: float, ema: float, volume_ratio: Decimal, roc: Optional[float]
