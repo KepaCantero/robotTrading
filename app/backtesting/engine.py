@@ -95,11 +95,25 @@ class SimpleBacktester:
             self._update_equity_curve(md.timestamp)
 
             # Process signals for this timestamp
-            while signal_index < len(signals) and signals[signal_index].timestamp <= md.timestamp:
+            # FIX: More flexible matching - allow signals within 1 day and exact symbol match
+            while signal_index < len(signals):
                 signal = signals[signal_index]
-                if signal.symbol == md.symbol:
+                
+                # Allow signals up to 1 day in the past (signals are generated on market data)
+                time_diff = (md.timestamp - signal.timestamp).total_seconds()
+                
+                # Process signal if:
+                # 1. Symbol matches exactly
+                # 2. Signal timestamp is before or equal to market_data timestamp (within 1 day tolerance)
+                if signal.symbol == md.symbol and time_diff >= -86400 and time_diff <= 86400:
                     self._process_signal(signal, md)
-                signal_index += 1
+                    signal_index += 1
+                elif signal.timestamp > md.timestamp:
+                    # Signal is in the future, wait for next market data
+                    break
+                else:
+                    # Signal symbol doesn't match or too old, skip it
+                    signal_index += 1
 
             # Check for stop loss / take profit
             self._check_exit_conditions(md)
