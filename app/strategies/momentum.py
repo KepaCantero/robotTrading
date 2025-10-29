@@ -670,7 +670,7 @@ class MomentumStrategy(BaseStrategy):
             priority_score=85.0,
             source=SignalSource.MOMENTUM,
             price=market_data.last,
-            volume=market_data.volume,
+            volume=Decimal("1"),  # FIX: Placeholder - get_position_size() calculates actual size based on capital
             timestamp=market_data.timestamp,
             metadata={
                 "strategy": self.name,
@@ -710,7 +710,7 @@ class MomentumStrategy(BaseStrategy):
             priority_score=85.0,
             source=SignalSource.MOMENTUM,
             price=market_data.last,
-            volume=market_data.volume,
+            volume=Decimal("1"),  # FIX: Placeholder - get_position_size() calculates actual size based on capital
             timestamp=market_data.timestamp,
             metadata={
                 "strategy": self.name,

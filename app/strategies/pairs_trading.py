@@ -437,8 +437,13 @@ class PairsTradingStrategy(BaseStrategy):
             Lista de señales para el par
         """
         signals = []
-        # Ajustar volumen para pairs trading (más conservador que momentum)
-        volume = max(market_data.volume // 2, 1)  # Volumen reducido para pairs trading
+        # FIX: signal.volume is NOT market trading volume, it's just a placeholder
+        # get_position_size() will calculate the actual position size based on:
+        # - Available capital
+        # - max_position_size config
+        # - Signal price
+        # Use a reasonable placeholder (will be recalculated)
+        volume_placeholder = Decimal("1")  # Placeholder - actual size calculated by get_position_size()
 
         # FIX: Generate BUY signals more frequently to establish positions first
         # Pairs trading needs BUY positions before SELL signals can execute
@@ -461,7 +466,7 @@ class PairsTradingStrategy(BaseStrategy):
                     priority_score=75.0,
                     source=SignalSource.MOMENTUM,
                     price=market_data.last,
-                    volume=volume,
+                    volume=volume_placeholder,
                     timestamp=market_data.timestamp,
                     metadata={
                         "strategy": self.name,
@@ -484,7 +489,7 @@ class PairsTradingStrategy(BaseStrategy):
                     priority_score=75.0,
                     source=SignalSource.MOMENTUM,
                     price=market_data.last,
-                    volume=volume,
+                    volume=volume_placeholder,
                     timestamp=market_data.timestamp,
                     metadata={
                         "strategy": self.name,
@@ -511,7 +516,7 @@ class PairsTradingStrategy(BaseStrategy):
                     priority_score=75.0,
                     source=SignalSource.MOMENTUM,
                     price=market_data.last,
-                    volume=volume,
+                    volume=volume_placeholder,
                     timestamp=market_data.timestamp,
                     metadata={
                         "strategy": self.name,
@@ -533,7 +538,7 @@ class PairsTradingStrategy(BaseStrategy):
                     priority_score=75.0,
                     source=SignalSource.MOMENTUM,
                     price=market_data.last,
-                    volume=volume,
+                    volume=volume_placeholder,
                     timestamp=market_data.timestamp,
                     metadata={
                         "strategy": self.name,
@@ -610,7 +615,8 @@ class PairsTradingStrategy(BaseStrategy):
 
     def _create_simple_buy_signal(self, market_data: Quote) -> Signal:
         """Create a simple buy signal for pairs trading."""
-        volume = max(market_data.volume // 2, 1)  # Conservador para pairs trading
+        # FIX: volume is placeholder - get_position_size() calculates actual size
+        volume_placeholder = Decimal("1")
         return Signal(
             symbol=market_data.symbol,
             signal_type=SignalType.BUY,
@@ -620,7 +626,7 @@ class PairsTradingStrategy(BaseStrategy):
             priority_score=80.0,
             source=SignalSource.MOMENTUM,
             price=market_data.last,
-            volume=volume,
+            volume=volume_placeholder,
             timestamp=market_data.timestamp,
             metadata={
                 "strategy": self.name,
@@ -631,7 +637,8 @@ class PairsTradingStrategy(BaseStrategy):
 
     def _create_simple_sell_signal(self, market_data: Quote) -> Signal:
         """Create a simple sell signal for pairs trading."""
-        volume = max(market_data.volume // 2, 1)  # Conservador para pairs trading
+        # FIX: volume is placeholder - get_position_size() calculates actual size
+        volume_placeholder = Decimal("1")
         return Signal(
             symbol=market_data.symbol,
             signal_type=SignalType.SELL,
@@ -641,7 +648,7 @@ class PairsTradingStrategy(BaseStrategy):
             priority_score=80.0,
             source=SignalSource.MOMENTUM,
             price=market_data.last,
-            volume=volume,
+            volume=volume_placeholder,
             timestamp=market_data.timestamp,
             metadata={
                 "strategy": self.name,

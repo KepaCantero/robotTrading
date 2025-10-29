@@ -7,7 +7,7 @@ permitiendo hot-swapping y gestión dinámica de estrategias.
 
 from abc import ABC, abstractmethod
 from datetime import datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Any, Dict, List, Optional
 
 from app.models.market_data import Quote
@@ -103,22 +103,45 @@ class BaseStrategy(ABC):
             portfolio: Estado del portfolio
 
         Returns:
-            Tamaño de posición calculado
+            Tamaño de posición calculado (en número de acciones/shares)
         """
         max_position_size = Decimal(str(self.config.get("max_position_size", 0.1)))
         available_cash = portfolio.cash
 
-        # FIX: Signal uses signal_type (SignalType enum), not direction
-        # Signal uses 'volume' attribute, not 'quantity'
-        signal_volume = signal.volume
-        
         if signal.signal_type == SignalType.BUY:
-            # Para compras, limitar por cash disponible
-            max_shares = available_cash / signal.price
-            return min(signal_volume, max_shares * max_position_size)
+            # FIX: Para BUY, calcular tamaño basado en capital disponible, no en signal.volume
+            # signal.volume es solo un placeholder (1) para señales
+            # El tamaño real se calcula basado en:
+            # - Capital disponible
+            # - max_position_size (% del capital que podemos usar)
+            # - Precio de la acción
+            
+            # Capital máximo que podemos usar para esta posición
+            max_position_value = available_cash * max_position_size
+            
+            # Número máximo de acciones que podemos comprar
+            position_size = max_position_value / signal.price
+            
+            # Asegurar mínimo 1 acción
+            position_size = max(position_size, Decimal("1"))
+            
+            return position_size.quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)
         else:
-            # Para ventas, usar cantidad de la señal
-            return signal_volume
+            # FIX: Para SELL, usar la posición existente, no signal.volume
+            # Buscar posición existente para este símbolo
+            existing_position = None
+            for pos in portfolio.positions:
+                if pos.symbol == signal.symbol:
+                    existing_position = pos
+                    break
+            
+            if existing_position:
+                # Vender toda la posición o una fracción
+                # Por defecto, usar toda la posición disponible
+                return existing_position.quantity
+            else:
+                # No hay posición, no podemos vender
+                return Decimal("0")
 
     def get_stop_loss_price(self, signal: Signal) -> Optional[Decimal]:
         """
