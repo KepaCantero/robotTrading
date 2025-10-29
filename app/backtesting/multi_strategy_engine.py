@@ -103,9 +103,18 @@ class MultiStrategyBacktester:
             # Generate signals for this strategy
             # Note: filtered_quotes already contains only symbols allowed for this strategy
             signals = []
+            quotes_processed = 0
+            quotes_with_signals = 0
+            
+            logger.info(f"{strategy_name}: Processing {len(filtered_quotes)} filtered quotes")
+            
             for quote in filtered_quotes:
                 try:
+                    quotes_processed += 1
                     candidate_signals = strategy.generate_signals(quote)
+                    
+                    if candidate_signals:
+                        quotes_with_signals += 1
                     
                     # Log signal candidates for diagnostics
                     if self.diagnostic_logger:
@@ -119,7 +128,12 @@ class MultiStrategyBacktester:
                     
                     signals.extend(candidate_signals)
                 except Exception as e:
-                    logger.debug(f"Signal error for {strategy_name} on {quote.symbol}: {e}")
+                    logger.error(f"{strategy_name} ERROR generating signals for {quote.symbol}: {e}", exc_info=True)
+            
+            logger.info(
+                f"{strategy_name}: Processed {quotes_processed} quotes, "
+                f"{quotes_with_signals} generated signals, total signals={len(signals)}"
+            )
 
             signals_by_strategy[strategy_name] = signals
 
