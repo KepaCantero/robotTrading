@@ -321,6 +321,30 @@ class MomentumStrategy(BaseStrategy):
             # Verificar límites de exposición
             total_exposure = self._calculate_total_exposure(portfolio)
             max_exposure = Decimal("0.8")  # Máximo 80% de exposición
+            
+            # FIX: Add detailed logging to diagnose why signals are rejected
+            # Calculate exposure after this trade would execute
+            if signal.signal_type == SignalType.BUY:
+                # Estimate exposure after BUY: add position value to invested
+                estimated_position_value = signal.price * position_size
+                total_value_after = portfolio.cash + sum(p.market_value for p in portfolio.positions) - (signal.price * position_size)
+                invested_after = sum(p.market_value for p in portfolio.positions) + estimated_position_value
+                exposure_after = invested_after / total_value_after if total_value_after > 0 else Decimal("0")
+                
+                logger.info(
+                    f"🔍 MOMENTUM risk_check BUY {signal.symbol}: "
+                    f"current_exposure={total_exposure:.2%}, exposure_after={exposure_after:.2%}, "
+                    f"max={max_exposure:.2%}, cash=${portfolio.cash:.2f}, "
+                    f"position_size={position_size:.6f}, position_value=${estimated_position_value:.2f}"
+                )
+            else:
+                # For SELL, exposure should decrease
+                logger.info(
+                    f"🔍 MOMENTUM risk_check SELL {signal.symbol}: "
+                    f"current_exposure={total_exposure:.2%}, max={max_exposure:.2%}, "
+                    f"cash=${portfolio.cash:.2f}, sell_quantity={position_size:.6f}"
+                )
+            
             if total_exposure > max_exposure:
                 logger.info(
                     f"⚠️ MOMENTUM risk_check REJECTED {signal.signal_type} {signal.symbol}: "
