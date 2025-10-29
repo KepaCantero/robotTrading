@@ -248,14 +248,14 @@ class MeanReversionStrategy(BaseStrategy):
         Returns:
             True si debe generar señal de venta
         """
-        # Check if z-score indicates overvaluation (more restrictive)
+        # Check if z-score indicates overvaluation
         is_overvalued = z_score > self.z_score_threshold
         
-        # Require confirmation: price closed significantly above open
-        price_rise = (market_data.close - market_data.open) / market_data.open > Decimal("0.005")  # > 0.5% rise
+        # Require confirmation: price closed significantly above open (relaxed from 0.005 to 0.003)
+        price_rise = (market_data.close - market_data.open) / market_data.open > Decimal("0.003")  # > 0.3% rise
         
-        # Only allow moderate volatility
-        acceptable_volatility = volatility < self.volatility_threshold
+        # Only allow moderate volatility (relaxed check)
+        acceptable_volatility = volatility < self.volatility_threshold * 2  # More permissive
         
         return is_overvalued and price_rise and acceptable_volatility
 

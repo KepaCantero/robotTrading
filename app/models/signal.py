@@ -132,8 +132,9 @@ class Signal(BaseModel):
 
         if v < 0:
             raise ValueError(f"Volume must be non-negative, got {v}")
-        if v > Decimal("1000000000"):  # 1B shares limit
-            raise ValueError(f"Volume exceeds maximum limit of 1B shares, got {v}")
+        # Increased limit to 10B shares to match Quote model (NVDA can have >1B shares)
+        if v > Decimal("10000000000"):  # 10B shares limit
+            raise ValueError(f"Volume exceeds maximum limit of 10B shares, got {v}")
 
         return v
 
