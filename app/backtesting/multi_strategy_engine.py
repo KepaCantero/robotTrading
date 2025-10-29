@@ -105,12 +105,21 @@ class MultiStrategyBacktester:
             signals = []
             quotes_processed = 0
             quotes_with_signals = 0
+            errors_count = 0
             
             logger.info(f"{strategy_name}: Processing {len(filtered_quotes)} filtered quotes")
+            
+            # Track sample quotes to see what's being processed
+            sample_symbols = set()
             
             for quote in filtered_quotes:
                 try:
                     quotes_processed += 1
+                    
+                    # Track symbols (sample first 10)
+                    if len(sample_symbols) < 10:
+                        sample_symbols.add(quote.symbol)
+                    
                     candidate_signals = strategy.generate_signals(quote)
                     
                     if candidate_signals:
@@ -128,12 +137,28 @@ class MultiStrategyBacktester:
                     
                     signals.extend(candidate_signals)
                 except Exception as e:
+                    errors_count += 1
                     logger.error(f"{strategy_name} ERROR generating signals for {quote.symbol}: {e}", exc_info=True)
             
+            # Comprehensive logging summary
             logger.info(
                 f"{strategy_name}: Processed {quotes_processed} quotes, "
-                f"{quotes_with_signals} generated signals, total signals={len(signals)}"
+                f"{quotes_with_signals} generated signals, total signals={len(signals)}, "
+                f"errors={errors_count}"
             )
+            
+            # Log diagnostic info even if no signals generated
+            if not signals and quotes_processed > 0:
+                logger.warning(
+                    f"{strategy_name}: ⚠️  No signals generated after processing {quotes_processed} quotes. "
+                    f"Sample symbols: {sorted(list(sample_symbols))[:10]}. "
+                    f"This may indicate: missing historical data, filter conditions too strict, or strategy logic issue."
+                )
+                
+                # Also log to diagnostic logger to track this issue
+                if self.diagnostic_logger:
+                    # Log that we processed quotes but got no signals
+                    self.diagnostic_logger.strategy_stats[strategy_name]["signals_candidate"] = 0  # Explicitly set to 0
 
             signals_by_strategy[strategy_name] = signals
 
