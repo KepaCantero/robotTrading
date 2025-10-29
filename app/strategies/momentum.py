@@ -663,16 +663,20 @@ class MomentumStrategy(BaseStrategy):
         # FIX: Core conditions: RSI condition + EMA + Volume (ROC and OBV are nice-to-have)
         # For neutral RSI, be more flexible - allow BUY even if price < EMA if other conditions are good
         if rsi_neutral_bullish:
-            # In neutral zone, be flexible with EMA:
-            # - Prefer price > EMA (uptrend) BUT
-            # - Also allow if price < EMA but volume is strong and ROC/OBV are positive
-            # This captures opportunities when market is oversold but showing signs of reversal
+            # In neutral zone, be flexible with EMA and ROC:
+            # - Prefer price > EMA (uptrend) AND ROC > 0 BUT
+            # - Also allow if price < EMA but volume is strong (volume > 1.2)
+            # - Make ROC optional for neutral zone (it's a nice-to-have, not required)
+            # This captures opportunities when market is in neutral zone with good volume
             volume_strong = volume_ratio > Decimal("1.2")  # Strong volume confirmation
-            # Allow BUY if: (price > EMA) OR (strong volume AND ROC positive)
-            ema_flexible = ema_bullish or (volume_strong and roc_positive)
-            return ema_flexible and has_volume and roc_positive and obv_bullish
+            # Allow BUY if: 
+            #   Option 1: price > EMA (uptrend confirmed)
+            #   Option 2: volume strong (>1.2) even if price < EMA (momentum building)
+            ema_flexible = ema_bullish or volume_strong
+            # ROC is optional for neutral zone, OBV is also optional
+            return ema_flexible and has_volume
         else:
-            # For oversold or strong momentum, standard conditions (require price > EMA)
+            # For oversold or strong momentum, standard conditions (require price > EMA, ROC, OBV)
             return rsi_condition and ema_bullish and has_volume and roc_positive and obv_bullish
 
     def _is_sell_signal(
