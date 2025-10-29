@@ -184,24 +184,38 @@ class MomentumStrategy(BaseStrategy):
                 # FIX: Simplified logic - only check ATR filter if enabled, otherwise generate signals
                 # Stochastic RSI check is too restrictive, removed for more signals
                 if self._passes_atr_filter():
+                    # Check both BUY and SELL conditions (not elif) to generate both types of signals
+                    current_price = market_data.close or market_data.last
+                    buy_condition = self._is_buy_signal(rsi, ema, volume_ratio, roc, obv_trend, market_data)
+                    sell_condition = self._is_sell_signal(rsi, ema, volume_ratio, roc, obv_trend, market_data)
+                    
+                    # Log diagnostic info for Momentum strategy
+                    logger.debug(
+                        f"MOMENTUM {market_data.symbol}: RSI={rsi:.2f}, price={current_price:.2f}, EMA={ema:.2f}, "
+                        f"volume_ratio={volume_ratio:.2f}, ROC={roc_safe:.2f}, OBV={obv_trend}, "
+                        f"BUY={buy_condition}, SELL={sell_condition}"
+                    )
+                    
                     # Generar señal de compra con condiciones robustas
-                    if self._is_buy_signal(rsi, ema, volume_ratio, roc, obv_trend, market_data):
+                    if buy_condition:
                         signal = self._create_buy_signal(market_data, rsi, ema, volume_ratio, roc)
                         raw_signals.append(signal)
                         self.last_signal_bar_index = self.current_bar_index
                         self.last_signal_type = "buy"
-                        logger.debug(
-                            f"Generated BUY signal for {market_data.symbol}: RSI={rsi:.2f}, EMA={ema:.2f}, ROC={roc_safe:.2f}, OBV={obv_trend}, StochRSI={stoch_rsi_safe:.2f}"
+                        logger.info(
+                            f"✅ Generated BUY signal for {market_data.symbol}: RSI={rsi:.2f}, EMA={ema:.2f}, "
+                            f"price={current_price:.2f}, volume={volume_ratio:.2f}"
                         )
 
-                    # Generar señal de venta con condiciones robustas
-                    elif self._is_sell_signal(rsi, ema, volume_ratio, roc, obv_trend, market_data):
+                    # Generar señal de venta con condiciones robustas (changed from elif to if)
+                    if sell_condition:
                         signal = self._create_sell_signal(market_data, rsi, ema, volume_ratio, roc)
                         raw_signals.append(signal)
                         self.last_signal_bar_index = self.current_bar_index
                         self.last_signal_type = "sell"
-                        logger.debug(
-                            f"Generated SELL signal for {market_data.symbol}: RSI={rsi:.2f}, EMA={ema:.2f}, ROC={roc_safe:.2f}, OBV={obv_trend}, StochRSI={stoch_rsi_safe:.2f}"
+                        logger.info(
+                            f"✅ Generated SELL signal for {market_data.symbol}: RSI={rsi:.2f}, EMA={ema:.2f}, "
+                            f"price={current_price:.2f}, volume={volume_ratio:.2f}"
                         )
                 else:
                     logger.debug("Signal suppressed by ATR filter")
@@ -553,15 +567,16 @@ class MomentumStrategy(BaseStrategy):
         current_price = market_data.close or market_data.last
 
         # Condiciones más robustas:
-        # 1. RSI > 75 (sobrecompra, esperamos reversión a la baja) OR RSI < 55 (momentum negativo)
+        # 1. RSI > 70 (sobrecompra fuerte) OR RSI < 35 (momentum negativo fuerte - sobreventa extrema)
         # 2. Precio por debajo de EMA (tendencia bajista)
         # 3. Volumen razonable
         # 4. TASK-IND-5: Filtro de volumen dinámico >1.2 para confirmar liquidez
         # 5. TASK-IND-ROC-2: ROC < 0 para confirmar desaceleración bajista (optional)
         # 6. TASK-IND-OBV-1: OBV "falling" o "neutral" para confirmar selling pressure (optional)
-        rsi_overbought = rsi > 75
-        rsi_negative_momentum = rsi < 55  # More permissive
-        rsi_condition = rsi_overbought or rsi_negative_momentum
+        # FIX: Make SELL conditions symmetric to BUY - only trigger on clear overbought (> 70) or extreme oversold reversal (< 35)
+        rsi_overbought = rsi > 70  # Clear overbought condition
+        rsi_extreme_oversold = rsi < 35  # Extreme oversold - momentum reversal opportunity (more restrictive than < 55)
+        rsi_condition = rsi_overbought or rsi_extreme_oversold
         
         ema_bearish = current_price < Decimal(str(ema))
         has_volume = volume_ratio > Decimal(
