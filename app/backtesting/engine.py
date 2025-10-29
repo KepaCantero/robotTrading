@@ -138,14 +138,31 @@ class SimpleBacktester:
                 # 1. Symbol matches exactly
                 # 2. Signal timestamp is before or equal to market_data timestamp (within 1 day tolerance)
                 signals_processed += 1
+                
+                # CRITICAL: Log all Momentum signals for debugging
+                if strategy_name == "momentum":
+                    logger.info(
+                        f"🔍 MOMENTUM SIGNAL: {signal.symbol} {signal.signal_type} | "
+                        f"MD: {md.symbol} | "
+                        f"symbol_match={signal.symbol == md.symbol} | "
+                        f"time_diff={time_diff:.0f}s | "
+                        f"signal_time={signal.timestamp} | "
+                        f"md_time={md.timestamp}"
+                    )
+                
                 if signal.symbol == md.symbol and time_diff >= -86400 and time_diff <= 86400:
                     signals_matched += 1
                     strategy_stats[strategy_name]["matched"] += 1
-                    logger.debug(f"✅ MATCHED signal: {signal.symbol} {signal.signal_type} (strategy={strategy_name}) at {md.timestamp}, time_diff={time_diff:.0f}s")
+                    if strategy_name == "momentum":
+                        logger.info(f"✅ MOMENTUM MATCHED: {signal.symbol} {signal.signal_type} at {md.timestamp}, time_diff={time_diff:.0f}s")
+                    else:
+                        logger.debug(f"✅ MATCHED signal: {signal.symbol} {signal.signal_type} (strategy={strategy_name}) at {md.timestamp}, time_diff={time_diff:.0f}s")
                     self._process_signal(signal, md)
                     signal_index += 1
                 elif signal.timestamp > md.timestamp:
                     # Signal is in the future, wait for next market data
+                    if strategy_name == "momentum":
+                        logger.debug(f"⏳ MOMENTUM FUTURE: signal {signal.timestamp} > md {md.timestamp}, waiting...")
                     break
                 else:
                     # Signal symbol doesn't match or too old, skip it
@@ -154,11 +171,11 @@ class SimpleBacktester:
                     if signal.symbol != md.symbol:
                         strategy_stats[strategy_name]["symbol_mismatch"] += 1
                         if signals_skipped <= 10 or strategy_name == "momentum":  # Always log Momentum mismatches
-                            logger.info(f"❌ SKIP: symbol mismatch {signal.symbol} != {md.symbol} (strategy={strategy_name}, time_diff={time_diff:.0f}s)")
+                            logger.info(f"❌ MOMENTUM SKIP: symbol mismatch {signal.symbol} != {md.symbol} (time_diff={time_diff:.0f}s)")
                     elif abs(time_diff) > 86400:
                         strategy_stats[strategy_name]["time_mismatch"] += 1
                         if signals_skipped <= 10 or strategy_name == "momentum":  # Always log Momentum mismatches
-                            logger.info(f"❌ SKIP: timestamp too far {time_diff:.0f}s (strategy={strategy_name}, signal={signal.timestamp}, md={md.timestamp})")
+                            logger.info(f"❌ MOMENTUM SKIP: timestamp too far {time_diff:.0f}s (signal={signal.timestamp}, md={md.timestamp})")
                     signal_index += 1
 
             # Check for stop loss / take profit
@@ -308,9 +325,9 @@ class SimpleBacktester:
                         self.diagnostic_logger.log_signal_rejected(
                             strategy_name,
                             signal.symbol,
-                            signal_type_str,
-                            "Risk check failed",
-                            signal.metadata if hasattr(signal, 'metadata') else {},
+                            f"Risk check failed ({signal_type_str})",  # FIX: reason should be the rejection reason, not signal type
+                            failed_check="risk_check",
+                            metadata=signal.metadata if hasattr(signal, 'metadata') else {},
                         )
                     return
                 else:
