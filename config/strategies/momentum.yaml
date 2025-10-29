@@ -5,12 +5,15 @@ weight: 1.0
 
 # Strategy-specific parameters
 parameters:
-  rsi_threshold: 40
-  momentum_threshold: 0.02
-  volume_threshold: 1.5
+  rsi_threshold: 35 # Reduced from 40 to be more permissive
+  momentum_threshold: 0.015 # Reduced from 0.02
+  volume_threshold: 1.2 # Reduced from 1.5
   lookback_period: 14
   min_price_change: 0.01
   max_price_change: 0.1
+  # Volatility filter - disabled for diagnosis
+  atr_filter_enabled: false # Temporarily disabled to diagnose signal generation
+  min_atr_threshold: 0.015
 
 # Risk parameters
 max_position_size: 0.1

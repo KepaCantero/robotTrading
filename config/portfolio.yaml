@@ -64,11 +64,11 @@ strategy_allocations:
       target_weight: 0.50 # 50% of total capital
       min_weight: 0.30
       max_weight: 0.70
-    
+
     # Sector filtering - only trade these sectors
     sectors:
-      - technology  # ✅ Data available: AAPL, MSFT, GOOGL, AMZN, META, NVDA, TSLA
-      - growth      # ✅ Data available: TSLA, AMZN, META
+      - technology # ✅ Data available: AAPL, MSFT, GOOGL, AMZN, META, NVDA, TSLA
+      - growth # ✅ Data available: TSLA, AMZN, META
       # - energy     # Uncomment when CSV files are available (XOM, CVX)
 
     # Market type filtering
@@ -90,9 +90,9 @@ strategy_allocations:
       target_weight: 0.25 # 25% of total capital
       min_weight: 0.10
       max_weight: 0.40
-    
+
     sectors:
-      - technology  # Temporary: using available symbols until utilities are downloaded
+      - technology # Temporary: using available symbols until utilities are downloaded
       # - utilities     # Uncomment when CSV files are available
       # - consumer_staples
       # - reits
@@ -119,6 +119,12 @@ strategy_allocations:
 
     market_types:
       - correlated
+
+    # Explicit pair definitions (required for pairs trading)
+    pair_symbols:
+      - ["AAPL", "MSFT"] # Technology pair
+      - ["JPM", "BAC"] # Banking pair
+      - ["XOM", "CVX"] # Energy pair (when data available)
 
     rebalancing:
       frequency: monthly

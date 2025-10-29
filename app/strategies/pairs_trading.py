@@ -71,7 +71,27 @@ class PairsTradingStrategy(BaseStrategy):
             self.max_total_exposure = Decimal(str(config.get("max_total_exposure", 0.4)))
 
         # Parámetros de pares
-        self.pair_symbols = config.get("pair_symbols", ["AAPL", "MSFT"])
+        # Handle both formats: list of lists or simple list
+        pair_symbols_raw = config.get("pair_symbols")
+        if pair_symbols_raw is None:
+            # Try to get from strategy_config if available
+            if strategy_config and hasattr(strategy_config, 'parameters'):
+                pair_symbols_raw = strategy_config.parameters.get("pair_symbols")
+        
+        if pair_symbols_raw is None:
+            pair_symbols_raw = ["AAPL", "MSFT"]  # Default fallback
+        
+        # Normalize format: if list of lists, use first pair
+        # If simple list, use as is
+        if pair_symbols_raw and isinstance(pair_symbols_raw, list):
+            if len(pair_symbols_raw) > 0 and isinstance(pair_symbols_raw[0], list):
+                # List of lists format - use first pair
+                self.pair_symbols = pair_symbols_raw[0]
+            else:
+                # Simple list format
+                self.pair_symbols = pair_symbols_raw if len(pair_symbols_raw) >= 2 else ["AAPL", "MSFT"]
+        else:
+            self.pair_symbols = ["AAPL", "MSFT"]
 
         # Parámetros adicionales
         self.hedge_ratio = Decimal(str(config.get("hedge_ratio", 1.0)))

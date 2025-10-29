@@ -5,13 +5,19 @@ weight: 0.6
 
 # Strategy-specific parameters
 parameters:
-  cointegration_threshold: 0.01 # Extremely sensitive
-  min_correlation: 0.4 # Very low correlation requirement
+  # Explicit pair definitions
+  pair_symbols:
+    - ["AAPL", "MSFT"]  # Technology pair
+    - ["JPM", "BAC"]    # Banking pair
+    - ["XOM", "CVX"]    # Energy pair (when data available)
+  
+  cointegration_threshold: 0.05 # More realistic threshold
+  min_correlation: 0.6 # Higher correlation requirement
   max_pair_exposure: 0.2
   max_total_exposure: 0.4
   lookback_period: 30
   hedge_ratio_threshold: 0.1
-  spread_threshold: 0.3 # Extremely sensitive to spread
+  spread_threshold: 1.0 # Increased from 0.3 to reduce noise
 
 # Risk parameters
 max_position_size: 0.15
