@@ -12,8 +12,6 @@ from decimal import ROUND_HALF_UP, Decimal
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
-logger = logging.getLogger(__name__)
-
 from app.backtesting.models import (
     BacktestConfig,
     BacktestResult,
@@ -23,6 +21,8 @@ from app.backtesting.models import (
 )
 from app.models.portfolio import AssetClass, Portfolio, Position
 from app.models.signal import Signal, SignalType
+
+logger = logging.getLogger(__name__)
 
 
 def get_price(md) -> Decimal:
