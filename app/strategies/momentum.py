@@ -270,30 +270,10 @@ class MomentumStrategy(BaseStrategy):
             True si la señal pasa el risk check, False en caso contrario
         """
         try:
-            # Verificar tamaño de posición
-            position_size = self.get_position_size(signal, portfolio)
-            if position_size <= 0:
-                logger.info(
-                    f"⚠️ MOMENTUM risk_check REJECTED {signal.signal_type} {signal.symbol}: "
-                    f"Position size too small ({position_size:.6f})"
-                )
-                return False
-
-            # Verificar cash disponible para compras
-            if signal.signal_type == SignalType.BUY:
-                # FIX: Use get_position_size() to calculate actual position size and required cash
-                actual_position_size = self.get_position_size(signal, portfolio)
-                required_cash = signal.price * actual_position_size
-                if required_cash > portfolio.cash:
-                    logger.info(
-                        f"⚠️ MOMENTUM risk_check REJECTED BUY {signal.symbol}: "
-                        f"Insufficient cash (required=${required_cash:.2f} > available=${portfolio.cash:.2f}, "
-                        f"position_size={actual_position_size:.6f})"
-                    )
-                    return False
-
-            # Verificar posición existente para ventas
-            elif signal.signal_type == SignalType.SELL:
+            # FIX: Order matters - check SELL position existence BEFORE calculating position_size
+            # For SELL, if no position exists, get_position_size() returns 0, which fails the min check
+            if signal.signal_type == SignalType.SELL:
+                # First check if position exists
                 existing_position = self._get_existing_position(portfolio, signal.symbol)
                 if not existing_position:
                     logger.info(
@@ -301,14 +281,42 @@ class MomentumStrategy(BaseStrategy):
                         f"No position exists to sell"
                     )
                     return False
-                # FIX: Use get_position_size() to get actual sell quantity
+                # Now calculate sell quantity and verify we have enough
                 sell_quantity = self.get_position_size(signal, portfolio)
+                if sell_quantity <= 0:
+                    logger.info(
+                        f"⚠️ MOMENTUM risk_check REJECTED SELL {signal.symbol}: "
+                        f"Position size too small ({sell_quantity:.6f})"
+                    )
+                    return False
                 if existing_position.quantity < sell_quantity:
                     logger.info(
                         f"⚠️ MOMENTUM risk_check REJECTED SELL {signal.symbol}: "
                         f"Insufficient position (need={sell_quantity:.6f}, have={existing_position.quantity:.6f})"
                     )
                     return False
+                # For SELL, position_size is the sell_quantity
+                position_size = sell_quantity
+            elif signal.signal_type == SignalType.BUY:
+                # For BUY, calculate position size and verify cash
+                position_size = self.get_position_size(signal, portfolio)
+                if position_size <= 0:
+                    logger.info(
+                        f"⚠️ MOMENTUM risk_check REJECTED BUY {signal.symbol}: "
+                        f"Position size too small ({position_size:.6f})"
+                    )
+                    return False
+                required_cash = signal.price * position_size
+                if required_cash > portfolio.cash:
+                    logger.info(
+                        f"⚠️ MOMENTUM risk_check REJECTED BUY {signal.symbol}: "
+                        f"Insufficient cash (required=${required_cash:.2f} > available=${portfolio.cash:.2f}, "
+                        f"position_size={position_size:.6f})"
+                    )
+                    return False
+            else:
+                # HOLD or other signal types - not supported
+                return False
 
             # Verificar límites de exposición
             total_exposure = self._calculate_total_exposure(portfolio)
