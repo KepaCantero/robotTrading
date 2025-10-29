@@ -1,0 +1,15 @@
+{
+  "mean_reversion.z_score_threshold": 1.4404386709644112,
+  "mean_reversion.lookback_period": 11,
+  "mean_reversion.stop_loss_pct": 0.02645659359620575,
+  "mean_reversion.take_profit_pct": 0.12691866720434303,
+  "momentum.rsi_threshold": 57,
+  "momentum.momentum_threshold": 0.023478765465810927,
+  "momentum.volume_threshold": 1.0591759062467925,
+  "momentum.ema_period": 48,
+  "pairs_trading.spread_threshold": 1.836061043897767,
+  "pairs_trading.lookback_period": 27,
+  "pairs_trading.cointegration_threshold": 0.065333396486265,
+  "global.stop_loss_pct": 0.024886918365368146,
+  "global.position_size_pct": 0.07908600827578546
+}
