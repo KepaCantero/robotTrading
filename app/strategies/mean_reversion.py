@@ -70,6 +70,10 @@ class MeanReversionStrategy(BaseStrategy):
         # Parámetros adicionales
         self.min_z_score = Decimal(str(config.get("min_z_score", 1.5)))
 
+        # Initialize price history for logging purposes (similar to MomentumStrategy)
+        from collections import deque
+        self.price_history = deque(maxlen=200)  # Maintain up to 200 bars of history
+
         logger.info(f"MeanReversionStrategy initialized: {self.name}")
 
     def get_required_parameters(self) -> List[str]:
@@ -112,6 +116,12 @@ class MeanReversionStrategy(BaseStrategy):
             if not hasattr(self, '_call_count'):
                 self._call_count = 0
             self._call_count += 1
+            
+            # Update price history for tracking
+            if not hasattr(self, 'price_history'):
+                from collections import deque
+                self.price_history = deque(maxlen=200)
+            self.price_history.append(float(current_price))
             
             # Log ALL candidates (every call) at DEBUG level
             logger.debug(
