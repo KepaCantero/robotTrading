@@ -693,12 +693,15 @@ class MomentumStrategy(BaseStrategy):
         # 4. TASK-IND-5: Filtro de volumen dinámico >1.2 para confirmar liquidez
         # 5. TASK-IND-ROC-2: ROC < 0 para confirmar desaceleración bajista (optional)
         # 6. TASK-IND-OBV-1: OBV "falling" o "neutral" para confirmar selling pressure (optional)
-        # FIX: Make SELL conditions symmetric to BUY - more permissive
-        # BUY: RSI < 45 OR RSI > 55, so SELL should be: RSI > 55 OR RSI < 45 (but inverted logic)
-        # Actually: SELL when overbought (> 55) or momentum negative (< 45)
-        rsi_overbought = rsi > 55  # Overbought (symmetric to BUY's > 55 for momentum)
-        rsi_momentum_negative = rsi < 45  # Momentum negative (symmetric to BUY's < 45 for oversold)
-        rsi_condition = rsi_overbought or rsi_momentum_negative
+        # FIX: SELL logic should be different from BUY
+        # SELL should ONLY happen when:
+        # 1. RSI > 55 (overbought - take profit) OR
+        # 2. RSI between 45-55 but price < EMA (momentum reversal)
+        # NEVER sell when RSI < 45 (oversold) - that's when we should BUY
+        rsi_overbought = rsi > 55  # Overbought - clear sell signal
+        # For RSI between 45-55, only sell if momentum is negative (price below EMA)
+        rsi_neutral_bearish = (rsi >= 45 and rsi <= 55)  # Neutral zone
+        rsi_condition = rsi_overbought or (rsi_neutral_bearish and current_price < Decimal(str(ema)))
         
         ema_bearish = current_price < Decimal(str(ema))
         # FIX: Make volume requirement more permissive (same as BUY)
