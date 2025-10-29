@@ -1,0 +1,158 @@
+# Portfolio Multi-Strategy Configuration
+# Automated sector allocation and market type filtering
+
+# Sector Definitions
+sectors:
+  technology:
+    symbols: ["AAPL", "MSFT", "GOOGL", "AMZN", "META", "NVDA", "TSLA"]
+    description: "Technology and growth stocks"
+  
+  growth:
+    symbols: ["TSLA", "NFLX", "AMZN", "META"]
+    description: "High growth companies"
+  
+  energy:
+    symbols: ["XOM", "CVX", "COP", "EOG", "SLB"]
+    description: "Energy sector"
+  
+  utilities:
+    symbols: ["NEE", "DUK", "SO", "AEP", "SRE"]
+    description: "Utilities sector (stable)"
+  
+  consumer_staples:
+    symbols: ["PG", "KO", "PEP", "WMT", "COST"]
+    description: "Consumer staples (defensive)"
+  
+  reits:
+    symbols: ["AMT", "PLD", "EQIX", "PSA", "WELL"]
+    description: "Real Estate Investment Trusts"
+  
+  banks:
+    symbols: ["JPM", "BAC", "WFC", "C", "GS"]
+    description: "Banking sector"
+  
+  healthcare:
+    symbols: ["JNJ", "UNH", "PFE", "ABT", "TMO"]
+    description: "Healthcare sector"
+
+# Market Type Definitions
+market_types:
+  trending:
+    description: "Momentum-based market with clear trends"
+    indicators:
+      - adx_threshold: 25
+      - trend_strength: high
+    
+  sideways:
+    description: "Range-bound or stable market"
+    indicators:
+      - adx_threshold: 15
+      - trend_strength: low
+      - volatility: stable
+    
+  correlated:
+    description: "Highly correlated markets suitable for pairs trading"
+    indicators:
+      - min_correlation: 0.7
+      - cointegration_required: true
+
+# Strategy Allocations with Sector and Market Type Filters
+strategy_allocations:
+  momentum:
+    enabled: true
+    capital_allocation:
+      target_weight: 0.50  # 50% of total capital
+      min_weight: 0.30
+      max_weight: 0.70
+    
+    # Sector filtering - only trade these sectors
+    sectors:
+      - technology
+      - growth
+      - energy
+    
+    # Market type filtering
+    market_types:
+      - trending
+    
+    # Symbols (if you want explicit symbol list instead of sectors)
+    # symbols: ["AAPL", "MSFT", "GOOGL"]
+    
+    # Rebalancing configuration
+    rebalancing:
+      frequency: monthly  # monthly, quarterly, yearly
+      threshold: 0.05      # Rebalance if drift > 5%
+      enabled: true
+
+  mean_reversion:
+    enabled: true
+    capital_allocation:
+      target_weight: 0.25  # 25% of total capital
+      min_weight: 0.10
+      max_weight: 0.40
+    
+    sectors:
+      - utilities
+      - consumer_staples
+      - reits
+    
+    market_types:
+      - sideways
+    
+    rebalancing:
+      frequency: quarterly
+      threshold: 0.05
+      enabled: true
+
+  pairs_trading:
+    enabled: true
+    capital_allocation:
+      target_weight: 0.25  # 25% of total capital
+      min_weight: 0.10
+      max_weight: 0.40
+    
+    sectors:
+      - banks
+      - energy
+      - technology
+    
+    market_types:
+      - correlated
+    
+    rebalancing:
+      frequency: monthly
+      threshold: 0.05
+      enabled: true
+
+# Global Portfolio Settings
+portfolio:
+  total_capital: 100000
+  initial_allocation_date: "2015-01-01"
+  
+  # Rebalancing settings
+  global_rebalancing:
+    enabled: true
+    frequency: monthly  # monthly, quarterly, yearly
+    threshold: 0.05
+    
+  # Reporting settings
+  reporting:
+    save_results: true
+    output_path: "docs/BACKTEST_RESULTS"
+    generate_summary: true
+    include_metrics:
+      - sharpe_ratio
+      - max_drawdown
+      - total_return
+      - win_rate
+      - total_trades
+      - per_strategy_metrics
+
+# Performance-based optimization (for future use)
+optimization:
+  enabled: false
+  metric: sharpe  # sharpe, return, calmar
+  lookback_days: 90
+  min_performance_history_days: 30
+  rebalance_on_optimization: true
+
