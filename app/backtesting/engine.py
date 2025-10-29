@@ -265,13 +265,15 @@ class SimpleBacktester:
         current_price = get_price(market_data)
 
         # Calculate sell quantity (can be partial)
-        sell_quantity = min(
-            current_position,
-            self._calculate_position_size(signal, current_price),
-        )
+        calculated_sell_size = self._calculate_position_size(signal, current_price)
+        sell_quantity = min(current_position, calculated_sell_size)
+        logger.debug(f"SELL {signal.symbol}: calculated_sell_size={calculated_sell_size}, sell_quantity={sell_quantity}")
 
         if sell_quantity <= 0:
+            logger.warning(f"SELL {signal.symbol}: sell_quantity <= 0, skipping")
             return
+
+        logger.info(f"✅ EXECUTING SELL: {signal.symbol} qty={sell_quantity} price={current_price}")
 
         # Apply slippage
         execution_price = self._apply_slippage(current_price, False)
