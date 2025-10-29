@@ -21,17 +21,17 @@ Configuración principal del portfolio con:
 sectors:
   technology:
     symbols: ["AAPL", "MSFT", "GOOGL"]
-    
+
 # Tipos de mercado
 market_types:
   trending:
     description: "Mercado tendencial"
-    
+
 # Asignación por estrategia
 strategy_allocations:
   momentum:
     capital_allocation:
-      target_weight: 0.50  # 50%
+      target_weight: 0.50 # 50%
     sectors:
       - technology
       - growth
@@ -87,18 +87,21 @@ results = backtester.run_multi_strategy_backtest(quotes, start_date, end_date)
 ## 📊 Configuración Actual
 
 ### Momentum Strategy
+
 - **Capital**: 50% (configurable 30-70%)
 - **Sectores**: Technology, Growth, Energy
 - **Tipo de Mercado**: Trending
 - **Rebalanceo**: Mensual
 
 ### Mean Reversion Strategy
+
 - **Capital**: 25% (configurable 10-40%)
 - **Sectores**: Utilities, Consumer Staples, REITs
 - **Tipo de Mercado**: Sideways
 - **Rebalanceo**: Trimestral
 
 ### Pairs Trading Strategy
+
 - **Capital**: 25% (configurable 10-40%)
 - **Sectores**: Banks, Energy, Technology
 - **Tipo de Mercado**: Correlated
@@ -199,5 +202,4 @@ optimizer = MultiStrategyOptimizer(
 
 ---
 
-*Última actualización: 2025-10-28*
-
+_Última actualización: 2025-10-28_

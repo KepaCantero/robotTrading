@@ -52,11 +52,13 @@ print(df.head())
 ## 🎯 Recomendación
 
 1. **Instalar `yahoo_fin`**:
+
    ```bash
    pip install yahoo_fin requests_html
    ```
 
 2. **Reintentar descarga**:
+
    ```bash
    # yahoo_fin se usará automáticamente como fallback
    python scripts/download_portfolio_data.py --symbols AEP BAC --delay 3.0
@@ -74,5 +76,4 @@ Si `yahoo_fin` también tiene problemas:
 
 ---
 
-*Última actualización: 2025-10-29*
-
+_Última actualización: 2025-10-29_

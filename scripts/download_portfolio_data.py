@@ -3,12 +3,13 @@
 Download Portfolio Historical Data.
 
 Downloads historical market data for all symbols in portfolio.yaml configuration
-and saves them as CSV files for faster backtesting without rate limits.
+using Yahoo Finance v8 API and saves them as CSV files for faster backtesting.
 """
 
 import argparse
 import sys
 import time
+import json
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -17,145 +18,163 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from app.services.portfolio_config_manager import get_portfolio_config_manager
-from app.services.portfolio_builder import PortfolioBuilder
 import pandas as pd
+import requests
 
-# Try multiple Yahoo Finance libraries
-try:
-    import yfinance as yf
-    USE_YFINANCE = True
-except ImportError:
-    USE_YFINANCE = False
-    logger.warning("yfinance not available, trying yahoo_fin...")
-
-try:
-    from yahoo_fin.stock_info import get_data as yahoo_fin_get_data
-    USE_YAHOO_FIN = True
-except ImportError:
-    USE_YAHOO_FIN = False
-
-def download_symbol_data(
+def download_symbol_v8_api(
     symbol: str,
     start_date: datetime,
     end_date: datetime,
-    output_dir: Path,
-    retry_delay: float = 2.0,
-    max_retries: int = 3,
+    output_file: Path,
+    delay: float = 6.0,
+    max_retries: int = 5,
 ) -> bool:
-    """
-    Download historical data for a symbol and save as CSV.
-    
-    Args:
-        symbol: Stock symbol
-        start_date: Start date
-        end_date: End date
-        output_dir: Output directory for CSV files
-        retry_delay: Delay between retries (seconds)
-        max_retries: Maximum retry attempts
-        
-    Returns:
-        True if successful, False otherwise
-    """
-    output_file = output_dir / f"{symbol}.csv"
+    """Download symbol using Yahoo Finance v8 API."""
     
     # Skip if file already exists
     if output_file.exists():
         print(f"  ✓ {symbol}: CSV already exists, skipping...")
         return True
     
+    # Convert dates to Unix timestamps
+    period1 = int(start_date.timestamp())
+    period2 = int(end_date.timestamp())
+    
+    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
+    params = {
+        "period1": period1,
+        "period2": period2,
+        "interval": "1d",
+        "events": "div,splits",
+        "includePrePost": "false",
+    }
+    
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/json',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Referer': 'https://finance.yahoo.com/',
+    }
+    
     for attempt in range(max_retries):
         try:
             print(f"  📥 {symbol}: Downloading...", end=" ", flush=True)
             
-            # Try yfinance first
-            if USE_YFINANCE:
-                try:
-                    ticker = yf.Ticker(symbol)
-                    hist = ticker.history(start=start_date, end=end_date, interval="1d")
-                    
-                    if not hist.empty:
-                        df = pd.DataFrame({
-                            'date': hist.index,
-                            'timestamp': hist.index,
-                            'open': hist['Open'],
-                            'high': hist['High'],
-                            'low': hist['Low'],
-                            'close': hist['Close'],
-                            'volume': hist['Volume'],
-                        })
-                    else:
-                        raise ValueError("Empty data from yfinance")
-                        
-                except Exception as e:
-                    if "rate limit" in str(e).lower() or "too many requests" in str(e).lower():
-                        raise  # Re-raise rate limit errors
-                    # Try yahoo_fin as fallback
-                    if USE_YAHOO_FIN:
-                        start_str = start_date.strftime("%m/%d/%Y")
-                        end_str = end_date.strftime("%m/%d/%Y")
-                        df = yahoo_fin_get_data(symbol, start_date=start_str, end_date=end_str, interval="1d")
-                        if df is None or df.empty:
-                            raise ValueError("Empty data from yahoo_fin")
-                        # yahoo_fin already returns in correct format, just ensure columns
-                        df = df.reset_index()
-                        if 'timestamp' not in df.columns and 'date' in df.columns:
-                            df['timestamp'] = df['date']
-                    else:
-                        raise
+            response = requests.get(url, params=params, headers=headers, timeout=30)
             
-            # Try yahoo_fin if yfinance not available
-            elif USE_YAHOO_FIN:
-                start_str = start_date.strftime("%m/%d/%Y")
-                end_str = end_date.strftime("%m/%d/%Y")
-                df = yahoo_fin_get_data(symbol, start_date=start_str, end_date=end_str, interval="1d")
-                
-                if df is None or df.empty:
-                    print("❌ No data")
-                    return False
-                
-                # yahoo_fin returns indexed by date, reset and add timestamp
-                df = df.reset_index()
-                if 'timestamp' not in df.columns:
-                    df['timestamp'] = df.get('date', df.index)
-            else:
-                print("❌ No Yahoo Finance library available")
+            if response.status_code == 429:
+                # Rate limited - exponential backoff
+                wait_time = delay * (2 ** attempt)
+                print(f"⏳ Rate limited, waiting {wait_time:.0f}s...", flush=True)
+                time.sleep(wait_time)
+                continue
+            
+            if response.status_code != 200:
+                print(f"❌ HTTP {response.status_code}")
+                if attempt < max_retries - 1:
+                    time.sleep(delay)
+                    continue
                 return False
             
-            # Save to CSV
+            # Parse JSON response
+            try:
+                data = response.json()
+            except json.JSONDecodeError as e:
+                print(f"❌ Invalid JSON: {e}")
+                if attempt < max_retries - 1:
+                    time.sleep(delay)
+                    continue
+                return False
+            
+            # Extract data from response
+            if "chart" not in data or not data["chart"]["result"]:
+                print(f"❌ No data in response")
+                return False
+            
+            result = data["chart"]["result"][0]
+            
+            if "timestamp" not in result or "indicators" not in result:
+                print(f"❌ Invalid response structure")
+                return False
+            
+            timestamps = result["timestamp"]
+            quote = result["indicators"]["quote"][0]
+            
+            # Build DataFrame
+            rows = []
+            for i, ts in enumerate(timestamps):
+                date = datetime.fromtimestamp(ts)
+                if start_date <= date <= end_date:
+                    close = quote["close"][i] if i < len(quote["close"]) and quote["close"][i] is not None else None
+                    if close is None:
+                        continue
+                    
+                    rows.append({
+                        'date': date,
+                        'timestamp': date,
+                        'open': quote["open"][i] if i < len(quote["open"]) and quote["open"][i] is not None else close,
+                        'high': quote["high"][i] if i < len(quote["high"]) and quote["high"][i] is not None else close,
+                        'low': quote["low"][i] if i < len(quote["low"]) and quote["low"][i] is not None else close,
+                        'close': close,
+                        'volume': quote["volume"][i] if i < len(quote["volume"]) and quote["volume"][i] is not None else 0,
+                    })
+            
+            if not rows:
+                print(f"❌ No data in date range")
+                return False
+            
+            # Create DataFrame and save
+            df = pd.DataFrame(rows)
+            df = df.dropna(subset=['close'])
+            
+            if df.empty:
+                print(f"❌ No valid data after filtering")
+                return False
+            
             output_file.parent.mkdir(parents=True, exist_ok=True)
             df.to_csv(output_file, index=False)
             
             print(f"✅ {len(df)} rows saved")
+            
+            # Delay between downloads
+            time.sleep(delay)
+            
             return True
             
+        except requests.exceptions.RequestException as e:
+            print(f"❌ Request error: {e}")
+            if attempt < max_retries - 1:
+                wait_time = delay * (2 ** attempt)
+                time.sleep(wait_time)
+                continue
+            return False
         except Exception as e:
-            error_msg = str(e).lower()
-            if "rate limit" in error_msg or "too many requests" in error_msg:
-                if attempt < max_retries - 1:
-                    # Exponential backoff: 5s, 15s, 45s
-                    wait_time = 5 * (3 ** attempt)
-                    print(f"⏳ Rate limited, waiting {wait_time}s (attempt {attempt + 1}/{max_retries})...", flush=True)
-                    time.sleep(wait_time)
-                    continue
-                else:
-                    print(f"❌ Rate limited after {max_retries} attempts")
-                    print(f"   💡 Tip: Wait 5-10 minutes and retry this symbol, or reduce --delay")
-                    return False
-            else:
-                print(f"❌ Error: {e}")
-                return False
+            print(f"❌ Error: {e}")
+            if attempt < max_retries - 1:
+                time.sleep(delay)
+                continue
+            return False
     
     return False
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Download historical data for portfolio symbols"
+    parser = argparse.ArgumentParser(description="Download portfolio historical data")
+    parser.add_argument(
+        "--symbols",
+        nargs="+",
+        help="Specific symbols to download (default: all from portfolio.yaml)",
     )
     parser.add_argument(
         "--years",
         type=int,
         default=10,
-        help="Number of years of historical data (default: 10)",
+        help="Years of historical data (default: 10)",
+    )
+    parser.add_argument(
+        "--delay",
+        type=float,
+        default=6.0,
+        help="Delay in seconds between downloads (default: 6.0)",
     )
     parser.add_argument(
         "--output-dir",
@@ -163,114 +182,82 @@ def main():
         default="data/historical",
         help="Output directory for CSV files (default: data/historical)",
     )
-    parser.add_argument(
-        "--delay",
-        type=float,
-        default=2.0,
-        help="Delay between downloads in seconds (default: 2.0, increase if rate limited)",
-    )
-    parser.add_argument(
-        "--max-symbols",
-        type=int,
-        default=None,
-        help="Maximum symbols to download (default: all)",
-    )
-    parser.add_argument(
-        "--symbols",
-        type=str,
-        nargs="+",
-        help="Specific symbols to download (overrides portfolio config)",
-    )
     
     args = parser.parse_args()
+    
+    # Get symbols
+    if args.symbols:
+        symbols = [s.upper() for s in args.symbols]
+    else:
+        # Load from portfolio.yaml
+        try:
+            config_manager = get_portfolio_config_manager()
+            symbols = config_manager.get_all_symbols()
+            if not symbols:
+                print("❌ No symbols found in portfolio.yaml")
+                sys.exit(1)
+        except Exception as e:
+            print(f"❌ Error loading portfolio config: {e}")
+            sys.exit(1)
     
     # Calculate date range
     end_date = datetime.now()
     start_date = end_date - timedelta(days=365 * args.years)
     
-    # Setup output directory
-    output_dir = Path(args.output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-    
     print("=" * 80)
-    print("📊 Portfolio Data Downloader")
+    print("📊 Portfolio Data Downloader (Yahoo Finance v8 API)")
     print("=" * 80)
-    print(f"Period: {start_date.date()} to {end_date.date()} ({args.years} years)")
-    print(f"Output: {output_dir}")
+    print(f"Period: {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')} ({args.years} years)")
+    print(f"Output: {args.output_dir}")
+    print(f"Delay: {args.delay}s between downloads")
     print("=" * 80)
     
-    # Get symbols to download
     if args.symbols:
-        symbols = args.symbols
         print(f"\n📋 Downloading {len(symbols)} specified symbols:")
-        print(f"   {', '.join(symbols)}")
     else:
-        # Get symbols from portfolio config
-        portfolio_config = get_portfolio_config_manager()
-        portfolio_builder = PortfolioBuilder(portfolio_config=portfolio_config)
-        
-        portfolio_summary = portfolio_builder.get_portfolio_summary()
-        all_symbols = portfolio_summary["all_symbols"]
-        
-        if args.max_symbols:
-            all_symbols = all_symbols[:args.max_symbols]
-        
-        symbols = all_symbols
-        
-        print(f"\n📋 Portfolio symbols from config ({len(symbols)} total):")
-        print(f"   Strategies: {', '.join(portfolio_summary['enabled_strategies'])}")
-        print(f"   Symbols: {', '.join(symbols[:10])}{'...' if len(symbols) > 10 else ''}")
+        print(f"\n📋 Downloading {len(symbols)} symbols from portfolio.yaml:")
+    
+    for symbol in symbols[:10]:
+        print(f"   {symbol}")
+    if len(symbols) > 10:
+        print(f"   ... and {len(symbols) - 10} more")
     
     print("\n🚀 Starting download...")
     print("-" * 80)
     
-    # Download each symbol
+    output_dir = Path(args.output_dir)
     successful = []
     failed = []
     
     for i, symbol in enumerate(symbols, 1):
-        print(f"[{i}/{len(symbols)}] {symbol}", end=": ")
+        print(f"[{i}/{len(symbols)}] ", end="")
         
-        success = download_symbol_data(
+        output_file = output_dir / f"{symbol}.csv"
+        
+        success = download_symbol_v8_api(
             symbol,
             start_date,
             end_date,
-            output_dir,
-            retry_delay=args.delay * 2,
+            output_file,
+            delay=args.delay,
         )
         
         if success:
             successful.append(symbol)
         else:
             failed.append(symbol)
-        
-        # Add delay between downloads to avoid rate limiting
-        # Use longer delay if we just hit rate limits
-        if i < len(symbols):
-            delay = args.delay
-            # Increase delay if recent failures due to rate limiting
-            if failed and "rate limit" in str(failed[-1]).lower() if failed else False:
-                delay = args.delay * 3  # Triple delay after rate limit
-            
-            time.sleep(delay)
     
-    # Summary
     print("\n" + "=" * 80)
     print("📊 Download Summary")
     print("=" * 80)
     print(f"✅ Successful: {len(successful)}/{len(symbols)}")
     print(f"❌ Failed: {len(failed)}/{len(symbols)}")
     
-    if successful:
-        print(f"\n✅ Downloaded:")
-        for symbol in successful:
-            print(f"   - {symbol}.csv")
-    
     if failed:
         print(f"\n❌ Failed to download:")
         for symbol in failed:
             print(f"   - {symbol}")
-        print("\n💡 Tip: Retry failed symbols later or check if symbols are valid")
+        print(f"\n💡 Tip: Retry failed symbols later or check if symbols are valid")
     
     print("\n" + "=" * 80)
     print(f"📁 CSV files saved to: {output_dir.absolute()}")
@@ -280,4 +267,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-
