@@ -431,17 +431,17 @@ Esto hace el desarrollo más eficiente y menos propenso a conflictos.
 
 ### 📊 **Backtesting & Validation (5 tareas críticas)**
 
-| ID             | Tarea                     | Estado       | Archivos | Descripción                                                                                       |
-| -------------- | ------------------------- | ------------ | -------- | ------------------------------------------------------------------------------------------------- |
+| ID             | Tarea                     | Estado        | Archivos | Descripción                                                                                                                                                     |
+| -------------- | ------------------------- | ------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **TASK-BV-1**  | Walk-Forward Validation   | ✅ Completada | 4-6      | Implementar backtesting walk-forward: entrenar en ventana histórica y probar en período siguiente - Implementado en `app/backtesting/walk_forward_validator.py` |
 | **TASK-BV-2**  | Cross-Validation Temporal | ✅ Completada | 3-5      | Implementar validación cruzada temporal para evaluar consistencia de estrategias - Implementado en `app/backtesting/walk_forward_validator.py`                  |
-| **TASK-MET-1** | Sharpe y Sortino Ratio    | ✅ Completada | 2-3      | Implementar cálculo de Sharpe Ratio y Sortino Ratio en métricas de backtesting - Implementado en `app/backtesting/metrics.py`                    |
-| **TASK-MET-2** | Risk/Reward Ratio         | ✅ Completada | 2-3      | Implementar cálculo de Risk/Reward ratio promedio por operación (target ≥1:3) - Implementado en `app/backtesting/metrics.py`                     |
+| **TASK-MET-1** | Sharpe y Sortino Ratio    | ✅ Completada | 2-3      | Implementar cálculo de Sharpe Ratio y Sortino Ratio en métricas de backtesting - Implementado en `app/backtesting/metrics.py`                                   |
+| **TASK-MET-2** | Risk/Reward Ratio         | ✅ Completada | 2-3      | Implementar cálculo de Risk/Reward ratio promedio por operación (target ≥1:3) - Implementado en `app/backtesting/metrics.py`                                    |
 
 ### 💰 **Costos Realistas (2 tareas críticas)**
 
-| ID             | Tarea                      | Estado       | Archivos | Descripción                                                                                  |
-| -------------- | -------------------------- | ------------ | -------- | -------------------------------------------------------------------------------------------- |
+| ID             | Tarea                      | Estado        | Archivos | Descripción                                                                                                                                         |
+| -------------- | -------------------------- | ------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **TASK-CST-1** | Ajustar Costos Backtesting | ✅ Completada | 2-3      | Incorporar spreads (0.01-0.03%), comisiones (0.01-0.05%) y slippage realistas en backtesting - Implementado en `app/backtesting/cost_calculator.py` |
 | **TASK-CST-2** | Cálculo Costos Totales     | ✅ Completada | 2-3      | Implementar cálculo de costos totales por trade (0.02-0.1% adicional por transacción) - Implementado en `app/backtesting/cost_calculator.py`        |
 
