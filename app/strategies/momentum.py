@@ -167,11 +167,12 @@ class MomentumStrategy(BaseStrategy):
 
             # Sólo generar señales si tenemos suficiente histórico
             if rsi is None or ema is None:
-                # Log why signals are not generated (insufficient history)
-                if self.current_bar_index % 100 == 0:  # Log every 100th bar to avoid spam
-                    logger.debug(
-                        f"MOMENTUM {market_data.symbol}: Skipping - insufficient history "
-                        f"(RSI={rsi}, EMA={ema}, bars={self.current_bar_index})"
+                # Log why signals are not generated (insufficient history) - INFO level so we can see it
+                if self.current_bar_index % 50 == 0:  # Log every 50th bar
+                    logger.info(
+                        f"MOMENTUM {market_data.symbol}: ⚠️ Skipping - insufficient history "
+                        f"(RSI={rsi}, EMA={ema}, bars={self.current_bar_index}). "
+                        f"Need at least 14 bars for RSI and {self.ema_period if hasattr(self, 'ema_period') else 20} for EMA"
                     )
                 return []
 
