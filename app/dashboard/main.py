@@ -383,13 +383,50 @@ if execute_button:
             run_all_strategies = selected_strategy == "all_strategies"
             
             if run_all_strategies:
-                # Multi-strategy mode: allocate capital across strategies
+                # Multi-strategy mode: build portfolio from all strategy sectors
                 from decimal import Decimal
+                from app.services.portfolio_builder import PortfolioBuilder
+                from app.services.portfolio_config_manager import get_portfolio_config_manager
                 
-                allocation_manager = MultiStrategyAllocationManager(
-                    total_capital=Decimal(str(initial_capital))
+                st.info("🏗️ Building portfolio from configured sectors...")
+                
+                # Build portfolio with all symbols from all strategy sectors
+                portfolio_config = get_portfolio_config_manager()
+                portfolio_builder = PortfolioBuilder(portfolio_config=portfolio_config)
+                
+                # Get portfolio summary
+                portfolio_summary = portfolio_builder.get_portfolio_summary()
+                
+                with st.expander("📊 Portfolio Composition", expanded=True):
+                    st.write(f"**Total Symbols**: {portfolio_summary['total_unique_symbols']}")
+                    st.write("**Symbols by Strategy**:")
+                    for strat, syms in portfolio_summary['symbols_by_strategy'].items():
+                        st.write(f"- **{strat}**: {', '.join(syms[:10])}{'...' if len(syms) > 10 else ''}")
+                    
+                    st.write(f"**All Symbols**: {', '.join(portfolio_summary['all_symbols'][:20])}"
+                            f"{'...' if len(portfolio_summary['all_symbols']) > 20 else ''}")
+                
+                # Build portfolio quotes from all sectors
+                portfolio_quotes = portfolio_builder.build_portfolio_quotes(
+                    start_date=datetime.combine(start_date, datetime.min.time()),
+                    end_date=datetime.combine(end_date, datetime.max.time()),
+                    max_symbols_per_strategy=10,  # Limit to avoid too many API calls
                 )
                 
+                if not portfolio_quotes:
+                    st.error("❌ Failed to build portfolio - no data loaded")
+                    st.stop()
+                
+                st.success(
+                    f"✅ Portfolio built: {len(set(q.symbol for q in portfolio_quotes))} symbols, "
+                    f"{len(portfolio_quotes)} quotes"
+                )
+                
+                # Create allocation manager (will use portfolio.yaml config)
+                allocation_manager = portfolio_config.get_allocation_manager()
+                allocation_manager.update_total_capital(Decimal(str(initial_capital)))
+                
+                # Create strategies
                 all_strategies = {}
                 for strategy_type in ["momentum", "mean_reversion", "pairs_trading"]:
                     config = {"name": strategy_type, **config_presets[selected_preset]}
@@ -398,8 +435,14 @@ if execute_button:
                     elif strategy_type == "mean_reversion":
                         all_strategies[strategy_type] = MeanReversionStrategy(config)
                     elif strategy_type == "pairs_trading":
-                        if "pair_symbols" not in config:
-                            config["pair_symbols"] = ["AAPL", "MSFT"]
+                        # Get pair symbols from portfolio config
+                        pair_symbols = portfolio_builder.get_strategy_symbols_mapping().get(
+                            "pairs_trading", ["AAPL", "MSFT"]
+                        )
+                        if len(pair_symbols) >= 2:
+                            config["pair_symbols"] = pair_symbols[:2]
+                        else:
+                            config["pair_symbols"] = ["AAPL", "MSFT"]  # Fallback
                         all_strategies[strategy_type] = PairsTradingStrategy(config)
                 
                 multi_backtester = MultiStrategyBacktester(
@@ -412,10 +455,11 @@ if execute_button:
                         "take_profit": Decimal(str(config_presets[selected_preset]["take_profit"])),
                         "max_position_size": Decimal("0.05"),
                     },
+                    portfolio_config_manager=portfolio_config,  # Pass config manager
                 )
                 
                 consolidated = multi_backtester.run_multi_strategy_backtest(
-                    quotes=quotes,
+                    quotes=portfolio_quotes,  # Use portfolio quotes, not single symbol
                     start_date=datetime.combine(start_date, datetime.min.time()),
                     end_date=datetime.combine(end_date, datetime.max.time()),
                 )
@@ -445,11 +489,16 @@ if execute_button:
                 st.success(f"✅ Results saved to {json_file}")
                 
                 # Generate backend test summary for multi-strategy
+                # Get all symbols for summary
+                portfolio_symbols = ", ".join(portfolio_summary['all_symbols'][:5])
+                if len(portfolio_summary['all_symbols']) > 5:
+                    portfolio_symbols += f" (+{len(portfolio_summary['all_symbols']) - 5} more)"
+                
                 summary_file = generate_backend_test_summary(
                     all_results=[],  # Empty for multi-strategy as it has its own format
                     strategy=selected_strategy,
                     preset=selected_preset,
-                    symbol=symbol,
+                    symbol=portfolio_symbols,  # Show portfolio symbols
                     start_date=datetime.combine(start_date, datetime.min.time()),
                     end_date=datetime.combine(end_date, datetime.max.time()),
                     initial_capital=initial_capital,
