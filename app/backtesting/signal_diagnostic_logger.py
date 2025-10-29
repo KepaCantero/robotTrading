@@ -151,8 +151,8 @@ class SignalDiagnosticLogger:
             "generated_at": datetime.utcnow().isoformat(),
             "strategy_summaries": self.get_all_summaries(),
             "strategy_stats": {k: dict(v) for k, v in self.strategy_stats.items()},  # Include full stats
-            "candidates": self.candidate_details[-1000:],  # Last 1000 candidates
-            "rejection_details": self.rejection_details[-1000:],  # Last 1000 rejections
+            "candidates": self.candidate_details,  # ALL candidates (not just last 1000)
+            "rejection_details": self.rejection_details,  # ALL rejections (not just last 1000)
             "top_rejected_symbols": sorted(
                 [
                     {"symbol": s, **stats}
@@ -170,23 +170,34 @@ class SignalDiagnosticLogger:
         return output_file
     
     def print_summary(self) -> None:
-        """Print summary to console."""
-        print("\n" + "=" * 80)
-        print("📊 DIAGNÓSTICO DE SEÑALES POR ESTRATEGIA")
-        print("=" * 80)
+        """Log summary to file instead of console to avoid losing information."""
+        log_lines = []
+        log_lines.append("\n" + "=" * 80)
+        log_lines.append("📊 DIAGNÓSTICO DE SEÑALES POR ESTRATEGIA")
+        log_lines.append("=" * 80)
         
         for strategy, summary in self.get_all_summaries().items():
-            print(f"\n{strategy.upper()}:")
-            print(f"  Candidatas:     {summary['signals_candidate']}")
-            print(f"  Ejecutadas:     {summary['signals_executed']} ({summary['execution_rate']:.1f}%)")
-            print(f"  Rechazadas:     {summary['signals_rejected']} ({summary['rejection_rate']:.1f}%)")
+            log_lines.append(f"\n{strategy.upper()}:")
+            log_lines.append(f"  Candidatas:     {summary['signals_candidate']}")
+            log_lines.append(f"  Ejecutadas:     {summary['signals_executed']} ({summary['execution_rate']:.1f}%)")
+            log_lines.append(f"  Rechazadas:     {summary['signals_rejected']} ({summary['rejection_rate']:.1f}%)")
             
             if summary['checks_failed']:
-                print(f"  Checks fallidos:")
+                log_lines.append(f"  Checks fallidos:")
                 for check, count in sorted(summary['checks_failed'].items(), key=lambda x: x[1], reverse=True):
-                    print(f"    - {check}: {count} veces")
+                    log_lines.append(f"    - {check}: {count} veces")
         
-        print("\n" + "=" * 80)
+        log_lines.append("\n" + "=" * 80)
+        
+        # Write to logger instead of console
+        summary_text = "\n".join(log_lines)
+        logger.info(summary_text)
+        
+        # Also save to a separate summary log file
+        summary_file = self.output_dir / f"diagnostic_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+        with open(summary_file, 'w') as f:
+            f.write(summary_text)
+        logger.info(f"Diagnostic summary saved to {summary_file}")
     
     def reset(self) -> None:
         """Reset all counters (for new backtest run)."""
