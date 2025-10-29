@@ -18,8 +18,21 @@ sys.path.insert(0, str(project_root))
 
 from app.services.portfolio_config_manager import get_portfolio_config_manager
 from app.services.portfolio_builder import PortfolioBuilder
-import yfinance as yf
 import pandas as pd
+
+# Try multiple Yahoo Finance libraries
+try:
+    import yfinance as yf
+    USE_YFINANCE = True
+except ImportError:
+    USE_YFINANCE = False
+    logger.warning("yfinance not available, trying yahoo_fin...")
+
+try:
+    from yahoo_fin.stock_info import get_data as yahoo_fin_get_data
+    USE_YAHOO_FIN = True
+except ImportError:
+    USE_YAHOO_FIN = False
 
 def download_symbol_data(
     symbol: str,
@@ -54,23 +67,59 @@ def download_symbol_data(
         try:
             print(f"  📥 {symbol}: Downloading...", end=" ", flush=True)
             
-            ticker = yf.Ticker(symbol)
-            hist = ticker.history(start=start_date, end=end_date, interval="1d")
+            # Try yfinance first
+            if USE_YFINANCE:
+                try:
+                    ticker = yf.Ticker(symbol)
+                    hist = ticker.history(start=start_date, end=end_date, interval="1d")
+                    
+                    if not hist.empty:
+                        df = pd.DataFrame({
+                            'date': hist.index,
+                            'timestamp': hist.index,
+                            'open': hist['Open'],
+                            'high': hist['High'],
+                            'low': hist['Low'],
+                            'close': hist['Close'],
+                            'volume': hist['Volume'],
+                        })
+                    else:
+                        raise ValueError("Empty data from yfinance")
+                        
+                except Exception as e:
+                    if "rate limit" in str(e).lower() or "too many requests" in str(e).lower():
+                        raise  # Re-raise rate limit errors
+                    # Try yahoo_fin as fallback
+                    if USE_YAHOO_FIN:
+                        start_str = start_date.strftime("%m/%d/%Y")
+                        end_str = end_date.strftime("%m/%d/%Y")
+                        df = yahoo_fin_get_data(symbol, start_date=start_str, end_date=end_str, interval="1d")
+                        if df is None or df.empty:
+                            raise ValueError("Empty data from yahoo_fin")
+                        # yahoo_fin already returns in correct format, just ensure columns
+                        df = df.reset_index()
+                        if 'timestamp' not in df.columns and 'date' in df.columns:
+                            df['timestamp'] = df['date']
+                    else:
+                        raise
             
-            if hist.empty:
-                print("❌ No data")
+            # Try yahoo_fin if yfinance not available
+            elif USE_YAHOO_FIN:
+                start_str = start_date.strftime("%m/%d/%Y")
+                end_str = end_date.strftime("%m/%d/%Y")
+                df = yahoo_fin_get_data(symbol, start_date=start_str, end_date=end_str, interval="1d")
+                
+                if df is None or df.empty:
+                    print("❌ No data")
+                    return False
+                
+                # yahoo_fin returns indexed by date, reset and add timestamp
+                df = df.reset_index()
+                if 'timestamp' not in df.columns:
+                    df['timestamp'] = df.get('date', df.index)
+            else:
+                print("❌ No Yahoo Finance library available")
                 return False
-            
-            # Prepare DataFrame with standard columns
-            df = pd.DataFrame({
-                'date': hist.index,
-                'timestamp': hist.index,  # Both for compatibility
-                'open': hist['Open'],
-                'high': hist['High'],
-                'low': hist['Low'],
-                'close': hist['Close'],
-                'volume': hist['Volume'],
-            })
             
             # Save to CSV
             output_file.parent.mkdir(parents=True, exist_ok=True)
