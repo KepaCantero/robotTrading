@@ -4,15 +4,15 @@
 
 ### **TOTAL DE TAREAS: 94** (40 previas + 54 nuevas críticas MVP)
 
-- **Tareas Completadas**: 44 (TASK-1-15, 31, TASK-57, TASK-TS, TASK-HT-01-03, TASK-DV-1-4, TASK-IND-1-5, TASK-IND-ROC-1-2, TASK-IND-OBV-1-2, TASK-IND-STOCH-1-2, TASK-IND-VWAP-1, TASK-IND-EXP-1, TASK-MET-RUNTIME-1, TASK-MET-FILL-1, TASK-MET-MULTI-1, TASK-SC-1-5, TASK-RM-1-5, BACKTEST-SUMMARY-1, ATR-FILTER-1, TRAILING-STOP-1, CVaR-METRIC-1, BENCHMARK-1, MONTE-CARLO-1, Linting)
-- **Tareas Pendientes**: 56 (incluye tareas de Backtesting, Portfolio, etc.)
+- **Tareas Completadas**: 50 (TASK-1-15, 31, TASK-57, TASK-TS, TASK-HT-01-03, TASK-DV-1-4, TASK-IND-1-5, TASK-IND-ROC-1-2, TASK-IND-OBV-1-2, TASK-IND-STOCH-1-2, TASK-IND-VWAP-1, TASK-IND-EXP-1, TASK-MET-RUNTIME-1, TASK-MET-FILL-1, TASK-MET-MULTI-1, TASK-SC-1-5, TASK-RM-1-5, BACKTEST-SUMMARY-1, ATR-FILTER-1, TRAILING-STOP-1, CVaR-METRIC-1, BENCHMARK-1, MONTE-CARLO-1, Linting, **TASK-BV-1, TASK-BV-2, TASK-MET-1, TASK-MET-2, TASK-CST-1, TASK-CST-2**)
+- **Tareas Pendientes**: 44 (incluye tareas de Backtesting, Portfolio, etc.)
 - **Estado General**: MVP READY + **Data Validation operativo** + **Advanced Technical Indicators** (ADX, ATR, MACD) + Linting corregido
 - **Prioridad Actual**: Completar Signal Scoring + Risk Management + Backtesting + Portfolio Multi-Strategy + Nuevos Indicadores Momentum
 - **Nuevas Tareas Críticas**:
   - Portfolio Allocation & Risk Management (10 tareas)
   - Estrategias Complementarias (8 tareas)
-  - Backtesting & Validation (5 tareas)
-  - Costos Realistas (2 tareas)
+  - Backtesting & Validation (5 tareas) - ✅ COMPLETADAS (TASK-BV-1, BV-2, MET-1, MET-2)
+  - Costos Realistas (2 tareas) - ✅ COMPLETADAS (TASK-CST-1, CST-2)
   - Indicadores Técnicos Avanzados & Sizing (16 tareas - 5 completadas, 11 pendientes: ROC, OBV, Stochastic RSI, VWAP, Expectancy, Runtime tracking, Fill ratio, Multi-timeframe)
   - Validación de Datos & Outliers (4 tareas)
   - Signal Scoring & Cooldown (5 tareas)
@@ -433,17 +433,17 @@ Esto hace el desarrollo más eficiente y menos propenso a conflictos.
 
 | ID             | Tarea                     | Estado       | Archivos | Descripción                                                                                       |
 | -------------- | ------------------------- | ------------ | -------- | ------------------------------------------------------------------------------------------------- |
-| **TASK-BV-1**  | Walk-Forward Validation   | ⏳ Pendiente | 4-6      | Implementar backtesting walk-forward: entrenar en ventana histórica y probar en período siguiente |
-| **TASK-BV-2**  | Cross-Validation Temporal | ⏳ Pendiente | 3-5      | Implementar validación cruzada temporal para evaluar consistencia de estrategias                  |
-| **TASK-MET-1** | Sharpe y Sortino Ratio    | ⏳ Pendiente | 2-3      | Implementar cálculo de Sharpe Ratio y Sortino Ratio en métricas de backtesting                    |
-| **TASK-MET-2** | Risk/Reward Ratio         | ⏳ Pendiente | 2-3      | Implementar cálculo de Risk/Reward ratio promedio por operación (target ≥1:3)                     |
+| **TASK-BV-1**  | Walk-Forward Validation   | ✅ Completada | 4-6      | Implementar backtesting walk-forward: entrenar en ventana histórica y probar en período siguiente - Implementado en `app/backtesting/walk_forward_validator.py` |
+| **TASK-BV-2**  | Cross-Validation Temporal | ✅ Completada | 3-5      | Implementar validación cruzada temporal para evaluar consistencia de estrategias - Implementado en `app/backtesting/walk_forward_validator.py`                  |
+| **TASK-MET-1** | Sharpe y Sortino Ratio    | ✅ Completada | 2-3      | Implementar cálculo de Sharpe Ratio y Sortino Ratio en métricas de backtesting - Implementado en `app/backtesting/metrics.py`                    |
+| **TASK-MET-2** | Risk/Reward Ratio         | ✅ Completada | 2-3      | Implementar cálculo de Risk/Reward ratio promedio por operación (target ≥1:3) - Implementado en `app/backtesting/metrics.py`                     |
 
 ### 💰 **Costos Realistas (2 tareas críticas)**
 
 | ID             | Tarea                      | Estado       | Archivos | Descripción                                                                                  |
 | -------------- | -------------------------- | ------------ | -------- | -------------------------------------------------------------------------------------------- |
-| **TASK-CST-1** | Ajustar Costos Backtesting | ⏳ Pendiente | 2-3      | Incorporar spreads (0.01-0.03%), comisiones (0.01-0.05%) y slippage realistas en backtesting |
-| **TASK-CST-2** | Cálculo Costos Totales     | ⏳ Pendiente | 2-3      | Implementar cálculo de costos totales por trade (0.02-0.1% adicional por transacción)        |
+| **TASK-CST-1** | Ajustar Costos Backtesting | ✅ Completada | 2-3      | Incorporar spreads (0.01-0.03%), comisiones (0.01-0.05%) y slippage realistas en backtesting - Implementado en `app/backtesting/cost_calculator.py` |
+| **TASK-CST-2** | Cálculo Costos Totales     | ✅ Completada | 2-3      | Implementar cálculo de costos totales por trade (0.02-0.1% adicional por transacción) - Implementado en `app/backtesting/cost_calculator.py`        |
 
 ### 🔬 **Indicadores Técnicos Avanzados & Sizing (16 tareas - 5 completadas, 11 pendientes)**
 
@@ -846,8 +846,8 @@ Esto hace el desarrollo más eficiente y menos propenso a conflictos.
 
 - **Portfolio Allocation & Risk Management**: 10 tareas (TASK-PA-1, PA-2, PORT-SEL-1, RM-1 a RM-5, REB-1, REB-2)
 - **Estrategias Complementarias**: 8 tareas (TASK-MR-1, MR-2, PT-1 a PT-4)
-- **Backtesting & Validation**: 5 tareas (TASK-BV-1, BV-2, MET-1, MET-2)
-- **Costos Realistas**: 2 tareas (TASK-CST-1, CST-2)
+- **Backtesting & Validation**: 5 tareas (TASK-BV-1, BV-2, MET-1, MET-2) - ✅ COMPLETADAS
+- **Costos Realistas**: 2 tareas (TASK-CST-1, CST-2) - ✅ COMPLETADAS
 - **Indicadores Técnicos Avanzados & Sizing**: 5 tareas (TASK-IND-1 a IND-5)
 - **Validación de Datos & Outliers**: 4 tareas (TASK-DV-1 a DV-4)
 - **Signal Scoring & Cooldown**: 5 tareas (TASK-SC-1 a SC-5)

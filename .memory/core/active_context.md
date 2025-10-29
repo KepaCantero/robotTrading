@@ -222,21 +222,40 @@ latency: 1000                       # Cambiar a backup si latencia > 1000ms
 
 **Razón**: Gestión de riesgo es crítica para preservar capital y diversificar exposición.
 
-##### **FASE 5: VALIDACIÓN Y BACKTESTING** (6 tareas) 🟠
+##### **FASE 5: VALIDACIÓN Y BACKTESTING** (6 tareas) ✅ COMPLETADA
 
 **Prioridad**: ALTA - Valida estrategias antes de live trading
 
 **Backtesting:**
 
-- **TASK-BV-1**: Walk-Forward Validation - Entrenar en ventana histórica, probar en período siguiente
-- **TASK-BV-2**: Cross-Validation Temporal - Evaluar consistencia de estrategias
-- **TASK-MET-1**: Sharpe y Sortino Ratio - Calcular ratios de riesgo-ajustados
-- **TASK-MET-2**: Risk/Reward Ratio - Ratio promedio por operación (target ≥1:3)
+- **TASK-BV-1**: ✅ Walk-Forward Validation - Entrenar en ventana histórica, probar en período siguiente
+  - Implementado en: `app/backtesting/walk_forward_validator.py`
+  - Clase `WalkForwardValidator` con ventanas de entrenamiento/validación configurables
+- **TASK-BV-2**: ✅ Cross-Validation Temporal - Evaluar consistencia de estrategias
+  - Implementado en: `app/backtesting/walk_forward_validator.py`
+  - Clase `CrossValidationTemporal` con N folds temporales
+- **TASK-MET-1**: ✅ Sharpe y Sortino Ratio - Calcular ratios de riesgo-ajustados
+  - Implementado en: `app/backtesting/metrics.py`
+  - Métodos `_calculate_sharpe_ratio()` y `_calculate_sortino_ratio()` con cálculo anualizado
+- **TASK-MET-2**: ✅ Risk/Reward Ratio - Ratio promedio por operación (target ≥1:3)
+  - Implementado en: `app/backtesting/metrics.py`
+  - Método `_calculate_risk_reward_ratio()` calcula avg_win / avg_loss
+  - Campo `risk_reward_ratio` añadido a `PerformanceMetrics`
 
 **Costos:**
 
-- **TASK-CST-1**: Ajustar Costos Backtesting - Spreads (0.01-0.03%), comisiones (0.01-0.05%), slippage
-- **TASK-CST-2**: Cálculo Costos Totales - Costos por trade (0.02-0.1% adicional)
+- **TASK-CST-1**: ✅ Ajustar Costos Backtesting - Spreads (0.01-0.03%), comisiones (0.01-0.05%), slippage
+  - Implementado en: `app/backtesting/cost_calculator.py`
+  - Clase `CostCalculator` con spreads dinámicos por tipo de activo
+  - Spreads: 0.01-0.03% para stocks, variables para crypto/forex
+  - Comisiones: 0.01-0.05% según tipo de activo
+  - Slippage dinámico basado en volatilidad, tamaño de orden y liquidez
+- **TASK-CST-2**: ✅ Cálculo Costos Totales - Costos por trade (0.02-0.1% adicional)
+  - Implementado en: `app/backtesting/cost_calculator.py`
+  - Método `calculate_total_cost()` integra spread, comisión, slippage y market impact
+  - Ajuste dinámico de precios de ejecución según condiciones de mercado
+
+**Documentación**: Ver `docs/IMPLEMENTATION_TASKS_BV_MET_CST.md` para detalles completos
 
 **Razón**: Backtesting robusto valida estrategias antes de arriesgar capital real.
 
