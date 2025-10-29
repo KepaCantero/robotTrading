@@ -281,11 +281,14 @@ class MomentumStrategy(BaseStrategy):
 
             # Verificar cash disponible para compras
             if signal.signal_type == SignalType.BUY:
-                required_cash = signal.price * signal.volume
+                # FIX: Use get_position_size() to calculate actual position size and required cash
+                actual_position_size = self.get_position_size(signal, portfolio)
+                required_cash = signal.price * actual_position_size
                 if required_cash > portfolio.cash:
                     logger.info(
                         f"⚠️ MOMENTUM risk_check REJECTED BUY {signal.symbol}: "
-                        f"Insufficient cash (required=${required_cash:.2f} > available=${portfolio.cash:.2f})"
+                        f"Insufficient cash (required=${required_cash:.2f} > available=${portfolio.cash:.2f}, "
+                        f"position_size={actual_position_size:.6f})"
                     )
                     return False
 
@@ -298,10 +301,12 @@ class MomentumStrategy(BaseStrategy):
                         f"No position exists to sell"
                     )
                     return False
-                if existing_position.quantity < signal.volume:
+                # FIX: Use get_position_size() to get actual sell quantity
+                sell_quantity = self.get_position_size(signal, portfolio)
+                if existing_position.quantity < sell_quantity:
                     logger.info(
                         f"⚠️ MOMENTUM risk_check REJECTED SELL {signal.symbol}: "
-                        f"Insufficient position (need={signal.volume:.6f}, have={existing_position.quantity:.6f})"
+                        f"Insufficient position (need={sell_quantity:.6f}, have={existing_position.quantity:.6f})"
                     )
                     return False
 
