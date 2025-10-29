@@ -17,6 +17,10 @@ from app.services.multi_strategy_allocation import (
     MultiStrategyAllocationManager,
     StrategyCapitalAllocation,
 )
+from app.services.portfolio_config_manager import (
+    PortfolioConfigManager,
+    get_portfolio_config_manager,
+)
 from app.strategies.base import BaseStrategy
 
 logger = logging.getLogger(__name__)
@@ -34,6 +38,7 @@ class MultiStrategyBacktester:
         allocation_manager: MultiStrategyAllocationManager,
         strategies: Dict[str, BaseStrategy],
         config_params: Dict,
+        portfolio_config_manager: Optional[PortfolioConfigManager] = None,
     ):
         """
         Initialize multi-strategy backtester.
@@ -42,11 +47,13 @@ class MultiStrategyBacktester:
             allocation_manager: Capital allocation manager
             strategies: Dictionary of strategy instances {name: strategy}
             config_params: Common backtest parameters (commission, slippage, etc.)
+            portfolio_config_manager: Optional portfolio config manager for sector filtering
         """
         self.allocation_manager = allocation_manager
         self.strategies = strategies
         self.config_params = config_params
         self.total_capital = allocation_manager.total_capital
+        self.portfolio_config = portfolio_config_manager or get_portfolio_config_manager()
 
     def run_multi_strategy_backtest(
         self, quotes: List[Quote], start_date: datetime, end_date: datetime
@@ -80,11 +87,22 @@ class MultiStrategyBacktester:
 
             logger.info(f"Backtesting {strategy_name} with ${allocated_capital:,.2f} capital")
 
+            # Filter quotes by sector if configured
+            filtered_quotes = self._filter_quotes_by_strategy(quotes, strategy_name)
+            
+            if filtered_quotes:
+                logger.info(
+                    f"{strategy_name}: Filtered {len(quotes)} quotes to {len(filtered_quotes)} "
+                    f"based on sector configuration"
+                )
+
             # Generate signals for this strategy
             signals = []
-            for quote in quotes:
+            for quote in filtered_quotes:
                 try:
-                    signals.extend(strategy.generate_signals(quote))
+                    # Double-check sector filtering at signal generation
+                    if self.portfolio_config.should_filter_symbol(quote.symbol, strategy_name):
+                        signals.extend(strategy.generate_signals(quote))
                 except Exception as e:
                     logger.debug(f"Signal error for {strategy_name}: {e}")
 
@@ -292,4 +310,28 @@ class MultiStrategyBacktester:
             }
 
         return summary
+
+    def _filter_quotes_by_strategy(
+        self, quotes: List[Quote], strategy_name: str
+    ) -> List[Quote]:
+        """
+        Filter quotes by strategy sector configuration.
+        
+        Args:
+            quotes: List of quotes to filter
+            strategy_name: Name of the strategy
+            
+        Returns:
+            Filtered list of quotes
+        """
+        allowed_symbols = self.portfolio_config.get_strategy_symbols(strategy_name)
+        
+        # If no sectors configured, return all quotes
+        if not allowed_symbols:
+            return quotes
+        
+        # Filter quotes by allowed symbols
+        filtered = [q for q in quotes if q.symbol in allowed_symbols]
+        
+        return filtered
 
