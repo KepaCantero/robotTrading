@@ -11,13 +11,13 @@ parameters:
     - ["JPM", "BAC"]    # Banking pair
     - ["XOM", "CVX"]    # Energy pair (when data available)
   
-  cointegration_threshold: 0.032 # Optimized by Optuna (trial 2, best: -106.52)
-  min_correlation: 0.6 # Higher correlation requirement
+  cointegration_threshold: 0.05 # More permissive (was 0.032)
+  min_correlation: 0.55 # More permissive (was 0.6)
   max_pair_exposure: 0.2
   max_total_exposure: 0.4
-  lookback_period: 31 # Optimized by Optuna
+  lookback_period: 20 # Standard (was 31, too long)
   hedge_ratio_threshold: 0.1
-  spread_threshold: 1.68 # Optimized by Optuna
+  spread_threshold: 1.2 # More permissive (was 1.68)
 
 # Risk parameters
 max_position_size: 0.15

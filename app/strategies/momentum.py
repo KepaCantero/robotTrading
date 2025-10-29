@@ -500,13 +500,18 @@ class MomentumStrategy(BaseStrategy):
         current_price = market_data.close or market_data.last
 
         # Condiciones más robustas:
-        # 1. RSI > 55 (momentum positivo fuerte)
+        # 1. RSI < threshold (oversold - momentum reversal) OR RSI > 55 (momentum positivo fuerte)
         # 2. Precio por encima de EMA (tendencia alcista)
         # 3. Volumen razonable
         # 4. TASK-IND-5: Filtro de volumen dinámico >1.2 para confirmar liquidez
         # 5. TASK-IND-ROC-2: ROC > 0 para confirmar aceleración de precio
         # 6. TASK-IND-OBV-1: OBV "rising" o "neutral" para confirmar buying pressure
-        rsi_positive = rsi > 55
+        # More permissive: RSI oversold (< threshold) OR momentum positive (> 55)
+        rsi_oversold = rsi < float(self.rsi_threshold)  # Buy when oversold
+        rsi_positive = rsi > 55  # OR buy on strong momentum
+        
+        # Use either condition (oversold OR strong momentum)
+        rsi_condition = rsi_oversold or rsi_positive
         ema_bullish = current_price > Decimal(str(ema))
         has_volume = volume_ratio > Decimal(
             "1.2"
@@ -518,7 +523,7 @@ class MomentumStrategy(BaseStrategy):
         # TASK-IND-OBV-1: OBV rising o neutral confirma buying pressure
         obv_bullish = obv_trend is None or obv_trend in ["rising", "neutral"]
 
-        return rsi_positive and ema_bullish and has_volume and roc_positive and obv_bullish
+        return rsi_condition and ema_bullish and has_volume and roc_positive and obv_bullish
 
     def _is_sell_signal(
         self,

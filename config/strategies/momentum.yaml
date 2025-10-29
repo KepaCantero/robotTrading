@@ -5,21 +5,21 @@ weight: 1.0
 
 # Strategy-specific parameters
 parameters:
-  rsi_threshold: 57 # Optimized by Optuna (trial 2, best: -106.52)
-  momentum_threshold: 0.025 # Optimized by Optuna
-  volume_threshold: 1.39 # Optimized by Optuna (rounded from 1.385)
-  ema_period: 36 # Optimized by Optuna
+  rsi_threshold: 45 # More permissive for buy signals (RSI < 45 for oversold, RSI > 55 for overbought)
+  momentum_threshold: 0.015 # More permissive
+  volume_threshold: 1.2 # More permissive (was 1.39)
+  ema_period: 20 # Standard (was 36, too long)
   lookback_period: 14
   min_price_change: 0.01
   max_price_change: 0.1
-  # Volatility filter
-  atr_filter_enabled: true
-  min_atr_threshold: 0.015
+  # Volatility filter - DISABLED for more signals
+  atr_filter_enabled: false # Disabled to generate more signals
+  min_atr_threshold: 0.010 # Lowered if enabled
 
 # Risk parameters
-max_position_size: 0.071 # Optimized by Optuna (7.1%)
-stop_loss_pct: 0.024 # Optimized by Optuna (2.4% global)
-take_profit_pct: 0.1
+max_position_size: 0.10 # More permissive (10%)
+stop_loss_pct: 0.03 # Standard 3%
+take_profit_pct: 0.08 # Standard 8%
 
 # Performance thresholds
 min_sharpe_ratio: 1.2
