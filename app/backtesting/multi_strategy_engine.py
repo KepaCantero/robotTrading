@@ -143,8 +143,10 @@ class MultiStrategyBacktester:
             )
 
             # Run backtest with allocated capital
+            # CRITICAL FIX: Use filtered_quotes, not quotes, so signals match market_data
+            # Signals were generated from filtered_quotes, so market_data must be filtered_quotes too
             backtester = SimpleBacktester(config)
-            result = backtester.run_backtest(quotes, signals, start_date, end_date)
+            result = backtester.run_backtest(filtered_quotes, signals, start_date, end_date)
             results_by_strategy[strategy_name] = result
             
             # Early-abort check: if loss > threshold in first 2 years
