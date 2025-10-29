@@ -517,12 +517,14 @@ class MomentumStrategy(BaseStrategy):
             "1.2"
         )  # TASK-IND-5: volume_ratio > 1.2 para liquidez confirmada
         
-        # TASK-IND-ROC-2: ROC positivo confirma aceleración alcista
-        roc_positive = roc is not None and roc > 0
+        # FIX: Make ROC and OBV optional (not required) to generate more signals
+        # TASK-IND-ROC-2: ROC positivo confirma aceleración alcista (optional)
+        roc_positive = roc is None or roc > 0  # Allow if ROC is None or positive
         
-        # TASK-IND-OBV-1: OBV rising o neutral confirma buying pressure
+        # TASK-IND-OBV-1: OBV rising o neutral confirma buying pressure (optional)
         obv_bullish = obv_trend is None or obv_trend in ["rising", "neutral"]
 
+        # FIX: Core conditions: RSI + EMA + Volume (ROC and OBV are nice-to-have)
         return rsi_condition and ema_bullish and has_volume and roc_positive and obv_bullish
 
     def _is_sell_signal(
