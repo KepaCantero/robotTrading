@@ -113,10 +113,19 @@ class MeanReversionStrategy(BaseStrategy):
                 self._call_count = 0
             self._call_count += 1
             
-            if self._call_count % 50 == 0:  # Log every 50th call
+            # Log ALL candidates (every call) at DEBUG level
+            logger.debug(
+                f"🔍 MEAN_REVERSION CANDIDATE {market_data.symbol}: "
+                f"price={current_price:.2f}, price_change={price_change_pct:.2f}%, "
+                f"z_score={z_score:.4f}, volatility={volatility:.4f}, "
+                f"threshold={self.z_score_threshold}, history_len={len(self.price_history)}"
+            )
+            
+            # More frequent logging (every 10 calls) for INFO level
+            if self._call_count % 10 == 0:
                 logger.info(
-                    f"MEAN_REVERSION {market_data.symbol}: price={current_price:.2f}, "
-                    f"price_change={price_change_pct:.2f}%, z_score={z_score:.4f}, "
+                    f"🔍 MEAN_REVERSION {market_data.symbol}: "
+                    f"price={current_price:.2f}, z_score={z_score:.4f}, "
                     f"volatility={volatility:.4f}, threshold={self.z_score_threshold}"
                 )
             
@@ -124,10 +133,17 @@ class MeanReversionStrategy(BaseStrategy):
             buy_condition = self._is_buy_signal(z_score, volatility, market_data)
             sell_condition = self._is_sell_signal(z_score, volatility, market_data)
             
-            # Logging cuando condiciones son True
+            # Log ALL candidates when conditions are checked
+            logger.debug(
+                f"🔍 MEAN_REVERSION CONDITIONS {market_data.symbol}: "
+                f"buy_condition={buy_condition}, sell_condition={sell_condition}, "
+                f"z_score={z_score:.4f}, price={current_price:.2f}"
+            )
+            
+            # Logging cuando condiciones son True (INFO level)
             if buy_condition or sell_condition:
                 logger.info(
-                    f"MEAN_REVERSION {market_data.symbol}: z_score={z_score:.4f}, "
+                    f"✅ MEAN_REVERSION CONDITIONS MET {market_data.symbol}: z_score={z_score:.4f}, "
                     f"volatility={volatility:.4f}, BUY={buy_condition}, SELL={sell_condition}"
                 )
 

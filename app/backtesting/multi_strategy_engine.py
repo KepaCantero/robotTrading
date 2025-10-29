@@ -122,17 +122,30 @@ class MultiStrategyBacktester:
                     
                     candidate_signals = strategy.generate_signals(quote)
                     
+                    # Log ALL candidates generated (even if empty)
                     if candidate_signals:
                         quotes_with_signals += 1
-                    
-                    # Log signal candidates for diagnostics
-                    if self.diagnostic_logger:
                         for sig in candidate_signals:
-                            self.diagnostic_logger.log_signal_candidate(
-                                strategy_name,
-                                quote.symbol,
-                                sig.signal_type.value if hasattr(sig.signal_type, 'value') else str(sig.signal_type),
-                                sig.metadata if hasattr(sig, 'metadata') else {},
+                            logger.info(
+                                f"📊 {strategy_name.upper()} CANDIDATE GENERATED: "
+                                f"{sig.symbol} {sig.signal_type.value if hasattr(sig.signal_type, 'value') else str(sig.signal_type)} "
+                                f"at {sig.timestamp} (price={sig.price:.2f})"
+                            )
+                            # Log signal candidates for diagnostics
+                            if self.diagnostic_logger:
+                                self.diagnostic_logger.log_signal_candidate(
+                                    strategy_name,
+                                    quote.symbol,
+                                    sig.signal_type.value if hasattr(sig.signal_type, 'value') else str(sig.signal_type),
+                                    sig.metadata if hasattr(sig, 'metadata') else {},
+                                )
+                    else:
+                        # Log when no signals generated (every 100 quotes to avoid spam)
+                        if quotes_processed % 100 == 0:
+                            logger.debug(
+                                f"📊 {strategy_name.upper()} NO CANDIDATES: "
+                                f"{quote.symbol} at {quote.timestamp} "
+                                f"(quotes_processed={quotes_processed})"
                             )
                     
                     signals.extend(candidate_signals)
