@@ -192,12 +192,11 @@ class MultiStrategyOptimizerV2:
             # Create allocation manager
             allocation_manager = MultiStrategyAllocationManager(
                 total_capital=self.total_capital,
-                strategy_weights={
-                    "momentum": Decimal("0.50"),
-                    "mean_reversion": Decimal("0.25"),
-                    "pairs_trading": Decimal("0.25"),
-                },
             )
+            # Set strategy weights
+            allocation_manager.set_strategy_weight("momentum", Decimal("0.50"))
+            allocation_manager.set_strategy_weight("mean_reversion", Decimal("0.25"))
+            allocation_manager.set_strategy_weight("pairs_trading", Decimal("0.25"))
             
             # Config params
             config_params = {
