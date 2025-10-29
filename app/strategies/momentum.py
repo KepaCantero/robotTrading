@@ -220,8 +220,9 @@ class MomentumStrategy(BaseStrategy):
                         self.last_signal_bar_index = self.current_bar_index
                         self.last_signal_type = "buy"
                         logger.info(
-                            f"✅ Generated BUY signal for {market_data.symbol}: RSI={rsi:.2f}, EMA={ema:.2f}, "
-                            f"price={current_price:.2f}, volume={volume_ratio:.2f}"
+                            f"✅ MOMENTUM Generated BUY signal for {market_data.symbol}: "
+                            f"RSI={rsi:.2f}, EMA={ema:.2f}, price={current_price:.2f}, "
+                            f"volume_ratio={volume_ratio:.2f}, ROC={roc_safe:.2f}, OBV={obv_trend}"
                         )
 
                     # Generar señal de venta con condiciones robustas (changed from elif to if)
@@ -231,16 +232,19 @@ class MomentumStrategy(BaseStrategy):
                         self.last_signal_bar_index = self.current_bar_index
                         self.last_signal_type = "sell"
                         logger.info(
-                            f"✅ Generated SELL signal for {market_data.symbol}: RSI={rsi:.2f}, EMA={ema:.2f}, "
-                            f"price={current_price:.2f}, volume={volume_ratio:.2f}"
+                            f"✅ MOMENTUM Generated SELL signal for {market_data.symbol}: "
+                            f"RSI={rsi:.2f}, EMA={ema:.2f}, price={current_price:.2f}, "
+                            f"volume_ratio={volume_ratio:.2f}, ROC={roc_safe:.2f}, OBV={obv_trend}"
                         )
                 else:
-                    logger.debug("Signal suppressed by ATR filter")
+                    if self.current_bar_index % 100 == 0:  # Log periodically
+                        logger.debug(f"MOMENTUM {market_data.symbol}: Signal suppressed by ATR filter")
             else:
-                logger.debug("Signal suppressed due to cooldown period")
+                if self.current_bar_index % 100 == 0:  # Log periodically
+                    logger.debug(f"MOMENTUM {market_data.symbol}: Signal suppressed due to cooldown period")
 
         except Exception as e:
-            logger.error(f"Error generating signals for {market_data.symbol}: {e}")
+            logger.error(f"MOMENTUM Error generating signals for {market_data.symbol}: {e}", exc_info=True)
 
         # TASK-SC-5: Process signals through Signal Scoring Engine
         # NOTE: Cooldown is managed internally by the strategy's cooldown logic

@@ -131,6 +131,17 @@ class PairsTradingStrategy(BaseStrategy):
         try:
             # Verificar si el símbolo es parte del par
             if market_data.symbol not in self.pair_symbols:
+                # Logging periódico para ver qué símbolos se están procesando
+                if not hasattr(self, '_symbol_log_count'):
+                    self._symbol_log_count = {}
+                if market_data.symbol not in self._symbol_log_count:
+                    self._symbol_log_count[market_data.symbol] = 0
+                self._symbol_log_count[market_data.symbol] += 1
+                
+                if self._symbol_log_count[market_data.symbol] % 100 == 0:
+                    logger.debug(
+                        f"PAIRS_TRADING {market_data.symbol}: Not part of pair {self.pair_symbols}"
+                    )
                 return signals
 
             # Calcular spread real entre los activos del par
@@ -141,21 +152,45 @@ class PairsTradingStrategy(BaseStrategy):
             
             # Calcular score de cointegración (para logging)
             cointegration_score = self._calculate_cointegration_score(market_data)
+            
+            # Logging de diagnóstico (INFO level periódico)
+            current_price = market_data.close or market_data.last
+            spread_abs = abs(spread)
+            spread_threshold_half = Decimal(str(self.spread_threshold)) / Decimal("2")
+            
+            if not hasattr(self, '_call_count'):
+                self._call_count = 0
+            self._call_count += 1
+            
+            if self._call_count % 50 == 0:  # Log every 50th call
+                logger.info(
+                    f"PAIRS_TRADING {market_data.symbol}: price={current_price:.2f}, "
+                    f"spread={spread:.4f} (abs={spread_abs:.4f}), threshold={spread_threshold_half:.4f}, "
+                    f"correlation={correlation:.4f}, cointegration={cointegration_score:.4f}, "
+                    f"pair={self.pair_symbols}"
+                )
 
             # FIX: More permissive - generate signals if spread is significant enough
             # Lowered threshold check, rely on actual spread calculation
-            spread_abs = abs(spread)
-            if spread_abs > Decimal(str(self.spread_threshold)) / Decimal("2"):  # Half threshold for more signals
+            if spread_abs > spread_threshold_half:  # Half threshold for more signals
                 # Generate signals for both sides of the pair
                 pair_signals = self._create_pair_signals(market_data, spread)
                 signals.extend(pair_signals)
-                logger.debug(
-                    f"Generated {len(pair_signals)} pair signals for {market_data.symbol} "
-                    f"(spread: {spread:.4f}, correlation: {correlation:.2f})"
+                logger.info(
+                    f"✅ PAIRS_TRADING Generated {len(pair_signals)} pair signals for {market_data.symbol}: "
+                    f"spread={spread:.4f} (abs={spread_abs:.4f}), correlation={correlation:.4f}, "
+                    f"cointegration={cointegration_score:.4f}"
                 )
+            else:
+                # Logging cuando spread no es suficiente (cada cierto tiempo)
+                if self._call_count % 200 == 0:
+                    logger.debug(
+                        f"PAIRS_TRADING {market_data.symbol}: Spread too small "
+                        f"({spread_abs:.4f} <= {spread_threshold_half:.4f})"
+                    )
 
         except Exception as e:
-            logger.error(f"Error generating signals for {market_data.symbol}: {e}")
+            logger.error(f"PAIRS_TRADING Error generating signals for {market_data.symbol}: {e}", exc_info=True)
 
         return signals
 
