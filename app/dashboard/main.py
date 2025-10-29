@@ -484,26 +484,14 @@ if execute_button:
                 # Generate unique ID
                 backtest_id = f"{selected_module}_{selected_strategy}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
                 
-                # Save JSON results
+                # Save JSON results FIRST
                 results_dir = project_root / "docs" / "BACKTEST_RESULTS" / "multi_strategy"
+                results_dir.mkdir(parents=True, exist_ok=True)
                 json_file = save_multi_strategy_results(consolidated, results_dir, backtest_id)
-                
-                # Generate markdown summary
-                summary_text = generate_multi_strategy_summary_text(consolidated)
-                
-                # Display summary in dashboard
-                st.markdown("## 📊 Multi-Strategy Results")
-                st.markdown(summary_text)
-                
-                # Also display as JSON
-                with st.expander("📄 View JSON Results"):
-                    import json
-                    with open(json_file, "r") as f:
-                        st.json(json.load(f))
                 
                 st.success(f"✅ Results saved to {json_file}")
                 
-                # Generate backend test summary for multi-strategy
+                # Generate backend test summary for multi-strategy (BEFORE displaying)
                 # Get all symbols for summary
                 portfolio_symbols = ", ".join(portfolio_summary['all_symbols'][:5])
                 if len(portfolio_summary['all_symbols']) > 5:
@@ -521,7 +509,33 @@ if execute_button:
                     multi_strategy_results=consolidated,
                 )
                 
+                # NOW display summary AFTER everything is saved and generated
+                st.markdown("---")
+                st.markdown("## 📊 Multi-Strategy Results")
+                
+                # Generate markdown summary
+                summary_text = generate_multi_strategy_summary_text(consolidated)
+                st.markdown(summary_text)
+                
+                # Also display as JSON
+                with st.expander("📄 View JSON Results"):
+                    import json
+                    with open(json_file, "r") as f:
+                        st.json(json.load(f))
+                
+                # Show backend test summary link
+                st.markdown("---")
                 st.info(f"📄 Backend test summary generated: {summary_file}")
+                with st.expander("📥 Download Backend Test Summary"):
+                    with open(summary_file, "r") as f:
+                        summary_content = f.read()
+                    st.download_button(
+                        label="📥 Download Backend Test Summary",
+                        data=summary_content,
+                        file_name=summary_file.name,
+                        mime="text/markdown",
+                    )
+                
                 st.stop()
             
             # Single strategy mode (existing behavior)
