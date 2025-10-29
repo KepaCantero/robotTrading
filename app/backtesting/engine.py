@@ -89,11 +89,22 @@ class SimpleBacktester:
         market_data.sort(key=lambda x: x.timestamp)
         signals.sort(key=lambda x: x.timestamp)
 
+        logger.info(f"📊 Backtest starting: {len(market_data)} market_data points, {len(signals)} signals")
+        if signals:
+            logger.debug(f"Signal time range: {signals[0].timestamp} to {signals[-1].timestamp}")
+            logger.debug(f"Market data time range: {market_data[0].timestamp} to {market_data[-1].timestamp}")
+            # Sample first few signals
+            for i, sig in enumerate(signals[:5]):
+                logger.debug(f"Sample signal {i}: {sig.symbol} {sig.signal_type} at {sig.timestamp}, strategy={sig.metadata.get('strategy', 'N/A') if sig.metadata else 'N/A'}")
+
         # Initialize backtest
         self._reset_backtest()
 
         # Process each market data point
         signal_index = 0
+        signals_processed = 0
+        signals_matched = 0
+        signals_skipped = 0
         for md in market_data:
             # Update equity curve
             self._update_equity_curve(md.timestamp)
@@ -109,8 +120,11 @@ class SimpleBacktester:
                 # Process signal if:
                 # 1. Symbol matches exactly
                 # 2. Signal timestamp is before or equal to market_data timestamp (within 1 day tolerance)
+                signals_processed += 1
                 if signal.symbol == md.symbol and time_diff >= -86400 and time_diff <= 86400:
-                    logger.debug(f"Processing signal: {signal.symbol} {signal.signal_type} at {md.timestamp}")
+                    signals_matched += 1
+                    strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
+                    logger.debug(f"✅ MATCHED signal: {signal.symbol} {signal.signal_type} (strategy={strategy_name}) at {md.timestamp}, time_diff={time_diff:.0f}s")
                     self._process_signal(signal, md)
                     signal_index += 1
                 elif signal.timestamp > md.timestamp:
@@ -118,10 +132,14 @@ class SimpleBacktester:
                     break
                 else:
                     # Signal symbol doesn't match or too old, skip it
+                    signals_skipped += 1
+                    strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
                     if signal.symbol != md.symbol:
-                        logger.debug(f"Skipping signal: symbol mismatch {signal.symbol} != {md.symbol}")
+                        if signals_skipped <= 10:  # Log first 10 mismatches to avoid spam
+                            logger.debug(f"❌ SKIP: symbol mismatch {signal.symbol} != {md.symbol} (strategy={strategy_name}, time_diff={time_diff:.0f}s)")
                     elif abs(time_diff) > 86400:
-                        logger.debug(f"Skipping signal: timestamp too far {time_diff}s")
+                        if signals_skipped <= 10:  # Log first 10 mismatches
+                            logger.debug(f"❌ SKIP: timestamp too far {time_diff:.0f}s (strategy={strategy_name}, signal={signal.timestamp}, md={md.timestamp})")
                     signal_index += 1
 
             # Check for stop loss / take profit
@@ -129,6 +147,8 @@ class SimpleBacktester:
 
         # Close any remaining positions
         self._close_all_positions(market_data[-1])
+
+        logger.info(f"📊 Backtest matching stats: {signals_processed} processed, {signals_matched} matched, {signals_skipped} skipped, {len(self.trades)} trades executed")
 
         # Calculate final metrics
         performance = self._calculate_performance_metrics()
