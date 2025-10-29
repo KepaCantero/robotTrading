@@ -174,16 +174,13 @@ class PairsTradingStrategy(BaseStrategy):
             self._call_count += 1
             
             # Log ALL candidates (every call) at DEBUG level
-            # Check if we have data for both pairs
-            pair_data_available = (
-                len(self.price_history.get(self.pair_symbols[0], [])) > 0 and
-                len(self.price_history.get(self.pair_symbols[1], [])) > 0
-            ) if len(self.pair_symbols) == 2 else False
+            # Check if symbol is part of pair
+            is_pair_symbol = market_data.symbol in self.pair_symbols
             
             logger.debug(
                 f"🔍 PAIRS_TRADING CANDIDATE {market_data.symbol}: "
-                f"price={current_price:.2f}, part_of_pair={market_data.symbol in self.pair_symbols}, "
-                f"pair_data_available={pair_data_available}, call_count={self._call_count}"
+                f"price={current_price:.2f}, part_of_pair={is_pair_symbol}, "
+                f"pair_symbols={self.pair_symbols}, call_count={self._call_count}"
             )
             
             if self._call_count % 10 == 0:  # Log every 10th call at INFO level
