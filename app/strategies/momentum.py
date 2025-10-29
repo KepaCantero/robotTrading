@@ -181,9 +181,9 @@ class MomentumStrategy(BaseStrategy):
 
             # Verificar cooldown
             if not self._is_cooldown_active(market_data):
-                # TASK-IND-STOCH-2: Filtrar falsas señales con Stochastic RSI
-                # NEW: ATR volatility filter to avoid choppy markets
-                if self._should_generate_signal(stoch_rsi, stoch_rsi_signal) and self._passes_atr_filter():
+                # FIX: Simplified logic - only check ATR filter if enabled, otherwise generate signals
+                # Stochastic RSI check is too restrictive, removed for more signals
+                if self._passes_atr_filter():
                     # Generar señal de compra con condiciones robustas
                     if self._is_buy_signal(rsi, ema, volume_ratio, roc, obv_trend, market_data):
                         signal = self._create_buy_signal(market_data, rsi, ema, volume_ratio, roc)
@@ -204,7 +204,7 @@ class MomentumStrategy(BaseStrategy):
                             f"Generated SELL signal for {market_data.symbol}: RSI={rsi:.2f}, EMA={ema:.2f}, ROC={roc_safe:.2f}, OBV={obv_trend}, StochRSI={stoch_rsi_safe:.2f}"
                         )
                 else:
-                    logger.debug("Signal suppressed by Stochastic RSI filter")
+                    logger.debug("Signal suppressed by ATR filter")
             else:
                 logger.debug("Signal suppressed due to cooldown period")
 

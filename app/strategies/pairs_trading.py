@@ -142,17 +142,17 @@ class PairsTradingStrategy(BaseStrategy):
             # Calcular score de cointegración (para logging)
             cointegration_score = self._calculate_cointegration_score(market_data)
 
-            # Determinar si generar señal basada en spread real
-            # ONLY generate signals if proper pair conditions are met
-            if self._is_spread_signal(spread, correlation, cointegration_score, market_data):
-                # Generar señales balanceadas para el par
+            # FIX: More permissive - generate signals if spread is significant enough
+            # Lowered threshold check, rely on actual spread calculation
+            spread_abs = abs(spread)
+            if spread_abs > Decimal(str(self.spread_threshold)) / Decimal("2"):  # Half threshold for more signals
+                # Generate signals for both sides of the pair
                 pair_signals = self._create_pair_signals(market_data, spread)
                 signals.extend(pair_signals)
                 logger.debug(
                     f"Generated {len(pair_signals)} pair signals for {market_data.symbol} "
                     f"(spread: {spread:.4f}, correlation: {correlation:.2f})"
                 )
-            # Removed destructive fallback - if no valid pair conditions, return empty list
 
         except Exception as e:
             logger.error(f"Error generating signals for {market_data.symbol}: {e}")
