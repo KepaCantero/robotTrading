@@ -19,6 +19,9 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
+# IMPORTANT: Import logging_config FIRST to ensure all warnings/errors go to files
+from app.core.logging_config import setup_file_logging
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -42,8 +45,7 @@ from app.strategies.mean_reversion import MeanReversionStrategy
 from app.strategies.momentum import MomentumStrategy
 from app.strategies.pairs_trading import PairsTradingStrategy
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Logging is already configured by logging_config module
 logger = logging.getLogger(__name__)
 
 # Page configuration
