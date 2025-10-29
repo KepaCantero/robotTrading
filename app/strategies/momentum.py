@@ -192,10 +192,22 @@ class MomentumStrategy(BaseStrategy):
             
             # Log diagnostic info BEFORE checking conditions (INFO level for visibility)
             current_price = market_data.close or market_data.last
-            if self.current_bar_index % 50 == 0:  # Log every 50th bar to see what's happening
+            
+            # Log ALL candidates (every bar) to track what's being evaluated
+            logger.debug(
+                f"🔍 MOMENTUM CANDIDATE {market_data.symbol}: "
+                f"RSI={rsi:.2f}, price={current_price:.2f}, EMA={ema:.2f}, "
+                f"volume_ratio={volume_ratio:.2f}, ROC={roc_safe:.2f}, OBV={obv_trend}, "
+                f"ATR_filter={atr_filter_passed}, cooldown={cooldown_active}, bar_index={self.current_bar_index}"
+            )
+            
+            # More frequent logging (every 10 bars) for INFO level
+            if self.current_bar_index % 10 == 0:
                 logger.info(
-                    f"MOMENTUM {market_data.symbol}: RSI={rsi:.2f}, price={current_price:.2f}, EMA={ema:.2f}, "
-                    f"volume_ratio={volume_ratio:.2f}, cooldown={cooldown_active}, atr_filter={atr_filter_passed}"
+                    f"🔍 MOMENTUM {market_data.symbol}: "
+                    f"RSI={rsi:.2f}, price={current_price:.2f}, EMA={ema:.2f}, "
+                    f"volume_ratio={volume_ratio:.2f}, ROC={roc_safe:.2f}, OBV={obv_trend}, "
+                    f"ATR_filter={atr_filter_passed}"
                 )
             
             if not cooldown_active:
@@ -239,10 +251,11 @@ class MomentumStrategy(BaseStrategy):
                         )
                 else:
                     # Log ALL ATR filter rejections
+                    current_atr = self.atr_history[-1] if self.atr_history else None
                     logger.debug(
                         f"❌ MOMENTUM CANDIDATE REJECTED {market_data.symbol}: "
-                        f"ATR filter failed (ATR={atr_value:.4f if atr_value else 'N/A'}, "
-                        f"price_change={abs(price_change):.4f}, threshold={atr_threshold:.4f})"
+                        f"ATR filter failed (ATR={current_atr:.4f if current_atr else 'N/A'}, "
+                        f"threshold={self.min_atr_threshold:.4f}, enabled={self.atr_filter_enabled})"
                     )
             else:
                 # Log ALL cooldown rejections
