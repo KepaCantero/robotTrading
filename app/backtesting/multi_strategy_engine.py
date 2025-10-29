@@ -184,7 +184,8 @@ class MultiStrategyBacktester:
             # Run backtest with allocated capital
             # CRITICAL FIX: Use filtered_quotes, not quotes, so signals match market_data
             # Signals were generated from filtered_quotes, so market_data must be filtered_quotes too
-            backtester = SimpleBacktester(config, diagnostic_logger=self.diagnostic_logger)
+            # CRITICAL: Pass strategy instance so risk_check can be applied
+            backtester = SimpleBacktester(config, diagnostic_logger=self.diagnostic_logger, strategy=strategy)
             result = backtester.run_backtest(filtered_quotes, signals, start_date, end_date)
             results_by_strategy[strategy_name] = result
             

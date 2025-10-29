@@ -21,6 +21,7 @@ from app.backtesting.models import (
     Trade,
     TradeStatus,
 )
+from app.models.portfolio import AssetClass, Portfolio, Position
 from app.models.signal import Signal, SignalType
 
 
@@ -46,8 +47,15 @@ class SimpleBacktester:
     commission, and risk management parameters.
     """
 
-    def __init__(self, config: BacktestConfig, diagnostic_logger=None):
-        """Initialize the backtesting engine."""
+    def __init__(self, config: BacktestConfig, diagnostic_logger=None, strategy=None):
+        """
+        Initialize the backtesting engine.
+        
+        Args:
+            config: Backtest configuration
+            diagnostic_logger: Optional diagnostic logger
+            strategy: Strategy instance for risk_check (optional but required for risk checking)
+        """
         self.config = config
         self.capital = config.initial_capital
         self.positions: Dict[str, Decimal] = {}  # symbol -> quantity
@@ -56,6 +64,7 @@ class SimpleBacktester:
         self.max_drawdown = Decimal("0")
         self.diagnostic_logger = diagnostic_logger
         self.peak_equity = config.initial_capital
+        self.strategy = strategy  # Strategy instance for risk_check
 
     def run_backtest(
         self,
@@ -208,9 +217,121 @@ class SimpleBacktester:
         self.max_drawdown = Decimal("0")
         self.peak_equity = self.config.initial_capital
 
+    def _create_portfolio_from_state(self, current_price_func=None):
+        """
+        Create a Portfolio object from current backtesting state.
+        
+        Args:
+            current_price_func: Optional function to get current price for a symbol
+        
+        Returns:
+            Portfolio object
+        """
+        
+        positions = []
+        
+        # Convert backtester positions to Portfolio Position objects
+        for symbol, quantity in self.positions.items():
+            if quantity == 0:
+                continue
+                
+            # Get current price (use market price if available)
+            if current_price_func:
+                market_price = current_price_func(symbol)
+            else:
+                # Try to get price from most recent trade for this symbol
+                market_price = Decimal("100")  # Default fallback
+                for trade in reversed(self.trades):
+                    if trade.symbol == symbol:
+                        market_price = trade.entry_price
+                        break
+            
+            # Get average entry price from open trades
+            avg_price = market_price  # Default to market price
+            buy_trades = [
+                t for t in self.trades
+                if t.symbol == symbol and t.side == "buy" and t.status == TradeStatus.OPEN
+            ]
+            if buy_trades:
+                total_qty = sum(t.quantity for t in buy_trades)
+                total_cost = sum(t.quantity * t.entry_price for t in buy_trades)
+                if total_qty > 0:
+                    avg_price = total_cost / total_qty
+            
+            # Calculate unrealized PnL
+            unrealized_pnl = (market_price - avg_price) * quantity
+            
+            position = Position(
+                symbol=symbol,
+                asset_class=AssetClass.EQUITY,
+                quantity=quantity,
+                avg_price=avg_price,
+                market_price=market_price,
+                unrealized_pnl=unrealized_pnl,
+                realized_pnl=Decimal("0"),
+                currency="USD",
+                broker="backtester",
+            )
+            positions.append(position)
+        
+        portfolio = Portfolio(
+            portfolio_id="backtest_portfolio",
+            cash=self.capital,
+            positions=positions,
+            timestamp=datetime.utcnow(),
+            broker="backtester",
+            currency="USD",
+        )
+        
+        return portfolio
+
     def _process_signal(self, signal: Signal, market_data: Any):
-        """Process a trading signal."""
+        """Process a trading signal with risk_check if strategy is available."""
         strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
+        
+        # CRITICAL: Apply risk_check if strategy is available
+        if self.strategy:
+            try:
+                # Create a Portfolio object from current state for risk_check
+                # Use current_price from market_data for accurate portfolio valuation
+                current_price = get_price(market_data)
+                portfolio = self._create_portfolio_from_state(
+                    current_price_func=lambda s: current_price if s == signal.symbol else Decimal("100")
+                )
+                
+                # Apply risk_check
+                if not self.strategy.risk_check(signal, portfolio):
+                    logger.info(f"⚠️ REJECTED {signal.signal_type} {signal.symbol} (strategy={strategy_name}): Risk check failed")
+                    # Log rejection to diagnostic logger
+                    if self.diagnostic_logger:
+                        signal_type_str = signal.signal_type.value if hasattr(signal.signal_type, 'value') else str(signal.signal_type)
+                        self.diagnostic_logger.log_signal_rejected(
+                            strategy_name,
+                            signal.symbol,
+                            signal_type_str,
+                            "Risk check failed",
+                            signal.metadata if hasattr(signal, 'metadata') else {},
+                        )
+                    return
+                else:
+                    logger.debug(f"✅ PASSED risk_check: {signal.signal_type} {signal.symbol} (strategy={strategy_name})")
+            except Exception as e:
+                logger.error(f"❌ ERROR in risk_check for {signal.symbol} (strategy={strategy_name}): {e}", exc_info=True)
+                # On error, reject the signal for safety
+                if self.diagnostic_logger:
+                    signal_type_str = signal.signal_type.value if hasattr(signal.signal_type, 'value') else str(signal.signal_type)
+                    self.diagnostic_logger.log_signal_rejected(
+                        strategy_name,
+                        signal.symbol,
+                        signal_type_str,
+                        f"Risk check error: {str(e)}",
+                        signal.metadata if hasattr(signal, 'metadata') else {},
+                    )
+                return
+        else:
+            logger.warning(f"⚠️ No strategy provided, skipping risk_check for {signal.symbol} (strategy={strategy_name})")
+        
+        # Execute signal if risk_check passes
         if signal.signal_type == SignalType.BUY:
             logger.info(f"🔄 Processing BUY signal for {signal.symbol} (strategy={strategy_name})")
             self._execute_buy_signal(signal, market_data)
