@@ -12,9 +12,12 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import logging
 import yaml
 from pydantic import BaseModel, Field, field_validator
 from pydantic_settings import BaseSettings
+
+logger = logging.getLogger(__name__)
 
 
 class Environment(str, Enum):
@@ -475,7 +478,7 @@ class CentralizedConfig(BaseSettings):
                     strategy_config = StrategyConfig(**strategy_data)
                     self.strategies[strategy_name] = strategy_config
                 except Exception as e:
-                    print(f"Warning: Could not load strategy config from {strategy_file}: {e}")
+                    logger.warning(f"Could not load strategy config from {strategy_file}: {e}")
 
     def get_strategy_config(self, strategy_name: str) -> Optional[StrategyConfig]:
         """Get configuration for a specific strategy."""

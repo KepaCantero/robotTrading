@@ -410,4 +410,4 @@ async def _store_optimization_result(
         pass
     except Exception as e:
         # Log error but don't raise exception in background task
-        print(f"Error storing optimization result: {str(e)}")
+        logger.error(f"Error storing optimization result: {str(e)}")
