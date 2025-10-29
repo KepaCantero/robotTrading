@@ -16,7 +16,14 @@ Sistema de optimización bayesiana que ajusta parámetros de las tres estrategia
 ### Instalación de Dependencias
 
 ```bash
-pip install optuna plotly kaleido  # Para visualizaciones
+# Instalar todas las dependencias del proyecto
+pip install -r requirements.txt
+
+# Para desarrollo (incluye visualizaciones y herramientas de testing)
+pip install -r requirements-dev.txt
+
+# Solo para optimización y visualizaciones
+pip install optuna plotly kaleido
 ```
 
 ### Ejecutar Optimización
@@ -71,6 +78,7 @@ python scripts/optimize_multi_strategy.py --symbol AAPL --storage sqlite:///opti
 ## 🎯 Métricas Objetivo
 
 ### Sharpe Ratio (default)
+
 Maximiza el ratio de Sharpe combinado ponderado por capital:
 
 ```python
@@ -78,9 +86,11 @@ weighted_sharpe = Σ(strategy_sharpe × strategy_weight)
 ```
 
 ### Total Return
+
 Maximiza el retorno total combinado del portfolio.
 
 ### Calmar Ratio
+
 Ratio de retorno anualizado vs. máximo drawdown:
 
 ```python
@@ -202,5 +212,4 @@ elif self.objective_metric == "sortino":
 
 ---
 
-*Última actualización: 2025-10-28*
-
+_Última actualización: 2025-10-28_
