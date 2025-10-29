@@ -101,26 +101,25 @@ class MultiStrategyBacktester:
                 )
 
             # Generate signals for this strategy
+            # Note: filtered_quotes already contains only symbols allowed for this strategy
             signals = []
             for quote in filtered_quotes:
                 try:
-                    # Double-check sector filtering at signal generation
-                    if self.portfolio_config.should_filter_symbol(quote.symbol, strategy_name):
-                        candidate_signals = strategy.generate_signals(quote)
-                        
-                        # Log signal candidates for diagnostics
-                        if self.diagnostic_logger:
-                            for sig in candidate_signals:
-                                self.diagnostic_logger.log_signal_candidate(
-                                    strategy_name,
-                                    quote.symbol,
-                                    sig.signal_type.value if hasattr(sig.signal_type, 'value') else str(sig.signal_type),
-                                    sig.metadata if hasattr(sig, 'metadata') else {},
-                                )
-                        
-                        signals.extend(candidate_signals)
+                    candidate_signals = strategy.generate_signals(quote)
+                    
+                    # Log signal candidates for diagnostics
+                    if self.diagnostic_logger:
+                        for sig in candidate_signals:
+                            self.diagnostic_logger.log_signal_candidate(
+                                strategy_name,
+                                quote.symbol,
+                                sig.signal_type.value if hasattr(sig.signal_type, 'value') else str(sig.signal_type),
+                                sig.metadata if hasattr(sig, 'metadata') else {},
+                            )
+                    
+                    signals.extend(candidate_signals)
                 except Exception as e:
-                    logger.debug(f"Signal error for {strategy_name}: {e}")
+                    logger.debug(f"Signal error for {strategy_name} on {quote.symbol}: {e}")
 
             signals_by_strategy[strategy_name] = signals
 
