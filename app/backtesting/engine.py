@@ -105,6 +105,9 @@ class SimpleBacktester:
         signals_processed = 0
         signals_matched = 0
         signals_skipped = 0
+        # Track matching stats by strategy
+        strategy_stats = {}  # strategy_name -> {matched, skipped, symbol_mismatch, time_mismatch}
+        
         for md in market_data:
             # Update equity curve
             self._update_equity_curve(md.timestamp)
@@ -113,6 +116,11 @@ class SimpleBacktester:
             # FIX: More flexible matching - allow signals within 1 day and exact symbol match
             while signal_index < len(signals):
                 signal = signals[signal_index]
+                strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
+                
+                # Initialize strategy stats
+                if strategy_name not in strategy_stats:
+                    strategy_stats[strategy_name] = {"matched": 0, "skipped": 0, "symbol_mismatch": 0, "time_mismatch": 0}
                 
                 # Allow signals up to 1 day in the past (signals are generated on market data)
                 time_diff = (md.timestamp - signal.timestamp).total_seconds()
@@ -123,7 +131,7 @@ class SimpleBacktester:
                 signals_processed += 1
                 if signal.symbol == md.symbol and time_diff >= -86400 and time_diff <= 86400:
                     signals_matched += 1
-                    strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
+                    strategy_stats[strategy_name]["matched"] += 1
                     logger.debug(f"✅ MATCHED signal: {signal.symbol} {signal.signal_type} (strategy={strategy_name}) at {md.timestamp}, time_diff={time_diff:.0f}s")
                     self._process_signal(signal, md)
                     signal_index += 1
@@ -133,13 +141,15 @@ class SimpleBacktester:
                 else:
                     # Signal symbol doesn't match or too old, skip it
                     signals_skipped += 1
-                    strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
+                    strategy_stats[strategy_name]["skipped"] += 1
                     if signal.symbol != md.symbol:
-                        if signals_skipped <= 10:  # Log first 10 mismatches to avoid spam
-                            logger.debug(f"❌ SKIP: symbol mismatch {signal.symbol} != {md.symbol} (strategy={strategy_name}, time_diff={time_diff:.0f}s)")
+                        strategy_stats[strategy_name]["symbol_mismatch"] += 1
+                        if signals_skipped <= 10 or strategy_name == "momentum":  # Always log Momentum mismatches
+                            logger.info(f"❌ SKIP: symbol mismatch {signal.symbol} != {md.symbol} (strategy={strategy_name}, time_diff={time_diff:.0f}s)")
                     elif abs(time_diff) > 86400:
-                        if signals_skipped <= 10:  # Log first 10 mismatches
-                            logger.debug(f"❌ SKIP: timestamp too far {time_diff:.0f}s (strategy={strategy_name}, signal={signal.timestamp}, md={md.timestamp})")
+                        strategy_stats[strategy_name]["time_mismatch"] += 1
+                        if signals_skipped <= 10 or strategy_name == "momentum":  # Always log Momentum mismatches
+                            logger.info(f"❌ SKIP: timestamp too far {time_diff:.0f}s (strategy={strategy_name}, signal={signal.timestamp}, md={md.timestamp})")
                     signal_index += 1
 
             # Check for stop loss / take profit
@@ -149,6 +159,15 @@ class SimpleBacktester:
         self._close_all_positions(market_data[-1])
 
         logger.info(f"📊 Backtest matching stats: {signals_processed} processed, {signals_matched} matched, {signals_skipped} skipped, {len(self.trades)} trades executed")
+        
+        # Log stats by strategy
+        if strategy_stats:
+            logger.info("📊 Matching stats by strategy:")
+            for strategy_name, stats in sorted(strategy_stats.items()):
+                logger.info(
+                    f"  {strategy_name}: {stats['matched']} matched, {stats['skipped']} skipped "
+                    f"(symbol_mismatch={stats['symbol_mismatch']}, time_mismatch={stats['time_mismatch']})"
+                )
 
         # Calculate final metrics
         performance = self._calculate_performance_metrics()
