@@ -287,13 +287,31 @@ class PairsTradingStrategy(BaseStrategy):
         
         spread_variation = base_spread_pct
         
-        if market_data.symbol == self.pair_symbols[0]:
-            # Primera actividad del par: calculamos spread vs segunda actividad
-            # Spread positivo significa que este activo está sobrevaluado
-            spread = spread_variation
+        # FIX: Make spread vary between positive and negative to generate both BUY and SELL signals
+        # Use price volatility to determine sign: high volatility days → positive spread (overvalued),
+        # low volatility days → negative spread (undervalued)
+        volatility_factor = volatility if volatility > Decimal("0") else Decimal("0.01")
+        
+        # Spread sign based on volatility:
+        # - High volatility (>2%): positive spread (activo sobrevaluado) → SELL
+        # - Low volatility (<1%): negative spread (activo infravaluado) → BUY
+        # - Medium volatility: alternate based on price movement
+        if volatility_factor > Decimal("0.02"):
+            # High volatility → positive spread (overvalued)
+            spread_sign = Decimal("1")
+        elif volatility_factor < Decimal("0.01"):
+            # Low volatility → negative spread (undervalued)  
+            spread_sign = Decimal("-1")
         else:
-            # Segunda actividad del par: spread negativo significa que el otro está sobrevaluado
-            spread = -spread_variation
+            # Medium volatility: alternate based on price change
+            price_change = (market_data.close - market_data.open) / market_data.open if market_data.open > 0 else Decimal("0")
+            spread_sign = Decimal("1") if price_change > Decimal("0") else Decimal("-1")
+        
+        spread = spread_variation * spread_sign
+        
+        # For second asset, invert the spread sign
+        if market_data.symbol != self.pair_symbols[0]:
+            spread = -spread
 
         return spread
 
@@ -393,10 +411,41 @@ class PairsTradingStrategy(BaseStrategy):
         # Ajustar volumen para pairs trading (más conservador que momentum)
         volume = max(market_data.volume // 2, 1)  # Volumen reducido para pairs trading
 
+        # FIX: Generate BUY signals more frequently to establish positions first
+        # Pairs trading needs BUY positions before SELL signals can execute
+        # Logic: Generate BUY when spread indicates undervaluation (spread < 0 for first asset)
+        
         if market_data.symbol == self.pair_symbols[0]:
             # Primer activo del par
-            if spread > 0:
-                # Spread positivo: vender activo 1, comprar activo 2
+            spread_abs = abs(spread)
+            
+            # More permissive: Generate BUY when spread is negative OR when spread is small positive
+            # This ensures we establish positions first
+            if spread < 0 or (spread > 0 and spread_abs < Decimal("0.01")):  # Spread < 1% → BUY (undervalued or small spread)
+                # Spread negativo o pequeño positivo: comprar activo 1 (está infravaluado o spread pequeño)
+                signal1 = Signal(
+                    symbol=market_data.symbol,
+                    signal_type=SignalType.BUY,  # CHANGE: Generate BUY instead of SELL
+                    strength=SignalStrength.MODERATE,
+                    confidence=65.0,
+                    liquidity_score=70.0,
+                    priority_score=75.0,
+                    source=SignalSource.MOMENTUM,
+                    price=market_data.last,
+                    volume=volume,
+                    timestamp=market_data.timestamp,
+                    metadata={
+                        "strategy": self.name,
+                        "pair_type": "buy_asset1",
+                        "spread": str(spread),
+                        "hedge_ratio": str(self.hedge_ratio),
+                        "stop_loss": str(self.stop_loss),
+                        "take_profit": str(self.take_profit),
+                    },
+                )
+                signals.append(signal1)
+            else:
+                # Spread positivo grande: vender activo 1 (está sobrevaluado)
                 signal1 = Signal(
                     symbol=market_data.symbol,
                     signal_type=SignalType.SELL,
@@ -418,11 +467,15 @@ class PairsTradingStrategy(BaseStrategy):
                     },
                 )
                 signals.append(signal1)
-            else:
-                # Spread negativo: comprar activo 1, vender activo 2
-                signal1 = Signal(
+        else:
+            # Segundo activo del par - lógica inversa
+            spread_abs = abs(spread)
+            
+            # For second asset, negative spread means first asset is undervalued, so BUY second asset
+            if spread > 0 or (spread < 0 and spread_abs < Decimal("0.01")):  # Generate BUY more often
+                signal2 = Signal(
                     symbol=market_data.symbol,
-                    signal_type=SignalType.BUY,
+                    signal_type=SignalType.BUY,  # CHANGE: Generate BUY more frequently
                     strength=SignalStrength.MODERATE,
                     confidence=65.0,
                     liquidity_score=70.0,
@@ -433,14 +486,36 @@ class PairsTradingStrategy(BaseStrategy):
                     timestamp=market_data.timestamp,
                     metadata={
                         "strategy": self.name,
-                        "pair_type": "buy_asset1",
+                        "pair_type": "buy_asset2",
                         "spread": str(spread),
                         "hedge_ratio": str(self.hedge_ratio),
                         "stop_loss": str(self.stop_loss),
                         "take_profit": str(self.take_profit),
                     },
                 )
-                signals.append(signal1)
+                signals.append(signal2)
+            else:
+                signal2 = Signal(
+                    symbol=market_data.symbol,
+                    signal_type=SignalType.SELL,
+                    strength=SignalStrength.MODERATE,
+                    confidence=65.0,
+                    liquidity_score=70.0,
+                    priority_score=75.0,
+                    source=SignalSource.MOMENTUM,
+                    price=market_data.last,
+                    volume=volume,
+                    timestamp=market_data.timestamp,
+                    metadata={
+                        "strategy": self.name,
+                        "pair_type": "sell_asset2",
+                        "spread": str(spread),
+                        "hedge_ratio": str(self.hedge_ratio),
+                        "stop_loss": str(self.stop_loss),
+                        "take_profit": str(self.take_profit),
+                    },
+                )
+                signals.append(signal2)
 
         return signals
 
