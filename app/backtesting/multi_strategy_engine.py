@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional
 
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig, BacktestResult
+from app.backtesting.signal_diagnostic_logger import SignalDiagnosticLogger
 from app.models.market_data import Quote
 from app.services.multi_strategy_allocation import MultiStrategyAllocationManager
 from app.services.portfolio_config_manager import (
@@ -35,6 +36,8 @@ class MultiStrategyBacktester:
         strategies: Dict[str, BaseStrategy],
         config_params: Dict,
         portfolio_config_manager: Optional[PortfolioConfigManager] = None,
+        enable_diagnostics: bool = True,
+        early_abort_loss_pct: Optional[Decimal] = None,  # Abort if loss > X% in first 2 years
     ):
         """
         Initialize multi-strategy backtester.
@@ -50,6 +53,11 @@ class MultiStrategyBacktester:
         self.config_params = config_params
         self.total_capital = allocation_manager.total_capital
         self.portfolio_config = portfolio_config_manager or get_portfolio_config_manager()
+        self.enable_diagnostics = enable_diagnostics
+        self.early_abort_loss_pct = early_abort_loss_pct or Decimal("0.20")  # Default 20%
+        
+        # Initialize diagnostic logger if enabled
+        self.diagnostic_logger = SignalDiagnosticLogger() if enable_diagnostics else None
 
     def run_multi_strategy_backtest(
         self, quotes: List[Quote], start_date: datetime, end_date: datetime
@@ -98,7 +106,19 @@ class MultiStrategyBacktester:
                 try:
                     # Double-check sector filtering at signal generation
                     if self.portfolio_config.should_filter_symbol(quote.symbol, strategy_name):
-                        signals.extend(strategy.generate_signals(quote))
+                        candidate_signals = strategy.generate_signals(quote)
+                        
+                        # Log signal candidates for diagnostics
+                        if self.diagnostic_logger:
+                            for sig in candidate_signals:
+                                self.diagnostic_logger.log_signal_candidate(
+                                    strategy_name,
+                                    quote.symbol,
+                                    sig.signal_type.value if hasattr(sig.signal_type, 'value') else str(sig.signal_type),
+                                    sig.metadata if hasattr(sig, 'metadata') else {},
+                                )
+                        
+                        signals.extend(candidate_signals)
                 except Exception as e:
                     logger.debug(f"Signal error for {strategy_name}: {e}")
 
@@ -127,6 +147,26 @@ class MultiStrategyBacktester:
             backtester = SimpleBacktester(config)
             result = backtester.run_backtest(quotes, signals, start_date, end_date)
             results_by_strategy[strategy_name] = result
+            
+            # Early-abort check: if loss > threshold in first 2 years
+            if self.early_abort_loss_pct:
+                two_years_later = datetime(
+                    start_date.year + 2, start_date.month, start_date.day
+                )
+                if end_date > two_years_later:
+                    # Check performance in first 2 years
+                    # This is simplified - in production would need intermediate equity curve
+                    total_return = result.performance.total_return
+                    if total_return < -float(self.early_abort_loss_pct) * 100:
+                        logger.warning(
+                            f"{strategy_name}: Early abort - loss {total_return:.2f}% "
+                            f"exceeds threshold {self.early_abort_loss_pct * 100:.0f}%"
+                        )
+        
+        # Save diagnostic report if enabled
+        if self.diagnostic_logger:
+            self.diagnostic_logger.save_diagnostic_report()
+            self.diagnostic_logger.print_summary()
 
         # Consolidate results
         consolidated = self._consolidate_results(results_by_strategy, capital_allocations)

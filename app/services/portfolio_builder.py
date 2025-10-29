@@ -177,24 +177,40 @@ class PortfolioBuilder:
                 
                 # Check if pair_symbols is explicitly configured
                 # Otherwise use symbols from sectors
-                pair_symbols_list = strategy_config.get("pair_symbols", strategy_symbols[:2])
+                pair_symbols_raw = strategy_config.get("pair_symbols", strategy_symbols[:2])
                 
-                # Ensure we have at least 2 symbols for pairs
-                if len(pair_symbols_list) >= 2:
-                    all_symbols.update(pair_symbols_list[:2])
-                    logger.info(
-                        f"Pairs Trading: Using pair {pair_symbols_list[0]}-{pair_symbols_list[1]}"
-                    )
+                # Handle both formats: list of lists or simple list
+                if pair_symbols_raw and isinstance(pair_symbols_raw, list):
+                    if len(pair_symbols_raw) > 0 and isinstance(pair_symbols_raw[0], list):
+                        # List of lists format - extract all unique symbols from all pairs
+                        pair_symbols_flat = []
+                        for pair in pair_symbols_raw:
+                            if isinstance(pair, list) and len(pair) >= 2:
+                                pair_symbols_flat.extend(pair[:2])  # Take first 2 of each pair
+                        # Remove duplicates while preserving order
+                        pair_symbols_list = list(dict.fromkeys(pair_symbols_flat))
+                        logger.info(
+                            f"Pairs Trading: Using {len(pair_symbols_list)} symbols from {len(pair_symbols_raw)} configured pairs"
+                        )
+                    else:
+                        # Simple list format
+                        pair_symbols_list = pair_symbols_raw if len(pair_symbols_raw) >= 2 else strategy_symbols[:2]
                 else:
                     # Fallback: use first two symbols from sectors
-                    if len(strategy_symbols) >= 2:
-                        all_symbols.update(strategy_symbols[:2])
-                    else:
-                        all_symbols.update(strategy_symbols)
-                        logger.warning(
-                            f"Pairs Trading: Only {len(strategy_symbols)} symbol(s) available, "
-                            "pairs trading may not work correctly"
-                        )
+                    pair_symbols_list = strategy_symbols[:2] if len(strategy_symbols) >= 2 else strategy_symbols
+                
+                # Add all pair symbols to the set
+                if pair_symbols_list:
+                    all_symbols.update(pair_symbols_list)
+                    logger.info(
+                        f"Pairs Trading: Added {len(pair_symbols_list)} symbols: {', '.join(pair_symbols_list[:5])}"
+                        f"{'...' if len(pair_symbols_list) > 5 else ''}"
+                    )
+                else:
+                    logger.warning(
+                        f"Pairs Trading: No pair symbols available, using sector symbols"
+                    )
+                    all_symbols.update(strategy_symbols)
             else:
                 # For other strategies, use symbols from sectors
                 if max_symbols_per_strategy:
