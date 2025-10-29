@@ -42,14 +42,17 @@ def test_signal_generation():
     
     # Generar 50 días de datos
     for i in range(50):
+        price = Decimal("200") + Decimal(str(i * 0.1))
         quote = Quote(
             symbol="AAPL",
             timestamp=datetime.utcnow(),
-            open=Decimal("200") + Decimal(str(i * 0.1)),
-            high=Decimal("202") + Decimal(str(i * 0.1)),
-            low=Decimal("198") + Decimal(str(i * 0.1)),
-            close=Decimal("200") + Decimal(str(i * 0.1)),
-            last=Decimal("200") + Decimal(str(i * 0.1)),
+            bid=price * Decimal("0.999"),
+            ask=price * Decimal("1.001"),
+            open=price,
+            high=price * Decimal("1.01"),
+            low=price * Decimal("0.99"),
+            close=price,
+            last=price,
             volume=Decimal("1000000") + Decimal(str(i * 10000)),
         )
         signals = strategy.generate_signals(quote)
@@ -104,6 +107,7 @@ def test_position_size_calculation():
             cash=case["cash"],
             positions=[],
             timestamp=datetime.utcnow(),
+            broker="test",
         )
         
         signal = Signal(
@@ -235,6 +239,7 @@ def test_risk_check_scenarios():
             cash=scenario["cash"],
             positions=scenario["positions"],
             timestamp=datetime.utcnow(),
+            broker="test",
         )
         
         signal = Signal(
@@ -336,6 +341,7 @@ def test_exposure_calculation():
             cash=case["cash"],
             positions=case["positions"],
             timestamp=datetime.utcnow(),
+            broker="test",
         )
         
         exposure = strategy._calculate_total_exposure(portfolio)
