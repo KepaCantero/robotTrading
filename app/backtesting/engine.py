@@ -325,12 +325,22 @@ class SimpleBacktester:
     def _calculate_position_size(self, signal: Signal, price: Decimal) -> Decimal:
         """Calculate position size based on signal and risk management."""
         # Base position size on signal confidence and max position size
-        confidence_factor = Decimal(str(signal.confidence / 100.0))
+        # FIX: Ensure minimum position size to avoid zero trades
+        confidence_factor = Decimal(str(max(signal.confidence / 100.0, 0.5)))  # Minimum 50% confidence factor
         max_position_value = self.capital * self.config.max_position_size
 
         position_value = max_position_value * confidence_factor
+        
+        # FIX: Ensure minimum position value to avoid rounding to zero
+        min_position_value = self.capital * Decimal("0.01")  # At least 1% of capital
+        position_value = max(position_value, min_position_value)
+        
         position_size = position_value / price
 
+        # FIX: Ensure minimum position size (at least 1 share)
+        min_size = Decimal("1")
+        position_size = max(position_size, min_size)
+        
         return position_size.quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)
 
     def _apply_slippage(self, price: Decimal, is_buy: bool) -> Decimal:
