@@ -1,0 +1,56 @@
+{
+  "generated_at": "2025-10-29T10:06:58.683364",
+  "strategy_summaries": {
+    "momentum": {
+      "strategy": "momentum",
+      "signals_candidate": 106,
+      "signals_executed": 0,
+      "signals_rejected": 0,
+      "execution_rate": 0.0,
+      "rejection_rate": 0.0,
+      "checks_failed": {}
+    },
+    "mean_reversion": {
+      "strategy": "mean_reversion",
+      "signals_candidate": 1096,
+      "signals_executed": 0,
+      "signals_rejected": 0,
+      "execution_rate": 0.0,
+      "rejection_rate": 0.0,
+      "checks_failed": {}
+    }
+  },
+  "rejection_details": [],
+  "top_rejected_symbols": [
+    {
+      "symbol": "GOOGL",
+      "candidates": 296,
+      "executed": 0,
+      "rejected": 0
+    },
+    {
+      "symbol": "META",
+      "candidates": 271,
+      "executed": 0,
+      "rejected": 0
+    },
+    {
+      "symbol": "MSFT",
+      "candidates": 182,
+      "executed": 0,
+      "rejected": 0
+    },
+    {
+      "symbol": "AMZN",
+      "candidates": 249,
+      "executed": 0,
+      "rejected": 0
+    },
+    {
+      "symbol": "AAPL",
+      "candidates": 204,
+      "executed": 0,
+      "rejected": 0
+    }
+  ]
+}
