@@ -221,39 +221,68 @@ class PairsTradingStrategy(BaseStrategy):
             # Verificar tamaño de posición
             position_size = self.get_position_size(signal, portfolio)
             if position_size <= 0:
-                logger.debug(f"Position size too small: {position_size}")
+                logger.info(
+                    f"⚠️ PAIRS_TRADING risk_check REJECTED {signal.signal_type} {signal.symbol}: "
+                    f"Position size too small ({position_size:.6f})"
+                )
                 return False
 
             # Verificar cash disponible para compras
             if signal.signal_type == SignalType.BUY:
                 required_cash = signal.price * signal.volume
                 if required_cash > portfolio.cash:
-                    logger.debug(f"Insufficient cash: {required_cash} > {portfolio.cash}")
+                    logger.info(
+                        f"⚠️ PAIRS_TRADING risk_check REJECTED BUY {signal.symbol}: "
+                        f"Insufficient cash (required=${required_cash:.2f} > available=${portfolio.cash:.2f})"
+                    )
                     return False
 
             # Verificar posición existente para ventas
             elif signal.signal_type == SignalType.SELL:
                 existing_position = self._get_existing_position(portfolio, signal.symbol)
-                if not existing_position or existing_position.quantity < signal.volume:
-                    logger.debug(f"Insufficient position for sell: {signal.volume}")
+                if not existing_position:
+                    logger.info(
+                        f"⚠️ PAIRS_TRADING risk_check REJECTED SELL {signal.symbol}: "
+                        f"No position exists to sell"
+                    )
+                    return False
+                if existing_position.quantity < signal.volume:
+                    logger.info(
+                        f"⚠️ PAIRS_TRADING risk_check REJECTED SELL {signal.symbol}: "
+                        f"Insufficient position (need={signal.volume:.6f}, have={existing_position.quantity:.6f})"
+                    )
                     return False
 
             # Verificar límites de exposición (muy conservador para pairs trading)
             total_exposure = self._calculate_total_exposure(portfolio)
             if total_exposure > self.max_total_exposure:  # Máximo configurable (default 40%)
-                logger.debug(f"Total exposure too high: {total_exposure} > {self.max_total_exposure}")
+                logger.info(
+                    f"⚠️ PAIRS_TRADING risk_check REJECTED {signal.signal_type} {signal.symbol}: "
+                    f"Total exposure too high ({total_exposure:.2%} > {self.max_total_exposure:.2%} max)"
+                )
                 return False
 
             # Verificar balance del par (pairs trading debe ser balanceado)
             pair_exposure = self._calculate_pair_exposure(portfolio)
             if pair_exposure > self.max_pair_exposure:  # Máximo configurable (default 20%)
-                logger.debug(f"Pair exposure too high: {pair_exposure} > {self.max_pair_exposure}")
+                logger.info(
+                    f"⚠️ PAIRS_TRADING risk_check REJECTED {signal.signal_type} {signal.symbol}: "
+                    f"Pair exposure too high ({pair_exposure:.2%} > {self.max_pair_exposure:.2%} max)"
+                )
                 return False
 
+            logger.debug(
+                f"✅ PAIRS_TRADING risk_check PASSED {signal.signal_type} {signal.symbol}: "
+                f"position_size={position_size:.6f}, cash=${portfolio.cash:.2f}, "
+                f"total_exposure={total_exposure:.2%}, pair_exposure={pair_exposure:.2%}"
+            )
             return True
 
         except Exception as e:
-            logger.error(f"Risk check error: {e}")
+            logger.error(
+                f"❌ PAIRS_TRADING risk_check ERROR for {signal.symbol}: {e}",
+                exc_info=True
+            )
             return False
 
     def _calculate_spread(self, market_data: Quote) -> Decimal:
