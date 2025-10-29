@@ -48,11 +48,30 @@ python scripts/download_portfolio_data.py --symbols AAPL MSFT GOOGL
 ## 🔄 Manejo de Rate Limits
 
 El script incluye:
-- **Retry automático**: 3 intentos con delays progresivos
+
+- **Retry automático**: 3 intentos con exponential backoff (5s, 15s, 45s)
 - **Detección de rate limits**: Pausa automática si detecta límites
 - **Skip de archivos existentes**: No descarga si el CSV ya existe
+- **Batch download**: Script alternativo para descargas en lotes
 
 Si encuentras rate limits frecuentes:
+
+### Opción 1: Usar delay más largo
+
+```bash
+# Delay de 5 segundos entre símbolos
+python scripts/download_portfolio_data.py --delay 5.0
+```
+
+### Opción 2: Descargar en lotes (Recomendado para rate limits)
+
+```bash
+# Descarga en batches de 5 símbolos con pausas
+python scripts/download_portfolio_data_batch.py
+```
+
+### Opción 3: Descargar solo símbolos específicos
+
 1. Aumenta el delay: `--delay 2.0`
 2. Descarga en lotes pequeños
 3. Espera entre ejecuciones
@@ -84,5 +103,4 @@ Una vez descargados los CSVs, el `PortfolioBuilder` los usará automáticamente:
 
 ---
 
-*Última actualización: 2025-10-29*
-
+_Última actualización: 2025-10-29_

@@ -83,12 +83,14 @@ def download_symbol_data(
             error_msg = str(e).lower()
             if "rate limit" in error_msg or "too many requests" in error_msg:
                 if attempt < max_retries - 1:
-                    wait_time = retry_delay * (attempt + 1)
-                    print(f"⏳ Rate limited, waiting {wait_time}s...", flush=True)
+                    # Exponential backoff: 5s, 15s, 45s
+                    wait_time = 5 * (3 ** attempt)
+                    print(f"⏳ Rate limited, waiting {wait_time}s (attempt {attempt + 1}/{max_retries})...", flush=True)
                     time.sleep(wait_time)
                     continue
                 else:
                     print(f"❌ Rate limited after {max_retries} attempts")
+                    print(f"   💡 Tip: Wait 5-10 minutes and retry this symbol, or reduce --delay")
                     return False
             else:
                 print(f"❌ Error: {e}")
@@ -115,8 +117,8 @@ def main():
     parser.add_argument(
         "--delay",
         type=float,
-        default=0.5,
-        help="Delay between downloads in seconds (default: 0.5)",
+        default=2.0,
+        help="Delay between downloads in seconds (default: 2.0, increase if rate limited)",
     )
     parser.add_argument(
         "--max-symbols",
@@ -194,8 +196,14 @@ def main():
             failed.append(symbol)
         
         # Add delay between downloads to avoid rate limiting
+        # Use longer delay if we just hit rate limits
         if i < len(symbols):
-            time.sleep(args.delay)
+            delay = args.delay
+            # Increase delay if recent failures due to rate limiting
+            if failed and "rate limit" in str(failed[-1]).lower() if failed else False:
+                delay = args.delay * 3  # Triple delay after rate limit
+            
+            time.sleep(delay)
     
     # Summary
     print("\n" + "=" * 80)
