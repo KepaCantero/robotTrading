@@ -5,11 +5,14 @@ This module provides FastAPI endpoints for walk-forward analysis, out-of-sample 
 and parameter optimization to prevent overfitting in trading strategies.
 """
 
+import logging
 from datetime import date, datetime
 from typing import List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.responses import JSONResponse
+
+logger = logging.getLogger(__name__)
 
 from app.models.optimization import (
     OptimizationArtifact,
