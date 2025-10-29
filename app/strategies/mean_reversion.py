@@ -225,14 +225,14 @@ class MeanReversionStrategy(BaseStrategy):
         Returns:
             True si debe generar señal de compra
         """
-        # Check if z-score indicates undervaluation (more restrictive)
+        # Check if z-score indicates undervaluation
         is_undervalued = z_score < -self.z_score_threshold
         
-        # Require confirmation: price closed significantly below open
-        price_drop = (market_data.close - market_data.open) / market_data.open < Decimal("-0.005")  # > 0.5% drop
+        # Require confirmation: price closed significantly below open (relaxed from 0.5% to 0.3%)
+        price_drop = (market_data.open - market_data.close) / market_data.open > Decimal("0.003")  # > 0.3% drop
         
-        # Only allow moderate volatility
-        acceptable_volatility = volatility < self.volatility_threshold
+        # Only allow moderate volatility (relaxed check)
+        acceptable_volatility = volatility < self.volatility_threshold * 2  # More permissive
         
         return is_undervalued and price_drop and acceptable_volatility
 
