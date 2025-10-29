@@ -596,15 +596,18 @@ class MomentumStrategy(BaseStrategy):
         # 4. TASK-IND-5: Filtro de volumen dinámico >1.2 para confirmar liquidez
         # 5. TASK-IND-ROC-2: ROC < 0 para confirmar desaceleración bajista (optional)
         # 6. TASK-IND-OBV-1: OBV "falling" o "neutral" para confirmar selling pressure (optional)
-        # FIX: Make SELL conditions symmetric to BUY - only trigger on clear overbought (> 70) or extreme oversold reversal (< 35)
-        rsi_overbought = rsi > 70  # Clear overbought condition
-        rsi_extreme_oversold = rsi < 35  # Extreme oversold - momentum reversal opportunity (more restrictive than < 55)
-        rsi_condition = rsi_overbought or rsi_extreme_oversold
+        # FIX: Make SELL conditions symmetric to BUY - more permissive
+        # BUY: RSI < 45 OR RSI > 55, so SELL should be: RSI > 55 OR RSI < 45 (but inverted logic)
+        # Actually: SELL when overbought (> 55) or momentum negative (< 45)
+        rsi_overbought = rsi > 55  # Overbought (symmetric to BUY's > 55 for momentum)
+        rsi_momentum_negative = rsi < 45  # Momentum negative (symmetric to BUY's < 45 for oversold)
+        rsi_condition = rsi_overbought or rsi_momentum_negative
         
         ema_bearish = current_price < Decimal(str(ema))
+        # FIX: Make volume requirement more permissive (same as BUY)
         has_volume = volume_ratio > Decimal(
-            "1.2"
-        )  # TASK-IND-5: volume_ratio > 1.2 para liquidez confirmada
+            "1.0"
+        )  # More permissive: volume_ratio > 1.0 (was 1.2) - only requires above-average volume
         
         # FIX: Make ROC and OBV optional (not required) to generate more signals
         # TASK-IND-ROC-2: ROC negativo confirma desaceleración bajista (optional)
