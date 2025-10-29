@@ -639,12 +639,15 @@ class MomentumStrategy(BaseStrategy):
         # 4. TASK-IND-5: Filtro de volumen dinámico >1.2 para confirmar liquidez
         # 5. TASK-IND-ROC-2: ROC > 0 para confirmar aceleración de precio
         # 6. TASK-IND-OBV-1: OBV "rising" o "neutral" para confirmar buying pressure
-        # More permissive: RSI oversold (< threshold) OR momentum positive (> 55)
-        rsi_oversold = rsi < float(self.rsi_threshold)  # Buy when oversold
-        rsi_positive = rsi > 55  # OR buy on strong momentum
+        # More permissive: RSI oversold (< threshold) OR momentum positive (> 55) OR neutral with bullish setup
+        rsi_oversold = rsi < float(self.rsi_threshold)  # Buy when oversold (< 45)
+        rsi_positive = rsi > 55  # OR buy on strong momentum (> 55)
+        # ALSO allow BUY when RSI is in neutral zone (45-55) BUT price is above EMA (uptrend)
+        # This prevents missing opportunities when market is trending up but RSI is neutral
+        rsi_neutral_bullish = (rsi >= 45 and rsi <= 55)  # Neutral zone
         
-        # Use either condition (oversold OR strong momentum)
-        rsi_condition = rsi_oversold or rsi_positive
+        # Use any of the three conditions
+        rsi_condition = rsi_oversold or rsi_positive or rsi_neutral_bullish
         ema_bullish = current_price > Decimal(str(ema))
         # FIX: Make volume requirement more permissive
         has_volume = volume_ratio > Decimal(
@@ -658,8 +661,14 @@ class MomentumStrategy(BaseStrategy):
         # TASK-IND-OBV-1: OBV rising o neutral confirma buying pressure (optional)
         obv_bullish = obv_trend is None or obv_trend in ["rising", "neutral"]
 
-        # FIX: Core conditions: RSI + EMA + Volume (ROC and OBV are nice-to-have)
-        return rsi_condition and ema_bullish and has_volume and roc_positive and obv_bullish
+        # FIX: Core conditions: RSI condition + EMA + Volume (ROC and OBV are nice-to-have)
+        # For neutral RSI, require price > EMA (uptrend) to generate BUY
+        if rsi_neutral_bullish:
+            # In neutral zone, require stronger confirmation: price > EMA AND volume
+            return ema_bullish and has_volume and roc_positive and obv_bullish
+        else:
+            # For oversold or strong momentum, standard conditions
+            return rsi_condition and ema_bullish and has_volume and roc_positive and obv_bullish
 
     def _is_sell_signal(
         self,
