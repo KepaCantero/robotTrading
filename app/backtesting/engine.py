@@ -358,6 +358,15 @@ class SimpleBacktester:
         )
         self.capital += proceeds
 
+        # Log execution to diagnostic logger
+        if self.diagnostic_logger:
+            strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
+            self.diagnostic_logger.log_signal_executed(
+                strategy_name=strategy_name,
+                symbol=signal.symbol,
+                metadata=signal.metadata if signal.metadata else {},
+            )
+
     def _calculate_position_size(self, signal: Signal, price: Decimal) -> Decimal:
         """Calculate position size based on signal and risk management."""
         # Base position size on signal confidence and max position size
