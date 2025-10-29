@@ -167,6 +167,12 @@ class MomentumStrategy(BaseStrategy):
 
             # Sólo generar señales si tenemos suficiente histórico
             if rsi is None or ema is None:
+                # Log why signals are not generated (insufficient history)
+                if self.current_bar_index % 100 == 0:  # Log every 100th bar to avoid spam
+                    logger.debug(
+                        f"MOMENTUM {market_data.symbol}: Skipping - insufficient history "
+                        f"(RSI={rsi}, EMA={ema}, bars={self.current_bar_index})"
+                    )
                 return []
 
             # Convertir None a valores seguros para logging
@@ -180,21 +186,32 @@ class MomentumStrategy(BaseStrategy):
                 self.rsi_history.append(rsi)  # TASK-IND-STOCH-2: Guardar histórico RSI
 
             # Verificar cooldown
-            if not self._is_cooldown_active(market_data):
+            cooldown_active = self._is_cooldown_active(market_data)
+            atr_filter_passed = self._passes_atr_filter()
+            
+            # Log diagnostic info BEFORE checking conditions (INFO level for visibility)
+            current_price = market_data.close or market_data.last
+            if self.current_bar_index % 50 == 0:  # Log every 50th bar to see what's happening
+                logger.info(
+                    f"MOMENTUM {market_data.symbol}: RSI={rsi:.2f}, price={current_price:.2f}, EMA={ema:.2f}, "
+                    f"volume_ratio={volume_ratio:.2f}, cooldown={cooldown_active}, atr_filter={atr_filter_passed}"
+                )
+            
+            if not cooldown_active:
                 # FIX: Simplified logic - only check ATR filter if enabled, otherwise generate signals
                 # Stochastic RSI check is too restrictive, removed for more signals
-                if self._passes_atr_filter():
+                if atr_filter_passed:
                     # Check both BUY and SELL conditions (not elif) to generate both types of signals
-                    current_price = market_data.close or market_data.last
                     buy_condition = self._is_buy_signal(rsi, ema, volume_ratio, roc, obv_trend, market_data)
                     sell_condition = self._is_sell_signal(rsi, ema, volume_ratio, roc, obv_trend, market_data)
                     
-                    # Log diagnostic info for Momentum strategy
-                    logger.debug(
-                        f"MOMENTUM {market_data.symbol}: RSI={rsi:.2f}, price={current_price:.2f}, EMA={ema:.2f}, "
-                        f"volume_ratio={volume_ratio:.2f}, ROC={roc_safe:.2f}, OBV={obv_trend}, "
-                        f"BUY={buy_condition}, SELL={sell_condition}"
-                    )
+                    # Log diagnostic info for Momentum strategy (INFO level for signals)
+                    if buy_condition or sell_condition:
+                        logger.info(
+                            f"MOMENTUM {market_data.symbol}: RSI={rsi:.2f}, price={current_price:.2f}, EMA={ema:.2f}, "
+                            f"volume_ratio={volume_ratio:.2f}, ROC={roc_safe:.2f}, OBV={obv_trend}, "
+                            f"BUY={buy_condition}, SELL={sell_condition}"
+                        )
                     
                     # Generar señal de compra con condiciones robustas
                     if buy_condition:
