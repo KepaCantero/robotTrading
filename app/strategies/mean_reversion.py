@@ -100,24 +100,57 @@ class MeanReversionStrategy(BaseStrategy):
         signals = []
 
         try:
-            # Calcular Z-score
+            # Calcular Z-score y volatilidad
             z_score = self._calculate_z_score(market_data)
             volatility = self._calculate_volatility(market_data)
+            
+            # Logging de diagnóstico (INFO level cada cierto número de llamadas)
+            current_price = market_data.close or market_data.last
+            price_change_pct = ((market_data.close - market_data.open) / market_data.open * 100) if market_data.open > 0 else Decimal("0")
+            
+            # Logging periódico para diagnóstico
+            if not hasattr(self, '_call_count'):
+                self._call_count = 0
+            self._call_count += 1
+            
+            if self._call_count % 50 == 0:  # Log every 50th call
+                logger.info(
+                    f"MEAN_REVERSION {market_data.symbol}: price={current_price:.2f}, "
+                    f"price_change={price_change_pct:.2f}%, z_score={z_score:.4f}, "
+                    f"volatility={volatility:.4f}, threshold={self.z_score_threshold}"
+                )
+            
+            # Evaluar condiciones BUY y SELL
+            buy_condition = self._is_buy_signal(z_score, volatility, market_data)
+            sell_condition = self._is_sell_signal(z_score, volatility, market_data)
+            
+            # Logging cuando condiciones son True
+            if buy_condition or sell_condition:
+                logger.info(
+                    f"MEAN_REVERSION {market_data.symbol}: z_score={z_score:.4f}, "
+                    f"volatility={volatility:.4f}, BUY={buy_condition}, SELL={sell_condition}"
+                )
 
             # Generar señal de compra (precio bajo, esperamos subida)
-            if self._is_buy_signal(z_score, volatility, market_data):
+            if buy_condition:
                 signal = self._create_buy_signal(market_data, z_score)
                 signals.append(signal)
-                logger.debug(f"Generated BUY signal for {market_data.symbol} (Z-score: {z_score})")
+                logger.info(
+                    f"✅ MEAN_REVERSION Generated BUY signal for {market_data.symbol}: "
+                    f"Z-score={z_score:.4f}, price={current_price:.2f}, volatility={volatility:.4f}"
+                )
 
             # Generar señal de venta (precio alto, esperamos bajada)
-            elif self._is_sell_signal(z_score, volatility, market_data):
+            if sell_condition:  # Changed from elif to if to allow both signals
                 signal = self._create_sell_signal(market_data, z_score)
                 signals.append(signal)
-                logger.debug(f"Generated SELL signal for {market_data.symbol} (Z-score: {z_score})")
+                logger.info(
+                    f"✅ MEAN_REVERSION Generated SELL signal for {market_data.symbol}: "
+                    f"Z-score={z_score:.4f}, price={current_price:.2f}, volatility={volatility:.4f}"
+                )
 
         except Exception as e:
-            logger.error(f"Error generating signals for {market_data.symbol}: {e}")
+            logger.error(f"MEAN_REVERSION Error generating signals for {market_data.symbol}: {e}", exc_info=True)
 
         return signals
 
