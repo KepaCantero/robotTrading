@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional
 
 from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
-from app.models.signal import Signal
+from app.models.signal import Signal, SignalType
 
 
 class BaseStrategy(ABC):
@@ -108,13 +108,17 @@ class BaseStrategy(ABC):
         max_position_size = Decimal(str(self.config.get("max_position_size", 0.1)))
         available_cash = portfolio.cash
 
-        if signal.direction == "buy":
+        # FIX: Signal uses signal_type (SignalType enum), not direction
+        # Signal uses 'volume' attribute, not 'quantity'
+        signal_volume = signal.volume
+        
+        if signal.signal_type == SignalType.BUY:
             # Para compras, limitar por cash disponible
             max_shares = available_cash / signal.price
-            return min(signal.quantity, max_shares * max_position_size)
+            return min(signal_volume, max_shares * max_position_size)
         else:
             # Para ventas, usar cantidad de la señal
-            return signal.quantity
+            return signal_volume
 
     def get_stop_loss_price(self, signal: Signal) -> Optional[Decimal]:
         """
@@ -139,17 +143,19 @@ class BaseStrategy(ABC):
                 atr_value = Decimal(str(atr))
                 stop_distance = atr_value * atr_multiplier
 
-                if signal.direction == "buy":
+                # FIX: Use signal_type instead of direction
+                if signal.signal_type == SignalType.BUY:
                     return signal.price - stop_distance
-                elif signal.direction == "sell":
+                elif signal.signal_type == SignalType.SELL:
                     return signal.price + stop_distance
 
         # Fallback: usar stop loss porcentual fijo si no hay ATR
         stop_loss_pct = Decimal(str(self.config.get("stop_loss", 0.05)))
 
-        if signal.direction == "buy":
+        # FIX: Use signal_type instead of direction
+        if signal.signal_type == SignalType.BUY:
             return signal.price * (1 - stop_loss_pct)
-        elif signal.direction == "sell":
+        elif signal.signal_type == SignalType.SELL:
             return signal.price * (1 + stop_loss_pct)
 
         return None
@@ -166,9 +172,10 @@ class BaseStrategy(ABC):
         """
         take_profit_pct = Decimal(str(self.config.get("take_profit", 0.10)))
 
-        if signal.direction == "buy":
+        # FIX: Use signal_type instead of direction
+        if signal.signal_type == SignalType.BUY:
             return signal.price * (1 + take_profit_pct)
-        elif signal.direction == "sell":
+        elif signal.signal_type == SignalType.SELL:
             return signal.price * (1 - take_profit_pct)
 
         return None
