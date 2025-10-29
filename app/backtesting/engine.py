@@ -386,6 +386,11 @@ class SimpleBacktester:
         current_position = self.positions.get(signal.symbol, Decimal("0"))
         if current_position > 0:
             # Close existing position first (with loss/profit)
+            strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
+            logger.info(
+                f"🔄 BUY {signal.symbol} (strategy={strategy_name}): "
+                f"Closing existing position ({current_position:.6f}) before opening new BUY"
+            )
             self._close_position(
                 signal.symbol, market_data.timestamp, "signal_reverse", get_price(market_data)
             )
@@ -512,6 +517,16 @@ class SimpleBacktester:
             )
             total_cost = avg_buy_price * sell_quantity + commission
             pnl = proceeds - total_cost
+            logger.info(
+                f"💰 PnL CALCULATION {signal.symbol} (strategy={strategy_name}): "
+                f"avg_buy_price={avg_buy_price:.2f}, execution_price={execution_price:.2f}, "
+                f"sell_quantity={sell_quantity:.6f}, proceeds={proceeds:.2f}, total_cost={total_cost:.2f}, pnl={pnl:.2f}"
+            )
+        else:
+            logger.warning(
+                f"⚠️ SELL {signal.symbol} (strategy={strategy_name}): NO buy_trades found! "
+                f"Position exists ({current_position:.6f}) but no open buy trades. PnL will be 0."
+            )
 
         # Build reason from signal metadata
         reason = self._build_trade_reason(signal, market_data)
