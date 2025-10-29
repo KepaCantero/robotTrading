@@ -169,39 +169,70 @@ class MeanReversionStrategy(BaseStrategy):
             # Verificar tamaño de posición
             position_size = self.get_position_size(signal, portfolio)
             if position_size <= 0:
-                logger.debug(f"Position size too small: {position_size}")
+                logger.info(
+                    f"⚠️ MEAN_REVERSION risk_check REJECTED {signal.signal_type} {signal.symbol}: "
+                    f"Position size too small ({position_size:.6f})"
+                )
                 return False
 
             # Verificar cash disponible para compras
             if signal.signal_type == SignalType.BUY:
                 required_cash = signal.price * signal.volume
                 if required_cash > portfolio.cash:
-                    logger.debug(f"Insufficient cash: {required_cash} > {portfolio.cash}")
+                    logger.info(
+                        f"⚠️ MEAN_REVERSION risk_check REJECTED BUY {signal.symbol}: "
+                        f"Insufficient cash (required=${required_cash:.2f} > available=${portfolio.cash:.2f})"
+                    )
                     return False
 
             # Verificar posición existente para ventas
             elif signal.signal_type == SignalType.SELL:
                 existing_position = self._get_existing_position(portfolio, signal.symbol)
-                if not existing_position or existing_position.quantity < signal.volume:
-                    logger.debug(f"Insufficient position for sell: {signal.volume}")
+                if not existing_position:
+                    logger.info(
+                        f"⚠️ MEAN_REVERSION risk_check REJECTED SELL {signal.symbol}: "
+                        f"No position exists to sell"
+                    )
+                    return False
+                if existing_position.quantity < signal.volume:
+                    logger.info(
+                        f"⚠️ MEAN_REVERSION risk_check REJECTED SELL {signal.symbol}: "
+                        f"Insufficient position (need={signal.volume:.6f}, have={existing_position.quantity:.6f})"
+                    )
                     return False
 
             # Verificar límites de exposición (más conservador que momentum)
             total_exposure = self._calculate_total_exposure(portfolio)
-            if total_exposure > Decimal("0.6"):  # Máximo 60% de exposición
-                logger.debug(f"Total exposure too high: {total_exposure}")
+            max_exposure = Decimal("0.6")  # Máximo 60% de exposición
+            if total_exposure > max_exposure:
+                logger.info(
+                    f"⚠️ MEAN_REVERSION risk_check REJECTED {signal.signal_type} {signal.symbol}: "
+                    f"Total exposure too high ({total_exposure:.2%} > {max_exposure:.2%})"
+                )
                 return False
 
             # Verificar volatilidad del activo
             volatility = self._calculate_volatility_from_signal(signal)
-            if volatility > self.volatility_threshold * 2:  # Evitar activos muy volátiles
-                logger.debug(f"Asset too volatile: {volatility}")
+            max_volatility = self.volatility_threshold * 2  # Evitar activos muy volátiles
+            if volatility > max_volatility:
+                logger.info(
+                    f"⚠️ MEAN_REVERSION risk_check REJECTED {signal.signal_type} {signal.symbol}: "
+                    f"Asset too volatile ({volatility:.4f} > {max_volatility:.4f} threshold)"
+                )
                 return False
 
+            logger.debug(
+                f"✅ MEAN_REVERSION risk_check PASSED {signal.signal_type} {signal.symbol}: "
+                f"position_size={position_size:.6f}, cash=${portfolio.cash:.2f}, "
+                f"exposure={total_exposure:.2%}, volatility={volatility:.4f}"
+            )
             return True
 
         except Exception as e:
-            logger.error(f"Risk check error: {e}")
+            logger.error(
+                f"❌ MEAN_REVERSION risk_check ERROR for {signal.symbol}: {e}",
+                exc_info=True
+            )
             return False
 
     def _calculate_z_score(self, market_data: Quote) -> Decimal:
