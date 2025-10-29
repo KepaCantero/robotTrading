@@ -156,7 +156,7 @@ class MultiStrategyBacktester:
                 if end_date > two_years_later:
                     # Check performance in first 2 years
                     # This is simplified - in production would need intermediate equity curve
-                    total_return = result.performance.total_return
+                    total_return = result.total_return
                     if total_return < -float(self.early_abort_loss_pct) * 100:
                         logger.warning(
                             f"{strategy_name}: Early abort - loss {total_return:.2f}% "
