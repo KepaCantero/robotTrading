@@ -4,8 +4,8 @@
 
 ### **TOTAL DE TAREAS: 94** (40 previas + 54 nuevas críticas MVP)
 
-- **Tareas Completadas**: 50 (TASK-1-15, 31, TASK-57, TASK-TS, TASK-HT-01-03, TASK-DV-1-4, TASK-IND-1-5, TASK-IND-ROC-1-2, TASK-IND-OBV-1-2, TASK-IND-STOCH-1-2, TASK-IND-VWAP-1, TASK-IND-EXP-1, TASK-MET-RUNTIME-1, TASK-MET-FILL-1, TASK-MET-MULTI-1, TASK-SC-1-5, TASK-RM-1-5, BACKTEST-SUMMARY-1, ATR-FILTER-1, TRAILING-STOP-1, CVaR-METRIC-1, BENCHMARK-1, MONTE-CARLO-1, Linting, **TASK-BV-1, TASK-BV-2, TASK-MET-1, TASK-MET-2, TASK-CST-1, TASK-CST-2**)
-- **Tareas Pendientes**: 44 (incluye tareas de Backtesting, Portfolio, etc.)
+- **Tareas Completadas**: 54 (TASK-1-15, 31, TASK-57, TASK-TS, TASK-HT-01-03, TASK-DV-1-4, TASK-IND-1-5, TASK-IND-ROC-1-2, TASK-IND-OBV-1-2, TASK-IND-STOCH-1-2, TASK-IND-VWAP-1, TASK-IND-EXP-1, TASK-MET-RUNTIME-1, TASK-MET-FILL-1, TASK-MET-MULTI-1, TASK-SC-1-5, TASK-RM-1-5, BACKTEST-SUMMARY-1, ATR-FILTER-1, TRAILING-STOP-1, CVaR-METRIC-1, BENCHMARK-1, MONTE-CARLO-1, Linting, **TASK-BV-1, TASK-BV-2, TASK-MET-1, TASK-MET-2, TASK-CST-1, TASK-CST-2, TASK-PARAM-1, TASK-PARAM-2, TASK-PARAM-3, TASK-MOM-OPT-1**)
+- **Tareas Pendientes**: 40 (incluye tareas de Backtesting, Portfolio, etc.)
 - **Estado General**: MVP READY + **Data Validation operativo** + **Advanced Technical Indicators** (ADX, ATR, MACD) + Linting corregido
 - **Prioridad Actual**: Completar Signal Scoring + Risk Management + Backtesting + Portfolio Multi-Strategy + Nuevos Indicadores Momentum
 - **Nuevas Tareas Críticas**:
