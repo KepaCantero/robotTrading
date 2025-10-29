@@ -317,15 +317,34 @@ class SimpleBacktester:
                 )
                 
                 # Apply risk_check
-                if not self.strategy.risk_check(signal, portfolio):
-                    logger.info(f"⚠️ REJECTED {signal.signal_type} {signal.symbol} (strategy={strategy_name}): Risk check failed")
-                    # Log rejection to diagnostic logger
+                # IMPORTANT: Capture the rejection reason from risk_check if possible
+                risk_check_result = self.strategy.risk_check(signal, portfolio)
+                if not risk_check_result:
+                    # Try to extract specific rejection reason from the portfolio state
+                    current_price = get_price(market_data)
+                    rejection_reason = f"Risk check failed"
+                    
+                    # Add contextual information about why it might have failed
+                    if signal.signal_type == SignalType.BUY:
+                        position_size = self.strategy.get_position_size(signal, portfolio)
+                        required_cash = signal.price * position_size if position_size > 0 else Decimal("0")
+                        rejection_reason += f" (BUY: cash=${portfolio.cash:.2f}, required=${required_cash:.2f}, position_size={position_size:.6f})"
+                    elif signal.signal_type == SignalType.SELL:
+                        existing_pos = next((p for p in portfolio.positions if p.symbol == signal.symbol), None)
+                        if not existing_pos:
+                            rejection_reason += " (SELL: no position exists)"
+                        else:
+                            rejection_reason += f" (SELL: position_qty={existing_pos.quantity:.6f})"
+                    
+                    logger.info(f"⚠️ REJECTED {signal.signal_type} {signal.symbol} (strategy={strategy_name}): {rejection_reason}")
+                    
+                    # Log rejection to diagnostic logger with detailed reason
                     if self.diagnostic_logger:
                         signal_type_str = signal.signal_type.value if hasattr(signal.signal_type, 'value') else str(signal.signal_type)
                         self.diagnostic_logger.log_signal_rejected(
                             strategy_name,
                             signal.symbol,
-                            f"Risk check failed ({signal_type_str})",  # FIX: reason should be the rejection reason, not signal type
+                            rejection_reason,
                             failed_check="risk_check",
                             metadata=signal.metadata if hasattr(signal, 'metadata') else {},
                         )
