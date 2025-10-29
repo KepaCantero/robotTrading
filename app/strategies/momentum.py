@@ -272,9 +272,22 @@ class MomentumStrategy(BaseStrategy):
         # NOTE: Cooldown is managed internally by the strategy's cooldown logic
         # Don't apply additional cooldown from scoring engine for backtesting
         if raw_signals:
+            logger.info(
+                f"🔍 MOMENTUM: {len(raw_signals)} raw signals generated for {market_data.symbol}, "
+                f"processing through signal scoring engine..."
+            )
             # In backtesting, we want to evaluate all signals without cooldown
             # But we still want scoring and ranking
             processed_signals = self.signal_scoring_engine.process_signals(raw_signals, apply_cooldown=False)
+            logger.info(
+                f"🔍 MOMENTUM: {len(processed_signals)} signals after scoring (from {len(raw_signals)} raw) "
+                f"for {market_data.symbol}"
+            )
+            if len(processed_signals) < len(raw_signals):
+                logger.info(
+                    f"⚠️ MOMENTUM: {len(raw_signals) - len(processed_signals)} signals filtered by scoring engine "
+                    f"for {market_data.symbol}"
+                )
             return processed_signals
 
         return []
