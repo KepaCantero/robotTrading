@@ -549,9 +549,10 @@ class MomentumStrategy(BaseStrategy):
         # Use either condition (oversold OR strong momentum)
         rsi_condition = rsi_oversold or rsi_positive
         ema_bullish = current_price > Decimal(str(ema))
+        # FIX: Make volume requirement more permissive
         has_volume = volume_ratio > Decimal(
-            "1.2"
-        )  # TASK-IND-5: volume_ratio > 1.2 para liquidez confirmada
+            "1.0"
+        )  # More permissive: volume_ratio > 1.0 (was 1.2) - only requires above-average volume
         
         # FIX: Make ROC and OBV optional (not required) to generate more signals
         # TASK-IND-ROC-2: ROC positivo confirma aceleración alcista (optional)
