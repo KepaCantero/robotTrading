@@ -407,14 +407,29 @@ if execute_button:
                             f"{'...' if len(portfolio_summary['all_symbols']) > 20 else ''}")
                 
                 # Build portfolio quotes from all sectors
-                portfolio_quotes = portfolio_builder.build_portfolio_quotes(
-                    start_date=datetime.combine(start_date, datetime.min.time()),
-                    end_date=datetime.combine(end_date, datetime.max.time()),
-                    max_symbols_per_strategy=10,  # Limit to avoid too many API calls
+                # Limit symbols to avoid rate limiting (use fewer symbols initially)
+                st.sidebar.markdown("---")
+                st.sidebar.subheader("⚙️ Portfolio Settings")
+                max_symbols = st.sidebar.number_input(
+                    "Max symbols per strategy",
+                    min_value=1,
+                    max_value=20,
+                    value=5,
+                    help="Limit number of symbols to avoid API rate limits. Lower = faster, fewer symbols."
                 )
                 
-                if not portfolio_quotes:
-                    st.error("❌ Failed to build portfolio - no data loaded")
+                try:
+                    portfolio_quotes = portfolio_builder.build_portfolio_quotes(
+                        start_date=datetime.combine(start_date, datetime.min.time()),
+                        end_date=datetime.combine(end_date, datetime.max.time()),
+                        max_symbols_per_strategy=max_symbols,  # Configurable limit
+                    )
+                except ValueError as e:
+                    st.error(f"❌ {str(e)}")
+                    st.info(
+                        "💡 **Suggestion**: Add CSV files to `data/historical/` folder for faster loading "
+                        "without rate limits. Format: `SYMBOL.csv` with columns: date, open, high, low, close, volume"
+                    )
                     st.stop()
                 
                 st.success(
