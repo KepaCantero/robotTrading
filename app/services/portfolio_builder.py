@@ -75,11 +75,24 @@ class PortfolioBuilder:
         loaded_symbols = []
         failed_symbols = []
         
-        for symbol in sorted(all_symbols):
+        import time
+        
+        for i, symbol in enumerate(sorted(all_symbols)):
             try:
+                # Try CSV first (faster, no rate limits)
                 quotes = self.data_loader.load_market_data(
-                    symbol, start_date, end_date, source="yfinance"  # Use yfinance for multi-symbol
+                    symbol, start_date, end_date, source="csv"
                 )
+                
+                # If CSV fails, try yfinance but with rate limiting protection
+                if not quotes:
+                    # Add delay to avoid rate limiting (except for first request)
+                    if i > 0:
+                        time.sleep(0.5)  # 500ms delay between requests
+                    
+                    quotes = self.data_loader.load_market_data(
+                        symbol, start_date, end_date, source="yfinance"
+                    )
                 
                 if quotes:
                     all_quotes.extend(quotes)
@@ -90,8 +103,18 @@ class PortfolioBuilder:
                     logger.warning(f"No data available for {symbol}")
                     
             except Exception as e:
-                failed_symbols.append(symbol)
-                logger.error(f"Error loading {symbol}: {e}")
+                error_msg = str(e).lower()
+                if "rate limit" in error_msg or "too many requests" in error_msg:
+                    logger.warning(
+                        f"Rate limited for {symbol}. Will retry after delay or skip. "
+                        "Consider using CSV files for better performance."
+                    )
+                    failed_symbols.append(symbol)
+                    # Add longer delay if rate limited
+                    time.sleep(2.0)
+                else:
+                    failed_symbols.append(symbol)
+                    logger.error(f"Error loading {symbol}: {e}")
         
         logger.info(
             f"Portfolio built: {len(loaded_symbols)} symbols loaded, "
@@ -102,7 +125,18 @@ class PortfolioBuilder:
             logger.warning(f"Failed to load: {', '.join(failed_symbols)}")
         
         if not all_quotes:
-            raise ValueError("No market data loaded for portfolio")
+            if failed_symbols and "rate limit" in str(failed_symbols).lower():
+                raise ValueError(
+                    f"Rate limited by yfinance. Failed to load {len(failed_symbols)} symbols. "
+                    f"Please try again later or add CSV files to data/historical/ for: "
+                    f"{', '.join(failed_symbols[:5])}{'...' if len(failed_symbols) > 5 else ''}"
+                )
+            else:
+                raise ValueError(
+                    f"No market data loaded for portfolio. "
+                    f"Failed to load {len(failed_symbols)} symbols: "
+                    f"{', '.join(failed_symbols[:5])}{'...' if len(failed_symbols) > 5 else ''}"
+                )
         
         # Sort quotes by timestamp for consistent processing
         all_quotes.sort(key=lambda q: q.timestamp)
