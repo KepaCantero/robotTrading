@@ -191,11 +191,12 @@ class SimpleBacktester:
 
     def _process_signal(self, signal: Signal, market_data: Any):
         """Process a trading signal."""
+        strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
         if signal.signal_type == SignalType.BUY:
-            logger.debug(f"Processing BUY signal for {signal.symbol}")
+            logger.info(f"🔄 Processing BUY signal for {signal.symbol} (strategy={strategy_name})")
             self._execute_buy_signal(signal, market_data)
         elif signal.signal_type == SignalType.SELL:
-            logger.debug(f"Processing SELL signal for {signal.symbol}")
+            logger.info(f"🔄 Processing SELL signal for {signal.symbol} (strategy={strategy_name})")
             self._execute_sell_signal(signal, market_data)
         elif signal.signal_type == SignalType.HOLD:
             # Hold signals don't generate trades
@@ -219,20 +220,21 @@ class SimpleBacktester:
         # Calculate position size based on signal confidence and available
         # capital
         position_size = self._calculate_position_size(signal, current_price)
-        logger.debug(f"BUY {signal.symbol}: calculated position_size={position_size}, price={current_price}, capital={self.capital}")
+        strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
+        logger.info(f"💰 BUY {signal.symbol} (strategy={strategy_name}): position_size={position_size}, price={current_price}, capital={self.capital}")
 
         if position_size <= 0:
-            logger.warning(f"BUY {signal.symbol}: position_size <= 0, skipping")
+            logger.warning(f"❌ BUY {signal.symbol} (strategy={strategy_name}): position_size <= 0, skipping")
             return
 
         # Check if we have enough capital
         total_cost = position_size * current_price
         if total_cost > self.capital:
-            logger.debug(f"BUY {signal.symbol}: total_cost ({total_cost}) > capital ({self.capital}), adjusting position_size")
+            logger.info(f"🔧 BUY {signal.symbol} (strategy={strategy_name}): total_cost ({total_cost}) > capital ({self.capital}), adjusting position_size")
             position_size = self.capital / current_price
 
         if position_size <= 0:
-            logger.warning(f"BUY {signal.symbol}: adjusted position_size <= 0, skipping")
+            logger.warning(f"❌ BUY {signal.symbol} (strategy={strategy_name}): adjusted position_size <= 0, skipping")
             return
 
         # Apply slippage
@@ -243,10 +245,10 @@ class SimpleBacktester:
         slippage_cost = abs(position_size * (execution_price - current_price))
         total_cost = position_size * execution_price + commission + slippage_cost
 
-        logger.debug(f"BUY {signal.symbol}: execution_price={execution_price}, total_cost={total_cost}, capital={self.capital}")
+        logger.info(f"💰 BUY {signal.symbol} (strategy={strategy_name}): execution_price={execution_price}, total_cost={total_cost}, capital={self.capital}")
 
         if total_cost > self.capital:
-            logger.warning(f"BUY {signal.symbol}: total_cost ({total_cost}) > capital ({self.capital}) after slippage, skipping")
+            logger.warning(f"❌ BUY {signal.symbol} (strategy={strategy_name}): total_cost ({total_cost}) > capital ({self.capital}) after slippage, skipping")
             return
 
         logger.info(f"✅ EXECUTING BUY: {signal.symbol} qty={position_size} price={execution_price}")
@@ -286,9 +288,11 @@ class SimpleBacktester:
 
     def _execute_sell_signal(self, signal: Signal, market_data: Any):
         """Execute a sell signal."""
+        strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
         current_position = self.positions.get(signal.symbol, Decimal("0"))
 
         if current_position <= 0:
+            logger.warning(f"❌ SELL {signal.symbol} (strategy={strategy_name}): No position to sell (position={current_position})")
             return  # No position to sell
 
         # Get price using helper function
@@ -297,13 +301,13 @@ class SimpleBacktester:
         # Calculate sell quantity (can be partial)
         calculated_sell_size = self._calculate_position_size(signal, current_price)
         sell_quantity = min(current_position, calculated_sell_size)
-        logger.debug(f"SELL {signal.symbol}: calculated_sell_size={calculated_sell_size}, sell_quantity={sell_quantity}")
+        logger.info(f"💰 SELL {signal.symbol} (strategy={strategy_name}): calculated_sell_size={calculated_sell_size}, sell_quantity={sell_quantity}, current_position={current_position}")
 
         if sell_quantity <= 0:
-            logger.warning(f"SELL {signal.symbol}: sell_quantity <= 0, skipping")
+            logger.warning(f"❌ SELL {signal.symbol} (strategy={strategy_name}): sell_quantity <= 0, skipping")
             return
 
-        logger.info(f"✅ EXECUTING SELL: {signal.symbol} qty={sell_quantity} price={current_price}")
+        logger.info(f"✅ EXECUTING SELL: {signal.symbol} (strategy={strategy_name}) qty={sell_quantity} price={current_price}")
 
         # Apply slippage
         execution_price = self._apply_slippage(current_price, False)
