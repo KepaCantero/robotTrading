@@ -16,6 +16,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+# IMPORTANT: Import logging_config FIRST to ensure all warnings/errors go to files
+from app.core.logging_config import setup_file_logging
+
 from app.api.assets import router as assets_router
 from app.api.cost_analysis import router as cost_analysis_router
 from app.api.market_data import router as market_data_router
@@ -32,10 +35,8 @@ from app.core.config import get_settings
 # import)
 settings = None
 
-# Configure logging (will be updated when settings are loaded)
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+# Logging is already configured by logging_config module
+# Just get the logger
 logger = logging.getLogger(__name__)
 
 
