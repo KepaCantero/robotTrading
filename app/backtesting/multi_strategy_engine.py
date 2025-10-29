@@ -5,18 +5,14 @@ TASK-PA-1, PA-2: Implements multi-strategy backtesting with capital allocation.
 """
 
 import logging
-from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from app.backtesting.engine import SimpleBacktester
-from app.backtesting.models import BacktestConfig, BacktestResult, Trade
+from app.backtesting.models import BacktestConfig, BacktestResult
 from app.models.market_data import Quote
-from app.services.multi_strategy_allocation import (
-    MultiStrategyAllocationManager,
-    StrategyCapitalAllocation,
-)
+from app.services.multi_strategy_allocation import MultiStrategyAllocationManager
 from app.services.portfolio_config_manager import (
     PortfolioConfigManager,
     get_portfolio_config_manager,
@@ -90,7 +86,7 @@ class MultiStrategyBacktester:
             # Filter quotes by sector if configured
             filtered_quotes = self._filter_quotes_by_strategy(quotes, strategy_name)
             
-            if filtered_quotes:
+            if len(filtered_quotes) < len(quotes):
                 logger.info(
                     f"{strategy_name}: Filtered {len(quotes)} quotes to {len(filtered_quotes)} "
                     f"based on sector configuration"
@@ -226,7 +222,6 @@ class MultiStrategyBacktester:
                 "total_trades": result.performance.total_trades,
                 "win_rate": float(result.performance.win_rate),
                 "total_return": float(result.total_return),
-                "final_capital": float(result.final_capital),
                 "sharpe_ratio": float(result.performance.sharpe_ratio) if result.performance.sharpe_ratio else None,
                 "max_drawdown": float(result.performance.max_drawdown) if result.performance.max_drawdown else 0,
             }
