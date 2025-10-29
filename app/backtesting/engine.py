@@ -5,11 +5,14 @@ This module provides the core backtesting functionality including
 historical data simulation, trade execution, and performance metrics calculation.
 """
 
+import logging
 import math
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
+
+logger = logging.getLogger(__name__)
 
 from app.backtesting.models import (
     BacktestConfig,
@@ -106,6 +109,7 @@ class SimpleBacktester:
                 # 1. Symbol matches exactly
                 # 2. Signal timestamp is before or equal to market_data timestamp (within 1 day tolerance)
                 if signal.symbol == md.symbol and time_diff >= -86400 and time_diff <= 86400:
+                    logger.debug(f"Processing signal: {signal.symbol} {signal.signal_type} at {md.timestamp}")
                     self._process_signal(signal, md)
                     signal_index += 1
                 elif signal.timestamp > md.timestamp:
@@ -113,6 +117,10 @@ class SimpleBacktester:
                     break
                 else:
                     # Signal symbol doesn't match or too old, skip it
+                    if signal.symbol != md.symbol:
+                        logger.debug(f"Skipping signal: symbol mismatch {signal.symbol} != {md.symbol}")
+                    elif abs(time_diff) > 86400:
+                        logger.debug(f"Skipping signal: timestamp too far {time_diff}s")
                     signal_index += 1
 
             # Check for stop loss / take profit
@@ -163,11 +171,14 @@ class SimpleBacktester:
     def _process_signal(self, signal: Signal, market_data: Any):
         """Process a trading signal."""
         if signal.signal_type == SignalType.BUY:
+            logger.debug(f"Processing BUY signal for {signal.symbol}")
             self._execute_buy_signal(signal, market_data)
         elif signal.signal_type == SignalType.SELL:
+            logger.debug(f"Processing SELL signal for {signal.symbol}")
             self._execute_sell_signal(signal, market_data)
         elif signal.signal_type == SignalType.HOLD:
             # Hold signals don't generate trades
+            logger.debug(f"Processing HOLD signal for {signal.symbol} (skipped)")
             pass
 
     def _execute_buy_signal(self, signal: Signal, market_data: Any):
@@ -187,16 +198,20 @@ class SimpleBacktester:
         # Calculate position size based on signal confidence and available
         # capital
         position_size = self._calculate_position_size(signal, current_price)
+        logger.debug(f"BUY {signal.symbol}: calculated position_size={position_size}, price={current_price}, capital={self.capital}")
 
         if position_size <= 0:
+            logger.warning(f"BUY {signal.symbol}: position_size <= 0, skipping")
             return
 
         # Check if we have enough capital
         total_cost = position_size * current_price
         if total_cost > self.capital:
+            logger.debug(f"BUY {signal.symbol}: total_cost ({total_cost}) > capital ({self.capital}), adjusting position_size")
             position_size = self.capital / current_price
 
         if position_size <= 0:
+            logger.warning(f"BUY {signal.symbol}: adjusted position_size <= 0, skipping")
             return
 
         # Apply slippage
@@ -207,8 +222,13 @@ class SimpleBacktester:
         slippage_cost = abs(position_size * (execution_price - current_price))
         total_cost = position_size * execution_price + commission + slippage_cost
 
+        logger.debug(f"BUY {signal.symbol}: execution_price={execution_price}, total_cost={total_cost}, capital={self.capital}")
+
         if total_cost > self.capital:
+            logger.warning(f"BUY {signal.symbol}: total_cost ({total_cost}) > capital ({self.capital}) after slippage, skipping")
             return
+
+        logger.info(f"✅ EXECUTING BUY: {signal.symbol} qty={position_size} price={execution_price}")
 
         # Build reason from signal metadata
         reason = self._build_trade_reason(signal, market_data)
@@ -261,12 +281,16 @@ class SimpleBacktester:
         slippage_cost = abs(sell_quantity * (execution_price - current_price))
         proceeds = sell_quantity * execution_price - commission - slippage_cost
 
+        logger.debug(f"SELL {signal.symbol}: current_position={current_position}, price={current_price}, capital={self.capital}")
+
         # Find the most recent buy trade for this symbol to calculate PnL
         buy_trades = [
             t
             for t in self.trades
             if t.symbol == signal.symbol and t.side == "buy" and t.status == TradeStatus.OPEN
         ]
+
+        logger.debug(f"SELL {signal.symbol}: found {len(buy_trades)} open buy trades")
 
         # Calculate PnL
         pnl = Decimal("0")
