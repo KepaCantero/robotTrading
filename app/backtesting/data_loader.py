@@ -14,7 +14,19 @@ from pathlib import Path
 from typing import List, Optional
 
 import pandas as pd
-import yfinance as yf
+
+# Try multiple Yahoo Finance libraries as fallbacks
+try:
+    import yfinance as yf
+    HAS_YFINANCE = True
+except ImportError:
+    HAS_YFINANCE = False
+
+try:
+    from yahoo_fin.stock_info import get_data as yahoo_fin_get_data
+    HAS_YAHOO_FIN = True
+except ImportError:
+    HAS_YAHOO_FIN = False
 
 from app.models.market_data import Quote
 
@@ -121,41 +133,105 @@ class DataLoader:
         end_date: datetime,
         timeframe: str = "1d",
     ) -> List[Quote]:
-        """Load data from Yahoo Finance."""
-        try:
-            ticker = yf.Ticker(symbol)
-            interval = "1d" if timeframe == "1d" else "1h"
-            hist = ticker.history(start=start_date, end=end_date, interval=interval)
+        """
+        Load data from Yahoo Finance using multiple libraries as fallbacks.
+        
+        Tries:
+        1. yfinance (primary)
+        2. yahoo_fin (fallback)
+        """
+        # Try yfinance first
+        if HAS_YFINANCE:
+            try:
+                ticker = yf.Ticker(symbol)
+                interval = "1d" if timeframe == "1d" else "1h"
+                hist = ticker.history(start=start_date, end=end_date, interval=interval)
 
-            if hist.empty:
-                logger.warning(f"No data from yfinance for {symbol}")
-                return []
-
-            quotes = []
-            for idx, row in hist.iterrows():
-                # Convert index to datetime if needed
-                timestamp = idx if isinstance(idx, datetime) else datetime.fromisoformat(str(idx))
-
-                quote = Quote(
-                    symbol=symbol,
-                    bid=Decimal(str(row.get("Close", row.get("Low", 100)))),
-                    ask=Decimal(str(row.get("Close", row.get("High", 100)))),
-                    last=Decimal(str(row.get("Close", 100))),
-                    volume=Decimal(str(row.get("Volume", 0))),
-                    timestamp=timestamp,
-                    high=Decimal(str(row.get("High", row.get("Close", 100)))),
-                    low=Decimal(str(row.get("Low", row.get("close", 100)))),
-                    open=Decimal(str(row.get("Open", row.get("Close", 100)))),
-                    close=Decimal(str(row.get("Close", 100))),
+                if not hist.empty:
+                    quotes = self._convert_yfinance_to_quotes(hist, symbol)
+                    logger.info(f"Loaded {len(quotes)} quotes from yfinance for {symbol}")
+                    return quotes
+            except Exception as e:
+                logger.debug(f"yfinance failed for {symbol}: {e}, trying yahoo_fin...")
+        
+        # Fallback to yahoo_fin
+        if HAS_YAHOO_FIN:
+            try:
+                # yahoo_fin uses mm/dd/yyyy format
+                start_str = start_date.strftime("%m/%d/%Y")
+                end_str = end_date.strftime("%m/%d/%Y")
+                interval = "1d" if timeframe == "1d" else "1wk"
+                
+                df = yahoo_fin_get_data(
+                    symbol,
+                    start_date=start_str,
+                    end_date=end_str,
+                    index_as_date=True,
+                    interval=interval,
                 )
-                quotes.append(quote)
-
-            logger.info(f"Loaded {len(quotes)} quotes from yfinance for {symbol}")
-            return quotes
-
-        except Exception as e:
-            logger.error(f"Error loading from yfinance for {symbol}: {e}")
-            return []
+                
+                if df is not None and not df.empty:
+                    quotes = self._convert_dataframe_to_quotes(df, symbol)
+                    logger.info(f"Loaded {len(quotes)} quotes from yahoo_fin for {symbol}")
+                    return quotes
+            except Exception as e:
+                logger.debug(f"yahoo_fin failed for {symbol}: {e}")
+        
+        logger.warning(f"No data available from Yahoo Finance libraries for {symbol}")
+        return []
+    
+    def _convert_yfinance_to_quotes(self, hist: pd.DataFrame, symbol: str) -> List[Quote]:
+        """Convert yfinance DataFrame to Quote objects."""
+        quotes = []
+        for idx, row in hist.iterrows():
+            timestamp = idx if isinstance(idx, datetime) else pd.to_datetime(idx).to_pydatetime()
+            
+            quote = Quote(
+                symbol=symbol,
+                bid=Decimal(str(row.get("Close", row.get("Low", 100)))),
+                ask=Decimal(str(row.get("Close", row.get("High", 100)))),
+                last=Decimal(str(row.get("Close", 100))),
+                volume=Decimal(str(row.get("Volume", 0))),
+                timestamp=timestamp,
+                high=Decimal(str(row.get("High", row.get("Close", 100)))),
+                low=Decimal(str(row.get("Low", row.get("close", 100)))),
+                open=Decimal(str(row.get("Open", row.get("Close", 100)))),
+                close=Decimal(str(row.get("Close", 100))),
+            )
+            quotes.append(quote)
+        return quotes
+    
+    def _convert_dataframe_to_quotes(self, df: pd.DataFrame, symbol: str) -> List[Quote]:
+        """Convert pandas DataFrame (from yahoo_fin or CSV) to Quote objects."""
+        quotes = []
+        
+        for idx, row in df.iterrows():
+            # Handle date index
+            if isinstance(idx, datetime):
+                timestamp = idx
+            elif isinstance(idx, pd.Timestamp):
+                timestamp = idx.to_pydatetime()
+            else:
+                timestamp = pd.to_datetime(idx).to_pydatetime()
+            
+            # Get close price (primary price)
+            close = Decimal(str(row.get("close", row.get("Close", row.get("last", 100)))))
+            
+            quote = Quote(
+                symbol=symbol,
+                bid=close,
+                ask=close,
+                last=close,
+                volume=Decimal(str(row.get("volume", row.get("Volume", 0)))),
+                timestamp=timestamp,
+                high=Decimal(str(row.get("high", row.get("High", close)))),
+                low=Decimal(str(row.get("low", row.get("Low", close)))),
+                open=Decimal(str(row.get("open", row.get("Open", close)))),
+                close=close,
+            )
+            quotes.append(quote)
+        
+        return quotes
 
     def save_to_csv(self, data: List[Quote], filename: str):
         """
