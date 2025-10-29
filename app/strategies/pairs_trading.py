@@ -174,10 +174,16 @@ class PairsTradingStrategy(BaseStrategy):
             self._call_count += 1
             
             # Log ALL candidates (every call) at DEBUG level
+            # Check if we have data for both pairs
+            pair_data_available = (
+                len(self.price_history.get(self.pair_symbols[0], [])) > 0 and
+                len(self.price_history.get(self.pair_symbols[1], [])) > 0
+            ) if len(self.pair_symbols) == 2 else False
+            
             logger.debug(
                 f"🔍 PAIRS_TRADING CANDIDATE {market_data.symbol}: "
                 f"price={current_price:.2f}, part_of_pair={market_data.symbol in self.pair_symbols}, "
-                f"pair_data_available={pair_available}, call_count={self._call_count}"
+                f"pair_data_available={pair_data_available}, call_count={self._call_count}"
             )
             
             if self._call_count % 10 == 0:  # Log every 10th call at INFO level
@@ -204,8 +210,9 @@ class PairsTradingStrategy(BaseStrategy):
                 # Logging cuando spread no es suficiente (cada cierto tiempo)
                 if self._call_count % 200 == 0:
                     logger.debug(
-                        f"PAIRS_TRADING {market_data.symbol}: Spread too small "
-                        f"({spread_abs:.4f} <= {spread_threshold_half:.4f})"
+                        f"❌ PAIRS_TRADING CANDIDATE REJECTED {market_data.symbol}: "
+                        f"Spread too small (spread={spread_abs:.4f} <= threshold={spread_threshold_half:.4f}), "
+                        f"normalized_spread={spread/spread_threshold_half:.4f if spread_threshold_half > 0 else 'N/A'}"
                     )
 
         except Exception as e:
