@@ -238,11 +238,19 @@ class MomentumStrategy(BaseStrategy):
                             f"volume_ratio={volume_ratio:.2f}, ROC={roc_safe:.2f}, OBV={obv_trend}"
                         )
                 else:
-                    if self.current_bar_index % 100 == 0:  # Log periodically
-                        logger.debug(f"MOMENTUM {market_data.symbol}: Signal suppressed by ATR filter")
+                    # Log ALL ATR filter rejections
+                    logger.debug(
+                        f"❌ MOMENTUM CANDIDATE REJECTED {market_data.symbol}: "
+                        f"ATR filter failed (ATR={atr_value:.4f if atr_value else 'N/A'}, "
+                        f"price_change={abs(price_change):.4f}, threshold={atr_threshold:.4f})"
+                    )
             else:
-                if self.current_bar_index % 100 == 0:  # Log periodically
-                    logger.debug(f"MOMENTUM {market_data.symbol}: Signal suppressed due to cooldown period")
+                # Log ALL cooldown rejections
+                logger.debug(
+                    f"❌ MOMENTUM CANDIDATE REJECTED {market_data.symbol}: "
+                    f"Cooldown active (last_signal_bar={self.last_signal_bar_index}, "
+                    f"current_bar={self.current_bar_index}, cooldown_bars={self.cooldown_bars})"
+                )
 
         except Exception as e:
             logger.error(f"MOMENTUM Error generating signals for {market_data.symbol}: {e}", exc_info=True)

@@ -173,7 +173,14 @@ class PairsTradingStrategy(BaseStrategy):
                 self._call_count = 0
             self._call_count += 1
             
-            if self._call_count % 50 == 0:  # Log every 50th call
+            # Log ALL candidates (every call) at DEBUG level
+            logger.debug(
+                f"🔍 PAIRS_TRADING CANDIDATE {market_data.symbol}: "
+                f"price={current_price:.2f}, part_of_pair={market_data.symbol in self.pair_symbols}, "
+                f"pair_data_available={pair_available}, call_count={self._call_count}"
+            )
+            
+            if self._call_count % 10 == 0:  # Log every 10th call at INFO level
                 logger.info(
                     f"PAIRS_TRADING {market_data.symbol}: price={current_price:.2f}, "
                     f"spread={spread:.4f} (abs={spread_abs:.4f}), threshold={spread_threshold_half:.4f} "
