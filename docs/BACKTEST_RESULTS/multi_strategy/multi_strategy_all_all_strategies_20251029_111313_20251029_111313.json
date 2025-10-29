@@ -1,0 +1,77 @@
+{
+  "timestamp": "2025-10-29T11:13:13.367683",
+  "backtest_id": "all_all_strategies_20251029_111313",
+  "strategies": [
+    {
+      "name": "momentum",
+      "allocation_pct": 50.0,
+      "trades": 0,
+      "pnl": 0.0,
+      "sharpe": null,
+      "max_drawdown": 0,
+      "win_rate": 0.0,
+      "total_return": 0.0,
+      "initial_capital": 50000.0,
+      "final_capital": 50000.0,
+      "config": {
+        "max_exposure": 0.5,
+        "aggressive_risk": true
+      }
+    },
+    {
+      "name": "mean_reversion",
+      "allocation_pct": 25.0,
+      "trades": 7,
+      "pnl": -40.83000958301636,
+      "sharpe": -1.7090749629205861,
+      "max_drawdown": -7.186754664093484,
+      "win_rate": 28.57142857142857,
+      "total_return": -0.16332003833206,
+      "initial_capital": 25000.0,
+      "final_capital": 24959.169990416984,
+      "config": {
+        "max_exposure": 0.6,
+        "z_score_threshold": 2.0,
+        "moderate_risk": true
+      }
+    },
+    {
+      "name": "pairs_trading",
+      "allocation_pct": 25.0,
+      "trades": 0,
+      "pnl": 0.0,
+      "sharpe": null,
+      "max_drawdown": 0,
+      "win_rate": 0.0,
+      "total_return": 0.0,
+      "initial_capital": 25000.0,
+      "final_capital": 25000.0,
+      "config": {
+        "max_pair_exposure": 0.2,
+        "max_total_exposure": 0.4,
+        "conservative_risk": true
+      }
+    }
+  ],
+  "combined": {
+    "total_pnl": -40.83000958302,
+    "sharpe": -0.42726874073014653,
+    "max_drawdown": -1.796688666023371,
+    "total_return": -0.040830009583015,
+    "total_trades": 7
+  },
+  "allocation": {
+    "momentum": {
+      "capital": 50000.0,
+      "weight": 0.5
+    },
+    "mean_reversion": {
+      "capital": 25000.0,
+      "weight": 0.25
+    },
+    "pairs_trading": {
+      "capital": 25000.0,
+      "weight": 0.25
+    }
+  }
+}
