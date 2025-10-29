@@ -178,7 +178,6 @@ class MomentumStrategy(BaseStrategy):
 
             # Convertir None a valores seguros para logging
             roc_safe = roc if roc is not None else 0.0
-            stoch_rsi_safe = stoch_rsi if stoch_rsi is not None else 0.0
 
             # Guardar para uso en señales
             self.last_rsi = rsi
@@ -662,12 +661,18 @@ class MomentumStrategy(BaseStrategy):
         obv_bullish = obv_trend is None or obv_trend in ["rising", "neutral"]
 
         # FIX: Core conditions: RSI condition + EMA + Volume (ROC and OBV are nice-to-have)
-        # For neutral RSI, require price > EMA (uptrend) to generate BUY
+        # For neutral RSI, be more flexible - allow BUY even if price < EMA if other conditions are good
         if rsi_neutral_bullish:
-            # In neutral zone, require stronger confirmation: price > EMA AND volume
-            return ema_bullish and has_volume and roc_positive and obv_bullish
+            # In neutral zone, be flexible with EMA:
+            # - Prefer price > EMA (uptrend) BUT
+            # - Also allow if price < EMA but volume is strong and ROC/OBV are positive
+            # This captures opportunities when market is oversold but showing signs of reversal
+            volume_strong = volume_ratio > Decimal("1.2")  # Strong volume confirmation
+            # Allow BUY if: (price > EMA) OR (strong volume AND ROC positive)
+            ema_flexible = ema_bullish or (volume_strong and roc_positive)
+            return ema_flexible and has_volume and roc_positive and obv_bullish
         else:
-            # For oversold or strong momentum, standard conditions
+            # For oversold or strong momentum, standard conditions (require price > EMA)
             return rsi_condition and ema_bullish and has_volume and roc_positive and obv_bullish
 
     def _is_sell_signal(
