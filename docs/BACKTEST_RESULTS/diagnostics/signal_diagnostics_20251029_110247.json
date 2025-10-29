@@ -1,0 +1,29 @@
+{
+  "generated_at": "2025-10-29T10:02:47.012660",
+  "strategy_summaries": {
+    "momentum": {
+      "strategy": "momentum",
+      "signals_candidate": 106,
+      "signals_executed": 0,
+      "signals_rejected": 0,
+      "execution_rate": 0.0,
+      "rejection_rate": 0.0,
+      "checks_failed": {}
+    }
+  },
+  "rejection_details": [],
+  "top_rejected_symbols": [
+    {
+      "symbol": "GOOGL",
+      "candidates": 104,
+      "executed": 0,
+      "rejected": 0
+    },
+    {
+      "symbol": "META",
+      "candidates": 2,
+      "executed": 0,
+      "rejected": 0
+    }
+  ]
+}
