@@ -48,6 +48,8 @@ class TestMomentumSignalGeneration:
                 low=price * Decimal("0.99"),
                 close=price,
                 last=price,
+                bid=price * Decimal("0.999"),
+                ask=price * Decimal("1.001"),
                 volume=volume,
             )
             signals = strategy.generate_signals(quote)
@@ -77,6 +79,8 @@ class TestMomentumSignalGeneration:
                 low=Decimal("198"),
                 close=Decimal("200"),
                 last=Decimal("200"),
+                bid=Decimal("199.8"),
+                ask=Decimal("200.2"),
                 volume=Decimal("1000000"),
             )
             strategy.generate_signals(quote)
@@ -90,14 +94,20 @@ class TestMomentumSignalGeneration:
             low=Decimal("198"),
             close=Decimal("200"),
             last=Decimal("200"),
+            bid=Decimal("199.8"),
+            ask=Decimal("200.2"),
             volume=Decimal("1000000"),
         )
         signals = strategy.generate_signals(quote)
         
-        if signals:
+        # Después de suficiente histórico, puede que genere señales
+        # Verificamos que si hay señales, tienen la estructura correcta
+        if signals and len(signals) > 0:
             signal = signals[0]
             assert hasattr(signal, 'symbol')
             assert hasattr(signal, 'signal_type')
+            assert hasattr(signal, 'price')
+            assert hasattr(signal, 'timestamp')
             assert hasattr(signal, 'price')
             assert hasattr(signal, 'volume')
             assert signal.signal_type in [SignalType.BUY, SignalType.SELL]
@@ -127,6 +137,7 @@ class TestMomentumRiskCheck:
             cash=Decimal("50000"),
             positions=[],
             timestamp=datetime.utcnow(),
+            broker="test",
         )
         
         # Señal BUY con precio razonable
@@ -160,6 +171,7 @@ class TestMomentumRiskCheck:
             cash=Decimal("10"),  # Solo $10
             positions=[],
             timestamp=datetime.utcnow(),
+            broker="test",
         )
         
         signal = Signal(
@@ -203,6 +215,7 @@ class TestMomentumRiskCheck:
             cash=Decimal("10000"),  # $10k cash
             positions=positions,
             timestamp=datetime.utcnow(),
+            broker="test",
         )
         
         # Total value = $70k, invested = $60k, exposición = 85.7% > 80%
@@ -242,6 +255,7 @@ class TestMomentumRiskCheck:
                 )
             ],
             timestamp=datetime.utcnow(),
+            broker="test",
         )
         
         signal = Signal(
@@ -268,6 +282,7 @@ class TestMomentumRiskCheck:
             cash=Decimal("50000"),
             positions=[],
             timestamp=datetime.utcnow(),
+            broker="test",
         )
         
         signal = Signal(
@@ -305,6 +320,7 @@ class TestMomentumPositionSize:
             cash=Decimal("50000"),
             positions=[],
             timestamp=datetime.utcnow(),
+            broker="test",
         )
         
         signal = Signal(
@@ -349,6 +365,7 @@ class TestMomentumPositionSize:
                 )
             ],
             timestamp=datetime.utcnow(),
+            broker="test",
         )
         
         signal = Signal(
@@ -378,6 +395,7 @@ class TestMomentumPositionSize:
             cash=Decimal("50000"),
             positions=[],
             timestamp=datetime.utcnow(),
+            broker="test",
         )
         
         signal = Signal(
@@ -429,6 +447,7 @@ class TestMomentumExposureCalculation:
             cash=Decimal("30000"),
             positions=positions,
             timestamp=datetime.utcnow(),
+            broker="test",
         )
         
         exposure = self.strategy._calculate_total_exposure(portfolio)
@@ -447,6 +466,7 @@ class TestMomentumExposureCalculation:
             cash=Decimal("50000"),
             positions=[],
             timestamp=datetime.utcnow(),
+            broker="test",
         )
         
         exposure = self.strategy._calculate_total_exposure(portfolio)
@@ -480,6 +500,8 @@ class TestMomentumIntegration:
                     low=Decimal("198"),
                     close=Decimal("200"),
                     last=Decimal("200"),
+                    bid=Decimal("199.8"),
+                    ask=Decimal("200.2"),
                     volume=Decimal("1000000"),
                 )
                 strategy.generate_signals(quote)
@@ -493,6 +515,8 @@ class TestMomentumIntegration:
             low=Decimal("198"),
             close=Decimal("200"),
             last=Decimal("200"),
+            bid=Decimal("199.8"),
+            ask=Decimal("200.2"),
             volume=Decimal("1000000"),
         )
         signals = strategy.generate_signals(quote)
@@ -529,6 +553,7 @@ class TestMomentumIntegration:
                 )
             ],
             timestamp=datetime.utcnow(),
+            broker="test",
         )
         
         # BUY signal para AAPL
@@ -568,12 +593,12 @@ class TestMomentumEdgeCases:
     
     def test_risk_check_with_very_high_exposure(self):
         """Test con exposición muy alta (cerca del límite)."""
-        # Portfolio con exposición al 79% (justo bajo el límite)
+        # Portfolio con exposición al 45% (justo bajo el límite de 50%)
         positions = [
             Position(
                 symbol="MSFT",
                 asset_class=AssetClass.EQUITY,
-                quantity=Decimal("395"),  # $39.5k en posiciones
+                quantity=Decimal("225"),  # $22.5k en posiciones
                 avg_price=Decimal("100"),
                 market_price=Decimal("100"),
                 unrealized_pnl=Decimal("0"),
@@ -585,12 +610,13 @@ class TestMomentumEdgeCases:
         
         portfolio = Portfolio(
             portfolio_id="test",
-            cash=Decimal("10500"),  # $10.5k cash
+            cash=Decimal("27500"),  # $27.5k cash
             positions=positions,
             timestamp=datetime.utcnow(),
+            broker="test",
         )
         
-        # Total = $50k, invested = $39.5k, exposure = 79%
+        # Total = $50k, invested = $22.5k, exposure = 45% < 50%
         signal = Signal(
             symbol="AAPL",
             signal_type=SignalType.BUY,
@@ -606,8 +632,8 @@ class TestMomentumEdgeCases:
         )
         
         result = self.strategy.risk_check(signal, portfolio)
-        # Debería pasar porque 79% < 80%
-        assert result == True, "risk_check should pass at 79% exposure"
+        # Debería pasar porque 45% < 50% (límite por defecto)
+        assert result == True, "risk_check should pass at 45% exposure (below 50% limit)"
     
     def test_risk_check_with_zero_cash(self):
         """Test con cash = 0."""
@@ -616,6 +642,7 @@ class TestMomentumEdgeCases:
             cash=Decimal("0"),
             positions=[],
             timestamp=datetime.utcnow(),
+            broker="test",
         )
         
         signal = Signal(
@@ -642,6 +669,7 @@ class TestMomentumEdgeCases:
             cash=Decimal("100"),  # Solo $100
             positions=[],
             timestamp=datetime.utcnow(),
+            broker="test",
         )
         
         signal = Signal(

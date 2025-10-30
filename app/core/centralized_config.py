@@ -275,6 +275,224 @@ class StrategyConfig(BaseModel):
         return v
 
 
+class StockAllocationSettings(BaseSettings):
+    """
+    Stock Allocation Configuration with Pydantic validation.
+    
+    Centralizes all parameters for the Strategy Stock Allocator module.
+    Each parameter is validated, documented, and versioned.
+    """
+    
+    # Data validation parameters
+    LOOKBACK_MAX_DAYS: int = Field(
+        default=126, 
+        ge=60, 
+        le=1000,
+        description="Maximum lookback period in days - RELAXED: 126 days (~6 months) instead of 252 to allow more stocks to pass (minimum 60, maximum 1000)"
+    )
+    MIN_LIQUIDITY_USD: float = Field(
+        default=500_000.0, 
+        ge=50_000.0, 
+        description="Minimum daily liquidity in USD - RELAXED: 500k (was 1M) to allow more stocks. Actual filter uses 5% of this = $25k minimum (minimum 50k)"
+    )
+    
+    # Stationarity and cointegration tests
+    ADF_P_VALUE_THRESHOLD: float = Field(
+        default=0.01, 
+        ge=0.01, 
+        le=0.10,
+        description="ADF test p-value threshold for cointegration (STRICT: 0.01 for pairs trading to avoid spurious relationships)"
+    )
+    ADF_P_VALUE_THRESHOLD_MEAN_REVERSION: float = Field(
+        default=0.05,
+        ge=0.01,
+        le=0.10,
+        description="ADF test p-value threshold for mean reversion stationarity (more relaxed: 0.05)"
+    )
+    KPSS_P_VALUE_THRESHOLD: float = Field(
+        default=0.05,
+        ge=0.01,
+        le=0.10,
+        description="KPSS test p-value threshold for stationarity (0.01-0.10)"
+    )
+    
+    # Mean Reversion parameters
+    MAX_HALF_LIFE_DAYS: int = Field(
+        default=120, 
+        ge=30, 
+        le=180,
+        description="Maximum half-life in days for mean reversion (RELAXED: 120 days to activate more trades, was 30)"
+    )
+    MIN_HALF_LIFE_DAYS: int = Field(
+        default=1,
+        ge=1,
+        le=10,
+        description="Minimum half-life in days (too fast = noise) (1-10)"
+    )
+    
+    # Exposure limits
+    MAX_STRATEGY_EXPOSURE: float = Field(
+        default=0.50, 
+        ge=0.10, 
+        le=0.80,
+        description="Maximum exposure per strategy (10%-80%)"
+    )
+    MAX_PAIR_EXPOSURE: float = Field(
+        default=0.15,
+        ge=0.05,
+        le=0.30,
+        description="Maximum exposure per pair (5%-30%)"
+    )
+    MAX_ASSETS_PER_PAIR: int = Field(
+        default=2,
+        ge=2,
+        le=5,
+        description="Maximum number of pairs an asset can participate in (2-5)"
+    )
+    
+    # Momentum scoring weights
+    MOMENTUM_WEIGHTS: Dict[str, float] = Field(
+        default_factory=lambda: {
+            "H_long": 0.40,
+            "Sortino": 0.35,
+            "1/tau": 0.05,
+            "Liquidity": 0.20,
+        },
+        description="Weights for Momentum scoring (must sum to ~1.0)"
+    )
+    
+    # Mean Reversion scoring weights
+    MEAN_REVERSION_WEIGHTS: Dict[str, float] = Field(
+        default_factory=lambda: {
+            "H_long": 0.05,
+            "Sortino": 0.10,
+            "1/tau": 0.45,
+            "Liquidity": 0.40,
+        },
+        description="Weights for Mean Reversion scoring (must sum to ~1.0)"
+    )
+    
+    # Pairs Trading scoring weights
+    PAIRS_TRADING_WEIGHTS: Dict[str, float] = Field(
+        default_factory=lambda: {
+            "H_long": 0.00,
+            "Sortino": 0.00,
+            "1/tau": 0.60,
+            "Liquidity": 0.40,
+        },
+        description="Weights for Pairs Trading scoring (must sum to ~1.0)"
+    )
+    
+    # Sortino ratio threshold
+    MIN_SORTINO_RATIO: float = Field(
+        default=0.5,
+        ge=0.5,
+        le=3.0,
+        description="Minimum Sortino ratio for Momentum strategy (RELAXED: 0.5 to avoid over-filtering, was 1.0)"
+    )
+    
+    # Hurst exponent thresholds
+    HURST_MOMENTUM_THRESHOLD: float = Field(
+        default=0.52,
+        ge=0.50,
+        le=0.70,
+        description="Hurst threshold above which asset is classified as Momentum (RELAXED: 0.52 to increase universe, was 0.55)"
+    )
+    HURST_MEAN_REVERSION_THRESHOLD: float = Field(
+        default=0.45,
+        ge=0.30,
+        le=0.50,
+        description="Hurst threshold below which asset is classified as Mean Reversion (<0.45)"
+    )
+    
+    # ERC / Risk Parity optimization
+    ERC_OPTIMIZATION_TOLERANCE: float = Field(
+        default=1e-6,
+        ge=1e-8,
+        le=1e-4,
+        description="Optimization tolerance for ERC algorithm (1e-8 to 1e-4)"
+    )
+    ERC_MAX_ITERATIONS: int = Field(
+        default=1000,
+        ge=100,
+        le=10000,
+        description="Maximum iterations for ERC optimization (100-10000)"
+    )
+    
+    # GARCH parameters
+    GARCH_FORECAST_HORIZON: int = Field(
+        default=1,
+        ge=1,
+        le=30,
+        description="GARCH volatility forecast horizon in days (1-30)"
+    )
+    
+    # Dynamic window selection for momentum
+    DYNAMIC_WINDOW_ENABLED: bool = Field(
+        default=True,
+        description="Enable dynamic window selection for slope/ROC calculation (30-90 days, optimal by MSE)"
+    )
+    SLOPE_WINDOW_MIN: int = Field(
+        default=30,
+        ge=20,
+        le=60,
+        description="Minimum window for slope calculation (days)"
+    )
+    SLOPE_WINDOW_MAX: int = Field(
+        default=90,
+        ge=60,
+        le=180,
+        description="Maximum window for slope calculation (days)"
+    )
+    
+    # Pairs Trading: Minimum lookback for cointegration
+    MIN_COINTEGRATION_LOOKBACK_DAYS: int = Field(
+        default=250,
+        ge=100,
+        le=500,
+        description="Minimum lookback days for cointegration test (STRICT: 250 to avoid spurious relationships)"
+    )
+    
+    # Decision logging
+    LOG_ALL_DECISIONS: bool = Field(
+        default=True,
+        description="Log all allocation decisions with full metadata"
+    )
+    LOG_FILTER_REJECTIONS: bool = Field(
+        default=True,
+        description="Log reasons for stock filtering/rejections"
+    )
+    
+    @field_validator("MOMENTUM_WEIGHTS", "MEAN_REVERSION_WEIGHTS", "PAIRS_TRADING_WEIGHTS")
+    @classmethod
+    def validate_weights_sum(cls, v: Dict[str, float]) -> Dict[str, float]:
+        """Validate that weights sum approximately to 1.0."""
+        total = sum(v.values())
+        if not 0.95 <= total <= 1.05:  # Allow 5% tolerance
+            logger.warning(f"Weights sum to {total:.3f}, expected ~1.0")
+        return v
+    
+    @field_validator("ERC_OPTIMIZATION_TOLERANCE")
+    @classmethod
+    def validate_tolerance(cls, v: float) -> float:
+        """Validate optimization tolerance."""
+        if not 1e-8 <= v <= 1e-4:
+            raise ValueError("ERC optimization tolerance must be between 1e-8 and 1e-4")
+        return v
+    
+    @field_validator("MAX_STRATEGY_EXPOSURE", "MAX_PAIR_EXPOSURE")
+    @classmethod
+    def validate_exposure(cls, v: float) -> float:
+        """Validate exposure limits."""
+        if not 0 <= v <= 1:
+            raise ValueError("Exposure limits must be between 0 and 1")
+        return v
+    
+    class Config:
+        env_prefix = "STOCK_ALLOCATION_"
+        case_sensitive = False
+
+
 class DatabaseConfig(BaseModel):
     """Database configuration."""
 

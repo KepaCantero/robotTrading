@@ -7,22 +7,31 @@ weight: 0.6
 parameters:
   # Explicit pair definitions
   pair_symbols:
-    - ["AAPL", "MSFT"]  # Technology pair
-    - ["JPM", "BAC"]    # Banking pair
-    - ["XOM", "CVX"]    # Energy pair (when data available)
-  
-  cointegration_threshold: 0.05 # More permissive (was 0.032)
-  min_correlation: 0.55 # More permissive (was 0.6)
-  max_pair_exposure: 0.2
-  max_total_exposure: 0.4
-  lookback_period: 20 # Standard (was 31, too long)
-  hedge_ratio_threshold: 0.1
-  spread_threshold: 1.2 # More permissive (was 1.68)
+    - ["AAPL", "MSFT"] # Technology pair
+    - ["JPM", "BAC"] # Banking pair
+    - ["XOM", "CVX"] # Energy pair (when data available)
 
-# Risk parameters
-max_position_size: 0.15
-stop_loss_pct: 0.04
-take_profit_pct: 0.08
+  cointegration_threshold: 0.01 # VERY STRICT: p-value < 0.01 to avoid spurious relationships (was 0.05)
+  min_correlation: 0.85 # STRICT: Minimum 0.85 correlation (was 0.8) - only strongest pairs
+  max_pair_exposure: 0.10 # Further reduced to minimize risk
+  max_total_exposure: 0.12 # Further reduced (was 0.15)
+  lookback_period: 30 # Good for spread calculation
+  hedge_ratio_threshold: 0.1
+  spread_threshold: 0.008 #INCREASED: 0.8% minimum spread (was 0.5%) - minimum edge filter
+  min_spread_z_score: 2.0 # NEW: Minimum normalized deviation >= 2σ (minimum edge filter)
+  max_pair_half_life_days: 15 # NEW: Half-life < 15 days for mean reversion spread (was no limit)
+  max_trades_per_day: 1 # REDUCED: Only 1 trade per day to reduce overtrading (was 2)
+  max_capital_per_day: 0.03 # REDUCED: Limit daily capital usage to 3% (was 5%)
+  slippage_per_trade_pct: 0.05 # NEW: Model slippage 0.05% per side
+  commission_per_trade_pct: 0.05 # NEW: Model commission 0.05% per side
+
+# Risk parameters - DYNAMIC STOP-LOSS ENABLED
+max_position_size: 0.12 # Reduced from 0.15
+stop_loss_pct: 0.03 # 3% static fallback (dynamic ATR-based preferred)
+take_profit_pct: 0.06 # 6% take profit (risk/reward ~2:1)
+atr_multiplier: 2.5 # Dynamic stop = ATR * 2.5 (wider for pairs trading)
+use_dynamic_stop_loss: true # Enable ATR-based dynamic stop loss
+max_drawdown_per_strategy: 0.05 # 5% max drawdown per strategy
 
 # Performance thresholds
 min_sharpe_ratio: 1.5

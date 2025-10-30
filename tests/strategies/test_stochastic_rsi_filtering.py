@@ -1,5 +1,7 @@
 """
 Tests for Stochastic RSI filtering in MomentumStrategy (TASK-IND-STOCH-2).
+
+REFACTORED: Uses TechnicalIndicatorCalculator instead of private methods.
 """
 
 import pytest
@@ -8,6 +10,7 @@ from decimal import Decimal
 
 from app.models.market_data import Quote
 from app.models.signal import SignalType
+from app.services.momentum_analysis import TechnicalIndicatorCalculator
 from app.strategies.momentum import MomentumStrategy
 
 
@@ -49,9 +52,11 @@ class TestStochasticRSICalculation:
 
     def test_calculate_stochastic_rsi_insufficient_data(self, momentum_strategy):
         """Test Stochastic RSI with insufficient RSI history."""
-        momentum_strategy.rsi_history = deque([50.0, 55.0, 60.0])  # Only 3 values
+        rsi_values = [50.0, 55.0, 60.0]  # Only 3 values
 
-        stoch_rsi, signal = momentum_strategy._calculate_stochastic_rsi(period=14)
+        # REFACTORED: Use TechnicalIndicatorCalculator instead of private method
+        calculator = TechnicalIndicatorCalculator()
+        stoch_rsi, signal = calculator.calculate_stochastic_rsi(rsi_values, period=14)
 
         assert stoch_rsi is None
         assert signal is None
@@ -60,10 +65,10 @@ class TestStochasticRSICalculation:
         """Test Stochastic RSI with sufficient RSI history."""
         # Create RSI history with variation
         rsi_values = [30.0, 35.0, 40.0, 45.0, 50.0, 55.0, 60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0, 95.0]
-        for val in rsi_values:
-            momentum_strategy.rsi_history.append(val)
 
-        stoch_rsi, signal = momentum_strategy._calculate_stochastic_rsi(period=14)
+        # REFACTORED: Use TechnicalIndicatorCalculator instead of private method
+        calculator = TechnicalIndicatorCalculator()
+        stoch_rsi, signal = calculator.calculate_stochastic_rsi(rsi_values, period=14)
 
         assert stoch_rsi is not None
         assert signal is not None
@@ -75,10 +80,11 @@ class TestStochasticRSICalculation:
     def test_calculate_stochastic_rsi_flat_rsi(self, momentum_strategy):
         """Test Stochastic RSI with flat RSI values."""
         # All RSI values are the same
-        for _ in range(14):
-            momentum_strategy.rsi_history.append(50.0)
+        rsi_values = [50.0] * 14
 
-        stoch_rsi, signal = momentum_strategy._calculate_stochastic_rsi(period=14)
+        # REFACTORED: Use TechnicalIndicatorCalculator instead of private method
+        calculator = TechnicalIndicatorCalculator()
+        stoch_rsi, signal = calculator.calculate_stochastic_rsi(rsi_values, period=14)
 
         assert stoch_rsi is None
         assert signal is None
@@ -87,10 +93,10 @@ class TestStochasticRSICalculation:
         """Test Stochastic RSI in overbought condition."""
         # High RSI values (overbought)
         rsi_values = [80.0, 85.0, 90.0, 88.0, 92.0, 95.0, 98.0, 97.0, 99.0, 100.0, 98.0, 97.0, 96.0, 95.0]
-        for val in rsi_values:
-            momentum_strategy.rsi_history.append(val)
 
-        stoch_rsi, signal = momentum_strategy._calculate_stochastic_rsi(period=14)
+        # REFACTORED: Use TechnicalIndicatorCalculator instead of private method
+        calculator = TechnicalIndicatorCalculator()
+        stoch_rsi, signal = calculator.calculate_stochastic_rsi(rsi_values, period=14)
 
         assert stoch_rsi is not None
         # In overbought condition, StochRSI should be high
@@ -100,10 +106,10 @@ class TestStochasticRSICalculation:
         """Test Stochastic RSI in oversold condition."""
         # Low RSI values (oversold) - declining pattern with current value being lowest
         rsi_values = [35.0, 34.0, 32.0, 30.0, 28.0, 25.0, 22.0, 20.0, 18.0, 17.0, 16.0, 15.0, 12.0, 10.0]
-        for val in rsi_values:
-            momentum_strategy.rsi_history.append(val)
 
-        stoch_rsi, signal = momentum_strategy._calculate_stochastic_rsi(period=14)
+        # REFACTORED: Use TechnicalIndicatorCalculator instead of private method
+        calculator = TechnicalIndicatorCalculator()
+        stoch_rsi, signal = calculator.calculate_stochastic_rsi(rsi_values, period=14)
 
         assert stoch_rsi is not None
         # In oversold condition where current value (10.0) is the lowest, StochRSI should be very low

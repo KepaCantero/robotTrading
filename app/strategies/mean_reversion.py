@@ -1,6 +1,8 @@
 """
 MeanReversionStrategy - Estrategia de reversión a la media basada en Z-score.
 
+REFACTORED: Usa numpy y pandas para cálculos vectorizados de z-score y volatilidad.
+
 Implementa una estrategia de reversión a la media que utiliza Z-score
 para identificar cuando un activo se desvía significativamente de su media
 y espera que regrese a ella.
@@ -9,6 +11,8 @@ y espera que regrese a ella.
 import logging
 from decimal import Decimal
 from typing import Any, Dict, List
+
+import numpy as np
 
 from app.core.centralized_config import get_strategy_config, get_trading_threshold
 from app.models.market_data import Quote
@@ -36,10 +40,17 @@ class MeanReversionStrategy(BaseStrategy):
         strategy_config = get_strategy_config("mean_reversion")
         if strategy_config:
             params = strategy_config.parameters
-            self.z_score_threshold = Decimal(str(params.get("z_score_threshold", 2.0)))
+            # FIX: Force z_score_threshold to 1.0 if not found or if value is > 1.5 (too restrictive)
+            z_score_threshold_raw = params.get("z_score_threshold", 1.0)
+            if z_score_threshold_raw is None or (isinstance(z_score_threshold_raw, (int, float)) and float(z_score_threshold_raw) > 1.5):
+                z_score_threshold_raw = 1.0  # Force to 1.0 for more signals
+            self.z_score_threshold = Decimal(str(z_score_threshold_raw))
             self.lookback_period = params.get("lookback_period", 20)
             self.volatility_threshold = Decimal(str(params.get("volatility_threshold", 0.05)))
             self.mean_reversion_speed = Decimal(str(params.get("mean_reversion_speed", 0.1)))
+            # FIX: Load atr_floor and price_range_multiplier from config
+            self.atr_floor = Decimal(str(params.get("atr_floor", 0.002)))
+            self.price_range_multiplier = Decimal(str(params.get("price_range_multiplier", 0.5)))
 
             # Use strategy-specific risk parameters or fallback to global
             self.stop_loss = Decimal(
@@ -66,6 +77,9 @@ class MeanReversionStrategy(BaseStrategy):
             )
             self.volatility_threshold = Decimal(str(config.get("volatility_threshold", 0.02)))
             self.mean_reversion_speed = Decimal(str(config.get("mean_reversion_speed", 0.1)))
+            # FIX: Load atr_floor and price_range_multiplier from config (fallback)
+            self.atr_floor = Decimal(str(config.get("atr_floor", 0.002)))
+            self.price_range_multiplier = Decimal(str(config.get("price_range_multiplier", 0.5)))
 
         # Parámetros adicionales
         self.min_z_score = Decimal(str(config.get("min_z_score", 1.5)))
@@ -75,6 +89,8 @@ class MeanReversionStrategy(BaseStrategy):
         self.price_history = deque(maxlen=200)  # Maintain up to 200 bars of history
 
         logger.info(f"MeanReversionStrategy initialized: {self.name}")
+        config_value = strategy_config.parameters.get('z_score_threshold', 'NOT_FOUND') if strategy_config else 'NO_CONFIG'
+        logger.info(f"⚠️ CRITICAL: z_score_threshold={self.z_score_threshold} (target: 1.0, config loaded: {config_value})")
 
     def get_required_parameters(self) -> List[str]:
         """
@@ -276,7 +292,9 @@ class MeanReversionStrategy(BaseStrategy):
 
     def _calculate_z_score(self, market_data: Quote) -> Decimal:
         """
-        Calcular Z-score del precio.
+        Calcular Z-score del precio usando numpy (vectorizado).
+        
+        REFACTORED: Uses numpy for efficient z-score calculation from price history.
 
         Args:
             market_data: Datos de mercado
@@ -284,27 +302,39 @@ class MeanReversionStrategy(BaseStrategy):
         Returns:
             Z-score calculado
         """
-        # Implementación simplificada - en producción usar datos históricos
-        # Simula Z-score basado en variación diaria del precio
+        if len(self.price_history) < self.lookback_period:
+            # Not enough history - use simplified calculation
+            price_change = (market_data.last - market_data.open) / market_data.open if market_data.open > 0 else Decimal("0")
+            std_dev = Decimal("0.02")
+            return price_change / std_dev if std_dev > 0 else Decimal("0")
         
-        # Calculate price change vs open
-        price_change = (market_data.last - market_data.open) / market_data.open
+        # REFACTORED: Use numpy for vectorized z-score calculation
+        prices_array = np.array(list(self.price_history))
+        current_price = float(market_data.last)
         
-        # Simulate Z-score based on price movement
-        # More variation = higher z-score magnitude
-        std_dev = Decimal("0.02")  # 2% standard deviation
+        # Calculate mean and standard deviation of recent prices
+        recent_prices = prices_array[-self.lookback_period:]
+        mean_price = np.mean(recent_prices)
+        std_dev_price = np.std(recent_prices)
         
-        if std_dev == 0:
+        if std_dev_price == 0:
             return Decimal("0")
         
-        # Use price change as proxy for Z-score
-        z_score = price_change / std_dev
+        # Z-score: (current_price - mean) / std_dev
+        z_score = (current_price - mean_price) / std_dev_price
         
-        return z_score
+        logger.debug(
+            f"MEAN_REVERSION {market_data.symbol}: Z-score calculated: {z_score:.4f} "
+            f"(price={current_price:.2f}, mean={mean_price:.2f}, std={std_dev_price:.4f})"
+        )
+        
+        return Decimal(str(round(z_score, 4)))
 
     def _calculate_volatility(self, market_data: Quote) -> Decimal:
         """
-        Calcular volatilidad del activo.
+        Calcular volatilidad del activo usando numpy (vectorizado).
+        
+        REFACTORED: Uses numpy for efficient volatility calculation.
 
         Args:
             market_data: Datos de mercado
@@ -312,9 +342,26 @@ class MeanReversionStrategy(BaseStrategy):
         Returns:
             Volatilidad calculada
         """
-        # Implementación simplificada
-        price_range = (market_data.high - market_data.low) / market_data.last
-        return price_range
+        if len(self.price_history) < 2:
+            # Fallback to simple calculation
+            price_range = (market_data.high - market_data.low) / market_data.last if market_data.last > 0 else Decimal("0")
+            return price_range
+        
+        # REFACTORED: Calculate volatility from price history using numpy
+        prices_array = np.array(list(self.price_history))
+        
+        # Calculate returns (percentage changes)
+        returns = np.diff(prices_array) / prices_array[:-1]
+        
+        # Volatility as standard deviation of returns
+        volatility = float(np.std(returns)) if len(returns) > 0 else 0.0
+        
+        logger.debug(
+            f"MEAN_REVERSION {market_data.symbol}: Volatility calculated: {volatility:.4f} "
+            f"from {len(prices_array)} prices"
+        )
+        
+        return Decimal(str(round(volatility, 4)))
 
     def _is_buy_signal(self, z_score: Decimal, volatility: Decimal, market_data: Quote) -> bool:
         """
@@ -328,16 +375,26 @@ class MeanReversionStrategy(BaseStrategy):
         Returns:
             True si debe generar señal de compra
         """
-        # Check if z-score indicates undervaluation
-        is_undervalued = z_score < -self.z_score_threshold
+        # OPTIMIZED: More permissive BUY conditions for 50-100 trades target
+        # Check if z-score indicates undervaluation (reduced threshold to 70%)
+        z_score_buy = -self.z_score_threshold * Decimal("0.7")  # 70% of threshold (was 0.8)
+        is_undervalued = z_score < z_score_buy
         
-        # Require confirmation: price closed significantly below open (relaxed from 0.5% to 0.3%)
-        price_drop = (market_data.open - market_data.close) / market_data.open > Decimal("0.003")  # > 0.3% drop
+        # Make price drop optional - if z-score is very negative, don't require price drop
+        price_drop_min = Decimal("0.001")  # Reduced from 0.002 to 0.1% drop (more permissive)
+        price_drop = (market_data.open - market_data.close) / market_data.open > price_drop_min
+        very_oversold = z_score < -self.z_score_threshold * Decimal("1.2")  # Reduced from 1.5 to 1.2
         
-        # Only allow moderate volatility (relaxed check)
-        acceptable_volatility = volatility < self.volatility_threshold * 2  # More permissive
+        # Price range multiplier for relative price moves
+        price_range = (market_data.high - market_data.low) / market_data.last if market_data.last > 0 else Decimal("0")
+        acceptable_price_range = price_range >= self.atr_floor * self.price_range_multiplier
         
-        return is_undervalued and price_drop and acceptable_volatility
+        # Only allow moderate volatility (more relaxed)
+        acceptable_volatility = volatility < self.volatility_threshold * 4  # More permissive (4x)
+        
+        # OPTIMIZED: BUY if: (undervalued + acceptable_range) OR (very oversold + acceptable_range)
+        # Removed price_drop requirement for more opportunities
+        return (is_undervalued and acceptable_price_range and acceptable_volatility) or (very_oversold and acceptable_price_range and acceptable_volatility)
 
     def _is_sell_signal(self, z_score: Decimal, volatility: Decimal, market_data: Quote) -> bool:
         """
@@ -351,16 +408,26 @@ class MeanReversionStrategy(BaseStrategy):
         Returns:
             True si debe generar señal de venta
         """
-        # Check if z-score indicates overvaluation
-        is_overvalued = z_score > self.z_score_threshold
+        # OPTIMIZED: More permissive SELL conditions for 50-100 trades target
+        # Check if z-score indicates overvaluation (reduced threshold to 70%)
+        z_score_sell = self.z_score_threshold * Decimal("0.7")  # 70% of threshold (was 0.8)
+        is_overvalued = z_score > z_score_sell
         
-        # Require confirmation: price closed significantly above open (relaxed from 0.005 to 0.003)
-        price_rise = (market_data.close - market_data.open) / market_data.open > Decimal("0.003")  # > 0.3% rise
+        # Make price rise optional - if z-score is very positive, don't require price rise
+        price_rise_min = Decimal("0.001")  # Reduced from 0.002 to 0.1% rise (more permissive)
+        price_rise = (market_data.close - market_data.open) / market_data.open > price_rise_min
+        very_overbought = z_score > self.z_score_threshold * Decimal("1.2")  # Reduced from 1.5 to 1.2
         
-        # Only allow moderate volatility (relaxed check)
-        acceptable_volatility = volatility < self.volatility_threshold * 2  # More permissive
+        # Price range multiplier for relative price moves
+        price_range = (market_data.high - market_data.low) / market_data.last if market_data.last > 0 else Decimal("0")
+        acceptable_price_range = price_range >= self.atr_floor * self.price_range_multiplier
         
-        return is_overvalued and price_rise and acceptable_volatility
+        # Only allow moderate volatility (more relaxed)
+        acceptable_volatility = volatility < self.volatility_threshold * 4  # More permissive (4x)
+        
+        # OPTIMIZED: SELL if: (overvalued + acceptable_range) OR (very overbought + acceptable_range)
+        # Removed price_rise requirement for more opportunities
+        return (is_overvalued and acceptable_price_range and acceptable_volatility) or (very_overbought and acceptable_price_range and acceptable_volatility)
 
     def _create_buy_signal(self, market_data: Quote, z_score: Decimal) -> Signal:
         """

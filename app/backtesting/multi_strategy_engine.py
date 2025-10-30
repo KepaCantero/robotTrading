@@ -5,19 +5,24 @@ TASK-PA-1, PA-2: Implements multi-strategy backtesting with capital allocation.
 """
 
 import logging
+from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
+import pandas as pd
+
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig, BacktestResult
 from app.backtesting.signal_diagnostic_logger import SignalDiagnosticLogger
+from app.core.centralized_config import StockAllocationSettings
 from app.models.market_data import Quote
 from app.services.multi_strategy_allocation import MultiStrategyAllocationManager
 from app.services.portfolio_config_manager import (
     PortfolioConfigManager,
     get_portfolio_config_manager,
 )
+from app.services.strategy_stock_allocator import StrategyStockAllocator
 from app.strategies.base import BaseStrategy
 
 logger = logging.getLogger(__name__)
@@ -58,12 +63,20 @@ class MultiStrategyBacktester:
         
         # Initialize diagnostic logger if enabled
         self.diagnostic_logger = SignalDiagnosticLogger() if enable_diagnostics else None
+        
+        # Initialize Strategy Stock Allocator with centralized config
+        allocation_config = StockAllocationSettings()
+        self.stock_allocator = StrategyStockAllocator(config=allocation_config)
+        self.allocation_result = None  # Will store allocation result after first run
 
     def run_multi_strategy_backtest(
         self, quotes: List[Quote], start_date: datetime, end_date: datetime
     ) -> Dict[str, Dict]:
         """
         Run backtest across multiple strategies with allocated capital.
+        
+        Uses StrategyStockAllocator to intelligently select and assign stocks to strategies
+        based on statistical classification (Hurst, ADF, KPSS, Half-Life, etc.).
         
         Args:
             quotes: Historical market data
@@ -75,9 +88,58 @@ class MultiStrategyBacktester:
         """
         logger.info(f"Starting multi-strategy backtest with ${self.total_capital:,.2f} total capital")
 
-        # Allocate capital to each strategy
-        capital_allocations = self.allocation_manager.allocate_capital()
+        # STEP 1: Convert quotes to historical_data format for allocator
+        historical_data = self._convert_quotes_to_dataframe_dict(quotes)
         
+        # STEP 2: Use StrategyStockAllocator to select and assign stocks
+        logger.info("Using StrategyStockAllocator to select and assign stocks to strategies")
+        logger.info(f"📊 Historical data prepared: {len(historical_data)} symbols with price data")
+        
+        # Get strategy-level capital allocations
+        capital_allocations = self.allocation_manager.allocate_capital()
+        strategy_allocations_dict = {
+            strategy: float(capital) 
+            for strategy, capital in capital_allocations.items()
+        }
+        logger.info(f"📊 Capital allocations for allocator: {strategy_allocations_dict}")
+        
+        # Run allocation
+        try:
+            logger.info("🔄 Executing StrategyStockAllocator.allocate()...")
+            self.allocation_result = self.stock_allocator.allocate(
+                historical_data=historical_data,
+                total_capital=float(self.total_capital),
+                strategy_allocations=strategy_allocations_dict
+            )
+            logger.info(f"✅ Allocation completed. Validation: {self.allocation_result.validation_passed}, Allocations: {len(self.allocation_result.allocations)}")
+        except Exception as e:
+            logger.error(f"❌ StrategyStockAllocator.allocate() failed with error: {e}", exc_info=True)
+            self.allocation_result = None
+            use_allocator = False
+        
+        if not self.allocation_result or not self.allocation_result.validation_passed:
+            logger.warning(
+                f"⚠️ Stock allocation {'validation failed' if self.allocation_result else 'failed to execute'}: "
+                f"{self.allocation_result.validation_errors if self.allocation_result else 'Exception during execution'}. "
+                f"Falling back to portfolio config filtering."
+            )
+            # Fall back to old method if allocation fails
+            use_allocator = False
+        else:
+            use_allocator = True
+            logger.info(
+                f"✅ Stock allocation successful: {len(self.allocation_result.allocations)} stocks assigned, "
+                f"${self.allocation_result.residual_capital:,.2f} residual capital, "
+                f"validation PASSED"
+            )
+            # Log breakdown by strategy
+            strategy_counts = {}
+            for ticker, metrics in self.allocation_result.allocations.items():
+                strategy = metrics.strategy
+                strategy_counts[strategy] = strategy_counts.get(strategy, 0) + 1
+            logger.info(f"📊 Stock assignments by strategy: {strategy_counts}")
+        
+        # Allocate capital to each strategy
         results_by_strategy: Dict[str, BacktestResult] = {}
         signals_by_strategy: Dict[str, List] = {}
 
@@ -91,8 +153,12 @@ class MultiStrategyBacktester:
 
             logger.info(f"Backtesting {strategy_name} with ${allocated_capital:,.2f} capital")
 
-            # Filter quotes by sector if configured
-            filtered_quotes = self._filter_quotes_by_strategy(quotes, strategy_name)
+            # Filter quotes based on allocator result or fallback to portfolio config
+            if use_allocator:
+                filtered_quotes = self._filter_quotes_by_allocator(quotes, strategy_name)
+            else:
+                # Fallback to old method
+                filtered_quotes = self._filter_quotes_by_strategy(quotes, strategy_name)
             
             if len(filtered_quotes) < len(quotes):
                 logger.info(
@@ -224,6 +290,25 @@ class MultiStrategyBacktester:
 
         # Consolidate results
         consolidated = self._consolidate_results(results_by_strategy, capital_allocations)
+        
+        # Add allocation information to consolidated results
+        if self.allocation_result:
+            consolidated['stock_allocation'] = {
+                'validation_passed': self.allocation_result.validation_passed,
+                'allocated_stocks': len(self.allocation_result.allocations),
+                'residual_capital': float(self.allocation_result.residual_capital),
+                'validation_errors': self.allocation_result.validation_errors,
+                'allocation_method': 'StrategyStockAllocator',
+                'decision_logs': self.allocation_result.decision_logs[-10:] if self.allocation_result.decision_logs else [],  # Last 10 logs
+            }
+            
+            # Log allocation summary
+            logger.info(
+                f"📊 Stock Allocation Summary: "
+                f"{len(self.allocation_result.allocations)} stocks assigned, "
+                f"${self.allocation_result.residual_capital:,.2f} residual capital, "
+                f"validation={'PASSED' if self.allocation_result.validation_passed else 'FAILED'}"
+            )
         
         logger.info(
             f"Multi-strategy backtest completed: "
@@ -423,4 +508,88 @@ class MultiStrategyBacktester:
         filtered = [q for q in quotes if q.symbol in allowed_symbols]
         
         return filtered
-
+    
+    def _convert_quotes_to_dataframe_dict(self, quotes: List[Quote]) -> Dict[str, pd.DataFrame]:
+        """
+        Convert List[Quote] to Dict[str, pd.DataFrame] format for StrategyStockAllocator.
+        
+        Args:
+            quotes: List of Quote objects
+            
+        Returns:
+            Dictionary mapping symbol to DataFrame with OHLCV data
+        """
+        # Group quotes by symbol
+        quotes_by_symbol = defaultdict(list)
+        for quote in quotes:
+            quotes_by_symbol[quote.symbol].append(quote)
+        
+        historical_data = {}
+        
+        for symbol, symbol_quotes in quotes_by_symbol.items():
+            # Sort by timestamp
+            symbol_quotes.sort(key=lambda q: q.timestamp)
+            
+            # Build DataFrame
+            data = {
+                'open': [float(q.open) for q in symbol_quotes],
+                'high': [float(q.high) for q in symbol_quotes],
+                'low': [float(q.low) for q in symbol_quotes],
+                'close': [float(q.close) for q in symbol_quotes],
+                'volume': [float(q.volume) for q in symbol_quotes],
+            }
+            
+            # Create DataFrame with datetime index
+            timestamps = [q.timestamp for q in symbol_quotes]
+            df = pd.DataFrame(data, index=pd.DatetimeIndex(timestamps))
+            
+            historical_data[symbol] = df
+        
+        logger.debug(f"Converted quotes to {len(historical_data)} DataFrames")
+        return historical_data
+    
+    def _filter_quotes_by_allocator(
+        self, quotes: List[Quote], strategy_name: str
+    ) -> List[Quote]:
+        """
+        Filter quotes based on StrategyStockAllocator assignment results.
+        
+        Args:
+            quotes: List of quotes to filter
+            strategy_name: Name of the strategy
+            
+        Returns:
+            Filtered list of quotes for this strategy
+        """
+        if not self.allocation_result:
+            logger.warning("No allocation result available, using fallback")
+            return self._filter_quotes_by_strategy(quotes, strategy_name)
+        
+        # Get symbols assigned to this strategy
+        assigned_symbols = set()
+        for ticker, metrics in self.allocation_result.allocations.items():
+            if metrics.strategy == strategy_name:
+                assigned_symbols.add(ticker)
+        
+        # Also include pairs if this is pairs_trading
+        if strategy_name == "pairs_trading":
+            for pair in self.allocation_result.pairs:
+                assigned_symbols.add(pair.ticker1)
+                assigned_symbols.add(pair.ticker2)
+        
+        if not assigned_symbols:
+            logger.warning(
+                f"No symbols assigned to {strategy_name} by allocator, "
+                f"falling back to portfolio config"
+            )
+            return self._filter_quotes_by_strategy(quotes, strategy_name)
+        
+        # Filter quotes by assigned symbols
+        filtered = [q for q in quotes if q.symbol in assigned_symbols]
+        
+        logger.info(
+            f"{strategy_name}: Filtered to {len(filtered)} quotes "
+            f"from {len(assigned_symbols)} assigned symbols"
+        )
+        
+        return filtered

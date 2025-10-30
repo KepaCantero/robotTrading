@@ -418,15 +418,32 @@ class SimpleBacktester:
             logger.warning(f"❌ BUY {signal.symbol} (strategy={strategy_name}): adjusted position_size <= 0, skipping")
             return
 
-        # Apply slippage
-        execution_price = self._apply_slippage(current_price, True)
+        # NEW: Apply strategy-specific slippage and commission
+        # Priority: signal metadata > strategy config > global config
+        strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
+        slippage_pct = self._get_strategy_slippage(signal, strategy_name)
+        commission_pct = self._get_strategy_commission(signal, strategy_name)
+        
+        execution_price = self._apply_slippage(current_price, True, slippage_pct=slippage_pct)
 
-        # Calculate costs
-        commission = self.config.commission_per_trade
+        # Calculate costs: commission can be percentage or fixed amount
+        trade_value = position_size * execution_price
+        if commission_pct is not None:
+            # Commission as percentage of trade value
+            commission = trade_value * (commission_pct / Decimal("100"))
+        else:
+            # Fixed commission amount
+            commission = self.config.commission_per_trade
+        
         slippage_cost = abs(position_size * (execution_price - current_price))
         total_cost = position_size * execution_price + commission + slippage_cost
 
-        logger.info(f"💰 BUY {signal.symbol} (strategy={strategy_name}): execution_price={execution_price}, total_cost={total_cost}, capital={self.capital}")
+        logger.info(
+            f"💰 BUY {signal.symbol} (strategy={strategy_name}): "
+            f"execution_price={execution_price:.4f} (slippage={slippage_pct if slippage_pct else self.config.slippage_percentage:.2f}%), "
+            f"commission=${commission:.2f} ({commission_pct if commission_pct else 'fixed'}), "
+            f"slippage_cost=${slippage_cost:.2f}, total_cost=${total_cost:.2f}, capital=${self.capital:.2f}"
+        )
 
         if total_cost > self.capital:
             logger.warning(f"❌ BUY {signal.symbol} (strategy={strategy_name}): total_cost ({total_cost}) > capital ({self.capital}) after slippage, skipping")
@@ -490,15 +507,33 @@ class SimpleBacktester:
 
         logger.info(f"✅ EXECUTING SELL: {signal.symbol} (strategy={strategy_name}) qty={sell_quantity} price={current_price}")
 
-        # Apply slippage
-        execution_price = self._apply_slippage(current_price, False)
+        # NEW: Apply strategy-specific slippage and commission
+        # Priority: signal metadata > strategy config > global config
+        strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
+        slippage_pct = self._get_strategy_slippage(signal, strategy_name)
+        commission_pct = self._get_strategy_commission(signal, strategy_name)
+        
+        execution_price = self._apply_slippage(current_price, False, slippage_pct=slippage_pct)
 
-        # Calculate proceeds
-        commission = self.config.commission_per_trade
+        # Calculate proceeds: commission can be percentage or fixed amount
+        trade_value = sell_quantity * execution_price
+        if commission_pct is not None:
+            # Commission as percentage of trade value
+            commission = trade_value * (commission_pct / Decimal("100"))
+        else:
+            # Fixed commission amount
+            commission = self.config.commission_per_trade
+        
         slippage_cost = abs(sell_quantity * (execution_price - current_price))
         proceeds = sell_quantity * execution_price - commission - slippage_cost
 
-        logger.debug(f"SELL {signal.symbol}: current_position={current_position}, price={current_price}, capital={self.capital}")
+        logger.info(
+            f"💰 SELL {signal.symbol} (strategy={strategy_name}): "
+            f"execution_price={execution_price:.4f} (slippage={slippage_pct if slippage_pct else self.config.slippage_percentage:.2f}%), "
+            f"commission=${commission:.2f} ({commission_pct if commission_pct else 'fixed'}), "
+            f"slippage_cost=${slippage_cost:.2f}, proceeds=${proceeds:.2f}, "
+            f"current_position={current_position:.6f}, capital=${self.capital:.2f}"
+        )
 
         # Find the most recent buy trade for this symbol to calculate PnL
         buy_trades = [
@@ -603,9 +638,23 @@ class SimpleBacktester:
         
         return position_size.quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)
 
-    def _apply_slippage(self, price: Decimal, is_buy: bool) -> Decimal:
-        """Apply slippage to execution price."""
-        slippage_factor = self.config.slippage_percentage / Decimal("100")
+    def _apply_slippage(self, price: Decimal, is_buy: bool, slippage_pct: Optional[Decimal] = None) -> Decimal:
+        """
+        Apply slippage to execution price.
+        
+        Args:
+            price: Base price
+            is_buy: True for buy orders, False for sell
+            slippage_pct: Optional slippage percentage (overrides config)
+            
+        Returns:
+            Execution price with slippage applied
+        """
+        # Use provided slippage_pct or fall back to config
+        if slippage_pct is not None:
+            slippage_factor = slippage_pct / Decimal("100")
+        else:
+            slippage_factor = self.config.slippage_percentage / Decimal("100")
 
         if is_buy:
             # Buy orders execute at higher price (unfavorable)
@@ -613,6 +662,52 @@ class SimpleBacktester:
         else:
             # Sell orders execute at lower price (unfavorable)
             return price * (Decimal("1") - slippage_factor)
+    
+    def _get_strategy_slippage(self, signal: Signal, strategy_name: str) -> Optional[Decimal]:
+        """
+        Get slippage percentage for strategy.
+        
+        Priority: signal metadata > strategy config > global config > None
+        
+        Returns:
+            Slippage percentage (as Decimal, e.g., 0.05 for 0.05%) or None to use config default
+        """
+        # 1. Check signal metadata first
+        if signal.metadata and "slippage_per_trade_pct" in signal.metadata:
+            try:
+                return Decimal(str(signal.metadata["slippage_per_trade_pct"]))
+            except:
+                pass
+        
+        # 2. Check strategy instance if available
+        if self.strategy and hasattr(self.strategy, "slippage_per_trade_pct"):
+            return self.strategy.slippage_per_trade_pct
+        
+        # 3. Return None to use global config default
+        return None
+    
+    def _get_strategy_commission(self, signal: Signal, strategy_name: str) -> Optional[Decimal]:
+        """
+        Get commission percentage for strategy.
+        
+        Priority: signal metadata > strategy config > None (use fixed amount from config)
+        
+        Returns:
+            Commission percentage (as Decimal, e.g., 0.05 for 0.05%) or None to use fixed amount
+        """
+        # 1. Check signal metadata first
+        if signal.metadata and "commission_per_trade_pct" in signal.metadata:
+            try:
+                return Decimal(str(signal.metadata["commission_per_trade_pct"]))
+            except:
+                pass
+        
+        # 2. Check strategy instance if available
+        if self.strategy and hasattr(self.strategy, "commission_per_trade_pct"):
+            return self.strategy.commission_per_trade_pct
+        
+        # 3. Return None to use fixed commission from config
+        return None
 
     def _build_trade_reason(self, signal: Signal, market_data: Any) -> str:
         """Build human-readable reason for the trade from signal metadata."""
@@ -719,13 +814,33 @@ class SimpleBacktester:
         # Use provided current price or fallback
         exit_price = current_price if current_price else avg_entry_price
 
+        # NEW: Apply slippage to exit price (for stop_loss/take_profit closes)
+        # Use default slippage from config since we don't have signal context here
+        exit_price_with_slippage = self._apply_slippage(exit_price, False)  # False = sell
+
         # Calculate P&L
         total_buy_cost = buy_cost
-        total_sell_proceeds = current_position * exit_price
-        commission_cost = self.config.commission_per_trade * (
-            Decimal(len(recent_trades)) + Decimal("1")
-        )  # Commission for buy + sell
-        pnl = total_sell_proceeds - total_buy_cost - commission_cost
+        # Use average commission per trade from recent trades if available
+        avg_commission_per_buy = sum(t.commission for t in recent_trades if t.commission) / len(recent_trades) if recent_trades and any(t.commission for t in recent_trades) else self.config.commission_per_trade
+        
+        total_sell_proceeds = current_position * exit_price_with_slippage
+        slippage_cost_exit = abs(current_position * (exit_price_with_slippage - exit_price))
+        
+        # Commission for sell: try to match strategy commission if available
+        # For simplicity, use percentage if recent trades had percentage-based commission
+        # Otherwise use fixed amount
+        sell_trade_value = current_position * exit_price_with_slippage
+        commission_sell = avg_commission_per_buy  # Default: same as buy
+        
+        # Check if we can infer commission type from recent trades
+        # If buy trades had commission > fixed amount, assume percentage-based
+        if recent_trades and any(t.commission > self.config.commission_per_trade * Decimal("1.5") for t in recent_trades):
+            # Likely percentage-based - estimate from trade value
+            commission_rate = avg_commission_per_buy / (recent_trades[0].quantity * recent_trades[0].entry_price) if recent_trades[0].quantity * recent_trades[0].entry_price > 0 else Decimal("0")
+            commission_sell = sell_trade_value * commission_rate
+        
+        total_commission_cost = sum(t.commission for t in recent_trades) + commission_sell
+        pnl = total_sell_proceeds - total_buy_cost - total_commission_cost - slippage_cost_exit
         pnl_percentage = (pnl / total_buy_cost * 100) if total_buy_cost > 0 else Decimal("0")
 
         # Close all matching buy trades
@@ -749,15 +864,15 @@ class SimpleBacktester:
             status=TradeStatus.CLOSED,
             pnl=pnl,
             pnl_percentage=pnl_percentage,
-            commission=self.config.commission_per_trade,
-            slippage=Decimal("0"),
+            commission=commission_sell,
+            slippage=slippage_cost_exit,
         )
 
         # Add trade to results
         self.trades.append(trade)
 
         # Update capital
-        self.capital += total_sell_proceeds - self.config.commission_per_trade
+        self.capital += total_sell_proceeds - commission_sell
         self.positions[symbol] = Decimal("0")
 
     def _close_all_positions(self, final_market_data: Any):

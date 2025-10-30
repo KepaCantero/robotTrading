@@ -84,6 +84,7 @@ def save_multi_strategy_results(
             "total_trades": combined.get("total_trades", 0),
         },
         "allocation": consolidated_results.get("allocation", {}),
+        "stock_allocation": consolidated_results.get("stock_allocation"),  # StrategyStockAllocator results
     }
     
     # Save to JSON

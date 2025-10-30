@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
+from app.core.centralized_config import get_config
 from app.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
@@ -144,25 +145,29 @@ class MultiStrategyAllocationManager:
         self._initialize_default_allocations()
 
     def _initialize_default_allocations(self) -> None:
-        """Initialize default strategy allocations."""
+        """Initialize default strategy allocations from centralized config."""
+        # Get centralized configuration
+        config = get_config()
+        trading = config.trading
+        
         self.strategy_allocations = {
             "momentum": StrategyCapitalAllocation(
                 strategy_name="momentum",
-                target_weight=Decimal("0.50"),  # 50%
-                min_weight=Decimal("0.30"),        # 30% minimum
-                max_weight=Decimal("0.70"),        # 70% maximum
+                target_weight=Decimal(str(trading.momentum_target_weight)),
+                min_weight=Decimal(str(config.trading.min_allocation_weight)),
+                max_weight=Decimal(str(trading.max_momentum_exposure)),
             ),
             "mean_reversion": StrategyCapitalAllocation(
                 strategy_name="mean_reversion",
-                target_weight=Decimal("0.25"),     # 25%
-                min_weight=Decimal("0.10"),        # 10% minimum
-                max_weight=Decimal("0.40"),        # 40% maximum
+                target_weight=Decimal(str(trading.mean_reversion_target_weight)),
+                min_weight=Decimal(str(config.trading.min_allocation_weight)),
+                max_weight=Decimal(str(trading.max_mean_reversion_exposure)),
             ),
             "pairs_trading": StrategyCapitalAllocation(
                 strategy_name="pairs_trading",
-                target_weight=Decimal("0.25"),     # 25%
-                min_weight=Decimal("0.10"),        # 10% minimum
-                max_weight=Decimal("0.40"),        # 40% maximum
+                target_weight=Decimal(str(trading.pairs_trading_target_weight)),
+                min_weight=Decimal(str(config.trading.min_allocation_weight)),
+                max_weight=Decimal(str(trading.max_pairs_trading_exposure)),
             ),
         }
 
@@ -309,6 +314,29 @@ class DynamicPortfolioSelector:
 
         # Reallocate with normalized weights
         final_allocations = self.allocation_manager.allocate_capital()
+        
+        # Fix precision errors: ensure total exactly matches total capital
+        allocated_total = sum(final_allocations.values())
+        total_capital = self.allocation_manager.total_capital
+        difference = total_capital - allocated_total
+        
+        # Distribute any difference to the largest allocation (rounding fix)
+        if abs(difference) > Decimal("0.01"):
+            # Find strategy with largest allocation
+            largest_strategy = max(final_allocations.keys(), key=lambda k: final_allocations[k])
+            final_allocations[largest_strategy] += difference
+        elif abs(difference) > Decimal("0") and abs(difference) <= Decimal("0.01"):
+            # Small rounding error: round each allocation to nearest cent
+            rounded_allocations = {}
+            running_total = Decimal("0")
+            strategies = list(final_allocations.keys())
+            for i, strategy in enumerate(strategies[:-1]):
+                rounded_value = final_allocations[strategy].quantize(Decimal("0.01"))
+                rounded_allocations[strategy] = rounded_value
+                running_total += rounded_value
+            # Last strategy gets the remainder to ensure exact total
+            rounded_allocations[strategies[-1]] = total_capital - running_total
+            final_allocations = rounded_allocations
 
         logger.info("Rebalancing complete:")
         for name, allocated in final_allocations.items():

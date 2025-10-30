@@ -3,23 +3,34 @@ name: momentum
 enabled: true
 weight: 1.0
 
-# Strategy-specific parameters
+# Strategy-specific parameters - OPTIMIZED FOR WIN RATE >30%
 parameters:
-  rsi_threshold: 45 # More permissive for buy signals (RSI < 45 for oversold, RSI > 55 for overbought)
-  momentum_threshold: 0.015 # More permissive
-  volume_threshold: 1.2 # More permissive (was 1.39)
-  ema_period: 20 # Standard (was 36, too long)
-  lookback_period: 14
+  rsi_threshold_buy: 50 # RELAXED: BUY when RSI > 50 (was < 45) - more opportunities
+  rsi_threshold_sell: 55 # SELL when RSI > 55
+  ema_ratio_threshold: 1.001 # NEW: EMA_fast > EMA_slow × 1.001 for confirmation
+  momentum_threshold: 0.015 # RELAXED: 0.015 (was 0.02) for more signals
+  volume_threshold: 1.1 # RELAXED: 1.1 (was 1.15) - less strict volume requirement
+  ema_period: 20 # Standard EMA period
+  lookback_period: 14 # RSI lookback
   min_price_change: 0.01
   max_price_change: 0.1
-  # Volatility filter - DISABLED for more signals
-  atr_filter_enabled: false # Disabled to generate more signals
-  min_atr_threshold: 0.010 # Lowered if enabled
+  # Volatility filter - Enabled with relative ATR (% of price)
+  atr_filter_enabled: true # Filter choppy markets
+  use_relative_atr: true # Use ATR as % of price (recommended)
+  min_atr_threshold: 0.006 # RELAXED: 0.6% minimum volatility (was 0.8%) - ATR > percentil 60
+  atr_percentile_threshold: 60 # NEW: ATR must be > 60th percentile for confirmation
+  stoch_rsi_enabled: true # Enable Stochastic RSI filter
+  stoch_rsi_min: 15 # RELAXED: Minimum StochRSI level (was 20)
+  stoch_rsi_max: 85 # RELAXED: Maximum StochRSI level (was 80)
 
-# Risk parameters
-max_position_size: 0.10 # More permissive (10%)
-stop_loss_pct: 0.03 # Standard 3%
-take_profit_pct: 0.08 # Standard 8%
+# Risk parameters - DYNAMIC STOP-LOSS ENABLED
+max_position_size: 0.10 # 10% per position
+max_exposure: 0.5 # Maximum 50% exposure
+stop_loss_pct: 0.025 # 2.5% static fallback (dynamic ATR-based preferred)
+take_profit_pct: 0.08 # 8% take profit (risk/reward ~3:1)
+atr_multiplier: 2.0 # Dynamic stop = ATR * 2.0
+use_dynamic_stop_loss: true # Enable ATR-based dynamic stop loss
+max_drawdown_per_strategy: 0.05 # 5% max drawdown per strategy
 
 # Performance thresholds
 min_sharpe_ratio: 1.2

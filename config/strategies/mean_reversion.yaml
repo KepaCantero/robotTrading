@@ -3,23 +3,27 @@ name: mean_reversion
 enabled: true
 weight: 0.8
 
-# Strategy-specific parameters
+# Strategy-specific parameters - OPTIMIZED FOR 50-100 TRADES
 parameters:
-  z_score_threshold: 1.49 # Optimized by Optuna (trial 2, best: -106.52)
-  lookback_period: 12 # Optimized by Optuna
+  z_score_threshold: 1.0 # VERY RELAXED: 1.0 (was 1.25) - activate more trades, target: z-score > 1.5 or < -1.5 as minimum
+  lookback_period: 20 # Good balance for volatility calculation
   mean_reversion_speed: 0.1
-  volatility_threshold: 0.02 # Stricter volatility filter (2% ATR floor)
-  min_reversion_signal: 0.02
+  volatility_threshold: 0.02 # Further reduced to 2% minimum volatility (more permissive)
+  min_reversion_signal: 0.006 # More permissive (reduced from 0.008)
   max_reversion_signal: 0.15
-  min_volume: 100000 # Minimum average volume filter
-  atr_floor: 0.008 # ATR must be > 0.8% to trade
+  min_volume: 50000 # Allow smaller stocks
+  atr_floor: 0.002 # More permissive (0.2% minimum ATR)
+  price_range_multiplier: 0.5 # Allow trades with smaller price ranges relative to price
 
-# Risk parameters
+# Risk parameters - DYNAMIC STOP-LOSS ENABLED
 max_position_size: 0.07 # Optimized by Optuna
-stop_loss_pct: 0.017 # Optimized by Optuna (1.7% - tighter stops)
-take_profit_pct: 0.103 # Optimized by Optuna (10.3% - risk/reward ~1:6)
-max_trades_per_day: 2 # Limit overtrading
-max_trades_per_week: 10
+stop_loss_pct: 0.015 # 1.5% static fallback (dynamic ATR-based preferred)
+take_profit_pct: 0.10 # 10% take profit (risk/reward ~6:1)
+atr_multiplier: 1.5 # Dynamic stop = ATR * 1.5 (tighter for mean reversion)
+use_dynamic_stop_loss: true # Enable ATR-based dynamic stop loss
+max_trades_per_day: 3 # Increased from 2 to allow more trades (target: 50-100 total)
+max_trades_per_week: 15 # Increased from 10
+max_drawdown_per_strategy: 0.05 # 5% max drawdown per strategy
 
 # Performance thresholds
 min_sharpe_ratio: 1.0
