@@ -37,10 +37,32 @@ class MomentumStrategy(BaseStrategy):
         """
         super().__init__(config)
 
-        # Load strategy-specific configuration
+        # Initialize all parameters with defaults FIRST (before loading YAML config)
+        # Parámetros técnicos
+        self.rsi_period = config.get("rsi_period", 14)
+        self.ema_period = config.get("ema_period", 20)
+        self.lookback_period = config.get("lookback_period", 5)
+
+        # ATR volatility filter settings - initialize defaults first
+        self.min_atr_threshold = Decimal(str(config.get("min_atr_threshold", 0.015)))
+        self.atr_filter_enabled = config.get("atr_filter_enabled", True)
+        self.use_relative_atr = config.get("use_relative_atr", True)
+
+        # Load strategy-specific configuration and override defaults
         strategy_config = get_strategy_config("momentum")
         if strategy_config:
             params = strategy_config.parameters
+            # Merge strategy parameters into local config so downstream `self.config.get(...)` uses YAML values
+            if isinstance(params, dict):
+                try:
+                    # Do not lose existing config keys
+                    self.config.update({k: v for k, v in params.items() if v is not None})
+                    # Update config dict as well for downstream access
+                    config.update({k: v for k, v in params.items() if v is not None})
+                except Exception:
+                    pass
+
+            # Core thresholds
             self.rsi_threshold = Decimal(str(params.get("rsi_threshold", 40)))
             self.momentum_threshold = Decimal(str(params.get("momentum_threshold", 0.02)))
             self.volume_threshold = Decimal(str(params.get("volume_threshold", 1.5)))
@@ -58,6 +80,28 @@ class MomentumStrategy(BaseStrategy):
             # FIX: Load max_exposure from portfolio config (target_weight * 1.1 for buffer) or default 60%
             # portfolio.yaml has target_weight: 0.60 for momentum, so max_exposure should be ~0.60-0.70
             self.max_exposure = Decimal(str(params.get("max_exposure", 0.60)))  # Default 60% (matches portfolio target_weight)
+
+            # Technical indicator periods from parameters if present (now safe because defaults initialized)
+            if "ema_period" in params:
+                self.ema_period = params.get("ema_period", self.ema_period)
+            if "lookback_period" in params:
+                self.lookback_period = params.get("lookback_period", self.lookback_period)
+            if "rsi_period" in params:
+                self.rsi_period = params.get("rsi_period", self.rsi_period)
+
+            # ATR/Stochastic RSI filters from parameters if present (now safe because defaults initialized)
+            if "atr_filter_enabled" in params:
+                self.atr_filter_enabled = params.get("atr_filter_enabled", self.atr_filter_enabled)
+            if "use_relative_atr" in params:
+                self.use_relative_atr = params.get("use_relative_atr", self.use_relative_atr)
+            if "min_atr_threshold" in params:
+                self.min_atr_threshold = Decimal(str(params.get("min_atr_threshold", self.min_atr_threshold)))
+            if "stoch_rsi_enabled" in params:
+                self.config["stoch_rsi_enabled"] = params.get("stoch_rsi_enabled")
+            if "stoch_rsi_min" in params:
+                self.config["stoch_rsi_min"] = params.get("stoch_rsi_min")
+            if "stoch_rsi_max" in params:
+                self.config["stoch_rsi_max"] = params.get("stoch_rsi_max")
         else:
             # Fallback to config or defaults
             self.rsi_threshold = Decimal(str(config.get("rsi_threshold", 40)))
@@ -74,11 +118,6 @@ class MomentumStrategy(BaseStrategy):
             self.volume_threshold = Decimal(str(config.get("volume_threshold", 1.5)))
             self.max_exposure = Decimal(str(config.get("max_exposure", 0.60)))  # Default 60% (matches portfolio target_weight)
 
-        # Parámetros técnicos
-        self.rsi_period = config.get("rsi_period", 14)
-        self.ema_period = config.get("ema_period", 20)
-        self.lookback_period = config.get("lookback_period", 5)
-
         # Histórico para calcular indicadores reales
         self.price_history = deque(maxlen=200)  # Mantener 200 velas de histórico
         self.high_history = deque(maxlen=200)
@@ -90,9 +129,7 @@ class MomentumStrategy(BaseStrategy):
         
         # ATR volatility filter settings
         self.atr_history = deque(maxlen=14)  # ATR history for volatility filtering
-        self.min_atr_threshold = Decimal(str(config.get("min_atr_threshold", 0.015)))  # 1.5% min ATR (relative to price)
-        self.atr_filter_enabled = config.get("atr_filter_enabled", True)
-        self.use_relative_atr = config.get("use_relative_atr", True)  # Use ATR as % of price (recommended)
+        # Note: min_atr_threshold, atr_filter_enabled, use_relative_atr already initialized above
 
         # Cooldown para evitar señales repetidas
         self.last_signal_bar_index = None

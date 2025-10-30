@@ -64,6 +64,13 @@ st.markdown("**Interactive backtesting analysis and module comparison**")
 if "backtest_results" not in session_state:
     session_state.backtest_results = {}
 
+# MAIN EXECUTE BUTTON - Move to top of page (before sidebar content)
+st.markdown("---")
+col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
+with col_btn2:
+    execute_button = st.button("🚀 Execute Backtest", type="primary", use_container_width=True, key="main_execute_button")
+st.markdown("---")
+
 # Sidebar for module selection
 with st.sidebar:
     st.header("⚙️ Configuration")
@@ -194,11 +201,6 @@ with st.sidebar:
     # Show preset details
     with st.expander(f"View {selected_preset} Preset Parameters"):
         st.json(config_presets[selected_preset])
-
-    st.divider()
-
-    # Execute button
-    execute_button = st.button("🚀 Execute Backtest", type="primary", use_container_width=True)
 
 # Auto-load saved backtest results
 # This loads results AFTER the user selects module/strategy
@@ -412,13 +414,13 @@ if execute_button:
                 # Limit symbols to avoid rate limiting (use fewer symbols initially)
                 st.sidebar.markdown("---")
                 st.sidebar.subheader("⚙️ Portfolio Settings")
-                max_symbols = st.sidebar.number_input(
-                    "Max symbols per strategy",
-                    min_value=1,
-                    max_value=20,
-                    value=5,
-                    help="Limit number of symbols to avoid API rate limits. Lower = faster, fewer symbols."
+                # Use ALL symbols by default (None = no limit) for StrategyStockAllocator to work properly
+                max_symbols_input = st.sidebar.text_input(
+                    "Max symbols per strategy (leave empty for ALL)",
+                    value="",  # Empty = use all symbols
+                    help="Limit number of symbols to avoid API rate limits. Leave empty to use ALL available symbols (recommended). Enter number to limit."
                 )
+                max_symbols = int(max_symbols_input) if max_symbols_input and max_symbols_input.isdigit() else None
                 
                 try:
                     portfolio_quotes = portfolio_builder.build_portfolio_quotes(
@@ -970,26 +972,72 @@ if session_state.backtest_results:
 
     result = session_state.backtest_results[result_key]
 
-    # Metrics dashboard with 6 cards
-    col1, col2, col3, col4, col5, col6 = st.columns(6)
-
+    # Metrics dashboard with improved styling - 3 columns with 2 metrics each
+    st.markdown("### 📊 Performance Metrics")
+    
+    col1, col2, col3 = st.columns(3)
+    
     with col1:
-        st.metric("📊 Total Trades", result.performance.total_trades)
+        st.markdown("""
+        <div style="background-color: #f0f2f6; padding: 20px; border-radius: 10px; border-left: 5px solid #1f77b4;">
+            <h3 style="margin: 0; color: #1f77b4;">📊 Total Trades</h3>
+            <h2 style="margin: 10px 0 0 0; color: #262730;">{}</h2>
+        </div>
+        """.format(result.performance.total_trades), unsafe_allow_html=True)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        pnl_value = float(result.performance.total_pnl)
+        pnl_color = "#28a745" if pnl_value >= 0 else "#dc3545"
+        pnl_sign = "+" if pnl_value >= 0 else ""
+        st.markdown("""
+        <div style="background-color: #f0f2f6; padding: 20px; border-radius: 10px; border-left: 5px solid {};">
+            <h3 style="margin: 0; color: {};">💰 Total P&L</h3>
+            <h2 style="margin: 10px 0 0 0; color: {};">{}$ {:.2f}</h2>
+        </div>
+        """.format(pnl_color, pnl_color, pnl_color, pnl_sign, pnl_value), unsafe_allow_html=True)
+    
     with col2:
-        st.metric("✅ Win Rate", f"{float(result.performance.win_rate):.1f}%")
+        win_rate = float(result.performance.win_rate)
+        win_color = "#28a745" if win_rate >= 50 else "#ffc107" if win_rate >= 30 else "#dc3545"
+        st.markdown("""
+        <div style="background-color: #f0f2f6; padding: 20px; border-radius: 10px; border-left: 5px solid {};">
+            <h3 style="margin: 0; color: {};">✅ Win Rate</h3>
+            <h2 style="margin: 10px 0 0 0; color: {};">{:.1f}%</h2>
+        </div>
+        """.format(win_color, win_color, win_color, win_rate), unsafe_allow_html=True)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        sharpe = float(result.performance.sharpe_ratio) if result.performance.sharpe_ratio else None
+        sharpe_color = "#28a745" if sharpe and sharpe > 1 else "#ffc107" if sharpe and sharpe > 0 else "#dc3545"
+        sharpe_display = f"{sharpe:.2f}" if sharpe is not None else "N/A"
+        st.markdown("""
+        <div style="background-color: #f0f2f6; padding: 20px; border-radius: 10px; border-left: 5px solid {};">
+            <h3 style="margin: 0; color: {};">📈 Sharpe Ratio</h3>
+            <h2 style="margin: 10px 0 0 0; color: {};">{}</h2>
+        </div>
+        """.format(sharpe_color, sharpe_color, sharpe_color, sharpe_display), unsafe_allow_html=True)
+    
     with col3:
-        st.metric("💰 Total PnL", f"${float(result.performance.total_pnl):,.2f}")
-    with col4:
-        sharpe = (
-            f"{float(result.performance.sharpe_ratio):.2f}"
-            if result.performance.sharpe_ratio
-            else "N/A"
-        )
-        st.metric("📈 Sharpe Ratio", sharpe)
-    with col5:
-        st.metric("📉 Max Drawdown", f"{float(result.performance.max_drawdown_percentage):.2f}%")
-    with col6:
-        st.metric("💼 Capital Final", f"${float(result.final_capital):,.2f}")
+        max_dd = float(result.performance.max_drawdown_percentage)
+        dd_color = "#dc3545" if max_dd > 20 else "#ffc107" if max_dd > 10 else "#28a745"
+        st.markdown("""
+        <div style="background-color: #f0f2f6; padding: 20px; border-radius: 10px; border-left: 5px solid {};">
+            <h3 style="margin: 0; color: {};">📉 Max Drawdown</h3>
+            <h2 style="margin: 10px 0 0 0; color: {};">{:.2f}%</h2>
+        </div>
+        """.format(dd_color, dd_color, dd_color, max_dd), unsafe_allow_html=True)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        final_cap = float(result.final_capital)
+        st.markdown("""
+        <div style="background-color: #f0f2f6; padding: 20px; border-radius: 10px; border-left: 5px solid #6c757d;">
+            <h3 style="margin: 0; color: #6c757d;">💼 Final Capital</h3>
+            <h2 style="margin: 10px 0 0 0; color: #262730;">${:,.2f}</h2>
+        </div>
+        """.format(final_cap), unsafe_allow_html=True)
 
     # Equity curve
     st.subheader("📈 Equity Curve")
@@ -1013,30 +1061,54 @@ if session_state.backtest_results:
     else:
         st.info("No equity curve data available")
 
-    # Trade log
-    st.subheader("📋 Trade Log")
+    # Trade log with improved styling
+    st.markdown("---")
+    st.markdown("### 📋 Trade Log")
     if result.trades and len(result.trades) > 0:
-        trades_df = pd.DataFrame(
-            [
-                {
-                    "Trade ID": trade.trade_id[:8],
-                    "Symbol": trade.symbol,
-                    "Side": trade.side,
-                    "Quantity": float(trade.quantity),
-                    "Entry Price": float(trade.entry_price),
-                    "Exit Price": float(trade.exit_price) if trade.exit_price else None,
-                    "Entry Time": trade.entry_time,
-                    "Exit Time": trade.exit_time,
-                    "PnL": float(trade.pnl) if trade.pnl else 0,
-                    "Status": trade.status.value,
-                    "Reason": trade.reason if trade.reason else "N/A",
-                }
-                for trade in result.trades
-            ]
-        )
-
+        trades_data = []
+        for trade in result.trades:
+            pnl_val = float(trade.pnl) if trade.pnl else 0.0
+            trades_data.append({
+                "ID": trade.trade_id[:8],
+                "Symbol": trade.symbol,
+                "Side": "🟢 BUY" if trade.side == "BUY" else "🔴 SELL",
+                "Quantity": f"{float(trade.quantity):,.2f}",
+                "Entry Price": f"${float(trade.entry_price):,.2f}",
+                "Exit Price": f"${float(trade.exit_price):,.2f}" if trade.exit_price else "N/A",
+                "Entry Time": trade.entry_time.strftime("%Y-%m-%d %H:%M") if trade.entry_time else "N/A",
+                "Exit Time": trade.exit_time.strftime("%Y-%m-%d %H:%M") if trade.exit_time else "N/A",
+                "P&L": f"${pnl_val:+,.2f}",
+                "Status": "✅ " + trade.status.value if trade.status.value == "CLOSED" else "⏳ " + trade.status.value,
+                "Reason": (trade.reason[:30] + "...") if trade.reason and len(trade.reason) > 30 else (trade.reason or "N/A"),
+            })
+        
+        trades_df = pd.DataFrame(trades_data)
+        
         if not trades_df.empty:
-            st.dataframe(trades_df, use_container_width=True, height=400)
+            # Style the dataframe
+            def style_row(row):
+                pnl_str = str(row['P&L'])
+                if pnl_str.startswith('$+'):
+                    return ['background-color: #d4edda'] * len(row)
+                elif pnl_str.startswith('$-'):
+                    return ['background-color: #f8d7da'] * len(row)
+                else:
+                    return [''] * len(row)
+            
+            styled_df = trades_df.style.apply(style_row, axis=1)
+            st.dataframe(styled_df, use_container_width=True, height=500, hide_index=True)
+            
+            # Summary stats
+            col_sum1, col_sum2, col_sum3 = st.columns(3)
+            with col_sum1:
+                total_pnl = sum(float(t.pnl) if t.pnl else 0 for t in result.trades)
+                st.metric("Total P&L", f"${total_pnl:+,.2f}")
+            with col_sum2:
+                winning = sum(1 for t in result.trades if t.pnl and float(t.pnl) > 0)
+                st.metric("Winning Trades", f"{winning}/{len(result.trades)}")
+            with col_sum3:
+                avg_pnl = total_pnl / len(result.trades) if result.trades else 0
+                st.metric("Avg P&L per Trade", f"${avg_pnl:+,.2f}")
         else:
             st.info("No trades recorded")
     else:
@@ -1072,7 +1144,28 @@ if session_state.backtest_results:
                 )
 
             comparison_df = pd.DataFrame(comparison_data)
-            st.dataframe(comparison_df, use_container_width=True, hide_index=True)
+            
+            # Style comparison table
+            def style_comparison(val):
+                if isinstance(val, str) and val.endswith('%'):
+                    try:
+                        num = float(val.replace('%', '').replace('$', '').replace(',', ''))
+                        if 'Win Rate' in str(val) or 'Return' in str(val):
+                            if num > 50:
+                                return 'background-color: #d4edda; color: #155724'
+                            elif num > 30:
+                                return 'background-color: #fff3cd; color: #856404'
+                            else:
+                                return 'background-color: #f8d7da; color: #721c24'
+                    except:
+                        pass
+                return ''
+            
+            # Apply styling
+            styled_comparison = comparison_df.style.applymap(
+                lambda x: 'font-weight: bold' if isinstance(x, (int, float)) or (isinstance(x, str) and any(c.isdigit() for c in x)) else ''
+            )
+            st.dataframe(styled_comparison, use_container_width=True, hide_index=True)
 
             # Comparison chart (equity curves)
             st.subheader("📈 Equity Curve Comparison")

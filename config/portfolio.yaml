@@ -4,36 +4,84 @@
 # Sector Definitions
 sectors:
   technology:
-    symbols: ["AAPL", "MSFT", "GOOGL", "AMZN", "META", "NVDA", "TSLA"]
+    symbols:
+      [
+        "AAPL",
+        "MSFT",
+        "GOOGL",
+        "AMZN",
+        "META",
+        "NVDA",
+        "TSLA",
+        "ORCL",
+        "INTC",
+        "CSCO",
+        "ADBE",
+        "CRM",
+        "AMD",
+        "AVGO",
+        "QCOM",
+      ]
     description: "Technology and growth stocks"
 
   growth:
-    symbols: ["TSLA", "NFLX", "AMZN", "META"]
+    symbols:
+      [
+        "TSLA",
+        "NFLX",
+        "AMZN",
+        "META",
+        "GOOGL",
+        "NVDA",
+        "AMD",
+        "SHOP",
+        "SQ",
+        "SNOW",
+        "CRWD",
+        "NET",
+      ]
     description: "High growth companies"
 
   energy:
-    symbols: ["XOM", "CVX", "COP", "EOG", "SLB"]
+    symbols:
+      ["XOM", "CVX", "COP", "EOG", "SLB", "MPC", "VLO", "PSX", "HAL", "FTI"]
     description: "Energy sector"
 
   utilities:
-    symbols: ["NEE", "DUK", "SO", "AEP", "SRE"]
+    symbols: ["NEE", "DUK", "SO", "AEP", "SRE", "D", "EXC", "ES", "ETR", "FE"]
     description: "Utilities sector (stable)"
 
   consumer_staples:
-    symbols: ["PG", "KO", "PEP", "WMT", "COST"]
+    symbols:
+      ["PG", "KO", "PEP", "WMT", "COST", "HD", "MCD", "NKE", "SBUX", "TGT"]
     description: "Consumer staples (defensive)"
 
   reits:
-    symbols: ["AMT", "PLD", "EQIX", "PSA", "WELL"]
+    symbols:
+      ["AMT", "PLD", "EQIX", "PSA", "WELL", "SPG", "O", "DLR", "AVB", "EQR"]
     description: "Real Estate Investment Trusts"
 
   banks:
-    symbols: ["JPM", "BAC", "WFC", "C", "GS"]
+    symbols: ["JPM", "BAC", "WFC", "C", "GS", "MS", "BX", "SCHW", "USB", "PNC"]
     description: "Banking sector"
 
   healthcare:
-    symbols: ["JNJ", "UNH", "PFE", "ABT", "TMO"]
+    symbols:
+      ["JNJ", "UNH", "PFE", "ABT", "TMO", "DHR", "BMY", "AMGN", "CI", "HUM"]
     description: "Healthcare sector"
+
+  industrials:
+    symbols: ["BA", "CAT", "GE", "HON", "LMT", "RTX", "UNP", "UPS", "DE", "ETN"]
+    description: "Industrial sector"
+
+  materials:
+    symbols:
+      ["LIN", "APD", "SHW", "FCX", "NEM", "ECL", "PPG", "DD", "DOW", "CTVA"]
+    description: "Materials sector"
+
+  communication:
+    symbols: ["VZ", "T", "CMCSA", "DIS", "NFLX", "GOOGL", "META", "TMUS"]
+    description: "Communication services"
 
 # Market Type Definitions
 market_types:
