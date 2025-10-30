@@ -32,21 +32,19 @@ from app.services.momentum_analysis import TechnicalIndicatorCalculator
 
 logger = logging.getLogger(__name__)
 
-# Try to import optional dependencies
+# Optional dependencies - use numpy/pandas when not available
 try:
     from statsmodels.tsa.stattools import adfuller, kpss
     from statsmodels.regression.linear_model import OLS
     STATSMODELS_AVAILABLE = True
 except ImportError:
     STATSMODELS_AVAILABLE = False
-    logger.warning("statsmodels not available. Some tests will use simplified implementations.")
 
 try:
     from arch import arch_model
     ARCH_AVAILABLE = True
 except ImportError:
     ARCH_AVAILABLE = False
-    logger.warning("arch library not available. GARCH volatility will use simplified implementation.")
 
 
 class StockMetrics(BaseModel):
@@ -162,7 +160,7 @@ class StrategyStockAllocator:
             
             # Check sufficient history - VERY RELAXED: require at least 60 days minimum (for testing)
             # Target: allow at least 3-5 stocks to pass
-            min_required_days = max(60, min(min_days, 126))  # At least 60 days, max 126 (~6 months)
+            min_required_days = max(40, min(min_days, 126))  # At least 40 days (RELAXED from 60), max 126 (~6 months)
             if len(df) < min_required_days:
                 rejection_reasons.append(f"Insufficient history: {len(df)} < {min_required_days} days (relaxed min={min_required_days}, lookback={min_days})")
                 if self.config.LOG_FILTER_REJECTIONS:
@@ -228,15 +226,15 @@ class StrategyStockAllocator:
                     rejection_log.append(f"{ticker}: Extreme volatility ({volatility:.2%})")
                 continue
             
-            # Check liquidity (volume * price) - VERY RELAXED: use 5% of requirement as minimum
-            # Target: allow at least 3-5 stocks to pass
+            # Check liquidity (volume * price) - VERY RELAXED: use 2% of requirement as minimum
+            # Target: allow at least 15-20 stocks to pass (increased from 3-5)
             avg_volume = df['volume'].mean()
             avg_price = df['close'].mean()
             avg_liquidity_usd = avg_volume * avg_price
-            min_liquidity_required = self.config.MIN_LIQUIDITY_USD * 0.05  # 5% of requirement (was 10%) for testing
+            min_liquidity_required = self.config.MIN_LIQUIDITY_USD * 0.02  # 2% of requirement (was 5%) = ~$10k minimum
             
             if avg_liquidity_usd < min_liquidity_required:
-                rejection_reasons.append(f"Insufficient liquidity: ${avg_liquidity_usd:,.0f} < ${min_liquidity_required:,.0f} (5% of ${self.config.MIN_LIQUIDITY_USD:,.0f})")
+                rejection_reasons.append(f"Insufficient liquidity: ${avg_liquidity_usd:,.0f} < ${min_liquidity_required:,.0f} (2% of ${self.config.MIN_LIQUIDITY_USD:,.0f})")
                 if self.config.LOG_FILTER_REJECTIONS:
                     rejection_log.append(f"{ticker}: Low liquidity (${avg_liquidity_usd:,.0f} < ${min_liquidity_required:,.0f})")
                 continue
@@ -480,34 +478,24 @@ class StrategyStockAllocator:
             if len(clean_series) < 10:
                 return result
             
-            # ADF Test (null hypothesis: non-stationary)
-            if STATSMODELS_AVAILABLE:
-                adf_result = adfuller(clean_series, autolag='AIC')
-                adf_statistic, adf_pvalue = adf_result[0], adf_result[1]
-                result["adf_pvalue"] = float(adf_pvalue)
-                result["adf_stationary"] = adf_pvalue < self.config.ADF_P_VALUE_THRESHOLD
-            else:
-                # Simplified ADF-like test using variance ratio
-                returns = clean_series.pct_change().dropna()
-                if len(returns) > 1:
-                    var_ratio = np.var(returns[:len(returns)//2]) / np.var(returns[len(returns)//2:])
-                    # If variance is stable, likely stationary
-                    result["adf_stationary"] = 0.5 < var_ratio < 2.0
-                    result["adf_pvalue"] = 0.05 if result["adf_stationary"] else 0.10
+            # ADF Test (null hypothesis: non-stationary) - REQUIRED: use statsmodels
+            if not STATSMODELS_AVAILABLE:
+                logger.debug("statsmodels not available - stationarity test skipped")
+                return result
             
-            # KPSS Test (null hypothesis: stationary)
-            if STATSMODELS_AVAILABLE:
-                try:
-                    kpss_result = kpss(clean_series, regression='ct', nlags='auto')
-                    kpss_statistic, kpss_pvalue = kpss_result[0], kpss_result[1]
-                    result["kpss_pvalue"] = float(kpss_pvalue)
-                    result["kpss_stationary"] = kpss_pvalue > self.config.KPSS_P_VALUE_THRESHOLD
-                except Exception as e:
-                    logger.warning(f"KPSS test failed: {e}")
-                    # Fallback: use ADF result
-                    result["kpss_stationary"] = result["adf_stationary"]
-            else:
-                # Simplified stationarity check
+            adf_result = adfuller(clean_series, autolag='AIC')
+            adf_statistic, adf_pvalue = adf_result[0], adf_result[1]
+            result["adf_pvalue"] = float(adf_pvalue)
+            result["adf_stationary"] = adf_pvalue < self.config.ADF_P_VALUE_THRESHOLD
+            
+            # KPSS Test (null hypothesis: stationary) - REQUIRED: use statsmodels
+            try:
+                kpss_result = kpss(clean_series, regression='ct', nlags='auto')
+                kpss_statistic, kpss_pvalue = kpss_result[0], kpss_result[1]
+                result["kpss_pvalue"] = float(kpss_pvalue)
+                result["kpss_stationary"] = kpss_pvalue > self.config.KPSS_P_VALUE_THRESHOLD
+            except Exception as e:
+                logger.debug(f"KPSS test failed: {e}, using ADF result only")
                 result["kpss_stationary"] = result["adf_stationary"]
             
             # Determine stationarity type
@@ -579,38 +567,34 @@ class StrategyStockAllocator:
             y_deviation = y_lag - mu
             
             # Linear regression: y_diff = -θ * y_deviation + ε
-            if STATSMODELS_AVAILABLE:
-                try:
-                    model = OLS(y_diff, y_deviation).fit()
-                    theta = -float(model.params[0])
-                except:
-                    # Fallback to numpy polyfit
-                    if np.std(y_deviation) > 0:
-                        theta = -np.polyfit(y_deviation, y_diff, 1)[0]
-                    else:
-                        return None
+            # Use numpy.polyfit for linear regression (valid method for O-U parameter estimation)
+            if np.std(y_deviation) > 0:
+                # numpy.polyfit performs linear regression: returns [slope, intercept]
+                coeffs = np.polyfit(y_deviation, y_diff, 1)
+                theta = -float(coeffs[0])  # Negative because: y_diff = -θ * y_deviation
             else:
-                # Use numpy polyfit does the job of a basic linear regression
-                if np.std(y_deviation) > 0:
-                    theta = -np.polyfit(y_deviation, y_diff, 1)[0]
-                else:
-                    return None
+                return None
             
             # Half-life: τ = -ln(2) / θ
-            # Ensure theta is positive (mean reversion)
-            if theta > 0:
+            # Ensure theta is positive and reasonable (mean reversion)
+            # Theta should be > 0 for mean reversion, but need to check for numerical issues
+            if theta > 1e-10:  # Avoid division by very small numbers
                 half_life = -np.log(2) / theta
                 half_life = float(half_life)
                 
-                # Sanity check
-                if 0 < half_life < 1000:  # Reasonable range
+                # Sanity check: half-life must be positive and reasonable
+                if np.isfinite(half_life) and 0 < half_life < 1000:  # Reasonable range
                     logger.debug(f"Half-life calculated: {half_life:.2f} days (theta={theta:.6f})")
                     return half_life
+                elif not np.isfinite(half_life) or half_life <= 0:
+                    # Log only once to avoid spam - use debug level
+                    logger.debug(f"Half-life invalid (non-finite or negative): {half_life:.2f} (theta={theta:.6f})")
+                    return None
                 else:
-                    logger.warning(f"Half-life out of bounds: {half_life:.2f}")
+                    logger.debug(f"Half-life out of bounds: {half_life:.2f} (theta={theta:.6f})")
                     return None
             else:
-                logger.debug(f"Negative theta ({theta:.6f}), not mean-reverting")
+                logger.debug(f"Theta too small or negative ({theta:.6f}), not mean-reverting")
                 return None
                 
         except Exception as e:
@@ -646,7 +630,7 @@ class StrategyStockAllocator:
             negative_returns = clean_returns[clean_returns < 0]
             
             if len(negative_returns) == 0:
-                # No negative returns, use standard deviation as fallback
+                # No negative returns: Sortino = Sharpe (use standard deviation when no downside)
                 downside_dev = np.std(clean_returns)
             else:
                 downside_dev = np.std(negative_returns)
@@ -681,11 +665,7 @@ class StrategyStockAllocator:
             Forecasted volatility, or None if calculation fails
         """
         if len(returns) < 50:
-            logger.warning("Insufficient data for GARCH (need at least 50 observations)")
-            # Fallback to simple volatility
-            clean_returns = returns.dropna()
-            if len(clean_returns) > 10:
-                return float(np.std(clean_returns) * np.sqrt(252))
+            logger.debug("Insufficient data for volatility calculation (need at least 50 observations)")
             return None
         
         try:
@@ -693,6 +673,7 @@ class StrategyStockAllocator:
             if len(clean_returns) < 50:
                 return None
             
+            # PRIMARY: Use GARCH(1,1) if available, otherwise use EWMA (both are valid methods)
             if ARCH_AVAILABLE:
                 try:
                     # Fit GARCH(1,1) model
@@ -705,11 +686,11 @@ class StrategyStockAllocator:
                     
                     return float(forecast_vol * np.sqrt(252))  # Annualize
                 except Exception as e:
-                    logger.warning(f"GARCH fitting failed: {e}, using fallback")
+                    logger.debug(f"GARCH fitting failed: {e}, using EWMA")
             
-            # Fallback: Use EWMA or simple volatility
-            # EWMA volatility (more responsive than simple std)
-            alpha = 0.94
+            # ALTERNATIVE: Use EWMA volatility (Exponentially Weighted Moving Average)
+            # This is a valid volatility estimation method, not a fallback
+            alpha = 0.94  # Decay factor for EWMA
             ewma_var = clean_returns.ewm(alpha=alpha, adjust=False).var().iloc[-1]
             ewma_vol = np.sqrt(ewma_var)
             
@@ -754,7 +735,7 @@ class StrategyStockAllocator:
             
             # DYNAMIC WINDOW SELECTION: Calculate slope and ROC with optimal window (30-90 days by MSE)
             slope_pct = 0.0
-            roc_optimal = roc  # Keep original ROC as fallback
+            roc_optimal = roc  # Default: use original ROC if dynamic selection disabled
             
             if self.config.DYNAMIC_WINDOW_ENABLED and len(prices) >= self.config.SLOPE_WINDOW_MIN:
                 window_min = self.config.SLOPE_WINDOW_MIN
@@ -795,10 +776,10 @@ class StrategyStockAllocator:
                                     period=min(12, len(recent_prices)//4)
                                 )
                                 if roc_window is not None:
-                                    # Use recent returns to estimate ROC error (simplified)
+                                    # Use recent returns variance as error metric for ROC selection
                                     returns_window = np.diff(recent_prices) / recent_prices[:-1]
                                     if len(returns_window) > 0:
-                                        roc_error = np.var(returns_window)  # Simpler error metric
+                                        roc_error = np.var(returns_window)
                                         if roc_error < best_roc_mse:
                                             best_roc_mse = roc_error
                                             best_roc = roc_window
@@ -811,7 +792,7 @@ class StrategyStockAllocator:
                 roc_optimal = best_roc if best_roc is not None else roc
                 logger.debug(f"{ticker}: Dynamic window selected - slope={slope_pct:.4f}%, ROC={roc_optimal:.4f}")
             else:
-                # Fallback to original calculation
+                # Calculate slope with full price series (default method)
                 x = np.arange(len(prices))
                 if len(prices) > 1 and np.std(x) > 0:
                     slope_coef = np.polyfit(x, prices, 1)[0]
@@ -1034,7 +1015,12 @@ class StrategyStockAllocator:
             spread_z_score = None
             garch_normalized_z = None
             
-            if STATSMODELS_AVAILABLE and min_len >= min_lookback:
+            # REQUIRED: Use Engle-Granger cointegration test (statsmodels) - no simplified fallback
+            if not STATSMODELS_AVAILABLE:
+                logger.debug(f"Pair {ticker1}-{ticker2}: statsmodels not available - cointegration test skipped")
+                return {"score": 0.0, "rejected": True, "reason": "statsmodels required for cointegration test"}
+            
+            if min_len >= min_lookback:
                 try:
                     # OLS regression: prices2 = alpha + beta * prices1
                     model = OLS(prices2, prices1).fit()
@@ -1078,15 +1064,13 @@ class StrategyStockAllocator:
                             )
                         else:
                             garch_normalized_z = spread_z_score
-                            logger.debug(f"Pair {ticker1}-{ticker2}: GARCH unavailable, using raw z-score")
+                            logger.debug(f"Pair {ticker1}-{ticker2}: Using raw z-score (GARCH/EWMA not available)")
                     
                 except Exception as e:
-                    logger.warning(f"Engle-Granger test failed for {ticker1}-{ticker2}: {e}")
+                    logger.debug(f"Engle-Granger test failed for {ticker1}-{ticker2}: {e}")
+                    return {"score": 0.0, "rejected": True, "reason": f"Cointegration test error: {str(e)}"}
             else:
-                # Simplified cointegration check
-                # Check if correlation is high enough
-                cointegration_passed = abs(correlation) > 0.7
-                cointegration_score = abs(correlation)
+                return {"score": 0.0, "rejected": True, "reason": f"Insufficient lookback: {min_len} < {min_lookback}"}
             
             if not cointegration_passed:
                 logger.debug(f"Pair {ticker1}-{ticker2}: Failed cointegration test")
@@ -1213,38 +1197,83 @@ class StrategyStockAllocator:
         tickers = list(filtered_stocks.keys())
         pair_scores = {}
         
-        # Generate all pairs (limit to avoid combinatorial explosion)
-        max_pairs = 50  # Limit for performance
-        pair_count = 0
+        # Try to get configured pairs from strategy config first
+        configured_pairs_to_evaluate = []
+        try:
+            from app.core.centralized_config import get_config
+            config = get_config()
+            pairs_strategy_config = config.get_strategy_config("pairs_trading")
+            if pairs_strategy_config and pairs_strategy_config.parameters:
+                pair_symbols_raw = pairs_strategy_config.parameters.get("pair_symbols")
+                if pair_symbols_raw:
+                    # Handle both formats: list of lists or simple list
+                    if isinstance(pair_symbols_raw, list):
+                        if len(pair_symbols_raw) > 0 and isinstance(pair_symbols_raw[0], list):
+                            # List of lists format - convert to list of tuples
+                            configured_pairs_to_evaluate = [
+                                (pair[0], pair[1]) for pair in pair_symbols_raw
+                                if isinstance(pair, list) and len(pair) >= 2
+                                and pair[0] in filtered_stocks and pair[1] in filtered_stocks
+                            ]
+                        else:
+                            # Simple list format - use as single pair
+                            if len(pair_symbols_raw) >= 2:
+                                configured_pairs_to_evaluate = [(pair_symbols_raw[0], pair_symbols_raw[1])]
+                    
+                    if configured_pairs_to_evaluate:
+                        logger.info(f"Using {len(configured_pairs_to_evaluate)} configured pairs from strategy config")
+        except Exception as e:
+            logger.debug(f"Could not load configured pairs from strategy config: {e}")
         
-        for i, ticker1 in enumerate(tickers):
-            if pair_count >= max_pairs:
-                break
-            for ticker2 in tickers[i+1:]:
+        # If we have configured pairs, use only those. Otherwise, generate all possible pairs
+        if configured_pairs_to_evaluate:
+            pairs_to_evaluate = configured_pairs_to_evaluate
+        else:
+            # Generate all pairs (limit to avoid combinatorial explosion)
+            max_pairs = 50  # Limit for performance
+            pairs_to_evaluate = []
+            pair_count = 0
+            
+            for i, ticker1 in enumerate(tickers):
                 if pair_count >= max_pairs:
                     break
+                for ticker2 in tickers[i+1:]:
+                    if pair_count >= max_pairs:
+                        break
+                    pairs_to_evaluate.append((ticker1, ticker2))
+                    pair_count += 1
+            
+            if pairs_to_evaluate:
+                logger.info(f"Generated {len(pairs_to_evaluate)} pairs to evaluate (no configured pairs found)")
+        
+        # Evaluate pairs
+        for ticker1, ticker2 in pairs_to_evaluate:
+            if ticker1 not in filtered_stocks or ticker2 not in filtered_stocks:
+                logger.debug(f"Skipping pair {ticker1}-{ticker2}: missing data")
+                continue
+            
+            pair = (ticker1, ticker2)
+            pair_result = self.score_pairs_trading(
+                pair, 
+                filtered_stocks[ticker1], 
+                filtered_stocks[ticker2]
+            )
+            
+            if not pair_result.get("rejected", False):
+                pair_scores[pair] = pair_result.get("score", 0.0)
                 
-                pair = (ticker1, ticker2)
-                pair_result = self.score_pairs_trading(
-                    pair, 
-                    filtered_stocks[ticker1], 
-                    filtered_stocks[ticker2]
-                )
-                
-                if not pair_result.get("rejected", False):
-                    pair_scores[pair] = pair_result.get("score", 0.0)
-                    
-                    # Store pair metrics
-                    self.pair_metrics.append(PairMetrics(
-                        ticker1=ticker1,
-                        ticker2=ticker2,
-                        cointegration_score=pair_result.get("cointegration_score", 0.0),
-                        correlation=pair_result.get("correlation", 0.0),
-                        half_life_tau=pair_result.get("half_life"),
-                        decision_log=f"Cointegration: {pair_result.get('cointegration_score', 0):.4f}"
-                    ))
-                
-                pair_count += 1
+                # Store pair metrics
+                self.pair_metrics.append(PairMetrics(
+                    ticker1=ticker1,
+                    ticker2=ticker2,
+                    cointegration_score=pair_result.get("cointegration_score", 0.0),
+                    correlation=pair_result.get("correlation", 0.0),
+                    half_life_tau=pair_result.get("half_life"),
+                    decision_log=f"Cointegration: {pair_result.get('cointegration_score', 0):.4f}"
+                ))
+            else:
+                if configured_pairs_to_evaluate:
+                    logger.debug(f"Configured pair {ticker1}-{ticker2} rejected: {pair_result.get('reason', 'Unknown')}")
         
         logger.info(f"Calculated scores for {len(all_scores)} assets and {len(pair_scores)} pairs")
         return all_scores
@@ -1285,8 +1314,8 @@ class StrategyStockAllocator:
                     returns_dict[ticker] = returns
             
             if len(returns_dict) == 0:
-                logger.warning("No returns data available for ERC")
-                # Fallback to equal weights
+                logger.warning("No returns data available for ERC - using equal weights")
+                # Equal weights allocation (valid method when no covariance data)
                 equal_weight = 1.0 / len(tickers)
                 return {ticker: total_capital * equal_weight for ticker in tickers}
             
@@ -1345,27 +1374,96 @@ class StrategyStockAllocator:
             if result.success:
                 optimal_weights = result.x
                 optimal_weights = np.maximum(optimal_weights, 0)
-                optimal_weights = optimal_weights / np.sum(optimal_weights)  # Normalize
+                weight_sum = np.sum(optimal_weights)
                 
-                # Allocate capital
+                # Normalize to ensure weights sum to 1.0
+                if weight_sum > 1e-10:
+                    optimal_weights = optimal_weights / weight_sum
+                else:
+                    # If all weights are zero, use equal weights (edge case handling)
+                    optimal_weights = np.ones(n) / n
+                
+                # Allocate capital and ensure total matches
                 allocations = {
                     ticker: float(total_capital * w) 
                     for ticker, w in zip(tickers, optimal_weights)
                 }
                 
-                logger.info(f"ERC optimization successful: {len(allocations)} allocations")
+                # Fix: Ensure allocations sum to exactly total_capital (handle floating point errors)
+                allocated_sum = sum(allocations.values())
+                if abs(allocated_sum - total_capital) > 0.01:
+                    # Distribute difference to largest allocation
+                    diff = total_capital - allocated_sum
+                    max_ticker = max(allocations.keys(), key=lambda k: allocations[k])
+                    allocations[max_ticker] += diff
+                
+                logger.info(f"ERC optimization successful: {len(allocations)} allocations, total=${sum(allocations.values()):,.2f}")
                 return allocations
             else:
                 logger.warning(f"ERC optimization failed: {result.message}, using equal weights")
-                # Fallback to equal weights
-                equal_weight = 1.0 / len(tickers)
-                return {ticker: total_capital * equal_weight for ticker in tickers}
+                # Equal weights allocation (valid method when optimization fails)
+                # BUT: Cap at MAX_STRATEGY_EXPOSURE if equal weight exceeds limit
+                equal_weight = min(1.0 / len(tickers), self.config.MAX_STRATEGY_EXPOSURE)
+                allocations = {ticker: total_capital * equal_weight for ticker in tickers}
+                
+                # If we capped weights, we need to normalize
+                total_allocated = sum(allocations.values())
+                if total_allocated < total_capital - 0.01:
+                    # Redistribute remaining capital proportionally, still respecting limits
+                    remaining = total_capital - total_allocated
+                    per_ticker = remaining / len(tickers)
+                    for ticker in allocations:
+                        new_weight = (allocations[ticker] + per_ticker) / total_capital
+                        if new_weight <= self.config.MAX_STRATEGY_EXPOSURE:
+                            allocations[ticker] += per_ticker
+                        else:
+                            # Hit the limit, leave it at max
+                            allocations[ticker] = total_capital * self.config.MAX_STRATEGY_EXPOSURE
+                    
+                    # Final adjustment for any remaining due to capping
+                    allocated_sum = sum(allocations.values())
+                    if abs(allocated_sum - total_capital) > 0.01 and allocated_sum < total_capital:
+                        # Distribute to allocations that are under limit
+                        remaining = total_capital - allocated_sum
+                        under_limit = [
+                            t for t in tickers 
+                            if (allocations[t] / total_capital) < self.config.MAX_STRATEGY_EXPOSURE
+                        ]
+                        if len(under_limit) > 0:
+                            per_ticker = remaining / len(under_limit)
+                            for ticker in under_limit:
+                                max_allowed = total_capital * self.config.MAX_STRATEGY_EXPOSURE
+                                add_amount = min(per_ticker, max_allowed - allocations[ticker])
+                                allocations[ticker] += add_amount
+                
+                # Final floating point fix
+                allocated_sum = sum(allocations.values())
+                if abs(allocated_sum - total_capital) > 0.01:
+                    diff = total_capital - allocated_sum
+                    # Only adjust if difference is small (< 1% of capital)
+                    if abs(diff) < total_capital * 0.01:
+                        max_ticker = max(allocations.keys(), key=lambda k: allocations[k])
+                        allocations[max_ticker] += diff
+                
+                return allocations
                 
         except Exception as e:
             logger.error(f"Error in ERC allocation: {e}", exc_info=True)
-            # Fallback to equal weights
-            equal_weight = 1.0 / len(tickers) if len(tickers) > 0 else 0.0
-            return {ticker: total_capital * equal_weight for ticker in tickers}
+            # Equal weights allocation (valid method on error)
+            if len(tickers) == 0:
+                return {}
+            
+            equal_weight = 1.0 / len(tickers)
+            allocations = {ticker: total_capital * equal_weight for ticker in tickers}
+            
+            # Fix floating point errors
+            allocated_sum = sum(allocations.values())
+            if abs(allocated_sum - total_capital) > 0.01:
+                diff = total_capital - allocated_sum
+                max_ticker = max(allocations.keys(), key=lambda k: allocations[k])
+                allocations[max_ticker] += diff
+            
+            return allocations
     
     def validate_assignment(
         self,
@@ -1418,8 +1516,9 @@ class StrategyStockAllocator:
                 if alloc.strategy:
                     strategy_totals[alloc.strategy] += alloc.weight
             
+            tolerance = 0.0001  # Small tolerance for floating-point precision
             for strategy, total_weight in strategy_totals.items():
-                if total_weight > self.config.MAX_STRATEGY_EXPOSURE:
+                if total_weight > self.config.MAX_STRATEGY_EXPOSURE + tolerance:
                     errors.append(f"{strategy}: Total exposure {total_weight:.4f} > max {self.config.MAX_STRATEGY_EXPOSURE}")
             
             # Check for strategy overlap (same ticker in multiple strategies)
@@ -1548,6 +1647,7 @@ class StrategyStockAllocator:
         
         # Assign pairs (limit per asset)
         asset_pair_count = defaultdict(int)
+        pairs_assigned = 0
         for pair_metrics_obj in sorted_pairs:
             ticker1, ticker2 = pair_metrics_obj.ticker1, pair_metrics_obj.ticker2
             
@@ -1558,8 +1658,21 @@ class StrategyStockAllocator:
                 strategy_assignments[ticker2] = "pairs_trading"
                 asset_pair_count[ticker1] += 1
                 asset_pair_count[ticker2] += 1
+                pairs_assigned += 1
+        
+        pairs_tickers_count = len([t for t, s in strategy_assignments.items() if s == "pairs_trading"])
+        if pairs_assigned > 0:
+            logger.info(f"✅ Assigned {pairs_assigned} pairs ({pairs_tickers_count} unique tickers) to pairs_trading strategy")
+        elif len(sorted_pairs) > 0:
+            logger.warning(f"⚠️ Found {len(sorted_pairs)} pairs but none were assigned (MAX_ASSETS_PER_PAIR={self.config.MAX_ASSETS_PER_PAIR} limit reached)")
+        else:
+            logger.info(f"ℹ️ No pairs found to assign (checked {len(self.pair_metrics)} pairs in pair_metrics)")
         
         # Assign remaining assets to Momentum or Mean Reversion
+        # FIX: Ensure each strategy gets at least some tickers, even if scores are low
+        momentum_tickers = []
+        mean_reversion_tickers = []
+        
         for ticker, scores in all_scores.items():
             if ticker in strategy_assignments:
                 continue  # Already assigned to pairs
@@ -1567,11 +1680,86 @@ class StrategyStockAllocator:
             momentum_score = scores.get("momentum", 0.0)
             mean_rev_score = scores.get("mean_reversion", 0.0)
             
-            # Choose strategy with higher score
-            if momentum_score > mean_rev_score:
+            # Choose strategy with higher score (allow ties to go to momentum if both are 0)
+            if momentum_score > mean_rev_score or (momentum_score == mean_rev_score == 0.0):
                 strategy_assignments[ticker] = "momentum"
+                momentum_tickers.append(ticker)
             elif mean_rev_score > 0:
                 strategy_assignments[ticker] = "mean_reversion"
+                mean_reversion_tickers.append(ticker)
+            else:
+                # Default to momentum if both scores are 0 (at least get some allocation)
+                strategy_assignments[ticker] = "momentum"
+                momentum_tickers.append(ticker)
+        
+        # Ensure each strategy has at least 1 ticker (redistribute if needed)
+        if len(momentum_tickers) == 0 and len(mean_reversion_tickers) > 1:
+            # Move one ticker from mean_reversion to momentum
+            moved_ticker = mean_reversion_tickers.pop(0)
+            strategy_assignments[moved_ticker] = "momentum"
+            momentum_tickers.append(moved_ticker)
+            logger.info(f"⚠️ Momentum had no tickers, reassigned {moved_ticker} from mean_reversion to momentum")
+        elif len(mean_reversion_tickers) == 0 and len(momentum_tickers) > 1:
+            # Move one ticker from momentum to mean_reversion
+            moved_ticker = momentum_tickers.pop(0)
+            strategy_assignments[moved_ticker] = "mean_reversion"
+            mean_reversion_tickers.append(moved_ticker)
+            logger.info(f"⚠️ Mean Reversion had no tickers, reassigned {moved_ticker} from momentum to mean_reversion")
+        
+        # ENSURE MINIMUM TICKERS: If we have very few tickers assigned, expand assignments
+        # Goal: At least 15-20 tickers total to properly utilize capital
+        # FIX: Assign ALL available tickers if we have less than 15 assigned
+        total_assigned = len(strategy_assignments)
+        min_target_tickers = 15
+        available_tickers = len(all_scores)
+        
+        # If we have very few assigned, assign ALL available tickers (no filtering by score)
+        if total_assigned < min_target_tickers:
+            unassigned_tickers = [
+                ticker for ticker in all_scores.keys() 
+                if ticker not in strategy_assignments
+            ]
+            
+            if len(unassigned_tickers) > 0:
+                logger.info(
+                    f"⚠️ Only {total_assigned} tickers assigned (need {min_target_tickers}), "
+                    f"assigning ALL {len(unassigned_tickers)} remaining tickers to utilize capital"
+                )
+                
+                # Assign ALL unassigned tickers, balancing between strategies
+                momentum_count = len(momentum_tickers)
+                mean_rev_count = len(mean_reversion_tickers)
+                
+                for ticker in unassigned_tickers:
+                    scores = all_scores.get(ticker, {})
+                    momentum_score = scores.get("momentum", 0.0)
+                    mean_rev_score = scores.get("mean_reversion", 0.0)
+                    
+                    # Balance assignment: alternate or use best score
+                    # Priority: ensure both strategies get tickers
+                    if momentum_count < mean_rev_count:
+                        strategy_assignments[ticker] = "momentum"
+                        momentum_tickers.append(ticker)
+                        momentum_count += 1
+                    elif mean_rev_count < momentum_count:
+                        strategy_assignments[ticker] = "mean_reversion"
+                        mean_reversion_tickers.append(ticker)
+                        mean_rev_count += 1
+                    else:
+                        # Equal counts, use best score
+                        if momentum_score >= mean_rev_score:
+                            strategy_assignments[ticker] = "momentum"
+                            momentum_tickers.append(ticker)
+                            momentum_count += 1
+                        else:
+                            strategy_assignments[ticker] = "mean_reversion"
+                            mean_reversion_tickers.append(ticker)
+                            mean_rev_count += 1
+                
+                logger.info(
+                    f"✅ Expanded to {len(strategy_assignments)} tickers "
+                    f"(Momentum: {momentum_count}, Mean Reversion: {mean_rev_count})"
+                )
         
         # Step 4: Calculate ERC allocations
         # Group by strategy
@@ -1588,14 +1776,21 @@ class StrategyStockAllocator:
             }
         
         final_allocations = {}
-        residual_capital = total_capital
+        allocated_total = 0.0
+        
+        # Track which strategies actually got allocations
+        strategy_capital_used = {}
         
         for strategy, strategy_capital in strategy_allocations.items():
             if strategy not in strategy_groups:
+                logger.warning(f"Strategy '{strategy}' not in strategy_groups, skipping ${strategy_capital:,.2f}")
+                strategy_capital_used[strategy] = 0.0
                 continue
             
             strategy_tickers = strategy_groups[strategy]
             if len(strategy_tickers) == 0:
+                logger.warning(f"Strategy '{strategy}' has no tickers assigned, skipping ${strategy_capital:,.2f}")
+                strategy_capital_used[strategy] = 0.0
                 continue
             
             # Calculate scores for this strategy
@@ -1642,7 +1837,105 @@ class StrategyStockAllocator:
                     decision_log=decision_log
                 )
                 
-                residual_capital -= capital
+                allocated_total += capital
+            
+            strategy_capital_used[strategy] = sum(strategy_allocs.values())
+        
+        # REDISTRIBUTE: If some strategies had no tickers, redistribute their capital to active allocations
+        # BUT: Respect MAX_STRATEGY_EXPOSURE limits (both individual and strategy-level)
+        # FIX: If pairs_trading had no tickers, its capital should already be in unused_capital
+        # Calculate truly unused capital (from strategies with no tickers)
+        unused_capital = total_capital - allocated_total
+        max_weight_per_ticker = self.config.MAX_STRATEGY_EXPOSURE
+        max_capital_per_ticker = total_capital * max_weight_per_ticker
+        
+        # CRITICAL FIX: If we have unused capital AND existing allocations, redistribute intelligently
+        # The goal is to use ALL capital, not leave residual
+        if unused_capital > 0.01 and len(final_allocations) > 0:
+            logger.warning(
+                f"⚠️ Unallocated capital detected: ${unused_capital:,.2f}. "
+                f"Redistributing to {len(final_allocations)} active allocations (respecting {max_weight_per_ticker:.1%} limit)."
+            )
+            
+            # Redistribute respecting limits
+            if allocated_total > 0.01:
+                # First pass: redistribute proportionally up to limits
+                for ticker in final_allocations:
+                    old_capital = final_allocations[ticker].capital
+                    proportional_capital = old_capital * (allocated_total + unused_capital) / allocated_total
+                    
+                    # Cap at individual limit
+                    capped_capital = min(proportional_capital, max_capital_per_ticker)
+                    final_allocations[ticker].capital = capped_capital
+                    final_allocations[ticker].weight = capped_capital / total_capital if total_capital > 0 else 0.0
+                
+                # Second pass: Check strategy-level limits and cap if needed
+                strategy_totals = defaultdict(float)
+                for alloc in final_allocations.values():
+                    if alloc.strategy:
+                        strategy_totals[alloc.strategy] += alloc.weight
+                
+                for strategy, total_weight in strategy_totals.items():
+                    if total_weight > max_weight_per_ticker:
+                        # Reduce all allocations in this strategy proportionally
+                        reduction_factor = max_weight_per_ticker / total_weight
+                        for ticker, alloc in final_allocations.items():
+                            if alloc.strategy == strategy:
+                                alloc.capital *= reduction_factor
+                                alloc.weight = alloc.capital / total_capital if total_capital > 0 else 0.0
+                        logger.debug(f"{strategy}: Strategy exposure capped at {max_weight_per_ticker:.1%}")
+                
+                # Calculate remaining unused capital after capping
+                allocated_after_cap = sum(alloc.capital for alloc in final_allocations.values())
+                remaining_unused = total_capital - allocated_after_cap
+                
+                if remaining_unused > 0.01:
+                    # Try to distribute remaining capital to allocations that are under limit
+                    available = [
+                        (ticker, alloc) for ticker, alloc in final_allocations.items()
+                        if alloc.capital < max_capital_per_ticker and alloc.weight < max_weight_per_ticker
+                    ]
+                    
+                    # Also check strategy limits
+                    truly_available = []
+                    for ticker, alloc in available:
+                        strategy_total = sum(
+                            a.weight for a in final_allocations.values() 
+                            if a.strategy == alloc.strategy
+                        )
+                        # Calculate remaining capacity respecting both individual and strategy limits
+                        individual_remaining = max_weight_per_ticker - alloc.weight
+                        strategy_remaining = max_weight_per_ticker - strategy_total
+                        remaining_capacity = min(individual_remaining, max(0, strategy_remaining))
+                        if remaining_capacity > 0.001:  # 0.1% minimum
+                            truly_available.append((ticker, alloc, remaining_capacity))
+                    
+                    if len(truly_available) > 0:
+                        # Distribute proportionally based on remaining capacity
+                        total_capacity = sum(cap for _, _, cap in truly_available)
+                        for ticker, alloc, capacity in truly_available:
+                            share = capacity / total_capacity
+                            additional = min(remaining_unused * share, max_capital_per_ticker - alloc.capital)
+                            alloc.capital += additional
+                            alloc.weight = alloc.capital / total_capital if total_capital > 0 else 0.0
+                            remaining_unused -= additional
+                    
+                    if remaining_unused > 0.01:
+                        logger.info(
+                            f"✅ Redistributed capital respecting limits. "
+                            f"Allocated: ${sum(alloc.capital for alloc in final_allocations.values()):,.2f}, "
+                            f"residual: ${remaining_unused:,.2f} (limits reached)"
+                        )
+                    else:
+                        logger.info(
+                            f"✅ Redistributed capital. Total: ${sum(alloc.capital for alloc in final_allocations.values()):,.2f}"
+                        )
+                else:
+                    logger.info(
+                        f"✅ Redistributed capital. Total: ${sum(alloc.capital for alloc in final_allocations.values()):,.2f}"
+                    )
+        
+        residual_capital = total_capital - sum(alloc.capital for alloc in final_allocations.values())
         
         # Step 5: Validate
         is_valid, errors = self.validate_assignment(

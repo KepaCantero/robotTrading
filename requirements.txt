@@ -12,8 +12,10 @@ psycopg2-binary>=2.9.0,<3.0.0
 # Data Processing & Analysis
 pandas>=2.0.0,<3.0.0
 numpy>=1.24.0,<2.0.0
-pandas-ta>=0.3.14b,<1.0.0  # Technical Analysis Library (vectorized indicators)
+pandas-ta-classic>=0.3.36,<1.0.0  # Technical Analysis Library (REQUIRED - compatible with Python 3.9+, uses library ONLY, NO manual calculations)
 scipy>=1.11.0,<2.0.0  # Statistical calculations (cointegration, etc.)
+statsmodels>=0.14.0,<1.0.0  # Statistical tests (ADF, KPSS, Johansen, Engle-Granger)
+arch>=6.0.0,<7.0.0  # GARCH volatility modeling
 
 # Market Data
 yfinance>=0.2.0,<1.0.0

@@ -186,7 +186,8 @@ class TradingThresholds(BaseModel):
         "circuit_breaker_error_rate",
     )
     @classmethod
-    def validate_percentage(cls, v):
+    def validate_percentage_limits(cls, v):
+        """Validate percentage values for risk limits (0-1 range)."""
         if not 0 <= v <= 1:
             raise ValueError("Percentage values must be between 0 and 1")
         return v

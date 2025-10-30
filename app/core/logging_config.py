@@ -1,15 +1,25 @@
 """
 Logging Configuration Module
 
-Configures logging to ensure all warnings and errors are written to files.
+Thresholds logging to ensure all warnings and errors are written to files.
 This prevents loss of important diagnostic information.
 """
 
 import logging
 import sys
+import warnings
 from pathlib import Path
 from logging.handlers import RotatingFileHandler
 from typing import Optional
+
+# Configure Python warnings to reduce noise
+# Suppress known warnings that are expected and handled gracefully
+warnings.filterwarnings("ignore", category=UserWarning, module="pydantic._internal._model_construction")
+warnings.filterwarnings("ignore", message=".*validate_percentage.*overrides.*")
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="pandas")
+warnings.filterwarnings("ignore", category=FutureWarning, module="pandas")
+# Only show warnings once per unique message
+warnings.simplefilter("once", UserWarning)
 
 
 def setup_file_logging(

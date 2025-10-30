@@ -1,7 +1,7 @@
 """
 MeanReversionStrategy - Estrategia de reversión a la media basada en Z-score.
 
-REFACTORED: Usa numpy y pandas para cálculos vectorizados de z-score y volatilidad.
+REFACTORED: Usa pandas-ta-classic para cálculos de z-score y volatilidad (NO cálculos manuales).
 
 Implementa una estrategia de reversión a la media que utiliza Z-score
 para identificar cuando un activo se desvía significativamente de su media
@@ -12,12 +12,11 @@ import logging
 from decimal import Decimal
 from typing import Any, Dict, List
 
-import numpy as np
-
 from app.core.centralized_config import get_strategy_config, get_trading_threshold
 from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
+from app.services.momentum_analysis import TechnicalIndicatorCalculator
 
 from .base import BaseStrategy
 
@@ -87,6 +86,9 @@ class MeanReversionStrategy(BaseStrategy):
         # Initialize price history for logging purposes (similar to MomentumStrategy)
         from collections import deque
         self.price_history = deque(maxlen=200)  # Maintain up to 200 bars of history
+        
+        # ✅ USE LIBRARY: Initialize TechnicalIndicatorCalculator (uses pandas-ta-classic)
+        self.indicator_calculator = TechnicalIndicatorCalculator()
 
         logger.info(f"MeanReversionStrategy initialized: {self.name}")
         config_value = strategy_config.parameters.get('z_score_threshold', 'NOT_FOUND') if strategy_config else 'NO_CONFIG'
@@ -292,9 +294,9 @@ class MeanReversionStrategy(BaseStrategy):
 
     def _calculate_z_score(self, market_data: Quote) -> Decimal:
         """
-        Calcular Z-score del precio usando numpy (vectorizado).
+        Calcular Z-score del precio usando pandas-ta-classic.zscore() library.
         
-        REFACTORED: Uses numpy for efficient z-score calculation from price history.
+        ✅ REFACTORED: Uses pandas_ta_classic.zscore() - NO manual calculations
 
         Args:
             market_data: Datos de mercado
@@ -308,33 +310,38 @@ class MeanReversionStrategy(BaseStrategy):
             std_dev = Decimal("0.02")
             return price_change / std_dev if std_dev > 0 else Decimal("0")
         
-        # REFACTORED: Use numpy for vectorized z-score calculation
-        prices_array = np.array(list(self.price_history))
+        # ✅ USE LIBRARY: Use TechnicalIndicatorCalculator.calculate_zscore() (pandas-ta-classic)
+        prices_list = [float(p) for p in list(self.price_history)]
         current_price = float(market_data.last)
         
-        # Calculate mean and standard deviation of recent prices
-        recent_prices = prices_array[-self.lookback_period:]
-        mean_price = np.mean(recent_prices)
-        std_dev_price = np.std(recent_prices)
+        # Add current price for calculation
+        prices_with_current = prices_list + [current_price]
         
-        if std_dev_price == 0:
-            return Decimal("0")
-        
-        # Z-score: (current_price - mean) / std_dev
-        z_score = (current_price - mean_price) / std_dev_price
-        
-        logger.debug(
-            f"MEAN_REVERSION {market_data.symbol}: Z-score calculated: {z_score:.4f} "
-            f"(price={current_price:.2f}, mean={mean_price:.2f}, std={std_dev_price:.4f})"
+        # Calculate z-score using pandas-ta-classic (rolling z-score with lookback_period)
+        z_score_raw = self.indicator_calculator.calculate_zscore(
+            prices_with_current, 
+            period=self.lookback_period, 
+            std=1.0
         )
         
-        return Decimal(str(round(z_score, 4)))
+        if z_score_raw is None:
+            logger.debug(f"MEAN_REVERSION {market_data.symbol}: Z-score calculation returned None")
+            return Decimal("0")
+        
+        z_score = Decimal(str(z_score_raw))
+        
+        logger.debug(
+            f"MEAN_REVERSION {market_data.symbol}: Z-score calculated via pandas-ta-classic: {z_score:.4f} "
+            f"(price={current_price:.2f}, lookback={self.lookback_period})"
+        )
+        
+        return z_score
 
     def _calculate_volatility(self, market_data: Quote) -> Decimal:
         """
-        Calcular volatilidad del activo usando numpy (vectorizado).
+        Calcular volatilidad del activo usando pandas-ta-classic.volatility() library.
         
-        REFACTORED: Uses numpy for efficient volatility calculation.
+        ✅ REFACTORED: Uses pandas_ta_classic.volatility() - NO manual calculations
 
         Args:
             market_data: Datos de mercado
@@ -347,21 +354,33 @@ class MeanReversionStrategy(BaseStrategy):
             price_range = (market_data.high - market_data.low) / market_data.last if market_data.last > 0 else Decimal("0")
             return price_range
         
-        # REFACTORED: Calculate volatility from price history using numpy
-        prices_array = np.array(list(self.price_history))
+        # ✅ USE LIBRARY: Use TechnicalIndicatorCalculator.calculate_volatility() (pandas-ta-classic)
+        prices_list = [float(p) for p in list(self.price_history)]
+        current_price = float(market_data.last)
+        prices_with_current = prices_list + [current_price]
         
-        # Calculate returns (percentage changes)
-        returns = np.diff(prices_array) / prices_array[:-1]
-        
-        # Volatility as standard deviation of returns
-        volatility = float(np.std(returns)) if len(returns) > 0 else 0.0
-        
-        logger.debug(
-            f"MEAN_REVERSION {market_data.symbol}: Volatility calculated: {volatility:.4f} "
-            f"from {len(prices_array)} prices"
+        # Calculate volatility using pandas-ta-classic (daily volatility)
+        volatility_raw = self.indicator_calculator.calculate_volatility(
+            prices_with_current,
+            tf='days',
+            returns=False,
+            log=False
         )
         
-        return Decimal(str(round(volatility, 4)))
+        if volatility_raw is None:
+            # Fallback to simple calculation if library returns None
+            price_range = (market_data.high - market_data.low) / market_data.last if market_data.last > 0 else Decimal("0")
+            logger.debug(f"MEAN_REVERSION {market_data.symbol}: Volatility calculation returned None, using fallback")
+            return price_range
+        
+        volatility = Decimal(str(volatility_raw))
+        
+        logger.debug(
+            f"MEAN_REVERSION {market_data.symbol}: Volatility calculated via pandas-ta-classic: {volatility:.6f} "
+            f"from {len(prices_with_current)} prices"
+        )
+        
+        return volatility
 
     def _is_buy_signal(self, z_score: Decimal, volatility: Decimal, market_data: Quote) -> bool:
         """
