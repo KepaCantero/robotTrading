@@ -47,18 +47,18 @@ class PairsTradingStrategy(BaseStrategy):
         strategy_config = get_strategy_config("pairs_trading")
         if strategy_config:
             params = strategy_config.parameters
-            self.cointegration_threshold = Decimal(str(params.get("cointegration_threshold", 0.05)))
-            self.spread_threshold = Decimal(str(params.get("spread_threshold", 2.0)))
-            self.lookback_period = params.get("lookback_period", 30)
-            self.min_correlation = Decimal(str(params.get("min_correlation", 0.7)))
-            self.max_pair_exposure = Decimal(str(params.get("max_pair_exposure", 0.2)))
-            self.max_total_exposure = Decimal(str(params.get("max_total_exposure", 0.4)))  # 40% max
-            self.hedge_ratio_threshold = Decimal(str(params.get("hedge_ratio_threshold", 0.1)))
+            self.cointegration_threshold = Decimal(str(params.get("cointegration_threshold")))
+            self.spread_threshold = Decimal(str(params.get("spread_threshold")))
+            self.lookback_period = params.get("lookback_period")
+            self.min_correlation = Decimal(str(params.get("min_correlation")))
+            self.max_pair_exposure = Decimal(str(params.get("max_pair_exposure")))
+            self.max_total_exposure = Decimal(str(params.get("max_total_exposure")))  # 40% max
+            self.hedge_ratio_threshold = Decimal(str(params.get("hedge_ratio_threshold")))
             # NEW: Minimum edge filters
-            self.min_spread_z_score = Decimal(str(params.get("min_spread_z_score", 2.0)))
-            self.max_pair_half_life_days = params.get("max_pair_half_life_days", 15)
-            self.slippage_per_trade_pct = Decimal(str(params.get("slippage_per_trade_pct", 0.05)))
-            self.commission_per_trade_pct = Decimal(str(params.get("commission_per_trade_pct", 0.05)))
+            self.min_spread_z_score = Decimal(str(params.get("min_spread_z_score")))
+            self.max_pair_half_life_days = params.get("max_pair_half_life_days")
+            self.slippage_per_trade_pct = Decimal(str(params.get("slippage_per_trade_pct")))
+            self.commission_per_trade_pct = Decimal(str(params.get("commission_per_trade_pct")))
 
             # Use strategy-specific risk parameters or fallback to global
             self.stop_loss = Decimal(
@@ -72,8 +72,8 @@ class PairsTradingStrategy(BaseStrategy):
             )
         else:
             # Fallback to config or defaults
-            self.cointegration_threshold = Decimal(str(config.get("cointegration_threshold", 0.05)))
-            self.spread_threshold = Decimal(str(config.get("spread_threshold", 2.0)))
+            self.cointegration_threshold = Decimal(str(config.get("cointegration_threshold")))
+            self.spread_threshold = Decimal(str(config.get("spread_threshold")))
             self.stop_loss = Decimal(
                 str(config.get("stop_loss", get_trading_threshold("stop_loss_pct")))
             )
@@ -83,15 +83,15 @@ class PairsTradingStrategy(BaseStrategy):
             self.max_position_size = Decimal(
                 str(config.get("max_position_size", get_trading_threshold("max_position_size")))
             )
-            self.lookback_period = config.get("lookback_period", 30)
-            self.min_correlation = Decimal(str(config.get("min_correlation", 0.7)))
-            self.max_pair_exposure = Decimal(str(config.get("max_pair_exposure", 0.2)))  # Default 20%
-            self.max_total_exposure = Decimal(str(config.get("max_total_exposure", 0.4)))
+            self.lookback_period = config.get("lookback_period")
+            self.min_correlation = Decimal(str(config.get("min_correlation")))
+            self.max_pair_exposure = Decimal(str(config.get("max_pair_exposure")))  # Default 20%
+            self.max_total_exposure = Decimal(str(config.get("max_total_exposure")))
             # NEW: Minimum edge filters (fallback)
-            self.min_spread_z_score = Decimal(str(config.get("min_spread_z_score", 2.0)))
-            self.max_pair_half_life_days = config.get("max_pair_half_life_days", 15)
-            self.slippage_per_trade_pct = Decimal(str(config.get("slippage_per_trade_pct", 0.05)))
-            self.commission_per_trade_pct = Decimal(str(config.get("commission_per_trade_pct", 0.05)))
+            self.min_spread_z_score = Decimal(str(config.get("min_spread_z_score")))
+            self.max_pair_half_life_days = config.get("max_pair_half_life_days")
+            self.slippage_per_trade_pct = Decimal(str(config.get("slippage_per_trade_pct")))
+            self.commission_per_trade_pct = Decimal(str(config.get("commission_per_trade_pct")))
 
         # Parámetros de pares
         # Handle both formats: list of lists or simple list
@@ -117,8 +117,8 @@ class PairsTradingStrategy(BaseStrategy):
             self.pair_symbols = ["AAPL", "MSFT"]
 
         # Parámetros adicionales
-        self.hedge_ratio = Decimal(str(config.get("hedge_ratio", 1.0)))
-        self.max_spread_deviation = Decimal(str(config.get("max_spread_deviation", 3.0)))
+        self.hedge_ratio = Decimal(str(config.get("hedge_ratio")))
+        self.max_spread_deviation = Decimal(str(config.get("max_spread_deviation")))
 
         # REFACTORED: Store price history for both symbols in pair for vectorized calculations
         self.price_history = defaultdict(lambda: deque(maxlen=300))  # Increased to 300 for rolling cointegration
@@ -132,9 +132,9 @@ class PairsTradingStrategy(BaseStrategy):
         # IMPROVEMENT: Trade frequency limiting to prevent overtrading
         # Get max_trades_per_day from params if available (from strategy_config), otherwise from config
         if strategy_config and hasattr(strategy_config, 'parameters'):
-            self.max_trades_per_day = strategy_config.parameters.get("max_trades_per_day", 5)
+            self.max_trades_per_day = strategy_config.parameters.get("max_trades_per_day")
         else:
-            self.max_trades_per_day = config.get("max_trades_per_day", 5)  # Default: max 5 trades/day
+            self.max_trades_per_day = config.get("max_trades_per_day")
         self.trades_today = 0
         self.last_trade_date = None
 
