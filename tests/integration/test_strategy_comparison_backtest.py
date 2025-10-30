@@ -234,8 +234,25 @@ class StrategyComparisonBacktest:
         # Extract metrics
         comparison_data = []
         
-        for strategy_name, result in self.results.items():
+        # Ensure we show all strategies, even if they failed
+        expected_strategies = ["multi_strategy", "momentum", "pairs_trading", "mean_reversion"]
+        for strategy_name in expected_strategies:
+            result = self.results.get(strategy_name)
+            
             if result is None:
+                # Strategy failed or returned None - show placeholder
+                metrics = {
+                    "Strategy": strategy_name.replace("_", " ").title(),
+                    "Total Trades": 0,
+                    "Win Rate": "N/A",
+                    "Total P&L": "$0.00",
+                    "Final Capital": f"${float(self.initial_capital):,.2f}",
+                    "Return %": "0.00%",
+                    "Sharpe Ratio": "N/A",
+                    "Max Drawdown": "N/A",
+                }
+                comparison_data.append(metrics)
+                logger.warning(f"⚠️ {strategy_name} result is None - showing placeholder in report")
                 continue
                 
             if strategy_name == "multi_strategy":
