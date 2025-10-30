@@ -39,17 +39,13 @@ class MeanReversionStrategy(BaseStrategy):
         strategy_config = get_strategy_config("mean_reversion")
         if strategy_config:
             params = strategy_config.parameters
-            # FIX: Force z_score_threshold to 1.0 if not found or if value is > 1.5 (too restrictive)
-            z_score_threshold_raw = params.get("z_score_threshold", 1.0)
-            if z_score_threshold_raw is None or (isinstance(z_score_threshold_raw, (int, float)) and float(z_score_threshold_raw) > 1.5):
-                z_score_threshold_raw = 1.0  # Force to 1.0 for more signals
-            self.z_score_threshold = Decimal(str(z_score_threshold_raw))
-            self.lookback_period = params.get("lookback_period", 20)
-            self.volatility_threshold = Decimal(str(params.get("volatility_threshold", 0.05)))
-            self.mean_reversion_speed = Decimal(str(params.get("mean_reversion_speed", 0.1)))
+            self.z_score_threshold = Decimal(str(params.get("z_score_threshold")))
+            self.lookback_period = params.get("lookback_period")
+            self.volatility_threshold = Decimal(str(params.get("volatility_threshold")))
+            self.mean_reversion_speed = Decimal(str(params.get("mean_reversion_speed")))
             # FIX: Load atr_floor and price_range_multiplier from config
-            self.atr_floor = Decimal(str(params.get("atr_floor", 0.002)))
-            self.price_range_multiplier = Decimal(str(params.get("price_range_multiplier", 0.5)))
+            self.atr_floor = Decimal(str(params.get("atr_floor")))
+            self.price_range_multiplier = Decimal(str(params.get("price_range_multiplier")))
 
             # Use strategy-specific risk parameters or fallback to global
             self.stop_loss = Decimal(
@@ -63,8 +59,8 @@ class MeanReversionStrategy(BaseStrategy):
             )
         else:
             # Fallback to config or defaults
-            self.z_score_threshold = Decimal(str(config.get("z_score_threshold", 2.0)))
-            self.lookback_period = config.get("lookback_period", 20)
+            self.z_score_threshold = Decimal(str(config.get("z_score_threshold")))
+            self.lookback_period = config.get("lookback_period")
             self.stop_loss = Decimal(
                 str(config.get("stop_loss", get_trading_threshold("stop_loss_pct")))
             )
@@ -74,14 +70,14 @@ class MeanReversionStrategy(BaseStrategy):
             self.max_position_size = Decimal(
                 str(config.get("max_position_size", get_trading_threshold("max_position_size")))
             )
-            self.volatility_threshold = Decimal(str(config.get("volatility_threshold", 0.02)))
-            self.mean_reversion_speed = Decimal(str(config.get("mean_reversion_speed", 0.1)))
+            self.volatility_threshold = Decimal(str(config.get("volatility_threshold")))
+            self.mean_reversion_speed = Decimal(str(config.get("mean_reversion_speed")))
             # FIX: Load atr_floor and price_range_multiplier from config (fallback)
-            self.atr_floor = Decimal(str(config.get("atr_floor", 0.002)))
-            self.price_range_multiplier = Decimal(str(config.get("price_range_multiplier", 0.5)))
+            self.atr_floor = Decimal(str(config.get("atr_floor")))
+            self.price_range_multiplier = Decimal(str(config.get("price_range_multiplier")))
 
         # Parámetros adicionales
-        self.min_z_score = Decimal(str(config.get("min_z_score", 1.5)))
+        self.min_z_score = Decimal(str(config.get("min_z_score")))
 
         # Initialize price history for logging purposes (similar to MomentumStrategy)
         from collections import deque
@@ -91,7 +87,7 @@ class MeanReversionStrategy(BaseStrategy):
         self.indicator_calculator = TechnicalIndicatorCalculator()
 
         logger.info(f"MeanReversionStrategy initialized: {self.name}")
-        config_value = strategy_config.parameters.get('z_score_threshold', 'NOT_FOUND') if strategy_config else 'NO_CONFIG'
+        config_value = strategy_config.parameters.get('z_score_threshold') if strategy_config else 'NO_CONFIG'
         logger.info(f"⚠️ CRITICAL: z_score_threshold={self.z_score_threshold} (target: 1.0, config loaded: {config_value})")
 
     def get_required_parameters(self) -> List[str]:
