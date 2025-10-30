@@ -17,6 +17,7 @@ from app.backtesting.models import BacktestConfig, BacktestResult
 from app.backtesting.signal_diagnostic_logger import SignalDiagnosticLogger
 from app.core.centralized_config import StockAllocationSettings
 from app.models.market_data import Quote
+from app.services.dynamic_capital_reallocation import DynamicCapitalReallocationEngine
 from app.services.multi_strategy_allocation import MultiStrategyAllocationManager
 from app.services.portfolio_config_manager import (
     PortfolioConfigManager,
@@ -43,6 +44,8 @@ class MultiStrategyBacktester:
         portfolio_config_manager: Optional[PortfolioConfigManager] = None,
         enable_diagnostics: bool = True,
         early_abort_loss_pct: Optional[Decimal] = None,  # Abort if loss > X% in first 2 years
+        enable_dynamic_reallocation: bool = True,
+        reallocation_frequency_days: int = 30,
     ):
         """
         Initialize multi-strategy backtester.
@@ -52,6 +55,10 @@ class MultiStrategyBacktester:
             strategies: Dictionary of strategy instances {name: strategy}
             config_params: Common backtest parameters (commission, slippage, etc.)
             portfolio_config_manager: Optional portfolio config manager for sector filtering
+            enable_diagnostics: Enable diagnostic logging
+            early_abort_loss_pct: Abort if loss > X% in first 2 years
+            enable_dynamic_reallocation: Enable dynamic capital reallocation (default True)
+            reallocation_frequency_days: Days between reallocations (default 30)
         """
         self.allocation_manager = allocation_manager
         self.strategies = strategies
@@ -68,6 +75,17 @@ class MultiStrategyBacktester:
         allocation_config = StockAllocationSettings()
         self.stock_allocator = StrategyStockAllocator(config=allocation_config)
         self.allocation_result = None  # Will store allocation result after first run
+        
+        # Initialize Dynamic Capital Reallocation Engine
+        self.enable_dynamic_reallocation = enable_dynamic_reallocation
+        if enable_dynamic_reallocation:
+            self.reallocation_engine = DynamicCapitalReallocationEngine(
+                rebalance_frequency_days=reallocation_frequency_days,
+                rolling_window_days=30,
+            )
+            logger.info(f"✅ Dynamic Capital Reallocation Engine enabled (frequency: {reallocation_frequency_days} days)")
+        else:
+            self.reallocation_engine = None
 
     def run_multi_strategy_backtest(
         self, quotes: List[Quote], start_date: datetime, end_date: datetime
@@ -264,9 +282,20 @@ class MultiStrategyBacktester:
             # CRITICAL FIX: Use filtered_quotes, not quotes, so signals match market_data
             # Signals were generated from filtered_quotes, so market_data must be filtered_quotes too
             # CRITICAL: Pass strategy instance so risk_check can be applied
-            backtester = SimpleBacktester(config, diagnostic_logger=self.diagnostic_logger, strategy=strategy)
+            # CRITICAL: Enable Risk Envelope validation with total portfolio capital
+            # CRITICAL: Link reallocation engine for performance tracking (SimpleBacktester will update it)
+            backtester = SimpleBacktester(
+                config,
+                diagnostic_logger=self.diagnostic_logger,
+                strategy=strategy,
+                enable_risk_envelope=True,
+                strategy_name=strategy_name,
+                total_portfolio_capital=self.total_capital,
+                reallocation_engine=self.reallocation_engine,  # Link shared reallocation engine
+            )
             result = backtester.run_backtest(filtered_quotes, signals, start_date, end_date)
             results_by_strategy[strategy_name] = result
+            # Note: SimpleBacktester will automatically update reallocation_engine after backtest completes
             
             # Early-abort check: if loss > threshold in first 2 years
             if self.early_abort_loss_pct:

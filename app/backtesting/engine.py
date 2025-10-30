@@ -21,6 +21,8 @@ from app.backtesting.models import (
 )
 from app.models.portfolio import AssetClass, Portfolio, Position
 from app.models.signal import Signal, SignalType
+from app.services.dynamic_capital_reallocation import DynamicCapitalReallocationEngine
+from app.services.risk_envelope_validator import RiskEnvelopeValidator
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +49,17 @@ class SimpleBacktester:
     commission, and risk management parameters.
     """
 
-    def __init__(self, config: BacktestConfig, diagnostic_logger=None, strategy=None):
+    def __init__(
+        self, 
+        config: BacktestConfig, 
+        diagnostic_logger=None, 
+        strategy=None,
+        enable_risk_envelope: bool = True,
+        risk_envelope_validator: Optional[RiskEnvelopeValidator] = None,
+        strategy_name: str = "unknown",
+        total_portfolio_capital: Optional[Decimal] = None,
+        reallocation_engine: Optional[DynamicCapitalReallocationEngine] = None,
+    ):
         """
         Initialize the backtesting engine.
         
@@ -55,6 +67,11 @@ class SimpleBacktester:
             config: Backtest configuration
             diagnostic_logger: Optional diagnostic logger
             strategy: Strategy instance for risk_check (optional but required for risk checking)
+            enable_risk_envelope: Enable risk envelope validation (default True)
+            risk_envelope_validator: Optional custom RiskEnvelopeValidator instance
+            strategy_name: Name of strategy for risk envelope logging
+            total_portfolio_capital: Total portfolio capital for multi-strategy scenarios (defaults to initial_capital)
+            reallocation_engine: Optional DynamicCapitalReallocationEngine instance for performance tracking
         """
         self.config = config
         self.capital = config.initial_capital
@@ -65,6 +82,21 @@ class SimpleBacktester:
         self.diagnostic_logger = diagnostic_logger
         self.peak_equity = config.initial_capital
         self.strategy = strategy  # Strategy instance for risk_check
+        self.strategy_name = strategy_name
+        self.total_portfolio_capital = total_portfolio_capital or config.initial_capital
+        
+        # Initialize Risk Envelope Validator
+        self.enable_risk_envelope = enable_risk_envelope
+        if enable_risk_envelope:
+            self.risk_validator = risk_envelope_validator or RiskEnvelopeValidator()
+            logger.info(f"✅ Risk Envelope Validator enabled for {strategy_name}")
+        else:
+            self.risk_validator = None
+        
+        # Initialize Dynamic Capital Reallocation Engine (optional, for performance tracking)
+        self.reallocation_engine = reallocation_engine
+        if reallocation_engine:
+            logger.info(f"✅ Dynamic Capital Reallocation Engine linked for {strategy_name}")
 
     def run_backtest(
         self,
@@ -212,6 +244,30 @@ class SimpleBacktester:
             if years > 0
             else Decimal("0")
         )
+
+        # Update reallocation engine with strategy performance after backtest
+        if self.reallocation_engine and performance:
+            # Calculate winning and losing trades
+            winning_trades = sum(1 for t in self.trades if t.pnl and t.pnl > 0)
+            losing_trades = sum(1 for t in self.trades if t.pnl and t.pnl <= 0)
+            total_trades = len(self.trades)
+            
+            # Update performance tracker
+            self.reallocation_engine.update_strategy_performance(
+                strategy_name=self.strategy_name,
+                timestamp=market_data[-1].timestamp,  # Use end date as timestamp
+                pnl=Decimal(str(performance.total_pnl)),
+                returns=Decimal(str(total_return)),
+                total_trades=total_trades,
+                winning_trades=winning_trades,
+                losing_trades=losing_trades,
+            )
+            logger.info(
+                f"📊 Updated performance tracker for {self.strategy_name}: "
+                f"PnL={performance.total_pnl:.2f}, "
+                f"Return={total_return:.2f}%, "
+                f"Trades={total_trades} (W:{winning_trades}, L:{losing_trades})"
+            )
 
         return BacktestResult(
             config=self.config,
@@ -366,6 +422,74 @@ class SimpleBacktester:
                 return
         else:
             logger.warning(f"⚠️ No strategy provided, skipping risk_check for {signal.symbol} (strategy={strategy_name})")
+        
+        # CRITICAL: Apply Risk Envelope validation if enabled
+        if self.enable_risk_envelope and self.risk_validator:
+            current_price = get_price(market_data)
+            
+            # Calculate current portfolio positions for validation
+            current_portfolio_exposure = {}  # symbol -> position value
+            strategy_positions = {}  # symbol -> position value for this strategy
+            
+            # Build exposure maps from current positions
+            for symbol, quantity in self.positions.items():
+                if quantity > 0:
+                    # Get current price for this symbol (use signal price if same symbol, otherwise estimate)
+                    pos_price = current_price if symbol == signal.symbol else Decimal("100")
+                    
+                    # Try to get actual price from recent trades
+                    for trade in reversed(self.trades):
+                        if trade.symbol == symbol:
+                            if trade.status == TradeStatus.OPEN:
+                                pos_price = trade.entry_price
+                            break
+                    
+                    position_value = quantity * pos_price
+                    current_portfolio_exposure[symbol] = position_value
+                    strategy_positions[symbol] = position_value
+            
+            # Calculate trade value
+            if signal.signal_type == SignalType.BUY:
+                # Estimate trade value from position size
+                portfolio = self._create_portfolio_from_state(
+                    current_price_func=lambda s: current_price if s == signal.symbol else Decimal("100")
+                )
+                position_size = self.strategy.get_position_size(signal, portfolio) if self.strategy else Decimal("0.01")
+                trade_value = signal.price * position_size
+            elif signal.signal_type == SignalType.SELL:
+                # For sell, use current position value
+                existing_pos = self.positions.get(signal.symbol, Decimal("0"))
+                trade_value = existing_pos * current_price
+            else:
+                trade_value = Decimal("0")
+            
+            # Validate trade
+            if trade_value > 0:
+                is_valid, reason = self.risk_validator.validate_trade(
+                    symbol=signal.symbol,
+                    trade_value=trade_value,
+                    strategy_name=self.strategy_name,
+                    current_portfolio=current_portfolio_exposure,
+                    strategy_positions=strategy_positions,
+                    total_capital=self.total_portfolio_capital,
+                    strategy_capital=self.config.initial_capital,
+                )
+                
+                if not is_valid:
+                    logger.warning(
+                        f"❌ RISK ENVELOPE REJECTED {signal.signal_type} {signal.symbol} "
+                        f"(strategy={strategy_name}): {reason}"
+                    )
+                    if self.diagnostic_logger:
+                        signal_type_str = signal.signal_type.value if hasattr(signal.signal_type, 'value') else str(signal.signal_type)
+                        self.diagnostic_logger.log_signal_rejected(
+                            strategy_name,
+                            signal.symbol,
+                            signal_type_str,
+                            f"Risk envelope: {reason}",
+                            signal.metadata if hasattr(signal, 'metadata') else {},
+                        )
+                    return
         
         # Execute signal if risk_check passes
         if signal.signal_type == SignalType.BUY:
