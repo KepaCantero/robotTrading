@@ -62,10 +62,10 @@ class MomentumStrategy(BaseStrategy):
                 except Exception:
                     pass
 
-            # Core thresholds
-            self.rsi_threshold = Decimal(str(params.get("rsi_threshold", 40)))
-            self.momentum_threshold = Decimal(str(params.get("momentum_threshold", 0.02)))
-            self.volume_threshold = Decimal(str(params.get("volume_threshold", 1.5)))
+            # Core thresholds - load from YAML, no defaults
+            self.rsi_threshold = Decimal(str(params.get("rsi_threshold_buy") or params.get("rsi_threshold")))
+            self.momentum_threshold = Decimal(str(params.get("momentum_threshold")))
+            self.volume_threshold = Decimal(str(params.get("volume_threshold")))
 
             # Use strategy-specific risk parameters or fallback to global
             self.stop_loss = Decimal(
@@ -624,31 +624,35 @@ class MomentumStrategy(BaseStrategy):
             )
             return False
         
-        # OPTIMIZED: BUY conditions for win rate >30%
-        # Allow BUY when RSI is oversold (< 45) with strong momentum confirmation
-        rsi_oversold = rsi < float(self.rsi_threshold)  # Buy when oversold (< 45)
-        rsi_neutral_bullish = (rsi >= float(self.rsi_threshold) and rsi < 50)  # Neutral zone 45-50
+        # FIXED: Momentum strategy should buy on momentum continuation, not oversold reversal
+        # Buy when: RSI 40-70 (momentum zone), price above EMA, volume > threshold, positive ROC
+        # This is TRUE momentum trading: catch the trend, not the bottom
         
-        # Core conditions - stricter for better win rate
-        volume_threshold = Decimal(str(self.config.get("volume_threshold", 1.15)))
-        has_volume = volume_ratio >= volume_threshold  # Use configured volume threshold
+        volume_threshold = Decimal(str(self.config.get("volume_threshold")))
+        has_volume = volume_ratio >= volume_threshold
         
-        ema_bullish = current_price > Decimal(str(ema))  # Price above EMA (trend confirmation)
+        ema_bullish = current_price > Decimal(str(ema))  # Price above EMA (uptrend)
         
         # Momentum confirmation
-        momentum_threshold = Decimal(str(self.config.get("momentum_threshold", 0.02)))
+        momentum_threshold = Decimal(str(self.config.get("momentum_threshold")))
         has_momentum = roc is None or roc >= float(momentum_threshold)  # Positive momentum
         
         obv_bullish = obv_trend is None or obv_trend in ["rising", "neutral"]
         
-        # OPTIMIZED: BUY when oversold with strong confirmation
-        if rsi_oversold:
-            # Oversold: require volume, EMA confirmation, and momentum
+        # FIXED: Momentum buy conditions - RSI in momentum zone (40-70)
+        # Option 1: RSI in momentum zone (40-70) with all confirmations
+        rsi_momentum_zone = 40.0 <= rsi <= 70.0  # Not oversold, not overbought
+        
+        # Option 2: RSI recovering from oversold (rising from < 40) with volume surge
+        rsi_recovering = rsi < 40.0 and has_volume and has_momentum
+        
+        if rsi_momentum_zone:
+            # Core momentum trade: RSI in good range, price above EMA, volume + momentum
             return has_volume and ema_bullish and has_momentum and (obv_bullish is None or obv_bullish)
-        elif rsi_neutral_bullish:
-            # Neutral zone: require strong volume AND price > EMA (more conservative)
-            strong_volume = volume_ratio > Decimal("1.25")
-            return strong_volume and ema_bullish
+        elif rsi_recovering:
+            # Early entry: RSI recovering from oversold with strong volume/momentum
+            strong_volume = volume_ratio >= Decimal("1.25")
+            return strong_volume and ema_bullish and has_momentum
         
         return False
 
@@ -694,13 +698,13 @@ class MomentumStrategy(BaseStrategy):
         rsi_neutral_bearish = (rsi >= 50 and rsi <= 55) and current_price < Decimal(str(ema))  # Neutral zone 50-55
         
         # Core conditions - stricter for better win rate
-        volume_threshold = Decimal(str(self.config.get("volume_threshold", 1.15)))
+        volume_threshold = Decimal(str(self.config.get("volume_threshold")))
         has_volume = volume_ratio >= volume_threshold  # Use configured volume threshold
         
         ema_bearish = current_price < Decimal(str(ema))  # Price below EMA (trend reversal)
         
         # Momentum confirmation
-        momentum_threshold = Decimal(str(self.config.get("momentum_threshold", 0.02)))
+        momentum_threshold = Decimal(str(self.config.get("momentum_threshold")))
         roc_negative = roc is None or roc <= -float(momentum_threshold)  # Negative momentum
         
         obv_bearish = obv_trend is None or obv_trend in ["falling", "neutral"]
@@ -744,8 +748,8 @@ class MomentumStrategy(BaseStrategy):
                 "atr": str(atr) if atr is not None else "N/A",  # ATR for dynamic stop-loss
                 "stop_loss": str(self.stop_loss),
                 "take_profit": str(self.take_profit),
-                "atr_multiplier": str(self.config.get("atr_multiplier", 2.0)),
-                "use_dynamic_stop_loss": str(self.config.get("use_dynamic_stop_loss", True)),
+                "atr_multiplier": str(self.config.get("atr_multiplier")),
+                "use_dynamic_stop_loss": str(self.config.get("use_dynamic_stop_loss")),
                 "momentum_type": "positive_breakout",
                 "reason": self._format_signal_reason("positive_breakout", rsi, volume_ratio, roc, atr),
             },
@@ -787,8 +791,8 @@ class MomentumStrategy(BaseStrategy):
                 "atr": str(atr) if atr is not None else "N/A",  # ATR for dynamic stop-loss
                 "stop_loss": str(self.stop_loss),
                 "take_profit": str(self.take_profit),
-                "atr_multiplier": str(self.config.get("atr_multiplier", 2.0)),
-                "use_dynamic_stop_loss": str(self.config.get("use_dynamic_stop_loss", True)),
+                "atr_multiplier": str(self.config.get("atr_multiplier")),
+                "use_dynamic_stop_loss": str(self.config.get("use_dynamic_stop_loss")),
                 "momentum_type": "negative_reversal",
                 "reason": self._format_signal_reason("negative_reversal", rsi, volume_ratio, roc, atr),
             },
@@ -874,7 +878,7 @@ class MomentumStrategy(BaseStrategy):
             True si se debe generar señal, False si se debe filtrar
         """
         # Check if Stochastic RSI filter is enabled
-        stoch_rsi_enabled = self.config.get("stoch_rsi_enabled", True)
+        stoch_rsi_enabled = self.config.get("stoch_rsi_enabled")
         if not stoch_rsi_enabled:
             return True
             
@@ -883,8 +887,8 @@ class MomentumStrategy(BaseStrategy):
             return True
 
         # OPTIMIZED: Use configurable thresholds
-        stoch_rsi_min = self.config.get("stoch_rsi_min", 20)
-        stoch_rsi_max = self.config.get("stoch_rsi_max", 80)
+        stoch_rsi_min = self.config.get("stoch_rsi_min")
+        stoch_rsi_max = self.config.get("stoch_rsi_max")
 
         # Condiciones de filtrado:
         # - Generar señales cuando no está en extremos (evitar sobrecompra/sobreventa)
