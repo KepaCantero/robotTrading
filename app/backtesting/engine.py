@@ -213,8 +213,14 @@ class SimpleBacktester:
             # Check for stop loss / take profit
             self._check_exit_conditions(md)
 
-        # Close any remaining positions
-        self._close_all_positions(market_data[-1])
+        # Close any remaining positions using the last price for each symbol
+        # CRITICAL FIX: Build a price map from all market_data to get correct prices for each symbol
+        price_map = {}
+        for md in reversed(market_data):  # Start from most recent
+            if md.symbol not in price_map:
+                price_map[md.symbol] = get_price(md)
+        
+        self._close_all_positions(market_data[-1], price_map=price_map)
 
         logger.info(f"📊 Backtest matching stats: {signals_processed} processed, {signals_matched} matched, {signals_skipped} skipped, {len(self.trades)} trades executed")
         
@@ -999,15 +1005,41 @@ class SimpleBacktester:
         self.capital += total_sell_proceeds - commission_sell
         self.positions[symbol] = Decimal("0")
 
-    def _close_all_positions(self, final_market_data: Any):
-        """Close all remaining positions at the end of backtest."""
+    def _close_all_positions(self, final_market_data: Any, price_map: Optional[Dict[str, Decimal]] = None):
+        """
+        Close all remaining positions at the end of backtest.
+        
+        Args:
+            final_market_data: Last market data point (for timestamp)
+            price_map: Optional dictionary mapping symbol -> price for accurate closing prices
+        """
         for symbol in list(self.positions.keys()):
             if self.positions[symbol] > 0:
+                # Use price from price_map if available, otherwise try to find it in recent trades
+                closing_price = None
+                if price_map and symbol in price_map:
+                    closing_price = price_map[symbol]
+                    logger.debug(f"Using price_map price for {symbol}: {closing_price:.2f}")
+                else:
+                    # Fallback: try to get price from most recent trade for this symbol
+                    recent_trades_for_symbol = [t for t in reversed(self.trades) if t.symbol == symbol]
+                    if recent_trades_for_symbol:
+                        closing_price = recent_trades_for_symbol[0].entry_price
+                        logger.warning(
+                            f"⚠️ No price_map entry for {symbol}, using last trade price: {closing_price:.2f}"
+                        )
+                    else:
+                        # Last resort: use final_market_data price (may be wrong symbol)
+                        closing_price = get_price(final_market_data)
+                        logger.warning(
+                            f"⚠️ Using final_market_data price for {symbol} (symbol may not match): {closing_price:.2f}"
+                        )
+                
                 self._close_position(
                     symbol,
                     final_market_data.timestamp,
                     "end_of_backtest",
-                    get_price(final_market_data),
+                    closing_price,
                 )
 
     def _update_equity_curve(self, timestamp: datetime):
