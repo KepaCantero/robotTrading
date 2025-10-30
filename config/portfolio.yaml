@@ -61,9 +61,9 @@ strategy_allocations:
   momentum:
     enabled: true
     capital_allocation:
-      target_weight: 0.50 # 50% of total capital
-      min_weight: 0.30
-      max_weight: 0.70
+      target_weight: 0.60 # 60% of total capital (increased from 50% per recommendation)
+      min_weight: 0.40
+      max_weight: 0.70 # Increased max exposure for momentum
 
     # Sector filtering - only trade these sectors
     sectors:
@@ -87,9 +87,9 @@ strategy_allocations:
   mean_reversion:
     enabled: true
     capital_allocation:
-      target_weight: 0.25 # 25% of total capital
-      min_weight: 0.10
-      max_weight: 0.40
+      target_weight: 0.25 # 25% of total capital (per recommendation: 60% Momentum, 25% Mean, 15% Pairs)
+      min_weight: 0.15
+      max_weight: 0.35 # Hard limit to prevent overexposure
 
     sectors:
       - technology # Temporary: using available symbols until utilities are downloaded
@@ -108,9 +108,9 @@ strategy_allocations:
   pairs_trading:
     enabled: true
     capital_allocation:
-      target_weight: 0.25 # 25% of total capital
-      min_weight: 0.10
-      max_weight: 0.40
+      target_weight: 0.15 # 15% of total capital (per recommendation: 60% Momentum, 25% Mean, 15% Pairs)
+      min_weight: 0.05
+      max_weight: 0.15 # Hard limit to minimize impact of low win rate strategy
 
     sectors:
       - banks
