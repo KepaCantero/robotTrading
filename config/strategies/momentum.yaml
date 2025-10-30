@@ -6,6 +6,7 @@ weight: 1.0
 # Strategy-specific parameters - OPTIMIZED FOR WIN RATE >30%
 parameters:
   rsi_threshold_buy: 50 # RELAXED: BUY when RSI > 50 (was < 45) - more opportunities
+  rsi_threshold: 50 # Main RSI threshold for buy (loaded by code)
   rsi_threshold_sell: 55 # SELL when RSI > 55
   ema_ratio_threshold: 1.001 # NEW: EMA_fast > EMA_slow × 1.001 for confirmation
   momentum_threshold: 0.015 # RELAXED: 0.015 (was 0.02) for more signals
