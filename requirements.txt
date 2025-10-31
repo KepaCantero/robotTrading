@@ -11,7 +11,7 @@ psycopg2-binary>=2.9.0,<3.0.0
 
 # Data Processing & Analysis
 pandas>=2.0.0,<3.0.0
-numpy>=1.24.0,<2.0.0
+numpy>=1.24.0,<3.0.0  # Updated to allow numpy 2.x for pandas-ta-classic compatibility
 pandas-ta-classic>=0.3.36,<1.0.0  # Technical Analysis Library (REQUIRED - compatible with Python 3.9+, uses library ONLY, NO manual calculations)
 scipy>=1.11.0,<2.0.0  # Statistical calculations (cointegration, etc.)
 statsmodels>=0.14.0,<1.0.0  # Statistical tests (ADF, KPSS, Johansen, Engle-Granger)
@@ -20,13 +20,29 @@ arch>=6.0.0,<7.0.0  # GARCH volatility modeling
 # Market Data
 yfinance>=0.2.0,<1.0.0
 yahoo-fin>=0.8.9,<1.0.0  # Alternative to yfinance (yahoo_fin)
-requests-html>=0.10.1,<1.0.0  # Required by yahoo_fin
+requests-html>=0.10.0,<1.0.0  # Required by yahoo_fin
 
 # Configuration
 pyyaml>=6.0,<7.0
 
 # Optimization (NEW - Multi-Strategy Optimizer)
 optuna>=3.4.0,<4.0.0
+
+# Machine Learning - Supervised Learning (REQUIRED for SupervisedLearningEngine)
+scikit-learn>=1.3.0,<2.0.0
+xgboost>=2.0.0,<3.0.0  # Optional but recommended for better performance
+
+# Deep Learning - PyTorch (REQUIRED for DeepLearningEngine)
+torch>=2.0.0,<3.0.0  # PyTorch core
+torchvision>=0.15.0,<1.0.0  # Optional, for data transforms
+
+# Deep Learning - TensorFlow (Alternative backend for DeepLearningEngine)
+tensorflow>=2.13.0,<3.0.0  # Optional alternative to PyTorch
+
+# Reinforcement Learning (REQUIRED for ReinforcementLearningEngine)
+stable-baselines3>=2.0.0,<3.0.0  # RL algorithms (PPO, A2C, DDPG, etc.)
+gym>=0.26.0,<1.0.0  # RL environments
+gymnasium>=0.29.0,<1.0.0  # Newer gym API (optional)
 
 # HTTP & API Clients
 httpx>=0.25.0,<1.0.0

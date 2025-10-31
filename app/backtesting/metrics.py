@@ -64,11 +64,13 @@ class MetricsCalculator:
         winning_trades = [t for t in closed_trades if t.pnl and t.pnl > 0]
         losing_trades = [t for t in closed_trades if t.pnl and t.pnl <= 0]
 
-        win_rate = (
-            Decimal(str(len(winning_trades) / total_trades * 100))
-            if total_trades > 0
-            else Decimal("0")
-        )
+        # Calculate win rate (asegurar que esté entre 0-100)
+        if total_trades > 0:
+            win_rate = Decimal(str((len(winning_trades) / total_trades) * 100))
+            # Asegurar que no exceda 100 (por redondeos)
+            win_rate = min(Decimal("100"), max(Decimal("0"), win_rate))
+        else:
+            win_rate = Decimal("0")
 
         # P&L metrics
         total_pnl = sum((t.pnl or Decimal("0")) for t in closed_trades)
@@ -85,7 +87,9 @@ class MetricsCalculator:
         # Risk metrics
         equity_curve = self._build_equity_curve(closed_trades, initial_capital)
         max_drawdown = self._calculate_max_drawdown(equity_curve)
-        max_drawdown_percentage = (max_drawdown / initial_capital) * Decimal("100")
+        # Asegurar que max_drawdown sea <= 0 (validación Pydantic)
+        max_drawdown = min(Decimal("0"), max_drawdown)
+        max_drawdown_percentage = min(Decimal("0"), (max_drawdown / initial_capital) * Decimal("100") if initial_capital > 0 else Decimal("0"))
 
         # Calculate returns for Sharpe/Sortino
         daily_returns = self._calculate_daily_returns(closed_trades, initial_capital)
