@@ -1,0 +1,43 @@
+[
+  {
+    "test_type":"baseline",
+    "test_name":"Baseline - All Modules Active",
+    "modules_active":[
+      "ema_filter",
+      "rsi_filter",
+      "stoch_rsi_filter",
+      "momentum_filter",
+      "volume_filter",
+      "atr_filter"
+    ],
+    "learning_engine":null,
+    "thresholds":{
+      "ema_filter.fast_period":12,
+      "ema_filter.slow_period":26,
+      "ema_filter.trend_confirmation":{
+        "method":"price_above",
+        "min_distance_pct":0.005
+      },
+      "rsi_filter.period":14,
+      "stoch_rsi_filter.rsi_period":14,
+      "stoch_rsi_filter.stoch_period":14,
+      "stoch_rsi_filter.k_period":3,
+      "stoch_rsi_filter.d_period":3,
+      "momentum_filter.period":12,
+      "momentum_filter.method":"roc",
+      "volume_filter.lookback_period":20,
+      "volume_filter.method":"ratio",
+      "atr_filter.period":14,
+      "atr_filter.method":"relative_percentile",
+      "atr_filter.use_relative_atr":true
+    },
+    "total_pnl":-4673.3124769047,
+    "return_pct":3.0767210432,
+    "win_rate":36.8,
+    "sharpe_ratio":-0.1626291332,
+    "max_drawdown":-2.9177982842,
+    "total_trades":125,
+    "avg_trade_pnl":-37.3864998152,
+    "final_capital":103076.7210432086
+  }
+]

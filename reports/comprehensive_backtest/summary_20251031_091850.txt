@@ -1,0 +1,67 @@
+================================================================================
+COMPREHENSIVE BACKTEST SUMMARY
+================================================================================
+
+Symbol: SNOW
+Period: 2023-01-01 to 2024-01-01
+Initial Capital: $100,000.00
+Total Backtests: 8
+
+TOP 10 RESULTS:
+--------------------------------------------------------------------------------
+
+Ablation - Without rsi_filter:
+  Sharpe Ratio: -0.03
+  Total PnL: $-12,405.40
+  Return %: 3.53%
+  Win Rate: 26.82%
+  Max Drawdown: -2.84%
+
+Baseline - All Modules Active:
+  Sharpe Ratio: -0.16
+  Total PnL: $-4,673.31
+  Return %: 3.08%
+  Win Rate: 36.80%
+  Max Drawdown: -2.92%
+
+Ablation - Baseline (All Modules):
+  Sharpe Ratio: -0.16
+  Total PnL: $-4,673.31
+  Return %: 3.08%
+  Win Rate: 36.80%
+  Max Drawdown: -2.92%
+
+Ablation - Without momentum_filter:
+  Sharpe Ratio: -0.17
+  Total PnL: $-6,392.62
+  Return %: 2.92%
+  Win Rate: 32.85%
+  Max Drawdown: -2.75%
+
+Ablation - Without ema_filter:
+  Sharpe Ratio: -0.18
+  Total PnL: $-6,929.05
+  Return %: 2.94%
+  Win Rate: 32.62%
+  Max Drawdown: -2.78%
+
+Ablation - Without stoch_rsi_filter:
+  Sharpe Ratio: -0.25
+  Total PnL: $-6,103.27
+  Return %: 2.67%
+  Win Rate: 30.83%
+  Max Drawdown: -2.76%
+
+Ablation - Without atr_filter:
+  Sharpe Ratio: -0.25
+  Total PnL: $-8,024.77
+  Return %: 3.00%
+  Win Rate: 31.54%
+  Max Drawdown: -2.49%
+
+Ablation - Without volume_filter:
+  Sharpe Ratio: -0.57
+  Total PnL: $-9,654.72
+  Return %: 2.44%
+  Win Rate: 30.77%
+  Max Drawdown: -2.95%

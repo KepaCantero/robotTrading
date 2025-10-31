@@ -1,0 +1,8 @@
+STRATEGY COMPARISON BACKTEST REPORT
+====================================================================================================
+
+      Strategy  Total Trades Win Rate  Total P&L Final Capital Return % Sharpe Ratio Max Drawdown
+      Momentum            11   36.36%   $-362.94    $99,691.94   -0.31%        -0.47       -3.06%
+Mean Reversion           132   15.91% $-9,817.00    $94,803.32   -5.20%        -0.36       -7.75%
+
+Generated: 2025-10-30 17:43:33

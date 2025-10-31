@@ -1,0 +1,274 @@
+# Comprehensive Backtesting Configuration
+# Sistema completo de backtesting automatizado y configurable
+
+# ============================================
+# DATOS DE ENTRADA
+# ============================================
+input:
+  symbol: "SNOW" # Ticker del stock
+  start_date: "2023-01-01" # Fecha inicio (YYYY-MM-DD)
+  end_date: "2024-01-01" # Fecha fin (YYYY-MM-DD)
+  initial_capital: 100000.0 # Capital inicial en USD
+
+# ============================================
+# MÓDULOS Y FILTROS
+# ============================================
+modules:
+  # Módulos de filtro activos
+  filters:
+    ema_filter:
+      enabled: true
+      parameters:
+        fast_period:
+          min: 10
+          max: 20
+          default: 12
+        slow_period:
+          min: 20
+          max: 50
+          default: 26
+
+    rsi_filter:
+      enabled: true
+      parameters:
+        period:
+          min: 10
+          max: 20
+          default: 14
+        buy_threshold:
+          min: 40
+          max: 60
+          default: 50
+        sell_threshold:
+          min: 40
+          max: 70
+          default: 70
+
+    stoch_rsi_filter:
+      enabled: true
+      parameters:
+        min_threshold:
+          min: 10
+          max: 30
+          default: 15
+        max_threshold:
+          min: 70
+          max: 90
+          default: 85
+
+    momentum_filter:
+      enabled: true
+      parameters:
+        threshold:
+          min: 0.01
+          max: 0.03
+          default: 0.015
+
+    volume_filter:
+      enabled: true
+      parameters:
+        threshold:
+          min: 1.0
+          max: 1.5
+          default: 1.1
+
+    atr_filter:
+      enabled: true
+      parameters:
+        min_threshold:
+          min: 0.005
+          max: 0.01
+          default: 0.006
+
+  # Market Detection
+  market_detection:
+    trend_detection:
+      enabled: true
+    volatility_detection:
+      enabled: true
+    range_detection:
+      enabled: true
+
+# ============================================
+# LEARNING ENGINES
+# ============================================
+learning_engines:
+  supervised:
+    enabled: true
+    parameters:
+      algorithm: "random_forest" # random_forest, gradient_boosting, xgboost
+      n_estimators:
+        min: 50
+        max: 200
+        default: 100
+      max_depth:
+        min: 5
+        max: 20
+        default: 10
+      train_test_split: 0.7 # 70% train, 30% test
+
+  deep:
+    enabled: true
+    parameters:
+      architecture: "lstm" # lstm, gru, transformer
+      sequence_length:
+        min: 30
+        max: 90
+        default: 60
+      hidden_size:
+        min: 32
+        max: 128
+        default: 64
+      num_layers:
+        min: 1
+        max: 4
+        default: 2
+      epochs:
+        min: 10
+        max: 100
+        default: 50
+      batch_size:
+        min: 16
+        max: 64
+        default: 32
+      learning_rate:
+        min: 0.0001
+        max: 0.01
+        default: 0.001
+
+  reinforcement:
+    enabled: true
+    parameters:
+      algorithm: "ppo" # ppo, a2c, ddpg
+      training_steps:
+        min: 50000
+        max: 200000
+        default: 100000
+      learning_rate:
+        min: 0.0001
+        max: 0.001
+        default: 0.0003
+
+  transformer:
+    enabled: false # Opcional, requiere implementación
+    parameters:
+      nhead: 8
+      num_layers: 4
+      dim_feedforward: 256
+      dropout: 0.1
+      epochs: 50
+      batch_size: 32
+      learning_rate: 0.0001
+
+# ============================================
+# CONFIGURACIÓN DE BACKTESTS
+# ============================================
+backtests:
+  # 1️⃣ Baseline Backtest
+  baseline:
+    enabled: true
+    description: "Línea base con todos los módulos activos"
+    learning_engine: null # null, supervised, deep, reinforcement
+    use_default_thresholds: true
+
+  # 2️⃣ Walk-forward / Rolling Window
+  walk_forward:
+    enabled: true
+    description: "Evaluar optimización por ventana temporal"
+    window_size_days: 90 # Tamaño de ventana de entrenamiento
+    step_size_days: 30 # Paso entre ventanas
+    learning_engine: "supervised" # null o nombre del engine
+    optimize_thresholds: false # Optimizar thresholds en cada ventana
+
+  # 3️⃣ Monte Carlo / Stress Test
+  monte_carlo:
+    enabled: true
+    description: "Robustez frente a volatilidad y movimientos aleatorios"
+    num_simulations: 100
+    volatility_multiplier:
+      min: 0.5
+      max: 2.0
+      default: 1.0
+    price_shock_percentage: 0.05 # 5% shock de precio
+
+  # 4️⃣ Transformer-driven Optimization
+  transformer_optimization:
+    enabled: false # Requiere transformer enabled
+    description: "Optimizar parámetros iterativamente usando Transformer"
+    max_iterations: 50
+    convergence_threshold: 0.01 # Cambio mínimo en Sharpe para converger
+    optimize_thresholds: true
+    optimize_learning_params: true
+
+  # 5️⃣ Ablation / Modular Impact Test
+  ablation:
+    enabled: true
+    description: "Medir impacto individual de cada módulo"
+    modules_to_test:
+      - "ema_filter"
+      - "rsi_filter"
+      - "stoch_rsi_filter"
+      - "momentum_filter"
+      - "volume_filter"
+      - "atr_filter"
+    baseline_modules: [] # Vacío = todos activos
+
+  # 6️⃣ Parameter Sensitivity / Grid Search
+  grid_search:
+    enabled: true
+    description: "Identificar rangos de parámetros robustos"
+    search_method: "random" # grid, random
+    num_combinations: 100 # Número de combinaciones a probar
+    optimize_metric: "sharpe_ratio" # sharpe_ratio, total_pnl, win_rate
+    parameters_to_optimize:
+      - "rsi_filter.buy_threshold"
+      - "rsi_filter.sell_threshold"
+      - "momentum_filter.threshold"
+      - "volume_filter.threshold"
+
+  # 7️⃣ Out-of-Sample / Forward Performance
+  out_of_sample:
+    enabled: true
+    description: "Validar robustez de parámetros optimizados"
+    train_split: 0.7 # 70% train, 30% test
+    use_optimized_params: true # Usar parámetros del grid_search
+    learning_engine: "supervised"
+
+  # 8️⃣ Market Condition / Regime Test
+  regime_test:
+    enabled: true
+    description: "Evaluar desempeño según régimen de mercado"
+    regimes:
+      - name: "bull_market"
+        conditions:
+          trend_direction: "trend_up"
+          volatility_regime: "normal"
+      - name: "bear_market"
+        conditions:
+          trend_direction: "trend_down"
+          volatility_regime: "high"
+      - name: "sideways_market"
+        conditions:
+          in_range: true
+          volatility_regime: "low"
+
+# ============================================
+# CONFIGURACIÓN DE REPORTES
+# ============================================
+reporting:
+  output_directory: "reports/comprehensive_backtest"
+  output_format: ["csv", "json"] # csv, json, html
+  consolidate_results: true
+  sort_by: "sharpe_ratio" # sharpe_ratio, total_pnl, win_rate, return_pct
+  include_charts: true
+  metrics_to_include:
+    - "total_pnl"
+    - "return_pct"
+    - "win_rate"
+    - "sharpe_ratio"
+    - "sortino_ratio"
+    - "max_drawdown"
+    - "total_trades"
+    - "avg_trade_pnl"
+    - "profit_factor"
+    - "calmar_ratio"

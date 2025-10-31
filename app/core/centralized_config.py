@@ -694,6 +694,13 @@ class CentralizedConfig(BaseSettings):
                         strategy_data = yaml.safe_load(f)
 
                     strategy_name = strategy_file.stem
+                    
+                    # Mapear strategy_name a name si existe (compatibilidad con YAML)
+                    if "strategy_name" in strategy_data and "name" not in strategy_data:
+                        strategy_data["name"] = strategy_data.pop("strategy_name")
+                    elif "name" not in strategy_data:
+                        strategy_data["name"] = strategy_name
+                    
                     strategy_config = StrategyConfig(**strategy_data)
                     self.strategies[strategy_name] = strategy_config
                 except Exception as e:

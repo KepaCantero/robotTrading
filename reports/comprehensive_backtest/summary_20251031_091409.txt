@@ -1,0 +1,18 @@
+================================================================================
+COMPREHENSIVE BACKTEST SUMMARY
+================================================================================
+
+Symbol: SNOW
+Period: 2023-01-01 to 2024-01-01
+Initial Capital: $100,000.00
+Total Backtests: 1
+
+TOP 10 RESULTS:
+--------------------------------------------------------------------------------
+
+Baseline - All Modules Active:
+  Sharpe Ratio: -0.16
+  Total PnL: $-4,673.31
+  Return %: 3.08%
+  Win Rate: 36.80%
+  Max Drawdown: -2.92%

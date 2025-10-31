@@ -152,6 +152,33 @@ class SimpleBacktester:
         for md in market_data:
             # Update equity curve
             self._update_equity_curve(md.timestamp)
+            
+            # NEW: Ejecutar reentrenamiento si es necesario (si strategy tiene learning_engine)
+            if self.strategy and hasattr(self.strategy, 'learning_engine') and self.strategy.learning_engine:
+                from app.strategies.momentum_modular.learning.learning_updater import LearningEngineUpdater
+                if not hasattr(self.strategy, '_learning_updater'):
+                    self.strategy._learning_updater = LearningEngineUpdater(
+                        learning_engine=self.strategy.learning_engine,
+                        rebalance_frequency_days=7
+                    )
+                
+                # Agregar market data al historial
+                if hasattr(md, 'close') or hasattr(md, 'bid'):
+                    price = float(get_price(md))
+                    self.strategy._learning_updater.add_market_data(
+                        market_data={
+                            'price': price,
+                            'volume': float(getattr(md, 'volume', 0)),
+                            'symbol': md.symbol
+                        },
+                        timestamp=md.timestamp
+                    )
+                
+                # Intentar reentrenar si es necesario
+                self.strategy._learning_updater.retrain_if_needed(
+                    current_date=md.timestamp,
+                    quotes=market_data[:market_data.index(md)+1] if md in market_data else None
+                )
 
             # Process signals for this timestamp
             # FIX: More flexible matching - allow signals within 1 day and exact symbol match
@@ -605,6 +632,28 @@ class SimpleBacktester:
         )
         self.capital -= total_cost
 
+        # NEW: Registrar trade para learning engine (si está activo)
+        if self.strategy and hasattr(self.strategy, 'learning_engine') and self.strategy.learning_engine:
+            if hasattr(self.strategy, '_learning_updater'):
+                self.strategy._learning_updater.add_trade_result(
+                    trade={
+                        'symbol': signal.symbol,
+                        'entry_time': trade.entry_time,
+                        'entry_price': float(trade.entry_price),
+                        'quantity': float(trade.quantity),
+                        'side': 'buy'
+                    },
+                    timestamp=market_data.timestamp
+                )
+                
+                # Si la estrategia tiene método add_trade_result, llamarlo también
+                if hasattr(self.strategy, 'add_trade_result'):
+                    self.strategy.add_trade_result({
+                        'pnl': 0,  # P&L se actualizará al cerrar
+                        'entry_time': trade.entry_time,
+                        'symbol': signal.symbol
+                    })
+
         # Log execution to diagnostic logger
         if self.diagnostic_logger:
             strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
@@ -737,6 +786,32 @@ class SimpleBacktester:
             t.quantity for t in buy_trades if t.status == TradeStatus.CLOSED
         )
         self.capital += proceeds
+
+        # NEW: Registrar trade result para learning engine (con P&L)
+        if self.strategy and hasattr(self.strategy, 'learning_engine') and self.strategy.learning_engine:
+            if hasattr(self.strategy, '_learning_updater'):
+                self.strategy._learning_updater.add_trade_result(
+                    trade={
+                        'symbol': signal.symbol,
+                        'entry_time': buy_trades[-1].entry_time if buy_trades else market_data.timestamp,
+                        'exit_time': market_data.timestamp,
+                        'entry_price': float(avg_buy_price) if buy_trades else 0,
+                        'exit_price': float(execution_price),
+                        'quantity': float(sell_quantity),
+                        'pnl': float(pnl),
+                        'side': 'sell'
+                    },
+                    timestamp=market_data.timestamp
+                )
+                
+                # Actualizar en strategy también
+                if hasattr(self.strategy, 'add_trade_result'):
+                    self.strategy.add_trade_result({
+                        'pnl': float(pnl),
+                        'entry_time': buy_trades[-1].entry_time if buy_trades else market_data.timestamp,
+                        'exit_time': market_data.timestamp,
+                        'symbol': signal.symbol
+                    })
 
         # Log execution to diagnostic logger
         if self.diagnostic_logger:
@@ -1060,9 +1135,12 @@ class SimpleBacktester:
         if portfolio_value > self.peak_equity:
             self.peak_equity = portfolio_value
 
-        current_drawdown = (portfolio_value - self.peak_equity) / self.peak_equity * 100
-        if current_drawdown < self.max_drawdown:
-            self.max_drawdown = current_drawdown
+        # Calcular drawdown como valor negativo absoluto (no porcentaje)
+        # max_drawdown debe ser <= 0 según validación Pydantic
+        if self.peak_equity > 0:
+            current_drawdown = portfolio_value - self.peak_equity  # Valor negativo o cero
+            if current_drawdown < self.max_drawdown:
+                self.max_drawdown = current_drawdown
 
     def _calculate_performance_metrics(self) -> PerformanceMetrics:
         """Calculate comprehensive performance metrics."""
@@ -1084,8 +1162,13 @@ class SimpleBacktester:
         winning_count = len(winning_trades)
         losing_count = len(losing_trades)
 
-        # Calculate win rate
-        win_rate = (winning_count / total_trades * 100) if total_trades > 0 else Decimal("0")
+        # Calculate win rate (asegurar que esté entre 0-100)
+        if total_trades > 0:
+            win_rate = Decimal(str((winning_count / total_trades) * 100))
+            # Asegurar que no exceda 100 (por redondeos)
+            win_rate = min(Decimal("100"), max(Decimal("0"), win_rate))
+        else:
+            win_rate = Decimal("0")
 
         # Calculate P&L metrics
         total_pnl = sum(trade.pnl for trade in winning_trades + losing_trades)
@@ -1125,8 +1208,8 @@ class SimpleBacktester:
             gross_profit=gross_profit,
             gross_loss=gross_loss,
             net_profit=net_profit,
-            max_drawdown=self.max_drawdown,
-            max_drawdown_percentage=self.max_drawdown,
+            max_drawdown=min(Decimal("0"), self.max_drawdown),  # Asegurar que sea <= 0
+            max_drawdown_percentage=min(Decimal("0"), (self.max_drawdown / self.config.initial_capital * 100) if self.config.initial_capital > 0 else Decimal("0")),
             sharpe_ratio=sharpe_ratio,
             sortino_ratio=None,  # Not implemented yet
             avg_win=avg_win,
