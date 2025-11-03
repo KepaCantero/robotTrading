@@ -20,8 +20,11 @@ except ImportError:
         logger.warning("pandas-ta-classic o pandas-ta no disponible. Funcionalidad limitada.")
 
 from app.models.market_data import Quote
-from app.strategies.momentum_modular.learning.feature_extractor import FeatureExtractor
 from app.backtesting.models import Trade, TradeStatus
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.strategies.momentum_modular.learning.feature_extractor import FeatureExtractor
 
 logger = logging.getLogger(__name__)
 
@@ -31,20 +34,26 @@ class TrainingDataPreparator:
     Prepara datos de entrenamiento completos para todos los tipos de learning engines.
     """
     
-    def __init__(self, feature_extractor: Optional[FeatureExtractor] = None):
+    def __init__(self, feature_extractor: Optional['FeatureExtractor'] = None):
         """
         Inicializar preparador de datos.
         
         Args:
             feature_extractor: FeatureExtractor instance (crea uno nuevo si None)
         """
-        self.feature_extractor = feature_extractor or FeatureExtractor()
+        # Lazy import de FeatureExtractor solo cuando se necesite
+        if feature_extractor is None:
+            from app.strategies.momentum_modular.learning.feature_extractor import FeatureExtractor
+            self.feature_extractor = FeatureExtractor()
+        else:
+            self.feature_extractor = feature_extractor
     
     def prepare_supervised_training_data(
         self,
         quotes: List[Quote],
         trades: List[Trade],
-        min_sequence_length: int = 60
+        min_sequence_length: int = 60,
+        lookahead_days: int = 10
     ) -> Dict[str, Any]:
         """
         Preparar datos de entrenamiento para Supervised Learning.
@@ -104,26 +113,93 @@ class TrainingDataPreparator:
                 }
             )
             
-            features_list.append(features['feature_vector'])
-            
             # Generar label: ¿fue este punto un buen momento para comprar?
             # Label = 1 si hay un trade exitoso en los próximos N días después de este punto
             label = self._generate_label_for_timestamp(
-                timestamp, trades_by_timestamp, df, i, lookahead_days=10
+                timestamp, trades_by_timestamp, df, i, lookahead_days=lookahead_days
             )
-            labels_list.append(label)
+            
+            # Estrategia mejorada: incluir samples con label válido O si hay muy pocos samples
+            # Si label es None, verificar si hay trades cerca para decidir si incluir con label 0
+            if label is not None:
+                features_list.append(features)
+                labels_list.append(label)
+            else:
+                # Si no hay label pero hay trades cercanos (en un rango más amplio), usar label 0
+                # Esto ayuda a balancear cuando hay muy pocos trades
+                has_nearby_trades = self._has_trades_nearby(
+                    timestamp, trades_by_timestamp, lookahead_days * 2  # Buscar en ventana doble
+                )
+                if has_nearby_trades:
+                    # Hay trades cercanos pero no en la ventana específica -> label 0
+                    features_list.append(features)
+                    labels_list.append(0)
         
+        # Si aún no hay features, usar una estrategia de fallback más permisiva
         if not features_list:
-            logger.warning("No features generated")
-            return {'features': pd.DataFrame(), 'labels': pd.Series([], dtype=int)}
+            logger.warning("No features generated with standard labeling. Using fallback strategy...")
+            # Fallback: incluir todos los samples con label 0 (asumiendo que no eran buenos momentos)
+            features_list = []
+            labels_list = []
+            for i in range(min_sequence_length, min(len(indicators_df), min_sequence_length + 100)):  # Limitar a 100 samples para evitar sobrecarga
+                quote = quotes[i]
+                timestamp = quote.timestamp if hasattr(quote, 'timestamp') else df.index[i]
+                
+                indicators = self._extract_indicators_from_row(indicators_df.iloc[i])
+                market_context = self._estimate_market_context(indicators_df.iloc[:i+1])
+                filter_results = self._simulate_filter_results(indicators, market_context)
+                
+                features = self.feature_extractor.extract_complete_features(
+                    indicators=indicators,
+                    filter_results=filter_results,
+                    market_context=market_context,
+                    metadata={
+                        'timestamp': timestamp,
+                        'symbol': quote.symbol,
+                        'recent_trades': self._get_recent_trades_before_timestamp(trades, timestamp),
+                        'recent_win_rate': self._calculate_recent_win_rate(trades, timestamp)
+                    }
+                )
+                
+                features_list.append(features)
+                labels_list.append(0)  # Label 0 por defecto en fallback
+            
+            if not features_list:
+                logger.error("No features generated even with fallback strategy")
+                return {'features': pd.DataFrame(), 'labels': pd.Series([], dtype=int)}
+            else:
+                logger.info(f"Fallback strategy: Generated {len(features_list)} samples with default labels")
         
         # Crear DataFrame de features
-        feature_names = features_list[0]['feature_names'] if features_list else []
-        X_df = pd.DataFrame([f['feature_vector'] for f in features_list], columns=feature_names)
+        # Extraer feature_names del primer elemento (debería ser igual para todos)
+        feature_names = features_list[0].get('feature_names', []) if features_list else []
+        # Extraer solo los feature_vectors para el DataFrame
+        X_df = pd.DataFrame([f.get('feature_vector', []) for f in features_list], columns=feature_names)
         y_series = pd.Series(labels_list, dtype=int)
         
-        logger.info(f"Prepared training data: {len(X_df)} samples, {len(feature_names)} features, "
-                   f"{y_series.sum()} positive labels ({y_series.mean()*100:.1f}%)")
+        # Verificar balance de clases
+        unique_labels = y_series.unique()
+        positive_count = int(y_series.sum())
+        negative_count = len(y_series) - positive_count
+        
+        logger.info(f"Prepared training data: {len(X_df)} samples, {len(feature_names)} features")
+        logger.info(f"  Labels: {len(unique_labels)} classes - Positive: {positive_count} ({positive_count/len(y_series)*100:.1f}%), Negative: {negative_count} ({negative_count/len(y_series)*100:.1f}%)")
+        
+        # Si solo hay una clase, intentar balancear ajustando criterios de éxito o usando datos adicionales
+        if len(unique_labels) < 2:
+            logger.warning(f"⚠️ Solo hay {len(unique_labels)} clase(s) en los labels.")
+            if len(unique_labels) == 1:
+                label_value = unique_labels[0]
+                logger.warning(f"  Todos los labels son {label_value}. Esto impedirá el entrenamiento supervisado.")
+                logger.warning(f"  Causas posibles:")
+                logger.warning(f"    - Muy pocos trades generados en el backtest")
+                logger.warning(f"    - Todos los trades tienen el mismo resultado")
+                logger.warning(f"    - Ventana de lookahead muy pequeña")
+                logger.warning(f"  Soluciones sugeridas:")
+                logger.warning(f"    1. Aumentar lookahead_days (actual: {lookahead_days})")
+                logger.warning(f"    2. Usar más datos históricos para entrenamiento")
+                logger.warning(f"    3. Ajustar criterios de éxito (umbrales más bajos para trades exitosos)")
+                logger.warning(f"    4. Revisar configuración de la estrategia (puede estar generando muy pocas señales)")
         
         return {
             'features': X_df,
@@ -198,14 +274,16 @@ class TrainingDataPreparator:
                 sequence_length=sequence_length
             )
             
-            sequences.append(sequence)
-            
             # Generar label
             timestamp = quotes[i].timestamp if hasattr(quotes[i], 'timestamp') else df.index[i]
             label = self._generate_label_for_timestamp(
                 timestamp, trades_by_timestamp, df, i, lookahead_days=10
             )
-            labels.append(label)
+            
+            # Solo incluir muestras con labels válidos (filtra None)
+            if label is not None:
+                sequences.append(sequence)
+                labels.append(label)
         
         if not sequences:
             logger.warning("No sequences generated")
@@ -214,8 +292,18 @@ class TrainingDataPreparator:
         X_sequences = np.array(sequences, dtype=np.float32)
         y_labels = np.array(labels, dtype=int)
         
+        # Verificar balance de clases
+        unique_labels = np.unique(y_labels)
+        positive_count = int(y_labels.sum())
+        negative_count = len(y_labels) - positive_count
+        
         logger.info(f"Prepared DL training data: {len(X_sequences)} sequences, "
-                   f"shape {X_sequences.shape}, {y_labels.sum()} positive labels")
+                   f"shape {X_sequences.shape}")
+        logger.info(f"  Labels: {len(unique_labels)} classes - Positive: {positive_count} ({positive_count/len(y_labels)*100:.1f}%), Negative: {negative_count} ({negative_count/len(y_labels)*100:.1f}%)")
+        
+        # Si solo hay una clase, advertir
+        if len(unique_labels) < 2:
+            logger.warning(f"⚠️ Solo hay {len(unique_labels)} clase(s) en los labels. Esto puede causar problemas en el entrenamiento.")
         
         return {
             'sequences': X_sequences,
@@ -343,7 +431,8 @@ class TrainingDataPreparator:
         # Precio actual
         indicators_df['price'] = df['close']
         
-        return indicators_df.fillna(method='ffill').fillna(0)
+        # Usar ffill() en lugar de fillna(method='ffill') para evitar deprecation warning
+        return indicators_df.ffill().fillna(0)
     
     def _extract_indicators_from_row(self, row: pd.Series) -> Dict[str, float]:
         """Extraer indicadores de una fila del DataFrame."""
@@ -461,13 +550,19 @@ class TrainingDataPreparator:
         
         return filter_results
     
-    def _create_trades_timestamp_map(self, trades: List[Trade], df: pd.DataFrame) -> Dict[datetime, List[Trade]]:
+    def _create_trades_timestamp_map(self, trades: List, df: pd.DataFrame) -> Dict[datetime, List]:
         """Crear mapa de trades por timestamp."""
         trades_map = {}
         
         for trade in trades:
-            if trade.entry_time:
-                timestamp = trade.entry_time
+            # Manejar tanto dicts como objetos Trade
+            if isinstance(trade, dict):
+                entry_time = trade.get('entry_time')
+            else:
+                entry_time = getattr(trade, 'entry_time', None)
+            
+            if entry_time:
+                timestamp = entry_time
                 # Redondear a día más cercano para matching
                 day = timestamp.replace(hour=0, minute=0, second=0, microsecond=0)
                 if day not in trades_map:
@@ -483,10 +578,15 @@ class TrainingDataPreparator:
         df: pd.DataFrame,
         current_idx: int,
         lookahead_days: int = 10
-    ) -> int:
+    ) -> Optional[int]:
         """
-        Generar label para un timestamp.
+        Generar label para un timestamp con mejor granularidad.
         Label = 1 si hubo un trade exitoso en los próximos N días.
+        Label = 0 si hubo trades pero no exitosos.
+        None si no hubo trades (se excluye del dataset para evitar desbalanceo).
+        
+        Returns:
+            int: 0 o 1, o None si no hay trades en la ventana
         """
         # Buscar trades en ventana lookahead
         end_timestamp = timestamp + timedelta(days=lookahead_days)
@@ -498,16 +598,69 @@ class TrainingDataPreparator:
                 relevant_trades.extend(trades)
         
         if not relevant_trades:
-            return 0  # No hubo trades
+            # No hubo trades en esta ventana - retornar None para excluir este sample
+            # Esto ayuda a evitar demasiados 0s que causan desbalanceo
+            return None
         
-        # Verificar si alguno fue exitoso
+        # Calcular tasa de éxito de trades en esta ventana
+        successful_count = 0
+        total_closed = 0
+        
         for trade in relevant_trades:
-            if trade.status == TradeStatus.CLOSED and trade.pnl and trade.pnl > 0:
-                # Trade exitoso - label positivo
-                return 1
+            # Manejar tanto dicts como objetos Trade
+            if isinstance(trade, dict):
+                status = trade.get('status', '')
+                pnl = trade.get('pnl', 0)
+            else:
+                status = getattr(trade, 'status', None)
+                pnl = getattr(trade, 'pnl', None)
+            
+            if status == TradeStatus.CLOSED or status == 'CLOSED':
+                total_closed += 1
+                # Considerar exitoso si P&L es positivo
+                if pnl is not None:
+                    try:
+                        pnl_value = float(pnl) if not isinstance(pnl, (int, float)) else pnl
+                        if pnl_value > 0:
+                            successful_count += 1
+                    except (ValueError, TypeError):
+                        pass
         
-        # Hubo trades pero no exitosos
-        return 0
+        # Si hay trades cerrados, etiquetar según tasa de éxito
+        if total_closed > 0:
+            # Si más del 50% fueron exitosos, label = 1, sino label = 0
+            success_rate = successful_count / total_closed
+            return 1 if success_rate >= 0.5 else 0
+        
+        # Hay trades pero ninguno cerrado aún - retornar None para excluir
+        return None
+    
+    def _has_trades_nearby(
+        self,
+        timestamp: datetime,
+        trades_map: Dict[datetime, List[Trade]],
+        window_days: int = 30
+    ) -> bool:
+        """
+        Verificar si hay trades cerca de un timestamp (sin importar su resultado).
+        Útil para decidir si incluir un sample con label 0.
+        
+        Args:
+            timestamp: Timestamp a verificar
+            trades_map: Mapa de trades por fecha
+            window_days: Ventana de días para buscar
+        
+        Returns:
+            True si hay trades cerca, False en caso contrario
+        """
+        start_timestamp = timestamp - timedelta(days=window_days // 2)
+        end_timestamp = timestamp + timedelta(days=window_days)
+        
+        for trade_date in trades_map.keys():
+            if start_timestamp <= trade_date <= end_timestamp:
+                return True
+        
+        return False
     
     def _get_recent_trades_before_timestamp(
         self,
@@ -519,12 +672,24 @@ class TrainingDataPreparator:
         recent_trades = []
         
         for trade in reversed(trades):
-            if trade.entry_time and trade.entry_time < timestamp:
-                if trade.status == TradeStatus.CLOSED and trade.pnl is not None:
+            # Manejar tanto dicts como objetos Trade
+            if isinstance(trade, dict):
+                entry_time = trade.get('entry_time')
+                status = trade.get('status', '')
+                pnl = trade.get('pnl')
+                exit_time = trade.get('exit_time')
+            else:
+                entry_time = getattr(trade, 'entry_time', None)
+                status = getattr(trade, 'status', None)
+                pnl = getattr(trade, 'pnl', None)
+                exit_time = getattr(trade, 'exit_time', None)
+            
+            if entry_time and entry_time < timestamp:
+                if (status == TradeStatus.CLOSED or status == 'CLOSED') and pnl is not None:
                     recent_trades.append({
-                        'pnl': float(trade.pnl),
-                        'entry_time': trade.entry_time,
-                        'exit_time': trade.exit_time
+                        'pnl': float(pnl),
+                        'entry_time': entry_time,
+                        'exit_time': exit_time
                     })
                     
                     if len(recent_trades) >= max_trades:
@@ -534,22 +699,49 @@ class TrainingDataPreparator:
     
     def _calculate_recent_win_rate(
         self,
-        trades: List[Trade],
+        trades: List,
         timestamp: datetime,
         window_days: int = 30
     ) -> float:
-        """Calcular win rate reciente antes de un timestamp."""
+        """
+        Calcular win rate reciente antes de un timestamp.
+        
+        Args:
+            trades: Lista de trades (pueden ser objetos Trade o diccionarios)
+            timestamp: Timestamp de referencia
+            window_days: Ventana de días para calcular win rate
+        """
         start_timestamp = timestamp - timedelta(days=window_days)
         
-        relevant_trades = [
-            t for t in trades
-            if t.entry_time and start_timestamp <= t.entry_time < timestamp
-            and t.status == TradeStatus.CLOSED and t.pnl is not None
-        ]
+        # Helper para obtener atributos de trade (soporta objetos y diccionarios)
+        def get_attr(trade, attr, default=None):
+            if isinstance(trade, dict):
+                return trade.get(attr, default)
+            return getattr(trade, attr, default)
+        
+        relevant_trades = []
+        for t in trades:
+            entry_time = get_attr(t, 'entry_time')
+            status = get_attr(t, 'status')
+            pnl = get_attr(t, 'pnl')
+            
+            # Manejar TradeStatus enum o string
+            if hasattr(status, 'name'):
+                status_str = status.name
+            elif isinstance(status, str):
+                status_str = status.upper()
+            else:
+                status_str = str(status).upper()
+            
+            if (entry_time and 
+                start_timestamp <= entry_time < timestamp and
+                status_str == 'CLOSED' and 
+                pnl is not None):
+                relevant_trades.append(t)
         
         if not relevant_trades:
             return 0.5  # Default
         
-        winning_trades = [t for t in relevant_trades if t.pnl > 0]
-        return len(winning_trades) / len(relevant_trades)
+        winning_trades = [t for t in relevant_trades if get_attr(t, 'pnl', 0) > 0]
+        return len(winning_trades) / len(relevant_trades) if relevant_trades else 0.5
 

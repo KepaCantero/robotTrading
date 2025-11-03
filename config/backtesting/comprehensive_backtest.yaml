@@ -95,6 +95,7 @@ modules:
 learning_engines:
   supervised:
     enabled: true
+    lookahead_days: 15 # Ventana de días para generar labels (mayor = más probabilidad de múltiples clases)
     parameters:
       algorithm: "random_forest" # random_forest, gradient_boosting, xgboost
       n_estimators:
@@ -150,7 +151,7 @@ learning_engines:
         default: 0.0003
 
   transformer:
-    enabled: false # Opcional, requiere implementación
+    enabled: true # Habilitado - usa fallback si no está disponible
     parameters:
       nhead: 8
       num_layers: 4
@@ -171,7 +172,14 @@ backtests:
     learning_engine: null # null, supervised, deep, reinforcement
     use_default_thresholds: true
 
-  # 2️⃣ Walk-forward / Rolling Window
+  # 2️⃣ Learning Engines Test
+  learning_engines:
+    enabled: true
+    description: "Probar cada learning engine individualmente (supervised, deep, reinforcement)"
+    use_multi_strategy: true # Ejecutar también multi-strategy para comparación
+    # Automáticamente prueba todos los learning engines habilitados en learning_engines section
+
+  # 3️⃣ Walk-forward / Rolling Window
   walk_forward:
     enabled: true
     description: "Evaluar optimización por ventana temporal"
@@ -180,27 +188,28 @@ backtests:
     learning_engine: "supervised" # null o nombre del engine
     optimize_thresholds: false # Optimizar thresholds en cada ventana
 
-  # 3️⃣ Monte Carlo / Stress Test
+  # 4️⃣ Monte Carlo / Stress Test
   monte_carlo:
     enabled: true
     description: "Robustez frente a volatilidad y movimientos aleatorios"
     num_simulations: 100
+    use_multi_strategy: true # Ejecutar también con multi-strategy para comparación
     volatility_multiplier:
       min: 0.5
       max: 2.0
       default: 1.0
     price_shock_percentage: 0.05 # 5% shock de precio
 
-  # 4️⃣ Transformer-driven Optimization
+  # 5️⃣ Transformer-driven Optimization
   transformer_optimization:
-    enabled: false # Requiere transformer enabled
+    enabled: true # Habilitado - usa grid search mejorado si transformer no disponible
     description: "Optimizar parámetros iterativamente usando Transformer"
     max_iterations: 50
     convergence_threshold: 0.01 # Cambio mínimo en Sharpe para converger
     optimize_thresholds: true
     optimize_learning_params: true
 
-  # 5️⃣ Ablation / Modular Impact Test
+  # 6️⃣ Ablation / Modular Impact Test
   ablation:
     enabled: true
     description: "Medir impacto individual de cada módulo"
@@ -213,10 +222,10 @@ backtests:
       - "atr_filter"
     baseline_modules: [] # Vacío = todos activos
 
-  # 6️⃣ Parameter Sensitivity / Grid Search
+  # 7️⃣ Parameter Sensitivity / Grid Search
   grid_search:
     enabled: true
-    description: "Identificar rangos de parámetros robustos"
+    description: "Identificar rangos de parámetros robustos (limitado a thresholds)"
     search_method: "random" # grid, random
     num_combinations: 100 # Número de combinaciones a probar
     optimize_metric: "sharpe_ratio" # sharpe_ratio, total_pnl, win_rate
@@ -226,7 +235,21 @@ backtests:
       - "momentum_filter.threshold"
       - "volume_filter.threshold"
 
-  # 7️⃣ Out-of-Sample / Forward Performance
+  # 7b️⃣ Hyperparameter Optimization (Completo)
+  hyperparameter_optimization:
+    enabled: true
+    description: "Optimización completa de hiperparámetros (presets, learning params, risk params)"
+    optimization_method: "random_search" # grid_search, random_search
+    max_iterations: 100 # Número de configuraciones a probar
+    optimize_metric: "sharpe_ratio" # sharpe_ratio, total_pnl, win_rate, combined
+    compare_with_grid_search: true # Comparar resultados con grid_search
+    # Parámetros que optimiza:
+    # - Presets (conservative/balanced/aggressive)
+    # - Learning engine params (algoritmos, thresholds)
+    # - Risk params (position size, stop-loss, take-profit)
+    # - Filter thresholds (igual que grid_search)
+
+  # 8️⃣ Out-of-Sample / Forward Performance
   out_of_sample:
     enabled: true
     description: "Validar robustez de parámetros optimizados"
@@ -234,7 +257,15 @@ backtests:
     use_optimized_params: true # Usar parámetros del grid_search
     learning_engine: "supervised"
 
-  # 8️⃣ Market Condition / Regime Test
+  # 9️⃣ Multi-Strategy Backtest
+  multi_strategy:
+    enabled: true
+    description: "Probar múltiples estrategias simultáneamente con división de capital"
+    strategies: ["momentum", "mean_reversion", "pairs_trading"]
+    enable_dynamic_reallocation: true
+    reallocation_frequency_days: 30
+
+  # 🔟 Market Condition / Regime Test
   regime_test:
     enabled: true
     description: "Evaluar desempeño según régimen de mercado"
@@ -272,3 +303,41 @@ reporting:
     - "avg_trade_pnl"
     - "profit_factor"
     - "calmar_ratio"
+
+# ============================================
+# META-ANALYSIS Y AUDITORÍA
+# ============================================
+meta_analysis:
+  enabled: true
+  enable_audit: true
+  enable_storage: true
+  enable_analysis: true
+  enable_incremental_learning: true # Si true, carga pesos guardados antes de entrenar (fine-tuning)
+
+# ============================================
+# PARALELIZACIÓN
+# ============================================
+parallelization:
+  enabled: true
+  max_workers: null # null = auto (CPU count), o especificar número
+  # Tests paralelizables: monte_carlo, grid_search, learning_engines
+  # Reducción estimada de tiempo: hasta 70% con múltiples cores
+
+# Umbrales para colores dinámicos en dashboard
+thresholds:
+  sharpe:
+    bad: 0.0
+    warn: 0.8
+    good: 1.5
+  drawdown:
+    bad: 15.0 # %
+    warn: 10.0
+    good: 5.0
+  winrate:
+    bad: 0.4
+    warn: 0.55
+    good: 0.65
+  return_pct:
+    bad: 0.0
+    warn: 10.0
+    good: 25.0

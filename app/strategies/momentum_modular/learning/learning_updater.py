@@ -114,14 +114,23 @@ class LearningEngineUpdater:
         """
         Reentrenar learning engine si es necesario.
         
+        El reentrenamiento nunca debe fallar - si hay errores, se registran
+        pero el backtest continúa normalmente.
+        
         Args:
             current_date: Fecha actual del backtest
             quotes: Lista de quotes históricos (opcional, se usan si están disponibles)
         
         Returns:
-            True si se reentrenó, False en caso contrario
+            True si se reentrenó, False en caso contrario (nunca lanza excepciones)
         """
+        # Verificar si se debe reentrenar
         if not self.should_retrain(current_date):
+            return False
+        
+        # Verificar que el engine esté habilitado
+        if not self.learning_engine or not self.learning_engine.enabled:
+            logger.debug(f"Learning engine no habilitado, saltando reentrenamiento")
             return False
         
         logger.info(
@@ -135,7 +144,12 @@ class LearningEngineUpdater:
             training_data = self._prepare_training_data_from_history(quotes)
             
             if not training_data or self._is_training_data_empty(training_data):
-                logger.warning("⚠️ Datos de entrenamiento vacíos, saltando reentrenamiento")
+                logger.debug("⚠️ Datos de entrenamiento vacíos, saltando reentrenamiento")
+                return False
+            
+            # Verificar dependencias antes de intentar entrenar
+            if not self._can_train():
+                logger.debug(f"⚠️ Learning engine no puede entrenar (dependencias faltantes), saltando reentrenamiento")
                 return False
             
             # Reentrenar
@@ -152,8 +166,20 @@ class LearningEngineUpdater:
             
             return True
             
+        except ImportError as e:
+            # Dependencias faltantes - no es crítico, solo registramos y continuamos
+            logger.debug(
+                f"⚠️ Reentrenamiento omitido: dependencias faltantes ({e}). "
+                f"El backtest continúa sin reentrenamiento."
+            )
+            return False
         except Exception as e:
-            logger.error(f"❌ Error en reentrenamiento: {e}", exc_info=True)
+            # Cualquier otro error - no es crítico, registramos y continuamos
+            logger.warning(
+                f"⚠️ Error en reentrenamiento (no crítico): {type(e).__name__}: {e}. "
+                f"El backtest continúa sin reentrenamiento."
+            )
+            # No loguear el stack trace completo para errores no críticos
             return False
     
     def _prepare_training_data_from_history(
@@ -225,6 +251,48 @@ class LearningEngineUpdater:
             return "reinforcement"
         return "supervised"  # Default
     
+    def _can_train(self) -> bool:
+        """
+        Verificar si el learning engine puede entrenar (dependencias disponibles).
+        
+        Returns:
+            True si puede entrenar, False en caso contrario (nunca lanza excepciones)
+        """
+        if not self.learning_engine:
+            return False
+        
+        engine_type = self._get_engine_type()
+        
+        try:
+            if engine_type == "supervised":
+                # Verificar scikit-learn
+                import sklearn  # noqa: F401
+                from sklearn.ensemble import RandomForestClassifier  # noqa: F401
+                return True
+            elif engine_type == "deep":
+                # Verificar PyTorch o TensorFlow
+                try:
+                    import torch  # noqa: F401
+                    return True
+                except ImportError:
+                    try:
+                        import tensorflow as tf  # noqa: F401
+                        return True
+                    except ImportError:
+                        return False
+            elif engine_type == "reinforcement":
+                # Verificar stable-baselines3 y gym
+                try:
+                    from stable_baselines3 import PPO  # noqa: F401
+                    import gym  # noqa: F401
+                    return True
+                except ImportError:
+                    return False
+            return True  # Si no sabemos, intentamos
+        except Exception:
+            # Cualquier error al verificar significa que no puede entrenar
+            return False
+    
     def _is_training_data_empty(self, training_data: Dict[str, Any]) -> bool:
         """Verificar si los datos de entrenamiento están vacíos."""
         if "features" in training_data:
@@ -240,17 +308,42 @@ class LearningEngineUpdater:
         return True
     
     def _convert_trade_history_to_trades(self) -> List:
-        """Convertir trade_history a formato Trade (simplificado para backtest)."""
-        # En producción, esto convertiría a objetos PDE Trade completos
-        # Por ahora, retornar formato simplificado
+        """
+        Convertir trade_history a formato Trade (simplificado para backtest).
+        
+        Retorna diccionarios con la estructura compatible con objetos Trade
+        para que puedan ser usados tanto por código que espera objetos como diccionarios.
+        """
         trades = []
         for trade_record in self.trade_history:
-            trades.append({
-                'pnl': trade_record.get('pnl', 0),
-                'entry_time': trade_record.get('entry_time'),
-                'exit_time': trade_record.get('exit_time'),
-                'status': 'CLOSED' if trade_record.get('exit_time') else 'OPEN'
-            })
+            entry_time = trade_record.get('entry_time')
+            exit_time = trade_record.get('exit_time')
+            pnl = trade_record.get('pnl', 0)
+            
+            # Convertir pnl a Decimal si es necesario
+            if pnl is not None and not isinstance(pnl, (int, float, Decimal)):
+                try:
+                    pnl = Decimal(str(pnl))
+                except:
+                    pnl = Decimal("0")
+            elif pnl is None:
+                pnl = Decimal("0")
+            
+            # Determinar status
+            status_str = 'CLOSED' if exit_time else 'OPEN'
+            
+            trade_dict = {
+                'pnl': pnl,
+                'entry_time': entry_time,
+                'exit_time': exit_time,
+                'status': status_str,
+                'symbol': trade_record.get('symbol', 'UNKNOWN'),
+                'side': trade_record.get('side', 'BUY'),
+                'quantity': trade_record.get('quantity', 0),
+                'entry_price': trade_record.get('entry_price', 0),
+                'exit_price': trade_record.get('exit_price', trade_record.get('entry_price', 0))
+            }
+            trades.append(trade_dict)
         return trades
     
     def _convert_market_history_to_quotes(self) -> List:

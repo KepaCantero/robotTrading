@@ -69,9 +69,40 @@ class BaseLearningEngine(ABC):
             features: Features actuales del mercado/filtros
         
         Returns:
-            Dict con predicciones, probabilidades, acciones recomendadas, etc.
+            Dict estándar con el siguiente formato:
+            {
+                'success_probability': float,  # Probabilidad de éxito (0-1)
+                'confidence': float,  # Confianza en la predicción (0-1)
+                'filter_adjustments': Dict[str, Dict[str, float]],  # Ajustes a filtros
+                'recommended_action': str,  # 'BUY', 'SELL', 'HOLD'
+                'raw_prediction': Any  # Predicción cruda del modelo (opcional)
+            }
         """
         pass
+    
+    def explain(self, features: Dict[str, Any], prediction: Optional[Dict[str, Any]] = None) -> str:
+        """
+        Generar explicación textual de la predicción.
+        
+        Args:
+            features: Features actuales del mercado/filtros
+            prediction: Predicción generada (si no se proporciona, se calcula)
+        
+        Returns:
+            Explicación textual de la decisión
+        """
+        if prediction is None:
+            prediction = self.predict(features)
+        
+        action = prediction.get('recommended_action', 'HOLD')
+        confidence = prediction.get('confidence', 0.0)
+        prob = prediction.get('success_probability', 0.0)
+        
+        return (
+            f"Acción recomendada: {action}. "
+            f"Probabilidad de éxito: {prob:.2%}, "
+            f"Confianza: {confidence:.2%}."
+        )
     
     @abstractmethod
     def evaluate(self, test_data: Dict[str, Any]) -> Dict[str, float]:

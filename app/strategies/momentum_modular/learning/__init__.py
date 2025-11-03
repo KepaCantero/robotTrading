@@ -3,26 +3,22 @@ LearningEngine - Sistema modular de aprendizaje híbrido para estrategias de tra
 """
 
 from .base_learning_engine import BaseLearningEngine
-from .supervised_learning_engine import SupervisedLearningEngine
-from .deep_learning_engine import DeepLearningEngine
-from .reinforcement_learning_engine import ReinforcementLearningEngine
 
-# HybridLearningEngine es opcional (puede no estar implementado aún)
-try:
-    from .hybrid_learning_engine import HybridLearningEngine
-    __all__ = [
-        "BaseLearningEngine",
-        "SupervisedLearningEngine",
-        "DeepLearningEngine",
-        "ReinforcementLearningEngine",
-        "HybridLearningEngine",
-    ]
-except ImportError:
-    # HybridLearningEngine no está disponible
-    __all__ = [
-        "BaseLearningEngine",
-        "SupervisedLearningEngine",
-        "DeepLearningEngine",
-        "ReinforcementLearningEngine",
-    ]
+# TODOS los learning engines se importan LAZY para evitar bloqueos
+# Solo BaseLearningEngine se importa aquí porque es necesario para type hints
+# Los demás se importarán cuando realmente se necesiten en strategy.py
+
+SupervisedLearningEngine = None
+DeepLearningEngine = None
+ReinforcementLearningEngine = None
+TransformerEngine = None
+TRANSFORMER_AVAILABLE = False
+
+# HybridLearningEngine también lazy
+HybridLearningEngine = None
+HYBRID_AVAILABLE = False
+
+# Construir __all__ dinámicamente - solo BaseLearningEngine por ahora
+# Los demás se importan lazy cuando se necesitan
+__all__ = ["BaseLearningEngine"]
 

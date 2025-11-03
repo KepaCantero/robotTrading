@@ -270,24 +270,84 @@ class FeatureExtractor:
         return max(0.0, min(1.0, rsi / 100.0))
     
     def _normalize_momentum(self, momentum: float) -> float:
-        """Normalizar momentum a rango 0-1."""
+        """
+        Normalizar momentum a rango 0-1 usando sigmoid.
+        
+        Args:
+            momentum: Valor de momentum (típicamente -0.1 a 0.1, pero puede variar)
+        
+        Returns:
+            Valor normalizado entre 0 y 1
+        
+        Nota: Clampea el exponente para evitar overflow numérico.
+        """
         # Momentum típico aproximadamente -0.1 a 0.1
         # Normalizar a 0-1 usando sigmoid
-        return 1.0 / (1.0 + np.exp(-momentum * 100))  # Scale factor
+        # Clampear exponente para evitar overflow (exp(x) para x > 709 causa overflow)
+        exponent = -momentum * 100
+        # Limitar exponente a rango seguro [-700, 700] para evitar overflow/underflow
+        exponent_clamped = np.clip(exponent, -700, 700)
+        
+        try:
+            sigmoid = 1.0 / (1.0 + np.exp(exponent_clamped))
+            # Asegurar que el resultado esté en [0, 1]
+            return float(np.clip(sigmoid, 0.0, 1.0))
+        except (OverflowError, FloatingPointError):
+            # Fallback si aún hay problemas: usar función más simple
+            logger.debug(f"Momentum overflow, usando normalización alternativa para momentum={momentum}")
+            # Normalización lineal con clamping
+            normalized = (momentum + 0.5) / 1.0  # Asumiendo rango -0.5 a 0.5
+            return float(np.clip(normalized, 0.0, 1.0))
     
     def _normalize_volume_ratio(self, volume_ratio: float) -> float:
-        """Normalizar volume ratio."""
+        """
+        Normalizar volume ratio.
+        
+        Args:
+            volume_ratio: Ratio de volumen (típicamente 0.5 a 3.0, pero puede ser mayor)
+        
+        Returns:
+            Valor normalizado entre 0 y 1
+        
+        Nota: Maneja overflow en log() para valores muy grandes.
+        """
         # Volume ratio típico: 0.5 a 3.0
         # Normalizar usando log
-        if volume_ratio > 0:
-            return min(1.0, np.log(1 + volume_ratio) / np.log(4))
-        return 0.0
+        if volume_ratio <= 0:
+            return 0.0
+        
+        try:
+            # Clampear volume_ratio para evitar overflow en log
+            # log(1e308) ≈ 710, lo cual está cerca del límite
+            volume_clamped = min(volume_ratio, 1e100)  # Límite seguro para log
+            normalized = min(1.0, np.log(1 + volume_clamped) / np.log(4))
+            return float(np.clip(normalized, 0.0, 1.0))
+        except (OverflowError, FloatingPointError):
+            # Fallback: normalización lineal
+            logger.debug(f"Volume ratio overflow, usando normalización alternativa para ratio={volume_ratio}")
+            # Asumir que ratios > 10 son extremos, normalizar linealmente
+            return float(np.clip(volume_ratio / 10.0, 0.0, 1.0))
     
     def _normalize_pnl(self, pnl: float) -> float:
-        """Normalizar P&L a rango -1 a 1."""
+        """
+        Normalizar P&L a rango -1 a 1 usando tanh.
+        
+        Args:
+            pnl: Profit and Loss (puede variar mucho)
+        
+        Returns:
+            Valor normalizado entre -1 y 1
+        
+        Nota: tanh es más estable que exp, pero aún se protege contra valores extremos.
+        """
         # P&L puede variar mucho, usar tanh para normalizar
         # Asumir P&L típico en rango -1000 a 1000
-        return np.tanh(pnl / 1000.0)
+        # Clampear entrada para evitar problemas con valores extremos
+        # tanh es estable pero clampear por seguridad
+        pnl_normalized = pnl / 1000.0
+        # Clampear a rango razonable para tanh (aunque tanh maneja bien valores grandes)
+        pnl_clamped = np.clip(pnl_normalized, -50, 50)  # tanh(50) ≈ 1.0, tanh(-50) ≈ -1.0
+        return float(np.clip(np.tanh(pnl_clamped), -1.0, 1.0))
     
     def extract_sequence_features(
         self,

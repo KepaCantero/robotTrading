@@ -57,3 +57,8 @@ python-json-logger>=2.0.0,<3.0.0
 # CORS & Security
 python-multipart>=0.0.6,<1.0.0
 
+# Performance Analytics & Reporting (Fase 1 - Awesome-Quant)
+quantstats>=0.0.62,<1.0.0  # Portfolio analytics and HTML reports
+empyrical-reloaded>=0.5.0,<1.0.0  # Risk and performance metrics (standard library)
+pyfolio-reloaded>=0.9.5,<1.0.0  # Portfolio and risk analytics with tearsheets
+

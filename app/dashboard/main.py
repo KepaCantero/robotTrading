@@ -40,6 +40,7 @@ from app.dashboard.multi_strategy_utils import (
     generate_multi_strategy_summary_text,
     save_multi_strategy_results,
 )
+from app.dashboard.comprehensive_data_loader import ComprehensiveBacktestLoader
 from app.services.multi_strategy_allocation import MultiStrategyAllocationManager
 from app.strategies.mean_reversion import MeanReversionStrategy
 from app.strategies.momentum import MomentumStrategy
@@ -59,6 +60,17 @@ st.set_page_config(
 # Title
 st.title("📊 AlgoTrading Backtest Dashboard")
 st.markdown("**Interactive backtesting analysis and module comparison**")
+
+# Auto-load comprehensive backtest results
+comprehensive_loader = ComprehensiveBacktestLoader()
+try:
+    comprehensive_stats = comprehensive_loader.get_summary_stats()
+    if comprehensive_stats['total_tests'] > 0:
+        st.sidebar.success(
+            f"📊 {comprehensive_stats['total_tests']} comprehensive backtest(s) disponibles"
+        )
+except Exception as e:
+    logger.debug(f"No se pudieron cargar comprehensive results: {e}")
 
 # Initialize session state
 if "backtest_results" not in session_state:

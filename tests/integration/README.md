@@ -38,7 +38,7 @@ pytest tests/integration/test_strategy_stock_allocator_integration.py -v -s
 ### 3. `test_signal_generation_integration.py`
 
 Tests de generación de señales con datos reales:
-
+ 
 **TEST 1: Multi-Strategy Portfolio**
 
 - Portfolio con las 3 estrategias (Momentum 60%, Mean Reversion 25%, Pairs Trading 15%)

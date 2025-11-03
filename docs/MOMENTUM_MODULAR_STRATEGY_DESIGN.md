@@ -1,6 +1,51 @@
-# Estrategia Momentum Modular e Inteligente - Diseño Técnico
+# Sistema de Estrategias de Trading - Diseño Técnico Completo
 
-## Arquitectura General
+## Estrategias Implementadas
+
+El sistema incluye **4 estrategias principales**, cada una diseñada para diferentes condiciones de mercado:
+
+### 1. **MomentumStrategy** (Básica)
+
+- **Tipo**: Momentum simple
+- **Indicadores**: RSI, EMA, Volumen, ATR
+- **Uso**: Trading de tendencias básicas, bajo overhead computacional
+- **Complejidad**: Baja
+- **Ideal para**: Mercados con tendencias claras, backtesting rápido
+
+### 2. **ModularMomentumStrategy** (Avanzada) ⭐
+
+- **Tipo**: Momentum modular con IA integrada
+- **Indicadores**: EMA, RSI, StochRSI, Momentum (ROC), Volume, ATR
+- **Features únicos**:
+  - **6 filtros modulares** activables según contexto de mercado
+  - **4 Learning Engines** integrados (Supervised, Deep, Reinforcement, Transformer)
+  - **Market Context Analyzer** para detectar régimen de mercado
+  - **Ajuste dinámico** de thresholds basado en predicciones de IA
+- **Uso**: Trading adaptativo avanzado, optimización continua
+- **Complejidad**: Alta
+- **Ideal para**: Estrategias sofisticadas, aprendizaje continuo, multi-régimen
+
+### 3. **MeanReversionStrategy**
+
+- **Tipo**: Reversión a la media
+- **Indicadores**: Z-score, volatilidad (ATR), rangos de precio
+- **Uso**: Trading en mercados laterales (range-bound)
+- **Complejidad**: Media
+- **Ideal para**: Mercados sin tendencia clara, spreads estrechos
+
+### 4. **PairsTradingStrategy**
+
+- **Tipo**: Arbitraje estadístico
+- **Indicadores**: Cointegración, correlación, spread, hedge ratio
+- **Uso**: Trading de pares cointegrados, estrategia market-neutral
+- **Complejidad**: Media-Alta
+- **Ideal para**: Reducción de riesgo sistemático, portfolios balanceados
+
+---
+
+## Arquitectura General - ModularMomentumStrategy
+
+Esta es la estrategia más avanzada del sistema, con soporte completo para Learning Engines.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -450,27 +495,64 @@ signal_frequency:
   max_signals_per_day: 3
   max_signals_per_symbol_per_day: 1
 
-# ADAPTIVE LEARNING (Reservado para futura IA)
-adaptive_learning:
-  enabled: false
+# LEARNING ENGINES (✅ IMPLEMENTADOS)
+learning_engines:
+  enabled: true
 
-  # Cuando se habilite, estos módulos aprenderán de resultados
-  modules_for_adaptation:
-    - "ema_filter"
-    - "rsi_filter"
-    - "momentum_filter"
+  # Motor 1: Supervised Learning
+  supervised:
+    enabled: true
+    algorithm: "random_forest" # 'random_forest' | 'xgboost' | 'gradient_boosting' | 'neural_net'
+    optimize_thresholds: true
+    threshold_params:
+      rsi_buy_min: { "min": 30, "max": 50, "step": 2 }
+      rsi_buy_max: { "min": 60, "max": 80, "step": 2 }
+      momentum_threshold: { "min": 0.01, "max": 0.03, "step": 0.005 }
+      ema_distance: { "min": 0.002, "max": 0.01, "step": 0.001 }
 
-  adaptation_method: "reinforcement_learning" # 'rl' | 'genetic_algorithm' | 'neural_net'
+  # Motor 2: Deep Learning
+  deep:
+    enabled: true
+    architecture: "lstm" # 'lstm' | 'gru' | 'transformer'
+    sequence_length: 60 # Ventana temporal
+    hidden_size: 64
+    num_layers: 2
+    dropout: 0.2
+    epochs: 50
+    batch_size: 32
+    learning_rate: 0.001
 
-  parameters_to_adapt:
-    thresholds: true
-    period: false # Mantener períodos fijos por ahora
-    combination_weights: true # Aprender pesos para combinación MAJORITY
+  # Motor 3: Reinforcement Learning
+  reinforcement:
+    enabled: true
+    algorithm: "ppo" # 'ppo' | 'a2c' | 'ddpg'
+    training_steps: 100000
+    learning_rate: 3e-4
+    action_space:
+      ["HOLD", "BUY", "SELL", "ADJUST_STOP_LOSS", "ADJUST_TAKE_PROFIT"]
 
-  learning_window:
-    lookback_days: 90
-    reoptimize_frequency_days: 30
-    min_trades_for_learning: 20
+  # Motor 4: Transformer
+  transformer:
+    enabled: true
+    sequence_length: 30 # Más corto que LSTM para eficiencia
+    d_model: 128
+    nhead: 8
+    num_layers: 4
+    dropout: 0.1
+    epochs: 30
+    batch_size: 32
+
+  # Cómo los Learning Engines modifican la estrategia:
+  # 1. Predicción de éxito de trade (probabilidad)
+  # 2. Ajuste dinámico de thresholds de filtros (filter_adjustments)
+  # 3. Sugerencias de acción (BUY/SELL/HOLD)
+  # 4. Ajustes de riesgo (stop-loss, take-profit dinámicos)
+
+  # Entrenamiento automático:
+  auto_train: true
+  min_trades_for_training: 20
+  retrain_frequency_days: 7
+  incremental_learning: true # Reutiliza pesos previos
 ```
 
 ---
@@ -551,9 +633,198 @@ class BaseFilter:
 
 ---
 
-## Evolución con IA (Futuro)
+## Learning Engines - Implementación Real ✅
 
-### Opción 1: Reinforcement Learning (RL)
+Los Learning Engines están **completamente implementados** y funcionando en el sistema.
+
+### Arquitectura de Integración
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│           ModularMomentumStrategy.generate_signals()        │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+        ┌──────────────┴──────────────┐
+        │                             │
+        ▼                             ▼
+┌──────────────────┐      ┌─────────────────────┐
+│ 1. Calcular       │      │ 2. Evaluar Filtros  │
+│    Indicadores    │      │    Modulares        │
+└─────────┬────────┘      └──────────┬──────────┘
+          │                          │
+          └──────────┬─────────────────┘
+                     │
+                     ▼
+        ┌────────────────────────────┐
+        │ 3. Inicializar Learning     │
+        │    Engine (Lazy Loading)    │
+        └────────────┬─────────────────┘
+                     │
+        ┌────────────┴────────────┐
+        │                          │
+        ▼                          ▼
+┌──────────────────┐    ┌──────────────────────┐
+│ Si está entrenado │    │ Si NO está entrenado │
+│ → Predecir        │    │ → Auto-train o usar  │
+│ → Aplicar ajustes │    │   predicción neutral  │
+└──────────────────┘    └──────────────────────┘
+```
+
+### Flujo de Trabajo de Learning Engines
+
+1. **Inicialización Lazy**:
+
+   ```python
+   # El learning engine NO se inicializa en __init__
+   # Se inicializa solo cuando se necesita (primera señal)
+   if self._learning_config and self.learning_engine is None:
+       self._initialize_learning_engine()
+   ```
+
+2. **Preparación de Features**:
+
+   - **Supervised/Reinforcement**: Features estándar (indicadores, filtros, contexto)
+   - **Deep/Transformer**: Secuencias históricas (60 o 30 timesteps)
+
+3. **Predicción y Ajustes**:
+
+   ```python
+   prediction = learning_engine.predict(features)
+   # prediction = {
+   #     'success_probability': 0.75,
+   #     'confidence': 0.85,
+   #     'filter_adjustments': {
+   #         'rsi_filter': {'rsi_buy_min': -5, 'momentum_threshold': -0.005},
+   #         'ema_filter': {'min_distance_pct': -0.001}
+   #     },
+   #     'recommended_action': 'BUY'
+   # }
+   ```
+
+4. **Aplicación de Ajustes**:
+   ```python
+   self._apply_learning_adjustments(prediction)
+   # Ajusta thresholds de filtros en tiempo real
+   # Modifica min_success_probability
+   # Aplica threshold_adjustments globales
+   ```
+
+### Motor 1: Supervised Learning
+
+**Implementación**: `SupervisedLearningEngine`
+
+- **Algoritmos**: RandomForest, XGBoost, GradientBoosting, Neural Network
+- **Entrada**: Features de indicadores técnicos y resultados de filtros
+- **Salida**: Probabilidad de éxito del trade + ajustes de thresholds
+- **Uso**: Filtrado de señales y optimización de parámetros
+
+### Motor 2: Deep Learning
+
+**Implementación**: `DeepLearningEngine`
+
+- **Arquitecturas**: LSTM, GRU (con soporte para Transformer)
+- **Entrada**: Secuencias históricas de precios, volumen, indicadores (60 timesteps)
+- **Salida**: Predicción de dirección de precio + ajustes de filtros
+- **Uso**: Detección de patrones complejos en series temporales
+- **Características especiales**:
+  - Entrenamiento en subprocess para evitar bloqueos (mutex.cc)
+  - Soporte para carga incremental de pesos
+  - Normalización automática de features
+
+### Motor 3: Reinforcement Learning
+
+**Implementación**: `ReinforcementLearningEngine`
+
+- **Algoritmos**: PPO (Proximal Policy Optimization), A2C, DDPG
+- **Entorno**: `TradingEnv` con estados (indicadores, posición, equity)
+- **Acciones**: BUY, SELL, HOLD, ADJUST_STOP_LOSS, ADJUST_TAKE_PROFIT
+- **Recompensa**: P&L ajustado por riesgo, Sharpe ratio
+- **Uso**: Aprendizaje de políticas óptimas de trading y gestión de riesgo
+
+### Motor 4: Transformer
+
+**Implementación**: `TransformerEngine`
+
+- **Arquitectura**: Transformer encoder con atención multi-head
+- **Entrada**: Secuencias históricas (30 timesteps) más cortas que Deep Learning
+- **Salida**: Predicción de movimiento de precio + confidence
+- **Uso**: Captura de dependencias complejas y relaciones no lineales
+- **Ventaja**: Eficiente en secuencias más cortas, mejor paralelización
+
+### Entrenamiento y Persistencia
+
+- **Entrenamiento Automático**: Se entrena automáticamente con datos históricos si no está entrenado
+- **Aprendizaje Incremental**: Reutiliza pesos de entrenamientos anteriores (fine-tuning)
+- **Persistencia**: Los pesos se guardan automáticamente después de cada backtest
+- **Re-entrenamiento**: El `LearningEngineUpdater` reentrena periódicamente (cada 7 días por defecto)
+
+---
+
+## Otras Estrategias Implementadas
+
+### MeanReversionStrategy
+
+**Principio**: Comprar cuando el precio está muy por debajo de su media (oversold) y vender cuando está muy por encima (overbought).
+
+**Indicadores Clave**:
+
+- **Z-score**: Mide cuántas desviaciones estándar está el precio de su media
+- **ATR**: Filtro de volatilidad mínima
+- **Price Range**: Detecta rangos de trading válidos
+
+**Configuración Típica**:
+
+```yaml
+mean_reversion:
+  z_score_threshold: 1.0
+  min_z_score: 1.5
+  lookback_period: 60
+  volatility_threshold: 0.015
+  atr_floor: 0.01
+```
+
+**Uso Ideal**: Mercados laterales (range-bound), baja volatilidad
+
+### PairsTradingStrategy
+
+**Principio**: Identificar pares de activos cointegrados y comerciar cuando el spread se desvía de su media histórica.
+
+**Indicadores Clave**:
+
+- **Cointegración**: Prueba estadística (ADF, Johansen) para detectar relación estable
+- **Correlación**: Correlación mínima requerida (0.7+)
+- **Spread**: Desviación del spread vs. su media histórica
+- **Hedge Ratio**: Ratio óptimo entre activos para posición neutral
+
+**Configuración Típica**:
+
+```yaml
+pairs_trading:
+  cointegration_threshold: 0.05
+  spread_threshold: 2.0
+  min_correlation: 0.7
+  min_spread_z_score: 2.0
+  max_pair_exposure: 0.20
+```
+
+**Uso Ideal**: Reducción de riesgo sistemático, estrategias market-neutral
+
+---
+
+## Comparativa de Estrategias
+
+| Estrategia              | Complejidad | Overhead | Mejor Régimen      | Learning Engines |
+| ----------------------- | ----------- | -------- | ------------------ | ---------------- |
+| MomentumStrategy        | Baja        | Bajo     | Tendencias fuertes | ❌               |
+| ModularMomentumStrategy | Alta        | Alto     | Multi-régimen      | ✅ 4 engines     |
+| MeanReversionStrategy   | Media       | Medio    | Rangos laterales   | ❌               |
+| PairsTradingStrategy    | Media-Alta  | Medio    | Pares cointegrados | ❌               |
+
+---
+
+## Evolución con IA - Implementación Futura (Opcional)
+
+### Opción 1: Genetic Algorithm para Optimización
 
 ```python
 class AdaptiveFilterManager:
@@ -809,4 +1080,24 @@ app/strategies/momentum_modular/
 
 5. **Debugging**: Cada módulo debe retornar metadata detallada para debugging y análisis post-backtest.
 
-Este diseño permite una estrategia completamente modular, adaptativa y preparada para evolución con IA en el futuro.
+Este diseño permite un sistema completo de estrategias modulares, adaptativas y con soporte completo para Learning Engines.
+
+## Resumen de Implementación
+
+### ✅ Completamente Implementado
+
+- ✅ **ModularMomentumStrategy** con 6 filtros modulares
+- ✅ **4 Learning Engines** (Supervised, Deep, Reinforcement, Transformer)
+- ✅ **Market Context Analyzer** para detección de régimen
+- ✅ **Aplicación dinámica de ajustes** de Learning Engines
+- ✅ **Entrenamiento automático** e incremental
+- ✅ **MomentumStrategy** básica
+- ✅ **MeanReversionStrategy**
+- ✅ **PairsTradingStrategy**
+
+### 🔄 En Desarrollo / Mejoras Futuras
+
+- 🔄 Optimización de hiperparámetros automática (Grid Search, Bayesian)
+- 🔄 Genetic Algorithm para optimización de parámetros
+- 🔄 Meta-Learning para selección automática de estrategia según régimen
+- 🔄 Multi-strategy portfolio con rebalanceo dinámico
