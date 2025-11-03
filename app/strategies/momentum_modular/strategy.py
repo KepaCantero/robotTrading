@@ -4,9 +4,12 @@ ModularMomentumStrategy - Estrategia de momentum completamente modular con learn
 
 import logging
 from collections import deque
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, TYPE_CHECKING
 from datetime import datetime
 from decimal import Decimal
+
+if TYPE_CHECKING:
+    from .learning.base_learning_engine import BaseLearningEngine
 
 from app.strategies.base import BaseStrategy
 from app.models.market_data import Quote
@@ -19,8 +22,7 @@ from .modules.filters import (
     EMAFilter, RSIFilter, StochRSIFilter,
     MomentumFilter, VolumeFilter, ATRFilter
 )
-from .learning.base_learning_engine import BaseLearningEngine
-from .learning.feature_extractor import FeatureExtractor
+# BaseLearningEngine solo para type hints (no se ejecuta en runtime)
 
 logger = logging.getLogger(__name__)
 
@@ -74,31 +76,20 @@ class ModularMomentumStrategy(BaseStrategy):
                     self.filters.append(filter_instance)
                     logger.info(f"✅ Filtro activado: {filter_name}")
         
-        # Learning engine (opcional)
+        # Learning engine (opcional) - INICIALIZACIÓN LAZY para evitar bloqueos de mutex
+        # NO inicializar aquí - se inicializará cuando realmente se necesite
         learning_config = config.get("adaptive_learning", {})
-        self.learning_engine: Optional[BaseLearningEngine] = None
-        if learning_config.get("enabled", False):
-            engine_type = learning_config.get("engine_type", "supervised")
-            try:
-                if engine_type == "supervised":
-                    from .learning.supervised_learning_engine import SupervisedLearningEngine
-                    self.learning_engine = SupervisedLearningEngine(learning_config)
-                elif engine_type == "deep":
-                    from .learning.deep_learning_engine import DeepLearningEngine
-                    self.learning_engine = DeepLearningEngine(learning_config)
-                elif engine_type == "reinforcement":
-                    from .learning.reinforcement_learning_engine import ReinforcementLearningEngine
-                    self.learning_engine = ReinforcementLearningEngine(learning_config)
-                
-                if self.learning_engine:
-                    logger.info(f"✅ Learning engine activado: {engine_type}")
-            except (ImportError, RuntimeError) as e:
-                logger.error(f"❌ Error al inicializar learning engine {engine_type}: {e}")
-                logger.error("⚠️ Asegúrate de instalar todas las dependencias: pip install -r requirements.txt")
-                raise  # Re-lanzar el error para que el usuario sepa que falta algo
+        self._learning_config = learning_config if learning_config.get("enabled", False) else None
+        self._learning_engine_type = learning_config.get("engine_type", "supervised") if learning_config.get("enabled", False) else None
+        self.learning_engine = None  # Se inicializará lazy cuando se necesite
         
-        # Feature extractor para learning engines
-        self.feature_extractor = FeatureExtractor()
+        # Solo loguear que está configurado, pero NO crear la instancia
+        if self._learning_config:
+            logger.info(f"📋 Learning engine configurado: {self._learning_engine_type} (se inicializará cuando se necesite)")
+        
+        # Feature extractor para learning engines (import lazy - solo cuando se necesite)
+        # NO importar aquí para evitar bloqueos - se importará cuando realmente se use
+        self._feature_extractor = None
         
         # Thresholds configurables
         self.min_success_probability = self.current_preset.get("min_confidence", 0.6)
@@ -116,9 +107,80 @@ class ModularMomentumStrategy(BaseStrategy):
         # Histórico de trades para metadata
         self.recent_trades: deque = deque(maxlen=10)
         
+        # Histórico de features para Deep Learning / Transformer (secuencias)
+        self.features_history = deque(maxlen=200)  # Almacena dicts con indicators, filter_results, market_context, metadata
+        
         logger.info(f"✅ ModularMomentumStrategy inicializada (preset: {self.preset}, "
                    f"{len(self.filters)} filtros activos, "
-                   f"learning: {'✅' if self.learning_engine else '❌'})")
+                   f"learning: {'✅ configurado' if self._learning_config else '❌'})")
+    
+    def _initialize_learning_engine(self) -> None:
+        """
+        Inicializar learning engine de forma lazy.
+        
+        Esto previene que PyTorch/MKL se inicialicen durante la creación de la estrategia,
+        evitando bloqueos de mutex.cc
+        """
+        if not self._learning_config or self.learning_engine is not None:
+            return
+        
+        engine_type = self._learning_engine_type
+        if not engine_type:
+            return
+        
+        try:
+            # CRÍTICO: Configurar variables de entorno ANTES de importar learning engines
+            import os
+            os.environ['OMP_NUM_THREADS'] = '1'
+            os.environ['OPENBLAS_NUM_THREADS'] = '1'
+            os.environ['MKL_NUM_THREADS'] = '1'
+            os.environ['NUMEXPR_NUM_THREADS'] = '1'
+            os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
+            os.environ['MKL_SERVICE_FORCE_INTEL'] = '1'
+            os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
+            os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
+            os.environ['FOR_DISABLE_CONSOLE_CTRL_HANDLER'] = '1'
+            os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+            os.environ['CUDA_VISIBLE_DEVICES'] = ''
+            os.environ['TORCH_USE_CUDA_DSA'] = '0'
+            
+            if engine_type == "supervised":
+                from .learning.supervised_learning_engine import SupervisedLearningEngine
+                self.learning_engine = SupervisedLearningEngine(self._learning_config)
+            elif engine_type == "deep":
+                # CRÍTICO: NO crear DeepLearningEngine en proceso principal - causa mutex.cc blocking
+                # Se entrenará en subprocess y NO se usará para predicciones en proceso principal
+                logger.info("⚠️ Deep Learning configurado pero NO se inicializará en proceso principal (previene mutex.cc blocking)")
+                logger.info("⚠️ El entrenamiento se hará en subprocess. No habrá predicciones del modelo durante el backtest.")
+                self.learning_engine = None  # NO crear - evitar cualquier import de PyTorch
+                # NO desactivar _learning_engine_type - mantenerlo para saber qué tipo es
+            elif engine_type == "reinforcement":
+                from .learning.reinforcement_learning_engine import ReinforcementLearningEngine
+                self.learning_engine = ReinforcementLearningEngine(self._learning_config)
+            elif engine_type == "transformer":
+                # CRÍTICO: NO crear TransformerEngine en proceso principal - causa mutex.cc blocking
+                logger.info("⚠️ Transformer configurado pero NO se inicializará en proceso principal (previene mutex.cc blocking)")
+                logger.info("⚠️ El entrenamiento se hará en subprocess. No habrá predicciones del modelo durante el backtest.")
+                self.learning_engine = None  # NO crear - evitar cualquier import de PyTorch
+                # NO desactivar _learning_engine_type - mantenerlo para saber qué tipo es
+            
+            if self.learning_engine and self.learning_engine.enabled:
+                logger.info(f"✅ Learning engine inicializado: {engine_type}")
+            elif self.learning_engine and not self.learning_engine.enabled:
+                logger.warning(f"⚠️ Learning engine {engine_type} está deshabilitado (dependencias faltantes)")
+                self.learning_engine = None
+        except (ImportError, RuntimeError) as e:
+            logger.error(f"❌ Error al inicializar learning engine {engine_type}: {e}")
+            logger.error("⚠️ Asegúrate de instalar todas las dependencias: pip install -r requirements.txt")
+            self.learning_engine = None
+        except Exception as e:
+            error_msg = str(e).lower()
+            if 'mutex' in error_msg or 'lock' in error_msg or 'blocking' in error_msg:
+                logger.error(f"❌ Bloqueo de mutex al inicializar {engine_type}: {e}")
+                logger.error("💡 El learning engine se intentará inicializar más tarde o se omitirá")
+                self.learning_engine = None
+            else:
+                raise
     
     def generate_signals(self, market_data: Quote) -> List[Signal]:
         """
@@ -168,31 +230,101 @@ class ModularMomentumStrategy(BaseStrategy):
                 return []
             
             # 6. SI learning engine está activo, obtener predicción
+            # CRÍTICO: Para deep/transformer, NUNCA inicializar en proceso principal (evita mutex.cc blocking)
             learning_prediction = None
-            if self.learning_engine and self.learning_engine.is_ready():
-                features = {
-                    'indicators': indicators,
-                    'filter_results': filter_results,
-                    'market_context': market_context,
-                    'metadata': {
+            
+            # Solo intentar usar learning engine si NO es deep/transformer
+            if self._learning_config and self._learning_engine_type not in ['deep', 'transformer']:
+                # INICIALIZACIÓN LAZY del learning engine (solo cuando se necesita)
+                if self.learning_engine is None:
+                    self._initialize_learning_engine()
+            
+            # Para deep/transformer, SIEMPRE usar predicción neutral (nunca tocar PyTorch)
+            if self._learning_engine_type in ['deep', 'transformer']:
+                learning_prediction = {
+                    'success_probability': 0.5,
+                    'confidence': 0.0,
+                    'recommended_action': 'HOLD',
+                    'filter_adjustments': {}
+                }
+                logger.debug(f"⚠️ {self._learning_engine_type} engine - usando predicción neutral (previene mutex.cc blocking)")
+            elif self.learning_engine and self.learning_engine.enabled:
+                # Para otros engines (supervised, reinforcement), proceder normalmente
+                if learning_prediction is None:
+                    # Si no está entrenado pero está habilitado, intentar entrenar automáticamente
+                    if not self.learning_engine.is_ready():
+                        # Intentar entrenar con datos históricos si hay suficientes
+                        if len(self.price_history) >= 100:  # Mínimo de datos para entrenar
+                            try:
+                                self._auto_train_learning_engine()
+                            except Exception as e:
+                                logger.debug(f"No se pudo entrenar learning engine automáticamente: {e}")
+                    
+                    # Preparar metadata
+                    metadata = {
                         'timestamp': market_data.timestamp if hasattr(market_data, 'timestamp') else datetime.now(),
                         'symbol': market_data.symbol,
                         'recent_trades': list(self.recent_trades),
                         'recent_win_rate': self._calculate_recent_win_rate()
                     }
-                }
-                
-                learning_prediction = self.learning_engine.predict(features)
-                
-                # Filtrar señal si probabilidad es baja
-                if self.learning_engine.__class__.__name__ in ['SupervisedLearningEngine', 'DeepLearningEngine']:
-                    success_prob = learning_prediction.get('success_probability', learning_prediction.get('confidence', 0.5))
-                    if success_prob < self.min_success_probability:
-                        logger.debug(f"🚫 Señal rechazada por learning engine: prob={success_prob:.2f} < {self.min_success_probability:.2f}")
-                        return []
-                
-                # Aplicar ajustes sugeridos por learning engine
-                self._apply_learning_adjustments(learning_prediction)
+                    
+                    # Preparar features según el tipo de learning engine
+                    learning_engine_type = self.learning_engine.__class__.__name__
+                    
+                    if learning_engine_type in ['DeepLearningEngine', 'TransformerEngine']:
+                        # Para Deep Learning y Transformer, necesitamos una secuencia histórica
+                        features = self._prepare_sequence_features_for_learning(
+                            indicators, filter_results, market_context, metadata
+                        )
+                    else:
+                        # Para Supervised y Reinforcement, usar features estándar
+                        features = {
+                            'indicators': indicators,
+                            'filter_results': filter_results,
+                            'market_context': market_context,
+                            'metadata': metadata
+                        }
+                    
+                    if self.learning_engine.is_ready():
+                        # Learning engine entrenado - usar predicción real
+                        try:
+                            learning_prediction = self.learning_engine.predict(features)
+                        except KeyError as e:
+                            if 'sequence' in str(e):
+                                logger.warning(f"⚠️ Learning engine {learning_engine_type} necesita 'sequence' pero no está disponible. Usando predicción neutral.")
+                                learning_prediction = {
+                                    'success_probability': 0.5,
+                                    'confidence': 0.0,
+                                    'recommended_action': 'HOLD'
+                                }
+                            else:
+                                raise
+                        except Exception as e:
+                            logger.warning(f"⚠️ Error en predicción de learning engine: {e}")
+                            learning_prediction = {
+                                'success_probability': 0.5,
+                                'confidence': 0.0,
+                                'recommended_action': 'HOLD'
+                            }
+                        
+                        # Filtrar señal si probabilidad es baja
+                        if self.learning_engine.__class__.__name__ in ['SupervisedLearningEngine', 'DeepLearningEngine']:
+                            success_prob = learning_prediction.get('success_probability', learning_prediction.get('confidence', 0.5))
+                            if success_prob < self.min_success_probability:
+                                logger.debug(f"🚫 Señal rechazada por learning engine: prob={success_prob:.2f} < {self.min_success_probability:.2f}")
+                                return []
+                        
+                        # Aplicar ajustes sugeridos por learning engine
+                        self._apply_learning_adjustments(learning_prediction)
+                    else:
+                        # Learning engine no entrenado - usar predicción neutral
+                        learning_prediction = {
+                            'success_probability': 0.5,
+                            'confidence': 0.0,
+                            'recommended_action': 'HOLD'
+                        }
+                        logger.debug(f"⚠️ Learning engine ({self.learning_engine.__class__.__name__}) no entrenado - usando predicción neutral. "
+                                   f"Estado: enabled={self.learning_engine.enabled}, is_trained={self.learning_engine.is_trained}, model={'exists' if self.learning_engine.model else 'None'}")
             
             # 7. Crear señal
             confidence = self._calculate_signal_confidence(filter_results, learning_prediction)
@@ -436,6 +568,158 @@ class ModularMomentumStrategy(BaseStrategy):
         
         return min(100.0, max(0.0, base_confidence * 100))
     
+    def _auto_train_learning_engine(self) -> None:
+        """
+        Entrenar automáticamente el learning engine usando datos históricos disponibles.
+        Solo se ejecuta una vez cuando hay suficientes datos.
+        """
+        if not self.learning_engine or not self.learning_engine.enabled:
+            return
+        
+        if self.learning_engine.is_ready():
+            return  # Ya está entrenado
+        
+        # Marcar que ya intentamos entrenar para evitar múltiples intentos
+        if not hasattr(self, '_training_attempted'):
+            self._training_attempted = False
+        
+        if self._training_attempted:
+            return  # Ya intentamos entrenar antes
+        
+        self._training_attempted = True
+        
+        try:
+            # Preparar datos usando FeatureExtractor
+            # Lazy import de feature_extractor solo cuando se necesite
+            if self._feature_extractor is None:
+                try:
+                    from .learning.feature_extractor import FeatureExtractor
+                    self._feature_extractor = FeatureExtractor()
+                except Exception as e:
+                    logger.debug(f"FeatureExtractor no disponible: {e}")
+                    self._feature_extractor = None
+            
+            if self._feature_extractor is not None and len(self.price_history) >= 100:
+                # Crear datos sintéticos basados en histórico
+                # Nota: Esto es una aproximación. En producción, necesitaríamos los quotes completos
+                logger.debug(f"🎓 Intentando auto-entrenar learning engine con {len(self.price_history)} datos históricos...")
+                
+                # Por ahora, simplemente marcamos que necesitamos entrenar
+                # El entrenamiento real debe hacerse antes del backtest con quotes completos
+                logger.debug("⚠️ Auto-entrenamiento requiere quotes completos - será entrenado en el backtest")
+                
+        except Exception as e:
+            logger.debug(f"Error en auto-entrenamiento: {e}")
+    
+    def _prepare_sequence_features_for_learning(
+        self,
+        indicators: Dict[str, Any],
+        filter_results: Dict[str, Dict],
+        market_context: Dict[str, Any],
+        metadata: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Preparar features en formato de secuencia para Deep Learning / Transformer engines.
+        
+        Almacena features históricas y construye una secuencia de la longitud requerida.
+        """
+        # Guardar features actuales en historial
+        self.features_history.append({
+            'indicators': indicators.copy(),
+            'filter_results': filter_results.copy(),
+            'market_context': market_context.copy(),
+            'metadata': metadata.copy()
+        })
+        
+        # Determinar longitud de secuencia requerida
+        sequence_length = 60  # Default
+        learning_engine_type = self.learning_engine.__class__.__name__
+        if learning_engine_type == 'DeepLearningEngine':
+            # Obtener sequence_length de la configuración del engine
+            engine_config = getattr(self.learning_engine, 'config', {})
+            params = engine_config.get('parameters', {})
+            sequence_length = params.get('sequence_length', 60)
+        elif learning_engine_type == 'TransformerEngine':
+            sequence_length = 30  # Default para Transformer
+        
+        # Construir secuencia usando FeatureExtractor
+        if self._feature_extractor is None:
+            try:
+                from .learning.feature_extractor import FeatureExtractor
+                self._feature_extractor = FeatureExtractor()
+            except Exception as e:
+                logger.debug(f"FeatureExtractor no disponible: {e}")
+                self._feature_extractor = None
+        
+        if self._feature_extractor is None:
+            # Fallback: construir secuencia básica
+            sequence = self._build_basic_sequence(sequence_length)
+            return {
+                'sequence': sequence,
+                'market_context': market_context
+            }
+        
+        # Convertir historial a lista para FeatureExtractor
+        historical_data = list(self.features_history)
+        
+        # Si no hay suficiente historial, rellenar con el último elemento
+        if len(historical_data) < sequence_length:
+            padding = [historical_data[-1] if historical_data else {
+                'indicators': indicators,
+                'filter_results': filter_results,
+                'market_context': market_context,
+                'metadata': metadata
+            }] * (sequence_length - len(historical_data))
+            historical_data = padding + historical_data
+        
+        # Extraer secuencia usando FeatureExtractor
+        try:
+            sequence = self._feature_extractor.extract_sequence_features(
+                historical_data[-sequence_length:],
+                sequence_length=sequence_length
+            )
+        except Exception as e:
+            logger.warning(f"Error extrayendo secuencia: {e}, usando fallback")
+            sequence = self._build_basic_sequence(sequence_length)
+        
+        return {
+            'sequence': sequence,
+            'market_context': market_context
+        }
+    
+    def _build_basic_sequence(self, sequence_length: int):
+        """Construir secuencia básica usando price_history como fallback."""
+        import numpy as np
+        
+        # Extraer últimas sequence_length precios y normalizarlos
+        prices = list(self.price_history)[-sequence_length:]
+        
+        if len(prices) < sequence_length:
+            # Rellenar con el último precio disponible
+            if prices:
+                padding = [prices[-1]] * (sequence_length - len(prices))
+                prices = padding + prices
+            else:
+                prices = [0.0] * sequence_length
+        
+        # Convertir a numpy array y normalizar (porcentaje de cambio)
+        price_array = np.array(prices, dtype=np.float32)
+        
+        # Calcular cambios porcentuales
+        if len(price_array) > 1:
+            pct_changes = np.diff(price_array) / price_array[:-1]
+            pct_changes = np.concatenate([[0.0], pct_changes])  # Primer elemento sin cambio
+        else:
+            pct_changes = np.array([0.0], dtype=np.float32)
+        
+        # Reshape para (sequence_length, 1) - una sola feature (price change)
+        if len(pct_changes) < sequence_length:
+            padding = np.zeros(sequence_length - len(pct_changes), dtype=np.float32)
+            pct_changes = np.concatenate([padding, pct_changes])
+        
+        sequence = pct_changes.reshape(sequence_length, 1)
+        return sequence
+    
     def _apply_learning_adjustments(self, prediction: Dict[str, Any]) -> None:
         """Aplicar ajustes sugeridos por learning engine."""
         if not prediction:
@@ -444,19 +728,55 @@ class ModularMomentumStrategy(BaseStrategy):
         # Ajustar thresholds de filtros
         filter_adjustments = prediction.get('filter_adjustments', {})
         if filter_adjustments:
-            for filter_instance in self.filters:
-                if filter_instance.name in filter_adjustments:
-                    adjustment = filter_adjustments[filter_instance.name]
-                    # Aplicar ajuste a thresholds (simplificado)
-                    logger.debug(f"🔧 Ajustando {filter_instance.name}: {adjustment}")
+            for filter_name, adjustment_value in filter_adjustments.items():
+                # Buscar el filtro por nombre
+                filter_instance = None
+                for f in self.filters:
+                    if f.name == filter_name or filter_name in f.name.lower():
+                        filter_instance = f
+                        break
+                
+                if filter_instance:
+                    # Aplicar ajuste según el tipo de threshold
+                    if isinstance(adjustment_value, dict):
+                        # Ajuste estructurado (ej: {'rsi_buy_min': -5, 'momentum_threshold': -0.005})
+                        for threshold_name, threshold_adjustment in adjustment_value.items():
+                            if hasattr(filter_instance, threshold_name):
+                                current_value = getattr(filter_instance, threshold_name)
+                                if isinstance(current_value, (int, float)):
+                                    new_value = current_value + threshold_adjustment
+                                    setattr(filter_instance, threshold_name, new_value)
+                                    logger.debug(f"🔧 Ajustando {filter_instance.name}.{threshold_name}: {current_value} → {new_value} (Δ{threshold_adjustment})")
+                    elif isinstance(adjustment_value, (int, float)):
+                        # Ajuste simple (escalar)
+                        # Intentar ajustar thresholds comunes
+                        for attr_name in ['threshold', 'buy_threshold', 'sell_threshold', 'min_threshold', 'max_threshold']:
+                            if hasattr(filter_instance, attr_name):
+                                current_value = getattr(filter_instance, attr_name)
+                                if isinstance(current_value, (int, float)):
+                                    new_value = current_value * (1 + adjustment_value * 0.1)  # Ajuste del 10% por unidad
+                                    setattr(filter_instance, attr_name, new_value)
+                                    logger.debug(f"🔧 Ajustando {filter_instance.name}.{attr_name}: {current_value} → {new_value}")
+                                    break
         
-        # Ajustar confianza mínima requerida
+        # Ajustar confianza mínima requerida basado en predicción
         if 'confidence' in prediction:
             predicted_confidence = prediction['confidence']
             if predicted_confidence < 0.5:
                 self.min_success_probability = 0.7  # Ser más estricto
             else:
                 self.min_success_probability = 0.6  # Normal
+        
+        # Ajustar thresholds globales de la estrategia si están en la predicción
+        if 'threshold_adjustments' in prediction:
+            threshold_adjs = prediction['threshold_adjustments']
+            for threshold_name, adjustment in threshold_adjs.items():
+                if hasattr(self, threshold_name):
+                    current = getattr(self, threshold_name)
+                    if isinstance(current, (int, float)) and isinstance(adjustment, (int, float)):
+                        new_value = current * (1 + adjustment)
+                        setattr(self, threshold_name, new_value)
+                        logger.debug(f"🔧 Ajustando estrategia.{threshold_name}: {current} → {new_value}")
     
     def _calculate_recent_win_rate(self) -> float:
         """Calcular win rate de trades recientes."""

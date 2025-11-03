@@ -89,10 +89,19 @@ class SupervisedLearningEngine(BaseLearningEngine):
         Returns:
             Métricas de entrenamiento
         """
-        if not SKLEARN_AVAILABLE:
+        # Verificar disponibilidad dinámicamente para asegurar que sklearn está disponible
+        # Esto maneja casos donde SKLEARN_AVAILABLE puede ser incorrecto o sklearn se importó después
+        try:
+            # Verificar que sklearn está realmente disponible
+            import sklearn
+            # Verificar que las clases específicas están disponibles
+            from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier  # noqa: F401
+            from sklearn.model_selection import train_test_split  # noqa: F401
+        except ImportError as e:
             raise ImportError(
-                "scikit-learn es requerido para SupervisedLearningEngine. "
-                "Instala con: pip install scikit-learn>=1.3.0"
+                f"scikit-learn es requerido para SupervisedLearningEngine. "
+                f"Instala con: pip install scikit-learn>=1.3.0\n"
+                f"Error al verificar: {e}"
             )
         
         # Preparar datos
@@ -104,10 +113,30 @@ class SupervisedLearningEngine(BaseLearningEngine):
         if isinstance(y_train, pd.Series):
             y_train = y_train.values
         
+        # Validar que hay suficientes datos y múltiples clases
+        if len(X_train) == 0 or len(y_train) == 0:
+            logger.warning("Datos de entrenamiento vacíos")
+            return {'error': 'empty_data'}
+        
+        unique_labels = len(np.unique(y_train))
+        if unique_labels < 2:
+            logger.warning(f"Solo hay {unique_labels} clase(s) en los labels. Se necesita al menos 2 clases para entrenamiento supervisado.")
+            logger.warning(f"  Total samples: {len(y_train)}, Labels: {np.unique(y_train, return_counts=True)}")
+            # No podemos entrenar sin múltiples clases - retornar error
+            return {
+                'error': 'insufficient_classes',
+                'message': f'Solo hay {unique_labels} clase(s) en los labels. Se necesita al menos 2 clases.',
+                'unique_labels': int(unique_labels),
+                'total_samples': len(y_train)
+            }
+        
         # Split de validación si no se proporciona
         if validation_data is None:
+            # Solo usar stratify si hay más de una clase (evita error con una sola clase)
+            unique_classes = len(np.unique(y_train))
+            stratify_param = y_train if unique_classes > 1 else None
             X_train, X_val, y_train, y_val = train_test_split(
-                X_train, y_train, test_size=0.2, random_state=42, stratify=y_train
+                X_train, y_train, test_size=0.2, random_state=42, stratify=stratify_param
             )
         else:
             X_val = validation_data['features']
@@ -243,7 +272,13 @@ class SupervisedLearningEngine(BaseLearningEngine):
         else:
             # Evaluación para sklearn/xgboost
             if hasattr(self.model, 'predict_proba'):
-                predictions = self.model.predict_proba(X)[:, 1]
+                proba = self.model.predict_proba(X)
+                # Verificar si solo hay una clase (proba tiene shape [n_samples, 1])
+                # En ese caso, usar la única columna disponible
+                if proba.shape[1] > 1:
+                    predictions = proba[:, 1]
+                else:
+                    predictions = proba[:, 0]
             else:
                 predictions = self.model.predict(X)
             y_pred = self.model.predict(X)
@@ -255,11 +290,22 @@ class SupervisedLearningEngine(BaseLearningEngine):
             'f1_score': float(f1_score(y, y_pred, zero_division=0))
         }
         
-        # AUC si hay probabilidades
-        if len(predictions.shape) == 1 or predictions.shape[1] > 1:
+        # AUC si hay probabilidades y más de una clase
+        unique_labels = len(np.unique(y))
+        if unique_labels > 1:
             try:
-                metrics['roc_auc'] = float(roc_auc_score(y, predictions if predictions.ndim == 1 else predictions[:, 1]))
-            except:
+                if predictions.ndim == 1:
+                    # Ya es un array 1D
+                    metrics['roc_auc'] = float(roc_auc_score(y, predictions))
+                elif predictions.shape[1] > 1:
+                    # Múltiples clases, usar la clase positiva
+                    metrics['roc_auc'] = float(roc_auc_score(y, predictions[:, 1]))
+                else:
+                    # Solo una columna, usar esa
+                    metrics['roc_auc'] = float(roc_auc_score(y, predictions[:, 0]))
+            except (ValueError, IndexError) as e:
+                # Si falla (por ejemplo, solo una clase en y), simplemente no calcular AUC
+                logger.debug(f"No se pudo calcular AUC: {e}")
                 pass
         
         return metrics
@@ -330,7 +376,12 @@ class SupervisedLearningEngine(BaseLearningEngine):
         else:
             # Predicción con sklearn/xgboost
             if hasattr(self.model, 'predict_proba'):
-                prob = self.model.predict_proba([feature_vector])[0][1]
+                proba = self.model.predict_proba([feature_vector])[0]
+                # Manejar caso donde solo hay una clase
+                if len(proba) > 1:
+                    prob = proba[1]  # Clase positiva
+                else:
+                    prob = proba[0]  # Única clase disponible
             else:
                 pred = self.model.predict([feature_vector])[0]
                 prob = float(pred)

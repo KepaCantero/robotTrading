@@ -119,6 +119,49 @@ class DynamicCapitalReallocationEngine:
         # Last rebalance date
         self.last_rebalance_date: Optional[datetime] = None
     
+    def update_strategy_performance(
+        self,
+        strategy_name: str,
+        timestamp: datetime,
+        pnl: Decimal,
+        returns: Decimal,
+        total_trades: int,
+        winning_trades: int = 0,
+        losing_trades: int = 0,
+    ) -> None:
+        """
+        Update strategy performance (compatibility method for SimpleBacktester).
+        
+        Converts backtest results to PerformanceMetrics format.
+        """
+        # Calculate metrics from backtest results
+        win_rate = float(winning_trades) / total_trades if total_trades > 0 else 0.0
+        
+        # Calculate max drawdown from returns (simplified - would need equity curve for exact)
+        # For now, estimate volatility from returns
+        returns_list = [returns]  # Single return value for this period
+        
+        # Estimate volatility (simplified)
+        volatility = abs(float(returns)) if returns != 0 else 0.0
+        
+        # Estimate max drawdown (simplified - negative if loss)
+        max_drawdown = abs(float(pnl)) if pnl < 0 else 0.0
+        
+        # Calculate Sharpe ratio (simplified - would need risk-free rate and period)
+        sharpe_ratio = None  # Not calculated from single data point
+        
+        # Record performance using existing method
+        self.record_performance(
+            strategy_name=strategy_name,
+            timestamp=timestamp,
+            returns=returns_list,
+            sharpe_ratio=sharpe_ratio,
+            max_drawdown=max_drawdown,
+            win_rate=win_rate,
+            volatility=volatility,
+            total_trades=total_trades,
+        )
+    
     def record_performance(
         self,
         strategy_name: str,

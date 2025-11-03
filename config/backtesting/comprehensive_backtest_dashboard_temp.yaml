@@ -1,0 +1,269 @@
+input:
+  symbol: SNOW
+  start_date: '2024-11-01'
+  end_date: '2025-10-31'
+  initial_capital: 100000.0
+modules:
+  filters:
+    ema_filter:
+      enabled: true
+      parameters:
+        fast_period:
+          min: 10
+          max: 20
+          default: 12
+        slow_period:
+          min: 20
+          max: 50
+          default: 26
+    rsi_filter:
+      enabled: true
+      parameters:
+        period:
+          min: 10
+          max: 20
+          default: 14
+        buy_threshold:
+          min: 40
+          max: 60
+          default: 50
+        sell_threshold:
+          min: 40
+          max: 70
+          default: 70
+    stoch_rsi_filter:
+      enabled: true
+      parameters:
+        min_threshold:
+          min: 10
+          max: 30
+          default: 15
+        max_threshold:
+          min: 70
+          max: 90
+          default: 85
+    momentum_filter:
+      enabled: true
+      parameters:
+        threshold:
+          min: 0.01
+          max: 0.03
+          default: 0.015
+    volume_filter:
+      enabled: true
+      parameters:
+        threshold:
+          min: 1.0
+          max: 1.5
+          default: 1.1
+    atr_filter:
+      enabled: true
+      parameters:
+        min_threshold:
+          min: 0.005
+          max: 0.01
+          default: 0.006
+  market_detection:
+    trend_detection:
+      enabled: true
+    volatility_detection:
+      enabled: true
+    range_detection:
+      enabled: true
+learning_engines:
+  supervised:
+    enabled: false
+    parameters:
+      algorithm: random_forest
+      n_estimators:
+        min: 50
+        max: 200
+        default: 100
+      max_depth:
+        min: 5
+        max: 20
+        default: 10
+      train_test_split: 0.7
+  deep:
+    enabled: true
+    parameters:
+      architecture: lstm
+      sequence_length:
+        min: 30
+        max: 90
+        default: 60
+      hidden_size:
+        min: 32
+        max: 128
+        default: 64
+      num_layers:
+        min: 1
+        max: 4
+        default: 2
+      epochs:
+        min: 10
+        max: 100
+        default: 50
+      batch_size:
+        min: 16
+        max: 64
+        default: 32
+      learning_rate:
+        min: 0.0001
+        max: 0.01
+        default: 0.001
+  reinforcement:
+    enabled: false
+    parameters:
+      algorithm: ppo
+      training_steps:
+        min: 50000
+        max: 200000
+        default: 100000
+      learning_rate:
+        min: 0.0001
+        max: 0.001
+        default: 0.0003
+  transformer:
+    enabled: true
+    parameters:
+      nhead: 8
+      num_layers: 4
+      dim_feedforward: 256
+      dropout: 0.1
+      epochs: 50
+      batch_size: 32
+      learning_rate: 0.0001
+backtests:
+  baseline:
+    enabled: true
+    description: "L\xEDnea base con todos los m\xF3dulos activos"
+    learning_engine: null
+    use_default_thresholds: true
+  learning_engines:
+    enabled: true
+    description: Probar cada learning engine individualmente (supervised, deep, reinforcement)
+    use_multi_strategy: false
+  walk_forward:
+    enabled: false
+    description: "Evaluar optimizaci\xF3n por ventana temporal"
+    window_size_days: 90
+    step_size_days: 30
+    learning_engine: supervised
+    optimize_thresholds: false
+  monte_carlo:
+    enabled: false
+    description: Robustez frente a volatilidad y movimientos aleatorios
+    num_simulations: 100
+    use_multi_strategy: true
+    volatility_multiplier:
+      min: 0.5
+      max: 2.0
+      default: 1.0
+    price_shock_percentage: 0.05
+  transformer_optimization:
+    enabled: false
+    description: "Optimizar par\xE1metros iterativamente usando Transformer"
+    max_iterations: 50
+    convergence_threshold: 0.01
+    optimize_thresholds: true
+    optimize_learning_params: true
+  ablation:
+    enabled: false
+    description: "Medir impacto individual de cada m\xF3dulo"
+    modules_to_test:
+    - ema_filter
+    - rsi_filter
+    - stoch_rsi_filter
+    - momentum_filter
+    - volume_filter
+    - atr_filter
+    baseline_modules: []
+  grid_search:
+    enabled: false
+    description: "Identificar rangos de par\xE1metros robustos"
+    search_method: random
+    num_combinations: 100
+    optimize_metric: sharpe_ratio
+    parameters_to_optimize:
+    - rsi_filter.buy_threshold
+    - rsi_filter.sell_threshold
+    - momentum_filter.threshold
+    - volume_filter.threshold
+  out_of_sample:
+    enabled: false
+    description: "Validar robustez de par\xE1metros optimizados"
+    train_split: 0.7
+    use_optimized_params: true
+    learning_engine: supervised
+  multi_strategy:
+    enabled: false
+    description: "Probar m\xFAltiples estrategias simult\xE1neamente con divisi\xF3\
+      n de capital"
+    strategies:
+    - momentum
+    - mean_reversion
+    - pairs_trading
+    enable_dynamic_reallocation: true
+    reallocation_frequency_days: 30
+  regime_test:
+    enabled: false
+    description: "Evaluar desempe\xF1o seg\xFAn r\xE9gimen de mercado"
+    regimes:
+    - name: bull_market
+      conditions:
+        trend_direction: trend_up
+        volatility_regime: normal
+    - name: bear_market
+      conditions:
+        trend_direction: trend_down
+        volatility_regime: high
+    - name: sideways_market
+      conditions:
+        in_range: true
+        volatility_regime: low
+reporting:
+  output_directory: reports/comprehensive_backtest
+  output_format:
+  - csv
+  - json
+  consolidate_results: true
+  sort_by: sharpe_ratio
+  include_charts: true
+  metrics_to_include:
+  - total_pnl
+  - return_pct
+  - win_rate
+  - sharpe_ratio
+  - sortino_ratio
+  - max_drawdown
+  - total_trades
+  - avg_trade_pnl
+  - profit_factor
+  - calmar_ratio
+meta_analysis:
+  enabled: true
+  enable_audit: true
+  enable_storage: true
+  enable_analysis: true
+  enable_incremental_learning: true
+parallelization:
+  enabled: true
+  max_workers: 4
+thresholds:
+  sharpe:
+    bad: 0.0
+    warn: 0.8
+    good: 1.5
+  drawdown:
+    bad: 15.0
+    warn: 10.0
+    good: 5.0
+  winrate:
+    bad: 0.4
+    warn: 0.55
+    good: 0.65
+  return_pct:
+    bad: 0.0
+    warn: 10.0
+    good: 25.0

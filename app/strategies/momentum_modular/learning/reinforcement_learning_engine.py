@@ -13,26 +13,36 @@ from .base_learning_engine import BaseLearningEngine
 logger = logging.getLogger(__name__)
 
 # Importaciones opcionales para RL
+# Hacer imports no bloqueantes para evitar deadlocks con threading
+STABLE_BASELINES3_AVAILABLE = False
+GYM_AVAILABLE = False
+
+# Intentar importar stable_baselines3 - puede bloquear, así que hacerlo opcional
+# Si bloquea, simplemente no estará disponible
 try:
+    # Desactivar threading warnings de TensorFlow si está disponible
+    import os
+    os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', '2')
+    os.environ.setdefault('OMP_NUM_THREADS', '1')  # Reducir threads para evitar bloqueos
+    
     from stable_baselines3 import PPO, A2C, DDPG
     from stable_baselines3.common.env_util import make_vec_env
     from stable_baselines3.common.callbacks import BaseCallback
     STABLE_BASELINES3_AVAILABLE = True
+    logger.debug("stable-baselines3 disponible")
 except (ImportError, Exception) as e:
     STABLE_BASELINES3_AVAILABLE = False
-    error_type = type(e).__name__
-    if "numpy" in str(e).lower() or "multiarray" in str(e).lower():
-        logger.warning(f"stable-baselines3 no disponible: conflicto con numpy ({error_type}). Funcionalidad RL limitada.")
-    else:
-        logger.warning(f"stable-baselines3 no disponible ({error_type}). Funcionalidad RL limitada.")
+    # Silenciar completamente - es esperado que puede no estar disponible o bloquear
+    logger.debug(f"stable-baselines3 no disponible o bloqueado")
 
+# Importar gym de forma simple
 try:
     import gym
     import gym.spaces
     GYM_AVAILABLE = True
 except ImportError:
     GYM_AVAILABLE = False
-    logger.warning("gym no disponible. Funcionalidad RL limitada.")
+    logger.debug("gym no disponible. Funcionalidad RL limitada.")
 
 
 class TradingEnv:

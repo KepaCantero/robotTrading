@@ -18,6 +18,14 @@ from app.backtesting.models import PerformanceMetrics, Trade
 
 logger = logging.getLogger(__name__)
 
+# Optional: empyrical-reloaded for standard financial metrics
+try:
+    import empyrical as ep
+    EMPYRICAL_AVAILABLE = True
+except ImportError:
+    EMPYRICAL_AVAILABLE = False
+    logger.debug("empyrical-reloaded no disponible. Usando implementaciones manuales.")
+
 
 class MetricsCalculator:
     """Calculator for backtesting performance metrics."""
@@ -225,12 +233,30 @@ class MetricsCalculator:
         return returns
 
     def _calculate_sharpe_ratio(self, returns: List[Decimal]) -> Optional[Decimal]:
-        """Calculate Sharpe ratio."""
+        """Calculate Sharpe ratio using empyrical if available, otherwise manual."""
         if not returns or len(returns) < 2:
             return None
 
         try:
             returns_array = np.array([float(r) for r in returns])
+            
+            # Use empyrical if available (industry standard)
+            if EMPYRICAL_AVAILABLE:
+                try:
+                    sharpe = ep.sharpe_ratio(
+                        returns_array,
+                        risk_free=float(self.risk_free_rate),
+                        period='daily',
+                        annualization=252
+                    )
+                    # Handle NaN
+                    if np.isnan(sharpe) or np.isinf(sharpe):
+                        return Decimal("0")
+                    return Decimal(str(sharpe))
+                except Exception as e:
+                    logger.debug(f"Error usando empyrical para Sharpe, usando cálculo manual: {e}")
+            
+            # Fallback to manual calculation
             mean_return = np.mean(returns_array)
             std_return = np.std(returns_array)
 
@@ -254,12 +280,30 @@ class MetricsCalculator:
             return None
 
     def _calculate_sortino_ratio(self, returns: List[Decimal]) -> Optional[Decimal]:
-        """Calculate Sortino ratio (only downside deviation)."""
+        """Calculate Sortino ratio using empyrical if available, otherwise manual."""
         if not returns or len(returns) < 2:
             return None
 
         try:
             returns_array = np.array([float(r) for r in returns])
+            
+            # Use empyrical if available (industry standard)
+            if EMPYRICAL_AVAILABLE:
+                try:
+                    sortino = ep.sortino_ratio(
+                        returns_array,
+                        risk_free=float(self.risk_free_rate),
+                        period='daily',
+                        annualization=252
+                    )
+                    # Handle NaN
+                    if np.isnan(sortino) or np.isinf(sortino):
+                        return Decimal("0")
+                    return Decimal(str(sortino))
+                except Exception as e:
+                    logger.debug(f"Error usando empyrical para Sortino, usando cálculo manual: {e}")
+            
+            # Fallback to manual calculation
             mean_return = np.mean(returns_array)
 
             # Calculate downside deviation

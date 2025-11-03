@@ -117,8 +117,19 @@ class PairsTradingStrategy(BaseStrategy):
             self.pair_symbols = ["AAPL", "MSFT"]
 
         # Parámetros adicionales
-        self.hedge_ratio = Decimal(str(config.get("hedge_ratio")))
-        self.max_spread_deviation = Decimal(str(config.get("max_spread_deviation")))
+        hedge_ratio_value = config.get("hedge_ratio")
+        if hedge_ratio_value is None and strategy_config:
+            hedge_ratio_value = strategy_config.parameters.get("hedge_ratio", 1.0)
+        elif hedge_ratio_value is None:
+            hedge_ratio_value = 1.0  # Valor por defecto
+        self.hedge_ratio = Decimal(str(hedge_ratio_value))
+        
+        max_spread_deviation_value = config.get("max_spread_deviation")
+        if max_spread_deviation_value is None and strategy_config:
+            max_spread_deviation_value = strategy_config.parameters.get("max_spread_deviation", 3.0)
+        elif max_spread_deviation_value is None:
+            max_spread_deviation_value = 3.0  # Valor por defecto
+        self.max_spread_deviation = Decimal(str(max_spread_deviation_value))
 
         # REFACTORED: Store price history for both symbols in pair for vectorized calculations
         self.price_history = defaultdict(lambda: deque(maxlen=300))  # Increased to 300 for rolling cointegration

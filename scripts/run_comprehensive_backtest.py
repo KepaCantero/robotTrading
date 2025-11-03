@@ -11,6 +11,7 @@ Uso:
 
 Backtests disponibles:
     - baseline: Línea base con todos los módulos activos
+    - learning_engines: Prueba cada learning engine individualmente (supervised, deep, reinforcement)
     - walk_forward: Optimización por ventana temporal
     - monte_carlo: Stress test con simulaciones aleatorias
     - transformer_optimization: Optimización iterativa con Transformer
@@ -21,23 +22,55 @@ Backtests disponibles:
 """
 
 import sys
+import os
+
+# ============================================================================
+# SOLUCIÓN DEFINITIVA: Configurar variables de entorno ANTES de cualquier import
+# Esto previene bloqueos de threading con mutex.cc
+# Debe ir ANTES de importar numpy, pandas, torch, o cualquier otra librería
+# ============================================================================
+os.environ['OMP_NUM_THREADS'] = '1'
+os.environ['OPENBLAS_NUM_THREADS'] = '1'
+os.environ['MKL_NUM_THREADS'] = '1'
+os.environ['NUMEXPR_NUM_THREADS'] = '1'
+os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
+os.environ['MKL_SERVICE_FORCE_INTEL'] = '1'
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
+os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
+os.environ['FOR_DISABLE_CONSOLE_CTRL_HANDLER'] = '1'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+os.environ['CUDA_VISIBLE_DEVICES'] = ''  # Deshabilitar CUDA para evitar bloqueos
+os.environ['TORCH_USE_CUDA_DSA'] = '0'
+
 import argparse
 import logging
 from pathlib import Path
+
+# Configurar logging PRIMERO, antes de cualquier import que pueda bloquearse
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    force=True  # Forzar reconfiguración si ya estaba configurado
+)
+
+logger = logging.getLogger(__name__)
+logger.info("🚀 Script iniciado - Configurando logging...")
 
 # Agregar raíz del proyecto al path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestRunner
+logger.info("📦 Intentando importar ComprehensiveBacktestRunner...")
+print("📦 Importando módulos (esto puede tardar 10-30 segundos)...", flush=True)
 
-# Configurar logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-
-logger = logging.getLogger(__name__)
+try:
+    from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestRunner
+    logger.info("✅ ComprehensiveBacktestRunner importado correctamente")
+    print("✅ Módulos importados correctamente", flush=True)
+except Exception as e:
+    logger.error(f"❌ Error importando ComprehensiveBacktestRunner: {e}", exc_info=True)
+    print(f"❌ Error en import: {e}", flush=True)
+    raise
 
 
 def main():
@@ -54,7 +87,7 @@ Ejemplos:
   python scripts/run_comprehensive_backtest.py baseline
 
   # Ejecutar múltiples backtests
-  python scripts/run_comprehensive_backtest.py baseline ablation grid_search
+  python scripts/run_comprehensive_backtest.py baseline learning_engines ablation grid_search
         """
     )
     

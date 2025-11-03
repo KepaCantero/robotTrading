@@ -77,7 +77,12 @@ class MeanReversionStrategy(BaseStrategy):
             self.price_range_multiplier = Decimal(str(config.get("price_range_multiplier")))
 
         # Parámetros adicionales
-        self.min_z_score = Decimal(str(config.get("min_z_score")))
+        min_z_score_value = config.get("min_z_score")
+        if min_z_score_value is None and strategy_config:
+            min_z_score_value = strategy_config.parameters.get("min_z_score", 1.5)
+        elif min_z_score_value is None:
+            min_z_score_value = 1.5  # Valor por defecto
+        self.min_z_score = Decimal(str(min_z_score_value))
 
         # Initialize price history for logging purposes (similar to MomentumStrategy)
         from collections import deque

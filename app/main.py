@@ -8,6 +8,25 @@ Author: AlgoTrading MVP Team
 Version: 1.0.0
 """
 
+# ============================================================================
+# SOLUCIÓN DEFINITIVA: Configurar variables de entorno ANTES de cualquier import
+# Esto previene bloqueos de threading con mutex.cc
+# Debe ir ANTES de importar numpy, pandas, torch, o cualquier otra librería
+# ============================================================================
+import os
+os.environ['OMP_NUM_THREADS'] = '1'
+os.environ['OPENBLAS_NUM_THREADS'] = '1'
+os.environ['MKL_NUM_THREADS'] = '1'
+os.environ['NUMEXPR_NUM_THREADS'] = '1'
+os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
+os.environ['MKL_SERVICE_FORCE_INTEL'] = '1'
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
+os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
+os.environ['FOR_DISABLE_CONSOLE_CTRL_HANDLER'] = '1'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
+os.environ['TORCH_USE_CUDA_DSA'] = '0'
+
 import logging
 from contextlib import asynccontextmanager
 from typing import Any, Dict
