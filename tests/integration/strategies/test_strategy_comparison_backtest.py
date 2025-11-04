@@ -34,7 +34,7 @@ from app.services.portfolio_config_manager import get_portfolio_config_manager
 from app.strategies.mean_reversion import MeanReversionStrategy
 from app.strategies.momentum import MomentumStrategy
 from app.strategies.pairs_trading import PairsTradingStrategy
-from tests.integration.test_data_loader import load_all_csv_data
+from tests.integration.data.test_data_loader import load_all_csv_data
 
 logging.basicConfig(
     level=logging.INFO,

@@ -291,26 +291,47 @@ class TransformerEngine(BaseLearningEngine):
                 # Definir TransformerModel lazy dentro de este contexto
                 class TransformerModel(nn.Module):
                     """Modelo Transformer para predicción de series de tiempo y optimización."""
-                    def __init__(self, d_model=64, nhead=8, num_layers=4, dim_feedforward=256, dropout=0.1, output_size=1):
+                    def __init__(self, d_model=64, nhead=8, num_layers=4, dim_feedforward=256, dropout=0.1, output_size=1, max_len=1000):
                         super(TransformerModel, self).__init__()
                         self.d_model = d_model
+                        
+                        # Proyección de entrada
                         self.input_projection = nn.Linear(1, d_model)
-                        self.pos_encoder = nn.Parameter(torch.randn(1000, d_model))
+                        
+                        # Positional encoding sinusoidal mejorado
+                        # Usa sin/cos encoding estándar (más efectivo que random parameter)
+                        pe = torch.zeros(max_len, d_model)
+                        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+                        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-np.log(10000.0) / d_model))
+                        pe[:, 0::2] = torch.sin(position * div_term)
+                        pe[:, 1::2] = torch.cos(position * div_term)
+                        self.register_buffer('pos_encoder', pe.unsqueeze(0))
+                        
+                        # Transformer encoder
                         encoder_layer = nn.TransformerEncoderLayer(
                             d_model=d_model, nhead=nhead, dim_feedforward=dim_feedforward,
                             dropout=dropout, batch_first=True
                         )
                         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
+                        
+                        # Output layer
                         self.fc = nn.Linear(d_model, output_size)
                         self.dropout = nn.Dropout(dropout)
                     
                     def forward(self, x):
+                        # Proyectar entrada
                         if x.dim() == 2:
                             x = x.unsqueeze(-1)
                         x = self.input_projection(x)
+                        
+                        # Añadir positional encoding sinusoidal
                         seq_len = x.size(1)
-                        x = x + self.pos_encoder[:seq_len, :].unsqueeze(0)
+                        x = x + self.pos_encoder[:, :seq_len, :]
+                        
+                        # Transformer encoder
                         x = self.transformer_encoder(x)
+                        
+                        # Usar última posición para predicción
                         x = x[:, -1, :]
                         x = self.dropout(x)
                         x = self.fc(x)

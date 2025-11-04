@@ -29,6 +29,20 @@ except (ImportError, Exception) as e:
     logger.warning(f"XGBoost no disponible ({type(e).__name__}). Usando sklearn como alternativa.")
 
 try:
+    import lightgbm as lgb
+    LIGHTGBM_AVAILABLE = True
+except (ImportError, Exception) as e:
+    LIGHTGBM_AVAILABLE = False
+    logger.warning(f"LightGBM no disponible ({type(e).__name__}). No será usado.")
+
+try:
+    import catboost as cb
+    CATBOOST_AVAILABLE = True
+except (ImportError, Exception) as e:
+    CATBOOST_AVAILABLE = False
+    logger.warning(f"CatBoost no disponible ({type(e).__name__}). No será usado.")
+
+try:
     import torch
     import torch.nn as nn
     PYTORCH_AVAILABLE = True
@@ -45,6 +59,8 @@ class SupervisedLearningEngine(BaseLearningEngine):
     - RandomForest
     - GradientBoosting
     - XGBoost
+    - LightGBM
+    - CatBoost
     - Neural Networks (PyTorch)
     
     Optimiza thresholds de filtros basado en datos históricos etiquetados.
@@ -54,7 +70,7 @@ class SupervisedLearningEngine(BaseLearningEngine):
         """Inicializar motor de aprendizaje supervisado."""
         super().__init__("supervised", config)
         
-        self.algorithm = config.get("algorithm", "random_forest")  # random_forest, xgboost, gradient_boosting, neural_net
+        self.algorithm = config.get("algorithm", "random_forest")  # random_forest, xgboost, lightgbm, catboost, gradient_boosting, neural_net
         self.feature_cols = config.get("feature_columns", [])
         self.target_col = config.get("target_column", "trade_success")
         
@@ -151,6 +167,10 @@ class SupervisedLearningEngine(BaseLearningEngine):
             self.model = self._train_random_forest(X_train, y_train)
         elif self.algorithm == "xgboost" and XGBOOST_AVAILABLE:
             self.model = self._train_xgboost(X_train, y_train)
+        elif self.algorithm == "lightgbm" and LIGHTGBM_AVAILABLE:
+            self.model = self._train_lightgbm(X_train, y_train, X_val, y_val)
+        elif self.algorithm == "catboost" and CATBOOST_AVAILABLE:
+            self.model = self._train_catboost(X_train, y_train, X_val, y_val)
         elif self.algorithm == "gradient_boosting":
             self.model = self._train_gradient_boosting(X_train, y_train)
         elif self.algorithm == "neural_net" and PYTORCH_AVAILABLE:
@@ -199,6 +219,82 @@ class SupervisedLearningEngine(BaseLearningEngine):
         
         model = xgb.XGBClassifier(**params)
         model.fit(X_train, y_train)
+        return model
+    
+    def _train_lightgbm(self, X_train, y_train, X_val, y_val):
+        """Entrenar LightGBM con early stopping."""
+        params = {
+            'objective': 'binary',
+            'metric': 'binary_logloss',
+            'boosting_type': 'gbdt',
+            'num_leaves': self.model_params.get("num_leaves", 31),
+            'learning_rate': self.model_params.get("learning_rate", 0.05),
+            'feature_fraction': self.model_params.get("feature_fraction", 0.9),
+            'bagging_fraction': self.model_params.get("bagging_fraction", 0.8),
+            'bagging_freq': self.model_params.get("bagging_freq", 5),
+            'verbose': -1,  # Suprimir output
+            'random_state': 42,
+            **self.model_params.get("lightgbm_params", {})
+        }
+        
+        train_data = lgb.Dataset(X_train, label=y_train)
+        val_data = lgb.Dataset(X_val, label=y_val, reference=train_data)
+        
+        # Entrenar con early stopping
+        num_boost_round = self.model_params.get("n_estimators", 100)
+        early_stopping_rounds = self.model_params.get("early_stopping_rounds", 10)
+        
+        model = lgb.train(
+            params,
+            train_data,
+            num_boost_round=num_boost_round,
+            valid_sets=[val_data],
+            callbacks=[lgb.early_stopping(early_stopping_rounds), lgb.log_evaluation(period=0)]
+        )
+        
+        # Wrapper para compatibilidad con predict_proba
+        class LightGBMWrapper:
+            def __init__(self, model):
+                self.model = model
+            
+            def predict_proba(self, X):
+                pred = self.model.predict(X)
+                # Retornar en formato [prob_class_0, prob_class_1]
+                return np.column_stack([1 - pred, pred])
+            
+            def predict(self, X):
+                return (self.model.predict(X) >= 0.5).astype(int)
+            
+            @property
+            def feature_importances_(self):
+                return self.model.feature_importance(importance_type='gain')
+        
+        return LightGBMWrapper(model)
+    
+    def _train_catboost(self, X_train, y_train, X_val, y_val):
+        """Entrenar CatBoost con early stopping."""
+        params = {
+            'iterations': self.model_params.get("n_estimators", 100),
+            'depth': self.model_params.get("max_depth", 6),
+            'learning_rate': self.model_params.get("learning_rate", 0.1),
+            'loss_function': 'Logloss',
+            'eval_metric': 'AUC',
+            'verbose': False,
+            'random_seed': 42,
+            **self.model_params.get("catboost_params", {})
+        }
+        
+        # CatBoost acepta early stopping automáticamente
+        model = cb.CatBoostClassifier(**params)
+        
+        # Entrenar con early stopping
+        model.fit(
+            X_train, y_train,
+            eval_set=(X_val, y_val),
+            early_stopping_rounds=self.model_params.get("early_stopping_rounds", 10),
+            verbose=False
+        )
+        
         return model
     
     def _train_gradient_boosting(self, X_train, y_train):
@@ -270,7 +366,7 @@ class SupervisedLearningEngine(BaseLearningEngine):
                 predictions = self.model(X_t).numpy().flatten()
                 y_pred = (predictions >= 0.5).astype(int)
         else:
-            # Evaluación para sklearn/xgboost
+            # Evaluación para sklearn/xgboost/lightgbm/catboost
             if hasattr(self.model, 'predict_proba'):
                 proba = self.model.predict_proba(X)
                 # Verificar si solo hay una clase (proba tiene shape [n_samples, 1])
@@ -281,6 +377,8 @@ class SupervisedLearningEngine(BaseLearningEngine):
                     predictions = proba[:, 0]
             else:
                 predictions = self.model.predict(X)
+            
+            # Obtener predicciones de clase (para métricas)
             y_pred = self.model.predict(X)
         
         metrics = {
@@ -396,12 +494,30 @@ class SupervisedLearningEngine(BaseLearningEngine):
         
         # Feature importance si disponible
         importance = {}
+        # LightGBM wrapper tiene feature_importances_ como property
         if hasattr(self.model, 'feature_importances_'):
+            importances = self.model.feature_importances_
             if isinstance(features.get('indicators'), dict):
                 feature_names = list(features['indicators'].keys())
-                for i, imp in enumerate(self.model.feature_importances_):
+                # Puede que tengamos más features que nombres, usar índices genéricos si es necesario
+                for i, imp in enumerate(importances):
                     if i < len(feature_names):
                         importance[feature_names[i]] = float(imp)
+                    else:
+                        importance[f'feature_{i}'] = float(imp)
+        # CatBoost también tiene feature_importances_
+        elif hasattr(self.model, 'get_feature_importance'):
+            try:
+                importances = self.model.get_feature_importance()
+                if isinstance(features.get('indicators'), dict):
+                    feature_names = list(features['indicators'].keys())
+                    for i, imp in enumerate(importances):
+                        if i < len(feature_names):
+                            importance[feature_names[i]] = float(imp)
+                        else:
+                            importance[f'feature_{i}'] = float(imp)
+            except Exception as e:
+                logger.debug(f"No se pudo obtener feature importance: {e}")
         
         return {
             'success_probability': float(prob),

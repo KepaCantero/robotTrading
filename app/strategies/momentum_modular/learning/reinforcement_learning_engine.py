@@ -25,7 +25,7 @@ try:
     os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', '2')
     os.environ.setdefault('OMP_NUM_THREADS', '1')  # Reducir threads para evitar bloqueos
     
-    from stable_baselines3 import PPO, A2C, DDPG
+    from stable_baselines3 import PPO, A2C, DDPG, DQN, TD3, SAC
     from stable_baselines3.common.env_util import make_vec_env
     from stable_baselines3.common.callbacks import BaseCallback
     STABLE_BASELINES3_AVAILABLE = True
@@ -65,8 +65,21 @@ class TradingEnv:
             low=-np.inf, high=np.inf, shape=(self.observation_dim,), dtype=np.float32
         )
         
-        # Espacio de acciones: 0=HOLD, 1=BUY, 2=SELL, 3=Ajustar SL, 4=Ajustar TP
-        self.action_space = gym.spaces.Discrete(5)
+        # Espacio de acciones: discreto o continuo según el algoritmo
+        use_continuous = config.get("use_continuous_action", False)
+        if use_continuous:
+            # Action space continuo: [position_size, stop_loss_adjust, take_profit_adjust]
+            # position_size: -1 a 1 (short a long)
+            # stop_loss_adjust: -0.1 a 0.1 (ajuste porcentual)
+            # take_profit_adjust: -0.1 a 0.1 (ajuste porcentual)
+            self.action_space = gym.spaces.Box(
+                low=np.array([-1.0, -0.1, -0.1], dtype=np.float32),
+                high=np.array([1.0, 0.1, 0.1], dtype=np.float32),
+                dtype=np.float32
+            )
+        else:
+            # Espacio de acciones discreto: 0=HOLD, 1=BUY, 2=SELL, 3=Ajustar SL, 4=Ajustar TP
+            self.action_space = gym.spaces.Discrete(5)
         
         # Parámetros de recompensa
         self.reward_config = config.get("reward_config", {
@@ -88,12 +101,14 @@ class TradingEnv:
         
         return self._get_observation()
     
-    def step(self, action: int, market_data: Dict) -> Tuple[np.ndarray, float, bool, Dict]:
+    def step(self, action, market_data: Dict) -> Tuple[np.ndarray, float, bool, Dict]:
         """
         Ejecutar acción en el entorno.
         
         Args:
-            action: Acción a tomar (0-4)
+            action: Acción a tomar 
+                - Discreto: 0-4 (0=HOLD, 1=BUY, 2=SELL, 3=Ajustar SL, 4=Ajustar TP)
+                - Continuo: array [position_size, stop_loss_adjust, take_profit_adjust]
             market_data: Datos de mercado actuales (precio, indicadores, etc.)
         
         Returns:
@@ -102,18 +117,41 @@ class TradingEnv:
         price = market_data.get('price', 0)
         prev_equity = self.equity[-1]
         
-        # Ejecutar acción
-        if action == 1:  # BUY
-            if self.position == 0:  # Solo comprar si no hay posición
-                self._execute_buy(price, market_data)
-        elif action == 2:  # SELL
-            if self.position != 0:  # Solo vender si hay posición
-                self._execute_sell(price, market_data)
-        elif action == 3:  # Ajustar stop-loss
-            self._adjust_stop_loss(market_data)
-        elif action == 4:  # Ajustar take-profit
-            self._adjust_take_profit(market_data)
-        # action == 0 (HOLD) no hace nada
+        # Manejar acción discreta o continua
+        if isinstance(self.action_space, gym.spaces.Discrete):
+            # Acción discreta
+            if action == 1:  # BUY
+                if self.position == 0:  # Solo comprar si no hay posición
+                    self._execute_buy(price, market_data)
+            elif action == 2:  # SELL
+                if self.position != 0:  # Solo vender si hay posición
+                    self._execute_sell(price, market_data)
+            elif action == 3:  # Ajustar stop-loss
+                self._adjust_stop_loss(market_data)
+            elif action == 4:  # Ajustar take-profit
+                self._adjust_take_profit(market_data)
+            # action == 0 (HOLD) no hace nada
+        else:
+            # Acción continua: [position_size, stop_loss_adjust, take_profit_adjust]
+            action = np.clip(action, self.action_space.low, self.action_space.high)
+            position_size = action[0]
+            stop_loss_adjust = action[1]
+            take_profit_adjust = action[2]
+            
+            # Convertir position_size a acción discreta
+            if position_size > 0.3:  # Threshold para comprar
+                if self.position == 0:
+                    self._execute_buy(price, market_data)
+            elif position_size < -0.3:  # Threshold para vender
+                if self.position != 0:
+                    self._execute_sell(price, market_data)
+            # Si está entre -0.3 y 0.3, mantener posición actual
+            
+            # Aplicar ajustes de stop-loss y take-profit
+            if abs(stop_loss_adjust) > 0.01:
+                self._adjust_stop_loss(market_data, adjustment=stop_loss_adjust)
+            if abs(take_profit_adjust) > 0.01:
+                self._adjust_take_profit(market_data, adjustment=take_profit_adjust)
         
         # Actualizar equity
         if self.position != 0:
@@ -180,15 +218,23 @@ class TradingEnv:
             trade['pnl'] = pnl
             trade['exit_step'] = self.current_step
     
-    def _adjust_stop_loss(self, market_data: Dict):
+    def _adjust_stop_loss(self, market_data: Dict, adjustment: float = 0.0):
         """Ajustar stop-loss dinámicamente."""
-        # Placeholder: en producción, ajustar parámetros de stop-loss
-        pass
+        # En producción, ajustar parámetros de stop-loss basado en adjustment
+        # adjustment: -0.1 a 0.1 (ajuste porcentual)
+        if self.trades:
+            # Aplicar ajuste al stop-loss del trade actual
+            # Por ahora, placeholder - se implementará lógica real más adelante
+            pass
     
-    def _adjust_take_profit(self, market_data: Dict):
+    def _adjust_take_profit(self, market_data: Dict, adjustment: float = 0.0):
         """Ajustar take-profit dinámicamente."""
-        # Placeholder: en producción, ajustar parámetros de take-profit
-        pass
+        # En producción, ajustar parámetros de take-profit basado en adjustment
+        # adjustment: -0.1 a 0.1 (ajuste porcentual)
+        if self.trades:
+            # Aplicar ajuste al take-profit del trade actual
+            # Por ahora, placeholder - se implementará lógica real más adelante
+            pass
     
     def _calculate_reward(self, prev_equity: float, current_equity: float) -> float:
         """Calcular recompensa basada en performance."""
@@ -243,9 +289,12 @@ class ReinforcementLearningEngine(BaseLearningEngine):
     Motor de Reinforcement Learning para aprender políticas óptimas de trading.
     
     Algoritmos soportados:
-    - PPO (Proximal Policy Optimization)
-    - A2C (Advantage Actor-Critic)
-    - DDPG (Deep Deterministic Policy Gradient)
+    - PPO (Proximal Policy Optimization) - On-policy, discreto/continuo
+    - A2C (Advantage Actor-Critic) - On-policy, discreto/continuo
+    - DDPG (Deep Deterministic Policy Gradient) - Off-policy, continuo
+    - DQN (Deep Q-Network) - Off-policy, discreto
+    - TD3 (Twin Delayed DDPG) - Off-policy, continuo (mejor que DDPG)
+    - SAC (Soft Actor-Critic) - Off-policy, continuo (con entropía máxima)
     
     Aprende a:
     - Cuándo comprar/vender/mantener
@@ -263,7 +312,7 @@ class ReinforcementLearningEngine(BaseLearningEngine):
                 "Instala con: pip install stable-baselines3>=2.0.0 gym>=0.26.0"
             )
         
-        self.algorithm = config.get("algorithm", "ppo")  # ppo, a2c, ddpg
+        self.algorithm = config.get("algorithm", "ppo")  # ppo, a2c, ddpg, dqn, td3, sac
         self.env_config = config.get("env_config", {})
         self.training_steps = config.get("training_steps", 100000)
         self.learning_rate = config.get("learning_rate", 3e-4)
@@ -295,7 +344,15 @@ class ReinforcementLearningEngine(BaseLearningEngine):
         env_config['max_steps'] = len(training_data['market_sequences'])
         env_config['initial_capital'] = training_data.get('initial_capital', 100000.0)
         
+        # Determinar si necesitamos action space continuo o discreto
+        continuous_action_algorithms = ['ddpg', 'td3', 'sac']
+        use_continuous = self.algorithm.lower() in continuous_action_algorithms
+        env_config['use_continuous_action'] = use_continuous
+        
         self.env = TradingEnv(env_config)
+        
+        # Parámetros comunes para algoritmos
+        algorithm_params = self.env_config.get("algorithm_parameters", {})
         
         # Crear agente según algoritmo
         if self.algorithm == "ppo":
@@ -303,31 +360,71 @@ class ReinforcementLearningEngine(BaseLearningEngine):
                 "MlpPolicy",
                 self.env,
                 learning_rate=self.learning_rate,
-                n_steps=2048,
-                batch_size=64,
-                n_epochs=10,
-                gamma=0.99,
-                verbose=1
+                n_steps=algorithm_params.get("n_steps", 2048),
+                batch_size=algorithm_params.get("batch_size", 64),
+                n_epochs=algorithm_params.get("n_epochs", 10),
+                gamma=algorithm_params.get("gamma", 0.99),
+                verbose=algorithm_params.get("verbose", 1)
             )
         elif self.algorithm == "a2c":
             self.agent = A2C(
                 "MlpPolicy",
                 self.env,
                 learning_rate=self.learning_rate,
-                n_steps=5,
-                gamma=0.99,
-                verbose=1
+                n_steps=algorithm_params.get("n_steps", 5),
+                gamma=algorithm_params.get("gamma", 0.99),
+                verbose=algorithm_params.get("verbose", 1)
             )
         elif self.algorithm == "ddpg":
-            # DDPG requiere Box action space, adaptar entorno
+            # DDPG requiere Box action space (continuo)
             self.agent = DDPG(
                 "MlpPolicy",
                 self.env,
                 learning_rate=self.learning_rate,
-                verbose=1
+                gamma=algorithm_params.get("gamma", 0.99),
+                buffer_size=algorithm_params.get("buffer_size", 100000),
+                verbose=algorithm_params.get("verbose", 1)
+            )
+        elif self.algorithm == "dqn":
+            # DQN requiere Discrete action space
+            self.agent = DQN(
+                "MlpPolicy",
+                self.env,
+                learning_rate=self.learning_rate,
+                gamma=algorithm_params.get("gamma", 0.99),
+                buffer_size=algorithm_params.get("buffer_size", 100000),
+                exploration_fraction=algorithm_params.get("exploration_fraction", 0.1),
+                exploration_initial_eps=algorithm_params.get("exploration_initial_eps", 1.0),
+                exploration_final_eps=algorithm_params.get("exploration_final_eps", 0.05),
+                verbose=algorithm_params.get("verbose", 1)
+            )
+        elif self.algorithm == "td3":
+            # TD3 requiere Box action space (continuo) - mejor que DDPG
+            self.agent = TD3(
+                "MlpPolicy",
+                self.env,
+                learning_rate=self.learning_rate,
+                gamma=algorithm_params.get("gamma", 0.99),
+                buffer_size=algorithm_params.get("buffer_size", 100000),
+                verbose=algorithm_params.get("verbose", 1)
+            )
+        elif self.algorithm == "sac":
+            # SAC requiere Box action space (continuo) - con entropía máxima
+            self.agent = SAC(
+                "MlpPolicy",
+                self.env,
+                learning_rate=self.learning_rate,
+                gamma=algorithm_params.get("gamma", 0.99),
+                buffer_size=algorithm_params.get("buffer_size", 100000),
+                learning_starts=algorithm_params.get("learning_starts", 100),
+                ent_coef=algorithm_params.get("ent_coef", "auto"),  # Auto-tune entropy coefficient
+                verbose=algorithm_params.get("verbose", 1)
             )
         else:
-            raise ValueError(f"Algoritmo {self.algorithm} no soportado")
+            raise ValueError(
+                f"Algoritmo {self.algorithm} no soportado. "
+                f"Opciones: ppo, a2c, ddpg, dqn, td3, sac"
+            )
         
         # Entrenar
         logger.info(f"Entrenando agente {self.algorithm} por {self.training_steps} pasos...")
