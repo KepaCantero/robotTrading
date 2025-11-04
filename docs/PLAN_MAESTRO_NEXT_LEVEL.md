@@ -199,12 +199,12 @@ graph TB
 
 **Tareas**:
 
-- [ ] **3.1** Refactorizar estrategias existentes:
-  - [ ] Crear `BaseStrategyEngine` abstracta
-  - [ ] Convertir `MomentumStrategy` → `MomentumStrategyEngine`
-  - [ ] Convertir `MeanReversionStrategy` → `MeanReversionStrategyEngine`
-  - [ ] Convertir `PairsTradingStrategy` → `PairsTradingStrategyEngine`
-  - [ ] Convertir `ModularMomentumStrategy` → `ModularMomentumStrategyEngine`
+- [x] **3.1** Refactorizar estrategias existentes:
+  - [x] Crear `BaseStrategyEngine` abstracta
+  - [x] Convertir `MomentumStrategy` → `MomentumStrategyEngine`
+  - [x] Convertir `MeanReversionStrategy` → `MeanReversionStrategyEngine`
+  - [x] Convertir `PairsTradingStrategy` → `PairsTradingStrategyEngine`
+  - [x] Convertir `ModularMomentumStrategy` → `ModularMomentumStrategyEngine`
 - [ ] **3.2** Nuevas estrategias base:
   - [ ] `BreakoutStrategyEngine` (soporte/resistencia breaks)
   - [ ] `MeanReversionStrategyEngine` (mejorado con Z-score adaptativo)
@@ -266,13 +266,13 @@ graph TB
   - [ ] Pre-trained models para diferentes regímenes
   - [ ] Fine-tuning adaptativo
   - [ ] Knowledge distillation entre modelos
-- [ ] **4.5** Aprendizaje multi-tarea:
-  - [ ] Compartir representaciones entre tareas
-  - [ ] Multi-objective optimization (return, Sharpe, drawdown)
-- [ ] **4.6** Hyperparameter auto-tuning:
-  - [ ] Bayesian optimization (Optuna)
-  - [ ] Early stopping adaptativo
-  - [ ] Resource-aware tuning (GPU/CPU constraints)
+- [x] **4.5** Aprendizaje multi-tarea:
+  - [x] Compartir representaciones entre tareas
+  - [x] Multi-objective optimization (return, Sharpe, drawdown)
+- [x] **4.6** Hyperparameter auto-tuning:
+  - [x] Bayesian optimization (Optuna)
+  - [x] Early stopping adaptativo
+  - [x] Resource-aware tuning (GPU/CPU constraints)
 
 **Stack Tecnológico**:
 

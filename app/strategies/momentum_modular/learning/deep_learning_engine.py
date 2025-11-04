@@ -107,7 +107,8 @@ class DeepLearningEngine(BaseLearningEngine):
     Arquitecturas soportadas:
     - LSTM: Para dependencias de largo plazo
     - GRU: Similar a LSTM, más eficiente
-    - Transformer: Para capturar relaciones complejas (futuro)
+    - Transformer: Para capturar relaciones complejas (con attention mechanisms)
+    - AttentionLSTM: LSTM mejorado con mecanismo de atención
     
     Predice movimientos de mercado y ajusta parámetros dinámicos de filtros.
     """
@@ -153,7 +154,7 @@ class DeepLearningEngine(BaseLearningEngine):
                 return
         
         # Si llegamos aquí, NO usamos defer_pytorch_init, así que inicializar normalmente
-        self.architecture = config.get("architecture", "lstm")  # lstm, gru, transformer
+        self.architecture = config.get("architecture", "lstm")  # lstm, gru, transformer, attention_lstm
         self.backend = config.get("backend", "pytorch")  # pytorch, tensorflow
         
         # Hyperparámetros
@@ -169,6 +170,9 @@ class DeepLearningEngine(BaseLearningEngine):
         self.feature_columns = config.get("feature_columns", [
             'price', 'volume', 'rsi', 'ema_fast', 'ema_slow', 'momentum', 'atr'
         ])
+        
+        # Parámetros específicos para transformer y otras arquitecturas (si se usa)
+        self.model_params = config.get("model_parameters", {})
         
         self.scaler = None  # Para normalizar datos
     
@@ -355,6 +359,91 @@ class DeepLearningEngine(BaseLearningEngine):
                 out = self.sigmoid(out)
                 return out
         
+        class AttentionLSTMModel(nn.Module):
+            """LSTM con mecanismo de atención para series de tiempo."""
+            def __init__(self, input_size, hidden_size, num_layers, output_size, dropout=0.2):
+                super(AttentionLSTMModel, self).__init__()
+                self.hidden_size = hidden_size
+                self.num_layers = num_layers
+                self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True, dropout=dropout)
+                
+                # Mecanismo de atención
+                self.attention = nn.MultiheadAttention(hidden_size, num_heads=4, dropout=dropout, batch_first=True)
+                self.attention_norm = nn.LayerNorm(hidden_size)
+                
+                self.fc = nn.Linear(hidden_size, output_size)
+                self.sigmoid = nn.Sigmoid()
+                self.dropout = nn.Dropout(dropout)
+            
+            def forward(self, x):
+                # LSTM forward
+                h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
+                c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
+                lstm_out, _ = self.lstm(x, (h0, c0))
+                
+                # Aplicar atención
+                attn_out, _ = self.attention(lstm_out, lstm_out, lstm_out)
+                attn_out = self.attention_norm(lstm_out + attn_out)  # Residual connection
+                attn_out = self.dropout(attn_out)
+                
+                # Usar última posición para predicción (o promedio de todas las posiciones)
+                out = self.fc(attn_out[:, -1, :])
+                out = self.sigmoid(out)
+                return out
+        
+        class TransformerModel(nn.Module):
+            """Modelo Transformer para series de tiempo."""
+            def __init__(self, input_size, d_model=64, nhead=8, num_layers=4, dim_feedforward=256, output_size=1, dropout=0.1):
+                super(TransformerModel, self).__init__()
+                self.d_model = d_model
+                
+                # Proyección de entrada
+                self.input_projection = nn.Linear(input_size, d_model)
+                
+                # Positional encoding
+                max_len = 1000
+                pe = torch.zeros(max_len, d_model)
+                position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+                div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-np.log(10000.0) / d_model))
+                pe[:, 0::2] = torch.sin(position * div_term)
+                pe[:, 1::2] = torch.cos(position * div_term)
+                self.register_buffer('pos_encoder', pe.unsqueeze(0))
+                
+                # Transformer encoder
+                encoder_layer = nn.TransformerEncoderLayer(
+                    d_model=d_model,
+                    nhead=nhead,
+                    dim_feedforward=dim_feedforward,
+                    dropout=dropout,
+                    batch_first=True
+                )
+                self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
+                
+                # Output layer
+                self.fc = nn.Linear(d_model, output_size)
+                self.dropout = nn.Dropout(dropout)
+                self.sigmoid = nn.Sigmoid()
+            
+            def forward(self, x):
+                # Proyectar entrada
+                if x.dim() == 2:
+                    x = x.unsqueeze(-1)
+                x = self.input_projection(x)
+                
+                # Añadir positional encoding
+                seq_len = x.size(1)
+                x = x + self.pos_encoder[:, :seq_len, :]
+                
+                # Transformer encoder
+                x = self.transformer_encoder(x)
+                
+                # Usar última posición para predicción
+                x = x[:, -1, :]
+                x = self.dropout(x)
+                x = self.fc(x)
+                x = self.sigmoid(x)
+                return x
+        
         # Crear modelo con threading deshabilitado
         # CRÍTICO: Usar no_grad y try-except para capturar bloqueos de mutex
         try:
@@ -363,8 +452,19 @@ class DeepLearningEngine(BaseLearningEngine):
                     self.model = LSTMModel(input_size, self.hidden_size, self.num_layers, output_size, self.dropout)
                 elif self.architecture == "gru":
                     self.model = GRUModel(input_size, self.hidden_size, self.num_layers, output_size, self.dropout)
+                elif self.architecture == "attention_lstm":
+                    self.model = AttentionLSTMModel(input_size, self.hidden_size, self.num_layers, output_size, self.dropout)
+                elif self.architecture == "transformer":
+                    # Parámetros de transformer desde config
+                    d_model = self.model_params.get("d_model", 64)
+                    nhead = self.model_params.get("nhead", 8)
+                    num_transformer_layers = self.model_params.get("num_transformer_layers", 4)
+                    dim_feedforward = self.model_params.get("dim_feedforward", 256)
+                    self.model = TransformerModel(
+                        input_size, d_model, nhead, num_transformer_layers, dim_feedforward, output_size, self.dropout
+                    )
                 else:
-                    raise ValueError(f"Arquitectura {self.architecture} no soportada aún")
+                    raise ValueError(f"Arquitectura {self.architecture} no soportada. Opciones: lstm, gru, attention_lstm, transformer")
         except Exception as e:
             error_msg = str(e).lower()
             if 'mutex' in error_msg or 'lock' in error_msg:

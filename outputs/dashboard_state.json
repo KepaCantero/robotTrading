@@ -1,0 +1,9 @@
+{
+  "data_engine_status": "ok",
+  "context_engine_status": "ok",
+  "market_regime": "bear",
+  "volatility": 0.0377592611850029,
+  "volatility_regime": "low",
+  "correlation_ok": true,
+  "timestamp": "2025-11-04T08:09:06.158587Z"
+}

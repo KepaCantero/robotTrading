@@ -375,11 +375,13 @@ class PairsTradingStrategy(BaseStrategy):
             True si la señal pasa el risk check, False en caso contrario
         """
         try:
+            # Check position existence first (needed for both BUY and SELL)
+            existing_position = self._get_existing_position(portfolio, signal.symbol)
+            
             # FIX: Order matters - check SELL position existence BEFORE calculating position_size
             # For SELL, if no position exists, get_position_size() returns 0, which fails the min check
             if signal.signal_type == SignalType.SELL:
                 # First check if position exists
-                existing_position = self._get_existing_position(portfolio, signal.symbol)
                 if not existing_position:
                     logger.info(
                         f"⚠️ PAIRS_TRADING risk_check REJECTED SELL {signal.symbol}: "
@@ -425,19 +427,34 @@ class PairsTradingStrategy(BaseStrategy):
 
             # Verificar límites de exposición (muy conservador para pairs trading)
             total_exposure = self._calculate_total_exposure(portfolio)
-            if total_exposure > self.max_total_exposure:  # Máximo configurable (default 40%)
+            # For SELL with existing position, allow higher total exposure temporarily
+            # since we're reducing exposure by selling
+            max_allowed_total_exposure = self.max_total_exposure
+            if signal.signal_type == SignalType.SELL and existing_position:
+                # For SELL operations, allow up to 15% total exposure (even if config is lower)
+                max_allowed_total_exposure = Decimal("0.15")
+            
+            if total_exposure > max_allowed_total_exposure:
                 logger.info(
                     f"⚠️ PAIRS_TRADING risk_check REJECTED {signal.signal_type} {signal.symbol}: "
-                    f"Total exposure too high ({total_exposure:.2%} > {self.max_total_exposure:.2%} max)"
+                    f"Total exposure too high ({total_exposure:.2%} > {max_allowed_total_exposure:.2%} max)"
                 )
                 return False
 
             # Verificar balance del par (pairs trading debe ser balanceado)
             pair_exposure = self._calculate_pair_exposure(portfolio)
-            if pair_exposure > self.max_pair_exposure:  # Máximo configurable (default 20%)
+            # For SELL with existing position, allow higher pair exposure temporarily
+            # since we're reducing exposure by selling
+            max_allowed_exposure = self.max_pair_exposure
+            if signal.signal_type == SignalType.SELL and existing_position:
+                # For SELL operations, allow up to 15% pair exposure (even if config is lower)
+                # This allows selling positions even when pair exposure is temporarily high
+                max_allowed_exposure = Decimal("0.15")
+            
+            if pair_exposure > max_allowed_exposure:
                 logger.info(
                     f"⚠️ PAIRS_TRADING risk_check REJECTED {signal.signal_type} {signal.symbol}: "
-                    f"Pair exposure too high ({pair_exposure:.2%} > {self.max_pair_exposure:.2%} max)"
+                    f"Pair exposure too high ({pair_exposure:.2%} > {max_allowed_exposure:.2%} max)"
                 )
                 return False
 
