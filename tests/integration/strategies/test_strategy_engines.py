@@ -41,7 +41,9 @@ from app.engines.strategy_engines import (
     MomentumStrategyEngine,
     MeanReversionStrategyEngine,
     PairsTradingStrategyEngine,
-    ModularMomentumStrategyEngine
+    ModularMomentumStrategyEngine,
+    BreakoutStrategyEngine,
+    TrendFollowingStrategyEngine,
 )
 from tests.integration.data.test_data_loader import load_all_csv_data
 
@@ -427,6 +429,210 @@ class TestModularMomentumStrategyEngine:
             # No debería fallar aunque learning engine no esté entrenado
         
         assert engine.learning_enabled
+
+
+class TestBreakoutStrategyEngine:
+    """Tests de integración para BreakoutStrategyEngine."""
+
+    def test_breakout_engine_initialization(self):
+        """El engine se inicializa correctamente con configuración mínima."""
+        config = {
+            "lookback_period": 10,
+            "breakout_threshold_pct": 0.01,
+            "min_volume_ratio": 1.0,
+        }
+        engine = BreakoutStrategyEngine(config)
+
+        assert engine.get_strategy_type() == "breakout"
+        assert engine.lookback_period == 10
+        assert not engine.learning_enabled
+
+    def test_breakout_engine_generate_signals_with_real_data(self):
+        """Generación de señales con datos históricos reales (si están disponibles)."""
+        historical_data = load_all_csv_data()
+        if not historical_data:
+            pytest.skip("No hay datos históricos disponibles")
+
+        symbol = list(historical_data.keys())[0]
+        df = historical_data[symbol]
+        quotes = dataframe_to_quotes(symbol, df[:200])  # más barras para aumentar prob. de breakout
+
+        config = {
+            "lookback_period": 20,
+            "breakout_threshold_pct": 0.01,
+            "min_volume_ratio": 1.0,
+        }
+        engine = BreakoutStrategyEngine(config)
+
+        signals_count = 0
+        for quote in quotes:
+            signals = engine.generate_signals(quote)
+            if signals:
+                signals_count += len(signals)
+                signal = signals[0]
+                assert signal.symbol == symbol
+                assert signal.signal_type in [SignalType.BUY, SignalType.SELL]
+
+        logger.info(f"BreakoutStrategyEngine generó {signals_count} señales para {symbol}")
+        # No assert estricto sobre signals_count (depende del activo)
+
+
+class TestTrendFollowingStrategyEngine:
+    """Tests de integración para TrendFollowingStrategyEngine."""
+
+    def test_trend_following_engine_initialization(self):
+        """El engine se inicializa correctamente con configuración mínima."""
+        config = {
+            "adx_period": 14,
+            "adx_threshold": 25.0,
+            "macd_fast_period": 12,
+            "macd_slow_period": 26,
+            "macd_signal_period": 9,
+            "min_volume_ratio": 1.2,
+        }
+        engine = TrendFollowingStrategyEngine(config)
+
+        assert engine.get_strategy_type() == "trend_following"
+        assert engine.adx_period == 14
+        assert engine.adx_threshold == Decimal("25.0")
+        assert not engine.learning_enabled
+
+    def test_trend_following_engine_generate_signals_with_real_data(self):
+        """Generación de señales con datos históricos reales (si están disponibles)."""
+        historical_data = load_all_csv_data()
+        if not historical_data:
+            pytest.skip("No hay datos históricos disponibles")
+
+        symbol = list(historical_data.keys())[0]
+        df = historical_data[symbol]
+        quotes = dataframe_to_quotes(symbol, df[:200])  # más barras para tener suficiente histórico
+
+        config = {
+            "adx_period": 14,
+            "adx_threshold": 25.0,
+            "macd_fast_period": 12,
+            "macd_slow_period": 26,
+            "macd_signal_period": 9,
+            "min_volume_ratio": 1.0,  # Bajar threshold para más señales en test
+        }
+        engine = TrendFollowingStrategyEngine(config)
+
+        signals_count = 0
+        for quote in quotes:
+            signals = engine.generate_signals(quote)
+            if signals:
+                signals_count += len(signals)
+                signal = signals[0]
+                assert signal.symbol == symbol
+                assert signal.signal_type in [SignalType.BUY, SignalType.SELL]
+                assert signal.source.value == "trend_following"
+
+        logger.info(f"TrendFollowingStrategyEngine generó {signals_count} señales para {symbol}")
+        # No assert estricto sobre signals_count (depende del activo y tendencias)
+
+    def test_trend_following_engine_feature_extraction(self):
+        """Feature extraction debe devolver campos de ADX y MACD."""
+        config = {
+            "adx_period": 14,
+            "macd_slow_period": 26,
+        }
+        engine = TrendFollowingStrategyEngine(config)
+
+        quote = Quote(
+            symbol="AAPL",
+            timestamp=datetime.now(),
+            bid=Decimal("150.0"),
+            ask=Decimal("150.1"),
+            last=Decimal("150.05"),
+            close=Decimal("150.05"),
+            open=Decimal("149.0"),
+            high=Decimal("151.0"),
+            low=Decimal("148.0"),
+            volume=Decimal("1000000"),
+        )
+
+        # Procesar varias veces para tener suficiente histórico
+        for i in range(30):
+            quote_with_trend = Quote(
+                symbol="AAPL",
+                timestamp=datetime.now(),
+                bid=Decimal(str(150.0 + i * 0.5)),  # Tendencia alcista
+                ask=Decimal(str(150.1 + i * 0.5)),
+                last=Decimal(str(150.05 + i * 0.5)),
+                close=Decimal(str(150.05 + i * 0.5)),
+                open=Decimal(str(149.0 + i * 0.5)),
+                high=Decimal(str(151.0 + i * 0.5)),
+                low=Decimal(str(148.0 + i * 0.5)),
+                volume=Decimal("1000000"),
+            )
+            engine.generate_signals(quote_with_trend)
+
+        features = engine.extract_features(quote)
+        assert isinstance(features, dict)
+        assert "adx" in features
+        assert "macd_line" in features
+        assert "macd_signal" in features
+        assert "macd_histogram" in features
+        assert "volume_ratio" in features
+        assert features["symbol"] == "AAPL"
+
+    def test_trend_following_engine_get_required_parameters(self):
+        """get_required_parameters debe retornar lista de parámetros requeridos."""
+        engine = TrendFollowingStrategyEngine({})
+        params = engine.get_required_parameters()
+
+        assert "adx_period" in params
+        assert "adx_threshold" in params
+        assert "macd_fast_period" in params
+        assert "macd_slow_period" in params
+        assert "macd_signal_period" in params
+        assert "min_volume_ratio" in params
+
+    def test_breakout_engine_feature_extraction(self):
+        """Feature extraction debe devolver campos de rango y volumen."""
+        config = {
+            "lookback_period": 5,
+            "breakout_threshold_pct": 0.01,
+            "min_volume_ratio": 1.0,
+        }
+        engine = BreakoutStrategyEngine(config)
+
+        quote = Quote(
+            symbol="AAPL",
+            timestamp=datetime.now(),
+            bid=Decimal("150.0"),
+            ask=Decimal("150.1"),
+            last=Decimal("150.05"),
+            close=Decimal("150.05"),
+            open=Decimal("149.0"),
+            high=Decimal("151.0"),
+            low=Decimal("148.0"),
+            volume=Decimal("1000000"),
+        )
+
+        # Alimentar histórico mínimo
+        for price in [149.5, 150.0, 150.5, 149.8, 150.2]:
+            engine.generate_signals(
+                Quote(
+                    symbol="AAPL",
+                    timestamp=datetime.now(),
+                    bid=Decimal(str(price)),
+                    ask=Decimal(str(price)),
+                    last=Decimal(str(price)),
+                    close=Decimal(str(price)),
+                    open=Decimal(str(price)),
+                    high=Decimal(str(price)),
+                    low=Decimal(str(price)),
+                    volume=Decimal("1000000"),
+                )
+            )
+
+        features = engine.extract_features(quote)
+        assert isinstance(features, dict)
+        # Campos clave de rango y volumen
+        assert "range_high" in features
+        assert "range_low" in features
+        assert "volume_ratio" in features
 
 
 class TestStrategyEnginesIntegration:

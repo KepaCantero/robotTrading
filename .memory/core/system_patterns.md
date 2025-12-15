@@ -15,6 +15,25 @@
 
 ### 🏗️ **PATRONES ARQUITECTÓNICOS IMPLEMENTADOS**
 
+#### 0. Engine Pattern (Plan Maestro "Next Level")
+
+**Estado**: ✅ Implementado parcialmente en código, alineado con `docs/PLAN_MAESTRO_NEXT_LEVEL.md`.  
+**Idea clave**: Expresar los dominios principales como *engines* desacoplados bajo `app/engines/` con interfaces claras y composición flexible.
+
+- **Engines actualmente implementados**:
+  - `DataEngine` (`app/engines/data_engine/`): fuentes múltiples (OHLCV, fundamentales, sentimiento, opciones), normalización, limpieza, versionado, cache distribuido y streaming.
+  - `ContextEngine` (`app/engines/context_engine/`): detección de régimen (HMM, clustering, correlaciones), volatilidad (GARCH, regímenes), correlaciones dinámicas, indicadores macro.
+  - `StrategyEngines` (`app/engines/strategy_engines/`): `MomentumStrategyEngine`, `MeanReversionStrategyEngine`, `PairsTradingStrategyEngine`, `ModularMomentumStrategyEngine` y **`BreakoutStrategyEngine` (2025‑11‑18)**, todos sobre `BaseStrategyEngine` con integración opcional a Data/Context/Portfolio/Risk y Learning Engines.
+  - `PortfolioEngine` (`app/engines/portfolio_engine/`): interfaz de alto nivel sobre `PortfolioService` con optimizadores (Markowitz, Risk Parity, Black-Litterman, Kelly), rebalancers y meta-learners.
+  - `RiskEngine` (`app/engines/risk_engine/`): capa avanzada sobre `PortfolioRiskManager` con VaR/CVaR, stress testing, exposición, drawdowns, correlaciones, risk attribution y alert system.
+- **Engines planificados (aún no implementados como módulos dedicados)**:
+  - `ExecutionEngine`, `MonitoringDashboard`, `MetaAnalyzer`, `Audit & Persistence`, `Explainability/XAI`, `SyntheticData`, `PredictionFusion`, `Compliance & Governance`, `KnowledgeGraphEngine`, `ExperimentationOrchestration`, `InfrastructureOptimizer`.
+- **Patrón de integración de estrategias**:
+  - `BaseStrategyEngine` actúa como fachada entre estrategias concretas y otros engines (Data, Context, Portfolio, Risk, Learning), permitiendo:
+    - Uso de datos enriquecidos de contexto.
+    - Ajustes dinámicos vía Learning Engines (incluyendo el pipeline completo de `momentum_modular`).
+    - Reutilización de Portfolio/Risk Engine sin acoplar la lógica de negocio.
+
 #### **1. Microservices Architecture Pattern**
 
 **Estado**: ✅ IMPLEMENTADO COMPLETAMENTE
