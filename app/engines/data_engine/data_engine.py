@@ -31,6 +31,10 @@ from .versioning.schema_versioner import SchemaVersioner
 from .versioning.data_lineage import DataLineageTracker
 from .versioning.version_manager import DataVersionManager
 
+from .cache.distributed_cache import DistributedCache
+from .streaming.websocket_streaming import WebSocketStreamingManager
+from .config_loader import DataEngineConfigLoader
+
 logger = logging.getLogger(__name__)
 
 
@@ -46,26 +50,53 @@ class DataEngine:
         Inicializar Data Engine.
         
         Args:
-            config: Configuración completa del engine
+            config: Configuración completa del engine (opcional, usa YAML por defecto)
         """
         config = config or {}
         self.config = config
         
+        # Cargar configuración desde YAML
+        self.config_loader = DataEngineConfigLoader(config.get('config_path', 'config/data_engine.yaml'))
+        
+        # Obtener configuración de entorno si está disponible
+        import os
+        env_redis_url = os.getenv('REDIS_URL') or os.getenv('DATA_ENGINE_CACHE_REDIS_URL')
+        env_postgres_url = os.getenv('DATABASE_URL') or os.getenv('DATA_ENGINE_CACHE_POSTGRES_URL')
+        
         # Inicializar componentes
         self.sources: Dict[str, BaseDataSource] = {}
-        self.normalizer = UnifiedNormalizer(config.get('normalizer_config', {}))
-        self.cleaning_pipeline = DataCleaningPipeline(config.get('cleaning_config', {}))
+        self.normalizer = UnifiedNormalizer(self.config_loader.get_normalization_config())
+        self.cleaning_pipeline = DataCleaningPipeline(self.config_loader.get_cleaning_config())
         
-        self.schema_versioner = SchemaVersioner(config.get('schema_config', {}))
-        self.lineage_tracker = DataLineageTracker(config.get('lineage_config', {}))
-        self.version_manager = DataVersionManager(config.get('version_config', {}))
+        versioning_config = self.config_loader.get_versioning_config()
+        self.schema_versioner = SchemaVersioner({
+            'schema_version': versioning_config.get('schema_version', '1.0.0')
+        })
+        self.lineage_tracker = DataLineageTracker({
+            'enabled': versioning_config.get('data_lineage_enabled', True)
+        })
+        self.version_manager = DataVersionManager({
+            'enabled': versioning_config.get('enabled', True)
+        })
         
-        # Cache (simple dict, puede mejorarse con Redis)
-        self.cache: Dict[str, Any] = {}
-        self.cache_ttl = config.get('cache_ttl', 3600)  # 1 hora
+        # Cache distribuido (Redis + PostgreSQL con fallback a memoria)
+        cache_config = self.config_loader.get_cache_config(env_redis_url, env_postgres_url)
+        # Merge con config externo si existe
+        if 'cache_config' in config:
+            cache_config.update(config['cache_config'])
+        self.cache = DistributedCache(cache_config)
+        
+        # Streaming manager (WebSocket)
+        streaming_config = self.config_loader.get_streaming_config()
+        # Merge con config externo si existe
+        if 'streaming_config' in config:
+            streaming_config.update(config['streaming_config'])
+        self.streaming_manager = WebSocketStreamingManager(streaming_config)
+        self.streaming_enabled = streaming_config.get('enabled', False)
         
         # Inicializar fuentes configuradas
-        self._initialize_sources(config.get('sources', {}))
+        sources_config = config.get('sources', {})
+        self._initialize_sources(sources_config)
     
     def _initialize_sources(self, sources_config: Dict[str, Any]) -> None:
         """Inicializar fuentes de datos configuradas."""
@@ -155,7 +186,8 @@ class DataEngine:
         source: Optional[str] = None,
         frequency: str = '1d',
         normalize: bool = True,
-        clean: bool = True
+        clean: bool = True,
+        use_cache: bool = True
     ) -> List[Dict[str, Any]]:
         """
         Obtener datos OHLCV.
@@ -168,10 +200,25 @@ class DataEngine:
             frequency: Frecuencia (1d, 1h, 5m, etc.)
             normalize: Aplicar normalización
             clean: Aplicar limpieza
+            use_cache: Usar cache si está disponible
         
         Returns:
             Lista de datos OHLCV
         """
+        # Verificar cache
+        if use_cache:
+            cache_key = self.cache._make_key(
+                'ohlcv', symbol,
+                start_date=start_date.isoformat(),
+                end_date=end_date.isoformat(),
+                frequency=frequency,
+                source=source
+            )
+            cached_data = await self.cache.get(cache_key)
+            if cached_data:
+                logger.debug(f"Datos OHLCV obtenidos del cache para {symbol}")
+                return cached_data
+        
         # Determinar fuente
         ohlcv_source = None
         if source:
@@ -214,13 +261,31 @@ class DataEngine:
             cleaning_result = self.cleaning_pipeline.clean(raw_data, symbol, 'ohlcv')
             raw_data = cleaning_result['cleaned_data']
         
+        # Guardar en cache
+        if use_cache:
+            await self.cache.set(
+                cache_key,
+                raw_data,
+                metadata={
+                    'symbol': symbol,
+                    'source': ohlcv_source.name,
+                    'data_type': 'ohlcv',
+                    'frequency': frequency
+                }
+            )
+        
+        # Broadcast si streaming está habilitado
+        if self.streaming_enabled and self.streaming_manager:
+            await self.streaming_manager.broadcast_ohlcv(symbol, raw_data)
+        
         return raw_data
     
     async def get_fundamentals(
         self,
         symbol: str,
         source: Optional[str] = None,
-        data_type: str = 'profile'  # profile, metrics, statements
+        data_type: str = 'profile',  # profile, metrics, statements
+        use_cache: bool = True
     ) -> Optional[Dict[str, Any]]:
         """
         Obtener datos fundamentales.
@@ -229,11 +294,25 @@ class DataEngine:
             symbol: Símbolo del instrumento
             source: Fuente específica (fmp, alpha_vantage_fundamental)
             data_type: Tipo de datos (profile, metrics, statements)
+            use_cache: Usar cache si está disponible
         
         Returns:
             Dict con datos fundamentales
         """
+        # Verificar cache
+        if use_cache:
+            cache_key = self.cache._make_key(
+                'fundamentals', symbol,
+                data_type=data_type,
+                source=source
+            )
+            cached_data = await self.cache.get(cache_key)
+            if cached_data:
+                logger.debug(f"Datos fundamentales obtenidos del cache para {symbol}")
+                return cached_data
+        
         # Determinar fuente
+        fundamental_source = None
         if source:
             fundamental_source = self.sources.get(source)
         else:
@@ -254,14 +333,15 @@ class DataEngine:
             await fundamental_source.connect()
         
         # Obtener datos según tipo
+        result = None
         try:
             if isinstance(fundamental_source, FinancialModelingPrepSource):
                 if data_type == 'profile':
-                    return await fundamental_source.get_company_profile(symbol)
+                    result = await fundamental_source.get_company_profile(symbol)
                 elif data_type == 'metrics':
-                    return {'metrics': await fundamental_source.get_key_metrics(symbol)}
+                    result = {'metrics': await fundamental_source.get_key_metrics(symbol)}
                 elif data_type == 'statements':
-                    return {
+                    result = {
                         'income': await fundamental_source.get_financial_statements(symbol, 'income-statement'),
                         'balance': await fundamental_source.get_financial_statements(symbol, 'balance-sheet-statement'),
                         'cashflow': await fundamental_source.get_financial_statements(symbol, 'cash-flow-statement')
@@ -269,21 +349,33 @@ class DataEngine:
             
             elif isinstance(fundamental_source, AlphaVantageFundamentalSource):
                 if data_type == 'profile':
-                    return await fundamental_source.get_company_overview(symbol)
+                    result = await fundamental_source.get_company_overview(symbol)
                 elif data_type == 'earnings':
-                    return await fundamental_source.get_earnings(symbol)
+                    result = await fundamental_source.get_earnings(symbol)
             
         except Exception as e:
             logger.error(f"Error obteniendo fundamentales de {fundamental_source.name}: {e}")
             return None
         
-        return None
+        # Guardar en cache
+        if result and use_cache:
+            await self.cache.set(
+                cache_key,
+                result,
+                metadata={
+                    'symbol': symbol,
+                    'source': fundamental_source.name,
+                    'data_type': f'fundamentals_{data_type}'
+                }
+            )
+        
+        return result
     
     async def get_sentiment(
         self,
         symbol: str,
         source: Optional[str] = None,
-        max_results: int = 100
+        max_results: Optional[int] = None
     ) -> Dict[str, Any]:
         """
         Obtener sentimiento para un símbolo.
@@ -291,11 +383,16 @@ class DataEngine:
         Args:
             symbol: Símbolo del instrumento
             source: Fuente específica (twitter, reddit, news)
-            max_results: Número máximo de resultados
+            max_results: Número máximo de resultados (usa config YAML si None)
         
         Returns:
             Dict con sentimiento agregado
         """
+        # Obtener max_results desde config si no se especifica
+        if max_results is None:
+            sentiment_config = self.config_loader.get_sentiment_config()
+            max_results = sentiment_config.get('default_max_results', 100)
+        
         sentiment_sources_to_use = []
         
         if source:
@@ -307,9 +404,10 @@ class DataEngine:
         
         if not sentiment_sources_to_use:
             logger.warning("No hay fuente de sentimiento disponible")
+            sentiment_config = self.config_loader.get_sentiment_config()
             return {
-                'sentiment_score': 0.0,
-                'total_sources': 0,
+                'sentiment_score': sentiment_config.get('default_score', 0.0),
+                'total_sources': sentiment_config.get('default_counts', {}).get('total', 0),
                 'sources': {}
             }
         
@@ -332,11 +430,14 @@ class DataEngine:
                 logger.error(f"Error obteniendo sentimiento de {source_name}: {e}")
         
         # Agregar sentimientos
+        sentiment_config = self.config_loader.get_sentiment_config()
+        default_score = sentiment_config.get('default_score', 0.0)
+        
         if sentiment_results:
-            scores = [r.get('sentiment_score', 0.0) for r in sentiment_results.values()]
-            avg_score = sum(scores) / len(scores) if scores else 0.0
+            scores = [r.get('sentiment_score', default_score) for r in sentiment_results.values()]
+            avg_score = sum(scores) / len(scores) if scores else default_score
         else:
-            avg_score = 0.0
+            avg_score = default_score
         
         return {
             'sentiment_score': float(avg_score),
@@ -418,9 +519,26 @@ class DataEngine:
             'surface_data': []
         }
     
+    async def initialize(self) -> None:
+        """Inicializar Data Engine (conectar fuentes, iniciar streaming)."""
+        await self.connect_all()
+        
+        if self.streaming_enabled and self.streaming_manager:
+            await self.streaming_manager.start()
+    
+    async def shutdown(self) -> None:
+        """Cerrar Data Engine (desconectar fuentes, detener streaming)."""
+        await self.disconnect_all()
+        
+        if self.streaming_manager:
+            await self.streaming_manager.stop()
+        
+        if self.cache:
+            await self.cache.close()
+    
     def get_status(self) -> Dict[str, Any]:
         """Obtener estado del Data Engine."""
-        return {
+        status = {
             'sources': {
                 name: {
                     'is_connected': source.is_connected,
@@ -428,9 +546,12 @@ class DataEngine:
                 }
                 for name, source in self.sources.items()
             },
-            'cache_size': len(self.cache),
+            'cache': self.cache.get_status() if self.cache else None,
+            'streaming': self.streaming_manager.get_status() if self.streaming_manager else None,
+            'streaming_enabled': self.streaming_enabled,
             'normalizer_enabled': self.normalizer is not None,
             'cleaning_enabled': self.cleaning_pipeline is not None,
             'versioning_enabled': self.version_manager is not None
         }
+        return status
 

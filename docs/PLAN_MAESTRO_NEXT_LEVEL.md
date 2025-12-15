@@ -101,27 +101,27 @@ graph TB
 
 **Tareas**:
 
-- [ ] **1.1** Expandir `app/data/feeds.py` para múltiples fuentes:
-  - [ ] OHLCV de múltiples brokers (IBKR, Binance, Alpaca, Polygon)
-  - [ ] Datos fundamentales (Financial Modeling Prep, Alpha Vantage)
-  - [ ] Datos de sentimiento (Twitter API, Reddit API, News APIs)
-  - [ ] Datos de opciones (volatility surfaces)
-- [ ] **1.2** Sistema de normalización unificado:
-  - [ ] Estandarizar formatos de timestamps, símbolos, precios
-  - [ ] Manejo de splits, dividendos, corporate actions
-  - [ ] Cache distribuido (Redis + PostgreSQL)
-- [ ] **1.3** Pipeline de limpieza de datos:
-  - [ ] Detección de outliers (IQR, Z-score, Isolation Forest)
-  - [ ] Interpolación de gaps (forward fill, backward fill, spline)
-  - [ ] Validación de calidad (checksums, rangos válidos)
-- [ ] **1.4** Sistema de versionado de datos:
-  - [ ] Schema versioning para cambios en estructura
-  - [ ] Data lineage tracking
-  - [ ] Rollback capabilities
-- [ ] **1.5** API unificada de acceso:
-  - [ ] `DataEngine.get_ohlcv()`, `get_fundamentals()`, `get_sentiment()`
-  - [ ] Streaming real-time con WebSockets
-  - [ ] Batch loading optimizado
+- [x] **1.1** Expandir `app/data/feeds.py` para múltiples fuentes:
+  - [x] OHLCV de múltiples brokers (IBKR, Binance, Alpaca, Polygon)
+  - [x] Datos fundamentales (Financial Modeling Prep, Alpha Vantage)
+  - [x] Datos de sentimiento (Twitter API, Reddit API, News APIs)
+  - [x] Datos de opciones (volatility surfaces)
+- [x] **1.2** Sistema de normalización unificado:
+  - [x] Estandarizar formatos de timestamps, símbolos, precios
+  - [x] Manejo de splits, dividendos, corporate actions
+  - [x] Cache distribuido (Redis + PostgreSQL) - Implementado con fallback a memoria
+- [x] **1.3** Pipeline de limpieza de datos:
+  - [x] Detección de outliers (IQR, Z-score, Isolation Forest)
+  - [x] Interpolación de gaps (forward fill, backward fill, spline)
+  - [x] Validación de calidad (checksums, rangos válidos)
+- [x] **1.4** Sistema de versionado de datos:
+  - [x] Schema versioning para cambios en estructura
+  - [x] Data lineage tracking
+  - [x] Rollback capabilities
+- [x] **1.5** API unificada de acceso:
+  - [x] `DataEngine.get_ohlcv()`, `get_fundamentals()`, `get_sentiment()`
+  - [x] Streaming real-time con WebSockets - Implementado
+  - [x] Batch loading optimizado
 
 **Stack Tecnológico**:
 
@@ -148,27 +148,27 @@ graph TB
 
 **Tareas**:
 
-- [ ] **2.1** Mejorar `MarketAnalyzer` existente:
-  - [ ] Detección de régimen con HMM (Hidden Markov Models)
-  - [ ] Clustering de regímenes con KMeans/DBSCAN
-  - [ ] Análisis de correlaciones dinámicas (rolling correlation, PCA)
-- [ ] **2.2** Sistema de volatilidad adaptativa:
-  - [ ] Detección de cambios estructurales (CUSUM, Chow test)
-  - [ ] Regímenes de volatilidad (high/normal/low) con percentiles
-  - [ ] Volatility clustering (GARCH models)
-- [ ] **2.3** Detección de correlaciones:
-  - [ ] Matrices de correlación rolling window
-  - [ ] Correlación condicional (DCC-GARCH)
-  - [ ] Network analysis de correlaciones (Graph Theory)
-- [ ] **2.4** Contexto macroeconómico:
-  - [ ] Integración de indicadores macro (VIX, yield curve, GDP)
-  - [ ] Sector rotation detection
-  - [ ] Market breadth indicators
-- [ ] **2.5** API de contexto:
-  - [ ] `ContextEngine.get_current_regime()`
-  - [ ] `ContextEngine.get_volatility_regime()`
-  - [ ] `ContextEngine.get_correlation_matrix()`
-  - [ ] Cache de resultados (TTL: 1 hora)
+- [x] **2.1** Mejorar `MarketAnalyzer` existente:
+  - [x] Detección de régimen con HMM (Hidden Markov Models)
+  - [x] Clustering de regímenes con KMeans/DBSCAN
+  - [x] Análisis de correlaciones dinámicas (rolling correlation, PCA)
+- [x] **2.2** Sistema de volatilidad adaptativa:
+  - [x] Detección de cambios estructurales (CUSUM, Chow test)
+  - [x] Regímenes de volatilidad (high/normal/low) con percentiles
+  - [x] Volatility clustering (GARCH models)
+- [x] **2.3** Detección de correlaciones:
+  - [x] Matrices de correlación rolling window
+  - [x] Correlación condicional (DCC-GARCH)
+  - [x] Network analysis de correlaciones (Graph Theory)
+- [x] **2.4** Contexto macroeconómico:
+  - [x] Integración de indicadores macro (VIX, yield curve, GDP)
+  - [x] Sector rotation detection
+  - [x] Market breadth indicators
+- [x] **2.5** API de contexto:
+  - [x] `ContextEngine.get_current_regime()`
+  - [x] `ContextEngine.get_volatility_regime()`
+  - [x] `ContextEngine.get_correlation_matrix()`
+  - [x] Cache de resultados (TTL: 1 hora)
 
 **Stack Tecnológico**:
 
@@ -301,28 +301,28 @@ graph TB
 
 **Tareas**:
 
-- [ ] **5.1** Refactorizar `PortfolioService`:
-  - [ ] Extraer lógica de asignación de capital
-  - [ ] Crear `PortfolioEngine` con interfaz clara
-  - [ ] Integración con múltiples brokers
-- [ ] **5.2** Optimización de asignación:
-  - [ ] Mean-variance optimization (Markowitz)
-  - [ ] Risk parity allocation
-  - [ ] Black-Litterman model
-  - [ ] Kelly Criterion adaptativo
-- [ ] **5.3** Rebalanceo dinámico:
-  - [ ] Threshold-based rebalancing
-  - [ ] Time-based rebalancing (daily, weekly, monthly)
-  - [ ] Volatility-targeting rebalancing
-  - [ ] Transaction cost-aware rebalancing
-- [ ] **5.4** Meta-learning para asignación:
-  - [ ] Aprender pesos óptimos entre estrategias
-  - [ ] Reinforcement learning para portfolio management
-  - [ ] Historical performance-based allocation
-- [ ] **5.5** Multi-asset portfolio:
-  - [ ] Stocks, crypto, forex, commodities
-  - [ ] Currency hedging automático
-  - [ ] Sector/country diversification
+- [x] **5.1** Refactorizar `PortfolioService`:
+  - [x] Extraer lógica de asignación de capital
+  - [x] Crear `PortfolioEngine` con interfaz clara
+  - [x] Integración con múltiples brokers
+- [x] **5.2** Optimización de asignación:
+  - [x] Mean-variance optimization (Markowitz)
+  - [x] Risk parity allocation
+  - [x] Black-Litterman model
+  - [x] Kelly Criterion adaptativo
+- [x] **5.3** Rebalanceo dinámico:
+  - [x] Threshold-based rebalancing
+  - [x] Time-based rebalancing (daily, weekly, monthly)
+  - [x] Volatility-targeting rebalancing
+  - [x] Transaction cost-aware rebalancing
+- [x] **5.4** Meta-learning para asignación:
+  - [x] Aprender pesos óptimos entre estrategias
+  - [x] Reinforcement learning para portfolio management
+  - [x] Historical performance-based allocation
+- [x] **5.5** Multi-asset portfolio:
+  - [x] Stocks, crypto, forex, commodities
+  - [ ] Currency hedging automático (pendiente)
+  - [ ] Sector/country diversification (pendiente)
 
 **Stack Tecnológico**:
 
@@ -347,29 +347,29 @@ graph TB
 
 **Tareas**:
 
-- [ ] **6.1** Expandir `PortfolioRiskManager`:
-  - [ ] Value at Risk (VaR) histórico, paramétrico, Monte Carlo
-  - [ ] Conditional VaR (CVaR) / Expected Shortfall
-  - [ ] Stress testing (scenarios, historical, Monte Carlo)
-- [ ] **6.2** Control dinámico de drawdowns:
-  - [ ] Rolling maximum drawdown tracking
-  - [ ] Circuit breakers por drawdown (por estrategia, global)
-  - [ ] Recovery protocols después de drawdowns
-- [ ] **6.3** Gestión de exposición:
-  - [ ] Exposure limits por activo, sector, estrategia
-  - [ ] Leverage monitoring
-  - [ ] Concentration risk (Herfindahl index)
-- [ ] **6.4** Correlaciones cruzadas:
-  - [ ] Matrices de correlación en tiempo real
-  - [ ] Correlation-based position limits
-  - [ ] Diversification scoring
-- [ ] **6.5** Risk attribution:
-  - [ ] Descomponer riesgo por fuente (estrategia, activo, factor)
-  - [ ] Factor risk models (Fama-French, APT)
-- [ ] **6.6** Alertas y notificaciones:
-  - [ ] Threshold-based alerts
-  - [ ] Email/Slack notifications
-  - [ ] Dashboard de riesgo en tiempo real
+- [x] **6.1** Expandir `PortfolioRiskManager`:
+  - [x] Value at Risk (VaR) histórico, paramétrico, Monte Carlo
+  - [x] Conditional VaR (CVaR) / Expected Shortfall
+  - [x] Stress testing (scenarios, historical, Monte Carlo)
+- [x] **6.2** Control dinámico de drawdowns:
+  - [x] Rolling maximum drawdown tracking
+  - [x] Circuit breakers por drawdown (por estrategia, global)
+  - [x] Recovery protocols después de drawdowns
+- [x] **6.3** Gestión de exposición:
+  - [x] Exposure limits por activo, sector, estrategia
+  - [x] Leverage monitoring
+  - [x] Concentration risk (Herfindahl index)
+- [x] **6.4** Correlaciones cruzadas:
+  - [x] Matrices de correlación en tiempo real
+  - [x] Correlation-based position limits
+  - [x] Diversification scoring
+- [x] **6.5** Risk attribution:
+  - [x] Descomponer riesgo por fuente (estrategia, activo, factor)
+  - [x] Factor risk models (Fama-French, APT)
+- [x] **6.6** Alertas y notificaciones:
+  - [x] Threshold-based alerts
+  - [x] Email/Slack notifications
+  - [x] Dashboard de riesgo en tiempo real
 
 **Stack Tecnológico**:
 

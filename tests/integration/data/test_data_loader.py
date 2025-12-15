@@ -24,9 +24,9 @@ def load_all_csv_data(data_dir: Path = None, min_days: int = 40) -> Dict[str, pd
         Dictionary mapping symbol -> DataFrame with OHLCV data indexed by date.
     """
     if data_dir is None:
-        # __file__ is tests/integration/test_data_loader.py
-        # Go up 2 levels: tests/integration -> tests -> project_root
-        project_root = Path(__file__).parent.parent.parent
+        # __file__ is tests/integration/data/test_data_loader.py
+        # Go up 3 levels: tests/integration/data -> tests/integration -> tests -> project_root
+        project_root = Path(__file__).parent.parent.parent.parent
         data_dir = project_root / "data" / "historical"
     
     csv_files = list(data_dir.glob("*.csv"))

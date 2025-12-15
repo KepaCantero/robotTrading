@@ -1,0 +1,130 @@
+# DataEngine Configuration (Módulo 1)
+# Todos los parámetros deben estar definidos aquí - NO números mágicos en el código
+
+# Cache Configuration
+cache:
+  enabled: true
+  default_ttl_seconds: 3600  # 1 hora por defecto
+  redis:
+    enabled: true
+    # URL se obtiene de REDIS_URL si no se especifica
+    url: ""  # Opcional: override de REDIS_URL
+    decode_responses: false
+  postgres:
+    enabled: true
+    # URL se obtiene de DATABASE_URL si no se especifica
+    url: ""  # Opcional: override de DATABASE_URL
+  # Configuración de tablas PostgreSQL
+  postgres_schema:
+    table_name: "data_engine_cache"
+    key_max_length: 255
+    data_type_max_length: 50
+    symbol_max_length: 50
+    source_max_length: 50
+
+# Streaming Configuration
+streaming:
+  enabled: false
+  heartbeat_interval_seconds: 30
+  max_connections: 100
+  websocket_path: "/ws/data/{client_id}"
+  max_connection_code: 1008
+  connection_reason_max_reached: "Maximum connections reached"
+
+# Data Sources Configuration
+sources:
+  # Configuración por defecto para fuentes OHLCV
+  ohlcv:
+    default_frequency: "1d"
+    binance:
+      max_candles_per_request: 1000
+      pagination_enabled: true
+    polygon:
+      max_bars_per_request: 10000
+  
+  # Configuración por defecto para fuentes fundamentales
+  fundamental:
+    fmp:
+      default_limit: 5
+    alpha_vantage:
+      default_limit: 5
+  
+  # Configuración por defecto para fuentes de sentimiento
+  sentiment:
+    default_max_results: 100
+    twitter:
+      max_results_limit: 100  # Límite de Twitter API
+      sample_size: 10  # Muestra de tweets para análisis
+      default_sentiment_values:
+        positive: 0.5
+        negative: -0.5
+        neutral: 0.0
+    reddit:
+      max_posts_limit: 50
+      reddit_api_limit: 25  # Límite de Reddit API por request
+      sample_size: 10  # Muestra de posts para análisis
+      default_sentiment_values:
+        positive: 0.5
+        negative: -0.5
+        neutral: 0.0
+    news:
+      max_articles_limit: 50
+      news_api_limit: 100  # Límite de News API
+      sample_size: 10  # Muestra de artículos para análisis
+      default_sentiment_values:
+        positive: 0.5
+        negative: -0.5
+        neutral: 0.0
+      sample_feed_size: 5  # Tamaño de muestra de feed para metadata
+  
+  # Configuración por defecto para fuentes de opciones
+  options:
+    default_implied_volatility: 0.0
+    default_greeks:
+      delta: 0.0
+      gamma: 0.0
+      theta: 0.0
+      vega: 0.0
+
+# IBKR Specific Configuration
+ibkr:
+  paper_trading_port: 7497
+  live_trading_port: 7496
+  default_client_id: 1
+  default_bar_size: "1 day"
+
+# API Response Codes
+api:
+  success_status: 200
+  error_status: 500
+
+# Sentiment Analysis Defaults
+sentiment:
+  default_score: 0.0
+  default_counts:
+    positive: 0
+    negative: 0
+    neutral: 0
+    total: 0
+
+# Data Normalization
+normalization:
+  timestamp_format: "%Y-%m-%d %H:%M:%S"
+  timezone: "UTC"
+
+# Data Cleaning
+cleaning:
+  enabled: true
+  outlier_detection:
+    enabled: true
+    methods: ["iqr", "zscore", "isolation_forest"]
+  gap_interpolation:
+    enabled: true
+    methods: ["forward_fill", "backward_fill", "spline"]
+
+# Versioning
+versioning:
+  enabled: true
+  schema_version: "1.0.0"
+  data_lineage_enabled: true
+

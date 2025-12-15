@@ -26,9 +26,68 @@ Los tests de integración están organizados en las siguientes categorías:
 ### ⚙️ Engines (`engines/`)
 - `test_data_context_integration.py` - Integración de DataEngine y ContextEngine con Strategy Engines (Módulos 1 y 2)
 - `test_multi_strategy_integration.py` - Tests de multi-strategy con engines integrados
+- `test_portfolio_engine_integration.py` - Tests de Portfolio Engine (Fase 3, Módulo 5)
+- `test_risk_engine_integration.py` - Tests de Risk Engine (Fase 3, Módulo 6)
+- `test_portfolio_risk_strategy_integration.py` - Integración de Portfolio Engine y Risk Engine con Strategy Engines (Fase 3)
 
 ### ✅ Validation (`validation/`)
 - `test_validation_block1_data_integrity.py` - Validación de integridad de datos
+
+## Tests de Integración Fase 3: Portfolio y Risk
+
+### Portfolio Engine Integration (`test_portfolio_engine_integration.py`)
+
+Tests para verificar que Portfolio Engine (Fase 3, Módulo 5) funciona correctamente:
+
+- `test_portfolio_engine_initialization` - Inicialización de PortfolioEngine
+- `test_set_optimizer` - Configuración de optimizadores
+- `test_set_rebalancer` - Configuración de rebalanceadores
+- `test_set_meta_learner` - Configuración de meta-learners
+- `test_get_allocation_by_asset_class` - Asignación por clase de activo
+- `test_markowitz_optimizer` - Optimizador Markowitz
+- `test_risk_parity_optimizer` - Optimizador Risk Parity
+- `test_black_litterman_optimizer` - Optimizador Black-Litterman
+- `test_kelly_criterion_optimizer` - Optimizador Kelly Criterion
+- `test_threshold_rebalancer` - Rebalanceador por umbral
+- `test_time_based_rebalancer` - Rebalanceador por tiempo
+- `test_volatility_targeting_rebalancer` - Rebalanceador por volatilidad
+- `test_transaction_cost_aware_rebalancer` - Rebalanceador con costos
+- `test_historical_performance_learner` - Meta-learner de performance histórica
+- `test_ensemble_meta_learner` - Meta-learner ensemble
+
+### Risk Engine Integration (`test_risk_engine_integration.py`)
+
+Tests para verificar que Risk Engine (Fase 3, Módulo 6) funciona correctamente:
+
+- `test_risk_engine_initialization` - Inicialización de RiskEngine
+- `test_assess_risk` - Evaluación básica de riesgo
+- `test_set_components` - Configuración de componentes
+- `test_historical_var_calculator` - Calculador VaR histórico
+- `test_parametric_var_calculator` - Calculador VaR paramétrico
+- `test_monte_carlo_var_calculator` - Calculador VaR Monte Carlo
+- `test_stress_tester_initialization` - Inicialización de StressTester
+- `test_run_historical_stress_tests` - Stress tests históricos
+- `test_drawdown_controller_initialization` - Inicialización de DrawdownController
+- `test_assess_drawdown` - Evaluación de drawdown
+- `test_exposure_manager_initialization` - Inicialización de ExposureManager
+- `test_analyze_exposure` - Análisis de exposición
+- `test_correlation_analyzer_initialization` - Inicialización de CorrelationAnalyzer
+- `test_analyze_correlations` - Análisis de correlaciones
+- `test_risk_attributor_initialization` - Inicialización de RiskAttributor
+- `test_attribute_risk` - Atribución de riesgo
+- `test_alert_system_initialization` - Inicialización de AlertSystem
+- `test_check_thresholds` - Verificación de umbrales
+
+### Portfolio & Risk Integration with Strategy Engines (`test_portfolio_risk_strategy_integration.py`)
+
+Tests para verificar que Portfolio Engine y Risk Engine se integran correctamente con Strategy Engines:
+
+- `test_portfolio_engine_with_strategy_engine` - Strategy Engine puede usar Portfolio Engine
+- `test_portfolio_optimization_with_strategy_signals` - Optimización usando señales de estrategias
+- `test_risk_engine_with_strategy_engine` - Strategy Engine puede usar Risk Engine
+- `test_risk_assessment_with_strategy_portfolio` - Evaluación de riesgo usando portfolio de estrategia
+- `test_portfolio_risk_strategy_integration` - Integración completa Portfolio + Risk + Strategy
+- `test_multi_strategy_with_portfolio_risk_engines` - Multi-strategy con Portfolio y Risk Engines
 
 ## Tests de Integración Módulos 1 y 2
 
@@ -84,14 +143,20 @@ Los tests verifican que:
 
 1. ✅ **DataEngine** puede ser inicializado y usado por Strategy Engines
 2. ✅ **ContextEngine** puede ser inicializado y usado por Strategy Engines
-3. ✅ Los Strategy Engines pueden compartir instancias de DataEngine y ContextEngine
-4. ✅ Las métricas incluyen llamadas a los engines
-5. ✅ El status incluye información de los engines
-6. ✅ ModularMomentumStrategyEngine usa ContextEngine cuando está disponible
-7. ✅ Los backtests multi-strategy funcionan con los engines integrados
+3. ✅ **PortfolioEngine** puede ser inicializado y usado por Strategy Engines
+4. ✅ **RiskEngine** puede ser inicializado y usado por Strategy Engines
+5. ✅ Los Strategy Engines pueden compartir instancias de todos los engines
+6. ✅ Las métricas incluyen llamadas a los engines
+7. ✅ El status incluye información de todos los engines
+8. ✅ ModularMomentumStrategyEngine usa ContextEngine cuando está disponible
+9. ✅ Los backtests multi-strategy funcionan con los engines integrados
+10. ✅ Portfolio Engine puede optimizar asignación usando señales de estrategias
+11. ✅ Risk Engine puede evaluar riesgo de portfolios generados por estrategias
 
 ## Notas
 
-- Los tests son opcionales si DataEngine o ContextEngine no están disponibles (usando `pytest.skip`)
-- Los engines pueden funcionar sin DataEngine/ContextEngine (fallback a métodos tradicionales)
+- Los tests son opcionales si DataEngine, ContextEngine, PortfolioEngine o RiskEngine no están disponibles (usando `pytest.skip`)
+- Los engines pueden funcionar sin otros engines (fallback a métodos tradicionales)
+- Portfolio Engine y Risk Engine son completamente opcionales y pueden ser configurados externamente
+- Strategy Engines pueden usar múltiples engines simultáneamente
 - La integración es retrocompatible: si los engines no están disponibles, los Strategy Engines funcionan normalmente
