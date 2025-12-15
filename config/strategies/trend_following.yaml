@@ -1,0 +1,30 @@
+# Trend Following Strategy Configuration
+name: trend_following
+enabled: true
+weight: 1.0
+
+# Strategy-specific parameters
+parameters:
+  adx_period: 14 # Período para ADX
+  adx_threshold: 25.0 # ADX mínimo para confirmar tendencia (alias de min_adx_threshold)
+  min_adx_threshold: 25.0 # ADX mínimo para confirmar tendencia
+  macd_fast_period: 12 # Período rápido para MACD
+  macd_slow_period: 26 # Período lento para MACD
+  macd_signal_period: 9 # Período de señal para MACD
+  macd_histogram_threshold: 0.0 # Histograma debe ser positivo/negativo según dirección
+  min_volume_ratio: 1.5 # Volumen debe ser 1.5x el promedio
+  volume_lookback: 20 # Períodos para calcular promedio de volumen
+  min_signal_confidence: 60.0 # Confianza mínima para generar señal
+  max_exposure: 0.60 # Maximum 60% exposure
+
+# Risk parameters
+max_position_size: 0.10 # 10% per position
+stop_loss_pct: 0.025 # 2.5% stop loss
+take_profit_pct: 0.08 # 8% take profit (risk/reward ~3:1)
+max_drawdown_per_strategy: 0.05 # 5% max drawdown per strategy
+
+# Performance thresholds
+min_sharpe_ratio: 1.0
+max_drawdown: 0.15
+min_win_rate: 0.40
+

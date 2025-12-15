@@ -1,0 +1,25 @@
+# Breakout Strategy Configuration
+name: breakout
+enabled: true
+weight: 1.0
+
+# Strategy-specific parameters
+parameters:
+  lookback_period: 20 # Período para calcular rango de precios
+  breakout_threshold_pct: 0.02 # 2% por encima/abajo del rango para breakout
+  min_volume_ratio: 1.5 # Volumen debe ser 1.5x el promedio
+  volume_lookback: 20 # Períodos para calcular promedio de volumen
+  min_signal_confidence: 60.0 # Confianza mínima para generar señal
+  max_exposure: 0.60 # Maximum 60% exposure
+
+# Risk parameters
+max_position_size: 0.10 # 10% per position
+stop_loss_pct: 0.03 # 3% stop loss
+take_profit_pct: 0.06 # 6% take profit (risk/reward 2:1)
+max_drawdown_per_strategy: 0.05 # 5% max drawdown per strategy
+
+# Performance thresholds
+min_sharpe_ratio: 1.0
+max_drawdown: 0.15
+min_win_rate: 0.40
+

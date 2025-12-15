@@ -23,6 +23,7 @@
 - **Strategy Framework**: Sistema de Estrategias Múltiples (BaseStrategy, Factory, Registry)
 - **Walk Forward Analysis**: Implementación custom para validación robusta
 - **Bias Detection**: Sistema de detección de Look-Ahead Bias y Data Snooping
+- **Next Level Engines (Plan Maestro)**: mlfinlab, riskfolio-lib, PyPortfolioOpt, optuna/ray[tune], stable-baselines3, torch/transformers (según módulo descrito en `docs/PLAN_MAESTRO_NEXT_LEVEL.md`), ya integrados en parte en `DataEngine`, `ContextEngine`, `PortfolioEngine`, `RiskEngine` y el sistema de learning de `momentum_modular`.
 
 ### Asynchronous Processing
 

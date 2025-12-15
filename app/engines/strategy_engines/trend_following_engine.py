@@ -179,23 +179,33 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
             )
             features["adx"] = float(adx) if adx is not None else 0.0
 
-            # MACD
-            macd_line, macd_signal, macd_histogram = self.indicator_calculator.calculate_macd(
-                prices,
-                fast_period=self.macd_fast_period,
-                slow_period=self.macd_slow_period,
-                signal_period=self.macd_signal_period,
-            )
-            features["macd_line"] = float(macd_line) if macd_line is not None else 0.0
-            features["macd_signal"] = float(macd_signal) if macd_signal is not None else 0.0
-            features["macd_histogram"] = float(macd_histogram) if macd_histogram is not None else 0.0
+            # MACD (con manejo de errores)
+            try:
+                macd_line, macd_signal, macd_histogram = self.indicator_calculator.calculate_macd(
+                    prices,
+                    fast_period=self.macd_fast_period,
+                    slow_period=self.macd_slow_period,
+                    signal_period=self.macd_signal_period,
+                )
+            except (TypeError, ValueError) as e:
+                logger.debug(f"MACD calculation failed: {e}, using defaults")
+                macd_line, macd_signal, macd_histogram = None, None, None
+            
+            # Manejar None values de forma segura
+            macd_line_val = float(macd_line) if macd_line is not None else 0.0
+            macd_signal_val = float(macd_signal) if macd_signal is not None else 0.0
+            macd_histogram_val = float(macd_histogram) if macd_histogram is not None else 0.0
+            
+            features["macd_line"] = macd_line_val
+            features["macd_signal"] = macd_signal_val
+            features["macd_histogram"] = macd_histogram_val
 
             # Detectar cruces
             if len(prices) >= 2 and macd_line is not None and macd_signal is not None:
                 # Para detectar cruces necesitamos valores previos
                 # Por simplicidad, usamos el histograma: positivo = MACD > Signal
-                features["macd_cross_up"] = features["macd_histogram"] > 0
-                features["macd_cross_down"] = features["macd_histogram"] < 0
+                features["macd_cross_up"] = macd_histogram_val > 0
+                features["macd_cross_down"] = macd_histogram_val < 0
             else:
                 features["macd_cross_up"] = False
                 features["macd_cross_down"] = False

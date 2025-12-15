@@ -134,12 +134,12 @@ class StrategyFactory:
     def _register_default_strategies(self) -> None:
         """Registrar estrategias por defecto."""
         try:
-            # Importar estrategias por defecto
+            # Importar estrategias por defecto (legacy)
             from .mean_reversion import MeanReversionStrategy
             from .momentum import MomentumStrategy
             from .pairs_trading import PairsTradingStrategy
 
-            # Registrar estrategias
+            # Registrar estrategias legacy
             self.register_strategy("momentum", MomentumStrategy)
             self.register_strategy("mean_reversion", MeanReversionStrategy)
             self.register_strategy("pairs_trading", PairsTradingStrategy)
@@ -149,6 +149,29 @@ class StrategyFactory:
         except ImportError as e:
             logger.warning(f"Could not import default strategies: {e}")
             logger.info("Default strategies will be registered when their modules are available")
+        
+        # Registrar Strategy Engines (nuevos engines refactorizados)
+        try:
+            from app.engines.strategy_engines import (
+                BreakoutStrategyEngine,
+                TrendFollowingStrategyEngine,
+                MomentumStrategyEngine,
+                MeanReversionStrategyEngine,
+                PairsTradingStrategyEngine,
+            )
+
+            # Registrar engines (pueden usarse con el mismo nombre o con sufijo _engine)
+            self.register_strategy("breakout", BreakoutStrategyEngine)
+            self.register_strategy("trend_following", TrendFollowingStrategyEngine)
+            self.register_strategy("momentum_engine", MomentumStrategyEngine)
+            self.register_strategy("mean_reversion_engine", MeanReversionStrategyEngine)
+            self.register_strategy("pairs_trading_engine", PairsTradingStrategyEngine)
+
+            logger.info("Registered strategy engines: breakout, trend_following, momentum_engine, mean_reversion_engine, pairs_trading_engine")
+
+        except ImportError as e:
+            logger.warning(f"Could not import strategy engines: {e}")
+            logger.info("Strategy engines will be registered when their modules are available")
 
     def reload_strategies(self) -> None:
         """Recargar estrategias por defecto."""

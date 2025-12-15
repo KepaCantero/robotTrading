@@ -17,6 +17,7 @@ from collections import deque
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Sequence
 
+from app.core.centralized_config import get_strategy_config, get_trading_threshold
 from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
@@ -49,6 +50,7 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
         """
         super().__init__(config)
 
+        # Initialize all parameters with defaults FIRST (before loading YAML config)
         # Parámetros principales
         self.lookback_period: int = int(config.get("lookback_period", 20))
         # Umbral de breakout expresado como fracción (0.01 = 1%)
@@ -67,6 +69,41 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
         self.min_signal_confidence: float = float(
             config.get("min_signal_confidence", 60.0)
         )
+
+        # Load strategy-specific configuration from YAML and override defaults
+        strategy_config = get_strategy_config("breakout")
+        if strategy_config:
+            params = strategy_config.parameters
+            # Merge strategy parameters into local config
+            if isinstance(params, dict):
+                try:
+                    self.config.update({k: v for k, v in params.items() if v is not None})
+                    config.update({k: v for k, v in params.items() if v is not None})
+                except Exception:
+                    pass
+
+            # Core thresholds - load from YAML
+            if "lookback_period" in params:
+                self.lookback_period = int(params.get("lookback_period", self.lookback_period))
+            if "breakout_threshold_pct" in params:
+                self.breakout_threshold_pct = Decimal(str(params.get("breakout_threshold_pct", self.breakout_threshold_pct)))
+            if "min_volume_ratio" in params:
+                self.min_volume_ratio = Decimal(str(params.get("min_volume_ratio", self.min_volume_ratio)))
+            if "min_signal_confidence" in params:
+                self.min_signal_confidence = float(params.get("min_signal_confidence", self.min_signal_confidence))
+
+            # Risk parameters from YAML
+            self.stop_loss = Decimal(
+                str(strategy_config.stop_loss_pct or get_trading_threshold("stop_loss_pct"))
+            )
+            self.take_profit = Decimal(
+                str(strategy_config.take_profit_pct or get_trading_threshold("take_profit_pct"))
+            )
+            self.max_position_size = Decimal(
+                str(strategy_config.max_position_size or get_trading_threshold("max_position_size"))
+            )
+            if "max_exposure" in params:
+                self.max_exposure = Decimal(str(params.get("max_exposure", self.max_exposure)))
 
         # Históricos
         self.price_history: deque[float] = deque(maxlen=max(self.lookback_period, 100))
@@ -215,20 +252,20 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
             if current_price <= 0:
                 return []
 
-            # Actualizar histórico
-            self.price_history.append(current_price)
-            self.high_history.append(
-                float(getattr(market_data, "high", current_price))
-            )
-            self.low_history.append(
-                float(getattr(market_data, "low", current_price))
-            )
-            self.volume_history.append(float(getattr(market_data, "volume", 0)))
-
-            # Necesitamos suficiente histórico
+            # Necesitamos suficiente histórico ANTES de añadir el precio actual
             if len(self.price_history) < self.lookback_period:
+                # Añadir al histórico pero no generar señal aún
+                self.price_history.append(current_price)
+                self.high_history.append(
+                    float(getattr(market_data, "high", current_price))
+                )
+                self.low_history.append(
+                    float(getattr(market_data, "low", current_price))
+                )
+                self.volume_history.append(float(getattr(market_data, "volume", 0)))
                 return []
 
+            # Calcular rango ANTES de añadir el precio actual (para detectar breakout correctamente)
             prices = list(self.price_history)
             highs = list(self.high_history)
             lows = list(self.low_history)
@@ -253,6 +290,16 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
             # Niveles de breakout
             breakout_up_level = range_high * (1 + float(self.breakout_threshold_pct))
             breakout_down_level = range_low * (1 - float(self.breakout_threshold_pct))
+
+            # Actualizar histórico DESPUÉS de calcular el rango (para el próximo ciclo)
+            self.price_history.append(current_price)
+            self.high_history.append(
+                float(getattr(market_data, "high", current_price))
+            )
+            self.low_history.append(
+                float(getattr(market_data, "low", current_price))
+            )
+            self.volume_history.append(float(getattr(market_data, "volume", 0)))
 
             # Flags de breakout
             breakout_up = current_price >= breakout_up_level
