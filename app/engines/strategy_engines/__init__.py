@@ -11,12 +11,16 @@ from .momentum_engine import MomentumStrategyEngine
 from .mean_reversion_engine import MeanReversionStrategyEngine
 from .pairs_engine import PairsTradingStrategyEngine
 from .modular_momentum_engine import ModularMomentumStrategyEngine
+from .breakout_engine import BreakoutStrategyEngine
+from .trend_following_engine import TrendFollowingStrategyEngine
 
 __all__ = [
-    'BaseStrategyEngine',
-    'MomentumStrategyEngine',
-    'MeanReversionStrategyEngine',
-    'PairsTradingStrategyEngine',
-    'ModularMomentumStrategyEngine',
+    "BaseStrategyEngine",
+    "MomentumStrategyEngine",
+    "MeanReversionStrategyEngine",
+    "PairsTradingStrategyEngine",
+    "ModularMomentumStrategyEngine",
+    "BreakoutStrategyEngine",
+    "TrendFollowingStrategyEngine",
 ]
 

@@ -1,6 +1,27 @@
 # Progress Tracking - AlgoTrading MVP
 
-## Current Status: **MVP OPERATIVO AWS/DOCKER - PAPER TRADING ACTIVO** ✅
+## Current Status (2025-11-18): Plan Maestro "Next Level" – Fases 1–3
+
+- **Fase 1: Data Engine + Context Engine**
+  - Estado: ✅ **COMPLETADA**.
+  - Implementados `DataEngine` y `ContextEngine` en `app/engines/` con sus submódulos (fuentes de datos, normalizadores, validadores, versionado, analizadores de régimen/volatilidad/correlación, indicadores macro) y tests de integración (`tests/integration/engines/test_data_context_integration.py`).
+- **Fase 2: Strategy Engines + Learning Engine**
+  - Estado: 🟡 **MUY AVANZADA, NO CERRADA**.
+  - Refactor de estrategias a `StrategyEngines` completado (`momentum`, `mean_reversion`, `pairs_trading`, `modular_momentum`) sobre `BaseStrategyEngine`, con integración opcional a Data/Context/Portfolio/Risk y Learning Engines.
+  - Sistema de learning para `momentum_modular` completo (feature extractor, training data preparator, learning engines supervisado/deep/RL, reentrenamiento automático y uso durante backtesting).
+  - **Novedad 2025‑11‑18**: Implementado `BreakoutStrategyEngine` (señales de ruptura de rango) con unit test (`tests/unit/engines/test_breakout_engine.py`) e integración en `tests/integration/strategies/test_strategy_engines.py`; ejecución de `pytest` pendiente por falta del binario en la sandbox (correr localmente).
+  - Pendientes: `TrendFollowingStrategyEngine`, `ArbitrageStrategyEngine` mejorado, `StrategyCompositor` para ensembles y mejoras avanzadas del `LearningEngine` (drift detection, feature importance, transfer learning).
+- **Fase 3: Portfolio Engine + Risk Engine**
+  - Estado: ✅ **NÚCLEO COMPLETO**, con pequeños gaps.
+  - `PortfolioEngine` implementado con optimizadores (Markowitz, Risk Parity, Black-Litterman, Kelly), rebalancers (threshold, time-based, volatility-targeting, transaction-cost-aware) y meta-learners, ver `tests/integration/engines/test_portfolio_engine_integration.py`.
+  - `RiskEngine` implementado con VaR/CVaR (histórico, paramétrico, Monte Carlo), stress testing, exposure manager, drawdown controller, correlation analyzer, risk attribution y alert system, ver `tests/integration/engines/test_risk_engine_integration.py`.
+  - Pendientes: `currency hedging` automático y diversificación sector/país dentro del Portfolio Engine.
+- **Fases 4–7**
+  - Estado: 📄 **DISEÑADAS, IMPLEMENTACIÓN PARCIAL**.
+  - `ExecutionEngine` centralizado existe en `app/strategies/execution_engine.py`, pero todavía no como `app/engines/execution_engine/` ni con OMS multi-broker completo.
+  - El resto de módulos (Monitoring & Dashboard “next level”, Meta-Analyzer avanzado, Audit & Persistence Engine, XAI, Synthetic Data Engine, Prediction Fusion, Compliance & Governance, Knowledge Graph, Experimentation & Orchestration, Infrastructure Optimizer) están definidos en `docs/PLAN_MAESTRO_NEXT_LEVEL.md` y parcialmente solapados con componentes actuales (dashboard existente, meta_analyzer de backtesting, etc.), pero aún no se han materializado como engines dedicados.
+
+## Historical Status (MVP): **MVP OPERATIVO AWS/DOCKER - PAPER TRADING ACTIVO** ✅
 
 ### Phase: MVP Production Ready - AWS + Docker + Paper Trading
 

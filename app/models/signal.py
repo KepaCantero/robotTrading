@@ -41,6 +41,10 @@ class SignalSource(str, Enum):
     VOLUME = "volume"
     TECHNICAL = "technical"
     FUNDAMENTAL = "fundamental"
+    TREND_FOLLOWING = "trend_following"
+    BREAKOUT = "breakout"
+    MEAN_REVERSION = "mean_reversion"
+    PAIRS_TRADING = "pairs_trading"
 
 
 @dataclass

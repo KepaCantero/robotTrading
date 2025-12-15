@@ -1,6 +1,22 @@
 # Active Context - AlgoTrading MVP
 
-## Current Focus: **COMPLETAR MVP - PORTFOLIO MULTI-STRATEGY + DATA QUALITY + TECHNICAL INDICATORS** 🎯
+## Current Focus (2025-11-18): Plan Maestro "Next Level" – Engine Architecture
+
+- **Estado de alto nivel**: El MVP descrito más abajo está operativo; ahora el foco activo es el **Plan Maestro "AlgoTrading Next Level"** definido en `docs/PLAN_MAESTRO_NEXT_LEVEL.md`.
+- **Fase 1 (Data & Context)**: ✅ Completada en código con `DataEngine` y `ContextEngine` en `app/engines/`, incluyendo normalización, limpieza, versionado, análisis de régimen/volatilidad/correlaciones y tests de integración.
+- **Fase 2 (Strategy & Learning)**: 🟡 Muy avanzada pero no cerrada.  
+  - Refactor de estrategias a `StrategyEngines` completado (`MomentumStrategyEngine`, `MeanReversionStrategyEngine`, `PairsTradingStrategyEngine`, `ModularMomentumStrategyEngine` sobre `BaseStrategyEngine`).  
+  - Sistema de learning para `momentum_modular` completo (feature extractor, preparador de datos, learning engines supervisado/deep/RL, reentrenamiento automático).  
+  - **Novedad 2025‑11‑18**: Se añadió `BreakoutStrategyEngine` (Módulo 3.2) con señales de ruptura de rango y confirmación de volumen, más unit test (`tests/unit/engines/test_breakout_engine.py`) e integración en `tests/integration/strategies/test_strategy_engines.py`. La ejecución de `pytest` quedó pendiente por falta del comando en la sandbox; correr localmente antes de mergear.  
+  - Pendiente: siguientes estrategias (`TrendFollowing`, `Arbitrage` mejorado, etc.), sistema de composición/ensembles (`compositor`) y mejoras avanzadas de `LearningEngine` (drift detection, feature importance, transfer learning).
+- **Fase 3 (Portfolio & Risk)**: ✅ Núcleo implementado.  
+  - `PortfolioEngine` y `RiskEngine` en `app/engines/` con optimizadores (Markowitz, Risk Parity, Black-Litterman, Kelly), rebalancers, meta-learners, VaR/CVaR, stress testing, exposición, drawdowns, correlaciones, risk attribution y alert system, todos con tests de integración.  
+  - Pendiente: `currency hedging` automático y diversificación sector/país en el Portfolio Engine.
+- **Fases 4–7 (Análisis, Persistencia, Ejecución, Monitoring, XAI, Synthetic Data, Fusion, Governance, KGE, Experimentación, Infraestructura)**:  
+  - Diseño detallado en `PLAN_MAESTRO_NEXT_LEVEL.md`.  
+  - Piezas iniciales en código (por ejemplo `ExecutionEngine` centralizado en `app/strategies/execution_engine.py`), pero aún no existen módulos dedicados bajo `app/engines/` ni el dashboard “next level”.
+
+## Previous Focus: **COMPLETAR MVP - PORTFOLIO MULTI-STRATEGY + DATA QUALITY + TECHNICAL INDICATORS** 🎯
 
 ### Phase: MVP Finalization - Backend Test Result Summary + ATR Filtering + Advanced Risk Metrics
 
