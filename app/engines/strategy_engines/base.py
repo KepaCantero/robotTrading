@@ -39,6 +39,21 @@ except ImportError:
     CONTEXT_ENGINE_AVAILABLE = False
     logger.debug("ContextEngine no disponible")
 
+# Importaciones opcionales para PortfolioEngine y RiskEngine (Fase 3)
+try:
+    from app.engines.portfolio_engine import PortfolioEngine
+    PORTFOLIO_ENGINE_AVAILABLE = True
+except ImportError:
+    PORTFOLIO_ENGINE_AVAILABLE = False
+    logger.debug("PortfolioEngine no disponible")
+
+try:
+    from app.engines.risk_engine import RiskEngine
+    RISK_ENGINE_AVAILABLE = True
+except ImportError:
+    RISK_ENGINE_AVAILABLE = False
+    logger.debug("RiskEngine no disponible")
+
 
 class BaseStrategyEngine(BaseStrategy, ABC):
     """
@@ -87,6 +102,30 @@ class BaseStrategyEngine(BaseStrategy, ABC):
                 logger.info(f"{self.__class__.__name__}: ContextEngine habilitado")
             except Exception as e:
                 logger.warning(f"No se pudo inicializar ContextEngine: {e}")
+        
+        # PortfolioEngine integration (Fase 3, Módulo 5)
+        self.portfolio_engine = None
+        self.portfolio_engine_enabled = config.get("portfolio_engine_enabled", False)
+        if PORTFOLIO_ENGINE_AVAILABLE and self.portfolio_engine_enabled:
+            portfolio_engine_config = config.get("portfolio_engine_config", {})
+            try:
+                self.portfolio_engine = PortfolioEngine(portfolio_engine_config)
+                self.portfolio_engine.initialize()
+                logger.info(f"{self.__class__.__name__}: PortfolioEngine habilitado")
+            except Exception as e:
+                logger.warning(f"No se pudo inicializar PortfolioEngine: {e}")
+        
+        # RiskEngine integration (Fase 3, Módulo 6)
+        self.risk_engine = None
+        self.risk_engine_enabled = config.get("risk_engine_enabled", False)
+        if RISK_ENGINE_AVAILABLE and self.risk_engine_enabled:
+            risk_engine_config = config.get("risk_engine_config", {})
+            try:
+                self.risk_engine = RiskEngine(risk_engine_config)
+                self.risk_engine.initialize()
+                logger.info(f"{self.__class__.__name__}: RiskEngine habilitado")
+            except Exception as e:
+                logger.warning(f"No se pudo inicializar RiskEngine: {e}")
         
         # Feature extraction
         self.feature_extractors = []  # Lista de extractores de features
@@ -391,6 +430,28 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         self.context_engine_enabled = True
         logger.info(f"{self.__class__.__name__}: ContextEngine configurado externamente")
     
+    def set_portfolio_engine(self, portfolio_engine: Any) -> None:
+        """
+        Configurar PortfolioEngine externo (Fase 3, Módulo 5).
+        
+        Args:
+            portfolio_engine: Instancia de PortfolioEngine
+        """
+        self.portfolio_engine = portfolio_engine
+        self.portfolio_engine_enabled = True
+        logger.info(f"{self.__class__.__name__}: PortfolioEngine configurado externamente")
+    
+    def set_risk_engine(self, risk_engine: Any) -> None:
+        """
+        Configurar RiskEngine externo (Fase 3, Módulo 6).
+        
+        Args:
+            risk_engine: Instancia de RiskEngine
+        """
+        self.risk_engine = risk_engine
+        self.risk_engine_enabled = True
+        logger.info(f"{self.__class__.__name__}: RiskEngine configurado externamente")
+    
     # ===== Métodos mejorados de generate_signals =====
     
     def generate_signals(self, market_data: Quote) -> List[Signal]:
@@ -480,6 +541,8 @@ class BaseStrategyEngine(BaseStrategy, ABC):
             "learning_enabled": self.learning_enabled,
             "data_engine_enabled": self.data_engine_enabled,
             "context_engine_enabled": self.context_engine_enabled,
+            "portfolio_engine_enabled": self.portfolio_engine_enabled,
+            "risk_engine_enabled": self.risk_engine_enabled,
             "is_ensemble_component": self.is_ensemble_component,
             "ensemble_weight": float(self.ensemble_weight),
             "metrics": self.get_metrics()
@@ -495,6 +558,18 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         if self.context_engine:
             try:
                 status["context_engine_status"] = "available"
+            except:
+                pass
+        
+        if self.portfolio_engine:
+            try:
+                status["portfolio_engine_status"] = self.portfolio_engine.get_status()
+            except:
+                pass
+        
+        if self.risk_engine:
+            try:
+                status["risk_engine_status"] = self.risk_engine.get_status()
             except:
                 pass
         
