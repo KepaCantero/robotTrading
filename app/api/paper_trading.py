@@ -7,7 +7,7 @@ portfolio simulation, and trade execution for the algorithmic trading system.
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -340,7 +340,7 @@ async def get_config(
 async def get_portfolio_stats(
     portfolio_id: UUID,
     service: PaperTradingService = Depends(get_paper_trading_service),
-) -> Dict[str, any]:
+) -> Dict[str, Any]:
     """Get portfolio statistics."""
     portfolio = await service.get_portfolio(portfolio_id)
     if not portfolio:

@@ -23,7 +23,7 @@
 - **Engines actualmente implementados**:
   - `DataEngine` (`app/engines/data_engine/`): fuentes múltiples (OHLCV, fundamentales, sentimiento, opciones), normalización, limpieza, versionado, cache distribuido y streaming.
   - `ContextEngine` (`app/engines/context_engine/`): detección de régimen (HMM, clustering, correlaciones), volatilidad (GARCH, regímenes), correlaciones dinámicas, indicadores macro.
-  - `StrategyEngines` (`app/engines/strategy_engines/`): `MomentumStrategyEngine`, `MeanReversionStrategyEngine`, `PairsTradingStrategyEngine`, `ModularMomentumStrategyEngine` y **`BreakoutStrategyEngine` (2025‑11‑18)**, todos sobre `BaseStrategyEngine` con integración opcional a Data/Context/Portfolio/Risk y Learning Engines.
+  - `StrategyEngines` (`app/engines/strategy_engines/`): `MomentumStrategyEngine`, `MeanReversionStrategyEngine`, `PairsTradingStrategyEngine`, `ModularMomentumStrategyEngine`, **`BreakoutStrategyEngine` (2025‑11‑18)** y **`TrendFollowingStrategyEngine` (2025‑11‑18)** con ADX/MACD, todos sobre `BaseStrategyEngine` con integración opcional a Data/Context/Portfolio/Risk y Learning Engines.
   - `PortfolioEngine` (`app/engines/portfolio_engine/`): interfaz de alto nivel sobre `PortfolioService` con optimizadores (Markowitz, Risk Parity, Black-Litterman, Kelly), rebalancers y meta-learners.
   - `RiskEngine` (`app/engines/risk_engine/`): capa avanzada sobre `PortfolioRiskManager` con VaR/CVaR, stress testing, exposición, drawdowns, correlaciones, risk attribution y alert system.
 - **Engines planificados (aún no implementados como módulos dedicados)**:

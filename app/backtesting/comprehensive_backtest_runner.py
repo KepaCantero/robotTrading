@@ -3010,6 +3010,24 @@ class ComprehensiveBacktestRunner:
             
             strategies["pairs_trading"] = PairsTradingStrategy(pairs_config)
         
+        # 4. Breakout Strategy Engine (nuevo)
+        from app.engines.strategy_engines import BreakoutStrategyEngine
+        breakout_config_dict = centralized_config.get_strategy_config("breakout")
+        if breakout_config_dict:
+            breakout_config = breakout_config_dict.dict()
+            if "parameters" in breakout_config and isinstance(breakout_config["parameters"], dict):
+                breakout_config.update(breakout_config["parameters"])
+            strategies["breakout"] = BreakoutStrategyEngine(breakout_config)
+        
+        # 5. Trend Following Strategy Engine (nuevo)
+        from app.engines.strategy_engines import TrendFollowingStrategyEngine
+        trend_config_dict = centralized_config.get_strategy_config("trend_following")
+        if trend_config_dict:
+            trend_config = trend_config_dict.dict()
+            if "parameters" in trend_config and isinstance(trend_config["parameters"], dict):
+                trend_config.update(trend_config["parameters"])
+            strategies["trend_following"] = TrendFollowingStrategyEngine(trend_config)
+        
         if not strategies:
             raise ValueError("No se pudieron crear estrategias para multi-strategy backtest")
         

@@ -73,7 +73,7 @@ try:
     # Generar señales
     print("🔍 Generating signals...")
     signals = []
-    for quote in quotes[:100]:  # Limitar para prueba
+    for quote in quotes:  # Procesar todas las quotes (la estrategia necesita suficiente histórico)
         try:
             signals.extend(strategy.generate_signals(quote))
         except Exception as e:
@@ -84,8 +84,9 @@ try:
 
     # Ejecutar backtest
     print("▶️  Running backtest...")
-    backtester = SimpleBacktester(config)
-    result = backtester.run_backtest(quotes[:100], signals)
+    # Pasar la estrategia al backtester para que pueda ejecutar risk_check
+    backtester = SimpleBacktester(config, strategy=strategy, strategy_name=STRATEGY_NAME)
+    result = backtester.run_backtest(quotes, signals)
 
     # Mostrar resultados
     print()

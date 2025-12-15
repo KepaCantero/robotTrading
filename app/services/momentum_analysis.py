@@ -165,10 +165,19 @@ class TechnicalIndicatorCalculator:
                 logger.debug("MACD: Some column names not found in DataFrame")
                 return None, None, None
             
-            # Get last valid values
-            macd_line = float(macd_df[macd_line_col].iloc[-1])
-            signal_line = float(macd_df[signal_line_col].iloc[-1])
-            histogram = float(macd_df[histogram_col].iloc[-1])
+            # Get last valid values, handling NaN/None
+            macd_line_val = macd_df[macd_line_col].iloc[-1]
+            signal_line_val = macd_df[signal_line_col].iloc[-1]
+            histogram_val = macd_df[histogram_col].iloc[-1]
+            
+            # Check for NaN or None values
+            if pd.isna(macd_line_val) or pd.isna(signal_line_val) or pd.isna(histogram_val):
+                logger.debug("MACD: NaN values in MACD calculation")
+                return None, None, None
+            
+            macd_line = float(macd_line_val)
+            signal_line = float(signal_line_val)
+            histogram = float(histogram_val)
             
             logger.debug(
                 f"MACD({fast_period},{slow_period},{signal_period}) calculated: "
@@ -179,7 +188,8 @@ class TechnicalIndicatorCalculator:
             
         except Exception as e:
             logger.error(f"MACD calculation error with pandas_ta_classic: {e}")
-            raise
+            # Retornar None en lugar de lanzar excepción para permitir que el código continúe
+            return None, None, None
     
     @staticmethod
     def calculate_roc(prices: List[float], period: int = 12) -> Optional[float]:
