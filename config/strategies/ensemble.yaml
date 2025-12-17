@@ -1,0 +1,122 @@
+# Ensemble Strategy Configuration
+# Configuración para sistemas de composición de estrategias
+
+# ============================================================================
+# Weighted Ensemble - Combina señales con pesos dinámicos
+# ============================================================================
+weighted_ensemble:
+  name: "weighted_ensemble"
+  description: "Ensemble que combina señales con pesos dinámicos basados en performance"
+  enabled: true
+
+  # Configuración general
+  min_strategies_for_signal: 2  # Mínimo de estrategias que deben coincidir
+  conflict_resolution: "weighted"  # weighted, majority, strongest
+  weight_update_frequency: 100  # Actualizar pesos cada N señales
+
+  # Método de ponderación
+  weight_method: "sharpe"  # sharpe, returns, inverse_volatility, equal
+  performance_lookback: 30  # Días de histórico para calcular performance
+  min_weight: 0.05  # Peso mínimo por estrategia
+  max_weight: 0.50  # Peso máximo por estrategia
+
+  # Sub-estrategias por defecto
+  default_strategies:
+    - name: "momentum_engine"
+      weight: 0.35
+    - name: "trend_following"
+      weight: 0.25
+    - name: "breakout"
+      weight: 0.20
+    - name: "mean_reversion_engine"
+      weight: 0.20
+
+# ============================================================================
+# Regime Based Selector - Selecciona estrategia según régimen de mercado
+# ============================================================================
+regime_selector:
+  name: "regime_selector"
+  description: "Selector que elige estrategias basado en régimen de mercado detectado"
+  enabled: true
+
+  # Configuración general
+  min_strategies_for_signal: 1
+
+  # Parámetros de detección de régimen
+  lookback_period: 20  # Días para detectar régimen
+  volatility_threshold: 0.02  # Umbral para alta volatilidad (2%)
+  trend_threshold: 0.005  # Umbral para tendencia significativa (0.5%)
+
+  # Mapeo régimen -> estrategias preferidas
+  regime_strategies:
+    trending_up:
+      - "momentum_engine"
+      - "trend_following"
+      - "breakout"
+    trending_down:
+      - "momentum_engine"
+      - "mean_reversion_engine"
+    high_volatility:
+      - "mean_reversion_engine"
+      - "arbitrage"
+    low_volatility:
+      - "breakout"
+      - "trend_following"
+    unknown:
+      - "momentum_engine"
+      - "mean_reversion_engine"
+      - "breakout"
+
+# ============================================================================
+# Voting Ensemble - Combina señales por votación mayoritaria
+# ============================================================================
+voting_ensemble:
+  name: "voting_ensemble"
+  description: "Ensemble que combina señales mediante votación entre estrategias"
+  enabled: true
+
+  # Configuración general
+  min_strategies_for_signal: 2
+  conflict_resolution: "majority"
+
+  # Parámetros de votación
+  min_votes: 2  # Mínimo de votos requeridos
+  require_majority: true  # Requerir mayoría simple
+  unanimous_boost: 1.2  # Boost de confianza si voto unánime (20%)
+
+  # Sub-estrategias votantes
+  default_strategies:
+    - name: "momentum_engine"
+    - name: "trend_following"
+    - name: "breakout"
+    - name: "mean_reversion_engine"
+
+# ============================================================================
+# Configuración de Risk Management para Ensembles
+# ============================================================================
+risk_management:
+  max_exposure: 0.60  # Exposición máxima del portfolio
+  min_confidence: 50.0  # Confianza mínima para señales
+  correlation_threshold: 0.70  # Umbral de correlación entre estrategias
+
+# ============================================================================
+# Presets de configuración rápida
+# ============================================================================
+presets:
+  conservative:
+    min_strategies_for_signal: 3
+    min_votes: 3
+    require_majority: true
+    min_confidence: 60.0
+
+  balanced:
+    min_strategies_for_signal: 2
+    min_votes: 2
+    require_majority: true
+    min_confidence: 50.0
+
+  aggressive:
+    min_strategies_for_signal: 1
+    min_votes: 1
+    require_majority: false
+    min_confidence: 40.0

@@ -1,0 +1,55 @@
+# Arbitrage Strategy Configuration
+name: arbitrage
+enabled: true
+weight: 0.8
+
+# Strategy-specific parameters
+parameters:
+  # Type of arbitrage: "statistical", "spread", or "carry"
+  arbitrage_type: statistical
+
+  # Arbitrage pairs - related assets for spread trading
+  arbitrage_pairs:
+    - ["SPY", "IVV"]       # S&P 500 ETF arbitrage (tracking same index)
+    - ["GLD", "IAU"]       # Gold ETF arbitrage
+    - ["QQQ", "QQQM"]      # Nasdaq-100 ETF arbitrage
+    - ["TLT", "IEF"]       # Treasury bond ETF arbitrage
+    - ["VTI", "ITOT"]      # Total US market ETF arbitrage
+    - ["EFA", "IEFA"]      # International developed markets ETF
+
+  # Entry/Exit thresholds
+  entry_z_score: 2.0          # Z-score threshold to enter arbitrage position
+  exit_z_score: 0.5           # Z-score threshold to exit (close to mean)
+  lookback_period: 60         # Periods for calculating spread statistics
+
+  # Spread bounds
+  min_spread_pct: 0.005       # Minimum spread 0.5% to trade (filters noise)
+  max_spread_pct: 0.10        # Maximum spread 10% (avoid extreme dislocations)
+
+  # Correlation requirements
+  min_correlation: 0.85       # Minimum correlation between assets
+
+  # Exposure limits
+  max_exposure: 0.40          # Maximum 40% total arbitrage exposure
+  max_position_per_leg: 0.15  # Maximum 15% per arbitrage leg
+
+  # Signal thresholds
+  min_signal_confidence: 60.0 # Minimum confidence to generate signal
+
+  # Carry trade specific parameters
+  carry_yield_threshold: 0.02     # 2% minimum yield differential
+  funding_rate_threshold: 0.0001  # 0.01% funding rate threshold
+
+  # Trade frequency
+  max_trades_per_day: 10      # Maximum trades per day
+
+# Risk parameters
+max_position_size: 0.10       # 10% max per position
+stop_loss_pct: 0.02           # 2% stop loss (tighter for arbitrage)
+take_profit_pct: 0.04         # 4% take profit (2:1 risk/reward)
+max_drawdown_per_strategy: 0.03  # 3% max drawdown (stricter for arbitrage)
+
+# Performance thresholds
+min_sharpe_ratio: 2.0         # Higher Sharpe expected for arbitrage
+max_drawdown: 0.08            # Lower max drawdown for arbitrage
+min_win_rate: 0.60            # Higher win rate expected

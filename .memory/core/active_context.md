@@ -1,21 +1,147 @@
 # Active Context - AlgoTrading MVP
 
-## Current Focus (2025-11-18): Plan Maestro "Next Level" – Engine Architecture
+## Current Focus (2025-12-15): Plan Maestro "Next Level" – Engine Architecture
 
 - **Estado de alto nivel**: El MVP descrito más abajo está operativo; ahora el foco activo es el **Plan Maestro "AlgoTrading Next Level"** definido en `docs/PLAN_MAESTRO_NEXT_LEVEL.md`.
-- **Fase 1 (Data & Context)**: ✅ Completada en código con `DataEngine` y `ContextEngine` en `app/engines/`, incluyendo normalización, limpieza, versionado, análisis de régimen/volatilidad/correlaciones y tests de integración.
-- **Fase 2 (Strategy & Learning)**: 🟡 Muy avanzada pero no cerrada.  
-  - Refactor de estrategias a `StrategyEngines` completado (`MomentumStrategyEngine`, `MeanReversionStrategyEngine`, `PairsTradingStrategyEngine`, `ModularMomentumStrategyEngine` sobre `BaseStrategyEngine`).  
-  - Sistema de learning para `momentum_modular` completo (feature extractor, preparador de datos, learning engines supervisado/deep/RL, reentrenamiento automático).  
-  - **Novedad 2025‑11‑18 (Sesión 1)**: Se añadió `BreakoutStrategyEngine` (Módulo 3.2) con señales de ruptura de rango y confirmación de volumen, más unit test (`tests/unit/engines/test_breakout_engine.py`) e integración en `tests/integration/strategies/test_strategy_engines.py`.  
-  - **Novedad 2025‑11‑18 (Sesión 2)**: Se implementó `TrendFollowingStrategyEngine` (Módulo 3.2) con ADX (fuerza de tendencia >25) y MACD (confirmación de dirección), confirmación por volumen, parámetros centralizados, feature extraction para Learning Engine, unit tests (10 tests) e integration tests (4 tests). Añadido `TREND_FOLLOWING` a `SignalSource` enum. Creado `BACKTEST_COMMANDS.md` con comandos para ejecutar backtests con diferentes configuraciones. Instalado `pytest` y dependencias en el entorno virtual. Commits: `ab4bc6c` (TrendFollowingStrategyEngine), `3f4459b` (BreakoutStrategyEngine + Fases 1-3), `6a4bc8b` (BACKTEST_COMMANDS.md).  
-  - Pendiente: `ArbitrageStrategyEngine` mejorado, sistema de composición/ensembles (`compositor`) y mejoras avanzadas de `LearningEngine` (drift detection, feature importance, transfer learning).
-- **Fase 3 (Portfolio & Risk)**: ✅ Núcleo implementado.  
-  - `PortfolioEngine` y `RiskEngine` en `app/engines/` con optimizadores (Markowitz, Risk Parity, Black-Litterman, Kelly), rebalancers, meta-learners, VaR/CVaR, stress testing, exposición, drawdowns, correlaciones, risk attribution y alert system, todos con tests de integración.  
-  - Pendiente: `currency hedging` automático y diversificación sector/país en el Portfolio Engine.
-- **Fases 4–7 (Análisis, Persistencia, Ejecución, Monitoring, XAI, Synthetic Data, Fusion, Governance, KGE, Experimentación, Infraestructura)**:  
-  - Diseño detallado en `PLAN_MAESTRO_NEXT_LEVEL.md`.  
-  - Piezas iniciales en código (por ejemplo `ExecutionEngine` centralizado en `app/strategies/execution_engine.py`), pero aún no existen módulos dedicados bajo `app/engines/` ni el dashboard “next level”.
+- **Referencia**: Ver `docs/PLAN_MAESTRO_NEXT_LEVEL.md` para arquitectura completa de 17 módulos y fases de implementación.
+
+### 📋 Estado del Plan Maestro por Fase
+
+#### **FASE 1: Fundamentos de Datos y Contexto** (Meses 1-3) ✅ **COMPLETADA**
+
+**Módulo 1: Data Engine** ✅
+
+- Normalización unificada de múltiples fuentes (IBKR, Binance, Alpaca, Polygon)
+- Limpieza y validación de datos
+- Sistema de versionado y caché distribuido
+- Tests de integración completos
+
+**Módulo 2: Context Engine** ✅
+
+- Detección de régimen de mercado (HMM, Markov)
+- Análisis de volatilidad y correlaciones
+- Identificación de contexto macro
+- Tests de integración completos
+
+#### **FASE 2: Strategy & Learning** (Meses 4-7) 🟡 **MUY AVANZADA (85% completada)**
+
+**Módulo 3: Strategy Engines** ✅ **95% completado**
+
+- [x] **3.1 Refactorizar estrategias existentes** ✅ **COMPLETADO**
+
+  - [x] `BaseStrategyEngine` abstracta creada
+  - [x] `MomentumStrategyEngine` refactorizado
+  - [x] `MeanReversionStrategyEngine` refactorizado
+  - [x] `PairsTradingStrategyEngine` refactorizado
+  - [x] `ModularMomentumStrategyEngine` refactorizado
+
+- [x] **3.2 Nuevas estrategias base** ✅ **4/4 completadas (100%)**
+
+  - [x] ✅ `BreakoutStrategyEngine` - **COMPLETADO** (2025-12-15)
+    - Detección de rupturas de rango (soporte/resistencia)
+    - Confirmación por volumen
+    - Configuración YAML centralizada (`config/strategies/breakout.yaml`)
+    - Integrado en backtests y StrategyFactory
+    - Unit tests e integration tests completos
+  - [x] ✅ `TrendFollowingStrategyEngine` - **COMPLETADO** (2025-12-15)
+    - ADX para fuerza de tendencia (>25)
+    - MACD para confirmación de dirección
+    - Confirmación por volumen
+    - Configuración YAML centralizada (`config/strategies/trend_following.yaml`)
+    - Integrado en backtests y StrategyFactory
+    - Unit tests e integration tests completos
+  - [x] ✅ `ArbitrageStrategyEngine` - **COMPLETADO** (2025-12-16)
+    - Arbitraje estadístico (z-score del spread)
+    - Spread trading (diferencias de precio entre activos correlacionados)
+    - Carry trades (diferencias en tasas de interés/rendimiento)
+    - Half-life estimation para mean reversion speed
+    - Configuración YAML centralizada (`config/strategies/arbitrage.yaml`)
+    - Integrado en backtests y StrategyFactory
+    - Unit tests completos
+  - [x] ✅ `MeanReversionStrategyEngine` mejorado (ya existía, mejorado con Z-score adaptativo)
+
+- [x] **3.3 Sistema de composición de estrategias** ✅ **COMPLETADO** (2025-12-17)
+
+  - [x] ✅ `BaseStrategyEnsemble` - Clase base para composición de estrategias
+  - [x] ✅ `WeightedEnsemble` - Combina señales con pesos dinámicos (Sharpe, returns, inverse_volatility)
+  - [x] ✅ `RegimeBasedSelector` - Selecciona estrategias según régimen de mercado detectado
+  - [x] ✅ `VotingEnsemble` - Combinación por votación mayoritaria con boost unánime
+  - [x] ✅ Configuración YAML centralizada (`config/strategies/ensemble.yaml`)
+  - [x] ✅ Integrado en StrategyFactory (weighted_ensemble, regime_selector, voting_ensemble)
+  - [x] ✅ Unit tests completos (24 tests pasando)
+
+- [x] **3.4 Integración con Learning Engine** ✅ **PARCIALMENTE COMPLETADO**
+
+  - [x] Cada engine puede recibir ajustes de Learning Engine (callbacks implementados)
+  - [x] Feature extraction estandarizado (implementado en todos los engines)
+  - [x] Callbacks para aprendizaje continuo (base implementada)
+  - [ ] Mejoras avanzadas: drift detection, feature importance, transfer learning
+
+- [x] **3.5 Testing y validación** ✅ **COMPLETADO**
+  - [x] Backtesting unificado para todos los engines (integración en `comprehensive_backtest_runner.py`)
+  - [x] Unit tests para BreakoutStrategyEngine y TrendFollowingStrategyEngine
+  - [x] Integration tests completos
+  - [ ] Walk-forward validation (pendiente)
+  - [ ] Stress testing con datos sintéticos (pendiente)
+
+**Módulo 4: Learning Engine** 🟡 **60% completado**
+
+- Sistema de learning para `momentum_modular` completo
+- Feature extractor, preparador de datos, learning engines (supervisado/deep/RL)
+- Reentrenamiento automático implementado
+- Pendiente: drift detection, feature importance, transfer learning
+
+**Integración Completa (2025-12-15):**
+
+- ✅ Archivos YAML de configuración creados (`config/strategies/breakout.yaml`, `config/strategies/trend_following.yaml`)
+- ✅ Engines registrados en `StrategyFactory` (disponibles como "breakout" y "trend_following")
+- ✅ Integración en `comprehensive_backtest_runner.py` para multi-strategy backtests
+- ✅ Carga automática de configuración desde YAML (sin magic numbers)
+- ✅ Todos los parámetros centralizados en configuración YAML
+- ✅ `run_simple_backtest.py` corregido para pasar estrategia al backtester (risk_check funcionando)
+- ✅ Commits: `f64b185` (integración completa de engines en backtesting)
+
+#### **FASE 3: Portfolio y Risk** (Meses 8-10) ✅ **NÚCLEO IMPLEMENTADO**
+
+**Módulo 5: Portfolio Engine** ✅
+
+- Optimizadores: Markowitz, Risk Parity, Black-Litterman, Kelly Criterion
+- Rebalancers dinámicos
+- Meta-learners para asignación
+- Tests de integración completos
+- Pendiente: currency hedging automático, diversificación sector/país
+
+**Módulo 6: Risk Engine** ✅
+
+- VaR/CVaR calculados
+- Stress testing implementado
+- Exposición, drawdowns, correlaciones
+- Risk attribution y alert system
+- Tests de integración completos
+
+#### **Fases 4–7 (Análisis, Persistencia, Ejecución, Monitoring, XAI, Synthetic Data, Fusion, Governance, KGE, Experimentación, Infraestructura)**: ⏳ **PENDIENTES**
+
+- Diseño detallado en `PLAN_MAESTRO_NEXT_LEVEL.md`
+- Piezas iniciales en código (`ExecutionEngine` en `app/strategies/execution_engine.py`)
+- Módulos dedicados bajo `app/engines/` aún no implementados
+- Dashboard "next level" pendiente
+
+### 📊 Progreso General del Plan Maestro
+
+| Fase                        | Estado | Progreso | Módulos Completados                          |
+| --------------------------- | ------ | -------- | -------------------------------------------- |
+| Fase 1: Data & Context      | ✅     | 100%     | 2/2 (Data Engine, Context Engine)            |
+| Fase 2: Strategy & Learning | ✅     | 95%      | 3.1 ✅, 3.2 ✅ (4/4), 3.3 ✅, 3.4 ✅, 3.5 ✅ |
+| Fase 3: Portfolio & Risk    | ✅     | 90%      | Portfolio Engine ✅, Risk Engine ✅          |
+| Fases 4-7                   | ⏳     | 10%      | Diseño completo, implementación pendiente    |
+
+**Próximas Tareas Prioritarias:**
+
+1. ✅ `ArbitrageStrategyEngine` (completar 3.2) - **COMPLETADO** (2025-12-16)
+2. ✅ Sistema de composición/ensembles (3.3) - **COMPLETADO** (2025-12-17)
+3. ⏳ Walk-forward validation (3.5)
+4. ⏳ Drift detection en Learning Engine (4.2)
+5. ⏳ Stress testing con datos sintéticos (3.5)
 
 ## Previous Focus: **COMPLETAR MVP - PORTFOLIO MULTI-STRATEGY + DATA QUALITY + TECHNICAL INDICATORS** 🎯
 
