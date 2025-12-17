@@ -158,6 +158,7 @@ class StrategyFactory:
                 MomentumStrategyEngine,
                 MeanReversionStrategyEngine,
                 PairsTradingStrategyEngine,
+                ArbitrageStrategyEngine,
             )
 
             # Registrar engines (pueden usarse con el mismo nombre o con sufijo _engine)
@@ -166,12 +167,90 @@ class StrategyFactory:
             self.register_strategy("momentum_engine", MomentumStrategyEngine)
             self.register_strategy("mean_reversion_engine", MeanReversionStrategyEngine)
             self.register_strategy("pairs_trading_engine", PairsTradingStrategyEngine)
+            self.register_strategy("arbitrage", ArbitrageStrategyEngine)
 
-            logger.info("Registered strategy engines: breakout, trend_following, momentum_engine, mean_reversion_engine, pairs_trading_engine")
+            logger.info("Registered strategy engines: breakout, trend_following, momentum_engine, mean_reversion_engine, pairs_trading_engine, arbitrage")
 
         except ImportError as e:
             logger.warning(f"Could not import strategy engines: {e}")
             logger.info("Strategy engines will be registered when their modules are available")
+
+        # Registrar Ensemble Strategies
+        try:
+            from app.engines.strategy_engines import (
+                WeightedEnsemble,
+                RegimeBasedSelector,
+                VotingEnsemble,
+            )
+
+            # Registrar ensembles
+            self.register_strategy("weighted_ensemble", WeightedEnsemble)
+            self.register_strategy("regime_selector", RegimeBasedSelector)
+            self.register_strategy("voting_ensemble", VotingEnsemble)
+
+            logger.info("Registered ensemble strategies: weighted_ensemble, regime_selector, voting_ensemble")
+
+        except ImportError as e:
+            logger.warning(f"Could not import ensemble strategies: {e}")
+            logger.info("Ensemble strategies will be registered when their modules are available")
+
+    def create_ensemble(
+        self,
+        ensemble_type: str,
+        ensemble_config: Dict[str, Any],
+        strategies_config: List[Dict[str, Any]],
+    ) -> BaseStrategy:
+        """
+        Crear ensemble con sub-estrategias.
+
+        Args:
+            ensemble_type: Tipo de ensemble ('weighted_ensemble', 'regime_selector', 'voting_ensemble')
+            ensemble_config: Configuración del ensemble
+            strategies_config: Lista de configs de sub-estrategias, cada una con:
+                - name: Nombre de la estrategia registrada
+                - weight: Peso opcional (default 1.0)
+                - config: Config para la estrategia
+
+        Returns:
+            Instancia del ensemble con sub-estrategias añadidas
+
+        Example:
+            factory.create_ensemble(
+                ensemble_type='weighted_ensemble',
+                ensemble_config={'min_strategies_for_signal': 2},
+                strategies_config=[
+                    {'name': 'momentum_engine', 'weight': 0.4, 'config': {}},
+                    {'name': 'trend_following', 'weight': 0.3, 'config': {}},
+                    {'name': 'breakout', 'weight': 0.3, 'config': {}},
+                ]
+            )
+        """
+        # Crear ensemble base
+        ensemble = self.create_strategy(ensemble_type, ensemble_config)
+
+        # Añadir sub-estrategias
+        for idx, strategy_conf in enumerate(strategies_config):
+            strategy_name = strategy_conf.get("name")
+            if not strategy_name:
+                raise ValueError(f"Strategy config at index {idx} missing 'name' field")
+
+            strategy_weight = strategy_conf.get("weight", 1.0)
+            strategy_config = strategy_conf.get("config", {})
+
+            # Crear sub-estrategia
+            sub_strategy = self.create_strategy(strategy_name, strategy_config)
+
+            # Añadir al ensemble
+            ensemble.add_strategy(
+                name=f"{strategy_name}_{idx}",
+                strategy=sub_strategy,
+                weight=strategy_weight,
+            )
+
+        logger.info(
+            f"Created ensemble '{ensemble_type}' with {len(strategies_config)} sub-strategies"
+        )
+        return ensemble
 
     def reload_strategies(self) -> None:
         """Recargar estrategias por defecto."""

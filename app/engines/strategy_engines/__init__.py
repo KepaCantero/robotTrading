@@ -13,6 +13,13 @@ from .pairs_engine import PairsTradingStrategyEngine
 from .modular_momentum_engine import ModularMomentumStrategyEngine
 from .breakout_engine import BreakoutStrategyEngine
 from .trend_following_engine import TrendFollowingStrategyEngine
+from .arbitrage_engine import ArbitrageStrategyEngine
+from .ensemble import (
+    BaseStrategyEnsemble,
+    WeightedEnsemble,
+    RegimeBasedSelector,
+    VotingEnsemble,
+)
 
 __all__ = [
     "BaseStrategyEngine",
@@ -22,5 +29,11 @@ __all__ = [
     "ModularMomentumStrategyEngine",
     "BreakoutStrategyEngine",
     "TrendFollowingStrategyEngine",
+    "ArbitrageStrategyEngine",
+    # Ensembles
+    "BaseStrategyEnsemble",
+    "WeightedEnsemble",
+    "RegimeBasedSelector",
+    "VotingEnsemble",
 ]
 

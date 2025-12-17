@@ -45,6 +45,7 @@ class SignalSource(str, Enum):
     BREAKOUT = "breakout"
     MEAN_REVERSION = "mean_reversion"
     PAIRS_TRADING = "pairs_trading"
+    ARBITRAGE = "arbitrage"
 
 
 @dataclass
