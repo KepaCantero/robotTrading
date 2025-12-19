@@ -164,7 +164,7 @@ class SectorDiversificationValidator:
 
         for sector, notional in sector_exposure.items():
             exposure_pct = notional / total_value
-            weight_sq = exposure_pct ** 2
+            weight_sq = exposure_pct**2
             herfindahl += weight_sq
             sector_details[sector] = {"exposure": float(exposure_pct), "notional": float(notional)}
 
@@ -199,9 +199,7 @@ class SectorDiversificationValidator:
 
         return exposure
 
-    def _calculate_severity(
-        self, actual: Decimal, limit: Decimal
-    ) -> str:
+    def _calculate_severity(self, actual: Decimal, limit: Decimal) -> str:
         """Calculate violation severity."""
         if actual <= limit:
             return "none"

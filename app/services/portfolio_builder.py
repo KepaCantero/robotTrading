@@ -211,9 +211,7 @@ class PortfolioBuilder:
                         f"{'...' if len(pair_symbols_list) > 5 else ''}"
                     )
                 else:
-                    logger.warning(
-                        "Pairs Trading: No pair symbols available, using sector symbols"
-                    )
+                    logger.warning("Pairs Trading: No pair symbols available, using sector symbols")
                     all_symbols.update(strategy_symbols)
             else:
                 # For other strategies, use symbols from sectors
