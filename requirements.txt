@@ -15,7 +15,7 @@ numpy>=1.24.0,<3.0.0  # Updated to allow numpy 2.x for pandas-ta-classic compati
 pandas-ta-classic>=0.3.36,<1.0.0  # Technical Analysis Library (REQUIRED - compatible with Python 3.9+, uses library ONLY, NO manual calculations)
 scipy>=1.11.0,<2.0.0  # Statistical calculations (cointegration, etc.)
 statsmodels>=0.14.0,<1.0.0  # Statistical tests (ADF, KPSS, Johansen, Engle-Granger)
-arch>=6.0.0,<7.0.0  # GARCH volatility modeling
+arch>=6.0.0,<8.0.0  # GARCH volatility modeling (7.x required for numpy 2.x)
 
 # Market Data
 yfinance>=0.2.0,<1.0.0
@@ -48,7 +48,7 @@ gym>=0.26.0,<1.0.0  # RL environments
 gymnasium>=0.29.0,<1.0.0  # Newer gym API (optional)
 
 # HTTP & API Clients
-httpx>=0.25.0,<1.0.0
+httpx>=0.25.0,<0.28.0  # <0.28 required for starlette TestClient compatibility
 requests>=2.31.0,<3.0.0
 aiohttp>=3.9.0,<4.0.0  # Required for async HTTP requests in DataEngine sources
 websockets>=12.0,<13.0  # Required for WebSocket streaming in DataEngine

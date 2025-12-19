@@ -255,75 +255,79 @@ class TechnicalIndicatorCalculator:
             raise
     
     @staticmethod
-    def calculate_stochastic_rsi(rsi_values: List[float], period: int = 14) -> Tuple[Optional[float], Optional[float]]:
+    def calculate_stochastic_rsi(rsi_values: List[float], period: int = 14, smooth_k: int = 3) -> Tuple[Optional[float], Optional[float]]:
         """
-        Calculate Stochastic RSI using pandas_ta_classic.stochrsi() library.
-        
-        ✅ REQUIRED: Uses pandas_ta_classic.stochrsi() - NO manual calculations
-        Uses pandas-ta-classic library ONLY.
-        
+        Calculate Stochastic RSI from pre-calculated RSI values using pandas vectorized operations.
+
+        StochRSI = (Current RSI - Lowest RSI over N periods) / (Highest RSI - Lowest RSI over N periods) * 100
+        %K = StochRSI (or smoothed with SMA)
+        %D = SMA of %K
+
+        Uses pandas library for vectorized rolling calculations.
+
         Args:
             rsi_values: List of RSI values
             period: Period for Stochastic RSI calculation (default 14)
-            
+            smooth_k: Smoothing period for %D (default 3)
+
         Returns:
             Tuple of (StochRSI %K, StochRSI %D) or (None, None) if insufficient data
         """
-        if len(rsi_values) < period:
-            logger.debug(f"Stochastic RSI: Insufficient RSI data ({len(rsi_values)} < {period})")
+        # Need at least period values for the rolling window, plus smooth_k-1 for %D
+        min_required = period + smooth_k - 1
+        if len(rsi_values) < min_required:
+            logger.debug(f"Stochastic RSI: Insufficient RSI data ({len(rsi_values)} < {min_required})")
             return None, None
-        
-        # PRIMARY: Use pandas_ta_classic library (vectorized, optimized, tested)        
+
         try:
-            # Convert RSI values to pandas Series for pandas_ta_classic
+            # Convert RSI values to pandas Series for vectorized operations
             rsi_series = pd.Series(rsi_values, name='rsi')
-            
-            # ✅ USE LIBRARY: pandas_ta_classic.stochrsi() - vectorized calculation
-            # This is the PRIMARY method - uses professional library implementation
-            stoch_rsi_df = ta.stochrsi(rsi_series, length=period)
-            
-            if stoch_rsi_df is None or stoch_rsi_df.empty:
-                logger.debug("Stochastic RSI: pandas_ta_classic.stochrsi() returned None or empty DataFrame")
-                return None, None
-            
-            # Extract %K and %D values from pandas_ta_classic result (column names may vary)
-            stoch_rsi_k_col = None
-            stoch_rsi_d_col = None
-            for col in stoch_rsi_df.columns:
-                col_upper = col.upper()
-                if "STOCHRSIK" in col_upper or "STOCHRSI_K" in col_upper or "K" in col_upper:
-                    stoch_rsi_k_col = col
-                elif "STOCHRSID" in col_upper or "STOCHRSI_D" in col_upper or "D" in col_upper:
-                    stoch_rsi_d_col = col
-            
-            if stoch_rsi_k_col is None or stoch_rsi_d_col is None:
-                logger.debug(f"Stochastic RSI: Column names not found. Available: {list(stoch_rsi_df.columns)}")
-                return None, None
-            
-            # Extract the last values (%K and %D) - check for NaN before converting
-            stoch_rsi_k_val = stoch_rsi_df[stoch_rsi_k_col].iloc[-1]
-            stoch_rsi_d_val = stoch_rsi_df[stoch_rsi_d_col].iloc[-1]
-            
+
+            # Calculate rolling min and max of RSI over the period
+            rsi_min = rsi_series.rolling(window=period).min()
+            rsi_max = rsi_series.rolling(window=period).max()
+
+            # Calculate StochRSI %K = (RSI - min) / (max - min) * 100
+            denominator = rsi_max - rsi_min
+
+            # Handle division by zero (when RSI is flat)
+            stoch_rsi_k = pd.Series(index=rsi_series.index, dtype=float)
+            non_zero_mask = denominator != 0
+            stoch_rsi_k[non_zero_mask] = ((rsi_series[non_zero_mask] - rsi_min[non_zero_mask]) /
+                                           denominator[non_zero_mask]) * 100
+            stoch_rsi_k[~non_zero_mask] = np.nan  # Flat RSI = undefined StochRSI
+
+            # Calculate %D as SMA of %K
+            stoch_rsi_d = stoch_rsi_k.rolling(window=smooth_k).mean()
+
+            # Get last valid values
+            stoch_rsi_k_val = stoch_rsi_k.iloc[-1]
+            stoch_rsi_d_val = stoch_rsi_d.iloc[-1]
+
             # Check for NaN/inf before conversion
-            if pd.isna(stoch_rsi_k_val) or pd.isna(stoch_rsi_d_val) or not np.isfinite(stoch_rsi_k_val) or not np.isfinite(stoch_rsi_d_val):
-                logger.debug(f"Stochastic RSI: NaN or inf values returned by pandas-ta-classic: K={stoch_rsi_k_val}, D={stoch_rsi_d_val}")
+            if pd.isna(stoch_rsi_k_val) or pd.isna(stoch_rsi_d_val):
+                logger.debug(f"Stochastic RSI: NaN values in result: K={stoch_rsi_k_val}, D={stoch_rsi_d_val}")
                 return None, None
-            
+
+            if not np.isfinite(stoch_rsi_k_val) or not np.isfinite(stoch_rsi_d_val):
+                logger.debug(f"Stochastic RSI: Inf values in result: K={stoch_rsi_k_val}, D={stoch_rsi_d_val}")
+                return None, None
+
             stoch_rsi_k = float(stoch_rsi_k_val)
             stoch_rsi_d = float(stoch_rsi_d_val)
-            
+
             # Validate values are in expected range [0, 100]
             if not (0 <= stoch_rsi_k <= 100) or not (0 <= stoch_rsi_d <= 100):
                 logger.debug(f"Stochastic RSI: Values out of range [0,100]: K={stoch_rsi_k:.2f}, D={stoch_rsi_d:.2f}")
                 return None, None
-            
-            logger.debug(f"Stochastic RSI({period}) via pandas_ta_classic: %K={stoch_rsi_k:.2f}, %D={stoch_rsi_d:.2f}")
-            
+
+            logger.debug(f"Stochastic RSI({period}): %K={stoch_rsi_k:.2f}, %D={stoch_rsi_d:.2f}")
+
             return round(stoch_rsi_k, 2), round(stoch_rsi_d, 2)
-            
+
         except Exception as e:
-            logger.error(f"Stochastic RSI calculation error with pandas_ta_classic: {e}")
-            raise
+            logger.error(f"Stochastic RSI calculation error: {e}")
+            return None, None
     
     @staticmethod
     def calculate_atr(

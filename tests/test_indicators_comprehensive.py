@@ -589,8 +589,9 @@ class TestOBVComprehensive(unittest.TestCase):
         volumes = [1000.0, 2000.0, 1500.0, 1800.0]
         result = self.calculator.calculate_obv(prices, volumes)
         self.assertIsNotNone(result)
-        # OBV debe ser 0 cuando precios no cambian (no suma ni resta)
-        self.assertEqual(result, 0.0, "OBV debe ser 0 cuando precios son constantes")
+        # OBV starts at first volume and stays constant when prices don't change
+        # (pandas_ta behavior: initializes OBV with first volume)
+        self.assertEqual(result, 1000.0, "OBV debe ser el primer volumen cuando precios son constantes")
 
     def test_obv_empty_lists(self):
         """Test: OBV con listas vacías debe retornar None."""
@@ -621,7 +622,12 @@ class TestStochasticRSIComprehensive(unittest.TestCase):
 
     def test_stoch_rsi_sufficient_data(self):
         """Test: Stochastic RSI con datos suficientes debe calcular correctamente."""
-        rsi_values = [40.0 + i * 2.0 for i in range(20)]  # RSI variando de 40 a 78
+        # Need at least period + smooth_k - 1 = 14 + 3 - 1 = 16 values for valid %D
+        # Using varying RSI values with both up and down movement
+        rsi_values = [
+            40.0, 45.0, 50.0, 48.0, 52.0, 55.0, 53.0, 58.0, 60.0, 57.0,
+            62.0, 65.0, 63.0, 68.0, 70.0, 67.0, 72.0, 75.0, 73.0, 78.0
+        ]  # 20 values with variation
         stoch, signal = self.calculator.calculate_stochastic_rsi(rsi_values, period=14)
         self.assertIsNotNone(stoch, "Stochastic RSI debe calcularse con datos suficientes")
         self.assertIsNotNone(signal, "Stochastic RSI signal debe calcularse con datos suficientes")

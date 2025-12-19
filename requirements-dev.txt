@@ -7,12 +7,12 @@ plotly>=5.17.0,<6.0.0
 kaleido>=0.2.1,<1.0.0  # For static image export from plotly
 
 # Testing
-pytest>=7.4.0,<8.0.0
-pytest-asyncio>=0.21.0,<1.0.0
+pytest>=7.4.0,<9.0.0
+pytest-asyncio>=0.21.0,<2.0.0
 pytest-cov>=4.1.0,<5.0.0
 pytest-mock>=3.11.0,<4.0.0
 pytest-timeout>=2.1.0,<3.0.0
-httpx>=0.25.0,<1.0.0  # For FastAPI testing
+httpx>=0.25.0,<0.28.0  # For FastAPI testing (<0.28 for starlette compatibility)
 
 # Code Quality
 black>=23.9.0,<24.0.0

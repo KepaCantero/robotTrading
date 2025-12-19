@@ -21,6 +21,8 @@
 - **Market Data**: yfinance, alpha_vantage, ccxt
 - **Financial Calculations**: quantlib-python, scipy
 - **Strategy Framework**: Sistema de Estrategias Múltiples (BaseStrategy, Factory, Registry)
+- **Strategy Engines**: Sistema de engines refactorizados (`MomentumStrategyEngine`, `MeanReversionStrategyEngine`, `PairsTradingStrategyEngine`, `ModularMomentumStrategyEngine`, `BreakoutStrategyEngine`, `TrendFollowingStrategyEngine`) sobre `BaseStrategyEngine`
+- **Configuración Centralizada**: Sistema de configuración YAML (`config/strategies/*.yaml`) para todos los engines, eliminando magic numbers
 - **Walk Forward Analysis**: Implementación custom para validación robusta
 - **Bias Detection**: Sistema de detección de Look-Ahead Bias y Data Snooping
 - **Next Level Engines (Plan Maestro)**: mlfinlab, riskfolio-lib, PyPortfolioOpt, optuna/ray[tune], stable-baselines3, torch/transformers (según módulo descrito en `docs/PLAN_MAESTRO_NEXT_LEVEL.md`), ya integrados en parte en `DataEngine`, `ContextEngine`, `PortfolioEngine`, `RiskEngine` y el sistema de learning de `momentum_modular`.
@@ -81,11 +83,13 @@
 
 ### Trading System Patterns
 
-- **Strategy Factory**: Creación dinámica de estrategias de trading
+- **Strategy Factory**: Creación dinámica de estrategias de trading (incluye engines: momentum, mean_reversion, pairs_trading, breakout, trend_following)
+- **Strategy Engines Pattern**: Engines refactorizados sobre `BaseStrategyEngine` con integración opcional a Data/Context/Portfolio/Risk/Learning
+- **Configuración Centralizada**: Sistema YAML para parámetros de estrategias (`config/strategies/*.yaml`)
 - **Signal Processing**: Pipeline para procesamiento de señales de mercado
 - **Risk Management**: Sistema de gestión de riesgo integrado
 - **Portfolio Management**: Gestión de carteras y posiciones
-- **Backtesting Engine**: Motor de backtesting con historical data
+- **Backtesting Engine**: Motor de backtesting con historical data (integración completa con Strategy Engines)
 
 ### Data Processing Patterns
 
