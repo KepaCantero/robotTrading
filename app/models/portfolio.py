@@ -13,6 +13,55 @@ from typing import List, Optional, Protocol
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
+class HedgingMetadata(BaseModel):
+    """Metadata for currency hedging on positions [TASK-5.5-CURRENCY-HEDGING]."""
+
+    model_config = ConfigDict(
+        strict=True,
+        validate_assignment=True,
+        extra="forbid",
+        str_strip_whitespace=True,
+    )
+
+    is_hedge: bool = Field(
+        default=False, description="Whether this position is a hedge (not a base position)"
+    )
+    base_position_id: Optional[str] = Field(
+        default=None, description="ID of the position being hedged (if is_hedge=True)"
+    )
+    hedge_ratio: Decimal = Field(
+        default=Decimal("1.0"), ge=Decimal("0"), le=Decimal("1.0"),
+        description="Ratio of position being hedged (0-1)"
+    )
+    hedge_currency_pair: Optional[str] = Field(
+        default=None, description="Forex pair used for hedging (e.g., EUR/USD)"
+    )
+    hedge_cost_bps: Decimal = Field(
+        default=Decimal("0"), ge=Decimal("0"),
+        description="Hedging cost in basis points"
+    )
+    hedge_created_at: Optional[datetime] = Field(
+        default=None, description="When the hedge was created"
+    )
+    hedge_expires_at: Optional[datetime] = Field(
+        default=None, description="When rolling hedge expires (if applicable)"
+    )
+
+    @field_validator("hedge_cost_bps")
+    @classmethod
+    def validate_hedge_cost(cls, v) -> Decimal:
+        """Validate hedge cost."""
+        if isinstance(v, (int, float)):
+            v = Decimal(str(v))
+        elif not isinstance(v, Decimal):
+            raise ValueError("Hedge cost must be a number")
+
+        if v > Decimal("1000"):  # 1000 bps = 10% max cost
+            raise ValueError(f"Hedge cost exceeds maximum limit of 1000 bps, got {v}")
+
+        return v
+
+
 class AssetClass(str, Enum):
     """Asset class enumeration for portfolio categorization."""
 
@@ -43,6 +92,9 @@ class Position(BaseModel):
     realized_pnl: Decimal = Field(default=Decimal("0"), description="Realized profit/loss")
     currency: str = Field(default="USD", description="Position currency")
     broker: str = Field(..., description="Broker identifier")
+    hedging: HedgingMetadata = Field(
+        default_factory=HedgingMetadata, description="Currency hedging metadata"
+    )
 
     @field_validator("quantity")
     @classmethod

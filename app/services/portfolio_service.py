@@ -20,6 +20,7 @@ from app.models.portfolio import (
     Position,
 )
 from app.services.circuit_breaker_manager import CircuitBreakerManager, CircuitBreakerType
+from app.services.currency_hedging_engine import CurrencyHedgingEngine
 from app.services.portfolio_risk_manager import PortfolioRiskManager
 
 logger = logging.getLogger(__name__)
@@ -35,6 +36,7 @@ class PortfolioService:
         # Gestores especializados
         self.circuit_breaker_manager = CircuitBreakerManager()
         self.risk_manager = PortfolioRiskManager()
+        self.hedging_engine = CurrencyHedgingEngine()  # [TASK-5.5]
 
         # Acceso directo a circuit breakers para compatibilidad con tests
         self.circuit_breakers = self.circuit_breaker_manager.circuit_breakers
@@ -44,6 +46,10 @@ class PortfolioService:
         self.successful_operations = 0
         self.failed_operations = 0
         self.last_operation_time: Optional[datetime] = None
+
+        # Hedging tracking [TASK-5.5]
+        self.total_hedges_created = 0
+        self.total_hedge_cost = Decimal("0")
 
     async def get_portfolio(self) -> Optional[Portfolio]:
         """Obtener portafolio con protección de circuit breaker."""
@@ -373,6 +379,65 @@ class PortfolioService:
             volatility_level=0.25,
             timestamp=datetime.now(),
         )
+
+    def get_unhedged_currency_exposure(
+        self, portfolio: Portfolio
+    ) -> Dict[str, Decimal]:
+        """
+        Get current unhedged currency exposure [TASK-5.5].
+
+        Returns:
+            Dict[currency, exposure_amount]: Unhedged exposure per currency
+        """
+        try:
+            currency_exp = self.hedging_engine.calculate_currency_exposure(portfolio)
+            logger.debug(f"Unhedged FX exposure: {currency_exp}")
+            return currency_exp
+        except Exception as e:
+            logger.warning(f"Failed to calculate currency exposure: {e}")
+            return {}
+
+    def get_hedging_statistics(self) -> Dict[str, Any]:
+        """Get hedging statistics [TASK-5.5]."""
+        return {
+            "total_hedges_created": self.total_hedges_created,
+            "total_hedge_cost_bps": float(self.total_hedge_cost),
+            "hedging_engine_stats": self.hedging_engine.get_statistics(),
+        }
+
+    async def apply_auto_hedging(self, portfolio: Portfolio) -> Dict[str, Any]:
+        """
+        Apply automatic hedging to portfolio [TASK-5.5].
+
+        Returns:
+            Dict with hedging results (recommendations, created hedges, etc.)
+        """
+        try:
+            # Get hedge recommendations
+            recommendations = self.hedging_engine.calculate_hedge_recommendations(
+                portfolio
+            )
+
+            logger.info(f"Generated {len(recommendations)} hedge recommendations")
+
+            # Track statistics
+            for rec in recommendations:
+                self.total_hedges_created += 1
+                self.total_hedge_cost += rec.estimated_cost_bps
+
+            return {
+                "success": True,
+                "recommendations_count": len(recommendations),
+                "recommendations": [r.model_dump() for r in recommendations],
+                "total_cost_bps": float(sum(r.estimated_cost_bps for r in recommendations)),
+            }
+        except Exception as e:
+            logger.error(f"Failed to apply auto-hedging: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "recommendations_count": 0,
+            }
 
     def _get_asset_class(self, symbol: str) -> AssetClass:
         """Determine asset class based on symbol."""

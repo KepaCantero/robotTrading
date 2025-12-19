@@ -102,7 +102,19 @@
   - Auto-retraining triggers integrados en LearningEngineUpdater
   - Configuración YAML centralizada (`config/drift_detection.yaml`)
   - 60 unit tests (100% passing)
-- Pendiente: feature importance, transfer learning
+- ✅ **Feature Importance** [TASK-4.2-FEATURE-IMPORTANCE] - **COMPLETADO** (2025-12-19)
+  - 6-method ensemble (SHAP, Permutation, Built-in, Correlation, Stability, Selection)
+  - Feature categorization (critical, important, moderate, low)
+  - Engineering recommendations automáticas
+  - Configuración YAML centralizada (`config/feature_importance.yaml`)
+  - Tests de integración completos
+- ✅ **Transfer Learning** [TASK-4.2-TRANSFER-LEARNING] - **COMPLETADO** (2025-12-19)
+  - Market regime detection (bull/bear/sideways + volatility levels)
+  - Pre-trained model lookup y fine-tuning automático
+  - Model registration después del entrenamiento
+  - Public API para acceso a TL status e historial
+  - Configuración YAML centralizada (`config/transfer_learning.yaml`)
+  - Integration tests completos
 
 **Integración Completa (2025-12-15):**
 
@@ -146,7 +158,7 @@
 | Fase 1: Data & Context      | ✅     | 100%     | 2/2 (Data Engine, Context Engine)            |
 | Fase 2: Strategy & Learning | ✅     | 100%     | 3.1 ✅, 3.2 ✅ (4/4), 3.3 ✅, 3.4 ✅, 3.5 ✅ [TASK-3.5-WFV] |
 | Fase 3: Portfolio & Risk    | ✅     | 90%      | Portfolio Engine ✅, Risk Engine ✅          |
-| Fases 4-7                   | 🟡     | 30%      | Drift Detection ✅ [TASK-4.2-DRIFT], Feature Importance ✅ [TASK-4.2-FEATURE-IMPORTANCE], Transfer Learning pendiente |
+| Fases 4-7                   | 🟡     | 40%      | Drift Detection ✅ [TASK-4.2-DRIFT], Feature Importance ✅ [TASK-4.2-FEATURE-IMPORTANCE], Transfer Learning ✅ [TASK-4.2-TRANSFER-LEARNING] |
 
 **Próximas Tareas Prioritarias:**
 

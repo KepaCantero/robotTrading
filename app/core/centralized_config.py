@@ -642,6 +642,50 @@ class MonitoringConfig(BaseModel):
         return v
 
 
+class CurrencyHedgingConfig(BaseModel):
+    """Configuration for automatic currency hedging [TASK-5.5-CURRENCY-HEDGING]."""
+
+    enabled: bool = Field(default=True, description="Enable currency hedging")
+    base_currency: str = Field(default="USD", description="Base currency for hedging")
+    auto_hedge: bool = Field(default=True, description="Automatically create hedge positions")
+    hedging_strategy: str = Field(
+        default="partial", description="Hedging strategy: full, partial, or rolling"
+    )
+    partial_hedge_percentage: float = Field(
+        default=0.5, ge=0.0, le=1.0, description="Percentage to hedge for partial strategy"
+    )
+
+    # Thresholds
+    single_currency_max: float = Field(
+        default=0.25, ge=0.0, le=1.0, description="Max exposure per currency"
+    )
+    total_fx_max: float = Field(
+        default=0.50, ge=0.0, le=1.0, description="Max total unhedged FX exposure"
+    )
+    minimum_exposure: Decimal = Field(
+        default=Decimal("50000"), description="Minimum exposure to trigger hedging"
+    )
+
+    # Cost limits
+    max_cost_bps: Decimal = Field(
+        default=Decimal("10"), ge=Decimal("0"), description="Max hedging cost in basis points"
+    )
+    acceptable_slippage: float = Field(
+        default=0.5, ge=0.0, le=10.0, description="Acceptable slippage %"
+    )
+    enforce_cost_limit: bool = Field(
+        default=True, description="Don't hedge if cost exceeds limit"
+    )
+
+    # Rolling hedge
+    rolling_window_days: int = Field(
+        default=30, ge=1, le=365, description="Rolling hedge window in days"
+    )
+    rebalance_frequency: str = Field(
+        default="weekly", description="Rebalance frequency: daily, weekly, monthly"
+    )
+
+
 class CentralizedConfig(BaseSettings):
     """Centralized configuration for the entire application."""
 
@@ -665,6 +709,9 @@ class CentralizedConfig(BaseSettings):
     )
     monitoring: MonitoringConfig = Field(
         default_factory=MonitoringConfig, description="Monitoring configuration"
+    )
+    currency_hedging: CurrencyHedgingConfig = Field(
+        default_factory=CurrencyHedgingConfig, description="Currency hedging configuration"
     )
 
     # Strategy configurations

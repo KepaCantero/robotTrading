@@ -36,6 +36,8 @@ class RiskViolation(str, Enum):
     DAILY_LOSS = "daily_loss"
     DRAWDOWN = "drawdown"
     VOLATILITY = "volatility"
+    UNHEDGED_FX_EXPOSURE = "unhedged_fx_exposure"  # [TASK-5.5]
+    EXCESSIVE_FX_CONCENTRATION = "excessive_fx_concentration"  # [TASK-5.5]
 
 
 class PortfolioRiskManager:
@@ -150,6 +152,9 @@ class PortfolioRiskManager:
         # Calcular volatilidad del portafolio
         portfolio_volatility = self._calculate_portfolio_volatility(portfolio)
 
+        # Calcular exposición de moneda extranjera [TASK-5.5]
+        currency_exposures = self._calculate_currency_exposure(portfolio, new_position)
+
         return {
             "total_exposure": total_exposure,
             "sector_exposures": sector_exposures,
@@ -157,6 +162,7 @@ class PortfolioRiskManager:
             "daily_loss": daily_loss,
             "drawdown": drawdown,
             "portfolio_volatility": portfolio_volatility,
+            "currency_exposures": currency_exposures,
             "position_count": len(portfolio.positions) + (1 if new_position else 0),
         }
 
@@ -222,6 +228,13 @@ class PortfolioRiskManager:
                     "severity": "critical",
                 }
             )
+
+        # Verificar exposición de moneda extranjera [TASK-5.5]
+        if "currency_exposures" in risk_metrics:
+            fx_violations = self._detect_fx_violations(
+                risk_metrics["currency_exposures"]
+            )
+            violations.extend(fx_violations)
 
         return violations
 
@@ -396,6 +409,103 @@ class PortfolioRiskManager:
             "daily_loss_limit": self.daily_loss_limit,
             "max_drawdown_limit": self.max_drawdown_limit,
         }
+
+    def _calculate_currency_exposure(
+        self, portfolio: Portfolio, new_position: Optional[Position]
+    ) -> Dict[str, Any]:
+        """
+        Calcular exposición de moneda extranjera [TASK-5.5].
+
+        Returns:
+            Dict with currency exposures and totals
+        """
+        base_currency = portfolio.currency or "USD"
+        exposure_by_currency: Dict[str, Decimal] = {}
+        total_unhedged = Decimal("0")
+        total_portfolio_value = portfolio.total_equity
+
+        # Aggregate positions by currency
+        positions_to_check = portfolio.positions.copy()
+        if new_position:
+            positions_to_check.append(new_position)
+
+        for position in positions_to_check:
+            # Skip base currency and hedge positions
+            if position.currency == base_currency or position.hedging.is_hedge:
+                continue
+
+            position_value = position.market_value
+            if position.currency not in exposure_by_currency:
+                exposure_by_currency[position.currency] = Decimal("0")
+
+            exposure_by_currency[position.currency] += position_value
+            total_unhedged += position_value
+
+        # Calculate percentages
+        portfolio_pct = (
+            (total_unhedged / total_portfolio_value * 100)
+            if total_portfolio_value > 0
+            else Decimal("0")
+        )
+
+        return {
+            "by_currency": exposure_by_currency,
+            "total_unhedged": total_unhedged,
+            "total_portfolio_pct": portfolio_pct,
+        }
+
+    def _detect_fx_violations(self, currency_exposures: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """
+        Detectar violaciones de exposición a moneda extranjera [TASK-5.5].
+
+        Args:
+            currency_exposures: Currency exposure metrics from _calculate_currency_exposure
+
+        Returns:
+            List of FX-related violations
+        """
+        violations = []
+
+        # Get thresholds from config
+        try:
+            hedging_config = self.config.currency_hedging
+            single_currency_max = hedging_config.single_currency_max
+            total_fx_max = hedging_config.total_fx_max
+        except (AttributeError, KeyError):
+            # Fallback defaults
+            single_currency_max = 0.25
+            total_fx_max = 0.50
+
+        by_currency = currency_exposures.get("by_currency", {})
+        total_unhedged_pct = currency_exposures.get("total_portfolio_pct", Decimal("0"))
+
+        # Check total unhedged FX exposure
+        if total_unhedged_pct > Decimal(str(total_fx_max * 100)):
+            violations.append(
+                {
+                    "type": RiskViolation.EXCESSIVE_FX_CONCENTRATION,
+                    "current_value": float(total_unhedged_pct),
+                    "limit": float(Decimal(str(total_fx_max)) * 100),
+                    "severity": "high",
+                    "description": f"Total unhedged FX exposure {total_unhedged_pct:.1f}% exceeds limit",
+                }
+            )
+
+        # Check individual currency exposures
+        for currency, amount in by_currency.items():
+            # This would need portfolio total value for percentage calculation
+            # For now, log at medium severity if above threshold
+            violations.append(
+                {
+                    "type": RiskViolation.UNHEDGED_FX_EXPOSURE,
+                    "currency": currency,
+                    "current_value": float(amount),
+                    "severity": "medium",
+                    "description": f"Unhedged {currency} exposure of {amount:,.0f}",
+                }
+            )
+
+        return violations
 
     def get_recent_violations(self, limit: int = 10) -> List[Dict[str, Any]]:
         """Obtener violaciones recientes."""

@@ -1,0 +1,259 @@
+# Currency Hedging Configuration [TASK-5.5-CURRENCY-HEDGING]
+# Automatic FX exposure management and hedging rules
+
+# ============================================================================
+# General Settings
+# ============================================================================
+enabled: true
+
+# Base currency for all conversions and comparisons
+base_currency: "USD"
+
+# Automatic hedging mode (true) vs manual hedging requests (false)
+auto_hedge: true
+
+# Hedging strategy for multi-currency portfolios
+# - full: Hedge 100% of non-base currency exposure
+# - partial: Hedge to target percentage (see partial_hedge_percentage)
+# - rolling: Use rolling hedges with fixed duration windows
+hedging_strategy: "partial"
+
+# Partial hedging target (50% = hedge half the exposure)
+partial_hedge_percentage: 0.5
+
+# ============================================================================
+# Exposure Thresholds
+# ============================================================================
+thresholds:
+  # Maximum exposure in any single non-USD currency as % of portfolio
+  single_currency_max: 0.25
+
+  # Maximum total unhedged FX exposure as % of portfolio
+  total_fx_max: 0.50
+
+  # Minimum notional exposure to trigger hedging (in USD)
+  minimum_exposure: 50000
+
+  # Alert threshold (log warning but don't force hedge)
+  alert_threshold: 0.30
+
+# ============================================================================
+# Rolling Hedge Configuration
+# ============================================================================
+rolling_hedge:
+  # Duration of rolling hedge windows in days
+  window_days: 30
+
+  # How often to rebalance rolling hedges
+  # Options: daily, weekly, monthly
+  rebalance_frequency: "weekly"
+
+  # Days before expiry to roll to next window
+  roll_before_expiry_days: 5
+
+# ============================================================================
+# Hedge Cost & Limits
+# ============================================================================
+cost_limits:
+  # Maximum acceptable hedging cost in basis points
+  max_cost_bps: 10
+
+  # Maximum acceptable slippage on forex orders (%)
+  acceptable_slippage: 0.5
+
+  # If true, don't hedge if estimated cost exceeds max_cost_bps
+  enforce_cost_limit: true
+
+# ============================================================================
+# Forex Pair Configuration
+# ============================================================================
+forex_pairs:
+  # Default forex pairs for hedging major currencies
+  EUR: "EUR/USD"
+  GBP: "GBP/USD"
+  JPY: "USD/JPY"      # Inverse pair
+  CHF: "USD/CHF"      # Inverse pair
+  AUD: "AUD/USD"
+  CAD: "USD/CAD"      # Inverse pair
+  NZD: "NZD/USD"
+  SGD: "USD/SGD"      # Inverse pair
+  HKD: "HKD/USD"
+  INR: "USD/INR"      # Inverse pair
+
+# ============================================================================
+# Correlation & Volatility
+# ============================================================================
+correlation:
+  # How often to update correlation matrix (days)
+  update_frequency: 30
+
+  # Lookback window for correlation calculation (days)
+  lookback_window: 252
+
+  # Default fallback correlations if API fails
+  default_correlations:
+    EUR: 0.85
+    GBP: 0.80
+    JPY: 0.75
+    CHF: 0.70
+    AUD: 0.65
+    CAD: 0.90
+    NZD: 0.60
+    SGD: 0.50
+    HKD: 0.40
+    INR: 0.30
+
+  # Volatility target for hedge ratio calculation
+  # Formula: hedge_ratio = min(correlation, volatility_target)
+  volatility_target: 0.80
+
+# ============================================================================
+# Risk Assessment Integration
+# ============================================================================
+risk_assessment:
+  # Include unhedged FX exposure in risk violations
+  check_unhedged_exposure: true
+
+  # Include FX concentration risk in violations
+  check_fx_concentration: true
+
+  # Severity level for FX violations
+  violation_severity: "medium"  # critical, high, medium, low
+
+# ============================================================================
+# Hedge Position Management
+# ============================================================================
+position_management:
+  # Automatically close expired hedges
+  auto_close_expired: true
+
+  # Keep expired hedges for N days before closing (for analysis)
+  keep_expired_days: 0
+
+  # Label for identifying hedge positions
+  hedge_position_label: "FX_HEDGE"
+
+  # Mark hedge positions as non-tradable (no manual intervention)
+  hedge_positions_readonly: false
+
+# ============================================================================
+# Data Fetching & Caching
+# ============================================================================
+data_fetching:
+  # Broker APIs to use for forex data
+  # Options: OANDA, FXCM, FRED (Federal Reserve), Yahoo Finance
+  data_sources:
+    - "OANDA"
+    - "FXCM"
+
+  # Cache duration for forex rates (minutes)
+  rate_cache_duration_minutes: 60
+
+  # Cache duration for correlation matrix (days)
+  correlation_cache_duration_days: 7
+
+  # Timeout for API calls (seconds)
+  api_timeout_seconds: 30
+
+  # Retry attempts for failed API calls
+  api_retry_attempts: 3
+
+  # Use cached values if API fails
+  fallback_to_cache: true
+
+# ============================================================================
+# Reporting & Tracking
+# ============================================================================
+reporting:
+  # Track hedging operations history
+  track_history: true
+
+  # Maximum history entries to keep
+  max_history_entries: 1000
+
+  # Log hedging operations
+  log_operations: true
+
+  # Log level for hedging operations
+  log_level: "info"  # debug, info, warning, error
+
+  # Generate daily hedging summary
+  generate_daily_summary: false
+
+  # Include hedging metrics in portfolio reports
+  include_in_reports: true
+
+# ============================================================================
+# Advanced Settings
+# ============================================================================
+advanced:
+  # Enable experimental features
+  experimental_features: false
+
+  # Debug mode (extra logging and validation)
+  debug: false
+
+  # Validate all calculations against expected ranges
+  validation_enabled: true
+
+  # Custom hedge ratio multiplier (1.0 = normal, <1.0 = reduce hedges)
+  hedge_ratio_multiplier: 1.0
+
+  # Allow hedging of multiple currencies with single pair
+  # (e.g., use EUR/USD to hedge both EUR and CHF exposure)
+  cross_hedge_enabled: false
+
+  # Maximum hedge positions per currency
+  max_hedges_per_currency: 3
+
+# ============================================================================
+# Performance Settings
+# ============================================================================
+performance:
+  # Parallel processing for hedge calculations
+  n_jobs: 1  # 1 = no parallelization, -1 = all cores
+
+  # Cache forex data and correlations in memory
+  cache_in_memory: true
+
+  # Maximum number of cached rates in memory
+  max_cached_rates: 100
+
+  # Pre-fetch forex pairs on startup
+  preload_forex_data: false
+
+# ============================================================================
+# Integration Settings
+# ============================================================================
+integration:
+  # When to apply hedging
+  apply_on_position_add: true     # Auto-hedge when position added
+  apply_on_position_close: false  # Cleanup when position closed
+  apply_on_rebalance: true        # Re-hedge during rebalancing
+
+  # Check hedging on portfolio operations
+  check_before_position_add: true
+  check_after_position_add: true
+
+  # Circuit breaker for hedging failures
+  disable_on_error: false  # If true, disable hedging after N errors
+  error_threshold: 5       # Errors before disabling
+
+# ============================================================================
+# Validation Settings
+# ============================================================================
+validation:
+  # Validate hedge ratio (must be 0-1)
+  validate_hedge_ratio: true
+
+  # Validate hedge cost (must be within limits)
+  validate_hedge_cost: true
+
+  # Validate forex pairs exist
+  validate_forex_pairs: true
+
+  # Validate exposure calculations
+  validate_exposure: true
+
+  # Strict mode (fail fast on validation errors)
+  strict_mode: false
