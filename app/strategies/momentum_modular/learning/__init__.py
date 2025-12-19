@@ -21,12 +21,22 @@ from .drift_detector import (
     load_drift_config,
 )
 
-# Feature importance (siempre disponibles)
+# Feature importance (siempre disponibles) [TASK-4.2-FEATURE-IMPORTANCE]
 from .feature_importance import (
     AttentionWeightsAnalyzer,
+    BuiltInImportanceAnalyzer,
+    ComprehensiveFeatureAnalyzer,
+    ComprehensiveImportanceReport,
+    CorrelationAnalyzer,
     FeatureImportanceAnalyzer,
+    FeatureImportanceResult,
     FeatureSelector,
+    FeatureStabilityTracker,
+    ImportanceCategory,
+    PermutationImportanceAnalyzer,
     SHAPAnalyzer,
+    get_default_feature_importance_config,
+    load_feature_importance_config,
 )
 
 # Hyperparameter tuning (siempre disponibles)
@@ -81,11 +91,21 @@ __all__ = [
     "ComprehensiveDriftReport",
     "load_drift_config",
     "get_default_drift_config",
-    # Feature importance
+    # Feature importance [TASK-4.2-FEATURE-IMPORTANCE]
     "SHAPAnalyzer",
     "AttentionWeightsAnalyzer",
     "FeatureSelector",
     "FeatureImportanceAnalyzer",
+    "PermutationImportanceAnalyzer",
+    "BuiltInImportanceAnalyzer",
+    "CorrelationAnalyzer",
+    "FeatureStabilityTracker",
+    "ComprehensiveFeatureAnalyzer",
+    "ImportanceCategory",
+    "FeatureImportanceResult",
+    "ComprehensiveImportanceReport",
+    "load_feature_importance_config",
+    "get_default_feature_importance_config",
     # Transfer learning
     "ModelRegistry",
     "FineTuner",
