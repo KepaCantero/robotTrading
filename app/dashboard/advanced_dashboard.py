@@ -46,7 +46,7 @@ if str(project_root) not in sys.path:
 # Importar el resto de módulos con manejo de errores
 try:
     from app.dashboard.comprehensive_data_loader import ComprehensiveBacktestLoader
-except Exception as e:
+except Exception:
     ComprehensiveBacktestLoader = None
 
 # No cargar aquí para evitar bloqueos - se cargará dentro de main() cuando se necesite
@@ -55,26 +55,26 @@ ComprehensiveBacktestRunner = None
 # Importar librerías básicas
 try:
     import yaml
-except Exception as e:
+except Exception:
     yaml = None
 
 try:
     import plotly.express as px
     import plotly.graph_objects as go
     from plotly.subplots import make_subplots
-except Exception as e:
+except Exception:
     make_subplots = None
     go = None
     px = None
 
 try:
     import pandas as pd
-except Exception as e:
+except Exception:
     pd = None
 
 try:
     from app.core.logging_config import setup_file_logging
-except:
+except Exception:
     setup_file_logging = None
 
 import json
@@ -2345,7 +2345,7 @@ def main():
                 if learning_engines:
                     st.write(f"**Learning Engines:** {', '.join(learning_engines)}")
                 else:
-                    st.write(f"**Learning Engines:** ❌ None (Baseline only)")
+                    st.write("**Learning Engines:** ❌ None (Baseline only)")
 
                 st.write(f"**Selected Tests:** {', '.join(selected_tests)}")
                 st.write(f"**Symbol:** {params.get('symbol', 'N/A')}")

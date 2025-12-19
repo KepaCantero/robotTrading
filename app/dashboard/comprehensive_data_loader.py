@@ -159,14 +159,14 @@ class ComprehensiveBacktestLoader:
                                         if before_metrics.startswith('{')
                                         else {}
                                     )
-                                except:
+                                except (ValueError, SyntaxError) as e:
                                     try:
                                         result['before_training_metrics'] = json.loads(
                                             before_metrics
                                         )
-                                    except:
+                                    except (ValueError, json.JSONDecodeError) as e2:
                                         logger.debug(
-                                            f"No se pudo parsear before_training_metrics: {before_metrics[:50]}"
+                                            f"No se pudo parsear before_training_metrics: {before_metrics[:50]} - {e2}"
                                         )
                                         result['before_training_metrics'] = {}
 
@@ -182,12 +182,12 @@ class ComprehensiveBacktestLoader:
                                         if after_metrics.startswith('{')
                                         else {}
                                     )
-                                except:
+                                except (ValueError, SyntaxError) as e:
                                     try:
                                         result['after_training_metrics'] = json.loads(after_metrics)
-                                    except:
+                                    except (ValueError, json.JSONDecodeError) as e2:
                                         logger.debug(
-                                            f"No se pudo parsear after_training_metrics: {after_metrics[:50]}"
+                                            f"No se pudo parsear after_training_metrics: {after_metrics[:50]} - {e2}"
                                         )
                                         result['after_training_metrics'] = {}
 
@@ -203,12 +203,12 @@ class ComprehensiveBacktestLoader:
                                         if improvement.startswith('{')
                                         else {}
                                     )
-                                except:
+                                except (ValueError, SyntaxError) as e:
                                     try:
                                         result['improvement_pct'] = json.loads(improvement)
-                                    except:
+                                    except (ValueError, json.JSONDecodeError) as e2:
                                         logger.debug(
-                                            f"No se pudo parsear improvement_pct: {improvement[:50]}"
+                                            f"No se pudo parsear improvement_pct: {improvement[:50]} - {e2}"
                                         )
                                         result['improvement_pct'] = {}
 
@@ -413,7 +413,7 @@ class ComprehensiveBacktestLoader:
             'clusters_found': len(analysis_data.get('clusters', {}))
             if isinstance(analysis_data.get('clusters'), dict)
             else 0,
-            'optimal_combinations': len(analysis_data.get('optimal_combinations', [])),
+            'optimal_combinations_count': len(analysis_data.get('optimal_combinations', [])),
             'avg_sharpe': analysis_data.get('aggregate_metrics', {}).get('avg_sharpe_ratio', 0),
             'avg_return': analysis_data.get('aggregate_metrics', {}).get('avg_return_pct', 0),
             'correlations': analysis_data.get('correlations', {}),

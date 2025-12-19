@@ -358,7 +358,7 @@ class ComprehensiveBacktestRunner:
         Returns:
             True si se entrenó exitosamente, False en caso contrario
         """
-        logger.info(f"    🔍 Verificando learning engine para entrenamiento...")
+        logger.info("    🔍 Verificando learning engine para entrenamiento...")
         logger.info(
             f"       - strategy.learning_engine existe: {strategy.learning_engine is not None}"
         )
@@ -372,24 +372,24 @@ class ComprehensiveBacktestRunner:
             and strategy._learning_config
             and strategy.learning_engine is None
         ):
-            logger.info(f"    ⚙️ Inicializando learning engine (lazy loading)...")
+            logger.info("    ⚙️ Inicializando learning engine (lazy loading)...")
             try:
                 strategy._initialize_learning_engine()
-                logger.info(f"    ✅ Learning engine inicializado")
+                logger.info("    ✅ Learning engine inicializado")
             except Exception as e:
                 logger.error(f"    ❌ Error inicializando learning engine: {e}", exc_info=True)
                 return False
 
         if not strategy.learning_engine:
-            logger.warning(f"    ⚠️ No hay learning engine configurado")
+            logger.warning("    ⚠️ No hay learning engine configurado")
             return False
 
         if not strategy.learning_engine.enabled:
-            logger.warning(f"    ⚠️ Learning engine deshabilitado")
+            logger.warning("    ⚠️ Learning engine deshabilitado")
             return False
 
         if strategy.learning_engine.is_ready():
-            logger.info(f"    ✅ Learning engine ya está entrenado y listo")
+            logger.info("    ✅ Learning engine ya está entrenado y listo")
             return True  # Ya está entrenado
 
         # Determinar tipo de engine si no se proporciona
@@ -523,7 +523,7 @@ class ComprehensiveBacktestRunner:
                     has_valid_data = bool(training_data)
 
             # Log detallado de diagnóstico
-            logger.info(f"    📋 Validación de datos de entrenamiento:")
+            logger.info("    📋 Validación de datos de entrenamiento:")
             logger.info(f"       - training_data existe: {training_data is not None}")
             logger.info(f"       - Tipo: {type(training_data)}")
             if training_data:
@@ -538,7 +538,8 @@ class ComprehensiveBacktestRunner:
                                 logger.info(
                                     f"       - {key}: array/tensor con shape {getattr(value, 'shape', 'N/A')}"
                                 )
-                            except:
+                            except (AttributeError, TypeError) as e:
+                                logger.debug(f"Could not get shape for {key}: {e}")
                                 logger.info(f"       - {key}: objeto con longitud {len(value)}")
                         else:
                             logger.info(f"       - {key}: {type(value)}")
@@ -631,15 +632,15 @@ class ComprehensiveBacktestRunner:
                         logger.warning(
                             f"       Unique labels: {metrics.get('unique_labels', 'N/A')}, Total samples: {metrics.get('total_samples', 'N/A')}"
                         )
-                        logger.warning(f"       Sugerencias:")
-                        logger.warning(f"       - Aumentar lookahead_days en preparación de datos")
-                        logger.warning(f"       - Usar más datos históricos")
+                        logger.warning("       Sugerencias:")
+                        logger.warning("       - Aumentar lookahead_days en preparación de datos")
+                        logger.warning("       - Usar más datos históricos")
                         logger.warning(
                             f"       - Ajustar criterios de éxito de trades (umbrales más bajos)"
                         )
                         return False
                     elif error_type == 'empty_data':
-                        logger.warning(f"    ⚠️ Entrenamiento falló: Datos de entrenamiento vacíos")
+                        logger.warning("    ⚠️ Entrenamiento falló: Datos de entrenamiento vacíos")
                         return False
                     else:
                         logger.warning(f"    ⚠️ Entrenamiento falló: {error_msg}")
@@ -650,9 +651,9 @@ class ComprehensiveBacktestRunner:
                 if learning_engine_name in ['deep', 'transformer'] and metrics.get(
                     'trained_in_subprocess'
                 ):
-                    logger.info(f"    ✅ Entrenamiento en subprocess marcado como exitoso")
+                    logger.info("    ✅ Entrenamiento en subprocess marcado como exitoso")
                     logger.info(
-                        f"    ⚠️ Modelo NO disponible en proceso principal (previene mutex.cc blocking)"
+                        "    ⚠️ Modelo NO disponible en proceso principal (previene mutex.cc blocking)"
                     )
                     return True
 
@@ -1870,7 +1871,7 @@ class ComprehensiveBacktestRunner:
                 # Optimizar thresholds en train set (si está habilitado)
                 thresholds_override = None
                 if optimize_thresholds and len(train_window_quotes) >= 40:
-                    logger.info(f"    🔧 Optimizando thresholds en train set...")
+                    logger.info("    🔧 Optimizando thresholds en train set...")
                     # Mini grid search solo en train set
                     best_thresholds = self._optimize_thresholds_in_window(
                         train_window_quotes, num_combinations=20  # Limitado para walk-forward
@@ -1910,7 +1911,7 @@ class ComprehensiveBacktestRunner:
                             )
                             logger.info(f"    ✅ Entrenamiento completado: {metrics}")
                         else:
-                            logger.warning(f"    ⚠️ No se pudieron preparar datos de entrenamiento")
+                            logger.warning("    ⚠️ No se pudieron preparar datos de entrenamiento")
                     except Exception as e:
                         logger.error(f"    ❌ Error entrenando learning engine: {e}", exc_info=True)
                         # Continuar sin learning engine entrenado
@@ -2001,7 +2002,7 @@ class ComprehensiveBacktestRunner:
         if len(results) > 1:
             avg_sharpe = sum(r['sharpe_ratio'] for r in results) / len(results)
             avg_return = sum(r['return_pct'] for r in results) / len(results)
-            logger.info(f"\n  📊 Métricas Agregadas:")
+            logger.info("\n  📊 Métricas Agregadas:")
             logger.info(f"    Promedio Sharpe: {avg_sharpe:.2f}")
             logger.info(f"    Promedio Return: {avg_return:.2f}%")
             logger.info(
@@ -2529,7 +2530,7 @@ class ComprehensiveBacktestRunner:
                 logger.warning(
                     f"    ⚠️ REGIME MISMATCH: Train primary={train_primary}, Test primary={test_primary}"
                 )
-                logger.warning(f"    ⚠️ Esto puede afectar la validez del test OOS")
+                logger.warning("    ⚠️ Esto puede afectar la validez del test OOS")
                 regime_warning = True
 
             # Calcular similitud de regímenes
@@ -2616,7 +2617,7 @@ class ComprehensiveBacktestRunner:
                     logger.error(f"  ❌ Error entrenando learning engine: {e}", exc_info=True)
                     # Continuar sin learning engine entrenado
             else:
-                logger.warning(f"  ⚠️ Learning engine no se inicializó correctamente")
+                logger.warning("  ⚠️ Learning engine no se inicializó correctamente")
         else:
             # Sin learning engine - crear estrategia normalmente
             strategy_train = ModularMomentumStrategy(strategy_config)
@@ -2736,7 +2737,7 @@ class ComprehensiveBacktestRunner:
 
         self.results.append(result_dict)
 
-        logger.info(f"✅ Out-of-Sample completado:")
+        logger.info("✅ Out-of-Sample completado:")
         logger.info(
             f"   📊 TEST: PnL=${result_dict['total_pnl']:.2f}, Sharpe={result_dict['sharpe_ratio']:.2f}, Return={result_dict['return_pct']:.2f}%"
         )
@@ -3283,7 +3284,7 @@ class ComprehensiveBacktestRunner:
         }
 
         self.results.append(result_dict)
-        logger.info(f"✅ Transformer Optimization completado:")
+        logger.info("✅ Transformer Optimization completado:")
         logger.info(f"   🏆 Mejor Sharpe: {best_sharpe:.4f}")
         logger.info(f"   📊 Iteraciones: {iteration}/{max_iterations}")
         logger.info(f"   🎯 Convergencia: {'Sí' if iteration < max_iterations else 'No'}")
@@ -3561,7 +3562,7 @@ class ComprehensiveBacktestRunner:
             )
 
             self.results.append(result_dict)
-            logger.info(f"✅ Multi-Strategy Backtest completado:")
+            logger.info("✅ Multi-Strategy Backtest completado:")
             logger.info(f"   PnL: ${result_dict['total_pnl']:.2f}")
             logger.info(f"   Sharpe: {result_dict['sharpe_ratio']:.2f}")
             logger.info(f"   Trades: {result_dict['total_trades']}")
@@ -3928,13 +3929,13 @@ class ComprehensiveBacktestRunner:
         hyperopt_best = max(hyperopt_results, key=lambda x: x.get('sharpe_ratio', 0), default=None)
 
         if grid_best and hyperopt_best:
-            logger.info(f"\n🔍 Grid Search (Mejor):")
+            logger.info("\n🔍 Grid Search (Mejor):")
             logger.info(f"   Sharpe Ratio: {grid_best.get('sharpe_ratio', 0):.2f}")
             logger.info(f"   Total PnL: ${grid_best.get('total_pnl', 0):.2f}")
             logger.info(f"   Win Rate: {grid_best.get('win_rate', 0):.1f}%")
             logger.info(f"   Max Drawdown: {grid_best.get('max_drawdown', 0):.2f}%")
 
-            logger.info(f"\n🎯 Hyperparameter Optimization (Mejor):")
+            logger.info("\n🎯 Hyperparameter Optimization (Mejor):")
             logger.info(f"   Sharpe Ratio: {hyperopt_best.get('sharpe_ratio', 0):.2f}")
             logger.info(f"   Total PnL: ${hyperopt_best.get('total_pnl', 0):.2f}")
             logger.info(f"   Win Rate: {hyperopt_best.get('win_rate', 0):.1f}%")
@@ -3965,7 +3966,7 @@ class ComprehensiveBacktestRunner:
                 )
                 logger.info(f"\n✅ Grid Search es MEJOR por {improvement:.1f}% en Sharpe Ratio")
             else:
-                logger.info(f"\n⚖️ Ambos métodos tienen resultados similares")
+                logger.info("\n⚖️ Ambos métodos tienen resultados similares")
 
         logger.info("=" * 80)
 

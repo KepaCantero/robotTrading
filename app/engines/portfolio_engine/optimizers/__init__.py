@@ -28,7 +28,7 @@ except ImportError:
     logger.warning("cvxpy no disponible. Optimización avanzada limitada.")
 
 try:
-    from pypfopt import EfficientFrontier, expected_returns, risk_models
+    from pypfopt import EfficientFrontier, expected_returns as pypfopt_expected_returns, risk_models
 
     PYPORTFOLIO_AVAILABLE = True
 except ImportError:

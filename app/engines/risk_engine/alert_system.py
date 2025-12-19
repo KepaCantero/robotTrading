@@ -468,7 +468,7 @@ class AlertSystem(BaseAlertSystem):
             response = requests.post(webhook_url, json=payload, timeout=10)
             response.raise_for_status()
 
-            self.logger.info(f"Alertas enviadas por Slack")
+            self.logger.info("Alertas enviadas por Slack")
         except ImportError:
             self.logger.warning("requests no disponible para Slack")
         except Exception as e:

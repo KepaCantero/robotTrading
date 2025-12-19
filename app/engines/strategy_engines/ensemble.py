@@ -439,7 +439,7 @@ class RegimeBasedSelector(BaseStrategyEnsemble):
             "volatility_threshold", 0.025
         )  # 2.5% volatilidad alta
 
-        logger.info(f"RegimeBasedSelector initialized")
+        logger.info("RegimeBasedSelector initialized")
 
     def _generate_signals_impl(self, market_data: Quote) -> List[Signal]:
         """
