@@ -1,0 +1,174 @@
+# Drift Detection Configuration [TASK-4.2-DRIFT]
+# Comprehensive drift detection for ML models in trading
+
+# ============================================================================
+# General Settings
+# ============================================================================
+enabled: true
+
+# ============================================================================
+# Detectors Configuration
+# ============================================================================
+detectors:
+  # Kolmogorov-Smirnov Test
+  ks_test:
+    enabled: true
+    p_value_threshold: 0.05    # Significance level
+    window_size: 500           # Reference window size
+    min_samples: 30            # Minimum samples required
+
+  # Population Stability Index (PSI) - Standard in finance
+  psi:
+    enabled: true
+    threshold: 0.25            # >0.25 = significant drift
+    n_bins: 10                 # Number of buckets
+    min_samples: 30
+    # PSI interpretation:
+    # < 0.10: No significant change
+    # 0.10 - 0.25: Minor change, monitor
+    # > 0.25: Significant change, investigate/retrain
+
+  # ADWIN (Adaptive Windowing) - For streaming data
+  adwin:
+    enabled: true
+    delta: 0.002               # Confidence parameter (lower = more sensitive)
+    min_window: 5              # Minimum window size
+    max_window: 1000           # Maximum window size
+
+  # Maximum Mean Discrepancy (MMD)
+  mmd:
+    enabled: false             # Disabled by default (computationally expensive)
+    threshold: 0.1             # MMD threshold
+    kernel: "rbf"              # Kernel type
+    gamma: 1.0                 # RBF kernel parameter
+
+# ============================================================================
+# Monitoring Configuration
+# ============================================================================
+monitoring:
+  # Window settings
+  window_size: 500             # Default reference window size
+  min_samples: 30              # Minimum samples for detection
+
+  # Check frequency
+  check_interval_minutes: 60   # How often to check for drift
+  batch_size: 100              # Samples per batch check
+
+  # Monitoring levels
+  feature_level: true          # Monitor individual features
+  prediction_level: true       # Monitor model predictions
+  target_level: true           # Monitor target distribution
+
+  # Features to monitor (empty = all features)
+  monitored_features: []
+
+  # Features to exclude from monitoring
+  excluded_features:
+    - "timestamp"
+    - "symbol"
+    - "trade_id"
+
+# ============================================================================
+# Severity Thresholds
+# ============================================================================
+thresholds:
+  # Drift severity levels (based on combined score)
+  none: 0.0                    # No drift
+  low: 0.1                     # Minor drift, continue monitoring
+  medium: 0.25                 # Moderate drift, investigate
+  high: 0.4                    # Significant drift, consider retraining
+  critical: 0.6                # Critical drift, retrain immediately
+
+  # Action thresholds
+  warning: 0.1                 # Trigger warning alert
+  critical: 0.25               # Trigger critical alert
+  retrain: 0.4                 # Trigger automatic retraining
+
+# ============================================================================
+# Auto-Retraining Configuration
+# ============================================================================
+auto_retrain:
+  enabled: true
+
+  # Minimum interval between retrains
+  min_interval_hours: 24       # Don't retrain more often than this
+
+  # Trigger conditions
+  require_multiple_detectors: true   # Require 2+ detectors to agree
+  min_detectors_triggered: 2         # Minimum detectors that must trigger
+
+  # Performance-based triggers
+  performance_degradation_threshold: 0.2  # 20% performance drop triggers retrain
+
+  # Time-based triggers
+  max_days_without_retrain: 30  # Force retrain after N days
+
+  # Data requirements
+  min_samples_for_retrain: 1000  # Minimum samples before allowing retrain
+
+# ============================================================================
+# Overfitting Detection
+# ============================================================================
+overfitting:
+  enabled: true
+  overfitting_threshold: 0.1   # Train/val gap ratio threshold
+  min_epochs: 10               # Minimum epochs before detection
+
+  # Learning curve analysis
+  analyze_learning_curves: true
+  divergence_threshold: 0.05   # Threshold for train/val divergence
+
+# ============================================================================
+# Alerting Configuration
+# ============================================================================
+alerting:
+  enabled: true
+
+  # Alert channels (for future integration)
+  channels:
+    - type: "log"
+      level: "warning"
+    - type: "metrics"
+      endpoint: null           # Prometheus/StatsD endpoint
+
+  # Alert throttling
+  min_alert_interval_minutes: 30  # Don't spam alerts
+
+  # Alert messages
+  messages:
+    warning: "Drift warning detected: {detector} score={score:.3f}"
+    critical: "Critical drift detected: {detector} score={score:.3f}. Consider retraining."
+    retrain: "Auto-retraining triggered due to drift: {reasons}"
+
+# ============================================================================
+# Reporting Configuration
+# ============================================================================
+reporting:
+  # Output directory for drift reports
+  output_directory: "reports/drift"
+
+  # Report formats
+  generate_json: true
+  generate_html: false
+  generate_csv: true
+
+  # Report frequency
+  report_on_drift: true        # Generate report when drift detected
+  periodic_report_hours: 24    # Generate periodic report every N hours
+
+  # Visualization
+  plot_distributions: true
+  plot_drift_timeline: true
+  plot_feature_importance: true
+
+# ============================================================================
+# Historical Data
+# ============================================================================
+history:
+  # How much history to keep
+  max_history_days: 90         # Keep drift history for N days
+  max_history_entries: 10000   # Maximum history entries
+
+  # Persistence
+  persist_to_disk: true
+  history_file: "data/drift_history.json"
