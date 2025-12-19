@@ -4,6 +4,7 @@ LearningEngineUpdater - Sistema de reentrenamiento automático para learning eng
 Integra:
 - Detección de drift [TASK-4.2-DRIFT] para reentrenamiento inteligente
 - Análisis de Feature Importance [TASK-4.2-FEATURE-IMPORTANCE]
+- Transfer Learning [TASK-4.2-TRANSFER-LEARNING] para fine-tuning de modelos pre-entrenados
 
 Características:
 - Detección de concept drift (PSI, KS test, ADWIN)
@@ -12,6 +13,8 @@ Características:
 - Triggers automáticos de reentrenamiento basados en drift
 - Feature importance analysis con 6 métodos (SHAP, Permutation, Built-in, Correlation, Attention, Stability)
 - Recomendaciones automáticas de feature engineering
+- Transfer Learning: Fine-tuning de modelos pre-entrenados por régimen de mercado
+- Registro automático de modelos entrenados para transferencia futura
 """
 
 import logging
@@ -26,14 +29,70 @@ from .drift_detector import (
     AutoRetrainingTrigger,
     ComprehensiveDriftDetector,
     ComprehensiveDriftReport,
-    DriftSeverity,
     OverfittingDetector,
     load_drift_config,
 )
 from .feature_importance import ComprehensiveFeatureAnalyzer, load_feature_importance_config
 from .training_data_preparator import TrainingDataPreparator
+from .transfer_learning import TransferLearningManager
 
 logger = logging.getLogger(__name__)
+
+
+def load_transfer_learning_config(config_path: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Load Transfer Learning configuration from YAML file.
+
+    Args:
+        config_path: Path to YAML config file (optional)
+
+    Returns:
+        Dictionary with Transfer Learning configuration
+    """
+    if config_path is None:
+        # Try multiple default locations
+        from pathlib import Path
+        possible_paths = [
+            Path("config/transfer_learning.yaml"),
+            Path(__file__).parent.parent.parent.parent.parent / "config/transfer_learning.yaml",
+        ]
+        for path in possible_paths:
+            if path.exists():
+                config_path = str(path)
+                break
+
+    if config_path:
+        try:
+            import yaml
+            with open(config_path, "r", encoding="utf-8") as f:
+                config = yaml.safe_load(f)
+                logger.debug(f"Loaded transfer learning config from {config_path}")
+                return config or {}
+        except Exception as e:
+            logger.warning(f"Error loading transfer learning config from {config_path}: {e}")
+
+    # Return default configuration if file not found or error loading
+    return {
+        "enabled": True,
+        "registry_path": "models/registry",
+        "fine_tuner": {
+            "freeze_layers": True,
+            "freeze_n_layers": 2,
+            "learning_rate_multiplier": 0.1,
+            "fine_tune_epochs": 10,
+            "early_stopping_patience": 5,
+        },
+        "distiller": {
+            "temperature": 3.0,
+            "alpha": 0.7,
+            "distillation_epochs": 50,
+        },
+        "market_regime": {
+            "detection_window_days": 20,
+            "volatility_thresholds": {"low": 0.01, "normal": 0.03, "high": 1.0},
+            "trend_thresholds": {"bearish": -0.001, "bullish": 0.001},
+        },
+    }
 
 
 class LearningEngineUpdater:
@@ -113,6 +172,29 @@ class LearningEngineUpdater:
             self._feature_analyzer = None
             self._feature_importance_history = []
             self._last_feature_analysis = None
+
+        # Transfer Learning integration [TASK-4.2-TRANSFER-LEARNING]
+        self._transfer_learning_config = load_transfer_learning_config()
+        self._transfer_learning_enabled = self._transfer_learning_config.get("enabled", True)
+
+        if self._transfer_learning_enabled:
+            try:
+                self._transfer_manager = TransferLearningManager(
+                    registry_path=self._transfer_learning_config.get("registry_path", "models/registry")
+                )
+                self._transfer_history: List[Dict[str, Any]] = []
+                self._last_transfer_operation: Optional[Dict[str, Any]] = None
+                logger.info("Transfer Learning enabled for LearningEngineUpdater")
+            except Exception as e:
+                logger.warning(f"Failed to initialize Transfer Learning: {e}, disabling TL")
+                self._transfer_learning_enabled = False
+                self._transfer_manager = None
+                self._transfer_history = []
+                self._last_transfer_operation = None
+        else:
+            self._transfer_manager = None
+            self._transfer_history = []
+            self._last_transfer_operation = None
 
     def should_retrain(self, current_date: datetime) -> bool:
         """
@@ -313,6 +395,154 @@ class LearningEngineUpdater:
         market_record = {**market_data, 'timestamp': timestamp}
         self.market_history.append(market_record)
 
+    def _detect_market_regime(self, training_data: Dict[str, Any]) -> str:
+        """
+        Detect current market regime (bull, bear, sideways, etc.).
+
+        Args:
+            training_data: Dict with training data containing targets/returns
+
+        Returns:
+            Market regime string (bull, bear, sideways, high_volatility, low_volatility)
+        """
+        try:
+            targets = training_data.get("targets")
+            if targets is None:
+                logger.debug("No targets available for regime detection, defaulting to 'normal'")
+                return "normal"
+
+            # Convert to numpy if needed
+            if hasattr(targets, "values"):
+                targets = targets.values
+
+            targets = np.asarray(targets).flatten()
+
+            if len(targets) < 2:
+                return "normal"
+
+            # Calculate volatility (std dev of returns)
+            volatility = float(np.std(targets))
+
+            # Calculate trend (mean return)
+            trend = float(np.mean(targets))
+
+            # Get thresholds from config
+            config = self._transfer_learning_config.get("market_regime", {})
+            vol_thresholds = config.get("volatility_thresholds", {"low": 0.01, "normal": 0.03, "high": 1.0})
+            trend_thresholds = config.get("trend_thresholds", {"bearish": -0.001, "bullish": 0.001})
+
+            # Determine volatility classification
+            if volatility < vol_thresholds.get("low", 0.01):
+                vol_class = "low_volatility"
+            elif volatility < vol_thresholds.get("normal", 0.03):
+                vol_class = "normal_volatility"
+            else:
+                vol_class = "high_volatility"
+
+            # Determine trend classification
+            if trend < trend_thresholds.get("bearish", -0.001):
+                trend_class = "bear"
+            elif trend > trend_thresholds.get("bullish", 0.001):
+                trend_class = "bull"
+            else:
+                trend_class = "sideways"
+
+            # Combine into regime
+            regime = f"{trend_class}_{vol_class}"
+
+            logger.debug(f"Detected market regime: {regime} (vol={volatility:.4f}, trend={trend:.4f})")
+            return regime
+
+        except Exception as e:
+            logger.debug(f"Error detecting market regime: {e}, defaulting to 'normal'")
+            return "normal"
+
+    def _execute_transfer_learning_step(
+        self, training_data: Dict[str, Any], current_date: datetime
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Execute transfer learning step before training.
+
+        Tries to find and fine-tune a pre-trained model instead of training from scratch.
+        Falls back to normal training if no suitable model found.
+
+        Args:
+            training_data: Dict with training data
+            current_date: Current date
+
+        Returns:
+            Metrics dict if TL was applied and successful, None if should use normal training
+        """
+        if not self._transfer_learning_enabled or not self._transfer_manager:
+            return None
+
+        try:
+            # Detect market regime
+            regime = self._detect_market_regime(training_data)
+
+            # Get engine type
+            engine_type = self._get_engine_type()
+
+            # Find best pre-trained model for this regime
+            best_model_id = self._transfer_manager.find_best_model(
+                regime=regime,
+                model_type=engine_type,
+                metric="f1_score"
+            )
+
+            if not best_model_id:
+                logger.debug(f"No pre-trained model found for regime={regime}, type={engine_type}, will train normally")
+                return None
+
+            logger.info(f"Using pre-trained model {best_model_id} for {regime} market")
+
+            # Extract training arrays
+            features = training_data.get("features")
+            targets = training_data.get("targets")
+
+            if features is None or targets is None:
+                logger.debug("Features or targets not available for fine-tuning, training normally")
+                return None
+
+            # Convert to numpy
+            if hasattr(features, "values"):
+                features = features.values
+            if hasattr(targets, "values"):
+                targets = targets.values
+
+            features = np.asarray(features)
+            targets = np.asarray(targets)
+
+            if len(features) == 0:
+                return None
+
+            # Fine-tune the pre-trained model
+            fine_tuned_model, tl_metrics = self._transfer_manager.load_and_finetune(
+                base_model_id=best_model_id,
+                X_train=features,
+                y_train=targets,
+            )
+
+            # Replace learning engine model with fine-tuned version
+            self.learning_engine.model = fine_tuned_model
+            self.learning_engine.is_trained = True
+
+            # Store TL operation info
+            self._last_transfer_operation = {
+                "timestamp": current_date,
+                "type": "fine_tune",
+                "model_id": best_model_id,
+                "regime": regime,
+                "metrics": tl_metrics,
+            }
+
+            logger.info(f"✅ Transfer Learning fine-tuning completed with metrics: {tl_metrics}")
+            return tl_metrics
+
+        except Exception as e:
+            logger.debug(f"Transfer learning failed (non-critical): {type(e).__name__}: {e}, falling back to normal training")
+            return None
+
     def retrain_if_needed(self, current_date: datetime, quotes: Optional[List] = None) -> bool:
         """
         Reentrenar learning engine si es necesario.
@@ -333,7 +563,7 @@ class LearningEngineUpdater:
 
         # Verificar que el engine esté habilitado
         if not self.learning_engine or not self.learning_engine.enabled:
-            logger.debug(f"Learning engine no habilitado, saltando reentrenamiento")
+            logger.debug("Learning engine no habilitado, saltando reentrenamiento")
             return False
 
         logger.info(
@@ -353,12 +583,18 @@ class LearningEngineUpdater:
             # Verificar dependencias antes de intentar entrenar
             if not self._can_train():
                 logger.debug(
-                    f"⚠️ Learning engine no puede entrenar (dependencias faltantes), saltando reentrenamiento"
+                    "⚠️ Learning engine no puede entrenar (dependencias faltantes), saltando reentrenamiento"
                 )
                 return False
 
-            # Reentrenar
-            metrics = self.learning_engine.train(training_data)
+            # Transfer Learning [TASK-4.2-TRANSFER-LEARNING] - Try to use pre-trained model
+            tl_metrics = self._execute_transfer_learning_step(training_data, current_date)
+            if tl_metrics is not None:
+                # Transfer Learning was successful, use those metrics
+                metrics = tl_metrics
+            else:
+                # No TL model available or TL failed, train normally
+                metrics = self.learning_engine.train(training_data)
 
             logger.info(f"✅ Reentrenamiento completado: {metrics}")
 
@@ -388,6 +624,10 @@ class LearningEngineUpdater:
             # Analyze feature importance [TASK-4.2-FEATURE-IMPORTANCE]
             if self._feature_importance_enabled and "features" in training_data:
                 self._analyze_and_log_feature_importance(training_data, current_date)
+
+            # Register newly trained model for Transfer Learning [TASK-4.2-TRANSFER-LEARNING]
+            if self._transfer_learning_enabled and metrics and self.learning_engine.is_trained:
+                self._register_trained_model_for_transfer_learning(training_data, metrics, current_date)
 
             return True
 
@@ -696,6 +936,71 @@ class LearningEngineUpdater:
             )
             # Feature importance is non-critical, continue regardless
 
+    def _register_trained_model_for_transfer_learning(
+        self, training_data: Dict[str, Any], metrics: Dict[str, Any], current_date: datetime
+    ) -> None:
+        """
+        Register newly trained model for future transfer learning.
+
+        Args:
+            training_data: Dict with training data
+            metrics: Metrics from training
+            current_date: Current date
+        """
+        try:
+            if not self._transfer_manager:
+                return
+
+            # Detect market regime
+            regime = self._detect_market_regime(training_data)
+            engine_type = self._get_engine_type()
+
+            # Get feature importance if available
+            feature_importance = self.get_last_feature_importance_analysis() or {}
+
+            # Get feature info
+            features = training_data.get("features")
+            n_features = 0
+            n_samples = 0
+            if features is not None:
+                if hasattr(features, "values"):
+                    features = features.values
+                features_array = np.asarray(features)
+                if len(features_array.shape) > 0:
+                    n_samples = features_array.shape[0]
+                if len(features_array.shape) > 1:
+                    n_features = features_array.shape[1]
+
+            # Register the newly trained model
+            model_id = self._transfer_manager.create_pretrained_model(
+                model=self.learning_engine.model,
+                regime=regime,
+                model_type=engine_type,
+                algorithm=self.learning_engine.algorithm if hasattr(self.learning_engine, 'algorithm') else 'unknown',
+                metadata={
+                    'training_date': current_date.isoformat(),
+                    'metrics': metrics,
+                    'n_features': n_features,
+                    'n_samples': n_samples,
+                    'feature_importance': feature_importance,
+                }
+            )
+
+            # Store in transfer learning history
+            self._transfer_history.append({
+                'timestamp': current_date,
+                'model_id': model_id,
+                'regime': regime,
+                'type': 'new_model_registration',
+                'metrics': metrics,
+            })
+
+            logger.info(f"Registered new model {model_id} for {regime} market")
+
+        except Exception as e:
+            logger.debug(f"Failed to register model (non-critical): {type(e).__name__}: {e}")
+            # Model registration is non-critical, continue regardless
+
     def get_last_feature_importance_analysis(self) -> Optional[Dict[str, Any]]:
         """
         Obtener último análisis de importancia de features.
@@ -754,4 +1059,63 @@ class LearningEngineUpdater:
             "last_analysis_date": (
                 recent_analyses[-1].get("timestamp") if recent_analyses else None
             ),
+        }
+
+    def get_last_transfer_operation(self) -> Optional[Dict[str, Any]]:
+        """
+        Get details of last transfer learning operation (fine-tune or registration).
+
+        Returns:
+            Dict with last operation details or None if no operations yet
+        """
+        return self._last_transfer_operation
+
+    def get_transfer_history(self) -> List[Dict[str, Any]]:
+        """
+        Get complete history of transfer learning operations.
+
+        Returns:
+            List of transfer learning operations (fine-tunes, registrations)
+        """
+        return self._transfer_history.copy()
+
+    def get_available_pretrained_models(self, regime: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Get available pre-trained models, optionally filtered by market regime.
+
+        Args:
+            regime: Optional market regime to filter by (bull, bear, sideways, etc.)
+
+        Returns:
+            Dict with available models organized by regime and type
+        """
+        if not self._transfer_manager:
+            return {"status": "transfer_learning_disabled", "models": {}}
+
+        try:
+            models = self._transfer_manager.list_models(regime=regime)
+            return {
+                "status": "ok",
+                "models": models,
+                "filter_regime": regime,
+                "total_models": sum(len(v) for v in models.values()) if models else 0,
+            }
+        except Exception as e:
+            logger.debug(f"Error listing pre-trained models: {e}")
+            return {"status": "error", "error": str(e), "models": {}}
+
+    def get_transfer_learning_status(self) -> Dict[str, Any]:
+        """
+        Get current transfer learning configuration and status.
+
+        Returns:
+            Dict with TL status, enabled flag, operations count, etc.
+        """
+        return {
+            "enabled": self._transfer_learning_enabled,
+            "manager_initialized": self._transfer_manager is not None,
+            "last_operation": self._last_transfer_operation,
+            "total_operations": len(self._transfer_history),
+            "registrations": len([op for op in self._transfer_history if op.get("type") == "new_model_registration"]),
+            "fine_tunes": len([op for op in self._transfer_history if op.get("type") == "fine_tune"]),
         }

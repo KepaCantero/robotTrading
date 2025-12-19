@@ -1,0 +1,187 @@
+# Transfer Learning Configuration [TASK-4.2-TRANSFER-LEARNING]
+# Pre-trained model management, fine-tuning, and knowledge distillation
+
+# ============================================================================
+# General Settings
+# ============================================================================
+enabled: true
+
+# Pre-trained model registry storage path
+registry_path: "models/registry"
+
+# ============================================================================
+# Market Regime Detection
+# ============================================================================
+market_regime:
+  # Detection window for calculating statistics
+  detection_window_days: 20
+
+  # Volatility thresholds (based on daily returns std dev)
+  volatility_thresholds:
+    low: 0.01                    # Very stable market
+    normal: 0.03                 # Normal volatility
+    high: 1.0                    # Anything above 0.03 is high
+
+  # Trend thresholds (based on mean returns)
+  trend_thresholds:
+    bearish: -0.001              # Negative average returns
+    bullish: 0.001               # Positive average returns
+
+  # Regime categories (for model lookup)
+  # Combinations: (bull/bear/sideways) + (low/normal/high volatility)
+
+# ============================================================================
+# Fine-Tuning Configuration
+# ============================================================================
+fine_tuner:
+  # Layer freezing for transfer learning
+  freeze_layers: true
+  freeze_n_layers: 2             # Freeze first N layers
+
+  # Learning rate adjustment for fine-tuning
+  learning_rate_multiplier: 0.1  # 10% of original learning rate
+
+  # Training parameters
+  fine_tune_epochs: 10           # Epochs for fine-tuning
+  early_stopping_patience: 5     # Patience for early stopping
+
+  # Batch size (usually smaller for fine-tuning)
+  batch_size: 32
+
+  # Supported model types
+  # - pytorch: Neural networks (nn.Module)
+  # - tree: XGBoost, LightGBM, CatBoost, RandomForest
+  # - sklearn: Scikit-learn models
+
+# ============================================================================
+# Knowledge Distillation Configuration
+# ============================================================================
+distiller:
+  # Temperature scaling for soft targets
+  temperature: 3.0               # Higher = softer probability distribution
+
+  # Loss weighting
+  alpha: 0.7                     # Weight for soft targets (1-alpha for hard targets)
+                                 # 0.7 = 70% soft targets, 30% hard targets
+
+  # Training parameters
+  distillation_epochs: 50        # Epochs for distillation
+  early_stopping_patience: 10    # Patience for early stopping
+
+  # Batch size for distillation training
+  batch_size: 32
+
+# ============================================================================
+# Model Selection Strategy
+# ============================================================================
+model_selection:
+  # Strategy for choosing pre-trained model
+  strategy: "best_performance"   # best_performance, most_recent, ensemble
+
+  # Performance metric to optimize
+  metric: "f1_score"             # f1_score, accuracy, roc_auc, sharpe_ratio
+
+  # Regime matching
+  require_exact_regime: false    # True = exact match, False = closest match
+  allow_different_type: false    # Allow different model types if no exact match
+
+  # Fallback behavior
+  fallback_to_training: true     # Train from scratch if no suitable pre-trained model
+
+# ============================================================================
+# Integration Settings
+# ============================================================================
+integration:
+  # When to apply transfer learning
+  apply_on_retrain: true         # Use TL during automatic retraining
+  apply_on_manual_train: true    # Use TL during manual training
+
+  # Model registration
+  register_after_training: true  # Register newly trained models for future TL
+
+  # Frequency
+  tl_check_frequency: "every_retrain"  # every_retrain, daily, weekly
+
+  # Historical tracking
+  track_operations: true
+  max_history_entries: 1000      # Max TL operations to track
+
+# ============================================================================
+# Performance Settings
+# ============================================================================
+performance:
+  # Parallel processing
+  n_jobs: 1                      # Number of parallel jobs
+                                 # 1 = no parallelization
+                                 # -1 = all cores
+
+  # Memory optimization
+  cache_models: true             # Cache loaded models in memory
+  max_cached_models: 5           # Maximum models to keep in memory
+
+  # Timeout for operations
+  fine_tune_timeout_minutes: 30
+  distill_timeout_minutes: 60
+
+# ============================================================================
+# Validation Settings
+# ============================================================================
+validation:
+  # Validate fine-tuned models
+  validate_after_finetune: true
+  validation_split: 0.2          # 20% for validation
+
+  # Compare fine-tuned vs base model
+  compare_with_base: true
+  improvement_threshold: 0.01    # At least 1% improvement to use fine-tuned
+
+  # Error handling
+  on_validation_failure: "revert_to_training"  # revert_to_training, use_anyway
+
+# ============================================================================
+# Logging and Alerting
+# ============================================================================
+logging:
+  # Log transfer learning operations
+  log_operations: true
+  log_level: "info"              # debug, info, warning, error
+
+  # Log performance metrics
+  log_metrics: true
+  log_timing: true               # Log duration of operations
+
+  # Alerts
+  alert_on_improvement: true     # Alert when TL improves performance
+  alert_on_degradation: true     # Alert when TL worsens performance
+  degradation_threshold: -0.02   # Negative 2% performance drop
+
+# ============================================================================
+# Reporting Configuration
+# ============================================================================
+reporting:
+  # Report generation
+  generate_summary: true
+  generate_detailed: false
+
+  # Output format
+  output_format: "dict"          # dict, json, dataframe
+
+  # What to include
+  include_model_metadata: true
+  include_performance_metrics: true
+  include_training_history: true
+
+# ============================================================================
+# Advanced Settings
+# ============================================================================
+advanced:
+  # Experimental features
+  use_ensemble_distillation: false   # Use multiple teacher models
+  use_multi_task_learning: false     # Learn multiple related tasks
+
+  # Custom callbacks
+  enable_custom_callbacks: false
+  callbacks: []
+
+  # Debug mode
+  debug: false                   # Extra logging and validation checks
