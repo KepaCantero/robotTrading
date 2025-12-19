@@ -243,9 +243,12 @@ class MetricsCalculator:
             # Use empyrical if available (industry standard)
             if EMPYRICAL_AVAILABLE:
                 try:
+                    # Convert annual risk-free rate to daily for empyrical
+                    # (empyrical expects daily rate when period='daily')
+                    daily_risk_free = float(self.risk_free_rate) / 252
                     sharpe = ep.sharpe_ratio(
                         returns_array,
-                        risk_free=float(self.risk_free_rate),
+                        risk_free=daily_risk_free,
                         period='daily',
                         annualization=252
                     )
@@ -290,9 +293,11 @@ class MetricsCalculator:
             # Use empyrical if available (industry standard)
             if EMPYRICAL_AVAILABLE:
                 try:
+                    # Convert annual risk-free rate to daily for empyrical
+                    daily_risk_free = float(self.risk_free_rate) / 252
                     sortino = ep.sortino_ratio(
                         returns_array,
-                        risk_free=float(self.risk_free_rate),
+                        risk_free=daily_risk_free,
                         period='daily',
                         annualization=252
                     )

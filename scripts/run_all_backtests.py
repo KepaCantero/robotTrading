@@ -29,6 +29,11 @@ from app.strategies.factory import StrategyFactory
 from app.strategies.momentum import MomentumStrategy
 from app.strategies.mean_reversion import MeanReversionStrategy
 from app.strategies.pairs_trading import PairsTradingStrategy
+from app.engines.strategy_engines import (
+    BreakoutStrategyEngine,
+    TrendFollowingStrategyEngine,
+    ArbitrageStrategyEngine,
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -102,6 +107,12 @@ class BacktestRunner:
             strategy = MeanReversionStrategy(config)
         elif strategy_name == 'pairs_trading':
             strategy = PairsTradingStrategy(config)
+        elif strategy_name == 'breakout':
+            strategy = BreakoutStrategyEngine(config)
+        elif strategy_name == 'trend_following':
+            strategy = TrendFollowingStrategyEngine(config)
+        elif strategy_name == 'arbitrage':
+            strategy = ArbitrageStrategyEngine(config)
         else:
             logger.error(f"Unknown strategy: {strategy_name}")
             return None

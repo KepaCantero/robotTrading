@@ -3027,7 +3027,16 @@ class ComprehensiveBacktestRunner:
             if "parameters" in trend_config and isinstance(trend_config["parameters"], dict):
                 trend_config.update(trend_config["parameters"])
             strategies["trend_following"] = TrendFollowingStrategyEngine(trend_config)
-        
+
+        # 6. Arbitrage Strategy Engine (nuevo)
+        from app.engines.strategy_engines import ArbitrageStrategyEngine
+        arbitrage_config_dict = centralized_config.get_strategy_config("arbitrage")
+        if arbitrage_config_dict:
+            arbitrage_config = arbitrage_config_dict.dict()
+            if "parameters" in arbitrage_config and isinstance(arbitrage_config["parameters"], dict):
+                arbitrage_config.update(arbitrage_config["parameters"])
+            strategies["arbitrage"] = ArbitrageStrategyEngine(arbitrage_config)
+
         if not strategies:
             raise ValueError("No se pudieron crear estrategias para multi-strategy backtest")
         

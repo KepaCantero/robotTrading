@@ -18,12 +18,17 @@
 #### 0. Engine Pattern (Plan Maestro "Next Level")
 
 **Estado**: ✅ Implementado parcialmente en código, alineado con `docs/PLAN_MAESTRO_NEXT_LEVEL.md`.  
-**Idea clave**: Expresar los dominios principales como *engines* desacoplados bajo `app/engines/` con interfaces claras y composición flexible.
+**Idea clave**: Expresar los dominios principales como _engines_ desacoplados bajo `app/engines/` con interfaces claras y composición flexible.
 
 - **Engines actualmente implementados**:
   - `DataEngine` (`app/engines/data_engine/`): fuentes múltiples (OHLCV, fundamentales, sentimiento, opciones), normalización, limpieza, versionado, cache distribuido y streaming.
   - `ContextEngine` (`app/engines/context_engine/`): detección de régimen (HMM, clustering, correlaciones), volatilidad (GARCH, regímenes), correlaciones dinámicas, indicadores macro.
-  - `StrategyEngines` (`app/engines/strategy_engines/`): `MomentumStrategyEngine`, `MeanReversionStrategyEngine`, `PairsTradingStrategyEngine`, `ModularMomentumStrategyEngine`, **`BreakoutStrategyEngine` (2025‑11‑18)** y **`TrendFollowingStrategyEngine` (2025‑11‑18)** con ADX/MACD, todos sobre `BaseStrategyEngine` con integración opcional a Data/Context/Portfolio/Risk y Learning Engines.
+  - `StrategyEngines` (`app/engines/strategy_engines/`):
+    - `MomentumStrategyEngine`, `MeanReversionStrategyEngine`, `PairsTradingStrategyEngine`, `ModularMomentumStrategyEngine`
+    - ✅ **`BreakoutStrategyEngine`** (2025-12-15): Detección de rupturas de rango con confirmación de volumen, configuración YAML centralizada, integrado en backtests
+    - ✅ **`TrendFollowingStrategyEngine`** (2025-12-15): ADX/MACD para seguimiento de tendencias, configuración YAML centralizada, integrado en backtests
+    - Todos sobre `BaseStrategyEngine` con integración opcional a Data/Context/Portfolio/Risk y Learning Engines
+    - **Integración completa**: Registrados en `StrategyFactory`, disponibles en `comprehensive_backtest_runner.py`, configuración YAML centralizada
   - `PortfolioEngine` (`app/engines/portfolio_engine/`): interfaz de alto nivel sobre `PortfolioService` con optimizadores (Markowitz, Risk Parity, Black-Litterman, Kelly), rebalancers y meta-learners.
   - `RiskEngine` (`app/engines/risk_engine/`): capa avanzada sobre `PortfolioRiskManager` con VaR/CVaR, stress testing, exposición, drawdowns, correlaciones, risk attribution y alert system.
 - **Engines planificados (aún no implementados como módulos dedicados)**:
@@ -33,6 +38,8 @@
     - Uso de datos enriquecidos de contexto.
     - Ajustes dinámicos vía Learning Engines (incluyendo el pipeline completo de `momentum_modular`).
     - Reutilización de Portfolio/Risk Engine sin acoplar la lógica de negocio.
+  - **Configuración centralizada**: Todos los engines cargan parámetros desde archivos YAML (`config/strategies/*.yaml`), eliminando magic numbers y centralizando configuración.
+  - **Integración con backtesting**: Engines disponibles automáticamente en `comprehensive_backtest_runner.py` y `run_simple_backtest.py` mediante `StrategyFactory`.
 
 #### **1. Microservices Architecture Pattern**
 
