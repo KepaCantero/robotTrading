@@ -128,13 +128,21 @@
 
 #### **FASE 3: Portfolio y Risk** (Meses 8-10) ✅ **NÚCLEO IMPLEMENTADO**
 
-**Módulo 5: Portfolio Engine** ✅
+**Módulo 5: Portfolio Engine** ✅ **95% completado**
 
-- Optimizadores: Markowitz, Risk Parity, Black-Litterman, Kelly Criterion
-- Rebalancers dinámicos
-- Meta-learners para asignación
-- Tests de integración completos
-- Pendiente: currency hedging automático, diversificación sector/país
+- Optimizadores: Markowitz, Risk Parity, Black-Litterman, Kelly Criterion ✅
+- Rebalancers dinámicos ✅
+- Meta-learners para asignación ✅
+- Tests de integración completos ✅
+- ✅ **Currency Hedging Automático** [TASK-5.5-CURRENCY-HEDGING] - **COMPLETADO** (2025-12-19)
+  - Cálculo de exposición por moneda extranjera
+  - Motor de recomendaciones de cobertura con priorización
+  - Servicio de datos Forex con caché y fallbacks
+  - Integración en marco de evaluación de riesgos
+  - Estrategias configurables (full, partial, rolling)
+  - Configuración YAML centralizada (`config/currency_hedging.yaml`)
+  - FX violations en sistema de riesgos (UNHEDGED_FX_EXPOSURE, EXCESSIVE_FX_CONCENTRATION)
+- Pendiente: diversificación sector/país (sector/country diversification)
 
 **Módulo 6: Risk Engine** ✅
 

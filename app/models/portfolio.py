@@ -30,15 +30,16 @@ class HedgingMetadata(BaseModel):
         default=None, description="ID of the position being hedged (if is_hedge=True)"
     )
     hedge_ratio: Decimal = Field(
-        default=Decimal("1.0"), ge=Decimal("0"), le=Decimal("1.0"),
-        description="Ratio of position being hedged (0-1)"
+        default=Decimal("1.0"),
+        ge=Decimal("0"),
+        le=Decimal("1.0"),
+        description="Ratio of position being hedged (0-1)",
     )
     hedge_currency_pair: Optional[str] = Field(
         default=None, description="Forex pair used for hedging (e.g., EUR/USD)"
     )
     hedge_cost_bps: Decimal = Field(
-        default=Decimal("0"), ge=Decimal("0"),
-        description="Hedging cost in basis points"
+        default=Decimal("0"), ge=Decimal("0"), description="Hedging cost in basis points"
     )
     hedge_created_at: Optional[datetime] = Field(
         default=None, description="When the hedge was created"
@@ -91,6 +92,12 @@ class Position(BaseModel):
     unrealized_pnl: Decimal = Field(..., description="Unrealized profit/loss")
     realized_pnl: Decimal = Field(default=Decimal("0"), description="Realized profit/loss")
     currency: str = Field(default="USD", description="Position currency")
+    sector: Optional[str] = Field(
+        default=None, description="Sector classification (e.g., technology, energy, healthcare)"
+    )
+    country: Optional[str] = Field(
+        default=None, description="Country or region code (e.g., US, UK, JP, EU)"
+    )
     broker: str = Field(..., description="Broker identifier")
     hedging: HedgingMetadata = Field(
         default_factory=HedgingMetadata, description="Currency hedging metadata"

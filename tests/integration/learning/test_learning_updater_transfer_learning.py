@@ -70,7 +70,9 @@ class TestMarketRegimeDetection:
     @pytest.fixture
     def updater(self, mock_learning_engine):
         """Crear LearningEngineUpdater con mocks."""
-        with patch("app.strategies.momentum_modular.learning.learning_updater.TransferLearningManager"):
+        with patch(
+            "app.strategies.momentum_modular.learning.learning_updater.TransferLearningManager"
+        ):
             updater = LearningEngineUpdater(mock_learning_engine)
         return updater
 
@@ -159,8 +161,12 @@ class TestTransferLearningIntegration:
 
     def test_tl_disabled_by_default_config(self, mock_learning_engine):
         """Test que TL se inicializa cuando está habilitado en config."""
-        with patch("app.strategies.momentum_modular.learning.learning_updater.TransferLearningManager") as mock_tm:
-            with patch("app.strategies.momentum_modular.learning.learning_updater.load_transfer_learning_config") as mock_config:
+        with patch(
+            "app.strategies.momentum_modular.learning.learning_updater.TransferLearningManager"
+        ) as mock_tm:
+            with patch(
+                "app.strategies.momentum_modular.learning.learning_updater.load_transfer_learning_config"
+            ) as mock_config:
                 mock_config.return_value = {"enabled": True, "registry_path": "models/registry"}
                 mock_tm.return_value = MagicMock()
 
@@ -171,7 +177,10 @@ class TestTransferLearningIntegration:
 
     def test_tl_execution_no_model(self, mock_learning_engine, mock_transfer_manager):
         """Test ejecución de TL cuando no hay modelo pre-entrenado."""
-        with patch("app.strategies.momentum_modular.learning.learning_updater.TransferLearningManager", return_value=mock_transfer_manager):
+        with patch(
+            "app.strategies.momentum_modular.learning.learning_updater.TransferLearningManager",
+            return_value=mock_transfer_manager,
+        ):
             updater = LearningEngineUpdater(mock_learning_engine)
 
             training_data = {
@@ -188,7 +197,10 @@ class TestTransferLearningIntegration:
         """Test ejecución de TL cuando hay modelo pre-entrenado."""
         mock_transfer_manager.find_best_model.return_value = "model_bull_123"
 
-        with patch("app.strategies.momentum_modular.learning.learning_updater.TransferLearningManager", return_value=mock_transfer_manager):
+        with patch(
+            "app.strategies.momentum_modular.learning.learning_updater.TransferLearningManager",
+            return_value=mock_transfer_manager,
+        ):
             updater = LearningEngineUpdater(mock_learning_engine)
 
             training_data = {
@@ -222,7 +234,10 @@ class TestPublicAPIMethods:
 
     def test_get_transfer_learning_status(self, mock_learning_engine, mock_transfer_manager):
         """Test obtener estado de Transfer Learning."""
-        with patch("app.strategies.momentum_modular.learning.learning_updater.TransferLearningManager", return_value=mock_transfer_manager):
+        with patch(
+            "app.strategies.momentum_modular.learning.learning_updater.TransferLearningManager",
+            return_value=mock_transfer_manager,
+        ):
             updater = LearningEngineUpdater(mock_learning_engine)
 
             status = updater.get_transfer_learning_status()
@@ -235,7 +250,10 @@ class TestPublicAPIMethods:
 
     def test_get_transfer_history_empty(self, mock_learning_engine, mock_transfer_manager):
         """Test obtener historial vacío de TL."""
-        with patch("app.strategies.momentum_modular.learning.learning_updater.TransferLearningManager", return_value=mock_transfer_manager):
+        with patch(
+            "app.strategies.momentum_modular.learning.learning_updater.TransferLearningManager",
+            return_value=mock_transfer_manager,
+        ):
             updater = LearningEngineUpdater(mock_learning_engine)
 
             history = updater.get_transfer_history()
@@ -245,7 +263,10 @@ class TestPublicAPIMethods:
 
     def test_get_available_pretrained_models(self, mock_learning_engine, mock_transfer_manager):
         """Test obtener modelos pre-entrenados disponibles."""
-        with patch("app.strategies.momentum_modular.learning.learning_updater.TransferLearningManager", return_value=mock_transfer_manager):
+        with patch(
+            "app.strategies.momentum_modular.learning.learning_updater.TransferLearningManager",
+            return_value=mock_transfer_manager,
+        ):
             updater = LearningEngineUpdater(mock_learning_engine)
 
             models = updater.get_available_pretrained_models()
@@ -254,9 +275,14 @@ class TestPublicAPIMethods:
             assert "models" in models
             mock_transfer_manager.list_models.assert_called()
 
-    def test_get_available_models_filtered_by_regime(self, mock_learning_engine, mock_transfer_manager):
+    def test_get_available_models_filtered_by_regime(
+        self, mock_learning_engine, mock_transfer_manager
+    ):
         """Test filtrar modelos por régimen."""
-        with patch("app.strategies.momentum_modular.learning.learning_updater.TransferLearningManager", return_value=mock_transfer_manager):
+        with patch(
+            "app.strategies.momentum_modular.learning.learning_updater.TransferLearningManager",
+            return_value=mock_transfer_manager,
+        ):
             updater = LearningEngineUpdater(mock_learning_engine)
 
             models = updater.get_available_pretrained_models(regime="bull")
@@ -265,7 +291,10 @@ class TestPublicAPIMethods:
 
     def test_get_last_transfer_operation_none(self, mock_learning_engine, mock_transfer_manager):
         """Test obtener última operación cuando no hay."""
-        with patch("app.strategies.momentum_modular.learning.learning_updater.TransferLearningManager", return_value=mock_transfer_manager):
+        with patch(
+            "app.strategies.momentum_modular.learning.learning_updater.TransferLearningManager",
+            return_value=mock_transfer_manager,
+        ):
             updater = LearningEngineUpdater(mock_learning_engine)
 
             last_op = updater.get_last_transfer_operation()

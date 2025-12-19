@@ -52,6 +52,7 @@ def load_transfer_learning_config(config_path: Optional[str] = None) -> Dict[str
     if config_path is None:
         # Try multiple default locations
         from pathlib import Path
+
         possible_paths = [
             Path("config/transfer_learning.yaml"),
             Path(__file__).parent.parent.parent.parent.parent / "config/transfer_learning.yaml",
@@ -64,6 +65,7 @@ def load_transfer_learning_config(config_path: Optional[str] = None) -> Dict[str
     if config_path:
         try:
             import yaml
+
             with open(config_path, "r", encoding="utf-8") as f:
                 config = yaml.safe_load(f)
                 logger.debug(f"Loaded transfer learning config from {config_path}")
@@ -180,7 +182,9 @@ class LearningEngineUpdater:
         if self._transfer_learning_enabled:
             try:
                 self._transfer_manager = TransferLearningManager(
-                    registry_path=self._transfer_learning_config.get("registry_path", "models/registry")
+                    registry_path=self._transfer_learning_config.get(
+                        "registry_path", "models/registry"
+                    )
                 )
                 self._transfer_history: List[Dict[str, Any]] = []
                 self._last_transfer_operation: Optional[Dict[str, Any]] = None
@@ -428,7 +432,9 @@ class LearningEngineUpdater:
 
             # Get thresholds from config
             config = self._transfer_learning_config.get("market_regime", {})
-            vol_thresholds = config.get("volatility_thresholds", {"low": 0.01, "normal": 0.03, "high": 1.0})
+            vol_thresholds = config.get(
+                "volatility_thresholds", {"low": 0.01, "normal": 0.03, "high": 1.0}
+            )
             trend_thresholds = config.get("trend_thresholds", {"bearish": -0.001, "bullish": 0.001})
 
             # Determine volatility classification
@@ -450,7 +456,9 @@ class LearningEngineUpdater:
             # Combine into regime
             regime = f"{trend_class}_{vol_class}"
 
-            logger.debug(f"Detected market regime: {regime} (vol={volatility:.4f}, trend={trend:.4f})")
+            logger.debug(
+                f"Detected market regime: {regime} (vol={volatility:.4f}, trend={trend:.4f})"
+            )
             return regime
 
         except Exception as e:
@@ -485,13 +493,13 @@ class LearningEngineUpdater:
 
             # Find best pre-trained model for this regime
             best_model_id = self._transfer_manager.find_best_model(
-                regime=regime,
-                model_type=engine_type,
-                metric="f1_score"
+                regime=regime, model_type=engine_type, metric="f1_score"
             )
 
             if not best_model_id:
-                logger.debug(f"No pre-trained model found for regime={regime}, type={engine_type}, will train normally")
+                logger.debug(
+                    f"No pre-trained model found for regime={regime}, type={engine_type}, will train normally"
+                )
                 return None
 
             logger.info(f"Using pre-trained model {best_model_id} for {regime} market")
@@ -540,7 +548,9 @@ class LearningEngineUpdater:
             return tl_metrics
 
         except Exception as e:
-            logger.debug(f"Transfer learning failed (non-critical): {type(e).__name__}: {e}, falling back to normal training")
+            logger.debug(
+                f"Transfer learning failed (non-critical): {type(e).__name__}: {e}, falling back to normal training"
+            )
             return None
 
     def retrain_if_needed(self, current_date: datetime, quotes: Optional[List] = None) -> bool:
@@ -627,7 +637,9 @@ class LearningEngineUpdater:
 
             # Register newly trained model for Transfer Learning [TASK-4.2-TRANSFER-LEARNING]
             if self._transfer_learning_enabled and metrics and self.learning_engine.is_trained:
-                self._register_trained_model_for_transfer_learning(training_data, metrics, current_date)
+                self._register_trained_model_for_transfer_learning(
+                    training_data, metrics, current_date
+                )
 
             return True
 
@@ -976,24 +988,28 @@ class LearningEngineUpdater:
                 model=self.learning_engine.model,
                 regime=regime,
                 model_type=engine_type,
-                algorithm=self.learning_engine.algorithm if hasattr(self.learning_engine, 'algorithm') else 'unknown',
+                algorithm=self.learning_engine.algorithm
+                if hasattr(self.learning_engine, 'algorithm')
+                else 'unknown',
                 metadata={
                     'training_date': current_date.isoformat(),
                     'metrics': metrics,
                     'n_features': n_features,
                     'n_samples': n_samples,
                     'feature_importance': feature_importance,
-                }
+                },
             )
 
             # Store in transfer learning history
-            self._transfer_history.append({
-                'timestamp': current_date,
-                'model_id': model_id,
-                'regime': regime,
-                'type': 'new_model_registration',
-                'metrics': metrics,
-            })
+            self._transfer_history.append(
+                {
+                    'timestamp': current_date,
+                    'model_id': model_id,
+                    'regime': regime,
+                    'type': 'new_model_registration',
+                    'metrics': metrics,
+                }
+            )
 
             logger.info(f"Registered new model {model_id} for {regime} market")
 
@@ -1116,6 +1132,10 @@ class LearningEngineUpdater:
             "manager_initialized": self._transfer_manager is not None,
             "last_operation": self._last_transfer_operation,
             "total_operations": len(self._transfer_history),
-            "registrations": len([op for op in self._transfer_history if op.get("type") == "new_model_registration"]),
-            "fine_tunes": len([op for op in self._transfer_history if op.get("type") == "fine_tune"]),
+            "registrations": len(
+                [op for op in self._transfer_history if op.get("type") == "new_model_registration"]
+            ),
+            "fine_tunes": len(
+                [op for op in self._transfer_history if op.get("type") == "fine_tune"]
+            ),
         }
