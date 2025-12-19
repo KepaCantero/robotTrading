@@ -13,8 +13,8 @@ from decimal import Decimal
 from app.models.market_data import Quote
 from app.models.portfolio import AssetClass, Portfolio, Position
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
-from app.strategies.momentum import MomentumStrategy
 from app.strategies.mean_reversion import MeanReversionStrategy
+from app.strategies.momentum import MomentumStrategy
 from app.strategies.pairs_trading import PairsTradingStrategy
 
 
@@ -25,7 +25,9 @@ class TestStrategiesRiskCheck(unittest.TestCase):
         """Configurar estrategias para tests."""
         self.momentum = MomentumStrategy({"name": "momentum"})
         self.mean_reversion = MeanReversionStrategy({"name": "mean_reversion"})
-        self.pairs_trading = PairsTradingStrategy({"name": "pairs_trading", "pair_symbols": ["AAPL", "MSFT"]})
+        self.pairs_trading = PairsTradingStrategy(
+            {"name": "pairs_trading", "pair_symbols": ["AAPL", "MSFT"]}
+        )
 
     def _create_quote(self, symbol: str, price: Decimal, timestamp: datetime = None) -> Quote:
         """Crear Quote de prueba."""
@@ -257,10 +259,11 @@ class TestStrategiesRiskCheck(unittest.TestCase):
         # Position size debe ser razonable
         self.assertGreater(position_size, Decimal("0"), "Position size debe ser > 0")
         self.assertLess(
-            position_size * price, cash * Decimal("1.1"), "Position size no debe exceder cash disponible"
+            position_size * price,
+            cash * Decimal("1.1"),
+            "Position size no debe exceder cash disponible",
         )
 
 
 if __name__ == "__main__":
     unittest.main()
-

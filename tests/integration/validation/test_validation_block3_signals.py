@@ -12,10 +12,10 @@ from decimal import Decimal
 
 from app.models.market_data import Quote
 from app.models.signal import Signal, SignalType
-from app.strategies.momentum import MomentumStrategy
-from app.strategies.mean_reversion import MeanReversionStrategy
-from app.strategies.pairs_trading import PairsTradingStrategy
 from app.services.momentum_analysis import TechnicalIndicatorCalculator
+from app.strategies.mean_reversion import MeanReversionStrategy
+from app.strategies.momentum import MomentumStrategy
+from app.strategies.pairs_trading import PairsTradingStrategy
 
 
 class TestMomentumSignalCoherence(unittest.TestCase):
@@ -33,13 +33,13 @@ class TestMomentumSignalCoherence(unittest.TestCase):
         # Crear datos históricos con RSI bajo
         prices = []
         quotes = []
-        
+
         # Precios bajando para generar RSI bajo
         base_price = 100.0
         for i in range(30):
             price = base_price - i * 1.0  # Tendencia bajista
             prices.append(price)
-            
+
             quote = Quote(
                 symbol=self.symbol,
                 timestamp=self.base_date + timedelta(days=i),
@@ -54,10 +54,10 @@ class TestMomentumSignalCoherence(unittest.TestCase):
             )
             quotes.append(quote)
             signals = self.strategy.generate_signals(quote)
-            
+
             # Calcular RSI real
             rsi = self.calculator.calculate_rsi(prices, period=14)
-            
+
             # Si RSI < 30 y hay señal, debe ser BUY
             if rsi is not None and rsi < 30 and signals:
                 for signal in signals:
@@ -66,20 +66,20 @@ class TestMomentumSignalCoherence(unittest.TestCase):
                         self.assertEqual(
                             signal.signal_type,
                             SignalType.BUY,
-                            f"Con RSI={rsi} (<30), debe generar BUY, no {signal.signal_type}"
+                            f"Con RSI={rsi} (<30), debe generar BUY, no {signal.signal_type}",
                         )
 
     def test_momentum_sell_when_rsi_overbought(self):
         """Momentum: RSI > 70 → SELL."""
         # Crear datos históricos con RSI alto
         prices = []
-        
+
         # Precios subiendo para generar RSI alto
         base_price = 100.0
         for i in range(30):
             price = base_price + i * 1.0  # Tendencia alcista
             prices.append(price)
-            
+
             quote = Quote(
                 symbol=self.symbol,
                 timestamp=self.base_date + timedelta(days=i),
@@ -93,10 +93,10 @@ class TestMomentumSignalCoherence(unittest.TestCase):
                 volume=Decimal("2000000"),
             )
             signals = self.strategy.generate_signals(quote)
-            
+
             # Calcular RSI
             rsi = self.calculator.calculate_rsi(prices, period=14)
-            
+
             # Si RSI > 70 y hay señal, debe ser SELL (si hay posición)
             if rsi is not None and rsi > 70 and signals:
                 for signal in signals:
@@ -105,13 +105,13 @@ class TestMomentumSignalCoherence(unittest.TestCase):
                         self.assertEqual(
                             signal.signal_type,
                             SignalType.SELL,
-                            f"Con RSI={rsi} (>70), puede generar SELL"
+                            f"Con RSI={rsi} (>70), puede generar SELL",
                         )
 
     def test_momentum_signals_match_indicators(self):
         """Verificar que las señales Momentum se justifican por los indicadores."""
         quotes = []
-        
+
         # Crear 50 días de datos
         for i in range(50):
             price = Decimal("200") + Decimal(str(i * 0.5))
@@ -129,13 +129,13 @@ class TestMomentumSignalCoherence(unittest.TestCase):
             )
             quotes.append(quote)
             signals = self.strategy.generate_signals(quote)
-            
+
             # Verificar que las señales son coherentes con indicadores
             if signals:
                 # Obtener últimos valores de indicadores
                 if hasattr(self.strategy, 'last_rsi') and self.strategy.last_rsi is not None:
                     rsi = self.strategy.last_rsi
-                    
+
                     for signal in signals:
                         if signal.signal_type == SignalType.BUY:
                             # BUY debe justificarse por RSI bajo o condiciones alcistas
@@ -161,12 +161,12 @@ class TestMomentumCrossoverLogic(unittest.TestCase):
         # Crear datos donde EMA50 cruza por encima de EMA200
         prices = []
         quotes = []
-        
+
         # Tendencia alcista fuerte
         for i in range(100):
             price = Decimal("200") + Decimal(str(i * 0.5))
             prices.append(float(price))
-            
+
             quote = Quote(
                 symbol=self.symbol,
                 timestamp=self.base_date + timedelta(days=i),
@@ -180,14 +180,14 @@ class TestMomentumCrossoverLogic(unittest.TestCase):
                 volume=Decimal("2000000"),
             )
             quotes.append(quote)
-            
+
             if i >= 50:  # Después de acumular suficiente histórico
                 signals = self.strategy.generate_signals(quote)
-                
+
                 # Calcular EMAs
-                ema50 = self.calculator.calculate_ema(prices[:i+1], period=50)
-                ema200 = self.calculator.calculate_ema(prices[:i+1], period=200)
-                
+                ema50 = self.calculator.calculate_ema(prices[: i + 1], period=50)
+                ema200 = self.calculator.calculate_ema(prices[: i + 1], period=200)
+
                 # Si EMA50 > EMA200 (cruce alcista), puede generar BUY
                 if ema50 is not None and ema200 is not None and ema50 > ema200:
                     # Puede haber señales BUY
@@ -197,7 +197,7 @@ class TestMomentumCrossoverLogic(unittest.TestCase):
                             self.assertEqual(
                                 signal.signal_type,
                                 SignalType.BUY,
-                                "Cruce alcista (EMA50 > EMA200) debe generar BUY"
+                                "Cruce alcista (EMA50 > EMA200) debe generar BUY",
                             )
 
 
@@ -213,18 +213,18 @@ class TestMeanReversionSignalCoherence(unittest.TestCase):
     def test_mean_reversion_buy_on_negative_deviation(self):
         """Mean Reversion: compra tras desviación negativa significativa."""
         quotes = []
-        
+
         # Crear datos con desviación negativa (precio muy por debajo de la media)
         base_price = 100.0
         prices = []
-        
+
         # Primero precios estables, luego caída
         for i in range(40):
             if i < 30:
                 price = base_price + np.random.normal(0, 1)  # Estable
             else:
                 price = base_price - 10.0 - (i - 30) * 2.0  # Caída fuerte
-            
+
             prices.append(price)
             quote = Quote(
                 symbol=self.symbol,
@@ -240,7 +240,7 @@ class TestMeanReversionSignalCoherence(unittest.TestCase):
             )
             quotes.append(quote)
             signals = self.strategy.generate_signals(quote)
-            
+
             # Después de suficiente histórico, debe generar BUY cuando precio está muy bajo
             if len(prices) >= 20 and price < base_price - 5.0 and signals:
                 for signal in signals:
@@ -249,7 +249,7 @@ class TestMeanReversionSignalCoherence(unittest.TestCase):
                         self.assertEqual(
                             signal.signal_type,
                             SignalType.BUY,
-                            f"Con precio {price} muy por debajo de media, debe generar BUY"
+                            f"Con precio {price} muy por debajo de media, debe generar BUY",
                         )
 
     def test_mean_reversion_sell_on_positive_deviation(self):
@@ -257,14 +257,14 @@ class TestMeanReversionSignalCoherence(unittest.TestCase):
         quotes = []
         base_price = 100.0
         prices = []
-        
+
         # Primero precios estables, luego subida
         for i in range(40):
             if i < 30:
                 price = base_price + np.random.normal(0, 1)
             else:
                 price = base_price + 10.0 + (i - 30) * 2.0  # Subida fuerte
-            
+
             prices.append(price)
             quote = Quote(
                 symbol=self.symbol,
@@ -280,7 +280,7 @@ class TestMeanReversionSignalCoherence(unittest.TestCase):
             )
             quotes.append(quote)
             signals = self.strategy.generate_signals(quote)
-            
+
             # Debe generar SELL cuando precio está muy alto
             if len(prices) >= 20 and price > base_price + 5.0 and signals:
                 for signal in signals:
@@ -289,7 +289,7 @@ class TestMeanReversionSignalCoherence(unittest.TestCase):
                         self.assertEqual(
                             signal.signal_type,
                             SignalType.SELL,
-                            f"Con precio {price} muy por encima de media, debe generar SELL"
+                            f"Con precio {price} muy por encima de media, debe generar SELL",
                         )
 
 
@@ -306,9 +306,9 @@ class TestMeanReversionThresholds(unittest.TestCase):
         """Señales sólo se emiten cuando precio se desvía > X% de la media."""
         quotes = []
         all_signals = []
-        
+
         base_price = Decimal("200")
-        
+
         # Primero acumular histórico (estable)
         for i in range(30):
             quote = Quote(
@@ -326,14 +326,14 @@ class TestMeanReversionThresholds(unittest.TestCase):
             quotes.append(quote)
             signals = self.strategy.generate_signals(quote)
             all_signals.extend(signals)
-        
+
         # Luego desviación pequeña (< threshold)
         for i in range(5):
             price = base_price + Decimal("2")  # Desviación pequeña (1%)
-            
+
             quote = Quote(
                 symbol=self.symbol,
-                timestamp=self.base_date + timedelta(days=30+i),
+                timestamp=self.base_date + timedelta(days=30 + i),
                 open=price,
                 high=price * Decimal("1.01"),
                 low=price * Decimal("0.99"),
@@ -347,7 +347,7 @@ class TestMeanReversionThresholds(unittest.TestCase):
             signals_before = len(all_signals)
             signals = self.strategy.generate_signals(quote)
             all_signals.extend(signals)
-            
+
             # Con desviación pequeña, no debería generar muchas señales
             # (el umbral típico es > 2% o más)
             pass  # Validación se hace con desviación grande
@@ -358,10 +358,9 @@ class TestPairsTradingSpreadDirection(unittest.TestCase):
 
     def setUp(self):
         """Setup para tests de dirección de spread."""
-        self.strategy = PairsTradingStrategy({
-            "name": "pairs_trading",
-            "pair_symbols": ["AAPL", "MSFT"]
-        })
+        self.strategy = PairsTradingStrategy(
+            {"name": "pairs_trading", "pair_symbols": ["AAPL", "MSFT"]}
+        )
         self.symbol = "AAPL"
         self.base_date = datetime(2023, 1, 1)
 
@@ -381,12 +380,12 @@ class TestPairsTradingSpreadDirection(unittest.TestCase):
             ask=Decimal("150.2"),
             volume=Decimal("1000000"),
         )
-        
+
         # Acumular histórico
         for i in range(50):
             historical_quote = Quote(
                 symbol=self.symbol,
-                timestamp=self.base_date - timedelta(days=50-i),
+                timestamp=self.base_date - timedelta(days=50 - i),
                 open=Decimal("150"),
                 high=Decimal("152"),
                 low=Decimal("148"),
@@ -397,16 +396,16 @@ class TestPairsTradingSpreadDirection(unittest.TestCase):
                 volume=Decimal("1000000"),
             )
             self.strategy.generate_signals(historical_quote)
-        
+
         signals = self.strategy.generate_signals(quote)
-        
+
         # Verificar que las señales son coherentes
         if signals:
             for signal in signals:
                 self.assertIn(
                     signal.signal_type,
                     [SignalType.BUY, SignalType.SELL],
-                    "Pairs Trading debe generar señales válidas"
+                    "Pairs Trading debe generar señales válidas",
                 )
 
     def test_z_score_negative_buy_spread(self):
@@ -424,16 +423,16 @@ class TestPairsTradingSpreadDirection(unittest.TestCase):
             ask=Decimal("150.2"),
             volume=Decimal("1000000"),
         )
-        
+
         signals = self.strategy.generate_signals(quote)
-        
+
         # Validar coherencia (el spread se calcula internamente)
         if signals:
             for signal in signals:
                 self.assertIn(
                     signal.signal_type,
                     [SignalType.BUY, SignalType.SELL],
-                    "Señal debe ser BUY o SELL"
+                    "Señal debe ser BUY o SELL",
                 )
 
 
@@ -463,12 +462,12 @@ class TestNoSignalOverlap(unittest.TestCase):
             ask=Decimal("200.2"),
             volume=Decimal("2000000"),
         )
-        
+
         # Acumular histórico
         for i in range(30):
             historical_quote = Quote(
                 symbol=self.symbol,
-                timestamp=self.base_date - timedelta(days=30-i),
+                timestamp=self.base_date - timedelta(days=30 - i),
                 open=Decimal("200"),
                 high=Decimal("202"),
                 low=Decimal("198"),
@@ -480,13 +479,13 @@ class TestNoSignalOverlap(unittest.TestCase):
             )
             for strategy in self.strategies.values():
                 strategy.generate_signals(historical_quote)
-        
+
         # Generar señales
         all_signals = []
         for strategy_name, strategy in self.strategies.items():
             signals = strategy.generate_signals(quote)
             all_signals.extend(signals)
-        
+
         # Agrupar señales por timestamp y símbolo
         signals_by_timestamp_symbol = {}
         for signal in all_signals:
@@ -494,11 +493,11 @@ class TestNoSignalOverlap(unittest.TestCase):
             if key not in signals_by_timestamp_symbol:
                 signals_by_timestamp_symbol[key] = []
             signals_by_timestamp_symbol[key].append(signal)
-        
+
         # Verificar que no hay BUY y SELL simultáneos para el mismo símbolo
         for (symbol, timestamp), signals in signals_by_timestamp_symbol.items():
             signal_types = [s.signal_type for s in signals]
-            
+
             if SignalType.BUY in signal_types and SignalType.SELL in signal_types:
                 self.fail(
                     f"Señales opuestas simultáneas encontradas para {symbol} en {timestamp}: "
@@ -510,10 +509,10 @@ class TestNoSignalOverlap(unittest.TestCase):
         # Este test se valida en el backtesting engine
         # Aquí verificamos que las señales no se solapan en el tiempo
         strategy = MomentumStrategy({"name": "momentum"})
-        
+
         quotes = []
         all_signals = []
-        
+
         for i in range(50):
             quote = Quote(
                 symbol=self.symbol,
@@ -530,18 +529,18 @@ class TestNoSignalOverlap(unittest.TestCase):
             quotes.append(quote)
             signals = strategy.generate_signals(quote)
             all_signals.extend(signals)
-        
+
         # Verificar que las señales están en orden cronológico
         # Y que no hay múltiples BUY sin SELL intermedio
         buy_indices = []
         sell_indices = []
-        
+
         for i, signal in enumerate(all_signals):
             if signal.signal_type == SignalType.BUY:
                 buy_indices.append(i)
             elif signal.signal_type == SignalType.SELL:
                 sell_indices.append(i)
-        
+
         # Verificar orden: cada BUY debe tener un SELL posterior (o viceversa)
         # Esta validación completa se hace en el backtesting engine
         self.assertIsInstance(all_signals, list, "Debe generar lista de señales")
@@ -560,7 +559,7 @@ class TestSignalFrequency(unittest.TestCase):
         """Momentum: 50-300 trades/año."""
         quotes = []
         all_signals = []
-        
+
         # Simular 1 año de datos (252 días de trading)
         for i in range(252):
             close_price = Decimal("200") + Decimal(str((i % 10) - 5))  # Variación: 195-204
@@ -582,17 +581,17 @@ class TestSignalFrequency(unittest.TestCase):
             quotes.append(quote)
             signals = self.momentum.generate_signals(quote)
             all_signals.extend(signals)
-        
+
         # Convertir a trades anuales estimados (asumiendo que cada señal genera un trade)
         annual_signals = len(all_signals)
-        
+
         # No debe exceder 300 señales/año
         self.assertLessEqual(
             annual_signals,
             300,
-            f"Momentum genera demasiadas señales: {annual_signals}/año (esperado: 50-300)"
+            f"Momentum genera demasiadas señales: {annual_signals}/año (esperado: 50-300)",
         )
-        
+
         # Idealmente debería tener al menos algunas señales
         # (pero no fallamos si no hay suficientes datos históricos)
 
@@ -600,7 +599,7 @@ class TestSignalFrequency(unittest.TestCase):
         """Mean Reversion: <100 trades/año."""
         quotes = []
         all_signals = []
-        
+
         for i in range(252):
             close_price = Decimal("200") + Decimal(str(i % 10 - 5))  # Variación: 195-204
             # CORRECTED: high and low must encompass all possible close prices
@@ -621,21 +620,20 @@ class TestSignalFrequency(unittest.TestCase):
             quotes.append(quote)
             signals = self.mean_reversion.generate_signals(quote)
             all_signals.extend(signals)
-        
+
         annual_signals = len(all_signals)
-        
+
         # Mean Reversion debe ser conservador (<100 trades/año)
         self.assertLess(
             annual_signals,
             150,  # Tolerancia más alta para datos de prueba
-            f"Mean Reversion genera demasiadas señales: {annual_signals}/año (esperado: <100)"
+            f"Mean Reversion genera demasiadas señales: {annual_signals}/año (esperado: <100)",
         )
 
 
-from app.services.momentum_analysis import TechnicalIndicatorCalculator
-
 import numpy as np
+
+from app.services.momentum_analysis import TechnicalIndicatorCalculator
 
 if __name__ == "__main__":
     unittest.main()
-

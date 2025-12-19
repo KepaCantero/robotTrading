@@ -5,15 +5,15 @@ Estos tests usan datos sintéticos sencillos y un portfolio dummy para
 verificar la lógica principal sin depender de datos históricos reales.
 """
 
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
 
 import pytest
 
 from app.engines.strategy_engines import TrendFollowingStrategyEngine
 from app.models.market_data import Quote
-from app.models.portfolio import AssetClass, Position, Portfolio
-from app.models.signal import SignalType, SignalSource
+from app.models.portfolio import AssetClass, Portfolio, Position
+from app.models.signal import SignalSource, SignalType
 
 
 class DummyPortfolio:
@@ -26,7 +26,9 @@ class DummyPortfolio:
         return self._exposure
 
 
-def make_quote(price: float, high: float = None, low: float = None, volume: float = 1_000_000) -> Quote:
+def make_quote(
+    price: float, high: float = None, low: float = None, volume: float = 1_000_000
+) -> Quote:
     """Helper para crear Quote sencillo."""
     high_val = high if high is not None else price
     low_val = low if low is not None else price
@@ -220,4 +222,3 @@ class TestTrendFollowingStrategyEngineUnit:
         assert engine.macd_signal_period >= 5
         assert float(engine.min_volume_ratio) >= 1.0
         assert engine.volume_lookback >= 20
-

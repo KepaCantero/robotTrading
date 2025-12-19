@@ -6,20 +6,20 @@ Tests para verificar:
 - Distribución de PnL (no todos negativos)
 - Slippage y comisiones (descontados correctamente según preset Conservative)
 """
-import unittest
 import json
+import unittest
 from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig
-from app.models.market_data import Quote
-from app.models.signal import Signal, SignalType, SignalStrength, SignalSource
-from app.models.portfolio import Portfolio, Position, AssetClass
 from app.backtesting.multi_strategy_engine import MultiStrategyBacktester
-from app.services.portfolio_config_manager import get_portfolio_config_manager
+from app.models.market_data import Quote
+from app.models.portfolio import AssetClass, Portfolio, Position
+from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.services.portfolio_builder import PortfolioBuilder
+from app.services.portfolio_config_manager import get_portfolio_config_manager
 
 
 class TestGranularLogging(unittest.TestCase):
@@ -49,7 +49,7 @@ class TestGranularLogging(unittest.TestCase):
             ask=Decimal("200.2"),
             volume=Decimal("1000000"),
         )
-        
+
         signal = Signal(
             symbol="AAPL",
             signal_type=SignalType.BUY,
@@ -63,7 +63,7 @@ class TestGranularLogging(unittest.TestCase):
             timestamp=datetime(2024, 1, 1),
             metadata={"strategy": "momentum"},
         )
-        
+
         # Ejecutar trade (simulado)
         # El backtester debe logear con todos los campos requeridos
         result = self.backtester.run_backtest(
@@ -72,7 +72,7 @@ class TestGranularLogging(unittest.TestCase):
             start_date=datetime(2024, 1, 1),
             end_date=datetime(2024, 1, 2),
         )
-        
+
         # Verificar que los trades tienen valores válidos
         for trade in result.trades:
             self.assertIsNotNone(trade.entry_time, "Trade debe tener entry_time")
@@ -81,7 +81,7 @@ class TestGranularLogging(unittest.TestCase):
             if trade.pnl is not None:
                 self.assertFalse(
                     str(trade.pnl).lower() in ["nan", "inf", "-inf"],
-                    f"Trade PnL no debe ser NaN/Inf: {trade.pnl}"
+                    f"Trade PnL no debe ser NaN/Inf: {trade.pnl}",
                 )
 
     def test_pnl_not_nan_in_all_trades(self):
@@ -89,7 +89,7 @@ class TestGranularLogging(unittest.TestCase):
         # Crear múltiples trades
         quotes = []
         signals = []
-        
+
         base_date = datetime(2024, 1, 1)
         for i in range(10):
             quote = Quote(
@@ -105,7 +105,7 @@ class TestGranularLogging(unittest.TestCase):
                 volume=Decimal("1000000"),
             )
             quotes.append(quote)
-            
+
             if i % 2 == 0:  # BUY en días pares
                 signal = Signal(
                     symbol="AAPL",
@@ -136,21 +136,19 @@ class TestGranularLogging(unittest.TestCase):
                     metadata={"strategy": "momentum"},
                 )
                 signals.append(signal)
-        
+
         result = self.backtester.run_backtest(
             market_data=quotes,
             signals=signals,
             start_date=base_date,
             end_date=base_date + timedelta(days=10),
         )
-        
+
         # Verificar que ningún trade tiene PnL NaN
         for trade in result.trades:
             pnl_str = str(trade.pnl).lower()
             self.assertNotIn(
-                "nan",
-                pnl_str,
-                f"Trade {trade.symbol} en {trade.entry_time} tiene PnL NaN"
+                "nan", pnl_str, f"Trade {trade.symbol} en {trade.entry_time} tiene PnL NaN"
             )
 
 
@@ -171,10 +169,10 @@ class TestPnLDistribution(unittest.TestCase):
         # Crear trades variados (algunos ganadores, algunos perdedores)
         quotes = []
         signals = []
-        
+
         base_date = datetime(2024, 1, 1)
         buy_price = Decimal("200")
-        
+
         for i in range(20):
             current_price = buy_price + Decimal(str(i * 0.5))  # Precio subiendo
             quote = Quote(
@@ -190,7 +188,7 @@ class TestPnLDistribution(unittest.TestCase):
                 volume=Decimal("1000000"),
             )
             quotes.append(quote)
-            
+
             if i % 2 == 0:  # BUY
                 signal = Signal(
                     symbol="AAPL",
@@ -222,37 +220,35 @@ class TestPnLDistribution(unittest.TestCase):
                     metadata={"strategy": "momentum"},
                 )
                 signals.append(signal)
-        
+
         result = self.backtester.run_backtest(
             market_data=quotes,
             signals=signals,
             start_date=base_date,
             end_date=base_date + timedelta(days=20),
         )
-        
+
         # Verificar que hay trades con PnL positivo
         positive_pnl_trades = [t for t in result.trades if t.pnl and t.pnl > 0]
-        
+
         # Con la configuración actual (comprar a 200, vender a 205+), debería haber ganancias
         # Sin embargo, puede que no haya trades ejecutados
         if len(result.trades) > 0:
             total_trades = len(result.trades)
             positive_count = len(positive_pnl_trades)
-            
+
             # No todos deben ser negativos
             self.assertLess(
                 positive_count,
                 total_trades,  # Puede haber algunos negativos debido a comisiones
-                "No todos los trades deben ser negativos (indica señales invertidas)"
+                "No todos los trades deben ser negativos (indica señales invertidas)",
             )
-            
+
             # Al menos algunos deben ser positivos
             if total_trades >= 2:
                 # Con buys a 200 y sells a 205+, debería haber ganancias netas
                 self.assertGreater(
-                    positive_count,
-                    0,
-                    "Debe haber al menos algunos trades con PnL positivo"
+                    positive_count, 0, "Debe haber al menos algunos trades con PnL positivo"
                 )
 
 
@@ -269,7 +265,7 @@ class TestSlippageAndCommissions(unittest.TestCase):
             slippage_percentage=Decimal("0.05"),
         )
         backtester = SimpleBacktester(config=config)
-        
+
         quote = Quote(
             symbol="AAPL",
             timestamp=datetime(2024, 1, 1),
@@ -282,7 +278,7 @@ class TestSlippageAndCommissions(unittest.TestCase):
             ask=Decimal("200.2"),
             volume=Decimal("1000000"),
         )
-        
+
         signal = Signal(
             symbol="AAPL",
             signal_type=SignalType.BUY,
@@ -296,7 +292,7 @@ class TestSlippageAndCommissions(unittest.TestCase):
             timestamp=datetime(2024, 1, 1),
             metadata={"strategy": "momentum"},
         )
-        
+
         # Ejecutar trade
         result = backtester.run_backtest(
             market_data=[quote],
@@ -304,28 +300,28 @@ class TestSlippageAndCommissions(unittest.TestCase):
             start_date=datetime(2024, 1, 1),
             end_date=datetime(2024, 1, 2),
         )
-        
+
         # Verificar que la comisión se aplica
         # El capital debe reducirse por: price * quantity + commission
         if result.trades:
             # Verificar estructura de trade
             trade = result.trades[0]
             self.assertIsNotNone(trade, "Trade debe ejecutarse")
-            
+
             # La comisión se aplica en el cálculo de cost
             # (validado en test_engine_pnl_calculation.py)
 
     def test_slippage_applied_correctly(self):
         """Comprobar que slippage se aplica correctamente."""
         slippage = Decimal("0.05")  # 0.05% slippage
-        
+
         config = BacktestConfig(
             initial_capital=Decimal("100000"),
             commission_per_trade=Decimal("1.0"),
             slippage_percentage=slippage,
         )
         backtester = SimpleBacktester(config=config)
-        
+
         quote = Quote(
             symbol="AAPL",
             timestamp=datetime(2024, 1, 1),
@@ -338,7 +334,7 @@ class TestSlippageAndCommissions(unittest.TestCase):
             ask=Decimal("200.2"),
             volume=Decimal("1000000"),
         )
-        
+
         signal = Signal(
             symbol="AAPL",
             signal_type=SignalType.BUY,
@@ -352,14 +348,14 @@ class TestSlippageAndCommissions(unittest.TestCase):
             timestamp=datetime(2024, 1, 1),
             metadata={"strategy": "momentum"},
         )
-        
+
         result = backtester.run_backtest(
             market_data=[quote],
             signals=[signal],
             start_date=datetime(2024, 1, 1),
             end_date=datetime(2024, 1, 2),
         )
-        
+
         # Slippage se aplica incrementando el precio de ejecución
         # (validado en test_engine_pnl_calculation.py)
 
@@ -380,9 +376,9 @@ class TestTradeEntryExitConsistency(unittest.TestCase):
         """Cada trade tiene entrada y salida válidas: entry_time < exit_time."""
         quotes = []
         signals = []
-        
+
         base_date = datetime(2024, 1, 1)
-        
+
         for i in range(10):
             quote = Quote(
                 symbol="AAPL",
@@ -397,7 +393,7 @@ class TestTradeEntryExitConsistency(unittest.TestCase):
                 volume=Decimal("1000000"),
             )
             quotes.append(quote)
-            
+
             if i == 0:  # BUY
                 signal = Signal(
                     symbol="AAPL",
@@ -428,14 +424,14 @@ class TestTradeEntryExitConsistency(unittest.TestCase):
                     metadata={"strategy": "momentum"},
                 )
                 signals.append(signal)
-        
+
         result = self.backtester.run_backtest(
             market_data=quotes,
             signals=signals,
             start_date=base_date,
             end_date=base_date + timedelta(days=10),
         )
-        
+
         # Verificar que todos los trades cerrados tienen entry_time < exit_time
         for trade in result.trades:
             if trade.status.value == "closed":
@@ -444,7 +440,7 @@ class TestTradeEntryExitConsistency(unittest.TestCase):
                 self.assertLess(
                     trade.entry_time,
                     trade.exit_time,
-                    f"entry_time {trade.entry_time} debe ser anterior a exit_time {trade.exit_time}"
+                    f"entry_time {trade.entry_time} debe ser anterior a exit_time {trade.exit_time}",
                 )
 
 
@@ -474,7 +470,7 @@ class TestTradePriceConsistency(unittest.TestCase):
             ask=Decimal("200.2"),
             volume=Decimal("1000000"),
         )
-        
+
         signal = Signal(
             symbol="AAPL",
             signal_type=SignalType.BUY,
@@ -488,14 +484,14 @@ class TestTradePriceConsistency(unittest.TestCase):
             timestamp=datetime(2024, 1, 1),
             metadata={"strategy": "momentum"},
         )
-        
+
         result = self.backtester.run_backtest(
             market_data=[quote],
             signals=[signal],
             start_date=datetime(2024, 1, 1),
             end_date=datetime(2024, 1, 2),
         )
-        
+
         # El precio de entrada debe estar dentro del rango de la vela
         # (considerando slippage)
         if result.trades:
@@ -503,12 +499,12 @@ class TestTradePriceConsistency(unittest.TestCase):
             self.assertGreaterEqual(
                 trade.entry_price,
                 quote.low * Decimal("0.95"),  # Tolerancia por slippage
-                "entry_price debe estar dentro del rango de la vela"
+                "entry_price debe estar dentro del rango de la vela",
             )
             self.assertLessEqual(
                 trade.entry_price,
                 quote.high * Decimal("1.05"),  # Tolerancia por slippage
-                "entry_price debe estar dentro del rango de la vela"
+                "entry_price debe estar dentro del rango de la vela",
             )
 
 
@@ -528,11 +524,11 @@ class TestTradePnLCalculation(unittest.TestCase):
         """Comprueba que el cálculo de PnL = (exit - entry) * qty sea correcto."""
         quotes = []
         signals = []
-        
+
         base_date = datetime(2024, 1, 1)
         entry_price = Decimal("200")
         exit_price = Decimal("210")  # Ganancia de $10 por acción
-        
+
         # BUY
         quote_buy = Quote(
             symbol="AAPL",
@@ -547,7 +543,7 @@ class TestTradePnLCalculation(unittest.TestCase):
             volume=Decimal("1000000"),
         )
         quotes.append(quote_buy)
-        
+
         signal_buy = Signal(
             symbol="AAPL",
             signal_type=SignalType.BUY,
@@ -562,7 +558,7 @@ class TestTradePnLCalculation(unittest.TestCase):
             metadata={"strategy": "momentum"},
         )
         signals.append(signal_buy)
-        
+
         # SELL
         quote_sell = Quote(
             symbol="AAPL",
@@ -577,7 +573,7 @@ class TestTradePnLCalculation(unittest.TestCase):
             volume=Decimal("1000000"),
         )
         quotes.append(quote_sell)
-        
+
         signal_sell = Signal(
             symbol="AAPL",
             signal_type=SignalType.SELL,
@@ -592,20 +588,22 @@ class TestTradePnLCalculation(unittest.TestCase):
             metadata={"strategy": "momentum"},
         )
         signals.append(signal_sell)
-        
+
         result = self.backtester.run_backtest(
             market_data=quotes,
             signals=signals,
             start_date=base_date,
             end_date=base_date + timedelta(days=2),
         )
-        
+
         # Verificar PnL calculado
         for trade in result.trades:
             if trade.status.value == "closed" and trade.pnl is not None:
                 # PnL esperado = (exit - entry) * quantity - comisiones - slippage
-                expected_pnl = (exit_price - entry_price) * Decimal("10") - Decimal("2")  # 2 comisiones
-                
+                expected_pnl = (exit_price - entry_price) * Decimal("10") - Decimal(
+                    "2"
+                )  # 2 comisiones
+
                 # Tolerancia por slippage y comisiones
                 # Con slippage del 0.05% y comisiones, el cálculo puede variar
                 # entry_price: $200 * 10 = $2000
@@ -618,11 +616,11 @@ class TestTradePnLCalculation(unittest.TestCase):
                 self.assertLess(
                     diff,
                     110.0,  # Tolerancia aumentada para slippage (puede variar según dirección)
-                    f"PnL calculado {trade.pnl} debe estar cerca de esperado {expected_pnl}, diff={diff:.2f}"
+                    f"PnL calculado {trade.pnl} debe estar cerca de esperado {expected_pnl}, diff={diff:.2f}",
                 )
 
 
 if __name__ == "__main__":
     from datetime import timedelta
-    unittest.main()
 
+    unittest.main()

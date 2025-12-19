@@ -13,9 +13,10 @@ Comprehensive tests for the enhanced feature importance analysis module:
 
 import logging
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 from unittest.mock import MagicMock, patch
+
 import numpy as np
 import pytest
 
@@ -24,16 +25,16 @@ project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from app.strategies.momentum_modular.learning.feature_importance import (
-    PermutationImportanceAnalyzer,
     BuiltInImportanceAnalyzer,
-    CorrelationAnalyzer,
-    FeatureStabilityTracker,
     ComprehensiveFeatureAnalyzer,
-    ImportanceCategory,
-    FeatureImportanceResult,
     ComprehensiveImportanceReport,
-    load_feature_importance_config,
+    CorrelationAnalyzer,
+    FeatureImportanceResult,
+    FeatureStabilityTracker,
+    ImportanceCategory,
+    PermutationImportanceAnalyzer,
     get_default_feature_importance_config,
+    load_feature_importance_config,
 )
 
 logging.basicConfig(level=logging.INFO)

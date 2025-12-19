@@ -11,11 +11,11 @@ import unittest
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-from app.models.market_data import Quote
-from app.models.signal import Signal, SignalType, SignalStrength, SignalSource
-from app.models.portfolio import Portfolio, Position, AssetClass
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig
+from app.models.market_data import Quote
+from app.models.portfolio import AssetClass, Portfolio, Position
+from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.strategies.momentum import MomentumStrategy
 
 
@@ -36,17 +36,17 @@ class TestStopLossTakeProfit(unittest.TestCase):
         """Cada trade debe respetar SL configurado."""
         quotes = []
         signals = []
-        
+
         base_date = datetime(2024, 1, 1)
         base_price = Decimal("200")
-        
+
         # BUY a 200, luego precio cae a 190 (stop-loss debería activarse)
         for i in range(5):
             if i == 0:
                 price = base_price
             else:
                 price = base_price - Decimal("10") * Decimal(str(i))  # Caída progresiva
-            
+
             quote = Quote(
                 symbol="AAPL",
                 timestamp=base_date + timedelta(days=i),
@@ -60,7 +60,7 @@ class TestStopLossTakeProfit(unittest.TestCase):
                 volume=Decimal("1000000"),
             )
             quotes.append(quote)
-            
+
             if i == 0:
                 signal = Signal(
                     symbol="AAPL",
@@ -76,14 +76,14 @@ class TestStopLossTakeProfit(unittest.TestCase):
                     metadata={"strategy": "momentum", "stop_loss": "0.02"},  # 2% SL
                 )
                 signals.append(signal)
-        
+
         result = self.backtester.run_backtest(
             market_data=quotes,
             signals=signals,
             start_date=base_date,
             end_date=base_date + timedelta(days=5),
         )
-        
+
         # Verificar que los trades tienen SL aplicado
         # (esto se valida en el backtesting engine)
         self.assertIsNotNone(result, "Backtest debe completarse")
@@ -115,7 +115,7 @@ class TestTradePartialFill(unittest.TestCase):
             ask=Decimal("200.2"),
             volume=Decimal("1000000"),
         )
-        
+
         # Señal para comprar 10 acciones = $2000, pero solo tenemos $1000
         signal = Signal(
             symbol="AAPL",
@@ -130,24 +130,20 @@ class TestTradePartialFill(unittest.TestCase):
             timestamp=datetime(2024, 1, 1),
             metadata={"strategy": "momentum"},
         )
-        
+
         result = self.backtester.run_backtest(
             market_data=[quote],
             signals=[signal],
             start_date=datetime(2024, 1, 1),
             end_date=datetime(2024, 1, 2),
         )
-        
+
         # Verificar que executed_qty <= available_qty
         if result.trades:
             for trade in result.trades:
                 # La cantidad ejecutada debe ser <= cantidad disponible
                 # (validado por el backtesting engine)
-                self.assertGreater(
-                    trade.quantity,
-                    0,
-                    "Trade parcial debe tener cantidad > 0"
-                )
+                self.assertGreater(trade.quantity, 0, "Trade parcial debe tener cantidad > 0")
 
 
 class TestMaxPositionPerSymbol(unittest.TestCase):
@@ -178,7 +174,7 @@ class TestMaxPositionPerSymbol(unittest.TestCase):
             timestamp=datetime.utcnow(),
             broker="test",
         )
-        
+
         # Crear señal para comprar más AAPL
         quote = Quote(
             symbol="AAPL",
@@ -192,7 +188,7 @@ class TestMaxPositionPerSymbol(unittest.TestCase):
             ask=Decimal("200.2"),
             volume=Decimal("1000000"),
         )
-        
+
         signal = Signal(
             symbol="AAPL",
             signal_type=SignalType.BUY,
@@ -206,10 +202,10 @@ class TestMaxPositionPerSymbol(unittest.TestCase):
             timestamp=datetime(2024, 1, 1),
             metadata={"strategy": "momentum"},
         )
-        
+
         # Verificar risk_check (solo toma signal y portfolio, no quote)
         risk_passed = self.strategy.risk_check(signal, portfolio)
-        
+
         # Si la posición ya está en el límite, risk_check debe rechazar
         # (esto se valida en test_strategies_risk_check.py)
         self.assertIsInstance(risk_passed, bool, "risk_check debe retornar bool")
@@ -226,13 +222,14 @@ class TestRiskExposureAfterTrade(unittest.TestCase):
         """Valida que current_exposure <= preset.max_exposure después de cada trade."""
         # Este test se valida en el backtesting engine
         # Verificamos que la estrategia tiene límites configurados
-        
-        max_exposure = self.strategy.max_exposure if hasattr(self.strategy, 'max_exposure') else Decimal("0.8")
-        
+
+        max_exposure = (
+            self.strategy.max_exposure if hasattr(self.strategy, 'max_exposure') else Decimal("0.8")
+        )
+
         self.assertGreater(max_exposure, 0, "max_exposure debe estar configurado")
         self.assertLessEqual(max_exposure, 1, "max_exposure debe ser <= 1 (100%)")
 
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -18,7 +18,7 @@ class TestVWAPCalculation:
         volumes = [1000.0, 1200.0, 1500.0, 1100.0, 1300.0]
 
         vwap = calculator.calculate_vwap(prices, volumes)
-        
+
         assert vwap is not None
         assert isinstance(vwap, float)
         assert vwap > 0
@@ -34,7 +34,7 @@ class TestVWAPCalculation:
 
         # Calculate VWAP for last 3 periods
         vwap = calculator.calculate_vwap(prices, volumes, period=3)
-        
+
         assert vwap is not None
         assert isinstance(vwap, float)
         assert 112.0 <= vwap <= 118.0
@@ -49,7 +49,7 @@ class TestVWAPCalculation:
         # REFACTORED: VWAP calculates with available data if period > len, but should use available
         # With period=5 but only 2 data points, it will calculate with what's available
         vwap = calculator.calculate_vwap(prices, volumes, period=5)
-        
+
         # With only 2 data points and period=5, VWAP will use the 2 available points
         # This is acceptable behavior - it returns a value calculated from available data
         # The test is updated to reflect this behavior
@@ -68,7 +68,7 @@ class TestVWAPCalculation:
         volumes = [1000.0, 1200.0]  # Mismatched length
 
         vwap = calculator.calculate_vwap(prices, volumes)
-        
+
         assert vwap is None
 
     def test_calculate_vwap_zero_volume(self):
@@ -79,7 +79,7 @@ class TestVWAPCalculation:
         volumes = [1000.0, 0.0, 1500.0]
 
         vwap = calculator.calculate_vwap(prices, volumes)
-        
+
         assert vwap is not None  # Should still calculate with non-zero volumes
 
 

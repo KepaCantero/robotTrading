@@ -2,8 +2,9 @@
 Comprehensive tests for Signal Scoring and Cooldown Engine (TASK-SC-1 to SC-5).
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
 
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.services.signal_scoring_engine import (
@@ -133,7 +134,21 @@ class TestSignalCompoundScoreCalculator:
         """Test extracting volume ratio from metadata."""
         calculator = SignalCompoundScoreCalculator()
 
-        score = calculator._extract_volume_ratio(Signal(symbol="AAPL", signal_type=SignalType.BUY, strength=SignalStrength.MODERATE, confidence=50.0, liquidity_score=50.0, priority_score=50.0, source=SignalSource.MOMENTUM, price=Decimal("150"), volume=Decimal("1000"), metadata={"volume_ratio": 1.5}), {"volume_ratio": 1.5})
+        score = calculator._extract_volume_ratio(
+            Signal(
+                symbol="AAPL",
+                signal_type=SignalType.BUY,
+                strength=SignalStrength.MODERATE,
+                confidence=50.0,
+                liquidity_score=50.0,
+                priority_score=50.0,
+                source=SignalSource.MOMENTUM,
+                price=Decimal("150"),
+                volume=Decimal("1000"),
+                metadata={"volume_ratio": 1.5},
+            ),
+            {"volume_ratio": 1.5},
+        )
 
         assert isinstance(score, float)
         assert 0 <= score <= 1
@@ -142,7 +157,21 @@ class TestSignalCompoundScoreCalculator:
         """Test extracting volatility from metadata."""
         calculator = SignalCompoundScoreCalculator()
 
-        score = calculator._extract_volatility(Signal(symbol="AAPL", signal_type=SignalType.BUY, strength=SignalStrength.MODERATE, confidence=50.0, liquidity_score=50.0, priority_score=50.0, source=SignalSource.MOMENTUM, price=Decimal("150"), volume=Decimal("1000"), metadata={"volatility": 0.02}), {"volatility": 0.02})
+        score = calculator._extract_volatility(
+            Signal(
+                symbol="AAPL",
+                signal_type=SignalType.BUY,
+                strength=SignalStrength.MODERATE,
+                confidence=50.0,
+                liquidity_score=50.0,
+                priority_score=50.0,
+                source=SignalSource.MOMENTUM,
+                price=Decimal("150"),
+                volume=Decimal("1000"),
+                metadata={"volatility": 0.02},
+            ),
+            {"volatility": 0.02},
+        )
 
         assert isinstance(score, float)
         assert 0 <= score <= 1

@@ -93,7 +93,8 @@ class PriceNormalizer:
         actions = self.corporate_actions_db[symbol]
         # Filtrar con validación explícita de tipo
         splits = [
-            a for a in actions
+            a
+            for a in actions
             if a.get('type') == 'split'
             and isinstance(a.get('date'), datetime)
             and a.get('date') > timestamp
@@ -131,7 +132,8 @@ class PriceNormalizer:
         actions = self.corporate_actions_db[symbol]
         # Filtrar con validación explícita de tipo
         dividends = [
-            a for a in actions
+            a
+            for a in actions
             if a.get('type') == 'dividend'
             and isinstance(a.get('date'), datetime)
             and a.get('date') > timestamp

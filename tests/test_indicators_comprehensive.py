@@ -73,7 +73,23 @@ class TestRSIComprehensive(unittest.TestCase):
     def test_rsi_mixed_changes(self):
         """Test: RSI con cambios mixtos debe estar entre 0 y 100."""
         # Precios con subidas y bajadas
-        prices = [100.0, 101.0, 99.0, 102.0, 98.0, 103.0, 97.0, 104.0, 96.0, 105.0, 95.0, 106.0, 94.0, 107.0, 93.0]
+        prices = [
+            100.0,
+            101.0,
+            99.0,
+            102.0,
+            98.0,
+            103.0,
+            97.0,
+            104.0,
+            96.0,
+            105.0,
+            95.0,
+            106.0,
+            94.0,
+            107.0,
+            93.0,
+        ]
         # Extender para tener suficientes datos
         prices.extend([92.0 + i * 0.5 for i in range(5)])
         result = self.calculator.calculate_rsi(prices, period=14)
@@ -112,7 +128,23 @@ class TestRSIComprehensive(unittest.TestCase):
     def test_rsi_negative_prices(self):
         """Test: RSI con precios negativos debe manejarse correctamente."""
         # Precios negativos (caso atípico pero posible)
-        prices = [-100.0, -101.0, -99.0, -102.0, -98.0, -103.0, -97.0, -104.0, -96.0, -105.0, -95.0, -106.0, -94.0, -107.0, -93.0]
+        prices = [
+            -100.0,
+            -101.0,
+            -99.0,
+            -102.0,
+            -98.0,
+            -103.0,
+            -97.0,
+            -104.0,
+            -96.0,
+            -105.0,
+            -95.0,
+            -106.0,
+            -94.0,
+            -107.0,
+            -93.0,
+        ]
         prices.extend([-92.0 + i * 0.5 for i in range(5)])
         # RSI debería calcularse pero los valores pueden ser atípicos
         result = self.calculator.calculate_rsi(prices, period=14)
@@ -124,7 +156,7 @@ class TestRSIComprehensive(unittest.TestCase):
     def test_rsi_different_periods(self):
         """Test: RSI con diferentes períodos debe funcionar correctamente."""
         prices = [100.0 + i * 0.5 for i in range(50)]
-        
+
         for period in [7, 14, 21, 28]:
             result = self.calculator.calculate_rsi(prices, period=period)
             if result is not None:
@@ -227,7 +259,9 @@ class TestEMAComprehensive(unittest.TestCase):
         self.assertIsNotNone(result)
         # EMA debe estar cerca del precio actual pero ponderado por historial
         self.assertGreater(result, prices[0], "EMA con precios subiendo debe ser > precio inicial")
-        self.assertLess(result, prices[-1], "EMA debe estar entre precio inicial y final para tendencia alcista")
+        self.assertLess(
+            result, prices[-1], "EMA debe estar entre precio inicial y final para tendencia alcista"
+        )
 
     def test_ema_falling_prices(self):
         """Test: EMA con precios bajando debe disminuir."""
@@ -236,15 +270,17 @@ class TestEMAComprehensive(unittest.TestCase):
         self.assertIsNotNone(result)
         # EMA debe estar cerca del precio actual pero ponderado por historial
         self.assertLess(result, prices[0], "EMA con precios bajando debe ser < precio inicial")
-        self.assertGreater(result, prices[-1], "EMA debe estar entre precio inicial y final para tendencia bajista")
+        self.assertGreater(
+            result, prices[-1], "EMA debe estar entre precio inicial y final para tendencia bajista"
+        )
 
     def test_ema_different_periods(self):
         """Test: EMA con diferentes períodos debe dar resultados diferentes."""
         prices = [100.0 + i * 0.5 for i in range(50)]
-        
+
         ema_short = self.calculator.calculate_ema(prices, period=5)
         ema_long = self.calculator.calculate_ema(prices, period=20)
-        
+
         self.assertIsNotNone(ema_short)
         self.assertIsNotNone(ema_long)
         # EMA corta debe estar más cerca del precio actual que EMA larga
@@ -264,7 +300,7 @@ class TestEMAComprehensive(unittest.TestCase):
             change = 5.0 if i % 2 == 0 else -5.0
             base += change
             prices.append(base)
-        
+
         result = self.calculator.calculate_ema(prices, period=10)
         self.assertIsNotNone(result)
         # EMA debería suavizar la volatilidad
@@ -336,7 +372,9 @@ class TestMACDComprehensive(unittest.TestCase):
         macd, signal, hist = self.calculator.calculate_macd(prices)
         if macd is not None and signal is not None and hist is not None:
             expected_hist = macd - signal
-            self.assertAlmostEqual(hist, expected_hist, places=2, msg="Histogram debe ser MACD - Signal")
+            self.assertAlmostEqual(
+                hist, expected_hist, places=2, msg="Histogram debe ser MACD - Signal"
+            )
 
     def test_macd_custom_periods(self):
         """Test: MACD con períodos personalizados debe funcionar."""
@@ -429,10 +467,10 @@ class TestATRComprehensive(unittest.TestCase):
         highs = [100.0 + i * 0.5 for i in range(30)]
         lows = [99.0 + i * 0.5 for i in range(30)]
         closes = [99.5 + i * 0.5 for i in range(30)]
-        
+
         atr_short = self.calculator.calculate_atr(highs, lows, closes, period=7)
         atr_long = self.calculator.calculate_atr(highs, lows, closes, period=21)
-        
+
         if atr_short is not None and atr_long is not None:
             # Ambos deben ser válidos
             self.assertGreaterEqual(atr_short, 0.0)
@@ -526,12 +564,14 @@ class TestROCComprehensive(unittest.TestCase):
         # Para testear esto, necesitamos que el precio hace 'period' períodos sea 0
         # prices[-period-1] debe ser 0 para period=12: necesitamos prices[-(12+1)] = prices[-13] = 0
         # Con lista de longitud 14: prices[-13] = prices[1] (índice 1 desde el final)
-        prices = [100.0, 0.0] + [100.0] * 12 + [50.0]  # Precio en índice 1 (hace 12 períodos desde el final) es 0
+        prices = (
+            [100.0, 0.0] + [100.0] * 12 + [50.0]
+        )  # Precio en índice 1 (hace 12 períodos desde el final) es 0
         result = self.calculator.calculate_roc(prices, period=12)
         # Si el precio hace 12 períodos es 0, debe retornar None
         # Verificar que el precio base (hace 12 períodos) es realmente 0
         if len(prices) >= 13:
-            price_periods_ago = prices[-12-1]  # Hace 12 períodos
+            price_periods_ago = prices[-12 - 1]  # Hace 12 períodos
             if price_periods_ago == 0:
                 self.assertIsNone(result, "ROC debe ser None cuando precio base es 0")
             else:
@@ -591,7 +631,9 @@ class TestOBVComprehensive(unittest.TestCase):
         self.assertIsNotNone(result)
         # OBV starts at first volume and stays constant when prices don't change
         # (pandas_ta behavior: initializes OBV with first volume)
-        self.assertEqual(result, 1000.0, "OBV debe ser el primer volumen cuando precios son constantes")
+        self.assertEqual(
+            result, 1000.0, "OBV debe ser el primer volumen cuando precios son constantes"
+        )
 
     def test_obv_empty_lists(self):
         """Test: OBV con listas vacías debe retornar None."""
@@ -617,16 +659,38 @@ class TestStochasticRSIComprehensive(unittest.TestCase):
         """Test: Stochastic RSI con todos los valores iguales debe retornar None."""
         rsi_values = [50.0] * 20
         stoch, signal = self.calculator.calculate_stochastic_rsi(rsi_values, period=14)
-        self.assertIsNone(stoch, "Stochastic RSI debe ser None cuando todos los valores son iguales")
-        self.assertIsNone(signal, "Stochastic RSI signal debe ser None cuando todos los valores son iguales")
+        self.assertIsNone(
+            stoch, "Stochastic RSI debe ser None cuando todos los valores son iguales"
+        )
+        self.assertIsNone(
+            signal, "Stochastic RSI signal debe ser None cuando todos los valores son iguales"
+        )
 
     def test_stoch_rsi_sufficient_data(self):
         """Test: Stochastic RSI con datos suficientes debe calcular correctamente."""
         # Need at least period + smooth_k - 1 = 14 + 3 - 1 = 16 values for valid %D
         # Using varying RSI values with both up and down movement
         rsi_values = [
-            40.0, 45.0, 50.0, 48.0, 52.0, 55.0, 53.0, 58.0, 60.0, 57.0,
-            62.0, 65.0, 63.0, 68.0, 70.0, 67.0, 72.0, 75.0, 73.0, 78.0
+            40.0,
+            45.0,
+            50.0,
+            48.0,
+            52.0,
+            55.0,
+            53.0,
+            58.0,
+            60.0,
+            57.0,
+            62.0,
+            65.0,
+            63.0,
+            68.0,
+            70.0,
+            67.0,
+            72.0,
+            75.0,
+            73.0,
+            78.0,
         ]  # 20 values with variation
         stoch, signal = self.calculator.calculate_stochastic_rsi(rsi_values, period=14)
         self.assertIsNotNone(stoch, "Stochastic RSI debe calcularse con datos suficientes")
@@ -655,7 +719,15 @@ class TestStochasticRSIComprehensive(unittest.TestCase):
         # Stochastic RSI normaliza dentro del período: (current - min) / (max - min) * 100
         # Si todos los valores están bajos pero el último es el máximo del período, será 100
         # Usar valores donde el último NO sea el máximo del período
-        rsi_values = [30.0] * 13 + [20.0, 25.0, 27.0, 29.0, 31.0, 28.0, 26.0]  # RSI bajo con variación
+        rsi_values = [30.0] * 13 + [
+            20.0,
+            25.0,
+            27.0,
+            29.0,
+            31.0,
+            28.0,
+            26.0,
+        ]  # RSI bajo con variación
         stoch, signal = self.calculator.calculate_stochastic_rsi(rsi_values, period=14)
         if stoch is not None:
             # El Stochastic RSI normaliza dentro del rango del período
@@ -734,9 +806,10 @@ class TestIndicatorIntegration(unittest.TestCase):
         if rsi is not None:
             self.assertGreater(rsi, 40.0, "RSI en tendencia alcista debe estar alto")
         if ema is not None:
-            self.assertGreater(ema, prices[0], "EMA en tendencia alcista debe estar arriba del precio inicial")
+            self.assertGreater(
+                ema, prices[0], "EMA en tendencia alcista debe estar arriba del precio inicial"
+            )
 
 
 if __name__ == "__main__":
     unittest.main()
-

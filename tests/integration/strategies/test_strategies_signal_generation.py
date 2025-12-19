@@ -12,8 +12,8 @@ from decimal import Decimal
 
 from app.models.market_data import Quote
 from app.models.signal import SignalType
-from app.strategies.momentum import MomentumStrategy
 from app.strategies.mean_reversion import MeanReversionStrategy
+from app.strategies.momentum import MomentumStrategy
 
 
 class TestStrategiesSignalGeneration(unittest.TestCase):
@@ -64,7 +64,9 @@ class TestStrategiesSignalGeneration(unittest.TestCase):
         quotes = []
         for i in range(20):  # Necesitamos suficientes datos para calcular RSI/EMA
             price = Decimal("100") + Decimal(str(i * 0.5))
-            quote = self._create_quote(symbol, price, Decimal("2000000"), base_date + timedelta(days=i))
+            quote = self._create_quote(
+                symbol, price, Decimal("2000000"), base_date + timedelta(days=i)
+            )
             quotes.append(quote)
 
         # Generar señales para los últimos quotes
@@ -82,8 +84,11 @@ class TestStrategiesSignalGeneration(unittest.TestCase):
         self.assertIsInstance(all_signals, list, "Debe retornar lista de señales")
         # Si hay señales, verificamos que son BUY o SELL válidas
         for signal in all_signals:
-            self.assertIn(signal.signal_type, [SignalType.BUY, SignalType.SELL],
-                "Señales deben ser BUY o SELL")
+            self.assertIn(
+                signal.signal_type,
+                [SignalType.BUY, SignalType.SELL],
+                "Señales deben ser BUY o SELL",
+            )
 
     def test_momentum_generates_both_buy_and_sell(self):
         """Test: Momentum debe generar tanto BUY como SELL."""
@@ -98,7 +103,9 @@ class TestStrategiesSignalGeneration(unittest.TestCase):
                 price = Decimal("100") + Decimal(str(i * 0.5))  # Tendencia alcista
             else:
                 price = Decimal("112.5") - Decimal(str((i - 25) * 0.5))  # Tendencia bajista
-            quote = self._create_quote(symbol, price, Decimal("1500000"), base_date + timedelta(days=i))
+            quote = self._create_quote(
+                symbol, price, Decimal("1500000"), base_date + timedelta(days=i)
+            )
             quotes.append(quote)
 
         # Generar señales
@@ -131,7 +138,9 @@ class TestStrategiesSignalGeneration(unittest.TestCase):
         prices = [100, 102, 98, 105, 95, 103, 97, 104, 96, 101]  # Variación
         for i, price_val in enumerate(prices * 5):  # Repetir para tener suficientes datos
             price = Decimal(str(price_val))
-            quote = self._create_quote(symbol, price, Decimal("1000000"), base_date + timedelta(days=i))
+            quote = self._create_quote(
+                symbol, price, Decimal("1000000"), base_date + timedelta(days=i)
+            )
             quotes.append(quote)
 
         # Generar señales
@@ -143,12 +152,14 @@ class TestStrategiesSignalGeneration(unittest.TestCase):
         # Mean Reversion necesita más datos históricos (lookback_period = 20 por defecto)
         # Con 50 quotes, debería generar señales después de acumular suficiente histórico
         # Verificamos que el proceso funciona sin errores
-        self.assertIsInstance(all_signals, list, 
-            "Mean Reversion debe retornar lista de señales")
+        self.assertIsInstance(all_signals, list, "Mean Reversion debe retornar lista de señales")
         # Verificamos que las señales generadas son válidas
         for signal in all_signals:
-            self.assertIn(signal.signal_type, [SignalType.BUY, SignalType.SELL],
-                "Señales deben ser BUY o SELL")
+            self.assertIn(
+                signal.signal_type,
+                [SignalType.BUY, SignalType.SELL],
+                "Señales deben ser BUY o SELL",
+            )
             self.assertEqual(signal.symbol, symbol, "Señal debe tener símbolo correcto")
 
 
@@ -158,4 +169,3 @@ if __name__ == "__main__":
     from app.models.signal import SignalType
 
     unittest.main()
-

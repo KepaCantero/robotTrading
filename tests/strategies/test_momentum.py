@@ -660,7 +660,10 @@ class TestROCFunctionality:
 
         assert "roc" in signal.metadata
         assert signal.metadata["roc"] == "7.5"
-        assert "momentum_positive_breakout: rsi=60.00 ema_trend=above volume=1.50x roc=7.50" in signal.metadata["reason"]
+        assert (
+            "momentum_positive_breakout: rsi=60.00 ema_trend=above volume=1.50x roc=7.50"
+            in signal.metadata["reason"]
+        )
 
     def test_roc_none_handling(self, strategy, bullish_quote):
         """Test that None ROC values are handled gracefully."""

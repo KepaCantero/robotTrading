@@ -8,16 +8,16 @@ Tests para verificar:
 - Trade return distribution, historical regression
 """
 import unittest
+from collections import Counter
 from datetime import datetime, timedelta
 from decimal import Decimal
-from collections import Counter
 
-from app.models.market_data import Quote
-from app.models.signal import Signal, SignalType, SignalStrength, SignalSource
-from app.models.portfolio import Portfolio
 from app.backtesting.engine import SimpleBacktester
-from app.backtesting.models import BacktestConfig
 from app.backtesting.metrics import MetricsCalculator
+from app.backtesting.models import BacktestConfig
+from app.models.market_data import Quote
+from app.models.portfolio import Portfolio
+from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.strategies.momentum import MomentumStrategy
 
 
@@ -48,7 +48,7 @@ class TestZeroCapitalStart(unittest.TestCase):
             ask=Decimal("200.2"),
             volume=Decimal("1000000"),
         )
-        
+
         signal = Signal(
             symbol="AAPL",
             signal_type=SignalType.BUY,
@@ -62,15 +62,15 @@ class TestZeroCapitalStart(unittest.TestCase):
             timestamp=datetime(2024, 1, 1),
             metadata={"strategy": "momentum"},
         )
-        
+
         try:
             result = self.backtester.run_backtest(
-            market_data=[quote],
+                market_data=[quote],
                 signals=[signal],
                 start_date=datetime(2024, 1, 1),
                 end_date=datetime(2024, 1, 2),
             )
-            
+
             # Con capital mínimo (insuficiente para un trade), no debe generar trades
             # Un trade requiere al menos precio * quantity + commission, que será > $0.01
             if result.trades:
@@ -80,7 +80,7 @@ class TestZeroCapitalStart(unittest.TestCase):
                     self.assertEqual(
                         trade.quantity,
                         Decimal("0"),
-                        "Con capital mínimo, trades deben tener cantidad 0 o ser rechazados"
+                        "Con capital mínimo, trades deben tener cantidad 0 o ser rechazados",
                     )
         except Exception as e:
             self.fail(f"Backtest no debe crashear con capital cero: {e}")
@@ -103,14 +103,14 @@ class TestMaxDrawdownLimit(unittest.TestCase):
         """Forzar mercado bajista extremo: drawdown no debe superar límite."""
         quotes = []
         signals = []
-        
+
         base_date = datetime(2024, 1, 1)
         base_price = Decimal("200")
-        
+
         # Simular caída del 50% en 20 días
         for i in range(20):
             price = base_price * (Decimal("1") - Decimal(str(i * 0.025)))  # -2.5% por día
-            
+
             quote = Quote(
                 symbol="AAPL",
                 timestamp=base_date + timedelta(days=i),
@@ -124,7 +124,7 @@ class TestMaxDrawdownLimit(unittest.TestCase):
                 volume=Decimal("50000000"),
             )
             quotes.append(quote)
-            
+
             if i == 0:  # BUY al inicio
                 signal = Signal(
                     symbol="AAPL",
@@ -140,23 +140,23 @@ class TestMaxDrawdownLimit(unittest.TestCase):
                     metadata={"strategy": "momentum"},
                 )
                 signals.append(signal)
-        
+
         result = self.backtester.run_backtest(
             market_data=quotes,
             signals=signals,
             start_date=base_date,
             end_date=base_date + timedelta(days=20),
         )
-        
+
         if result.trades and result.performance:
             max_dd_pct = result.performance.max_drawdown_percentage
-            
+
             # Drawdown no debe exceder 50% (conservative preset)
             # (aunque el mercado caiga 50%, stop-loss debería proteger)
             self.assertGreaterEqual(
                 max_dd_pct,
                 Decimal("-100"),  # No más de -100%
-                "Drawdown debe ser razonable incluso en mercado extremo"
+                "Drawdown debe ser razonable incluso en mercado extremo",
             )
 
 
@@ -171,18 +171,22 @@ class TestSharpeCalculationConsistency(unittest.TestCase):
         """Verifica fórmula de Sharpe vs benchmark."""
         # Retornos con media positiva y desviación razonable
         returns = [
-            Decimal("0.01"), Decimal("0.02"), Decimal("-0.01"),
-            Decimal("0.015"), Decimal("0.01"), Decimal("-0.005"),
+            Decimal("0.01"),
+            Decimal("0.02"),
+            Decimal("-0.01"),
+            Decimal("0.015"),
+            Decimal("0.01"),
+            Decimal("-0.005"),
         ]
-        
+
         sharpe = self.calculator._calculate_sharpe_ratio(returns)
-        
+
         if sharpe is not None:
             # Con retornos mayormente positivos, Sharpe debe ser positivo
             # (aunque pequeño por la desviación)
             self.assertFalse(
                 str(sharpe).lower() in ["nan", "inf", "-inf"],
-                f"Sharpe no debe ser NaN o Inf: {sharpe}"
+                f"Sharpe no debe ser NaN o Inf: {sharpe}",
             )
 
 
@@ -199,21 +203,21 @@ class TestDrawdownCalculationConsistency(unittest.TestCase):
             Decimal("100000"),  # Inicio
             Decimal("105000"),  # Peak
             Decimal("102000"),  # Caída
-            Decimal("95000"),   # Trough (drawdown máximo)
+            Decimal("95000"),  # Trough (drawdown máximo)
             Decimal("100000"),  # Recuperación
         ]
-        
+
         max_dd = self.calculator._calculate_max_drawdown(equity_curve)
-        
+
         # Drawdown máximo: (105000 - 95000) = 10000
         expected_dd = Decimal("10000")
-        
+
         self.assertIsNotNone(max_dd, "Drawdown debe calcularse")
         self.assertLessEqual(max_dd, Decimal("0"), "Drawdown debe ser negativo")
         self.assertGreaterEqual(
             abs(max_dd),
             expected_dd * Decimal("0.9"),  # Al menos 90% del esperado
-            f"Drawdown {max_dd} debe estar cerca de {expected_dd}"
+            f"Drawdown {max_dd} debe estar cerca de {expected_dd}",
         )
 
 
@@ -233,14 +237,14 @@ class TestTradeReturnDistribution(unittest.TestCase):
         """Histograma de PnL: detecta patrones anómalos (99% trades negativos)."""
         quotes = []
         signals = []
-        
+
         base_date = datetime(2024, 1, 1)
         base_price = Decimal("200")
-        
+
         # Crear trades mixtos (algunos ganadores, algunos perdedores)
         for i in range(20):
             price = base_price + Decimal(str((i % 10) - 5))
-            
+
             quote = Quote(
                 symbol="AAPL",
                 timestamp=base_date + timedelta(days=i),
@@ -254,7 +258,7 @@ class TestTradeReturnDistribution(unittest.TestCase):
                 volume=Decimal("1000000"),
             )
             quotes.append(quote)
-            
+
             if i % 2 == 0:  # BUY
                 signal = Signal(
                     symbol="AAPL",
@@ -286,31 +290,30 @@ class TestTradeReturnDistribution(unittest.TestCase):
                     metadata={"strategy": "momentum"},
                 )
                 signals.append(signal)
-        
+
         result = self.backtester.run_backtest(
             market_data=quotes,
             signals=signals,
             start_date=base_date,
             end_date=base_date + timedelta(days=20),
         )
-        
+
         if result.trades:
             # Contar trades positivos y negativos
             positive_trades = [t for t in result.trades if t.pnl and t.pnl > 0]
             negative_trades = [t for t in result.trades if t.pnl and t.pnl < 0]
-            
+
             total_trades = len(result.trades)
             negative_ratio = len(negative_trades) / total_trades if total_trades > 0 else 0
-            
+
             # No todos deben ser negativos (indica bug de inversión)
             self.assertLess(
                 negative_ratio,
                 0.99,  # Menos del 99% negativos
                 f"Patrón anómalo: {negative_ratio*100:.1f}% trades negativos "
-                f"(posibles señales invertidas)"
+                f"(posibles señales invertidas)",
             )
 
 
 if __name__ == "__main__":
     unittest.main()
-

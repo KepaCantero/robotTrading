@@ -44,7 +44,9 @@ class TestSignalMatching(unittest.TestCase):
             ask=price * Decimal("1.001"),
         )
 
-    def _create_signal(self, symbol: str, signal_type: SignalType, price: Decimal, timestamp: datetime) -> Signal:
+    def _create_signal(
+        self, symbol: str, signal_type: SignalType, price: Decimal, timestamp: datetime
+    ) -> Signal:
         """Crear señal de prueba."""
         return Signal(
             symbol=symbol,
@@ -75,7 +77,9 @@ class TestSignalMatching(unittest.TestCase):
         self.backtester._process_signal(signal, quote)
 
         # Verificar que se ejecutó (capital debe cambiar)
-        self.assertNotEqual(self.backtester.capital, initial_capital, "Capital debe cambiar cuando se ejecuta BUY")
+        self.assertNotEqual(
+            self.backtester.capital, initial_capital, "Capital debe cambiar cuando se ejecuta BUY"
+        )
 
         # Verificar que hay trade
         self.assertGreater(len(self.backtester.trades), 0, "Debe haber trade creado")
@@ -87,7 +91,9 @@ class TestSignalMatching(unittest.TestCase):
         base_timestamp = datetime(2024, 1, 1, 10, 0, 0)
 
         # Crear señal un poco antes del quote
-        signal = self._create_signal(symbol, SignalType.BUY, price, base_timestamp - timedelta(hours=12))
+        signal = self._create_signal(
+            symbol, SignalType.BUY, price, base_timestamp - timedelta(hours=12)
+        )
         quote = self._create_quote(symbol, price, base_timestamp)
 
         # Procesar señal
@@ -95,7 +101,11 @@ class TestSignalMatching(unittest.TestCase):
         self.backtester._process_signal(signal, quote)
 
         # Verificar que se ejecutó (debe crear trade)
-        self.assertGreater(len(self.backtester.trades), initial_trades, "Debe ejecutar señal dentro de tolerancia de 1 día")
+        self.assertGreater(
+            len(self.backtester.trades),
+            initial_trades,
+            "Debe ejecutar señal dentro de tolerancia de 1 día",
+        )
 
     def test_signal_does_not_match_future_quote(self):
         """Test: Señal con timestamp futuro no debe ejecutarse en run_backtest."""
@@ -104,7 +114,9 @@ class TestSignalMatching(unittest.TestCase):
         quote_timestamp = datetime(2024, 1, 1, 10, 0, 0)
 
         # Crear señal en el futuro (más de 1 día)
-        signal = self._create_signal(symbol, SignalType.BUY, price, quote_timestamp + timedelta(days=2))
+        signal = self._create_signal(
+            symbol, SignalType.BUY, price, quote_timestamp + timedelta(days=2)
+        )
         quote = self._create_quote(symbol, price, quote_timestamp)
 
         # Usar run_backtest que valida el matching
@@ -149,7 +161,9 @@ class TestSignalMatching(unittest.TestCase):
             self.backtester._process_signal(signal, quote)
 
         # Verificar que ambas se ejecutaron
-        self.assertGreater(len(self.backtester.trades), initial_trades, "Debe ejecutar múltiples señales")
+        self.assertGreater(
+            len(self.backtester.trades), initial_trades, "Debe ejecutar múltiples señales"
+        )
 
 
 class TestSignalExecutionOrder(unittest.TestCase):
@@ -180,7 +194,9 @@ class TestSignalExecutionOrder(unittest.TestCase):
             ask=price * Decimal("1.001"),
         )
 
-    def _create_signal(self, symbol: str, signal_type: SignalType, price: Decimal, timestamp: datetime) -> Signal:
+    def _create_signal(
+        self, symbol: str, signal_type: SignalType, price: Decimal, timestamp: datetime
+    ) -> Signal:
         """Crear señal de prueba."""
         return Signal(
             symbol=symbol,
@@ -221,7 +237,9 @@ class TestSignalExecutionOrder(unittest.TestCase):
 
         # Al menos un trade debe tener PnL positivo
         profitable = [t for t in closed_trades if t.pnl and t.pnl > 0]
-        self.assertGreater(len(profitable), 0, "Debe haber trade con PnL positivo cuando se vende más caro")
+        self.assertGreater(
+            len(profitable), 0, "Debe haber trade con PnL positivo cuando se vende más caro"
+        )
 
     def test_sell_before_buy_should_not_create_trade(self):
         """Test: SELL antes de BUY no debe crear trade."""
@@ -246,9 +264,10 @@ class TestSignalExecutionOrder(unittest.TestCase):
         trades_after = len(self.backtester.trades)
         self.assertGreater(trades_after, initial_trades, "BUY debe crear trade")
         # Pero no debe haber más trades que el BUY (SELL sin posición no crea trade)
-        self.assertLessEqual(trades_after, initial_trades + 1, "SELL sin posición no debe crear trade")
+        self.assertLessEqual(
+            trades_after, initial_trades + 1, "SELL sin posición no debe crear trade"
+        )
 
 
 if __name__ == "__main__":
     unittest.main()
-

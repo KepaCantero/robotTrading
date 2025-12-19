@@ -45,7 +45,9 @@ class TestWinRateBug(unittest.TestCase):
             ask=price * Decimal("1.001"),
         )
 
-    def _create_signal(self, symbol: str, signal_type: SignalType, price: Decimal, timestamp: datetime = None) -> Signal:
+    def _create_signal(
+        self, symbol: str, signal_type: SignalType, price: Decimal, timestamp: datetime = None
+    ) -> Signal:
         """Crear señal de prueba."""
         if timestamp is None:
             timestamp = datetime(2024, 1, 1)
@@ -84,7 +86,9 @@ class TestWinRateBug(unittest.TestCase):
         for trade in sell_trades:
             if trade.pnl is not None:
                 self.assertEqual(
-                    trade.pnl, Decimal("0"), "SELL sin buy_trades debe tener PnL = 0 (esto puede causar win rate 0% si todas son así)"
+                    trade.pnl,
+                    Decimal("0"),
+                    "SELL sin buy_trades debe tener PnL = 0 (esto puede causar win rate 0% si todas son así)",
                 )
 
     def test_multiple_buys_then_sell_calculates_correct_pnl(self):
@@ -95,7 +99,9 @@ class TestWinRateBug(unittest.TestCase):
         # Crear múltiples BUY con precios diferentes
         for i in range(3):
             buy_price = base_price + Decimal(str(i * 5))  # 100, 105, 110
-            buy_signal = self._create_signal(symbol, SignalType.BUY, buy_price, datetime(2024, 1, i + 1))
+            buy_signal = self._create_signal(
+                symbol, SignalType.BUY, buy_price, datetime(2024, 1, i + 1)
+            )
             buy_quote = self._create_quote(symbol, buy_price, datetime(2024, 1, i + 1))
             self.backtester._process_signal(buy_signal, buy_quote)
 
@@ -121,7 +127,7 @@ class TestWinRateBug(unittest.TestCase):
                 Decimal("0"),
                 f"Win rate no debe ser 0% cuando se vende por encima del promedio. "
                 f"Win rate={performance.win_rate}%, winning={performance.winning_trades}, "
-                f"total={performance.total_trades}"
+                f"total={performance.total_trades}",
             )
 
     def test_new_buy_closes_position_causing_loss(self):
@@ -131,13 +137,17 @@ class TestWinRateBug(unittest.TestCase):
         buy_price_2 = Decimal("90")  # Precio más bajo
 
         # Primer BUY
-        buy_signal_1 = self._create_signal(symbol, SignalType.BUY, buy_price_1, datetime(2024, 1, 1))
+        buy_signal_1 = self._create_signal(
+            symbol, SignalType.BUY, buy_price_1, datetime(2024, 1, 1)
+        )
         buy_quote_1 = self._create_quote(symbol, buy_price_1, datetime(2024, 1, 1))
         self.backtester._process_signal(buy_signal_1, buy_quote_1)
 
         # Segundo BUY (cierra el primero al precio de mercado actual)
         # Si el precio bajó, esto genera pérdida
-        buy_signal_2 = self._create_signal(symbol, SignalType.BUY, buy_price_2, datetime(2024, 1, 2))
+        buy_signal_2 = self._create_signal(
+            symbol, SignalType.BUY, buy_price_2, datetime(2024, 1, 2)
+        )
         buy_quote_2 = self._create_quote(symbol, buy_price_2, datetime(2024, 1, 2))
         self.backtester._process_signal(buy_signal_2, buy_quote_2)
 
@@ -163,12 +173,16 @@ class TestWinRateBug(unittest.TestCase):
         sell_price = Decimal("101")  # Pequeña ganancia
 
         # BUY
-        buy_signal = self._create_signal(symbol, SignalType.BUY, buy_price, datetime(2024, 1, 1, 10, 0, 0))
+        buy_signal = self._create_signal(
+            symbol, SignalType.BUY, buy_price, datetime(2024, 1, 1, 10, 0, 0)
+        )
         buy_quote = self._create_quote(symbol, buy_price, datetime(2024, 1, 1, 10, 0, 0))
         self.backtester._process_signal(buy_signal, buy_quote)
 
         # SELL inmediatamente después
-        sell_signal = self._create_signal(symbol, SignalType.SELL, sell_price, datetime(2024, 1, 1, 10, 1, 0))
+        sell_signal = self._create_signal(
+            symbol, SignalType.SELL, sell_price, datetime(2024, 1, 1, 10, 1, 0)
+        )
         sell_quote = self._create_quote(symbol, sell_price, datetime(2024, 1, 1, 10, 1, 0))
         self.backtester._process_signal(sell_signal, sell_quote)
 
@@ -192,4 +206,3 @@ class TestWinRateBug(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

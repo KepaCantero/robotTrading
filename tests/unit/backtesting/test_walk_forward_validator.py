@@ -9,32 +9,33 @@ Comprehensive tests for:
 - Monte Carlo simulation
 """
 
-import pytest
 from datetime import datetime, timedelta
 from decimal import Decimal
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import MagicMock, Mock, patch
+
 import numpy as np
+import pytest
 
-from app.backtesting.walk_forward_validator import (
-    WalkForwardValidator,
-    CrossValidationTemporal,
-    SyntheticDataGenerator,
-    StressTester,
-    MonteCarloSimulator,
-    ComprehensiveValidator,
-    ValidationWindow,
-    StressScenarioResult,
-    ValidationReport,
-    load_validation_config,
-    get_default_config,
-)
 from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics
+from app.backtesting.walk_forward_validator import (
+    ComprehensiveValidator,
+    CrossValidationTemporal,
+    MonteCarloSimulator,
+    StressScenarioResult,
+    StressTester,
+    SyntheticDataGenerator,
+    ValidationReport,
+    ValidationWindow,
+    WalkForwardValidator,
+    get_default_config,
+    load_validation_config,
+)
 from app.models.market_data import Quote
-
 
 # ============================================================================
 # Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def sample_config():
@@ -66,8 +67,18 @@ def sample_config():
             "enabled": True,
             "n_scenarios": 10,
             "scenarios": {
-                "flash_crash": {"enabled": True, "weight": 0.5, "drop_percentage": -0.10, "recovery_days": 5},
-                "high_volatility": {"enabled": True, "weight": 0.5, "volatility_multiplier": 2.0, "duration_days": 20},
+                "flash_crash": {
+                    "enabled": True,
+                    "weight": 0.5,
+                    "drop_percentage": -0.10,
+                    "recovery_days": 5,
+                },
+                "high_volatility": {
+                    "enabled": True,
+                    "weight": 0.5,
+                    "volatility_multiplier": 2.0,
+                    "duration_days": 20,
+                },
             },
             "thresholds": {
                 "max_scenario_drawdown": -0.30,
@@ -114,18 +125,20 @@ def sample_quotes():
         price = base_price * (1 + np.random.normal(0, 0.02))
         base_price = price
 
-        quotes.append(Quote(
-            symbol="TEST",
-            timestamp=start_date + timedelta(days=i),
-            bid=Decimal(str(round(price * 0.999, 2))),
-            ask=Decimal(str(round(price * 1.001, 2))),
-            last=Decimal(str(round(price, 2))),
-            volume=Decimal("1000000"),
-            open=Decimal(str(round(price * 0.99, 2))),
-            high=Decimal(str(round(price * 1.02, 2))),
-            low=Decimal(str(round(price * 0.98, 2))),
-            close=Decimal(str(round(price, 2))),
-        ))
+        quotes.append(
+            Quote(
+                symbol="TEST",
+                timestamp=start_date + timedelta(days=i),
+                bid=Decimal(str(round(price * 0.999, 2))),
+                ask=Decimal(str(round(price * 1.001, 2))),
+                last=Decimal(str(round(price, 2))),
+                volume=Decimal("1000000"),
+                open=Decimal(str(round(price * 0.99, 2))),
+                high=Decimal(str(round(price * 1.02, 2))),
+                low=Decimal(str(round(price * 0.98, 2))),
+                close=Decimal(str(round(price, 2))),
+            )
+        )
 
     return quotes
 
@@ -138,13 +151,15 @@ def sample_signals(sample_quotes):
     signals = []
     for i, quote in enumerate(sample_quotes):
         if i % 20 == 0:  # Signal every 20 days
-            signals.append(Mock(
-                symbol="TEST",
-                timestamp=quote.timestamp,
-                signal_type=SignalType.BUY if i % 40 == 0 else SignalType.SELL,
-                strength=75.0,
-                confidence=80.0,
-            ))
+            signals.append(
+                Mock(
+                    symbol="TEST",
+                    timestamp=quote.timestamp,
+                    signal_type=SignalType.BUY if i % 40 == 0 else SignalType.SELL,
+                    strength=75.0,
+                    confidence=80.0,
+                )
+            )
 
     return signals
 
@@ -152,6 +167,7 @@ def sample_signals(sample_quotes):
 # ============================================================================
 # Tests: Configuration Loading
 # ============================================================================
+
 
 class TestConfigLoading:
     """Tests for configuration loading functions."""
@@ -203,6 +219,7 @@ class TestConfigLoading:
 # Tests: Synthetic Data Generator
 # ============================================================================
 
+
 class TestSyntheticDataGenerator:
     """Tests for SyntheticDataGenerator class."""
 
@@ -241,9 +258,7 @@ class TestSyntheticDataGenerator:
         generator = SyntheticDataGenerator(sample_config["synthetic_data"])
         start_date = datetime(2020, 1, 1)
 
-        quotes = generator.generate_ou_prices(
-            500, start_date, theta=0.5, mu=100.0
-        )
+        quotes = generator.generate_ou_prices(500, start_date, theta=0.5, mu=100.0)
 
         # Prices should stay relatively close to mean
         prices = [float(q.close) for q in quotes]
@@ -254,9 +269,7 @@ class TestSyntheticDataGenerator:
         generator = SyntheticDataGenerator(sample_config["synthetic_data"])
         start_date = datetime(2020, 1, 1)
 
-        quotes = generator.generate_flash_crash_scenario(
-            100, start_date, drop_pct=-0.15
-        )
+        quotes = generator.generate_flash_crash_scenario(100, start_date, drop_pct=-0.15)
 
         prices = [float(q.close) for q in quotes]
         min_price = min(prices)
@@ -274,10 +287,12 @@ class TestSyntheticDataGenerator:
             200, start_date, volatility_multiplier=3.0
         )
 
-        normal_returns = np.diff([float(q.close) for q in normal_quotes]) / \
-                        np.array([float(q.close) for q in normal_quotes[:-1]])
-        high_vol_returns = np.diff([float(q.close) for q in high_vol_quotes]) / \
-                          np.array([float(q.close) for q in high_vol_quotes[:-1]])
+        normal_returns = np.diff([float(q.close) for q in normal_quotes]) / np.array(
+            [float(q.close) for q in normal_quotes[:-1]]
+        )
+        high_vol_returns = np.diff([float(q.close) for q in high_vol_quotes]) / np.array(
+            [float(q.close) for q in high_vol_quotes[:-1]]
+        )
 
         # High volatility should have higher std
         assert np.std(high_vol_returns) > np.std(normal_returns)
@@ -287,9 +302,7 @@ class TestSyntheticDataGenerator:
         generator = SyntheticDataGenerator(sample_config["synthetic_data"])
         start_date = datetime(2020, 1, 1)
 
-        quotes = generator.generate_trending_scenario(
-            200, start_date, daily_drift=0.005
-        )
+        quotes = generator.generate_trending_scenario(200, start_date, daily_drift=0.005)
 
         prices = [float(q.close) for q in quotes]
 
@@ -301,9 +314,7 @@ class TestSyntheticDataGenerator:
         generator = SyntheticDataGenerator(sample_config["synthetic_data"])
         start_date = datetime(2020, 1, 1)
 
-        quotes = generator.generate_gap_scenario(
-            100, start_date, gap_pct=0.10, n_gaps=3
-        )
+        quotes = generator.generate_gap_scenario(100, start_date, gap_pct=0.10, n_gaps=3)
 
         prices = [float(q.close) for q in quotes]
         returns = np.diff(prices) / prices[:-1]
@@ -330,6 +341,7 @@ class TestSyntheticDataGenerator:
 # ============================================================================
 # Tests: Walk-Forward Validator
 # ============================================================================
+
 
 class TestWalkForwardValidator:
     """Tests for WalkForwardValidator class."""
@@ -392,9 +404,7 @@ class TestWalkForwardValidator:
         start_date = datetime(2020, 1, 1)
         end_date = datetime(2021, 1, 1)
 
-        result = validator.validate_strategy(
-            [], [], backtest_config, start_date, end_date
-        )
+        result = validator.validate_strategy([], [], backtest_config, start_date, end_date)
 
         assert result["passed"] is False
         assert "Insufficient windows" in result.get("reason", "")
@@ -403,6 +413,7 @@ class TestWalkForwardValidator:
 # ============================================================================
 # Tests: Cross-Validation Temporal
 # ============================================================================
+
 
 class TestCrossValidationTemporal:
     """Tests for CrossValidationTemporal class."""
@@ -452,6 +463,7 @@ class TestCrossValidationTemporal:
 # ============================================================================
 # Tests: Monte Carlo Simulator
 # ============================================================================
+
 
 class TestMonteCarloSimulator:
     """Tests for MonteCarloSimulator class."""
@@ -535,12 +547,16 @@ class TestMonteCarloSimulator:
 # Tests: Stress Tester
 # ============================================================================
 
+
 class TestStressTester:
     """Tests for StressTester class."""
 
     def test_stress_tester_initialization(self, sample_config):
         """Test stress tester initialization."""
-        with patch('app.backtesting.walk_forward_validator.load_validation_config', return_value=sample_config):
+        with patch(
+            'app.backtesting.walk_forward_validator.load_validation_config',
+            return_value=sample_config,
+        ):
             tester = StressTester(config=sample_config["stress_testing"])
 
         assert tester.n_scenarios == 10
@@ -548,29 +564,31 @@ class TestStressTester:
 
     def test_generate_scenario_flash_crash(self, sample_config):
         """Test flash crash scenario generation."""
-        with patch('app.backtesting.walk_forward_validator.load_validation_config', return_value=sample_config):
+        with patch(
+            'app.backtesting.walk_forward_validator.load_validation_config',
+            return_value=sample_config,
+        ):
             tester = StressTester(config=sample_config["stress_testing"])
 
         scenario_config = sample_config["stress_testing"]["scenarios"]["flash_crash"]
         start_date = datetime(2020, 1, 1)
 
-        quotes = tester._generate_scenario(
-            "flash_crash", scenario_config, 100, start_date, "TEST"
-        )
+        quotes = tester._generate_scenario("flash_crash", scenario_config, 100, start_date, "TEST")
 
         assert len(quotes) == 100
         assert all(isinstance(q, Quote) for q in quotes)
 
     def test_generate_scenario_unknown_type_defaults_to_gbm(self, sample_config):
         """Test unknown scenario type defaults to GBM."""
-        with patch('app.backtesting.walk_forward_validator.load_validation_config', return_value=sample_config):
+        with patch(
+            'app.backtesting.walk_forward_validator.load_validation_config',
+            return_value=sample_config,
+        ):
             tester = StressTester(config=sample_config["stress_testing"])
 
         start_date = datetime(2020, 1, 1)
 
-        quotes = tester._generate_scenario(
-            "unknown_type", {}, 100, start_date, "TEST"
-        )
+        quotes = tester._generate_scenario("unknown_type", {}, 100, start_date, "TEST")
 
         assert len(quotes) == 100
 
@@ -578,6 +596,7 @@ class TestStressTester:
 # ============================================================================
 # Tests: Data Classes
 # ============================================================================
+
 
 class TestDataClasses:
     """Tests for data classes."""
@@ -635,12 +654,16 @@ class TestDataClasses:
 # Tests: Comprehensive Validator
 # ============================================================================
 
+
 class TestComprehensiveValidator:
     """Tests for ComprehensiveValidator facade class."""
 
     def test_comprehensive_validator_initialization(self, sample_config):
         """Test comprehensive validator initialization."""
-        with patch('app.backtesting.walk_forward_validator.load_validation_config', return_value=sample_config):
+        with patch(
+            'app.backtesting.walk_forward_validator.load_validation_config',
+            return_value=sample_config,
+        ):
             validator = ComprehensiveValidator()
 
         assert validator.walk_forward is not None
@@ -650,7 +673,10 @@ class TestComprehensiveValidator:
 
     def test_extract_returns_from_quotes(self, sample_config, sample_quotes):
         """Test return extraction from quotes."""
-        with patch('app.backtesting.walk_forward_validator.load_validation_config', return_value=sample_config):
+        with patch(
+            'app.backtesting.walk_forward_validator.load_validation_config',
+            return_value=sample_config,
+        ):
             validator = ComprehensiveValidator()
 
         returns = validator._extract_returns(sample_quotes)
@@ -660,7 +686,10 @@ class TestComprehensiveValidator:
 
     def test_extract_returns_empty_for_insufficient_quotes(self, sample_config):
         """Test return extraction with insufficient quotes."""
-        with patch('app.backtesting.walk_forward_validator.load_validation_config', return_value=sample_config):
+        with patch(
+            'app.backtesting.walk_forward_validator.load_validation_config',
+            return_value=sample_config,
+        ):
             validator = ComprehensiveValidator()
 
         returns = validator._extract_returns([])
@@ -672,13 +701,19 @@ class TestComprehensiveValidator:
 # Tests: Integration Tests
 # ============================================================================
 
+
 class TestIntegration:
     """Integration tests for validation module."""
 
     def test_full_validation_workflow_mock(self, sample_config, backtest_config):
         """Test full validation workflow with mocks."""
-        with patch('app.backtesting.walk_forward_validator.load_validation_config', return_value=sample_config):
-            with patch('app.backtesting.walk_forward_validator.SimpleBacktester') as mock_backtester:
+        with patch(
+            'app.backtesting.walk_forward_validator.load_validation_config',
+            return_value=sample_config,
+        ):
+            with patch(
+                'app.backtesting.walk_forward_validator.SimpleBacktester'
+            ) as mock_backtester:
                 # Mock backtest result
                 mock_result = Mock()
                 mock_result.total_return = Decimal("0.10")
@@ -700,18 +735,22 @@ class TestIntegration:
                 signals = []
 
                 for i in range(2500):  # ~7 years
-                    quotes.append(Quote(
-                        symbol="TEST",
-                        timestamp=start_date + timedelta(days=i),
-                        bid=Decimal("100"),
-                        ask=Decimal("100.1"),
-                        last=Decimal("100"),
-                        volume=Decimal("1000000"),
-                    ))
-                    if i % 20 == 0:
-                        signals.append(Mock(
+                    quotes.append(
+                        Quote(
+                            symbol="TEST",
                             timestamp=start_date + timedelta(days=i),
-                        ))
+                            bid=Decimal("100"),
+                            ask=Decimal("100.1"),
+                            last=Decimal("100"),
+                            volume=Decimal("1000000"),
+                        )
+                    )
+                    if i % 20 == 0:
+                        signals.append(
+                            Mock(
+                                timestamp=start_date + timedelta(days=i),
+                            )
+                        )
 
                 mock_strategy = Mock()
                 mock_strategy.analyze.return_value = Mock()
@@ -738,6 +777,7 @@ class TestIntegration:
 # Tests: Edge Cases
 # ============================================================================
 
+
 class TestEdgeCases:
     """Tests for edge cases and error handling."""
 
@@ -746,7 +786,8 @@ class TestEdgeCases:
         validator = WalkForwardValidator(config=sample_config["walk_forward"])
 
         result = validator.validate_strategy(
-            [], [],
+            [],
+            [],
             backtest_config,
             datetime(2015, 1, 1),
             datetime(2022, 1, 1),
@@ -756,7 +797,10 @@ class TestEdgeCases:
 
     def test_single_quote_handling(self, sample_config):
         """Test handling of single quote."""
-        with patch('app.backtesting.walk_forward_validator.load_validation_config', return_value=sample_config):
+        with patch(
+            'app.backtesting.walk_forward_validator.load_validation_config',
+            return_value=sample_config,
+        ):
             validator = ComprehensiveValidator()
 
         single_quote = Quote(
