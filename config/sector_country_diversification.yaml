@@ -1,0 +1,163 @@
+# Sector and Country Diversification Configuration
+# TASK-5.6-SECTOR-COUNTRY-DIVERSIFICATION
+
+general:
+  enabled: true
+  enforcement_mode: "soft"  # "soft" (warning) or "hard" (blocking)
+  description: "Enforce sector and country diversification limits to manage concentration risk"
+
+# Sector exposure limits
+sector_thresholds:
+  # Global sector limits
+  max_single_sector: 0.30  # 30% max per sector
+  max_total_sector_concentration: 0.70  # 70% max in top 3 sectors
+  minimum_sector_count: 3  # Maintain at least 3 sectors
+
+  # Per-sector limits
+  limits:
+    technology: 0.35      # 35% max for tech (high growth)
+    growth: 0.30          # 30% max for growth
+    energy: 0.25          # 25% max for energy (volatile)
+    utilities: 0.25       # 25% max for utilities (stable)
+    consumer_staples: 0.25
+    reits: 0.20           # 20% max for REITs
+    banks: 0.25           # 25% max for financial sector
+    healthcare: 0.25
+    industrials: 0.25
+    materials: 0.20
+    communication: 0.20
+
+# Country/Region exposure limits
+country_thresholds:
+  # Global country limits
+  max_single_country: 0.50  # 50% max per country
+  max_region_concentration: 0.80  # 80% max per region (e.g., North America)
+  minimum_country_count: 2  # Maintain at least 2 countries
+
+  # Geographic region definitions
+  regions:
+    north_america: [US, CA, MX]
+    europe: [UK, DE, FR, CH, NL, SE, NO]
+    asia_pacific: [JP, CN, IN, SG, AU, HK, KR]
+    emerging_markets: [IN, BR, MX, ZA, TH]
+
+  # Per-country limits
+  limits:
+    US: 0.60        # 60% max US exposure (home country)
+    UK: 0.25
+    JP: 0.20
+    DE: 0.15
+    FR: 0.15
+    CA: 0.20
+    CH: 0.15
+    AU: 0.12
+    SG: 0.12
+    HK: 0.12
+    KR: 0.12
+    CN: 0.10
+    IN: 0.10
+    BR: 0.10
+    EU: 0.50        # Eurozone limit
+
+# Sector-Country specific constraints
+sector_country_limits:
+  # Example: Technology in US can be up to 30%
+  # But Tech globally is limited to 35%
+  # So if US tech = 25%, then non-US tech <= 10%
+
+  technology_by_country:
+    US: 0.25
+    EU: 0.15
+    JP: 0.10
+
+  energy_by_country:
+    US: 0.20
+    UK: 0.15
+    NO: 0.10
+
+  banks_by_country:
+    US: 0.20
+    UK: 0.15
+    JP: 0.10
+    EU: 0.15
+
+# Rebalancing triggers and thresholds
+rebalancing:
+  enabled: true
+  rebalance_frequency: "weekly"  # "daily", "weekly", "monthly"
+
+  # Triggers for rebalancing alerts
+  triggers:
+    # Alert if a sector exceeds limit by this percentage
+    sector_breach_threshold: 0.03  # 3% breach triggers alert
+    country_breach_threshold: 0.05  # 5% breach triggers alert
+
+    # Auto-rebalance if breaches are severe
+    auto_rebalance_threshold: 0.10  # 10% breach triggers auto-rebalance
+
+  # Rebalancing rules
+  rules:
+    maintain_sector_diversity: true      # Keep minimum sector count
+    maintain_country_diversity: true     # Keep minimum country count
+    preserve_winning_positions: true     # Don't trim outperforming positions
+    gradual_reduction: true              # Reduce gradually rather than abruptly
+
+# Risk assessment settings
+risk_assessment:
+  # Include sector/country violations in risk score
+  include_sector_violations: true
+  include_country_violations: true
+
+  # Severity levels for violations
+  violation_severity:
+    minor: 0.00    # 0-2% breach: minor
+    moderate: 0.02 # 2-5% breach: moderate
+    severe: 0.05   # >5% breach: severe
+
+# Analytics and reporting
+analytics:
+  # Calculate diversification metrics
+  calculate_herfindahl: true  # Herfindahl-Hirschman Index
+  calculate_diversification_score: true
+  calculate_concentration_ratio: true
+
+  # Report top concentrations
+  report_top_sectors: 5
+  report_top_countries: 5
+
+  # Diversification score weights
+  diversification_score_weights:
+    sector_diversity: 0.50
+    country_diversity: 0.50
+
+# Validation settings
+validation:
+  # Validate position addition against constraints
+  validate_on_position_add: true
+
+  # Strict validation (hard fail) vs lenient (warnings)
+  strict_mode: false
+
+  # Check currency alignment with country
+  validate_currency_country: false
+
+# Logging and reporting
+logging:
+  log_diversification_checks: true
+  log_violations: true
+  log_rebalancing_suggestions: true
+  log_level: "info"  # "debug", "info", "warning", "error"
+
+# Advanced settings
+advanced:
+  # Enable cross-sector correlation analysis
+  analyze_sector_correlations: false
+
+  # Enable geographic hedging recommendations
+  geographic_hedging: false
+
+  # Consider market regime in diversification decisions
+  market_regime_adjustment: true
+
+  # Adjust limits based on volatility
+  volatility_adjustment: false

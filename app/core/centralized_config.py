@@ -673,9 +673,7 @@ class CurrencyHedgingConfig(BaseModel):
     acceptable_slippage: float = Field(
         default=0.5, ge=0.0, le=10.0, description="Acceptable slippage %"
     )
-    enforce_cost_limit: bool = Field(
-        default=True, description="Don't hedge if cost exceeds limit"
-    )
+    enforce_cost_limit: bool = Field(default=True, description="Don't hedge if cost exceeds limit")
 
     # Rolling hedge
     rolling_window_days: int = Field(
@@ -683,6 +681,60 @@ class CurrencyHedgingConfig(BaseModel):
     )
     rebalance_frequency: str = Field(
         default="weekly", description="Rebalance frequency: daily, weekly, monthly"
+    )
+
+
+class SectorCountryDiversificationConfig(BaseModel):
+    """Configuration for sector and country diversification [TASK-5.6-DIVERSIFICATION]."""
+
+    enabled: bool = Field(default=True, description="Enable sector/country diversification checks")
+    enforcement_mode: str = Field(
+        default="soft", description="Enforcement mode: soft (warning) or hard (blocking)"
+    )
+
+    # Sector thresholds
+    max_single_sector: float = Field(
+        default=0.30, ge=0.0, le=1.0, description="Maximum exposure per sector"
+    )
+    max_total_sector_concentration: float = Field(
+        default=0.70, ge=0.0, le=1.0, description="Maximum concentration in top sectors"
+    )
+    minimum_sector_count: int = Field(
+        default=3, ge=1, le=20, description="Minimum number of sectors to maintain"
+    )
+
+    # Country thresholds
+    max_single_country: float = Field(
+        default=0.50, ge=0.0, le=1.0, description="Maximum exposure per country"
+    )
+    max_region_concentration: float = Field(
+        default=0.80, ge=0.0, le=1.0, description="Maximum concentration per region"
+    )
+    minimum_country_count: int = Field(
+        default=2, ge=1, le=50, description="Minimum number of countries to maintain"
+    )
+
+    # Rebalancing
+    rebalance_frequency: str = Field(
+        default="weekly", description="Rebalancing frequency: daily, weekly, monthly"
+    )
+    sector_breach_threshold: float = Field(
+        default=0.03, ge=0.0, le=1.0, description="Sector breach alert threshold"
+    )
+    country_breach_threshold: float = Field(
+        default=0.05, ge=0.0, le=1.0, description="Country breach alert threshold"
+    )
+    auto_rebalance_threshold: float = Field(
+        default=0.10, ge=0.0, le=1.0, description="Auto-rebalance if breach exceeds this"
+    )
+
+    # Analytics
+    calculate_herfindahl: bool = Field(default=True, description="Calculate Herfindahl index")
+    calculate_diversification_score: bool = Field(
+        default=True, description="Calculate diversification score"
+    )
+    validate_on_position_add: bool = Field(
+        default=True, description="Validate constraints when adding positions"
     )
 
 
@@ -712,6 +764,9 @@ class CentralizedConfig(BaseSettings):
     )
     currency_hedging: CurrencyHedgingConfig = Field(
         default_factory=CurrencyHedgingConfig, description="Currency hedging configuration"
+    )
+    diversification: SectorCountryDiversificationConfig = Field(
+        default_factory=SectorCountryDiversificationConfig, description="Sector/country diversification configuration"
     )
 
     # Strategy configurations

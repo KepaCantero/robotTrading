@@ -32,6 +32,9 @@ class RiskViolation(str, Enum):
     POSITION_SIZE = "position_size"
     TOTAL_EXPOSURE = "total_exposure"
     SECTOR_EXPOSURE = "sector_exposure"
+    SECTOR_CONCENTRATION = "sector_concentration"  # [TASK-5.6]
+    COUNTRY_EXPOSURE = "country_exposure"  # [TASK-5.6]
+    COUNTRY_CONCENTRATION = "country_concentration"  # [TASK-5.6]
     CORRELATION = "correlation"
     DAILY_LOSS = "daily_loss"
     DRAWDOWN = "drawdown"
@@ -231,9 +234,7 @@ class PortfolioRiskManager:
 
         # Verificar exposición de moneda extranjera [TASK-5.5]
         if "currency_exposures" in risk_metrics:
-            fx_violations = self._detect_fx_violations(
-                risk_metrics["currency_exposures"]
-            )
+            fx_violations = self._detect_fx_violations(risk_metrics["currency_exposures"])
             violations.extend(fx_violations)
 
         return violations

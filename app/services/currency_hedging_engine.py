@@ -135,9 +135,7 @@ class CurrencyHedgingEngine:
         total_value = portfolio.total_equity
 
         # Calculate recommendations for each currency
-        for currency, amount in sorted(
-            exposure.items(), key=lambda x: x[1], reverse=True
-        ):
+        for currency, amount in sorted(exposure.items(), key=lambda x: x[1], reverse=True):
             # Check if exposure exceeds thresholds
             exposure_pct = amount / total_value if total_value > 0 else Decimal("0")
 
@@ -158,9 +156,7 @@ class CurrencyHedgingEngine:
 
             # Calculate hedge ratio
             correlation = correlations.get(currency, Decimal("0.5"))
-            hedge_ratio = self._calculate_hedge_ratio(
-                exposure_pct, correlation, urgency
-            )
+            hedge_ratio = self._calculate_hedge_ratio(exposure_pct, correlation, urgency)
 
             if hedge_ratio == Decimal("0"):
                 logger.debug(f"  {currency}: hedge_ratio = 0, skipping")
@@ -176,12 +172,8 @@ class CurrencyHedgingEngine:
             cost_bps = self._estimate_hedge_cost(forex_pair, contract_size)
 
             # Check cost limit
-            if cost_bps > self.config["max_cost_bps"] and self.config.get(
-                "enforce_cost_limit"
-            ):
-                logger.warning(
-                    f"  {currency}: cost {cost_bps} bps > limit, skipping"
-                )
+            if cost_bps > self.config["max_cost_bps"] and self.config.get("enforce_cost_limit"):
+                logger.warning(f"  {currency}: cost {cost_bps} bps > limit, skipping")
                 continue
 
             # Create recommendation

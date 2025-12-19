@@ -53,6 +53,15 @@ class Asset(BaseModel):
     name: str = Field(..., description="Full asset name")
     asset_class: AssetClass = Field(..., description="Asset class category")
     exchange: Exchange = Field(..., description="Primary exchange")
+    sector: Optional[str] = Field(
+        default=None, description="Sector classification (e.g., technology, energy, healthcare)"
+    )
+    country: Optional[str] = Field(
+        default=None, description="Country or region code where asset is listed/from"
+    )
+    primary_exchange: Optional[str] = Field(
+        default=None, description="Primary exchange for this asset"
+    )
 
     # Liquidity metrics
     liquidity_score: float = Field(

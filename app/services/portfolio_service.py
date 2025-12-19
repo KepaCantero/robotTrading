@@ -10,6 +10,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
+from app.core.centralized_config import get_config
 from app.models.portfolio import (
     AssetClass,
     AssetUniverse,
@@ -20,8 +21,10 @@ from app.models.portfolio import (
     Position,
 )
 from app.services.circuit_breaker_manager import CircuitBreakerManager, CircuitBreakerType
+from app.services.country_diversification_validator import CountryDiversificationValidator
 from app.services.currency_hedging_engine import CurrencyHedgingEngine
 from app.services.portfolio_risk_manager import PortfolioRiskManager
+from app.services.sector_diversification_validator import SectorDiversificationValidator
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +41,11 @@ class PortfolioService:
         self.risk_manager = PortfolioRiskManager()
         self.hedging_engine = CurrencyHedgingEngine()  # [TASK-5.5]
 
+        # Validators [TASK-5.6]
+        config = get_config()
+        self.sector_validator = SectorDiversificationValidator(config.diversification)
+        self.country_validator = CountryDiversificationValidator(config.diversification)
+
         # Acceso directo a circuit breakers para compatibilidad con tests
         self.circuit_breakers = self.circuit_breaker_manager.circuit_breakers
 
@@ -50,6 +58,10 @@ class PortfolioService:
         # Hedging tracking [TASK-5.5]
         self.total_hedges_created = 0
         self.total_hedge_cost = Decimal("0")
+
+        # Diversification tracking [TASK-5.6]
+        self.diversification_breaches = 0
+        self.rebalancing_actions = 0
 
     async def get_portfolio(self) -> Optional[Portfolio]:
         """Obtener portafolio con protección de circuit breaker."""
@@ -380,9 +392,7 @@ class PortfolioService:
             timestamp=datetime.now(),
         )
 
-    def get_unhedged_currency_exposure(
-        self, portfolio: Portfolio
-    ) -> Dict[str, Decimal]:
+    def get_unhedged_currency_exposure(self, portfolio: Portfolio) -> Dict[str, Decimal]:
         """
         Get current unhedged currency exposure [TASK-5.5].
 
@@ -414,9 +424,7 @@ class PortfolioService:
         """
         try:
             # Get hedge recommendations
-            recommendations = self.hedging_engine.calculate_hedge_recommendations(
-                portfolio
-            )
+            recommendations = self.hedging_engine.calculate_hedge_recommendations(portfolio)
 
             logger.info(f"Generated {len(recommendations)} hedge recommendations")
 
@@ -438,6 +446,43 @@ class PortfolioService:
                 "error": str(e),
                 "recommendations_count": 0,
             }
+
+    def get_sector_allocation(self) -> Dict[str, Decimal]:
+        """Get current sector allocation [TASK-5.6]."""
+        # This would be called with current portfolio
+        # For now, return empty dict as it requires current portfolio instance
+        return {}
+
+    def get_country_allocation(self) -> Dict[str, Decimal]:
+        """Get current country allocation [TASK-5.6]."""
+        # This would be called with current portfolio
+        # For now, return empty dict as it requires current portfolio instance
+        return {}
+
+    def get_diversification_status(self, portfolio: Portfolio) -> Dict[str, Any]:
+        """Get sector and country diversification status [TASK-5.6]."""
+        sector_stats = self.sector_validator.get_sector_statistics(portfolio)
+        country_stats = self.country_validator.get_country_statistics(portfolio)
+
+        return {
+            "sectors": sector_stats,
+            "countries": country_stats,
+            "total_diversification_breaches": self.diversification_breaches,
+            "rebalancing_actions_taken": self.rebalancing_actions,
+        }
+
+    def suggest_rebalancing(self, portfolio: Portfolio) -> Dict[str, List]:
+        """Get sector and country rebalancing suggestions [TASK-5.6]."""
+        sector_suggestions = self.sector_validator.get_sector_rebalancing_suggestions(portfolio)
+        country_suggestions = self.country_validator.get_country_rebalancing_suggestions(
+            portfolio
+        )
+
+        return {
+            "sector_suggestions": sector_suggestions,
+            "country_suggestions": country_suggestions,
+            "total_suggestions": len(sector_suggestions) + len(country_suggestions),
+        }
 
     def _get_asset_class(self, symbol: str) -> AssetClass:
         """Determine asset class based on symbol."""
