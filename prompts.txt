@@ -1,0 +1,306 @@
+Actúa como un Quant Engineer senior especializado en sistemas de trading
+robustos para producción (no research académico).
+
+OBJETIVO
+========
+A partir de los resultados completos de backtesting (walk-forward,
+regime tests, ablation studies y optimización), debes:
+
+1. Seleccionar la MEJOR configuración para operar con dinero real
+2. Separar claramente:
+   - Core Strategy (capital principal)
+   - Alpha Sleeve (alto riesgo, pequeño tamaño)
+   - Kill-switch automático (protección del sistema)
+3. Centralizar TODOS los parámetros elegidos en un único módulo de configuración
+4. Justificar cada decisión con métricas, no con opiniones
+5. Evitar sobreajuste y configuraciones frágiles
+
+REGLAS CLAVE
+============
+- Prioriza estabilidad > rentabilidad bruta
+- Penaliza Sharpe < 0.5
+- Penaliza Max Drawdown > 10% para Core
+- Alpha puede aceptar Sharpe bajo SOLO si DD es controlado
+- Si una configuración falla en walk-forward, descártala automáticamente
+- NO inventes resultados ni supongas datos no presentes
+
+ENTRADA
+=======
+Dispones de:
+- Resultados de walk-forward (múltiples ventanas)
+- Tests por régimen de mercado (bull / bear / sideways)
+- Ablation studies (sin filtros)
+- Resultados de optimización de hiperparámetros
+- Métricas: Sharpe, PnL, Return %, Win Rate, Max Drawdown
+
+TAREAS DETALLADAS
+=================
+
+TAREA 1 — SELECCIÓN DE CORE STRATEGY
+-----------------------------------
+1. Evalúa SOLO resultados de walk-forward
+2. Selecciona la ventana que cumpla:
+   - Sharpe ≥ 0.7
+   - Max Drawdown ≤ 5%
+   - Win Rate consistente (>50%)
+3. Declara esta configuración como:
+   CORE_STRATEGY
+
+Debes devolver:
+- Nombre exacto de la configuración
+- Parámetros usados
+- Justificación cuantitativa
+
+TAREA 2 — SELECCIÓN DE ALPHA SLEEVE
+----------------------------------
+1. Evalúa ablation studies (estrategias sin filtros)
+2. Identifica la versión con:
+   - Mayor Return %
+   - Max Drawdown ≤ 8%
+3. Marca esta estrategia como:
+   ALPHA_SLEEVE
+
+Define:
+- Riesgo permitido
+- Tamaño máximo de posición (% del capital)
+- Condiciones de activación (ej: baja volatilidad)
+
+TAREA 3 — DEFINICIÓN DEL KILL-SWITCH
+-----------------------------------
+Diseña reglas AUTOMÁTICAS y OBJETIVAS para desactivar el trading:
+
+Kill-switch GLOBAL si:
+- Drawdown rolling > X%
+- Sharpe rolling < 0 durante N trades
+- Volatilidad histórica > umbral
+
+Devuelve valores concretos para:
+- X (drawdown máximo)
+- N (número de trades)
+- Umbral de volatilidad
+
+TAREA 4 — CENTRALIZACIÓN DE PARÁMETROS
+-------------------------------------
+Crea un módulo único de configuración, por ejemplo:
+
+config/trading_config.py
+
+Debe contener:
+- CORE_STRATEGY_PARAMS
+- ALPHA_STRATEGY_PARAMS
+- RISK_LIMITS
+- KILL_SWITCH_RULES
+
+Formato:
+- Código claro
+- Comentarios explicativos
+- Nombres autoexplicativos
+- Sin hardcode disperso en el código base
+
+TAREA 5 — VALIDACIÓN FINAL
+--------------------------
+Antes de finalizar:
+- Verifica que la configuración seleccionada:
+  - Gana dinero en al menos 2 escenarios distintos
+  - No depende de una única ventana temporal
+- Si no cumple, marca la estrategia como:
+  ❌ NO APTA PARA REAL
+
+SALIDA ESPERADA
+===============
+1. Resumen ejecutivo (máx. 15 líneas)
+2. Configuración elegida para:
+   - Core
+   - Alpha
+   - Kill-switch
+3. Archivo de configuración centralizado listo para usar
+4. Lista de riesgos conocidos y cómo están mitigados
+
+IMPORTANTE
+==========
+No optimices por optimizar.
+Prefiero una estrategia que sobreviva 10 años
+a una que gane mucho en un backtest.
+
+
+Lectura correcta del backtest (lo importante)
+1️⃣ Lo primero: tus Sharpe ratios NO son fiables
+
+Hay un patrón clarísimo en todas las simulaciones:
+
+Win rate = 100% en muchos casos
+
+Retornos altísimos (+200%, +300%)
+
+Sharpe siempre negativo
+
+👉 Esto no puede ser matemáticamente correcto.
+
+Conclusión técnica
+Tu cálculo de Sharpe está mal implementado (muy común):
+
+Posibles errores:
+
+Usas PnL absoluto en vez de retornos
+
+Desviación estándar ≈ 0 → Sharpe explota negativo
+
+Serie de retornos mal alineada (e.g. por trade vs por día)
+
+Signo invertido
+
+📌 Regla:
+
+Hasta que el Sharpe no esté bien calculado, ignóralo completamente para decisiones automáticas.
+
+2️⃣ El Monte Carlo te está diciendo algo MUY claro
+Distribución real
+
+Tu estrategia tiene esta forma:
+
+Muchas simulaciones → quiebran
+
+Algunas pocas → explosión de capital
+
+Media ≠ realidad
+
+Cola derecha muy larga
+
+Esto es típico de:
+
+Estrategias convexas
+
+Con fuerte dependencia del path
+
+Sensibles al orden de trades
+
+👉 NO es una estrategia “estable”
+👉 SÍ es una estrategia con optionalidad
+
+3️⃣ Lo que SÍ funciona (y por qué)
+🟢 Core Strategy (capital principal)
+
+Walk-Forward Window 1
+
+Drawdown bajo
+
+Sharpe positivo (cuando lo arregles)
+
+Comportamiento consistente
+
+Retornos modestos pero reales
+
+✔️ Esta es tu columna vertebral
+✔️ Aquí va el 80–90% del capital
+
+🟡 Alpha Sleeve (lo peligroso pero rentable)
+
+Las versiones:
+
+Sin filtros
+
+Alta convexidad
+
+Monte Carlo explosivo
+
+👉 NO son malas
+👉 Son derivados de volatilidad encubiertos
+
+✔️ Úsalas SOLO:
+
+Con position sizing brutalmente pequeño
+
+Con kill-switch agresivo
+
+Como overlay, no como core
+
+📌 Aquí va 5–15% del capital, nunca más.
+
+4️⃣ Kill-switch: absolutamente obligatorio
+
+Sin esto, la cuenta muere.
+
+Kill conditions mínimas (hard rules)
+kill_switch:
+  max_drawdown_pct: 10
+  rolling_sharpe_window: 30
+  min_rolling_sharpe: 0.0
+  max_atr_percentile: 85
+
+
+DD > X% → OFF
+
+Sharpe rolling < 0 → OFF
+
+Volatilidad extrema → OFF
+
+5️⃣ Prompt “en curso” para el learning engine (lo que pedías)
+
+Este prompt elige la mejor configuración y actualiza parámetros centralizados, SIN sobreajustar:
+
+Eres un motor cuantitativo de validación de estrategias.
+
+Dispones de:
+- Resultados de walk-forward
+- Resultados Monte Carlo
+- Tests por régimen de mercado
+- Métricas: Return, Max Drawdown, Win Rate
+
+Objetivo:
+Seleccionar UNA configuración base para trading real.
+
+Restricciones obligatorias:
+1. Max Drawdown < 8%
+2. Return anualizado > 5%
+3. Consistencia positiva en al menos 60% de los tests
+4. Rechazar configuraciones con alta varianza Monte Carlo
+5. Ignorar Sharpe si su cálculo es inestable
+
+Proceso:
+- Prioriza walk-forward sobre Monte Carlo
+- Penaliza configuraciones con colas izquierdas largas
+- Prefiere estabilidad a retorno absoluto
+- Selecciona parámetros robustos, no óptimos
+
+Salida esperada:
+- Configuración ganadora
+- Justificación cuantitativa
+- Parámetros a guardar como configuración central
+- Reglas de kill-switch recomendadas
+
+Nunca optimices para el mejor resultado individual.
+Optimiza para supervivencia y consistencia.
+
+6️⃣ Recomendación final (sin diplomacia)
+
+🟥 NO:
+
+Usar Sharpe actual para decisiones
+
+Meter todo el capital en la versión “sin filtros”
+
+Ignorar Monte Carlo
+
+🟩 SÍ:
+
+Walk-Forward Window 1 como core
+
+Alpha sleeve pequeña y controlada
+
+Kill-switch automático
+
+Recalcular Sharpe correctamente
+
+Centralizar parámetros robustos, no “top PnL”
+
+Si quieres, en el siguiente paso puedo:
+
+✔️ Corregirte el cálculo de Sharpe
+
+✔️ Diseñar el learning_engine real (sin ChatGPT mágico)
+
+✔️ Proponerte position sizing óptimo tipo Kelly fraccionado
+
+✔️ Convertir esto en configuración production-ready
+
+Dime cuál.

@@ -1,6 +1,6 @@
 # Progress Tracking - AlgoTrading MVP
 
-## Current Status (2025-12-15): Plan Maestro "Next Level" – Fases 1–3
+## Current Status (2025-12-19): Plan Maestro "Next Level" – Fases 1–4
 
 - **Fase 1: Data Engine + Context Engine**
 
@@ -50,12 +50,13 @@
     - Strategy selector basado en régimen de mercado
     - Meta-strategy que combina múltiples engines
 
-  - **Tarea 3.4: Integración con Learning Engine** ✅ **PARCIALMENTE COMPLETADO**
+  - **Tarea 3.4: Integración con Learning Engine** ✅ **COMPLETADO**
 
     - ✅ Cada engine puede recibir ajustes de Learning Engine (callbacks implementados)
     - ✅ Feature extraction estandarizado (implementado en todos los engines)
     - ✅ Callbacks para aprendizaje continuo (base implementada)
-    - ⏳ Mejoras avanzadas: drift detection, feature importance, transfer learning
+    - ✅ **Drift Detection System [TASK-4.2-DRIFT]** - **COMPLETADO** (2025-12-19)
+    - ⏳ Mejoras avanzadas: feature importance, transfer learning
 
   - **Tarea 3.5: Testing y validación** ✅ **COMPLETADO**
 
@@ -83,7 +84,35 @@
   - `PortfolioEngine` implementado con optimizadores (Markowitz, Risk Parity, Black-Litterman, Kelly), rebalancers (threshold, time-based, volatility-targeting, transaction-cost-aware) y meta-learners, ver `tests/integration/engines/test_portfolio_engine_integration.py`.
   - `RiskEngine` implementado con VaR/CVaR (histórico, paramétrico, Monte Carlo), stress testing, exposure manager, drawdown controller, correlation analyzer, risk attribution y alert system, ver `tests/integration/engines/test_risk_engine_integration.py`.
   - Pendientes: `currency hedging` automático y diversificación sector/país dentro del Portfolio Engine.
-- **Fases 4–7**
+- **Fase 4: Learning Engine Avanzado** 🟡 **EN PROGRESO (60%)**
+
+  - ✅ **Tarea 4.2: Drift Detection System [TASK-4.2-DRIFT]** - **COMPLETADO** (2025-12-19)
+    - **PSIDetector**: Population Stability Index (estándar en finanzas, threshold >0.25 = drift significativo)
+    - **ADWINDetector**: Adaptive Windowing para streaming data (delta=0.002)
+    - **ConceptDriftDetector**: KS test y MMD para comparación de distribuciones
+    - **FeatureDriftMonitor**: Drift detection a nivel de feature individual
+    - **OverfittingDetector**: Análisis de gap train/val y divergencia de learning curves
+    - **ComprehensiveDriftDetector**: Facade que combina todos los métodos con scoring de severidad
+    - **AutoRetrainingTrigger**: Sistema de decisión multi-condición (tiempo, drift, overfitting, performance)
+    - **Integración con LearningEngineUpdater**: Drift detection automático durante reentrenamiento
+    - **Configuración YAML**: `config/drift_detection.yaml` con thresholds configurables
+    - **Tests**: 60 unit tests (100% passing)
+    - **Commit**: `b2177c1`
+  - ✅ **Tarea 4.2: Feature Importance System [TASK-4.2-FEATURE-IMPORTANCE]** - **COMPLETADO** (2025-12-19)
+    - **PermutationImportanceAnalyzer**: Model-agnostic importance via feature shuffling
+    - **BuiltInImportanceAnalyzer**: Extracción de feature_importances_ de modelos tree-based (RF, XGBoost, LightGBM)
+    - **CorrelationAnalyzer**: Análisis de correlación feature-target (Pearson, Spearman, Kendall) y multicollinearity detection
+    - **FeatureStabilityTracker**: Tracking de cambios de importancia a través de runs con trend detection
+    - **ComprehensiveFeatureAnalyzer**: Facade que combina todos los métodos con categorización automática
+    - **ImportanceCategory**: 5 niveles (CRITICAL, IMPORTANT, MODERATE, LOW, NEGLIGIBLE)
+    - **FeatureImportanceResult/ComprehensiveImportanceReport**: Data classes para resultados estructurados
+    - **Recomendaciones automáticas**: Generación de recomendaciones basadas en importancia, estabilidad y correlación
+    - **Configuración YAML**: `config/feature_importance.yaml` con thresholds configurables
+    - **Tests**: 54 unit tests (100% passing) + 9 integration tests
+    - **Exports**: Todos los nuevos componentes exportados en `__init__.py`
+  - ⏳ Transfer learning en Learning Engine
+
+- **Fases 5–7**
   - Estado: 📄 **DISEÑADAS, IMPLEMENTACIÓN PARCIAL**.
   - `ExecutionEngine` centralizado existe en `app/strategies/execution_engine.py`, pero todavía no como `app/engines/execution_engine/` ni con OMS multi-broker completo.
   - El resto de módulos (Monitoring & Dashboard “next level”, Meta-Analyzer avanzado, Audit & Persistence Engine, XAI, Synthetic Data Engine, Prediction Fusion, Compliance & Governance, Knowledge Graph, Experimentation & Orchestration, Infrastructure Optimizer) están definidos en `docs/PLAN_MAESTRO_NEXT_LEVEL.md` y parcialmente solapados con componentes actuales (dashboard existente, meta_analyzer de backtesting, etc.), pero aún no se han materializado como engines dedicados.

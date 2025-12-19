@@ -1,11 +1,17 @@
 """
 LearningEngineUpdater - Sistema de reentrenamiento automático para learning engines.
 
-Integra detección de drift [TASK-4.2-DRIFT] para reentrenamiento inteligente:
+Integra:
+- Detección de drift [TASK-4.2-DRIFT] para reentrenamiento inteligente
+- Análisis de Feature Importance [TASK-4.2-FEATURE-IMPORTANCE]
+
+Características:
 - Detección de concept drift (PSI, KS test, ADWIN)
 - Detección de feature drift a nivel individual
 - Detección de overfitting (train/val gap)
 - Triggers automáticos de reentrenamiento basados en drift
+- Feature importance analysis con 6 métodos (SHAP, Permutation, Built-in, Correlation, Attention, Stability)
+- Recomendaciones automáticas de feature engineering
 """
 
 import logging
@@ -24,6 +30,10 @@ from .drift_detector import (
     OverfittingDetector,
     load_drift_config,
 )
+from .feature_importance import (
+    ComprehensiveFeatureAnalyzer,
+    load_feature_importance_config,
+)
 from .training_data_preparator import TrainingDataPreparator
 
 logger = logging.getLogger(__name__)
@@ -39,6 +49,7 @@ class LearningEngineUpdater:
     - Gestión de historial de trades
     - Preparación de datos desde historial
     - Detección de drift para reentrenamiento inteligente [TASK-4.2-DRIFT]
+    - Análisis de Feature Importance con 6 métodos [TASK-4.2-FEATURE-IMPORTANCE]
     """
 
     def __init__(
@@ -91,6 +102,22 @@ class LearningEngineUpdater:
             self._retrain_trigger = None
             self._reference_features = None
             self._drift_history = []
+
+        # Feature Importance integration [TASK-4.2-FEATURE-IMPORTANCE]
+        self._feature_importance_config = load_feature_importance_config()
+        self._feature_importance_enabled = self._feature_importance_config.get("enabled", True)
+
+        if self._feature_importance_enabled:
+            self._feature_analyzer = ComprehensiveFeatureAnalyzer(
+                self._feature_importance_config
+            )
+            self._feature_importance_history: List[Dict[str, Any]] = []
+            self._last_feature_analysis: Optional[Dict[str, Any]] = None
+            logger.info("Feature importance analysis enabled for LearningEngineUpdater")
+        else:
+            self._feature_analyzer = None
+            self._feature_importance_history = []
+            self._last_feature_analysis = None
 
     def should_retrain(self, current_date: datetime) -> bool:
         """
@@ -364,6 +391,10 @@ class LearningEngineUpdater:
             # Limpiar historial antiguo (mantener solo último 30 días)
             self._clean_old_history(current_date)
 
+            # Analyze feature importance [TASK-4.2-FEATURE-IMPORTANCE]
+            if self._feature_importance_enabled and "features" in training_data:
+                self._analyze_and_log_feature_importance(training_data, current_date)
+
             return True
 
         except ImportError as e:
@@ -580,3 +611,151 @@ class LearningEngineUpdater:
             f"🧹 Historial limpiado: {len(self.trade_history)} trades, "
             f"{len(self.market_history)} market data points"
         )
+
+    def _analyze_and_log_feature_importance(
+        self, training_data: Dict[str, Any], current_date: datetime
+    ) -> None:
+        """
+        Analizar importancia de features después del reentrenamiento [TASK-4.2-FEATURE-IMPORTANCE].
+
+        Args:
+            training_data: Datos de entrenamiento usados
+            current_date: Fecha del análisis
+        """
+        try:
+            if not self._feature_analyzer or not self.learning_engine.is_ready():
+                return
+
+            features = training_data.get("features")
+            targets = training_data.get("targets")
+
+            if features is None or targets is None:
+                logger.debug("⚠️ Features o targets no disponibles para análisis de importancia")
+                return
+
+            # Convert to numpy arrays if needed
+            if hasattr(features, "values"):
+                features = features.values
+            if hasattr(targets, "values"):
+                targets = targets.values
+
+            # Run comprehensive feature analysis
+            logger.debug("📊 Analizando importancia de features (6 métodos)...")
+            analysis_result = self._feature_analyzer.analyze(
+                model=self.learning_engine.model if hasattr(self.learning_engine, "model") else None,
+                features=features,
+                targets=targets,
+                feature_names=training_data.get("feature_names"),
+                model_type=self._get_engine_type(),
+            )
+
+            if analysis_result and "error" not in analysis_result:
+                # Store analysis result
+                self._last_feature_analysis = {
+                    "timestamp": current_date,
+                    "analysis": analysis_result,
+                    "n_features": len(features[0]) if len(features) > 0 else 0,
+                    "n_samples": len(features),
+                }
+                self._feature_importance_history.append(self._last_feature_analysis)
+
+                # Log top/low importance features
+                if "top_features" in analysis_result:
+                    top_features = analysis_result.get("top_features", {})
+                    if top_features:
+                        logger.info(
+                            f"🌟 Top 5 features por importancia: "
+                            f"{', '.join(list(top_features.keys())[:5])}"
+                        )
+
+                # Check for critical warnings
+                if "warnings" in analysis_result:
+                    warnings = analysis_result.get("warnings", [])
+                    if warnings:
+                        for warning in warnings:
+                            logger.warning(f"⚠️ Feature Importance Warning: {warning}")
+
+                # Recommendations
+                if "recommendations" in analysis_result:
+                    recommendations = analysis_result.get("recommendations", [])
+                    if recommendations:
+                        logger.info(
+                            f"💡 Feature Engineering Recommendations: "
+                            f"{'; '.join(recommendations[:3])}"
+                        )
+
+                logger.info(
+                    f"✅ Feature importance analysis completado "
+                    f"({len(analysis_result.get('top_features', {}))} features analizados)"
+                )
+            else:
+                logger.debug(
+                    f"⚠️ Feature importance analysis no disponible: "
+                    f"{analysis_result.get('error', 'Unknown error') if analysis_result else 'No result'}"
+                )
+
+        except Exception as e:
+            logger.debug(
+                f"⚠️ Error en feature importance analysis (no crítico): {type(e).__name__}: {e}"
+            )
+            # Feature importance is non-critical, continue regardless
+
+    def get_last_feature_importance_analysis(self) -> Optional[Dict[str, Any]]:
+        """
+        Obtener último análisis de importancia de features.
+
+        Returns:
+            Dictionary con análisis o None si no disponible
+        """
+        return self._last_feature_analysis
+
+    def get_feature_importance_history(self) -> List[Dict[str, Any]]:
+        """
+        Obtener historial completo de análisis de importancia.
+
+        Returns:
+            List de análisis históricos
+        """
+        return self._feature_importance_history.copy()
+
+    def get_feature_importance_summary(self) -> Dict[str, Any]:
+        """
+        Obtener resumen de feature importance (últimas 5 análisis).
+
+        Returns:
+            Resumen con estadísticas de importancia
+        """
+        if not self._feature_importance_history:
+            return {"status": "no_analyses_yet", "count": 0}
+
+        # Get last 5 analyses
+        recent_analyses = self._feature_importance_history[-5:]
+
+        # Collect all top features from recent analyses
+        all_top_features = {}
+        for analysis_record in recent_analyses:
+            analysis = analysis_record.get("analysis", {})
+            top_features = analysis.get("top_features", {})
+            for feature, importance in top_features.items():
+                if feature not in all_top_features:
+                    all_top_features[feature] = []
+                all_top_features[feature].append(importance)
+
+        # Average importance across analyses
+        feature_importance_avg = {
+            feature: float(np.mean(importances))
+            for feature, importances in all_top_features.items()
+        }
+
+        # Sort by average importance
+        sorted_features = sorted(feature_importance_avg.items(), key=lambda x: x[1], reverse=True)
+
+        return {
+            "status": "ok",
+            "count": len(self._feature_importance_history),
+            "recent_analyses": len(recent_analyses),
+            "top_features": dict(sorted_features[:10]),
+            "last_analysis_date": (
+                recent_analyses[-1].get("timestamp") if recent_analyses else None
+            ),
+        }

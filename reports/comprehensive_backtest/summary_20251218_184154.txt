@@ -1,0 +1,81 @@
+================================================================================
+COMPREHENSIVE BACKTEST SUMMARY
+================================================================================
+
+Symbol: SNOW
+Period: 2023-01-01 to 2024-01-01
+Initial Capital: $100,000.00
+Total Backtests: 337
+
+TOP 10 RESULTS:
+--------------------------------------------------------------------------------
+
+Walk-Forward - Window 1:
+  Sharpe Ratio: 0.91
+  Total PnL: $7,342.46
+  Return %: 7.34%
+  Win Rate: 89.47%
+  Max Drawdown: -4.69%
+
+Walk-Forward - Window 3:
+  Sharpe Ratio: 0.56
+  Total PnL: $7,795.98
+  Return %: 7.80%
+  Win Rate: 59.09%
+  Max Drawdown: -13.23%
+
+Walk-Forward - Window 8:
+  Sharpe Ratio: 0.45
+  Total PnL: $-944.23
+  Return %: -0.94%
+  Win Rate: 28.57%
+  Max Drawdown: -10.54%
+
+Regime Test - sideways_market:
+  Sharpe Ratio: 0.28
+  Total PnL: $14,873.77
+  Return %: 14.87%
+  Win Rate: 34.22%
+  Max Drawdown: -20.15%
+
+Walk-Forward - Window 4:
+  Sharpe Ratio: 0.19
+  Total PnL: $3,985.62
+  Return %: 3.99%
+  Win Rate: 62.32%
+  Max Drawdown: -9.67%
+
+Regime Test - bear_market:
+  Sharpe Ratio: 0.05
+  Total PnL: $12,961.22
+  Return %: 12.96%
+  Win Rate: 46.24%
+  Max Drawdown: -5.11%
+
+Ablation - Without stoch_rsi_filter:
+  Sharpe Ratio: 0.04
+  Total PnL: $41,717.20
+  Return %: 41.72%
+  Win Rate: 13.86%
+  Max Drawdown: -6.98%
+
+Ablation - Without rsi_filter:
+  Sharpe Ratio: 0.04
+  Total PnL: $42,153.99
+  Return %: 42.15%
+  Win Rate: 13.84%
+  Max Drawdown: -8.55%
+
+Ablation - Without momentum_filter:
+  Sharpe Ratio: 0.03
+  Total PnL: $47,948.22
+  Return %: 47.95%
+  Win Rate: 13.97%
+  Max Drawdown: -6.79%
+
+Hyperparameter Optimization - Iteration 30:
+  Sharpe Ratio: 0.00
+  Total PnL: $0.00
+  Return %: 0.00%
+  Win Rate: 0.00%
+  Max Drawdown: 0.00%
