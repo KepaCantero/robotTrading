@@ -1,0 +1,150 @@
+# Validation Configuration (Task 3.5)
+# Walk-Forward Validation & Stress Testing with Synthetic Data
+
+# ============================================================================
+# Walk-Forward Validation Configuration
+# ============================================================================
+walk_forward:
+  enabled: true
+
+  # Window configuration
+  train_years: 4          # Years of training data
+  validation_years: 1     # Years of validation data
+  step_years: 1           # Years to step forward each iteration
+
+  # Minimum requirements
+  min_windows: 3          # Minimum number of windows required
+  min_trades_per_window: 10  # Minimum trades in each window
+
+  # Performance thresholds
+  thresholds:
+    min_consistency: 0.6      # 60% of windows must be profitable
+    max_return_std: 0.3       # Max standard deviation of returns
+    min_avg_sharpe: 0.5       # Minimum average Sharpe ratio
+    max_avg_drawdown: -0.20   # Maximum average drawdown (-20%)
+
+# ============================================================================
+# Cross-Validation Temporal Configuration
+# ============================================================================
+cross_validation:
+  enabled: true
+  n_folds: 5              # Number of temporal folds
+
+  # Performance thresholds
+  thresholds:
+    min_consistency_score: 0.6  # 60% of folds must be profitable
+    max_return_variance: 0.25   # Maximum variance across folds
+
+# ============================================================================
+# Stress Testing Configuration
+# ============================================================================
+stress_testing:
+  enabled: true
+
+  # Number of synthetic scenarios to generate
+  n_scenarios: 100
+
+  # Scenario types and weights
+  scenarios:
+    flash_crash:
+      enabled: true
+      weight: 0.15
+      drop_percentage: -0.10    # -10% instant drop
+      recovery_days: 5          # Days to recover
+
+    high_volatility:
+      enabled: true
+      weight: 0.20
+      volatility_multiplier: 3.0  # 3x normal volatility
+      duration_days: 20
+
+    trending_bull:
+      enabled: true
+      weight: 0.15
+      daily_drift: 0.002       # +0.2% daily drift
+      duration_days: 60
+
+    trending_bear:
+      enabled: true
+      weight: 0.15
+      daily_drift: -0.002      # -0.2% daily drift
+      duration_days: 60
+
+    mean_reverting:
+      enabled: true
+      weight: 0.15
+      reversion_speed: 0.1     # Mean reversion parameter
+      equilibrium_price: 100.0
+
+    gap_up:
+      enabled: true
+      weight: 0.10
+      gap_percentage: 0.05     # +5% overnight gap
+      n_gaps: 3
+
+    gap_down:
+      enabled: true
+      weight: 0.10
+      gap_percentage: -0.05    # -5% overnight gap
+      n_gaps: 3
+
+  # Stress test thresholds
+  thresholds:
+    max_scenario_drawdown: -0.30      # -30% max drawdown per scenario
+    min_survival_rate: 0.80           # 80% scenarios must survive
+    max_avg_loss: -0.15               # -15% max average loss
+    min_recovery_rate: 0.70           # 70% must recover from drawdown
+
+# ============================================================================
+# Synthetic Data Generation Parameters
+# ============================================================================
+synthetic_data:
+  # Base parameters
+  base_price: 100.0
+  base_volume: 1000000
+
+  # Price generation
+  price_model: "gbm"        # gbm, ou, jump_diffusion
+  annual_volatility: 0.20   # 20% annual volatility
+  annual_drift: 0.05        # 5% annual drift
+
+  # Volume generation
+  volume_noise: 0.30        # 30% volume noise
+  volume_trend: true        # Include volume trends
+
+  # Market microstructure
+  spread_bps: 10            # 10 basis points spread
+  tick_size: 0.01           # Minimum price increment
+
+# ============================================================================
+# Monte Carlo Simulation Parameters
+# ============================================================================
+monte_carlo:
+  enabled: true
+  n_simulations: 1000       # Number of simulations
+  confidence_levels: [0.95, 0.99]  # VaR/CVaR confidence levels
+
+  # Bootstrap parameters
+  block_size: 20            # Block bootstrap size (days)
+  resample_returns: true    # Resample historical returns
+
+  # Output metrics
+  calculate_var: true
+  calculate_cvar: true
+  calculate_max_drawdown_distribution: true
+
+# ============================================================================
+# Validation Report Configuration
+# ============================================================================
+reporting:
+  output_directory: "reports/validation"
+
+  # Report types
+  generate_html: true
+  generate_json: true
+  generate_csv: true
+
+  # Visualization
+  plot_equity_curves: true
+  plot_drawdown_distribution: true
+  plot_returns_histogram: true

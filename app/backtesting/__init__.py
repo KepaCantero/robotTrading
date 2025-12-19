@@ -8,11 +8,31 @@ and strategy evaluation.
 
 from .engine import BacktestResult, SimpleBacktester
 from .models import BacktestConfig, PerformanceMetrics, Trade
+from .walk_forward_validator import (
+    WalkForwardValidator,
+    CrossValidationTemporal,
+    SyntheticDataGenerator,
+    StressTester,
+    MonteCarloSimulator,
+    ComprehensiveValidator,
+    ValidationReport,
+    load_validation_config,
+)
 
 __all__ = [
+    # Core backtesting
     "SimpleBacktester",
     "BacktestResult",
     "BacktestConfig",
     "Trade",
     "PerformanceMetrics",
+    # Validation (Task 3.5)
+    "WalkForwardValidator",
+    "CrossValidationTemporal",
+    "SyntheticDataGenerator",
+    "StressTester",
+    "MonteCarloSimulator",
+    "ComprehensiveValidator",
+    "ValidationReport",
+    "load_validation_config",
 ]
