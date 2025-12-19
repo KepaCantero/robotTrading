@@ -178,7 +178,7 @@ def generate_multi_strategy_summary_text(
             summary += (
                 f"- **Allocation**: {allocation.get(strategy_name, {}).get('weight', 0):.1%}\n"
             )
-            summary += f"- **Risk Profile**: Conservative (max_pair_exposure: 20%, max_total_exposure: 40%)\n"
+            summary += "- **Risk Profile**: Conservative (max_pair_exposure: 20%, max_total_exposure: 40%)\n"
             summary += f"- **Capital Allocated**: ${result.get('initial_capital', 0):,.0f}\n"
             summary += f"- **Final Capital**: ${result.get('final_capital', 0):,.0f}\n"
             summary += f"- **PnL**: ${result.get('final_capital', 0) - result.get('initial_capital', 0):,.2f}\n"
@@ -188,7 +188,7 @@ def generate_multi_strategy_summary_text(
             summary += (
                 f"- **Allocation**: {allocation.get(strategy_name, {}).get('weight', 0):.1%}\n"
             )
-            summary += f"- **Risk Profile**: Moderate (max_exposure: 60%)\n"
+            summary += "- **Risk Profile**: Moderate (max_exposure: 60%)\n"
             summary += f"- **Capital Allocated**: ${result.get('initial_capital', 0):,.0f}\n"
             summary += f"- **Final Capital**: ${result.get('final_capital', 0):,.0f}\n"
             summary += f"- **PnL**: ${result.get('final_capital', 0) - result.get('initial_capital', 0):,.2f}\n"
@@ -198,7 +198,7 @@ def generate_multi_strategy_summary_text(
             summary += (
                 f"- **Allocation**: {allocation.get(strategy_name, {}).get('weight', 0):.1%}\n"
             )
-            summary += f"- **Risk Profile**: Aggressive (max_exposure: 50%)\n"
+            summary += "- **Risk Profile**: Aggressive (max_exposure: 50%)\n"
             summary += f"- **Capital Allocated**: ${result.get('initial_capital', 0):,.0f}\n"
             summary += f"- **Final Capital**: ${result.get('final_capital', 0):,.0f}\n"
             summary += f"- **PnL**: ${result.get('final_capital', 0) - result.get('initial_capital', 0):,.2f}\n"

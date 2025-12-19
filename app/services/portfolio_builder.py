@@ -212,7 +212,7 @@ class PortfolioBuilder:
                     )
                 else:
                     logger.warning(
-                        f"Pairs Trading: No pair symbols available, using sector symbols"
+                        "Pairs Trading: No pair symbols available, using sector symbols"
                     )
                     all_symbols.update(strategy_symbols)
             else:

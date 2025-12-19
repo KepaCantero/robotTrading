@@ -8,7 +8,7 @@ historical data simulation, trade execution, and performance metrics calculation
 import logging
 import math
 from datetime import datetime
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
@@ -449,7 +449,7 @@ class SimpleBacktester:
                 if not risk_check_result:
                     # Try to extract specific rejection reason from the portfolio state
                     current_price = get_price(market_data)
-                    rejection_reason = f"Risk check failed"
+                    rejection_reason = "Risk check failed"
 
                     # Add contextual information about why it might have failed
                     if signal.signal_type == SignalType.BUY:
@@ -994,7 +994,8 @@ class SimpleBacktester:
         if signal.metadata and "slippage_per_trade_pct" in signal.metadata:
             try:
                 return Decimal(str(signal.metadata["slippage_per_trade_pct"]))
-            except:
+            except (ValueError, TypeError, InvalidOperation) as e:
+                logger.debug(f"Invalid slippage value in metadata: {e}")
                 pass
 
         # 2. Check strategy instance if available
@@ -1017,7 +1018,8 @@ class SimpleBacktester:
         if signal.metadata and "commission_per_trade_pct" in signal.metadata:
             try:
                 return Decimal(str(signal.metadata["commission_per_trade_pct"]))
-            except:
+            except (ValueError, TypeError, InvalidOperation) as e:
+                logger.debug(f"Invalid commission value in metadata: {e}")
                 pass
 
         # 2. Check strategy instance if available
