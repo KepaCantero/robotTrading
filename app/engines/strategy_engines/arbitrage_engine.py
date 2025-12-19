@@ -72,8 +72,12 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
         self.min_signal_confidence: float = float(config.get("min_signal_confidence", 60.0))
 
         # Carry trade specific parameters
-        self.carry_yield_threshold: Decimal = Decimal(str(config.get("carry_yield_threshold", 0.02)))
-        self.funding_rate_threshold: Decimal = Decimal(str(config.get("funding_rate_threshold", 0.0001)))
+        self.carry_yield_threshold: Decimal = Decimal(
+            str(config.get("carry_yield_threshold", 0.02))
+        )
+        self.funding_rate_threshold: Decimal = Decimal(
+            str(config.get("funding_rate_threshold", 0.0001))
+        )
 
         # Risk parameters
         self.stop_loss = Decimal(str(config.get("stop_loss", 0.03)))
@@ -97,25 +101,41 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
                 if "lookback_period" in params:
                     self.lookback_period = int(params.get("lookback_period", self.lookback_period))
                 if "entry_z_score" in params:
-                    self.entry_z_score = Decimal(str(params.get("entry_z_score", self.entry_z_score)))
+                    self.entry_z_score = Decimal(
+                        str(params.get("entry_z_score", self.entry_z_score))
+                    )
                 if "exit_z_score" in params:
                     self.exit_z_score = Decimal(str(params.get("exit_z_score", self.exit_z_score)))
                 if "min_spread_pct" in params:
-                    self.min_spread_pct = Decimal(str(params.get("min_spread_pct", self.min_spread_pct)))
+                    self.min_spread_pct = Decimal(
+                        str(params.get("min_spread_pct", self.min_spread_pct))
+                    )
                 if "max_spread_pct" in params:
-                    self.max_spread_pct = Decimal(str(params.get("max_spread_pct", self.max_spread_pct)))
+                    self.max_spread_pct = Decimal(
+                        str(params.get("max_spread_pct", self.max_spread_pct))
+                    )
                 if "min_correlation" in params:
-                    self.min_correlation = Decimal(str(params.get("min_correlation", self.min_correlation)))
+                    self.min_correlation = Decimal(
+                        str(params.get("min_correlation", self.min_correlation))
+                    )
                 if "max_exposure" in params:
                     self.max_exposure = Decimal(str(params.get("max_exposure", self.max_exposure)))
                 if "max_position_per_leg" in params:
-                    self.max_position_per_leg = Decimal(str(params.get("max_position_per_leg", self.max_position_per_leg)))
+                    self.max_position_per_leg = Decimal(
+                        str(params.get("max_position_per_leg", self.max_position_per_leg))
+                    )
                 if "min_signal_confidence" in params:
-                    self.min_signal_confidence = float(params.get("min_signal_confidence", self.min_signal_confidence))
+                    self.min_signal_confidence = float(
+                        params.get("min_signal_confidence", self.min_signal_confidence)
+                    )
                 if "carry_yield_threshold" in params:
-                    self.carry_yield_threshold = Decimal(str(params.get("carry_yield_threshold", self.carry_yield_threshold)))
+                    self.carry_yield_threshold = Decimal(
+                        str(params.get("carry_yield_threshold", self.carry_yield_threshold))
+                    )
                 if "funding_rate_threshold" in params:
-                    self.funding_rate_threshold = Decimal(str(params.get("funding_rate_threshold", self.funding_rate_threshold)))
+                    self.funding_rate_threshold = Decimal(
+                        str(params.get("funding_rate_threshold", self.funding_rate_threshold))
+                    )
 
             # Risk parameters from YAML
             self.stop_loss = Decimal(
@@ -137,9 +157,9 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
         if arbitrage_pairs_raw is None:
             # Default pairs for different arbitrage types
             arbitrage_pairs_raw = [
-                ["SPY", "IVV"],      # S&P 500 ETF arbitrage
-                ["GLD", "IAU"],      # Gold ETF arbitrage
-                ["QQQ", "TQQQ"],     # Nasdaq ETF/leveraged
+                ["SPY", "IVV"],  # S&P 500 ETF arbitrage
+                ["GLD", "IAU"],  # Gold ETF arbitrage
+                ["QQQ", "TQQQ"],  # Nasdaq ETF/leveraged
             ]
 
         self.arbitrage_pairs: List[List[str]] = arbitrage_pairs_raw
@@ -229,7 +249,10 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
         # Add current price
         prices_current_with_current = prices_current + [features["price"]]
 
-        if len(prices_current_with_current) >= self.lookback_period and len(prices_other) >= self.lookback_period:
+        if (
+            len(prices_current_with_current) >= self.lookback_period
+            and len(prices_other) >= self.lookback_period
+        ):
             # Align lengths
             min_len = min(len(prices_current_with_current), len(prices_other))
             p1 = prices_current_with_current[-min_len:]
@@ -247,13 +270,15 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
             spread_std = float(np.std(spreads)) if np.std(spreads) > 0 else 1e-8
             spread_z_score = (current_spread - spread_mean) / spread_std if spread_std > 0 else 0.0
 
-            features.update({
-                "spread": float(current_spread),
-                "spread_pct": float(current_spread_pct * 100),
-                "spread_mean": spread_mean,
-                "spread_std": spread_std,
-                "spread_z_score": float(spread_z_score),
-            })
+            features.update(
+                {
+                    "spread": float(current_spread),
+                    "spread_pct": float(current_spread_pct * 100),
+                    "spread_mean": spread_mean,
+                    "spread_std": spread_std,
+                    "spread_z_score": float(spread_z_score),
+                }
+            )
 
             # Correlation
             if len(p1) >= 20 and len(p2) >= 20:
@@ -274,7 +299,7 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
             features["half_life_days"] = half_life if half_life is not None else 0.0
 
             # Relative spread position (0-1 scale within recent range)
-            recent_spreads = spreads[-self.lookback_period:]
+            recent_spreads = spreads[-self.lookback_period :]
             spread_min = min(recent_spreads)
             spread_max = max(recent_spreads)
             spread_range = spread_max - spread_min
@@ -286,17 +311,19 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
 
         else:
             # Defaults when not enough history
-            features.update({
-                "spread": 0.0,
-                "spread_pct": 0.0,
-                "spread_mean": 0.0,
-                "spread_std": 0.0,
-                "spread_z_score": 0.0,
-                "correlation": 0.0,
-                "spread_volatility": 0.0,
-                "half_life_days": 0.0,
-                "relative_spread_position": 0.5,
-            })
+            features.update(
+                {
+                    "spread": 0.0,
+                    "spread_pct": 0.0,
+                    "spread_mean": 0.0,
+                    "spread_std": 0.0,
+                    "spread_z_score": 0.0,
+                    "correlation": 0.0,
+                    "spread_volatility": 0.0,
+                    "half_life_days": 0.0,
+                    "relative_spread_position": 0.5,
+                }
+            )
 
         # Carry trade features (if applicable)
         if self.arbitrage_type == self.ARBITRAGE_TYPE_CARRY:
@@ -340,7 +367,11 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
                 # Half-life = -ln(2) / ln(1 + theta)
                 if theta < 0:  # Mean-reverting
                     half_life = -np.log(2) / np.log(1 + theta) if (1 + theta) > 0 else None
-                    return float(half_life) if half_life is not None and not np.isnan(half_life) else None
+                    return (
+                        float(half_life)
+                        if half_life is not None and not np.isnan(half_life)
+                        else None
+                    )
             return None
         except Exception:
             return None
@@ -358,9 +389,7 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
         signals: List[Signal] = []
 
         try:
-            current_price = float(
-                market_data.close or market_data.bid or market_data.last or 0
-            )
+            current_price = float(market_data.close or market_data.bid or market_data.last or 0)
             if current_price <= 0:
                 return []
 
@@ -368,9 +397,7 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
 
             # Update price history
             self.price_history[current_symbol].append(current_price)
-            self.volume_history[current_symbol].append(
-                float(getattr(market_data, "volume", 0))
-            )
+            self.volume_history[current_symbol].append(float(getattr(market_data, "volume", 0)))
 
             # Find which pair this symbol belongs to
             pair_found = None
@@ -388,7 +415,10 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
             prices_current = list(self.price_history.get(current_symbol, []))
             prices_other = list(self.price_history.get(other_symbol, []))
 
-            if len(prices_current) < self.lookback_period or len(prices_other) < self.lookback_period:
+            if (
+                len(prices_current) < self.lookback_period
+                or len(prices_other) < self.lookback_period
+            ):
                 return []
 
             # Align lengths
@@ -398,8 +428,12 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
 
             # Calculate spread metrics
             spreads = [a - b for a, b in zip(p1, p2)]
-            spread_mean = float(np.mean(spreads[-self.lookback_period:]))
-            spread_std = float(np.std(spreads[-self.lookback_period:])) if np.std(spreads[-self.lookback_period:]) > 0 else 1e-8
+            spread_mean = float(np.mean(spreads[-self.lookback_period :]))
+            spread_std = (
+                float(np.std(spreads[-self.lookback_period :]))
+                if np.std(spreads[-self.lookback_period :]) > 0
+                else 1e-8
+            )
             current_spread = spreads[-1]
             spread_z_score = (current_spread - spread_mean) / spread_std if spread_std > 0 else 0.0
 
@@ -458,9 +492,7 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
                 )
 
         except Exception as e:
-            logger.error(
-                f"Error generando senal en ArbitrageStrategyEngine: {e}", exc_info=True
-            )
+            logger.error(f"Error generando senal en ArbitrageStrategyEngine: {e}", exc_info=True)
 
         return signals
 
@@ -579,7 +611,11 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
 
         # For pure spread arbitrage, we always go long the cheaper and short the more expensive
         # Compare prices
-        price_other = list(self.price_history.get(other_symbol, []))[-1] if self.price_history.get(other_symbol) else 0
+        price_other = (
+            list(self.price_history.get(other_symbol, []))[-1]
+            if self.price_history.get(other_symbol)
+            else 0
+        )
 
         if current_price > 0 and price_other > 0:
             is_first_leg = current_symbol == pair_key.split("_")[0]
@@ -881,12 +917,16 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
         if len(spreads) < self.lookback_period:
             return None
 
-        recent_spreads = spreads[-self.lookback_period:]
+        recent_spreads = spreads[-self.lookback_period :]
         return {
             "mean": float(np.mean(recent_spreads)),
             "std": float(np.std(recent_spreads)),
             "min": float(min(recent_spreads)),
             "max": float(max(recent_spreads)),
             "current": float(recent_spreads[-1]),
-            "z_score": float((recent_spreads[-1] - np.mean(recent_spreads)) / np.std(recent_spreads)) if np.std(recent_spreads) > 0 else 0.0,
+            "z_score": float(
+                (recent_spreads[-1] - np.mean(recent_spreads)) / np.std(recent_spreads)
+            )
+            if np.std(recent_spreads) > 0
+            else 0.0,
         }

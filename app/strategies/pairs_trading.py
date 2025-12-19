@@ -16,6 +16,7 @@ import numpy as np
 
 try:
     import scipy.stats  # noqa: F401
+
     SCIPY_AVAILABLE = True
 except ImportError:
     SCIPY_AVAILABLE = False
@@ -100,10 +101,10 @@ class PairsTradingStrategy(BaseStrategy):
             # Try to get from strategy_config if available
             if strategy_config and hasattr(strategy_config, 'parameters'):
                 pair_symbols_raw = strategy_config.parameters.get("pair_symbols")
-        
+
         if pair_symbols_raw is None:
             pair_symbols_raw = ["AAPL", "MSFT"]  # Default fallback
-        
+
         # Normalize format: if list of lists, use first pair
         # If simple list, use as is
         if pair_symbols_raw and isinstance(pair_symbols_raw, list):
@@ -112,7 +113,9 @@ class PairsTradingStrategy(BaseStrategy):
                 self.pair_symbols = pair_symbols_raw[0]
             else:
                 # Simple list format
-                self.pair_symbols = pair_symbols_raw if len(pair_symbols_raw) >= 2 else ["AAPL", "MSFT"]
+                self.pair_symbols = (
+                    pair_symbols_raw if len(pair_symbols_raw) >= 2 else ["AAPL", "MSFT"]
+                )
         else:
             self.pair_symbols = ["AAPL", "MSFT"]
 
@@ -123,7 +126,7 @@ class PairsTradingStrategy(BaseStrategy):
         elif hedge_ratio_value is None:
             hedge_ratio_value = 1.0  # Valor por defecto
         self.hedge_ratio = Decimal(str(hedge_ratio_value))
-        
+
         max_spread_deviation_value = config.get("max_spread_deviation")
         if max_spread_deviation_value is None and strategy_config:
             max_spread_deviation_value = strategy_config.parameters.get("max_spread_deviation", 3.0)
@@ -132,14 +135,16 @@ class PairsTradingStrategy(BaseStrategy):
         self.max_spread_deviation = Decimal(str(max_spread_deviation_value))
 
         # REFACTORED: Store price history for both symbols in pair for vectorized calculations
-        self.price_history = defaultdict(lambda: deque(maxlen=300))  # Increased to 300 for rolling cointegration
-        
+        self.price_history = defaultdict(
+            lambda: deque(maxlen=300)
+        )  # Increased to 300 for rolling cointegration
+
         # IMPROVEMENT: Rolling cointegration revalidation (every 30 days)
         self.last_cointegration_recalc_date = None
         self.cointegration_recalc_interval_days = 30  # Recalculate cointegration every 30 days
         self.cached_cointegration_score = None  # Cache cointegration score until next recalculation
         self.cached_hedge_ratio = Decimal("1.0")  # Cache hedge ratio
-        
+
         # IMPROVEMENT: Trade frequency limiting to prevent overtrading
         # Get max_trades_per_day from params if available (from strategy_config), otherwise from config
         if strategy_config and hasattr(strategy_config, 'parameters'):
@@ -190,7 +195,7 @@ class PairsTradingStrategy(BaseStrategy):
                 if market_data.symbol not in self._symbol_log_count:
                     self._symbol_log_count[market_data.symbol] = 0
                 self._symbol_log_count[market_data.symbol] += 1
-                
+
                 if self._symbol_log_count[market_data.symbol] % 100 == 0:
                     logger.debug(
                         f"PAIRS_TRADING {market_data.symbol}: Not part of pair {self.pair_symbols}"
@@ -199,20 +204,20 @@ class PairsTradingStrategy(BaseStrategy):
 
             # Update price history for vectorized calculations
             self.price_history[market_data.symbol].append(float(market_data.last))
-            
+
             # REFACTORED: Calcular spread usando numpy (vectorizado)
             spread = self._calculate_spread(market_data)
-            
+
             # REFACTORED: Calcular correlación usando numpy (vectorizado)
             correlation = self._calculate_correlation(market_data)
-            
+
             # REFACTORED: Calcular score de cointegración usando scipy/numpy (vectorizado)
             cointegration_score = self._calculate_cointegration_score(market_data)
-            
+
             # Logging de diagnóstico (INFO level periódico)
             current_price = market_data.close or market_data.last
             spread_abs = abs(spread)
-            
+
             # FIX: spread_threshold is configured as percentage (1.2 = 120%), but spread is calculated as decimal (0.02 = 2%)
             # Convert threshold to decimal if it's > 1 (treat as percentage), otherwise use as is
             if self.spread_threshold > Decimal("1"):
@@ -221,24 +226,24 @@ class PairsTradingStrategy(BaseStrategy):
             else:
                 # Threshold is already in decimal format
                 spread_threshold_decimal = self.spread_threshold
-            
+
             # Use 50% of threshold for more permissive signal generation
             spread_threshold_half = spread_threshold_decimal / Decimal("2")
-            
+
             if not hasattr(self, '_call_count'):
                 self._call_count = 0
             self._call_count += 1
-            
+
             # Log ALL candidates (every call) at DEBUG level
             # Check if symbol is part of pair
             is_pair_symbol = market_data.symbol in self.pair_symbols
-            
+
             logger.debug(
                 f"🔍 PAIRS_TRADING CANDIDATE {market_data.symbol}: "
                 f"price={current_price:.2f}, part_of_pair={is_pair_symbol}, "
                 f"pair_symbols={self.pair_symbols}, call_count={self._call_count}"
             )
-            
+
             if self._call_count % 10 == 0:  # Log every 10th call at INFO level
                 logger.info(
                     f"PAIRS_TRADING {market_data.symbol}: price={current_price:.2f}, "
@@ -249,52 +254,59 @@ class PairsTradingStrategy(BaseStrategy):
                 )
 
             # IMPROVEMENT: Check daily trade limit before generating signals
-            current_date = market_data.timestamp.date() if hasattr(market_data.timestamp, 'date') else None
+            current_date = (
+                market_data.timestamp.date() if hasattr(market_data.timestamp, 'date') else None
+            )
             if current_date is not None:
                 if self.last_trade_date != current_date:
                     # New day - reset counter
                     self.trades_today = 0
                     self.last_trade_date = current_date
-            
+
             # IMPROVEMENT: Apply stricter correlation and cointegration filters
             # RELAXED: Use 80% of threshold for more signals (was 100%)
             correlation_passed = correlation >= (self.min_correlation * Decimal("0.8"))
-            cointegration_passed = cointegration_score >= (self.cointegration_threshold * Decimal("0.8"))
-            
+            cointegration_passed = cointegration_score >= (
+                self.cointegration_threshold * Decimal("0.8")
+            )
+
             # NEW: Calculate spread z-score and half-life for minimum edge filter
             spread_z_score_passed = True
             half_life_passed = True
-            
+
             if len(self.pair_symbols) >= 2:
                 symbol1_history = list(self.price_history[self.pair_symbols[0]])
                 symbol2_history = list(self.price_history[self.pair_symbols[1]])
                 min_length = min(len(symbol1_history), len(symbol2_history))
-                
+
                 if min_length >= 30:  # Need at least 30 days for reliable calculations
                     try:
                         prices1 = np.array(symbol1_history[-min_length:])
                         prices2 = np.array(symbol2_history[-min_length:])
-                        
+
                         # Calculate hedge ratio and spread series
                         if len(prices1) >= 2 and np.std(prices1) > 0:
                             beta = np.polyfit(prices1, prices2, 1)[0]
                             spread_series = prices2 - (beta * prices1)
-                            
+
                             # Calculate spread z-score (normalized deviation)
                             spread_mean = np.mean(spread_series)
                             spread_std = np.std(spread_series)
                             current_spread = float(spread)  # Current spread from _calculate_spread
-                            
+
                             if spread_std > 0:
                                 spread_z_score = abs((current_spread - spread_mean) / spread_std)
-                                spread_z_score_passed = spread_z_score >= float(self.min_spread_z_score)
+                                spread_z_score_passed = spread_z_score >= float(
+                                    self.min_spread_z_score
+                                )
                             else:
                                 spread_z_score_passed = True  # Pass if no std
-                            
+
                             # Calculate half-life of spread (mean reversion speed)
                             import pandas as pd
+
                             spread_series_pd = pd.Series(spread_series)
-                            
+
                             # Simple O-U half-life estimation
                             y = spread_series_pd.values
                             if len(y) >= 20:
@@ -302,14 +314,16 @@ class PairsTradingStrategy(BaseStrategy):
                                 y_diff = np.diff(y)
                                 mu = np.mean(y_lag)
                                 y_deviation = y_lag - mu
-                                
+
                                 if len(y_deviation) > 0 and np.std(y_deviation) > 0:
                                     try:
                                         theta = -np.polyfit(y_deviation, y_diff, 1)[0]
                                         if theta > 0:
                                             half_life = -np.log(2) / theta
                                             if 0 < half_life < 1000:  # Reasonable range
-                                                half_life_passed = half_life <= float(self.max_pair_half_life_days)
+                                                half_life_passed = half_life <= float(
+                                                    self.max_pair_half_life_days
+                                                )
                                             else:
                                                 half_life_passed = True  # Pass if out of bounds
                                         else:
@@ -318,11 +332,16 @@ class PairsTradingStrategy(BaseStrategy):
                                         half_life_passed = True  # Pass on error
                     except Exception as e:
                         logger.debug(f"Error calculating spread filters: {e}")
-            
+
             # FIX: Generate signals if spread is significant enough + all filters pass
             # IMPROVEMENT: Use full threshold (not half) and require correlation + cointegration + edge filters
-            if (spread_abs > spread_threshold_decimal and correlation_passed and cointegration_passed 
-                and spread_z_score_passed and half_life_passed):
+            if (
+                spread_abs > spread_threshold_decimal
+                and correlation_passed
+                and cointegration_passed
+                and spread_z_score_passed
+                and half_life_passed
+            ):
                 # IMPROVEMENT: Check daily trade limit
                 if self.trades_today >= self.max_trades_per_day:
                     logger.debug(
@@ -343,23 +362,34 @@ class PairsTradingStrategy(BaseStrategy):
                 # Log why signals were rejected
                 reasons = []
                 if spread_abs <= spread_threshold_decimal:
-                    reasons.append(f"spread too small ({spread_abs:.4f} <= {spread_threshold_decimal:.4f})")
+                    reasons.append(
+                        f"spread too small ({spread_abs:.4f} <= {spread_threshold_decimal:.4f})"
+                    )
                 if not correlation_passed:
-                    reasons.append(f"correlation too low ({correlation:.4f} < {self.min_correlation:.4f})")
+                    reasons.append(
+                        f"correlation too low ({correlation:.4f} < {self.min_correlation:.4f})"
+                    )
                 if not cointegration_passed:
-                    reasons.append(f"cointegration too low ({cointegration_score:.4f} < {self.cointegration_threshold:.4f})")
+                    reasons.append(
+                        f"cointegration too low ({cointegration_score:.4f} < {self.cointegration_threshold:.4f})"
+                    )
                 if not spread_z_score_passed:
-                    reasons.append(f"spread z-score too low (< {float(self.min_spread_z_score):.2f})")
+                    reasons.append(
+                        f"spread z-score too low (< {float(self.min_spread_z_score):.2f})"
+                    )
                 if not half_life_passed:
                     reasons.append(f"half-life too high (> {self.max_pair_half_life_days} days)")
-                
+
                 if self._call_count % 200 == 0:
                     logger.debug(
                         f"❌ PAIRS_TRADING CANDIDATE REJECTED {market_data.symbol}: {', '.join(reasons)}"
                     )
 
         except Exception as e:
-            logger.error(f"PAIRS_TRADING Error generating signals for {market_data.symbol}: {e}", exc_info=True)
+            logger.error(
+                f"PAIRS_TRADING Error generating signals for {market_data.symbol}: {e}",
+                exc_info=True,
+            )
 
         return signals
 
@@ -377,7 +407,7 @@ class PairsTradingStrategy(BaseStrategy):
         try:
             # Check position existence first (needed for both BUY and SELL)
             existing_position = self._get_existing_position(portfolio, signal.symbol)
-            
+
             # FIX: Order matters - check SELL position existence BEFORE calculating position_size
             # For SELL, if no position exists, get_position_size() returns 0, which fails the min check
             if signal.signal_type == SignalType.SELL:
@@ -433,7 +463,7 @@ class PairsTradingStrategy(BaseStrategy):
             if signal.signal_type == SignalType.SELL and existing_position:
                 # For SELL operations, allow up to 15% total exposure (even if config is lower)
                 max_allowed_total_exposure = Decimal("0.15")
-            
+
             if total_exposure > max_allowed_total_exposure:
                 logger.info(
                     f"⚠️ PAIRS_TRADING risk_check REJECTED {signal.signal_type} {signal.symbol}: "
@@ -450,7 +480,7 @@ class PairsTradingStrategy(BaseStrategy):
                 # For SELL operations, allow up to 15% pair exposure (even if config is lower)
                 # This allows selling positions even when pair exposure is temporarily high
                 max_allowed_exposure = Decimal("0.15")
-            
+
             if pair_exposure > max_allowed_exposure:
                 logger.info(
                     f"⚠️ PAIRS_TRADING risk_check REJECTED {signal.signal_type} {signal.symbol}: "
@@ -467,15 +497,14 @@ class PairsTradingStrategy(BaseStrategy):
 
         except Exception as e:
             logger.error(
-                f"❌ PAIRS_TRADING risk_check ERROR for {signal.symbol}: {e}",
-                exc_info=True
+                f"❌ PAIRS_TRADING risk_check ERROR for {signal.symbol}: {e}", exc_info=True
             )
             return False
 
     def _calculate_spread(self, market_data: Quote) -> Decimal:
         """
         Calcular spread entre los activos del par usando numpy (vectorizado).
-        
+
         REFACTORED: Uses numpy for efficient spread calculation from price histories.
 
         Args:
@@ -486,66 +515,82 @@ class PairsTradingStrategy(BaseStrategy):
         """
         if len(self.pair_symbols) < 2:
             return Decimal("0")
-        
+
         # Get price histories for both symbols in the pair
         symbol1_history = list(self.price_history[self.pair_symbols[0]])
         symbol2_history = list(self.price_history[self.pair_symbols[1]])
-        
+
         if len(symbol1_history) < 2 or len(symbol2_history) < 2:
             # Not enough history - use simplified calculation based on current prices
             if market_data.symbol == self.pair_symbols[0]:
                 # We need the other symbol's price - estimate from volatility
-                volatility = (market_data.high - market_data.low) / market_data.last if market_data.last > 0 else Decimal("0.02")
+                volatility = (
+                    (market_data.high - market_data.low) / market_data.last
+                    if market_data.last > 0
+                    else Decimal("0.02")
+                )
                 spread = volatility * Decimal("0.5")  # Simplified spread
             else:
-                volatility = (market_data.high - market_data.low) / market_data.last if market_data.last > 0 else Decimal("0.02")
+                volatility = (
+                    (market_data.high - market_data.low) / market_data.last
+                    if market_data.last > 0
+                    else Decimal("0.02")
+                )
                 spread = -volatility * Decimal("0.5")  # Opposite sign for second symbol
             return spread
-        
+
         # REFACTORED: Use numpy for vectorized spread calculation
         # CORRECTED: Calculate spread correctly using hedge ratio (beta)
         min_length = min(len(symbol1_history), len(symbol2_history))
         prices1 = np.array(symbol1_history[-min_length:])
         prices2 = np.array(symbol2_history[-min_length:])
-        
+
         # Calculate hedge ratio (beta) via linear regression: prices2 = alpha + beta * prices1
         # Beta represents how much of symbol2 to buy/sell per unit of symbol1
         if len(prices1) >= 2 and np.std(prices1) > 0:
             beta = np.polyfit(prices1, prices2, 1)[0]  # Linear regression coefficient
         else:
             beta = prices2[-1] / prices1[-1] if prices1[-1] > 0 else 1.0  # Fallback: simple ratio
-        
+
         # CORRECTED: Calculate spread correctly for both symbols
         # Spread represents deviation from equilibrium: spread = price2 - (beta * price1)
         # Get current prices for both symbols
-        current_price1 = float(market_data.last) if market_data.symbol == self.pair_symbols[0] else prices1[-1]
-        current_price2 = float(market_data.last) if market_data.symbol == self.pair_symbols[1] else prices2[-1]
-        
+        current_price1 = (
+            float(market_data.last) if market_data.symbol == self.pair_symbols[0] else prices1[-1]
+        )
+        current_price2 = (
+            float(market_data.last) if market_data.symbol == self.pair_symbols[1] else prices2[-1]
+        )
+
         # Calculate equilibrium price for symbol2
         equilibrium_price2 = beta * current_price1
-        
+
         # Spread: actual price2 vs equilibrium price2 (normalized as percentage)
-        spread_decimal = (current_price2 - equilibrium_price2) / equilibrium_price2 if equilibrium_price2 > 0 else Decimal("0")
-        
+        spread_decimal = (
+            (current_price2 - equilibrium_price2) / equilibrium_price2
+            if equilibrium_price2 > 0
+            else Decimal("0")
+        )
+
         # For symbol1, invert the spread sign to maintain consistency
         # Positive spread = symbol2 overvalued = symbol1 undervalued
         if market_data.symbol == self.pair_symbols[0]:
             spread_decimal = -spread_decimal
-        
+
         # Store hedge ratio for signal creation
         self.hedge_ratio = Decimal(str(beta))
-        
+
         logger.debug(
             f"PAIRS_TRADING {market_data.symbol}: Spread calculated: {spread_decimal:.4f} "
             f"(beta={beta:.4f}, eq_price2={equilibrium_price2:.4f}, price2={current_price2:.4f}, price1={current_price1:.4f})"
         )
-        
+
         return Decimal(str(round(spread_decimal, 4)))
 
     def _calculate_correlation(self, market_data: Quote) -> Decimal:
         """
         Calcular correlación entre los activos del par usando numpy (vectorizado).
-        
+
         REFACTORED: Uses numpy.corrcoef for efficient correlation calculation.
 
         Args:
@@ -556,38 +601,40 @@ class PairsTradingStrategy(BaseStrategy):
         """
         if len(self.pair_symbols) < 2:
             return Decimal("0.75")
-        
+
         # Get price histories for both symbols
         symbol1_history = list(self.price_history[self.pair_symbols[0]])
         symbol2_history = list(self.price_history[self.pair_symbols[1]])
-        
+
         min_length = min(len(symbol1_history), len(symbol2_history))
         if min_length < 2:
             # Not enough history - return default correlation
             return Decimal("0.75")
-        
+
         # REFACTORED: Use numpy for vectorized correlation calculation
         prices1 = np.array(symbol1_history[-min_length:])
         prices2 = np.array(symbol2_history[-min_length:])
-        
+
         # Calculate correlation coefficient
         if len(prices1) >= 2 and np.std(prices1) > 0 and np.std(prices2) > 0:
             correlation_matrix = np.corrcoef(prices1, prices2)
-            correlation = float(correlation_matrix[0, 1]) if not np.isnan(correlation_matrix[0, 1]) else 0.75
+            correlation = (
+                float(correlation_matrix[0, 1]) if not np.isnan(correlation_matrix[0, 1]) else 0.75
+            )
         else:
             correlation = 0.75  # Default correlation
-        
+
         logger.debug(
             f"PAIRS_TRADING {market_data.symbol}: Correlation calculated: {correlation:.4f} "
             f"from {min_length} price points"
         )
-        
+
         return Decimal(str(round(correlation, 4)))
 
     def _calculate_cointegration_score(self, market_data: Quote) -> Decimal:
         """
         Calcular score de cointegración usando scipy (vectorizado).
-        
+
         REFACTORED: Uses scipy.stats for Engle-Granger cointegration test when available.
 
         Args:
@@ -598,23 +645,25 @@ class PairsTradingStrategy(BaseStrategy):
         """
         if len(self.pair_symbols) < 2:
             return Decimal("0.75")
-        
+
         symbol1_history = list(self.price_history[self.pair_symbols[0]])
         symbol2_history = list(self.price_history[self.pair_symbols[1]])
-        
+
         min_length = min(len(symbol1_history), len(symbol2_history))
         if min_length < 10:
             # Not enough history - return default score
             return Decimal("0.75")
-        
+
         # IMPROVEMENT: Rolling window regression - recalculate every 30 days
-        current_date = market_data.timestamp.date() if hasattr(market_data.timestamp, 'date') else None
+        current_date = (
+            market_data.timestamp.date() if hasattr(market_data.timestamp, 'date') else None
+        )
         should_recalculate = True
-        
+
         if current_date is not None and self.last_cointegration_recalc_date is not None:
             days_since_recalc = (current_date - self.last_cointegration_recalc_date).days
             should_recalculate = days_since_recalc >= self.cointegration_recalc_interval_days
-        
+
         # Use cached score if available and within interval
         if not should_recalculate and self.cached_cointegration_score is not None:
             logger.debug(
@@ -622,17 +671,19 @@ class PairsTradingStrategy(BaseStrategy):
                 f"{self.cached_cointegration_score:.4f} (last recalc: {self.last_cointegration_recalc_date})"
             )
             return self.cached_cointegration_score
-        
+
         # REFACTORED: Use scipy for cointegration test when available
         # Use rolling window: last 250 days or available history (minimum 60 for reliability)
         lookback_window = min(min_length, 250)
         prices1 = np.array(symbol1_history[-lookback_window:])
         prices2 = np.array(symbol2_history[-lookback_window:])
-        
+
         if len(prices1) < 60:  # Need at least 60 days for reliable cointegration test
-            logger.debug(f"PAIRS_TRADING {market_data.symbol}: Insufficient data for rolling cointegration ({len(prices1)} < 60)")
+            logger.debug(
+                f"PAIRS_TRADING {market_data.symbol}: Insufficient data for rolling cointegration ({len(prices1)} < 60)"
+            )
             return Decimal("0.75")
-        
+
         if SCIPY_AVAILABLE and len(prices1) >= 60:
             try:
                 # Perform Engle-Granger cointegration test
@@ -641,12 +692,12 @@ class PairsTradingStrategy(BaseStrategy):
                 # Calculate hedge ratio (beta) via linear regression
                 beta = np.polyfit(prices1, prices2, 1)[0]
                 spread_series = prices2 - (beta * prices1)
-                
+
                 # Test for stationarity of spread (ADF test if available)
                 # Simplified: check if spread is mean-reverting (low variance relative to mean)
                 spread_mean = np.mean(spread_series)
                 spread_std = np.std(spread_series)
-                
+
                 # Cointegration score: lower std relative to mean = higher cointegration
                 if spread_std > 0:
                     cointegration_ratio = abs(spread_mean) / spread_std
@@ -654,26 +705,30 @@ class PairsTradingStrategy(BaseStrategy):
                     cointegration_score = max(0.0, min(1.0, 1.0 - (cointegration_ratio / 10.0)))
                 else:
                     cointegration_score = 0.85  # Default if no variation
-                
+
                 logger.info(
                     f"PAIRS_TRADING {market_data.symbol}: 🔄 Rolling cointegration recalculated: "
                     f"{cointegration_score:.4f} (beta={beta:.4f}, spread_std={spread_std:.4f}, "
                     f"window={lookback_window} days, date={current_date})"
                 )
-                
+
                 # Cache the result
                 self.cached_cointegration_score = Decimal(str(round(cointegration_score, 4)))
                 self.cached_hedge_ratio = Decimal(str(round(beta, 4)))
                 if current_date is not None:
                     self.last_cointegration_recalc_date = current_date
-                
+
                 return self.cached_cointegration_score
             except Exception as e:
                 logger.warning(f"PAIRS_TRADING cointegration calculation error: {e}")
                 return Decimal("0.75")
         else:
             # Fallback: estimate based on price stability
-            price_stability = abs(market_data.open - market_data.close) / market_data.last if market_data.last > 0 else Decimal("0.01")
+            price_stability = (
+                abs(market_data.open - market_data.close) / market_data.last
+                if market_data.last > 0
+                else Decimal("0.01")
+            )
             if price_stability < Decimal("0.005"):
                 return Decimal("0.92")
             elif price_stability < Decimal("0.015"):
@@ -727,16 +782,18 @@ class PairsTradingStrategy(BaseStrategy):
         # - max_position_size config
         # - Signal price
         # Use a reasonable placeholder (will be recalculated)
-        volume_placeholder = Decimal("1")  # Placeholder - actual size calculated by get_position_size()
+        volume_placeholder = Decimal(
+            "1"
+        )  # Placeholder - actual size calculated by get_position_size()
 
         # FIX: Generate BUY signals more frequently to establish positions first
         # Pairs trading needs BUY positions before SELL signals can execute
         # Logic: Generate BUY when spread indicates undervaluation (spread < 0 for first asset)
-        
+
         # CORRECTED: Proper pairs trading logic
         # Spread positive = symbol2 overvalued relative to symbol1 = BUY symbol1 / SELL symbol2
         # Spread negative = symbol2 undervalued relative to symbol1 = SELL symbol1 / BUY symbol2
-        
+
         if market_data.symbol == self.pair_symbols[0]:
             # Primer activo del par (symbol1)
             if spread < 0:

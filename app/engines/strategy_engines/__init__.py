@@ -6,20 +6,15 @@ con funcionalidades adicionales para integración con Learning Engines,
 composición de estrategias, y feature extraction estandarizado.
 """
 
-from .base import BaseStrategyEngine
-from .momentum_engine import MomentumStrategyEngine
-from .mean_reversion_engine import MeanReversionStrategyEngine
-from .pairs_engine import PairsTradingStrategyEngine
-from .modular_momentum_engine import ModularMomentumStrategyEngine
-from .breakout_engine import BreakoutStrategyEngine
-from .trend_following_engine import TrendFollowingStrategyEngine
 from .arbitrage_engine import ArbitrageStrategyEngine
-from .ensemble import (
-    BaseStrategyEnsemble,
-    WeightedEnsemble,
-    RegimeBasedSelector,
-    VotingEnsemble,
-)
+from .base import BaseStrategyEngine
+from .breakout_engine import BreakoutStrategyEngine
+from .ensemble import BaseStrategyEnsemble, RegimeBasedSelector, VotingEnsemble, WeightedEnsemble
+from .mean_reversion_engine import MeanReversionStrategyEngine
+from .modular_momentum_engine import ModularMomentumStrategyEngine
+from .momentum_engine import MomentumStrategyEngine
+from .pairs_engine import PairsTradingStrategyEngine
+from .trend_following_engine import TrendFollowingStrategyEngine
 
 __all__ = [
     "BaseStrategyEngine",
@@ -36,4 +31,3 @@ __all__ = [
     "RegimeBasedSelector",
     "VotingEnsemble",
 ]
-

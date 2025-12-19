@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 class StrategyCapitalAllocation:
     """
     TASK-PA-1: Capital allocation configuration for each strategy.
-    
+
     Manages target allocations and current allocations per strategy.
     """
 
@@ -36,7 +36,7 @@ class StrategyCapitalAllocation:
     ):
         """
         Initialize strategy allocation.
-        
+
         Args:
             strategy_name: Name of the strategy
             target_weight: Target weight (0-1)
@@ -54,10 +54,10 @@ class StrategyCapitalAllocation:
     def allocate(self, total_capital: Decimal) -> Decimal:
         """
         Calculate allocated capital for this strategy.
-        
+
         Args:
             total_capital: Total portfolio capital
-            
+
         Returns:
             Capital allocated to this strategy
         """
@@ -67,44 +67,42 @@ class StrategyCapitalAllocation:
     def update_weight(self, new_weight: Decimal) -> None:
         """
         Update current weight, respecting min/max constraints.
-        
+
         Args:
             new_weight: New weight (0-1)
         """
         # Clamp to min/max bounds
         self.current_weight = max(self.min_weight, min(self.max_weight, new_weight))
-        logger.debug(
-            f"{self.strategy_name}: weight updated to {self.current_weight:.2%}"
-        )
+        logger.debug(f"{self.strategy_name}: weight updated to {self.current_weight:.2%}")
 
     def add_performance_data(self, timestamp: datetime, pnl: Decimal, returns: Decimal) -> None:
         """
         Add performance data point.
-        
+
         Args:
             timestamp: Timestamp of the data point
             pnl: Profit/loss
             returns: Return percentage
         """
-        self.performance_data.append({
-            "timestamp": timestamp,
-            "pnl": pnl,
-            "returns": returns,
-        })
+        self.performance_data.append(
+            {
+                "timestamp": timestamp,
+                "pnl": pnl,
+                "returns": returns,
+            }
+        )
 
         # Keep only last 90 days of data
         cutoff_date = datetime.utcnow() - timedelta(days=90)
-        self.performance_data = [
-            d for d in self.performance_data if d["timestamp"] >= cutoff_date
-        ]
+        self.performance_data = [d for d in self.performance_data if d["timestamp"] >= cutoff_date]
 
     def calculate_rolling_returns(self, days: int = 30) -> Decimal:
         """
         Calculate rolling returns over specified period.
-        
+
         Args:
             days: Number of days to look back
-            
+
         Returns:
             Rolling returns (as decimal)
         """
@@ -112,9 +110,7 @@ class StrategyCapitalAllocation:
             return Decimal("0")
 
         cutoff_date = datetime.utcnow() - timedelta(days=days)
-        recent_data = [
-            d for d in self.performance_data if d["timestamp"] >= cutoff_date
-        ]
+        recent_data = [d for d in self.performance_data if d["timestamp"] >= cutoff_date]
 
         if not recent_data:
             return Decimal("0")
@@ -126,20 +122,20 @@ class StrategyCapitalAllocation:
 class MultiStrategyAllocationManager:
     """
     TASK-PA-2: Multi-strategy capital allocation manager.
-    
+
     Manages capital distribution across multiple strategies based on target allocations.
     """
 
     def __init__(self, total_capital: Decimal):
         """
         Initialize allocation manager.
-        
+
         Args:
             total_capital: Total portfolio capital
         """
         self.total_capital = total_capital
         self.strategy_allocations: Dict[str, StrategyCapitalAllocation] = {}
-        
+
         # TASK-PA-1: Default allocations
         # 50% Momentum, 25% Mean Reversion, 25% Pairs Trading
         self._initialize_default_allocations()
@@ -149,7 +145,7 @@ class MultiStrategyAllocationManager:
         # Get centralized configuration
         config = get_config()
         trading = config.trading
-        
+
         self.strategy_allocations = {
             "momentum": StrategyCapitalAllocation(
                 strategy_name="momentum",
@@ -180,7 +176,7 @@ class MultiStrategyAllocationManager:
     def allocate_capital(self) -> Dict[str, Decimal]:
         """
         Allocate capital to each strategy based on current weights.
-        
+
         Returns:
             Dictionary mapping strategy names to allocated capital
         """
@@ -189,19 +185,17 @@ class MultiStrategyAllocationManager:
         for name, allocation in self.strategy_allocations.items():
             allocated = allocation.allocate(self.total_capital)
             allocations[name] = allocated
-            logger.debug(
-                f"{name}: allocated ${allocated:,.2f} ({allocation.current_weight:.1%})"
-            )
+            logger.debug(f"{name}: allocated ${allocated:,.2f} ({allocation.current_weight:.1%})")
 
         return allocations
 
     def get_allocation_for_strategy(self, strategy_name: str) -> Decimal:
         """
         Get allocated capital for a specific strategy.
-        
+
         Args:
             strategy_name: Name of the strategy
-            
+
         Returns:
             Allocated capital
         """
@@ -214,7 +208,7 @@ class MultiStrategyAllocationManager:
     def update_total_capital(self, new_capital: Decimal) -> None:
         """
         Update total capital and reallocate.
-        
+
         Args:
             new_capital: New total capital
         """
@@ -225,14 +219,14 @@ class MultiStrategyAllocationManager:
 class DynamicPortfolioSelector:
     """
     TASK-PORT-SEL-1: Dynamic Portfolio Selector.
-    
+
     Adjusts strategy weights based on rolling 30-day performance.
     """
 
     def __init__(self, allocation_manager: MultiStrategyAllocationManager):
         """
         Initialize dynamic selector.
-        
+
         Args:
             allocation_manager: Multi-strategy allocation manager
         """
@@ -248,7 +242,7 @@ class DynamicPortfolioSelector:
     ) -> None:
         """
         Update performance data for a strategy.
-        
+
         Args:
             strategy_name: Name of the strategy
             timestamp: Timestamp of the performance data
@@ -265,7 +259,7 @@ class DynamicPortfolioSelector:
     def rebalance_allocations(self) -> Dict[str, Decimal]:
         """
         Rebalance allocations based on rolling 30-day performance.
-        
+
         Returns:
             Dictionary of adjusted allocations
         """
@@ -298,7 +292,11 @@ class DynamicPortfolioSelector:
                 new_weight = allocation.target_weight * adjustment
             else:
                 # Underperformers get lower weight
-                adjustment = max(Decimal("0.5"), total_return / Decimal("0.01")) if total_return > 0 else Decimal("0.5")
+                adjustment = (
+                    max(Decimal("0.5"), total_return / Decimal("0.01"))
+                    if total_return > 0
+                    else Decimal("0.5")
+                )
                 new_weight = allocation.target_weight * adjustment
 
             # Update weight
@@ -306,7 +304,9 @@ class DynamicPortfolioSelector:
             new_allocations[name] = allocation.allocated_capital
 
         # Normalize allocations to ensure total = 1.0
-        total_weight = sum(a.current_weight for a in self.allocation_manager.strategy_allocations.values())
+        total_weight = sum(
+            a.current_weight for a in self.allocation_manager.strategy_allocations.values()
+        )
         if total_weight > 0:
             normalization_factor = Decimal("1") / total_weight
             for allocation in self.allocation_manager.strategy_allocations.values():
@@ -314,12 +314,12 @@ class DynamicPortfolioSelector:
 
         # Reallocate with normalized weights
         final_allocations = self.allocation_manager.allocate_capital()
-        
+
         # Fix precision errors: ensure total exactly matches total capital
         allocated_total = sum(final_allocations.values())
         total_capital = self.allocation_manager.total_capital
         difference = total_capital - allocated_total
-        
+
         # Distribute any difference to the largest allocation (rounding fix)
         if abs(difference) > Decimal("0.01"):
             # Find strategy with largest allocation
@@ -347,7 +347,7 @@ class DynamicPortfolioSelector:
     def should_rebalance(self) -> bool:
         """
         Check if rebalancing is needed based on drift threshold.
-        
+
         Returns:
             True if rebalancing should occur
         """
@@ -378,7 +378,9 @@ _multi_strategy_manager: Optional[MultiStrategyAllocationManager] = None
 _dynamic_selector: Optional[DynamicPortfolioSelector] = None
 
 
-def get_multi_strategy_manager(total_capital: Decimal = Decimal("100000")) -> MultiStrategyAllocationManager:
+def get_multi_strategy_manager(
+    total_capital: Decimal = Decimal("100000"),
+) -> MultiStrategyAllocationManager:
     """Get global multi-strategy allocation manager."""
     global _multi_strategy_manager
     if _multi_strategy_manager is None:

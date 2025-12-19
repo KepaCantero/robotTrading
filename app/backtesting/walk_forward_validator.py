@@ -8,15 +8,15 @@ Comprehensive validation system including:
 - Monte Carlo simulations
 """
 
+import json
 import logging
+import math
+import random
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Dict, List, Any, Optional, Tuple
 from pathlib import Path
-from dataclasses import dataclass, field
-import json
-import random
-import math
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import yaml
@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 # Configuration Loading
 # ============================================================================
+
 
 def load_validation_config(config_path: str = "config/validation.yaml") -> Dict[str, Any]:
     """Load validation configuration from YAML file."""
@@ -72,11 +73,36 @@ def get_default_config() -> Dict[str, Any]:
             "enabled": True,
             "n_scenarios": 100,
             "scenarios": {
-                "flash_crash": {"enabled": True, "weight": 0.15, "drop_percentage": -0.10, "recovery_days": 5},
-                "high_volatility": {"enabled": True, "weight": 0.20, "volatility_multiplier": 3.0, "duration_days": 20},
-                "trending_bull": {"enabled": True, "weight": 0.15, "daily_drift": 0.002, "duration_days": 60},
-                "trending_bear": {"enabled": True, "weight": 0.15, "daily_drift": -0.002, "duration_days": 60},
-                "mean_reverting": {"enabled": True, "weight": 0.15, "reversion_speed": 0.1, "equilibrium_price": 100.0},
+                "flash_crash": {
+                    "enabled": True,
+                    "weight": 0.15,
+                    "drop_percentage": -0.10,
+                    "recovery_days": 5,
+                },
+                "high_volatility": {
+                    "enabled": True,
+                    "weight": 0.20,
+                    "volatility_multiplier": 3.0,
+                    "duration_days": 20,
+                },
+                "trending_bull": {
+                    "enabled": True,
+                    "weight": 0.15,
+                    "daily_drift": 0.002,
+                    "duration_days": 60,
+                },
+                "trending_bear": {
+                    "enabled": True,
+                    "weight": 0.15,
+                    "daily_drift": -0.002,
+                    "duration_days": 60,
+                },
+                "mean_reverting": {
+                    "enabled": True,
+                    "weight": 0.15,
+                    "reversion_speed": 0.1,
+                    "equilibrium_price": 100.0,
+                },
                 "gap_up": {"enabled": True, "weight": 0.10, "gap_percentage": 0.05, "n_gaps": 3},
                 "gap_down": {"enabled": True, "weight": 0.10, "gap_percentage": -0.05, "n_gaps": 3},
             },
@@ -108,9 +134,11 @@ def get_default_config() -> Dict[str, Any]:
 # Data Classes for Results
 # ============================================================================
 
+
 @dataclass
 class ValidationWindow:
     """Represents a single validation window result."""
+
     window_id: int
     train_start: datetime
     train_end: datetime
@@ -127,6 +155,7 @@ class ValidationWindow:
 @dataclass
 class StressScenarioResult:
     """Result of a single stress test scenario."""
+
     scenario_type: str
     scenario_id: int
     total_return: float
@@ -140,6 +169,7 @@ class StressScenarioResult:
 @dataclass
 class ValidationReport:
     """Complete validation report."""
+
     strategy_name: str
     timestamp: datetime
     walk_forward_results: Optional[Dict[str, Any]] = None
@@ -153,6 +183,7 @@ class ValidationReport:
 # ============================================================================
 # Synthetic Data Generator
 # ============================================================================
+
 
 class SyntheticDataGenerator:
     """
@@ -334,7 +365,7 @@ class SyntheticDataGenerator:
             price = prices[-1] * np.exp(sigma * dW)
 
             if i in gap_days:
-                price *= (1 + gap_pct)
+                price *= 1 + gap_pct
 
             prices.append(max(price, 0.01))
 
@@ -366,18 +397,20 @@ class SyntheticDataGenerator:
             volume = int(self.base_volume * (1 + np.random.normal(0, self.volume_noise)))
             volume = max(volume, 1000)
 
-            quotes.append(Quote(
-                symbol=symbol,
-                timestamp=timestamp,
-                bid=Decimal(str(round(close_price * 0.9999, 2))),
-                ask=Decimal(str(round(close_price * 1.0001, 2))),
-                last=Decimal(str(round(close_price, 2))),
-                volume=Decimal(str(volume)),
-                open=Decimal(str(round(open_price, 2))),
-                high=Decimal(str(round(high, 2))),
-                low=Decimal(str(round(low, 2))),
-                close=Decimal(str(round(close_price, 2))),
-            ))
+            quotes.append(
+                Quote(
+                    symbol=symbol,
+                    timestamp=timestamp,
+                    bid=Decimal(str(round(close_price * 0.9999, 2))),
+                    ask=Decimal(str(round(close_price * 1.0001, 2))),
+                    last=Decimal(str(round(close_price, 2))),
+                    volume=Decimal(str(volume)),
+                    open=Decimal(str(round(open_price, 2))),
+                    high=Decimal(str(round(high, 2))),
+                    low=Decimal(str(round(low, 2))),
+                    close=Decimal(str(round(close_price, 2))),
+                )
+            )
 
         return quotes
 
@@ -385,6 +418,7 @@ class SyntheticDataGenerator:
 # ============================================================================
 # Walk-Forward Validator (Enhanced)
 # ============================================================================
+
 
 class WalkForwardValidator:
     """
@@ -415,12 +449,15 @@ class WalkForwardValidator:
         self.step_years = config.get("step_years", 1)
         self.min_windows = config.get("min_windows", 3)
         self.min_trades_per_window = config.get("min_trades_per_window", 10)
-        self.thresholds = config.get("thresholds", {
-            "min_consistency": 0.6,
-            "max_return_std": 0.3,
-            "min_avg_sharpe": 0.5,
-            "max_avg_drawdown": -0.20,
-        })
+        self.thresholds = config.get(
+            "thresholds",
+            {
+                "min_consistency": 0.6,
+                "max_return_std": 0.3,
+                "min_avg_sharpe": 0.5,
+                "max_avg_drawdown": -0.20,
+            },
+        )
 
     def create_windows(
         self,
@@ -439,12 +476,14 @@ class WalkForwardValidator:
             if validate_end > end_date:
                 break
 
-            windows.append({
-                "train_start": current_start,
-                "train_end": train_end,
-                "validate_start": validate_start,
-                "validate_end": validate_end,
-            })
+            windows.append(
+                {
+                    "train_start": current_start,
+                    "train_end": train_end,
+                    "validate_start": validate_start,
+                    "validate_end": validate_end,
+                }
+            )
 
             current_start += timedelta(days=365 * self.step_years)
 
@@ -484,14 +523,17 @@ class WalkForwardValidator:
 
             # Filter quotes for validation period
             validate_quotes = [
-                q for q in quotes
+                q
+                for q in quotes
                 if window["validate_start"] <= q.timestamp <= window["validate_end"]
             ]
 
             # Filter signals for validation period
             validate_signals = [
-                s for s in signals
-                if hasattr(s, 'timestamp') and window["validate_start"] <= s.timestamp <= window["validate_end"]
+                s
+                for s in signals
+                if hasattr(s, 'timestamp')
+                and window["validate_start"] <= s.timestamp <= window["validate_end"]
             ]
 
             if not validate_quotes or not validate_signals:
@@ -546,19 +588,27 @@ class WalkForwardValidator:
 
         if consistency < self.thresholds.get("min_consistency", 0.6):
             passed = False
-            failures.append(f"Consistency {consistency:.2%} < {self.thresholds['min_consistency']:.2%}")
+            failures.append(
+                f"Consistency {consistency:.2%} < {self.thresholds['min_consistency']:.2%}"
+            )
 
         if std_return > self.thresholds.get("max_return_std", 0.3):
             passed = False
-            failures.append(f"Return std {std_return:.2%} > {self.thresholds['max_return_std']:.2%}")
+            failures.append(
+                f"Return std {std_return:.2%} > {self.thresholds['max_return_std']:.2%}"
+            )
 
         if avg_sharpe < self.thresholds.get("min_avg_sharpe", 0.5):
             passed = False
-            failures.append(f"Avg Sharpe {avg_sharpe:.2f} < {self.thresholds['min_avg_sharpe']:.2f}")
+            failures.append(
+                f"Avg Sharpe {avg_sharpe:.2f} < {self.thresholds['min_avg_sharpe']:.2f}"
+            )
 
         if avg_drawdown < self.thresholds.get("max_avg_drawdown", -0.20):
             passed = False
-            failures.append(f"Avg Drawdown {avg_drawdown:.2%} < {self.thresholds['max_avg_drawdown']:.2%}")
+            failures.append(
+                f"Avg Drawdown {avg_drawdown:.2%} < {self.thresholds['max_avg_drawdown']:.2%}"
+            )
 
         return {
             "passed": passed,
@@ -599,6 +649,7 @@ class WalkForwardValidator:
 # Cross-Validation Temporal (Enhanced)
 # ============================================================================
 
+
 class CrossValidationTemporal:
     """
     Cross-Validation Temporal (Task 3.5).
@@ -617,10 +668,13 @@ class CrossValidationTemporal:
             config = full_config.get("cross_validation", {})
 
         self.n_folds = config.get("n_folds", 5)
-        self.thresholds = config.get("thresholds", {
-            "min_consistency_score": 0.6,
-            "max_return_variance": 0.25,
-        })
+        self.thresholds = config.get(
+            "thresholds",
+            {
+                "min_consistency_score": 0.6,
+                "max_return_variance": 0.25,
+            },
+        )
 
     def create_folds(
         self,
@@ -639,11 +693,13 @@ class CrossValidationTemporal:
             if i == self.n_folds - 1:
                 fold_end = end_date
 
-            folds.append({
-                "fold": i + 1,
-                "start": fold_start,
-                "end": fold_end,
-            })
+            folds.append(
+                {
+                    "fold": i + 1,
+                    "start": fold_start,
+                    "end": fold_end,
+                }
+            )
 
         return folds
 
@@ -665,13 +721,11 @@ class CrossValidationTemporal:
                 f"{fold['start'].strftime('%Y-%m-%d')} to {fold['end'].strftime('%Y-%m-%d')}"
             )
 
-            fold_quotes = [
-                q for q in quotes
-                if fold["start"] <= q.timestamp <= fold["end"]
-            ]
+            fold_quotes = [q for q in quotes if fold["start"] <= q.timestamp <= fold["end"]]
 
             fold_signals = [
-                s for s in signals
+                s
+                for s in signals
                 if hasattr(s, 'timestamp') and fold["start"] <= s.timestamp <= fold["end"]
             ]
 
@@ -686,20 +740,22 @@ class CrossValidationTemporal:
                 fold["end"],
             )
 
-            results.append({
-                "fold": fold["fold"],
-                "period": {
-                    "start": fold["start"].isoformat(),
-                    "end": fold["end"].isoformat(),
-                },
-                "result": {
-                    "total_return": float(result.total_return),
-                    "sharpe_ratio": float(result.performance.sharpe_ratio or 0),
-                    "max_drawdown": float(result.performance.max_drawdown_percentage or 0),
-                    "total_trades": result.performance.total_trades,
-                    "win_rate": float(result.performance.win_rate),
-                },
-            })
+            results.append(
+                {
+                    "fold": fold["fold"],
+                    "period": {
+                        "start": fold["start"].isoformat(),
+                        "end": fold["end"].isoformat(),
+                    },
+                    "result": {
+                        "total_return": float(result.total_return),
+                        "sharpe_ratio": float(result.performance.sharpe_ratio or 0),
+                        "max_drawdown": float(result.performance.max_drawdown_percentage or 0),
+                        "total_trades": result.performance.total_trades,
+                        "win_rate": float(result.performance.win_rate),
+                    },
+                }
+            )
 
         if not results:
             return {"passed": False, "reason": "No valid folds", "folds": []}
@@ -716,11 +772,15 @@ class CrossValidationTemporal:
 
         if consistency_score < self.thresholds.get("min_consistency_score", 0.6):
             passed = False
-            failures.append(f"Consistency {consistency_score:.2%} < {self.thresholds['min_consistency_score']:.2%}")
+            failures.append(
+                f"Consistency {consistency_score:.2%} < {self.thresholds['min_consistency_score']:.2%}"
+            )
 
         if return_variance > self.thresholds.get("max_return_variance", 0.25):
             passed = False
-            failures.append(f"Return variance {return_variance:.4f} > {self.thresholds['max_return_variance']}")
+            failures.append(
+                f"Return variance {return_variance:.4f} > {self.thresholds['max_return_variance']}"
+            )
 
         return {
             "passed": passed,
@@ -742,6 +802,7 @@ class CrossValidationTemporal:
 # Stress Tester
 # ============================================================================
 
+
 class StressTester:
     """
     Stress Testing System (Task 3.5).
@@ -761,18 +822,19 @@ class StressTester:
 
         self.n_scenarios = config.get("n_scenarios", 100)
         self.scenarios_config = config.get("scenarios", {})
-        self.thresholds = config.get("thresholds", {
-            "max_scenario_drawdown": -0.30,
-            "min_survival_rate": 0.80,
-            "max_avg_loss": -0.15,
-            "min_recovery_rate": 0.70,
-        })
+        self.thresholds = config.get(
+            "thresholds",
+            {
+                "max_scenario_drawdown": -0.30,
+                "min_survival_rate": 0.80,
+                "max_avg_loss": -0.15,
+                "min_recovery_rate": 0.70,
+            },
+        )
 
         # Load synthetic data config
         full_config = load_validation_config(config_path)
-        self.data_generator = SyntheticDataGenerator(
-            full_config.get("synthetic_data", {})
-        )
+        self.data_generator = SyntheticDataGenerator(full_config.get("synthetic_data", {}))
 
     def _generate_scenario(
         self,
@@ -785,34 +847,48 @@ class StressTester:
         """Generate synthetic data for a specific scenario type."""
         generators = {
             "flash_crash": lambda: self.data_generator.generate_flash_crash_scenario(
-                n_days, start_date, symbol,
+                n_days,
+                start_date,
+                symbol,
                 drop_pct=scenario_config.get("drop_percentage", -0.10),
                 recovery_days=scenario_config.get("recovery_days", 5),
             ),
             "high_volatility": lambda: self.data_generator.generate_high_volatility_scenario(
-                n_days, start_date, symbol,
+                n_days,
+                start_date,
+                symbol,
                 volatility_multiplier=scenario_config.get("volatility_multiplier", 3.0),
             ),
             "trending_bull": lambda: self.data_generator.generate_trending_scenario(
-                n_days, start_date, symbol,
+                n_days,
+                start_date,
+                symbol,
                 daily_drift=scenario_config.get("daily_drift", 0.002),
             ),
             "trending_bear": lambda: self.data_generator.generate_trending_scenario(
-                n_days, start_date, symbol,
+                n_days,
+                start_date,
+                symbol,
                 daily_drift=scenario_config.get("daily_drift", -0.002),
             ),
             "mean_reverting": lambda: self.data_generator.generate_ou_prices(
-                n_days, start_date, symbol,
+                n_days,
+                start_date,
+                symbol,
                 theta=scenario_config.get("reversion_speed", 0.1),
                 mu=scenario_config.get("equilibrium_price", 100.0),
             ),
             "gap_up": lambda: self.data_generator.generate_gap_scenario(
-                n_days, start_date, symbol,
+                n_days,
+                start_date,
+                symbol,
                 gap_pct=scenario_config.get("gap_percentage", 0.05),
                 n_gaps=scenario_config.get("n_gaps", 3),
             ),
             "gap_down": lambda: self.data_generator.generate_gap_scenario(
-                n_days, start_date, symbol,
+                n_days,
+                start_date,
+                symbol,
                 gap_pct=scenario_config.get("gap_percentage", -0.05),
                 n_gaps=scenario_config.get("n_gaps", 3),
             ),
@@ -849,8 +925,7 @@ class StressTester:
 
         # Calculate scenario distribution
         enabled_scenarios = {
-            k: v for k, v in self.scenarios_config.items()
-            if v.get("enabled", True)
+            k: v for k, v in self.scenarios_config.items() if v.get("enabled", True)
         }
 
         total_weight = sum(s.get("weight", 0.1) for s in enabled_scenarios.values())
@@ -898,16 +973,18 @@ class StressTester:
                     survived = max_dd > self.thresholds.get("max_scenario_drawdown", -0.30)
                     recovered = final_capital >= initial_capital * 0.9  # 90% recovery
 
-                    results.append(StressScenarioResult(
-                        scenario_type=scenario_type,
-                        scenario_id=i + 1,
-                        total_return=total_return,
-                        max_drawdown=max_dd,
-                        survived=survived,
-                        recovered=recovered,
-                        final_capital=final_capital,
-                        trades_executed=result.performance.total_trades,
-                    ))
+                    results.append(
+                        StressScenarioResult(
+                            scenario_type=scenario_type,
+                            scenario_id=i + 1,
+                            total_return=total_return,
+                            max_drawdown=max_dd,
+                            survived=survived,
+                            recovered=recovered,
+                            final_capital=final_capital,
+                            trades_executed=result.performance.total_trades,
+                        )
+                    )
 
                 except Exception as e:
                     logger.warning(f"Error in {scenario_type} scenario {i+1}: {e}")
@@ -931,7 +1008,9 @@ class StressTester:
 
         if survival_rate < self.thresholds.get("min_survival_rate", 0.80):
             passed = False
-            failures.append(f"Survival rate {survival_rate:.2%} < {self.thresholds['min_survival_rate']:.2%}")
+            failures.append(
+                f"Survival rate {survival_rate:.2%} < {self.thresholds['min_survival_rate']:.2%}"
+            )
 
         if avg_return < self.thresholds.get("max_avg_loss", -0.15):
             passed = False
@@ -939,21 +1018,25 @@ class StressTester:
 
         if recovery_rate < self.thresholds.get("min_recovery_rate", 0.70):
             passed = False
-            failures.append(f"Recovery rate {recovery_rate:.2%} < {self.thresholds['min_recovery_rate']:.2%}")
+            failures.append(
+                f"Recovery rate {recovery_rate:.2%} < {self.thresholds['min_recovery_rate']:.2%}"
+            )
 
         # Group results by scenario type
         by_scenario = {}
         for r in results:
             if r.scenario_type not in by_scenario:
                 by_scenario[r.scenario_type] = []
-            by_scenario[r.scenario_type].append({
-                "scenario_id": r.scenario_id,
-                "total_return": r.total_return,
-                "max_drawdown": r.max_drawdown,
-                "survived": r.survived,
-                "recovered": r.recovered,
-                "trades_executed": r.trades_executed,
-            })
+            by_scenario[r.scenario_type].append(
+                {
+                    "scenario_id": r.scenario_id,
+                    "total_return": r.total_return,
+                    "max_drawdown": r.max_drawdown,
+                    "survived": r.survived,
+                    "recovered": r.recovered,
+                    "trades_executed": r.trades_executed,
+                }
+            )
 
         return {
             "passed": passed,
@@ -981,6 +1064,7 @@ class StressTester:
 # ============================================================================
 # Monte Carlo Simulator
 # ============================================================================
+
 
 class MonteCarloSimulator:
     """
@@ -1040,11 +1124,13 @@ class MonteCarloSimulator:
             total_return = (final_value - initial_capital) / initial_capital
             max_drawdown = self._calculate_max_drawdown(equity)
 
-            simulation_results.append({
-                "final_value": final_value,
-                "total_return": total_return,
-                "max_drawdown": max_drawdown,
-            })
+            simulation_results.append(
+                {
+                    "final_value": final_value,
+                    "total_return": total_return,
+                    "max_drawdown": max_drawdown,
+                }
+            )
 
         # Aggregate results
         returns = [r["total_return"] for r in simulation_results]
@@ -1058,7 +1144,9 @@ class MonteCarloSimulator:
             var_results[f"VaR_{conf}"] = float(np.percentile(returns, percentile))
             # CVaR is mean of returns below VaR
             var_threshold = np.percentile(returns, percentile)
-            cvar_results[f"CVaR_{conf}"] = float(np.mean([r for r in returns if r <= var_threshold]))
+            cvar_results[f"CVaR_{conf}"] = float(
+                np.mean([r for r in returns if r <= var_threshold])
+            )
 
         return {
             "passed": True,
@@ -1093,7 +1181,7 @@ class MonteCarloSimulator:
 
         for _ in range(n_blocks):
             start_idx = np.random.randint(0, len(returns) - self.block_size + 1)
-            sampled.extend(returns[start_idx:start_idx + self.block_size])
+            sampled.extend(returns[start_idx : start_idx + self.block_size])
 
         return np.array(sampled[:n_periods])
 
@@ -1115,6 +1203,7 @@ class MonteCarloSimulator:
 # ============================================================================
 # Comprehensive Validator (Facade)
 # ============================================================================
+
 
 class ComprehensiveValidator:
     """
@@ -1205,9 +1294,15 @@ class ComprehensiveValidator:
 
         report.overall_passed = all_passed
         report.summary = {
-            "walk_forward_passed": report.walk_forward_results.get("passed") if report.walk_forward_results else None,
-            "cross_validation_passed": report.cross_validation_results.get("passed") if report.cross_validation_results else None,
-            "stress_test_passed": report.stress_test_results.get("passed") if report.stress_test_results else None,
+            "walk_forward_passed": report.walk_forward_results.get("passed")
+            if report.walk_forward_results
+            else None,
+            "cross_validation_passed": report.cross_validation_results.get("passed")
+            if report.cross_validation_results
+            else None,
+            "stress_test_passed": report.stress_test_results.get("passed")
+            if report.stress_test_results
+            else None,
             "monte_carlo_completed": report.monte_carlo_results is not None,
             "overall_passed": all_passed,
         }
@@ -1223,7 +1318,7 @@ class ComprehensiveValidator:
         returns = []
 
         for i in range(1, len(sorted_quotes)):
-            prev_close = float(sorted_quotes[i-1].close or sorted_quotes[i-1].last)
+            prev_close = float(sorted_quotes[i - 1].close or sorted_quotes[i - 1].last)
             curr_close = float(sorted_quotes[i].close or sorted_quotes[i].last)
             if prev_close > 0:
                 returns.append((curr_close - prev_close) / prev_close)
@@ -1233,7 +1328,9 @@ class ComprehensiveValidator:
     def save_report(self, report: ValidationReport, output_path: Optional[str] = None) -> str:
         """Save validation report to JSON file."""
         if output_path is None:
-            output_dir = Path(self.config.get("reporting", {}).get("output_directory", "reports/validation"))
+            output_dir = Path(
+                self.config.get("reporting", {}).get("output_directory", "reports/validation")
+            )
             output_dir.mkdir(parents=True, exist_ok=True)
             timestamp = report.timestamp.strftime("%Y%m%d_%H%M%S")
             output_path = str(output_dir / f"validation_{report.strategy_name}_{timestamp}.json")

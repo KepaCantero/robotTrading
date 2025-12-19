@@ -6,10 +6,10 @@ Exporta todos los calculadores de VaR disponibles.
 
 from .var_calculators import (
     BaseVaRCalculator,
+    GARCHVaRCalculator,
     HistoricalVaRCalculator,
-    ParametricVaRCalculator,
     MonteCarloVaRCalculator,
-    GARCHVaRCalculator
+    ParametricVaRCalculator,
 )
 
 __all__ = [
@@ -17,6 +17,5 @@ __all__ = [
     "HistoricalVaRCalculator",
     "ParametricVaRCalculator",
     "MonteCarloVaRCalculator",
-    "GARCHVaRCalculator"
+    "GARCHVaRCalculator",
 ]
-

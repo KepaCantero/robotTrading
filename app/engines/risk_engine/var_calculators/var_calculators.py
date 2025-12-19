@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 # Optional dependencies
 try:
     import arch
+
     ARCH_AVAILABLE = True
 except ImportError:
     ARCH_AVAILABLE = False
@@ -27,11 +28,11 @@ except ImportError:
 
 class BaseVaRCalculator(ABC):
     """Clase base para calculadores de VaR."""
-    
+
     def __init__(self, config: Dict[str, Any]):
         """
         Inicializar VaR calculator.
-        
+
         Args:
             config: Configuración del calculator
         """
@@ -39,20 +40,18 @@ class BaseVaRCalculator(ABC):
         self.confidence_level = config.get('confidence_level', 0.95)  # 95% por defecto
         self.time_horizon = config.get('time_horizon', 1)  # días
         self.logger = logging.getLogger(self.__class__.__name__)
-    
+
     @abstractmethod
     def calculate_var(
-        self,
-        returns: np.ndarray,
-        portfolio_value: Optional[float] = None
+        self, returns: np.ndarray, portfolio_value: Optional[float] = None
     ) -> Dict[str, Any]:
         """
         Calcular VaR.
-        
+
         Args:
             returns: Serie de retornos históricos
             portfolio_value: Valor del portfolio (opcional)
-        
+
         Returns:
             Dict con VaR y métricas relacionadas
         """
@@ -62,50 +61,48 @@ class BaseVaRCalculator(ABC):
 class HistoricalVaRCalculator(BaseVaRCalculator):
     """
     Historical VaR Calculator.
-    
+
     Calcula VaR usando distribución empírica de retornos históricos.
     """
-    
+
     def calculate_var(
-        self,
-        returns: np.ndarray,
-        portfolio_value: Optional[float] = None
+        self, returns: np.ndarray, portfolio_value: Optional[float] = None
     ) -> Dict[str, Any]:
         """
         Calcular VaR histórico.
-        
+
         Args:
             returns: Serie de retornos históricos
             portfolio_value: Valor del portfolio
-        
+
         Returns:
             Dict con VaR histórico
         """
         try:
             if len(returns) == 0:
                 return {'error': 'No returns data provided'}
-            
+
             # Convertir a numpy array si es necesario
             if isinstance(returns, (pd.Series, list)):
                 returns = np.array(returns)
-            
+
             # Calcular percentil correspondiente al confidence level
             percentile = (1 - self.confidence_level) * 100
-            
+
             # VaR histórico (percentil de distribución empírica)
             var_historical = np.percentile(returns, percentile)
-            
+
             # CVaR (Expected Shortfall) - promedio de pérdidas más allá del VaR
             losses_beyond_var = returns[returns <= var_historical]
             cvar = np.mean(losses_beyond_var) if len(losses_beyond_var) > 0 else var_historical
-            
+
             # Convertir a valor absoluto si portfolio_value está disponible
             var_amount = None
             cvar_amount = None
             if portfolio_value is not None:
                 var_amount = abs(var_historical * portfolio_value)
                 cvar_amount = abs(cvar * portfolio_value)
-            
+
             return {
                 'var': float(var_historical),
                 'var_amount': float(var_amount) if var_amount is not None else None,
@@ -114,7 +111,7 @@ class HistoricalVaRCalculator(BaseVaRCalculator):
                 'confidence_level': self.confidence_level,
                 'time_horizon': self.time_horizon,
                 'method': 'historical',
-                'observations': len(returns)
+                'observations': len(returns),
             }
         except Exception as e:
             self.logger.error(f"Error calculando VaR histórico: {e}", exc_info=True)
@@ -124,56 +121,55 @@ class HistoricalVaRCalculator(BaseVaRCalculator):
 class ParametricVaRCalculator(BaseVaRCalculator):
     """
     Parametric VaR Calculator (Variance-Covariance).
-    
+
     Asume distribución normal de retornos.
     """
-    
+
     def calculate_var(
-        self,
-        returns: np.ndarray,
-        portfolio_value: Optional[float] = None
+        self, returns: np.ndarray, portfolio_value: Optional[float] = None
     ) -> Dict[str, Any]:
         """
         Calcular VaR paramétrico.
-        
+
         Args:
             returns: Serie de retornos históricos
             portfolio_value: Valor del portfolio
-        
+
         Returns:
             Dict con VaR paramétrico
         """
         try:
             if len(returns) == 0:
                 return {'error': 'No returns data provided'}
-            
+
             # Convertir a numpy array
             if isinstance(returns, (pd.Series, list)):
                 returns = np.array(returns)
-            
+
             # Calcular media y desviación estándar
             mean_return = np.mean(returns)
             std_return = np.std(returns)
-            
+
             # Z-score para confidence level
             from scipy import stats
+
             z_score = stats.norm.ppf(1 - self.confidence_level)
-            
+
             # VaR paramétrico: mean - z * std
             var_parametric = mean_return - z_score * std_return
-            
+
             # CVaR bajo normalidad: mean - std * phi(z) / (1 - confidence_level)
             # donde phi es la densidad normal estándar
             phi_z = stats.norm.pdf(z_score)
             cvar_parametric = mean_return - std_return * phi_z / (1 - self.confidence_level)
-            
+
             # Convertir a valor absoluto si portfolio_value está disponible
             var_amount = None
             cvar_amount = None
             if portfolio_value is not None:
                 var_amount = abs(var_parametric * portfolio_value)
                 cvar_amount = abs(cvar_parametric * portfolio_value)
-            
+
             return {
                 'var': float(var_parametric),
                 'var_amount': float(var_amount) if var_amount is not None else None,
@@ -184,7 +180,7 @@ class ParametricVaRCalculator(BaseVaRCalculator):
                 'method': 'parametric',
                 'mean_return': float(mean_return),
                 'std_return': float(std_return),
-                'z_score': float(z_score)
+                'z_score': float(z_score),
             }
         except ImportError:
             self.logger.warning("scipy no disponible. Usando aproximación básica.")
@@ -195,11 +191,11 @@ class ParametricVaRCalculator(BaseVaRCalculator):
             z_scores = {0.95: 1.645, 0.99: 2.326, 0.90: 1.282}
             z_score = z_scores.get(self.confidence_level, 1.645)
             var_parametric = mean_return - z_score * std_return
-            
+
             var_amount = None
             if portfolio_value is not None:
                 var_amount = abs(var_parametric * portfolio_value)
-            
+
             return {
                 'var': float(var_parametric),
                 'var_amount': float(var_amount) if var_amount is not None else None,
@@ -207,7 +203,7 @@ class ParametricVaRCalculator(BaseVaRCalculator):
                 'time_horizon': self.time_horizon,
                 'method': 'parametric_basic',
                 'mean_return': float(mean_return),
-                'std_return': float(std_return)
+                'std_return': float(std_return),
             }
         except Exception as e:
             self.logger.error(f"Error calculando VaR paramétrico: {e}", exc_info=True)
@@ -217,65 +213,59 @@ class ParametricVaRCalculator(BaseVaRCalculator):
 class MonteCarloVaRCalculator(BaseVaRCalculator):
     """
     Monte Carlo VaR Calculator.
-    
+
     Simula retornos futuros usando Monte Carlo.
     """
-    
+
     def __init__(self, config: Dict[str, Any]):
         """Inicializar Monte Carlo VaR calculator."""
         super().__init__(config)
         self.n_simulations = config.get('n_simulations', 10000)
-    
+
     def calculate_var(
-        self,
-        returns: np.ndarray,
-        portfolio_value: Optional[float] = None
+        self, returns: np.ndarray, portfolio_value: Optional[float] = None
     ) -> Dict[str, Any]:
         """
         Calcular VaR usando Monte Carlo.
-        
+
         Args:
             returns: Serie de retornos históricos
             portfolio_value: Valor del portfolio
-        
+
         Returns:
             Dict con VaR Monte Carlo
         """
         try:
             if len(returns) == 0:
                 return {'error': 'No returns data provided'}
-            
+
             # Convertir a numpy array
             if isinstance(returns, (pd.Series, list)):
                 returns = np.array(returns)
-            
+
             # Calcular parámetros de distribución
             mean_return = np.mean(returns)
             std_return = np.std(returns)
-            
+
             # Simular retornos futuros
             np.random.seed(42)  # Para reproducibilidad
-            simulated_returns = np.random.normal(
-                mean_return,
-                std_return,
-                self.n_simulations
-            )
-            
+            simulated_returns = np.random.normal(mean_return, std_return, self.n_simulations)
+
             # Calcular percentil de simulaciones
             percentile = (1 - self.confidence_level) * 100
             var_mc = np.percentile(simulated_returns, percentile)
-            
+
             # CVaR de simulaciones
             losses_beyond_var = simulated_returns[simulated_returns <= var_mc]
             cvar_mc = np.mean(losses_beyond_var) if len(losses_beyond_var) > 0 else var_mc
-            
+
             # Convertir a valor absoluto si portfolio_value está disponible
             var_amount = None
             cvar_amount = None
             if portfolio_value is not None:
                 var_amount = abs(var_mc * portfolio_value)
                 cvar_amount = abs(cvar_mc * portfolio_value)
-            
+
             return {
                 'var': float(var_mc),
                 'var_amount': float(var_amount) if var_amount is not None else None,
@@ -286,7 +276,7 @@ class MonteCarloVaRCalculator(BaseVaRCalculator):
                 'method': 'monte_carlo',
                 'n_simulations': self.n_simulations,
                 'mean_return': float(mean_return),
-                'std_return': float(std_return)
+                'std_return': float(std_return),
             }
         except Exception as e:
             self.logger.error(f"Error calculando VaR Monte Carlo: {e}", exc_info=True)
@@ -296,22 +286,20 @@ class MonteCarloVaRCalculator(BaseVaRCalculator):
 class GARCHVaRCalculator(BaseVaRCalculator):
     """
     GARCH VaR Calculator.
-    
+
     Usa modelos GARCH para modelar volatilidad dinámica.
     """
-    
+
     def calculate_var(
-        self,
-        returns: np.ndarray,
-        portfolio_value: Optional[float] = None
+        self, returns: np.ndarray, portfolio_value: Optional[float] = None
     ) -> Dict[str, Any]:
         """
         Calcular VaR usando modelo GARCH.
-        
+
         Args:
             returns: Serie de retornos históricos
             portfolio_value: Valor del portfolio
-        
+
         Returns:
             Dict con VaR GARCH
         """
@@ -319,45 +307,46 @@ class GARCHVaRCalculator(BaseVaRCalculator):
             self.logger.warning("arch no disponible. Usando método paramétrico como fallback.")
             calculator = ParametricVaRCalculator(self.config)
             return calculator.calculate_var(returns, portfolio_value)
-        
+
         try:
             if len(returns) < 100:
                 self.logger.warning("Pocos datos para GARCH. Usando método paramétrico.")
                 calculator = ParametricVaRCalculator(self.config)
                 return calculator.calculate_var(returns, portfolio_value)
-            
+
             # Convertir a numpy array
             if isinstance(returns, (pd.Series, list)):
                 returns = np.array(returns)
-            
+
             # Ajustar modelo GARCH(1,1)
             from arch import arch_model
-            
+
             model = arch_model(returns * 100, vol='Garch', p=1, q=1)
             fitted_model = model.fit(disp='off')
-            
+
             # Obtener volatilidad condicional
             forecast = fitted_model.forecast(horizon=1)
             conditional_volatility = np.sqrt(forecast.variance.values[-1, 0]) / 100
-            
+
             # Calcular VaR usando volatilidad condicional
             from scipy import stats
+
             z_score = stats.norm.ppf(1 - self.confidence_level)
-            
+
             mean_return = np.mean(returns)
             var_garch = mean_return - z_score * conditional_volatility
-            
+
             # CVaR
             phi_z = stats.norm.pdf(z_score)
             cvar_garch = mean_return - conditional_volatility * phi_z / (1 - self.confidence_level)
-            
+
             # Convertir a valor absoluto
             var_amount = None
             cvar_amount = None
             if portfolio_value is not None:
                 var_amount = abs(var_garch * portfolio_value)
                 cvar_amount = abs(cvar_garch * portfolio_value)
-            
+
             return {
                 'var': float(var_garch),
                 'var_amount': float(var_amount) if var_amount is not None else None,
@@ -366,7 +355,7 @@ class GARCHVaRCalculator(BaseVaRCalculator):
                 'confidence_level': self.confidence_level,
                 'time_horizon': self.time_horizon,
                 'method': 'garch',
-                'conditional_volatility': float(conditional_volatility)
+                'conditional_volatility': float(conditional_volatility),
             }
         except ImportError:
             calculator = ParametricVaRCalculator(self.config)
@@ -375,4 +364,3 @@ class GARCHVaRCalculator(BaseVaRCalculator):
             self.logger.error(f"Error calculando VaR GARCH: {e}", exc_info=True)
             calculator = ParametricVaRCalculator(self.config)
             return calculator.calculate_var(returns, portfolio_value)
-

@@ -19,14 +19,14 @@ logger = logging.getLogger(__name__)
 class SignalCooldownManager:
     """
     TASK-SC-1: Signal Cooldown Manager.
-    
+
     Prevents over-trading by enforcing cooldown periods per symbol.
     """
 
     def __init__(self, default_cooldown_minutes: int = 10):
         """
         Initialize cooldown manager.
-        
+
         Args:
             default_cooldown_minutes: Default cooldown period in minutes
         """
@@ -37,7 +37,7 @@ class SignalCooldownManager:
     def set_cooldown(self, symbol: str, minutes: Optional[int] = None) -> None:
         """
         Set cooldown for a symbol.
-        
+
         Args:
             symbol: Symbol to set cooldown for
             minutes: Cooldown duration in minutes (uses default if None)
@@ -51,10 +51,10 @@ class SignalCooldownManager:
     def is_in_cooldown(self, symbol: str) -> bool:
         """
         Check if symbol is in cooldown period.
-        
+
         Args:
             symbol: Symbol to check
-            
+
         Returns:
             True if in cooldown, False otherwise
         """
@@ -90,7 +90,7 @@ class SignalCooldownManager:
 class SignalCompoundScoreCalculator:
     """
     TASK-SC-2: Signal Compound Score Calculator.
-    
+
     Calculates compound score using weighted components:
     - confidence (30%)
     - volume_ratio (25%)
@@ -115,11 +115,11 @@ class SignalCompoundScoreCalculator:
     ) -> float:
         """
         Calculate compound score for a signal.
-        
+
         Args:
             signal: Trading signal
             metadata: Optional additional metadata
-            
+
         Returns:
             Compound score (0-100)
         """
@@ -201,7 +201,7 @@ class SignalCompoundScoreCalculator:
 class SignalPriorityRanker:
     """
     TASK-SC-3: Signal Priority Ranker.
-    
+
     Ranks signals by priority based on compound score:
     - >80 = high priority
     - 50-80 = medium priority
@@ -215,7 +215,7 @@ class SignalPriorityRanker:
     ):
         """
         Initialize priority ranker.
-        
+
         Args:
             high_threshold: Score threshold for high priority
             medium_threshold: Score threshold for medium priority
@@ -226,10 +226,10 @@ class SignalPriorityRanker:
     def get_priority(self, compound_score: float) -> str:
         """
         Get priority level for a compound score.
-        
+
         Args:
             compound_score: Compound score (0-100)
-            
+
         Returns:
             Priority level: "high", "medium", or "low"
         """
@@ -243,10 +243,10 @@ class SignalPriorityRanker:
     def rank_signals(self, signals: List[Signal]) -> List[Signal]:
         """
         Rank signals by priority.
-        
+
         Args:
             signals: List of signals to rank
-            
+
         Returns:
             Signals sorted by priority (high -> medium -> low)
         """
@@ -264,7 +264,7 @@ class SignalPriorityRanker:
 class PortfolioSignalFilter:
     """
     TASK-SC-4: Portfolio Signal Filter.
-    
+
     Filters conflicting signals by strategy and symbol to prevent
     contradictory positions in the portfolio.
     """
@@ -281,12 +281,12 @@ class PortfolioSignalFilter:
     ) -> List[Signal]:
         """
         Filter signals to avoid conflicts.
-        
+
         Args:
             signals: List of signals to filter
             max_signals_per_symbol: Maximum signals per symbol
             filter_conflicts: Whether to filter conflicting signals
-            
+
         Returns:
             Filtered list of signals
         """
@@ -335,7 +335,7 @@ class PortfolioSignalFilter:
 class SignalScoringEngine:
     """
     TASK-SC-1 to SC-5: Complete Signal Scoring Engine.
-    
+
     Integrates all signal scoring components:
     - Cooldown management
     - Compound score calculation
@@ -346,7 +346,7 @@ class SignalScoringEngine:
     def __init__(self, default_cooldown_minutes: int = 10):
         """
         Initialize signal scoring engine.
-        
+
         Args:
             default_cooldown_minutes: Default cooldown period in minutes
         """
@@ -358,11 +358,11 @@ class SignalScoringEngine:
     def process_signals(self, signals: List[Signal], apply_cooldown: bool = True) -> List[Signal]:
         """
         Process signals through the complete scoring pipeline.
-        
+
         Args:
             signals: Raw signals from strategies
             apply_cooldown: Whether to apply cooldown (False for backtesting)
-            
+
         Returns:
             Processed and filtered signals
         """

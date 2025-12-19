@@ -18,12 +18,14 @@ import pandas as pd
 # Try multiple Yahoo Finance libraries as fallbacks
 try:
     import yfinance as yf
+
     HAS_YFINANCE = True
 except ImportError:
     HAS_YFINANCE = False
 
 try:
     from yahoo_fin.stock_info import get_data as yahoo_fin_get_data
+
     HAS_YAHOO_FIN = True
 except ImportError:
     HAS_YAHOO_FIN = False
@@ -104,7 +106,7 @@ class DataLoader:
                         if isinstance(row[date_col], datetime)
                         else pd.to_datetime(row[date_col]).to_pydatetime()
                     )
-                    
+
                     # Handle volume - cap at 10B to avoid validation errors
                     volume_raw = Decimal(str(row.get("volume", 0)))
                     max_volume = Decimal("10000000000")  # 10B shares limit
@@ -144,7 +146,7 @@ class DataLoader:
     ) -> List[Quote]:
         """
         Load data from Yahoo Finance using multiple methods as fallbacks.
-        
+
         Tries:
         1. Yahoo Finance v8 API directly (most reliable)
         2. yfinance (secondary)
@@ -155,7 +157,7 @@ class DataLoader:
         if quotes:
             logger.info(f"Loaded {len(quotes)} quotes from Yahoo Finance v8 API for {symbol}")
             return quotes
-        
+
         # Try yfinance second
         if HAS_YFINANCE:
             try:
@@ -169,7 +171,7 @@ class DataLoader:
                     return quotes
             except Exception as e:
                 logger.debug(f"yfinance failed for {symbol}: {e}, trying yahoo_fin...")
-        
+
         # Fallback to yahoo_fin
         if HAS_YAHOO_FIN:
             try:
@@ -177,7 +179,7 @@ class DataLoader:
                 start_str = start_date.strftime("%m/%d/%Y")
                 end_str = end_date.strftime("%m/%d/%Y")
                 interval = "1d" if timeframe == "1d" else "1wk"
-                
+
                 df = yahoo_fin_get_data(
                     symbol,
                     start_date=start_str,
@@ -185,17 +187,17 @@ class DataLoader:
                     index_as_date=True,
                     interval=interval,
                 )
-                
+
                 if df is not None and not df.empty:
                     quotes = self._convert_dataframe_to_quotes(df, symbol)
                     logger.info(f"Loaded {len(quotes)} quotes from yahoo_fin for {symbol}")
                     return quotes
             except Exception as e:
                 logger.debug(f"yahoo_fin failed for {symbol}: {e}")
-        
+
         logger.warning(f"No data available from Yahoo Finance for {symbol}")
         return []
-    
+
     def _load_from_yahoo_v8_api(
         self,
         symbol: str,
@@ -209,11 +211,11 @@ class DataLoader:
         """
         try:
             import requests
-            
+
             # Convert dates to Unix timestamps
             period1 = int(start_date.timestamp())
             period2 = int(end_date.timestamp())
-            
+
             # Map timeframe to interval
             interval_map = {
                 "1d": "1d",
@@ -221,7 +223,7 @@ class DataLoader:
                 "1m": "1m",
             }
             interval = interval_map.get(timeframe, "1d")
-            
+
             url = "https://query1.finance.yahoo.com/v8/finance/chart/{}".format(symbol)
             params = {
                 "period1": period1,
@@ -230,51 +232,75 @@ class DataLoader:
                 "events": "div,splits",
                 "includePrePost": "false",
             }
-            
+
             headers = {
                 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept': 'application/json',
                 'Accept-Language': 'en-US,en;q=0.9',
                 'Referer': 'https://finance.yahoo.com/',
             }
-            
+
             response = requests.get(url, params=params, headers=headers, timeout=30)
-            
+
             if response.status_code != 200:
-                logger.debug(f"Yahoo Finance v8 API returned status {response.status_code} for {symbol}")
+                logger.debug(
+                    f"Yahoo Finance v8 API returned status {response.status_code} for {symbol}"
+                )
                 return []
-            
+
             data = response.json()
-            
+
             if "chart" not in data or not data["chart"]["result"]:
                 logger.debug(f"No data in Yahoo Finance v8 API response for {symbol}")
                 return []
-            
+
             result = data["chart"]["result"][0]
-            
+
             if "timestamp" not in result or "indicators" not in result:
                 logger.debug(f"Invalid response structure from Yahoo Finance v8 API for {symbol}")
                 return []
-            
+
             timestamps = result["timestamp"]
             quote = result["indicators"]["quote"][0]
-            
+
             quotes = []
             for i, ts in enumerate(timestamps):
                 date = datetime.fromtimestamp(ts)
                 if start_date <= date <= end_date:
-                    close = quote["close"][i] if i < len(quote["close"]) and quote["close"][i] is not None else None
+                    close = (
+                        quote["close"][i]
+                        if i < len(quote["close"]) and quote["close"][i] is not None
+                        else None
+                    )
                     if close is None:
                         continue
-                    
-                    open_price = quote["open"][i] if i < len(quote["open"]) and quote["open"][i] is not None else close
-                    high = quote["high"][i] if i < len(quote["high"]) and quote["high"][i] is not None else close
-                    low = quote["low"][i] if i < len(quote["low"]) and quote["low"][i] is not None else close
-                    volume_raw = quote["volume"][i] if i < len(quote["volume"]) and quote["volume"][i] is not None else 0
+
+                    open_price = (
+                        quote["open"][i]
+                        if i < len(quote["open"]) and quote["open"][i] is not None
+                        else close
+                    )
+                    high = (
+                        quote["high"][i]
+                        if i < len(quote["high"]) and quote["high"][i] is not None
+                        else close
+                    )
+                    low = (
+                        quote["low"][i]
+                        if i < len(quote["low"]) and quote["low"][i] is not None
+                        else close
+                    )
+                    volume_raw = (
+                        quote["volume"][i]
+                        if i < len(quote["volume"]) and quote["volume"][i] is not None
+                        else 0
+                    )
                     # Cap volume at 10B to avoid validation errors (NVDA can have >1B shares)
                     max_volume = Decimal("10000000000")  # 10B shares
-                    volume = min(Decimal(str(volume_raw)), max_volume) if volume_raw else Decimal("0")
-                    
+                    volume = (
+                        min(Decimal(str(volume_raw)), max_volume) if volume_raw else Decimal("0")
+                    )
+
                     quotes.append(
                         Quote(
                             symbol=symbol,
@@ -292,25 +318,25 @@ class DataLoader:
                             metadata={"source": "yahoo_v8_api"},
                         )
                     )
-            
+
             return quotes
-            
+
         except Exception as e:
             logger.debug(f"Yahoo Finance v8 API failed for {symbol}: {e}")
             return []
-    
+
     def _convert_yfinance_to_quotes(self, hist: pd.DataFrame, symbol: str) -> List[Quote]:
         """Convert yfinance DataFrame to Quote objects."""
         quotes = []
         max_volume = Decimal("10000000000")  # 10B shares limit
-        
+
         for idx, row in hist.iterrows():
             timestamp = idx if isinstance(idx, datetime) else pd.to_datetime(idx).to_pydatetime()
-            
+
             # Handle volume - cap at 10B
             volume_raw = Decimal(str(row.get("Volume", 0)))
             volume = min(volume_raw, max_volume) if volume_raw > 0 else Decimal("0")
-            
+
             quote = Quote(
                 symbol=symbol,
                 bid=Decimal(str(row.get("Close", row.get("Low", 100)))),
@@ -325,12 +351,12 @@ class DataLoader:
             )
             quotes.append(quote)
         return quotes
-    
+
     def _convert_dataframe_to_quotes(self, df: pd.DataFrame, symbol: str) -> List[Quote]:
         """Convert pandas DataFrame (from yahoo_fin or CSV) to Quote objects."""
         quotes = []
         max_volume = Decimal("10000000000")  # 10B shares limit
-        
+
         for idx, row in df.iterrows():
             # Handle date index
             if isinstance(idx, datetime):
@@ -339,14 +365,14 @@ class DataLoader:
                 timestamp = idx.to_pydatetime()
             else:
                 timestamp = pd.to_datetime(idx).to_pydatetime()
-            
+
             # Get close price (primary price)
             close = Decimal(str(row.get("close", row.get("Close", row.get("last", 100)))))
-            
+
             # Handle volume - cap at 10B
             volume_raw = Decimal(str(row.get("volume", row.get("Volume", 0))))
             volume = min(volume_raw, max_volume) if volume_raw > 0 else Decimal("0")
-            
+
             quote = Quote(
                 symbol=symbol,
                 bid=close,
@@ -360,7 +386,7 @@ class DataLoader:
                 close=close,
             )
             quotes.append(quote)
-        
+
         return quotes
 
     def save_to_csv(self, data: List[Quote], filename: str):

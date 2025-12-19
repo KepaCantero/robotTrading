@@ -22,6 +22,7 @@ import pandas as pd
 # REQUIRED: pandas-ta-classic must be installed (compatible with Python 3.9+)
 try:
     import pandas_ta_classic as ta
+
     pass  # pandas-ta-classic is required
 except ImportError:
     raise ImportError(
@@ -52,75 +53,75 @@ logger = logging.getLogger(__name__)
 class TechnicalIndicatorCalculator:
     """
     Calculator for technical indicators using pandas-ta-classic library ONLY.
-    
+
     REQUIRED: pandas-ta-classic must be installed. All calculations use the library.
     NO manual calculations - all indicators come from pandas-ta-classic.
     """
-    
+
     @staticmethod
     def calculate_rsi(prices: List[float], period: int = 14) -> Optional[float]:
         """
         Calculate Relative Strength Index using pandas-ta-classic.rsi() library.
-        
+
         ✅ REQUIRED: Uses pandas_ta_classic.rsi() - NO manual calculations
         """
         if len(prices) < period + 1:
             logger.debug(f"RSI: Insufficient data ({len(prices)} < {period + 1})")
             return None
-        
+
         try:
             # ✅ USE LIBRARY: Convert to pandas Series and use pandas_ta_classic.rsi()
             df = pd.Series(prices, name='close')
             rsi_series = ta.rsi(df, length=period)
-            
+
             if rsi_series is None or rsi_series.empty or rsi_series.isna().all():
                 logger.debug("RSI: pandas_ta_classic returned None or all NaN values")
                 return None
-            
+
             # Get last valid value
             rsi_value = float(rsi_series.iloc[-1])
-            
+
             logger.debug(f"RSI({period}) calculated: {rsi_value:.2f} from {len(prices)} prices")
             return round(rsi_value, 2)
-            
+
         except Exception as e:
             logger.error(f"RSI calculation error with pandas_ta_classic: {e}")
             raise
-    
+
     @staticmethod
     def calculate_ema(prices: List[float], period: int) -> Optional[float]:
         """
         Calculate Exponential Moving Average using pandas-ta-classic.ema() library.
-        
+
         ✅ REQUIRED: Uses pandas_ta_classic.ema() - NO manual calculations
         """
         # Validate period to prevent errors with negative or zero periods
         if period <= 0:
             logger.debug(f"EMA: Invalid period ({period}) must be > 0")
             return None
-            
+
         if len(prices) < period:
             logger.debug(f"EMA: Insufficient data ({len(prices)} < {period})")
             return None
-        
+
         try:
             # ✅ USE LIBRARY: Convert to pandas Series and use pandas_ta_classic.ema()
             df = pd.Series(prices, name='close')
             ema_series = ta.ema(df, length=period)
-            
+
             if ema_series is None or ema_series.empty or ema_series.isna().all():
                 logger.debug("EMA: pandas_ta_classic returned None or all NaN values")
                 return None
-            
+
             ema_value = float(ema_series.iloc[-1])
-            
+
             logger.debug(f"EMA({period}) calculated: {ema_value:.2f} from {len(prices)} prices")
             return round(ema_value, 2)
-            
+
         except Exception as e:
             logger.error(f"EMA calculation error with pandas_ta_classic: {e}")
             raise
-    
+
     @staticmethod
     def calculate_macd(
         prices: List[float],
@@ -130,28 +131,28 @@ class TechnicalIndicatorCalculator:
     ) -> Tuple[Optional[float], Optional[float], Optional[float]]:
         """
         Calculate MACD using pandas_ta_classic.macd() library.
-        
+
         ✅ REQUIRED: Uses pandas_ta_classic.macd() - NO manual calculations
         Returns (MACD line, Signal line, Histogram)
         Uses pandas-ta-classic library ONLY.
         """
         if len(prices) < slow_period:
             logger.debug(f"MACD: Insufficient data ({len(prices)} < {slow_period})")
-            return None, None, None        
+            return None, None, None
         try:
             # ✅ USE LIBRARY: Convert to pandas Series and use pandas_ta_classic.macd()
             df = pd.Series(prices, name='close')
             macd_df = ta.macd(df, fast=fast_period, slow=slow_period, signal=signal_period)
-            
+
             if macd_df is None or macd_df.empty:
                 logger.debug("MACD: pandas_ta_classic returned None or empty DataFrame")
                 return None, None, None
-            
+
             # Extract MACD line, signal line, and histogram (pandas_ta_classic may use different naming)
             macd_line_col = None
             signal_line_col = None
             histogram_col = None
-            
+
             for col in macd_df.columns:
                 col_upper = col.upper()
                 if "MACD" in col_upper and "MACDS" not in col_upper and "MACDH" not in col_upper:
@@ -160,102 +161,103 @@ class TechnicalIndicatorCalculator:
                     signal_line_col = col
                 elif "MACDH" in col_upper or "MACD_HIST" in col_upper:
                     histogram_col = col
-            
+
             if macd_line_col is None or signal_line_col is None or histogram_col is None:
                 logger.debug("MACD: Some column names not found in DataFrame")
                 return None, None, None
-            
+
             # Get last valid values, handling NaN/None
             macd_line_val = macd_df[macd_line_col].iloc[-1]
             signal_line_val = macd_df[signal_line_col].iloc[-1]
             histogram_val = macd_df[histogram_col].iloc[-1]
-            
+
             # Check for NaN or None values
             if pd.isna(macd_line_val) or pd.isna(signal_line_val) or pd.isna(histogram_val):
                 logger.debug("MACD: NaN values in MACD calculation")
                 return None, None, None
-            
+
             macd_line = float(macd_line_val)
             signal_line = float(signal_line_val)
             histogram = float(histogram_val)
-            
+
             logger.debug(
                 f"MACD({fast_period},{slow_period},{signal_period}) calculated: "
                 f"MACD={macd_line:.4f}, Signal={signal_line:.4f}, Histogram={histogram:.4f}"
             )
-            
+
             return round(macd_line, 4), round(signal_line, 4), round(histogram, 4)
-            
+
         except Exception as e:
             logger.error(f"MACD calculation error with pandas_ta_classic: {e}")
             # Retornar None en lugar de lanzar excepción para permitir que el código continúe
             return None, None, None
-    
+
     @staticmethod
     def calculate_roc(prices: List[float], period: int = 12) -> Optional[float]:
         """
         Calculate Rate of Change using pandas_ta_classic.roc() library.
-        
+
         ✅ REQUIRED: Uses pandas_ta_classic.roc() - NO manual calculations
         Uses pandas-ta-classic library ONLY.
         """
         if len(prices) < period + 1:
             logger.debug(f"ROC: Insufficient data ({len(prices)} < {period + 1})")
-            return None        
+            return None
         try:
             df = pd.Series(prices, name='close')
             # ✅ USE LIBRARY: pandas_ta_classic.roc() - vectorized calculation
             roc_series = ta.roc(df, length=period)
-            
+
             if roc_series is None or roc_series.empty or roc_series.isna().all():
                 logger.debug("ROC: pandas_ta_classic returned None or all NaN values")
                 return None
-            
+
             roc_value = float(roc_series.iloc[-1])
-            
+
             logger.debug(f"ROC({period}) calculated: {roc_value:.4f}%")
             return round(roc_value, 4)
-            
+
         except Exception as e:
             logger.error(f"ROC calculation error with pandas_ta_classic: {e}")
             raise
-    
+
     @staticmethod
     def calculate_obv(prices: List[float], volumes: List[float]) -> Optional[float]:
         """
         Calculate On Balance Volume using pandas-ta-classic.obv() library.
-        
+
         ✅ REQUIRED: Uses pandas_ta_classic.obv() - NO manual calculations
         """
         if len(prices) < 2 or len(volumes) < 2 or len(prices) != len(volumes):
-            logger.debug(f"OBV: Insufficient or mismatched data (prices={len(prices)}, volumes={len(volumes)})")
+            logger.debug(
+                f"OBV: Insufficient or mismatched data (prices={len(prices)}, volumes={len(volumes)})"
+            )
             return None
-        
+
         try:
             # Create DataFrame with close and volume for pandas_ta_classic
-            df = pd.DataFrame({
-                'close': prices,
-                'volume': volumes
-            })
-            
+            df = pd.DataFrame({'close': prices, 'volume': volumes})
+
             # ✅ USE LIBRARY: pandas_ta_classic.obv() - vectorized calculation
             obv_series = ta.obv(df['close'], df['volume'])
-            
+
             if obv_series is None or obv_series.empty or obv_series.isna().all():
                 logger.debug("OBV: pandas_ta_classic returned None or all NaN values")
                 return None
-            
+
             obv_value = float(obv_series.iloc[-1])
-            
+
             logger.debug(f"OBV calculated: {obv_value:.2f}")
             return round(obv_value, 2)
-            
+
         except Exception as e:
             logger.error(f"OBV calculation error with pandas_ta_classic: {e}")
             raise
-    
+
     @staticmethod
-    def calculate_stochastic_rsi(rsi_values: List[float], period: int = 14, smooth_k: int = 3) -> Tuple[Optional[float], Optional[float]]:
+    def calculate_stochastic_rsi(
+        rsi_values: List[float], period: int = 14, smooth_k: int = 3
+    ) -> Tuple[Optional[float], Optional[float]]:
         """
         Calculate Stochastic RSI from pre-calculated RSI values using pandas vectorized operations.
 
@@ -276,7 +278,9 @@ class TechnicalIndicatorCalculator:
         # Need at least period values for the rolling window, plus smooth_k-1 for %D
         min_required = period + smooth_k - 1
         if len(rsi_values) < min_required:
-            logger.debug(f"Stochastic RSI: Insufficient RSI data ({len(rsi_values)} < {min_required})")
+            logger.debug(
+                f"Stochastic RSI: Insufficient RSI data ({len(rsi_values)} < {min_required})"
+            )
             return None, None
 
         try:
@@ -293,8 +297,9 @@ class TechnicalIndicatorCalculator:
             # Handle division by zero (when RSI is flat)
             stoch_rsi_k = pd.Series(index=rsi_series.index, dtype=float)
             non_zero_mask = denominator != 0
-            stoch_rsi_k[non_zero_mask] = ((rsi_series[non_zero_mask] - rsi_min[non_zero_mask]) /
-                                           denominator[non_zero_mask]) * 100
+            stoch_rsi_k[non_zero_mask] = (
+                (rsi_series[non_zero_mask] - rsi_min[non_zero_mask]) / denominator[non_zero_mask]
+            ) * 100
             stoch_rsi_k[~non_zero_mask] = np.nan  # Flat RSI = undefined StochRSI
 
             # Calculate %D as SMA of %K
@@ -306,11 +311,15 @@ class TechnicalIndicatorCalculator:
 
             # Check for NaN/inf before conversion
             if pd.isna(stoch_rsi_k_val) or pd.isna(stoch_rsi_d_val):
-                logger.debug(f"Stochastic RSI: NaN values in result: K={stoch_rsi_k_val}, D={stoch_rsi_d_val}")
+                logger.debug(
+                    f"Stochastic RSI: NaN values in result: K={stoch_rsi_k_val}, D={stoch_rsi_d_val}"
+                )
                 return None, None
 
             if not np.isfinite(stoch_rsi_k_val) or not np.isfinite(stoch_rsi_d_val):
-                logger.debug(f"Stochastic RSI: Inf values in result: K={stoch_rsi_k_val}, D={stoch_rsi_d_val}")
+                logger.debug(
+                    f"Stochastic RSI: Inf values in result: K={stoch_rsi_k_val}, D={stoch_rsi_d_val}"
+                )
                 return None, None
 
             stoch_rsi_k = float(stoch_rsi_k_val)
@@ -318,7 +327,9 @@ class TechnicalIndicatorCalculator:
 
             # Validate values are in expected range [0, 100]
             if not (0 <= stoch_rsi_k <= 100) or not (0 <= stoch_rsi_d <= 100):
-                logger.debug(f"Stochastic RSI: Values out of range [0,100]: K={stoch_rsi_k:.2f}, D={stoch_rsi_d:.2f}")
+                logger.debug(
+                    f"Stochastic RSI: Values out of range [0,100]: K={stoch_rsi_k:.2f}, D={stoch_rsi_d:.2f}"
+                )
                 return None, None
 
             logger.debug(f"Stochastic RSI({period}): %K={stoch_rsi_k:.2f}, %D={stoch_rsi_d:.2f}")
@@ -328,72 +339,68 @@ class TechnicalIndicatorCalculator:
         except Exception as e:
             logger.error(f"Stochastic RSI calculation error: {e}")
             return None, None
-    
+
     @staticmethod
     def calculate_atr(
         highs: List[float], lows: List[float], closes: List[float], period: int = 14
     ) -> Optional[float]:
         """
         Calculate Average True Range using pandas_ta_classic.atr() library.
-        
+
         ✅ REQUIRED: Uses pandas_ta_classic.atr() - NO manual calculations
         Uses pandas-ta-classic library ONLY.
         """
         if len(highs) < period + 1 or len(lows) < period + 1 or len(closes) < period + 1:
-            logger.debug(f"ATR: Insufficient data (len={min(len(highs), len(lows), len(closes))} < {period + 1})")
-            return None        
+            logger.debug(
+                f"ATR: Insufficient data (len={min(len(highs), len(lows), len(closes))} < {period + 1})"
+            )
+            return None
         try:
             # Create DataFrame with OHLC data for pandas_ta_classic
-            df = pd.DataFrame({
-                'high': highs,
-                'low': lows,
-                'close': closes
-            })
-            
+            df = pd.DataFrame({'high': highs, 'low': lows, 'close': closes})
+
             # ✅ USE LIBRARY: pandas_ta_classic.atr() - vectorized calculation
             atr_series = ta.atr(df['high'], df['low'], df['close'], length=period)
-            
+
             if atr_series is None or atr_series.empty or atr_series.isna().all():
                 logger.debug("ATR: pandas_ta_classic returned None or all NaN values")
                 return None
-            
+
             atr_value = float(atr_series.iloc[-1])
-            
+
             logger.debug(f"ATR({period}) calculated: {atr_value:.4f}")
             return round(atr_value, 4)
-            
+
         except Exception as e:
             logger.error(f"ATR calculation error with pandas_ta_classic: {e}")
             raise
-    
+
     @staticmethod
     def calculate_adx(
         highs: List[float], lows: List[float], closes: List[float], period: int = 14
     ) -> Optional[float]:
         """
         Calculate Average Directional Index using pandas_ta_classic.adx() library.
-        
+
         ✅ REQUIRED: Uses pandas_ta_classic.adx() - NO manual calculations
         Uses pandas-ta-classic library ONLY.
         """
         if len(highs) < period + 1 or len(lows) < period + 1 or len(closes) < period + 1:
-            logger.debug(f"ADX: Insufficient data (len={min(len(highs), len(lows), len(closes))} < {period + 1})")
-            return None        
+            logger.debug(
+                f"ADX: Insufficient data (len={min(len(highs), len(lows), len(closes))} < {period + 1})"
+            )
+            return None
         try:
             # Create DataFrame with OHLC data for pandas_ta_classic
-            df = pd.DataFrame({
-                'high': highs,
-                'low': lows,
-                'close': closes
-            })
-            
+            df = pd.DataFrame({'high': highs, 'low': lows, 'close': closes})
+
             # ✅ USE LIBRARY: pandas_ta_classic.adx() - vectorized calculation (includes +DI, -DI, ADX)
             adx_df = ta.adx(df['high'], df['low'], df['close'], length=period)
-            
+
             if adx_df is None or adx_df.empty:
                 logger.debug("ADX: pandas_ta_classic returned None or empty DataFrame")
                 return None
-            
+
             # Extract ADX column (pandas_ta_classic may use different naming)
             # Try common column names
             adx_col = None
@@ -401,206 +408,211 @@ class TechnicalIndicatorCalculator:
                 if "ADX" in col.upper():
                     adx_col = col
                     break
-            
+
             if adx_col is None:
                 logger.debug("ADX: ADX column not found in DataFrame")
                 return None
-            
+
             adx_value = float(adx_df[adx_col].iloc[-1])
-            
+
             logger.debug(f"ADX({period}) calculated: {adx_value:.2f}")
             return round(adx_value, 2)
-            
+
         except Exception as e:
             logger.error(f"ADX calculation error with pandas_ta_classic: {e}")
             raise
-    
+
     @staticmethod
     def calculate_volume_sma(volumes: List[Decimal], period: int = 20) -> Optional[Decimal]:
         """
         Calculate Volume Simple Moving Average using pandas.rolling() library.
-        
+
         ✅ USES LIBRARY: pandas.Series.rolling().mean() - NO manual calculations
         This is always vectorized via pandas, no fallback needed.
         """
         if len(volumes) < period:
             logger.debug(f"Volume SMA: Insufficient data ({len(volumes)} < {period})")
             return None
-        
+
         try:
             # Convert to pandas Series for vectorized calculation
             volumes_float = [float(v) for v in volumes]
             volumes_series = pd.Series(volumes_float)
-            
+
             # ✅ USE LIBRARY: pandas.Series.rolling().mean() - vectorized calculation
             sma = volumes_series.rolling(window=period).mean().iloc[-1]
-            
+
             logger.debug(f"Volume SMA({period}) calculated: {sma:.2f}")
             return Decimal(str(round(sma, 2)))
-            
+
         except Exception as e:
             logger.error(f"Volume SMA calculation error: {e}")
             raise
-    
+
     @staticmethod
     def calculate_vwap(
         prices: List[float], volumes: List[float], period: Optional[int] = None
     ) -> Optional[float]:
         """
         Calculate Volume-Weighted Average Price using pandas DataFrame operations.
-        
+
         ✅ USES LIBRARY: pandas DataFrame vectorized operations - NO manual calculations
         Formula: sum(price * volume) / sum(volume) using pandas vectorized operations.
         """
         if len(prices) < 2 or len(volumes) < 2 or len(prices) != len(volumes):
             logger.debug("VWAP: Insufficient or mismatched data")
             return None
-        
+
         try:
             # Create DataFrame for vectorized calculation
-            df = pd.DataFrame({
-                'price': prices,
-                'volume': volumes
-            })
-            
+            df = pd.DataFrame({'price': prices, 'volume': volumes})
+
             # Slice to period if specified
             if period is not None:
                 if len(df) < period:
                     logger.debug(f"VWAP: Insufficient data (have {len(df)}, need {period})")
                     return None
                 df = df.iloc[-period:]
-            
+
             # ✅ USE LIBRARY: pandas vectorized operations for VWAP calculation
             # Formula: sum(price * volume) / sum(volume)
             cumulative_pv = (df['price'] * df['volume']).sum()
             cumulative_volume = df['volume'].sum()
-            
+
             if cumulative_volume == 0:
                 return None
-            
+
             vwap = cumulative_pv / cumulative_volume
-            
+
             logger.debug(f"VWAP calculated: {vwap:.4f} from {len(df)} periods")
             return round(float(vwap), 4)
-            
+
         except Exception as e:
             logger.error(f"VWAP calculation error: {e}")
             raise
-    
+
     @staticmethod
     def detect_macd_divergence(
         prices: List[float], macd_histograms: List[float], lookback: int = 5
     ) -> Optional[str]:
         """
         Detect MACD histogram divergence patterns using numpy.
-        
+
         REFACTORED: Uses numpy for efficient array operations
         """
         if len(prices) < lookback * 2 or len(macd_histograms) < lookback * 2:
             return None
-        
+
         # Use numpy for vectorized operations
         prices_array = np.array(prices[-lookback:])
         histograms_array = np.array(macd_histograms[-lookback:])
-        
+
         # Bullish divergence: price down, histogram up
         price_trend_down = prices_array[-1] < prices_array[0]
         histogram_trend_up = histograms_array[-1] > histograms_array[0]
-        
+
         if price_trend_down and histogram_trend_up:
             if (
                 prices_array[-1] < np.min(prices_array[:-1])
                 and histograms_array[-1] > histograms_array[-2]
             ):
                 return "bullish"
-        
+
         # Bearish divergence: price up, histogram down
         price_trend_up = prices_array[-1] > prices_array[0]
         histogram_trend_down = histograms_array[-1] < histograms_array[0]
-        
+
         if price_trend_up and histogram_trend_down:
             if (
                 prices_array[-1] > np.max(prices_array[:-1])
                 and histograms_array[-1] < histograms_array[-2]
             ):
                 return "bearish"
-        
+
         return None
-    
+
     @staticmethod
-    def calculate_zscore(prices: List[float], period: int = 30, std: float = 1.0) -> Optional[float]:
+    def calculate_zscore(
+        prices: List[float], period: int = 30, std: float = 1.0
+    ) -> Optional[float]:
         """
         Calculate Z-score using pandas-ta-classic.zscore() library.
-        
+
         ✅ REQUIRED: Uses pandas_ta_classic.zscore() - NO manual calculations
-        
+
         Args:
             prices: List of price values
             period: Rolling period for mean/std calculation (default: 30)
             std: Standard deviation multiplier (default: 1.0)
-        
+
         Returns:
             Z-score value (None if insufficient data)
         """
         if len(prices) < period + 1:
             logger.debug(f"Z-score: Insufficient data ({len(prices)} < {period + 1})")
             return None
-        
+
         try:
             # ✅ USE LIBRARY: Convert to pandas Series and use pandas_ta_classic.zscore()
             df = pd.Series(prices, name='close')
             zscore_series = ta.zscore(df, length=period, std=std)
-            
+
             if zscore_series is None or zscore_series.empty or zscore_series.isna().all():
                 logger.debug("Z-score: pandas_ta_classic returned None or all NaN values")
                 return None
-            
+
             # Get last valid value
             zscore_value = float(zscore_series.iloc[-1])
-            
-            logger.debug(f"Z-score({period}, std={std}) calculated: {zscore_value:.4f} from {len(prices)} prices")
+
+            logger.debug(
+                f"Z-score({period}, std={std}) calculated: {zscore_value:.4f} from {len(prices)} prices"
+            )
             return round(zscore_value, 4)
-            
+
         except Exception as e:
             logger.error(f"Z-score calculation error with pandas_ta_classic: {e}")
             raise
-    
+
     @staticmethod
-    def calculate_volatility(prices: List[float], tf: str = 'days', returns: bool = False, log: bool = False) -> Optional[float]:
+    def calculate_volatility(
+        prices: List[float], tf: str = 'days', returns: bool = False, log: bool = False
+    ) -> Optional[float]:
         """
         Calculate volatility using pandas-ta-classic.volatility() library.
-        
+
         ✅ REQUIRED: Uses pandas_ta_classic.volatility() - NO manual calculations
-        
+
         Args:
             prices: List of price values
             tf: Time frame options: 'days', 'weeks', 'months', 'years' (default: 'days')
             returns: If True, replace close Series with user-defined Series (default: False)
             log: If True, calculates log_return (default: False)
-        
+
         Returns:
             Volatility value (None if insufficient data)
         """
         if len(prices) < 2:
             logger.debug(f"Volatility: Insufficient data ({len(prices)} < 2)")
             return None
-        
+
         try:
             # ✅ USE LIBRARY: Convert to pandas Series and use pandas_ta_classic.volatility()
             df = pd.Series(prices, name='close')
             volatility_value = ta.volatility(df, tf=tf, returns=returns, log=log)
-            
+
             if volatility_value is None or not np.isfinite(volatility_value):
                 logger.debug("Volatility: pandas_ta_classic returned None or non-finite value")
                 return None
-            
-            logger.debug(f"Volatility(tf={tf}) calculated: {volatility_value:.6f} from {len(prices)} prices")
+
+            logger.debug(
+                f"Volatility(tf={tf}) calculated: {volatility_value:.6f} from {len(prices)} prices"
+            )
             return round(float(volatility_value), 6)
-            
+
         except Exception as e:
             logger.error(f"Volatility calculation error with pandas_ta_classic: {e}")
             raise
-    
+
     @staticmethod
     def calculate_expectancy(
         winning_trades: int,
@@ -612,17 +624,17 @@ class TechnicalIndicatorCalculator:
         total_trades = winning_trades + losing_trades
         if total_trades == 0:
             return None
-        
+
         win_rate = winning_trades / total_trades
         loss_rate = losing_trades / total_trades
-        
+
         expectancy = (win_rate * avg_win_amount) - (loss_rate * avg_loss_amount)
         return round(expectancy, 4)
 
 
 class MomentumAnalysisService:
     """Service for momentum analysis and signal generation.
-    
+
     REQUIRED: Uses TechnicalIndicatorCalculator with pandas-ta-classic library ONLY (no manual calculations)
     """
 
@@ -1070,9 +1082,7 @@ class MomentumAnalysisService:
         )
 
         signals = await self.get_momentum_signals(filter_criteria)
-        strategy_signals = [
-            s for s in signals if s.signal_type == strategy.momentum_type
-        ]
+        strategy_signals = [s for s in signals if s.signal_type == strategy.momentum_type]
 
         return strategy_signals
 
@@ -1088,9 +1098,7 @@ class MomentumAnalysisService:
             ):
                 asset_signals[signal.symbol] = signal
 
-        sorted_assets = sorted(
-            asset_signals.values(), key=lambda x: x.momentum_score, reverse=True
-        )
+        sorted_assets = sorted(asset_signals.values(), key=lambda x: x.momentum_score, reverse=True)
 
         top_assets = []
         for signal in sorted_assets[:limit]:

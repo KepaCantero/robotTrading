@@ -53,7 +53,9 @@ class BaseStrategyEnsemble(BaseStrategyEngine):
 
         # Configuración de ensemble
         self.min_strategies_for_signal = config.get("min_strategies_for_signal", 1)
-        self.conflict_resolution = config.get("conflict_resolution", "weighted")  # weighted, majority, strongest
+        self.conflict_resolution = config.get(
+            "conflict_resolution", "weighted"
+        )  # weighted, majority, strongest
         self.weight_update_frequency = config.get("weight_update_frequency", 100)  # cada N señales
         self.signal_count = 0
 
@@ -168,11 +170,7 @@ class BaseStrategyEnsemble(BaseStrategyEngine):
 
         return True
 
-    def update_strategy_performance(
-        self,
-        strategy_name: str,
-        metrics: Dict[str, float]
-    ) -> None:
+    def update_strategy_performance(self, strategy_name: str, metrics: Dict[str, float]) -> None:
         """
         Actualizar historial de performance de una estrategia.
 
@@ -186,13 +184,13 @@ class BaseStrategyEnsemble(BaseStrategyEngine):
         # Mantener solo últimos N registros
         max_history = 100
         if len(self.performance_history[strategy_name]) > max_history:
-            self.performance_history[strategy_name] = self.performance_history[strategy_name][-max_history:]
+            self.performance_history[strategy_name] = self.performance_history[strategy_name][
+                -max_history:
+            ]
 
     @abstractmethod
     def _combine_signals(
-        self,
-        strategy_signals: Dict[str, List[Signal]],
-        market_data: Quote
+        self, strategy_signals: Dict[str, List[Signal]], market_data: Quote
     ) -> List[Signal]:
         """
         Combinar señales de múltiples estrategias.
@@ -268,9 +266,7 @@ class WeightedEnsemble(BaseStrategyEnsemble):
         return self._combine_signals(strategy_signals, market_data)
 
     def _combine_signals(
-        self,
-        strategy_signals: Dict[str, List[Signal]],
-        market_data: Quote
+        self, strategy_signals: Dict[str, List[Signal]], market_data: Quote
     ) -> List[Signal]:
         """
         Combinar señales usando pesos ponderados.
@@ -306,9 +302,9 @@ class WeightedEnsemble(BaseStrategyEnsemble):
                 if total_weight == 0:
                     continue
 
-                weighted_confidence = sum(
-                    s.confidence * w for _, s, w in weighted_signals
-                ) / total_weight
+                weighted_confidence = (
+                    sum(s.confidence * w for _, s, w in weighted_signals) / total_weight
+                )
 
                 # Usar el mejor precio disponible
                 best_signal = max(weighted_signals, key=lambda x: x[1].confidence * x[2])
@@ -316,7 +312,9 @@ class WeightedEnsemble(BaseStrategyEnsemble):
 
                 # Crear señal combinada
                 # Asegurar que signal_type es un SignalType enum
-                signal_type_enum = signal_type if isinstance(signal_type, SignalType) else SignalType(signal_type)
+                signal_type_enum = (
+                    signal_type if isinstance(signal_type, SignalType) else SignalType(signal_type)
+                )
                 priority = min(100.0, weighted_confidence * 0.8 + 20.0)  # Cap at 100
 
                 combined_signal = Signal(
@@ -352,7 +350,7 @@ class WeightedEnsemble(BaseStrategyEnsemble):
             if len(history) < 5:  # Mínimo 5 registros para actualizar
                 continue
 
-            recent = history[-self.performance_lookback:]
+            recent = history[-self.performance_lookback :]
 
             if self.weight_method == "sharpe":
                 avg_sharpe = np.mean([h.get("sharpe", 0) for h in recent])
@@ -368,10 +366,11 @@ class WeightedEnsemble(BaseStrategyEnsemble):
 
             # Aplicar decay y límites
             current_weight = self.strategy_weights.get(strategy_name, 1.0)
-            smoothed_weight = current_weight * float(self.weight_decay) + new_weight * (1 - float(self.weight_decay))
+            smoothed_weight = current_weight * float(self.weight_decay) + new_weight * (
+                1 - float(self.weight_decay)
+            )
             self.strategy_weights[strategy_name] = min(
-                float(self.max_weight),
-                max(float(self.min_weight), smoothed_weight)
+                float(self.max_weight), max(float(self.min_weight), smoothed_weight)
             )
 
         logger.debug(f"Updated weights: {self.strategy_weights}")
@@ -414,14 +413,17 @@ class RegimeBasedSelector(BaseStrategyEnsemble):
         super().__init__(config)
 
         # Mapeo de régimen a estrategias preferidas
-        self.regime_strategy_map: Dict[str, List[str]] = config.get("regime_strategy_map", {
-            self.REGIME_TRENDING_UP: ["trend_following", "momentum", "breakout"],
-            self.REGIME_TRENDING_DOWN: ["trend_following", "momentum"],
-            self.REGIME_MEAN_REVERTING: ["mean_reversion", "pairs_trading", "arbitrage"],
-            self.REGIME_HIGH_VOLATILITY: ["breakout", "momentum"],
-            self.REGIME_LOW_VOLATILITY: ["mean_reversion", "arbitrage"],
-            self.REGIME_UNKNOWN: [],  # Usar todas
-        })
+        self.regime_strategy_map: Dict[str, List[str]] = config.get(
+            "regime_strategy_map",
+            {
+                self.REGIME_TRENDING_UP: ["trend_following", "momentum", "breakout"],
+                self.REGIME_TRENDING_DOWN: ["trend_following", "momentum"],
+                self.REGIME_MEAN_REVERTING: ["mean_reversion", "pairs_trading", "arbitrage"],
+                self.REGIME_HIGH_VOLATILITY: ["breakout", "momentum"],
+                self.REGIME_LOW_VOLATILITY: ["mean_reversion", "arbitrage"],
+                self.REGIME_UNKNOWN: [],  # Usar todas
+            },
+        )
 
         # Estado del régimen actual
         self.current_regime: str = self.REGIME_UNKNOWN
@@ -433,7 +435,9 @@ class RegimeBasedSelector(BaseStrategyEnsemble):
 
         # Umbrales para detección de régimen
         self.trend_threshold = config.get("trend_threshold", 0.02)  # 2% para tendencia
-        self.volatility_threshold = config.get("volatility_threshold", 0.025)  # 2.5% volatilidad alta
+        self.volatility_threshold = config.get(
+            "volatility_threshold", 0.025
+        )  # 2.5% volatilidad alta
 
         logger.info(f"RegimeBasedSelector initialized")
 
@@ -451,13 +455,11 @@ class RegimeBasedSelector(BaseStrategyEnsemble):
             return []
 
         # Actualizar historial de precios
-        current_price = float(
-            market_data.close or market_data.bid or market_data.last or 0
-        )
+        current_price = float(market_data.close or market_data.bid or market_data.last or 0)
         if current_price > 0:
             self.price_history.append(current_price)
             if len(self.price_history) > self.regime_lookback * 2:
-                self.price_history = self.price_history[-self.regime_lookback * 2:]
+                self.price_history = self.price_history[-self.regime_lookback * 2 :]
 
         # Detectar régimen actual
         self._detect_regime()
@@ -484,7 +486,7 @@ class RegimeBasedSelector(BaseStrategyEnsemble):
             self.regime_confidence = 0.0
             return
 
-        prices = np.array(self.price_history[-self.regime_lookback:])
+        prices = np.array(self.price_history[-self.regime_lookback :])
 
         # Calcular retorno y volatilidad
         returns = np.diff(prices) / prices[:-1]
@@ -531,9 +533,7 @@ class RegimeBasedSelector(BaseStrategyEnsemble):
         return available
 
     def _combine_signals(
-        self,
-        strategy_signals: Dict[str, List[Signal]],
-        market_data: Quote
+        self, strategy_signals: Dict[str, List[Signal]], market_data: Quote
     ) -> List[Signal]:
         """
         Combinar señales de estrategias seleccionadas.
@@ -551,17 +551,31 @@ class RegimeBasedSelector(BaseStrategyEnsemble):
             for signal in signals:
                 # Añadir información de régimen al metadata
                 enhanced_metadata = signal.metadata.copy() if signal.metadata else {}
-                enhanced_metadata.update({
-                    "regime": self.current_regime,
-                    "regime_confidence": self.regime_confidence,
-                    "selected_strategy": strategy_name,
-                    "selector_type": "regime_based",
-                })
+                enhanced_metadata.update(
+                    {
+                        "regime": self.current_regime,
+                        "regime_confidence": self.regime_confidence,
+                        "selected_strategy": strategy_name,
+                        "selector_type": "regime_based",
+                    }
+                )
 
                 # Asegurar tipos correctos para Pydantic
-                signal_type_enum = signal.signal_type if isinstance(signal.signal_type, SignalType) else SignalType(signal.signal_type)
-                strength_enum = signal.strength if isinstance(signal.strength, SignalStrength) else SignalStrength(signal.strength)
-                source_enum = signal.source if isinstance(signal.source, SignalSource) else SignalSource(signal.source)
+                signal_type_enum = (
+                    signal.signal_type
+                    if isinstance(signal.signal_type, SignalType)
+                    else SignalType(signal.signal_type)
+                )
+                strength_enum = (
+                    signal.strength
+                    if isinstance(signal.strength, SignalStrength)
+                    else SignalStrength(signal.strength)
+                )
+                source_enum = (
+                    signal.source
+                    if isinstance(signal.source, SignalSource)
+                    else SignalSource(signal.source)
+                )
 
                 enhanced_signal = Signal(
                     symbol=signal.symbol,
@@ -641,9 +655,7 @@ class VotingEnsemble(BaseStrategyEnsemble):
         return self._combine_signals(strategy_signals, market_data)
 
     def _combine_signals(
-        self,
-        strategy_signals: Dict[str, List[Signal]],
-        market_data: Quote
+        self, strategy_signals: Dict[str, List[Signal]], market_data: Quote
     ) -> List[Signal]:
         """
         Combinar señales por votación mayoritaria.
@@ -691,7 +703,9 @@ class VotingEnsemble(BaseStrategyEnsemble):
                 _, base_signal = best_signal
 
                 # Convertir signal_type a enum si es string
-                signal_type_enum = signal_type if isinstance(signal_type, SignalType) else SignalType(signal_type)
+                signal_type_enum = (
+                    signal_type if isinstance(signal_type, SignalType) else SignalType(signal_type)
+                )
 
                 # Calcular priority_score con cap en 100
                 priority = min(100.0, avg_confidence * (num_votes / total_strategies))

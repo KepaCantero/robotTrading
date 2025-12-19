@@ -20,14 +20,14 @@ logger = logging.getLogger(__name__)
 class RebalancingTarget:
     """
     TASK-REB-1: Rebalancing target configuration.
-    
+
     Defines target allocations for strategies.
     """
 
     def __init__(self, strategy_name: str, target_weight: Decimal):
         """
         Initialize rebalancing target.
-        
+
         Args:
             strategy_name: Name of the strategy
             target_weight: Target weight (0-1)
@@ -39,10 +39,10 @@ class RebalancingTarget:
     def needs_rebalance(self, rebalance_frequency_days: int = 30) -> bool:
         """
         Check if rebalancing is needed based on frequency.
-        
+
         Args:
             rebalance_frequency_days: Days between rebalances (default 30)
-            
+
         Returns:
             True if rebalancing is needed
         """
@@ -60,19 +60,19 @@ class RebalancingTarget:
 class DynamicCapitalAdjuster:
     """
     TASK-REB-2: Dynamic Capital Adjuster.
-    
+
     Reduces capital allocation to strategies with negative performance streaks.
     """
 
     def __init__(
         self,
         min_allocation: Decimal = Decimal("0.10"),  # 10% minimum
-        max_allocation: Decimal = Decimal("0.70"),   # 70% maximum
+        max_allocation: Decimal = Decimal("0.70"),  # 70% maximum
         adjustment_factor: Decimal = Decimal("0.20"),  # 20% reduction per streak
     ):
         """
         Initialize capital adjuster.
-        
+
         Args:
             min_allocation: Minimum allocation ratio (0-1)
             max_allocation: Maximum allocation ratio (0-1)
@@ -90,12 +90,12 @@ class DynamicCapitalAdjuster:
     ) -> Decimal:
         """
         Calculate adjusted weight based on performance.
-        
+
         Args:
             target_weight: Target weight
             consecutive_losses: Number of consecutive losses
             recent_performance: Recent performance metric
-            
+
         Returns:
             Adjusted weight
         """
@@ -104,8 +104,7 @@ class DynamicCapitalAdjuster:
         # Reduce weight based on consecutive losses
         if consecutive_losses > 0:
             reduction = min(
-                self.adjustment_factor * consecutive_losses,
-                Decimal("0.50")  # Max 50% reduction
+                self.adjustment_factor * consecutive_losses, Decimal("0.50")  # Max 50% reduction
             )
             adjusted = adjusted * (Decimal("1") - reduction)
 
@@ -128,12 +127,12 @@ class DynamicCapitalAdjuster:
     ) -> bool:
         """
         Determine if allocation should be reduced.
-        
+
         Args:
             consecutive_losses: Number of consecutive losses
             recent_performance: Recent performance metric
             threshold_losses: Threshold for consecutive losses
-            
+
         Returns:
             True if allocation should be reduced
         """
@@ -151,7 +150,7 @@ class DynamicCapitalAdjuster:
 class PortfolioRebalancer:
     """
     TASK-REB-1: Monthly Rebalancer.
-    
+
     Maintains target allocations through periodic rebalancing.
     """
 
@@ -162,7 +161,7 @@ class PortfolioRebalancer:
     ):
         """
         Initialize rebalancer.
-        
+
         Args:
             rebalance_frequency_days: Days between rebalances (default 30)
             drift_threshold: Allowed drift from target (default 5%)
@@ -175,14 +174,12 @@ class PortfolioRebalancer:
     def set_target_allocation(self, strategy_name: str, target_weight: Decimal) -> None:
         """
         Set target allocation for a strategy.
-        
+
         Args:
             strategy_name: Name of the strategy
             target_weight: Target weight (0-1)
         """
-        self.rebalancing_targets[strategy_name] = RebalancingTarget(
-            strategy_name, target_weight
-        )
+        self.rebalancing_targets[strategy_name] = RebalancingTarget(strategy_name, target_weight)
         logger.info(f"Set target allocation for {strategy_name}: {target_weight:.1%}")
 
     def calculate_rebalance_needs(
@@ -192,11 +189,11 @@ class PortfolioRebalancer:
     ) -> Dict[str, Decimal]:
         """
         Calculate rebalancing needs.
-        
+
         Args:
             current_allocations: Current allocation per strategy
             portfolio_value: Total portfolio value
-            
+
         Returns:
             Dictionary of rebalancing adjustments needed
         """
@@ -205,7 +202,7 @@ class PortfolioRebalancer:
 
         for strategy_name, target in self.rebalancing_targets.items():
             current = current_allocations.get(strategy_name, Decimal("0"))
-            
+
             # Calculate target value
             target_value = portfolio_value * target.target_weight
 
@@ -227,12 +224,12 @@ class PortfolioRebalancer:
     ) -> Dict[str, Decimal]:
         """
         Apply rebalancing with dynamic capital adjustments.
-        
+
         Args:
             current_allocations: Current allocation per strategy
             portfolio_value: Total portfolio value
             strategy_performance: Performance data per strategy
-            
+
         Returns:
             New target allocations
         """
@@ -257,7 +254,11 @@ class PortfolioRebalancer:
 
             # Check if rebalancing needed
             current_allocation = current_allocations.get(strategy_name, Decimal("0"))
-            drift = abs(current_allocation - target_allocation) / portfolio_value if portfolio_value > 0 else Decimal("0")
+            drift = (
+                abs(current_allocation - target_allocation) / portfolio_value
+                if portfolio_value > 0
+                else Decimal("0")
+            )
 
             if drift > self.drift_threshold or target.needs_rebalance():
                 logger.info(
@@ -271,7 +272,7 @@ class PortfolioRebalancer:
     def get_rebalance_status(self) -> Dict[str, Any]:
         """
         Get current rebalancing status.
-        
+
         Returns:
             Status information
         """

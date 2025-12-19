@@ -63,7 +63,9 @@ class MomentumStrategy(BaseStrategy):
                     pass
 
             # Core thresholds - load from YAML, no defaults
-            self.rsi_threshold = Decimal(str(params.get("rsi_threshold_buy") or params.get("rsi_threshold")))
+            self.rsi_threshold = Decimal(
+                str(params.get("rsi_threshold_buy") or params.get("rsi_threshold"))
+            )
             self.momentum_threshold = Decimal(str(params.get("momentum_threshold")))
             self.volume_threshold = Decimal(str(params.get("volume_threshold")))
 
@@ -79,7 +81,9 @@ class MomentumStrategy(BaseStrategy):
             )
             # FIX: Load max_exposure from portfolio config (target_weight * 1.1 for buffer) or default 60%
             # portfolio.yaml has target_weight: 0.60 for momentum, so max_exposure should be ~0.60-0.70
-            self.max_exposure = Decimal(str(params.get("max_exposure", 0.60)))  # Default 60% (matches portfolio target_weight)
+            self.max_exposure = Decimal(
+                str(params.get("max_exposure", 0.60))
+            )  # Default 60% (matches portfolio target_weight)
 
             # Technical indicator periods from parameters if present (now safe because defaults initialized)
             if "ema_period" in params:
@@ -95,7 +99,9 @@ class MomentumStrategy(BaseStrategy):
             if "use_relative_atr" in params:
                 self.use_relative_atr = params.get("use_relative_atr", self.use_relative_atr)
             if "min_atr_threshold" in params:
-                self.min_atr_threshold = Decimal(str(params.get("min_atr_threshold", self.min_atr_threshold)))
+                self.min_atr_threshold = Decimal(
+                    str(params.get("min_atr_threshold", self.min_atr_threshold))
+                )
             if "stoch_rsi_enabled" in params:
                 self.config["stoch_rsi_enabled"] = params.get("stoch_rsi_enabled")
             if "stoch_rsi_min" in params:
@@ -116,7 +122,9 @@ class MomentumStrategy(BaseStrategy):
                 str(config.get("max_position_size", get_trading_threshold("max_position_size")))
             )
             self.volume_threshold = Decimal(str(config.get("volume_threshold", 1.5)))
-            self.max_exposure = Decimal(str(config.get("max_exposure", 0.60)))  # Default 60% (matches portfolio target_weight)
+            self.max_exposure = Decimal(
+                str(config.get("max_exposure", 0.60))
+            )  # Default 60% (matches portfolio target_weight)
 
         # Histórico para calcular indicadores reales
         self.price_history = deque(maxlen=200)  # Mantener 200 velas de histórico
@@ -126,7 +134,7 @@ class MomentumStrategy(BaseStrategy):
         self.last_rsi = None
         self.last_ema = None
         self.rsi_history = deque(maxlen=50)  # TASK-IND-STOCH-2: Histórico para Stochastic RSI
-        
+
         # ATR volatility filter settings
         self.atr_history = deque(maxlen=14)  # ATR history for volatility filtering
         # Note: min_atr_threshold, atr_filter_enabled, use_relative_atr already initialized above
@@ -139,7 +147,7 @@ class MomentumStrategy(BaseStrategy):
 
         # TASK-SC-5: Signal Scoring Engine integration
         self.signal_scoring_engine = get_signal_scoring_engine()
-        
+
         # REFACTORED: Use vectorized TechnicalIndicatorCalculator
         self.indicator_calculator = TechnicalIndicatorCalculator()
 
@@ -175,7 +183,9 @@ class MomentumStrategy(BaseStrategy):
         try:
             # Actualizar histórico
             self.price_history.append(float(market_data.close or market_data.last))
-            self.high_history.append(float(market_data.high or market_data.close or market_data.last))
+            self.high_history.append(
+                float(market_data.high or market_data.close or market_data.last)
+            )
             self.low_history.append(float(market_data.low or market_data.close or market_data.last))
             self.volume_history.append(float(market_data.volume))
             self.current_bar_index += 1
@@ -185,16 +195,18 @@ class MomentumStrategy(BaseStrategy):
             highs_list = list(self.high_history)
             lows_list = list(self.low_history)
             volumes_list = list(self.volume_history)
-            
+
             rsi = self.indicator_calculator.calculate_rsi(prices_list, self.rsi_period)
             ema = self.indicator_calculator.calculate_ema(prices_list, self.ema_period)
             volume_ratio = self._calculate_volume_ratio(market_data)
             roc = self.indicator_calculator.calculate_roc(prices_list, period=12)
             obv = self.indicator_calculator.calculate_obv(prices_list, volumes_list)
             obv_trend = self._calculate_obv_trend_from_value(obv)
-            
+
             # Calculate ATR using vectorized calculator (pandas_ta.atr)
-            atr = self.indicator_calculator.calculate_atr(highs_list, lows_list, prices_list, period=14)
+            atr = self.indicator_calculator.calculate_atr(
+                highs_list, lows_list, prices_list, period=14
+            )
             if atr is not None:
                 self.atr_history.append(atr)
 
@@ -215,7 +227,7 @@ class MomentumStrategy(BaseStrategy):
             # Guardar para uso en señales
             self.last_rsi = rsi
             self.last_ema = ema
-            
+
             # OPTIMIZED: Calculate Stochastic RSI using pandas_ta library (no manual calculations)
             # Build RSI history for Stochastic RSI calculation
             stoch_rsi_k = None
@@ -225,13 +237,15 @@ class MomentumStrategy(BaseStrategy):
                     self.rsi_history = deque(maxlen=50)
                 # Append RSI ONCE (removed duplicate append)
                 self.rsi_history.append(rsi)
-                
+
                 # Calculate Stochastic RSI using pandas_ta.stochrsi() via TechnicalIndicatorCalculator
                 # This uses the library, NOT manual calculation
                 if len(self.rsi_history) >= 14:
                     rsi_history_list = list(self.rsi_history)
                     # This calls pandas_ta.stochrsi() internally (see momentum_analysis.py)
-                    stoch_result = self.indicator_calculator.calculate_stochastic_rsi(rsi_history_list, period=14)
+                    stoch_result = self.indicator_calculator.calculate_stochastic_rsi(
+                        rsi_history_list, period=14
+                    )
                     if stoch_result[0] is not None and stoch_result[1] is not None:
                         stoch_rsi_k, stoch_rsi_d = stoch_result
                         logger.debug(
@@ -243,9 +257,9 @@ class MomentumStrategy(BaseStrategy):
             cooldown_active = self._is_cooldown_active(market_data)
             current_price = market_data.close or market_data.last
             atr_filter_passed = self._passes_atr_filter(current_price)
-            
+
             # Log diagnostic info BEFORE checking conditions (INFO level for visibility)
-            
+
             # Log ALL candidates (every bar) to track what's being evaluated
             logger.debug(
                 f"🔍 MOMENTUM CANDIDATE {market_data.symbol}: "
@@ -253,7 +267,7 @@ class MomentumStrategy(BaseStrategy):
                 f"volume_ratio={volume_ratio:.2f}, ROC={roc_safe:.2f}, OBV={obv_trend}, "
                 f"ATR_filter={atr_filter_passed}, cooldown={cooldown_active}, bar_index={self.current_bar_index}"
             )
-            
+
             # More frequent logging (every 10 bars) for INFO level
             if self.current_bar_index % 10 == 0:
                 logger.info(
@@ -262,23 +276,29 @@ class MomentumStrategy(BaseStrategy):
                     f"volume_ratio={volume_ratio:.2f}, ROC={roc_safe:.2f}, OBV={obv_trend}, "
                     f"ATR_filter={atr_filter_passed}"
                 )
-            
+
             if not cooldown_active:
                 # IMPROVEMENT: Apply Stochastic RSI filter to reduce false signals
                 stoch_rsi_passed = self._should_generate_signal(stoch_rsi_k, stoch_rsi_d)
-                
+
                 # CORRECTED: Prevent overlapping signals and inverted signals
                 # Only generate one signal type per bar to avoid conflicts
                 if atr_filter_passed and stoch_rsi_passed:
-                    buy_condition = self._is_buy_signal(rsi, ema, volume_ratio, roc, obv_trend, market_data)
-                    sell_condition = self._is_sell_signal(rsi, ema, volume_ratio, roc, obv_trend, market_data)
-                    
+                    buy_condition = self._is_buy_signal(
+                        rsi, ema, volume_ratio, roc, obv_trend, market_data
+                    )
+                    sell_condition = self._is_sell_signal(
+                        rsi, ema, volume_ratio, roc, obv_trend, market_data
+                    )
+
                     # FIXED: Prevent overlapping signals - prioritize buy if both conditions met
                     # CORRECTED: Never generate BUY with RSI > 70 or SELL with RSI < 30
                     if buy_condition and not sell_condition:
                         # Only generate BUY if conditions are met and no SELL
                         current_atr = self.atr_history[-1] if self.atr_history else None
-                        signal = self._create_buy_signal(market_data, rsi, ema, volume_ratio, roc, current_atr)
+                        signal = self._create_buy_signal(
+                            market_data, rsi, ema, volume_ratio, roc, current_atr
+                        )
                         raw_signals.append(signal)
                         self.last_signal_bar_index = self.current_bar_index
                         self.last_signal_type = "buy"
@@ -290,7 +310,9 @@ class MomentumStrategy(BaseStrategy):
                     elif sell_condition and not buy_condition:
                         # Only generate SELL if conditions are met and no BUY
                         current_atr = self.atr_history[-1] if self.atr_history else None
-                        signal = self._create_sell_signal(market_data, rsi, ema, volume_ratio, roc, current_atr)
+                        signal = self._create_sell_signal(
+                            market_data, rsi, ema, volume_ratio, roc, current_atr
+                        )
                         raw_signals.append(signal)
                         self.last_signal_bar_index = self.current_bar_index
                         self.last_signal_type = "sell"
@@ -308,12 +330,16 @@ class MomentumStrategy(BaseStrategy):
                         # Prioritize based on RSI: if RSI < 45, prefer BUY; if RSI > 55, prefer SELL
                         current_atr = self.atr_history[-1] if self.atr_history else None
                         if rsi < 45:
-                            signal = self._create_buy_signal(market_data, rsi, ema, volume_ratio, roc, current_atr)
+                            signal = self._create_buy_signal(
+                                market_data, rsi, ema, volume_ratio, roc, current_atr
+                            )
                             raw_signals.append(signal)
                             self.last_signal_bar_index = self.current_bar_index
                             self.last_signal_type = "buy"
                         elif rsi > 55:
-                            signal = self._create_sell_signal(market_data, rsi, ema, volume_ratio, roc, current_atr)
+                            signal = self._create_sell_signal(
+                                market_data, rsi, ema, volume_ratio, roc, current_atr
+                            )
                             raw_signals.append(signal)
                             self.last_signal_bar_index = self.current_bar_index
                             self.last_signal_type = "sell"
@@ -325,12 +351,14 @@ class MomentumStrategy(BaseStrategy):
                     filter_failed = []
                     if not atr_filter_passed:
                         atr_str = f"{current_atr:.4f}" if current_atr is not None else "N/A"
-                        filter_failed.append(f"ATR filter (ATR={atr_str}, threshold={self.min_atr_threshold:.4f})")
+                        filter_failed.append(
+                            f"ATR filter (ATR={atr_str}, threshold={self.min_atr_threshold:.4f})"
+                        )
                     if not stoch_rsi_passed:
                         k_str = f"{stoch_rsi_k:.2f}" if stoch_rsi_k is not None else "N/A"
                         d_str = f"{stoch_rsi_d:.2f}" if stoch_rsi_d is not None else "N/A"
                         filter_failed.append(f"StochRSI filter (K={k_str}, D={d_str})")
-                    
+
                     logger.debug(
                         f"❌ MOMENTUM CANDIDATE REJECTED {market_data.symbol}: "
                         f"{', '.join(filter_failed)}"
@@ -344,7 +372,9 @@ class MomentumStrategy(BaseStrategy):
                 )
 
         except Exception as e:
-            logger.error(f"MOMENTUM Error generating signals for {market_data.symbol}: {e}", exc_info=True)
+            logger.error(
+                f"MOMENTUM Error generating signals for {market_data.symbol}: {e}", exc_info=True
+            )
 
         # TASK-SC-5: Process signals through Signal Scoring Engine
         # NOTE: Cooldown is managed internally by the strategy's cooldown logic
@@ -356,7 +386,9 @@ class MomentumStrategy(BaseStrategy):
             )
             # In backtesting, we want to evaluate all signals without cooldown
             # But we still want scoring and ranking
-            processed_signals = self.signal_scoring_engine.process_signals(raw_signals, apply_cooldown=False)
+            processed_signals = self.signal_scoring_engine.process_signals(
+                raw_signals, apply_cooldown=False
+            )
             logger.info(
                 f"🔍 MOMENTUM: {len(processed_signals)} signals after scoring (from {len(raw_signals)} raw) "
                 f"for {market_data.symbol}"
@@ -434,16 +466,24 @@ class MomentumStrategy(BaseStrategy):
             total_exposure = self._calculate_total_exposure(portfolio)
             # CORRECTED: Use config max_exposure from self (loaded in __init__)
             max_exposure = self.max_exposure  # Loaded from config or default 50%
-            
+
             # FIX: Add detailed logging to diagnose why signals are rejected
             # Calculate exposure after this trade would execute
             if signal.signal_type == SignalType.BUY:
                 # Estimate exposure after BUY: add position value to invested
                 estimated_position_value = signal.price * position_size
-                total_value_after = portfolio.cash + sum(p.market_value for p in portfolio.positions) - (signal.price * position_size)
-                invested_after = sum(p.market_value for p in portfolio.positions) + estimated_position_value
-                exposure_after = invested_after / total_value_after if total_value_after > 0 else Decimal("0")
-                
+                total_value_after = (
+                    portfolio.cash
+                    + sum(p.market_value for p in portfolio.positions)
+                    - (signal.price * position_size)
+                )
+                invested_after = (
+                    sum(p.market_value for p in portfolio.positions) + estimated_position_value
+                )
+                exposure_after = (
+                    invested_after / total_value_after if total_value_after > 0 else Decimal("0")
+                )
+
                 logger.info(
                     f"🔍 MOMENTUM risk_check BUY {signal.symbol}: "
                     f"current_exposure={total_exposure:.2%}, exposure_after={exposure_after:.2%}, "
@@ -457,7 +497,7 @@ class MomentumStrategy(BaseStrategy):
                     f"current_exposure={total_exposure:.2%}, max={max_exposure:.2%}, "
                     f"cash=${portfolio.cash:.2f}, sell_quantity={position_size:.6f}"
                 )
-            
+
             if total_exposure > max_exposure:
                 logger.info(
                     f"⚠️ MOMENTUM risk_check REJECTED {signal.signal_type} {signal.symbol}: "
@@ -472,10 +512,7 @@ class MomentumStrategy(BaseStrategy):
             return True
 
         except Exception as e:
-            logger.error(
-                f"❌ MOMENTUM risk_check ERROR for {signal.symbol}: {e}",
-                exc_info=True
-            )
+            logger.error(f"❌ MOMENTUM risk_check ERROR for {signal.symbol}: {e}", exc_info=True)
             return False
 
     # REFACTORED: Methods removed - use TechnicalIndicatorCalculator instead
@@ -504,16 +541,16 @@ class MomentumStrategy(BaseStrategy):
     def _calculate_obv_trend_from_value(self, obv: Optional[float]) -> Optional[str]:
         """
         Calculate OBV trend from OBV value.
-        
+
         REFACTORED: Simplified - uses OBV value from calculator.
         """
         if obv is None:
             return None
-        
+
         # Compare current OBV with recent history
         if len(self.price_history) < 10:
             return "neutral"
-        
+
         # Simple trend: if OBV is positive and increasing, trend is rising
         # This is a simplified version - in production, compare multiple OBV values
         return "rising" if obv > 0 else "falling"
@@ -599,7 +636,7 @@ class MomentumStrategy(BaseStrategy):
     ) -> bool:
         """
         Determinar si generar señal de compra.
-        
+
         CORRECTED: Never generate BUY when RSI > 70 (overbought).
         Only generate BUY when RSI indicates oversold conditions (< threshold).
 
@@ -623,37 +660,39 @@ class MomentumStrategy(BaseStrategy):
                 f"MOMENTUM {market_data.symbol}: BUY signal rejected - RSI too high ({rsi:.2f} >= 70)"
             )
             return False
-        
+
         # FIXED: Momentum strategy should buy on momentum continuation, not oversold reversal
         # Buy when: RSI 40-70 (momentum zone), price above EMA, volume > threshold, positive ROC
         # This is TRUE momentum trading: catch the trend, not the bottom
-        
+
         volume_threshold = Decimal(str(self.config.get("volume_threshold")))
         has_volume = volume_ratio >= volume_threshold
-        
+
         ema_bullish = current_price > Decimal(str(ema))  # Price above EMA (uptrend)
-        
+
         # Momentum confirmation
         momentum_threshold = Decimal(str(self.config.get("momentum_threshold")))
         has_momentum = roc is None or roc >= float(momentum_threshold)  # Positive momentum
-        
+
         obv_bullish = obv_trend is None or obv_trend in ["rising", "neutral"]
-        
+
         # FIXED: Momentum buy conditions - RSI in momentum zone (40-70)
         # Option 1: RSI in momentum zone (40-70) with all confirmations
         rsi_momentum_zone = 40.0 <= rsi <= 70.0  # Not oversold, not overbought
-        
+
         # Option 2: RSI recovering from oversold (rising from < 40) with volume surge
         rsi_recovering = rsi < 40.0 and has_volume and has_momentum
-        
+
         if rsi_momentum_zone:
             # Core momentum trade: RSI in good range, price above EMA, volume + momentum
-            return has_volume and ema_bullish and has_momentum and (obv_bullish is None or obv_bullish)
+            return (
+                has_volume and ema_bullish and has_momentum and (obv_bullish is None or obv_bullish)
+            )
         elif rsi_recovering:
             # Early entry: RSI recovering from oversold with strong volume/momentum
             strong_volume = volume_ratio >= Decimal("1.25")
             return strong_volume and ema_bullish and has_momentum
-        
+
         return False
 
     def _is_sell_signal(
@@ -667,7 +706,7 @@ class MomentumStrategy(BaseStrategy):
     ) -> bool:
         """
         Determinar si generar señal de venta.
-        
+
         CORRECTED: Never generate SELL when RSI < 30 (oversold).
         Only generate SELL when RSI indicates overbought conditions (> threshold).
 
@@ -691,29 +730,37 @@ class MomentumStrategy(BaseStrategy):
                 f"MOMENTUM {market_data.symbol}: SELL signal rejected - RSI too low ({rsi:.2f} <= 30)"
             )
             return False
-        
+
         # OPTIMIZED: SELL conditions for win rate >30%
         # SELL when RSI overbought (> 55) with bearish confirmation
         rsi_overbought = rsi > 55  # Overbought - clear sell signal
-        rsi_neutral_bearish = (rsi >= 50 and rsi <= 55) and current_price < Decimal(str(ema))  # Neutral zone 50-55
-        
+        rsi_neutral_bearish = (rsi >= 50 and rsi <= 55) and current_price < Decimal(
+            str(ema)
+        )  # Neutral zone 50-55
+
         # Core conditions - stricter for better win rate
         volume_threshold = Decimal(str(self.config.get("volume_threshold")))
         has_volume = volume_ratio >= volume_threshold  # Use configured volume threshold
-        
+
         ema_bearish = current_price < Decimal(str(ema))  # Price below EMA (trend reversal)
-        
+
         # Momentum confirmation
         momentum_threshold = Decimal(str(self.config.get("momentum_threshold")))
         roc_negative = roc is None or roc <= -float(momentum_threshold)  # Negative momentum
-        
+
         obv_bearish = obv_trend is None or obv_trend in ["falling", "neutral"]
-        
+
         rsi_condition = rsi_overbought or rsi_neutral_bearish
         return rsi_condition and ema_bearish and has_volume and roc_negative and obv_bearish
 
     def _create_buy_signal(
-        self, market_data: Quote, rsi: float, ema: float, volume_ratio: Decimal, roc: Optional[float], atr: Optional[float] = None
+        self,
+        market_data: Quote,
+        rsi: float,
+        ema: float,
+        volume_ratio: Decimal,
+        roc: Optional[float],
+        atr: Optional[float] = None,
     ) -> Signal:
         """
         Crear señal de compra con metadata completa.
@@ -737,7 +784,9 @@ class MomentumStrategy(BaseStrategy):
             priority_score=85.0,
             source=SignalSource.MOMENTUM,
             price=market_data.last,
-            volume=Decimal("1"),  # FIX: Placeholder - get_position_size() calculates actual size based on capital
+            volume=Decimal(
+                "1"
+            ),  # FIX: Placeholder - get_position_size() calculates actual size based on capital
             timestamp=market_data.timestamp,
             metadata={
                 "strategy": self.name,
@@ -751,12 +800,20 @@ class MomentumStrategy(BaseStrategy):
                 "atr_multiplier": str(self.config.get("atr_multiplier")),
                 "use_dynamic_stop_loss": str(self.config.get("use_dynamic_stop_loss")),
                 "momentum_type": "positive_breakout",
-                "reason": self._format_signal_reason("positive_breakout", rsi, volume_ratio, roc, atr),
+                "reason": self._format_signal_reason(
+                    "positive_breakout", rsi, volume_ratio, roc, atr
+                ),
             },
         )
 
     def _create_sell_signal(
-        self, market_data: Quote, rsi: float, ema: float, volume_ratio: Decimal, roc: Optional[float], atr: Optional[float] = None
+        self,
+        market_data: Quote,
+        rsi: float,
+        ema: float,
+        volume_ratio: Decimal,
+        roc: Optional[float],
+        atr: Optional[float] = None,
     ) -> Signal:
         """
         Crear señal de venta con metadata completa.
@@ -780,7 +837,9 @@ class MomentumStrategy(BaseStrategy):
             priority_score=85.0,
             source=SignalSource.MOMENTUM,
             price=market_data.last,
-            volume=Decimal("1"),  # FIX: Placeholder - get_position_size() calculates actual size based on capital
+            volume=Decimal(
+                "1"
+            ),  # FIX: Placeholder - get_position_size() calculates actual size based on capital
             timestamp=market_data.timestamp,
             metadata={
                 "strategy": self.name,
@@ -794,7 +853,9 @@ class MomentumStrategy(BaseStrategy):
                 "atr_multiplier": str(self.config.get("atr_multiplier")),
                 "use_dynamic_stop_loss": str(self.config.get("use_dynamic_stop_loss")),
                 "momentum_type": "negative_reversal",
-                "reason": self._format_signal_reason("negative_reversal", rsi, volume_ratio, roc, atr),
+                "reason": self._format_signal_reason(
+                    "negative_reversal", rsi, volume_ratio, roc, atr
+                ),
             },
         )
 
@@ -835,24 +896,24 @@ class MomentumStrategy(BaseStrategy):
         return invested_value / total_value
 
     # REFACTORED: _calculate_atr removed - use TechnicalIndicatorCalculator.calculate_atr()
-    
+
     def _passes_atr_filter(self, current_price: Optional[Decimal] = None) -> bool:
         """
         Check if current market passes ATR volatility filter.
-        
+
         IMPROVEMENT: Uses relative ATR (% of price) instead of absolute ATR.
         This makes the filter more consistent across different price levels.
         """
         if not self.atr_filter_enabled:
             return True
-        
+
         if len(self.atr_history) == 0:
             return True
-        
+
         current_atr = self.atr_history[-1] if self.atr_history else None
         if current_atr is None:
             return True
-        
+
         # IMPROVEMENT: Use relative ATR (% of price) if enabled and price available
         if self.use_relative_atr and current_price is not None and current_price > 0:
             relative_atr = float(current_atr) / float(current_price)
@@ -861,15 +922,17 @@ class MomentumStrategy(BaseStrategy):
         else:
             # Fallback to absolute ATR for backward compatibility
             return float(current_atr) > float(self.min_atr_threshold)
-    
+
     # REFACTORED: _calculate_stochastic_rsi removed - use TechnicalIndicatorCalculator.calculate_stochastic_rsi()
 
-    def _should_generate_signal(self, stoch_rsi: Optional[float], stoch_rsi_signal: Optional[float]) -> bool:
+    def _should_generate_signal(
+        self, stoch_rsi: Optional[float], stoch_rsi_signal: Optional[float]
+    ) -> bool:
         """
         TASK-IND-STOCH-2: Determinar si se debe generar señal basado en Stochastic RSI.
 
         OPTIMIZED: Uses configurable thresholds from config file.
-        
+
         Args:
             stoch_rsi: Valor de Stochastic RSI
             stoch_rsi_signal: Valor de señal de Stochastic RSI
@@ -881,7 +944,7 @@ class MomentumStrategy(BaseStrategy):
         stoch_rsi_enabled = self.config.get("stoch_rsi_enabled")
         if not stoch_rsi_enabled:
             return True
-            
+
         # Si no hay suficiente data, permitir señales (degradación tolerante)
         if stoch_rsi is None or stoch_rsi_signal is None:
             return True
@@ -894,32 +957,37 @@ class MomentumStrategy(BaseStrategy):
         # - Generar señales cuando no está en extremos (evitar sobrecompra/sobreventa)
         # - Esto reduce falsas señales en zonas extremas
         return stoch_rsi_min <= stoch_rsi <= stoch_rsi_max
-    
+
     def _format_signal_reason(
-        self, signal_type: str, rsi: float, volume_ratio: Decimal, roc: Optional[float], atr: Optional[float]
+        self,
+        signal_type: str,
+        rsi: float,
+        volume_ratio: Decimal,
+        roc: Optional[float],
+        atr: Optional[float],
     ) -> str:
         """
         Formatear razón de señal de manera segura sin formatos condicionales en f-strings.
-        
+
         Args:
             signal_type: Tipo de señal ("positive_breakout" o "negative_reversal")
             rsi: Valor de RSI
             volume_ratio: Ratio de volumen
             roc: Valor de ROC (puede ser None)
             atr: Valor de ATR (puede ser None)
-            
+
         Returns:
             String formateado con la razón de la señal
         """
         # Format roc safely - use "N/A" when None to match test expectations
         roc_str = "N/A" if roc is None else f"{roc:.2f}"
-        
+
         # Format atr safely
         atr_str = f"{atr:.4f}" if atr is not None else "N/A"
-        
+
         # Format trend direction based on signal type
         trend = "above" if signal_type == "positive_breakout" else "below"
-        
+
         return (
             f"momentum_{signal_type}: rsi={rsi:.2f} ema_trend={trend} "
             f"volume={float(volume_ratio):.2f}x roc={roc_str} atr={atr_str}"

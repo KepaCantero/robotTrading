@@ -7,6 +7,7 @@ Convierte timestamps de diferentes formatos y timezones a UTC estándar.
 import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
+
 import pytz
 
 logger = logging.getLogger(__name__)
@@ -15,14 +16,14 @@ logger = logging.getLogger(__name__)
 class TimestampNormalizer:
     """
     Normalizador de timestamps.
-    
+
     Convierte timestamps a UTC y maneja diferentes formatos y timezones.
     """
-    
+
     def __init__(self, config: Dict[str, Any] = None):
         """
         Inicializar normalizador.
-        
+
         Args:
             config: Configuración
         """
@@ -30,15 +31,15 @@ class TimestampNormalizer:
         self.default_timezone = config.get('default_timezone', 'UTC')
         self.output_timezone = pytz.UTC  # Siempre output UTC
         self.assume_local_if_naive = config.get('assume_local_if_naive', False)
-    
+
     def normalize(self, timestamp: Any, source_timezone: Optional[str] = None) -> datetime:
         """
         Normalizar timestamp a UTC.
-        
+
         Args:
             timestamp: Timestamp en cualquier formato (datetime, int, str, etc.)
             source_timezone: Timezone del timestamp si es naive (opcional)
-        
+
         Returns:
             datetime en UTC (timezone-aware)
         """
@@ -57,7 +58,7 @@ class TimestampNormalizer:
                 dt = self._parse_string_timestamp(timestamp)
             else:
                 raise ValueError(f"Tipo de timestamp no soportado: {type(timestamp)}")
-            
+
             # Manejar timezone
             if dt.tzinfo is None:
                 # Naive datetime - asignar timezone
@@ -70,22 +71,22 @@ class TimestampNormalizer:
                 else:
                     # Asumir UTC por defecto
                     dt = pytz.UTC.localize(dt)
-            
+
             # Convertir a UTC
             if dt.tzinfo != pytz.UTC:
                 dt = dt.astimezone(pytz.UTC)
-            
+
             return dt
-            
+
         except Exception as e:
             logger.error(f"Error normalizando timestamp {timestamp}: {e}")
             # Fallback: retornar UTC now
             return datetime.now(pytz.UTC)
-    
+
     def _parse_string_timestamp(self, timestamp_str: str) -> datetime:
         """
         Parsear string timestamp.
-        
+
         Soporta múltiples formatos comunes.
         """
         # Formato ISO
@@ -93,7 +94,7 @@ class TimestampNormalizer:
             return datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
         except:
             pass
-        
+
         # Formato común: YYYY-MM-DD HH:MM:SS
         formats = [
             '%Y-%m-%d %H:%M:%S',
@@ -104,27 +105,26 @@ class TimestampNormalizer:
             '%m/%d/%Y %H:%M:%S',
             '%m/%d/%Y',
             '%d/%m/%Y %H:%M:%S',
-            '%d/%m/%Y'
+            '%d/%m/%Y',
         ]
-        
+
         for fmt in formats:
             try:
                 return datetime.strptime(timestamp_str, fmt)
             except:
                 continue
-        
+
         raise ValueError(f"No se pudo parsear timestamp string: {timestamp_str}")
-    
+
     def normalize_batch(self, timestamps: list, source_timezone: Optional[str] = None) -> list:
         """
         Normalizar múltiples timestamps.
-        
+
         Args:
             timestamps: Lista de timestamps
             source_timezone: Timezone del source (opcional)
-        
+
         Returns:
             Lista de datetimes normalizados en UTC
         """
         return [self.normalize(ts, source_timezone) for ts in timestamps]
-

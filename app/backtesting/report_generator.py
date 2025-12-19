@@ -24,14 +24,14 @@ logger = logging.getLogger(__name__)
 class BacktestReportGenerator:
     """
     Professional backtest report generator.
-    
+
     Creates comprehensive, auditable reports for backtest results.
     """
 
     def __init__(self, output_dir: Path):
         """
         Initialize report generator.
-        
+
         Args:
             output_dir: Directory for saving reports
         """
@@ -46,12 +46,12 @@ class BacktestReportGenerator:
     ) -> Dict[str, Path]:
         """
         Generate comprehensive backtest report.
-        
+
         Args:
             result: Backtest result
             config: Backtest configuration
             backtest_id: Unique backtest ID
-            
+
         Returns:
             Dictionary of generated file paths
         """
@@ -96,9 +96,7 @@ class BacktestReportGenerator:
         logger.info(f"Generated comprehensive report for {backtest_id}")
         return files
 
-    def _generate_executive_summary(
-        self, result: BacktestResult, config: BacktestConfig
-    ) -> str:
+    def _generate_executive_summary(self, result: BacktestResult, config: BacktestConfig) -> str:
         """Generate executive summary."""
         performance = result.performance
 
@@ -162,9 +160,7 @@ class BacktestReportGenerator:
 *This report is automatically generated for auditing and improvement purposes.*
 """
 
-    def _generate_technical_analysis(
-        self, result: BacktestResult, config: BacktestConfig
-    ) -> str:
+    def _generate_technical_analysis(self, result: BacktestResult, config: BacktestConfig) -> str:
         """Generate technical analysis."""
         perf = result.performance
 
@@ -232,9 +228,7 @@ Max Position Size: {float(config.max_position_size):.2f}%
 *Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}*
 """
 
-    def _generate_risk_analysis(
-        self, result: BacktestResult, config: BacktestConfig
-    ) -> str:
+    def _generate_risk_analysis(self, result: BacktestResult, config: BacktestConfig) -> str:
         """Generate risk analysis."""
         perf = result.performance
 
@@ -289,31 +283,37 @@ Max Position Size: {float(config.max_position_size):.2f}%
 
         # Analyze performance
         if float(result.total_return) < 0:
-            recommendations.append({
-                "priority": "HIGH",
-                "category": "Profitability",
-                "issue": "Negative total return",
-                "recommendation": "Review entry/exit logic. Consider increasing signal confidence threshold or reducing position sizes.",
-                "expected_impact": "Medium"
-            })
+            recommendations.append(
+                {
+                    "priority": "HIGH",
+                    "category": "Profitability",
+                    "issue": "Negative total return",
+                    "recommendation": "Review entry/exit logic. Consider increasing signal confidence threshold or reducing position sizes.",
+                    "expected_impact": "Medium",
+                }
+            )
 
         if float(result.performance.win_rate) < 40:
-            recommendations.append({
-                "priority": "HIGH",
-                "category": "Win Rate",
-                "issue": "Low win rate",
-                "recommendation": "Improve signal quality. Add additional filters or increase confirmation requirements.",
-                "expected_impact": "High"
-            })
+            recommendations.append(
+                {
+                    "priority": "HIGH",
+                    "category": "Win Rate",
+                    "issue": "Low win rate",
+                    "recommendation": "Improve signal quality. Add additional filters or increase confirmation requirements.",
+                    "expected_impact": "High",
+                }
+            )
 
         if float(result.performance.max_drawdown) > 15:
-            recommendations.append({
-                "priority": "HIGH",
-                "category": "Risk",
-                "issue": "Excessive drawdown",
-                "recommendation": "Tighten stop losses. Reduce position sizes. Add circuit breakers.",
-                "expected_impact": "High"
-            })
+            recommendations.append(
+                {
+                    "priority": "HIGH",
+                    "category": "Risk",
+                    "issue": "Excessive drawdown",
+                    "recommendation": "Tighten stop losses. Reduce position sizes. Add circuit breakers.",
+                    "expected_impact": "High",
+                }
+            )
 
         rec_text = "# Recommendations for Improvement\n\n"
         rec_text += f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}\n\n"
@@ -337,42 +337,42 @@ Max Position Size: {float(config.max_position_size):.2f}%
     def _identify_critical_issues(self, result: BacktestResult, perf: PerformanceMetrics) -> str:
         """Identify critical issues."""
         issues = []
-        
+
         if float(result.total_return) < 0:
             issues.append("❌ Negative returns - strategy is losing money")
-            
+
         if float(perf.win_rate) < 40:
             issues.append("⚠️ Low win rate - strategy needs better signal quality")
-            
+
         if float(perf.max_drawdown) > 15:
             issues.append("⚠️ High drawdown - risk management needs improvement")
-            
+
         if perf.total_trades < 10:
             issues.append("⚠️ Insufficient trades - not enough data for reliable analysis")
-            
+
         if not issues:
             return "✅ No critical issues identified"
-            
+
         return "\n".join(issues)
 
     def _generate_next_steps(self, result: BacktestResult, perf: PerformanceMetrics) -> str:
         """Generate next steps."""
         steps = []
-        
+
         steps.append("1. Review detailed technical analysis report")
         steps.append("2. Examine risk analysis for exposure issues")
-        
+
         if float(result.total_return) < 0:
             steps.append("3. Optimize entry/exit conditions")
         else:
             steps.append("3. Increase position sizes if risk permits")
-            
+
         if float(perf.max_drawdown) > 10:
             steps.append("4. Tighten risk controls")
-            
+
         steps.append("5. Run walk-forward validation")
         steps.append("6. Test on out-of-sample data")
-        
+
         return "\n".join(steps)
 
     def _calculate_cagr(self, result: BacktestResult) -> float:
@@ -381,7 +381,7 @@ Max Position Size: {float(config.max_position_size):.2f}%
         years = days / 365.25
         if years <= 0 or result.final_capital <= 0:
             return 0.0
-        return ((result.final_capital / result.final_capital) ** (1/years) - 1) * 100
+        return ((result.final_capital / result.final_capital) ** (1 / years) - 1) * 100
 
     def _calculate_kelly(self, perf: PerformanceMetrics) -> float:
         """Calculate Kelly Criterion."""
@@ -408,11 +408,11 @@ Max Position Size: {float(config.max_position_size):.2f}%
         """Analyze equity curve."""
         if not result.equity_curve:
             return "No equity curve data available."
-        
+
         max_val = max(x[1] for x in result.equity_curve)
         min_val = min(x[1] for x in result.equity_curve)
         recovery_time = len(result.equity_curve) // 2
-        
+
         return f"""
 - **Peak Equity:** ${float(max_val):,.2f}
 - **Trough Equity:** ${float(min_val):,.2f}
@@ -446,17 +446,17 @@ Max Position Size: {float(config.max_position_size):.2f}%
     def _identify_risk_warnings(self, result: BacktestResult, perf: PerformanceMetrics) -> str:
         """Identify risk warnings."""
         warnings = []
-        
+
         if float(perf.max_drawdown) > 20:
             warnings.append("⚠️ CRITICAL: Max drawdown exceeds 20%")
         if float(perf.volatility or 0) > 30:
             warnings.append("⚠️ HIGH volatility detected")
         if float(result.total_return) < -10:
             warnings.append("⚠️ CRITICAL: Total return below -10%")
-            
+
         if not warnings:
             return "✅ No risk warnings"
-            
+
         return "\n".join(warnings)
 
     def _extract_detailed_metrics(
@@ -464,26 +464,30 @@ Max Position Size: {float(config.max_position_size):.2f}%
     ) -> Dict[str, Any]:
         """Extract detailed metrics."""
         perf = result.performance
-        
+
         return {
             "backtest_id": config.strategy_name,
             "timestamp": datetime.now().isoformat(),
             "period": {
                 "start": result.start_date.isoformat(),
                 "end": result.end_date.isoformat(),
-                "days": (result.end_date - result.start_date).days
+                "days": (result.end_date - result.start_date).days,
             },
             "config": {
                 "initial_capital": float(config.initial_capital),
                 "commission": float(config.commission_per_trade),
                 "slippage": float(config.slippage_percentage),
-                "stop_loss": float(config.stop_loss_percentage) if config.stop_loss_percentage else None,
-                "take_profit": float(config.take_profit_percentage) if config.take_profit_percentage else None
+                "stop_loss": float(config.stop_loss_percentage)
+                if config.stop_loss_percentage
+                else None,
+                "take_profit": float(config.take_profit_percentage)
+                if config.take_profit_percentage
+                else None,
             },
             "returns": {
                 "total": float(result.total_return),
                 "annualized": float(result.annualized_return) if result.annualized_return else None,
-                "final_capital": float(result.final_capital)
+                "final_capital": float(result.final_capital),
             },
             "performance": {
                 "total_trades": perf.total_trades,
@@ -491,13 +495,13 @@ Max Position Size: {float(config.max_position_size):.2f}%
                 "losing_trades": perf.losing_trades,
                 "win_rate": float(perf.win_rate),
                 "profit_factor": float(perf.profit_factor) if perf.profit_factor else None,
-                "expectancy": float(perf.expectancy) if perf.expectancy else None
+                "expectancy": float(perf.expectancy) if perf.expectancy else None,
             },
             "risk": {
                 "sharpe": float(perf.sharpe_ratio) if perf.sharpe_ratio else None,
                 "sortino": float(perf.sortino_ratio) if perf.sortino_ratio else None,
                 "calmar": float(perf.calmar_ratio) if perf.calmar_ratio else None,
                 "max_drawdown": float(perf.max_drawdown),
-                "volatility": float(perf.volatility) if perf.volatility else None
-            }
+                "volatility": float(perf.volatility) if perf.volatility else None,
+            },
         }

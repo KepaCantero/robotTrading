@@ -253,9 +253,9 @@ def generate_backend_test_summary(
 ) -> Path:
     """
     Generate professional Backend Test Result Summary.
-    
+
     Creates a comprehensive, auditable report with all backend modules analyzed.
-    
+
     Args:
         all_results: List of all backtest results from different modules
         strategy: Strategy name
@@ -265,17 +265,17 @@ def generate_backend_test_summary(
         end_date: End date
         initial_capital: Initial capital
         project_root: Project root path
-        
+
     Returns:
         Path to generated summary file
     """
     # If this is a multi-strategy backtest, generate different summary
     if multi_strategy_results and strategy == "all_strategies":
         from app.dashboard.multi_strategy_utils import generate_multi_strategy_summary_text
-        
+
         # Generate multi-strategy specific summary
         summary_text = generate_multi_strategy_summary_text(multi_strategy_results)
-        
+
         # Add header
         report = f"""# 🧩 Multi-Strategy Backend Test Result Summary
 
@@ -295,11 +295,11 @@ def generate_backend_test_summary(
 ---
 *End of Multi-Strategy Backend Test Result Summary*
 """
-    
+
     else:
         # Aggregate metrics from all modules
         aggregated = _aggregate_metrics(all_results)
-        
+
         # Generate comprehensive report
         report = _generate_comprehensive_backend_report(
             aggregated,
@@ -312,17 +312,17 @@ def generate_backend_test_summary(
             all_results,
             multi_strategy_results,
         )
-    
+
     # Save to dedicated directory
     summary_dir = project_root / "docs" / "BACKTEST_RESULTS" / "summaries"
     summary_dir.mkdir(parents=True, exist_ok=True)
-    
+
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     summary_file = summary_dir / f"BACKEND_TEST_SUMMARY_{strategy}_{preset}_{timestamp}.md"
-    
+
     with open(summary_file, "w") as f:
         f.write(report)
-    
+
     return summary_file
 
 
@@ -330,20 +330,20 @@ def _aggregate_metrics(all_results: List[Dict]) -> Dict:
     """Aggregate metrics from all module results."""
     if not all_results:
         return {}
-    
+
     # Calculate aggregated stats
     total_trades = sum(r.get("total_trades", 0) for r in all_results)
     win_rates = [float(r.get("win_rate", 0)) for r in all_results if r.get("win_rate")]
     total_returns = [float(r.get("total_return", 0)) for r in all_results if r.get("total_return")]
     final_capitals = [float(r.get("final_capital", 0)) for r in all_results]
-    
+
     # Estimate initial capital from first final_capital and return
     if final_capitals and total_returns:
         # Initial capital = final_capital / (1 + return)
         estimated_initial = final_capitals[0] / (1 + (total_returns[0] / 100))
     else:
         estimated_initial = 100000  # Default
-    
+
     return {
         "total_trades": total_trades,
         "avg_win_rate": statistics.mean(win_rates) if win_rates else 0,
@@ -352,7 +352,9 @@ def _aggregate_metrics(all_results: List[Dict]) -> Dict:
         "avg_total_return": statistics.mean(total_returns) if total_returns else 0,
         "total_return_min": min(total_returns) if total_returns else 0,
         "total_return_max": max(total_returns) if total_returns else 0,
-        "final_capital_avg": statistics.mean(final_capitals) if final_capitals else estimated_initial,
+        "final_capital_avg": statistics.mean(final_capitals)
+        if final_capitals
+        else estimated_initial,
         "estimated_initial": estimated_initial,
     }
 
@@ -369,9 +371,9 @@ def _generate_comprehensive_backend_report(
     multi_strategy_results: Optional[Dict] = None,
 ) -> str:
     """Generate comprehensive backend test report."""
-    
+
     period_days = (end_date - start_date).days
-    
+
     # Section 1: Context
     context = f"""# 🧩 Backend Test Result Summary
 
@@ -416,24 +418,26 @@ The backtest was executed with **{preset}** configuration:
 The backtest evaluated the following system modules:
 
 """
-    
+
     for result in all_results:
         module_name = result.get("module", "Unknown")
         context += f"- **{module_name}:** {result.get('total_trades', 0)} trades, {result.get('win_rate', 0):.2f}% win rate\n"
-    
+
     # NEW: Add multi-strategy allocation section if applicable
     if multi_strategy_results:
         context += "\n### Multi-Strategy Capital Allocation\n\n"
-        context += "The backtest was executed across multiple strategies with allocated capital:\n\n"
-        
+        context += (
+            "The backtest was executed across multiple strategies with allocated capital:\n\n"
+        )
+
         allocation = multi_strategy_results.get("allocation", {})
         for name, alloc_data in allocation.items():
             context += f"- **{name}**: ${alloc_data.get('capital', 0):,.2f} ({alloc_data.get('weight', 0)*100:.1f}%)\n"
-    
+
     # Section 2: Results
     avg_win_rate = metrics.get("avg_win_rate", 0)
     avg_return = metrics.get("avg_total_return", 0)
-    
+
     results = f"""
 ## 2. 📊 Resultados Globales
 
@@ -481,22 +485,22 @@ The backtest evaluated the following system modules:
 {_generate_multi_strategy_section(multi_strategy_results) if multi_strategy_results else ''}
 
 """
-    
+
     # Section 3: Module Analysis
     module_analysis = _generate_module_analysis(all_results)
-    
+
     # Section 4: Behavior Analysis
     behavior = _generate_behavior_analysis(all_results, strategy)
-    
+
     # Section 5: Reliability Assessment
     reliability = _generate_reliability_assessment(all_results)
-    
+
     # Section 6: Findings & Recommendations
     findings = _generate_findings_and_recommendations(metrics, all_results, preset)
-    
+
     # Section 7: Conclusion
     conclusion = _generate_conclusion(metrics, avg_return, avg_win_rate)
-    
+
     return context + results + module_analysis + behavior + reliability + findings + conclusion
 
 
@@ -649,23 +653,23 @@ def _generate_multi_strategy_section(multi_strategy_results: Optional[Dict]) -> 
     """Generate multi-strategy analysis section."""
     if not multi_strategy_results:
         return ""
-    
+
     per_strategy = multi_strategy_results.get("per_strategy", {})
     combined = multi_strategy_results.get("combined", {})
     allocation = multi_strategy_results.get("allocation", {})
-    
+
     section = "\n## Multi-Strategy Portfolio Analysis\n\n"
     section += "### Capital Allocation\n\n"
     section += "| Strategy | Capital | Weight | Initial | Final | Trades | Win Rate | Return |\n"
     section += "|----------|---------|--------|---------|-------|--------|----------|--------|\n"
-    
+
     total_initial = combined.get("total_initial_capital", 0)
     total_final = combined.get("total_final_capital", 0)
-    
+
     for name in ["momentum", "mean_reversion", "pairs_trading"]:
         alloc_data = allocation.get(name, {})
         strat_data = per_strategy.get(name, {})
-        
+
         capital = alloc_data.get("capital", 0)
         weight = alloc_data.get("weight", 0) * 100
         initial = strat_data.get("initial_capital", 0)
@@ -673,17 +677,18 @@ def _generate_multi_strategy_section(multi_strategy_results: Optional[Dict]) -> 
         trades = strat_data.get("total_trades", 0)
         win_rate = strat_data.get("win_rate", 0)
         ret = strat_data.get("total_return", 0)
-        
+
         section += f"| {name} | ${capital:,.0f} | {weight:.1f}% | ${initial:,.0f} | ${final:,.0f} | {trades} | {win_rate:.1f}% | {ret:.2f}% |\n"
-    
+
     section += f"| **Total** | **${total_initial:,.0f}** | **100%** | **${total_initial:,.0f}** | **${total_final:,.0f}** | **{combined.get('total_trades', 0)}** | **{0:.1f}%** | **{combined.get('total_return', 0):.2f}%** |\n"
-    
+
     section += "\n### Combined Performance\n\n"
     section += f"- **Total Return**: {combined.get('total_return', 0):.2f}%\n"
     section += f"- **Weighted Sharpe**: {combined.get('weighted_sharpe', 0):.3f}\n"
     section += f"- **Weighted Max DD**: {combined.get('weighted_max_dd', 0):.2f}%\n"
-    
+
     return section
+
 
 def _generate_module_analysis(all_results: List[Dict]) -> str:
     """Generate module-specific analysis."""
@@ -691,12 +696,12 @@ def _generate_module_analysis(all_results: List[Dict]) -> str:
 ## 3. ⚙️ Análisis Técnico por Módulo
 
 """
-    
+
     for result in all_results:
         module_name = result.get("module", "Unknown")
         trades = result.get("total_trades", 0)
         win_rate = result.get("win_rate", 0)
-        
+
         analysis += f"""
 ### {module_name}
 
@@ -709,7 +714,7 @@ def _generate_module_analysis(all_results: List[Dict]) -> str:
 {_analyze_module_behavior(module_name, result)}
 
 """
-    
+
     return analysis
 
 
@@ -717,9 +722,9 @@ def _analyze_module_behavior(module_name: str, result: Dict) -> str:
     """Analyze module behavior."""
     trades = result.get("total_trades", 0)
     win_rate = result.get("win_rate", 0)
-    
+
     analysis = f"- Trade execution: {'Active' if trades > 0 else 'No trades executed'}\n"
-    
+
     if module_name == "TechnicalAnalyst":
         analysis += "- Indicator calculation: RSI, EMA, Volume filters applied\n"
         analysis += f"- Signal quality: {'High' if win_rate > 50 else 'Needs improvement'}\n"
@@ -729,15 +734,19 @@ def _analyze_module_behavior(module_name: str, result: Dict) -> str:
     elif module_name == "ExecutionEngine":
         analysis += "- Order simulation: Market orders with slippage modeling\n"
         analysis += "- Execution quality: Assumed optimal fills\n"
-    
+
     return analysis
 
 
 def _generate_behavior_analysis(all_results: List[Dict], strategy: str) -> str:
     """Generate behavior analysis section."""
     total_trades = sum(r.get("total_trades", 0) for r in all_results)
-    avg_win_rate = statistics.mean([float(r.get("win_rate", 0)) for r in all_results if r.get("win_rate")]) if all_results else 0
-    
+    avg_win_rate = (
+        statistics.mean([float(r.get("win_rate", 0)) for r in all_results if r.get("win_rate")])
+        if all_results
+        else 0
+    )
+
     return f"""
 ## 4. 🔍 Análisis de Comportamiento
 
@@ -770,7 +779,8 @@ The strategy was tested across approximately **2 years** of market data for {str
 - Exit strategy may need {'refinement' if avg_win_rate < 50 else 'optimization'}
 
 """
-    
+
+
 def _assess_frequency(trades: int) -> str:
     """Assess trade frequency."""
     if trades > 30:
@@ -779,6 +789,7 @@ def _assess_frequency(trades: int) -> str:
         return "appropriate"
     else:
         return "low (under-utilization)"
+
 
 def _assess_win_rate_detailed(win_rate: float) -> str:
     """Detailed win rate assessment."""
@@ -831,26 +842,29 @@ def _generate_reliability_assessment(all_results: List[Dict]) -> str:
 - **Scalability:** Tested on single symbol (AAPL)
 
 """
-    
-def _generate_findings_and_recommendations(metrics: Dict, all_results: List[Dict], preset: str) -> str:
+
+
+def _generate_findings_and_recommendations(
+    metrics: Dict, all_results: List[Dict], preset: str
+) -> str:
     """Generate findings and recommendations."""
     avg_win_rate = metrics.get("avg_win_rate", 0)
     avg_return = metrics.get("avg_total_return", 0)
-    
+
     findings = """
 ## 6. 🧩 Hallazgos y Recomendaciones
 
 ### Key Findings
 
 """
-    
+
     if avg_win_rate < 50:
         findings += "- **CRITICAL:** Win rate below 50% indicates strategy needs refinement\n"
     if avg_return < 5:
         findings += "- **WARNING:** Total return is marginal, consider parameter optimization\n"
     if metrics.get("total_trades", 0) < 20:
         findings += "- **INFO:** Low trade count limits statistical significance\n"
-    
+
     findings += f"""
 ### Recommended Improvements
 
@@ -919,13 +933,13 @@ def _generate_findings_and_recommendations(metrics: Dict, all_results: List[Dict
 6. 🚀 **Paper trading:** Validate in live market conditions
 
 """
-    
+
     return findings
 
 
 def _generate_conclusion(metrics: Dict, avg_return: float, avg_win_rate: float) -> str:
     """Generate final conclusion."""
-    
+
     # Determine status
     if avg_return > 10 and avg_win_rate > 55:
         status = "🟢 APROBADO"
@@ -939,7 +953,7 @@ def _generate_conclusion(metrics: Dict, avg_return: float, avg_win_rate: float) 
         status = "🔴 FALLIDO"
         description = "Strategy needs significant improvement"
         recommendation = "RETRAIN or redesign strategy"
-    
+
     return f"""
 ## 7. 📁 Conclusión Técnica
 

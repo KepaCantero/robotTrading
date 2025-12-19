@@ -58,17 +58,11 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
             str(config.get("breakout_threshold_pct", 0.01))
         )
         # Mínimo volumen relativo requerido (>= 1.0 significa al menos igual al promedio)
-        self.min_volume_ratio: Decimal = Decimal(
-            str(config.get("min_volume_ratio", 1.5))
-        )
+        self.min_volume_ratio: Decimal = Decimal(str(config.get("min_volume_ratio", 1.5)))
         # Exposición máxima global del portfolio (similar a MomentumStrategyEngine)
-        self.max_exposure: Decimal = Decimal(
-            str(config.get("max_exposure", 0.60))
-        )
+        self.max_exposure: Decimal = Decimal(str(config.get("max_exposure", 0.60)))
         # Confianza mínima para pasar risk_check
-        self.min_signal_confidence: float = float(
-            config.get("min_signal_confidence", 60.0)
-        )
+        self.min_signal_confidence: float = float(config.get("min_signal_confidence", 60.0))
 
         # Load strategy-specific configuration from YAML and override defaults
         strategy_config = get_strategy_config("breakout")
@@ -86,11 +80,17 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
             if "lookback_period" in params:
                 self.lookback_period = int(params.get("lookback_period", self.lookback_period))
             if "breakout_threshold_pct" in params:
-                self.breakout_threshold_pct = Decimal(str(params.get("breakout_threshold_pct", self.breakout_threshold_pct)))
+                self.breakout_threshold_pct = Decimal(
+                    str(params.get("breakout_threshold_pct", self.breakout_threshold_pct))
+                )
             if "min_volume_ratio" in params:
-                self.min_volume_ratio = Decimal(str(params.get("min_volume_ratio", self.min_volume_ratio)))
+                self.min_volume_ratio = Decimal(
+                    str(params.get("min_volume_ratio", self.min_volume_ratio))
+                )
             if "min_signal_confidence" in params:
-                self.min_signal_confidence = float(params.get("min_signal_confidence", self.min_signal_confidence))
+                self.min_signal_confidence = float(
+                    params.get("min_signal_confidence", self.min_signal_confidence)
+                )
 
             # Risk parameters from YAML
             self.stop_loss = Decimal(
@@ -150,16 +150,9 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
             lows = list(self.low_history) if self.low_history else []
             volumes = list(self.volume_history) if self.volume_history else []
         else:
-            prices = [
-                float(q.close or q.bid or q.last or 0)
-                for q in historical_data
-            ]
-            highs = [
-                float(getattr(q, "high", q.close or 0)) for q in historical_data
-            ]
-            lows = [
-                float(getattr(q, "low", q.close or 0)) for q in historical_data
-            ]
+            prices = [float(q.close or q.bid or q.last or 0) for q in historical_data]
+            highs = [float(getattr(q, "high", q.close or 0)) for q in historical_data]
+            lows = [float(getattr(q, "low", q.close or 0)) for q in historical_data]
             volumes = [float(getattr(q, "volume", 0)) for q in historical_data]
 
         if len(prices) >= self.lookback_period:
@@ -246,9 +239,7 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
         signals: List[Signal] = []
 
         try:
-            current_price = float(
-                market_data.close or market_data.bid or market_data.last or 0
-            )
+            current_price = float(market_data.close or market_data.bid or market_data.last or 0)
             if current_price <= 0:
                 return []
 
@@ -256,12 +247,8 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
             if len(self.price_history) < self.lookback_period:
                 # Añadir al histórico pero no generar señal aún
                 self.price_history.append(current_price)
-                self.high_history.append(
-                    float(getattr(market_data, "high", current_price))
-                )
-                self.low_history.append(
-                    float(getattr(market_data, "low", current_price))
-                )
+                self.high_history.append(float(getattr(market_data, "high", current_price)))
+                self.low_history.append(float(getattr(market_data, "low", current_price)))
                 self.volume_history.append(float(getattr(market_data, "volume", 0)))
                 return []
 
@@ -293,12 +280,8 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
 
             # Actualizar histórico DESPUÉS de calcular el rango (para el próximo ciclo)
             self.price_history.append(current_price)
-            self.high_history.append(
-                float(getattr(market_data, "high", current_price))
-            )
-            self.low_history.append(
-                float(getattr(market_data, "low", current_price))
-            )
+            self.high_history.append(float(getattr(market_data, "high", current_price)))
+            self.low_history.append(float(getattr(market_data, "low", current_price)))
             self.volume_history.append(float(getattr(market_data, "volume", 0)))
 
             # Flags de breakout
@@ -323,9 +306,7 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
                     price=Decimal(str(current_price)),
                     timestamp=getattr(market_data, "timestamp", None),
                     confidence=confidence,
-                    liquidity_score=min(
-                        100.0, max(0.0, (volume_ratio - 0.5) * 50.0)
-                    ),
+                    liquidity_score=min(100.0, max(0.0, (volume_ratio - 0.5) * 50.0)),
                     priority_score=confidence * 0.7
                     + min(100.0, max(0.0, (volume_ratio - 0.5) * 50.0)) * 0.3,
                     source=SignalSource.TECHNICAL,
@@ -361,9 +342,7 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
                     price=Decimal(str(current_price)),
                     timestamp=getattr(market_data, "timestamp", None),
                     confidence=confidence,
-                    liquidity_score=min(
-                        100.0, max(0.0, (volume_ratio - 0.5) * 50.0)
-                    ),
+                    liquidity_score=min(100.0, max(0.0, (volume_ratio - 0.5) * 50.0)),
                     priority_score=confidence * 0.7
                     + min(100.0, max(0.0, (volume_ratio - 0.5) * 50.0)) * 0.3,
                     source=SignalSource.TECHNICAL,
@@ -383,9 +362,7 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
                 signals.append(signal)
 
         except Exception as e:
-            logger.error(
-                f"Error generando señal en BreakoutStrategyEngine: {e}", exc_info=True
-            )
+            logger.error(f"Error generando señal en BreakoutStrategyEngine: {e}", exc_info=True)
 
         return signals
 
@@ -481,5 +458,3 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
             return False
 
         return True
-
-

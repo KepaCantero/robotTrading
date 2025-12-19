@@ -11,7 +11,7 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 import optuna
-from optuna.storages import JournalStorage, JournalFileStorage
+from optuna.storages import JournalFileStorage, JournalStorage
 
 from app.backtesting.data_loader import DataLoader
 from app.backtesting.multi_strategy_engine import MultiStrategyBacktester
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 class MultiStrategyOptimizer:
     """
     Optimizes parameters for multiple trading strategies simultaneously.
-    
+
     Uses Optuna for Bayesian optimization across:
     - Momentum strategy parameters
     - Mean Reversion strategy parameters
@@ -51,7 +51,7 @@ class MultiStrategyOptimizer:
     ):
         """
         Initialize multi-strategy optimizer.
-        
+
         Args:
             total_capital: Total portfolio capital
             symbol: Symbol to backtest
@@ -63,133 +63,147 @@ class MultiStrategyOptimizer:
         """
         self.total_capital = total_capital
         self.symbol = symbol
-        
+
         # Default to 10-year backtest
         self.end_date = end_date or datetime.now()
         self.start_date = start_date or (self.end_date - timedelta(days=365 * 10))
-        
+
         self.n_trials = n_trials
         self.optimization_direction = optimization_direction
         self.objective_metric = objective_metric
-        
+
         self.data_loader = DataLoader()
         self.strategy_factory = StrategyFactory()
-        
+
         # Load market data once
         logger.info(f"Loading market data for {symbol} from {self.start_date} to {self.end_date}")
-        self.market_data = self.data_loader.load_market_data(
-            symbol, self.start_date, self.end_date
-        )
-        
+        self.market_data = self.data_loader.load_market_data(symbol, self.start_date, self.end_date)
+
         if not self.market_data:
             raise ValueError(f"No market data available for {symbol}")
-        
+
         logger.info(f"Loaded {len(self.market_data)} market data points")
-        
+
         self.best_params: Optional[Dict[str, Any]] = None
         self.best_value: Optional[float] = None
 
     def _suggest_strategy_params(self, trial: optuna.Trial) -> Dict[str, Dict[str, Any]]:
         """
         Suggest parameters for all strategies using Optuna.
-        
+
         Args:
             trial: Optuna trial object
-            
+
         Returns:
             Dictionary with strategy configs
         """
         params = {}
-        
+
         # Momentum Strategy Parameters
         params["momentum"] = {
             "name": "momentum",
             "rsi_threshold": trial.suggest_float("momentum_rsi_threshold", 30.0, 50.0, step=1.0),
-            "momentum_threshold": trial.suggest_float("momentum_momentum_threshold", 0.01, 0.05, step=0.01),
-            "volume_threshold": trial.suggest_float("momentum_volume_threshold", 1.0, 2.5, step=0.1),
+            "momentum_threshold": trial.suggest_float(
+                "momentum_momentum_threshold", 0.01, 0.05, step=0.01
+            ),
+            "volume_threshold": trial.suggest_float(
+                "momentum_volume_threshold", 1.0, 2.5, step=0.1
+            ),
             "ema_period": trial.suggest_int("momentum_ema_period", 10, 50, step=5),
             "rsi_period": trial.suggest_int("momentum_rsi_period", 10, 20, step=2),
             "lookback_period": trial.suggest_int("momentum_lookback_period", 3, 10, step=1),
         }
-        
+
         # Mean Reversion Strategy Parameters
         params["mean_reversion"] = {
             "name": "mean_reversion",
             "z_score_threshold": trial.suggest_float("mr_z_score_threshold", 0.5, 3.0, step=0.25),
-            "volatility_threshold": trial.suggest_float("mr_volatility_threshold", 0.01, 0.05, step=0.01),
+            "volatility_threshold": trial.suggest_float(
+                "mr_volatility_threshold", 0.01, 0.05, step=0.01
+            ),
             "lookback_period": trial.suggest_int("mr_lookback_period", 10, 30, step=5),
-            "mean_reversion_speed": trial.suggest_float("mr_mean_reversion_speed", 0.05, 0.2, step=0.05),
+            "mean_reversion_speed": trial.suggest_float(
+                "mr_mean_reversion_speed", 0.05, 0.2, step=0.05
+            ),
             "min_z_score": trial.suggest_float("mr_min_z_score", 1.0, 2.5, step=0.25),
         }
-        
+
         # Pairs Trading Strategy Parameters (simplified)
         params["pairs_trading"] = {
             "name": "pairs_trading",
             "spread_threshold": trial.suggest_float("pt_spread_threshold", 0.1, 1.0, step=0.1),
-            "cointegration_threshold": trial.suggest_float("pt_cointegration_threshold", 0.01, 0.1, step=0.01),
+            "cointegration_threshold": trial.suggest_float(
+                "pt_cointegration_threshold", 0.01, 0.1, step=0.01
+            ),
             "min_correlation": trial.suggest_float("pt_min_correlation", 0.3, 0.8, step=0.1),
             "lookback_period": trial.suggest_int("pt_lookback_period", 20, 50, step=5),
             "pair_symbols": ["AAPL", "MSFT"],  # Fixed pair for now
             "hedge_ratio": Decimal("1.0"),
             "max_spread_deviation": Decimal("3.0"),
         }
-        
+
         # Capital Allocation Weights (must sum to 1.0)
         momentum_weight = trial.suggest_float("alloc_momentum", 0.4, 0.7, step=0.05)
         mean_reversion_weight = trial.suggest_float("alloc_mean_reversion", 0.15, 0.4, step=0.05)
         # Pairs trading gets remainder to ensure sum = 1.0
         pairs_weight = max(0.05, 1.0 - momentum_weight - mean_reversion_weight)
-        
+
         params["allocation"] = {
             "momentum": momentum_weight,
             "mean_reversion": mean_reversion_weight,
             "pairs_trading": pairs_weight,
         }
-        
+
         return params
 
     def _create_strategies(self, params: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
         """
         Create strategy instances with optimized parameters.
-        
+
         Args:
             params: Strategy parameters dictionary
-            
+
         Returns:
             Dictionary of strategy instances
         """
         strategies = {}
-        
+
         # Create Momentum strategy
         momentum_config = params["momentum"].copy()
-        momentum_config.update({
-            "stop_loss": Decimal("0.05"),
-            "take_profit": Decimal("0.10"),
-            "max_position_size": Decimal("0.1"),
-        })
+        momentum_config.update(
+            {
+                "stop_loss": Decimal("0.05"),
+                "take_profit": Decimal("0.10"),
+                "max_position_size": Decimal("0.1"),
+            }
+        )
         strategies["momentum"] = MomentumStrategy(momentum_config)
-        
+
         # Create Mean Reversion strategy
         mr_config = params["mean_reversion"].copy()
-        mr_config.update({
-            "stop_loss": Decimal("0.03"),
-            "take_profit": Decimal("0.06"),
-            "max_position_size": Decimal("0.08"),
-        })
+        mr_config.update(
+            {
+                "stop_loss": Decimal("0.03"),
+                "take_profit": Decimal("0.06"),
+                "max_position_size": Decimal("0.08"),
+            }
+        )
         strategies["mean_reversion"] = MeanReversionStrategy(mr_config)
-        
+
         # Create Pairs Trading strategy
         pt_config = params["pairs_trading"].copy()
-        pt_config.update({
-            "stop_loss": Decimal("0.03"),
-            "take_profit": Decimal("0.06"),
-            "max_position_size": Decimal("0.08"),
-            "max_pair_exposure": Decimal("0.2"),
-            "max_total_exposure": Decimal("0.4"),
-            "hedge_ratio_threshold": Decimal("0.1"),
-        })
+        pt_config.update(
+            {
+                "stop_loss": Decimal("0.03"),
+                "take_profit": Decimal("0.06"),
+                "max_position_size": Decimal("0.08"),
+                "max_pair_exposure": Decimal("0.2"),
+                "max_total_exposure": Decimal("0.4"),
+                "hedge_ratio_threshold": Decimal("0.1"),
+            }
+        )
         strategies["pairs_trading"] = PairsTradingStrategy(pt_config)
-        
+
         return strategies
 
     def _create_allocation_manager(
@@ -197,15 +211,15 @@ class MultiStrategyOptimizer:
     ) -> MultiStrategyAllocationManager:
         """
         Create allocation manager with optimized weights.
-        
+
         Args:
             allocation_params: Allocation weights dictionary
-            
+
         Returns:
             MultiStrategyAllocationManager instance
         """
         manager = MultiStrategyAllocationManager(self.total_capital)
-        
+
         # Update allocation weights
         for strategy_name, weight in allocation_params.items():
             if strategy_name in manager.strategy_allocations:
@@ -213,29 +227,29 @@ class MultiStrategyOptimizer:
                 allocation.target_weight = Decimal(str(weight))
                 allocation.min_weight = Decimal(str(max(0.05, weight - 0.15)))
                 allocation.max_weight = Decimal(str(min(0.7, weight + 0.15)))
-        
+
         return manager
 
     def _objective_function(self, trial: optuna.Trial) -> float:
         """
         Objective function for Optuna optimization.
-        
+
         Args:
             trial: Optuna trial object
-            
+
         Returns:
             Objective value (Sharpe ratio, return, or Calmar ratio)
         """
         try:
             # Suggest parameters for this trial
             params = self._suggest_strategy_params(trial)
-            
+
             # Create strategies with optimized parameters
             strategies = self._create_strategies(params)
-            
+
             # Create allocation manager
             allocation_manager = self._create_allocation_manager(params["allocation"])
-            
+
             # Create backtester
             backtester = MultiStrategyBacktester(
                 allocation_manager=allocation_manager,
@@ -246,12 +260,12 @@ class MultiStrategyOptimizer:
                     "max_position_size": Decimal("0.1"),
                 },
             )
-            
+
             # Run backtest
             results = backtester.run_multi_strategy_backtest(
                 self.market_data, self.start_date, self.end_date
             )
-            
+
             # Extract metric based on objective
             if self.objective_metric == "sharpe":
                 metric_value = results["combined"].get("weighted_sharpe", 0.0)
@@ -264,20 +278,20 @@ class MultiStrategyOptimizer:
                 metric_value = total_return / max_dd if max_dd > 0 else 0.0
             else:
                 metric_value = results["combined"].get("weighted_sharpe", 0.0)
-            
+
             # Store intermediate results
             trial.set_user_attr("total_return", results["combined"].get("total_return", 0.0))
             trial.set_user_attr("total_trades", results["combined"].get("total_trades", 0))
             trial.set_user_attr("max_drawdown", results["combined"].get("weighted_max_dd", 0.0))
-            
+
             logger.debug(
                 f"Trial {trial.number}: {self.objective_metric}={metric_value:.4f}, "
                 f"return={results['combined'].get('total_return', 0.0):.2f}%, "
                 f"trades={results['combined'].get('total_trades', 0)}"
             )
-            
+
             return float(metric_value)
-            
+
         except Exception as e:
             logger.error(f"Error in trial {trial.number}: {e}", exc_info=True)
             # Return worst possible value
@@ -291,19 +305,19 @@ class MultiStrategyOptimizer:
     ) -> optuna.Study:
         """
         Run optimization study.
-        
+
         Args:
             storage: Path to SQLite storage (optional, for resume capability)
             study_name: Name of the study
             resume: Whether to resume from existing study
-            
+
         Returns:
             Optimized Optuna study
         """
         logger.info(f"Starting optimization with {self.n_trials} trials")
         logger.info(f"Optimizing: {self.objective_metric} ({self.optimization_direction})")
         logger.info(f"Period: {self.start_date.date()} to {self.end_date.date()}")
-        
+
         # Create or load study
         if storage:
             study = optuna.create_study(
@@ -317,38 +331,38 @@ class MultiStrategyOptimizer:
                 study_name=study_name,
                 direction=self.optimization_direction,
             )
-        
+
         # Run optimization
         study.optimize(
             self._objective_function,
             n_trials=self.n_trials,
             show_progress_bar=True,
         )
-        
+
         # Store best results
         if study.best_trial:
             self.best_params = study.best_params
             self.best_value = study.best_value
-            
+
             logger.info(f"Optimization complete!")
             logger.info(f"Best {self.objective_metric}: {self.best_value:.4f}")
             logger.info(f"Best parameters: {self.best_params}")
-        
+
         return study
 
     def get_best_config(self) -> Dict[str, Any]:
         """
         Get best configuration from optimization.
-        
+
         Returns:
             Dictionary with best strategy configs and allocation
         """
         if not self.best_params:
             raise ValueError("No optimization has been run yet")
-        
+
         # Reconstruct best config from best params
         best_config = {}
-        
+
         # Extract strategy params
         best_config["momentum"] = {
             k.replace("momentum_", ""): v
@@ -356,50 +370,46 @@ class MultiStrategyOptimizer:
             if k.startswith("momentum_")
         }
         best_config["momentum"]["name"] = "momentum"
-        
+
         best_config["mean_reversion"] = {
-            k.replace("mr_", ""): v
-            for k, v in self.best_params.items()
-            if k.startswith("mr_")
+            k.replace("mr_", ""): v for k, v in self.best_params.items() if k.startswith("mr_")
         }
         best_config["mean_reversion"]["name"] = "mean_reversion"
-        
+
         best_config["pairs_trading"] = {
-            k.replace("pt_", ""): v
-            for k, v in self.best_params.items()
-            if k.startswith("pt_")
+            k.replace("pt_", ""): v for k, v in self.best_params.items() if k.startswith("pt_")
         }
         best_config["pairs_trading"]["name"] = "pairs_trading"
         best_config["pairs_trading"]["pair_symbols"] = ["AAPL", "MSFT"]
-        
+
         # Extract allocation
         best_config["allocation"] = {
             k.replace("alloc_", ""): v
             for k, v in self.best_params.items()
             if k.startswith("alloc_")
         }
-        
+
         return best_config
 
     def run_backtest_with_best_params(self) -> Dict[str, Any]:
         """
         Run a final backtest with optimized parameters.
-        
+
         Returns:
             Consolidated backtest results
         """
         if not self.best_params:
             raise ValueError("No optimization has been run yet")
-        
+
         # Get best config
         best_config = self.get_best_config()
-        
+
         # Create strategies
         strategies = self._create_strategies(best_config)
-        
+
         # Create allocation manager
         allocation_manager = self._create_allocation_manager(best_config["allocation"])
-        
+
         # Run backtest
         backtester = MultiStrategyBacktester(
             allocation_manager=allocation_manager,
@@ -410,10 +420,9 @@ class MultiStrategyOptimizer:
                 "max_position_size": Decimal("0.1"),
             },
         )
-        
+
         results = backtester.run_multi_strategy_backtest(
             self.market_data, self.start_date, self.end_date
         )
-        
-        return results
 
+        return results

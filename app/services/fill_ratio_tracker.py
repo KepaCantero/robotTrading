@@ -35,7 +35,7 @@ class FillMetrics:
 class FillRatioTracker:
     """
     TASK-MET-FILL-1: Tracks order fill ratios and execution quality.
-    
+
     Monitors:
     - Fill ratio (filled quantity / requested quantity)
     - Slippage (difference between requested and filled price)
@@ -51,10 +51,10 @@ class FillRatioTracker:
     def track_order(self, order: Order) -> FillMetrics:
         """
         Track a new order and create metrics for it.
-        
+
         Args:
             order: Order to track
-            
+
         Returns:
             FillMetrics instance
         """
@@ -78,7 +78,7 @@ class FillRatioTracker:
     def record_fill(self, order_id: str, filled_quantity: Decimal, filled_price: Decimal) -> None:
         """
         Record fill for an order.
-        
+
         Args:
             order_id: Order ID
             filled_quantity: Quantity filled
@@ -88,18 +88,26 @@ class FillRatioTracker:
         if metrics:
             metrics.filled_quantity = filled_quantity
             metrics.filled_price = filled_price
-            metrics.fill_ratio = float(filled_quantity / metrics.requested_quantity) if metrics.requested_quantity > 0 else 0.0
-            
+            metrics.fill_ratio = (
+                float(filled_quantity / metrics.requested_quantity)
+                if metrics.requested_quantity > 0
+                else 0.0
+            )
+
             if metrics.requested_price > 0:
                 metrics.slippage = abs(filled_price - metrics.requested_price)
             metrics.status = OrderStatus.FILLED
 
     def record_partial_fill(
-        self, order_id: str, filled_quantity: Decimal, filled_price: Decimal, new_status: OrderStatus
+        self,
+        order_id: str,
+        filled_quantity: Decimal,
+        filled_price: Decimal,
+        new_status: OrderStatus,
     ) -> None:
         """
         Record partial fill for an order.
-        
+
         Args:
             order_id: Order ID
             filled_quantity: Quantity filled
@@ -110,8 +118,12 @@ class FillRatioTracker:
         if metrics:
             metrics.filled_quantity = filled_quantity
             metrics.filled_price = filled_price
-            metrics.fill_ratio = float(filled_quantity / metrics.requested_quantity) if metrics.requested_quantity > 0 else 0.0
-            
+            metrics.fill_ratio = (
+                float(filled_quantity / metrics.requested_quantity)
+                if metrics.requested_quantity > 0
+                else 0.0
+            )
+
             if metrics.requested_price > 0:
                 metrics.slippage = abs(filled_price - metrics.requested_price)
             metrics.status = new_status
@@ -119,7 +131,7 @@ class FillRatioTracker:
     def record_order_status(self, order_id: str, status: OrderStatus) -> None:
         """
         Update order status.
-        
+
         Args:
             order_id: Order ID
             status: New status
@@ -128,14 +140,16 @@ class FillRatioTracker:
         if metrics:
             metrics.status = status
 
-    def get_fill_ratio_stats(self, symbol: Optional[str] = None, last_n: int = 100) -> Dict[str, Any]:
+    def get_fill_ratio_stats(
+        self, symbol: Optional[str] = None, last_n: int = 100
+    ) -> Dict[str, Any]:
         """
         Get fill ratio statistics.
-        
+
         Args:
             symbol: Optional symbol to filter by
             last_n: Number of recent orders to analyze
-            
+
         Returns:
             Dictionary with fill ratio statistics
         """
@@ -152,11 +166,18 @@ class FillRatioTracker:
                 "avg_slippage": 0.0,
             }
 
-        filled = [m for m in recent_orders if m.status in [OrderStatus.FILLED, OrderStatus.PARTIALLY_FILLED]]
-        
-        avg_fill_ratio = sum(m.fill_ratio for m in recent_orders if m.fill_ratio > 0) / len(
-            [m for m in recent_orders if m.fill_ratio > 0]
-        ) if any(m.fill_ratio > 0 for m in recent_orders) else 0.0
+        filled = [
+            m
+            for m in recent_orders
+            if m.status in [OrderStatus.FILLED, OrderStatus.PARTIALLY_FILLED]
+        ]
+
+        avg_fill_ratio = (
+            sum(m.fill_ratio for m in recent_orders if m.fill_ratio > 0)
+            / len([m for m in recent_orders if m.fill_ratio > 0])
+            if any(m.fill_ratio > 0 for m in recent_orders)
+            else 0.0
+        )
 
         avg_slippage = (
             sum(float(m.slippage) for m in filled if m.slippage is not None)
@@ -169,7 +190,9 @@ class FillRatioTracker:
             "total_orders": len(recent_orders),
             "avg_fill_ratio": round(avg_fill_ratio, 4),
             "total_filled": len([m for m in recent_orders if m.status == OrderStatus.FILLED]),
-            "total_partial": len([m for m in recent_orders if m.status == OrderStatus.PARTIALLY_FILLED]),
+            "total_partial": len(
+                [m for m in recent_orders if m.status == OrderStatus.PARTIALLY_FILLED]
+            ),
             "total_rejected": len([m for m in recent_orders if m.status == OrderStatus.REJECTED]),
             "avg_slippage": round(avg_slippage, 6),
         }
