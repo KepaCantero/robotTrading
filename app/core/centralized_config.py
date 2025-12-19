@@ -766,7 +766,8 @@ class CentralizedConfig(BaseSettings):
         default_factory=CurrencyHedgingConfig, description="Currency hedging configuration"
     )
     diversification: SectorCountryDiversificationConfig = Field(
-        default_factory=SectorCountryDiversificationConfig, description="Sector/country diversification configuration"
+        default_factory=SectorCountryDiversificationConfig,
+        description="Sector/country diversification configuration",
     )
 
     # Strategy configurations

@@ -164,9 +164,12 @@ class CountryDiversificationValidator:
 
         for country, notional in country_exposure.items():
             exposure_pct = notional / total_value
-            weight_sq = exposure_pct ** 2
+            weight_sq = exposure_pct**2
             herfindahl += weight_sq
-            country_details[country] = {"exposure": float(exposure_pct), "notional": float(notional)}
+            country_details[country] = {
+                "exposure": float(exposure_pct),
+                "notional": float(notional),
+            }
 
         # Calculate effective number of countries
         effective_countries = Decimal("1") / herfindahl if herfindahl > 0 else Decimal("0")
@@ -199,9 +202,7 @@ class CountryDiversificationValidator:
 
         return exposure
 
-    def _calculate_severity(
-        self, actual: Decimal, limit: Decimal
-    ) -> str:
+    def _calculate_severity(self, actual: Decimal, limit: Decimal) -> str:
         """Calculate violation severity."""
         if actual <= limit:
             return "none"
