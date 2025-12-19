@@ -6,15 +6,14 @@ Exporta todos los meta-learners disponibles.
 
 from .meta_learners import (
     BaseMetaLearner,
+    EnsembleMetaLearner,
     HistoricalPerformanceLearner,
     ReinforcementLearningLearner,
-    EnsembleMetaLearner
 )
 
 __all__ = [
     "BaseMetaLearner",
     "HistoricalPerformanceLearner",
     "ReinforcementLearningLearner",
-    "EnsembleMetaLearner"
+    "EnsembleMetaLearner",
 ]
-

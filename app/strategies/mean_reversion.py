@@ -86,14 +86,19 @@ class MeanReversionStrategy(BaseStrategy):
 
         # Initialize price history for logging purposes (similar to MomentumStrategy)
         from collections import deque
+
         self.price_history = deque(maxlen=200)  # Maintain up to 200 bars of history
-        
+
         # ✅ USE LIBRARY: Initialize TechnicalIndicatorCalculator (uses pandas-ta-classic)
         self.indicator_calculator = TechnicalIndicatorCalculator()
 
         logger.info(f"MeanReversionStrategy initialized: {self.name}")
-        config_value = strategy_config.parameters.get('z_score_threshold') if strategy_config else 'NO_CONFIG'
-        logger.info(f"⚠️ CRITICAL: z_score_threshold={self.z_score_threshold} (target: 1.0, config loaded: {config_value})")
+        config_value = (
+            strategy_config.parameters.get('z_score_threshold') if strategy_config else 'NO_CONFIG'
+        )
+        logger.info(
+            f"⚠️ CRITICAL: z_score_threshold={self.z_score_threshold} (target: 1.0, config loaded: {config_value})"
+        )
 
     def get_required_parameters(self) -> List[str]:
         """
@@ -126,22 +131,27 @@ class MeanReversionStrategy(BaseStrategy):
             # Calcular Z-score y volatilidad
             z_score = self._calculate_z_score(market_data)
             volatility = self._calculate_volatility(market_data)
-            
+
             # Logging de diagnóstico (INFO level cada cierto número de llamadas)
             current_price = market_data.close or market_data.last
-            price_change_pct = ((market_data.close - market_data.open) / market_data.open * 100) if market_data.open > 0 else Decimal("0")
-            
+            price_change_pct = (
+                ((market_data.close - market_data.open) / market_data.open * 100)
+                if market_data.open > 0
+                else Decimal("0")
+            )
+
             # Logging periódico para diagnóstico
             if not hasattr(self, '_call_count'):
                 self._call_count = 0
             self._call_count += 1
-            
+
             # Update price history for tracking
             if not hasattr(self, 'price_history'):
                 from collections import deque
+
                 self.price_history = deque(maxlen=200)
             self.price_history.append(float(current_price))
-            
+
             # Log ALL candidates (every call) at DEBUG level
             logger.debug(
                 f"🔍 MEAN_REVERSION CANDIDATE {market_data.symbol}: "
@@ -149,7 +159,7 @@ class MeanReversionStrategy(BaseStrategy):
                 f"z_score={z_score:.4f}, volatility={volatility:.4f}, "
                 f"threshold={self.z_score_threshold}, history_len={len(self.price_history)}"
             )
-            
+
             # More frequent logging (every 10 calls) for INFO level
             if self._call_count % 10 == 0:
                 logger.info(
@@ -157,18 +167,18 @@ class MeanReversionStrategy(BaseStrategy):
                     f"price={current_price:.2f}, z_score={z_score:.4f}, "
                     f"volatility={volatility:.4f}, threshold={self.z_score_threshold}"
                 )
-            
+
             # Evaluar condiciones BUY y SELL
             buy_condition = self._is_buy_signal(z_score, volatility, market_data)
             sell_condition = self._is_sell_signal(z_score, volatility, market_data)
-            
+
             # Log ALL candidates when conditions are checked
             logger.debug(
                 f"🔍 MEAN_REVERSION CONDITIONS {market_data.symbol}: "
                 f"buy_condition={buy_condition}, sell_condition={sell_condition}, "
                 f"z_score={z_score:.4f}, price={current_price:.2f}"
             )
-            
+
             # Logging cuando condiciones son True (INFO level)
             if buy_condition or sell_condition:
                 logger.info(
@@ -195,7 +205,10 @@ class MeanReversionStrategy(BaseStrategy):
                 )
 
         except Exception as e:
-            logger.error(f"MEAN_REVERSION Error generating signals for {market_data.symbol}: {e}", exc_info=True)
+            logger.error(
+                f"MEAN_REVERSION Error generating signals for {market_data.symbol}: {e}",
+                exc_info=True,
+            )
 
         return signals
 
@@ -288,15 +301,14 @@ class MeanReversionStrategy(BaseStrategy):
 
         except Exception as e:
             logger.error(
-                f"❌ MEAN_REVERSION risk_check ERROR for {signal.symbol}: {e}",
-                exc_info=True
+                f"❌ MEAN_REVERSION risk_check ERROR for {signal.symbol}: {e}", exc_info=True
             )
             return False
 
     def _calculate_z_score(self, market_data: Quote) -> Decimal:
         """
         Calcular Z-score del precio usando pandas-ta-classic.zscore() library.
-        
+
         ✅ REFACTORED: Uses pandas_ta_classic.zscore() - NO manual calculations
 
         Args:
@@ -307,41 +319,43 @@ class MeanReversionStrategy(BaseStrategy):
         """
         if len(self.price_history) < self.lookback_period:
             # Not enough history - use simplified calculation
-            price_change = (market_data.last - market_data.open) / market_data.open if market_data.open > 0 else Decimal("0")
+            price_change = (
+                (market_data.last - market_data.open) / market_data.open
+                if market_data.open > 0
+                else Decimal("0")
+            )
             std_dev = Decimal("0.02")
             return price_change / std_dev if std_dev > 0 else Decimal("0")
-        
+
         # ✅ USE LIBRARY: Use TechnicalIndicatorCalculator.calculate_zscore() (pandas-ta-classic)
         prices_list = [float(p) for p in list(self.price_history)]
         current_price = float(market_data.last)
-        
+
         # Add current price for calculation
         prices_with_current = prices_list + [current_price]
-        
+
         # Calculate z-score using pandas-ta-classic (rolling z-score with lookback_period)
         z_score_raw = self.indicator_calculator.calculate_zscore(
-            prices_with_current, 
-            period=self.lookback_period, 
-            std=1.0
+            prices_with_current, period=self.lookback_period, std=1.0
         )
-        
+
         if z_score_raw is None:
             logger.debug(f"MEAN_REVERSION {market_data.symbol}: Z-score calculation returned None")
             return Decimal("0")
-        
+
         z_score = Decimal(str(z_score_raw))
-        
+
         logger.debug(
             f"MEAN_REVERSION {market_data.symbol}: Z-score calculated via pandas-ta-classic: {z_score:.4f} "
             f"(price={current_price:.2f}, lookback={self.lookback_period})"
         )
-        
+
         return z_score
 
     def _calculate_volatility(self, market_data: Quote) -> Decimal:
         """
         Calcular volatilidad del activo usando pandas-ta-classic.volatility() library.
-        
+
         ✅ REFACTORED: Uses pandas_ta_classic.volatility() - NO manual calculations
 
         Args:
@@ -352,35 +366,42 @@ class MeanReversionStrategy(BaseStrategy):
         """
         if len(self.price_history) < 2:
             # Fallback to simple calculation
-            price_range = (market_data.high - market_data.low) / market_data.last if market_data.last > 0 else Decimal("0")
+            price_range = (
+                (market_data.high - market_data.low) / market_data.last
+                if market_data.last > 0
+                else Decimal("0")
+            )
             return price_range
-        
+
         # ✅ USE LIBRARY: Use TechnicalIndicatorCalculator.calculate_volatility() (pandas-ta-classic)
         prices_list = [float(p) for p in list(self.price_history)]
         current_price = float(market_data.last)
         prices_with_current = prices_list + [current_price]
-        
+
         # Calculate volatility using pandas-ta-classic (daily volatility)
         volatility_raw = self.indicator_calculator.calculate_volatility(
-            prices_with_current,
-            tf='days',
-            returns=False,
-            log=False
+            prices_with_current, tf='days', returns=False, log=False
         )
-        
+
         if volatility_raw is None:
             # Fallback to simple calculation if library returns None
-            price_range = (market_data.high - market_data.low) / market_data.last if market_data.last > 0 else Decimal("0")
-            logger.debug(f"MEAN_REVERSION {market_data.symbol}: Volatility calculation returned None, using fallback")
+            price_range = (
+                (market_data.high - market_data.low) / market_data.last
+                if market_data.last > 0
+                else Decimal("0")
+            )
+            logger.debug(
+                f"MEAN_REVERSION {market_data.symbol}: Volatility calculation returned None, using fallback"
+            )
             return price_range
-        
+
         volatility = Decimal(str(volatility_raw))
-        
+
         logger.debug(
             f"MEAN_REVERSION {market_data.symbol}: Volatility calculated via pandas-ta-classic: {volatility:.6f} "
             f"from {len(prices_with_current)} prices"
         )
-        
+
         return volatility
 
     def _is_buy_signal(self, z_score: Decimal, volatility: Decimal, market_data: Quote) -> bool:
@@ -399,22 +420,30 @@ class MeanReversionStrategy(BaseStrategy):
         # Check if z-score indicates undervaluation (reduced threshold to 70%)
         z_score_buy = -self.z_score_threshold * Decimal("0.7")  # 70% of threshold (was 0.8)
         is_undervalued = z_score < z_score_buy
-        
+
         # Make price drop optional - if z-score is very negative, don't require price drop
         price_drop_min = Decimal("0.001")  # Reduced from 0.002 to 0.1% drop (more permissive)
         price_drop = (market_data.open - market_data.close) / market_data.open > price_drop_min
-        very_oversold = z_score < -self.z_score_threshold * Decimal("1.2")  # Reduced from 1.5 to 1.2
-        
+        very_oversold = z_score < -self.z_score_threshold * Decimal(
+            "1.2"
+        )  # Reduced from 1.5 to 1.2
+
         # Price range multiplier for relative price moves
-        price_range = (market_data.high - market_data.low) / market_data.last if market_data.last > 0 else Decimal("0")
+        price_range = (
+            (market_data.high - market_data.low) / market_data.last
+            if market_data.last > 0
+            else Decimal("0")
+        )
         acceptable_price_range = price_range >= self.atr_floor * self.price_range_multiplier
-        
+
         # Only allow moderate volatility (more relaxed)
         acceptable_volatility = volatility < self.volatility_threshold * 4  # More permissive (4x)
-        
+
         # OPTIMIZED: BUY if: (undervalued + acceptable_range) OR (very oversold + acceptable_range)
         # Removed price_drop requirement for more opportunities
-        return (is_undervalued and acceptable_price_range and acceptable_volatility) or (very_oversold and acceptable_price_range and acceptable_volatility)
+        return (is_undervalued and acceptable_price_range and acceptable_volatility) or (
+            very_oversold and acceptable_price_range and acceptable_volatility
+        )
 
     def _is_sell_signal(self, z_score: Decimal, volatility: Decimal, market_data: Quote) -> bool:
         """
@@ -432,22 +461,30 @@ class MeanReversionStrategy(BaseStrategy):
         # Check if z-score indicates overvaluation (reduced threshold to 70%)
         z_score_sell = self.z_score_threshold * Decimal("0.7")  # 70% of threshold (was 0.8)
         is_overvalued = z_score > z_score_sell
-        
+
         # Make price rise optional - if z-score is very positive, don't require price rise
         price_rise_min = Decimal("0.001")  # Reduced from 0.002 to 0.1% rise (more permissive)
         price_rise = (market_data.close - market_data.open) / market_data.open > price_rise_min
-        very_overbought = z_score > self.z_score_threshold * Decimal("1.2")  # Reduced from 1.5 to 1.2
-        
+        very_overbought = z_score > self.z_score_threshold * Decimal(
+            "1.2"
+        )  # Reduced from 1.5 to 1.2
+
         # Price range multiplier for relative price moves
-        price_range = (market_data.high - market_data.low) / market_data.last if market_data.last > 0 else Decimal("0")
+        price_range = (
+            (market_data.high - market_data.low) / market_data.last
+            if market_data.last > 0
+            else Decimal("0")
+        )
         acceptable_price_range = price_range >= self.atr_floor * self.price_range_multiplier
-        
+
         # Only allow moderate volatility (more relaxed)
         acceptable_volatility = volatility < self.volatility_threshold * 4  # More permissive (4x)
-        
+
         # OPTIMIZED: SELL if: (overvalued + acceptable_range) OR (very overbought + acceptable_range)
         # Removed price_rise requirement for more opportunities
-        return (is_overvalued and acceptable_price_range and acceptable_volatility) or (very_overbought and acceptable_price_range and acceptable_volatility)
+        return (is_overvalued and acceptable_price_range and acceptable_volatility) or (
+            very_overbought and acceptable_price_range and acceptable_volatility
+        )
 
     def _create_buy_signal(self, market_data: Quote, z_score: Decimal) -> Signal:
         """
@@ -469,7 +506,9 @@ class MeanReversionStrategy(BaseStrategy):
             priority_score=80.0,
             source=SignalSource.MOMENTUM,
             price=market_data.last,
-            volume=Decimal("1"),  # FIX: Placeholder - get_position_size() calculates actual size based on capital
+            volume=Decimal(
+                "1"
+            ),  # FIX: Placeholder - get_position_size() calculates actual size based on capital
             timestamp=market_data.timestamp,
             metadata={
                 "strategy": self.name,
@@ -501,7 +540,9 @@ class MeanReversionStrategy(BaseStrategy):
             priority_score=80.0,
             source=SignalSource.MOMENTUM,
             price=market_data.last,
-            volume=Decimal("1"),  # FIX: Placeholder - get_position_size() calculates actual size based on capital
+            volume=Decimal(
+                "1"
+            ),  # FIX: Placeholder - get_position_size() calculates actual size based on capital
             timestamp=market_data.timestamp,
             metadata={
                 "strategy": self.name,

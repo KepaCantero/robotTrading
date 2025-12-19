@@ -85,7 +85,9 @@ class PerformanceMetrics(BaseModel):
     max_drawdown_percentage: Decimal = Field(..., le=0, description="Maximum drawdown percentage")
     sharpe_ratio: Optional[Decimal] = Field(None, description="Sharpe ratio")
     sortino_ratio: Optional[Decimal] = Field(None, description="Sortino ratio")
-    risk_reward_ratio: Optional[Decimal] = Field(None, description="Average risk/reward ratio per trade (target ≥1:3)")
+    risk_reward_ratio: Optional[Decimal] = Field(
+        None, description="Average risk/reward ratio per trade (target ≥1:3)"
+    )
 
     # Trade statistics
     avg_win: Decimal = Field(..., description="Average winning trade")

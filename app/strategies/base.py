@@ -115,16 +115,16 @@ class BaseStrategy(ABC):
             # - Capital disponible
             # - max_position_size (% del capital que podemos usar)
             # - Precio de la acción
-            
+
             # Capital máximo que podemos usar para esta posición
             max_position_value = available_cash * max_position_size
-            
+
             # Número máximo de acciones que podemos comprar
             position_size = max_position_value / signal.price
-            
+
             # Asegurar mínimo 1 acción
             position_size = max(position_size, Decimal("1"))
-            
+
             return position_size.quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)
         else:
             # FIX: Para SELL, usar la posición existente, no signal.volume
@@ -134,7 +134,7 @@ class BaseStrategy(ABC):
                 if pos.symbol == signal.symbol:
                     existing_position = pos
                     break
-            
+
             if existing_position:
                 # Vender toda la posición o una fracción
                 # Por defecto, usar toda la posición disponible

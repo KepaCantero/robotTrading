@@ -8,10 +8,10 @@ Normaliza datos de diferentes fuentes a formato estándar:
 - Corporate actions handling
 """
 
-from .timestamp_normalizer import TimestampNormalizer
-from .symbol_normalizer import SymbolNormalizer
-from .price_normalizer import PriceNormalizer
 from .corporate_actions_handler import CorporateActionsHandler
+from .price_normalizer import PriceNormalizer
+from .symbol_normalizer import SymbolNormalizer
+from .timestamp_normalizer import TimestampNormalizer
 from .unified_normalizer import UnifiedNormalizer
 
 __all__ = [
@@ -19,6 +19,5 @@ __all__ = [
     "SymbolNormalizer",
     "PriceNormalizer",
     "CorporateActionsHandler",
-    "UnifiedNormalizer"
+    "UnifiedNormalizer",
 ]
-

@@ -4,24 +4,29 @@ ModularMomentumStrategy - Estrategia de momentum completamente modular con learn
 
 import logging
 from collections import deque
-from typing import Dict, List, Optional, Any, TYPE_CHECKING
 from datetime import datetime
 from decimal import Decimal
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
     from .learning.base_learning_engine import BaseLearningEngine
 
-from app.strategies.base import BaseStrategy
 from app.models.market_data import Quote
-from app.models.signal import Signal, SignalType, SignalStrength, SignalSource
 from app.models.portfolio import Portfolio
+from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.services.momentum_analysis import TechnicalIndicatorCalculator
+from app.strategies.base import BaseStrategy
 
-from .modules.market_analyzer import MarketAnalyzer
 from .modules.filters import (
-    EMAFilter, RSIFilter, StochRSIFilter,
-    MomentumFilter, VolumeFilter, ATRFilter
+    ATRFilter,
+    EMAFilter,
+    MomentumFilter,
+    RSIFilter,
+    StochRSIFilter,
+    VolumeFilter,
 )
+from .modules.market_analyzer import MarketAnalyzer
+
 # BaseLearningEngine solo para type hints (no se ejecuta en runtime)
 
 logger = logging.getLogger(__name__)
@@ -30,7 +35,7 @@ logger = logging.getLogger(__name__)
 class ModularMomentumStrategy(BaseStrategy):
     """
     Estrategia de momentum completamente modular con learning engines integrado.
-    
+
     Características:
     - Arquitectura modular: filtros activables/desactivables
     - Learning engines: Supervised, Deep, Reinforcement Learning
@@ -38,24 +43,24 @@ class ModularMomentumStrategy(BaseStrategy):
     - Ajuste dinámico de thresholds basado en predicciones
     - Reentrenamiento automático
     """
-    
+
     def __init__(self, config: Dict[str, Any]):
         """
         Inicializar estrategia modular.
-        
+
         Args:
             config: Configuración desde YAML (momentum_modular.yaml)
         """
         super().__init__(config)
-        
+
         # Configuración
         self.preset = config.get("preset", "balanced")
         self.presets_config = config.get("presets", {})
         self.current_preset = self.presets_config.get(self.preset, {})
-        
+
         # Módulos de análisis
         self.market_analyzer = MarketAnalyzer(config.get("market_analyzer", {}))
-        
+
         # Filtros modulares
         modules_config = config.get("modules", {})
         self.filters = []
@@ -67,7 +72,7 @@ class ModularMomentumStrategy(BaseStrategy):
             "volume_filter": VolumeFilter,
             "atr_filter": ATRFilter,
         }
-        
+
         for filter_name, filter_class in filter_classes.items():
             if filter_name in modules_config:
                 filter_config = modules_config[filter_name]
@@ -75,27 +80,33 @@ class ModularMomentumStrategy(BaseStrategy):
                     filter_instance = filter_class(filter_config, preset=self.preset)
                     self.filters.append(filter_instance)
                     logger.info(f"✅ Filtro activado: {filter_name}")
-        
+
         # Learning engine (opcional) - INICIALIZACIÓN LAZY para evitar bloqueos de mutex
         # NO inicializar aquí - se inicializará cuando realmente se necesite
         learning_config = config.get("adaptive_learning", {})
         self._learning_config = learning_config if learning_config.get("enabled", False) else None
-        self._learning_engine_type = learning_config.get("engine_type", "supervised") if learning_config.get("enabled", False) else None
+        self._learning_engine_type = (
+            learning_config.get("engine_type", "supervised")
+            if learning_config.get("enabled", False)
+            else None
+        )
         self.learning_engine = None  # Se inicializará lazy cuando se necesite
-        
+
         # Solo loguear que está configurado, pero NO crear la instancia
         if self._learning_config:
-            logger.info(f"📋 Learning engine configurado: {self._learning_engine_type} (se inicializará cuando se necesite)")
-        
+            logger.info(
+                f"📋 Learning engine configurado: {self._learning_engine_type} (se inicializará cuando se necesite)"
+            )
+
         # Feature extractor para learning engines (import lazy - solo cuando se necesite)
         # NO importar aquí para evitar bloqueos - se importará cuando realmente se use
         self._feature_extractor = None
-        
+
         # Thresholds configurables
         self.min_success_probability = self.current_preset.get("min_confidence", 0.6)
         combination_mode = self.current_preset.get("combination_mode", "MAJORITY")
         self.combination_mode = combination_mode  # "ALL", "MAJORITY", "ANY"
-        
+
         # Históricos para indicadores
         self.indicator_calculator = TechnicalIndicatorCalculator()
         self.price_history = deque(maxlen=200)
@@ -103,34 +114,39 @@ class ModularMomentumStrategy(BaseStrategy):
         self.low_history = deque(maxlen=200)
         self.volume_history = deque(maxlen=200)
         self.atr_history = deque(maxlen=100)
-        
+
         # Histórico de trades para metadata
         self.recent_trades: deque = deque(maxlen=10)
-        
+
         # Histórico de features para Deep Learning / Transformer (secuencias)
-        self.features_history = deque(maxlen=200)  # Almacena dicts con indicators, filter_results, market_context, metadata
-        
-        logger.info(f"✅ ModularMomentumStrategy inicializada (preset: {self.preset}, "
-                   f"{len(self.filters)} filtros activos, "
-                   f"learning: {'✅ configurado' if self._learning_config else '❌'})")
-    
+        self.features_history = deque(
+            maxlen=200
+        )  # Almacena dicts con indicators, filter_results, market_context, metadata
+
+        logger.info(
+            f"✅ ModularMomentumStrategy inicializada (preset: {self.preset}, "
+            f"{len(self.filters)} filtros activos, "
+            f"learning: {'✅ configurado' if self._learning_config else '❌'})"
+        )
+
     def _initialize_learning_engine(self) -> None:
         """
         Inicializar learning engine de forma lazy.
-        
+
         Esto previene que PyTorch/MKL se inicialicen durante la creación de la estrategia,
         evitando bloqueos de mutex.cc
         """
         if not self._learning_config or self.learning_engine is not None:
             return
-        
+
         engine_type = self._learning_engine_type
         if not engine_type:
             return
-        
+
         try:
             # CRÍTICO: Configurar variables de entorno ANTES de importar learning engines
             import os
+
             os.environ['OMP_NUM_THREADS'] = '1'
             os.environ['OPENBLAS_NUM_THREADS'] = '1'
             os.environ['MKL_NUM_THREADS'] = '1'
@@ -143,35 +159,49 @@ class ModularMomentumStrategy(BaseStrategy):
             os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
             os.environ['CUDA_VISIBLE_DEVICES'] = ''
             os.environ['TORCH_USE_CUDA_DSA'] = '0'
-            
+
             if engine_type == "supervised":
                 from .learning.supervised_learning_engine import SupervisedLearningEngine
+
                 self.learning_engine = SupervisedLearningEngine(self._learning_config)
             elif engine_type == "deep":
                 # CRÍTICO: NO crear DeepLearningEngine en proceso principal - causa mutex.cc blocking
                 # Se entrenará en subprocess y NO se usará para predicciones en proceso principal
-                logger.info("⚠️ Deep Learning configurado pero NO se inicializará en proceso principal (previene mutex.cc blocking)")
-                logger.info("⚠️ El entrenamiento se hará en subprocess. No habrá predicciones del modelo durante el backtest.")
+                logger.info(
+                    "⚠️ Deep Learning configurado pero NO se inicializará en proceso principal (previene mutex.cc blocking)"
+                )
+                logger.info(
+                    "⚠️ El entrenamiento se hará en subprocess. No habrá predicciones del modelo durante el backtest."
+                )
                 self.learning_engine = None  # NO crear - evitar cualquier import de PyTorch
                 # NO desactivar _learning_engine_type - mantenerlo para saber qué tipo es
             elif engine_type == "reinforcement":
                 from .learning.reinforcement_learning_engine import ReinforcementLearningEngine
+
                 self.learning_engine = ReinforcementLearningEngine(self._learning_config)
             elif engine_type == "transformer":
                 # CRÍTICO: NO crear TransformerEngine en proceso principal - causa mutex.cc blocking
-                logger.info("⚠️ Transformer configurado pero NO se inicializará en proceso principal (previene mutex.cc blocking)")
-                logger.info("⚠️ El entrenamiento se hará en subprocess. No habrá predicciones del modelo durante el backtest.")
+                logger.info(
+                    "⚠️ Transformer configurado pero NO se inicializará en proceso principal (previene mutex.cc blocking)"
+                )
+                logger.info(
+                    "⚠️ El entrenamiento se hará en subprocess. No habrá predicciones del modelo durante el backtest."
+                )
                 self.learning_engine = None  # NO crear - evitar cualquier import de PyTorch
                 # NO desactivar _learning_engine_type - mantenerlo para saber qué tipo es
-            
+
             if self.learning_engine and self.learning_engine.enabled:
                 logger.info(f"✅ Learning engine inicializado: {engine_type}")
             elif self.learning_engine and not self.learning_engine.enabled:
-                logger.warning(f"⚠️ Learning engine {engine_type} está deshabilitado (dependencias faltantes)")
+                logger.warning(
+                    f"⚠️ Learning engine {engine_type} está deshabilitado (dependencias faltantes)"
+                )
                 self.learning_engine = None
         except (ImportError, RuntimeError) as e:
             logger.error(f"❌ Error al inicializar learning engine {engine_type}: {e}")
-            logger.error("⚠️ Asegúrate de instalar todas las dependencias: pip install -r requirements.txt")
+            logger.error(
+                "⚠️ Asegúrate de instalar todas las dependencias: pip install -r requirements.txt"
+            )
             self.learning_engine = None
         except Exception as e:
             error_msg = str(e).lower()
@@ -181,73 +211,75 @@ class ModularMomentumStrategy(BaseStrategy):
                 self.learning_engine = None
             else:
                 raise
-    
+
     def generate_signals(self, market_data: Quote) -> List[Signal]:
         """
         Genera señales usando módulos y learning engines.
-        
+
         Args:
             market_data: Datos de mercado actuales
-        
+
         Returns:
             Lista de señales generadas
         """
         signals = []
-        
+
         try:
             # 1. Actualizar históricos
             current_price = float(market_data.close or market_data.bid or market_data.last or 0)
             if current_price <= 0:
                 return []
-            
+
             self.price_history.append(current_price)
             self.high_history.append(float(market_data.high or current_price))
             self.low_history.append(float(market_data.low or current_price))
             self.volume_history.append(float(market_data.volume or 0))
-            
+
             # Necesitamos suficiente histórico para calcular indicadores
             min_history = 60  # Suficiente para EMA slow (26) + RSI (14) + buffer
             if len(self.price_history) < min_history:
                 return []
-            
+
             # 2. Calcular indicadores técnicos
             indicators = self._calculate_indicators()
             if not indicators:
                 return []
-            
+
             # 3. Analizar contexto de mercado
             price_list = list(self.price_history)
             atr_list = list(self.atr_history) if self.atr_history else []
             market_context = self.market_analyzer.analyze(market_data, price_list, atr_list)
-            
+
             # 4. Evaluar todos los filtros
             filter_results = self._evaluate_filters(indicators, market_context)
-            
+
             # 5. Generar señal candidata basada en filtros
             signal_type = self._determine_signal_type(filter_results, market_context)
-            
+
             if signal_type is None:
                 return []
-            
+
             # 6. SI learning engine está activo, obtener predicción
             # CRÍTICO: Para deep/transformer, NUNCA inicializar en proceso principal (evita mutex.cc blocking)
             learning_prediction = None
-            
+
             # Solo intentar usar learning engine si NO es deep/transformer
             if self._learning_config and self._learning_engine_type not in ['deep', 'transformer']:
                 # INICIALIZACIÓN LAZY del learning engine (solo cuando se necesita)
                 if self.learning_engine is None:
                     self._initialize_learning_engine()
-            
+
             # Para deep/transformer, SIEMPRE usar predicción neutral (nunca tocar PyTorch)
             if self._learning_engine_type in ['deep', 'transformer']:
                 learning_prediction = {
                     'success_probability': 0.5,
                     'confidence': 0.0,
                     'recommended_action': 'HOLD',
-                    'filter_adjustments': {}
+                    'filter_adjustments': {},
                 }
-                logger.debug(f"⚠️ {self._learning_engine_type} engine - usando predicción neutral (previene mutex.cc blocking)")
+                logger.debug(
+                    f"⚠️ {self._learning_engine_type} engine - usando predicción neutral (previene mutex.cc blocking)"
+                )
             elif self.learning_engine and self.learning_engine.enabled:
                 # Para otros engines (supervised, reinforcement), proceder normalmente
                 if learning_prediction is None:
@@ -258,19 +290,23 @@ class ModularMomentumStrategy(BaseStrategy):
                             try:
                                 self._auto_train_learning_engine()
                             except Exception as e:
-                                logger.debug(f"No se pudo entrenar learning engine automáticamente: {e}")
-                    
+                                logger.debug(
+                                    f"No se pudo entrenar learning engine automáticamente: {e}"
+                                )
+
                     # Preparar metadata
                     metadata = {
-                        'timestamp': market_data.timestamp if hasattr(market_data, 'timestamp') else datetime.now(),
+                        'timestamp': market_data.timestamp
+                        if hasattr(market_data, 'timestamp')
+                        else datetime.now(),
                         'symbol': market_data.symbol,
                         'recent_trades': list(self.recent_trades),
-                        'recent_win_rate': self._calculate_recent_win_rate()
+                        'recent_win_rate': self._calculate_recent_win_rate(),
                     }
-                    
+
                     # Preparar features según el tipo de learning engine
                     learning_engine_type = self.learning_engine.__class__.__name__
-                    
+
                     if learning_engine_type in ['DeepLearningEngine', 'TransformerEngine']:
                         # Para Deep Learning y Transformer, necesitamos una secuencia histórica
                         features = self._prepare_sequence_features_for_learning(
@@ -282,20 +318,22 @@ class ModularMomentumStrategy(BaseStrategy):
                             'indicators': indicators,
                             'filter_results': filter_results,
                             'market_context': market_context,
-                            'metadata': metadata
+                            'metadata': metadata,
                         }
-                    
+
                     if self.learning_engine.is_ready():
                         # Learning engine entrenado - usar predicción real
                         try:
                             learning_prediction = self.learning_engine.predict(features)
                         except KeyError as e:
                             if 'sequence' in str(e):
-                                logger.warning(f"⚠️ Learning engine {learning_engine_type} necesita 'sequence' pero no está disponible. Usando predicción neutral.")
+                                logger.warning(
+                                    f"⚠️ Learning engine {learning_engine_type} necesita 'sequence' pero no está disponible. Usando predicción neutral."
+                                )
                                 learning_prediction = {
                                     'success_probability': 0.5,
                                     'confidence': 0.0,
-                                    'recommended_action': 'HOLD'
+                                    'recommended_action': 'HOLD',
                                 }
                             else:
                                 raise
@@ -304,16 +342,23 @@ class ModularMomentumStrategy(BaseStrategy):
                             learning_prediction = {
                                 'success_probability': 0.5,
                                 'confidence': 0.0,
-                                'recommended_action': 'HOLD'
+                                'recommended_action': 'HOLD',
                             }
-                        
+
                         # Filtrar señal si probabilidad es baja
-                        if self.learning_engine.__class__.__name__ in ['SupervisedLearningEngine', 'DeepLearningEngine']:
-                            success_prob = learning_prediction.get('success_probability', learning_prediction.get('confidence', 0.5))
+                        if self.learning_engine.__class__.__name__ in [
+                            'SupervisedLearningEngine',
+                            'DeepLearningEngine',
+                        ]:
+                            success_prob = learning_prediction.get(
+                                'success_probability', learning_prediction.get('confidence', 0.5)
+                            )
                             if success_prob < self.min_success_probability:
-                                logger.debug(f"🚫 Señal rechazada por learning engine: prob={success_prob:.2f} < {self.min_success_probability:.2f}")
+                                logger.debug(
+                                    f"🚫 Señal rechazada por learning engine: prob={success_prob:.2f} < {self.min_success_probability:.2f}"
+                                )
                                 return []
-                        
+
                         # Aplicar ajustes sugeridos por learning engine
                         self._apply_learning_adjustments(learning_prediction)
                     else:
@@ -321,14 +366,16 @@ class ModularMomentumStrategy(BaseStrategy):
                         learning_prediction = {
                             'success_probability': 0.5,
                             'confidence': 0.0,
-                            'recommended_action': 'HOLD'
+                            'recommended_action': 'HOLD',
                         }
-                        logger.debug(f"⚠️ Learning engine ({self.learning_engine.__class__.__name__}) no entrenado - usando predicción neutral. "
-                                   f"Estado: enabled={self.learning_engine.enabled}, is_trained={self.learning_engine.is_trained}, model={'exists' if self.learning_engine.model else 'None'}")
-            
+                        logger.debug(
+                            f"⚠️ Learning engine ({self.learning_engine.__class__.__name__}) no entrenado - usando predicción neutral. "
+                            f"Estado: enabled={self.learning_engine.enabled}, is_trained={self.learning_engine.is_trained}, model={'exists' if self.learning_engine.model else 'None'}"
+                        )
+
             # 7. Crear señal
             confidence = self._calculate_signal_confidence(filter_results, learning_prediction)
-            
+
             # Calcular strength basado en confidence
             # IMPORTANTE: Debe coincidir con validación en Signal model
             # - STRONG/VERY_STRONG requieren confidence >= 70.0
@@ -341,39 +388,50 @@ class ModularMomentumStrategy(BaseStrategy):
                 strength = SignalStrength.MODERATE
             else:
                 strength = SignalStrength.WEAK
-            
+
             # Validación de seguridad: asegurar consistencia entre strength y confidence
             # Esto previene errores de validación Pydantic
-            if strength in [SignalStrength.STRONG, SignalStrength.VERY_STRONG] and confidence < 70.0:
+            if (
+                strength in [SignalStrength.STRONG, SignalStrength.VERY_STRONG]
+                and confidence < 70.0
+            ):
                 # Ajustar strength a MODERATE si confidence es demasiado bajo
-                logger.warning(f"⚠️ Confidence {confidence:.2f} es demasiado bajo para {strength}, ajustando a MODERATE")
+                logger.warning(
+                    f"⚠️ Confidence {confidence:.2f} es demasiado bajo para {strength}, ajustando a MODERATE"
+                )
                 strength = SignalStrength.MODERATE
             elif strength == SignalStrength.WEAK and confidence > 80.0:
                 # Ajustar strength si confidence es demasiado alto para WEAK
-                logger.warning(f"⚠️ Confidence {confidence:.2f} es demasiado alto para {strength}, ajustando a MODERATE")
+                logger.warning(
+                    f"⚠️ Confidence {confidence:.2f} es demasiado alto para {strength}, ajustando a MODERATE"
+                )
                 strength = SignalStrength.MODERATE
-            
+
             # Calcular liquidity_score (usar volume_ratio del indicador o default)
             volume_ratio = indicators.get('volume_ratio', 1.0)
-            liquidity_score = min(100.0, max(0.0, (volume_ratio - 0.5) * 50.0))  # Normalizar 0.5-2.0 -> 0-100
-            
+            liquidity_score = min(
+                100.0, max(0.0, (volume_ratio - 0.5) * 50.0)
+            )  # Normalizar 0.5-2.0 -> 0-100
+
             # Calcular priority_score (combinación de confidence y liquidity)
             priority_score = (confidence * 0.7) + (liquidity_score * 0.3)
-            
+
             # Obtener volume del market_data o usar un default
             volume = Decimal(str(getattr(market_data, 'volume', 0)))
             if volume == 0:
                 volume = Decimal("0.01")  # Default mínimo
-            
+
             # Usar SignalSource enum - momentum_modular es una variante de momentum
             signal_source = SignalSource.MOMENTUM
-            
+
             signal = Signal(
                 symbol=market_data.symbol,
                 signal_type=signal_type,
                 strength=strength,
                 price=Decimal(str(current_price)),
-                timestamp=market_data.timestamp if hasattr(market_data, 'timestamp') else datetime.now(),
+                timestamp=market_data.timestamp
+                if hasattr(market_data, 'timestamp')
+                else datetime.now(),
                 confidence=confidence,
                 liquidity_score=liquidity_score,
                 priority_score=priority_score,
@@ -383,46 +441,48 @@ class ModularMomentumStrategy(BaseStrategy):
                     'strategy': self.name,
                     'indicators': indicators,
                     'market_context': market_context,
-                    'filter_results': {name: {'passed': res.get('passed'), 'confidence': res.get('confidence')} 
-                                     for name, res in filter_results.items()},
+                    'filter_results': {
+                        name: {'passed': res.get('passed'), 'confidence': res.get('confidence')}
+                        for name, res in filter_results.items()
+                    },
                     'learning_prediction': learning_prediction,
-                    'preset': self.preset
-                }
+                    'preset': self.preset,
+                },
             )
-            
+
             signals.append(signal)
-            
+
         except Exception as e:
             logger.error(f"Error generando señal: {e}", exc_info=True)
-        
+
         return signals
-    
+
     def _calculate_indicators(self) -> Dict[str, Any]:
         """Calcular todos los indicadores técnicos necesarios."""
         if len(self.price_history) < 26:
             return {}
-        
+
         prices = list(self.price_history)
         highs = list(self.high_history)
         lows = list(self.low_history)
         volumes = list(self.volume_history)
-        
+
         indicators = {}
-        
+
         # RSI
         rsi = self.indicator_calculator.calculate_rsi(prices, period=14)
         indicators['rsi'] = rsi if rsi is not None else 50.0
-        
+
         # EMAs
         ema_fast = self.indicator_calculator.calculate_ema(prices, period=12)
         ema_slow = self.indicator_calculator.calculate_ema(prices, period=26)
         indicators['ema_fast'] = ema_fast if ema_fast is not None else 0.0
         indicators['ema_slow'] = ema_slow if ema_slow is not None else 0.0
-        
+
         # Momentum / ROC
         momentum = self.indicator_calculator.calculate_roc(prices, period=14)
         indicators['momentum_roc'] = momentum if momentum is not None else 0.0
-        
+
         # Volume
         if len(volumes) >= 20:
             avg_volume = sum(volumes[-20:]) / 20
@@ -434,7 +494,7 @@ class ModularMomentumStrategy(BaseStrategy):
             indicators['volume_ratio'] = 1.0
             indicators['volume'] = volumes[-1] if volumes else 0
             indicators['avg_volume'] = 0
-        
+
         # ATR
         atr = self.indicator_calculator.calculate_atr(highs, lows, prices, period=14)
         if atr is not None:
@@ -442,13 +502,15 @@ class ModularMomentumStrategy(BaseStrategy):
             indicators['atr'] = atr
             current_price = prices[-1]
             indicators['relative_atr'] = (atr / current_price * 100) if current_price > 0 else 0
-            
+
             # ATR percentile
             if len(self.atr_history) >= 30:
                 # Convert deque to list for slicing (deque doesn't support slice notation in older Python)
                 recent_atr = list(self.atr_history)[-30:] if len(self.atr_history) > 0 else []
                 sorted_atr = sorted(recent_atr)
-                percentile = (sorted_atr.index(atr) / len(sorted_atr)) * 100 if atr in sorted_atr else 50
+                percentile = (
+                    (sorted_atr.index(atr) / len(sorted_atr)) * 100 if atr in sorted_atr else 50
+                )
                 indicators['atr_percentile'] = percentile
             else:
                 indicators['atr_percentile'] = 50
@@ -456,72 +518,71 @@ class ModularMomentumStrategy(BaseStrategy):
             indicators['atr'] = 0.0
             indicators['relative_atr'] = 0.0
             indicators['atr_percentile'] = 50.0
-        
+
         # StochRSI (simplificado)
         indicators['stoch_rsi_k'] = 50.0  # TODO: Implementar cálculo real
         indicators['stoch_rsi_d'] = 50.0
-        
+
         # Precio actual
         indicators['price'] = prices[-1]
-        
+
         return indicators
-    
+
     def _evaluate_filters(
-        self,
-        indicators: Dict[str, Any],
-        market_context: Dict[str, Any]
+        self, indicators: Dict[str, Any], market_context: Dict[str, Any]
     ) -> Dict[str, Dict[str, Any]]:
         """Evaluar todos los filtros activos."""
         filter_results = {}
-        
+
         for filter_instance in self.filters:
             try:
                 # Evaluar para compra (BUY)
                 result_buy = filter_instance.evaluate(indicators, market_context, 'BUY')
                 filter_results[f"{filter_instance.name}_buy"] = result_buy
-                
+
                 # Evaluar para venta (SELL)
                 result_sell = filter_instance.evaluate(indicators, market_context, 'SELL')
                 filter_results[f"{filter_instance.name}_sell"] = result_sell
-                
+
                 # Resultado general (usar BUY para simplificar)
                 filter_results[filter_instance.name] = result_buy
-                
+
             except Exception as e:
                 logger.error(f"Error evaluando filtro {filter_instance.name}: {e}")
                 filter_results[filter_instance.name] = {
                     'passed': False,
                     'confidence': 0.0,
-                    'reason': f"Error: {str(e)}"
+                    'reason': f"Error: {str(e)}",
                 }
-        
+
         return filter_results
-    
+
     def _determine_signal_type(
-        self,
-        filter_results: Dict[str, Dict[str, Any]],
-        market_context: Dict[str, Any]
+        self, filter_results: Dict[str, Dict[str, Any]], market_context: Dict[str, Any]
     ) -> Optional[SignalType]:
         """Determinar tipo de señal basado en resultados de filtros."""
-        
+
         if len(self.filters) == 0:
             logger.warning("⚠️ No hay filtros activos - no se pueden generar señales")
             return None
-        
+
         # Contar solo los resultados principales de cada filtro (sin _buy/_sell)
         # Cada filtro tiene una entrada principal con su nombre
         filter_names = [f.name for f in self.filters]
         passed_filters = [
-            filter_name for filter_name in filter_names
+            filter_name
+            for filter_name in filter_names
             if filter_name in filter_results and filter_results[filter_name].get('passed', False)
         ]
-        
+
         total_filters = len(self.filters)
-        
-        logger.debug(f"🔍 Determinando señal: {len(passed_filters)}/{total_filters} filtros pasaron, modo={self.combination_mode}")
+
+        logger.debug(
+            f"🔍 Determinando señal: {len(passed_filters)}/{total_filters} filtros pasaron, modo={self.combination_mode}"
+        )
         logger.debug(f"   Filtros que pasaron: {passed_filters}")
         logger.debug(f"   Todos los filtros: {filter_names}")
-        
+
         # Decidir según modo de combinación
         if self.combination_mode == "ALL":
             if len(passed_filters) == total_filters:
@@ -530,15 +591,21 @@ class ModularMomentumStrategy(BaseStrategy):
         elif self.combination_mode == "MAJORITY":
             required = max(1, (total_filters + 1) // 2)  # Mayoría = >50%
             if len(passed_filters) >= required:
-                logger.debug(f"✅ Mayoría de filtros pasaron ({len(passed_filters)}/{total_filters}) - generando señal BUY")
+                logger.debug(
+                    f"✅ Mayoría de filtros pasaron ({len(passed_filters)}/{total_filters}) - generando señal BUY"
+                )
                 return SignalType.BUY
         elif self.combination_mode == "ANY":
             if len(passed_filters) > 0:
-                logger.debug(f"✅ Al menos un filtro pasó ({len(passed_filters)}) - generando señal BUY")
+                logger.debug(
+                    f"✅ Al menos un filtro pasó ({len(passed_filters)}) - generando señal BUY"
+                )
                 return SignalType.BUY
-        
-        logger.debug(f"❌ No se cumple el modo de combinación ({self.combination_mode}) - no se genera señal")
-        
+
+        logger.debug(
+            f"❌ No se cumple el modo de combinación ({self.combination_mode}) - no se genera señal"
+        )
+
         # Revisar condiciones de venta (oversold/sobrecomprado)
         # Por ahora solo generamos señales BUY
         # TODO: Implementar lógica de SELL cuando hay posición abierta
@@ -546,28 +613,30 @@ class ModularMomentumStrategy(BaseStrategy):
         if market_type == 'trend_down':
             # Considerar venta si hay posición
             return None  # Por ahora solo compras
-        
+
         return None
-    
+
     def _calculate_signal_confidence(
         self,
         filter_results: Dict[str, Dict[str, Any]],
-        learning_prediction: Optional[Dict[str, Any]]
+        learning_prediction: Optional[Dict[str, Any]],
     ) -> float:
         """Calcular confianza de la señal."""
         # Confianza base desde filtros
         confidences = [res.get('confidence', 0.0) for res in filter_results.values()]
         base_confidence = sum(confidences) / len(confidences) if confidences else 0.5
-        
+
         # Ajustar con predicción de learning engine
         if learning_prediction:
-            learning_confidence = learning_prediction.get('confidence', learning_prediction.get('success_probability', 0.5))
+            learning_confidence = learning_prediction.get(
+                'confidence', learning_prediction.get('success_probability', 0.5)
+            )
             # Combinar: 60% filtros, 40% learning
             combined = base_confidence * 0.6 + learning_confidence * 0.4
             return min(100.0, max(0.0, combined * 100))
-        
+
         return min(100.0, max(0.0, base_confidence * 100))
-    
+
     def _auto_train_learning_engine(self) -> None:
         """
         Entrenar automáticamente el learning engine usando datos históricos disponibles.
@@ -575,62 +644,69 @@ class ModularMomentumStrategy(BaseStrategy):
         """
         if not self.learning_engine or not self.learning_engine.enabled:
             return
-        
+
         if self.learning_engine.is_ready():
             return  # Ya está entrenado
-        
+
         # Marcar que ya intentamos entrenar para evitar múltiples intentos
         if not hasattr(self, '_training_attempted'):
             self._training_attempted = False
-        
+
         if self._training_attempted:
             return  # Ya intentamos entrenar antes
-        
+
         self._training_attempted = True
-        
+
         try:
             # Preparar datos usando FeatureExtractor
             # Lazy import de feature_extractor solo cuando se necesite
             if self._feature_extractor is None:
                 try:
                     from .learning.feature_extractor import FeatureExtractor
+
                     self._feature_extractor = FeatureExtractor()
                 except Exception as e:
                     logger.debug(f"FeatureExtractor no disponible: {e}")
                     self._feature_extractor = None
-            
+
             if self._feature_extractor is not None and len(self.price_history) >= 100:
                 # Crear datos sintéticos basados en histórico
                 # Nota: Esto es una aproximación. En producción, necesitaríamos los quotes completos
-                logger.debug(f"🎓 Intentando auto-entrenar learning engine con {len(self.price_history)} datos históricos...")
-                
+                logger.debug(
+                    f"🎓 Intentando auto-entrenar learning engine con {len(self.price_history)} datos históricos..."
+                )
+
                 # Por ahora, simplemente marcamos que necesitamos entrenar
                 # El entrenamiento real debe hacerse antes del backtest con quotes completos
-                logger.debug("⚠️ Auto-entrenamiento requiere quotes completos - será entrenado en el backtest")
-                
+                logger.debug(
+                    "⚠️ Auto-entrenamiento requiere quotes completos - será entrenado en el backtest"
+                )
+
         except Exception as e:
             logger.debug(f"Error en auto-entrenamiento: {e}")
-    
+
     def _prepare_sequence_features_for_learning(
         self,
         indicators: Dict[str, Any],
         filter_results: Dict[str, Dict],
         market_context: Dict[str, Any],
-        metadata: Dict[str, Any]
+        metadata: Dict[str, Any],
     ) -> Dict[str, Any]:
         """
         Preparar features en formato de secuencia para Deep Learning / Transformer engines.
-        
+
         Almacena features históricas y construye una secuencia de la longitud requerida.
         """
         # Guardar features actuales en historial
-        self.features_history.append({
-            'indicators': indicators.copy(),
-            'filter_results': filter_results.copy(),
-            'market_context': market_context.copy(),
-            'metadata': metadata.copy()
-        })
-        
+        self.features_history.append(
+            {
+                'indicators': indicators.copy(),
+                'filter_results': filter_results.copy(),
+                'market_context': market_context.copy(),
+                'metadata': metadata.copy(),
+            }
+        )
+
         # Determinar longitud de secuencia requerida
         sequence_length = 60  # Default
         learning_engine_type = self.learning_engine.__class__.__name__
@@ -641,59 +717,57 @@ class ModularMomentumStrategy(BaseStrategy):
             sequence_length = params.get('sequence_length', 60)
         elif learning_engine_type == 'TransformerEngine':
             sequence_length = 30  # Default para Transformer
-        
+
         # Construir secuencia usando FeatureExtractor
         if self._feature_extractor is None:
             try:
                 from .learning.feature_extractor import FeatureExtractor
+
                 self._feature_extractor = FeatureExtractor()
             except Exception as e:
                 logger.debug(f"FeatureExtractor no disponible: {e}")
                 self._feature_extractor = None
-        
+
         if self._feature_extractor is None:
             # Fallback: construir secuencia básica
             sequence = self._build_basic_sequence(sequence_length)
-            return {
-                'sequence': sequence,
-                'market_context': market_context
-            }
-        
+            return {'sequence': sequence, 'market_context': market_context}
+
         # Convertir historial a lista para FeatureExtractor
         historical_data = list(self.features_history)
-        
+
         # Si no hay suficiente historial, rellenar con el último elemento
         if len(historical_data) < sequence_length:
-            padding = [historical_data[-1] if historical_data else {
-                'indicators': indicators,
-                'filter_results': filter_results,
-                'market_context': market_context,
-                'metadata': metadata
-            }] * (sequence_length - len(historical_data))
+            padding = [
+                historical_data[-1]
+                if historical_data
+                else {
+                    'indicators': indicators,
+                    'filter_results': filter_results,
+                    'market_context': market_context,
+                    'metadata': metadata,
+                }
+            ] * (sequence_length - len(historical_data))
             historical_data = padding + historical_data
-        
+
         # Extraer secuencia usando FeatureExtractor
         try:
             sequence = self._feature_extractor.extract_sequence_features(
-                historical_data[-sequence_length:],
-                sequence_length=sequence_length
+                historical_data[-sequence_length:], sequence_length=sequence_length
             )
         except Exception as e:
             logger.warning(f"Error extrayendo secuencia: {e}, usando fallback")
             sequence = self._build_basic_sequence(sequence_length)
-        
-        return {
-            'sequence': sequence,
-            'market_context': market_context
-        }
-    
+
+        return {'sequence': sequence, 'market_context': market_context}
+
     def _build_basic_sequence(self, sequence_length: int):
         """Construir secuencia básica usando price_history como fallback."""
         import numpy as np
-        
+
         # Extraer últimas sequence_length precios y normalizarlos
         prices = list(self.price_history)[-sequence_length:]
-        
+
         if len(prices) < sequence_length:
             # Rellenar con el último precio disponible
             if prices:
@@ -701,30 +775,30 @@ class ModularMomentumStrategy(BaseStrategy):
                 prices = padding + prices
             else:
                 prices = [0.0] * sequence_length
-        
+
         # Convertir a numpy array y normalizar (porcentaje de cambio)
         price_array = np.array(prices, dtype=np.float32)
-        
+
         # Calcular cambios porcentuales
         if len(price_array) > 1:
             pct_changes = np.diff(price_array) / price_array[:-1]
             pct_changes = np.concatenate([[0.0], pct_changes])  # Primer elemento sin cambio
         else:
             pct_changes = np.array([0.0], dtype=np.float32)
-        
+
         # Reshape para (sequence_length, 1) - una sola feature (price change)
         if len(pct_changes) < sequence_length:
             padding = np.zeros(sequence_length - len(pct_changes), dtype=np.float32)
             pct_changes = np.concatenate([padding, pct_changes])
-        
+
         sequence = pct_changes.reshape(sequence_length, 1)
         return sequence
-    
+
     def _apply_learning_adjustments(self, prediction: Dict[str, Any]) -> None:
         """Aplicar ajustes sugeridos por learning engine."""
         if not prediction:
             return
-        
+
         # Ajustar thresholds de filtros
         filter_adjustments = prediction.get('filter_adjustments', {})
         if filter_adjustments:
@@ -735,7 +809,7 @@ class ModularMomentumStrategy(BaseStrategy):
                     if f.name == filter_name or filter_name in f.name.lower():
                         filter_instance = f
                         break
-                
+
                 if filter_instance:
                     # Aplicar ajuste según el tipo de threshold
                     if isinstance(adjustment_value, dict):
@@ -746,19 +820,31 @@ class ModularMomentumStrategy(BaseStrategy):
                                 if isinstance(current_value, (int, float)):
                                     new_value = current_value + threshold_adjustment
                                     setattr(filter_instance, threshold_name, new_value)
-                                    logger.debug(f"🔧 Ajustando {filter_instance.name}.{threshold_name}: {current_value} → {new_value} (Δ{threshold_adjustment})")
+                                    logger.debug(
+                                        f"🔧 Ajustando {filter_instance.name}.{threshold_name}: {current_value} → {new_value} (Δ{threshold_adjustment})"
+                                    )
                     elif isinstance(adjustment_value, (int, float)):
                         # Ajuste simple (escalar)
                         # Intentar ajustar thresholds comunes
-                        for attr_name in ['threshold', 'buy_threshold', 'sell_threshold', 'min_threshold', 'max_threshold']:
+                        for attr_name in [
+                            'threshold',
+                            'buy_threshold',
+                            'sell_threshold',
+                            'min_threshold',
+                            'max_threshold',
+                        ]:
                             if hasattr(filter_instance, attr_name):
                                 current_value = getattr(filter_instance, attr_name)
                                 if isinstance(current_value, (int, float)):
-                                    new_value = current_value * (1 + adjustment_value * 0.1)  # Ajuste del 10% por unidad
+                                    new_value = current_value * (
+                                        1 + adjustment_value * 0.1
+                                    )  # Ajuste del 10% por unidad
                                     setattr(filter_instance, attr_name, new_value)
-                                    logger.debug(f"🔧 Ajustando {filter_instance.name}.{attr_name}: {current_value} → {new_value}")
+                                    logger.debug(
+                                        f"🔧 Ajustando {filter_instance.name}.{attr_name}: {current_value} → {new_value}"
+                                    )
                                     break
-        
+
         # Ajustar confianza mínima requerida basado en predicción
         if 'confidence' in prediction:
             predicted_confidence = prediction['confidence']
@@ -766,7 +852,7 @@ class ModularMomentumStrategy(BaseStrategy):
                 self.min_success_probability = 0.7  # Ser más estricto
             else:
                 self.min_success_probability = 0.6  # Normal
-        
+
         # Ajustar thresholds globales de la estrategia si están en la predicción
         if 'threshold_adjustments' in prediction:
             threshold_adjs = prediction['threshold_adjustments']
@@ -776,20 +862,22 @@ class ModularMomentumStrategy(BaseStrategy):
                     if isinstance(current, (int, float)) and isinstance(adjustment, (int, float)):
                         new_value = current * (1 + adjustment)
                         setattr(self, threshold_name, new_value)
-                        logger.debug(f"🔧 Ajustando estrategia.{threshold_name}: {current} → {new_value}")
-    
+                        logger.debug(
+                            f"🔧 Ajustando estrategia.{threshold_name}: {current} → {new_value}"
+                        )
+
     def _calculate_recent_win_rate(self) -> float:
         """Calcular win rate de trades recientes."""
         if not self.recent_trades:
             return 0.5
-        
+
         winning = sum(1 for t in self.recent_trades if t.get('pnl', 0) > 0)
         return winning / len(self.recent_trades)
-    
+
     def add_trade_result(self, trade: Dict[str, Any]) -> None:
         """Agregar resultado de trade para aprendizaje futuro."""
         self.recent_trades.append(trade)
-    
+
     def risk_check(self, signal: Signal, portfolio: Portfolio) -> bool:
         """Verificar criterios de riesgo (implementación básica)."""
         # Verificaciones básicas
@@ -798,18 +886,18 @@ class ModularMomentumStrategy(BaseStrategy):
             required_cash = signal.price * self.get_position_size(signal, portfolio)
             if required_cash > portfolio.cash:
                 return False
-        
+
         return True
-    
+
     def get_required_parameters(self) -> List[str]:
         """Parámetros requeridos."""
         return ["name", "preset"]
-    
+
     def get_position_size(self, signal: Signal, portfolio: Portfolio) -> Decimal:
         """Calcular tamaño de posición."""
         max_position_size = Decimal(str(self.config.get("max_position_size", 0.1)))
         available_cash = portfolio.cash
-        
+
         if signal.signal_type == SignalType.BUY:
             max_position_value = available_cash * max_position_size
             position_size = max_position_value / signal.price
@@ -820,4 +908,3 @@ class ModularMomentumStrategy(BaseStrategy):
                 if pos.symbol == signal.symbol:
                     return pos.quantity
             return Decimal("0")
-

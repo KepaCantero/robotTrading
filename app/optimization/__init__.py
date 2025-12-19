@@ -8,4 +8,3 @@ simultaneously using Bayesian optimization (Optuna).
 from app.optimization.multi_strategy_optimizer import MultiStrategyOptimizer
 
 __all__ = ["MultiStrategyOptimizer"]
-

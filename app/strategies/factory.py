@@ -149,16 +149,16 @@ class StrategyFactory:
         except ImportError as e:
             logger.warning(f"Could not import default strategies: {e}")
             logger.info("Default strategies will be registered when their modules are available")
-        
+
         # Registrar Strategy Engines (nuevos engines refactorizados)
         try:
             from app.engines.strategy_engines import (
-                BreakoutStrategyEngine,
-                TrendFollowingStrategyEngine,
-                MomentumStrategyEngine,
-                MeanReversionStrategyEngine,
-                PairsTradingStrategyEngine,
                 ArbitrageStrategyEngine,
+                BreakoutStrategyEngine,
+                MeanReversionStrategyEngine,
+                MomentumStrategyEngine,
+                PairsTradingStrategyEngine,
+                TrendFollowingStrategyEngine,
             )
 
             # Registrar engines (pueden usarse con el mismo nombre o con sufijo _engine)
@@ -169,7 +169,9 @@ class StrategyFactory:
             self.register_strategy("pairs_trading_engine", PairsTradingStrategyEngine)
             self.register_strategy("arbitrage", ArbitrageStrategyEngine)
 
-            logger.info("Registered strategy engines: breakout, trend_following, momentum_engine, mean_reversion_engine, pairs_trading_engine, arbitrage")
+            logger.info(
+                "Registered strategy engines: breakout, trend_following, momentum_engine, mean_reversion_engine, pairs_trading_engine, arbitrage"
+            )
 
         except ImportError as e:
             logger.warning(f"Could not import strategy engines: {e}")
@@ -178,9 +180,9 @@ class StrategyFactory:
         # Registrar Ensemble Strategies
         try:
             from app.engines.strategy_engines import (
-                WeightedEnsemble,
                 RegimeBasedSelector,
                 VotingEnsemble,
+                WeightedEnsemble,
             )
 
             # Registrar ensembles
@@ -188,7 +190,9 @@ class StrategyFactory:
             self.register_strategy("regime_selector", RegimeBasedSelector)
             self.register_strategy("voting_ensemble", VotingEnsemble)
 
-            logger.info("Registered ensemble strategies: weighted_ensemble, regime_selector, voting_ensemble")
+            logger.info(
+                "Registered ensemble strategies: weighted_ensemble, regime_selector, voting_ensemble"
+            )
 
         except ImportError as e:
             logger.warning(f"Could not import ensemble strategies: {e}")

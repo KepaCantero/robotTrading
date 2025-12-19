@@ -31,7 +31,7 @@ class TimeframeSignal:
 class MultiTimeframeConfirmation:
     """
     TASK-MET-MULTI-1: Implements multi-timeframe confirmation for trading signals.
-    
+
     Confirms signals by requiring agreement across multiple timeframes:
     - 15m, 1h, 4h, daily
     - Increases signal quality
@@ -41,7 +41,7 @@ class MultiTimeframeConfirmation:
     def __init__(self, timeframes: List[str], min_confirmations: int = 2):
         """
         Initialize multi-timeframe confirmation.
-        
+
         Args:
             timeframes: List of timeframes to consider (e.g., ['15m', '1h', '4h', '1d'])
             min_confirmations: Minimum number of timeframes that must agree
@@ -54,11 +54,11 @@ class MultiTimeframeConfirmation:
     def add_signal(self, signal: Signal, timeframe: str) -> bool:
         """
         Add a signal from a specific timeframe and check for confirmation.
-        
+
         Args:
             signal: Trading signal
             timeframe: Timeframe of the signal
-            
+
         Returns:
             True if signal is confirmed across multiple timeframes
         """
@@ -83,10 +83,10 @@ class MultiTimeframeConfirmation:
     def _check_confirmation(self, symbol: str) -> bool:
         """
         Check if signals for a symbol are confirmed across multiple timeframes.
-        
+
         Args:
             symbol: Symbol to check
-            
+
         Returns:
             True if confirmed, False otherwise
         """
@@ -118,14 +118,16 @@ class MultiTimeframeConfirmation:
 
         return False
 
-    def get_confirmed_signals(self, symbol: Optional[str] = None, recent_only: bool = True) -> List[Dict[str, Any]]:
+    def get_confirmed_signals(
+        self, symbol: Optional[str] = None, recent_only: bool = True
+    ) -> List[Dict[str, Any]]:
         """
         Get confirmed signals.
-        
+
         Args:
             symbol: Optional symbol to filter by
             recent_only: Only return signals from last hour
-            
+
         Returns:
             List of confirmed signals
         """
@@ -143,7 +145,9 @@ class MultiTimeframeConfirmation:
         # Remove old signals
         if not recent_only:
             cutoff_time = datetime.utcnow() - timedelta(days=1)
-            self.confirmed_signals = [s for s in self.confirmed_signals if s["confirmed_at"] > cutoff_time]
+            self.confirmed_signals = [
+                s for s in self.confirmed_signals if s["confirmed_at"] > cutoff_time
+            ]
 
         return signals
 
@@ -152,7 +156,9 @@ class MultiTimeframeConfirmation:
         return {
             "total_confirmations": len(self.confirmed_signals),
             "confirmed_by_type": {
-                signal_type.value: len([s for s in self.confirmed_signals if s["signal_type"] == signal_type])
+                signal_type.value: len(
+                    [s for s in self.confirmed_signals if s["signal_type"] == signal_type]
+                )
                 for signal_type in SignalType
             },
             "unique_symbols": len(set(s["symbol"] for s in self.confirmed_signals)),

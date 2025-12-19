@@ -19,9 +19,6 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-# IMPORTANT: Import logging_config FIRST to ensure all warnings/errors go to files
-from app.core.logging_config import setup_file_logging
-
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -31,16 +28,16 @@ from streamlit import session_state
 from app.backtesting.data_loader import DataLoader
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig
-from app.dashboard.report_generator import (
-    save_backtest_result,
-    generate_backend_test_summary,
-)
 from app.backtesting.multi_strategy_engine import MultiStrategyBacktester
+
+# IMPORTANT: Import logging_config FIRST to ensure all warnings/errors go to files
+from app.core.logging_config import setup_file_logging
+from app.dashboard.comprehensive_data_loader import ComprehensiveBacktestLoader
 from app.dashboard.multi_strategy_utils import (
     generate_multi_strategy_summary_text,
     save_multi_strategy_results,
 )
-from app.dashboard.comprehensive_data_loader import ComprehensiveBacktestLoader
+from app.dashboard.report_generator import generate_backend_test_summary, save_backtest_result
 from app.services.multi_strategy_allocation import MultiStrategyAllocationManager
 from app.strategies.mean_reversion import MeanReversionStrategy
 from app.strategies.momentum import MomentumStrategy
@@ -80,7 +77,9 @@ if "backtest_results" not in session_state:
 st.markdown("---")
 col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
 with col_btn2:
-    execute_button = st.button("🚀 Execute Backtest", type="primary", use_container_width=True, key="main_execute_button")
+    execute_button = st.button(
+        "🚀 Execute Backtest", type="primary", use_container_width=True, key="main_execute_button"
+    )
 st.markdown("---")
 
 # Sidebar for module selection
@@ -146,14 +145,15 @@ with st.sidebar:
     # Symbol and date range
     st.divider()
     st.subheader("📊 Backtest Parameters")
-    
+
     symbol = st.text_input("Symbol", value="AAPL")
-    
+
     # Default to 10 years of data
     from datetime import timedelta
-    default_start = datetime.now() - timedelta(days=365*10)
+
+    default_start = datetime.now() - timedelta(days=365 * 10)
     default_end = datetime.now() - timedelta(days=1)
-    
+
     start_date = st.date_input("Start Date", value=default_start.date())
     end_date = st.date_input("End Date", value=default_end.date())
     initial_capital = st.number_input(
@@ -397,31 +397,36 @@ if execute_button:
 
             # Option: Check if we should run all strategies with capital allocation
             run_all_strategies = selected_strategy == "all_strategies"
-            
+
             if run_all_strategies:
                 # Multi-strategy mode: build portfolio from all strategy sectors
                 from decimal import Decimal
+
                 from app.services.portfolio_builder import PortfolioBuilder
                 from app.services.portfolio_config_manager import get_portfolio_config_manager
-                
+
                 st.info("🏗️ Building portfolio from configured sectors...")
-                
+
                 # Build portfolio with all symbols from all strategy sectors
                 portfolio_config = get_portfolio_config_manager()
                 portfolio_builder = PortfolioBuilder(portfolio_config=portfolio_config)
-                
+
                 # Get portfolio summary
                 portfolio_summary = portfolio_builder.get_portfolio_summary()
-                
+
                 with st.expander("📊 Portfolio Composition", expanded=True):
                     st.write(f"**Total Symbols**: {portfolio_summary['total_unique_symbols']}")
                     st.write("**Symbols by Strategy**:")
                     for strat, syms in portfolio_summary['symbols_by_strategy'].items():
-                        st.write(f"- **{strat}**: {', '.join(syms[:10])}{'...' if len(syms) > 10 else ''}")
-                    
-                    st.write(f"**All Symbols**: {', '.join(portfolio_summary['all_symbols'][:20])}"
-                            f"{'...' if len(portfolio_summary['all_symbols']) > 20 else ''}")
-                
+                        st.write(
+                            f"- **{strat}**: {', '.join(syms[:10])}{'...' if len(syms) > 10 else ''}"
+                        )
+
+                    st.write(
+                        f"**All Symbols**: {', '.join(portfolio_summary['all_symbols'][:20])}"
+                        f"{'...' if len(portfolio_summary['all_symbols']) > 20 else ''}"
+                    )
+
                 # Build portfolio quotes from all sectors
                 # Limit symbols to avoid rate limiting (use fewer symbols initially)
                 st.sidebar.markdown("---")
@@ -430,10 +435,14 @@ if execute_button:
                 max_symbols_input = st.sidebar.text_input(
                     "Max symbols per strategy (leave empty for ALL)",
                     value="",  # Empty = use all symbols
-                    help="Limit number of symbols to avoid API rate limits. Leave empty to use ALL available symbols (recommended). Enter number to limit."
+                    help="Limit number of symbols to avoid API rate limits. Leave empty to use ALL available symbols (recommended). Enter number to limit.",
                 )
-                max_symbols = int(max_symbols_input) if max_symbols_input and max_symbols_input.isdigit() else None
-                
+                max_symbols = (
+                    int(max_symbols_input)
+                    if max_symbols_input and max_symbols_input.isdigit()
+                    else None
+                )
+
                 try:
                     portfolio_quotes = portfolio_builder.build_portfolio_quotes(
                         start_date=datetime.combine(start_date, datetime.min.time()),
@@ -447,16 +456,16 @@ if execute_button:
                         "without rate limits. Format: `SYMBOL.csv` with columns: date, open, high, low, close, volume"
                     )
                     st.stop()
-                
+
                 st.success(
                     f"✅ Portfolio built: {len(set(q.symbol for q in portfolio_quotes))} symbols, "
                     f"{len(portfolio_quotes)} quotes"
                 )
-                
+
                 # Create allocation manager (will use portfolio.yaml config)
                 allocation_manager = portfolio_config.get_allocation_manager()
                 allocation_manager.update_total_capital(Decimal(str(initial_capital)))
-                
+
                 # Create strategies
                 all_strategies = {}
                 for strategy_type in ["momentum", "mean_reversion", "pairs_trading"]:
@@ -475,7 +484,7 @@ if execute_button:
                         else:
                             config["pair_symbols"] = ["AAPL", "MSFT"]  # Fallback
                         all_strategies[strategy_type] = PairsTradingStrategy(config)
-                
+
                 multi_backtester = MultiStrategyBacktester(
                     allocation_manager=allocation_manager,
                     strategies=all_strategies,
@@ -488,31 +497,33 @@ if execute_button:
                     },
                     portfolio_config_manager=portfolio_config,  # Pass config manager
                 )
-                
+
                 consolidated = multi_backtester.run_multi_strategy_backtest(
                     quotes=portfolio_quotes,  # Use portfolio quotes, not single symbol
                     start_date=datetime.combine(start_date, datetime.min.time()),
                     end_date=datetime.combine(end_date, datetime.max.time()),
                 )
-                
-                st.success(f"✅ Multi-strategy backtest completed ({len(all_strategies)} strategies)")
-                
+
+                st.success(
+                    f"✅ Multi-strategy backtest completed ({len(all_strategies)} strategies)"
+                )
+
                 # Generate unique ID
                 backtest_id = f"{selected_module}_{selected_strategy}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-                
+
                 # Save JSON results FIRST
                 results_dir = project_root / "docs" / "BACKTEST_RESULTS" / "multi_strategy"
                 results_dir.mkdir(parents=True, exist_ok=True)
                 json_file = save_multi_strategy_results(consolidated, results_dir, backtest_id)
-                
+
                 st.success(f"✅ Results saved to {json_file}")
-                
+
                 # Generate backend test summary for multi-strategy (BEFORE displaying)
                 # Get all symbols for summary
                 portfolio_symbols = ", ".join(portfolio_summary['all_symbols'][:5])
                 if len(portfolio_summary['all_symbols']) > 5:
                     portfolio_symbols += f" (+{len(portfolio_summary['all_symbols']) - 5} more)"
-                
+
                 summary_file = generate_backend_test_summary(
                     all_results=[],  # Empty for multi-strategy as it has its own format
                     strategy=selected_strategy,
@@ -524,21 +535,22 @@ if execute_button:
                     project_root=project_root,
                     multi_strategy_results=consolidated,
                 )
-                
+
                 # NOW display summary AFTER everything is saved and generated
                 st.markdown("---")
                 st.markdown("## 📊 Multi-Strategy Results")
-                
+
                 # Generate markdown summary
                 summary_text = generate_multi_strategy_summary_text(consolidated)
                 st.markdown(summary_text)
-                
+
                 # Also display as JSON
                 with st.expander("📄 View JSON Results"):
                     import json
+
                     with open(json_file, "r") as f:
                         st.json(json.load(f))
-                
+
                 # Show backend test summary link
                 st.markdown("---")
                 st.info(f"📄 Backend test summary generated: {summary_file}")
@@ -551,9 +563,9 @@ if execute_button:
                         file_name=summary_file.name,
                         mime="text/markdown",
                     )
-                
+
                 st.stop()
-            
+
             # Single strategy mode (existing behavior)
             # Create strategy once for all modules (shares state/history)
             strategy_config = {
@@ -649,7 +661,7 @@ if execute_button:
 
             # Show summary
             st.success(f"✅ Backtests completed for {len(modules_to_run)} module(s)")
-            
+
             # Generate comprehensive Backend Test Result Summary
             try:
                 # Collect all backtest results
@@ -658,16 +670,22 @@ if execute_button:
                     key = f"{current_module}_{selected_strategy}_{selected_preset}"
                     if key in session_state.backtest_results:
                         result = session_state.backtest_results[key]
-                        all_backtest_results.append({
-                            "module": current_module,
-                            "total_trades": result.performance.total_trades,
-                            "win_rate": float(result.performance.win_rate),
-                            "total_return": float(result.total_return),
-                            "final_capital": float(result.final_capital),
-                            "sharpe_ratio": float(result.performance.sharpe_ratio) if result.performance.sharpe_ratio else None,
-                            "max_drawdown": float(result.performance.max_drawdown) if result.performance.max_drawdown else 0,
-                        })
-                
+                        all_backtest_results.append(
+                            {
+                                "module": current_module,
+                                "total_trades": result.performance.total_trades,
+                                "win_rate": float(result.performance.win_rate),
+                                "total_return": float(result.total_return),
+                                "final_capital": float(result.final_capital),
+                                "sharpe_ratio": float(result.performance.sharpe_ratio)
+                                if result.performance.sharpe_ratio
+                                else None,
+                                "max_drawdown": float(result.performance.max_drawdown)
+                                if result.performance.max_drawdown
+                                else 0,
+                            }
+                        )
+
                 # Generate comprehensive summary if we have results
                 if all_backtest_results:
                     summary_file = generate_backend_test_summary(
@@ -680,16 +698,18 @@ if execute_button:
                         initial_capital=initial_capital,
                         project_root=project_root,
                     )
-                    
+
                     # Show link to summary
                     st.markdown("---")
                     st.success("📄 **Backend Test Result Summary Generated**")
-                    st.markdown(f"""
+                    st.markdown(
+                        f"""
                     **Location:** `{summary_file.relative_to(project_root)}`
                     
                     **To view:** Open the file in your editor or download it.
-                    """)
-                    
+                    """
+                    )
+
                     # Add download button
                     with open(summary_file, "r") as f:
                         summary_content = f.read()
@@ -699,7 +719,7 @@ if execute_button:
                             file_name=summary_file.name,
                             mime="text/markdown",
                         )
-                    
+
             except Exception as summary_error:
                 logger.warning(f"Failed to generate backend test summary: {summary_error}")
                 st.warning("⚠️ Could not generate comprehensive summary report")
@@ -986,70 +1006,106 @@ if session_state.backtest_results:
 
     # Metrics dashboard with improved styling - 3 columns with 2 metrics each
     st.markdown("### 📊 Performance Metrics")
-    
+
     col1, col2, col3 = st.columns(3)
-    
+
     with col1:
-        st.markdown("""
+        st.markdown(
+            """
         <div style="background-color: #f0f2f6; padding: 20px; border-radius: 10px; border-left: 5px solid #1f77b4;">
             <h3 style="margin: 0; color: #1f77b4;">📊 Total Trades</h3>
             <h2 style="margin: 10px 0 0 0; color: #262730;">{}</h2>
         </div>
-        """.format(result.performance.total_trades), unsafe_allow_html=True)
-        
+        """.format(
+                result.performance.total_trades
+            ),
+            unsafe_allow_html=True,
+        )
+
         st.markdown("<br>", unsafe_allow_html=True)
-        
+
         pnl_value = float(result.performance.total_pnl)
         pnl_color = "#28a745" if pnl_value >= 0 else "#dc3545"
         pnl_sign = "+" if pnl_value >= 0 else ""
-        st.markdown("""
+        st.markdown(
+            """
         <div style="background-color: #f0f2f6; padding: 20px; border-radius: 10px; border-left: 5px solid {};">
             <h3 style="margin: 0; color: {};">💰 Total P&L</h3>
             <h2 style="margin: 10px 0 0 0; color: {};">{}$ {:.2f}</h2>
         </div>
-        """.format(pnl_color, pnl_color, pnl_color, pnl_sign, pnl_value), unsafe_allow_html=True)
-    
+        """.format(
+                pnl_color, pnl_color, pnl_color, pnl_sign, pnl_value
+            ),
+            unsafe_allow_html=True,
+        )
+
     with col2:
         win_rate = float(result.performance.win_rate)
         win_color = "#28a745" if win_rate >= 50 else "#ffc107" if win_rate >= 30 else "#dc3545"
-        st.markdown("""
+        st.markdown(
+            """
         <div style="background-color: #f0f2f6; padding: 20px; border-radius: 10px; border-left: 5px solid {};">
             <h3 style="margin: 0; color: {};">✅ Win Rate</h3>
             <h2 style="margin: 10px 0 0 0; color: {};">{:.1f}%</h2>
         </div>
-        """.format(win_color, win_color, win_color, win_rate), unsafe_allow_html=True)
-        
+        """.format(
+                win_color, win_color, win_color, win_rate
+            ),
+            unsafe_allow_html=True,
+        )
+
         st.markdown("<br>", unsafe_allow_html=True)
-        
+
         sharpe = float(result.performance.sharpe_ratio) if result.performance.sharpe_ratio else None
-        sharpe_color = "#28a745" if sharpe and sharpe > 1 else "#ffc107" if sharpe and sharpe > 0 else "#dc3545"
+        sharpe_color = (
+            "#28a745"
+            if sharpe and sharpe > 1
+            else "#ffc107"
+            if sharpe and sharpe > 0
+            else "#dc3545"
+        )
         sharpe_display = f"{sharpe:.2f}" if sharpe is not None else "N/A"
-        st.markdown("""
+        st.markdown(
+            """
         <div style="background-color: #f0f2f6; padding: 20px; border-radius: 10px; border-left: 5px solid {};">
             <h3 style="margin: 0; color: {};">📈 Sharpe Ratio</h3>
             <h2 style="margin: 10px 0 0 0; color: {};">{}</h2>
         </div>
-        """.format(sharpe_color, sharpe_color, sharpe_color, sharpe_display), unsafe_allow_html=True)
-    
+        """.format(
+                sharpe_color, sharpe_color, sharpe_color, sharpe_display
+            ),
+            unsafe_allow_html=True,
+        )
+
     with col3:
         max_dd = float(result.performance.max_drawdown_percentage)
         dd_color = "#dc3545" if max_dd > 20 else "#ffc107" if max_dd > 10 else "#28a745"
-        st.markdown("""
+        st.markdown(
+            """
         <div style="background-color: #f0f2f6; padding: 20px; border-radius: 10px; border-left: 5px solid {};">
             <h3 style="margin: 0; color: {};">📉 Max Drawdown</h3>
             <h2 style="margin: 10px 0 0 0; color: {};">{:.2f}%</h2>
         </div>
-        """.format(dd_color, dd_color, dd_color, max_dd), unsafe_allow_html=True)
-        
+        """.format(
+                dd_color, dd_color, dd_color, max_dd
+            ),
+            unsafe_allow_html=True,
+        )
+
         st.markdown("<br>", unsafe_allow_html=True)
-        
+
         final_cap = float(result.final_capital)
-        st.markdown("""
+        st.markdown(
+            """
         <div style="background-color: #f0f2f6; padding: 20px; border-radius: 10px; border-left: 5px solid #6c757d;">
             <h3 style="margin: 0; color: #6c757d;">💼 Final Capital</h3>
             <h2 style="margin: 10px 0 0 0; color: #262730;">${:,.2f}</h2>
         </div>
-        """.format(final_cap), unsafe_allow_html=True)
+        """.format(
+                final_cap
+            ),
+            unsafe_allow_html=True,
+        )
 
     # Equity curve
     st.subheader("📈 Equity Curve")
@@ -1080,22 +1136,32 @@ if session_state.backtest_results:
         trades_data = []
         for trade in result.trades:
             pnl_val = float(trade.pnl) if trade.pnl else 0.0
-            trades_data.append({
-                "ID": trade.trade_id[:8],
-                "Symbol": trade.symbol,
-                "Side": "🟢 BUY" if trade.side == "BUY" else "🔴 SELL",
-                "Quantity": f"{float(trade.quantity):,.2f}",
-                "Entry Price": f"${float(trade.entry_price):,.2f}",
-                "Exit Price": f"${float(trade.exit_price):,.2f}" if trade.exit_price else "N/A",
-                "Entry Time": trade.entry_time.strftime("%Y-%m-%d %H:%M") if trade.entry_time else "N/A",
-                "Exit Time": trade.exit_time.strftime("%Y-%m-%d %H:%M") if trade.exit_time else "N/A",
-                "P&L": f"${pnl_val:+,.2f}",
-                "Status": "✅ " + trade.status.value if trade.status.value == "CLOSED" else "⏳ " + trade.status.value,
-                "Reason": (trade.reason[:30] + "...") if trade.reason and len(trade.reason) > 30 else (trade.reason or "N/A"),
-            })
-        
+            trades_data.append(
+                {
+                    "ID": trade.trade_id[:8],
+                    "Symbol": trade.symbol,
+                    "Side": "🟢 BUY" if trade.side == "BUY" else "🔴 SELL",
+                    "Quantity": f"{float(trade.quantity):,.2f}",
+                    "Entry Price": f"${float(trade.entry_price):,.2f}",
+                    "Exit Price": f"${float(trade.exit_price):,.2f}" if trade.exit_price else "N/A",
+                    "Entry Time": trade.entry_time.strftime("%Y-%m-%d %H:%M")
+                    if trade.entry_time
+                    else "N/A",
+                    "Exit Time": trade.exit_time.strftime("%Y-%m-%d %H:%M")
+                    if trade.exit_time
+                    else "N/A",
+                    "P&L": f"${pnl_val:+,.2f}",
+                    "Status": "✅ " + trade.status.value
+                    if trade.status.value == "CLOSED"
+                    else "⏳ " + trade.status.value,
+                    "Reason": (trade.reason[:30] + "...")
+                    if trade.reason and len(trade.reason) > 30
+                    else (trade.reason or "N/A"),
+                }
+            )
+
         trades_df = pd.DataFrame(trades_data)
-        
+
         if not trades_df.empty:
             # Style the dataframe
             def style_row(row):
@@ -1106,10 +1172,10 @@ if session_state.backtest_results:
                     return ['background-color: #f8d7da'] * len(row)
                 else:
                     return [''] * len(row)
-            
+
             styled_df = trades_df.style.apply(style_row, axis=1)
             st.dataframe(styled_df, use_container_width=True, height=500, hide_index=True)
-            
+
             # Summary stats
             col_sum1, col_sum2, col_sum3 = st.columns(3)
             with col_sum1:
@@ -1156,7 +1222,7 @@ if session_state.backtest_results:
                 )
 
             comparison_df = pd.DataFrame(comparison_data)
-            
+
             # Style comparison table
             def style_comparison(val):
                 if isinstance(val, str) and val.endswith('%'):
@@ -1172,10 +1238,13 @@ if session_state.backtest_results:
                     except:
                         pass
                 return ''
-            
+
             # Apply styling
             styled_comparison = comparison_df.style.applymap(
-                lambda x: 'font-weight: bold' if isinstance(x, (int, float)) or (isinstance(x, str) and any(c.isdigit() for c in x)) else ''
+                lambda x: 'font-weight: bold'
+                if isinstance(x, (int, float))
+                or (isinstance(x, str) and any(c.isdigit() for c in x))
+                else ''
             )
             st.dataframe(styled_comparison, use_container_width=True, hide_index=True)
 

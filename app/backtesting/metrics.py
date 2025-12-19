@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 # Optional: empyrical-reloaded for standard financial metrics
 try:
     import empyrical as ep
+
     EMPYRICAL_AVAILABLE = True
 except ImportError:
     EMPYRICAL_AVAILABLE = False
@@ -97,15 +98,22 @@ class MetricsCalculator:
         max_drawdown = self._calculate_max_drawdown(equity_curve)
         # Asegurar que max_drawdown sea <= 0 (validación Pydantic)
         max_drawdown = min(Decimal("0"), max_drawdown)
-        max_drawdown_percentage = min(Decimal("0"), (max_drawdown / initial_capital) * Decimal("100") if initial_capital > 0 else Decimal("0"))
+        max_drawdown_percentage = min(
+            Decimal("0"),
+            (max_drawdown / initial_capital) * Decimal("100")
+            if initial_capital > 0
+            else Decimal("0"),
+        )
 
         # Calculate returns for Sharpe/Sortino
         daily_returns = self._calculate_daily_returns(closed_trades, initial_capital)
         sharpe_ratio = self._calculate_sharpe_ratio(daily_returns) if daily_returns else None
         sortino_ratio = self._calculate_sortino_ratio(daily_returns) if daily_returns else None
-        
+
         # Risk/Reward Ratio (TASK-MET-2: Average risk/reward per trade, target ≥1:3)
-        risk_reward_ratio = self._calculate_risk_reward_ratio(closed_trades) if closed_trades else None
+        risk_reward_ratio = (
+            self._calculate_risk_reward_ratio(closed_trades) if closed_trades else None
+        )
 
         # Trade statistics
         avg_win = (
@@ -239,7 +247,7 @@ class MetricsCalculator:
 
         try:
             returns_array = np.array([float(r) for r in returns])
-            
+
             # Use empyrical if available (industry standard)
             if EMPYRICAL_AVAILABLE:
                 try:
@@ -247,10 +255,7 @@ class MetricsCalculator:
                     # (empyrical expects daily rate when period='daily')
                     daily_risk_free = float(self.risk_free_rate) / 252
                     sharpe = ep.sharpe_ratio(
-                        returns_array,
-                        risk_free=daily_risk_free,
-                        period='daily',
-                        annualization=252
+                        returns_array, risk_free=daily_risk_free, period='daily', annualization=252
                     )
                     # Handle NaN
                     if np.isnan(sharpe) or np.isinf(sharpe):
@@ -258,7 +263,7 @@ class MetricsCalculator:
                     return Decimal(str(sharpe))
                 except Exception as e:
                     logger.debug(f"Error usando empyrical para Sharpe, usando cálculo manual: {e}")
-            
+
             # Fallback to manual calculation
             mean_return = np.mean(returns_array)
             std_return = np.std(returns_array)
@@ -289,17 +294,14 @@ class MetricsCalculator:
 
         try:
             returns_array = np.array([float(r) for r in returns])
-            
+
             # Use empyrical if available (industry standard)
             if EMPYRICAL_AVAILABLE:
                 try:
                     # Convert annual risk-free rate to daily for empyrical
                     daily_risk_free = float(self.risk_free_rate) / 252
                     sortino = ep.sortino_ratio(
-                        returns_array,
-                        risk_free=daily_risk_free,
-                        period='daily',
-                        annualization=252
+                        returns_array, risk_free=daily_risk_free, period='daily', annualization=252
                     )
                     # Handle NaN
                     if np.isnan(sortino) or np.isinf(sortino):
@@ -307,7 +309,7 @@ class MetricsCalculator:
                     return Decimal(str(sortino))
                 except Exception as e:
                     logger.debug(f"Error usando empyrical para Sortino, usando cálculo manual: {e}")
-            
+
             # Fallback to manual calculation
             mean_return = np.mean(returns_array)
 
@@ -336,36 +338,36 @@ class MetricsCalculator:
         except Exception as e:
             logger.error(f"Error calculating Sortino ratio: {e}")
             return None
-    
+
     def _calculate_risk_reward_ratio(self, trades: List[Trade]) -> Optional[Decimal]:
         """
         Calculate average risk/reward ratio per trade (TASK-MET-2).
-        
+
         Risk/Reward = Average Win / Average Loss (absolute values)
         Target: ≥1:3 (for every $1 risked, expect $3 reward)
         """
         try:
             if not trades:
                 return None
-            
+
             # Get winning and losing trades
             wins = [t for t in trades if t.pnl and t.pnl > 0]
             losses = [t for t in trades if t.pnl and t.pnl < 0]
-            
+
             if not wins or not losses:
                 return None
-            
+
             # Calculate average win and average loss (absolute values)
             avg_win = sum(abs(t.pnl or Decimal("0")) for t in wins) / len(wins)
             avg_loss = abs(sum(t.pnl or Decimal("0") for t in losses) / len(losses))
-            
+
             if avg_loss == 0:
                 return None
-            
+
             # Risk/Reward = Avg Win / Avg Loss
             # Example: $300 avg win / $100 avg loss = 3:1 ratio
             risk_reward = avg_win / avg_loss
-            
+
             return Decimal(str(risk_reward))
 
         except Exception as e:

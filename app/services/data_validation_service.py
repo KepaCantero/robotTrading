@@ -81,9 +81,7 @@ class DataValidationService:
         self.outlier_zscore_threshold = outlier_zscore_threshold
         self.consistency_tolerance = consistency_tolerance
 
-    def detect_price_gaps(
-        self, data: List[OHLCData], symbol: str
-    ) -> List[DataQualityIssue]:
+    def detect_price_gaps(self, data: List[OHLCData], symbol: str) -> List[DataQualityIssue]:
         """
         TASK-DV-1: Detect price gaps > threshold.
 
@@ -129,9 +127,7 @@ class DataValidationService:
 
         return issues
 
-    def identify_outliers(
-        self, data: List[OHLCData], symbol: str
-    ) -> List[DataQualityIssue]:
+    def identify_outliers(self, data: List[OHLCData], symbol: str) -> List[DataQualityIssue]:
         """
         TASK-DV-2: Identify outliers using z-score method.
 
@@ -160,7 +156,7 @@ class DataValidationService:
         # Calculate mean and std
         mean_change = sum(price_changes) / len(price_changes)
         variance = sum((x - mean_change) ** 2 for x in price_changes) / len(price_changes)
-        std_change = variance ** 0.5
+        std_change = variance**0.5
 
         if std_change == 0:
             return issues
@@ -278,9 +274,7 @@ class DataValidationService:
 
         return issues
 
-    def validate_data_quality(
-        self, data: List[OHLCData], symbol: str
-    ) -> DataQualityReport:
+    def validate_data_quality(self, data: List[OHLCData], symbol: str) -> DataQualityReport:
         """
         TASK-DV-4: Complete data quality check before backtest.
 

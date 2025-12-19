@@ -6,10 +6,10 @@ Exporta todos los optimizadores disponibles.
 
 from .optimizers import (
     BaseOptimizer,
+    BlackLittermanOptimizer,
+    KellyCriterionOptimizer,
     MarkowitzOptimizer,
     RiskParityOptimizer,
-    BlackLittermanOptimizer,
-    KellyCriterionOptimizer
 )
 
 __all__ = [
@@ -17,6 +17,5 @@ __all__ = [
     "MarkowitzOptimizer",
     "RiskParityOptimizer",
     "BlackLittermanOptimizer",
-    "KellyCriterionOptimizer"
+    "KellyCriterionOptimizer",
 ]
-

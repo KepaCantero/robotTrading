@@ -15,9 +15,9 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
+from app.models.order import Order, OrderStatus
 from app.models.portfolio import Portfolio
 from app.models.signal import Signal
-from app.models.order import Order, OrderStatus
 
 logger = logging.getLogger(__name__)
 
@@ -25,14 +25,14 @@ logger = logging.getLogger(__name__)
 class TradeRiskLimiter:
     """
     TASK-RM-1: Risk per Trade Limiter.
-    
+
     Ensures no single trade risks more than 2% of capital.
     """
 
     def __init__(self, max_risk_per_trade: Decimal = Decimal("0.02")):
         """
         Initialize risk limiter.
-        
+
         Args:
             max_risk_per_trade: Maximum risk per trade (default 2% = 0.02)
         """
@@ -46,12 +46,12 @@ class TradeRiskLimiter:
     ) -> Decimal:
         """
         Calculate maximum position size based on risk limit.
-        
+
         Args:
             signal: Trading signal
             portfolio: Current portfolio
             stop_loss_pct: Stop loss percentage
-            
+
         Returns:
             Maximum position size
         """
@@ -82,13 +82,13 @@ class TradeRiskLimiter:
     ) -> bool:
         """
         Validate if trade respects risk limit.
-        
+
         Args:
             signal: Trading signal
             portfolio: Current portfolio
             position_size: Proposed position size
             stop_loss_pct: Stop loss percentage
-            
+
         Returns:
             True if trade respects risk limit
         """
@@ -116,14 +116,14 @@ class TradeRiskLimiter:
 class RiskRewardValidator:
     """
     TASK-RM-2: Risk/Reward Ratio Validator.
-    
+
     Ensures minimum 1:3 risk/reward ratio (risk 1 to gain 3).
     """
 
     def __init__(self, min_reward_ratio: Decimal = Decimal("3.0")):
         """
         Initialize validator.
-        
+
         Args:
             min_reward_ratio: Minimum reward/risk ratio (default 3.0 = 1:3)
         """
@@ -137,12 +137,12 @@ class RiskRewardValidator:
     ) -> bool:
         """
         Validate risk/reward ratio.
-        
+
         Args:
             entry_price: Entry price
             stop_loss: Stop loss price
             take_profit: Take profit price
-            
+
         Returns:
             True if ratio meets minimum requirement
         """
@@ -160,22 +160,18 @@ class RiskRewardValidator:
         is_valid = ratio >= self.min_reward_ratio
 
         if not is_valid:
-            logger.warning(
-                f"Risk/reward ratio {ratio:.2f} below minimum {self.min_reward_ratio}"
-            )
+            logger.warning(f"Risk/reward ratio {ratio:.2f} below minimum {self.min_reward_ratio}")
 
         return is_valid
 
-    def calculate_min_take_profit(
-        self, entry_price: Decimal, stop_loss: Decimal
-    ) -> Decimal:
+    def calculate_min_take_profit(self, entry_price: Decimal, stop_loss: Decimal) -> Decimal:
         """
         Calculate minimum take profit to achieve target ratio.
-        
+
         Args:
             entry_price: Entry price
             stop_loss: Stop loss price
-            
+
         Returns:
             Minimum take profit price
         """
@@ -193,7 +189,7 @@ class RiskRewardValidator:
 class StrategyExposureLimiter:
     """
     TASK-RM-3: Strategy Exposure Limiter.
-    
+
     Limits exposure per strategy:
     - Momentum: 50%
     - Mean Reversion: 25-30%
@@ -203,21 +199,19 @@ class StrategyExposureLimiter:
     def __init__(self):
         """Initialize exposure limiter."""
         self.strategy_limits = {
-            "momentum": Decimal("0.50"),           # 50%
-            "mean_reversion": Decimal("0.30"),      # 30%
-            "pairs_trading": Decimal("0.30"),       # 30%
+            "momentum": Decimal("0.50"),  # 50%
+            "mean_reversion": Decimal("0.30"),  # 30%
+            "pairs_trading": Decimal("0.30"),  # 30%
         }
 
-    def calculate_strategy_exposure(
-        self, portfolio: Portfolio, strategy_name: str
-    ) -> Decimal:
+    def calculate_strategy_exposure(self, portfolio: Portfolio, strategy_name: str) -> Decimal:
         """
         Calculate current exposure for a strategy.
-        
+
         Args:
             portfolio: Current portfolio
             strategy_name: Name of the strategy
-            
+
         Returns:
             Current exposure as percentage of total capital
         """
@@ -237,12 +231,12 @@ class StrategyExposureLimiter:
     ) -> bool:
         """
         Validate exposure limits.
-        
+
         Args:
             portfolio: Current portfolio
             strategy_name: Name of the strategy
             new_position_value: Value of new position
-            
+
         Returns:
             True if exposure within limits
         """
@@ -264,14 +258,14 @@ class StrategyExposureLimiter:
 class DrawdownMonitor:
     """
     TASK-RM-4: Drawdown Monitor.
-    
+
     Monitors portfolio drawdown and triggers stop when >15%.
     """
 
     def __init__(self, max_drawdown: Decimal = Decimal("0.15")):
         """
         Initialize drawdown monitor.
-        
+
         Args:
             max_drawdown: Maximum allowed drawdown (default 15% = 0.15)
         """
@@ -282,7 +276,7 @@ class DrawdownMonitor:
     def update_equity(self, current_equity: Decimal) -> None:
         """
         Update equity tracking.
-        
+
         Args:
             current_equity: Current total equity
         """
@@ -292,10 +286,10 @@ class DrawdownMonitor:
     def check_drawdown(self, current_equity: Decimal) -> tuple[bool, Decimal]:
         """
         Check current drawdown.
-        
+
         Args:
             current_equity: Current total equity
-            
+
         Returns:
             Tuple of (drawdown_exceeded, drawdown_percentage)
         """
@@ -322,14 +316,14 @@ class DrawdownMonitor:
 class CircuitBreaker:
     """
     TASK-RM-5: Circuit Breaker.
-    
+
     Pauses strategy after 3-5 consecutive stop losses.
     """
 
     def __init__(self, max_consecutive_stops: int = 5):
         """
         Initialize circuit breaker.
-        
+
         Args:
             max_consecutive_stops: Maximum consecutive stops before pause (default 5)
         """
@@ -341,7 +335,7 @@ class CircuitBreaker:
     def record_stop_loss(self, strategy_name: str) -> None:
         """
         Record a stop loss for a strategy.
-        
+
         Args:
             strategy_name: Name of the strategy
         """
@@ -359,7 +353,7 @@ class CircuitBreaker:
     def reset_stops(self, strategy_name: str) -> None:
         """
         Reset stop counter for a strategy.
-        
+
         Args:
             strategy_name: Name of the strategy
         """
@@ -369,10 +363,10 @@ class CircuitBreaker:
     def is_strategy_paused(self, strategy_name: str) -> bool:
         """
         Check if strategy is paused.
-        
+
         Args:
             strategy_name: Name of the strategy
-            
+
         Returns:
             True if strategy is paused
         """
@@ -390,10 +384,10 @@ class CircuitBreaker:
     def get_consecutive_stops(self, strategy_name: str) -> int:
         """
         Get consecutive stop count for strategy.
-        
+
         Args:
             strategy_name: Name of the strategy
-            
+
         Returns:
             Number of consecutive stops
         """
@@ -403,7 +397,7 @@ class CircuitBreaker:
 class AdvancedRiskManager:
     """
     TASK-RM-1 to RM-5: Complete Advanced Risk Management System.
-    
+
     Integrates all risk management components.
     """
 
@@ -416,7 +410,7 @@ class AdvancedRiskManager:
     ):
         """
         Initialize advanced risk manager.
-        
+
         Args:
             max_risk_per_trade: Maximum risk per trade (default 2%)
             min_reward_ratio: Minimum reward/risk ratio (default 3.0)
@@ -442,7 +436,7 @@ class AdvancedRiskManager:
     ) -> tuple[bool, str]:
         """
         Validate trade against all risk rules.
-        
+
         Args:
             signal: Trading signal
             portfolio: Current portfolio
@@ -450,7 +444,7 @@ class AdvancedRiskManager:
             stop_loss_pct: Stop loss percentage
             take_profit_pct: Take profit percentage
             strategy_name: Name of the strategy
-            
+
         Returns:
             Tuple of (is_valid, reason)
         """
@@ -498,12 +492,12 @@ class AdvancedRiskManager:
     ) -> Decimal:
         """
         Calculate safe position size considering all risk limits.
-        
+
         Args:
             signal: Trading signal
             portfolio: Current portfolio
             stop_loss_pct: Stop loss percentage
-            
+
         Returns:
             Safe position size
         """
@@ -523,7 +517,7 @@ class AdvancedRiskManager:
     ) -> None:
         """
         Record trade result for monitoring.
-        
+
         Args:
             strategy_name: Name of the strategy
             was_stop_loss: Whether trade hit stop loss
@@ -544,9 +538,7 @@ class AdvancedRiskManager:
             "drawdown_exceeded": self.drawdown_monitor.is_stopped,
             "peak_equity": float(self.drawdown_monitor.peak_equity),
             "strategy_stops": dict(self.circuit_breaker.strategy_stops),
-            "paused_strategies": [
-                k for k, v in self.circuit_breaker.strategy_paused.items() if v
-            ],
+            "paused_strategies": [k for k, v in self.circuit_breaker.strategy_paused.items() if v],
         }
 
 

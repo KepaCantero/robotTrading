@@ -14,6 +14,7 @@ Version: 1.0.0
 # Debe ir ANTES de importar numpy, pandas, torch, o cualquier otra librería
 # ============================================================================
 import os
+
 os.environ['OMP_NUM_THREADS'] = '1'
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
 os.environ['MKL_NUM_THREADS'] = '1'
@@ -35,9 +36,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-# IMPORTANT: Import logging_config FIRST to ensure all warnings/errors go to files
-from app.core.logging_config import setup_file_logging
-
 from app.api.assets import router as assets_router
 from app.api.cost_analysis import router as cost_analysis_router
 from app.api.market_data import router as market_data_router
@@ -49,6 +47,9 @@ from app.api.portfolio_analytics import router as portfolio_analytics_router
 from app.api.signals import router as signals_router
 from app.api.trading_error_handler import router as trading_error_handler_router
 from app.core.config import get_settings
+
+# IMPORTANT: Import logging_config FIRST to ensure all warnings/errors go to files
+from app.core.logging_config import setup_file_logging
 
 # Get application settings (lazy loading to avoid validation issues during
 # import)

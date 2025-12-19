@@ -38,7 +38,7 @@ class CycleMetrics:
 class PerformanceTracker:
     """
     TASK-MET-RUNTIME-1: Tracks runtime performance metrics per cycle.
-    
+
     Monitors:
     - Cycle duration
     - Signals generated per cycle
@@ -56,7 +56,7 @@ class PerformanceTracker:
     def start_cycle(self) -> int:
         """
         Start a new performance tracking cycle.
-        
+
         Returns:
             Cycle ID
         """
@@ -69,7 +69,7 @@ class PerformanceTracker:
     def end_cycle(self) -> Optional[Dict[str, Any]]:
         """
         End the current cycle and return metrics.
-        
+
         Returns:
             Dictionary with cycle metrics or None
         """
@@ -110,10 +110,10 @@ class PerformanceTracker:
     def get_performance_summary(self, last_n_cycles: int = 100) -> Dict[str, Any]:
         """
         Get performance summary for the last N cycles.
-        
+
         Args:
             last_n_cycles: Number of recent cycles to analyze
-            
+
         Returns:
             Dictionary with performance summary
         """
@@ -133,8 +133,10 @@ class PerformanceTracker:
         return {
             "total_cycles": len(recent_cycles),
             "avg_duration_ms": sum(c.duration_ms for c in recent_cycles) / len(recent_cycles),
-            "avg_signals_per_cycle": sum(c.signals_generated for c in recent_cycles) / len(recent_cycles),
-            "avg_trades_per_cycle": sum(c.trades_executed for c in recent_cycles) / len(recent_cycles),
+            "avg_signals_per_cycle": sum(c.signals_generated for c in recent_cycles)
+            / len(recent_cycles),
+            "avg_trades_per_cycle": sum(c.trades_executed for c in recent_cycles)
+            / len(recent_cycles),
             "total_errors": sum(c.errors_count for c in recent_cycles),
             "total_warnings": sum(c.warnings_count for c in recent_cycles),
             "error_rate": sum(c.errors_count for c in recent_cycles) / len(recent_cycles),

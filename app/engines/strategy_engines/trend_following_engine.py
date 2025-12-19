@@ -104,7 +104,9 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
             # Defaults si no hay configuración
             self.adx_threshold = Decimal(str(config.get("adx_threshold", 25.0)))
             self.min_volume_ratio = Decimal(str(config.get("min_volume_ratio", 1.2)))
-            self.macd_histogram_threshold = Decimal(str(config.get("macd_histogram_threshold", 0.0)))
+            self.macd_histogram_threshold = Decimal(
+                str(config.get("macd_histogram_threshold", 0.0))
+            )
             self.stop_loss = Decimal(str(get_trading_threshold("stop_loss_pct")))
             self.take_profit = Decimal(str(get_trading_threshold("take_profit_pct")))
             self.max_position_size = Decimal(str(get_trading_threshold("max_position_size")))
@@ -158,16 +160,9 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
             lows = list(self.low_history) if self.low_history else []
             volumes = list(self.volume_history) if self.volume_history else []
         else:
-            prices = [
-                float(q.close or q.bid or q.last or 0)
-                for q in historical_data
-            ]
-            highs = [
-                float(getattr(q, "high", q.close or 0)) for q in historical_data
-            ]
-            lows = [
-                float(getattr(q, "low", q.close or 0)) for q in historical_data
-            ]
+            prices = [float(q.close or q.bid or q.last or 0) for q in historical_data]
+            highs = [float(getattr(q, "high", q.close or 0)) for q in historical_data]
+            lows = [float(getattr(q, "low", q.close or 0)) for q in historical_data]
             volumes = [float(getattr(q, "volume", 0)) for q in historical_data]
 
         # Calcular indicadores si hay suficiente histórico
@@ -190,12 +185,12 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
             except (TypeError, ValueError) as e:
                 logger.debug(f"MACD calculation failed: {e}, using defaults")
                 macd_line, macd_signal, macd_histogram = None, None, None
-            
+
             # Manejar None values de forma segura
             macd_line_val = float(macd_line) if macd_line is not None else 0.0
             macd_signal_val = float(macd_signal) if macd_signal is not None else 0.0
             macd_histogram_val = float(macd_histogram) if macd_histogram is not None else 0.0
-            
+
             features["macd_line"] = macd_line_val
             features["macd_signal"] = macd_signal_val
             features["macd_histogram"] = macd_histogram_val
@@ -289,8 +284,8 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
 
             # Condiciones para señal BUY (tendencia alcista)
             adx_strong = adx > float(self.adx_threshold)  # Tendencia fuerte
-            macd_bullish = (
-                macd_line > macd_signal and macd_histogram > float(self.macd_histogram_threshold)
+            macd_bullish = macd_line > macd_signal and macd_histogram > float(
+                self.macd_histogram_threshold
             )  # MACD cruce alcista
             volume_confirmed = volume_ratio >= float(self.min_volume_ratio)  # Confirmación volumen
 
@@ -333,8 +328,8 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
                 signals.append(signal)
 
             # Condiciones para señal SELL (tendencia bajista)
-            macd_bearish = (
-                macd_line < macd_signal and macd_histogram < -float(self.macd_histogram_threshold)
+            macd_bearish = macd_line < macd_signal and macd_histogram < -float(
+                self.macd_histogram_threshold
             )  # MACD cruce bajista
 
             if adx_strong and macd_bearish and volume_confirmed:
@@ -376,7 +371,9 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
                 signals.append(signal)
 
         except Exception as e:
-            logger.error(f"Error generando señal en TrendFollowingStrategyEngine: {e}", exc_info=True)
+            logger.error(
+                f"Error generando señal en TrendFollowingStrategyEngine: {e}", exc_info=True
+            )
 
         return signals
 
@@ -440,9 +437,13 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
 
         try:
             # Check exposición máxima
-            total_exposure = portfolio.get_total_exposure() if hasattr(portfolio, "get_total_exposure") else 0.0
+            total_exposure = (
+                portfolio.get_total_exposure() if hasattr(portfolio, "get_total_exposure") else 0.0
+            )
             if total_exposure >= float(self.max_exposure):
-                logger.debug(f"Risk check failed: total exposure {total_exposure} >= {self.max_exposure}")
+                logger.debug(
+                    f"Risk check failed: total exposure {total_exposure} >= {self.max_exposure}"
+                )
                 return False
 
             # Check confidence mínima
@@ -455,4 +456,3 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
         except Exception as e:
             logger.error(f"Error en risk_check: {e}", exc_info=True)
             return False
-
