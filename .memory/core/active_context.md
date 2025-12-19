@@ -146,7 +146,7 @@
 | Fase 1: Data & Context      | ✅     | 100%     | 2/2 (Data Engine, Context Engine)            |
 | Fase 2: Strategy & Learning | ✅     | 100%     | 3.1 ✅, 3.2 ✅ (4/4), 3.3 ✅, 3.4 ✅, 3.5 ✅ [TASK-3.5-WFV] |
 | Fase 3: Portfolio & Risk    | ✅     | 90%      | Portfolio Engine ✅, Risk Engine ✅          |
-| Fases 4-7                   | 🟡     | 20%      | Drift Detection ✅ [TASK-4.2-DRIFT], resto pendiente |
+| Fases 4-7                   | 🟡     | 30%      | Drift Detection ✅ [TASK-4.2-DRIFT], Feature Importance ✅ [TASK-4.2-FEATURE-IMPORTANCE], Transfer Learning pendiente |
 
 **Próximas Tareas Prioritarias:**
 
@@ -154,7 +154,12 @@
 2. ✅ Sistema de composición/ensembles (3.3) - **COMPLETADO** (2025-12-17)
 3. ✅ Walk-forward validation & Stress testing (3.5) - **COMPLETADO [TASK-3.5-WFV]** (2025-12-19)
 4. ✅ Drift detection en Learning Engine (4.2) - **COMPLETADO [TASK-4.2-DRIFT]** (2025-12-19)
-5. ⏳ Feature importance en Learning Engine (4.2)
+5. ✅ Feature importance en Learning Engine (4.2) - **COMPLETADO [TASK-4.2-FEATURE-IMPORTANCE]** (2025-12-19)
+   - Integración de ComprehensiveFeatureAnalyzer en LearningEngineUpdater
+   - 6 métodos de análisis: SHAP, Permutation, Built-in, Correlation, Attention, Stability
+   - Tracking de cambios de importancia en el tiempo
+   - Recomendaciones automáticas de feature engineering
+   - Public API: `get_last_feature_importance_analysis()`, `get_feature_importance_summary()`
 6. ⏳ Transfer learning en Learning Engine (4.2)
 
 ## Previous Focus: **COMPLETAR MVP - PORTFOLIO MULTI-STRATEGY + DATA QUALITY + TECHNICAL INDICATORS** 🎯

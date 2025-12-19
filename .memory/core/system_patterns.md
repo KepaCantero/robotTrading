@@ -210,6 +210,7 @@ class TestConcurrency:
 - ✅ Repository Pattern (90%)
 - ✅ Strategy Pattern (100%)
 - ✅ Observer Pattern (85%)
+- ✅ **Drift Detection Pattern [TASK-4.2-DRIFT]** (100%) - NEW (2025-12-19)
 
 #### **Patrones que Requieren Mejora**
 
@@ -513,7 +514,47 @@ class TestConcurrency:
 - **Event System Mocking**: Mock trading events y notifications
 - **Database Mocking**: Mock trading data repositories
 
-### 3. Trading Test Data Builder
+### 3. Drift Detection Pattern [TASK-4.2-DRIFT]
+
+**Pattern**: Multi-detector drift detection for ML models in trading
+**Estado**: ✅ COMPLETADO (2025-12-19)
+**Implementation**:
+
+- **PSIDetector**: Population Stability Index (estándar en finanzas)
+  - Compara distribuciones usando buckets
+  - Threshold >0.25 = drift significativo
+- **ADWINDetector**: Adaptive Windowing para streaming data
+  - Usa Hoeffding bounds para detección
+  - Ajusta ventana automáticamente cuando detecta drift
+- **ConceptDriftDetector**: KS test y MMD
+  - Kolmogorov-Smirnov para comparar CDFs
+  - MMD para detección en RKHS
+- **FeatureDriftMonitor**: Drift a nivel de feature
+  - Detectores separados por feature
+  - Reportes con recomendaciones
+- **OverfittingDetector**: Detección de overfitting
+  - Monitorea gap train/val
+  - Analiza divergencia de learning curves
+- **ComprehensiveDriftDetector**: Facade combinando todos
+  - Agregación con scoring de severidad
+  - Niveles: NONE, LOW, MEDIUM, HIGH, CRITICAL
+- **AutoRetrainingTrigger**: Triggers automáticos
+  - Time-based, drift-based, performance-based
+  - Requiere múltiples detectores en acuerdo
+
+**Archivos**:
+- `app/strategies/momentum_modular/learning/drift_detector.py` (~1400 líneas)
+- `app/strategies/momentum_modular/learning/learning_updater.py` (integración)
+- `config/drift_detection.yaml` (configuración centralizada)
+- `tests/unit/learning/test_drift_detector.py` (60 tests)
+
+**Beneficios**:
+- Detección temprana de concept drift
+- Prevención de degradación de modelos
+- Reentrenamiento inteligente basado en drift
+- Configuración flexible vía YAML
+
+### 4. Trading Test Data Builder
 
 **Pattern**: Test data generation para trading scenarios
 **Implementation**:

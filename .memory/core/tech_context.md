@@ -25,6 +25,14 @@
 - **Configuración Centralizada**: Sistema de configuración YAML (`config/strategies/*.yaml`) para todos los engines, eliminando magic numbers
 - **Walk Forward Analysis**: Implementación custom para validación robusta
 - **Bias Detection**: Sistema de detección de Look-Ahead Bias y Data Snooping
+- **Drift Detection [TASK-4.2-DRIFT]**: Sistema completo de detección de drift para ML models
+  - PSI (Population Stability Index) - Estándar en finanzas
+  - ADWIN (Adaptive Windowing) - Para streaming data
+  - KS Test (Kolmogorov-Smirnov) - Comparación de distribuciones
+  - MMD (Maximum Mean Discrepancy) - Kernel-based detection
+  - Feature-level drift monitoring
+  - Overfitting detection (train/val gap, learning curves)
+  - Auto-retraining triggers integrados
 - **Next Level Engines (Plan Maestro)**: mlfinlab, riskfolio-lib, PyPortfolioOpt, optuna/ray[tune], stable-baselines3, torch/transformers (según módulo descrito en `docs/PLAN_MAESTRO_NEXT_LEVEL.md`), ya integrados en parte en `DataEngine`, `ContextEngine`, `PortfolioEngine`, `RiskEngine` y el sistema de learning de `momentum_modular`.
 
 ### Asynchronous Processing
