@@ -10,12 +10,12 @@ import unittest
 from datetime import datetime
 from decimal import Decimal
 
-from app.models.portfolio import Portfolio, Position, AssetClass
-from app.models.signal import Signal, SignalType, SignalStrength, SignalSource
-from app.strategies.momentum import MomentumStrategy
-from app.strategies.mean_reversion import MeanReversionStrategy
-from app.strategies.pairs_trading import PairsTradingStrategy
 from app.core.centralized_config import get_strategy_config
+from app.models.portfolio import AssetClass, Portfolio, Position
+from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
+from app.strategies.mean_reversion import MeanReversionStrategy
+from app.strategies.momentum import MomentumStrategy
+from app.strategies.pairs_trading import PairsTradingStrategy
 
 
 class TestExposureRestriction(unittest.TestCase):
@@ -25,16 +25,15 @@ class TestExposureRestriction(unittest.TestCase):
         """Setup para tests de exposición."""
         self.momentum = MomentumStrategy({"name": "momentum"})
         self.mean_reversion = MeanReversionStrategy({"name": "mean_reversion"})
-        self.pairs_trading = PairsTradingStrategy({
-            "name": "pairs_trading",
-            "pair_symbols": ["AAPL", "MSFT"]
-        })
+        self.pairs_trading = PairsTradingStrategy(
+            {"name": "pairs_trading", "pair_symbols": ["AAPL", "MSFT"]}
+        )
 
     def test_momentum_max_exposure_respected(self):
         """Validar que max_exposure no supera los límites del preset."""
         # Momentum tiene max_exposure = 80% (0.8)
         max_exposure = Decimal("0.8")
-        
+
         # Crear portfolio con exposición al límite
         portfolio = Portfolio(
             portfolio_id="test",
@@ -55,21 +54,21 @@ class TestExposureRestriction(unittest.TestCase):
             timestamp=datetime.utcnow(),
             broker="test",
         )
-        
+
         # Calcular exposición actual
         total_exposure = self.momentum._calculate_total_exposure(portfolio)
-        
+
         # Verificar que está dentro del límite o ligeramente por encima (por redondeo)
         self.assertLessEqual(
             total_exposure,
             max_exposure + Decimal("0.01"),  # Tolerancia 1%
-            f"Exposición actual {total_exposure:.2%} no debe superar max_exposure {max_exposure:.2%}"
+            f"Exposición actual {total_exposure:.2%} no debe superar max_exposure {max_exposure:.2%}",
         )
 
     def test_mean_reversion_max_exposure_respected(self):
         """Validar que Mean Reversion respeta max_exposure = 60%."""
         max_exposure = Decimal("0.6")  # 60% para Mean Reversion
-        
+
         portfolio = Portfolio(
             portfolio_id="test",
             cash=Decimal("40000"),  # $40k cash
@@ -89,19 +88,19 @@ class TestExposureRestriction(unittest.TestCase):
             timestamp=datetime.utcnow(),
             broker="test",
         )
-        
+
         total_exposure = self.mean_reversion._calculate_total_exposure(portfolio)
-        
+
         self.assertLessEqual(
             total_exposure,
             max_exposure + Decimal("0.01"),
-            f"Mean Reversion exposición {total_exposure:.2%} no debe superar {max_exposure:.2%}"
+            f"Mean Reversion exposición {total_exposure:.2%} no debe superar {max_exposure:.2%}",
         )
 
     def test_pairs_trading_max_pair_exposure_respected(self):
         """Validar que Pairs Trading respeta max_pair_exposure = 20%."""
         max_pair_exposure = Decimal("0.2")  # 20% para Pairs Trading
-        
+
         portfolio = Portfolio(
             portfolio_id="test",
             cash=Decimal("80000"),  # $80k cash
@@ -121,13 +120,13 @@ class TestExposureRestriction(unittest.TestCase):
             timestamp=datetime.utcnow(),
             broker="test",
         )
-        
+
         pair_exposure = self.pairs_trading._calculate_pair_exposure(portfolio)
-        
+
         self.assertLessEqual(
             pair_exposure,
             max_pair_exposure + Decimal("0.01"),
-            f"Pairs Trading pair_exposure {pair_exposure:.2%} no debe superar {max_pair_exposure:.2%}"
+            f"Pairs Trading pair_exposure {pair_exposure:.2%} no debe superar {max_pair_exposure:.2%}",
         )
 
 
@@ -138,28 +137,28 @@ class TestCapitalRebalancing(unittest.TestCase):
         """Asegurar que no se gasta el mismo capital en dos estrategias simultáneamente."""
         # Este test se valida a nivel de MultiStrategyBacktester
         # Verificamos que cada estrategia tiene su capital asignado
-        
+
         from app.services.multi_strategy_allocation import MultiStrategyAllocationManager
-        
+
         initial_capital = Decimal("100000")
         allocation_manager = MultiStrategyAllocationManager(total_capital=initial_capital)
-        
+
         # Obtener capital asignado a estrategias usando allocate()
         momentum_allocation = allocation_manager.strategy_allocations.get("momentum")
         mean_reversion_allocation = allocation_manager.strategy_allocations.get("mean_reversion")
-        
+
         if momentum_allocation and mean_reversion_allocation:
             # Calcular capital asignado
             momentum_capital = momentum_allocation.allocate(initial_capital)
             mean_reversion_capital = mean_reversion_allocation.allocate(initial_capital)
-            
+
             # Verificar que la suma no excede el capital total
             total_allocated = momentum_capital + mean_reversion_capital
-            
+
             self.assertLessEqual(
                 total_allocated,
                 initial_capital,
-                f"Capital total asignado {total_allocated} no debe exceder inicial {initial_capital}"
+                f"Capital total asignado {total_allocated} no debe exceder inicial {initial_capital}",
             )
 
     def test_capital_redistributed_after_position_close(self):
@@ -171,27 +170,27 @@ class TestCapitalRebalancing(unittest.TestCase):
             timestamp=datetime.utcnow(),
             broker="test",
         )
-        
+
         # Simular cierre de posición
         # Antes: $50k cash, $50k en posición = $100k total
         # Después: $100k cash, $0 en posición = $100k total
-        
+
         initial_cash = portfolio.cash
         initial_positions_value = sum(p.market_value for p in portfolio.positions)
         initial_total = initial_cash + initial_positions_value
-        
+
         # Cerrar posición (simulado)
         portfolio.positions = []
-        
+
         final_cash = portfolio.cash
         final_positions_value = sum(p.market_value for p in portfolio.positions)
         final_total = final_cash + final_positions_value
-        
+
         # El total debe mantenerse (o aumentar si hubo ganancia)
         self.assertGreaterEqual(
             final_total,
             initial_total - Decimal("100"),  # Tolerancia por comisiones
-            f"Capital total no debe disminuir después de cerrar: {final_total} vs {initial_total}"
+            f"Capital total no debe disminuir después de cerrar: {final_total} vs {initial_total}",
         )
 
 
@@ -202,7 +201,7 @@ class TestPresetPersistence(unittest.TestCase):
         """Revisar que el preset Conservative no está siendo sobrescrito por valores por defecto."""
         # Obtener config de momentum con preset Conservative
         strategy_config = get_strategy_config("momentum")
-        
+
         if strategy_config:
             # Verificar que los parámetros del preset están presentes
             if hasattr(strategy_config, 'stop_loss_pct'):
@@ -211,7 +210,7 @@ class TestPresetPersistence(unittest.TestCase):
                 self.assertIsNotNone(stop_loss, "stop_loss debe estar en config")
                 self.assertGreater(stop_loss, 0, "stop_loss debe ser positivo")
                 self.assertLess(stop_loss, 0.1, "stop_loss debe ser razonable (<10%)")
-            
+
             if hasattr(strategy_config, 'take_profit_pct'):
                 take_profit = strategy_config.take_profit_pct
                 self.assertIsNotNone(take_profit, "take_profit debe estar en config")
@@ -220,12 +219,12 @@ class TestPresetPersistence(unittest.TestCase):
     def test_preset_parameters_persist_in_strategy(self):
         """Verificar que los parámetros del preset persisten en la estrategia."""
         strategy = MomentumStrategy({"name": "momentum"})
-        
+
         # Verificar que los parámetros de riesgo están configurados
         self.assertIsNotNone(strategy.stop_loss, "stop_loss debe estar configurado")
         self.assertIsNotNone(strategy.take_profit, "take_profit debe estar configurado")
         self.assertIsNotNone(strategy.max_position_size, "max_position_size debe estar configurado")
-        
+
         # Verificar que no son valores por defecto genéricos (deben venir de config)
         self.assertGreater(strategy.stop_loss, 0, "stop_loss debe ser > 0")
         self.assertGreater(strategy.take_profit, 0, "take_profit debe ser > 0")
@@ -234,4 +233,3 @@ class TestPresetPersistence(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

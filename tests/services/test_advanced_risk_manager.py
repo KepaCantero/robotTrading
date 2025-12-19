@@ -2,12 +2,13 @@
 Comprehensive tests for Advanced Risk Manager (TASK-RM-1 to RM-5).
 """
 
-import pytest
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
+
+import pytest
 
 from app.models.portfolio import Portfolio
-from app.models.signal import Signal, SignalType, SignalSource, SignalStrength
+from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.services.advanced_risk_manager import (
     AdvancedRiskManager,
     CircuitBreaker,
@@ -38,7 +39,7 @@ def sample_signal():
 def sample_portfolio():
     """Create a sample portfolio."""
     positions = []
-    
+
     return Portfolio(
         cash=Decimal("90000"),
         positions=positions,
@@ -70,7 +71,7 @@ class TestTradeRiskLimiter:
     def test_validate_trade_risk_valid(self, sample_signal, sample_portfolio):
         """Test validating trade risk within limits."""
         limiter = TradeRiskLimiter()
-        
+
         position_size = Decimal("100")
         stop_loss_pct = Decimal("0.05")
 
@@ -83,7 +84,7 @@ class TestTradeRiskLimiter:
     def test_validate_trade_risk_exceeds_limit(self, sample_signal, sample_portfolio):
         """Test validating trade risk exceeding limits."""
         limiter = TradeRiskLimiter(max_risk_per_trade=Decimal("0.01"))  # 1% limit
-        
+
         position_size = Decimal("10000")
         stop_loss_pct = Decimal("0.10")
 
@@ -157,7 +158,7 @@ class TestDrawdownMonitor:
         """Test drawdown within limits."""
         monitor = DrawdownMonitor()
         monitor.update_equity(Decimal("100000"))
-        
+
         exceeded, drawdown = monitor.check_drawdown(Decimal("98000"))
 
         assert exceeded is False
@@ -167,7 +168,7 @@ class TestDrawdownMonitor:
         """Test drawdown exceeding limits."""
         monitor = DrawdownMonitor()
         monitor.update_equity(Decimal("100000"))
-        
+
         exceeded, drawdown = monitor.check_drawdown(Decimal("80000"))
 
         assert exceeded is True
@@ -177,7 +178,7 @@ class TestDrawdownMonitor:
         """Test resetting monitor."""
         monitor = DrawdownMonitor()
         monitor.is_stopped = True
-        
+
         monitor.reset()
 
         assert monitor.is_stopped is False

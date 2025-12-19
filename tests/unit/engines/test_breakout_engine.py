@@ -5,14 +5,14 @@ Estos tests usan datos sintéticos sencillos y un portfolio dummy para
 verificar la lógica principal sin depender de datos históricos reales.
 """
 
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
 
 import pytest
 
 from app.engines.strategy_engines import BreakoutStrategyEngine
 from app.models.market_data import Quote
-from app.models.portfolio import AssetClass, Position, Portfolio
+from app.models.portfolio import AssetClass, Portfolio, Position
 from app.models.signal import SignalType
 
 
@@ -26,7 +26,9 @@ class DummyPortfolio:
         return self._exposure
 
 
-def make_quote(price: float, high: float = None, low: float = None, volume: float = 1_000_000) -> Quote:
+def make_quote(
+    price: float, high: float = None, low: float = None, volume: float = 1_000_000
+) -> Quote:
     """Helper para crear Quote sencillo."""
     high_val = high if high is not None else price
     low_val = low if low is not None else price
@@ -105,7 +107,9 @@ class TestBreakoutStrategyEngineUnit:
         for i in range(total_quotes_needed):
             # Mantener precios dentro del rango [99, 101]
             price = 99.5 + (i % 3) * 0.5  # Oscila entre 99.5, 100, 100.5
-            quote = make_quote(price=price, high=min(101, price + 0.5), low=max(99, price - 0.5), volume=1_000_000)
+            quote = make_quote(
+                price=price, high=min(101, price + 0.5), low=max(99, price - 0.5), volume=1_000_000
+            )
             engine.generate_signals(quote)
 
         # Breakout alcista: precio significativamente por encima del máximo * (1 + threshold)
@@ -144,7 +148,7 @@ class TestBreakoutStrategyEngineUnit:
         signals = engine._generate_signals_impl(quote)
         # Si _generate_signals_impl no genera nada (por falta de histórico),
         # creamos una señal sintética para probar solo risk_check.
-        from app.models.signal import Signal, SignalStrength, SignalSource
+        from app.models.signal import Signal, SignalSource, SignalStrength
 
         if not signals:
             signal = Signal(
@@ -174,5 +178,3 @@ class TestBreakoutStrategyEngineUnit:
         # Señal con confianza baja
         low_conf_signal = signal.model_copy(update={"confidence": 50.0})
         assert engine.risk_check(low_conf_signal, low_exposure_portfolio) is False
-
-

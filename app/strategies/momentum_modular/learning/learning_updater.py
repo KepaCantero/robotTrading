@@ -30,10 +30,7 @@ from .drift_detector import (
     OverfittingDetector,
     load_drift_config,
 )
-from .feature_importance import (
-    ComprehensiveFeatureAnalyzer,
-    load_feature_importance_config,
-)
+from .feature_importance import ComprehensiveFeatureAnalyzer, load_feature_importance_config
 from .training_data_preparator import TrainingDataPreparator
 
 logger = logging.getLogger(__name__)
@@ -108,9 +105,7 @@ class LearningEngineUpdater:
         self._feature_importance_enabled = self._feature_importance_config.get("enabled", True)
 
         if self._feature_importance_enabled:
-            self._feature_analyzer = ComprehensiveFeatureAnalyzer(
-                self._feature_importance_config
-            )
+            self._feature_analyzer = ComprehensiveFeatureAnalyzer(self._feature_importance_config)
             self._feature_importance_history: List[Dict[str, Any]] = []
             self._last_feature_analysis: Optional[Dict[str, Any]] = None
             logger.info("Feature importance analysis enabled for LearningEngineUpdater")
@@ -190,7 +185,8 @@ class LearningEngineUpdater:
                         drift_detected=True,
                         severity=report.overall_severity,
                         detectors_triggered=[
-                            name for name, result in report.detector_results.items()
+                            name
+                            for name, result in report.detector_results.items()
                             if result.drift_detected
                         ],
                     )
@@ -280,9 +276,7 @@ class LearningEngineUpdater:
             return {"enabled": False}
 
         total_checks = len(self._drift_history)
-        drift_detected_count = sum(
-            1 for r in self._drift_history if r.overall_drift_detected
-        )
+        drift_detected_count = sum(1 for r in self._drift_history if r.overall_drift_detected)
         severity_counts = {}
         for report in self._drift_history:
             sev = report.overall_severity.value
@@ -642,7 +636,9 @@ class LearningEngineUpdater:
             # Run comprehensive feature analysis
             logger.debug("📊 Analizando importancia de features (6 métodos)...")
             analysis_result = self._feature_analyzer.analyze(
-                model=self.learning_engine.model if hasattr(self.learning_engine, "model") else None,
+                model=self.learning_engine.model
+                if hasattr(self.learning_engine, "model")
+                else None,
                 features=features,
                 targets=targets,
                 feature_names=training_data.get("feature_names"),

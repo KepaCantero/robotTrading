@@ -4,9 +4,10 @@ Tests for Stochastic RSI filtering in MomentumStrategy (TASK-IND-STOCH-2).
 REFACTORED: Uses TechnicalIndicatorCalculator instead of private methods.
 """
 
-import pytest
 from collections import deque
 from decimal import Decimal
+
+import pytest
 
 from app.models.market_data import Quote
 from app.models.signal import SignalType
@@ -36,7 +37,7 @@ def sample_quote():
     """Create a sample market quote."""
     from datetime import datetime
     from decimal import Decimal
-    
+
     return Quote(
         symbol="AAPL",
         bid=Decimal("149.50"),
@@ -71,8 +72,26 @@ class TestStochasticRSICalculation:
         # for both %K and %D (3-period SMA of %K) to be calculated
         # Minimum: period + 2 for %K rolling, + 2 more for %D SMA = period + 4
         rsi_values = [
-            30.0, 35.0, 40.0, 45.0, 50.0, 55.0, 60.0, 65.0, 70.0, 75.0,
-            80.0, 85.0, 90.0, 95.0, 90.0, 85.0, 80.0, 75.0, 70.0, 65.0
+            30.0,
+            35.0,
+            40.0,
+            45.0,
+            50.0,
+            55.0,
+            60.0,
+            65.0,
+            70.0,
+            75.0,
+            80.0,
+            85.0,
+            90.0,
+            95.0,
+            90.0,
+            85.0,
+            80.0,
+            75.0,
+            70.0,
+            65.0,
         ]  # 20 values for period=14
 
         # REFACTORED: Use TechnicalIndicatorCalculator instead of private method
@@ -103,8 +122,24 @@ class TestStochasticRSICalculation:
         # High RSI values (overbought) - need period + smooth_k - 1 = 14 + 3 - 1 = 16 minimum
         # Pattern: rising to high then staying high, ending near the high
         rsi_values = [
-            80.0, 82.0, 84.0, 86.0, 88.0, 90.0, 92.0, 94.0, 95.0, 96.0,
-            97.0, 98.0, 99.0, 100.0, 99.0, 98.0, 99.0, 100.0
+            80.0,
+            82.0,
+            84.0,
+            86.0,
+            88.0,
+            90.0,
+            92.0,
+            94.0,
+            95.0,
+            96.0,
+            97.0,
+            98.0,
+            99.0,
+            100.0,
+            99.0,
+            98.0,
+            99.0,
+            100.0,
         ]
 
         # REFACTORED: Use TechnicalIndicatorCalculator instead of private method
@@ -120,8 +155,24 @@ class TestStochasticRSICalculation:
         # Low RSI values (oversold) - need period + smooth_k - 1 = 16 minimum
         # Pattern: declining to low then staying low, ending near the low
         rsi_values = [
-            35.0, 33.0, 31.0, 29.0, 27.0, 25.0, 23.0, 21.0, 19.0, 17.0,
-            15.0, 13.0, 11.0, 10.0, 11.0, 10.0, 9.0, 8.0
+            35.0,
+            33.0,
+            31.0,
+            29.0,
+            27.0,
+            25.0,
+            23.0,
+            21.0,
+            19.0,
+            17.0,
+            15.0,
+            13.0,
+            11.0,
+            10.0,
+            11.0,
+            10.0,
+            9.0,
+            8.0,
         ]
 
         # REFACTORED: Use TechnicalIndicatorCalculator instead of private method
@@ -193,7 +244,7 @@ class TestStochasticRSIIntegration:
     def test_stochastic_rsi_integration_creates_rsi_history(self, momentum_strategy, sample_quote):
         """Test that RSI history is maintained during signal generation."""
         from datetime import datetime
-        
+
         # Populate price history to enable RSI calculation
         for i in range(50):
             price = Decimal(f"{150.0 + i * 0.5}")
@@ -217,9 +268,25 @@ class TestStochasticRSIIntegration:
     def test_stochastic_rsi_filters_false_signals(self, momentum_strategy, sample_quote):
         """Test that Stochastic RSI filters false signals."""
         from datetime import datetime
-        
+
         # Set up overbought condition
-        rsi_overbought = [90.0, 92.0, 95.0, 93.0, 94.0, 96.0, 98.0, 97.0, 99.0, 100.0, 98.0, 97.0, 96.0, 95.0, 94.0]
+        rsi_overbought = [
+            90.0,
+            92.0,
+            95.0,
+            93.0,
+            94.0,
+            96.0,
+            98.0,
+            97.0,
+            99.0,
+            100.0,
+            98.0,
+            97.0,
+            96.0,
+            95.0,
+            94.0,
+        ]
         for val in rsi_overbought:
             momentum_strategy.rsi_history.append(val)
 
@@ -241,7 +308,7 @@ class TestStochasticRSIIntegration:
             low=Decimal("149.00"),
             open=Decimal("150.00"),
         )
-        
+
         # Generate signals
         signals = momentum_strategy.generate_signals(quote)
 

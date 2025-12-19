@@ -2,9 +2,10 @@
 Comprehensive tests for Multi-Strategy Portfolio Allocation (TASK-PA-1, PA-2, PORT-SEL-1).
 """
 
-import pytest
-from decimal import Decimal
 from datetime import datetime, timedelta
+from decimal import Decimal
+
+import pytest
 
 from app.services.multi_strategy_allocation import (
     DynamicPortfolioSelector,
@@ -90,9 +91,7 @@ class TestStrategyCapitalAllocation:
             max_weight=Decimal("0.70"),
         )
 
-        allocation.add_performance_data(
-            datetime.utcnow(), Decimal("1000"), Decimal("0.02")
-        )
+        allocation.add_performance_data(datetime.utcnow(), Decimal("1000"), Decimal("0.02"))
 
         assert len(allocation.performance_data) == 1
         assert allocation.performance_data[0]["pnl"] == Decimal("1000")
@@ -230,7 +229,10 @@ class TestDynamicPortfolioSelector:
             "momentum", datetime.utcnow() - timedelta(days=15), Decimal("1000"), Decimal("0.02")
         )
         selector.update_strategy_performance(
-            "mean_reversion", datetime.utcnow() - timedelta(days=10), Decimal("500"), Decimal("0.01")
+            "mean_reversion",
+            datetime.utcnow() - timedelta(days=10),
+            Decimal("500"),
+            Decimal("0.01"),
         )
 
         allocations = selector.rebalance_allocations()

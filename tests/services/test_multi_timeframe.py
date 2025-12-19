@@ -2,14 +2,12 @@
 Tests for multi-timeframe confirmation (TASK-MET-MULTI-1).
 """
 
-import pytest
 from decimal import Decimal
 
+import pytest
+
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
-from app.services.multi_timeframe_service import (
-    MultiTimeframeConfirmation,
-    TimeframeSignal,
-)
+from app.services.multi_timeframe_service import MultiTimeframeConfirmation, TimeframeSignal
 
 
 class TestTimeframeSignal:
@@ -19,7 +17,7 @@ class TestTimeframeSignal:
     def sample_signal(self):
         """Create a sample signal."""
         from datetime import datetime
-        
+
         return Signal(
             symbol="AAPL",
             signal_type=SignalType.BUY,
@@ -51,7 +49,7 @@ class TestMultiTimeframeConfirmation:
     def sample_signal(self):
         """Create a sample signal."""
         from datetime import datetime
-        
+
         return Signal(
             symbol="AAPL",
             signal_type=SignalType.BUY,
@@ -67,7 +65,9 @@ class TestMultiTimeframeConfirmation:
 
     def test_service_initialization(self):
         """Test MultiTimeframeConfirmation initialization."""
-        service = MultiTimeframeConfirmation(timeframes=["15m", "1h", "4h", "1d"], min_confirmations=2)
+        service = MultiTimeframeConfirmation(
+            timeframes=["15m", "1h", "4h", "1d"], min_confirmations=2
+        )
 
         assert service.timeframes == ["15m", "1h", "4h", "1d"]
         assert service.min_confirmations == 2
@@ -100,7 +100,7 @@ class TestMultiTimeframeConfirmation:
 
         # Add second signal from different timeframe
         from datetime import datetime
-        
+
         signal2 = Signal(
             symbol="AAPL",
             signal_type=SignalType.BUY,
@@ -140,7 +140,7 @@ class TestMultiTimeframeConfirmation:
 
         # Add signal for different symbol
         from datetime import datetime
-        
+
         signal2 = Signal(
             symbol="MSFT",
             signal_type=SignalType.BUY,
@@ -168,7 +168,7 @@ class TestMultiTimeframeConfirmation:
 
         # Add some signals - need to create new signals to avoid timestamp collision
         from datetime import datetime
-        
+
         signal1 = Signal(
             symbol="AAPL",
             signal_type=SignalType.BUY,
@@ -181,7 +181,7 @@ class TestMultiTimeframeConfirmation:
             volume=Decimal("1000000"),
             timestamp=datetime.utcnow(),
         )
-        
+
         signal2 = Signal(
             symbol="AAPL",
             signal_type=SignalType.BUY,
@@ -194,7 +194,7 @@ class TestMultiTimeframeConfirmation:
             volume=Decimal("1000000"),
             timestamp=datetime.utcnow(),
         )
-        
+
         service.add_signal(signal1, "15m")
         service.add_signal(signal2, "1h")
 

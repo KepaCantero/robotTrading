@@ -10,31 +10,32 @@ Comprehensive tests for:
 - Auto-retraining triggers
 """
 
-import pytest
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
+
 import numpy as np
+import pytest
 
 from app.strategies.momentum_modular.learning.drift_detector import (
-    PSIDetector,
     ADWINDetector,
-    ConceptDriftDetector,
-    FeatureDriftMonitor,
-    OverfittingDetector,
-    ComprehensiveDriftDetector,
     AutoRetrainingTrigger,
+    ComprehensiveDriftDetector,
+    ComprehensiveDriftReport,
+    ConceptDriftDetector,
     DriftResult,
     DriftSeverity,
+    FeatureDriftMonitor,
     FeatureDriftReport,
-    ComprehensiveDriftReport,
-    load_drift_config,
+    OverfittingDetector,
+    PSIDetector,
     get_default_drift_config,
+    load_drift_config,
 )
-
 
 # ============================================================================
 # Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def sample_config():
@@ -96,6 +97,7 @@ def feature_data():
 # Tests: Configuration Loading
 # ============================================================================
 
+
 class TestConfigLoading:
     """Tests for configuration loading functions."""
 
@@ -135,6 +137,7 @@ class TestConfigLoading:
 # ============================================================================
 # Tests: PSI Detector
 # ============================================================================
+
 
 class TestPSIDetector:
     """Tests for PSI (Population Stability Index) detector."""
@@ -199,7 +202,11 @@ class TestPSIDetector:
         # Very different - high PSI
         very_different = np.random.normal(150, 30, 200)
         result_different = detector.detect(reference, very_different)
-        assert result_different.severity in [DriftSeverity.MEDIUM, DriftSeverity.HIGH, DriftSeverity.CRITICAL]
+        assert result_different.severity in [
+            DriftSeverity.MEDIUM,
+            DriftSeverity.HIGH,
+            DriftSeverity.CRITICAL,
+        ]
 
     def test_psi_insufficient_samples(self):
         """Test PSI with insufficient samples."""
@@ -231,6 +238,7 @@ class TestPSIDetector:
 # ============================================================================
 # Tests: ADWIN Detector
 # ============================================================================
+
 
 class TestADWINDetector:
     """Tests for ADWIN (Adaptive Windowing) detector."""
@@ -315,6 +323,7 @@ class TestADWINDetector:
 # Tests: Concept Drift Detector (KS Test)
 # ============================================================================
 
+
 class TestConceptDriftDetector:
     """Tests for KS Test based concept drift detector."""
 
@@ -347,11 +356,13 @@ class TestConceptDriftDetector:
 
     def test_ks_detects_drift(self):
         """Test KS test detects significant drift."""
-        detector = ConceptDriftDetector({
-            "p_value_threshold": 0.05,
-            "min_samples": 30,
-            "window_size": 1000,  # Large enough to hold all reference data
-        })
+        detector = ConceptDriftDetector(
+            {
+                "p_value_threshold": 0.05,
+                "min_samples": 30,
+                "window_size": 1000,  # Large enough to hold all reference data
+            }
+        )
 
         # Create clearly different distributions
         np.random.seed(42)
@@ -402,6 +413,7 @@ class TestConceptDriftDetector:
 # ============================================================================
 # Tests: Feature Drift Monitor
 # ============================================================================
+
 
 class TestFeatureDriftMonitor:
     """Tests for feature-level drift monitoring."""
@@ -470,11 +482,13 @@ class TestFeatureDriftMonitor:
 
         # Current: first feature drifted to N(5,1)
         np.random.seed(43)
-        current = np.column_stack([
-            np.random.normal(5, 1, 100),   # Drifted
-            np.random.normal(0, 1, 100),   # Same
-            np.random.normal(0, 1, 100),   # Same
-        ])
+        current = np.column_stack(
+            [
+                np.random.normal(5, 1, 100),  # Drifted
+                np.random.normal(0, 1, 100),  # Same
+                np.random.normal(0, 1, 100),  # Same
+            ]
+        )
 
         monitor.set_reference(reference, ["drifted", "stable1", "stable2"])
         reports = monitor.detect_feature_drift(current)
@@ -487,6 +501,7 @@ class TestFeatureDriftMonitor:
 # ============================================================================
 # Tests: Overfitting Detector
 # ============================================================================
+
 
 class TestOverfittingDetector:
     """Tests for overfitting detection."""
@@ -566,6 +581,7 @@ class TestOverfittingDetector:
 # ============================================================================
 # Tests: Comprehensive Drift Detector
 # ============================================================================
+
 
 class TestComprehensiveDriftDetector:
     """Tests for comprehensive drift detector."""
@@ -652,6 +668,7 @@ class TestComprehensiveDriftDetector:
 # Tests: Auto-Retraining Trigger
 # ============================================================================
 
+
 class TestAutoRetrainingTrigger:
     """Tests for auto-retraining trigger system."""
 
@@ -731,6 +748,7 @@ class TestAutoRetrainingTrigger:
 # Tests: Data Classes
 # ============================================================================
 
+
 class TestDataClasses:
     """Tests for data classes."""
 
@@ -778,6 +796,7 @@ class TestDataClasses:
 # ============================================================================
 # Tests: Edge Cases
 # ============================================================================
+
 
 class TestEdgeCases:
     """Tests for edge cases and error handling."""
@@ -830,7 +849,9 @@ class TestEdgeCases:
         predictions_current = np.random.choice([0, 1], size=200, p=[0.3, 0.7])  # Drifted
 
         detector.set_reference(reference_data, predictions=predictions_ref.astype(float))
-        report = detector.detect(reference_data[:200], current_predictions=predictions_current.astype(float))
+        report = detector.detect(
+            reference_data[:200], current_predictions=predictions_current.astype(float)
+        )
 
         # Should include prediction drift analysis
         if report.prediction_drift is not None:

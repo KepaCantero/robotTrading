@@ -4,21 +4,21 @@ Unit tests for Strategy Ensemble System.
 Tests para WeightedEnsemble, RegimeBasedSelector y VotingEnsemble.
 """
 
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 import pytest
 
+from app.engines.strategy_engines.base import BaseStrategyEngine
 from app.engines.strategy_engines.ensemble import (
     BaseStrategyEnsemble,
-    WeightedEnsemble,
     RegimeBasedSelector,
     VotingEnsemble,
+    WeightedEnsemble,
 )
-from app.engines.strategy_engines.base import BaseStrategyEngine
 from app.models.market_data import Quote
-from app.models.signal import Signal, SignalType, SignalStrength, SignalSource
+from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 
 def make_quote(
@@ -217,11 +217,14 @@ class TestWeightedEnsemble:
         """Se puede actualizar el historial de performance."""
         ensemble = WeightedEnsemble({})
 
-        ensemble.update_strategy_performance("test", {
-            "sharpe": 1.5,
-            "return": 0.15,
-            "max_drawdown": 0.05,
-        })
+        ensemble.update_strategy_performance(
+            "test",
+            {
+                "sharpe": 1.5,
+                "return": 0.15,
+                "max_drawdown": 0.05,
+            },
+        )
 
         assert len(ensemble.performance_history["test"]) == 1
         assert ensemble.performance_history["test"][0]["sharpe"] == 1.5
@@ -254,11 +257,13 @@ class TestRegimeBasedSelector:
 
     def test_regime_detection_trending_up(self):
         """Detecta tendencia alcista correctamente."""
-        selector = RegimeBasedSelector({
-            "regime_lookback": 20,
-            "trend_threshold": 0.005,  # Umbral más bajo
-            "volatility_threshold": 0.1,  # Umbral alto para evitar high_vol
-        })
+        selector = RegimeBasedSelector(
+            {
+                "regime_lookback": 20,
+                "trend_threshold": 0.005,  # Umbral más bajo
+                "volatility_threshold": 0.1,  # Umbral alto para evitar high_vol
+            }
+        )
 
         # Simular precios con tendencia alcista fuerte
         for i in range(30):
@@ -277,11 +282,13 @@ class TestRegimeBasedSelector:
 
     def test_regime_detection_trending_down(self):
         """Detecta tendencia bajista correctamente."""
-        selector = RegimeBasedSelector({
-            "regime_lookback": 20,
-            "trend_threshold": 0.005,  # Umbral más bajo
-            "volatility_threshold": 0.1,  # Umbral alto para evitar high_vol
-        })
+        selector = RegimeBasedSelector(
+            {
+                "regime_lookback": 20,
+                "trend_threshold": 0.005,  # Umbral más bajo
+                "volatility_threshold": 0.1,  # Umbral alto para evitar high_vol
+            }
+        )
 
         # Simular precios con tendencia bajista fuerte
         for i in range(30):
@@ -300,13 +307,16 @@ class TestRegimeBasedSelector:
 
     def test_regime_detection_high_volatility(self):
         """Detecta alta volatilidad correctamente."""
-        selector = RegimeBasedSelector({
-            "regime_lookback": 20,
-            "volatility_threshold": 0.01,  # Umbral bajo para test
-        })
+        selector = RegimeBasedSelector(
+            {
+                "regime_lookback": 20,
+                "volatility_threshold": 0.01,  # Umbral bajo para test
+            }
+        )
 
         # Simular precios muy volátiles
         import random
+
         random.seed(42)
         for i in range(30):
             price = 100.0 + random.uniform(-10, 10)  # Alta volatilidad
@@ -325,12 +335,14 @@ class TestRegimeBasedSelector:
 
     def test_selects_appropriate_strategies_for_regime(self):
         """Selecciona estrategias apropiadas según régimen."""
-        selector = RegimeBasedSelector({
-            "regime_strategy_map": {
-                RegimeBasedSelector.REGIME_TRENDING_UP: ["trend_following", "momentum"],
-                RegimeBasedSelector.REGIME_MEAN_REVERTING: ["mean_reversion"],
+        selector = RegimeBasedSelector(
+            {
+                "regime_strategy_map": {
+                    RegimeBasedSelector.REGIME_TRENDING_UP: ["trend_following", "momentum"],
+                    RegimeBasedSelector.REGIME_MEAN_REVERTING: ["mean_reversion"],
+                }
             }
-        })
+        )
 
         # Añadir estrategias
         selector.add_strategy("trend_following", MockStrategy({"name": "tf"}))
@@ -420,11 +432,13 @@ class TestVotingEnsemble:
 
     def test_unanimous_vote_boosts_confidence(self):
         """Votación unánime aumenta la confianza."""
-        ensemble = VotingEnsemble({
-            "min_votes": 2,
-            "require_majority": False,
-            "unanimous_boost": 1.2,
-        })
+        ensemble = VotingEnsemble(
+            {
+                "min_votes": 2,
+                "require_majority": False,
+                "unanimous_boost": 1.2,
+            }
+        )
 
         signal = make_signal(confidence=70.0)
         strategy1 = MockStrategy({"name": "s1"}, signals_to_return=[signal])
@@ -528,10 +542,13 @@ class TestEnsembleIntegration:
 
         # Añadir múltiples registros de performance
         for i in range(10):
-            ensemble.update_strategy_performance("test_strategy", {
-                "sharpe": 1.0 + i * 0.1,
-                "return": 0.01 * i,
-            })
+            ensemble.update_strategy_performance(
+                "test_strategy",
+                {
+                    "sharpe": 1.0 + i * 0.1,
+                    "return": 0.01 * i,
+                },
+            )
 
         history = ensemble.performance_history["test_strategy"]
         assert len(history) == 10

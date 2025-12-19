@@ -5,15 +5,15 @@ Estos tests usan datos sinteticos sencillos y un portfolio dummy para
 verificar la logica principal sin depender de datos historicos reales.
 """
 
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
 
 import pytest
 
 from app.engines.strategy_engines import ArbitrageStrategyEngine
 from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
-from app.models.signal import Signal, SignalType, SignalStrength, SignalSource
+from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 
 class DummyPortfolio:
@@ -158,9 +158,11 @@ class TestArbitrageStrategyEngineUnit:
 
     def test_arbitrage_engine_extract_features_basic(self):
         """extract_features devuelve features basicos cuando no hay historico."""
-        engine = ArbitrageStrategyEngine({
-            "arbitrage_pairs": [["SPY", "IVV"]],
-        })
+        engine = ArbitrageStrategyEngine(
+            {
+                "arbitrage_pairs": [["SPY", "IVV"]],
+            }
+        )
 
         quote = make_quote(symbol="SPY", price=400.0)
         features = engine.extract_features(quote)
@@ -198,10 +200,12 @@ class TestArbitrageStrategyEngineUnit:
 
     def test_arbitrage_engine_risk_check_respects_exposure(self):
         """risk_check debe filtrar por exposicion maxima."""
-        engine = ArbitrageStrategyEngine({
-            "max_exposure": 0.30,
-            "min_signal_confidence": 60.0,
-        })
+        engine = ArbitrageStrategyEngine(
+            {
+                "max_exposure": 0.30,
+                "min_signal_confidence": 60.0,
+            }
+        )
 
         signal = Signal(
             symbol="SPY",
@@ -227,10 +231,12 @@ class TestArbitrageStrategyEngineUnit:
 
     def test_arbitrage_engine_risk_check_respects_confidence(self):
         """risk_check debe filtrar por confianza minima."""
-        engine = ArbitrageStrategyEngine({
-            "max_exposure": 0.50,
-            "min_signal_confidence": 70.0,
-        })
+        engine = ArbitrageStrategyEngine(
+            {
+                "max_exposure": 0.50,
+                "min_signal_confidence": 70.0,
+            }
+        )
 
         # Senal con alta confianza
         high_conf_signal = Signal(
@@ -256,9 +262,11 @@ class TestArbitrageStrategyEngineUnit:
 
     def test_arbitrage_engine_set_yield_data(self):
         """set_yield_data almacena correctamente los datos de rendimiento."""
-        engine = ArbitrageStrategyEngine({
-            "arbitrage_type": "carry",
-        })
+        engine = ArbitrageStrategyEngine(
+            {
+                "arbitrage_type": "carry",
+            }
+        )
 
         engine.set_yield_data("SPY", 0.05)
         engine.set_yield_data("IVV", 0.04)
@@ -268,9 +276,11 @@ class TestArbitrageStrategyEngineUnit:
 
     def test_arbitrage_engine_set_funding_rate(self):
         """set_funding_rate almacena correctamente las tasas de funding."""
-        engine = ArbitrageStrategyEngine({
-            "arbitrage_type": "carry",
-        })
+        engine = ArbitrageStrategyEngine(
+            {
+                "arbitrage_type": "carry",
+            }
+        )
 
         engine.set_funding_rate("BTCUSDT", 0.0001)
         engine.set_funding_rate("ETHUSDT", 0.0002)
@@ -364,9 +374,11 @@ class TestArbitrageStrategyEngineUnit:
 
     def test_arbitrage_engine_metrics_tracking(self):
         """El engine trackea metricas correctamente."""
-        engine = ArbitrageStrategyEngine({
-            "arbitrage_pairs": [["SPY", "IVV"]],
-        })
+        engine = ArbitrageStrategyEngine(
+            {
+                "arbitrage_pairs": [["SPY", "IVV"]],
+            }
+        )
 
         initial_metrics = engine.get_metrics()
         assert initial_metrics["signals_generated"] == 0
@@ -383,9 +395,11 @@ class TestArbitrageStrategyEngineUnit:
 
     def test_arbitrage_engine_get_status(self):
         """get_status devuelve estado completo del engine."""
-        engine = ArbitrageStrategyEngine({
-            "name": "test_arbitrage",
-        })
+        engine = ArbitrageStrategyEngine(
+            {
+                "name": "test_arbitrage",
+            }
+        )
 
         status = engine.get_status()
 
@@ -400,10 +414,12 @@ class TestArbitrageTypesUnit:
 
     def test_statistical_arbitrage_type(self):
         """Statistical arbitrage usa z-score del spread."""
-        engine = ArbitrageStrategyEngine({
-            "arbitrage_type": "statistical",
-            "entry_z_score": 2.0,
-        })
+        engine = ArbitrageStrategyEngine(
+            {
+                "arbitrage_type": "statistical",
+                "entry_z_score": 2.0,
+            }
+        )
 
         # YAML may override, but defaults should work
         assert engine.arbitrage_type == "statistical"
@@ -411,10 +427,12 @@ class TestArbitrageTypesUnit:
 
     def test_spread_arbitrage_type(self):
         """Spread arbitrage usa diferencia de precio porcentual."""
-        engine = ArbitrageStrategyEngine({
-            "arbitrage_type": "spread",
-            "min_spread_pct": 0.01,
-        })
+        engine = ArbitrageStrategyEngine(
+            {
+                "arbitrage_type": "spread",
+                "min_spread_pct": 0.01,
+            }
+        )
 
         # YAML config may override arbitrage_type to "statistical"
         # The test verifies the engine initializes correctly
@@ -424,10 +442,12 @@ class TestArbitrageTypesUnit:
 
     def test_carry_arbitrage_type(self):
         """Carry trade usa diferencial de rendimiento."""
-        engine = ArbitrageStrategyEngine({
-            "arbitrage_type": "carry",
-            "carry_yield_threshold": 0.03,
-        })
+        engine = ArbitrageStrategyEngine(
+            {
+                "arbitrage_type": "carry",
+                "carry_yield_threshold": 0.03,
+            }
+        )
 
         # YAML may override arbitrage_type
         assert engine.arbitrage_type in ["carry", "statistical"]

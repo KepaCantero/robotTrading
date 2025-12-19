@@ -66,7 +66,9 @@ class TestEnginePnLCalculation(unittest.TestCase):
             metadata={"strategy": "test"},
         )
 
-    def _create_sell_signal(self, symbol: str, price: Decimal, timestamp: datetime = None) -> Signal:
+    def _create_sell_signal(
+        self, symbol: str, price: Decimal, timestamp: datetime = None
+    ) -> Signal:
         """Crear señal SELL de prueba."""
         if timestamp is None:
             timestamp = datetime(2024, 1, 1)
@@ -110,12 +112,16 @@ class TestEnginePnLCalculation(unittest.TestCase):
         # Verificar que al menos un trade tiene PnL positivo
         profitable_trades = [t for t in closed_trades if t.pnl and t.pnl > 0]
         self.assertGreater(
-            len(profitable_trades), 0, "Debe haber al menos un trade con PnL positivo cuando se vende más caro que se compró"
+            len(profitable_trades),
+            0,
+            "Debe haber al menos un trade con PnL positivo cuando se vende más caro que se compró",
         )
 
         # Verificar que el PnL es razonable (aproximadamente 10% menos comisiones/slippage)
         for trade in profitable_trades:
-            self.assertGreater(trade.pnl, Decimal("0"), f"Trade {trade.trade_id} debe tener PnL positivo")
+            self.assertGreater(
+                trade.pnl, Decimal("0"), f"Trade {trade.trade_id} debe tener PnL positivo"
+            )
 
     def test_buy_then_sell_loss_pnl(self):
         """Test: BUY seguido de SELL con pérdida debe tener PnL negativo."""
@@ -141,7 +147,9 @@ class TestEnginePnLCalculation(unittest.TestCase):
         for trade in closed_trades:
             if trade.pnl is not None:
                 self.assertLess(
-                    trade.pnl, Decimal("0"), f"Trade {trade.trade_id} debe tener PnL negativo cuando se vende más barato"
+                    trade.pnl,
+                    Decimal("0"),
+                    f"Trade {trade.trade_id} debe tener PnL negativo cuando se vende más barato",
                 )
 
     def test_sell_without_buy_should_not_create_trade(self):
@@ -175,7 +183,9 @@ class TestEnginePnLCalculation(unittest.TestCase):
 
         # Verificar que hay buy_trades abiertos
         open_buy_trades = [
-            t for t in self.backtester.trades if t.symbol == symbol and t.side == "buy" and t.status == TradeStatus.OPEN
+            t
+            for t in self.backtester.trades
+            if t.symbol == symbol and t.side == "buy" and t.status == TradeStatus.OPEN
         ]
         self.assertGreater(len(open_buy_trades), 0, "Debe haber buy_trades abiertos antes del SELL")
 
@@ -185,13 +195,17 @@ class TestEnginePnLCalculation(unittest.TestCase):
         self.backtester._process_signal(sell_signal, sell_quote)
 
         # Verificar que el trade SELL tiene PnL calculado
-        sell_trades = [t for t in self.backtester.trades if t.side == "sell" and t.status == TradeStatus.CLOSED]
+        sell_trades = [
+            t for t in self.backtester.trades if t.side == "sell" and t.status == TradeStatus.CLOSED
+        ]
         self.assertGreater(len(sell_trades), 0, "Debe haber trades SELL cerrados")
 
         for trade in sell_trades:
             self.assertIsNotNone(trade.pnl, f"Trade SELL {trade.trade_id} debe tener PnL calculado")
             # Con ganancia del 5%, PnL debe ser positivo (menos comisiones/slippage)
-            self.assertGreater(trade.pnl, Decimal("-10"), "PnL debe ser razonablemente positivo con 5% de ganancia")
+            self.assertGreater(
+                trade.pnl, Decimal("-10"), "PnL debe ser razonablemente positivo con 5% de ganancia"
+            )
 
     def test_pnl_calculation_uses_avg_buy_price(self):
         """Test: PnL debe calcularse usando precio promedio de compra."""
@@ -219,7 +233,9 @@ class TestEnginePnLCalculation(unittest.TestCase):
         self.backtester._process_signal(sell_signal, sell_quote)
 
         # Verificar que el PnL se calcula correctamente
-        sell_trades = [t for t in self.backtester.trades if t.side == "sell" and t.status == TradeStatus.CLOSED]
+        sell_trades = [
+            t for t in self.backtester.trades if t.side == "sell" and t.status == TradeStatus.CLOSED
+        ]
         self.assertGreater(len(sell_trades), 0)
 
         for trade in sell_trades:
@@ -229,9 +245,9 @@ class TestEnginePnLCalculation(unittest.TestCase):
                 # Con sell_price (108) vs avg_buy_price (105), la ganancia bruta es ~3%, pero comisiones/slippage pueden reducirla
                 # El PnL debería ser cercano a 0 (pequeña pérdida o pequeña ganancia) debido a comisiones/slippage
                 self.assertGreater(
-                    trade.pnl, 
-                    Decimal("-150"), 
-                    f"PnL debe ser razonable cuando se vende por encima del promedio de compra. PnL={trade.pnl}, avg_buy={avg_buy_price}, sell={sell_price}"
+                    trade.pnl,
+                    Decimal("-150"),
+                    f"PnL debe ser razonable cuando se vende por encima del promedio de compra. PnL={trade.pnl}, avg_buy={avg_buy_price}, sell={sell_price}",
                 )
                 # Si el cálculo está correcto, PnL debería estar entre -150 y +50 aproximadamente
                 # Esto verifica que el cálculo usa avg_buy_price y no el precio de la última compra
@@ -251,19 +267,35 @@ class TestEnginePnLCalculation(unittest.TestCase):
         for buy_price, sell_price, expected_profit in scenarios:
             # BUY
             buy_signal = self._create_buy_signal(
-                symbol, buy_price, datetime(2024, 1, scenarios.index((buy_price, sell_price, expected_profit)) * 2 + 1)
+                symbol,
+                buy_price,
+                datetime(
+                    2024, 1, scenarios.index((buy_price, sell_price, expected_profit)) * 2 + 1
+                ),
             )
             buy_quote = self._create_quote(
-                symbol, buy_price, datetime(2024, 1, scenarios.index((buy_price, sell_price, expected_profit)) * 2 + 1)
+                symbol,
+                buy_price,
+                datetime(
+                    2024, 1, scenarios.index((buy_price, sell_price, expected_profit)) * 2 + 1
+                ),
             )
             self.backtester._process_signal(buy_signal, buy_quote)
 
             # SELL
             sell_signal = self._create_sell_signal(
-                symbol, sell_price, datetime(2024, 1, scenarios.index((buy_price, sell_price, expected_profit)) * 2 + 2)
+                symbol,
+                sell_price,
+                datetime(
+                    2024, 1, scenarios.index((buy_price, sell_price, expected_profit)) * 2 + 2
+                ),
             )
             sell_quote = self._create_quote(
-                symbol, sell_price, datetime(2024, 1, scenarios.index((buy_price, sell_price, expected_profit)) * 2 + 2)
+                symbol,
+                sell_price,
+                datetime(
+                    2024, 1, scenarios.index((buy_price, sell_price, expected_profit)) * 2 + 2
+                ),
             )
             self.backtester._process_signal(sell_signal, sell_quote)
 
@@ -275,8 +307,12 @@ class TestEnginePnLCalculation(unittest.TestCase):
 
         # Win rate debe ser aproximadamente 50% (2 ganadores, 2 perdedores)
         # Permitir margen debido a comisiones y slippage
-        self.assertGreater(performance.win_rate, Decimal("30"), "Win rate debe ser > 30% (2 de 4 deberían ganar)")
-        self.assertLess(performance.win_rate, Decimal("70"), "Win rate debe ser < 70% (2 de 4 deberían ganar)")
+        self.assertGreater(
+            performance.win_rate, Decimal("30"), "Win rate debe ser > 30% (2 de 4 deberían ganar)"
+        )
+        self.assertLess(
+            performance.win_rate, Decimal("70"), "Win rate debe ser < 70% (2 de 4 deberían ganar)"
+        )
 
         # Debe haber winning trades y losing trades
         self.assertGreater(performance.winning_trades, 0, "Debe haber winning trades")
@@ -295,13 +331,19 @@ class TestEnginePnLCalculation(unittest.TestCase):
 
         # Verificar posición abierta
         initial_position = self.backtester.positions.get(symbol, Decimal("0"))
-        self.assertGreater(initial_position, Decimal("0"), "Debe haber posición después del primer BUY")
+        self.assertGreater(
+            initial_position, Decimal("0"), "Debe haber posición después del primer BUY"
+        )
 
         # Verificar que hay buy_trades abiertos
         open_trades_before = [
-            t for t in self.backtester.trades if t.symbol == symbol and t.side == "buy" and t.status == TradeStatus.OPEN
+            t
+            for t in self.backtester.trades
+            if t.symbol == symbol and t.side == "buy" and t.status == TradeStatus.OPEN
         ]
-        self.assertGreater(len(open_trades_before), 0, "Debe haber trades abiertos antes del segundo BUY")
+        self.assertGreater(
+            len(open_trades_before), 0, "Debe haber trades abiertos antes del segundo BUY"
+        )
 
         # Segundo BUY (debe cerrar el primero)
         buy_signal_2 = self._create_buy_signal(symbol, buy_price_2, datetime(2024, 1, 2))
@@ -310,13 +352,19 @@ class TestEnginePnLCalculation(unittest.TestCase):
 
         # Verificar que los trades anteriores se cerraron
         closed_trades = [
-            t for t in self.backtester.trades if t.symbol == symbol and t.status == TradeStatus.CLOSED
+            t
+            for t in self.backtester.trades
+            if t.symbol == symbol and t.status == TradeStatus.CLOSED
         ]
-        self.assertGreater(len(closed_trades), 0, "Los trades anteriores deben cerrarse cuando llega nuevo BUY")
+        self.assertGreater(
+            len(closed_trades), 0, "Los trades anteriores deben cerrarse cuando llega nuevo BUY"
+        )
 
         # Verificar que hay un nuevo trade abierto
         open_trades_after = [
-            t for t in self.backtester.trades if t.symbol == symbol and t.side == "buy" and t.status == TradeStatus.OPEN
+            t
+            for t in self.backtester.trades
+            if t.symbol == symbol and t.side == "buy" and t.status == TradeStatus.OPEN
         ]
         # Puede haber 0 o 1 trade abierto (dependiendo de la implementación)
         self.assertLessEqual(
@@ -338,7 +386,9 @@ class TestEnginePnLCalculation(unittest.TestCase):
         # Verificar consistencia
         position = self.backtester.positions.get(symbol, Decimal("0"))
         open_buy_trades = [
-            t for t in self.backtester.trades if t.symbol == symbol and t.side == "buy" and t.status == TradeStatus.OPEN
+            t
+            for t in self.backtester.trades
+            if t.symbol == symbol and t.side == "buy" and t.status == TradeStatus.OPEN
         ]
         total_open_quantity = sum(t.quantity for t in open_buy_trades)
 
@@ -353,4 +403,3 @@ class TestEnginePnLCalculation(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

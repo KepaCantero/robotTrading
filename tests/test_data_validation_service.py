@@ -8,15 +8,12 @@ Tests all data quality checks:
 - Pre-backtest data quality checks
 """
 
-import pytest
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-from app.services.data_validation_service import (
-    DataValidationService,
-    OHLCData,
-    DataQualityIssue,
-)
+import pytest
+
+from app.services.data_validation_service import DataQualityIssue, DataValidationService, OHLCData
 
 
 class TestDataValidationService:

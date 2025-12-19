@@ -2,11 +2,12 @@
 Tests for order fill ratio tracking (TASK-MET-FILL-1).
 """
 
-import pytest
 from decimal import Decimal
 
+import pytest
+
 from app.models.order import Order, OrderSide, OrderStatus, OrderType
-from app.services.fill_ratio_tracker import FillRatioTracker, FillMetrics
+from app.services.fill_ratio_tracker import FillMetrics, FillRatioTracker
 
 
 class TestFillMetrics:
@@ -51,7 +52,7 @@ class TestFillRatioTracker:
     def test_track_order(self, sample_order):
         """Test tracking a new order."""
         tracker = FillRatioTracker()
-        
+
         metrics = tracker.track_order(sample_order)
 
         assert metrics is not None
@@ -114,7 +115,7 @@ class TestFillRatioTracker:
     def test_get_fill_ratio_stats_with_data(self, sample_order):
         """Test getting fill ratio stats with data."""
         tracker = FillRatioTracker()
-        
+
         tracker.track_order(sample_order)
         # Record full fill
         tracker.record_fill("order123", Decimal("100"), Decimal("150.50"))
@@ -131,7 +132,9 @@ class TestFillRatioTracker:
         )
         tracker.track_order(order2)
         # Record partial fill
-        tracker.record_partial_fill("order456", Decimal("25"), Decimal("160.25"), OrderStatus.PARTIALLY_FILLED)
+        tracker.record_partial_fill(
+            "order456", Decimal("25"), Decimal("160.25"), OrderStatus.PARTIALLY_FILLED
+        )
 
         stats = tracker.get_fill_ratio_stats()
 
@@ -144,7 +147,7 @@ class TestFillRatioTracker:
     def test_get_fill_ratio_stats_by_symbol(self, sample_order):
         """Test getting fill ratio stats filtered by symbol."""
         tracker = FillRatioTracker()
-        
+
         tracker.track_order(sample_order)
         tracker.record_fill("order123", Decimal("100"), Decimal("150.50"))
 
