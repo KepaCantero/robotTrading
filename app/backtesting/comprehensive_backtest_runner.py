@@ -452,7 +452,7 @@ class ComprehensiveBacktestRunner:
                     # Verificar si el modelo está listo después de cargar
                     if strategy.learning_engine.is_ready():
                         logger.info(
-                            f"    ✅ Learning engine listo con pesos cargados (sin reentrenamiento)"
+                            "    ✅ Learning engine listo con pesos cargados (sin reentrenamiento)"
                         )
                         return True
 
@@ -562,7 +562,7 @@ class ComprehensiveBacktestRunner:
                                 f"    ⚠️ Solo hay {unique_labels} clase(s) en los datos de entrenamiento."
                             )
                             logger.warning(
-                                f"       Esto puede causar problemas. Intentando entrenar de todos modos..."
+                                "       Esto puede causar problemas. Intentando entrenar de todos modos..."
                             )
 
                 # Para deep/transformer, SIEMPRE usar subprocess para evitar mutex.cc blocking
@@ -580,17 +580,17 @@ class ComprehensiveBacktestRunner:
                         f"    🔄 {learning_engine_name} se entrenará en subprocess (evita mutex.cc)"
                     )
                     logger.info(
-                        f"    ⚠️ NOTA: El modelo NO estará disponible para predicciones en proceso principal"
+                        "    ⚠️ NOTA: El modelo NO estará disponible para predicciones en proceso principal"
                     )
                     logger.info(
-                        f"    ⚠️ El backtest usará predicciones neutrales (equivalente a baseline)"
+                        "    ⚠️ El backtest usará predicciones neutrales (equivalente a baseline)"
                     )
 
                     # Marcar como entrenado (en subprocess) pero sin modelo en proceso principal
                     # Esto es aceptable - el backtest usará predicciones neutrales
                     metrics = {'trained_in_subprocess': True, 'model_available': False}
                     logger.info(
-                        f"    ✅ Entrenamiento en subprocess completado (modelo no cargado en proceso principal)"
+                        "    ✅ Entrenamiento en subprocess completado (modelo no cargado en proceso principal)"
                     )
                 elif hasattr(strategy.learning_engine, 'train'):
                     if use_subprocess and hasattr(strategy.learning_engine.train, '__code__'):
@@ -636,7 +636,7 @@ class ComprehensiveBacktestRunner:
                         logger.warning("       - Aumentar lookahead_days en preparación de datos")
                         logger.warning("       - Usar más datos históricos")
                         logger.warning(
-                            f"       - Ajustar criterios de éxito de trades (umbrales más bajos)"
+                            "       - Ajustar criterios de éxito de trades (umbrales más bajos)"
                         )
                         return False
                     elif error_type == 'empty_data':
@@ -916,7 +916,7 @@ class ComprehensiveBacktestRunner:
                 error_msg = str(e).lower()
                 if 'mutex' in error_msg or 'lock' in error_msg or 'blocking' in error_msg:
                     logger.warning(
-                        f"⚠️ Bloqueo de mutex detectado. Reintentando entrenamiento en proceso hijo aislado..."
+                        "⚠️ Bloqueo de mutex detectado. Reintentando entrenamiento en proceso hijo aislado..."
                     )
                     # Intentar en subprocess como fallback
                     try:
@@ -961,7 +961,7 @@ class ComprehensiveBacktestRunner:
                             f"    ⚠️ Modelo de {learning_engine} no está disponible en proceso principal (entrenado en subprocess)."
                         )
                         logger.warning(
-                            f"    ⚠️ Usando predicciones neutrales (esto es normal para evitar mutex.cc blocking)."
+                            "    ⚠️ Usando predicciones neutrales (esto es normal para evitar mutex.cc blocking)."
                         )
 
                 strategy_name = self._get_strategy_name(strategy)
@@ -2611,7 +2611,7 @@ class ComprehensiveBacktestRunner:
                         logger.info(f"  ✅ Learning engine entrenado: {metrics}")
                     else:
                         logger.warning(
-                            f"  ⚠️ No se pudieron preparar datos de entrenamiento para learning engine"
+                            "  ⚠️ No se pudieron preparar datos de entrenamiento para learning engine"
                         )
                 except Exception as e:
                     logger.error(f"  ❌ Error entrenando learning engine: {e}", exc_info=True)
@@ -2750,7 +2750,7 @@ class ComprehensiveBacktestRunner:
 
         if regime_warning:
             logger.warning(
-                f"   ⚠️ REGIME WARNING: Los regímenes difieren significativamente entre train/test"
+                "   ⚠️ REGIME WARNING: Los regímenes difieren significativamente entre train/test"
             )
 
         return result_dict
