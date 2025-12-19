@@ -1,0 +1,147 @@
+# Feature Importance Configuration [TASK-4.2-FEATURE-IMPORTANCE]
+# Comprehensive feature importance analysis for ML models in trading
+
+# ============================================================================
+# General Settings
+# ============================================================================
+enabled: true
+
+# ============================================================================
+# SHAP Analysis Configuration
+# ============================================================================
+shap:
+  enabled: true
+  sample_size: 100           # Number of samples for SHAP calculation
+  max_evals: 100             # Max evaluations for KernelExplainer
+  use_background: true       # Use background data for explainer
+  model_type: "auto"         # auto, tree, linear, neural
+
+  # Top features to report
+  top_n_features: 10
+
+# ============================================================================
+# Permutation Importance Configuration
+# ============================================================================
+permutation:
+  enabled: true
+  n_repeats: 10              # Number of permutation repeats
+  n_jobs: -1                 # Parallel jobs (-1 = all cores)
+  random_state: 42           # For reproducibility
+  scoring: "auto"            # auto, accuracy, f1, r2, neg_mse
+
+  # Sample size for large datasets
+  max_samples: 1000
+
+# ============================================================================
+# Built-in Model Importance Configuration
+# ============================================================================
+builtin:
+  enabled: true
+  normalize: true            # Normalize importance to sum to 1
+
+  # Supported models: tree-based (RF, XGBoost, LightGBM, etc.)
+  # Will automatically extract feature_importances_ attribute
+
+# ============================================================================
+# Correlation Analysis Configuration
+# ============================================================================
+correlation:
+  enabled: true
+
+  # Target correlation
+  target_correlation_method: "spearman"  # pearson, spearman, kendall
+
+  # Feature-feature correlation
+  feature_correlation_method: "pearson"  # pearson, spearman
+  multicollinearity_threshold: 0.9       # Flag features with corr > threshold
+
+  # Mutual information
+  calculate_mutual_info: true
+  n_neighbors: 5                         # For MI estimation
+
+# ============================================================================
+# Feature Stability Tracking
+# ============================================================================
+stability:
+  enabled: true
+
+  # Rolling window for stability
+  window_size: 10                        # Number of historical importance snapshots
+
+  # Stability metrics
+  stability_threshold: 0.3               # Flag features with rank change > threshold
+  importance_change_threshold: 0.2       # Flag importance change > 20%
+
+  # Trend detection
+  detect_trends: true                    # Detect increasing/decreasing importance
+
+# ============================================================================
+# Feature Selection Thresholds
+# ============================================================================
+selection:
+  enabled: true
+
+  # Selection methods
+  method: "combined"         # univariate, rfe, model_based, combined
+
+  # Thresholds
+  min_importance: 0.01       # Minimum importance to keep feature
+  max_features: "auto"       # "auto" or specific number
+  min_features: 5            # Minimum features to keep
+
+  # Automatic feature removal
+  remove_low_importance: true
+  remove_highly_correlated: true
+  correlation_threshold: 0.95
+
+# ============================================================================
+# Reporting Configuration
+# ============================================================================
+reporting:
+  # Report types
+  generate_summary: true
+  generate_detailed: true
+  generate_recommendations: true
+
+  # Output
+  output_format: "dict"      # dict, json, dataframe
+  include_visualizations: false
+
+  # Feature categories
+  categorize_features: true
+  categories:
+    critical: 0.1            # Top 10% importance
+    important: 0.3           # Top 30%
+    moderate: 0.6            # Top 60%
+    low: 1.0                 # Rest
+
+# ============================================================================
+# Integration Settings
+# ============================================================================
+integration:
+  # Auto-analysis during training
+  analyze_on_train: true
+  analyze_frequency: "epoch"  # epoch, batch, end
+
+  # Feature tracking
+  track_importance_history: true
+  max_history_entries: 100
+
+  # Alerts
+  alert_on_importance_drift: true
+  importance_drift_threshold: 0.3
+
+# ============================================================================
+# Performance Settings
+# ============================================================================
+performance:
+  # Caching
+  cache_results: true
+  cache_ttl_seconds: 3600    # 1 hour
+
+  # Parallel processing
+  n_jobs: -1                 # -1 = all cores
+
+  # Memory optimization
+  use_sparse_for_large: true
+  large_dataset_threshold: 10000
