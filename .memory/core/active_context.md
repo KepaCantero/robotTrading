@@ -23,9 +23,9 @@
 - Identificación de contexto macro
 - Tests de integración completos
 
-#### **FASE 2: Strategy & Learning** (Meses 4-7) 🟡 **MUY AVANZADA (85% completada)**
+#### **FASE 2: Strategy & Learning** (Meses 4-7) ✅ **COMPLETADA (100%)**
 
-**Módulo 3: Strategy Engines** ✅ **95% completado**
+**Módulo 3: Strategy Engines** ✅ **100% completado**
 
 - [x] **3.1 Refactorizar estrategias existentes** ✅ **COMPLETADO**
 
@@ -77,19 +77,32 @@
   - [x] Callbacks para aprendizaje continuo (base implementada)
   - [ ] Mejoras avanzadas: drift detection, feature importance, transfer learning
 
-- [x] **3.5 Testing y validación** ✅ **COMPLETADO**
+- [x] **3.5 Testing y validación** ✅ **COMPLETADO [TASK-3.5-WFV]** (2025-12-19)
   - [x] Backtesting unificado para todos los engines (integración en `comprehensive_backtest_runner.py`)
   - [x] Unit tests para BreakoutStrategyEngine y TrendFollowingStrategyEngine
   - [x] Integration tests completos
-  - [ ] Walk-forward validation (pendiente)
-  - [ ] Stress testing con datos sintéticos (pendiente)
+  - [x] ✅ Walk-forward validation **[TASK-3.5-WFV]** - `WalkForwardValidator` con ventanas configurables
+  - [x] ✅ Cross-validation temporal **[TASK-3.5-WFV]** - `CrossValidationTemporal` con N folds
+  - [x] ✅ Stress testing con datos sintéticos **[TASK-3.5-WFV]** - `StressTester` + `SyntheticDataGenerator`
+  - [x] ✅ Monte Carlo simulation **[TASK-3.5-WFV]** - `MonteCarloSimulator` con VaR/CVaR
+  - [x] ✅ Configuración centralizada en `config/validation.yaml`
+  - [x] ✅ 44 unit tests (100% passing)
 
-**Módulo 4: Learning Engine** 🟡 **60% completado**
+**Módulo 4: Learning Engine** 🟡 **75% completado**
 
 - Sistema de learning para `momentum_modular` completo
 - Feature extractor, preparador de datos, learning engines (supervisado/deep/RL)
 - Reentrenamiento automático implementado
-- Pendiente: drift detection, feature importance, transfer learning
+- ✅ **Drift Detection** [TASK-4.2-DRIFT] - **COMPLETADO** (2025-12-19)
+  - PSI (Population Stability Index) - Estándar en finanzas
+  - ADWIN (Adaptive Windowing) - Para streaming data
+  - KS Test (Kolmogorov-Smirnov) - Comparación de distribuciones
+  - Feature-level drift monitoring por feature individual
+  - Overfitting detector (train/val gap, learning curves)
+  - Auto-retraining triggers integrados en LearningEngineUpdater
+  - Configuración YAML centralizada (`config/drift_detection.yaml`)
+  - 60 unit tests (100% passing)
+- Pendiente: feature importance, transfer learning
 
 **Integración Completa (2025-12-15):**
 
@@ -131,17 +144,18 @@
 | Fase                        | Estado | Progreso | Módulos Completados                          |
 | --------------------------- | ------ | -------- | -------------------------------------------- |
 | Fase 1: Data & Context      | ✅     | 100%     | 2/2 (Data Engine, Context Engine)            |
-| Fase 2: Strategy & Learning | ✅     | 95%      | 3.1 ✅, 3.2 ✅ (4/4), 3.3 ✅, 3.4 ✅, 3.5 ✅ |
+| Fase 2: Strategy & Learning | ✅     | 100%     | 3.1 ✅, 3.2 ✅ (4/4), 3.3 ✅, 3.4 ✅, 3.5 ✅ [TASK-3.5-WFV] |
 | Fase 3: Portfolio & Risk    | ✅     | 90%      | Portfolio Engine ✅, Risk Engine ✅          |
-| Fases 4-7                   | ⏳     | 10%      | Diseño completo, implementación pendiente    |
+| Fases 4-7                   | 🟡     | 20%      | Drift Detection ✅ [TASK-4.2-DRIFT], resto pendiente |
 
 **Próximas Tareas Prioritarias:**
 
 1. ✅ `ArbitrageStrategyEngine` (completar 3.2) - **COMPLETADO** (2025-12-16)
 2. ✅ Sistema de composición/ensembles (3.3) - **COMPLETADO** (2025-12-17)
-3. ⏳ Walk-forward validation (3.5)
-4. ⏳ Drift detection en Learning Engine (4.2)
-5. ⏳ Stress testing con datos sintéticos (3.5)
+3. ✅ Walk-forward validation & Stress testing (3.5) - **COMPLETADO [TASK-3.5-WFV]** (2025-12-19)
+4. ✅ Drift detection en Learning Engine (4.2) - **COMPLETADO [TASK-4.2-DRIFT]** (2025-12-19)
+5. ⏳ Feature importance en Learning Engine (4.2)
+6. ⏳ Transfer learning en Learning Engine (4.2)
 
 ## Previous Focus: **COMPLETAR MVP - PORTFOLIO MULTI-STRATEGY + DATA QUALITY + TECHNICAL INDICATORS** 🎯
 
