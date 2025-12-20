@@ -204,8 +204,8 @@ class TestWeightedEnsembleIntegration:
         }
 
         strategies_config = [
-            {"name": "momentum_engine", "weight": 1.0, "config": {}},
-            {"name": "trend_following", "weight": 1.0, "config": {}},
+            {"name": "momentum_engine", "weight": 1.0, "config": {"rsi_threshold": 40, "momentum_threshold": 0.02, "volume_threshold": 1.5, "rsi_period": 14, "ema_period": 20}},
+            {"name": "trend_following", "weight": 1.0, "config": {"ema_short_period": 12, "ema_long_period": 26}},
         ]
 
         ensemble = factory.create_ensemble("weighted_ensemble", ensemble_config, strategies_config)
@@ -246,8 +246,8 @@ class TestWeightedEnsembleIntegration:
 
         factory = StrategyFactory()
         strategies_config = [
-            {"name": "momentum_engine", "weight": 1.0, "config": {}},
-            {"name": "breakout", "weight": 1.0, "config": {}},
+            {"name": "momentum_engine", "weight": 1.0, "config": {"rsi_threshold": 40, "momentum_threshold": 0.02, "volume_threshold": 1.5, "rsi_period": 14, "ema_period": 20}},
+            {"name": "breakout", "weight": 1.0, "config": {"lookback_period": 20, "breakout_threshold": 0.02, "stop_loss": 0.03}},
         ]
 
         ensemble = factory.create_ensemble("weighted_ensemble", ensemble_config, strategies_config)
@@ -293,8 +293,8 @@ class TestRegimeBasedSelectorIntegration:
 
         factory = StrategyFactory()
         strategies_config = [
-            {"name": "momentum_engine", "weight": 1.0, "config": {}},
-            {"name": "trend_following", "weight": 1.0, "config": {}},
+            {"name": "momentum_engine", "weight": 1.0, "config": {"rsi_threshold": 40, "momentum_threshold": 0.02, "volume_threshold": 1.5, "rsi_period": 14, "ema_period": 20}},
+            {"name": "trend_following", "weight": 1.0, "config": {"ema_short_period": 12, "ema_long_period": 26}},
         ]
 
         selector = factory.create_ensemble("regime_selector", ensemble_config, strategies_config)
@@ -326,6 +326,9 @@ class TestRegimeBasedSelectorIntegration:
         assert regime in [
             RegimeBasedSelector.REGIME_TRENDING_UP,
             RegimeBasedSelector.REGIME_TRENDING_DOWN,
+            RegimeBasedSelector.REGIME_MEAN_REVERTING,
+            RegimeBasedSelector.REGIME_HIGH_VOLATILITY,
+            RegimeBasedSelector.REGIME_LOW_VOLATILITY,
             RegimeBasedSelector.REGIME_UNKNOWN,
         ]
 
@@ -338,9 +341,9 @@ class TestRegimeBasedSelectorIntegration:
 
         factory = StrategyFactory()
         strategies_config = [
-            {"name": "momentum_engine", "weight": 1.0, "config": {}},
-            {"name": "trend_following", "weight": 1.0, "config": {}},
-            {"name": "mean_reversion_engine", "weight": 1.0, "config": {}},
+            {"name": "momentum_engine", "weight": 1.0, "config": {"rsi_threshold": 40, "momentum_threshold": 0.02, "volume_threshold": 1.5, "rsi_period": 14, "ema_period": 20}},
+            {"name": "trend_following", "weight": 1.0, "config": {"ema_short_period": 12, "ema_long_period": 26}},
+            {"name": "mean_reversion_engine", "weight": 1.0, "config": {"z_score_threshold": 2.0, "lookback_period": 20, "volatility_threshold": 0.02, "stop_loss": 0.03, "take_profit": 0.06, "max_position_size": 0.08}},
         ]
 
         selector = factory.create_ensemble("regime_selector", ensemble_config, strategies_config)
@@ -387,9 +390,9 @@ class TestVotingEnsembleIntegration:
         }
 
         strategies_config = [
-            {"name": "momentum_engine", "weight": 1.0, "config": {}},
-            {"name": "trend_following", "weight": 1.0, "config": {}},
-            {"name": "breakout", "weight": 1.0, "config": {}},
+            {"name": "momentum_engine", "weight": 1.0, "config": {"rsi_threshold": 40, "momentum_threshold": 0.02, "volume_threshold": 1.5, "rsi_period": 14, "ema_period": 20}},
+            {"name": "trend_following", "weight": 1.0, "config": {"ema_short_period": 12, "ema_long_period": 26}},
+            {"name": "breakout", "weight": 1.0, "config": {"lookback_period": 20, "breakout_threshold": 0.02, "stop_loss": 0.03}},
         ]
 
         ensemble = factory.create_ensemble("voting_ensemble", ensemble_config, strategies_config)
@@ -429,9 +432,9 @@ class TestVotingEnsembleIntegration:
 
         factory = StrategyFactory()
         strategies_config = [
-            {"name": "momentum_engine", "weight": 1.0, "config": {}},
-            {"name": "trend_following", "weight": 1.0, "config": {}},
-            {"name": "breakout", "weight": 1.0, "config": {}},
+            {"name": "momentum_engine", "weight": 1.0, "config": {"rsi_threshold": 40, "momentum_threshold": 0.02, "volume_threshold": 1.5, "rsi_period": 14, "ema_period": 20}},
+            {"name": "trend_following", "weight": 1.0, "config": {"ema_short_period": 12, "ema_long_period": 26}},
+            {"name": "breakout", "weight": 1.0, "config": {"lookback_period": 20, "breakout_threshold": 0.02, "stop_loss": 0.03}},
         ]
 
         ensemble = factory.create_ensemble("voting_ensemble", ensemble_config, strategies_config)
@@ -473,9 +476,9 @@ class TestEnsemblePerformance:
         }
 
         strategies_config = [
-            {"name": "momentum_engine", "weight": 0.4, "config": {}},
-            {"name": "trend_following", "weight": 0.3, "config": {}},
-            {"name": "breakout", "weight": 0.3, "config": {}},
+            {"name": "momentum_engine", "weight": 0.4, "config": {"rsi_threshold": 40, "momentum_threshold": 0.02, "volume_threshold": 1.5, "rsi_period": 14, "ema_period": 20}},
+            {"name": "trend_following", "weight": 0.3, "config": {"ema_short_period": 12, "ema_long_period": 26}},
+            {"name": "breakout", "weight": 0.3, "config": {"lookback_period": 20, "breakout_threshold": 0.02, "stop_loss": 0.03}},
         ]
 
         ensemble = factory.create_ensemble("weighted_ensemble", ensemble_config, strategies_config)
@@ -508,8 +511,8 @@ class TestEnsemblePerformance:
 
         ensemble_config = {"name": "features_test"}
         strategies_config = [
-            {"name": "momentum_engine", "weight": 1.0, "config": {}},
-            {"name": "trend_following", "weight": 1.0, "config": {}},
+            {"name": "momentum_engine", "weight": 1.0, "config": {"rsi_threshold": 40, "momentum_threshold": 0.02, "volume_threshold": 1.5, "rsi_period": 14, "ema_period": 20}},
+            {"name": "trend_following", "weight": 1.0, "config": {"ema_short_period": 12, "ema_long_period": 26}},
         ]
 
         ensemble = factory.create_ensemble("weighted_ensemble", ensemble_config, strategies_config)
