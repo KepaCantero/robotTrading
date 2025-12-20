@@ -7,11 +7,11 @@ for robust parameter selection.
 
 import json
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from itertools import product
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import yaml
 
@@ -222,7 +222,6 @@ class GridSearchOptimizer:
 
             # Run backtest on validation period
             from app.backtesting.models import BacktestConfig
-            from app.backtesting.simple_backtester import SimpleBacktester
 
             config = BacktestConfig(
                 strategy_name="multi_strategy",

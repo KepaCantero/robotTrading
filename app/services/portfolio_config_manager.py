@@ -6,17 +6,13 @@ capital allocation based on portfolio.yaml configuration.
 """
 
 import logging
-from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
 import yaml
 
-from app.services.multi_strategy_allocation import (
-    MultiStrategyAllocationManager,
-    StrategyCapitalAllocation,
-)
+from app.services.multi_strategy_allocation import MultiStrategyAllocationManager
 
 logger = logging.getLogger(__name__)
 

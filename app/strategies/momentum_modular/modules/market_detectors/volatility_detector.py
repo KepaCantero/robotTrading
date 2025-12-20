@@ -3,7 +3,7 @@ VolatilityDetector - Módulo independiente para detectar régimen de volatilidad
 """
 
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from .base_detector import BaseMarketDetector
 

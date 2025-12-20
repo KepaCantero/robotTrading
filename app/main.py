@@ -49,7 +49,6 @@ from app.api.trading_error_handler import router as trading_error_handler_router
 from app.core.config import get_settings
 
 # IMPORTANT: Import logging_config FIRST to ensure all warnings/errors go to files
-from app.core.logging_config import setup_file_logging
 
 # Get application settings (lazy loading to avoid validation issues during
 # import)

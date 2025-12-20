@@ -10,19 +10,18 @@ Comprehensive validation system including:
 
 import json
 import logging
-import math
 import random
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import yaml
 
 from app.backtesting.engine import SimpleBacktester
-from app.backtesting.models import BacktestConfig, BacktestResult
+from app.backtesting.models import BacktestConfig
 from app.models.market_data import Quote
 
 logger = logging.getLogger(__name__)

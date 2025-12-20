@@ -14,9 +14,9 @@ Características principales:
 """
 
 import logging
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
@@ -202,7 +202,6 @@ class BaseStrategyEnsemble(BaseStrategyEngine):
         Returns:
             Lista de señales combinadas
         """
-        pass
 
 
 class WeightedEnsemble(BaseStrategyEnsemble):
@@ -490,7 +489,7 @@ class RegimeBasedSelector(BaseStrategyEnsemble):
 
         # Calcular retorno y volatilidad
         returns = np.diff(prices) / prices[:-1]
-        total_return = (prices[-1] / prices[0]) - 1
+        (prices[-1] / prices[0]) - 1
         volatility = np.std(returns) * np.sqrt(252)  # Anualizada
 
         # Calcular tendencia (pendiente de regresión lineal)

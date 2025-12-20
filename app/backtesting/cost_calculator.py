@@ -11,7 +11,7 @@ Calculates realistic trading costs including:
 import logging
 from decimal import ROUND_HALF_UP, Decimal
 from enum import Enum
-from typing import Dict, Optional, Tuple
+from typing import Optional, Tuple
 
 logger = logging.getLogger(__name__)
 

@@ -54,7 +54,6 @@ class BaseRebalancer(ABC):
         Returns:
             True si se debe rebalancear
         """
-        pass
 
     @abstractmethod
     def calculate_rebalance_trades(
@@ -76,7 +75,6 @@ class BaseRebalancer(ABC):
         Returns:
             Lista de trades necesarios
         """
-        pass
 
 
 class ThresholdRebalancer(BaseRebalancer):

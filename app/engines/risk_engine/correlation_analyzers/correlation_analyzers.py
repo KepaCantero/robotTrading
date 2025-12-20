@@ -9,9 +9,8 @@ Implementa análisis de correlaciones:
 
 import logging
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
@@ -49,7 +48,6 @@ class BaseCorrelationAnalyzer(ABC):
         Returns:
             Análisis de correlaciones
         """
-        pass
 
 
 class CorrelationAnalyzer(BaseCorrelationAnalyzer):

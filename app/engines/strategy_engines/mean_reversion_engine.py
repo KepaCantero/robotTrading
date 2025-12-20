@@ -143,7 +143,6 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
 
             # Z-score (reversión a la media)
             # Usar pandas-ta para calcular mean y std
-            import numpy as np
             import pandas as pd
 
             df = pd.DataFrame({'close': prices})

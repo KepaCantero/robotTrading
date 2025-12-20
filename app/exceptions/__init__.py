@@ -20,11 +20,8 @@ from app.core.exceptions import (
     SignalError,
     TradingError,
     ValidationError,
-    raise_business_logic_error as core_raise_business_logic_error,
-    raise_configuration_error as core_raise_configuration_error,
     raise_market_data_error,
     raise_trading_error,
-    raise_validation_error as core_raise_validation_error,
 )
 from app.exceptions.error_handler import (
     ErrorHandler,

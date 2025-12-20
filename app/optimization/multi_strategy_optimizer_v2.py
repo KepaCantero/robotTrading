@@ -8,15 +8,12 @@ Includes walk-forward validation and Monte Carlo resampling.
 import csv
 import json
 import logging
-from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
-import numpy as np
 import optuna
-import pandas as pd
 
 from app.backtesting.data_loader import DataLoader
 from app.backtesting.multi_strategy_engine import MultiStrategyBacktester
@@ -224,7 +221,7 @@ class MultiStrategyOptimizerV2:
         # Extract metrics
         sharpe = combined.get("weighted_sharpe", 0.0) or 0.0
         max_dd = abs(combined.get("weighted_max_drawdown", 0.0) or 0.0)
-        total_return = combined.get("total_return", 0.0) or 0.0
+        combined.get("total_return", 0.0) or 0.0
 
         # Count trades per strategy
         strategy_results = result.get("strategies", {})

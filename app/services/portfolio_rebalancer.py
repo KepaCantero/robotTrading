@@ -7,12 +7,9 @@ Implements:
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
-
-from app.models.portfolio import Portfolio
-from app.models.signal import Signal
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 

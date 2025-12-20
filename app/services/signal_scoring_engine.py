@@ -8,10 +8,9 @@ compound scoring, priority ranking, and portfolio signal filtering.
 import logging
 from collections import defaultdict
 from datetime import datetime, timedelta
-from decimal import Decimal
 from typing import Any, Dict, List, Optional, Set
 
-from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
+from app.models.signal import Signal, SignalType
 
 logger = logging.getLogger(__name__)
 

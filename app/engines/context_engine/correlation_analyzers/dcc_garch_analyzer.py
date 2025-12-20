@@ -5,9 +5,7 @@ Implementa Dynamic Conditional Correlation GARCH para correlaciones dinámicas.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
-
-import numpy as np
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 

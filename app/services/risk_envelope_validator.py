@@ -13,7 +13,7 @@ causing large losses despite small nominal returns.
 
 import logging
 from decimal import Decimal
-from typing import Dict, Optional, Tuple
+from typing import Dict, Tuple
 
 logger = logging.getLogger(__name__)
 

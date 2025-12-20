@@ -470,11 +470,10 @@ class PortfolioRiskManager:
         # Get thresholds from config
         try:
             hedging_config = self.config.currency_hedging
-            single_currency_max = hedging_config.single_currency_max
+            hedging_config.single_currency_max
             total_fx_max = hedging_config.total_fx_max
         except (AttributeError, KeyError):
             # Fallback defaults
-            single_currency_max = 0.25
             total_fx_max = 0.50
 
         by_currency = currency_exposures.get("by_currency", {})

@@ -9,11 +9,9 @@ Implementa risk attribution:
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 import numpy as np
-import pandas as pd
 
 from app.models.portfolio import Portfolio
 
@@ -45,7 +43,6 @@ class BaseRiskAttributor(ABC):
         Returns:
             Risk attribution
         """
-        pass
 
 
 class RiskAttributor(BaseRiskAttributor):

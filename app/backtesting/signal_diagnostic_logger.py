@@ -9,7 +9,6 @@ import json
 import logging
 from collections import defaultdict
 from datetime import datetime
-from decimal import Decimal
 from pathlib import Path
 from typing import Any, DefaultDict, Dict, List, Optional
 
@@ -183,7 +182,7 @@ class SignalDiagnosticLogger:
             )
 
             if summary['checks_failed']:
-                log_lines.append(f"  Checks fallidos:")
+                log_lines.append("  Checks fallidos:")
                 for check, count in sorted(
                     summary['checks_failed'].items(), key=lambda x: x[1], reverse=True
                 ):

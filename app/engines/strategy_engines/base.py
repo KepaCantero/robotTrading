@@ -18,8 +18,7 @@ from decimal import Decimal
 from typing import Any, Callable, Dict, List, Optional
 
 from app.models.market_data import Quote
-from app.models.portfolio import Portfolio
-from app.models.signal import Signal, SignalType
+from app.models.signal import Signal
 from app.strategies.base import BaseStrategy
 
 logger = logging.getLogger(__name__)
@@ -171,7 +170,6 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         Returns:
             Diccionario con features estandarizados
         """
-        pass
 
     @abstractmethod
     def get_strategy_type(self) -> str:
@@ -181,7 +179,6 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         Returns:
             String identificando el tipo de estrategia
         """
-        pass
 
     # ===== Métodos concretos para Learning Engine integration =====
 
@@ -512,7 +509,6 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         Returns:
             Lista de señales generadas
         """
-        pass
 
     # ===== Métricas y estado =====
 

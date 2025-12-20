@@ -131,9 +131,9 @@ class ComprehensiveBacktestRunner:
         self.config_path = config_path  # Guardar para auditoría
         self.results: List[Dict[str, Any]] = []
         # Store complete BacktestResult objects for quantstats/pyfolio analysis
-        self.backtest_results_objects: List[Tuple[str, BacktestResult]] = (
-            []
-        )  # (test_name, BacktestResult)
+        self.backtest_results_objects: List[
+            Tuple[str, BacktestResult]
+        ] = []  # (test_name, BacktestResult)
         self.output_dir = Path(self.config['reporting']['output_directory'])
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1561,7 +1561,7 @@ class ComprehensiveBacktestRunner:
         """
         logger.info("🔄 Ejecutando Grid Search (PARALELO)...")
 
-        from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+        from concurrent.futures import ThreadPoolExecutor, as_completed
 
         grid_config = self.config['backtests']['grid_search']
         search_method = grid_config.get('search_method', 'random')
@@ -3174,9 +3174,7 @@ class ComprehensiveBacktestRunner:
 
         # Verificar si transformer está disponible
         try:
-            from app.strategies.momentum_modular.learning.transformer_engine import (
-                TransformerEngine,
-            )
+            pass
 
             transformer_available = True
         except ImportError:
@@ -3778,7 +3776,7 @@ class ComprehensiveBacktestRunner:
         )
 
         # Sobrescribir método _run_backtest para usar quotes del runner
-        original_run_backtest = optimizer._run_backtest
+        optimizer._run_backtest
 
         def adapted_run_backtest(config: Dict[str, Any]) -> Optional[Dict[str, Any]]:
             """Ejecutar backtest usando quotes del ComprehensiveBacktestRunner."""
@@ -3856,7 +3854,7 @@ class ComprehensiveBacktestRunner:
         # Convertir resultados al formato estándar
         results = []
         best_config = optimization_results.get('best_config', {})
-        best_score = optimization_results.get('best_score', float('-inf'))
+        optimization_results.get('best_score', float('-inf'))
 
         strategy = None  # Para guardar pesos si hay learning engine
 
@@ -4082,7 +4080,9 @@ class ComprehensiveBacktestRunner:
 
             logger.info("✅ Análisis meta completado")
         except ImportError:
-            logger.warning("⚠️ BacktestMetaAnalyzer no disponible. Instala dependencias opcionales.")
+            logger.warning(
+                "⚠️ BacktestMetaAnalyzer no disponible. Instala dependencias opcionales."
+            )
         except Exception as e:
             logger.error(f"❌ Error en análisis meta: {e}", exc_info=True)
 
@@ -4393,7 +4393,7 @@ class ComprehensiveBacktestRunner:
         reports_dir = self.output_dir / "quantstats_reports"
         reports_dir.mkdir(parents=True, exist_ok=True)
 
-        initial_capital = float(self.config['input']['initial_capital'])
+        float(self.config['input']['initial_capital'])
 
         for test_name, backtest_result in self.backtest_results_objects:
             try:
@@ -4459,7 +4459,7 @@ class ComprehensiveBacktestRunner:
         reports_dir = self.output_dir / "pyfolio_reports"
         reports_dir.mkdir(parents=True, exist_ok=True)
 
-        initial_capital = float(self.config['input']['initial_capital'])
+        float(self.config['input']['initial_capital'])
 
         for test_name, backtest_result in self.backtest_results_objects:
             try:

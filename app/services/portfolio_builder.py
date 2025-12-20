@@ -7,7 +7,6 @@ from different sectors, allocated according to strategy percentages.
 
 import logging
 from datetime import datetime
-from decimal import Decimal
 from typing import Any, Dict, List, Optional, Set
 
 from app.backtesting.data_loader import DataLoader

@@ -11,8 +11,7 @@ import json
 import logging
 import pickle
 from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 # Redis (opcional)
 try:

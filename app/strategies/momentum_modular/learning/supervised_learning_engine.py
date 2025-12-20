@@ -3,7 +3,7 @@ SupervisedLearningEngine - Aprende a predecir probabilidad de éxito de trades.
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -22,7 +22,6 @@ try:
         recall_score,
         roc_auc_score,
     )
-    from sklearn.model_selection import cross_val_score, train_test_split
 
     SKLEARN_AVAILABLE = True
 except ImportError:
@@ -124,7 +123,7 @@ class SupervisedLearningEngine(BaseLearningEngine):
         # Esto maneja casos donde SKLEARN_AVAILABLE puede ser incorrecto o sklearn se importó después
         try:
             # Verificar que sklearn está realmente disponible
-            import sklearn
+            pass
 
             # Verificar que las clases específicas están disponibles
             from sklearn.ensemble import (  # noqa: F401
@@ -343,7 +342,7 @@ class SupervisedLearningEngine(BaseLearningEngine):
         hidden_sizes = self.model_params.get("hidden_sizes", [64, 32])
         learning_rate = self.model_params.get("learning_rate", 0.001)
         epochs = self.model_params.get("epochs", 50)
-        batch_size = self.model_params.get("batch_size", 32)
+        self.model_params.get("batch_size", 32)
 
         # Definir modelo
         layers = [nn.Linear(input_size, hidden_sizes[0]), nn.ReLU()]
@@ -430,7 +429,6 @@ class SupervisedLearningEngine(BaseLearningEngine):
             except (ValueError, IndexError) as e:
                 # Si falla (por ejemplo, solo una clase en y), simplemente no calcular AUC
                 logger.debug(f"No se pudo calcular AUC: {e}")
-                pass
 
         return metrics
 

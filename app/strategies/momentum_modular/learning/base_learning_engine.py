@@ -7,8 +7,7 @@ import os
 import pickle
 from abc import ABC, abstractmethod
 from datetime import datetime
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +58,6 @@ class BaseLearningEngine(ABC):
         Returns:
             Dict con métricas de entrenamiento (loss, accuracy, etc.)
         """
-        pass
 
     @abstractmethod
     def predict(self, features: Dict[str, Any]) -> Dict[str, Any]:
@@ -79,7 +77,6 @@ class BaseLearningEngine(ABC):
                 'raw_prediction': Any  # Predicción cruda del modelo (opcional)
             }
         """
-        pass
 
     def explain(self, features: Dict[str, Any], prediction: Optional[Dict[str, Any]] = None) -> str:
         """
@@ -116,7 +113,6 @@ class BaseLearningEngine(ABC):
         Returns:
             Dict con métricas de evaluación
         """
-        pass
 
     def save_model(self, path: Optional[str] = None) -> bool:
         """

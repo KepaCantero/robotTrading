@@ -159,7 +159,7 @@ class ComprehensiveBacktestLoader:
                                         if before_metrics.startswith('{')
                                         else {}
                                     )
-                                except (ValueError, SyntaxError) as e:
+                                except (ValueError, SyntaxError):
                                     try:
                                         result['before_training_metrics'] = json.loads(
                                             before_metrics
@@ -182,7 +182,7 @@ class ComprehensiveBacktestLoader:
                                         if after_metrics.startswith('{')
                                         else {}
                                     )
-                                except (ValueError, SyntaxError) as e:
+                                except (ValueError, SyntaxError):
                                     try:
                                         result['after_training_metrics'] = json.loads(after_metrics)
                                     except (ValueError, json.JSONDecodeError) as e2:
@@ -203,7 +203,7 @@ class ComprehensiveBacktestLoader:
                                         if improvement.startswith('{')
                                         else {}
                                     )
-                                except (ValueError, SyntaxError) as e:
+                                except (ValueError, SyntaxError):
                                     try:
                                         result['improvement_pct'] = json.loads(improvement)
                                     except (ValueError, json.JSONDecodeError) as e2:

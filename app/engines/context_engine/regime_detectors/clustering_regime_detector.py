@@ -5,10 +5,9 @@ Usa KMeans y DBSCAN para identificar regímenes basados en features de mercado.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import numpy as np
-import pandas as pd
 
 logger = logging.getLogger(__name__)
 

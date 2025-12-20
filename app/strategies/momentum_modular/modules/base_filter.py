@@ -4,7 +4,7 @@ BaseFilter - Clase abstracta base para todos los filtros modulares.
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional
+from typing import Dict
 
 logger = logging.getLogger(__name__)
 
@@ -127,4 +127,3 @@ class BaseFilter(ABC):
                 'metadata': Dict
             }
         """
-        pass

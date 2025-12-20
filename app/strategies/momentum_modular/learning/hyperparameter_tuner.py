@@ -9,8 +9,7 @@ Incluye:
 
 import logging
 import time
-from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional
 
 import numpy as np
 
@@ -19,7 +18,6 @@ logger = logging.getLogger(__name__)
 # Importaciones opcionales para Optuna
 try:
     import optuna
-    from optuna.trial import TrialState
 
     OPTUNA_AVAILABLE = True
 except ImportError:

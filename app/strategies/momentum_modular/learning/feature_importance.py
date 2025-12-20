@@ -17,15 +17,13 @@ Incluye:
 
 import logging
 import os
-from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -571,8 +569,6 @@ class AttentionWeightsAnalyzer:
             import torch.nn as nn
 
             # Buscar TransformerEncoderLayer en el modelo
-            attention_weights_list = []
-
             # Hook para capturar attention
             def attention_hook(module, input, output):
                 # En TransformerEncoderLayer, el output es (output, attention_weights) si return_attn=True
@@ -590,7 +586,7 @@ class AttentionWeightsAnalyzer:
                         hook = module.register_forward_hook(attention_hook)
                         # Forward pass
                         with torch.no_grad():
-                            output = module(sequence)
+                            module(sequence)
                         hook.remove()
 
             # Alternativa: usar forward hook global
@@ -1337,7 +1333,7 @@ class CorrelationAnalyzer:
         feature_names: List[str],
     ) -> Tuple[Dict[str, Dict[str, float]], List[Tuple[str, str, float]]]:
         """Calculate feature-feature correlations and identify highly correlated pairs."""
-        n_features = X.shape[1]
+        X.shape[1]
         corr_matrix = {}
         highly_correlated = []
 

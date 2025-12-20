@@ -11,7 +11,7 @@ Provides comprehensive data quality checks for market data before backtesting:
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 
 from pydantic import BaseModel, Field
 

@@ -4,7 +4,7 @@ DeepLearningEngine - Det parte patrones complejos con LSTM, GRU o Transformers.
 
 import logging
 import os
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional
 
 # ============================================================================
 # CRÍTICO: Configurar variables de entorno ANTES de importar numpy/pandas/PyTorch
@@ -28,7 +28,6 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # Ahora importar numpy y pandas DESPUÉS de configurar variables
 import numpy as np
-import pandas as pd
 
 from .base_learning_engine import BaseLearningEngine
 
@@ -90,9 +89,7 @@ def _ensure_pytorch_imported():
 
 
 try:
-    import tensorflow as tf
-    from tensorflow import keras
-    from tensorflow.keras import layers
+    pass
 
     TENSORFLOW_AVAILABLE = True
 except ImportError:
@@ -625,7 +622,6 @@ class DeepLearningEngine(BaseLearningEngine):
         """
         import multiprocessing as mp
         import pickle
-        import tempfile
 
         logger.info("🔄 Entrenando en proceso hijo aislado para evitar deadlocks...")
 

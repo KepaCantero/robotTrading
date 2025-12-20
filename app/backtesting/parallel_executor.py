@@ -11,7 +11,6 @@ Permite paralelizar:
 import logging
 import multiprocessing
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
-from functools import partial
 from typing import Any, Callable, Dict, List, Optional
 
 logger = logging.getLogger(__name__)

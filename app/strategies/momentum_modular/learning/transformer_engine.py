@@ -28,7 +28,6 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # Ahora importar numpy y pandas DESPUÉS de configurar variables
 import numpy as np
-import pandas as pd
 
 from .base_learning_engine import BaseLearningEngine
 
@@ -347,7 +346,7 @@ class TransformerEngine(BaseLearningEngine):
                         x = self.fc(x)
                         return x
 
-                input_size = sequences.shape[2] if len(sequences.shape) > 2 else 1
+                sequences.shape[2] if len(sequences.shape) > 2 else 1
                 # Crear modelo en contexto seguro - usar no_grad para máxima seguridad
                 try:
                     with torch.no_grad():
@@ -365,8 +364,8 @@ class TransformerEngine(BaseLearningEngine):
                     error_msg = str(e).lower()
                     if 'mutex' in error_msg or 'lock' in error_msg:
                         logger.error(
-                            f"❌ Bloqueo de mutex detectado al crear TransformerModel. "
-                            f"Intenta: export MKL_SERVICE_FORCE_INTEL=1 && export KMP_DUPLICATE_LIB_OK=TRUE"
+                            "❌ Bloqueo de mutex detectado al crear TransformerModel. "
+                            "Intenta: export MKL_SERVICE_FORCE_INTEL=1 && export KMP_DUPLICATE_LIB_OK=TRUE"
                         )
                         raise RuntimeError(
                             "Bloqueo de mutex en PyTorch. Revisa docs/PROBLEMA_MUTEX_BLOQUEO.md para soluciones."

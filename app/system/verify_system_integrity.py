@@ -8,19 +8,17 @@ Sistema completo de validación que verifica:
 - Dashboard state JSON se genera correctamente
 """
 
-import asyncio
 import json
 import logging
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.core.logging_config import setup_file_logging, setup_module_loggers
 from app.engines.context_engine import ContextEngine
 from app.engines.data_engine import DataEngine
 
@@ -73,7 +71,7 @@ class SystemIntegrityValidator:
                 handlers=[logging.FileHandler(log_file), logging.StreamHandler(sys.stdout)],
             )
 
-        logger.info(f"System Integrity Validator initialized")
+        logger.info("System Integrity Validator initialized")
         logger.info(f"Outputs directory: {self.outputs_dir}")
         logger.info(f"Logs directory: {self.logs_dir}")
         logger.info(f"Dashboard state file: {self.dashboard_state_file}")
@@ -350,7 +348,7 @@ class SystemIntegrityValidator:
                             "status": "ok",
                             "message": f"Correlation matrix generated ({len(corr_matrix)}x{len(corr_matrix[0]) if corr_matrix else 0})",
                         }
-                        logger.info(f"  ✅ Correlation matrix: OK")
+                        logger.info("  ✅ Correlation matrix: OK")
                     else:
                         result["checks"]["correlation_matrix"] = {
                             "status": "warning",
@@ -598,7 +596,7 @@ class SystemIntegrityValidator:
                     "message": f"JSON file does not exist: {self.dashboard_state_file.name}",
                 }
                 result["errors"].append("JSON file missing")
-                logger.error(f"  ❌ JSON validity: FAILED (file not found)")
+                logger.error("  ❌ JSON validity: FAILED (file not found)")
 
             # Determinar estado final
             if result["errors"]:

@@ -14,7 +14,6 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 import numpy as np
-import pandas as pd
 
 from app.models.portfolio import Portfolio
 
@@ -46,7 +45,6 @@ class BaseDrawdownController(ABC):
         Returns:
             Evaluación de drawdown
         """
-        pass
 
 
 class DrawdownController(BaseDrawdownController):
@@ -320,7 +318,7 @@ class DrawdownController(BaseDrawdownController):
     ) -> Dict[str, Any]:
         """Verificar y activar circuit breakers."""
         current_drawdown = portfolio_drawdown.get('current_drawdown', 0.0)
-        max_drawdown = portfolio_drawdown.get('max_drawdown', 0.0)
+        portfolio_drawdown.get('max_drawdown', 0.0)
 
         # Verificar circuit breaker global
         if current_drawdown > self.max_drawdown_limit:
@@ -358,7 +356,7 @@ class DrawdownController(BaseDrawdownController):
     def _assess_recovery(self, portfolio_drawdown: Dict[str, Any]) -> Dict[str, Any]:
         """Evaluar estado de recovery después de drawdown."""
         current_drawdown = portfolio_drawdown.get('current_drawdown', 0.0)
-        peak_value = portfolio_drawdown.get('peak_value', 0.0)
+        portfolio_drawdown.get('peak_value', 0.0)
         current_value = portfolio_drawdown.get('current_value', 0.0)
 
         # Entrar en recovery mode si drawdown es significativo

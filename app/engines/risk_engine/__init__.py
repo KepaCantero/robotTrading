@@ -15,21 +15,17 @@ Proporciona:
 
 import logging
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Dict, List
 
-import numpy as np
-import pandas as pd
-
-from app.models.portfolio import Portfolio, Position
+from app.models.portfolio import Portfolio
 from app.services.portfolio_risk_manager import PortfolioRiskManager
 
 logger = logging.getLogger(__name__)
 
 # Optional dependencies
 try:
-    import arch
+    pass
 
     ARCH_AVAILABLE = True
 except ImportError:
@@ -37,7 +33,7 @@ except ImportError:
     logger.warning("arch no disponible. Modelos GARCH limitados.")
 
 try:
-    import statsmodels.api as sm
+    pass
 
     STATSMODELS_AVAILABLE = True
 except ImportError:
@@ -63,7 +59,6 @@ class BaseRiskEngine(ABC):
     @abstractmethod
     def initialize(self) -> None:
         """Inicializar el engine."""
-        pass
 
     @abstractmethod
     def assess_risk(self, portfolio: Portfolio, **kwargs) -> Dict[str, Any]:
@@ -77,7 +72,6 @@ class BaseRiskEngine(ABC):
         Returns:
             Dict con evaluación de riesgo
         """
-        pass
 
 
 class RiskEngine(BaseRiskEngine):

@@ -544,7 +544,11 @@ class ConceptDriftDetector:
                 drift_detected=False,
                 detector_name="ks_test",
                 statistic=0.0,
-                details={"error": "insufficient_data_after_flatten", "reference_samples": len(reference_array), "current_samples": len(current_flat)},
+                details={
+                    "error": "insufficient_data_after_flatten",
+                    "reference_samples": len(reference_array),
+                    "current_samples": len(current_flat),
+                },
             )
             self.drift_history.append(result)
             return result

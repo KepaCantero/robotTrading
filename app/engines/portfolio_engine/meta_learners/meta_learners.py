@@ -10,11 +10,9 @@ Implementa meta-learning para optimizar asignación de capital entre estrategias
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
-import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +57,6 @@ class BaseMetaLearner(ABC):
         Returns:
             Dict con pesos aprendidos por estrategia
         """
-        pass
 
     @abstractmethod
     def update(
@@ -76,7 +73,6 @@ class BaseMetaLearner(ABC):
             portfolio_return: Retorno del portfolio combinado
             market_context: Contexto de mercado
         """
-        pass
 
 
 class HistoricalPerformanceLearner(BaseMetaLearner):
@@ -386,7 +382,7 @@ class ReinforcementLearningLearner(BaseMetaLearner):
             self.optimizer.zero_grad()
 
             # Predecir pesos
-            predicted_weights = self.model(features_tensor)
+            self.model(features_tensor)
 
             # Loss simplificado (en producción usar algoritmo RL completo)
             # Por ahora, solo guardar experiencia

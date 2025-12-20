@@ -5,7 +5,7 @@ TrainingDataPreparator - Prepara datos de entrenamiento completos para learning 
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -213,18 +213,18 @@ class TrainingDataPreparator:
                 logger.warning(
                     f"  Todos los labels son {label_value}. Esto impedirá el entrenamiento supervisado."
                 )
-                logger.warning(f"  Causas posibles:")
-                logger.warning(f"    - Muy pocos trades generados en el backtest")
-                logger.warning(f"    - Todos los trades tienen el mismo resultado")
-                logger.warning(f"    - Ventana de lookahead muy pequeña")
-                logger.warning(f"  Soluciones sugeridas:")
+                logger.warning("  Causas posibles:")
+                logger.warning("    - Muy pocos trades generados en el backtest")
+                logger.warning("    - Todos los trades tienen el mismo resultado")
+                logger.warning("    - Ventana de lookahead muy pequeña")
+                logger.warning("  Soluciones sugeridas:")
                 logger.warning(f"    1. Aumentar lookahead_days (actual: {lookahead_days})")
-                logger.warning(f"    2. Usar más datos históricos para entrenamiento")
+                logger.warning("    2. Usar más datos históricos para entrenamiento")
                 logger.warning(
-                    f"    3. Ajustar criterios de éxito (umbrales más bajos para trades exitosos)"
+                    "    3. Ajustar criterios de éxito (umbrales más bajos para trades exitosos)"
                 )
                 logger.warning(
-                    f"    4. Revisar configuración de la estrategia (puede estar generando muy pocas señales)"
+                    "    4. Revisar configuración de la estrategia (puede estar generando muy pocas señales)"
                 )
 
         return {'features': X_df, 'labels': y_series}
@@ -372,7 +372,9 @@ class TrainingDataPreparator:
                     'price': (
                         float(quote.bid)
                         if hasattr(quote, 'bid')
-                        else float(quote.close) if hasattr(quote, 'close') else 0.0
+                        else float(quote.close)
+                        if hasattr(quote, 'close')
+                        else 0.0
                     ),
                     'volume': float(getattr(quote, 'volume', 0)),
                     'timestamp': quote.timestamp if hasattr(quote, 'timestamp') else df.index[i],
@@ -393,7 +395,9 @@ class TrainingDataPreparator:
             price = (
                 float(quote.bid)
                 if hasattr(quote, 'bid')
-                else float(quote.close) if hasattr(quote, 'close') else 0.0
+                else float(quote.close)
+                if hasattr(quote, 'close')
+                else 0.0
             )
             volume = float(getattr(quote, 'volume', 0))
 
