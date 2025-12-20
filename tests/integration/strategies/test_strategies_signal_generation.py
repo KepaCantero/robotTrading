@@ -6,6 +6,7 @@ Problemas identificados:
 - Estrategias no generan señales cuando deberían
 - Señales generadas con timestamps incorrectos
 """
+
 import unittest
 from datetime import datetime, timedelta
 from decimal import Decimal

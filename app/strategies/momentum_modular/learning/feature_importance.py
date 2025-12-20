@@ -710,9 +710,11 @@ class FeatureSelector:
             selected_feature_names = [feature_names[i] for i in selected_indices]
 
             return {
-                'selected_features': selected_indices.tolist()
-                if isinstance(selected_indices, np.ndarray)
-                else selected_indices,
+                'selected_features': (
+                    selected_indices.tolist()
+                    if isinstance(selected_indices, np.ndarray)
+                    else selected_indices
+                ),
                 'selected_feature_names': selected_feature_names,
                 'feature_scores': feature_scores,
                 'n_selected': len(selected_indices),

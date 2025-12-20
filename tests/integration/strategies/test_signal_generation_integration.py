@@ -48,9 +48,9 @@ def dataframe_to_quotes(symbol: str, df: pd.DataFrame) -> List[Quote]:
                 bid=Decimal(str(row['close'])),
                 ask=Decimal(str(row['close'])),
                 last=Decimal(str(row['close'])),
-                volume=Decimal(str(int(row['volume'])))
-                if pd.notna(row['volume'])
-                else Decimal("0"),
+                volume=(
+                    Decimal(str(int(row['volume']))) if pd.notna(row['volume']) else Decimal("0")
+                ),
                 timestamp=timestamp,
                 high=Decimal(str(row['high'])),
                 low=Decimal(str(row['low'])),

@@ -263,9 +263,9 @@ class PortfolioEngine(BasePortfolioEngine):
             'has_optimizer': self.optimizer is not None,
             'has_rebalancer': self.rebalancer is not None,
             'has_meta_learner': self.meta_learner is not None,
-            'current_portfolio': self.current_portfolio.portfolio_id
-            if self.current_portfolio
-            else None,
+            'current_portfolio': (
+                self.current_portfolio.portfolio_id if self.current_portfolio else None
+            ),
             'total_allocation_operations': self.total_allocation_operations,
             'total_rebalance_operations': self.total_rebalance_operations,
             'successful_operations': self.successful_operations,

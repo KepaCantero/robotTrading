@@ -83,15 +83,15 @@ class UnifiedNormalizer:
         if self.corporate_actions_handler.actions_db.get(normalized_symbol):
             # Aplicar ajustes a precios
             for price_field in ['open', 'high', 'low', 'close']:
-                prices_dict[
-                    price_field
-                ] = self.corporate_actions_handler.apply_adjustments_to_prices(
-                    normalized_symbol,
-                    [
-                        Decimal(str(p)) if not isinstance(p, Decimal) else p
-                        for p in prices_dict[price_field]
-                    ],
-                    timestamps,
+                prices_dict[price_field] = (
+                    self.corporate_actions_handler.apply_adjustments_to_prices(
+                        normalized_symbol,
+                        [
+                            Decimal(str(p)) if not isinstance(p, Decimal) else p
+                            for p in prices_dict[price_field]
+                        ],
+                        timestamps,
+                    )
                 )
 
         # Construir datos normalizados
@@ -99,16 +99,16 @@ class UnifiedNormalizer:
             normalized_item = {
                 'symbol': normalized_symbol,
                 'timestamp': timestamps[i],
-                'open': prices_dict['open'][i]
-                if i < len(prices_dict['open'])
-                else item.get('open'),
-                'high': prices_dict['high'][i]
-                if i < len(prices_dict['high'])
-                else item.get('high'),
+                'open': (
+                    prices_dict['open'][i] if i < len(prices_dict['open']) else item.get('open')
+                ),
+                'high': (
+                    prices_dict['high'][i] if i < len(prices_dict['high']) else item.get('high')
+                ),
                 'low': prices_dict['low'][i] if i < len(prices_dict['low']) else item.get('low'),
-                'close': prices_dict['close'][i]
-                if i < len(prices_dict['close'])
-                else item.get('close'),
+                'close': (
+                    prices_dict['close'][i] if i < len(prices_dict['close']) else item.get('close')
+                ),
                 'volume': Decimal(str(item.get('volume', 0))),
                 'source': source,
                 'normalized': True,

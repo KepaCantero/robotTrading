@@ -272,12 +272,16 @@ class StrategyComparisonBacktest:
                         "Total P&L": f"${total_pnl:,.2f}",
                         "Final Capital": f"${total_final:,.2f}",
                         "Return %": f"{total_return_pct:.2f}%",
-                        "Sharpe Ratio": f"{float(weighted_sharpe):.2f}"
-                        if weighted_sharpe is not None
-                        else "N/A",
-                        "Max Drawdown": f"{float(weighted_max_dd):.2f}%"
-                        if weighted_max_dd is not None
-                        else "N/A",
+                        "Sharpe Ratio": (
+                            f"{float(weighted_sharpe):.2f}"
+                            if weighted_sharpe is not None
+                            else "N/A"
+                        ),
+                        "Max Drawdown": (
+                            f"{float(weighted_max_dd):.2f}%"
+                            if weighted_max_dd is not None
+                            else "N/A"
+                        ),
                     }
                 else:
                     continue
@@ -290,9 +294,11 @@ class StrategyComparisonBacktest:
                     "Total P&L": f"${float(result.performance.total_pnl):,.2f}",
                     "Final Capital": f"${float(result.final_capital):,.2f}",
                     "Return %": f"{float(result.total_return):.2f}%",
-                    "Sharpe Ratio": f"{float(result.performance.sharpe_ratio):.2f}"
-                    if result.performance.sharpe_ratio
-                    else "N/A",
+                    "Sharpe Ratio": (
+                        f"{float(result.performance.sharpe_ratio):.2f}"
+                        if result.performance.sharpe_ratio
+                        else "N/A"
+                    ),
                     "Max Drawdown": f"{float(result.performance.max_drawdown_percentage):.2f}%",
                 }
 

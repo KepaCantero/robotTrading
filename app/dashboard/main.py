@@ -677,12 +677,16 @@ if execute_button:
                                 "win_rate": float(result.performance.win_rate),
                                 "total_return": float(result.total_return),
                                 "final_capital": float(result.final_capital),
-                                "sharpe_ratio": float(result.performance.sharpe_ratio)
-                                if result.performance.sharpe_ratio
-                                else None,
-                                "max_drawdown": float(result.performance.max_drawdown)
-                                if result.performance.max_drawdown
-                                else 0,
+                                "sharpe_ratio": (
+                                    float(result.performance.sharpe_ratio)
+                                    if result.performance.sharpe_ratio
+                                    else None
+                                ),
+                                "max_drawdown": (
+                                    float(result.performance.max_drawdown)
+                                    if result.performance.max_drawdown
+                                    else 0
+                                ),
                             }
                         )
 
@@ -1060,9 +1064,7 @@ if session_state.backtest_results:
         sharpe_color = (
             "#28a745"
             if sharpe and sharpe > 1
-            else "#ffc107"
-            if sharpe and sharpe > 0
-            else "#dc3545"
+            else "#ffc107" if sharpe and sharpe > 0 else "#dc3545"
         )
         sharpe_display = f"{sharpe:.2f}" if sharpe is not None else "N/A"
         st.markdown(
@@ -1144,19 +1146,23 @@ if session_state.backtest_results:
                     "Quantity": f"{float(trade.quantity):,.2f}",
                     "Entry Price": f"${float(trade.entry_price):,.2f}",
                     "Exit Price": f"${float(trade.exit_price):,.2f}" if trade.exit_price else "N/A",
-                    "Entry Time": trade.entry_time.strftime("%Y-%m-%d %H:%M")
-                    if trade.entry_time
-                    else "N/A",
-                    "Exit Time": trade.exit_time.strftime("%Y-%m-%d %H:%M")
-                    if trade.exit_time
-                    else "N/A",
+                    "Entry Time": (
+                        trade.entry_time.strftime("%Y-%m-%d %H:%M") if trade.entry_time else "N/A"
+                    ),
+                    "Exit Time": (
+                        trade.exit_time.strftime("%Y-%m-%d %H:%M") if trade.exit_time else "N/A"
+                    ),
                     "P&L": f"${pnl_val:+,.2f}",
-                    "Status": "✅ " + trade.status.value
-                    if trade.status.value == "CLOSED"
-                    else "⏳ " + trade.status.value,
-                    "Reason": (trade.reason[:30] + "...")
-                    if trade.reason and len(trade.reason) > 30
-                    else (trade.reason or "N/A"),
+                    "Status": (
+                        "✅ " + trade.status.value
+                        if trade.status.value == "CLOSED"
+                        else "⏳ " + trade.status.value
+                    ),
+                    "Reason": (
+                        (trade.reason[:30] + "...")
+                        if trade.reason and len(trade.reason) > 30
+                        else (trade.reason or "N/A")
+                    ),
                 }
             )
 
@@ -1241,10 +1247,12 @@ if session_state.backtest_results:
 
             # Apply styling
             styled_comparison = comparison_df.style.applymap(
-                lambda x: 'font-weight: bold'
-                if isinstance(x, (int, float))
-                or (isinstance(x, str) and any(c.isdigit() for c in x))
-                else ''
+                lambda x: (
+                    'font-weight: bold'
+                    if isinstance(x, (int, float))
+                    or (isinstance(x, str) and any(c.isdigit() for c in x))
+                    else ''
+                )
             )
             st.dataframe(styled_comparison, use_container_width=True, hide_index=True)
 

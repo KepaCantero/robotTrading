@@ -6,6 +6,7 @@ Tests para verificar:
 - Reproducibilidad (mismos resultados con misma semilla y datos)
 - Sharpe y drawdown (cálculo correcto)
 """
+
 import json
 import unittest
 from datetime import datetime, timedelta

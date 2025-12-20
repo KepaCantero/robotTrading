@@ -142,12 +142,12 @@ class RiskEnvelopeValidator:
         total_strategy_exposure = sum(strategy_positions.values())
 
         return {
-            "portfolio_exposure_pct": float(total_portfolio_exposure / total_capital)
-            if total_capital > 0
-            else 0.0,
-            "strategy_exposure_pct": float(total_strategy_exposure / strategy_capital)
-            if strategy_capital > 0
-            else 0.0,
+            "portfolio_exposure_pct": (
+                float(total_portfolio_exposure / total_capital) if total_capital > 0 else 0.0
+            ),
+            "strategy_exposure_pct": (
+                float(total_strategy_exposure / strategy_capital) if strategy_capital > 0 else 0.0
+            ),
             "largest_symbol_exposure_pct": (
                 float(max(current_portfolio.values()) / total_capital)
                 if current_portfolio and total_capital > 0

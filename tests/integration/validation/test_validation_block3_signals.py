@@ -6,6 +6,7 @@ Tests para verificar:
 - Coherencia de señales (justificación por indicadores)
 - No solapamiento (no hay señales simultáneas opuestas)
 """
+
 import unittest
 from datetime import datetime, timedelta
 from decimal import Decimal

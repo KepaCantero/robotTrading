@@ -7,6 +7,7 @@ Tests para verificar:
 - Sharpe and drawdown calculation consistency
 - Trade return distribution, historical regression
 """
+
 import unittest
 from collections import Counter
 from datetime import datetime, timedelta

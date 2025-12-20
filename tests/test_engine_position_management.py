@@ -6,6 +6,7 @@ Problemas identificados:
 - Posiciones que no se cierran correctamente
 - Problemas al cerrar posición antes de nuevo BUY
 """
+
 import unittest
 from datetime import datetime
 from decimal import Decimal

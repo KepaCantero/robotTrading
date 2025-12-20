@@ -3,12 +3,13 @@ Tests comprehensivos de validación del sistema de backtesting.
 
 Validaciones según especificaciones:
 1. Integridad del Dataset
-2. Verificación de Indicadores Técnicos  
+2. Verificación de Indicadores Técnicos
 3. Validación de Señales y Lógica de Estrategia
 4. Tests Funcionales de Estrategia
 5. Validación de Backtesting Engine
 6. Revisión de Resultados Esperados
 """
+
 import unittest
 from datetime import datetime, timedelta
 from decimal import Decimal

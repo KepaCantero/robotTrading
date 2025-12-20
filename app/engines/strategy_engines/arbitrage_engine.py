@@ -924,9 +924,9 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
             "min": float(min(recent_spreads)),
             "max": float(max(recent_spreads)),
             "current": float(recent_spreads[-1]),
-            "z_score": float(
-                (recent_spreads[-1] - np.mean(recent_spreads)) / np.std(recent_spreads)
-            )
-            if np.std(recent_spreads) > 0
-            else 0.0,
+            "z_score": (
+                float((recent_spreads[-1] - np.mean(recent_spreads)) / np.std(recent_spreads))
+                if np.std(recent_spreads) > 0
+                else 0.0
+            ),
         }

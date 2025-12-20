@@ -7,6 +7,7 @@ Validación exhaustiva de:
 - Ejecución de trades con PnL correcto
 - Aplicación de límites y rebalanceo
 """
+
 import unittest
 from collections import defaultdict
 from datetime import datetime, timedelta

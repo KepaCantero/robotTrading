@@ -5,6 +5,7 @@ Este test simula exactamente el escenario que causa el problema:
 - Momentum ejecuta 420 trades pero win rate = 0.0%
 - Todas las operaciones resultan en pérdidas
 """
+
 import unittest
 from datetime import datetime, timedelta
 from decimal import Decimal

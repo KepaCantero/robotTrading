@@ -438,9 +438,9 @@ class SimpleBacktester:
                 # Use current_price from market_data for accurate portfolio valuation
                 current_price = get_price(market_data)
                 portfolio = self._create_portfolio_from_state(
-                    current_price_func=lambda s: current_price
-                    if s == signal.symbol
-                    else Decimal("100")
+                    current_price_func=lambda s: (
+                        current_price if s == signal.symbol else Decimal("100")
+                    )
                 )
 
                 # Apply risk_check
@@ -544,9 +544,9 @@ class SimpleBacktester:
             if signal.signal_type == SignalType.BUY:
                 # Estimate trade value from position size
                 portfolio = self._create_portfolio_from_state(
-                    current_price_func=lambda s: current_price
-                    if s == signal.symbol
-                    else Decimal("100")
+                    current_price_func=lambda s: (
+                        current_price if s == signal.symbol else Decimal("100")
+                    )
                 )
                 position_size = (
                     self.strategy.get_position_size(signal, portfolio)
@@ -687,7 +687,9 @@ class SimpleBacktester:
             )
             return
 
-        logger.info(f"✅ EXECUTING BUY: {signal.symbol} qty={position_size} price={execution_price}")
+        logger.info(
+            f"✅ EXECUTING BUY: {signal.symbol} qty={position_size} price={execution_price}"
+        )
 
         # Build reason from signal metadata
         reason = self._build_trade_reason(signal, market_data)
@@ -894,9 +896,9 @@ class SimpleBacktester:
                 self.strategy._learning_updater.add_trade_result(
                     trade={
                         'symbol': signal.symbol,
-                        'entry_time': buy_trades[-1].entry_time
-                        if buy_trades
-                        else market_data.timestamp,
+                        'entry_time': (
+                            buy_trades[-1].entry_time if buy_trades else market_data.timestamp
+                        ),
                         'exit_time': market_data.timestamp,
                         'entry_price': float(avg_buy_price) if buy_trades else 0,
                         'exit_price': float(execution_price),
@@ -912,9 +914,9 @@ class SimpleBacktester:
                     self.strategy.add_trade_result(
                         {
                             'pnl': float(pnl),
-                            'entry_time': buy_trades[-1].entry_time
-                            if buy_trades
-                            else market_data.timestamp,
+                            'entry_time': (
+                                buy_trades[-1].entry_time if buy_trades else market_data.timestamp
+                            ),
                             'exit_time': market_data.timestamp,
                             'symbol': signal.symbol,
                         }
@@ -1340,9 +1342,11 @@ class SimpleBacktester:
             max_drawdown=min(Decimal("0"), self.max_drawdown),  # Asegurar que sea <= 0
             max_drawdown_percentage=min(
                 Decimal("0"),
-                (self.max_drawdown / self.config.initial_capital * 100)
-                if self.config.initial_capital > 0
-                else Decimal("0"),
+                (
+                    (self.max_drawdown / self.config.initial_capital * 100)
+                    if self.config.initial_capital > 0
+                    else Decimal("0")
+                ),
             ),
             sharpe_ratio=sharpe_ratio,
             sortino_ratio=None,  # Not implemented yet

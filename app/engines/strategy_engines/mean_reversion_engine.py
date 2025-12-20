@@ -298,9 +298,9 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
                         'mean': float(mean),
                         'std': float(std),
                         'volatility': volatility,
-                        'price_mean_distance': float((current_price - mean) / mean)
-                        if mean > 0
-                        else 0.0,
+                        'price_mean_distance': (
+                            float((current_price - mean) / mean) if mean > 0 else 0.0
+                        ),
                     },
                 )
 
@@ -337,9 +337,9 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
                         'mean': float(mean),
                         'std': float(std),
                         'volatility': volatility,
-                        'price_mean_distance': float((current_price - mean) / mean)
-                        if mean > 0
-                        else 0.0,
+                        'price_mean_distance': (
+                            float((current_price - mean) / mean) if mean > 0 else 0.0
+                        ),
                     },
                 )
 

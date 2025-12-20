@@ -4,6 +4,7 @@ Tests de Regresión para Indicadores Técnicos
 Generado automáticamente por StrategyAuditor.
 Valida que los indicadores coinciden con pandas_ta.
 """
+
 import unittest
 from decimal import Decimal
 

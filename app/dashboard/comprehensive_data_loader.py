@@ -346,9 +346,9 @@ class ComprehensiveBacktestLoader:
             'avg_win_rate': float(df['win_rate'].mean()) if 'win_rate' in df.columns else 0.0,
             'best_sharpe': float(df['sharpe_ratio'].max()) if 'sharpe_ratio' in df.columns else 0.0,
             'best_pnl': float(df['total_pnl'].max()) if 'total_pnl' in df.columns else 0.0,
-            'worst_drawdown': float(df['max_drawdown'].min())
-            if 'max_drawdown' in df.columns
-            else 0.0,
+            'worst_drawdown': (
+                float(df['max_drawdown'].min()) if 'max_drawdown' in df.columns else 0.0
+            ),
         }
 
         return stats
@@ -410,9 +410,11 @@ class ComprehensiveBacktestLoader:
             'file_name': meta_data.get('file_name', 'Unknown'),
             'timestamp': meta_data.get('timestamp', 'Unknown'),
             'total_backtests_analyzed': analysis_data.get('total_backtests', 0),
-            'clusters_found': len(analysis_data.get('clusters', {}))
-            if isinstance(analysis_data.get('clusters'), dict)
-            else 0,
+            'clusters_found': (
+                len(analysis_data.get('clusters', {}))
+                if isinstance(analysis_data.get('clusters'), dict)
+                else 0
+            ),
             'optimal_combinations_count': len(analysis_data.get('optimal_combinations', [])),
             'avg_sharpe': analysis_data.get('aggregate_metrics', {}).get('avg_sharpe_ratio', 0),
             'avg_return': analysis_data.get('aggregate_metrics', {}).get('avg_return_pct', 0),

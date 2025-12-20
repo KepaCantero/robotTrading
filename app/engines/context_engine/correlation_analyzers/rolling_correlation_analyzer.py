@@ -58,9 +58,9 @@ class RollingCorrelationAnalyzer:
                 avg_corr = float(np.mean(np.triu(last_corr, k=1)[np.triu(last_corr, k=1) != 0]))
 
             return {
-                'correlation_matrix': last_corr.tolist()
-                if isinstance(last_corr, np.ndarray)
-                else None,
+                'correlation_matrix': (
+                    last_corr.tolist() if isinstance(last_corr, np.ndarray) else None
+                ),
                 'average_correlation': avg_corr,
                 'correlation_trend': 'stable',
             }
