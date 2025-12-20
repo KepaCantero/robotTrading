@@ -7,6 +7,7 @@ from .base_learning_engine import BaseLearningEngine
 # Drift detection y overfitting (siempre disponibles) [TASK-4.2-DRIFT]
 from .drift_detector import (
     ADWINDetector,
+    AdvancedOverfittingDetector,
     AutoRetrainingTrigger,
     ComprehensiveDriftDetector,
     ComprehensiveDriftReport,
@@ -16,9 +17,15 @@ from .drift_detector import (
     FeatureDriftMonitor,
     FeatureDriftReport,
     OverfittingDetector,
+    OverfittingMetrics,
+    OverfittingReport,
+    OverfittingSeverity,
+    OverfittingResult,
     PSIDetector,
     get_default_drift_config,
+    get_default_overfitting_config,
     load_drift_config,
+    load_overfitting_config,
 )
 
 # Feature importance (siempre disponibles) [TASK-4.2-FEATURE-IMPORTANCE]
@@ -83,14 +90,21 @@ __all__ = [
     "ConceptDriftDetector",
     "FeatureDriftMonitor",
     "OverfittingDetector",
+    "AdvancedOverfittingDetector",
     "ComprehensiveDriftDetector",
     "AutoRetrainingTrigger",
     "DriftResult",
     "DriftSeverity",
     "FeatureDriftReport",
     "ComprehensiveDriftReport",
+    "OverfittingSeverity",
+    "OverfittingMetrics",
+    "OverfittingResult",
+    "OverfittingReport",
     "load_drift_config",
     "get_default_drift_config",
+    "load_overfitting_config",
+    "get_default_overfitting_config",
     # Feature importance [TASK-4.2-FEATURE-IMPORTANCE]
     "SHAPAnalyzer",
     "AttentionWeightsAnalyzer",

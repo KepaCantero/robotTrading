@@ -104,6 +104,54 @@ def get_default_drift_config() -> Dict[str, Any]:
     }
 
 
+def load_overfitting_config(
+    config_path: str = "config/overfitting_detection.yaml",
+) -> Dict[str, Any]:
+    """Load overfitting detection configuration from YAML file."""
+    path = Path(config_path)
+    if not path.exists():
+        logger.warning(f"Overfitting config not found at {config_path}, using defaults")
+        return get_default_overfitting_config()
+
+    with open(path, "r") as f:
+        return yaml.safe_load(f)
+
+
+def get_default_overfitting_config() -> Dict[str, Any]:
+    """Return default overfitting detection configuration."""
+    return {
+        "enabled": True,
+        "detection": {
+            "train_val_gap_threshold": 0.1,  # 10% divergence triggers detection
+            "test_set_analysis": True,
+            "cross_validation_enabled": True,
+            "cv_folds": 5,
+        },
+        "learning_curves": {
+            "min_epochs": 10,
+            "analyze_trends": True,
+            "extrapolation_window": 5,
+            "divergence_sensitivity": 0.05,
+        },
+        "regularization": {
+            "monitor_l1": True,
+            "monitor_l2": True,
+            "analyze_weight_magnitudes": True,
+        },
+        "model_complexity": {
+            "track_parameters": True,
+            "track_layers": True,
+            "complexity_penalty": 0.1,
+        },
+        "severity_thresholds": {
+            "low": 20.0,  # Overfitting score for LOW severity
+            "medium": 40.0,  # Overfitting score for MEDIUM severity
+            "high": 60.0,  # Overfitting score for HIGH severity
+            "critical": 80.0,  # Overfitting score for CRITICAL severity
+        },
+    }
+
+
 # ============================================================================
 # Data Classes
 # ============================================================================
@@ -887,7 +935,116 @@ class FeatureDriftMonitor:
 
 
 # ============================================================================
-# Overfitting Detector
+# Overfitting Severity and Data Classes [TASK-4.2-PHASE-4]
+# ============================================================================
+
+
+class OverfittingSeverity(Enum):
+    """Severity levels for overfitting detection."""
+
+    NONE = "none"
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+
+@dataclass
+class OverfittingMetrics:
+    """Metrics for a single training epoch."""
+
+    epoch: int
+    train_loss: float
+    val_loss: Optional[float]
+    train_metric: float  # accuracy/f1/r2 depending on task
+    val_metric: Optional[float]
+    test_loss: Optional[float] = None
+    test_metric: Optional[float] = None
+    l1_regularization: Optional[float] = None
+    l2_regularization: Optional[float] = None
+    model_params_count: Optional[int] = None
+    timestamp: Optional[datetime] = None
+
+    def generalization_gap(self) -> Optional[float]:
+        """Calculate generalization gap (val - train loss)."""
+        if self.val_loss is None or self.train_loss is None:
+            return None
+        return self.val_loss - self.train_loss
+
+    def gap_ratio(self) -> Optional[float]:
+        """Calculate gap ratio for normalization."""
+        gap = self.generalization_gap()
+        if gap is None or self.train_loss == 0:
+            return None
+        return gap / self.train_loss
+
+
+@dataclass
+class OverfittingResult:
+    """Result from overfitting detection."""
+
+    overfitting_detected: bool
+    severity: OverfittingSeverity
+    overfitting_score: float  # 0-100, similar to RobustnessScorer
+    gap_ratio: float  # Normalized train/val gap
+    generalization_gap: float  # Absolute gap
+    learning_curve_trend: str  # diverging, converging, plateau
+    cross_validation_std: Optional[float] = None
+    root_causes: List[str] = field(default_factory=list)
+    recommendations: List[str] = field(default_factory=list)
+    divergence_point: Optional[int] = None  # Epoch where overfitting starts
+    optimal_stopping_point: Optional[int] = None
+    details: Dict[str, Any] = field(default_factory=dict)
+    timestamp: Optional[datetime] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            "overfitting_detected": self.overfitting_detected,
+            "severity": self.severity.value,
+            "overfitting_score": self.overfitting_score,
+            "gap_ratio": self.gap_ratio,
+            "generalization_gap": self.generalization_gap,
+            "learning_curve_trend": self.learning_curve_trend,
+            "cross_validation_std": self.cross_validation_std,
+            "root_causes": self.root_causes,
+            "recommendations": self.recommendations,
+            "divergence_point": self.divergence_point,
+            "optimal_stopping_point": self.optimal_stopping_point,
+            "details": self.details,
+            "timestamp": self.timestamp.isoformat() if self.timestamp else None,
+        }
+
+
+@dataclass
+class OverfittingReport:
+    """Comprehensive overfitting analysis report."""
+
+    timestamp: datetime
+    model_name: str
+    overall_overfitting_detected: bool
+    severity: OverfittingSeverity
+    latest_result: OverfittingResult
+    results_history: List[OverfittingResult]
+    trend_analysis: Dict[str, Any]
+    actionable_recommendations: List[str]
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            "timestamp": self.timestamp.isoformat(),
+            "model_name": self.model_name,
+            "overall_overfitting_detected": self.overall_overfitting_detected,
+            "severity": self.severity.value,
+            "latest_result": self.latest_result.to_dict(),
+            "results_history_size": len(self.results_history),
+            "trend_analysis": self.trend_analysis,
+            "actionable_recommendations": self.actionable_recommendations,
+        }
+
+
+# ============================================================================
+# Overfitting Detector (Basic - Phase 3)
 # ============================================================================
 
 
@@ -993,6 +1150,570 @@ class OverfittingDetector:
             "train_metrics": self.train_metrics_history.copy(),
             "val_metrics": self.val_metrics_history.copy(),
         }
+
+
+# ============================================================================
+# Advanced Overfitting Detector [TASK-4.2-PHASE-4]
+# ============================================================================
+
+
+class AdvancedOverfittingDetector:
+    """
+    Advanced overfitting detection system with comprehensive analysis.
+
+    Detects:
+    1. Train/val gap divergence
+    2. Test set performance degradation
+    3. Cross-validation stability
+    4. Regularization effectiveness
+    5. Learning curve extrapolation
+    6. Root cause identification
+    7. Actionable recommendations
+    """
+
+    def __init__(self, config: Dict[str, Any] = None):
+        """
+        Initialize advanced overfitting detector.
+
+        Args:
+            config: Configuration dict or load from YAML
+        """
+        if config is None:
+            config = load_overfitting_config()
+
+        self.config = config
+
+        # Thresholds
+        self.train_val_gap_threshold = config.get("detection", {}).get(
+            "train_val_gap_threshold", 0.1
+        )
+        self.test_set_analysis = config.get("detection", {}).get("test_set_analysis", True)
+        self.cross_validation_enabled = config.get("detection", {}).get(
+            "cross_validation_enabled", True
+        )
+        self.cv_folds = config.get("detection", {}).get("cv_folds", 5)
+
+        # Learning curves
+        self.min_epochs = config.get("learning_curves", {}).get("min_epochs", 10)
+        self.analyze_trends = config.get("learning_curves", {}).get("analyze_trends", True)
+        self.extrapolation_window = config.get("learning_curves", {}).get(
+            "extrapolation_window", 5
+        )
+        self.divergence_sensitivity = config.get("learning_curves", {}).get(
+            "divergence_sensitivity", 0.05
+        )
+
+        # Regularization
+        self.monitor_l1 = config.get("regularization", {}).get("monitor_l1", True)
+        self.monitor_l2 = config.get("regularization", {}).get("monitor_l2", True)
+
+        # Model complexity
+        self.track_parameters = config.get("model_complexity", {}).get("track_parameters", True)
+        self.complexity_penalty = config.get("model_complexity", {}).get(
+            "complexity_penalty", 0.1
+        )
+
+        # Severity thresholds
+        self.severity_thresholds = config.get("severity_thresholds", {})
+
+        # Internal state
+        self.metrics_history: List[OverfittingMetrics] = []
+        self.cv_scores_history: List[List[float]] = []
+        self.results_history: List[OverfittingResult] = []
+
+    def update_metrics(
+        self,
+        epoch: int,
+        train_loss: float,
+        val_loss: Optional[float] = None,
+        train_metric: float = 0.0,
+        val_metric: Optional[float] = None,
+        test_loss: Optional[float] = None,
+        test_metric: Optional[float] = None,
+        l1_regularization: Optional[float] = None,
+        l2_regularization: Optional[float] = None,
+        model_params_count: Optional[int] = None,
+    ) -> None:
+        """
+        Update metrics for a training epoch.
+
+        Args:
+            epoch: Epoch number
+            train_loss: Training loss
+            val_loss: Validation loss
+            train_metric: Training metric (accuracy/F1/R2)
+            val_metric: Validation metric
+            test_loss: Test loss (optional)
+            test_metric: Test metric (optional)
+            l1_regularization: L1 regularization value
+            l2_regularization: L2 regularization value
+            model_params_count: Total model parameters
+        """
+        metrics = OverfittingMetrics(
+            epoch=epoch,
+            train_loss=train_loss,
+            val_loss=val_loss,
+            train_metric=train_metric,
+            val_metric=val_metric,
+            test_loss=test_loss,
+            test_metric=test_metric,
+            l1_regularization=l1_regularization,
+            l2_regularization=l2_regularization,
+            model_params_count=model_params_count,
+            timestamp=datetime.now(),
+        )
+        self.metrics_history.append(metrics)
+
+    def add_cv_scores(self, cv_scores: List[float]) -> None:
+        """
+        Add cross-validation scores for stability analysis.
+
+        Args:
+            cv_scores: List of scores from K-fold cross-validation
+        """
+        self.cv_scores_history.append(cv_scores)
+
+    def detect_overfitting(self) -> OverfittingResult:
+        """
+        Detect overfitting using all available signals.
+
+        Returns:
+            OverfittingResult with comprehensive analysis
+        """
+        timestamp = datetime.now()
+
+        # Check minimum data
+        if len(self.metrics_history) < self.min_epochs:
+            return OverfittingResult(
+                overfitting_detected=False,
+                severity=OverfittingSeverity.NONE,
+                overfitting_score=0.0,
+                gap_ratio=0.0,
+                generalization_gap=0.0,
+                learning_curve_trend="unknown",
+                root_causes=["insufficient_epochs"],
+                recommendations=["continue_training"],
+                details={"epochs_collected": len(self.metrics_history)},
+                timestamp=timestamp,
+            )
+
+        # Get latest metrics
+        latest = self.metrics_history[-1]
+
+        # 1. Calculate gap ratio
+        gap_ratio, gap = self._calculate_gap_ratio()
+
+        # 2. Analyze learning curves
+        lc_trend = self._analyze_learning_curve_trend()
+        divergence_point = self._detect_divergence_point()
+
+        # 3. Detect overfitting signals
+        overfitting_signals = self._detect_overfitting_signals(
+            gap_ratio, lc_trend, divergence_point
+        )
+
+        # 4. Analyze cross-validation stability
+        cv_std = self._analyze_cross_validation_stability()
+
+        # 5. Identify root causes
+        root_causes = self._identify_root_causes(overfitting_signals, cv_std)
+
+        # 6. Calculate overfitting score (0-100)
+        overfitting_score = self._calculate_overfitting_score(
+            gap_ratio, lc_trend, cv_std, divergence_point
+        )
+
+        # 7. Determine severity
+        severity = self._determine_severity(overfitting_score)
+
+        # 8. Generate recommendations
+        recommendations = self._generate_recommendations(
+            root_causes, severity, overfitting_score
+        )
+
+        # 9. Calculate optimal stopping point
+        optimal_stopping = self._estimate_optimal_stopping_point()
+
+        # Create result
+        result = OverfittingResult(
+            overfitting_detected=overfitting_score > 30.0,  # 30+ score = detection
+            severity=severity,
+            overfitting_score=overfitting_score,
+            gap_ratio=gap_ratio,
+            generalization_gap=gap,
+            learning_curve_trend=lc_trend,
+            cross_validation_std=cv_std,
+            root_causes=root_causes,
+            recommendations=recommendations,
+            divergence_point=divergence_point,
+            optimal_stopping_point=optimal_stopping,
+            details={
+                "epochs_analyzed": len(self.metrics_history),
+                "has_test_metrics": latest.test_loss is not None,
+                "has_regularization": latest.l1_regularization is not None
+                or latest.l2_regularization is not None,
+                "model_parameters": latest.model_params_count,
+            },
+            timestamp=timestamp,
+        )
+
+        self.results_history.append(result)
+        return result
+
+    def _calculate_gap_ratio(self) -> Tuple[float, float]:
+        """Calculate train/val gap ratio."""
+        if not self.metrics_history:
+            return 0.0, 0.0
+
+        # Use last 10 epochs or all if less
+        recent_metrics = self.metrics_history[-10:]
+
+        # Filter metrics with valid val loss
+        valid_metrics = [m for m in recent_metrics if m.val_loss is not None]
+
+        if not valid_metrics:
+            return 0.0, 0.0
+
+        # Calculate mean losses
+        train_losses = [m.train_loss for m in valid_metrics]
+        val_losses = [m.val_loss for m in valid_metrics]
+
+        mean_train_loss = np.mean(train_losses)
+        mean_val_loss = np.mean(val_losses)
+
+        gap = mean_val_loss - mean_train_loss
+
+        if mean_train_loss > 0:
+            gap_ratio = gap / mean_train_loss
+        else:
+            gap_ratio = abs(gap) if gap != 0 else 0.0
+
+        return float(gap_ratio), float(gap)
+
+    def _analyze_learning_curve_trend(self) -> str:
+        """Analyze learning curve trends."""
+        if len(self.metrics_history) < 5:
+            return "unknown"
+
+        recent_metrics = self.metrics_history[-self.extrapolation_window :]
+
+        # Get valid training and validation metrics
+        train_losses = [m.train_loss for m in recent_metrics]
+        val_metrics = [m.val_loss for m in recent_metrics if m.val_loss is not None]
+
+        if not val_metrics:
+            return "unknown"
+
+        # Calculate trends
+        train_trend = self._calculate_trend(train_losses)
+        val_trend = self._calculate_trend(val_metrics)
+
+        # Classify trend
+        if train_trend < -self.divergence_sensitivity and val_trend > self.divergence_sensitivity:
+            return "diverging"  # Train improves, val worsens
+        elif train_trend < -self.divergence_sensitivity and val_trend < -self.divergence_sensitivity:
+            return "converging"  # Both improve
+        elif abs(train_trend) < self.divergence_sensitivity and abs(val_trend) < self.divergence_sensitivity:
+            return "plateau"  # Both plateau
+        else:
+            return "unstable"
+
+    def _detect_divergence_point(self) -> Optional[int]:
+        """Detect where overfitting divergence starts."""
+        if len(self.metrics_history) < 5:
+            return None
+
+        recent = self.metrics_history[-10:]
+        valid_indices = [i for i, m in enumerate(recent) if m.val_loss is not None]
+
+        if len(valid_indices) < 3:
+            return None
+
+        for i in range(1, len(valid_indices)):
+            current_idx = valid_indices[i]
+            prev_idx = valid_indices[i - 1]
+
+            current_m = recent[current_idx]
+            prev_m = recent[prev_idx]
+
+            # Check if train improves but val worsens
+            if (
+                current_m.train_loss < prev_m.train_loss
+                and current_m.val_loss > prev_m.val_loss
+            ):
+                return len(self.metrics_history) - len(recent) + current_idx
+
+        return None
+
+    def _detect_overfitting_signals(
+        self,
+        gap_ratio: float,
+        lc_trend: str,
+        divergence_point: Optional[int],
+    ) -> Dict[str, bool]:
+        """Detect multiple overfitting signals."""
+        return {
+            "large_gap": gap_ratio > self.train_val_gap_threshold,
+            "diverging_curves": lc_trend == "diverging",
+            "has_divergence_point": divergence_point is not None,
+        }
+
+    def _analyze_cross_validation_stability(self) -> Optional[float]:
+        """Analyze cross-validation score stability."""
+        if not self.cv_scores_history or not self.cross_validation_enabled:
+            return None
+
+        # Use last CV scores
+        latest_cv = self.cv_scores_history[-1]
+
+        if len(latest_cv) < 2:
+            return None
+
+        return float(np.std(latest_cv))
+
+    def _identify_root_causes(
+        self,
+        overfitting_signals: Dict[str, bool],
+        cv_std: Optional[float],
+    ) -> List[str]:
+        """Identify root causes of overfitting."""
+        causes = []
+
+        if overfitting_signals.get("diverging_curves"):
+            causes.append("learning_curves_diverging")
+
+        if overfitting_signals.get("large_gap"):
+            causes.append("large_train_validation_gap")
+
+        if cv_std is not None and cv_std > 0.1:
+            causes.append("high_cross_validation_variance")
+
+        if self.metrics_history:
+            latest = self.metrics_history[-1]
+            if (
+                latest.model_params_count is not None
+                and len(self.metrics_history) < 1000
+                and latest.model_params_count > 1000000
+            ):
+                causes.append("model_too_complex_for_data")
+
+            if latest.l2_regularization is not None and latest.l2_regularization < 0.0001:
+                causes.append("insufficient_l2_regularization")
+
+        if not causes:
+            causes.append("unknown")
+
+        return causes
+
+    def _calculate_overfitting_score(
+        self,
+        gap_ratio: float,
+        lc_trend: str,
+        cv_std: Optional[float],
+        divergence_point: Optional[int],
+    ) -> float:
+        """
+        Calculate overfitting score (0-100).
+
+        Similar scoring approach to RobustnessScorer.
+        """
+        score = 0.0
+
+        # 1. Gap ratio contribution (40%)
+        gap_score = min(100.0, gap_ratio * 100.0)
+        score += gap_score * 0.4
+
+        # 2. Learning curve trend contribution (35%)
+        if lc_trend == "diverging":
+            trend_score = 100.0
+        elif lc_trend == "converging":
+            trend_score = 20.0
+        elif lc_trend == "plateau":
+            trend_score = 40.0
+        else:
+            trend_score = 30.0
+
+        score += trend_score * 0.35
+
+        # 3. Cross-validation stability (15%)
+        if cv_std is not None:
+            cv_score = min(100.0, cv_std * 100.0)
+        else:
+            cv_score = 0.0
+        score += cv_score * 0.15
+
+        # 4. Divergence point penalty (10%)
+        if divergence_point is not None:
+            epochs_since_divergence = len(self.metrics_history) - divergence_point
+            divergence_score = min(100.0, (epochs_since_divergence / 10.0) * 100.0)
+        else:
+            divergence_score = 0.0
+        score += divergence_score * 0.1
+
+        return float(min(100.0, score))
+
+    def _determine_severity(self, overfitting_score: float) -> OverfittingSeverity:
+        """Determine severity based on overfitting score."""
+        thresholds = self.severity_thresholds
+
+        if overfitting_score < thresholds.get("low", 20.0):
+            return OverfittingSeverity.NONE
+        elif overfitting_score < thresholds.get("medium", 40.0):
+            return OverfittingSeverity.LOW
+        elif overfitting_score < thresholds.get("high", 60.0):
+            return OverfittingSeverity.MEDIUM
+        elif overfitting_score < thresholds.get("critical", 80.0):
+            return OverfittingSeverity.HIGH
+        else:
+            return OverfittingSeverity.CRITICAL
+
+    def _generate_recommendations(
+        self,
+        root_causes: List[str],
+        severity: OverfittingSeverity,
+        overfitting_score: float,
+    ) -> List[str]:
+        """Generate actionable recommendations."""
+        recommendations = []
+
+        # Severity-based recommendations
+        if severity == OverfittingSeverity.CRITICAL:
+            recommendations.append("immediately_stop_training")
+            recommendations.append("reduce_model_complexity")
+        elif severity == OverfittingSeverity.HIGH:
+            recommendations.append("stop_training_soon")
+            recommendations.append("apply_regularization")
+        elif severity == OverfittingSeverity.MEDIUM:
+            recommendations.append("monitor_closely")
+            recommendations.append("consider_early_stopping")
+        elif severity == OverfittingSeverity.LOW:
+            recommendations.append("monitor_trends")
+
+        # Root cause-based recommendations
+        if "model_too_complex_for_data" in root_causes:
+            recommendations.append("simplify_model_architecture")
+            recommendations.append("reduce_number_of_layers")
+
+        if "insufficient_l2_regularization" in root_causes:
+            recommendations.append("increase_l2_regularization_weight")
+
+        if "high_cross_validation_variance" in root_causes:
+            recommendations.append("increase_training_data")
+            recommendations.append("apply_data_augmentation")
+
+        if "learning_curves_diverging" in root_causes:
+            recommendations.append("apply_early_stopping")
+            recommendations.append("add_dropout_layers")
+
+        # Ensure at least one recommendation
+        if not recommendations:
+            recommendations.append("continue_monitoring")
+
+        return list(set(recommendations))  # Remove duplicates
+
+    def _estimate_optimal_stopping_point(self) -> Optional[int]:
+        """Estimate optimal epoch to stop training."""
+        if len(self.metrics_history) < 5:
+            return None
+
+        # Find epoch with best validation metric
+        best_val_loss = float("inf")
+        best_epoch = None
+
+        for i, m in enumerate(self.metrics_history):
+            if m.val_loss is not None and m.val_loss < best_val_loss:
+                best_val_loss = m.val_loss
+                best_epoch = m.epoch
+
+        return best_epoch
+
+    def _calculate_trend(self, values: List[float]) -> float:
+        """Calculate trend using linear regression."""
+        if len(values) < 2:
+            return 0.0
+
+        x = np.arange(len(values))
+        y = np.array(values)
+
+        try:
+            slope = np.polyfit(x, y, 1)[0]
+            return float(slope)
+        except Exception:
+            return 0.0
+
+    def get_learning_curves(self) -> Dict[str, Any]:
+        """Get learning curves history."""
+        epochs = [m.epoch for m in self.metrics_history]
+        train_losses = [m.train_loss for m in self.metrics_history]
+        val_losses = [m.val_loss for m in self.metrics_history]
+        train_metrics = [m.train_metric for m in self.metrics_history]
+        val_metrics = [m.val_metric for m in self.metrics_history]
+
+        return {
+            "epochs": epochs,
+            "train_losses": train_losses,
+            "val_losses": val_losses,
+            "train_metrics": train_metrics,
+            "val_metrics": val_metrics,
+        }
+
+    def generate_report(self, model_name: str = "unnamed") -> OverfittingReport:
+        """
+        Generate comprehensive overfitting report.
+
+        Args:
+            model_name: Name of the model being analyzed
+
+        Returns:
+            OverfittingReport with full analysis
+        """
+        timestamp = datetime.now()
+
+        if not self.results_history:
+            latest_result = self.detect_overfitting()
+        else:
+            latest_result = self.results_history[-1]
+
+        # Analyze trend over all results
+        trend_scores = [r.overfitting_score for r in self.results_history[-10:]]
+        trend_direction = "unknown"
+
+        if len(trend_scores) >= 3:
+            slope = np.polyfit(np.arange(len(trend_scores)), trend_scores, 1)[0]
+            if slope > 0.5:
+                trend_direction = "worsening"
+            elif slope < -0.5:
+                trend_direction = "improving"
+            else:
+                trend_direction = "stable"
+
+        trend_analysis = {
+            "direction": trend_direction,
+            "recent_scores": trend_scores[-5:] if trend_scores else [],
+            "average_score": float(np.mean(trend_scores)) if trend_scores else 0.0,
+        }
+
+        # Aggregate recommendations from recent results
+        all_recommendations = set()
+        for result in self.results_history[-5:]:
+            all_recommendations.update(result.recommendations)
+
+        return OverfittingReport(
+            timestamp=timestamp,
+            model_name=model_name,
+            overall_overfitting_detected=latest_result.overfitting_detected,
+            severity=latest_result.severity,
+            latest_result=latest_result,
+            results_history=self.results_history,
+            trend_analysis=trend_analysis,
+            actionable_recommendations=list(all_recommendations),
+        )
+
+    def reset(self) -> None:
+        """Reset detector state."""
+        self.metrics_history.clear()
+        self.cv_scores_history.clear()
+        self.results_history.clear()
 
 
 # ============================================================================
