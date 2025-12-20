@@ -260,14 +260,9 @@ class ModularMomentumStrategy(BaseStrategy):
                 return []
 
             # 6. SI learning engine está activo, obtener predicción
-            # CRÍTICO: Para deep/transformer, NUNCA inicializar en proceso principal (evita mutex.cc blocking)
+            # CRÍTICO: NUNCA inicializar learning engine en proceso principal - CAUSA MUTEX.CC BLOCKING
+            # El learning engine solo se entrena en subprocess durante backtesting
             learning_prediction = None
-
-            # Solo intentar usar learning engine si NO es deep/transformer
-            if self._learning_config and self._learning_engine_type not in ['deep', 'transformer']:
-                # INICIALIZACIÓN LAZY del learning engine (solo cuando se necesita)
-                if self.learning_engine is None:
-                    self._initialize_learning_engine()
 
             # Para deep/transformer, SIEMPRE usar predicción neutral (nunca tocar PyTorch)
             if self._learning_engine_type in ['deep', 'transformer']:
@@ -280,7 +275,8 @@ class ModularMomentumStrategy(BaseStrategy):
                 logger.debug(
                     f"⚠️ {self._learning_engine_type} engine - usando predicción neutral (previene mutex.cc blocking)"
                 )
-            elif self.learning_engine and self.learning_engine.enabled:
+            # Solo usar learning engine si YA está inicializado (no intentar inicializar aquí)
+            elif self.learning_engine is not None and self.learning_engine.enabled:
                 # Para otros engines (supervised, reinforcement), proceder normalmente
                 if learning_prediction is None:
                     # Si no está entrenado pero está habilitado, intentar entrenar automáticamente
