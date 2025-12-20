@@ -18,10 +18,10 @@ Detectores implementados:
 import logging
 from collections import deque
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import yaml
@@ -30,8 +30,7 @@ logger = logging.getLogger(__name__)
 
 # Importaciones opcionales
 try:
-    from scipy import stats
-    from scipy.stats import chi2_contingency, ks_2samp
+    from scipy.stats import ks_2samp
 
     SCIPY_AVAILABLE = True
 except ImportError:
@@ -39,7 +38,7 @@ except ImportError:
     logger.warning("scipy no disponible. Algunos tests estadísticos no funcionarán.")
 
 try:
-    from sklearn.metrics import mean_absolute_error, mean_squared_error
+    pass
 
     SKLEARN_METRICS_AVAILABLE = True
 except ImportError:
@@ -535,16 +534,20 @@ class ConceptDriftDetector:
                 details={"error": "insufficient_reference_data"},
             )
 
-        if len(current_data) < self.min_samples:
-            return DriftResult(
+        # Flatten first, then check
+        reference_array = np.array(list(self.reference_data)).flatten()
+        current_flat = current_data.flatten()
+
+        # Check minimum sample requirements on flattened data
+        if len(reference_array) < self.min_samples or len(current_flat) < self.min_samples:
+            result = DriftResult(
                 drift_detected=False,
                 detector_name="ks_test",
                 statistic=0.0,
-                details={"error": "insufficient_current_data"},
+                details={"error": "insufficient_data_after_flatten", "reference_samples": len(reference_array), "current_samples": len(current_flat)},
             )
-
-        reference_array = np.array(list(self.reference_data)).flatten()
-        current_flat = current_data.flatten()
+            self.drift_history.append(result)
+            return result
 
         if not SCIPY_AVAILABLE:
             return DriftResult(
@@ -679,6 +682,61 @@ class ConceptDriftDetector:
             results["mmd"] = self.detect_drift_mmd(current_data, timestamp)
 
         return results
+
+    def detect_drift(
+        self,
+        current_data: np.ndarray,
+        timestamp: Optional[datetime] = None,
+    ) -> Dict[str, Any]:
+        """
+        Detect drift and return results as a dictionary.
+
+        Args:
+            current_data: Current data to check for drift
+            timestamp: Optional timestamp for the detection
+
+        Returns:
+            Dict with keys: 'drift_detected', 'drift_score', 'recommendation'
+        """
+        results = self.detect(current_data, timestamp)
+
+        # Aggregate results from all detectors
+        drift_detected = False
+        max_score = 0.0
+        recommendation = "ok"
+
+        for detector_name, result in results.items():
+            if result.drift_detected:
+                drift_detected = True
+            # Get p-value as score if available, otherwise use statistic
+            score = result.p_value if result.p_value is not None else result.statistic
+            if score > max_score:
+                max_score = score
+
+        # Determine recommendation based on severity
+        if results:
+            max_severity = max(
+                (r.severity for r in results.values()),
+                key=lambda s: list(DriftSeverity).index(s),
+                default=DriftSeverity.NONE,
+            )
+
+            if max_severity == DriftSeverity.CRITICAL:
+                recommendation = "retrain_immediately"
+            elif max_severity == DriftSeverity.HIGH:
+                recommendation = "investigate_and_retrain"
+            elif max_severity == DriftSeverity.MEDIUM:
+                recommendation = "monitor_closely"
+            elif max_severity == DriftSeverity.LOW:
+                recommendation = "monitor"
+            else:
+                recommendation = "ok"
+
+        return {
+            "drift_detected": drift_detected,
+            "drift_score": float(max_score),
+            "recommendation": recommendation,
+        }
 
     def get_drift_history(self, limit: int = 100) -> List[Dict[str, Any]]:
         """Get drift detection history."""
@@ -1025,6 +1083,22 @@ class ComprehensiveDriftDetector:
         # Feature monitor
         self.feature_monitor.set_reference(data, feature_names)
 
+    def update_reference(
+        self,
+        data: np.ndarray,
+        predictions: Optional[np.ndarray] = None,
+        feature_names: Optional[List[str]] = None,
+    ) -> None:
+        """
+        Update reference data for drift detection (alias for set_reference).
+
+        Args:
+            data: Feature data (n_samples, n_features)
+            predictions: Model predictions (optional)
+            feature_names: Feature names (optional)
+        """
+        self.set_reference(data, predictions, feature_names)
+
     def detect(
         self,
         current_data: np.ndarray,
@@ -1186,7 +1260,7 @@ class AutoRetrainingTrigger:
         """Initialize trigger system."""
         config = config or {}
 
-        self.drift_detector = ComprehensiveDriftDetector(config.get("drift_config"))
+        self.drift_detector = ConceptDriftDetector(config.get("drift_detector_config", {}))
         self.overfitting_detector = OverfittingDetector(config.get("overfitting_config", {}))
 
         # Triggers
@@ -1230,7 +1304,7 @@ class AutoRetrainingTrigger:
         results = {
             "should_retrain": False,
             "reasons": [],
-            "drift_report": None,
+            "drift_detection": None,
             "overfitting_detection": None,
             "performance_degradation": None,
             "time_based": False,
@@ -1246,12 +1320,13 @@ class AutoRetrainingTrigger:
 
         # 2. Drift-based check
         if self.retrain_on_drift and current_data is not None:
-            drift_report = self.drift_detector.detect(current_data, current_predictions, timestamp)
-            results["drift_report"] = drift_report
+            drift_result = self.drift_detector.detect_drift(current_data, timestamp)
+            results["drift_detection"] = drift_result
 
-            if drift_report.should_retrain:
+            if drift_result.get("drift_detected", False):
                 should_retrain = True
-                reasons.append(f"drift_detected: severity={drift_report.overall_severity.value}")
+                recommendation = drift_result.get("recommendation", "monitor")
+                reasons.append(f"drift_detected: recommendation={recommendation}")
 
         # 3. Overfitting check
         if self.retrain_on_overfitting:
@@ -1328,7 +1403,6 @@ class AutoRetrainingTrigger:
         """Record that a retrain was performed."""
         timestamp = timestamp or datetime.now()
         self.last_retrain_timestamp = timestamp
-        self.drift_detector.record_retrain(timestamp)
 
         self.retrain_history.append(
             {
