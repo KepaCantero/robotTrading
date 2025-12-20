@@ -207,7 +207,9 @@ class ModularMomentumStrategy(BaseStrategy):
             error_msg = str(e).lower()
             if 'mutex' in error_msg or 'lock' in error_msg or 'blocking' in error_msg:
                 logger.error(f"❌ Bloqueo de mutex al inicializar {engine_type}: {e}")
-                logger.error("💡 El learning engine se intentará inicializar más tarde o se omitirá")
+                logger.error(
+                    "💡 El learning engine se intentará inicializar más tarde o se omitirá"
+                )
                 self.learning_engine = None
             else:
                 raise
@@ -296,9 +298,11 @@ class ModularMomentumStrategy(BaseStrategy):
 
                     # Preparar metadata
                     metadata = {
-                        'timestamp': market_data.timestamp
-                        if hasattr(market_data, 'timestamp')
-                        else datetime.now(),
+                        'timestamp': (
+                            market_data.timestamp
+                            if hasattr(market_data, 'timestamp')
+                            else datetime.now()
+                        ),
                         'symbol': market_data.symbol,
                         'recent_trades': list(self.recent_trades),
                         'recent_win_rate': self._calculate_recent_win_rate(),
@@ -429,9 +433,9 @@ class ModularMomentumStrategy(BaseStrategy):
                 signal_type=signal_type,
                 strength=strength,
                 price=Decimal(str(current_price)),
-                timestamp=market_data.timestamp
-                if hasattr(market_data, 'timestamp')
-                else datetime.now(),
+                timestamp=(
+                    market_data.timestamp if hasattr(market_data, 'timestamp') else datetime.now()
+                ),
                 confidence=confidence,
                 liquidity_score=liquidity_score,
                 priority_score=priority_score,
@@ -739,14 +743,16 @@ class ModularMomentumStrategy(BaseStrategy):
         # Si no hay suficiente historial, rellenar con el último elemento
         if len(historical_data) < sequence_length:
             padding = [
-                historical_data[-1]
-                if historical_data
-                else {
-                    'indicators': indicators,
-                    'filter_results': filter_results,
-                    'market_context': market_context,
-                    'metadata': metadata,
-                }
+                (
+                    historical_data[-1]
+                    if historical_data
+                    else {
+                        'indicators': indicators,
+                        'filter_results': filter_results,
+                        'market_context': market_context,
+                        'metadata': metadata,
+                    }
+                )
             ] * (sequence_length - len(historical_data))
             historical_data = padding + historical_data
 

@@ -100,9 +100,11 @@ class MetricsCalculator:
         max_drawdown = min(Decimal("0"), max_drawdown)
         max_drawdown_percentage = min(
             Decimal("0"),
-            (max_drawdown / initial_capital) * Decimal("100")
-            if initial_capital > 0
-            else Decimal("0"),
+            (
+                (max_drawdown / initial_capital) * Decimal("100")
+                if initial_capital > 0
+                else Decimal("0")
+            ),
         )
 
         # Calculate returns for Sharpe/Sortino

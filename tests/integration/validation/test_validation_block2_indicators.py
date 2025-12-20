@@ -6,6 +6,7 @@ Tests para verificar:
 - Lag o desfasado (verificar que no estén desplazados una vela)
 - Persistencia de configuración (parámetros desde config, no hardcodeados)
 """
+
 import unittest
 from decimal import Decimal
 from typing import List

@@ -6,6 +6,7 @@ Problemas identificados:
 - Señales sin match con market data
 - Timestamps incorrectos
 """
+
 import unittest
 from datetime import datetime, timedelta
 from decimal import Decimal

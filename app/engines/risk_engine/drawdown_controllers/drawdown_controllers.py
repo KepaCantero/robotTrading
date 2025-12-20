@@ -344,9 +344,11 @@ class DrawdownController(BaseDrawdownController):
         return {
             'global_circuit_breaker_active': self.circuit_breaker_active,
             'global_circuit_breaker_reason': self.circuit_breaker_reason,
-            'global_circuit_breaker_timestamp': self.circuit_breaker_timestamp.isoformat()
-            if self.circuit_breaker_timestamp
-            else None,
+            'global_circuit_breaker_timestamp': (
+                self.circuit_breaker_timestamp.isoformat()
+                if self.circuit_breaker_timestamp
+                else None
+            ),
             'strategy_circuit_breakers_active': active_strategy_breakers,
             'strategy_circuit_breakers': dict(self.strategy_circuit_breakers),
             'max_drawdown_limit': self.max_drawdown_limit,
@@ -388,9 +390,9 @@ class DrawdownController(BaseDrawdownController):
             'recovery_mode_active': self.recovery_mode,
             'recovery_complete': recovery_complete,
             'recovery_percentage': recovery_percentage,
-            'recovery_start_value': float(self.recovery_start_value)
-            if self.recovery_start_value
-            else None,
+            'recovery_start_value': (
+                float(self.recovery_start_value) if self.recovery_start_value else None
+            ),
             'current_drawdown': current_drawdown,
             'recovery_threshold': self.recovery_threshold,
         }

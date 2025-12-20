@@ -352,9 +352,9 @@ def _aggregate_metrics(all_results: List[Dict]) -> Dict:
         "avg_total_return": statistics.mean(total_returns) if total_returns else 0,
         "total_return_min": min(total_returns) if total_returns else 0,
         "total_return_max": max(total_returns) if total_returns else 0,
-        "final_capital_avg": statistics.mean(final_capitals)
-        if final_capitals
-        else estimated_initial,
+        "final_capital_avg": (
+            statistics.mean(final_capitals) if final_capitals else estimated_initial
+        ),
         "estimated_initial": estimated_initial,
     }
 

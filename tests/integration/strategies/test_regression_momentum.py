@@ -4,6 +4,7 @@ Test de Regresión para Momentum
 Generado automáticamente por StrategyAuditor.
 Valida coherencia de señales y parámetros.
 """
+
 import unittest
 from datetime import datetime, timedelta
 from decimal import Decimal

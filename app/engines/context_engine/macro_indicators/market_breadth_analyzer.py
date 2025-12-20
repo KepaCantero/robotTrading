@@ -32,9 +32,7 @@ class MarketBreadthAnalyzer:
             'breadth': breadth_pct,
             'up_count': up_count,
             'total_count': total_count,
-            'breadth_regime': 'bullish'
-            if breadth_pct > 60
-            else 'bearish'
-            if breadth_pct < 40
-            else 'neutral',
+            'breadth_regime': (
+                'bullish' if breadth_pct > 60 else 'bearish' if breadth_pct < 40 else 'neutral'
+            ),
         }

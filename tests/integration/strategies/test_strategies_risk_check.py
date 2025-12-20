@@ -6,6 +6,7 @@ Problemas identificados:
 - risk_check no verifica correctamente posiciones para SELL
 - Insufficient cash para BUY cuando debería haber suficiente
 """
+
 import unittest
 from datetime import datetime
 from decimal import Decimal

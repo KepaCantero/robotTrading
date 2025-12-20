@@ -6,6 +6,7 @@ Tests para verificar:
 - Rebalanceo (no se gasta el mismo capital en dos estrategias simultáneamente)
 - Persistencia de preset (Conservative no sobrescrito por valores por defecto)
 """
+
 import unittest
 from datetime import datetime
 from decimal import Decimal

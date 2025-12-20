@@ -1294,15 +1294,17 @@ class ComprehensiveValidator:
 
         report.overall_passed = all_passed
         report.summary = {
-            "walk_forward_passed": report.walk_forward_results.get("passed")
-            if report.walk_forward_results
-            else None,
-            "cross_validation_passed": report.cross_validation_results.get("passed")
-            if report.cross_validation_results
-            else None,
-            "stress_test_passed": report.stress_test_results.get("passed")
-            if report.stress_test_results
-            else None,
+            "walk_forward_passed": (
+                report.walk_forward_results.get("passed") if report.walk_forward_results else None
+            ),
+            "cross_validation_passed": (
+                report.cross_validation_results.get("passed")
+                if report.cross_validation_results
+                else None
+            ),
+            "stress_test_passed": (
+                report.stress_test_results.get("passed") if report.stress_test_results else None
+            ),
             "monte_carlo_completed": report.monte_carlo_results is not None,
             "overall_passed": all_passed,
         }

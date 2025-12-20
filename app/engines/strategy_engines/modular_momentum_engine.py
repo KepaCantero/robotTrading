@@ -175,9 +175,9 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
 
         # Preparar metadata
         metadata = {
-            'timestamp': market_data.timestamp
-            if hasattr(market_data, 'timestamp')
-            else datetime.now(),
+            'timestamp': (
+                market_data.timestamp if hasattr(market_data, 'timestamp') else datetime.now()
+            ),
             'symbol': market_data.symbol,
             'recent_trades': list(self.recent_trades),
             'recent_win_rate': self._calculate_recent_win_rate(),
@@ -293,9 +293,9 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
                 signal_type=signal_type,
                 strength=strength,
                 price=Decimal(str(current_price)),
-                timestamp=market_data.timestamp
-                if hasattr(market_data, 'timestamp')
-                else datetime.now(),
+                timestamp=(
+                    market_data.timestamp if hasattr(market_data, 'timestamp') else datetime.now()
+                ),
                 confidence=confidence,
                 liquidity_score=liquidity_score,
                 priority_score=priority_score,
@@ -349,15 +349,17 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
                     market_context = {
                         'type': regime,
                         'confidence': context_result.get('confidence', 0.5),
-                        'volatility_regime': volatility_result.get('regime', 'normal')
-                        if volatility_result
-                        else 'normal',
+                        'volatility_regime': (
+                            volatility_result.get('regime', 'normal')
+                            if volatility_result
+                            else 'normal'
+                        ),
                         'trend_strength': context_result.get('regime_probabilities', {}).get(
                             'bull', 0.0
                         ),
-                        'volatility_percentile': volatility_result.get('percentile', 50)
-                        if volatility_result
-                        else 50,
+                        'volatility_percentile': (
+                            volatility_result.get('percentile', 50) if volatility_result else 50
+                        ),
                         'in_range': False,  # ContextEngine no proporciona esto directamente
                     }
                     return market_context

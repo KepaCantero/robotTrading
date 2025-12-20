@@ -120,11 +120,14 @@ class ExposureManager(BaseExposureManager):
                 'leverage': leverage_analysis,
                 'concentration': concentration_analysis,
                 'violations': violations,
-                'total_exposure': float(
-                    sum(pos.market_value for pos in portfolio.positions) / portfolio.total_equity
-                )
-                if portfolio.total_equity > 0
-                else 0.0,
+                'total_exposure': (
+                    float(
+                        sum(pos.market_value for pos in portfolio.positions)
+                        / portfolio.total_equity
+                    )
+                    if portfolio.total_equity > 0
+                    else 0.0
+                ),
                 'timestamp': datetime.utcnow().isoformat(),
             }
         except Exception as e:
@@ -156,9 +159,9 @@ class ExposureManager(BaseExposureManager):
                         'symbol': position.symbol,
                         'exposure': exposure,
                         'limit': self.max_asset_exposure,
-                        'severity': 'high'
-                        if exposure > self.max_asset_exposure * 1.5
-                        else 'medium',
+                        'severity': (
+                            'high' if exposure > self.max_asset_exposure * 1.5 else 'medium'
+                        ),
                     }
                 )
 
@@ -213,9 +216,9 @@ class ExposureManager(BaseExposureManager):
                         'sector': sector,
                         'exposure': exposure,
                         'limit': self.max_sector_exposure,
-                        'severity': 'high'
-                        if exposure > self.max_sector_exposure * 1.5
-                        else 'medium',
+                        'severity': (
+                            'high' if exposure > self.max_sector_exposure * 1.5 else 'medium'
+                        ),
                     }
                 )
 
@@ -274,9 +277,9 @@ class ExposureManager(BaseExposureManager):
                         'strategy': strategy,
                         'exposure': exposure,
                         'limit': self.max_strategy_exposure,
-                        'severity': 'high'
-                        if exposure > self.max_strategy_exposure * 1.5
-                        else 'medium',
+                        'severity': (
+                            'high' if exposure > self.max_strategy_exposure * 1.5 else 'medium'
+                        ),
                     }
                 )
 
@@ -364,12 +367,12 @@ class ExposureManager(BaseExposureManager):
             'effective_n': float(effective_n),
             'concentration_level': concentration_level,
             'n_positions': len(weights),
-            'top_5_weight': sum(sorted(weights, reverse=True)[:5])
-            if len(weights) >= 5
-            else sum(weights),
-            'top_10_weight': sum(sorted(weights, reverse=True)[:10])
-            if len(weights) >= 10
-            else sum(weights),
+            'top_5_weight': (
+                sum(sorted(weights, reverse=True)[:5]) if len(weights) >= 5 else sum(weights)
+            ),
+            'top_10_weight': (
+                sum(sorted(weights, reverse=True)[:10]) if len(weights) >= 10 else sum(weights)
+            ),
         }
 
     def _detect_violations(

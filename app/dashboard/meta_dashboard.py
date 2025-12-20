@@ -273,9 +273,11 @@ class MetaDashboard:
         for strategy in strategies:
             for engine in engines:
                 subset = self.df_results[
-                    (self.df_results['test_type'] == strategy)
-                    if 'test_type' in self.df_results.columns
-                    else True
+                    (
+                        (self.df_results['test_type'] == strategy)
+                        if 'test_type' in self.df_results.columns
+                        else True
+                    )
                 ]
                 if 'learning_engine' in self.df_results.columns:
                     subset = subset[subset['learning_engine'] == engine]

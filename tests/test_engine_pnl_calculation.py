@@ -6,6 +6,7 @@ Estos tests verifican problemas críticos identificados:
 - Cálculo incorrecto de PnL
 - Problemas con positions sin buy_trades
 """
+
 import unittest
 from datetime import datetime
 from decimal import Decimal

@@ -477,12 +477,12 @@ Max Position Size: {float(config.max_position_size):.2f}%
                 "initial_capital": float(config.initial_capital),
                 "commission": float(config.commission_per_trade),
                 "slippage": float(config.slippage_percentage),
-                "stop_loss": float(config.stop_loss_percentage)
-                if config.stop_loss_percentage
-                else None,
-                "take_profit": float(config.take_profit_percentage)
-                if config.take_profit_percentage
-                else None,
+                "stop_loss": (
+                    float(config.stop_loss_percentage) if config.stop_loss_percentage else None
+                ),
+                "take_profit": (
+                    float(config.take_profit_percentage) if config.take_profit_percentage else None
+                ),
             },
             "returns": {
                 "total": float(result.total_return),

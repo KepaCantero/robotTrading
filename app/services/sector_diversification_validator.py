@@ -176,9 +176,9 @@ class SectorDiversificationValidator:
             "sector_count": len(sector_exposure),
             "herfindahl_index": float(herfindahl),
             "effective_sectors": float(effective_sectors),
-            "diversification_ratio": float(effective_sectors / len(sector_exposure))
-            if len(sector_exposure) > 0
-            else 0.0,
+            "diversification_ratio": (
+                float(effective_sectors / len(sector_exposure)) if len(sector_exposure) > 0 else 0.0
+            ),
             "sectors": sector_details,
             "checks_performed": self.checks_performed,
             "violations_found": self.violations_found,

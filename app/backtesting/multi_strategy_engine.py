@@ -227,9 +227,11 @@ class MultiStrategyBacktester:
                                 self.diagnostic_logger.log_signal_candidate(
                                     strategy_name,
                                     quote.symbol,
-                                    sig.signal_type.value
-                                    if hasattr(sig.signal_type, 'value')
-                                    else str(sig.signal_type),
+                                    (
+                                        sig.signal_type.value
+                                        if hasattr(sig.signal_type, 'value')
+                                        else str(sig.signal_type)
+                                    ),
                                     sig.metadata if hasattr(sig, 'metadata') else {},
                                 )
                     else:
@@ -340,9 +342,11 @@ class MultiStrategyBacktester:
                 'residual_capital': float(self.allocation_result.residual_capital),
                 'validation_errors': self.allocation_result.validation_errors,
                 'allocation_method': 'StrategyStockAllocator',
-                'decision_logs': self.allocation_result.decision_logs[-10:]
-                if self.allocation_result.decision_logs
-                else [],  # Last 10 logs
+                'decision_logs': (
+                    self.allocation_result.decision_logs[-10:]
+                    if self.allocation_result.decision_logs
+                    else []
+                ),  # Last 10 logs
             }
 
             # Log allocation summary
@@ -448,12 +452,14 @@ class MultiStrategyBacktester:
                 "total_trades": result.performance.total_trades,
                 "win_rate": float(result.performance.win_rate),
                 "total_return": float(result.total_return),
-                "sharpe_ratio": float(result.performance.sharpe_ratio)
-                if result.performance.sharpe_ratio
-                else None,
-                "max_drawdown": float(result.performance.max_drawdown)
-                if result.performance.max_drawdown
-                else 0,
+                "sharpe_ratio": (
+                    float(result.performance.sharpe_ratio)
+                    if result.performance.sharpe_ratio
+                    else None
+                ),
+                "max_drawdown": (
+                    float(result.performance.max_drawdown) if result.performance.max_drawdown else 0
+                ),
             }
 
         return {

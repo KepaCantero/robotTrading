@@ -152,9 +152,11 @@ class ThresholdRebalancer(BaseRebalancer):
                             'symbol': symbol,
                             'quantity': float(quantity_diff),
                             'target_weight': target_weight,
-                            'current_weight': float(current_value / portfolio_value)
-                            if portfolio_value > 0
-                            else 0.0,
+                            'current_weight': (
+                                float(current_value / portfolio_value)
+                                if portfolio_value > 0
+                                else 0.0
+                            ),
                             'reason': 'threshold_rebalance',
                         }
                     )
@@ -239,9 +241,11 @@ class TimeBasedRebalancer(BaseRebalancer):
                             'symbol': symbol,
                             'quantity': float(quantity_diff),
                             'target_weight': target_weight,
-                            'current_weight': float(current_value / portfolio_value)
-                            if portfolio_value > 0
-                            else 0.0,
+                            'current_weight': (
+                                float(current_value / portfolio_value)
+                                if portfolio_value > 0
+                                else 0.0
+                            ),
                             'reason': f'time_based_{self.rebalance_frequency}',
                         }
                     )
@@ -334,9 +338,11 @@ class VolatilityTargetingRebalancer(BaseRebalancer):
                             'symbol': symbol,
                             'quantity': float(quantity_diff),
                             'target_weight': target_weight,
-                            'current_weight': float(current_value / portfolio_value)
-                            if portfolio_value > 0
-                            else 0.0,
+                            'current_weight': (
+                                float(current_value / portfolio_value)
+                                if portfolio_value > 0
+                                else 0.0
+                            ),
                             'reason': 'volatility_targeting',
                         }
                     )

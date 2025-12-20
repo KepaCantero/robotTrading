@@ -131,9 +131,9 @@ class ComprehensiveBacktestRunner:
         self.config_path = config_path  # Guardar para auditoría
         self.results: List[Dict[str, Any]] = []
         # Store complete BacktestResult objects for quantstats/pyfolio analysis
-        self.backtest_results_objects: List[
-            Tuple[str, BacktestResult]
-        ] = []  # (test_name, BacktestResult)
+        self.backtest_results_objects: List[Tuple[str, BacktestResult]] = (
+            []
+        )  # (test_name, BacktestResult)
         self.output_dir = Path(self.config['reporting']['output_directory'])
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -725,14 +725,16 @@ class ComprehensiveBacktestRunner:
             'total_pnl': consistent_metrics['total_pnl'],
             'return_pct': consistent_metrics['return_pct'],
             'win_rate': float(result.performance.win_rate),
-            'sharpe_ratio': float(result.performance.sharpe_ratio)
-            if result.performance.sharpe_ratio
-            else 0.0,
+            'sharpe_ratio': (
+                float(result.performance.sharpe_ratio) if result.performance.sharpe_ratio else 0.0
+            ),
             'max_drawdown': float(result.performance.max_drawdown_percentage),
             'total_trades': result.performance.total_trades,
-            'avg_trade_pnl': consistent_metrics['total_pnl'] / result.performance.total_trades
-            if result.performance.total_trades > 0
-            else 0.0,
+            'avg_trade_pnl': (
+                consistent_metrics['total_pnl'] / result.performance.total_trades
+                if result.performance.total_trades > 0
+                else 0.0
+            ),
             'final_capital': consistent_metrics['final_capital'],
         }
 
@@ -868,25 +870,32 @@ class ComprehensiveBacktestRunner:
                 'total_pnl': baseline_metrics['total_pnl'],
                 'return_pct': baseline_metrics['return_pct'],
                 'win_rate': float(baseline_result.performance.win_rate),
-                'sharpe_ratio': float(baseline_result.performance.sharpe_ratio)
-                if baseline_result.performance.sharpe_ratio
-                else 0.0,
-                'sortino_ratio': float(baseline_result.performance.sortino_ratio)
-                if baseline_result.performance.sortino_ratio
-                else 0.0,
+                'sharpe_ratio': (
+                    float(baseline_result.performance.sharpe_ratio)
+                    if baseline_result.performance.sharpe_ratio
+                    else 0.0
+                ),
+                'sortino_ratio': (
+                    float(baseline_result.performance.sortino_ratio)
+                    if baseline_result.performance.sortino_ratio
+                    else 0.0
+                ),
                 'max_drawdown': float(baseline_result.performance.max_drawdown_percentage),
                 'total_trades': baseline_result.performance.total_trades,
-                'avg_trade_pnl': baseline_metrics['total_pnl']
-                / baseline_result.performance.total_trades
-                if baseline_result.performance.total_trades > 0
-                else 0.0,
+                'avg_trade_pnl': (
+                    baseline_metrics['total_pnl'] / baseline_result.performance.total_trades
+                    if baseline_result.performance.total_trades > 0
+                    else 0.0
+                ),
                 'final_capital': baseline_metrics['final_capital'],
-                'profit_factor': float(
-                    baseline_result.performance.gross_profit
-                    / abs(baseline_result.performance.gross_loss)
-                )
-                if baseline_result.performance.gross_loss != 0
-                else (999.0 if baseline_result.performance.gross_profit > 0 else 0.0),
+                'profit_factor': (
+                    float(
+                        baseline_result.performance.gross_profit
+                        / abs(baseline_result.performance.gross_loss)
+                    )
+                    if baseline_result.performance.gross_loss != 0
+                    else (999.0 if baseline_result.performance.gross_profit > 0 else 0.0)
+                ),
             }
 
             logger.info(
@@ -998,24 +1007,29 @@ class ComprehensiveBacktestRunner:
                     'total_pnl': consistent_metrics['total_pnl'],
                     'return_pct': consistent_metrics['return_pct'],
                     'win_rate': float(result.performance.win_rate),
-                    'sharpe_ratio': float(result.performance.sharpe_ratio)
-                    if result.performance.sharpe_ratio
-                    else 0.0,
-                    'sortino_ratio': float(result.performance.sortino_ratio)
-                    if result.performance.sortino_ratio
-                    else 0.0,
+                    'sharpe_ratio': (
+                        float(result.performance.sharpe_ratio)
+                        if result.performance.sharpe_ratio
+                        else 0.0
+                    ),
+                    'sortino_ratio': (
+                        float(result.performance.sortino_ratio)
+                        if result.performance.sortino_ratio
+                        else 0.0
+                    ),
                     'max_drawdown': float(result.performance.max_drawdown_percentage),
                     'total_trades': result.performance.total_trades,
-                    'avg_trade_pnl': consistent_metrics['total_pnl']
-                    / result.performance.total_trades
-                    if result.performance.total_trades > 0
-                    else 0.0,
+                    'avg_trade_pnl': (
+                        consistent_metrics['total_pnl'] / result.performance.total_trades
+                        if result.performance.total_trades > 0
+                        else 0.0
+                    ),
                     'final_capital': consistent_metrics['final_capital'],
-                    'profit_factor': float(
-                        result.performance.gross_profit / abs(result.performance.gross_loss)
-                    )
-                    if result.performance.gross_loss != 0
-                    else (999.0 if result.performance.gross_profit > 0 else 0.0),
+                    'profit_factor': (
+                        float(result.performance.gross_profit / abs(result.performance.gross_loss))
+                        if result.performance.gross_loss != 0
+                        else (999.0 if result.performance.gross_profit > 0 else 0.0)
+                    ),
                 }
 
                 # Calcular mejoras porcentuales
@@ -1158,25 +1172,33 @@ class ComprehensiveBacktestRunner:
                         'total_pnl': baseline_consistent_metrics['total_pnl'],
                         'return_pct': baseline_consistent_metrics['return_pct'],
                         'win_rate': float(baseline_result.performance.win_rate),
-                        'sharpe_ratio': float(baseline_result.performance.sharpe_ratio)
-                        if baseline_result.performance.sharpe_ratio
-                        else 0.0,
-                        'sortino_ratio': float(baseline_result.performance.sortino_ratio)
-                        if baseline_result.performance.sortino_ratio
-                        else 0.0,
+                        'sharpe_ratio': (
+                            float(baseline_result.performance.sharpe_ratio)
+                            if baseline_result.performance.sharpe_ratio
+                            else 0.0
+                        ),
+                        'sortino_ratio': (
+                            float(baseline_result.performance.sortino_ratio)
+                            if baseline_result.performance.sortino_ratio
+                            else 0.0
+                        ),
                         'max_drawdown': float(baseline_result.performance.max_drawdown_percentage),
                         'total_trades': baseline_result.performance.total_trades,
-                        'avg_trade_pnl': baseline_consistent_metrics['total_pnl']
-                        / baseline_result.performance.total_trades
-                        if baseline_result.performance.total_trades > 0
-                        else 0.0,
+                        'avg_trade_pnl': (
+                            baseline_consistent_metrics['total_pnl']
+                            / baseline_result.performance.total_trades
+                            if baseline_result.performance.total_trades > 0
+                            else 0.0
+                        ),
                         'final_capital': baseline_consistent_metrics['final_capital'],
-                        'profit_factor': float(
-                            baseline_result.performance.gross_profit
-                            / abs(baseline_result.performance.gross_loss)
-                        )
-                        if baseline_result.performance.gross_loss != 0
-                        else (999.0 if baseline_result.performance.gross_profit > 0 else 0.0),
+                        'profit_factor': (
+                            float(
+                                baseline_result.performance.gross_profit
+                                / abs(baseline_result.performance.gross_loss)
+                            )
+                            if baseline_result.performance.gross_loss != 0
+                            else (999.0 if baseline_result.performance.gross_profit > 0 else 0.0)
+                        ),
                     }
 
                     # AHORA: Crear estrategia CON learning engine y entrenar
@@ -1217,24 +1239,32 @@ class ComprehensiveBacktestRunner:
                             'total_pnl': consistent_metrics['total_pnl'],
                             'return_pct': consistent_metrics['return_pct'],
                             'win_rate': float(result.performance.win_rate),
-                            'sharpe_ratio': float(result.performance.sharpe_ratio)
-                            if result.performance.sharpe_ratio
-                            else 0.0,
-                            'sortino_ratio': float(result.performance.sortino_ratio)
-                            if result.performance.sortino_ratio
-                            else 0.0,
+                            'sharpe_ratio': (
+                                float(result.performance.sharpe_ratio)
+                                if result.performance.sharpe_ratio
+                                else 0.0
+                            ),
+                            'sortino_ratio': (
+                                float(result.performance.sortino_ratio)
+                                if result.performance.sortino_ratio
+                                else 0.0
+                            ),
                             'max_drawdown': float(result.performance.max_drawdown_percentage),
                             'total_trades': result.performance.total_trades,
-                            'avg_trade_pnl': consistent_metrics['total_pnl']
-                            / result.performance.total_trades
-                            if result.performance.total_trades > 0
-                            else 0.0,
+                            'avg_trade_pnl': (
+                                consistent_metrics['total_pnl'] / result.performance.total_trades
+                                if result.performance.total_trades > 0
+                                else 0.0
+                            ),
                             'final_capital': consistent_metrics['final_capital'],
-                            'profit_factor': float(
-                                result.performance.gross_profit / abs(result.performance.gross_loss)
-                            )
-                            if result.performance.gross_loss != 0
-                            else (999.0 if result.performance.gross_profit > 0 else 0.0),
+                            'profit_factor': (
+                                float(
+                                    result.performance.gross_profit
+                                    / abs(result.performance.gross_loss)
+                                )
+                                if result.performance.gross_loss != 0
+                                else (999.0 if result.performance.gross_profit > 0 else 0.0)
+                            ),
                         }
 
                         # Calcular mejoras porcentuales
@@ -1381,14 +1411,18 @@ class ComprehensiveBacktestRunner:
                 'total_pnl': consistent_metrics['total_pnl'],
                 'return_pct': consistent_metrics['return_pct'],
                 'win_rate': float(result.performance.win_rate),
-                'sharpe_ratio': float(result.performance.sharpe_ratio)
-                if result.performance.sharpe_ratio
-                else 0.0,
+                'sharpe_ratio': (
+                    float(result.performance.sharpe_ratio)
+                    if result.performance.sharpe_ratio
+                    else 0.0
+                ),
                 'max_drawdown': float(result.performance.max_drawdown_percentage),
                 'total_trades': result.performance.total_trades,
-                'avg_trade_pnl': consistent_metrics['total_pnl'] / result.performance.total_trades
-                if result.performance.total_trades > 0
-                else 0.0,
+                'avg_trade_pnl': (
+                    consistent_metrics['total_pnl'] / result.performance.total_trades
+                    if result.performance.total_trades > 0
+                    else 0.0
+                ),
                 'final_capital': consistent_metrics['final_capital'],
             }
 
@@ -1474,14 +1508,18 @@ class ComprehensiveBacktestRunner:
                 'total_pnl': consistent_metrics['total_pnl'],
                 'return_pct': consistent_metrics['return_pct'],
                 'win_rate': float(result.performance.win_rate),
-                'sharpe_ratio': float(result.performance.sharpe_ratio)
-                if result.performance.sharpe_ratio
-                else 0.0,
+                'sharpe_ratio': (
+                    float(result.performance.sharpe_ratio)
+                    if result.performance.sharpe_ratio
+                    else 0.0
+                ),
                 'max_drawdown': float(result.performance.max_drawdown_percentage),
                 'total_trades': result.performance.total_trades,
-                'avg_trade_pnl': consistent_metrics['total_pnl'] / result.performance.total_trades
-                if result.performance.total_trades > 0
-                else 0.0,
+                'avg_trade_pnl': (
+                    consistent_metrics['total_pnl'] / result.performance.total_trades
+                    if result.performance.total_trades > 0
+                    else 0.0
+                ),
                 'final_capital': consistent_metrics['final_capital'],
             }
 
@@ -1590,15 +1628,18 @@ class ComprehensiveBacktestRunner:
                     'total_pnl': consistent_metrics['total_pnl'],
                     'return_pct': consistent_metrics['return_pct'],
                     'win_rate': float(result.performance.win_rate),
-                    'sharpe_ratio': float(result.performance.sharpe_ratio)
-                    if result.performance.sharpe_ratio
-                    else 0.0,
+                    'sharpe_ratio': (
+                        float(result.performance.sharpe_ratio)
+                        if result.performance.sharpe_ratio
+                        else 0.0
+                    ),
                     'max_drawdown': float(result.performance.max_drawdown_percentage),
                     'total_trades': result.performance.total_trades,
-                    'avg_trade_pnl': consistent_metrics['total_pnl']
-                    / result.performance.total_trades
-                    if result.performance.total_trades > 0
-                    else 0.0,
+                    'avg_trade_pnl': (
+                        consistent_metrics['total_pnl'] / result.performance.total_trades
+                        if result.performance.total_trades > 0
+                        else 0.0
+                    ),
                     'final_capital': consistent_metrics['final_capital'],
                 }
 
@@ -1971,14 +2012,18 @@ class ComprehensiveBacktestRunner:
                 'total_pnl': consistent_metrics['total_pnl'],
                 'return_pct': consistent_metrics['return_pct'],
                 'win_rate': float(result.performance.win_rate),
-                'sharpe_ratio': float(result.performance.sharpe_ratio)
-                if result.performance.sharpe_ratio
-                else 0.0,
+                'sharpe_ratio': (
+                    float(result.performance.sharpe_ratio)
+                    if result.performance.sharpe_ratio
+                    else 0.0
+                ),
                 'max_drawdown': float(result.performance.max_drawdown_percentage),
                 'total_trades': result.performance.total_trades,
-                'avg_trade_pnl': consistent_metrics['total_pnl'] / result.performance.total_trades
-                if result.performance.total_trades > 0
-                else 0.0,
+                'avg_trade_pnl': (
+                    consistent_metrics['total_pnl'] / result.performance.total_trades
+                    if result.performance.total_trades > 0
+                    else 0.0
+                ),
                 'final_capital': consistent_metrics['final_capital'],
             }
 
@@ -2255,14 +2300,18 @@ class ComprehensiveBacktestRunner:
                 'total_pnl': consistent_metrics['total_pnl'],
                 'return_pct': consistent_metrics['return_pct'],
                 'win_rate': float(result.performance.win_rate),
-                'sharpe_ratio': float(result.performance.sharpe_ratio)
-                if result.performance.sharpe_ratio
-                else 0.0,
+                'sharpe_ratio': (
+                    float(result.performance.sharpe_ratio)
+                    if result.performance.sharpe_ratio
+                    else 0.0
+                ),
                 'max_drawdown': float(result.performance.max_drawdown_percentage),
                 'total_trades': result.performance.total_trades,
-                'avg_trade_pnl': consistent_metrics['total_pnl'] / result.performance.total_trades
-                if result.performance.total_trades > 0
-                else 0.0,
+                'avg_trade_pnl': (
+                    consistent_metrics['total_pnl'] / result.performance.total_trades
+                    if result.performance.total_trades > 0
+                    else 0.0
+                ),
                 'final_capital': consistent_metrics['final_capital'],
             }
 
@@ -2345,9 +2394,9 @@ class ComprehensiveBacktestRunner:
                         volume=quote.volume if quote.volume >= 0 else Decimal("0.01"),
                         bid=bid_price,
                         ask=ask_price,
-                        feed_type=quote.feed_type
-                        if hasattr(quote, 'feed_type')
-                        else DataFeedType.MOCK,
+                        feed_type=(
+                            quote.feed_type if hasattr(quote, 'feed_type') else DataFeedType.MOCK
+                        ),
                     )
                     modified_quotes.append(modified_quote)
                     base_price = modified_price
@@ -2387,15 +2436,18 @@ class ComprehensiveBacktestRunner:
                     'total_pnl': consistent_metrics['total_pnl'],
                     'return_pct': consistent_metrics['return_pct'],
                     'win_rate': float(result.performance.win_rate),
-                    'sharpe_ratio': float(result.performance.sharpe_ratio)
-                    if result.performance.sharpe_ratio
-                    else 0.0,
+                    'sharpe_ratio': (
+                        float(result.performance.sharpe_ratio)
+                        if result.performance.sharpe_ratio
+                        else 0.0
+                    ),
                     'max_drawdown': float(result.performance.max_drawdown_percentage),
                     'total_trades': result.performance.total_trades,
-                    'avg_trade_pnl': consistent_metrics['total_pnl']
-                    / result.performance.total_trades
-                    if result.performance.total_trades > 0
-                    else 0.0,
+                    'avg_trade_pnl': (
+                        consistent_metrics['total_pnl'] / result.performance.total_trades
+                        if result.performance.total_trades > 0
+                        else 0.0
+                    ),
                     'final_capital': consistent_metrics['final_capital'],
                 }
 
@@ -2707,14 +2759,18 @@ class ComprehensiveBacktestRunner:
             'total_pnl': test_metrics['total_pnl'],
             'return_pct': test_metrics['return_pct'],
             'win_rate': float(result_test.performance.win_rate),
-            'sharpe_ratio': float(result_test.performance.sharpe_ratio)
-            if result_test.performance.sharpe_ratio
-            else 0.0,
+            'sharpe_ratio': (
+                float(result_test.performance.sharpe_ratio)
+                if result_test.performance.sharpe_ratio
+                else 0.0
+            ),
             'max_drawdown': float(result_test.performance.max_drawdown_percentage),
             'total_trades': result_test.performance.total_trades,
-            'avg_trade_pnl': test_metrics['total_pnl'] / result_test.performance.total_trades
-            if result_test.performance.total_trades > 0
-            else 0.0,
+            'avg_trade_pnl': (
+                test_metrics['total_pnl'] / result_test.performance.total_trades
+                if result_test.performance.total_trades > 0
+                else 0.0
+            ),
             'final_capital': test_metrics['final_capital'],
             # Métricas de TRAIN (para comparación)
             'train_total_pnl': train_metrics['total_pnl'],
@@ -2727,12 +2783,12 @@ class ComprehensiveBacktestRunner:
             'return_degradation_pct': return_degradation,
             # Validación de regímenes
             'regime_warning': regime_warning,
-            'train_regime_distribution': train_regimes.get('percentages', {})
-            if validate_regimes
-            else {},
-            'test_regime_distribution': test_regimes.get('percentages', {})
-            if validate_regimes
-            else {},
+            'train_regime_distribution': (
+                train_regimes.get('percentages', {}) if validate_regimes else {}
+            ),
+            'test_regime_distribution': (
+                test_regimes.get('percentages', {}) if validate_regimes else {}
+            ),
         }
 
         self.results.append(result_dict)
@@ -3051,14 +3107,18 @@ class ComprehensiveBacktestRunner:
                 'total_pnl': consistent_metrics['total_pnl'],
                 'return_pct': consistent_metrics['return_pct'],
                 'win_rate': float(result.performance.win_rate),
-                'sharpe_ratio': float(result.performance.sharpe_ratio)
-                if result.performance.sharpe_ratio
-                else 0.0,
+                'sharpe_ratio': (
+                    float(result.performance.sharpe_ratio)
+                    if result.performance.sharpe_ratio
+                    else 0.0
+                ),
                 'max_drawdown': float(result.performance.max_drawdown_percentage),
                 'total_trades': result.performance.total_trades,
-                'avg_trade_pnl': consistent_metrics['total_pnl'] / result.performance.total_trades
-                if result.performance.total_trades > 0
-                else 0.0,
+                'avg_trade_pnl': (
+                    consistent_metrics['total_pnl'] / result.performance.total_trades
+                    if result.performance.total_trades > 0
+                    else 0.0
+                ),
                 'final_capital': consistent_metrics['final_capital'],
             }
 
@@ -3521,23 +3581,28 @@ class ComprehensiveBacktestRunner:
             'total_pnl': consistent_metrics['total_pnl'],
             'return_pct': consistent_metrics['return_pct'],
             'win_rate': combined_metrics.get('weighted_win_rate', 0),
-            'sharpe_ratio': float(combined_metrics.get('weighted_sharpe', 0))
-            if combined_metrics.get('weighted_sharpe')
-            else 0.0,
+            'sharpe_ratio': (
+                float(combined_metrics.get('weighted_sharpe', 0))
+                if combined_metrics.get('weighted_sharpe')
+                else 0.0
+            ),
             'max_drawdown': float(combined_metrics.get('weighted_max_dd', 0)),
             'total_trades': combined_metrics.get('total_trades', 0),
-            'avg_trade_pnl': consistent_metrics['total_pnl']
-            / combined_metrics.get('total_trades', 1)
-            if combined_metrics.get('total_trades', 0) > 0
-            else 0.0,
+            'avg_trade_pnl': (
+                consistent_metrics['total_pnl'] / combined_metrics.get('total_trades', 1)
+                if combined_metrics.get('total_trades', 0) > 0
+                else 0.0
+            ),
             'final_capital': consistent_metrics['final_capital'],
             'capital_allocations': {
                 k: float(v)
                 for k, v in multi_backtester.allocation_manager.allocate_capital().items()
             },
-            'dynamic_reallocation_enabled': multi_backtester.enable_dynamic_reallocation
-            if hasattr(multi_backtester, 'enable_dynamic_reallocation')
-            else True,
+            'dynamic_reallocation_enabled': (
+                multi_backtester.enable_dynamic_reallocation
+                if hasattr(multi_backtester, 'enable_dynamic_reallocation')
+                else True
+            ),
         }
 
         return result_dict
@@ -3753,24 +3818,29 @@ class ComprehensiveBacktestRunner:
                     'total_pnl': consistent_metrics['total_pnl'],
                     'return_pct': consistent_metrics['return_pct'],
                     'win_rate': float(result.performance.win_rate),
-                    'sharpe_ratio': float(result.performance.sharpe_ratio)
-                    if result.performance.sharpe_ratio
-                    else 0.0,
-                    'sortino_ratio': float(result.performance.sortino_ratio)
-                    if result.performance.sortino_ratio
-                    else 0.0,
+                    'sharpe_ratio': (
+                        float(result.performance.sharpe_ratio)
+                        if result.performance.sharpe_ratio
+                        else 0.0
+                    ),
+                    'sortino_ratio': (
+                        float(result.performance.sortino_ratio)
+                        if result.performance.sortino_ratio
+                        else 0.0
+                    ),
                     'max_drawdown': float(result.performance.max_drawdown_percentage),
                     'total_trades': result.performance.total_trades,
-                    'avg_trade_pnl': consistent_metrics['total_pnl']
-                    / result.performance.total_trades
-                    if result.performance.total_trades > 0
-                    else 0.0,
+                    'avg_trade_pnl': (
+                        consistent_metrics['total_pnl'] / result.performance.total_trades
+                        if result.performance.total_trades > 0
+                        else 0.0
+                    ),
                     'final_capital': consistent_metrics['final_capital'],
-                    'profit_factor': float(
-                        result.performance.gross_profit / abs(result.performance.gross_loss)
-                    )
-                    if result.performance.gross_loss != 0
-                    else (999.0 if result.performance.gross_profit > 0 else 0.0),
+                    'profit_factor': (
+                        float(result.performance.gross_profit / abs(result.performance.gross_loss))
+                        if result.performance.gross_loss != 0
+                        else (999.0 if result.performance.gross_profit > 0 else 0.0)
+                    ),
                 }
 
                 return result_dict
@@ -4012,9 +4082,7 @@ class ComprehensiveBacktestRunner:
 
             logger.info("✅ Análisis meta completado")
         except ImportError:
-            logger.warning(
-                "⚠️ BacktestMetaAnalyzer no disponible. Instala dependencias opcionales."
-            )
+            logger.warning("⚠️ BacktestMetaAnalyzer no disponible. Instala dependencias opcionales.")
         except Exception as e:
             logger.error(f"❌ Error en análisis meta: {e}", exc_info=True)
 

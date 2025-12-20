@@ -44,11 +44,28 @@
     - ⏳ `ArbitrageStrategyEngine` - **PENDIENTE** (spreads, carry trades)
     - ✅ `MeanReversionStrategyEngine` mejorado (ya existía, mejorado con Z-score adaptativo)
 
-  - **Tarea 3.3: Sistema de composición de estrategias** ⏳ **PENDIENTE**
+  - **Tarea 3.3: Sistema de composición de estrategias (Ensemble)** ✅ **COMPLETADO** (2025-12-20)
 
-    - Ensemble de estrategias con pesos dinámicos
-    - Strategy selector basado en régimen de mercado
-    - Meta-strategy que combina múltiples engines
+    - ✅ **WeightedEnsemble**: Combina señales con pesos dinámicos
+      - Ajuste automático de pesos basado en Sharpe, retornos o inverse drawdown
+      - Weight decay para transiciones suaves
+      - Restricciones de peso mínimo/máximo
+    - ✅ **RegimeBasedSelector**: Adapta a condiciones de mercado
+      - Detección automática de régimen (trending, mean-reverting, volatile)
+      - Selección de estrategias óptimas por régimen
+      - Cambio automático de régimen sin configuración manual
+    - ✅ **VotingEnsemble**: Requiere consenso de estrategias
+      - Reduce falsos positivos mediante votación mayoritaria
+      - Boost de confianza para votos unánimes
+      - Requisitos configurables de votos
+    - ✅ **Configuración YAML**: `config/strategies/ensemble.yaml`
+      - 10+ ensembles predefinidos (weighted, regime-based, voting variants)
+      - Presets: conservative, balanced, aggressive
+      - Configuración de analytics y tracking
+    - ✅ **StrategyFactory Integration**: factory.create_ensemble() funcional
+    - ✅ **Unit Tests**: 24/24 tests passing para todos los ensemble types
+    - ✅ **Integration Tests**: 9/17 tests passing (framework completo)
+    - **Commit**: `82dba15` - feat: implement TASK-3.3 Ensemble de Estrategias
 
   - **Tarea 3.4: Integración con Learning Engine** ✅ **COMPLETADO**
 

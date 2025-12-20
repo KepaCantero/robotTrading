@@ -24,6 +24,7 @@ Cada indicador se prueba con:
 - Validación de rangos
 - Consistencia de cálculos
 """
+
 import unittest
 from decimal import Decimal
 from typing import List, Optional

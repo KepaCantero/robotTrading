@@ -179,9 +179,11 @@ class CountryDiversificationValidator:
             "country_count": len(country_exposure),
             "herfindahl_index": float(herfindahl),
             "effective_countries": float(effective_countries),
-            "diversification_ratio": float(effective_countries / len(country_exposure))
-            if len(country_exposure) > 0
-            else 0.0,
+            "diversification_ratio": (
+                float(effective_countries / len(country_exposure))
+                if len(country_exposure) > 0
+                else 0.0
+            ),
             "countries": country_details,
             "checks_performed": self.checks_performed,
             "violations_found": self.violations_found,

@@ -331,16 +331,18 @@ class HyperparameterOptimizer:
             return {
                 'total_pnl': float(result.performance.total_pnl),
                 'total_return': float(result.total_return),
-                'sharpe_ratio': float(result.performance.sharpe_ratio)
-                if result.performance.sharpe_ratio
-                else 0.0,
+                'sharpe_ratio': (
+                    float(result.performance.sharpe_ratio)
+                    if result.performance.sharpe_ratio
+                    else 0.0
+                ),
                 'win_rate': float(result.performance.win_rate),
                 'max_drawdown': float(result.performance.max_drawdown_percentage),
                 'total_trades': result.performance.total_trades,
                 'final_capital': float(result.final_capital),
-                'annualized_return': float(result.annualized_return)
-                if hasattr(result, 'annualized_return')
-                else 0.0,
+                'annualized_return': (
+                    float(result.annualized_return) if hasattr(result, 'annualized_return') else 0.0
+                ),
             }
 
         except Exception as e:

@@ -7,6 +7,7 @@ Tests para verificar:
 - Max position por símbolo
 - Risk exposure después de cada trade
 """
+
 import unittest
 from datetime import datetime, timedelta
 from decimal import Decimal

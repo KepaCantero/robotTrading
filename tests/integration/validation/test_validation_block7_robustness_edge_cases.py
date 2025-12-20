@@ -6,6 +6,7 @@ Tests para verificar:
 - Constant price dataset, extreme volatility
 - Indicator NaN handling, signal delay compensation
 """
+
 import math
 import unittest
 from datetime import datetime, timedelta

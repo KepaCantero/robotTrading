@@ -6,6 +6,7 @@ Tests para verificar:
 - Distribución de PnL (no todos negativos)
 - Slippage y comisiones (descontados correctamente según preset Conservative)
 """
+
 import json
 import unittest
 from datetime import datetime, timedelta

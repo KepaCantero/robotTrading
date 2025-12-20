@@ -1120,9 +1120,11 @@ def main():
                 with col1:
                     test_type_filter = st.selectbox(
                         "Filter by Test Type",
-                        options=['All'] + list(df['test_type'].unique())
-                        if 'test_type' in df.columns
-                        else ['All'],
+                        options=(
+                            ['All'] + list(df['test_type'].unique())
+                            if 'test_type' in df.columns
+                            else ['All']
+                        ),
                         key="test_type_filter",
                     )
 
@@ -1432,11 +1434,11 @@ def main():
                                 comparison_data['Improvement %'].append(
                                     sharpe_imp
                                     if metric == 'sharpe_ratio'
-                                    else return_imp
-                                    if metric == 'return_pct'
-                                    else winrate_imp
-                                    if metric == 'win_rate'
-                                    else dd_imp
+                                    else (
+                                        return_imp
+                                        if metric == 'return_pct'
+                                        else winrate_imp if metric == 'win_rate' else dd_imp
+                                    )
                                 )
 
                             comparison_df = pd.DataFrame(comparison_data)
@@ -1608,15 +1610,17 @@ def main():
                                     metrics=metrics_to_save,
                                     description=config_description,
                                     tags=tags_list,
-                                    before_training_metrics=before_training
-                                    if isinstance(before_training, dict)
-                                    else None,
-                                    after_training_metrics=after_training
-                                    if isinstance(after_training, dict)
-                                    else None,
-                                    improvement_pct=improvement
-                                    if isinstance(improvement, dict)
-                                    else None,
+                                    before_training_metrics=(
+                                        before_training
+                                        if isinstance(before_training, dict)
+                                        else None
+                                    ),
+                                    after_training_metrics=(
+                                        after_training if isinstance(after_training, dict) else None
+                                    ),
+                                    improvement_pct=(
+                                        improvement if isinstance(improvement, dict) else None
+                                    ),
                                 )
 
                                 st.success(
@@ -1869,9 +1873,11 @@ def main():
                         'test_type': row.get('test_type', 'Unknown'),
                         'strategy': strategy_config.get('strategy', 'Unknown'),
                         'learning_engine': strategy_config.get('learning_engine', 'None'),
-                        'modules': ', '.join(strategy_config.get('modules_active', []))
-                        if strategy_config.get('modules_active')
-                        else 'None',
+                        'modules': (
+                            ', '.join(strategy_config.get('modules_active', []))
+                            if strategy_config.get('modules_active')
+                            else 'None'
+                        ),
                         'parameters': strategy_config.get('parameters', {}),
                         'passed_count': passed_count,
                         'total_count': total_count,
@@ -2262,13 +2268,13 @@ def main():
                     config['backtests']['multi_strategy']['strategies'] = params.get(
                         'strategies', ["momentum", "mean_reversion", "pairs_trading"]
                     )
-                    config['backtests']['multi_strategy'][
-                        'enable_dynamic_reallocation'
-                    ] = params.get('enable_dynamic_reallocation', True)
+                    config['backtests']['multi_strategy']['enable_dynamic_reallocation'] = (
+                        params.get('enable_dynamic_reallocation', True)
+                    )
                     if params.get('enable_dynamic_reallocation', True):
-                        config['backtests']['multi_strategy'][
-                            'reallocation_frequency_days'
-                        ] = params.get('reallocation_frequency', 30)
+                        config['backtests']['multi_strategy']['reallocation_frequency_days'] = (
+                            params.get('reallocation_frequency', 30)
+                        )
 
                 # Enable/disable specific backtests
                 for test_name in [
@@ -2377,7 +2383,9 @@ def main():
                                     ComprehensiveBacktestRunner,
                                 )
 
-                                logger.info("✅ ComprehensiveBacktestRunner importado correctamente")
+                                logger.info(
+                                    "✅ ComprehensiveBacktestRunner importado correctamente"
+                                )
                             except Exception as import_error:
                                 logger.error(f"Error durante import: {import_error}", exc_info=True)
                                 raise

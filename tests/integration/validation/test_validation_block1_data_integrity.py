@@ -6,6 +6,7 @@ Tests para verificar:
 - Orden cronológico (quotes y señales en orden ascendente)
 - Dataset por símbolo (datos completos sin gaps > 1 intervalo)
 """
+
 import unittest
 from datetime import datetime, timedelta
 from decimal import Decimal

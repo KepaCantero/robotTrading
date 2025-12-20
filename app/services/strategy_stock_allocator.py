@@ -828,9 +828,7 @@ class StrategyStockAllocator:
             macd_norm = (
                 1.0
                 if (macd is not None and macd > macd_signal)
-                else 0.0
-                if macd is not None
-                else 0.5
+                else 0.0 if macd is not None else 0.5
             )
             roc_norm = (
                 min(1.0, max(0.0, (roc_optimal + 0.1) / 0.2)) if roc_optimal is not None else 0.5
@@ -1181,9 +1179,9 @@ class StrategyStockAllocator:
                 "hedge_ratio": hedge_ratio,
                 "liquidity_score": liquidity_score,
                 "spread_z_score": float(spread_z_score) if spread_z_score is not None else None,
-                "garch_normalized_z": float(garch_normalized_z)
-                if garch_normalized_z is not None
-                else None,
+                "garch_normalized_z": (
+                    float(garch_normalized_z) if garch_normalized_z is not None else None
+                ),
                 "rejected": False,
             }
 
@@ -1639,15 +1637,15 @@ class StrategyStockAllocator:
                 "Peso": f"{alloc.weight:.4f}",
                 "Capital": f"${alloc.capital:,.2f}",
                 "SPS": f"{alloc.sps_score:.4f}",
-                "Sortino": f"{alloc.sortino_ratio:.4f}"
-                if alloc.sortino_ratio is not None
-                else "N/A",
+                "Sortino": (
+                    f"{alloc.sortino_ratio:.4f}" if alloc.sortino_ratio is not None else "N/A"
+                ),
                 "H_long": f"{alloc.h_long:.4f}" if alloc.h_long is not None else "N/A",
                 "H_short": f"{alloc.h_short:.4f}" if alloc.h_short is not None else "N/A",
                 "τ": f"{alloc.half_life_tau:.2f}" if alloc.half_life_tau is not None else "N/A",
-                "σ_GARCH": f"{alloc.garch_volatility:.4f}"
-                if alloc.garch_volatility is not None
-                else "N/A",
+                "σ_GARCH": (
+                    f"{alloc.garch_volatility:.4f}" if alloc.garch_volatility is not None else "N/A"
+                ),
                 "Decision_Log": alloc.decision_log,
             }
             rows.append(row)

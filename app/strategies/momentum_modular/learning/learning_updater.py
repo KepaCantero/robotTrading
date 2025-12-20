@@ -888,9 +888,9 @@ class LearningEngineUpdater:
             # Run comprehensive feature analysis
             logger.debug("📊 Analizando importancia de features (6 métodos)...")
             analysis_result = self._feature_analyzer.analyze(
-                model=self.learning_engine.model
-                if hasattr(self.learning_engine, "model")
-                else None,
+                model=(
+                    self.learning_engine.model if hasattr(self.learning_engine, "model") else None
+                ),
                 features=features,
                 targets=targets,
                 feature_names=training_data.get("feature_names"),
@@ -988,9 +988,11 @@ class LearningEngineUpdater:
                 model=self.learning_engine.model,
                 regime=regime,
                 model_type=engine_type,
-                algorithm=self.learning_engine.algorithm
-                if hasattr(self.learning_engine, 'algorithm')
-                else 'unknown',
+                algorithm=(
+                    self.learning_engine.algorithm
+                    if hasattr(self.learning_engine, 'algorithm')
+                    else 'unknown'
+                ),
                 metadata={
                     'training_date': current_date.isoformat(),
                     'metrics': metrics,
