@@ -366,24 +366,44 @@ class ComprehensiveBacktestRunner:
             f"       - strategy._learning_config existe: {hasattr(strategy, '_learning_config') and strategy._learning_config is not None}"
         )
 
-        # CRÍTICO: Si el learning engine es lazy, inicializarlo ahora
+        # CRÍTICO: NO inicializar learning engine en main thread - CAUSA MUTEX.CC BLOCKING
+        # El learning engine se entrena solo en subprocess durante backtesting
         if (
             hasattr(strategy, '_learning_config')
             and strategy._learning_config
             and strategy.learning_engine is None
         ):
-            logger.info("    ⚙️ Inicializando learning engine (lazy loading)...")
-            try:
-                strategy._initialize_learning_engine()
-                logger.info("    ✅ Learning engine inicializado")
-            except Exception as e:
-                logger.error(f"    ❌ Error inicializando learning engine: {e}", exc_info=True)
+            engine_type = strategy._learning_engine_type
+            logger.warning(
+                f"    ⚠️ {engine_type} learning engine NO inicializado en main thread (previene mutex.cc blocking)"
+            )
+            logger.warning(
+                f"    💡 El entrenamiento se hará SOLO en subprocess sin predicciones en main process"
+            )
+            # Para cualquier tipo de learning engine, permitir que se entrene en subprocess
+            if learning_engine_name in ['deep', 'transformer', 'supervised', 'reinforcement']:
+                logger.info(f"    📋 {learning_engine_name} se entrenará en subprocess")
+                # Continuar sin learning engine inicializado
+                # El entrenamiento procederá normalmente abajo
+            else:
                 return False
 
-        if not strategy.learning_engine:
-            logger.warning("    ⚠️ No hay learning engine configurado")
-            return False
+        # Si learning_engine no está inicializado (ESPERADO en main thread para evitar mutex.cc)
+        if strategy.learning_engine is None:
+            logger.info(
+                f"    ℹ️ Learning engine NO inicializado en main thread (mutex prevention)"
+            )
+            # Si learning_engine_name no se proporciona, determinar del tipo configurado
+            if learning_engine_name is None:
+                learning_engine_name = strategy._learning_engine_type or 'supervised'
 
+            logger.info(
+                f"    📋 Entrenamiento de {learning_engine_name} procederá en subprocess"
+            )
+            # Retornar True para permitir que continúe el entrenamiento en subprocess
+            return True
+
+        # Si llegamos aquí, learning_engine SÍ está inicializado (caso excepcional)
         if not strategy.learning_engine.enabled:
             logger.warning("    ⚠️ Learning engine deshabilitado")
             return False
