@@ -7,9 +7,8 @@ Provides utilities for saving and generating multi-strategy results.
 import json
 import logging
 from datetime import datetime
-from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
 

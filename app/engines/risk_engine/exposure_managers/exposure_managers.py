@@ -13,9 +13,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-import numpy as np
-
-from app.models.portfolio import Portfolio, Position
+from app.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +43,6 @@ class BaseExposureManager(ABC):
         Returns:
             Análisis de exposición
         """
-        pass
 
 
 class ExposureManager(BaseExposureManager):

@@ -7,7 +7,7 @@ Maneja ajustes por splits, dividendos y corporate actions.
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 

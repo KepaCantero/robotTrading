@@ -8,8 +8,7 @@ Implements multi-timeframe confirmation to validate signals across different tim
 import logging
 from collections import defaultdict
 from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 
 from app.models.signal import Signal, SignalType
 

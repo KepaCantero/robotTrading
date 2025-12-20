@@ -9,11 +9,9 @@ Dashboard avanzado con:
 - Indicadores avanzados (Stability Index, Learning Retention, etc.)
 """
 
-import json
 import logging
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional
 
 import numpy as np
 import pandas as pd
@@ -28,21 +26,19 @@ except ImportError:
 try:
     import plotly.express as px
     import plotly.graph_objects as go
-    from plotly.subplots import make_subplots
 
     PLOTLY_AVAILABLE = True
 except ImportError:
     PLOTLY_AVAILABLE = False
 
 try:
-    from sklearn.cluster import KMeans
     from sklearn.metrics import silhouette_score
 
     SKLEARN_AVAILABLE = True
 except ImportError:
     SKLEARN_AVAILABLE = False
 
-from app.backtesting.meta_analyzer import AuditTrail, BacktestMetaAnalyzer
+from app.backtesting.meta_analyzer import BacktestMetaAnalyzer
 
 logger = logging.getLogger(__name__)
 

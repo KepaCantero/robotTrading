@@ -7,7 +7,6 @@ Permite:
 - Verificar reproducibilidad
 """
 
-import asyncio
 import hashlib
 import json
 import logging

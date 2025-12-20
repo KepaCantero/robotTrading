@@ -14,12 +14,10 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-import json
 import os
 import sys
-from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 # CRÍTICO: Configurar variables de entorno ANTES de imports pesados
 os.environ.setdefault('OMP_NUM_THREADS', '1')
@@ -52,7 +50,6 @@ except Exception:
 
 try:
     import plotly.express as px
-    import plotly.graph_objects as go
 
     plotly_available = True
 except Exception:

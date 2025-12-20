@@ -7,7 +7,6 @@ Permite guardar y cargar pesos de learning engines para:
 - Aprendizaje incremental
 """
 
-import asyncio
 import logging
 import pickle
 from datetime import datetime

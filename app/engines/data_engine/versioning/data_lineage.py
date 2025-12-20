@@ -9,7 +9,7 @@ import logging
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 logger = logging.getLogger(__name__)
 

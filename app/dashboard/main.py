@@ -31,14 +31,12 @@ from app.backtesting.models import BacktestConfig
 from app.backtesting.multi_strategy_engine import MultiStrategyBacktester
 
 # IMPORTANT: Import logging_config FIRST to ensure all warnings/errors go to files
-from app.core.logging_config import setup_file_logging
 from app.dashboard.comprehensive_data_loader import ComprehensiveBacktestLoader
 from app.dashboard.multi_strategy_utils import (
     generate_multi_strategy_summary_text,
     save_multi_strategy_results,
 )
 from app.dashboard.report_generator import generate_backend_test_summary, save_backtest_result
-from app.services.multi_strategy_allocation import MultiStrategyAllocationManager
 from app.strategies.mean_reversion import MeanReversionStrategy
 from app.strategies.momentum import MomentumStrategy
 from app.strategies.pairs_trading import PairsTradingStrategy
@@ -1064,7 +1062,9 @@ if session_state.backtest_results:
         sharpe_color = (
             "#28a745"
             if sharpe and sharpe > 1
-            else "#ffc107" if sharpe and sharpe > 0 else "#dc3545"
+            else "#ffc107"
+            if sharpe and sharpe > 0
+            else "#dc3545"
         )
         sharpe_display = f"{sharpe:.2f}" if sharpe is not None else "N/A"
         st.markdown(

@@ -8,8 +8,7 @@ Combina:
 """
 
 import logging
-from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from .gap_interpolator import GapInterpolator
 from .outlier_detector import OutlierDetector
@@ -100,7 +99,7 @@ class DataCleaningPipeline:
         # 3. Validar calidad
         quality_metrics = {}
         if self.validate_quality:
-            validation_result = self.quality_validator.validate_batch(cleaned_data, data_type)
+            self.quality_validator.validate_batch(cleaned_data, data_type)
             quality_metrics = self.quality_validator.get_quality_metrics(cleaned_data)
 
             # Si calidad es muy baja, advertir

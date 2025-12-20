@@ -3,11 +3,9 @@ ReinforcementLearningEngine - Aprende políticas óptimas de trading con RL.
 """
 
 import logging
-from collections import deque
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-import pandas as pd
 
 from .base_learning_engine import BaseLearningEngine
 
@@ -29,14 +27,13 @@ try:
 
     from stable_baselines3 import A2C, DDPG, DQN, PPO, SAC, TD3
     from stable_baselines3.common.callbacks import BaseCallback
-    from stable_baselines3.common.env_util import make_vec_env
 
     STABLE_BASELINES3_AVAILABLE = True
     logger.debug("stable-baselines3 disponible")
-except (ImportError, Exception) as e:
+except (ImportError, Exception):
     STABLE_BASELINES3_AVAILABLE = False
     # Silenciar completamente - es esperado que puede no estar disponible o bloquear
-    logger.debug(f"stable-baselines3 no disponible o bloqueado")
+    logger.debug("stable-baselines3 no disponible o bloqueado")
 
 # Importar gym de forma simple
 try:

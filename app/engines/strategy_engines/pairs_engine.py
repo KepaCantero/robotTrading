@@ -11,7 +11,7 @@ Refactorización de PairsTradingStrategy como Strategy Engine con:
 import logging
 from collections import defaultdict, deque
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence
 
 import numpy as np
 

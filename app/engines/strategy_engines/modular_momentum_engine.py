@@ -507,7 +507,7 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
         # Decidir según modo de combinación
         if self.combination_mode == "ALL":
             if len(passed_filters) == total_filters:
-                logger.debug(f"✅ Todos los filtros pasaron - generando señal BUY")
+                logger.debug("✅ Todos los filtros pasaron - generando señal BUY")
                 return SignalType.BUY
         elif self.combination_mode == "MAJORITY":
             required = max(1, (total_filters + 1) // 2)

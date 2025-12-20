@@ -423,7 +423,7 @@ class MeanReversionStrategy(BaseStrategy):
 
         # Make price drop optional - if z-score is very negative, don't require price drop
         price_drop_min = Decimal("0.001")  # Reduced from 0.002 to 0.1% drop (more permissive)
-        price_drop = (market_data.open - market_data.close) / market_data.open > price_drop_min
+        (market_data.open - market_data.close) / market_data.open > price_drop_min
         very_oversold = z_score < -self.z_score_threshold * Decimal(
             "1.2"
         )  # Reduced from 1.5 to 1.2
@@ -464,7 +464,7 @@ class MeanReversionStrategy(BaseStrategy):
 
         # Make price rise optional - if z-score is very positive, don't require price rise
         price_rise_min = Decimal("0.001")  # Reduced from 0.002 to 0.1% rise (more permissive)
-        price_rise = (market_data.close - market_data.open) / market_data.open > price_rise_min
+        (market_data.close - market_data.open) / market_data.open > price_rise_min
         very_overbought = z_score > self.z_score_threshold * Decimal(
             "1.2"
         )  # Reduced from 1.5 to 1.2

@@ -9,7 +9,7 @@ Implementa diferentes métodos para calcular VaR:
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import numpy as np
 import pandas as pd
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 # Optional dependencies
 try:
-    import arch
+    pass
 
     ARCH_AVAILABLE = True
 except ImportError:
@@ -55,7 +55,6 @@ class BaseVaRCalculator(ABC):
         Returns:
             Dict con VaR y métricas relacionadas
         """
-        pass
 
 
 class HistoricalVaRCalculator(BaseVaRCalculator):

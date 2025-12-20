@@ -5,11 +5,11 @@ HyperparameterOptimizer - Sistema de optimización automatizada para ModularMome
 import json
 import logging
 import random
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from itertools import product
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -17,7 +17,6 @@ import pandas as pd
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig
 from app.models.market_data import Quote
-from app.strategies.momentum_modular.automated_backtest import AutomatedBacktestRunner
 from app.strategies.momentum_modular.strategy import ModularMomentumStrategy
 
 logger = logging.getLogger(__name__)
@@ -113,7 +112,7 @@ class HyperparameterOptimizer:
             random.seed(random_seed)
             np.random.seed(random_seed)
 
-        logger.info(f"🚀 Iniciando optimización de hiperparámetros")
+        logger.info("🚀 Iniciando optimización de hiperparámetros")
         logger.info(f"   Símbolo: {self.symbol}")
         logger.info(f"   Período: {self.start_date.date()} - {self.end_date.date()}")
         logger.info(f"   Métrica objetivo: {self.optimization_metric}")
@@ -356,8 +355,6 @@ class HyperparameterOptimizer:
 
         import yaml
 
-        from app.core.centralized_config import get_strategy_config_manager
-
         config_path = (
             Path(__file__).parent.parent.parent.parent
             / "config"
@@ -533,7 +530,7 @@ class HyperparameterOptimizer:
             # Guardar resumen
             summary_file = results_dir / f"summary_{self.symbol}_{timestamp}.txt"
             with open(summary_file, 'w') as f:
-                f.write(f"Optimización de Hiperparámetros\n")
+                f.write("Optimización de Hiperparámetros\n")
                 f.write(f"{'='*80}\n\n")
                 f.write(f"Símbolo: {self.symbol}\n")
                 f.write(f"Período: {self.start_date.date()} - {self.end_date.date()}\n")
@@ -541,8 +538,8 @@ class HyperparameterOptimizer:
                 f.write(f"Método: {self.optimization_method}\n")
                 f.write(f"Total iteraciones: {len(self.results)}\n\n")
                 f.write(f"Mejor Score: {self.best_score:.4f}\n\n")
-                f.write(f"Mejor Configuración:\n")
+                f.write("Mejor Configuración:\n")
                 f.write(json.dumps(self.best_config, indent=2))
-                f.write(f"\n\nTop 10 Resultados:\n")
+                f.write("\n\nTop 10 Resultados:\n")
                 f.write(report.head(10).to_string())
             logger.info(f"💾 Resumen guardado: {summary_file}")

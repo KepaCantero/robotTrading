@@ -143,13 +143,13 @@ class SchemaVersioner:
         to_schema = self.get_schema(schema_name, to_version)
 
         if not from_schema or not to_schema:
-            logger.warning(f"No se pueden encontrar schemas para migración")
+            logger.warning("No se pueden encontrar schemas para migración")
             return data
 
         # Migración básica: mantener campos comunes, agregar defaults para nuevos
         migrated_data = data.copy()
 
-        from_fields = from_schema['definition'].get('fields', {})
+        from_schema['definition'].get('fields', {})
         to_fields = to_schema['definition'].get('fields', {})
 
         # Agregar campos nuevos con defaults

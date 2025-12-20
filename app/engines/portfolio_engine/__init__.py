@@ -15,7 +15,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from app.models.portfolio import AssetClass, Portfolio, PortfolioProvider, Position
+from app.models.portfolio import Portfolio, PortfolioProvider
 from app.services.portfolio_service import PortfolioService
 
 logger = logging.getLogger(__name__)
@@ -43,12 +43,10 @@ class BasePortfolioEngine(ABC):
     @abstractmethod
     def initialize(self) -> None:
         """Inicializar el engine."""
-        pass
 
     @abstractmethod
     def process(self, input_data: Any) -> Any:
         """Procesar datos de entrada."""
-        pass
 
     def health_check(self) -> Dict[str, Any]:
         """Verificar salud del engine."""

@@ -6,9 +6,6 @@ Tracks performance metrics per cycle to monitor system efficiency and identify b
 
 import logging
 import time
-from collections import defaultdict
-from datetime import datetime, timedelta
-from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)

@@ -10,11 +10,9 @@ Implementa diferentes métodos de optimización de portfolio:
 
 import logging
 from abc import ABC, abstractmethod
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional
 
 import numpy as np
-import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +26,7 @@ except ImportError:
     logger.warning("cvxpy no disponible. Optimización avanzada limitada.")
 
 try:
-    from pypfopt import EfficientFrontier, expected_returns as pypfopt_expected_returns, risk_models
+    from pypfopt import EfficientFrontier
 
     PYPORTFOLIO_AVAILABLE = True
 except ImportError:
@@ -67,7 +65,6 @@ class BaseOptimizer(ABC):
         Returns:
             Dict con pesos optimizados y métricas
         """
-        pass
 
 
 class MarkowitzOptimizer(BaseOptimizer):
@@ -116,11 +113,11 @@ class MarkowitzOptimizer(BaseOptimizer):
             ef = EfficientFrontier(expected_returns, cov_matrix)
 
             # Aplicar restricciones
-            max_weight = constraints.get('max_weight', 1.0)
-            min_weight = constraints.get('min_weight', 0.0)
+            constraints.get('max_weight', 1.0)
+            constraints.get('min_weight', 0.0)
 
             # Maximizar Sharpe ratio
-            weights = ef.max_sharpe()
+            ef.max_sharpe()
 
             # Normalizar si es necesario
             cleaned_weights = ef.clean_weights()
@@ -201,7 +198,7 @@ class MarkowitzOptimizer(BaseOptimizer):
         self, expected_returns: np.ndarray, cov_matrix: np.ndarray, constraints: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Optimización básica sin dependencias externas."""
-        n = len(expected_returns)
+        len(expected_returns)
 
         # Método simple: inverso de varianza (inverse volatility weighting)
         variances = np.diag(cov_matrix)
@@ -266,7 +263,7 @@ class RiskParityOptimizer(BaseOptimizer):
         constraints = constraints or {}
 
         try:
-            n = len(cov_matrix)
+            len(cov_matrix)
 
             # Método básico: Inverse volatility weighting
             # (aproximación simple de Risk Parity)

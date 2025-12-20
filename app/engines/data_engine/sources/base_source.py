@@ -4,9 +4,7 @@ BaseDataSource - Interfaz base para todas las fuentes de datos.
 
 import logging
 from abc import ABC, abstractmethod
-from datetime import datetime
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +36,6 @@ class BaseDataSource(ABC):
         Returns:
             True si la conexión fue exitosa
         """
-        pass
 
     @abstractmethod
     async def disconnect(self) -> bool:
@@ -48,7 +45,6 @@ class BaseDataSource(ABC):
         Returns:
             True si la desconexión fue exitosa
         """
-        pass
 
     @abstractmethod
     async def health_check(self) -> bool:
@@ -58,7 +54,6 @@ class BaseDataSource(ABC):
         Returns:
             True si la fuente está saludable
         """
-        pass
 
     def get_config(self) -> Dict[str, Any]:
         """Obtener configuración actual."""

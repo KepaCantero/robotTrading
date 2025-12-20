@@ -603,7 +603,6 @@ class SimpleBacktester:
         elif signal.signal_type == SignalType.HOLD:
             # Hold signals don't generate trades
             logger.debug(f"Processing HOLD signal for {signal.symbol} (skipped)")
-            pass
 
     def _execute_buy_signal(self, signal: Signal, market_data: Any):
         """Execute a buy signal."""
@@ -687,9 +686,7 @@ class SimpleBacktester:
             )
             return
 
-        logger.info(
-            f"✅ EXECUTING BUY: {signal.symbol} qty={position_size} price={execution_price}"
-        )
+        logger.info(f"✅ EXECUTING BUY: {signal.symbol} qty={position_size} price={execution_price}")
 
         # Build reason from signal metadata
         reason = self._build_trade_reason(signal, market_data)
@@ -998,7 +995,6 @@ class SimpleBacktester:
                 return Decimal(str(signal.metadata["slippage_per_trade_pct"]))
             except (ValueError, TypeError, InvalidOperation) as e:
                 logger.debug(f"Invalid slippage value in metadata: {e}")
-                pass
 
         # 2. Check strategy instance if available
         if self.strategy and hasattr(self.strategy, "slippage_per_trade_pct"):
@@ -1022,7 +1018,6 @@ class SimpleBacktester:
                 return Decimal(str(signal.metadata["commission_per_trade_pct"]))
             except (ValueError, TypeError, InvalidOperation) as e:
                 logger.debug(f"Invalid commission value in metadata: {e}")
-                pass
 
         # 2. Check strategy instance if available
         if self.strategy and hasattr(self.strategy, "commission_per_trade_pct"):

@@ -8,18 +8,13 @@ considering capital allocation and maximizing combined Sharpe ratio.
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import optuna
-from optuna.storages import JournalFileStorage, JournalStorage
 
 from app.backtesting.data_loader import DataLoader
 from app.backtesting.multi_strategy_engine import MultiStrategyBacktester
-from app.models.market_data import Quote
-from app.services.multi_strategy_allocation import (
-    MultiStrategyAllocationManager,
-    StrategyCapitalAllocation,
-)
+from app.services.multi_strategy_allocation import MultiStrategyAllocationManager
 from app.strategies.factory import StrategyFactory
 from app.strategies.mean_reversion import MeanReversionStrategy
 from app.strategies.momentum import MomentumStrategy
@@ -344,7 +339,7 @@ class MultiStrategyOptimizer:
             self.best_params = study.best_params
             self.best_value = study.best_value
 
-            logger.info(f"Optimization complete!")
+            logger.info("Optimization complete!")
             logger.info(f"Best {self.objective_metric}: {self.best_value:.4f}")
             logger.info(f"Best parameters: {self.best_params}")
 

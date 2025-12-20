@@ -12,11 +12,10 @@ Creates comprehensive, auditable backtest reports with:
 import json
 import logging
 from datetime import datetime
-from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
-from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics, Trade
+from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics
 
 logger = logging.getLogger(__name__)
 

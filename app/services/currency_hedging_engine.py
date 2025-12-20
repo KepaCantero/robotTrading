@@ -8,11 +8,11 @@ Provides core hedging logic independent of portfolio service.
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from pydantic import BaseModel, Field
 
-from app.models.portfolio import Portfolio, Position
+from app.models.portfolio import Portfolio
 from app.services.forex_data_service import get_forex_fetcher
 
 logger = logging.getLogger(__name__)

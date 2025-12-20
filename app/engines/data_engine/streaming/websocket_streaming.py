@@ -12,8 +12,7 @@ import asyncio
 import json
 import logging
 from datetime import datetime
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Set
 
 try:
     from fastapi import WebSocket, WebSocketDisconnect

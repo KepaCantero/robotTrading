@@ -9,7 +9,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
-    from .learning.base_learning_engine import BaseLearningEngine
+    pass
 
 from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
@@ -207,9 +207,7 @@ class ModularMomentumStrategy(BaseStrategy):
             error_msg = str(e).lower()
             if 'mutex' in error_msg or 'lock' in error_msg or 'blocking' in error_msg:
                 logger.error(f"❌ Bloqueo de mutex al inicializar {engine_type}: {e}")
-                logger.error(
-                    "💡 El learning engine se intentará inicializar más tarde o se omitirá"
-                )
+                logger.error("💡 El learning engine se intentará inicializar más tarde o se omitirá")
                 self.learning_engine = None
             else:
                 raise
@@ -590,7 +588,7 @@ class ModularMomentumStrategy(BaseStrategy):
         # Decidir según modo de combinación
         if self.combination_mode == "ALL":
             if len(passed_filters) == total_filters:
-                logger.debug(f"✅ Todos los filtros pasaron - generando señal BUY")
+                logger.debug("✅ Todos los filtros pasaron - generando señal BUY")
                 return SignalType.BUY
         elif self.combination_mode == "MAJORITY":
             required = max(1, (total_filters + 1) // 2)  # Mayoría = >50%

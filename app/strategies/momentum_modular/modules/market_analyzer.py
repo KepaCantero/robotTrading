@@ -4,7 +4,7 @@ MarketAnalyzer - Orquesta módulos detectores de régimen de mercado.
 
 import logging
 from collections import deque
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from .market_detectors.range_detector import RangeDetector
 from .market_detectors.trend_detector import TrendDetector

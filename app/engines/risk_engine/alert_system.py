@@ -10,8 +10,7 @@ Implementa sistema de alertas y notificaciones:
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from app.models.portfolio import Portfolio
 
@@ -56,7 +55,6 @@ class BaseAlertSystem(ABC):
         Returns:
             Lista de alertas generadas
         """
-        pass
 
     @abstractmethod
     def send_alerts(self, alerts: List[Dict[str, Any]]) -> bool:
@@ -69,7 +67,6 @@ class BaseAlertSystem(ABC):
         Returns:
             True si se enviaron exitosamente
         """
-        pass
 
 
 class AlertSystem(BaseAlertSystem):
@@ -244,7 +241,7 @@ class AlertSystem(BaseAlertSystem):
         violations = exposure_result.get('violations', [])
 
         if violations:
-            threshold = self.thresholds.get('exposure_limit', 0.20)
+            self.thresholds.get('exposure_limit', 0.20)
 
             for violation in violations:
                 alerts.append(
@@ -283,7 +280,7 @@ class AlertSystem(BaseAlertSystem):
         violations = correlation_result.get('violations', [])
 
         if violations:
-            threshold = self.thresholds.get('correlation_limit', 0.8)
+            self.thresholds.get('correlation_limit', 0.8)
 
             for violation in violations:
                 alerts.append(

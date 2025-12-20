@@ -17,9 +17,7 @@ Implementa arquitectura profesional, verificable y auditable con:
 
 import logging
 from collections import defaultdict
-from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -27,7 +25,7 @@ from pydantic import BaseModel, Field
 from scipy import stats
 from scipy.optimize import minimize
 
-from app.core.centralized_config import StockAllocationSettings, get_config
+from app.core.centralized_config import StockAllocationSettings
 from app.services.momentum_analysis import TechnicalIndicatorCalculator
 
 logger = logging.getLogger(__name__)
@@ -824,18 +822,20 @@ class StrategyStockAllocator:
                     liquidity_score = min(1.0, avg_volume / self.config.MIN_LIQUIDITY_USD)
 
             # Normalize metrics for scoring
-            rsi_norm = (rsi / 100.0) if rsi is not None else 0.5
+            (rsi / 100.0) if rsi is not None else 0.5
             macd_norm = (
                 1.0
                 if (macd is not None and macd > macd_signal)
-                else 0.0 if macd is not None else 0.5
+                else 0.0
+                if macd is not None
+                else 0.5
             )
             roc_norm = (
                 min(1.0, max(0.0, (roc_optimal + 0.1) / 0.2)) if roc_optimal is not None else 0.5
             )
             sortino_norm = min(1.0, max(0.0, sortino / 2.0)) if sortino is not None else 0.5
-            slope_norm = min(1.0, max(0.0, (slope_pct + 0.1) / 0.2))
-            spearman_norm = min(1.0, max(0.0, (spearman_rho + 1) / 2))
+            min(1.0, max(0.0, (slope_pct + 0.1) / 0.2))
+            min(1.0, max(0.0, (spearman_rho + 1) / 2))
             h_long_norm = (
                 (h_long - 0.3) / 0.4 if h_long is not None else 0.5
             )  # Normalize 0.3-0.7 to 0-1
@@ -1159,7 +1159,7 @@ class StrategyStockAllocator:
                 inv_tau = 1.0 / half_life
                 inv_tau_norm = min(1.0, max(0.0, (inv_tau - 0.01) / 0.1))
 
-            correlation_norm = abs(correlation)
+            abs(correlation)
 
             # Weighted score
             weights = self.config.PAIRS_TRADING_WEIGHTS
@@ -1792,7 +1792,7 @@ class StrategyStockAllocator:
         # FIX: Assign ALL available tickers if we have less than 15 assigned
         total_assigned = len(strategy_assignments)
         min_target_tickers = 15
-        available_tickers = len(all_scores)
+        len(all_scores)
 
         # If we have very few assigned, assign ALL available tickers (no filtering by score)
         if total_assigned < min_target_tickers:
@@ -2039,7 +2039,7 @@ class StrategyStockAllocator:
         )
 
         # Step 6: Generate output
-        output_df = self.generate_output(final_allocations, self.pair_metrics)
+        self.generate_output(final_allocations, self.pair_metrics)
 
         result = AllocationResult(
             allocations=final_allocations,

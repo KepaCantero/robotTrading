@@ -649,4 +649,4 @@ if __name__ == "__main__":
     )
 
     print("\n✅ Backtest automatizado completado!")
-    print(f"Resultados guardados en: docs/BACKTEST_RESULTS/")
+    print("Resultados guardados en: docs/BACKTEST_RESULTS/")
