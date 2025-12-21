@@ -1,5 +1,131 @@
 # Portfolio Multi-Strategy Configuration
-# Automated sector allocation and market type filtering
+# Automated sector and country allocation with market type filtering
+
+# Country and Sector Mapping
+symbol_mappings:
+  AAPL: { sector: technology, country: USA }
+  MSFT: { sector: technology, country: USA }
+  GOOGL: { sector: technology, country: USA }
+  AMZN: { sector: technology, country: USA }
+  META: { sector: technology, country: USA }
+  NVDA: { sector: technology, country: USA }
+  TSLA: { sector: technology, country: USA }
+  ORCL: { sector: technology, country: USA }
+  INTC: { sector: technology, country: USA }
+  CSCO: { sector: technology, country: USA }
+  ADBE: { sector: technology, country: USA }
+  CRM: { sector: technology, country: USA }
+  AMD: { sector: technology, country: USA }
+  AVGO: { sector: technology, country: USA }
+  QCOM: { sector: technology, country: USA }
+  ASML: { sector: technology, country: Netherlands }
+  SAP: { sector: technology, country: Germany }
+
+  NFLX: { sector: growth, country: USA }
+  SHOP: { sector: growth, country: Canada }
+  SQ: { sector: growth, country: USA }
+  SNOW: { sector: growth, country: USA }
+  CRWD: { sector: growth, country: USA }
+  NET: { sector: growth, country: USA }
+
+  XOM: { sector: energy, country: USA }
+  CVX: { sector: energy, country: USA }
+  COP: { sector: energy, country: USA }
+  EOG: { sector: energy, country: USA }
+  SLB: { sector: energy, country: USA }
+  MPC: { sector: energy, country: USA }
+  VLO: { sector: energy, country: USA }
+  PSX: { sector: energy, country: USA }
+  HAL: { sector: energy, country: USA }
+  FTI: { sector: energy, country: Canada }
+
+  NEE: { sector: utilities, country: USA }
+  DUK: { sector: utilities, country: USA }
+  SO: { sector: utilities, country: USA }
+  AEP: { sector: utilities, country: USA }
+  SRE: { sector: utilities, country: USA }
+  D: { sector: utilities, country: USA }
+  EXC: { sector: utilities, country: USA }
+  ES: { sector: utilities, country: Spain }
+  ETR: { sector: utilities, country: Germany }
+  FE: { sector: utilities, country: USA }
+
+  PG: { sector: consumer_staples, country: USA }
+  KO: { sector: consumer_staples, country: USA }
+  PEP: { sector: consumer_staples, country: USA }
+  WMT: { sector: consumer_staples, country: USA }
+  COST: { sector: consumer_staples, country: USA }
+  HD: { sector: consumer_staples, country: USA }
+  MCD: { sector: consumer_staples, country: USA }
+  NKE: { sector: consumer_staples, country: USA }
+  SBUX: { sector: consumer_staples, country: USA }
+  TGT: { sector: consumer_staples, country: USA }
+  NSRGY: { sector: consumer_staples, country: Switzerland }
+
+  AMT: { sector: reits, country: USA }
+  PLD: { sector: reits, country: USA }
+  EQIX: { sector: reits, country: USA }
+  PSA: { sector: reits, country: USA }
+  WELL: { sector: reits, country: USA }
+  SPG: { sector: reits, country: USA }
+  O: { sector: reits, country: USA }
+  DLR: { sector: reits, country: USA }
+  AVB: { sector: reits, country: USA }
+  EQR: { sector: reits, country: USA }
+
+  JPM: { sector: banking, country: USA }
+  BAC: { sector: banking, country: USA }
+  WFC: { sector: banking, country: USA }
+  C: { sector: banking, country: USA }
+  GS: { sector: banking, country: USA }
+  MS: { sector: banking, country: USA }
+  BX: { sector: banking, country: USA }
+  SCHW: { sector: banking, country: USA }
+  USB: { sector: banking, country: USA }
+  PNC: { sector: banking, country: USA }
+  DBSSF: { sector: banking, country: Germany }
+  SCCO: { sector: banking, country: Chile }
+
+  JNJ: { sector: healthcare, country: USA }
+  UNH: { sector: healthcare, country: USA }
+  PFE: { sector: healthcare, country: USA }
+  ABT: { sector: healthcare, country: USA }
+  TMO: { sector: healthcare, country: USA }
+  DHR: { sector: healthcare, country: USA }
+  BMY: { sector: healthcare, country: USA }
+  AMGN: { sector: healthcare, country: USA }
+  CI: { sector: healthcare, country: USA }
+  HUM: { sector: healthcare, country: USA }
+  ASGA: { sector: healthcare, country: Australia }
+
+  BA: { sector: industrials, country: USA }
+  CAT: { sector: industrials, country: USA }
+  GE: { sector: industrials, country: USA }
+  HON: { sector: industrials, country: USA }
+  LMT: { sector: industrials, country: USA }
+  RTX: { sector: industrials, country: USA }
+  UNP: { sector: industrials, country: USA }
+  UPS: { sector: industrials, country: USA }
+  DE: { sector: industrials, country: USA }
+  ETN: { sector: industrials, country: USA }
+  SIEGY: { sector: industrials, country: Germany }
+
+  LIN: { sector: materials, country: USA }
+  APD: { sector: materials, country: USA }
+  SHW: { sector: materials, country: USA }
+  FCX: { sector: materials, country: USA }
+  NEM: { sector: materials, country: USA }
+  ECL: { sector: materials, country: USA }
+  PPG: { sector: materials, country: USA }
+  DD: { sector: materials, country: USA }
+  DOW: { sector: materials, country: USA }
+  CTVA: { sector: materials, country: USA }
+
+  VZ: { sector: communication, country: USA }
+  T: { sector: communication, country: USA }
+  CMCSA: { sector: communication, country: USA }
+  DIS: { sector: communication, country: USA }
+  TMUS: { sector: communication, country: USA }
 
 # Sector Definitions
 sectors:
