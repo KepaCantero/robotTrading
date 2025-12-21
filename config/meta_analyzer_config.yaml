@@ -1,0 +1,390 @@
+# Meta-Analyzer Configuration
+# Configuration for BacktestMetaAnalyzer and all integrated components
+
+# ============================================================================
+# METRIC THRESHOLDS - Alert severity levels for various performance metrics
+# ============================================================================
+metric_thresholds:
+  # Sharpe Ratio (risk-adjusted returns)
+  sharpe_ratio:
+    excellent: 2.0      # Outstanding risk-adjusted performance
+    good: 1.0           # Solid risk-adjusted performance
+    warning: 0.5        # Below target performance
+    critical: -0.5      # Negative risk-adjusted returns
+
+  # Calmar Ratio (return / max drawdown)
+  calmar_ratio:
+    excellent: 2.0      # Strong return-to-drawdown ratio
+    good: 1.0           # Acceptable return-to-drawdown ratio
+    warning: 0.5        # Low return-to-drawdown ratio
+    critical: 0.0       # Negative or zero ratio
+
+  # Maximum Drawdown (peak-to-trough decline)
+  max_drawdown:
+    warning: -0.20      # 20% drawdown warning
+    critical: -0.50     # 50% drawdown critical
+
+  # Sortino Ratio (downside risk-adjusted returns)
+  sortino_ratio:
+    excellent: 2.5      # Outstanding downside risk-adjusted performance
+    good: 1.5           # Solid downside risk-adjusted performance
+    warning: 0.75       # Below target performance
+    critical: 0.0       # Negative or zero ratio
+
+  # Win Rate (percentage of winning trades)
+  win_rate:
+    excellent: 0.60     # 60%+ win rate is strong
+    good: 0.50          # 50%+ is acceptable
+    warning: 0.40       # Below 40% is concerning
+    critical: 0.25      # Below 25% is critical
+
+  # Profit Factor (gross profit / gross loss)
+  profit_factor:
+    excellent: 2.5      # Excellent risk/reward
+    good: 1.5           # Good risk/reward
+    warning: 1.0        # Breakeven risk/reward
+    critical: 0.5       # Poor risk/reward
+
+  # Volatility (annualized)
+  volatility:
+    excellent: 0.10     # Low volatility (10%)
+    good: 0.15          # Moderate volatility (15%)
+    warning: 0.25       # High volatility (25%)
+    critical: 0.50      # Very high volatility (50%+)
+
+  # Return (total return percentage)
+  return_pct:
+    excellent: 0.30     # 30%+ is excellent
+    good: 0.15          # 15%+ is good
+    warning: 0.05       # 5%+ is acceptable
+    critical: -0.10     # -10% is critical
+
+  # Ulcer Index (underwater duration penalty)
+  ulcer_index:
+    good: 0.10          # Low underwater duration
+    warning: 0.20       # Moderate underwater duration
+    critical: 0.50      # High underwater duration
+
+  # Recovery Factor (total profit / max drawdown)
+  recovery_factor:
+    excellent: 3.0      # Strong recovery capacity
+    good: 2.0           # Good recovery capacity
+    warning: 1.0        # Weak recovery capacity
+    critical: 0.5       # Poor recovery capacity
+
+# ============================================================================
+# ANALYSIS PARAMETERS - Core analysis configuration
+# ============================================================================
+analysis:
+  # Rolling window sizes for various calculations
+  rolling_windows:
+    sharpe_calculation_days: 252  # 1 year for Sharpe/Sortino
+    volatility_window_days: 20    # 20 trading days for rolling volatility
+    correlation_window_days: 60   # 60 trading days for rolling correlation
+    rolling_metric_window_days: 252  # Full year rolling metrics
+
+  # Seasonality analysis configuration
+  seasonality:
+    min_history_months: 60        # Minimum 5 years of data
+    min_history_days: 1260        # Equivalent in trading days
+    monthly_analysis: true        # Analyze monthly patterns
+    quarterly_analysis: true      # Analyze quarterly patterns
+    seasonal_decomposition: "additive"  # "additive" or "multiplicative"
+
+  # Regime detection configuration
+  regime_detection:
+    enabled: true
+    method: "kmeans"              # K-Means clustering
+    n_regimes: 3                  # Bull/Neutral/Bear
+    volatility_window: 20         # Rolling volatility window
+    min_data_points: 252          # Minimum 1 year of data
+    regime_names:
+      0: "Bear Market"
+      1: "Neutral Market"
+      2: "Bull Market"
+
+  # Clustering analysis configuration
+  clustering:
+    k_means:
+      enabled: true
+      k_range: [2, 5]             # Test k from 2 to 5
+      random_state: 42
+    hierarchical:
+      enabled: true
+      linkage: "ward"
+    dbscan:
+      enabled: true
+      eps: 0.3
+      min_samples: 3
+    tsne:
+      enabled: true
+      perplexity: 30
+      n_iter: 1000
+    silhouette_analysis:
+      enabled: true
+
+  # PCA and dimensionality reduction
+  dimensionality_reduction:
+    pca:
+      enabled: true
+      n_components: 5             # Keep top 5 components
+    ica:
+      enabled: false              # Optional advanced analysis
+
+  # Walk-forward validation (out-of-sample testing)
+  walk_forward:
+    enabled: true
+    test_periods: 5               # 5 test periods
+    train_window_days: 252        # 1 year training window
+    min_step_size: 20             # Minimum 20 days per step
+
+# ============================================================================
+# VISUALIZATION SETTINGS - Output and display configuration
+# ============================================================================
+visualization:
+  # Output paths
+  output_paths:
+    reports_dir: "reports/meta_analyzer"
+    static_plots_dir: "reports/meta_analyzer/static"
+    interactive_dir: "reports/meta_analyzer/interactive"
+    diagnostics_dir: "reports/meta_analyzer/diagnostics"
+
+  # Static plot settings (matplotlib)
+  static_plots:
+    enabled: true
+    dpi: 300                      # High quality exports
+    figsize: [12, 8]              # Default figure size
+    style: "seaborn-v0_8"         # matplotlib style
+    color_palette: "husl"         # seaborn palette
+    grid: true
+    tight_layout: true
+    save_format: "png"            # png or pdf
+
+  # Interactive visualizations (plotly)
+  interactive:
+    enabled: true
+    template: "plotly_dark"       # "plotly_dark" or "plotly"
+    hovermode: "closest"
+    height: 600
+    width: 1200
+
+  # Specific visualization configurations
+  plots:
+    correlation_network:
+      enabled: true
+      threshold: 0.5              # Only show correlations > 0.5
+      node_size_scale: 30
+
+    parallel_coordinates:
+      enabled: true
+      dimensions: 10              # Top 10 metrics
+
+    underwater_drawdown:
+      enabled: true
+      color: "red"
+
+    rolling_metrics:
+      enabled: true
+      metrics: ["sharpe_ratio", "volatility", "max_drawdown"]
+      window_days: 252
+
+    regime_performance:
+      enabled: true
+      show_transitions: true
+
+    seasonality_heatmap:
+      enabled: true
+      colormap: "RdYlGn"          # Red-Yellow-Green
+      show_values: true
+
+    three_d_scatter:
+      enabled: true
+      dimensions: 3               # 3D visualization
+      camera_angle: [30, 45]
+
+  # Dashboard settings
+  dashboard:
+    enabled: true
+    interactive: true
+    include_sections:
+      - performance_summary
+      - risk_metrics
+      - clustering_analysis
+      - regime_analysis
+      - seasonality_analysis
+      - recommendations
+
+# ============================================================================
+# REPORTING CONFIGURATION - Report generation settings
+# ============================================================================
+reporting:
+  # Report sections to include
+  include_sections:
+    performance_summary: true
+    statistical_insights: true
+    risk_warnings: true
+    recommendations: true
+    regime_analysis: true
+    seasonality_analysis: true
+    clustering_analysis: true
+    walk_forward_analysis: true
+
+  # Report format and style
+  markdown:
+    style: "github"               # GitHub-flavored markdown
+    include_table_of_contents: true
+    include_timestamp: true
+    include_data_quality: true
+    code_blocks: true
+
+  # Export formats
+  export_formats:
+    markdown: true
+    html: true
+    pdf: false                    # Requires additional dependencies
+    json: true
+    csv: true
+
+# ============================================================================
+# ALERT CONFIGURATION - Alert severity and notifications
+# ============================================================================
+alerts:
+  enabled: true
+
+  # Alert levels
+  levels:
+    critical:
+      enabled: true
+      color: "red"
+      symbol: "🔴"
+    warning:
+      enabled: true
+      color: "orange"
+      symbol: "🟡"
+    info:
+      enabled: true
+      color: "blue"
+      symbol: "🔵"
+
+  # Alert conditions
+  conditions:
+    # Sharpe ratio drops below good threshold
+    low_sharpe:
+      enabled: true
+      threshold: 1.0
+      level: "warning"
+
+    # Max drawdown exceeds warning threshold
+    high_drawdown:
+      enabled: true
+      threshold: -0.30
+      level: "critical"
+
+    # Profit factor below acceptable level
+    low_profit_factor:
+      enabled: true
+      threshold: 1.0
+      level: "warning"
+
+    # Win rate too low
+    low_win_rate:
+      enabled: true
+      threshold: 0.40
+      level: "warning"
+
+    # High volatility
+    high_volatility:
+      enabled: true
+      threshold: 0.25
+      level: "warning"
+
+# ============================================================================
+# DATA QUALITY SETTINGS
+# ============================================================================
+data_quality:
+  # Minimum data requirements
+  min_required:
+    total_trades: 10              # At least 10 trades
+    trading_days: 60              # At least 60 trading days
+    annual_periods: 1             # At least 1 year of data
+
+  # Data validation
+  validation:
+    check_for_gaps: true
+    check_for_outliers: true
+    outlier_std_threshold: 5      # 5 standard deviations
+    handle_missing_values: "forward_fill"  # How to handle NaN
+
+  # Warnings for low data quality
+  warnings:
+    insufficient_history: "⚠️ Insufficient historical data for seasonal analysis"
+    sparse_trading: "⚠️ Sparse trading pattern detected"
+    high_volatility_alert: "⚠️ High volatility detected"
+
+# ============================================================================
+# ADVANCED SETTINGS
+# ============================================================================
+advanced:
+  # Performance optimization
+  performance:
+    cache_results: true
+    parallel_analysis: true
+    max_workers: 4               # Number of parallel threads
+
+  # Numerical stability
+  numerical:
+    epsilon: 1e-8                # Small value to prevent division by zero
+    nan_replacement: 0.0
+    inf_replacement: 0.0
+
+  # Random seeds for reproducibility
+  random_state: 42
+  numpy_seed: 42
+  pandas_seed: 42
+
+  # Logging
+  logging:
+    level: "INFO"                # DEBUG, INFO, WARNING, ERROR
+    format: "detailed"           # "simple" or "detailed"
+    save_logs: true
+    log_file: "reports/meta_analyzer/analysis.log"
+
+  # Caching
+  caching:
+    enabled: true
+    cache_dir: ".cache/meta_analyzer"
+    cache_ttl_hours: 24           # Cache validity period
+
+# ============================================================================
+# INTEGRATION SETTINGS - Integration with other components
+# ============================================================================
+integration:
+  # BacktestMetaAnalyzer integration
+  meta_analyzer:
+    enabled: true
+    include_in_comprehensive_analysis: true
+
+  # Advanced Metrics integration
+  advanced_metrics:
+    enabled: true
+    calculate_all_metrics: true
+
+  # Visualization integration
+  advanced_visualizations:
+    enabled: true
+    generate_all_plots: true
+
+  # Regime Analyzer integration
+  regime_analyzer:
+    enabled: true
+    include_regime_analysis: true
+
+  # Seasonality Analyzer integration (when available)
+  seasonality_analyzer:
+    enabled: true
+    include_seasonality_analysis: true
+
+  # Clustering Analyzer integration (when available)
+  clustering_analyzer:
+    enabled: true
+    include_clustering_analysis: true
