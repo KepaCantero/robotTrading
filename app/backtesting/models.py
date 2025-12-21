@@ -89,6 +89,38 @@ class PerformanceMetrics(BaseModel):
         None, description="Average risk/reward ratio per trade (target ≥1:3)"
     )
 
+    # Advanced financial metrics (PHASE 4 MODULE 7)
+    calmar_ratio: Optional[Decimal] = Field(
+        None, description="Calmar Ratio: CAGR / |Max Drawdown| (>1.0 good, >3.0 excellent)"
+    )
+    omega_ratio: Optional[Decimal] = Field(
+        None, description="Omega Ratio: Probability-weighted gains/losses ratio (>1.0 profitable)"
+    )
+    ulcer_index: Optional[Decimal] = Field(
+        None, description="Ulcer Index: Duration-weighted drawdown penalty (lower is better)"
+    )
+    volatility_annualized: Optional[Decimal] = Field(
+        None, description="Annualized Volatility: std(returns) * sqrt(252)"
+    )
+    recovery_factor: Optional[Decimal] = Field(
+        None, description="Recovery Factor: Net Profit / |Max Drawdown|"
+    )
+    profit_factor: Optional[Decimal] = Field(
+        None, description="Profit Factor: Gross Profit / |Gross Loss| (>1.5 good, >2.0 excellent)"
+    )
+    skewness: Optional[Decimal] = Field(
+        None, description="Skewness: Return distribution asymmetry (negative is worse)"
+    )
+    kurtosis: Optional[Decimal] = Field(
+        None, description="Excess Kurtosis: Tail risk measure (negative is better)"
+    )
+    var_95: Optional[Decimal] = Field(
+        None, description="Value at Risk 95%: Worst 5% scenario (negative value = potential loss)"
+    )
+    cvar_95: Optional[Decimal] = Field(
+        None, description="Conditional VaR 95%: Expected loss beyond VaR threshold"
+    )
+
     # Trade statistics
     avg_win: Decimal = Field(..., description="Average winning trade")
     avg_loss: Decimal = Field(..., le=0, description="Average losing trade")

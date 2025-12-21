@@ -14,6 +14,7 @@ from typing import List, Optional
 
 import numpy as np
 
+from app.backtesting.advanced_metrics import AdvancedMetricsCalculator
 from app.backtesting.models import PerformanceMetrics, Trade
 
 logger = logging.getLogger(__name__)
@@ -139,6 +140,32 @@ class MetricsCalculator:
         total_days = (end_date - start_date).days
         avg_trade_duration = self._calculate_avg_trade_duration(closed_trades)
 
+        # Calculate advanced metrics (PHASE 4 MODULE 7)
+        advanced_metrics = {}
+        try:
+            if daily_returns and equity_curve and total_days > 0:
+                # Calculate CAGR for Calmar and Recovery Factor
+                cagr = self.calculate_cagr(initial_capital, final_capital, start_date, end_date)
+
+                # Initialize advanced metrics calculator
+                adv_calc = AdvancedMetricsCalculator(risk_free_rate=self.risk_free_rate)
+
+                # Calculate all advanced metrics
+                advanced_metrics = adv_calc.calculate_all_advanced_metrics(
+                    returns=daily_returns,
+                    equity_curve=equity_curve,
+                    cagr=cagr,
+                    max_drawdown=max_drawdown,
+                    total_pnl=total_pnl,
+                    gross_profit=gross_profit,
+                    gross_loss=abs(gross_loss),  # Use absolute value for loss
+                )
+                logger.debug(f"Advanced metrics calculated: {list(advanced_metrics.keys())}")
+            else:
+                logger.debug("Insufficient data for advanced metrics calculation")
+        except Exception as e:
+            logger.error(f"Error calculating advanced metrics: {e}")
+
         return PerformanceMetrics(
             total_trades=total_trades,
             winning_trades=len(winning_trades),
@@ -160,6 +187,17 @@ class MetricsCalculator:
             largest_loss=largest_loss,
             total_days=total_days,
             avg_trade_duration=avg_trade_duration,
+            # Advanced metrics
+            calmar_ratio=advanced_metrics.get("calmar_ratio"),
+            omega_ratio=advanced_metrics.get("omega_ratio"),
+            ulcer_index=advanced_metrics.get("ulcer_index"),
+            volatility_annualized=advanced_metrics.get("volatility_annualized"),
+            recovery_factor=advanced_metrics.get("recovery_factor"),
+            profit_factor=advanced_metrics.get("profit_factor"),
+            skewness=advanced_metrics.get("skewness"),
+            kurtosis=advanced_metrics.get("kurtosis"),
+            var_95=advanced_metrics.get("var_95"),
+            cvar_95=advanced_metrics.get("cvar_95"),
         )
 
     def _empty_metrics(
@@ -195,6 +233,17 @@ class MetricsCalculator:
             largest_loss=Decimal("0"),
             total_days=total_days,
             avg_trade_duration=Decimal("0"),
+            # Advanced metrics (all None for no trades)
+            calmar_ratio=None,
+            omega_ratio=None,
+            ulcer_index=None,
+            volatility_annualized=None,
+            recovery_factor=None,
+            profit_factor=None,
+            skewness=None,
+            kurtosis=None,
+            var_95=None,
+            cvar_95=None,
         )
 
     def _build_equity_curve(self, trades: List[Trade], initial_capital: Decimal) -> List[Decimal]:
