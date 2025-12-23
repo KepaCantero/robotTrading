@@ -390,16 +390,12 @@ class ComprehensiveBacktestRunner:
 
         # Si learning_engine no está inicializado (ESPERADO en main thread para evitar mutex.cc)
         if strategy.learning_engine is None:
-            logger.info(
-                f"    ℹ️ Learning engine NO inicializado en main thread (mutex prevention)"
-            )
+            logger.info(f"    ℹ️ Learning engine NO inicializado en main thread (mutex prevention)")
             # Si learning_engine_name no se proporciona, determinar del tipo configurado
             if learning_engine_name is None:
                 learning_engine_name = strategy._learning_engine_type or 'supervised'
 
-            logger.info(
-                f"    📋 Entrenamiento de {learning_engine_name} procederá en subprocess"
-            )
+            logger.info(f"    📋 Entrenamiento de {learning_engine_name} procederá en subprocess")
             # Retornar True para permitir que continúe el entrenamiento en subprocess
             return True
 

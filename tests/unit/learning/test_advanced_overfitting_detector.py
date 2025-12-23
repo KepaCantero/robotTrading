@@ -77,7 +77,9 @@ def moderate_overfitting_metrics():
                 train_loss=max(0.1, train_loss),
                 val_loss=max(0.1, val_loss),
                 train_metric=min(0.95, epoch * 0.03),
-                val_metric=min(0.95, epoch * 0.02) if epoch < 10 else max(0.5, 0.2 - (epoch - 10) * 0.01),
+                val_metric=min(0.95, epoch * 0.02)
+                if epoch < 10
+                else max(0.5, 0.2 - (epoch - 10) * 0.01),
                 l2_regularization=0.0001,
                 model_params_count=100000,
             )
@@ -344,7 +346,11 @@ class TestOverfittingDetection:
             )
         result = detector.detect_overfitting()
         assert result.overfitting_detected is True
-        assert result.severity in [OverfittingSeverity.MEDIUM, OverfittingSeverity.HIGH, OverfittingSeverity.CRITICAL]
+        assert result.severity in [
+            OverfittingSeverity.MEDIUM,
+            OverfittingSeverity.HIGH,
+            OverfittingSeverity.CRITICAL,
+        ]
         assert result.gap_ratio > 0.1
         assert result.overfitting_score > 50.0  # High overfitting score
 
@@ -362,7 +368,13 @@ class TestOverfittingDetection:
         result = detector.detect_overfitting()
         assert isinstance(result, OverfittingResult)
         assert result.overfitting_score >= 0.0 and result.overfitting_score <= 100.0
-        assert result.learning_curve_trend in ["converging", "diverging", "plateau", "unstable", "unknown"]
+        assert result.learning_curve_trend in [
+            "converging",
+            "diverging",
+            "plateau",
+            "unstable",
+            "unknown",
+        ]
         assert isinstance(result.root_causes, list)
         assert isinstance(result.recommendations, list)
 
@@ -450,7 +462,7 @@ class TestLearningCurveTrends:
             detector.update_metrics(
                 epoch=epoch,
                 train_loss=1.0 - (epoch * 0.08),  # Train improves strongly
-                val_loss=1.0 + (epoch * 0.06),   # Val worsens strongly
+                val_loss=1.0 + (epoch * 0.06),  # Val worsens strongly
                 train_metric=0.5 + (epoch * 0.06),
                 val_metric=0.5 - (epoch * 0.04),
             )

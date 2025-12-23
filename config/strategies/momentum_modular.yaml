@@ -5,6 +5,14 @@ strategy_name: momentum_modular
 enabled: true
 version: "2.0.0"
 
+# PHASE 1 T1.1: Capital Tier Recommendations
+recommended_for_tiers: ["micro", "small", "medium", "large"]  # Suitable for all tiers
+tier_preset_mapping:
+  micro: "conservative"        # Use conservative preset for micro
+  small: "conservative"        # Use conservative preset for small
+  medium: "balanced"           # Use balanced preset for medium
+  large: "aggressive"          # Use aggressive preset for large
+
 # MARKET CONTEXT ANALYZER
 market_analyzer:
   enabled: true
@@ -297,7 +305,7 @@ signal_frequency:
 
 # ADAPTIVE LEARNING (Reservado para futura IA)
 adaptive_learning:
-  enabled: false
+  enabled: true  # ✅ HABILITADO para validar funcionamiento
 
   # Cuando se habilite, estos módulos aprenderán de resultados
   modules_for_adaptation:

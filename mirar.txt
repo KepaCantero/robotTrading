@@ -1,9 +1,0 @@
-025-12-18 18:41:54,241 - app.backtesting.comprehensive_backtest_runner - INFO - 📊 Generando análisis pyfolio...
-2025-12-18 18:41:54,258 - app.backtesting.comprehensive_backtest_runner - WARNING - ⚠️ Error en análisis pyfolio para Baseline - All Modules Active: 'str' object has no attribute 'value'
-2025-12-18 18:41:54,270 - app.backtesting.comprehensive_backtest_runner - WARNING - ⚠️ Error en análisis pyfolio para Baseline - All Modules Active: 'str' object has no attribute 'value'
-2025-12-18 18:41:54,283 - app.backtesting.comprehensive_backtest_runner - WARNING - ⚠️ Error en análisis pyfolio para Ablation - Without ema_filter: 'str' object has no attribute 'value'
-2025-12-18 18:41:54,295 - app.backtesting.comprehensive_backtest_runner - WARNING - ⚠️ Error en análisis pyfolio para Ablation - Without rsi_filter: 'str' object has no attribute 'value'
-2025-12-18 18:41:54,307 - app.backtesting.comprehensive_backtest_runner - WARNING - ⚠️ Error en análisis pyfolio para Ablation - Without stoch_rsi_filter: 'str' object has no attribute 'value'
-2025-12-18 18:41:54,320 - app.backtesting.comprehensive_backtest_runner - WARNING - ⚠️ Error en análisis pyfolio para Ablation - Without momentum_filter: 'str' object has no attribute 'value'
-2025-12-18 18:41:54,332 - app.backtesting.comprehensive_backtest_runner - WARNING - ⚠️ Error en análisis pyfolio para Ablation - Without volume_filter: 'str' object has no attribute 'value'
-2025-12-18 18:41:54,345 - app.backtesting.comprehensive_backtest_runner - WARNING - ⚠️ Error en análisis pyfolio para Ablation - Without atr_filter: 'str' object has no attribute 'value'

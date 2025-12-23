@@ -478,7 +478,9 @@ class RobustnessScorer:
             status_icon = (
                 "✓"
                 if result.production_readiness == ProductionReadiness.PASS
-                else "⚠" if result.production_readiness == ProductionReadiness.WARN else "✗"
+                else "⚠"
+                if result.production_readiness == ProductionReadiness.WARN
+                else "✗"
             )
 
             print(
@@ -496,8 +498,7 @@ class RobustnessScorer:
                     f"(% windows profitable)"
                 )
                 print(
-                    f"    - Stability:   {details.stability_score:6.1f} "
-                    f"(parameter consistency)"
+                    f"    - Stability:   {details.stability_score:6.1f} " f"(parameter consistency)"
                 )
                 print(
                     f"    - Sensitivity: {details.sensitivity_score:6.1f} "
@@ -512,9 +513,7 @@ class RobustnessScorer:
             if result.risk_factors:
                 print(f"  Risk Factors:")
                 for factor in result.risk_factors:
-                    print(
-                        f"    [{factor.severity.value}] {factor.name}: {factor.description}"
-                    )
+                    print(f"    [{factor.severity.value}] {factor.name}: {factor.description}")
 
             if result.recommendations:
                 print(f"  Recommendations:")
