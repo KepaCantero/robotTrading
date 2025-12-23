@@ -1,31 +1,292 @@
-# 🚀 Plan Maestro: AlgoTrading Next Level (Consolidado v2.1)
+# 🚀 Plan Maestro: AlgoTrading Next Level (v3.0 - Capital-Aware Architecture)
 
-**Versión**: 2.1 - Consolidado + PHASE 0: Capital Viability & Integration Audit
+**Versión**: 3.0 - Capital-Aware Dual-Mode (Small Capital + Large Capital Optimization)
 **Fecha**: 2025-12-23
-**Estado**: FASE 0 CRÍTICA + Fases 1-3 completadas
+**Estado**: PHASE 0 ✅ COMPLETADO + PHASES 1-4 PLANEADOS (€250k Optimization)
 
 ---
 
 ## 📋 Resumen Ejecutivo
 
-Este documento consolida CUATRO planes en uno:
+Este documento consolida la arquitectura en UNA plataforma dual-mode:
 
-1. **Plan Maestro Original**: Arquitectura de 17 módulos inteligentes
+1. **Plan Maestro Original**: Arquitectura de 17 módulos inteligentes (Fases 1-3 + Fases 5-7)
 2. **Quant Plan (Awesome-Quant Integration)**: 7 librerías validadas para analytics, reporting y optimización
 3. **Refactored Plan (Elite Libraries)**: Integración de librerías élite para infraestructura y ejecución
-4. **PHASE 0: Capital-Aware Integration Audit** (NUEVO): Hardening crítico contra pérdida de capital en cuentas pequeñas ($10k-$30k)
+4. **PHASE 0: Capital-Aware Integration Audit** ✅ **COMPLETADO**: Hardening crítico para accounts <€50k
+5. **PHASES 1-4: Large Capital Optimization** (NUEVO): Escalamiento a €250k+ con target €800/mes neto (3.9% anual)
 
-**Objetivo**:
-- Transformar el sistema en una plataforma institucional SEGURA
-- Garantizar que el sistema correctamente **rechaza operaciones imposibles** antes de dañar capital
-- Validar interacciones de módulos bajo restricción de capital
-- Implementar gates fail-fast que previenen ruin de cuentas pequeñas
+### Arquitectura Dual-Mode:
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Capital < €50k (PHASE 0)                                    │
+│ └─ Supervivencia: Fail-fast, límites conservadores         │
+│    └─ 178 tests ✅, 4 sub-phases, Deployment-ready         │
+│                                                             │
+│ Capital €250k+ (PHASES 1-4)                                │
+│ └─ Retorno Absoluto: €800/mes (3.9% anual neto)           │
+│    ├─ PHASE 1: Capital-Tier Strategy (2-3 días)          │
+│    ├─ PHASE 2: Execution Optimization (2-3 días)          │
+│    ├─ PHASE 3: Dynamic Risk Scaling (1-2 días)            │
+│    └─ PHASE 4: Capacity Fade Validation (2-3 días)        │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Cronograma Total**: PHASE 0 ✅ + PHASES 1-4 (~9-11 días) + PHASES 5-17 (módulos avanzados)
 
 ---
 
-## ⚠️ PHASE 0: System Reliability Hardening & Capital Viability (CRÍTICO - PREREQUISITO)
+## ✅ PHASE 0: System Reliability Hardening & Capital Viability (✅ COMPLETADO)
 
-**Timeline**: 2-3 semanas (ANTES de cualquier deploy live)
+**Timeline**: ✅ Completado 2025-12-23
+**Estado**: 178 tests pasando, 4 sub-phases implementadas
+**Capital Target**: €10k-€50k (fail-safe, supervivencia)
+**Garantía**: Sistema rechaza operaciones imposibles antes de dañar capital
+
+**Tests**: 49 (T0.1) + 60 (T0.2) + 10 (T0.3) + 59 (T0.4) = **178 ✅**
+
+### FASE 0 - Resumen de Implementación:
+
+#### T0.1: Capital Viability Gates (49 tests)
+- ✅ CapitalViabilityValidator: Valida goals realizables
+- ✅ ExecutionCostAnalyzer: Analiza costes (volatility-dependent slippage)
+- ✅ OpportunityCostValidator: Risk-free vs active trading
+
+#### T0.2: Learning & Module Gates (60 tests)
+- ✅ LearningCapitalGate: Viabilidad económica de learning (min €25k)
+- ✅ ExpensiveModuleGate: Gating de módulos ML (€50k, €100k, etc.)
+
+#### T0.3: Integration Tests (10 tests)
+- ✅ Multi-gate coordination validation
+
+#### T0.4: Deployment System (59 tests)
+- ✅ DeploymentValidator: Orquestación de gates pre-deployment
+- ✅ AccountConfiguration: Configuración por tier (Micro/Small/Medium/Large)
+
+---
+
+## 🚀 PHASES 1-4: Large Capital Optimization (€250k+ Target: €800/mes)
+
+**Timeline**: ~9-11 días total (2-3 días cada PHASE)
+**Objetivo**: Escalar de supervivencia a retorno absoluto (3.9% anual neto)
+**Capital Target**: €250k+
+**Target**: €800 netos mensuales (€9,600 anuales)
+
+### PHASE 1: Capital-Tier Aware Strategy Orchestration (2-3 días)
+
+**Objetivo**: Mapear capital → features/risk/alpha strategy dinámicamente
+
+#### T1.1: Capital Tier Strategy Selector
+
+```python
+class CapitalTierStrategySelector:
+    """
+    Con capital, activa dinámicamente:
+    - Risk profile (1-2 micro → 6-7 large)
+    - Estrategias (básicas → ensemble)
+    - Features (simple → ML completo)
+    - Leverage (0 → 2.5x)
+    """
+
+    TIER_MAPPING = {
+        "micro" (<€15k):    {risk: 1-2, features: ["momentum"], leverage: 0},
+        "small" (€15k-€50k): {risk: 2-3, features: ["momentum","mr"], leverage: 0.5},
+        "medium" (€50k-€250k): {risk: 4-5, features: ["all"], leverage: 1.5},
+        "large" (€250k+):    {risk: 6-7, features: ["all"], leverage: 2.5},
+    }
+
+    def select_strategy(capital: Decimal) -> StrategyConfig
+    def activate_modules(capital: Decimal) -> ModuleSet
+    def scale_risk_profile(capital: Decimal) -> RiskProfile
+```
+
+**Componentes**:
+- T1.1.1: CapitalTierSelector (decide tier, mapea features)
+- T1.1.2: StrategyFeatureGatekeeper (activa/desactiva módulos)
+- T1.1.3: RiskProfileScaler (calcula risk_level por capital)
+
+**Tests**: ~15-20 tests
+
+#### T1.2: Absolute Return Optimizer
+
+```python
+class AbsoluteReturnOptimizer:
+    """
+    Transforma target € en parámetros operacionales
+    Entrada: capital=€250k, target=€800/mes
+    Salida: alpha_required, position_size, leverage, concentration
+    """
+
+    def calculate_required_alpha(target_euros: Decimal, capital: Decimal) -> Decimal:
+        """€800/mes → 3.9% anual → alpha neto requerido"""
+
+    def validate_feasibility(capital: Decimal, alpha_target: Decimal) -> bool:
+        """¿Es 3.9% neto realista? Considerando capacity fade"""
+
+    def optimize_parameters(capital: Decimal, target: Decimal) -> OperationalParams:
+        """Position sizing, leverage, diversification para target"""
+```
+
+**Componentes**:
+- T1.2.1: TargetAlphaCalculator (€ target → % alpha)
+- T1.2.2: CapacityFadeAnalyzer (estima decay con escala)
+- T1.2.3: ParameterOptimizer (position_size, leverage optimization)
+- T1.2.4: FeasibilityValidator (rechaza targets imposibles temprano)
+
+**Tests**: ~15-20 tests
+
+**Timeline PHASE 1**: 2-3 días
+**Salida**: Sistema puede operar en "Large Capital Mode" con optimización hacia €800/mes
+
+---
+
+### PHASE 2: Execution Optimization for Large Capital (2-3 días)
+
+**Objetivo**: Minimizar costes operativos en órdenes grandes para mantener 3.9% neto
+
+#### T2.1: Smart Order Routing Engine
+
+```python
+class SmartOrderRouter:
+    """
+    Para posiciones de €25k-€50k (10-20% del capital):
+    - Negociar comisiones wholesale (€250k → 0.02-0.03% vs retail 0.1%)
+    - Órdenes inteligentes (VWAP, TWAP, POI)
+    - Minimizar market impact
+    - Target: execution cost < 0.1% por ejecución
+    """
+
+    def negotiate_commissions(capital: Decimal, broker) -> CommissionRate
+    def select_order_type(size: Decimal, volatility: Decimal) -> OrderType
+    def estimate_market_impact(size: Decimal, symbol: str) -> Decimal
+    def monitor_execution_cost(actual: Decimal, budget: Decimal) -> ExecutionMetrics
+```
+
+**Componentes**:
+- T2.1.1: BrokerNegotiationEngine (obtiene comisiones por volume)
+- T2.1.2: OrderSplittingOptimizer (VWAP, TWAP, POI)
+- T2.1.3: MarketImpactEstimator (predice slippage por volumen)
+- T2.1.4: ExecutionCostMonitor (confirma cost < presupuesto)
+
+#### T2.2: Large Position Builder
+
+```python
+def build_large_position(symbol: str, size_euros: Decimal) -> ExecutionPlan:
+    """
+    Para construir posición de €50k:
+    - Dividir en tramos intraday (evitar market impact)
+    - Usar momentum temporal para mejores precios
+    - Limitar market impact < 2 bps
+    """
+```
+
+**Tests**: ~15-20 tests
+
+**Timeline PHASE 2**: 2-3 días
+**Salida**: Ejecución optimizada mantiene costs < 0.1% por trade
+
+---
+
+### PHASE 3: Dynamic Risk Scaling (1-2 días)
+
+**Objetivo**: Risk Engine dinámico que ajusta límites con capital y target
+
+```python
+DYNAMIC_RISK_CONFIG_250K = {
+    "capital": €250_000,
+    "target_return": 0.039,        # 3.9% anual
+    "acceptable_drawdown": 0.10,   # ↑ 10% (vs 3% para €10k)
+    "max_daily_loss": 0.005,       # €125/día = 5bps
+    "max_position": 0.15,          # 15% (vs 2% para micro)
+    "leverage": 1.5,               # Permitido
+    "diversification": 12,         # posiciones simultáneas
+    "pain_tolerance": "HIGH",
+}
+```
+
+**Componentes**:
+- T3.1: DynamicRiskLimits (calcula límites por capital + target)
+- T3.2: DrawdownToleranceCalculator (mayor tolerancia con €250k)
+- T3.3: LeveragePermissionEngine (leverage permitido con capital)
+
+**Tests**: ~10-15 tests
+
+**Timeline PHASE 3**: 1-2 días
+**Salida**: Risk Engine escala dinámicamente con capital
+
+---
+
+### PHASE 4: Capacity Fade & Alpha Validation (2-3 días)
+
+**Objetivo**: Validar que 3.9% neto es realista a €250k scale
+
+```python
+class CapacityFadeAnalyzer:
+    """
+    Con €250k, ¿cuánto baja el alpha debido a:
+    - Market impact de órdenes grandes
+    - Crowding (menos oportunidades únicas con más capital)
+    - Reduced alpha % cuando se negocia mayor volumen
+
+    Ej: Si alpha a €10k es 8%,
+        ¿cuál es alpha realista a €250k?
+        Posible: 5-6% (capacity fade del 2-3%)
+
+    Si alpha realista < 3.9% neto, RECHAZAR objetivo.
+    """
+
+    def analyze_capacity_fade(historical_alpha: Decimal, capital: Decimal) -> CapacityFadeReport
+    def estimate_alpha_at_scale(base_alpha: Decimal, capacity: Decimal) -> Decimal
+    def validate_feasibility(estimated_alpha: Decimal, target: Decimal) -> bool
+    def monitor_realized_alpha() -> AlphaMonitoringReport  # Monthly
+```
+
+**Componentes**:
+- T4.1.1: HistoricalCapacityAnalyzer (analiza decay en backtests)
+- T4.1.2: LiquidityHeadroom (cuánto % de volumen se negocia)
+- T4.1.3: AlphaDecayEstimator (proyecta alpha a €250k)
+- T4.1.4: FeasibilityGate (rechaza 3.9% si alpha < 4.5% neto)
+- T4.2: RealTimeAlphaMonitor (verifica mensualmente)
+
+**Tests**: ~15-20 tests
+
+**Timeline PHASE 4**: 2-3 días
+**Salida**: Validación que 3.9% es alcanzable; rechazo si no es viable
+
+---
+
+## Timeline Resumido: PHASES 0-4
+
+```
+PHASE 0: ✅ COMPLETADO (23-12-2025)
+         Capital Viability & Integration (178 tests)
+
+PHASE 1: 🟡 PRÓXIMO (2-3 días)
+         Capital-Tier Strategy + Absolute Return Optimizer
+
+PHASE 2: ⏳ (2-3 días después)
+         Execution Optimization for Large Capital
+
+PHASE 3: ⏳ (1-2 días después)
+         Dynamic Risk Scaling
+
+PHASE 4: ⏳ (2-3 días después)
+         Capacity Fade & Validation
+
+TOTAL: ~9-11 días para PHASES 1-4 (después de PHASE 0 ✅)
+       Luego PHASES 5-17 (módulos avanzados, backlog)
+```
+
+---
+
+## ⚠️ PHASE 0 DETALLES: System Reliability Hardening & Capital Viability (✅ COMPLETADO)
+
+**Timeline**: ✅ Completado
+**Objetivo**: Garantizar que sistema no mata cuentas por integración faulty o objetivo imposible
+**Capital Target**: €10k-€30k (máxima vulnerabilidad)
+**Riesgo de No Hacer**: 30-50% pérdida de capital en 3-6 meses
+
+### FASE 0.1: Fail-Fast Gates (Semana 1)
 **Objetivo**: Garantizar que sistema no mata cuentas por integración faulty o objetivo imposible
 **Capital Target**: $10k-$30k (máxima vulnerabilidad)
 **Riesgo de No Hacer**: 30-50% pérdida de capital en 3-6 meses
