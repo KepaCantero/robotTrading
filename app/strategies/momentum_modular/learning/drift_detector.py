@@ -1196,9 +1196,7 @@ class AdvancedOverfittingDetector:
         # Learning curves
         self.min_epochs = config.get("learning_curves", {}).get("min_epochs", 10)
         self.analyze_trends = config.get("learning_curves", {}).get("analyze_trends", True)
-        self.extrapolation_window = config.get("learning_curves", {}).get(
-            "extrapolation_window", 5
-        )
+        self.extrapolation_window = config.get("learning_curves", {}).get("extrapolation_window", 5)
         self.divergence_sensitivity = config.get("learning_curves", {}).get(
             "divergence_sensitivity", 0.05
         )
@@ -1209,9 +1207,7 @@ class AdvancedOverfittingDetector:
 
         # Model complexity
         self.track_parameters = config.get("model_complexity", {}).get("track_parameters", True)
-        self.complexity_penalty = config.get("model_complexity", {}).get(
-            "complexity_penalty", 0.1
-        )
+        self.complexity_penalty = config.get("model_complexity", {}).get("complexity_penalty", 0.1)
 
         # Severity thresholds
         self.severity_thresholds = config.get("severity_thresholds", {})
@@ -1327,9 +1323,7 @@ class AdvancedOverfittingDetector:
         severity = self._determine_severity(overfitting_score)
 
         # 8. Generate recommendations
-        recommendations = self._generate_recommendations(
-            root_causes, severity, overfitting_score
-        )
+        recommendations = self._generate_recommendations(root_causes, severity, overfitting_score)
 
         # 9. Calculate optimal stopping point
         optimal_stopping = self._estimate_optimal_stopping_point()
@@ -1411,9 +1405,14 @@ class AdvancedOverfittingDetector:
         # Classify trend
         if train_trend < -self.divergence_sensitivity and val_trend > self.divergence_sensitivity:
             return "diverging"  # Train improves, val worsens
-        elif train_trend < -self.divergence_sensitivity and val_trend < -self.divergence_sensitivity:
+        elif (
+            train_trend < -self.divergence_sensitivity and val_trend < -self.divergence_sensitivity
+        ):
             return "converging"  # Both improve
-        elif abs(train_trend) < self.divergence_sensitivity and abs(val_trend) < self.divergence_sensitivity:
+        elif (
+            abs(train_trend) < self.divergence_sensitivity
+            and abs(val_trend) < self.divergence_sensitivity
+        ):
             return "plateau"  # Both plateau
         else:
             return "unstable"
@@ -1437,10 +1436,7 @@ class AdvancedOverfittingDetector:
             prev_m = recent[prev_idx]
 
             # Check if train improves but val worsens
-            if (
-                current_m.train_loss < prev_m.train_loss
-                and current_m.val_loss > prev_m.val_loss
-            ):
+            if current_m.train_loss < prev_m.train_loss and current_m.val_loss > prev_m.val_loss:
                 return len(self.metrics_history) - len(recent) + current_idx
 
         return None

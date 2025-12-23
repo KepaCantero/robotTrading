@@ -247,14 +247,18 @@ class SensitivityAnalyzer:
                     "metric": performance_metric,
                 }
 
-                logger.debug(f"  Variation {variation_pct:+.1%}: {performance_metric}={perf_value:.4f}")
+                logger.debug(
+                    f"  Variation {variation_pct:+.1%}: {performance_metric}={perf_value:.4f}"
+                )
 
             except Exception as e:
                 logger.error(f"Error testing variation {variation_pct} for {param_name}: {e}")
                 continue
 
         if len(performances) < 2:
-            logger.warning(f"Not enough valid variations for {param_name}, skipping elasticity calculation")
+            logger.warning(
+                f"Not enough valid variations for {param_name}, skipping elasticity calculation"
+            )
             return result
 
         # Calculate elasticity
@@ -324,8 +328,12 @@ class SensitivityAnalyzer:
                 elasticities.append(elasticity_up)
 
             if down_perf != base_perf:
-                pct_perf_change = (down_perf - base_perf) / abs(base_perf) if base_perf != 0 else 0.0
-                elasticity_down = abs(pct_perf_change / (-variation_pct)) if variation_pct != 0 else 0.0
+                pct_perf_change = (
+                    (down_perf - base_perf) / abs(base_perf) if base_perf != 0 else 0.0
+                )
+                elasticity_down = (
+                    abs(pct_perf_change / (-variation_pct)) if variation_pct != 0 else 0.0
+                )
                 elasticities.append(elasticity_down)
 
         return float(np.mean(elasticities)) if elasticities else 0.0
@@ -391,7 +399,9 @@ class SensitivityAnalyzer:
         variation_band = mc_config.get("variation_band", 0.10)
         confidence_level = mc_config.get("confidence_level", 0.95)
 
-        logger.info(f"Running Monte Carlo sensitivity for {param_name} ({n_simulations} simulations)")
+        logger.info(
+            f"Running Monte Carlo sensitivity for {param_name} ({n_simulations} simulations)"
+        )
 
         results = []
 
@@ -433,8 +443,12 @@ class SensitivityAnalyzer:
             "std": float(np.std(results_array)),
             "min": float(np.min(results_array)),
             "max": float(np.max(results_array)),
-            f"percentile_{percentile_lower:.1f}": float(np.percentile(results_array, percentile_lower)),
-            f"percentile_{percentile_upper:.1f}": float(np.percentile(results_array, percentile_upper)),
+            f"percentile_{percentile_lower:.1f}": float(
+                np.percentile(results_array, percentile_lower)
+            ),
+            f"percentile_{percentile_upper:.1f}": float(
+                np.percentile(results_array, percentile_upper)
+            ),
             "n_simulations": len(results),
             "success_rate": float(len(results) / n_simulations),
         }

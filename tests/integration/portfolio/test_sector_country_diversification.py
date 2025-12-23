@@ -406,12 +406,8 @@ class TestPortfolioServiceDiversification:
         """Test that portfolio service has validators."""
         assert hasattr(portfolio_service, "sector_validator")
         assert hasattr(portfolio_service, "country_validator")
-        assert isinstance(
-            portfolio_service.sector_validator, SectorDiversificationValidator
-        )
-        assert isinstance(
-            portfolio_service.country_validator, CountryDiversificationValidator
-        )
+        assert isinstance(portfolio_service.sector_validator, SectorDiversificationValidator)
+        assert isinstance(portfolio_service.country_validator, CountryDiversificationValidator)
 
     def test_get_diversification_status(self, portfolio_service, sample_portfolio):
         """Test diversification status retrieval."""
@@ -521,21 +517,15 @@ class TestSectorCountryIntegration:
     def test_severity_calculation(self, sector_validator):
         """Test violation severity calculation."""
         # Minor breach (< 10%)
-        severity = sector_validator._calculate_severity(
-            Decimal("0.33"), Decimal("0.30")
-        )
+        severity = sector_validator._calculate_severity(Decimal("0.33"), Decimal("0.30"))
         assert severity == "minor"
 
         # Moderate breach (10-20%)
-        severity = sector_validator._calculate_severity(
-            Decimal("0.36"), Decimal("0.30")
-        )
+        severity = sector_validator._calculate_severity(Decimal("0.36"), Decimal("0.30"))
         assert severity == "moderate"
 
         # Severe breach (> 20%)
-        severity = sector_validator._calculate_severity(
-            Decimal("0.42"), Decimal("0.30")
-        )
+        severity = sector_validator._calculate_severity(Decimal("0.42"), Decimal("0.30"))
         assert severity == "severe"
 
 

@@ -1,0 +1,53 @@
+================================================================================
+COMPREHENSIVE BACKTEST SUMMARY
+================================================================================
+
+Symbol: SNOW
+Period: 2023-01-01 to 2024-01-01
+Initial Capital: $100,000.00
+Total Backtests: 6
+
+TOP 10 RESULTS:
+--------------------------------------------------------------------------------
+
+Learning Engine - supervised:
+  Sharpe Ratio: -0.09
+  Total PnL: $46,559.10
+  Return %: 46.56%
+  Win Rate: 89.47%
+  Max Drawdown: -6.66%
+
+Learning Engine - reinforcement:
+  Sharpe Ratio: -0.09
+  Total PnL: $46,559.10
+  Return %: 46.56%
+  Win Rate: 89.47%
+  Max Drawdown: -6.66%
+
+Learning Engine - deep:
+  Sharpe Ratio: -0.11
+  Total PnL: $37,343.97
+  Return %: 37.34%
+  Win Rate: 12.26%
+  Max Drawdown: -6.10%
+
+Learning Engine - transformer:
+  Sharpe Ratio: -0.11
+  Total PnL: $37,343.97
+  Return %: 37.34%
+  Win Rate: 12.26%
+  Max Drawdown: -6.10%
+
+Multi-Strategy Backtest:
+  Sharpe Ratio: -0.90
+  Total PnL: $-497.64
+  Return %: -0.50%
+  Win Rate: 0.00%
+  Max Drawdown: -420.45%
+
+Learning Engines - Multi-Strategy (Baseline):
+  Sharpe Ratio: -0.90
+  Total PnL: $-497.64
+  Return %: -0.50%
+  Win Rate: 0.00%
+  Max Drawdown: -420.45%

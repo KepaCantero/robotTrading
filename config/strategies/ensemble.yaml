@@ -23,6 +23,9 @@ weighted_ensemble:
   description: "Ensemble que combina señales con pesos dinámicos basados en performance"
   enabled: true
 
+  # PHASE 1 T1.1: Capital Tier Recommendations
+  recommended_for_tiers: ["small", "medium", "large"]  # Not for micro (too expensive)
+
   # Configuración general
   min_strategies_for_signal: 2  # Mínimo de estrategias que deben coincidir
   conflict_resolution: "weighted"  # weighted, majority, strongest
@@ -105,6 +108,9 @@ regime_selector:
   name: "regime_selector"
   description: "Selector que elige estrategias basado en régimen de mercado detectado"
   enabled: true
+
+  # PHASE 1 T1.1: Capital Tier Recommendations
+  recommended_for_tiers: ["medium", "large"]  # Primary for medium and large tiers
 
   # Configuración general
   min_strategies_for_signal: 1

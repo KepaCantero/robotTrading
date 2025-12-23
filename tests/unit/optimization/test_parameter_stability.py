@@ -222,9 +222,7 @@ class TestStabilityScoring:
         """Test that stability score is in valid range."""
         analyzer = ParameterStabilityMetrics()
 
-        window_results = [
-            WindowOptimalValue(i, "param", 40 + i, 0.85) for i in range(5)
-        ]
+        window_results = [WindowOptimalValue(i, "param", 40 + i, 0.85) for i in range(5)]
 
         result = analyzer.calculate_variance_across_windows("param", window_results)
         result.convergence_speed = 0.5
@@ -242,9 +240,7 @@ class TestAnalyzeParameterStability:
         analyzer = ParameterStabilityMetrics()
 
         # Parameter 1: stable
-        param1_results = [
-            WindowOptimalValue(i, "rsi_threshold", 40, 0.85) for i in range(5)
-        ]
+        param1_results = [WindowOptimalValue(i, "rsi_threshold", 40, 0.85) for i in range(5)]
 
         # Parameter 2: unstable
         param2_results = [
@@ -266,9 +262,7 @@ class TestAnalyzeParameterStability:
         """Test that stable parameters are correctly identified."""
         analyzer = ParameterStabilityMetrics()
 
-        stable_results = [
-            WindowOptimalValue(i, "stable_param", 40, 0.85) for i in range(6)
-        ]
+        stable_results = [WindowOptimalValue(i, "stable_param", 40, 0.85) for i in range(6)]
 
         parameters = {"stable_param": stable_results}
         report = analyzer.analyze_parameter_stability(parameters)
@@ -297,9 +291,7 @@ class TestAnalyzeParameterStability:
         analyzer = ParameterStabilityMetrics()
 
         param_results = [
-            WindowOptimalValue(i, f"param_{j}", 40, 0.85)
-            for j in range(3)
-            for i in range(4)
+            WindowOptimalValue(i, f"param_{j}", 40, 0.85) for j in range(3) for i in range(4)
         ]
 
         parameters = {
@@ -473,9 +465,7 @@ class TestEdgeCases:
         """Test handling of very large variance."""
         analyzer = ParameterStabilityMetrics()
 
-        window_results = [
-            WindowOptimalValue(i, "param", 10 ** i, 0.85) for i in range(5)
-        ]
+        window_results = [WindowOptimalValue(i, "param", 10**i, 0.85) for i in range(5)]
 
         result = analyzer.calculate_variance_across_windows("param", window_results)
 
@@ -487,9 +477,7 @@ class TestEdgeCases:
         """Test handling of negative parameter values."""
         analyzer = ParameterStabilityMetrics()
 
-        window_results = [
-            WindowOptimalValue(i, "param", -40 + i, 0.85) for i in range(5)
-        ]
+        window_results = [WindowOptimalValue(i, "param", -40 + i, 0.85) for i in range(5)]
 
         result = analyzer.calculate_variance_across_windows("param", window_results)
 

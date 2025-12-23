@@ -395,8 +395,7 @@ class ParameterStabilityMetrics:
             List of (parameter_name, stability_score) tuples
         """
         rankings = [
-            (name, result.stability_score)
-            for name, result in report.parameter_results.items()
+            (name, result.stability_score) for name, result in report.parameter_results.items()
         ]
         rankings.sort(key=lambda x: x[1], reverse=True)
         return rankings
