@@ -10,6 +10,7 @@ import numpy as np
 from app.services.reporting.quantstats_integration import (
     QuantStatsIntegration,
     get_quantstats_integration,
+    QUANTSTATS_AVAILABLE,
 )
 
 
@@ -74,6 +75,7 @@ class TestQuantStatsIntegration:
         assert "sharpe_ratio" in metrics
         assert isinstance(metrics["sharpe_ratio"], float)
 
+    @pytest.mark.skipif(not QUANTSTATS_AVAILABLE, reason="QuantStats not installed")
     def test_calculates_sortino_ratio(self, integration, good_returns):
         """Test Sortino ratio calculation."""
         metrics = integration.calculate_advanced_metrics(good_returns)
@@ -94,6 +96,7 @@ class TestQuantStatsIntegration:
         assert "win_rate" in metrics
         assert 0 <= metrics["win_rate"] <= 1, "Win rate should be 0-1"
 
+    @pytest.mark.skipif(not QUANTSTATS_AVAILABLE, reason="QuantStats not installed")
     def test_calculates_profit_factor(self, integration, good_returns):
         """Test profit factor calculation."""
         metrics = integration.calculate_advanced_metrics(good_returns)
@@ -101,6 +104,7 @@ class TestQuantStatsIntegration:
         assert "profit_factor" in metrics
         assert metrics["profit_factor"] >= 0
 
+    @pytest.mark.skipif(not QUANTSTATS_AVAILABLE, reason="QuantStats not installed")
     def test_calculates_recovery_factor(self, integration, good_returns):
         """Test recovery factor calculation."""
         metrics = integration.calculate_advanced_metrics(good_returns)
@@ -108,6 +112,7 @@ class TestQuantStatsIntegration:
         assert "recovery_factor" in metrics
         assert metrics["recovery_factor"] >= 0
 
+    @pytest.mark.skipif(not QUANTSTATS_AVAILABLE, reason="QuantStats not installed")
     def test_calculates_consecutive_wins(self, integration, good_returns):
         """Test consecutive wins calculation."""
         metrics = integration.calculate_advanced_metrics(good_returns)
@@ -115,6 +120,7 @@ class TestQuantStatsIntegration:
         assert "max_consecutive_wins" in metrics
         assert metrics["max_consecutive_wins"] > 0
 
+    @pytest.mark.skipif(not QUANTSTATS_AVAILABLE, reason="QuantStats not installed")
     def test_calculates_consecutive_losses(self, integration, poor_returns):
         """Test consecutive losses calculation."""
         metrics = integration.calculate_advanced_metrics(poor_returns)
@@ -135,6 +141,7 @@ class TestQuantStatsIntegration:
     # TEST: Benchmark Comparison
     # =========================================================================
 
+    @pytest.mark.skipif(not QUANTSTATS_AVAILABLE, reason="QuantStats not installed")
     def test_information_ratio_with_benchmark(self, integration, good_returns, benchmark_returns):
         """Test information ratio calculation with benchmark."""
         metrics = integration.calculate_advanced_metrics(good_returns, benchmark_returns)
@@ -180,7 +187,8 @@ class TestQuantStatsIntegration:
 
         assert "total_return" in metrics
         assert metrics["total_return"] == 0.0
-        assert metrics.get("volatility", 0) == 0.0
+        # Volatility should be 0 (allow for floating-point precision)
+        assert abs(metrics.get("volatility", 0)) < 1e-10
 
     def test_constant_returns(self, integration):
         """Test constant returns."""
@@ -190,7 +198,8 @@ class TestQuantStatsIntegration:
 
         assert "total_return" in metrics
         assert metrics["total_return"] > 0
-        assert metrics.get("volatility", 0) == 0.0
+        # Volatility should be ~0 (allow for floating-point precision)
+        assert abs(metrics.get("volatility", 0)) < 1e-10
 
     # =========================================================================
     # TEST: Fallback Metrics

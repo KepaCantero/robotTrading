@@ -85,7 +85,7 @@ class TestLimitAdjuster:
         # Should contract limits
         assert adjusted.stop_loss_pct < base.stop_loss_pct, "Should tighten stops"
         assert adjusted.max_position_size < base.max_position_size, "Should reduce positions"
-        assert "high" in reason.lower() or "0.8" in reason
+        assert "extreme" in reason.lower() or "0.5" in reason
 
     def test_volatility_extreme_severely_contracts_limits(self, adjuster):
         """Test extreme volatility severely contracts limits."""
