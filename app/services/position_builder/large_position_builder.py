@@ -398,12 +398,27 @@ class LargePositionBuilder:
         tranche_participation = tranche_size / daily_volume
 
         # Market impact scales with sqrt(participation_rate)
-        # So sqrt(single) vs num_tranches × sqrt(tranche)
+        #
+        # SINGLE EXECUTION:
+        #   Impact = k × sqrt(participation_rate) = k × sqrt(Q/V)
+        #
+        # N TRANCHES (spreading over time reduces effective volume pressure):
+        #   Each tranche has participation = (Q/N) / V
+        #   But temporal spreading means we don't see cumulative impact
+        #   Effective impact = k × sqrt(Q / (N × V)) = k × sqrt(participation_rate / N)
+        #
+        # IMPACT REDUCTION RATIO:
+        #   Reduction factor = sqrt(Q/V) / sqrt(Q/(N×V)) = sqrt(N)
+        #   So splitting into N tranches reduces impact by sqrt(N) factor
+
         single_exec_impact = single_exec_participation.sqrt()
-        tranche_impacts = num_tranches * tranche_participation.sqrt()
+
+        # Tranches reduce impact by sqrt(N) factor due to temporal spreading
+        # Effective impact with tranches = single_impact / sqrt(N)
+        tranche_impacts_combined = single_exec_impact / Decimal(num_tranches).sqrt()
 
         # Impact reduction
-        impact_reduction = single_exec_impact - tranche_impacts
+        impact_reduction = single_exec_impact - tranche_impacts_combined
         impact_reduction_pct = (
             (impact_reduction / single_exec_impact) * Decimal("100")
             if single_exec_impact > 0
@@ -413,7 +428,7 @@ class LargePositionBuilder:
         logger.info(
             f"Position impact analysis for {symbol}: "
             f"Single execution impact {single_exec_impact:.4f} vs "
-            f"{num_tranches} tranches {tranche_impacts:.4f} "
+            f"{num_tranches} tranches {tranche_impacts_combined:.4f} "
             f"({impact_reduction_pct:.1f}% reduction)"
         )
 
@@ -426,7 +441,7 @@ class LargePositionBuilder:
             "num_tranches": num_tranches,
             "tranche_size": tranche_size,
             "tranche_participation": tranche_participation,
-            "tranche_impacts_combined": tranche_impacts,
+            "tranche_impacts_combined": tranche_impacts_combined,
             "impact_reduction": impact_reduction,
             "impact_reduction_pct": impact_reduction_pct,
             "recommendation": (
@@ -453,16 +468,18 @@ class LargePositionBuilder:
 
         # Windows are typically spaced 2-3 hours apart
         # Total time: from first window start to last window end
-        # Typically 6-7 hours total market time
+        # More tranches = more time needed (minimum 2 hours between tranches)
 
-        if num_tranches <= 2:
-            hours = 3
-        elif num_tranches <= 3:
-            hours = 4
-        elif num_tranches <= 4:
-            hours = 6
+        if num_tranches == 1:
+            hours = 1  # Single execution window
+        elif num_tranches == 2:
+            hours = 3  # ~2-3 hours between windows
+        elif num_tranches == 3:
+            hours = 5  # Spread across more windows
+        elif num_tranches == 4:
+            hours = 6  # Full market day usage
         else:  # 5 tranches
-            hours = 7
+            hours = 7  # Extended into after-hours
 
         duration = timedelta(hours=hours)
         readable = f"{hours} hours"
