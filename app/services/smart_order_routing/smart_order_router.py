@@ -221,10 +221,13 @@ class SmartOrderRouter:
         # STEP 7: Set up execution monitoring
         # =====================================================================
 
+        # For strategies like POI with dynamic tranches, use minimum of 1
+        total_tranches_for_monitoring = max(1, len(execution_plan.tranches))
+
         monitoring = self.cost_monitor.start_monitoring(
             execution_id=execution_plan.execution_id,
             planned_cost_budget=total_cost_budget,
-            total_tranches=len(execution_plan.tranches),
+            total_tranches=total_tranches_for_monitoring,
         )
 
         logger.info(
