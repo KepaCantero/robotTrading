@@ -317,6 +317,49 @@ class AdjustedPositionSizes(BaseModel):
     )
 
 
+class Signal(BaseModel):
+    """Trade signal before applying risk scaling."""
+
+    model_config = ConfigDict(
+        strict=True,
+        validate_assignment=True,
+        extra="forbid",
+    )
+
+    signal_id: str = Field(
+        default_factory=lambda: str(uuid4()),
+        description="Unique signal identifier"
+    )
+    symbol: str = Field(
+        ...,
+        description="Trading symbol"
+    )
+    direction: str = Field(
+        ...,
+        description="buy or sell"
+    )
+    strength: Decimal = Field(
+        ...,
+        ge=Decimal("0"),
+        le=Decimal("1"),
+        description="Signal strength (0-1)"
+    )
+    base_position_size: Decimal = Field(
+        ...,
+        gt=Decimal("0"),
+        description="Base position size"
+    )
+    entry_price: Decimal = Field(
+        ...,
+        gt=Decimal("0"),
+        description="Entry price"
+    )
+    stop_loss_price: Optional[Decimal] = Field(
+        None,
+        description="Stop loss price"
+    )
+
+
 class AdjustedSignal(BaseModel):
     """Trade signal after applying risk scaling."""
 
