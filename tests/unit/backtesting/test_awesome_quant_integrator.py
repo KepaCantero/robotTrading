@@ -296,9 +296,9 @@ class TestAwesomeQuantIntegrator:
         unified = integrator.get_unified_metrics(constant_returns)
 
         assert isinstance(unified, dict)
-        # Volatility should be 0
+        # Volatility should be 0 (allow for floating point precision)
         if "volatility" in unified:
-            assert unified["volatility"] == 0.0
+            assert abs(unified["volatility"] - 0.0) < 1e-10
 
     def test_extreme_returns(self, integrator):
         """Test with extreme values."""

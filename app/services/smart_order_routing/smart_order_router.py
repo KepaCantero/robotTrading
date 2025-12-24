@@ -188,7 +188,7 @@ class SmartOrderRouter:
         # STEP 5: Split order optimally
         # =====================================================================
 
-        execution_plan = self.order_splitter.optimize_execution(
+        execution_plan = await self.order_splitter.optimize_execution(
             symbol=symbol,
             total_size=total_size,
             strategy=strategy,
