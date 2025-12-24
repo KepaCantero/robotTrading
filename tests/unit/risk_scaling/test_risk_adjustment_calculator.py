@@ -217,10 +217,11 @@ class TestRiskAdjustmentCalculator:
 
     def test_comprehensive_high_feasibility(self, calculator):
         """Test comprehensive calc for high feasibility scenario."""
+        capital = Decimal("250000")
         result = calculator.calculate_position_and_leverage(
             feasibility_ratio=Decimal("1.3"),
             base_position_size=Decimal("50000"),
-            capital=Decimal("250000"),
+            capital=capital,
             capital_tier="large",
             risk_tolerance=5,
             market_volatility="normal",
@@ -229,7 +230,7 @@ class TestRiskAdjustmentCalculator:
         # Should maintain good position and leverage
         assert result["position_size"] >= Decimal("45000"), "Should maintain position"
         assert result["leverage"] >= Decimal("1.5"), "Should allow good leverage"
-        assert result["capital_at_risk"] <= result["capital"] * Decimal("2"), "Should not exceed 2x capital"
+        assert result["capital_at_risk"] <= capital * Decimal("2"), "Should not exceed 2x capital"
 
     def test_comprehensive_low_feasibility(self, calculator):
         """Test comprehensive calc for low feasibility scenario."""

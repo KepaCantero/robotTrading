@@ -96,13 +96,16 @@ class QuantStatsIntegration:
 
             # Sortino Ratio (downside volatility only)
             downside_returns = returns[returns < 0]
-            downside_volatility = float(downside_returns.std() * np.sqrt(periods_per_year))
-            if downside_volatility > 0:
-                metrics["sortino_ratio"] = float(
-                    (metrics["annual_return"] / downside_volatility)
-                    if downside_volatility > 0
-                    else 0
-                )
+            if len(downside_returns) > 0:
+                downside_volatility = float(downside_returns.std() * np.sqrt(periods_per_year))
+            else:
+                downside_volatility = 0.0
+
+            metrics["sortino_ratio"] = float(
+                (metrics["annual_return"] / downside_volatility)
+                if downside_volatility > 0
+                else 0
+            )
 
             # Max Drawdown
             cumulative = (1 + returns).cumprod()
