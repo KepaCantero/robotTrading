@@ -1,8 +1,12 @@
 # Active Context - AlgoTrading
 
-## Current Focus (2025-12-23): Plan Maestro v3.0 "Capital-Aware Dual-Mode Architecture"
+## Current Focus (2025-12-24): Parametrization Framework Implementation
 
-**Estado de alto nivel**: MVP operativo + PHASE 0 ✅ COMPLETADO. Nuevo foco: **Escalamiento a Capital Grande (€250k+)**.
+**Estado de alto nivel**: PHASE 0-3 ✅ COMPLETADO (515 tests). Nuevo foco: **Parametrization Framework (T1.1-T14.1)**.
+
+**Última actualización**: 2025-12-24 - T1.1 InputProcessor ✅ COMPLETE (33 tests passing)
+
+**Próximo paso**: T2.1 ProfileGenerator (depends on T1.1) - Maps user input → strategy parameters
 
 **Estrategia**: Arquitectura dual-mode:
 - **Small Capital Mode** (<€50k): PHASE 0 ✅ (fail-safe, supervivencia)

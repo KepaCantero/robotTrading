@@ -1,0 +1,283 @@
+# Investment Profile Configuration
+# Maps (objetivo_inversion, capital_tier) → strategy parameters
+#
+# Used by T2.1 ProfileGenerator to dynamically configure modules
+# for user investment objectives and capital levels
+
+profiles:
+
+  # OBJETIVO 1: MAXIMIZAR_CAPITAL (Capital Growth)
+  # Focus: Sharpe ratio, Total return, Risk-adjusted performance
+  maximizar_capital:
+    micro:  # < €15k: Conservative growth
+      risk_profile: 2
+      leverage: 0
+      enabled_modules:
+        - momentum_modular
+      max_position_size: 0.15  # 15% per position
+      max_sector_allocation: 0.20  # 20% per sector
+      order_splitting_strategy: twap
+      commission_negotiation: false
+
+    small:  # €15k-€50k: Moderate growth
+      risk_profile: 3
+      leverage: 0.5
+      enabled_modules:
+        - momentum_modular
+        - mean_reversion_modular
+      max_position_size: 0.20  # 20% per position
+      max_sector_allocation: 0.25  # 25% per sector
+      order_splitting_strategy: vwap
+      commission_negotiation: true
+
+    medium:  # €50k-€250k: Balanced growth with multiple strategies
+      risk_profile: 4
+      leverage: 1.5
+      enabled_modules:
+        - momentum_modular
+        - mean_reversion_modular
+        - pairs_trading_modular
+        - dividend_screener
+      max_position_size: 0.25  # 25% per position
+      max_sector_allocation: 0.30  # 30% per sector
+      order_splitting_strategy: vwap
+      commission_negotiation: true
+
+    large:  # >= €250k: Aggressive growth with full toolkit
+      risk_profile: 6
+      leverage: 2.5
+      enabled_modules:
+        - momentum_modular
+        - mean_reversion_modular
+        - pairs_trading_modular
+        - dividend_screener
+        - portfolio_optimization
+        - ml_ensemble  # Only at large capital
+      max_position_size: 0.30  # 30% per position
+      max_sector_allocation: 0.35  # 35% per sector
+      order_splitting_strategy: vwap
+      commission_negotiation: true
+
+  # OBJETIVO 2: MAXIMIZAR_DIVIDENDOS (Dividend Income)
+  # Focus: Dividend yield, Income consistency, Capital preservation
+  maximizar_dividendos:
+    micro:  # < €15k: Conservative dividend strategy
+      risk_profile: 1
+      leverage: 0
+      enabled_modules:
+        - dividend_screener
+      max_position_size: 0.10  # 10% per position
+      max_sector_allocation: 0.15  # 15% per sector
+      order_splitting_strategy: twap
+      commission_negotiation: false
+
+    small:  # €15k-€50k: Balanced dividend + growth
+      risk_profile: 2
+      leverage: 0.3
+      enabled_modules:
+        - dividend_screener
+        - dividend_predictor
+        - mean_reversion_modular  # For rebalancing
+      max_position_size: 0.15  # 15% per position
+      max_sector_allocation: 0.20  # 20% per sector
+      order_splitting_strategy: vwap
+      commission_negotiation: true
+
+    medium:  # €50k-€250k: Dividend-focused with diversification
+      risk_profile: 3
+      leverage: 1.0
+      enabled_modules:
+        - dividend_screener
+        - dividend_predictor
+        - mean_reversion_modular
+        - sector_rotation
+      max_position_size: 0.20  # 20% per position
+      max_sector_allocation: 0.25  # 25% per sector
+      order_splitting_strategy: vwap
+      commission_negotiation: true
+
+    large:  # >= €250k: Optimized dividend portfolio
+      risk_profile: 4
+      leverage: 1.5
+      enabled_modules:
+        - dividend_screener
+        - dividend_predictor
+        - mean_reversion_modular
+        - sector_rotation
+        - portfolio_optimization
+      max_position_size: 0.25  # 25% per position
+      max_sector_allocation: 0.30  # 30% per sector
+      order_splitting_strategy: vwap
+      commission_negotiation: true
+
+  # OBJETIVO 3: CAPITAL_PRESERVATION (Protect Capital)
+  # Focus: Max drawdown minimization, Volatility reduction, Consistency
+  capital_preservation:
+    micro:  # < €15k: Ultra-conservative
+      risk_profile: 1
+      leverage: 0
+      enabled_modules:
+        - defensive_momentum
+      max_position_size: 0.10  # 10% per position
+      max_sector_allocation: 0.15  # 15% per sector
+      order_splitting_strategy: twap
+      commission_negotiation: false
+
+    small:  # €15k-€50k: Conservative with hedging
+      risk_profile: 2
+      leverage: 0
+      enabled_modules:
+        - defensive_momentum
+        - hedge_strategies
+        - mean_reversion_modular
+      max_position_size: 0.12  # 12% per position
+      max_sector_allocation: 0.18  # 18% per sector
+      order_splitting_strategy: vwap
+      commission_negotiation: true
+
+    medium:  # €50k-€250k: Diversified defensive
+      risk_profile: 2
+      leverage: 0.5
+      enabled_modules:
+        - defensive_momentum
+        - hedge_strategies
+        - mean_reversion_modular
+        - portfolio_optimization  # Minimize variance
+      max_position_size: 0.15  # 15% per position
+      max_sector_allocation: 0.20  # 20% per sector
+      order_splitting_strategy: vwap
+      commission_negotiation: true
+
+    large:  # >= €250k: Comprehensive capital protection
+      risk_profile: 3
+      leverage: 0.8
+      enabled_modules:
+        - defensive_momentum
+        - hedge_strategies
+        - mean_reversion_modular
+        - portfolio_optimization
+        - currency_hedging
+      max_position_size: 0.20  # 20% per position
+      max_sector_allocation: 0.25  # 25% per sector
+      order_splitting_strategy: vwap
+      commission_negotiation: true
+
+  # OBJETIVO 4: BALANCED_GROWTH (Balance Risk & Return)
+  # Focus: Balanced Sharpe ratio, Moderate drawdown, Consistent returns
+  balanced_growth:
+    micro:  # < €15k: Balanced conservative
+      risk_profile: 2
+      leverage: 0
+      enabled_modules:
+        - momentum_modular
+        - mean_reversion_modular
+      max_position_size: 0.15  # 15% per position
+      max_sector_allocation: 0.20  # 20% per sector
+      order_splitting_strategy: vwap
+      commission_negotiation: false
+
+    small:  # €15k-€50k: Balanced moderate
+      risk_profile: 3
+      leverage: 0.5
+      enabled_modules:
+        - momentum_modular
+        - mean_reversion_modular
+        - dividend_screener
+      max_position_size: 0.18  # 18% per position
+      max_sector_allocation: 0.23  # 23% per sector
+      order_splitting_strategy: vwap
+      commission_negotiation: true
+
+    medium:  # €50k-€250k: Balanced diversified
+      risk_profile: 4
+      leverage: 1.2
+      enabled_modules:
+        - momentum_modular
+        - mean_reversion_modular
+        - dividend_screener
+        - pairs_trading_modular
+        - portfolio_optimization
+      max_position_size: 0.22  # 22% per position
+      max_sector_allocation: 0.28  # 28% per sector
+      order_splitting_strategy: vwap
+      commission_negotiation: true
+
+    large:  # >= €250k: Balanced growth with leverage
+      risk_profile: 5
+      leverage: 2.0
+      enabled_modules:
+        - momentum_modular
+        - mean_reversion_modular
+        - dividend_screener
+        - pairs_trading_modular
+        - portfolio_optimization
+        - ml_ensemble
+      max_position_size: 0.28  # 28% per position
+      max_sector_allocation: 0.32  # 32% per sector
+      order_splitting_strategy: vwap
+      commission_negotiation: true
+
+  # OBJETIVO 5: INCOME_GENERATION (Steady Income Stream)
+  # Focus: Dividend yield + options income, Monthly distributions, Low volatility
+  income_generation:
+    micro:  # < €15k: Conservative income
+      risk_profile: 1
+      leverage: 0
+      enabled_modules:
+        - dividend_screener
+        - covered_call_writer
+      max_position_size: 0.12  # 12% per position
+      max_sector_allocation: 0.17  # 17% per sector
+      order_splitting_strategy: twap
+      commission_negotiation: false
+
+    small:  # €15k-€50k: Moderate income generation
+      risk_profile: 2
+      leverage: 0.3
+      enabled_modules:
+        - dividend_screener
+        - covered_call_writer
+        - put_seller_modular
+        - mean_reversion_modular
+      max_position_size: 0.15  # 15% per position
+      max_sector_allocation: 0.20  # 20% per sector
+      order_splitting_strategy: vwap
+      commission_negotiation: true
+
+    medium:  # €50k-€250k: Active income generation
+      risk_profile: 3
+      leverage: 0.9
+      enabled_modules:
+        - dividend_screener
+        - covered_call_writer
+        - put_seller_modular
+        - mean_reversion_modular
+        - portfolio_optimization
+      max_position_size: 0.20  # 20% per position
+      max_sector_allocation: 0.25  # 25% per sector
+      order_splitting_strategy: vwap
+      commission_negotiation: true
+
+    large:  # >= €250k: Sophisticated income strategies
+      risk_profile: 4
+      leverage: 1.4
+      enabled_modules:
+        - dividend_screener
+        - covered_call_writer
+        - put_seller_modular
+        - collar_strategy
+        - mean_reversion_modular
+        - portfolio_optimization
+      max_position_size: 0.25  # 25% per position
+      max_sector_allocation: 0.30  # 30% per sector
+      order_splitting_strategy: vwap
+      commission_negotiation: true
+
+# Default parameters if objective not found
+defaults:
+  risk_profile: 4
+  leverage: 1.0
+  max_position_size: 0.20
+  max_sector_allocation: 0.30
+  order_splitting_strategy: vwap
+  commission_negotiation: true
