@@ -37,6 +37,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.assets import router as assets_router
+from app.api.capa2_endpoints import router as capa2_router
 from app.api.cost_analysis import router as cost_analysis_router
 from app.api.market_data import router as market_data_router
 from app.api.momentum import router as momentum_router
@@ -109,6 +110,7 @@ app.add_middleware(
 )
 
 # Include API routers
+app.include_router(capa2_router)
 app.include_router(portfolio_router)
 app.include_router(signals_router)
 app.include_router(momentum_router)
