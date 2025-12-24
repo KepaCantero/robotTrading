@@ -1,0 +1,975 @@
+# Module Parameters Configuration (T3.1)
+# Maps (module_name, capital_tier) → module-specific parameters
+#
+# Used by ModuleParametrizer to generate parameters for each enabled module
+# based on capital tier, objective, and risk profile
+
+modules:
+
+  # ===================== MOMENTUM & TREND STRATEGIES =====================
+
+  momentum_modular:
+    description: "Multi-filter momentum strategy with adaptive thresholds"
+    base:
+      max_position_size: 0.10
+      stop_loss_pct: 0.025
+      take_profit_pct: 0.08
+      max_exposure: 0.30
+      max_positions: 5
+
+    tiers:
+      micro:
+        preset: conservative
+        max_position_size: 0.08  # 8% conservative
+        stop_loss_pct: 0.035  # Wider stop loss
+        take_profit_pct: 0.06  # Lower target
+        max_exposure: 0.20
+        max_positions: 3
+        risk_adjustment: 0.9
+        module_specific:
+          min_confidence: 0.75
+          combination_mode: "ALL"
+          min_volume_ratio: 1.2
+
+      small:
+        preset: conservative
+        max_position_size: 0.10
+        stop_loss_pct: 0.030
+        take_profit_pct: 0.07
+        max_exposure: 0.25
+        max_positions: 4
+        risk_adjustment: 0.95
+        module_specific:
+          min_confidence: 0.70
+          combination_mode: "MAJORITY"
+          min_volume_ratio: 1.1
+
+      medium:
+        preset: balanced
+        max_position_size: 0.12
+        stop_loss_pct: 0.025
+        take_profit_pct: 0.08
+        max_exposure: 0.30
+        max_positions: 6
+        risk_adjustment: 1.0
+        module_specific:
+          min_confidence: 0.60
+          combination_mode: "MAJORITY"
+          min_volume_ratio: 1.05
+
+      large:
+        preset: aggressive
+        max_position_size: 0.15
+        stop_loss_pct: 0.020
+        take_profit_pct: 0.10
+        max_exposure: 0.40
+        max_positions: 8
+        risk_adjustment: 1.1
+        module_specific:
+          min_confidence: 0.50
+          combination_mode: "MAJORITY"
+          min_volume_ratio: 1.0
+
+  trend_following_modular:
+    description: "Trend-following strategy using moving averages and momentum"
+    base:
+      max_position_size: 0.10
+      stop_loss_pct: 0.035
+      take_profit_pct: 0.12
+      max_exposure: 0.25
+      max_positions: 4
+
+    tiers:
+      micro:
+        preset: conservative
+        max_position_size: 0.08
+        stop_loss_pct: 0.05
+        take_profit_pct: 0.10
+        max_exposure: 0.15
+        max_positions: 2
+        risk_adjustment: 0.85
+        module_specific:
+          trend_strength_threshold: 0.7
+          slowness: "slow"
+
+      small:
+        preset: conservative
+        max_position_size: 0.10
+        stop_loss_pct: 0.04
+        take_profit_pct: 0.10
+        max_exposure: 0.20
+        max_positions: 3
+        risk_adjustment: 0.9
+        module_specific:
+          trend_strength_threshold: 0.65
+          slowness: "moderate"
+
+      medium:
+        preset: balanced
+        max_position_size: 0.12
+        stop_loss_pct: 0.035
+        take_profit_pct: 0.12
+        max_exposure: 0.25
+        max_positions: 4
+        risk_adjustment: 1.0
+        module_specific:
+          trend_strength_threshold: 0.60
+          slowness: "moderate"
+
+      large:
+        preset: aggressive
+        max_position_size: 0.15
+        stop_loss_pct: 0.030
+        take_profit_pct: 0.15
+        max_exposure: 0.35
+        max_positions: 6
+        risk_adjustment: 1.1
+        module_specific:
+          trend_strength_threshold: 0.55
+          slowness: "fast"
+
+  # ===================== MEAN REVERSION =====================
+
+  mean_reversion_modular:
+    description: "Mean reversion strategy with adaptive z-score thresholds"
+    base:
+      max_position_size: 0.07
+      stop_loss_pct: 0.015
+      take_profit_pct: 0.10
+      max_exposure: 0.20
+      max_positions: 5
+
+    tiers:
+      micro:
+        preset: conservative
+        max_position_size: 0.06
+        stop_loss_pct: 0.025
+        take_profit_pct: 0.08
+        max_exposure: 0.15
+        max_positions: 3
+        risk_adjustment: 0.85
+        module_specific:
+          z_score_threshold: 1.5
+          lookback_period: 30
+          volatility_threshold: 0.03
+
+      small:
+        preset: conservative
+        max_position_size: 0.07
+        stop_loss_pct: 0.020
+        take_profit_pct: 0.10
+        max_exposure: 0.18
+        max_positions: 4
+        risk_adjustment: 0.9
+        module_specific:
+          z_score_threshold: 1.25
+          lookback_period: 25
+          volatility_threshold: 0.025
+
+      medium:
+        preset: balanced
+        max_position_size: 0.08
+        stop_loss_pct: 0.015
+        take_profit_pct: 0.10
+        max_exposure: 0.20
+        max_positions: 5
+        risk_adjustment: 1.0
+        module_specific:
+          z_score_threshold: 1.0
+          lookback_period: 20
+          volatility_threshold: 0.02
+
+      large:
+        preset: aggressive
+        max_position_size: 0.10
+        stop_loss_pct: 0.012
+        take_profit_pct: 0.12
+        max_exposure: 0.25
+        max_positions: 7
+        risk_adjustment: 1.1
+        module_specific:
+          z_score_threshold: 0.8
+          lookback_period: 15
+          volatility_threshold: 0.015
+
+  # ===================== PAIRS TRADING =====================
+
+  pairs_trading_modular:
+    description: "Statistical arbitrage with cointegrated pairs"
+    base:
+      max_position_size: 0.12
+      stop_loss_pct: 0.03
+      take_profit_pct: 0.06
+      max_exposure: 0.20
+      max_positions: 3
+
+    tiers:
+      micro:
+        # Not recommended for micro tier (disabled in investment_profiles.yaml)
+        preset: conservative
+        max_position_size: 0.05
+        stop_loss_pct: 0.05
+        take_profit_pct: 0.05
+        max_exposure: 0.10
+        max_positions: 1
+        risk_adjustment: 0.7
+        module_specific:
+          cointegration_threshold: 0.001
+          min_correlation: 0.85
+          max_pair_exposure: 0.08
+
+      small:
+        # Not typically enabled for small tier, but parameters provided for flexibility
+        preset: conservative
+        max_position_size: 0.08
+        stop_loss_pct: 0.04
+        take_profit_pct: 0.06
+        max_exposure: 0.12
+        max_positions: 2
+        risk_adjustment: 0.8
+        module_specific:
+          cointegration_threshold: 0.01
+          min_correlation: 0.82
+          max_pair_exposure: 0.10
+
+      medium:
+        preset: balanced
+        max_position_size: 0.10
+        stop_loss_pct: 0.03
+        take_profit_pct: 0.06
+        max_exposure: 0.20
+        max_positions: 3
+        risk_adjustment: 1.0
+        module_specific:
+          cointegration_threshold: 0.01
+          min_correlation: 0.80
+          max_pair_exposure: 0.10
+
+      large:
+        preset: aggressive
+        max_position_size: 0.12
+        stop_loss_pct: 0.025
+        take_profit_pct: 0.07
+        max_exposure: 0.25
+        max_positions: 5
+        risk_adjustment: 1.15
+        module_specific:
+          cointegration_threshold: 0.01
+          min_correlation: 0.78
+          max_pair_exposure: 0.12
+
+  # ===================== DIVIDEND & INCOME STRATEGIES =====================
+
+  dividend_screener:
+    description: "Screen and rank dividend-paying securities"
+    base:
+      max_position_size: 0.08
+      stop_loss_pct: 0.04
+      take_profit_pct: 0.12  # Higher for dividend positions
+      max_exposure: 0.30
+      max_positions: 8
+
+    tiers:
+      micro:
+        preset: conservative
+        max_position_size: 0.08
+        stop_loss_pct: 0.05
+        take_profit_pct: 0.10
+        max_exposure: 0.25
+        max_positions: 5
+        risk_adjustment: 0.9
+        module_specific:
+          min_dividend_yield: 0.03
+          dividend_growth_years: 5
+
+      small:
+        preset: conservative
+        max_position_size: 0.08
+        stop_loss_pct: 0.04
+        take_profit_pct: 0.10
+        max_exposure: 0.28
+        max_positions: 6
+        risk_adjustment: 0.95
+        module_specific:
+          min_dividend_yield: 0.027
+          dividend_growth_years: 3
+
+      medium:
+        preset: balanced
+        max_position_size: 0.08
+        stop_loss_pct: 0.04
+        take_profit_pct: 0.12
+        max_exposure: 0.30
+        max_positions: 8
+        risk_adjustment: 1.0
+        module_specific:
+          min_dividend_yield: 0.025
+          dividend_growth_years: 3
+
+      large:
+        preset: aggressive
+        max_position_size: 0.10
+        stop_loss_pct: 0.035
+        take_profit_pct: 0.15
+        max_exposure: 0.35
+        max_positions: 10
+        risk_adjustment: 1.1
+        module_specific:
+          min_dividend_yield: 0.020
+          dividend_growth_years: 2
+
+  dividend_predictor:
+    description: "Predict dividend changes using ML"
+    base:
+      max_position_size: 0.08
+      stop_loss_pct: 0.04
+      take_profit_pct: 0.10
+      max_exposure: 0.20
+      max_positions: 5
+
+    tiers:
+      micro:
+        # Not typical for micro tier
+        preset: conservative
+        enabled: false
+        module_specific: {}
+
+      small:
+        preset: conservative
+        max_position_size: 0.06
+        stop_loss_pct: 0.05
+        take_profit_pct: 0.10
+        max_exposure: 0.15
+        max_positions: 3
+        risk_adjustment: 0.9
+        module_specific:
+          min_confidence: 0.70
+          prediction_horizon_days: 30
+
+      medium:
+        preset: balanced
+        max_position_size: 0.08
+        stop_loss_pct: 0.04
+        take_profit_pct: 0.12
+        max_exposure: 0.20
+        max_positions: 4
+        risk_adjustment: 1.0
+        module_specific:
+          min_confidence: 0.65
+          prediction_horizon_days: 30
+
+      large:
+        preset: aggressive
+        max_position_size: 0.10
+        stop_loss_pct: 0.035
+        take_profit_pct: 0.15
+        max_exposure: 0.25
+        max_positions: 6
+        risk_adjustment: 1.1
+        module_specific:
+          min_confidence: 0.60
+          prediction_horizon_days: 60
+
+  # ===================== OPTIONS STRATEGIES =====================
+
+  covered_call_writer:
+    description: "Generate income through covered call writing"
+    base:
+      max_position_size: 0.10
+      stop_loss_pct: 0.10  # Wider for options
+      take_profit_pct: 0.08
+      max_exposure: 0.25
+      max_positions: 5
+
+    tiers:
+      micro:
+        preset: conservative
+        max_position_size: 0.08
+        stop_loss_pct: 0.12
+        take_profit_pct: 0.06
+        max_exposure: 0.15
+        max_positions: 3
+        risk_adjustment: 0.85
+        module_specific:
+          min_delta: 0.30
+          max_delta: 0.70
+          min_days_to_expiration: 30
+
+      small:
+        preset: conservative
+        max_position_size: 0.10
+        stop_loss_pct: 0.10
+        take_profit_pct: 0.08
+        max_exposure: 0.20
+        max_positions: 4
+        risk_adjustment: 0.9
+        module_specific:
+          min_delta: 0.25
+          max_delta: 0.75
+          min_days_to_expiration: 20
+
+      medium:
+        preset: balanced
+        max_position_size: 0.12
+        stop_loss_pct: 0.08
+        take_profit_pct: 0.10
+        max_exposure: 0.25
+        max_positions: 5
+        risk_adjustment: 1.0
+        module_specific:
+          min_delta: 0.20
+          max_delta: 0.80
+          min_days_to_expiration: 15
+
+      large:
+        preset: aggressive
+        max_position_size: 0.15
+        stop_loss_pct: 0.06
+        take_profit_pct: 0.12
+        max_exposure: 0.30
+        max_positions: 7
+        risk_adjustment: 1.1
+        module_specific:
+          min_delta: 0.15
+          max_delta: 0.85
+          min_days_to_expiration: 7
+
+  put_seller_modular:
+    description: "Generate income through cash-secured put selling"
+    base:
+      max_position_size: 0.10
+      stop_loss_pct: 0.10
+      take_profit_pct: 0.08
+      max_exposure: 0.25
+      max_positions: 5
+
+    tiers:
+      micro:
+        # Not recommended for micro
+        preset: conservative
+        enabled: false
+        module_specific: {}
+
+      small:
+        preset: conservative
+        max_position_size: 0.08
+        stop_loss_pct: 0.12
+        take_profit_pct: 0.06
+        max_exposure: 0.15
+        max_positions: 2
+        risk_adjustment: 0.8
+        module_specific:
+          min_delta: 0.30
+          max_delta: 0.70
+          min_days_to_expiration: 30
+
+      medium:
+        preset: balanced
+        max_position_size: 0.10
+        stop_loss_pct: 0.10
+        take_profit_pct: 0.08
+        max_exposure: 0.20
+        max_positions: 3
+        risk_adjustment: 1.0
+        module_specific:
+          min_delta: 0.25
+          max_delta: 0.75
+          min_days_to_expiration: 20
+
+      large:
+        preset: aggressive
+        max_position_size: 0.12
+        stop_loss_pct: 0.08
+        take_profit_pct: 0.10
+        max_exposure: 0.25
+        max_positions: 5
+        risk_adjustment: 1.1
+        module_specific:
+          min_delta: 0.20
+          max_delta: 0.80
+          min_days_to_expiration: 10
+
+  collar_strategy:
+    description: "Define risk with collar positions (for large accounts)"
+    base:
+      max_position_size: 0.15
+      stop_loss_pct: 0.15
+      take_profit_pct: 0.10
+      max_exposure: 0.25
+      max_positions: 4
+
+    tiers:
+      micro:
+        # Not suitable for micro
+        preset: conservative
+        enabled: false
+        module_specific: {}
+
+      small:
+        # Not suitable for small
+        preset: conservative
+        enabled: false
+        module_specific: {}
+
+      medium:
+        # Only for medium+ accounts
+        preset: balanced
+        max_position_size: 0.12
+        stop_loss_pct: 0.15
+        take_profit_pct: 0.10
+        max_exposure: 0.15
+        max_positions: 2
+        risk_adjustment: 0.9
+        module_specific:
+          max_loss_pct: 0.10
+          min_protection_value: 0.02
+
+      large:
+        preset: aggressive
+        max_position_size: 0.15
+        stop_loss_pct: 0.12
+        take_profit_pct: 0.12
+        max_exposure: 0.25
+        max_positions: 4
+        risk_adjustment: 1.0
+        module_specific:
+          max_loss_pct: 0.08
+          min_protection_value: 0.01
+
+  # ===================== PORTFOLIO & DIVERSIFICATION =====================
+
+  portfolio_optimization:
+    description: "Optimize portfolio weights using efficient frontier or risk parity"
+    base:
+      max_position_size: 0.20  # Higher for portfolio-level optimization
+      stop_loss_pct: 0.08
+      take_profit_pct: 0.15
+      max_exposure: 1.0  # Portfolio-level
+      max_positions: 999  # Not applicable
+
+    tiers:
+      micro:
+        # Limited optimization for micro
+        preset: conservative
+        max_position_size: 0.15
+        max_exposure: 1.0
+        risk_adjustment: 0.9
+        module_specific:
+          method: "equal_weight"
+          rebalance_frequency_days: 30
+
+      small:
+        preset: conservative
+        max_position_size: 0.15
+        max_exposure: 1.0
+        risk_adjustment: 0.95
+        module_specific:
+          method: "risk_parity"
+          rebalance_frequency_days: 30
+
+      medium:
+        preset: balanced
+        max_position_size: 0.18
+        max_exposure: 1.0
+        risk_adjustment: 1.0
+        module_specific:
+          method: "efficient_frontier"
+          rebalance_frequency_days: 20
+          target_return: 0.08
+
+      large:
+        preset: aggressive
+        max_position_size: 0.20
+        max_exposure: 1.0
+        risk_adjustment: 1.1
+        module_specific:
+          method: "black_litterman"
+          rebalance_frequency_days: 14
+          target_return: 0.12
+
+  sector_rotation:
+    description: "Rotate capital between sectors based on momentum or mean reversion"
+    base:
+      max_position_size: 0.10
+      stop_loss_pct: 0.05
+      take_profit_pct: 0.10
+      max_exposure: 0.30
+      max_positions: 5
+
+    tiers:
+      micro:
+        # Not typical for micro
+        preset: conservative
+        enabled: false
+        module_specific: {}
+
+      small:
+        # Limited for small
+        preset: conservative
+        enabled: false
+        module_specific: {}
+
+      medium:
+        preset: balanced
+        max_position_size: 0.10
+        stop_loss_pct: 0.05
+        take_profit_pct: 0.10
+        max_exposure: 0.25
+        max_positions: 4
+        risk_adjustment: 1.0
+        module_specific:
+          rotation_signal: "momentum"
+          rebalance_frequency_days: 20
+
+      large:
+        preset: aggressive
+        max_position_size: 0.12
+        stop_loss_pct: 0.04
+        take_profit_pct: 0.12
+        max_exposure: 0.30
+        max_positions: 5
+        risk_adjustment: 1.1
+        module_specific:
+          rotation_signal: "dual_signal"  # momentum + mean_reversion
+          rebalance_frequency_days: 15
+
+  # ===================== HEDGING & RISK MANAGEMENT =====================
+
+  defensive_momentum:
+    description: "Conservative momentum focused on downside protection"
+    base:
+      max_position_size: 0.08
+      stop_loss_pct: 0.04
+      take_profit_pct: 0.06
+      max_exposure: 0.25
+      max_positions: 5
+
+    tiers:
+      micro:
+        preset: conservative
+        max_position_size: 0.06
+        stop_loss_pct: 0.05
+        take_profit_pct: 0.05
+        max_exposure: 0.15
+        max_positions: 3
+        risk_adjustment: 0.8
+        module_specific:
+          momentum_threshold: 0.02
+          use_protective_puts: true
+
+      small:
+        preset: conservative
+        max_position_size: 0.07
+        stop_loss_pct: 0.04
+        take_profit_pct: 0.06
+        max_exposure: 0.20
+        max_positions: 4
+        risk_adjustment: 0.9
+        module_specific:
+          momentum_threshold: 0.015
+          use_protective_puts: true
+
+      medium:
+        preset: balanced
+        max_position_size: 0.08
+        stop_loss_pct: 0.04
+        take_profit_pct: 0.07
+        max_exposure: 0.25
+        max_positions: 5
+        risk_adjustment: 1.0
+        module_specific:
+          momentum_threshold: 0.01
+          use_protective_puts: false
+
+      large:
+        preset: aggressive
+        max_position_size: 0.10
+        stop_loss_pct: 0.035
+        take_profit_pct: 0.08
+        max_exposure: 0.30
+        max_positions: 6
+        risk_adjustment: 1.1
+        module_specific:
+          momentum_threshold: 0.005
+          use_protective_puts: false
+
+  hedge_strategies:
+    description: "Dynamic hedging using options or short positions"
+    base:
+      max_position_size: 0.05
+      stop_loss_pct: 0.10
+      take_profit_pct: 0.05
+      max_exposure: 0.15
+      max_positions: 3
+
+    tiers:
+      micro:
+        preset: conservative
+        max_position_size: 0.03
+        stop_loss_pct: 0.15
+        take_profit_pct: 0.03
+        max_exposure: 0.08
+        max_positions: 1
+        risk_adjustment: 0.7
+        module_specific:
+          hedge_ratio: 0.30
+          hedge_type: "options"
+
+      small:
+        preset: conservative
+        max_position_size: 0.04
+        stop_loss_pct: 0.12
+        take_profit_pct: 0.04
+        max_exposure: 0.10
+        max_positions: 2
+        risk_adjustment: 0.8
+        module_specific:
+          hedge_ratio: 0.40
+          hedge_type: "options"
+
+      medium:
+        preset: balanced
+        max_position_size: 0.05
+        stop_loss_pct: 0.10
+        take_profit_pct: 0.05
+        max_exposure: 0.15
+        max_positions: 3
+        risk_adjustment: 1.0
+        module_specific:
+          hedge_ratio: 0.50
+          hedge_type: "mixed"
+
+      large:
+        preset: aggressive
+        max_position_size: 0.08
+        stop_loss_pct: 0.08
+        take_profit_pct: 0.07
+        max_exposure: 0.20
+        max_positions: 4
+        risk_adjustment: 1.1
+        module_specific:
+          hedge_ratio: 0.60
+          hedge_type: "mixed"
+
+  currency_hedging:
+    description: "Hedge currency exposure in international positions"
+    base:
+      max_position_size: 0.05
+      stop_loss_pct: 0.05
+      take_profit_pct: 0.03
+      max_exposure: 0.10
+      max_positions: 10
+
+    tiers:
+      micro:
+        # Not suitable for micro
+        preset: conservative
+        enabled: false
+        module_specific: {}
+
+      small:
+        # Limited for small
+        preset: conservative
+        enabled: false
+        module_specific: {}
+
+      medium:
+        preset: balanced
+        max_position_size: 0.05
+        stop_loss_pct: 0.05
+        take_profit_pct: 0.03
+        max_exposure: 0.08
+        max_positions: 5
+        risk_adjustment: 1.0
+        module_specific:
+          hedge_ratio: 0.75
+          currencies: ["EUR", "GBP", "JPY"]
+
+      large:
+        preset: aggressive
+        max_position_size: 0.06
+        stop_loss_pct: 0.04
+        take_profit_pct: 0.04
+        max_exposure: 0.12
+        max_positions: 8
+        risk_adjustment: 1.0
+        module_specific:
+          hedge_ratio: 0.90
+          currencies: ["EUR", "GBP", "JPY", "CHF"]
+
+  # ===================== MACHINE LEARNING & ADVANCED STRATEGIES =====================
+
+  ml_ensemble:
+    description: "ML-based ensemble combining multiple predictive models (large accounts only)"
+    base:
+      max_position_size: 0.12
+      stop_loss_pct: 0.03
+      take_profit_pct: 0.10
+      max_exposure: 0.35
+      max_positions: 8
+
+    tiers:
+      micro:
+        # Not suitable for micro (requires significant capital)
+        preset: conservative
+        enabled: false
+        module_specific: {}
+
+      small:
+        # Not suitable for small
+        preset: conservative
+        enabled: false
+        module_specific: {}
+
+      medium:
+        # May be enabled for medium with appropriate risk
+        preset: balanced
+        enabled: false  # Typically disabled, optional activation
+        max_position_size: 0.08
+        stop_loss_pct: 0.04
+        take_profit_pct: 0.08
+        max_exposure: 0.20
+        max_positions: 4
+        risk_adjustment: 1.0
+        module_specific:
+          min_model_confidence: 0.70
+          ensemble_method: "weighted_voting"
+          retraining_frequency_days: 30
+
+      large:
+        preset: aggressive
+        max_position_size: 0.12
+        stop_loss_pct: 0.03
+        take_profit_pct: 0.12
+        max_exposure: 0.35
+        max_positions: 8
+        risk_adjustment: 1.15
+        module_specific:
+          min_model_confidence: 0.60
+          ensemble_method: "stacking"
+          retraining_frequency_days: 14
+          models: ["xgboost", "lightgbm", "neural_net"]
+
+  # ===================== ADDITIONAL STRATEGIES =====================
+
+  breakout_modular:
+    description: "Breakout strategy based on support/resistance levels"
+    base:
+      max_position_size: 0.10
+      stop_loss_pct: 0.04
+      take_profit_pct: 0.12
+      max_exposure: 0.25
+      max_positions: 5
+
+    tiers:
+      micro:
+        preset: conservative
+        max_position_size: 0.08
+        stop_loss_pct: 0.06
+        take_profit_pct: 0.10
+        max_exposure: 0.15
+        max_positions: 3
+        risk_adjustment: 0.85
+        module_specific:
+          lookback_period: 30
+          breakout_threshold: 0.02
+
+      small:
+        preset: conservative
+        max_position_size: 0.09
+        stop_loss_pct: 0.05
+        take_profit_pct: 0.10
+        max_exposure: 0.20
+        max_positions: 4
+        risk_adjustment: 0.9
+        module_specific:
+          lookback_period: 25
+          breakout_threshold: 0.015
+
+      medium:
+        preset: balanced
+        max_position_size: 0.10
+        stop_loss_pct: 0.04
+        take_profit_pct: 0.12
+        max_exposure: 0.25
+        max_positions: 5
+        risk_adjustment: 1.0
+        module_specific:
+          lookback_period: 20
+          breakout_threshold: 0.01
+
+      large:
+        preset: aggressive
+        max_position_size: 0.12
+        stop_loss_pct: 0.03
+        take_profit_pct: 0.15
+        max_exposure: 0.30
+        max_positions: 7
+        risk_adjustment: 1.1
+        module_specific:
+          lookback_period: 15
+          breakout_threshold: 0.008
+
+  arbitrage_modular:
+    description: "Arbitrage opportunities between related securities"
+    base:
+      max_position_size: 0.10
+      stop_loss_pct: 0.02
+      take_profit_pct: 0.05
+      max_exposure: 0.20
+      max_positions: 4
+
+    tiers:
+      micro:
+        # Limited for micro
+        preset: conservative
+        max_position_size: 0.05
+        stop_loss_pct: 0.03
+        take_profit_pct: 0.03
+        max_exposure: 0.10
+        max_positions: 1
+        risk_adjustment: 0.8
+        module_specific:
+          min_spread_threshold: 0.002
+
+      small:
+        preset: conservative
+        max_position_size: 0.07
+        stop_loss_pct: 0.025
+        take_profit_pct: 0.04
+        max_exposure: 0.12
+        max_positions: 2
+        risk_adjustment: 0.9
+        module_specific:
+          min_spread_threshold: 0.0015
+
+      medium:
+        preset: balanced
+        max_position_size: 0.09
+        stop_loss_pct: 0.02
+        take_profit_pct: 0.05
+        max_exposure: 0.18
+        max_positions: 3
+        risk_adjustment: 1.0
+        module_specific:
+          min_spread_threshold: 0.001
+
+      large:
+        preset: aggressive
+        max_position_size: 0.10
+        stop_loss_pct: 0.015
+        take_profit_pct: 0.06
+        max_exposure: 0.25
+        max_positions: 5
+        risk_adjustment: 1.1
+        module_specific:
+          min_spread_threshold: 0.0005
+
+# Default parameters if module not found
+defaults:
+  max_position_size: 0.10
+  stop_loss_pct: 0.03
+  take_profit_pct: 0.08
+  max_exposure: 0.25
+  max_positions: 5
+  risk_adjustment: 1.0
