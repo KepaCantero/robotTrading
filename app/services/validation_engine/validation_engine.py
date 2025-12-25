@@ -152,7 +152,7 @@ class ValidationEngine:
                 )
 
             # Step 5: Validate risk metrics (if provided)
-            if request.backtest_sharpe_ratio is not None:
+            if request.backtest_sharpe_ratio is not None or request.backtest_max_drawdown_pct is not None:
                 risk_warnings = self._validate_risk_metrics(request)
                 result.warnings.extend(risk_warnings)
 
@@ -377,8 +377,10 @@ class ValidationEngine:
             result.overall_recommendation = "CONDITIONAL"
             result.confidence_level = "medium"
 
-        # Adjust based on warnings
-        if len(result.warnings) >= 3:
+        # Adjust based on risk metric warnings (Sharpe, drawdown)
+        # Don't count learning/module viability warnings in confidence calculation
+        risk_warnings = [w for w in result.warnings if any(x in w.lower() for x in ["sharpe", "drawdown"])]
+        if len(risk_warnings) >= 2:
             result.confidence_level = "low"
             if result.overall_recommendation == "APPROVE":
                 result.overall_recommendation = "CONDITIONAL"
