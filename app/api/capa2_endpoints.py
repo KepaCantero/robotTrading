@@ -31,7 +31,7 @@ from app.services.backtesting_orchestration.backtest_orchestrator import Backtes
 from app.services.validation_orchestration.validation_engine import ValidationEngine
 from app.services.strategy_recommendation.strategy_recommender import StrategyRecommender
 from app.services.portfolio_construction.portfolio_constructor import PortfolioConstructor
-from app.services.risk_scaling_application.risk_scaling_applicator import RiskScalingApplicator
+from app.services.risk_scaling_application import RiskScalingApplication
 from app.services.reporting.reporting_generator import ReportingGenerator
 from app.services.deployment.deploy_decision_orchestrator import DeployDecisionOrchestrator
 from app.services.configuration_persistence.configuration_repository import ConfigurationRepository
