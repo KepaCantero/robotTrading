@@ -1,515 +1,395 @@
 """
-T6.1: Unit Tests for StrategyRecommender
+T6.1: StrategyRecommender Tests
 
-Tests cover:
-- Metric score calculations
-- Weighted recommendation scoring
-- Recommendation determination
-- Objective-driven weighting
-- Edge cases and error handling
+Tests for objective-driven strategy recommendation and scoring.
 """
 
 import pytest
 from decimal import Decimal
-from dataclasses import dataclass
-
-from app.services.strategy_recommendation import (
+from app.services.strategy_recommender import (
     StrategyRecommender,
-    ObjectiveType,
-    ConfidenceLevel,
+    get_strategy_recommender,
+    StrategyRecommendationRequest,
 )
 
 
-@pytest.fixture
-def recommender():
-    """Create StrategyRecommender instance."""
-    return StrategyRecommender()
+# STRATEGY RECOMMENDER INITIALIZATION TESTS
+class TestStrategyRecommenderInitialization:
+    def test_recommender_init(self):
+        """Test recommender initialization."""
+        recommender = StrategyRecommender()
+        assert len(recommender.recommendation_history) == 0
+
+    def test_recommender_singleton(self):
+        """Test recommender singleton pattern."""
+        r1 = get_strategy_recommender()
+        r2 = get_strategy_recommender()
+        assert r1 is r2
+
+    def test_recommender_status(self):
+        """Test recommender status reporting."""
+        recommender = StrategyRecommender()
+        status = recommender.get_recommender_status()
+
+        assert "total_recommendations" in status
+        assert "successful_recommendations" in status
+        assert "average_score" in status
 
 
-@pytest.fixture
-def sample_investment_profile():
-    """Sample investment profile for testing."""
-    @dataclass
-    class MockInvestmentProfile:
-        objetivo_inversion: str = "maximizar_capital"
+# OBJECTIVE WEIGHTS TESTS
+class TestObjectiveWeights:
+    def test_get_weights_capital_maximization(self):
+        """Test weights for capital maximization objective."""
+        recommender = StrategyRecommender()
+        weights = recommender._get_objective_weights("maximizar_capital")
 
-    return MockInvestmentProfile()
+        assert weights.sharpe_weight == Decimal("0.60")
+        assert weights.return_weight == Decimal("0.30")
+        assert weights.sortino_weight == Decimal("0.10")
 
+    def test_get_weights_dividend_focus(self):
+        """Test weights for dividend objective."""
+        recommender = StrategyRecommender()
+        weights = recommender._get_objective_weights("maximizar_dividendos")
 
-@pytest.fixture
-def sample_excellent_backtest_result():
-    """Sample excellent backtest result."""
-    return {
-        "strategy_name": "momentum_modular",
-        "total_return": 0.25,  # 25% annual
-        "sharpe_ratio": 1.5,
-        "sortino_ratio": 1.8,
-        "max_drawdown": -0.10,  # 10% max drawdown
-        "win_rate": 0.65,
-        "dividend_yield": 0.03,  # 3% dividend
-    }
+        assert weights.dividend_yield_weight == Decimal("0.50")
+        assert weights.sharpe_weight == Decimal("0.30")
 
+    def test_get_weights_preservation(self):
+        """Test weights for capital preservation objective."""
+        recommender = StrategyRecommender()
+        weights = recommender._get_objective_weights("capital_preservation")
 
-@pytest.fixture
-def sample_moderate_backtest_result():
-    """Sample moderate backtest result."""
-    return {
-        "strategy_name": "mean_reversion",
-        "total_return": 0.08,  # 8% annual
-        "sharpe_ratio": 0.8,
-        "sortino_ratio": 1.0,
-        "max_drawdown": -0.20,  # 20% max drawdown
-        "win_rate": 0.55,
-        "dividend_yield": 0.02,
-    }
+        assert weights.drawdown_weight == Decimal("0.50")
+        assert weights.sharpe_weight == Decimal("0.40")
 
+    def test_get_weights_balanced_growth(self):
+        """Test weights for balanced growth objective."""
+        recommender = StrategyRecommender()
+        weights = recommender._get_objective_weights("balanced_growth")
 
-@pytest.fixture
-def sample_poor_backtest_result():
-    """Sample poor backtest result."""
-    return {
-        "strategy_name": "poor_strategy",
-        "total_return": 0.01,  # 1% annual
-        "sharpe_ratio": 0.2,
-        "sortino_ratio": 0.3,
-        "max_drawdown": -0.35,  # 35% max drawdown
-        "win_rate": 0.45,
-        "dividend_yield": 0.0,
-    }
+        assert weights.sharpe_weight == Decimal("0.40")
+        assert weights.return_weight == Decimal("0.30")
+        assert weights.drawdown_weight == Decimal("0.30")
 
 
-# =============================================================================
-# Test Metric Score Calculations
-# =============================================================================
-
-class TestMetricScoreCalculations:
-    """Test metric score normalization."""
-
+# COMPONENT SCORING TESTS
+class TestComponentScoring:
     @pytest.mark.asyncio
-    async def test_sharpe_ratio_normalization(self, recommender, sample_excellent_backtest_result):
-        """Test Sharpe ratio score normalization."""
-        scores = await recommender._calculate_metric_scores(sample_excellent_backtest_result)
-        # Sharpe 1.5: (1.5 + 1) / 4 * 100 = 62.5
-        assert 60 < scores["sharpe_ratio"] < 65
-
-    @pytest.mark.asyncio
-    async def test_return_normalization(self, recommender, sample_excellent_backtest_result):
-        """Test total return score normalization."""
-        scores = await recommender._calculate_metric_scores(sample_excellent_backtest_result)
-        # Return 0.25 (25%): 0.25 / 0.50 * 100 = 50
-        assert 48 < scores["total_return"] < 52
-
-    @pytest.mark.asyncio
-    async def test_drawdown_inverse_normalization(self, recommender, sample_excellent_backtest_result):
-        """Test max drawdown inverse score normalization."""
-        scores = await recommender._calculate_metric_scores(sample_excellent_backtest_result)
-        # Drawdown -0.10: (1 + (-0.10)) * 100 = 90
-        assert 88 < scores["max_drawdown_inverse"] < 92
-
-    @pytest.mark.asyncio
-    async def test_consistency_normalization(self, recommender, sample_excellent_backtest_result):
-        """Test consistency (win rate) score normalization."""
-        scores = await recommender._calculate_metric_scores(sample_excellent_backtest_result)
-        # Win rate 0.65: 0.65 * 100 = 65
-        assert 64 < scores["consistency"] < 66
-
-    @pytest.mark.asyncio
-    async def test_metric_scores_all_present(self, recommender, sample_excellent_backtest_result):
-        """Test that all metric scores are calculated."""
-        scores = await recommender._calculate_metric_scores(sample_excellent_backtest_result)
-        expected_metrics = [
-            "sharpe_ratio",
-            "total_return",
-            "sortino_ratio",
-            "max_drawdown_inverse",
-            "dividend_yield",
-            "consistency",
-            "capital_preservation"
-        ]
-        for metric in expected_metrics:
-            assert metric in scores
-            assert 0 <= scores[metric] <= 100
-
-
-# =============================================================================
-# Test Weighted Score Calculation
-# =============================================================================
-
-class TestWeightedScoreCalculation:
-    """Test weighted recommendation score calculation."""
-
-    @pytest.mark.asyncio
-    async def test_score_excellent_capital_maximization(
-        self, recommender, sample_excellent_backtest_result, sample_investment_profile
-    ):
-        """Test score calculation for excellent capital maximization strategy."""
-        sample_investment_profile.objetivo_inversion = "maximizar_capital"
-        recommendation = await recommender.recommend(
-            "excellent_strategy",
-            sample_excellent_backtest_result,
-            sample_investment_profile
-        )
-        # Good Sharpe, moderate-to-high return → moderate-to-good score
-        assert recommendation.score > 50
-
-    @pytest.mark.asyncio
-    async def test_score_moderate_capital_maximization(
-        self, recommender, sample_moderate_backtest_result, sample_investment_profile
-    ):
-        """Test score calculation for moderate capital maximization strategy."""
-        sample_investment_profile.objetivo_inversion = "maximizar_capital"
-        recommendation = await recommender.recommend(
-            "moderate_strategy",
-            sample_moderate_backtest_result,
-            sample_investment_profile
-        )
-        # Moderate Sharpe, low-to-moderate return → moderate-to-low score
-        assert 30 < recommendation.score < 50
-
-    @pytest.mark.asyncio
-    async def test_score_poor_strategy(
-        self, recommender, sample_poor_backtest_result, sample_investment_profile
-    ):
-        """Test score calculation for poor strategy."""
-        sample_investment_profile.objetivo_inversion = "maximizar_capital"
-        recommendation = await recommender.recommend(
-            "poor_strategy",
-            sample_poor_backtest_result,
-            sample_investment_profile
-        )
-        # Poor Sharpe, low return → low score
-        assert recommendation.score < 50
-
-
-# =============================================================================
-# Test Recommendation Determination
-# =============================================================================
-
-class TestRecommendationDetermination:
-    """Test recommendation status and confidence determination."""
-
-    def test_approved_recommendation(self, recommender):
-        """Test APPROVED recommendation (score >= 75)."""
-        recommendation, confidence = recommender._determine_recommendation(85)
-        assert recommendation == "APPROVED"
-        assert confidence in [ConfidenceLevel.HIGH.value, ConfidenceLevel.VERY_HIGH.value]
-
-    def test_very_high_confidence(self, recommender):
-        """Test VERY_HIGH confidence (score >= 90)."""
-        recommendation, confidence = recommender._determine_recommendation(95)
-        assert recommendation == "APPROVED"
-        assert confidence == ConfidenceLevel.VERY_HIGH.value
-
-    def test_conditional_recommendation(self, recommender):
-        """Test CONDITIONAL recommendation (60-74)."""
-        recommendation, confidence = recommender._determine_recommendation(65)
-        assert recommendation == "CONDITIONAL"
-        assert confidence == ConfidenceLevel.MODERATE.value
-
-    def test_review_recommendation(self, recommender):
-        """Test REVIEW recommendation (40-59)."""
-        recommendation, confidence = recommender._determine_recommendation(50)
-        assert recommendation == "REVIEW"
-        assert confidence == ConfidenceLevel.LOW.value
-
-    def test_rejected_recommendation(self, recommender):
-        """Test REJECTED recommendation (< 40)."""
-        recommendation, confidence = recommender._determine_recommendation(35)
-        assert recommendation == "REJECTED"
-        assert confidence == ConfidenceLevel.VERY_LOW.value
-
-    def test_boundary_approved_75(self, recommender):
-        """Test boundary at approved threshold (75)."""
-        recommendation, confidence = recommender._determine_recommendation(75)
-        assert recommendation == "APPROVED"
-
-    def test_boundary_conditional_60(self, recommender):
-        """Test boundary at conditional threshold (60)."""
-        recommendation, confidence = recommender._determine_recommendation(60)
-        assert recommendation == "CONDITIONAL"
-
-
-# =============================================================================
-# Test Objective-Driven Weighting
-# =============================================================================
-
-class TestObjectiveDrivenWeighting:
-    """Test weighting schemas for different objectives."""
-
-    @pytest.mark.asyncio
-    async def test_maximizar_capital_weighting(self, recommender, sample_excellent_backtest_result):
-        """Test weighting for maximizar_capital objective."""
-        @dataclass
-        class MockProfile:
-            objetivo_inversion = "maximizar_capital"
-
-        recommendation = await recommender.recommend(
-            "strategy",
-            sample_excellent_backtest_result,
-            MockProfile()
-        )
-        # Sharpe should be heavily weighted (60%)
-        weights = recommendation.objective_weights
-        assert weights["sharpe_ratio"] == 0.60
-        assert weights["total_return"] == 0.30
-        assert weights["sortino_ratio"] == 0.10
-
-    @pytest.mark.asyncio
-    async def test_capital_preservation_weighting(self, recommender, sample_excellent_backtest_result):
-        """Test weighting for capital_preservation objective."""
-        @dataclass
-        class MockProfile:
-            objetivo_inversion = "capital_preservation"
-
-        recommendation = await recommender.recommend(
-            "strategy",
-            sample_excellent_backtest_result,
-            MockProfile()
-        )
-        # Drawdown should be heavily weighted (50%)
-        weights = recommendation.objective_weights
-        assert weights["max_drawdown_inverse"] == 0.50
-        assert weights["sharpe_ratio"] == 0.40
-        assert weights["total_return"] == 0.10
-
-    @pytest.mark.asyncio
-    async def test_income_generation_weighting(self, recommender, sample_excellent_backtest_result):
-        """Test weighting for income_generation objective."""
-        @dataclass
-        class MockProfile:
-            objetivo_inversion = "income_generation"
-
-        recommendation = await recommender.recommend(
-            "strategy",
-            sample_excellent_backtest_result,
-            MockProfile()
-        )
-        # Dividend yield should be heavily weighted (50%)
-        weights = recommendation.objective_weights
-        assert weights["dividend_yield"] == 0.50
-        assert weights["consistency"] == 0.30
-        assert weights["sharpe_ratio"] == 0.20
-
-
-# =============================================================================
-# Test Recommendation Details Generation
-# =============================================================================
-
-class TestRecommendationDetails:
-    """Test generation of recommendation details."""
-
-    @pytest.mark.asyncio
-    async def test_excellent_strategy_details(
-        self, recommender, sample_excellent_backtest_result, sample_investment_profile
-    ):
-        """Test details for excellent strategy."""
-        recommendation = await recommender.recommend(
-            "excellent",
-            sample_excellent_backtest_result,
-            sample_investment_profile
-        )
-        details = recommendation.details
-        assert len(details.strengths) > 0
-        assert len(details.suggestions) >= 0
-        assert "risk_assessment" in recommendation.details.__dict__
-        assert "fit_analysis" in recommendation.details.__dict__
-
-    @pytest.mark.asyncio
-    async def test_poor_strategy_details(
-        self, recommender, sample_poor_backtest_result, sample_investment_profile
-    ):
-        """Test details for poor strategy."""
-        recommendation = await recommender.recommend(
-            "poor",
-            sample_poor_backtest_result,
-            sample_investment_profile
-        )
-        details = recommendation.details
-        assert len(details.weaknesses) > 0
-        assert len(details.suggestions) > 0
-
-    @pytest.mark.asyncio
-    async def test_details_have_required_fields(
-        self, recommender, sample_excellent_backtest_result, sample_investment_profile
-    ):
-        """Test that recommendation details have all required fields."""
-        recommendation = await recommender.recommend(
-            "test",
-            sample_excellent_backtest_result,
-            sample_investment_profile
-        )
-        details = recommendation.details
-        assert isinstance(details.strengths, list)
-        assert isinstance(details.weaknesses, list)
-        assert isinstance(details.suggestions, list)
-        assert isinstance(details.risk_assessment, str)
-        assert isinstance(details.fit_analysis, str)
-
-
-# =============================================================================
-# Test Safe Float Conversion
-# =============================================================================
-
-class TestSafeFloatConversion:
-    """Test safe float conversion for different types."""
-
-    def test_safe_float_from_int(self, recommender):
-        """Test converting int to float."""
-        assert recommender._safe_float(5) == 5.0
-
-    def test_safe_float_from_float(self, recommender):
-        """Test converting float to float."""
-        assert recommender._safe_float(3.14) == 3.14
-
-    def test_safe_float_from_decimal(self, recommender):
-        """Test converting Decimal to float."""
-        assert recommender._safe_float(Decimal("2.5")) == 2.5
-
-    def test_safe_float_from_string(self, recommender):
-        """Test converting string to float."""
-        assert recommender._safe_float("1.5") == 1.5
-
-    def test_safe_float_from_invalid_string(self, recommender):
-        """Test converting invalid string returns 0.0."""
-        assert recommender._safe_float("invalid") == 0.0
-
-    def test_safe_float_from_none(self, recommender):
-        """Test converting None returns 0.0."""
-        assert recommender._safe_float(None) == 0.0
-
-
-# =============================================================================
-# Test Recommendation Attributes
-# =============================================================================
-
-class TestRecommendationAttributes:
-    """Test recommendation object attributes."""
-
-    @pytest.mark.asyncio
-    async def test_recommendation_has_all_fields(
-        self, recommender, sample_excellent_backtest_result, sample_investment_profile
-    ):
-        """Test that recommendation has all required fields."""
-        recommendation = await recommender.recommend(
-            "test",
-            sample_excellent_backtest_result,
-            sample_investment_profile
-        )
-        assert hasattr(recommendation, "recommendation")
-        assert hasattr(recommendation, "score")
-        assert hasattr(recommendation, "confidence_level")
-        assert hasattr(recommendation, "objective_weights")
-        assert hasattr(recommendation, "metric_scores")
-        assert hasattr(recommendation, "details")
-        assert hasattr(recommendation, "summary")
-
-    @pytest.mark.asyncio
-    async def test_recommendation_score_range(
-        self, recommender, sample_excellent_backtest_result, sample_investment_profile
-    ):
-        """Test that recommendation score is in valid range."""
-        recommendation = await recommender.recommend(
-            "test",
-            sample_excellent_backtest_result,
-            sample_investment_profile
-        )
-        assert 0 <= recommendation.score <= 100
-
-    @pytest.mark.asyncio
-    async def test_metric_scores_all_in_range(
-        self, recommender, sample_excellent_backtest_result, sample_investment_profile
-    ):
-        """Test that all metric scores are in 0-100 range."""
-        recommendation = await recommender.recommend(
-            "test",
-            sample_excellent_backtest_result,
-            sample_investment_profile
-        )
-        for metric, score in recommendation.metric_scores.items():
-            assert 0 <= score <= 100, f"Metric {metric} score {score} out of range"
-
-
-# =============================================================================
-# Integration Tests
-# =============================================================================
-
-class TestRecommenderIntegration:
-    """Integration tests for strategy recommender."""
-
-    @pytest.mark.asyncio
-    async def test_recommendation_flow_excellent_strategy(
-        self, recommender, sample_excellent_backtest_result, sample_investment_profile
-    ):
-        """Test complete recommendation flow for excellent strategy."""
-        recommendation = await recommender.recommend(
-            "excellent_momentum",
-            sample_excellent_backtest_result,
-            sample_investment_profile
-        )
-        # Should be REVIEW or CONDITIONAL with reasonable confidence
-        assert recommendation.recommendation in ["REVIEW", "CONDITIONAL", "APPROVED"]
-        assert recommendation.confidence_level in [
-            ConfidenceLevel.VERY_HIGH.value,
-            ConfidenceLevel.HIGH.value,
-            ConfidenceLevel.MODERATE.value,
-            ConfidenceLevel.LOW.value
-        ]
-        assert recommendation.score > 40
-        assert len(recommendation.summary) > 0
-
-    @pytest.mark.asyncio
-    async def test_recommendation_flow_poor_strategy(
-        self, recommender, sample_poor_backtest_result, sample_investment_profile
-    ):
-        """Test complete recommendation flow for poor strategy."""
-        recommendation = await recommender.recommend(
-            "poor_strategy",
-            sample_poor_backtest_result,
-            sample_investment_profile
-        )
-        # Should be REVIEW or REJECTED with LOW/VERY_LOW confidence
-        assert recommendation.recommendation in ["REVIEW", "REJECTED"]
-        assert recommendation.confidence_level in [
-            ConfidenceLevel.LOW.value,
-            ConfidenceLevel.VERY_LOW.value
-        ]
-        assert len(recommendation.summary) > 0
-
-    @pytest.mark.asyncio
-    async def test_missing_backtest_metrics_default_to_zero(
-        self, recommender, sample_investment_profile
-    ):
-        """Test handling of missing backtest metrics."""
-        minimal_result = {"strategy_name": "test"}
-        recommendation = await recommender.recommend(
-            "test",
-            minimal_result,
-            sample_investment_profile
-        )
-        # Should still produce a recommendation with missing metrics defaulting to 0
-        assert recommendation.score >= 0
-        assert recommendation.recommendation in ["APPROVED", "CONDITIONAL", "REVIEW", "REJECTED"]
-
-    @pytest.mark.asyncio
-    async def test_different_objectives_produce_different_recommendations(
-        self, recommender, sample_excellent_backtest_result
-    ):
-        """Test that different objectives produce different recommendation scores."""
-        @dataclass
-        class MockProfile:
-            objetivo_inversion: str
-
-        # Capital maximization
-        profile_capital = MockProfile(objetivo_inversion="maximizar_capital")
-        rec_capital = await recommender.recommend(
-            "strategy", sample_excellent_backtest_result, profile_capital
+    async def test_score_excellent_strategy(self):
+        """Test scoring of excellent strategy."""
+        recommender = StrategyRecommender()
+        request = StrategyRecommendationRequest(
+            profile_id="test_excellent",
+            input_id="user_001",
+            objective="maximizar_capital",
+            sharpe_ratio=Decimal("2.0"),
+            annual_return_pct=Decimal("20"),
+            max_drawdown_pct=Decimal("5"),
+            sortino_ratio=Decimal("2.5"),
         )
 
-        # Capital preservation
-        profile_preservation = MockProfile(objetivo_inversion="capital_preservation")
-        rec_preservation = await recommender.recommend(
-            "strategy", sample_excellent_backtest_result, profile_preservation
+        result = await recommender.recommend(request)
+
+        assert result.success
+        assert result.overall_score >= Decimal("80")
+        assert result.recommendation_status == "STRONG_BUY"
+
+    @pytest.mark.asyncio
+    async def test_score_average_strategy(self):
+        """Test scoring of average strategy."""
+        recommender = StrategyRecommender()
+        request = StrategyRecommendationRequest(
+            profile_id="test_average",
+            input_id="user_002",
+            objective="balanced_growth",
+            sharpe_ratio=Decimal("1.0"),
+            annual_return_pct=Decimal("10"),
+            max_drawdown_pct=Decimal("15"),
+            sortino_ratio=Decimal("1.2"),
         )
 
-        # Scores should be different due to different weighting
-        assert abs(rec_capital.score - rec_preservation.score) >= 0
+        result = await recommender.recommend(request)
+
+        assert result.success
+        assert Decimal("40") < result.overall_score < Decimal("70")
+
+    @pytest.mark.asyncio
+    async def test_score_poor_strategy(self):
+        """Test scoring of poor strategy."""
+        recommender = StrategyRecommender()
+        request = StrategyRecommendationRequest(
+            profile_id="test_poor",
+            input_id="user_003",
+            objective="maximizar_capital",
+            sharpe_ratio=Decimal("0.3"),
+            annual_return_pct=Decimal("2"),
+            max_drawdown_pct=Decimal("40"),
+            sortino_ratio=Decimal("0.5"),
+        )
+
+        result = await recommender.recommend(request)
+
+        assert result.success
+        assert result.overall_score < Decimal("40")
+
+
+# RECOMMENDATION STATUS TESTS
+class TestRecommendationStatus:
+    @pytest.mark.asyncio
+    async def test_strong_buy_threshold(self):
+        """Test STRONG_BUY recommendation (score >= 85)."""
+        recommender = StrategyRecommender()
+        request = StrategyRecommendationRequest(
+            profile_id="test_strong_buy",
+            input_id="user_004",
+            objective="maximizar_capital",
+            sharpe_ratio=Decimal("2.5"),
+            annual_return_pct=Decimal("25"),
+            max_drawdown_pct=Decimal("3"),
+            sortino_ratio=Decimal("3.0"),
+        )
+
+        result = await recommender.recommend(request)
+
+        assert result.recommendation_status == "STRONG_BUY"
+        assert result.confidence_level == "high"
+
+    @pytest.mark.asyncio
+    async def test_buy_threshold(self):
+        """Test BUY recommendation (score 70-85)."""
+        recommender = StrategyRecommender()
+        request = StrategyRecommendationRequest(
+            profile_id="test_buy",
+            input_id="user_005",
+            objective="balanced_growth",
+            sharpe_ratio=Decimal("1.3"),
+            annual_return_pct=Decimal("12"),
+            max_drawdown_pct=Decimal("12"),
+        )
+
+        result = await recommender.recommend(request)
+
+        assert result.recommendation_status in ["BUY", "STRONG_BUY"]
+        assert result.confidence_level == "high"
+
+    @pytest.mark.asyncio
+    async def test_hold_threshold(self):
+        """Test HOLD recommendation (score 50-70)."""
+        recommender = StrategyRecommender()
+        request = StrategyRecommendationRequest(
+            profile_id="test_hold",
+            input_id="user_006",
+            objective="balanced_growth",
+            sharpe_ratio=Decimal("0.8"),
+            annual_return_pct=Decimal("8"),
+            max_drawdown_pct=Decimal("18"),
+        )
+
+        result = await recommender.recommend(request)
+
+        assert result.recommendation_status in ["HOLD", "BUY"]
+        assert result.confidence_level == "medium"
+
+
+# SUGGESTION GENERATION TESTS
+class TestSuggestionGeneration:
+    @pytest.mark.asyncio
+    async def test_suggest_improve_sharpe_ratio(self):
+        """Test suggestion to improve Sharpe ratio."""
+        recommender = StrategyRecommender()
+        request = StrategyRecommendationRequest(
+            profile_id="test_low_sharpe",
+            input_id="user_007",
+            objective="maximizar_capital",
+            sharpe_ratio=Decimal("0.5"),
+            annual_return_pct=Decimal("15"),
+            max_drawdown_pct=Decimal("10"),
+            sortino_ratio=Decimal("1.0"),
+        )
+
+        result = await recommender.recommend(request)
+
+        assert result.success
+        assert len(result.suggestions) > 0
+
+    @pytest.mark.asyncio
+    async def test_suggest_reduce_drawdown(self):
+        """Test suggestion to reduce drawdown."""
+        recommender = StrategyRecommender()
+        request = StrategyRecommendationRequest(
+            profile_id="test_high_drawdown",
+            input_id="user_008",
+            objective="capital_preservation",
+            sharpe_ratio=Decimal("1.5"),
+            annual_return_pct=Decimal("12"),
+            max_drawdown_pct=Decimal("35"),
+        )
+
+        result = await recommender.recommend(request)
+
+        assert result.success
+        assert len(result.suggestions) > 0
+
+    @pytest.mark.asyncio
+    async def test_suggest_increase_dividend(self):
+        """Test suggestion to increase dividend yield."""
+        recommender = StrategyRecommender()
+        request = StrategyRecommendationRequest(
+            profile_id="test_low_dividend",
+            input_id="user_009",
+            objective="income_generation",
+            sharpe_ratio=Decimal("1.5"),
+            annual_return_pct=Decimal("12"),
+            max_drawdown_pct=Decimal("10"),
+            dividend_yield_pct=Decimal("1.0"),
+        )
+
+        result = await recommender.recommend(request)
+
+        assert result.success
+
+
+# CHARACTERISTICS IDENTIFICATION TESTS
+class TestCharacteristicsIdentification:
+    @pytest.mark.asyncio
+    async def test_identify_strengths(self):
+        """Test identification of strategy strengths."""
+        recommender = StrategyRecommender()
+        request = StrategyRecommendationRequest(
+            profile_id="test_strengths",
+            input_id="user_010",
+            objective="maximizar_capital",
+            sharpe_ratio=Decimal("2.2"),
+            annual_return_pct=Decimal("22"),
+            max_drawdown_pct=Decimal("8"),
+            sortino_ratio=Decimal("2.5"),
+        )
+
+        result = await recommender.recommend(request)
+
+        assert result.success
+        assert len(result.strengths) > 0
+
+    @pytest.mark.asyncio
+    async def test_identify_weaknesses(self):
+        """Test identification of strategy weaknesses."""
+        recommender = StrategyRecommender()
+        request = StrategyRecommendationRequest(
+            profile_id="test_weaknesses",
+            input_id="user_011",
+            objective="balanced_growth",
+            sharpe_ratio=Decimal("0.4"),
+            annual_return_pct=Decimal("3"),
+            max_drawdown_pct=Decimal("45"),
+        )
+
+        result = await recommender.recommend(request)
+
+        assert result.success
+        assert len(result.weaknesses) > 0
+
+
+# OBJECTIVE-SPECIFIC RECOMMENDATION TESTS
+class TestObjectiveSpecificRecommendations:
+    @pytest.mark.asyncio
+    async def test_recommend_capital_maximization(self):
+        """Test recommendation for capital maximization."""
+        recommender = StrategyRecommender()
+        request = StrategyRecommendationRequest(
+            profile_id="test_capital_max",
+            input_id="user_012",
+            objective="maximizar_capital",
+            sharpe_ratio=Decimal("2.0"),
+            annual_return_pct=Decimal("20"),
+            max_drawdown_pct=Decimal("10"),
+            sortino_ratio=Decimal("2.2"),
+        )
+
+        result = await recommender.recommend(request)
+
+        assert result.success
+        assert result.overall_score >= Decimal("75")
+
+    @pytest.mark.asyncio
+    async def test_recommend_capital_preservation(self):
+        """Test recommendation for capital preservation."""
+        recommender = StrategyRecommender()
+        request = StrategyRecommendationRequest(
+            profile_id="test_preservation",
+            input_id="user_013",
+            objective="capital_preservation",
+            sharpe_ratio=Decimal("1.5"),
+            annual_return_pct=Decimal("8"),
+            max_drawdown_pct=Decimal("3"),
+        )
+
+        result = await recommender.recommend(request)
+
+        assert result.success
+        assert result.overall_score >= Decimal("50")
+
+    @pytest.mark.asyncio
+    async def test_recommend_income_generation(self):
+        """Test recommendation for income generation."""
+        recommender = StrategyRecommender()
+        request = StrategyRecommendationRequest(
+            profile_id="test_income",
+            input_id="user_014",
+            objective="income_generation",
+            sharpe_ratio=Decimal("1.2"),
+            annual_return_pct=Decimal("8"),
+            max_drawdown_pct=Decimal("12"),
+            dividend_yield_pct=Decimal("5.0"),
+            win_rate_pct=Decimal("60"),
+        )
+
+        result = await recommender.recommend(request)
+
+        assert result.success
+        assert result.overall_score >= Decimal("60")
+
+
+# RECOMMENDATION HISTORY TESTS
+class TestRecommendationHistory:
+    @pytest.mark.asyncio
+    async def test_history_tracking(self):
+        """Test recommendation history is tracked."""
+        recommender = StrategyRecommender()
+
+        for i in range(3):
+            request = StrategyRecommendationRequest(
+                profile_id=f"test_hist_{i}",
+                input_id=f"user_hist_{i}",
+                objective="balanced_growth",
+                sharpe_ratio=Decimal("1.5"),
+                annual_return_pct=Decimal("12"),
+                max_drawdown_pct=Decimal("10"),
+            )
+            await recommender.recommend(request)
+
+        history = await recommender.get_recommendation_history()
+        assert len(history) >= 3
+
+    @pytest.mark.asyncio
+    async def test_history_limit(self):
+        """Test history retrieval with limit."""
+        recommender = StrategyRecommender()
+
+        for i in range(5):
+            request = StrategyRecommendationRequest(
+                profile_id=f"test_limit_{i}",
+                input_id=f"user_limit_{i}",
+                objective="balanced_growth",
+                sharpe_ratio=Decimal("1.5"),
+                annual_return_pct=Decimal("12"),
+                max_drawdown_pct=Decimal("10"),
+            )
+            await recommender.recommend(request)
+
+        history = await recommender.get_recommendation_history(limit=2)
+        assert len(history) == 2
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])
