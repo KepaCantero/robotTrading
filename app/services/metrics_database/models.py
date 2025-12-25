@@ -5,10 +5,10 @@ Data models for time-series metrics storage and querying.
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Callable, Dict, List, Optional, Any
 
 
 class MetricType(str, Enum):
@@ -189,4 +189,199 @@ class MetricsStorageStats:
             "database_size_mb": self.database_size_mb,
             "avg_points_per_metric": self.avg_points_per_metric,
             "retention_days": self.retention_days,
+        }
+
+
+@dataclass
+class MetricStatistics:
+    """Statistical metrics for a time period."""
+    metric_type: MetricType
+    symbol: Optional[str]
+    portfolio_id: Optional[str]
+    period_start: datetime
+    period_end: datetime
+
+    # Aggregated statistics
+    count: int = 0
+    min_value: Optional[Decimal] = None
+    max_value: Optional[Decimal] = None
+    avg_value: Optional[Decimal] = None
+    stddev_value: Optional[Decimal] = None
+    sum_value: Optional[Decimal] = None
+
+    # Percentiles
+    p25_value: Optional[Decimal] = None
+    p50_value: Optional[Decimal] = None
+    p75_value: Optional[Decimal] = None
+    p95_value: Optional[Decimal] = None
+    p99_value: Optional[Decimal] = None
+
+    # Change metrics
+    first_value: Optional[Decimal] = None
+    last_value: Optional[Decimal] = None
+    change_value: Optional[Decimal] = None
+    change_percent: Optional[Decimal] = None
+
+    def to_dict(self) -> Dict:
+        """Convert to dictionary."""
+        return {
+            "metric_type": self.metric_type.value,
+            "symbol": self.symbol,
+            "portfolio_id": self.portfolio_id,
+            "period_start": self.period_start.isoformat(),
+            "period_end": self.period_end.isoformat(),
+            "count": self.count,
+            "min": str(self.min_value) if self.min_value else None,
+            "max": str(self.max_value) if self.max_value else None,
+            "avg": str(self.avg_value) if self.avg_value else None,
+            "stddev": str(self.stddev_value) if self.stddev_value else None,
+            "sum": str(self.sum_value) if self.sum_value else None,
+            "p25": str(self.p25_value) if self.p25_value else None,
+            "p50": str(self.p50_value) if self.p50_value else None,
+            "p75": str(self.p75_value) if self.p75_value else None,
+            "p95": str(self.p95_value) if self.p95_value else None,
+            "p99": str(self.p99_value) if self.p99_value else None,
+            "first": str(self.first_value) if self.first_value else None,
+            "last": str(self.last_value) if self.last_value else None,
+            "change": str(self.change_value) if self.change_value else None,
+            "change_percent": str(self.change_percent) if self.change_percent else None,
+        }
+
+
+@dataclass
+class CandlePoint:
+    """OHLC candlestick data point."""
+    timestamp: datetime
+    metric_type: MetricType
+    symbol: Optional[str]
+    portfolio_id: Optional[str]
+    period: str  # "1m", "5m", "15m", "1h", "1d", etc.
+
+    open_value: Decimal
+    high_value: Decimal
+    low_value: Decimal
+    close_value: Decimal
+    volume: int = 0
+
+    def to_dict(self) -> Dict:
+        """Convert to dictionary."""
+        return {
+            "timestamp": self.timestamp.isoformat(),
+            "metric_type": self.metric_type.value,
+            "symbol": self.symbol,
+            "portfolio_id": self.portfolio_id,
+            "period": self.period,
+            "open": str(self.open_value),
+            "high": str(self.high_value),
+            "low": str(self.low_value),
+            "close": str(self.close_value),
+            "volume": self.volume,
+        }
+
+
+@dataclass
+class CachedResult:
+    """Cached query result."""
+    query_hash: str
+    result: List[Any]
+    timestamp: datetime
+    ttl_seconds: int = 300  # 5 minutes default
+
+    @property
+    def is_expired(self) -> bool:
+        """Check if cache entry is expired."""
+        return datetime.utcnow() > (self.timestamp + timedelta(seconds=self.ttl_seconds))
+
+
+@dataclass
+class CollectorSource:
+    """Definition of a metric collection source."""
+    name: str
+    collector_fn: Callable
+    enabled: bool = True
+    priority: int = 0  # Higher priority = collected first
+    timeout_seconds: float = 5.0
+
+    async def collect(self) -> List[MetricPoint]:
+        """Execute collection."""
+        try:
+            return await self.collector_fn()
+        except Exception as e:
+            # Log error but don't raise to allow other sources to continue
+            return []
+
+
+@dataclass
+class QuestDBConfig:
+    """QuestDB connection and configuration."""
+    host: str = "localhost"
+    port: int = 5432
+    database: str = "qdb"
+    user: str = "admin"
+    password: str = "quest"
+    pool_size: int = 10
+    pool_timeout: float = 10.0
+    max_retries: int = 3
+    retry_backoff_base: float = 1.0
+    batch_size: int = 1000
+    retention_days: int = 90
+
+    @property
+    def connection_string(self) -> str:
+        """Generate PostgreSQL connection string for QuestDB."""
+        return (
+            f"postgresql://{self.user}:{self.password}@"
+            f"{self.host}:{self.port}/{self.database}"
+        )
+
+    def to_dict(self) -> Dict:
+        """Convert to dictionary (safe, without password)."""
+        return {
+            "host": self.host,
+            "port": self.port,
+            "database": self.database,
+            "user": self.user,
+            "pool_size": self.pool_size,
+            "batch_size": self.batch_size,
+            "retention_days": self.retention_days,
+        }
+
+
+@dataclass
+class MetricsCollectorConfig:
+    """MetricsCollector configuration."""
+    enabled: bool = True
+    collection_interval_seconds: int = 60
+    batch_size: int = 1000
+    flush_interval_seconds: int = 30
+    max_pending_metrics: int = 10000
+
+    def to_dict(self) -> Dict:
+        """Convert to dictionary."""
+        return {
+            "enabled": self.enabled,
+            "collection_interval_seconds": self.collection_interval_seconds,
+            "batch_size": self.batch_size,
+            "flush_interval_seconds": self.flush_interval_seconds,
+            "max_pending_metrics": self.max_pending_metrics,
+        }
+
+
+@dataclass
+class MetricsQueryEngineConfig:
+    """MetricsQueryEngine configuration."""
+    cache_enabled: bool = True
+    cache_ttl_seconds: int = 300  # 5 minutes
+    max_query_points: int = 100000
+    max_cache_entries: int = 1000
+    downsampling_enabled: bool = True
+
+    def to_dict(self) -> Dict:
+        """Convert to dictionary."""
+        return {
+            "cache_enabled": self.cache_enabled,
+            "cache_ttl_seconds": self.cache_ttl_seconds,
+            "max_query_points": self.max_query_points,
+            "max_cache_entries": self.max_cache_entries,
+            "downsampling_enabled": self.downsampling_enabled,
         }
