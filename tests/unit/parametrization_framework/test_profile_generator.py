@@ -50,13 +50,13 @@ class TestCapitalTierDetermination:
     def test_determine_tier_small(self):
         """Test capital tier determination for small capital."""
         generator = ProfileGenerator()
-        tier = generator._determine_capital_tier(Decimal("50000"))
+        tier = generator._determine_capital_tier(Decimal("30000"))
         assert tier == CapitalTier.SMALL
 
     def test_determine_tier_medium(self):
         """Test capital tier determination for medium capital."""
         generator = ProfileGenerator()
-        tier = generator._determine_capital_tier(Decimal("250000"))
+        tier = generator._determine_capital_tier(Decimal("100000"))
         assert tier == CapitalTier.MEDIUM
 
     def test_determine_tier_large(self):
@@ -85,7 +85,7 @@ class TestProfileGeneration:
         assert result.success
         assert result.profile is not None
         assert result.profile.objective == InvestmentObjective.MAXIMIZAR_CAPITAL
-        assert result.profile.capital_tier == CapitalTier.MEDIUM
+        assert result.profile.capital_tier == CapitalTier.LARGE
 
     @pytest.mark.asyncio
     async def test_generate_profile_capital_preservation(self):
@@ -133,10 +133,10 @@ class TestProfileGeneration:
         generator = ProfileGenerator()
         request = ProfileGenerationRequest(
             input_id="test_004",
-            capital_initial=Decimal("15000"),
+            capital_initial=Decimal("10000"),
             objective=InvestmentObjective.BALANCED_GROWTH,
             risk_tolerance=RiskProfile.MODERATE,
-            target_monthly_return_eur=Decimal("100"),
+            target_monthly_return_eur=Decimal("50"),
             time_horizon_months=12,
         )
 
