@@ -65,6 +65,14 @@ class InvestmentProfile:
     # Module configuration
     enabled_modules: List[ModuleConfig] = field(default_factory=list)
 
+    # MAESTRO PHASE 1 Integration: Absolute Return Optimization
+    required_annual_return_pct: Optional[Decimal] = None  # From EUR target
+    required_alpha_pct: Optional[Decimal] = None  # After tax and commission
+    capacity_fade_adjusted_alpha: Optional[Decimal] = None  # Alpha at this capital scale
+    position_size_pct: Optional[Decimal] = None  # Optimized position size
+    concurrent_positions: Optional[int] = None  # Optimized concurrent positions
+    feasibility_validation: Optional[Dict] = None  # AbsoluteReturnValidation results
+
     # Risk and leverage
     max_leverage: Decimal = field(default=Decimal("1.0"))
     max_position_size_pct: Decimal = field(default=Decimal("5.0"))  # % of portfolio
@@ -110,6 +118,14 @@ class InvestmentProfile:
                 }
                 for m in self.enabled_modules
             ],
+            # MAESTRO PHASE 1 fields
+            "required_annual_return_pct": str(self.required_annual_return_pct) if self.required_annual_return_pct else None,
+            "required_alpha_pct": str(self.required_alpha_pct) if self.required_alpha_pct else None,
+            "capacity_fade_adjusted_alpha": str(self.capacity_fade_adjusted_alpha) if self.capacity_fade_adjusted_alpha else None,
+            "position_size_pct": str(self.position_size_pct) if self.position_size_pct else None,
+            "concurrent_positions": self.concurrent_positions,
+            "feasibility_validation": self.feasibility_validation,
+            # Risk parameters
             "max_leverage": str(self.max_leverage),
             "max_position_size_pct": str(self.max_position_size_pct),
             "max_daily_loss_pct": str(self.max_daily_loss_pct),
