@@ -3,6 +3,7 @@ T2.1: ProfileGenerator - Maps user input to investment profiles
 
 Generates complete investment profiles based on user capital, objective, and risk tolerance.
 Uses configuration templates to create objective-aware parameter sets.
+Integrates MAESTRO PHASE 1 for absolute return optimization and feasibility validation.
 """
 
 import logging
@@ -20,6 +21,14 @@ from .models import (
     ModuleConfig,
     ProfileGenerationRequest,
     ProfileGenerationResult,
+)
+from app.maestro.phase_1 import (
+    CapitalTierSelector,
+    TargetAlphaCalculator,
+    CapacityFadeAnalyzer,
+    ParameterOptimizer,
+    FeasibilityValidator,
+    AbsoluteReturnTarget,
 )
 
 logger = logging.getLogger(__name__)
@@ -53,7 +62,15 @@ class ProfileGenerator:
 
         self.config_path = Path(config_path)
         self.profile_templates = self._load_profile_templates()
-        logger.info("✅ ProfileGenerator initialized")
+
+        # Initialize MAESTRO PHASE 1 components
+        self.tier_selector = CapitalTierSelector()
+        self.alpha_calculator = TargetAlphaCalculator()
+        self.fade_analyzer = CapacityFadeAnalyzer()
+        self.param_optimizer = ParameterOptimizer()
+        self.feasibility_validator = FeasibilityValidator()
+
+        logger.info("✅ ProfileGenerator initialized with MAESTRO PHASE 1 integration")
 
     def _load_profile_templates(self) -> Dict:
         """Load investment profile templates from YAML."""
@@ -241,8 +258,16 @@ class ProfileGenerator:
         start_time = datetime.utcnow()
 
         try:
-            # Step 1: Determine capital tier
-            capital_tier = self._determine_capital_tier(request.capital_initial)
+            # Step 1: Determine capital tier using MAESTRO PHASE 1
+            capital_tier_enum = self.tier_selector.detect_tier(request.capital_initial)
+            # Map MAESTRO tier to local CapitalTier
+            tier_map = {
+                "micro": CapitalTier.MICRO,
+                "small": CapitalTier.SMALL,
+                "medium": CapitalTier.MEDIUM,
+                "large": CapitalTier.LARGE,
+            }
+            capital_tier = tier_map.get(capital_tier_enum.value, CapitalTier.MICRO)
 
             # Step 2: Get objective template
             objective = InvestmentObjective(request.objective.value)
@@ -256,12 +281,15 @@ class ProfileGenerator:
                     error_message=f"No template found for {objective.value} / {capital_tier.value}"
                 )
 
-            # Step 4: Create investment profile
+            # Step 4: Create investment profile with MAESTRO PHASE 1 integration
             profile = self._create_profile_from_template(
                 request, capital_tier, objective, risk_profile, template
             )
 
-            # Step 5: Validate profile
+            # Step 5: Enhance profile with MAESTRO PHASE 1 analysis (absolute return optimization)
+            self._integrate_maestro_phase_1(profile, request)
+
+            # Step 6: Validate profile
             warnings = self._validate_profile(profile, request)
 
             # Create result
@@ -405,6 +433,92 @@ class ProfileGenerator:
             warnings.append("⚠️  High leverage with conservative risk profile - conflict detected")
 
         return warnings
+
+    def _integrate_maestro_phase_1(self, profile: InvestmentProfile, request: ProfileGenerationRequest) -> None:
+        """
+        Enhance profile with MAESTRO PHASE 1 absolute return optimization.
+
+        Calculates:
+        - required_annual_return_pct (from EUR targets)
+        - required_alpha_pct (accounting for taxes and commissions)
+        - capacity_fade_adjusted_alpha (estimated alpha at this capital scale)
+        - position_size_pct (optimized for target)
+        - concurrent_positions (diversification count)
+        - feasibility_validation (from FeasibilityValidator)
+        """
+        try:
+            # Create AbsoluteReturnTarget for MAESTRO analysis
+            target = AbsoluteReturnTarget(
+                target_euros_monthly=request.target_monthly_return_eur,
+                capital=request.capital_initial,
+                time_horizon_months=request.time_horizon_months,
+                tax_rate=Decimal("0.19"),  # Standard EU tax rate
+                commission_per_trade=Decimal("10"),  # EUR per trade
+                expected_trades_per_month=10,  # Standard assumption
+            )
+
+            # Step 1: Calculate required annual return percentage
+            annual_target = request.target_monthly_return_eur * 12
+            profile.required_annual_return_pct = (
+                (annual_target / request.capital_initial * 100).quantize(Decimal("0.01"))
+            )
+
+            # Step 2: Calculate required alpha percentage
+            profile.required_alpha_pct = self.alpha_calculator.calculate_required_alpha(target)
+
+            # Step 3: Estimate capacity fade adjusted alpha
+            # Use realistic alpha benchmarks (from PHASE 1 research)
+            strategy_type_map = {
+                "micro": "CONSERVATIVE",
+                "small": "BALANCED",
+                "medium": "BALANCED",
+                "large": "AGGRESSIVE",
+            }
+            strategy_type = strategy_type_map.get(profile.capital_tier.value, "BALANCED")
+
+            # Get realistic alpha range for this tier
+            realistic_alpha_ranges = {
+                "CONSERVATIVE": (Decimal("2"), Decimal("5")),
+                "BALANCED": (Decimal("3"), Decimal("8")),
+                "AGGRESSIVE": (Decimal("4"), Decimal("12")),
+            }
+            min_realistic, max_realistic = realistic_alpha_ranges.get(strategy_type, (Decimal("3"), Decimal("8")))
+            profile.capacity_fade_adjusted_alpha = self.fade_analyzer.estimate_capacity_fade(
+                request.capital_initial, max_realistic
+            )
+
+            # Step 4: Optimize position sizing and concurrent positions
+            position_params = self.param_optimizer.optimize_position_sizing(
+                capital=request.capital_initial,
+                target_alpha_pct=profile.required_alpha_pct,
+                expected_signal_return_pct=Decimal("2.0"),  # Standard assumption from backtests
+            )
+            profile.position_size_pct = position_params.get("position_size_pct")
+            profile.concurrent_positions = int(position_params.get("num_concurrent_positions", 1))
+
+            # Step 5: Validate feasibility and store validation result
+            validation_result = self.feasibility_validator.validate_target(target)
+            profile.feasibility_validation = {
+                "is_feasible": validation_result.is_feasible,
+                "confidence_level": validation_result.confidence_level,
+                "recommendation": validation_result.recommendation,
+                "monthly_costs": {
+                    k: str(v) for k, v in validation_result.monthly_costs.items()
+                },
+            }
+
+            logger.info(
+                f"📊 MAESTRO PHASE 1 Integration Complete:\n"
+                f"  Required Alpha: {profile.required_alpha_pct}%\n"
+                f"  Capacity Fade Adjusted: {profile.capacity_fade_adjusted_alpha}%\n"
+                f"  Position Size: {profile.position_size_pct}%\n"
+                f"  Concurrent Positions: {profile.concurrent_positions}\n"
+                f"  Feasibility: {validation_result.confidence_level}"
+            )
+
+        except Exception as e:
+            logger.error(f"❌ Error integrating MAESTRO PHASE 1: {e}", exc_info=True)
+            # Don't raise - allow profile generation to continue with partial data
 
     async def get_profile(self, profile_id: str) -> Optional[InvestmentProfile]:
         """Get cached profile by ID."""
