@@ -1,21 +1,32 @@
 """
-Strategy Recommendation Services - T6.1
+T19.1: Strategy Recommendation System - Intelligent strategy selection and ranking
 
-Recommends best strategy based on objective-driven weighting and backtest metrics.
+Provides:
+- StrategyScorer: Scores strategies based on performance metrics and objectives
+- StrategyRanker: Ranks multiple strategies for comparison
+- StrategyRecommender: Generates personalized strategy recommendations
 """
 
-from app.services.strategy_recommendation.strategy_recommender import (
+from .strategy_scorer import (
+    StrategyScorer,
+    get_strategy_scorer,
+)
+from .strategy_ranker import (
+    StrategyRanker,
+    get_strategy_ranker,
+)
+from .strategy_recommender import (
     StrategyRecommender,
+    get_strategy_recommender,
     StrategyRecommendation,
-    RecommendationDetails,
-    ObjectiveType,
-    ConfidenceLevel,
 )
 
 __all__ = [
+    "StrategyScorer",
+    "get_strategy_scorer",
+    "StrategyRanker",
+    "get_strategy_ranker",
     "StrategyRecommender",
+    "get_strategy_recommender",
     "StrategyRecommendation",
-    "RecommendationDetails",
-    "ObjectiveType",
-    "ConfidenceLevel",
 ]
