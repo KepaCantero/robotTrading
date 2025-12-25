@@ -1,7 +1,7 @@
 # Project Progress - CAPA 2 Parametrization Framework
 
 **Last Updated**: 2025-12-25
-**Overall Completion**: 49% of BATCH E (56/114 tests)
+**Overall Completion**: 65% of BATCH E (74/114 tests)
 **Session**: BATCH E Core Orchestration (T2.1-T6.1)
 
 ---
@@ -23,9 +23,9 @@
 | T2.1 | ProfileGenerator | ✅ COMPLETE | 19/19 | 550+ | `302ac90` |
 | T3.1 | ModuleParametrizer | ✅ COMPLETE | 19/19 | 600+ | `f03904e` |
 | T4.1 | BacktestOrchestrator | ✅ COMPLETE | 18/18 | 700+ | `4f97c6f` |
-| T5.1 | ValidationEngine | ⏳ PENDING | 10-12 | 400 | - |
+| T5.1 | ValidationEngine | ✅ COMPLETE | 18/18 | 480+ | `7640491` |
 | T6.1 | StrategyRecommender | ⏳ PENDING | 10-12 | 350 | - |
-| **BATCH E TOTAL** | | **49% DONE** | **56/114** | **1850+** | |
+| **BATCH E TOTAL** | | **65% DONE** | **74/114** | **2330+** | |
 
 ---
 
@@ -52,6 +52,14 @@
 - Status determination (APPROVED/CONDITIONAL/REJECTED)
 - **Metrics**: 700+ LOC, 18 tests, 100% pass rate
 
+### ✅ T5.1: ValidationEngine
+- Integrates PHASE 0 validators (CapitalViability, ExpensiveModule, LearningCapital gates)
+- Feasibility ratio validation (APPROVED/CONDITIONAL/REJECTED)
+- Module viability checking and capital-tier gating
+- Risk metrics validation (Sharpe ratio, max drawdown)
+- Complete validation orchestration with history tracking
+- **Metrics**: 480+ LOC, 18 tests, 100% pass rate
+
 ---
 
 ## Architecture Decisions
@@ -72,7 +80,8 @@
 - `app/services/profile_generator/` (3 files, 550+ LOC)
 - `app/services/module_parametrizer/` (3 files, 600+ LOC)
 - `app/services/backtest_orchestration/` (3 files, 700+ LOC)
-- `tests/unit/parametrization_framework/` (3 test files, 56 tests)
+- `app/services/validation_engine/` (3 files, 480+ LOC)
+- `tests/unit/parametrization_framework/` (4 test files, 74 tests)
 
 ---
 
@@ -80,14 +89,14 @@
 
 | Metric | Value |
 |--------|-------|
-| **Duration** | ~3 hours |
-| **Commits** | 3 |
-| **Tests Written** | 56 |
-| **Tests Passing** | 56 (100%) |
-| **Code Added** | 1,850+ LOC |
-| **Modules** | 3 (T2.1, T3.1, T4.1) |
+| **Duration** | ~4 hours |
+| **Commits** | 4 |
+| **Tests Written** | 74 |
+| **Tests Passing** | 74 (100%) |
+| **Code Added** | 2,330+ LOC |
+| **Modules** | 4 (T2.1, T3.1, T4.1, T5.1) |
 
 ---
 
-**Status**: In Progress - BATCH E 49% Complete
-**Next Task**: T5.1 ValidationEngine
+**Status**: In Progress - BATCH E 65% Complete
+**Next Task**: T6.1 StrategyRecommender
