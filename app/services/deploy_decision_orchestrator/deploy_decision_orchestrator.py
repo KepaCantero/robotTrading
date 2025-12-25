@@ -119,6 +119,8 @@ class DeployDecisionOrchestrator:
                 validation_score,
                 overall_score,
                 deployment_input.recommendation_status,
+                deployment_input.validation_passed,
+                deployment_input.feasibility_ratio,
             )
 
             # Step 7: Generate rationale
@@ -301,11 +303,18 @@ class DeployDecisionOrchestrator:
         validation_score: Decimal,
         overall_score: Decimal,
         recommendation_status: str,
+        validation_passed: bool,
+        feasibility_ratio: Decimal,
     ) -> tuple:
         """Determine deployment status and confidence level."""
 
-        # Hard gates: Both feasibility and validation must be acceptable
-        if feasibility_score < Decimal("40") or validation_score < Decimal("50"):
+        # HARD GATES - Automatic rejection
+        # 1. Validation gate: validation_passed=False is a hard failure
+        if not validation_passed:
+            return "REJECTED", "low"
+
+        # 2. Feasibility gate: feasibility_ratio < 0.7 is unviable
+        if feasibility_ratio < Decimal("0.7"):
             return "REJECTED", "low"
 
         # Check recommendation status
@@ -329,6 +338,15 @@ class DeployDecisionOrchestrator:
         else:
             status = "REJECTED"
             confidence = "low"
+
+        # Upgrade to CONDITIONAL if feasibility is marginal (0.7-1.0)
+        if Decimal("0.7") <= feasibility_ratio < Decimal("1.0"):
+            status = "CONDITIONAL"
+            # Keep confidence low if overall_score is also low
+            if overall_score >= Decimal("60"):
+                confidence = "medium"
+            else:
+                confidence = "low"
 
         return status, confidence
 
