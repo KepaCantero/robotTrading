@@ -1,351 +1,658 @@
 """
-T9.1: Unit Tests for ReportingGenerator
+T9.1: ReportingGenerator Tests
 
-Tests cover:
-- Report generation
-- Metric extraction
-- Risk calculations
-- HTML report generation
+Tests for comprehensive performance report generation.
 """
 
 import pytest
-from app.services.reporting import (
+from decimal import Decimal
+from datetime import datetime
+from app.services.reporting_generator import (
     ReportingGenerator,
+    get_reporting_generator,
+    ReportGenerationRequest,
+    StrategyMetrics,
+    AllocationSnapshot,
 )
 
 
-@pytest.fixture
-def generator():
-    """Create ReportingGenerator instance."""
-    return ReportingGenerator()
+# REPORTING GENERATOR INITIALIZATION TESTS
+class TestReportingGeneratorInitialization:
+    def test_generator_init(self):
+        """Test generator initialization."""
+        gen = ReportingGenerator()
+        assert len(gen.report_history) == 0
+
+    def test_generator_singleton(self):
+        """Test generator singleton pattern."""
+        g1 = get_reporting_generator()
+        g2 = get_reporting_generator()
+        assert g1 is g2
+
+    def test_generator_status(self):
+        """Test generator status reporting."""
+        gen = ReportingGenerator()
+        status = gen.get_generator_status()
+
+        assert "total_reports" in status
+        assert "successful_reports" in status
+        assert "success_rate" in status
+        assert "rating_distribution" in status
 
 
-@pytest.fixture
-def sample_backtest_result():
-    """Sample backtest result."""
-    return {
-        "strategy_name": "momentum_modular",
-        "total_return": 0.25,
-        "sharpe_ratio": 1.5,
-        "sortino_ratio": 1.8,
-        "max_drawdown": -0.15,
-        "win_rate": 0.65,
-        "profit_factor": 2.1,
-        "total_trades": 45,
-        "final_capital": 125000,
-    }
-
-
-@pytest.fixture
-def sample_allocation():
-    """Sample portfolio allocation."""
-    return {"AAPL": 0.30, "MSFT": 0.30, "GOOGL": 0.20, "AMZN": 0.20}
-
-
-@pytest.fixture
-def sample_monthly_returns():
-    """Sample monthly returns."""
-    return [0.02, 0.03, -0.01, 0.04, 0.02, 0.01, 0.03, 0.02, 0.04, -0.02, 0.03, 0.02]
-
-
-# =============================================================================
-# Test Report Generation
-# =============================================================================
-
-class TestReportGeneration:
-    """Test report generation."""
-
+# EXCELLENT PERFORMANCE TESTS
+class TestExcellentPerformance:
     @pytest.mark.asyncio
-    async def test_generate_report_complete(
-        self, generator, sample_backtest_result, sample_allocation, sample_monthly_returns
-    ):
-        """Test complete report generation."""
-        report = await generator.generate_report(
-            "test_strategy",
-            sample_backtest_result,
-            sample_allocation,
-            sample_monthly_returns,
+    async def test_excellent_rating_high_sharpe(self):
+        """Test excellent rating with high Sharpe ratio."""
+        gen = ReportingGenerator()
+
+        metrics = StrategyMetrics(
+            annual_return_pct=Decimal("30"),
+            sharpe_ratio=Decimal("2.5"),
+            sortino_ratio=Decimal("3.0"),
+            max_drawdown_pct=Decimal("8"),
+            win_rate_pct=Decimal("65"),
+            profit_factor=Decimal("2.8"),
+            calmar_ratio=Decimal("3.75"),
+            volatility_pct=Decimal("12"),
+            cumulative_return_pct=Decimal("45"),
+            num_trades=250,
         )
 
-        assert report.report_id is not None
-        assert report.strategy_name == "test_strategy"
-        assert report.summary is not None
-        assert report.metrics is not None
-        assert report.risk_metrics is not None
-        assert report.allocation == sample_allocation
-        assert report.monthly_returns == sample_monthly_returns
-        assert len(report.html_report) > 0
-
-    @pytest.mark.asyncio
-    async def test_generate_report_has_timestamp(
-        self, generator, sample_backtest_result, sample_allocation, sample_monthly_returns
-    ):
-        """Test that report has generated_at timestamp."""
-        report = await generator.generate_report(
-            "test_strategy",
-            sample_backtest_result,
-            sample_allocation,
-            sample_monthly_returns,
+        request = ReportGenerationRequest(
+            report_id="test_excellent_001",
+            profile_id="profile_excellent",
+            input_id="user_excellent",
+            strategy_name="High Performance Strategy",
+            backtest_metrics=metrics,
+            allocations=[
+                AllocationSnapshot(
+                    module_name="momentum",
+                    allocation_pct=Decimal("40"),
+                    expected_return_contribution_pct=Decimal("50"),
+                    risk_contribution_pct=Decimal("35"),
+                ),
+                AllocationSnapshot(
+                    module_name="mean_reversion",
+                    allocation_pct=Decimal("30"),
+                    expected_return_contribution_pct=Decimal("25"),
+                    risk_contribution_pct=Decimal("25"),
+                ),
+                AllocationSnapshot(
+                    module_name="pairs_trading",
+                    allocation_pct=Decimal("30"),
+                    expected_return_contribution_pct=Decimal("25"),
+                    risk_contribution_pct=Decimal("40"),
+                ),
+            ],
+            capital_eur=Decimal("500000"),
+            target_annual_return_pct=Decimal("15"),
+            max_acceptable_drawdown_pct=Decimal("20"),
         )
 
-        assert report.generated_at is not None
+        result = await gen.generate_report(request)
 
-
-# =============================================================================
-# Test Metric Extraction
-# =============================================================================
-
-class TestMetricExtraction:
-    """Test metric extraction from backtest results."""
-
-    @pytest.mark.asyncio
-    async def test_extract_metrics(self, generator, sample_backtest_result):
-        """Test extracting metrics from backtest result."""
-        metrics = await generator._extract_metrics(sample_backtest_result)
-
-        assert metrics["total_return"] == 0.25
-        assert metrics["sharpe_ratio"] == 1.5
-        assert metrics["sortino_ratio"] == 1.8
-        assert metrics["max_drawdown"] == -0.15
-        assert metrics["win_rate"] == 0.65
-        assert metrics["profit_factor"] == 2.1
-        assert metrics["total_trades"] == 45
+        assert result.success
+        assert result.overall_rating == "excellent"
+        assert len(result.strengths) > 0
+        assert "Exceptional risk-adjusted returns" in " ".join(result.strengths)
+        assert result.html_content is not None
+        assert "High Performance Strategy" in result.html_content
 
     @pytest.mark.asyncio
-    async def test_extract_metrics_handles_missing_values(self, generator):
-        """Test metric extraction with missing values."""
-        minimal_result = {"strategy_name": "test"}
-        metrics = await generator._extract_metrics(minimal_result)
+    async def test_excellent_strengths_identified(self):
+        """Test that strengths are properly identified for excellent performance."""
+        gen = ReportingGenerator()
 
-        assert metrics["total_return"] == 0.0
-        assert metrics["sharpe_ratio"] == 0.0
-        assert metrics["max_drawdown"] == 0.0
-        assert metrics["total_trades"] == 0
-
-
-# =============================================================================
-# Test Risk Metrics Calculation
-# =============================================================================
-
-class TestRiskMetrics:
-    """Test risk metrics calculation."""
-
-    @pytest.mark.asyncio
-    async def test_calculate_risk_metrics(
-        self, generator, sample_backtest_result, sample_monthly_returns
-    ):
-        """Test risk metrics calculation."""
-        risk_metrics = await generator._calculate_risk_metrics(
-            sample_backtest_result, sample_monthly_returns
+        metrics = StrategyMetrics(
+            annual_return_pct=Decimal("35"),
+            sharpe_ratio=Decimal("2.2"),
+            sortino_ratio=Decimal("2.8"),
+            max_drawdown_pct=Decimal("7"),
+            win_rate_pct=Decimal("62"),
+            profit_factor=Decimal("2.5"),
+            calmar_ratio=Decimal("5.0"),
+            volatility_pct=Decimal("15"),
+            cumulative_return_pct=Decimal("50"),
+            num_trades=300,
         )
 
-        assert "volatility" in risk_metrics
-        assert "max_drawdown" in risk_metrics
-        assert "var_95" in risk_metrics
-        assert "cvar_95" in risk_metrics
-        assert "calmar_ratio" in risk_metrics
-        assert risk_metrics["volatility"] > 0
-        assert risk_metrics["calmar_ratio"] != 0
-
-    @pytest.mark.asyncio
-    async def test_calculate_risk_metrics_empty_returns(
-        self, generator, sample_backtest_result
-    ):
-        """Test risk metrics with empty returns."""
-        risk_metrics = await generator._calculate_risk_metrics(
-            sample_backtest_result, []
+        request = ReportGenerationRequest(
+            report_id="test_strengths_001",
+            profile_id="profile_strengths",
+            input_id="user_strengths",
+            strategy_name="Strong Strategy",
+            backtest_metrics=metrics,
+            allocations=[
+                AllocationSnapshot(
+                    module_name="momentum",
+                    allocation_pct=Decimal("100"),
+                    expected_return_contribution_pct=Decimal("100"),
+                    risk_contribution_pct=Decimal("100"),
+                ),
+            ],
+            capital_eur=Decimal("250000"),
+            target_annual_return_pct=Decimal("12"),
+            max_acceptable_drawdown_pct=Decimal("15"),
         )
 
-        assert risk_metrics["volatility"] == 0.0
-        assert risk_metrics["var_95"] == 0.0
+        result = await gen.generate_report(request)
+
+        assert result.success
+        # Should identify multiple strengths
+        assert len(result.strengths) >= 3
+        assert any("Exceptional" in s for s in result.strengths)
+        assert any("exceeds target" in s.lower() for s in result.strengths)
+        assert any("downside protection" in s.lower() for s in result.strengths)
 
 
-# =============================================================================
-# Test VaR and CVaR Calculation
-# =============================================================================
+# GOOD PERFORMANCE TESTS
+class TestGoodPerformance:
+    @pytest.mark.asyncio
+    async def test_good_rating(self):
+        """Test good performance rating."""
+        gen = ReportingGenerator()
 
-class TestVaRCalculation:
-    """Test Value at Risk calculations."""
+        metrics = StrategyMetrics(
+            annual_return_pct=Decimal("18"),
+            sharpe_ratio=Decimal("1.3"),
+            sortino_ratio=Decimal("1.7"),
+            max_drawdown_pct=Decimal("15"),
+            win_rate_pct=Decimal("52"),
+            profit_factor=Decimal("1.8"),
+            calmar_ratio=Decimal("1.2"),
+            volatility_pct=Decimal("18"),
+            cumulative_return_pct=Decimal("25"),
+            num_trades=180,
+        )
 
-    def test_calculate_var_basic(self, generator, sample_monthly_returns):
-        """Test VaR calculation."""
-        var = generator._calculate_var(sample_monthly_returns, 0.95)
-        # VaR should be one of the returns or close to them
-        assert var <= min(sample_monthly_returns) or var != 0.0
+        request = ReportGenerationRequest(
+            report_id="test_good_001",
+            profile_id="profile_good",
+            input_id="user_good",
+            strategy_name="Good Strategy",
+            backtest_metrics=metrics,
+            allocations=[
+                AllocationSnapshot(
+                    module_name="ensemble",
+                    allocation_pct=Decimal("100"),
+                    expected_return_contribution_pct=Decimal("100"),
+                    risk_contribution_pct=Decimal("100"),
+                ),
+            ],
+            capital_eur=Decimal("100000"),
+            target_annual_return_pct=Decimal("12"),
+            max_acceptable_drawdown_pct=Decimal("20"),
+        )
 
-    def test_calculate_var_empty_list(self, generator):
-        """Test VaR with empty returns."""
-        var = generator._calculate_var([])
-        assert var == 0.0
+        result = await gen.generate_report(request)
 
-    def test_calculate_cvar_basic(self, generator, sample_monthly_returns):
-        """Test CVaR calculation."""
-        cvar = generator._calculate_cvar(sample_monthly_returns, 0.95)
-        # CVaR should be calculated and valid
-        assert cvar is not None
-        # With 12 returns and 95% confidence, should capture bottom ~1 return
-        assert isinstance(cvar, (int, float))
-
-    def test_calculate_cvar_empty_list(self, generator):
-        """Test CVaR with empty returns."""
-        cvar = generator._calculate_cvar([])
-        assert cvar == 0.0
-
-
-# =============================================================================
-# Test Calmar Ratio Calculation
-# =============================================================================
-
-class TestCalmarRatio:
-    """Test Calmar ratio calculation."""
-
-    def test_calculate_calmar_ratio_positive(self, generator):
-        """Test Calmar ratio with positive values."""
-        calmar = generator._calculate_calmar_ratio(0.25, -0.15)
-        assert calmar > 0
-        assert calmar == pytest.approx(0.25 / 0.15, rel=0.01)
-
-    def test_calculate_calmar_ratio_zero_drawdown(self, generator):
-        """Test Calmar ratio with zero drawdown."""
-        calmar = generator._calculate_calmar_ratio(0.25, 0.0)
-        assert calmar == 0.0
-
-    def test_calculate_calmar_ratio_small_drawdown(self, generator):
-        """Test Calmar ratio with very small drawdown."""
-        calmar = generator._calculate_calmar_ratio(0.25, -0.0001)
-        assert calmar == 0.0
+        assert result.success
+        assert result.overall_rating == "good"
 
 
-# =============================================================================
-# Test Summary Generation
-# =============================================================================
+# NEUTRAL PERFORMANCE TESTS
+class TestNeutralPerformance:
+    @pytest.mark.asyncio
+    async def test_neutral_rating(self):
+        """Test neutral performance rating."""
+        gen = ReportingGenerator()
 
+        metrics = StrategyMetrics(
+            annual_return_pct=Decimal("8"),
+            sharpe_ratio=Decimal("0.6"),
+            sortino_ratio=Decimal("0.8"),
+            max_drawdown_pct=Decimal("18"),
+            win_rate_pct=Decimal("45"),
+            profit_factor=Decimal("1.2"),
+            calmar_ratio=Decimal("0.44"),
+            volatility_pct=Decimal("22"),
+            cumulative_return_pct=Decimal("10"),
+            num_trades=120,
+        )
+
+        request = ReportGenerationRequest(
+            report_id="test_neutral_001",
+            profile_id="profile_neutral",
+            input_id="user_neutral",
+            strategy_name="Neutral Strategy",
+            backtest_metrics=metrics,
+            allocations=[
+                AllocationSnapshot(
+                    module_name="mean_reversion",
+                    allocation_pct=Decimal("100"),
+                    expected_return_contribution_pct=Decimal("100"),
+                    risk_contribution_pct=Decimal("100"),
+                ),
+            ],
+            capital_eur=Decimal("50000"),
+            target_annual_return_pct=Decimal("10"),
+            max_acceptable_drawdown_pct=Decimal("20"),
+        )
+
+        result = await gen.generate_report(request)
+
+        assert result.success
+        assert result.overall_rating == "neutral"
+        assert len(result.weaknesses) >= 0
+
+
+# POOR PERFORMANCE TESTS
+class TestPoorPerformance:
+    @pytest.mark.asyncio
+    async def test_poor_rating(self):
+        """Test poor performance rating."""
+        gen = ReportingGenerator()
+
+        metrics = StrategyMetrics(
+            annual_return_pct=Decimal("2"),
+            sharpe_ratio=Decimal("0.15"),
+            sortino_ratio=Decimal("0.2"),
+            max_drawdown_pct=Decimal("35"),
+            win_rate_pct=Decimal("35"),
+            profit_factor=Decimal("0.8"),
+            calmar_ratio=Decimal("0.06"),
+            volatility_pct=Decimal("35"),
+            cumulative_return_pct=Decimal("3"),
+            num_trades=80,
+        )
+
+        request = ReportGenerationRequest(
+            report_id="test_poor_001",
+            profile_id="profile_poor",
+            input_id="user_poor",
+            strategy_name="Poor Strategy",
+            backtest_metrics=metrics,
+            allocations=[
+                AllocationSnapshot(
+                    module_name="momentum",
+                    allocation_pct=Decimal("100"),
+                    expected_return_contribution_pct=Decimal("100"),
+                    risk_contribution_pct=Decimal("100"),
+                ),
+            ],
+            capital_eur=Decimal("25000"),
+            target_annual_return_pct=Decimal("12"),
+            max_acceptable_drawdown_pct=Decimal("15"),
+        )
+
+        result = await gen.generate_report(request)
+
+        assert result.success
+        assert result.overall_rating == "poor"
+        assert len(result.weaknesses) > 0
+
+    @pytest.mark.asyncio
+    async def test_poor_weaknesses_identified(self):
+        """Test that weaknesses are properly identified for poor performance."""
+        gen = ReportingGenerator()
+
+        metrics = StrategyMetrics(
+            annual_return_pct=Decimal("1"),
+            sharpe_ratio=Decimal("0.05"),
+            sortino_ratio=Decimal("0.1"),
+            max_drawdown_pct=Decimal("50"),
+            win_rate_pct=Decimal("30"),
+            profit_factor=Decimal("0.5"),
+            calmar_ratio=Decimal("0.02"),
+            volatility_pct=Decimal("40"),
+            cumulative_return_pct=Decimal("1"),
+            num_trades=50,
+        )
+
+        request = ReportGenerationRequest(
+            report_id="test_poor_weakness_001",
+            profile_id="profile_poor_weakness",
+            input_id="user_poor_weakness",
+            strategy_name="Very Poor Strategy",
+            backtest_metrics=metrics,
+            allocations=[
+                AllocationSnapshot(
+                    module_name="transformer_engine",
+                    allocation_pct=Decimal("100"),
+                    expected_return_contribution_pct=Decimal("100"),
+                    risk_contribution_pct=Decimal("100"),
+                ),
+            ],
+            capital_eur=Decimal("10000"),
+            target_annual_return_pct=Decimal("15"),
+            max_acceptable_drawdown_pct=Decimal("10"),
+        )
+
+        result = await gen.generate_report(request)
+
+        assert result.success
+        assert len(result.weaknesses) >= 3
+        assert any("Poor risk-adjusted" in w for w in result.weaknesses)
+        assert any("Underperforming" in w for w in result.weaknesses)
+        assert any("Exceeding" in w for w in result.weaknesses)
+
+
+# HTML CONTENT TESTS
+class TestHTMLContent:
+    @pytest.mark.asyncio
+    async def test_html_content_generated(self):
+        """Test that HTML content is generated."""
+        gen = ReportingGenerator()
+
+        metrics = StrategyMetrics(
+            annual_return_pct=Decimal("12"),
+            sharpe_ratio=Decimal("1.0"),
+            sortino_ratio=Decimal("1.2"),
+            max_drawdown_pct=Decimal("12"),
+            win_rate_pct=Decimal("50"),
+            profit_factor=Decimal("1.5"),
+            calmar_ratio=Decimal("1.0"),
+            volatility_pct=Decimal("15"),
+            cumulative_return_pct=Decimal("15"),
+            num_trades=100,
+        )
+
+        request = ReportGenerationRequest(
+            report_id="test_html_001",
+            profile_id="profile_html",
+            input_id="user_html",
+            strategy_name="Test Strategy HTML",
+            backtest_metrics=metrics,
+            allocations=[
+                AllocationSnapshot(
+                    module_name="momentum",
+                    allocation_pct=Decimal("50"),
+                    expected_return_contribution_pct=Decimal("60"),
+                    risk_contribution_pct=Decimal("50"),
+                ),
+                AllocationSnapshot(
+                    module_name="mean_reversion",
+                    allocation_pct=Decimal("50"),
+                    expected_return_contribution_pct=Decimal("40"),
+                    risk_contribution_pct=Decimal("50"),
+                ),
+            ],
+            capital_eur=Decimal("100000"),
+            target_annual_return_pct=Decimal("10"),
+            max_acceptable_drawdown_pct=Decimal("15"),
+        )
+
+        result = await gen.generate_report(request)
+
+        assert result.success
+        assert result.html_content is not None
+        assert "<!DOCTYPE html>" in result.html_content
+        assert "Test Strategy HTML" in result.html_content
+        assert "Annual Return" in result.html_content
+        assert "Sharpe Ratio" in result.html_content
+        assert "Portfolio Allocation" in result.html_content
+
+    @pytest.mark.asyncio
+    async def test_html_contains_metrics(self):
+        """Test that HTML contains all metrics."""
+        gen = ReportingGenerator()
+
+        metrics = StrategyMetrics(
+            annual_return_pct=Decimal("25"),
+            sharpe_ratio=Decimal("1.5"),
+            sortino_ratio=Decimal("2.0"),
+            max_drawdown_pct=Decimal("10"),
+            win_rate_pct=Decimal("55"),
+            profit_factor=Decimal("2.0"),
+            calmar_ratio=Decimal("2.5"),
+            volatility_pct=Decimal("15"),
+            cumulative_return_pct=Decimal("30"),
+            num_trades=150,
+        )
+
+        request = ReportGenerationRequest(
+            report_id="test_html_metrics_001",
+            profile_id="profile_html_metrics",
+            input_id="user_html_metrics",
+            strategy_name="Metrics Test Strategy",
+            backtest_metrics=metrics,
+            allocations=[
+                AllocationSnapshot(
+                    module_name="ensemble",
+                    allocation_pct=Decimal("100"),
+                    expected_return_contribution_pct=Decimal("100"),
+                    risk_contribution_pct=Decimal("100"),
+                ),
+            ],
+            capital_eur=Decimal("200000"),
+            target_annual_return_pct=Decimal("15"),
+            max_acceptable_drawdown_pct=Decimal("20"),
+        )
+
+        result = await gen.generate_report(request)
+
+        assert "25.00%" in result.html_content  # Annual return
+        assert "1.50" in result.html_content  # Sharpe ratio
+
+
+# RECOMMENDATIONS TESTS
+class TestRecommendations:
+    @pytest.mark.asyncio
+    async def test_recommendations_for_high_drawdown(self):
+        """Test recommendations generated for high drawdown."""
+        gen = ReportingGenerator()
+
+        metrics = StrategyMetrics(
+            annual_return_pct=Decimal("20"),
+            sharpe_ratio=Decimal("0.8"),
+            sortino_ratio=Decimal("1.0"),
+            max_drawdown_pct=Decimal("40"),  # High drawdown
+            win_rate_pct=Decimal("50"),
+            profit_factor=Decimal("1.5"),
+            calmar_ratio=Decimal("0.5"),
+            volatility_pct=Decimal("30"),
+            cumulative_return_pct=Decimal("25"),
+            num_trades=100,
+        )
+
+        request = ReportGenerationRequest(
+            report_id="test_rec_dd_001",
+            profile_id="profile_rec_dd",
+            input_id="user_rec_dd",
+            strategy_name="High Drawdown Strategy",
+            backtest_metrics=metrics,
+            allocations=[
+                AllocationSnapshot(
+                    module_name="momentum",
+                    allocation_pct=Decimal("100"),
+                    expected_return_contribution_pct=Decimal("100"),
+                    risk_contribution_pct=Decimal("100"),
+                ),
+            ],
+            capital_eur=Decimal("100000"),
+            target_annual_return_pct=Decimal("15"),
+            max_acceptable_drawdown_pct=Decimal("20"),
+        )
+
+        result = await gen.generate_report(request)
+
+        assert result.success
+        assert len(result.recommendations) > 0
+        assert any(
+            "defensive" in rec.lower() or "drawdown" in rec.lower()
+            for rec in result.recommendations
+        )
+
+    @pytest.mark.asyncio
+    async def test_recommendations_for_low_return(self):
+        """Test recommendations for underperforming return."""
+        gen = ReportingGenerator()
+
+        metrics = StrategyMetrics(
+            annual_return_pct=Decimal("5"),  # Low return
+            sharpe_ratio=Decimal("0.7"),
+            sortino_ratio=Decimal("0.9"),
+            max_drawdown_pct=Decimal("8"),
+            win_rate_pct=Decimal("50"),
+            profit_factor=Decimal("1.5"),
+            calmar_ratio=Decimal("0.625"),
+            volatility_pct=Decimal("12"),
+            cumulative_return_pct=Decimal("6"),
+            num_trades=80,
+        )
+
+        request = ReportGenerationRequest(
+            report_id="test_rec_return_001",
+            profile_id="profile_rec_return",
+            input_id="user_rec_return",
+            strategy_name="Low Return Strategy",
+            backtest_metrics=metrics,
+            allocations=[
+                AllocationSnapshot(
+                    module_name="pairs_trading",
+                    allocation_pct=Decimal("100"),
+                    expected_return_contribution_pct=Decimal("100"),
+                    risk_contribution_pct=Decimal("100"),
+                ),
+            ],
+            capital_eur=Decimal("75000"),
+            target_annual_return_pct=Decimal("12"),
+            max_acceptable_drawdown_pct=Decimal("15"),
+        )
+
+        result = await gen.generate_report(request)
+
+        assert result.success
+        assert any("return" in rec.lower() for rec in result.recommendations)
+
+
+# REPORT HISTORY TESTS
+class TestReportHistory:
+    @pytest.mark.asyncio
+    async def test_history_tracking(self):
+        """Test that report history is tracked."""
+        gen = ReportingGenerator()
+
+        for i in range(3):
+            metrics = StrategyMetrics(
+                annual_return_pct=Decimal("15"),
+                sharpe_ratio=Decimal("1.2"),
+                sortino_ratio=Decimal("1.5"),
+                max_drawdown_pct=Decimal("12"),
+                win_rate_pct=Decimal("50"),
+                profit_factor=Decimal("1.6"),
+                calmar_ratio=Decimal("1.25"),
+                volatility_pct=Decimal("15"),
+                cumulative_return_pct=Decimal("18"),
+                num_trades=100,
+            )
+
+            request = ReportGenerationRequest(
+                report_id=f"test_hist_{i}",
+                profile_id=f"profile_hist_{i}",
+                input_id=f"user_hist_{i}",
+                strategy_name=f"Strategy {i}",
+                backtest_metrics=metrics,
+                allocations=[
+                    AllocationSnapshot(
+                        module_name="momentum",
+                        allocation_pct=Decimal("100"),
+                        expected_return_contribution_pct=Decimal("100"),
+                        risk_contribution_pct=Decimal("100"),
+                    ),
+                ],
+                capital_eur=Decimal("100000"),
+                target_annual_return_pct=Decimal("12"),
+                max_acceptable_drawdown_pct=Decimal("15"),
+            )
+
+            await gen.generate_report(request)
+
+        history = await gen.get_report_history()
+        assert len(history) == 3
+
+    @pytest.mark.asyncio
+    async def test_history_limit(self):
+        """Test history retrieval with limit."""
+        gen = ReportingGenerator()
+
+        for i in range(5):
+            metrics = StrategyMetrics(
+                annual_return_pct=Decimal("12"),
+                sharpe_ratio=Decimal("1.0"),
+                sortino_ratio=Decimal("1.3"),
+                max_drawdown_pct=Decimal("10"),
+                win_rate_pct=Decimal("48"),
+                profit_factor=Decimal("1.4"),
+                calmar_ratio=Decimal("1.2"),
+                volatility_pct=Decimal("14"),
+                cumulative_return_pct=Decimal("15"),
+                num_trades=90,
+            )
+
+            request = ReportGenerationRequest(
+                report_id=f"test_limit_{i}",
+                profile_id=f"profile_limit_{i}",
+                input_id=f"user_limit_{i}",
+                strategy_name=f"Strategy {i}",
+                backtest_metrics=metrics,
+                allocations=[
+                    AllocationSnapshot(
+                        module_name="mean_reversion",
+                        allocation_pct=Decimal("100"),
+                        expected_return_contribution_pct=Decimal("100"),
+                        risk_contribution_pct=Decimal("100"),
+                    ),
+                ],
+                capital_eur=Decimal("100000"),
+                target_annual_return_pct=Decimal("10"),
+                max_acceptable_drawdown_pct=Decimal("15"),
+            )
+
+            await gen.generate_report(request)
+
+        history = await gen.get_report_history(limit=2)
+        assert len(history) == 2
+
+
+# SUMMARY GENERATION TESTS
 class TestSummaryGeneration:
-    """Test summary generation."""
-
     @pytest.mark.asyncio
-    async def test_generate_summary(self, generator, sample_backtest_result):
-        """Test summary generation."""
-        summary = await generator._generate_summary("test", sample_backtest_result)
+    async def test_summary_excellent(self):
+        """Test summary generation for excellent performance."""
+        gen = ReportingGenerator()
 
-        assert summary["strategy_name"] == "test"
-        assert summary["total_return"] == 0.25
-        assert summary["sharpe_ratio"] == 1.5
-        assert summary["max_drawdown"] == -0.15
-        assert summary["win_rate"] == 0.65
-
-    @pytest.mark.asyncio
-    async def test_generate_summary_handles_missing_values(self, generator):
-        """Test summary generation with missing values."""
-        summary = await generator._generate_summary("test", {})
-
-        assert summary["strategy_name"] == "test"
-        assert summary["total_return"] == 0.0
-        assert summary["sharpe_ratio"] == 0.0
-
-
-# =============================================================================
-# Test HTML Report Generation
-# =============================================================================
-
-class TestHTMLReportGeneration:
-    """Test HTML report generation."""
-
-    @pytest.mark.asyncio
-    async def test_generate_html_report(
-        self, generator, sample_allocation, sample_backtest_result
-    ):
-        """Test HTML report generation."""
-        summary = await generator._generate_summary("test_strategy", sample_backtest_result)
-        metrics = await generator._extract_metrics(sample_backtest_result)
-        risk_metrics = await generator._calculate_risk_metrics(
-            sample_backtest_result, [0.02, 0.03, 0.01]
+        metrics = StrategyMetrics(
+            annual_return_pct=Decimal("28"),
+            sharpe_ratio=Decimal("2.0"),
+            sortino_ratio=Decimal("2.5"),
+            max_drawdown_pct=Decimal("9"),
+            win_rate_pct=Decimal("60"),
+            profit_factor=Decimal("2.5"),
+            calmar_ratio=Decimal("3.1"),
+            volatility_pct=Decimal("14"),
+            cumulative_return_pct=Decimal("35"),
+            num_trades=200,
         )
 
-        html = await generator._generate_html_report(
-            "test_strategy", summary, metrics, risk_metrics, sample_allocation
+        request = ReportGenerationRequest(
+            report_id="test_summary_exc_001",
+            profile_id="profile_summary_exc",
+            input_id="user_summary_exc",
+            strategy_name="Excellent Performance Strategy",
+            backtest_metrics=metrics,
+            allocations=[
+                AllocationSnapshot(
+                    module_name="transformer_engine",
+                    allocation_pct=Decimal("100"),
+                    expected_return_contribution_pct=Decimal("100"),
+                    risk_contribution_pct=Decimal("100"),
+                ),
+            ],
+            capital_eur=Decimal("500000"),
+            target_annual_return_pct=Decimal("15"),
+            max_acceptable_drawdown_pct=Decimal("20"),
         )
 
-        assert "<html>" in html
-        assert "test_strategy" in html
-        assert "Performance Summary" in html
-        assert "Risk Metrics" in html
-        assert "Portfolio Allocation" in html
-        assert "AAPL" in html
-        assert "MSFT" in html
+        result = await gen.generate_report(request)
 
-    @pytest.mark.asyncio
-    async def test_html_report_contains_metrics(
-        self, generator, sample_allocation, sample_backtest_result
-    ):
-        """Test that HTML report contains key metrics."""
-        summary = await generator._generate_summary("test", sample_backtest_result)
-        metrics = await generator._extract_metrics(sample_backtest_result)
-        risk_metrics = await generator._calculate_risk_metrics(sample_backtest_result, [0.01])
-
-        html = await generator._generate_html_report(
-            "test", summary, metrics, risk_metrics, sample_allocation
-        )
-
-        # Should contain key metrics
-        assert "25.00%" in html or "0.25" in html  # Annual return
-        assert "1.50" in html  # Sharpe ratio
+        assert result.success
+        assert "strong risk-adjusted return profile" in result.summary.lower()
+        assert "28.0%" in result.summary or "28.00%" in result.summary
+        assert "200 trades" in result.summary
 
 
-# =============================================================================
-# Test Safe Float Conversion
-# =============================================================================
-
-class TestSafeFloatConversion:
-    """Test safe float conversion."""
-
-    def test_safe_float_from_float(self, generator):
-        """Test converting float."""
-        assert generator._safe_float(1.5) == 1.5
-
-    def test_safe_float_from_int(self, generator):
-        """Test converting int."""
-        assert generator._safe_float(5) == 5.0
-
-    def test_safe_float_from_string(self, generator):
-        """Test converting string."""
-        assert generator._safe_float("3.14") == 3.14
-
-    def test_safe_float_from_none(self, generator):
-        """Test converting None."""
-        assert generator._safe_float(None) == 0.0
-
-    def test_safe_float_from_invalid(self, generator):
-        """Test converting invalid value."""
-        assert generator._safe_float("invalid") == 0.0
-
-
-# =============================================================================
-# Integration Tests
-# =============================================================================
-
-class TestIntegration:
-    """Integration tests."""
-
-    @pytest.mark.asyncio
-    async def test_full_report_workflow(
-        self, generator, sample_backtest_result, sample_allocation, sample_monthly_returns
-    ):
-        """Test complete report generation workflow."""
-        report = await generator.generate_report(
-            "complete_test",
-            sample_backtest_result,
-            sample_allocation,
-            sample_monthly_returns,
-        )
-
-        # Verify all components are present
-        assert report.report_id is not None
-        assert report.strategy_name == "complete_test"
-        assert len(report.summary) > 0
-        assert len(report.metrics) > 0
-        assert len(report.risk_metrics) > 0
-        assert len(report.allocation) == 4
-        assert len(report.monthly_returns) == 12
-        assert len(report.html_report) > 100
-        assert "<html>" in report.html_report
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])
