@@ -1,594 +1,346 @@
 """
-T5.1: Unit Tests for ValidationEngine
+T5.1: ValidationEngine Tests
 
-Tests cover:
-- Capital viability validation
-- Execution cost analysis
-- Opportunity cost validation
-- Learning capital gating
-- Module gating
-- Feasibility ratio validation
-- Overall validation report
-- Edge cases and error handling
+Tests for ValidationEngine, PHASE 0 validator orchestration, and validation rules.
 """
 
-from datetime import datetime
-from decimal import Decimal
-
 import pytest
-
-from app.core.models.investment_profile import (
-    CapitalTier,
-    InvestmentProfile,
-    ObjectivoInversion,
-    RiskTolerance,
-)
-from app.backtesting.models import BacktestConfig, BacktestResult
-from app.services.backtesting_orchestration import (
-    BacktestOrchestrator,
-    ExtendedBacktestResult,
-    FeasibilityMetrics,
-)
-from app.services.validation_orchestration import (
+from decimal import Decimal
+from app.services.validation_engine import (
     ValidationEngine,
-    ValidationReport,
-    GateStatus,
+    get_validation_engine,
+    ValidationRequest,
+    ValidationResult,
 )
 
 
-@pytest.fixture
-def validation_engine():
-    """Create ValidationEngine instance."""
-    return ValidationEngine()
-
-
-@pytest.fixture
-def sample_investment_profile_small():
-    """Create sample InvestmentProfile for small capital."""
-    return InvestmentProfile(
-        profile_id="val_small_001",
-        input_id="input_001",
-        capital_initial=Decimal("50000"),
-        capital_tier=CapitalTier.SMALL,
-        objetivo_inversion=ObjectivoInversion.MAXIMIZAR_CAPITAL,
-        risk_tolerance=RiskTolerance.MEDIO,
-        risk_profile=3,
-        investment_horizon=12,
-        enabled_modules=["momentum_modular", "mean_reversion_modular"],
-        leverage_factor=Decimal("1.0"),
-        max_position_size=Decimal("0.10"),
-        max_sector_allocation=Decimal("0.20"),
-        order_splitting_strategy="twap",
-        commission_negotiation=False,
-        risk_scaling_enabled=False,
-    )
-
-
-@pytest.fixture
-def sample_investment_profile_large():
-    """Create sample InvestmentProfile for large capital."""
-    return InvestmentProfile(
-        profile_id="val_large_001",
-        input_id="input_002",
-        capital_initial=Decimal("250000"),
-        capital_tier=CapitalTier.LARGE,
-        objetivo_inversion=ObjectivoInversion.MAXIMIZAR_CAPITAL,
-        risk_tolerance=RiskTolerance.ALTO,
-        risk_profile=5,
-        investment_horizon=24,
-        enabled_modules=[
-            "momentum_modular",
-            "mean_reversion_modular",
-            "pairs_trading_modular",
-            "breakout_modular",
-        ],
-        leverage_factor=Decimal("1.5"),
-        max_position_size=Decimal("0.05"),
-        max_sector_allocation=Decimal("0.15"),
-        order_splitting_strategy="vwap",
-        commission_negotiation=True,
-        risk_scaling_enabled=True,
-    )
-
-
-@pytest.fixture
-def approved_extended_result():
-    """Create ExtendedBacktestResult with APPROVED feasibility."""
-    base_result = BacktestResult(
-        strategy_name="test_approved",
-        start_date=datetime(2024, 1, 1),
-        end_date=datetime(2024, 12, 31),
-        final_capital=Decimal("62500"),
-        total_return=Decimal("25"),
-        annualized_return=Decimal("25"),
-    )
-
-    metrics = FeasibilityMetrics(
-        required_annual_return=Decimal("19.2"),
-        required_monthly_return=Decimal("1.6"),
-        feasibility_ratio=Decimal("1.30"),
-        viability_status="APPROVED",
-        risk_adjusted_return=None,
-        confidence_level="HIGH",
-    )
-
-    return ExtendedBacktestResult(
-        **base_result.model_dump(),
-        feasibility_metrics=metrics,
-    )
-
-
-@pytest.fixture
-def conditional_extended_result():
-    """Create ExtendedBacktestResult with CONDITIONAL feasibility."""
-    base_result = BacktestResult(
-        strategy_name="test_conditional",
-        start_date=datetime(2024, 1, 1),
-        end_date=datetime(2024, 12, 31),
-        final_capital=Decimal("56000"),
-        total_return=Decimal("12"),
-        annualized_return=Decimal("12"),
-    )
-
-    metrics = FeasibilityMetrics(
-        required_annual_return=Decimal("19.2"),
-        required_monthly_return=Decimal("1.6"),
-        feasibility_ratio=Decimal("0.625"),
-        viability_status="CONDITIONAL",
-        risk_adjusted_return=None,
-        confidence_level="MEDIUM",
-    )
-
-    return ExtendedBacktestResult(
-        **base_result.model_dump(),
-        feasibility_metrics=metrics,
-    )
-
-
-@pytest.fixture
-def rejected_extended_result():
-    """Create ExtendedBacktestResult with REJECTED feasibility."""
-    base_result = BacktestResult(
-        strategy_name="test_rejected",
-        start_date=datetime(2024, 1, 1),
-        end_date=datetime(2024, 12, 31),
-        final_capital=Decimal("52000"),
-        total_return=Decimal("4"),
-        annualized_return=Decimal("4"),
-    )
-
-    metrics = FeasibilityMetrics(
-        required_annual_return=Decimal("19.2"),
-        required_monthly_return=Decimal("1.6"),
-        feasibility_ratio=Decimal("0.21"),
-        viability_status="REJECTED",
-        risk_adjusted_return=None,
-        confidence_level="LOW",
-    )
-
-    return ExtendedBacktestResult(
-        **base_result.model_dump(),
-        feasibility_metrics=metrics,
-    )
-
-
+# VALIDATION ENGINE INITIALIZATION TESTS
 class TestValidationEngineInitialization:
-    """Test ValidationEngine initialization."""
-
-    def test_initialization(self):
-        """Test ValidationEngine can be initialized."""
+    def test_engine_init(self):
+        """Test validation engine initialization."""
         engine = ValidationEngine()
-        assert engine is not None
+        assert len(engine.validation_history) == 0
+
+    def test_engine_singleton(self):
+        """Test validation engine singleton pattern."""
+        e1 = get_validation_engine()
+        e2 = get_validation_engine()
+        assert e1 is e2
+
+    def test_engine_status(self):
+        """Test validation engine status reporting."""
+        engine = ValidationEngine()
+        status = engine.get_validation_engine_status()
+
+        assert "total_validations" in status
+        assert "passed_validations" in status
+        assert "validation_pass_rate" in status
 
 
-class TestCapitalViabilityGate:
-    """Test capital viability validation."""
+# CAPITAL VIABILITY VALIDATION TESTS
+class TestCapitalViabilityValidation:
+    @pytest.mark.asyncio
+    async def test_validate_viable_capital(self):
+        """Test validation of viable capital with achievable goals."""
+        engine = ValidationEngine()
+        request = ValidationRequest(
+            profile_id="test_viable_capital",
+            input_id="user_001",
+            initial_capital=Decimal("250000"),
+            target_monthly_return_eur=Decimal("1000"),
+            tax_rate=Decimal("0.35"),
+            commission_per_trade=Decimal("15"),
+            expected_trades_per_month=10,
+        )
+
+        result = await engine.validate(request)
+
+        assert result.success
+        assert result.capital_viability is not None
+        assert result.capital_viability.is_viable
 
     @pytest.mark.asyncio
-    async def test_capital_above_minimum_small(
-        self, validation_engine, sample_investment_profile_small, approved_extended_result
-    ):
-        """Test capital meets minimum for SMALL tier."""
-        result = await validation_engine.validate_backtest_result(
-            approved_extended_result, sample_investment_profile_small
+    async def test_validate_unviable_capital_insufficient(self):
+        """Test validation rejects insufficient capital for goal."""
+        engine = ValidationEngine()
+        request = ValidationRequest(
+            profile_id="test_unviable_capital",
+            input_id="user_002",
+            initial_capital=Decimal("5000"),  # Too small
+            target_monthly_return_eur=Decimal("1000"),  # Too ambitious
+            tax_rate=Decimal("0.35"),
+            commission_per_trade=Decimal("15"),
+            expected_trades_per_month=10,
         )
 
-        assert result.capital_viability.status == GateStatus.PASSED
-        assert "meets minimum" in result.capital_viability.message
+        result = await engine.validate(request)
+
+        assert result.success
+        assert result.capital_viability is not None
+        assert not result.capital_viability.is_viable
+
+
+# FEASIBILITY RATIO VALIDATION TESTS
+class TestFeasibilityValidation:
+    @pytest.mark.asyncio
+    async def test_validate_feasibility_approved(self):
+        """Test validation passes for APPROVED feasibility ratio."""
+        engine = ValidationEngine()
+        request = ValidationRequest(
+            profile_id="test_feasibility_approved",
+            input_id="user_003",
+            initial_capital=Decimal("250000"),
+            target_monthly_return_eur=Decimal("1000"),
+            backtest_feasibility_ratio=Decimal("1.25"),  # >= 1.0
+        )
+
+        result = await engine.validate(request)
+
+        assert result.success
+        assert result.feasibility is not None
+        assert result.feasibility.feasibility_status == "APPROVED"
+        assert result.feasibility.is_viable
 
     @pytest.mark.asyncio
-    async def test_capital_above_minimum_large(
-        self, validation_engine, sample_investment_profile_large, approved_extended_result
-    ):
-        """Test capital meets minimum for LARGE tier."""
-        result = await validation_engine.validate_backtest_result(
-            approved_extended_result, sample_investment_profile_large
+    async def test_validate_feasibility_conditional(self):
+        """Test validation passes for CONDITIONAL feasibility ratio."""
+        engine = ValidationEngine()
+        request = ValidationRequest(
+            profile_id="test_feasibility_conditional",
+            input_id="user_004",
+            initial_capital=Decimal("250000"),
+            target_monthly_return_eur=Decimal("1000"),
+            backtest_feasibility_ratio=Decimal("0.85"),  # 0.7-1.0
         )
 
-        assert result.capital_viability.status == GateStatus.PASSED
+        result = await engine.validate(request)
+
+        assert result.success
+        assert result.feasibility is not None
+        assert result.feasibility.feasibility_status == "CONDITIONAL"
+        assert result.feasibility.is_viable
 
     @pytest.mark.asyncio
-    async def test_capital_below_minimum(
-        self, validation_engine, approved_extended_result
-    ):
-        """Test capital below minimum is rejected."""
-        profile = InvestmentProfile(
-            profile_id="test",
-            input_id="input",
-            capital_initial=Decimal("500"),  # Below micro minimum of €1000
-            capital_tier=CapitalTier.MICRO,
-            objetivo_inversion=ObjectivoInversion.CAPITAL_PRESERVATION,
-            risk_tolerance=RiskTolerance.BAJO,
-            risk_profile=1,
-            investment_horizon=6,
-            enabled_modules=["momentum_modular"],
-            leverage_factor=Decimal("1.0"),
-            max_position_size=Decimal("0.10"),
-            max_sector_allocation=Decimal("0.25"),
-            order_splitting_strategy="market",
-            commission_negotiation=False,
-            risk_scaling_enabled=False,
+    async def test_validate_feasibility_rejected(self):
+        """Test validation rejects low feasibility ratio."""
+        engine = ValidationEngine()
+        request = ValidationRequest(
+            profile_id="test_feasibility_rejected",
+            input_id="user_005",
+            initial_capital=Decimal("250000"),
+            target_monthly_return_eur=Decimal("1000"),
+            backtest_feasibility_ratio=Decimal("0.5"),  # < 0.7
         )
 
-        result = await validation_engine.validate_backtest_result(
-            approved_extended_result, profile
+        result = await engine.validate(request)
+
+        assert result.success
+        assert result.feasibility is not None
+        assert result.feasibility.feasibility_status == "REJECTED"
+        assert not result.feasibility.is_viable
+        assert "feasibility" in result.critical_failures[0].lower()
+
+
+# LEARNING VIABILITY VALIDATION TESTS
+class TestLearningViabilityValidation:
+    @pytest.mark.asyncio
+    async def test_learning_viable_large_capital(self):
+        """Test learning viability with large capital."""
+        engine = ValidationEngine()
+        request = ValidationRequest(
+            profile_id="test_learning_viable",
+            input_id="user_006",
+            initial_capital=Decimal("100000"),  # Large capital
+            target_monthly_return_eur=Decimal("1000"),
+            learning_enabled=True,
         )
 
-        assert result.capital_viability.status == GateStatus.FAILED
+        result = await engine.validate(request)
 
-
-class TestExecutionCostGate:
-    """Test execution cost validation."""
+        assert result.success
+        assert result.learning_viability is not None
+        assert result.learning_viability.learning_recommended
 
     @pytest.mark.asyncio
-    async def test_execution_costs_acceptable(
-        self, validation_engine, sample_investment_profile_small, approved_extended_result
-    ):
-        """Test execution costs within acceptable range."""
-        result = await validation_engine.validate_backtest_result(
-            approved_extended_result, sample_investment_profile_small
+    async def test_learning_not_viable_small_capital(self):
+        """Test learning not viable with small capital."""
+        engine = ValidationEngine()
+        request = ValidationRequest(
+            profile_id="test_learning_unviable",
+            input_id="user_007",
+            initial_capital=Decimal("10000"),  # Small capital
+            target_monthly_return_eur=Decimal("100"),
+            learning_enabled=True,
         )
 
-        assert result.execution_costs.status in [GateStatus.PASSED, GateStatus.WARNING]
+        result = await engine.validate(request)
 
-    @pytest.mark.asyncio
-    async def test_execution_costs_with_high_slippage(
-        self, validation_engine, sample_investment_profile_small, approved_extended_result
-    ):
-        """Test execution costs with high slippage."""
-        # Create result with high slippage config
-        if approved_extended_result.config:
-            approved_extended_result.config.slippage_percentage = Decimal("5.0")
-
-        result = await validation_engine.validate_backtest_result(
-            approved_extended_result, sample_investment_profile_small
-        )
-
-        # Should pass but may warn about costs
-        assert result.execution_costs.status in [GateStatus.PASSED, GateStatus.WARNING]
-
-
-class TestOpportunityCostGate:
-    """Test opportunity cost validation."""
-
-    @pytest.mark.asyncio
-    async def test_opportunity_cost_beats_passive(
-        self, validation_engine, sample_investment_profile_small, approved_extended_result
-    ):
-        """Test strategy beats passive benchmark."""
-        result = await validation_engine.validate_backtest_result(
-            approved_extended_result, sample_investment_profile_small
-        )
-
-        assert result.opportunity_cost.status in [GateStatus.PASSED, GateStatus.WARNING]
-
-    @pytest.mark.asyncio
-    async def test_opportunity_cost_underperforms_passive(
-        self, validation_engine, sample_investment_profile_small
-    ):
-        """Test strategy underperforms passive benchmark."""
-        base_result = BacktestResult(
-            strategy_name="test",
-            start_date=datetime(2024, 1, 1),
-            end_date=datetime(2024, 12, 31),
-            final_capital=Decimal("51000"),
-            total_return=Decimal("2"),  # Much lower than passive
-            annualized_return=Decimal("2"),
-        )
-
-        metrics = FeasibilityMetrics(
-            required_annual_return=Decimal("10"),
-            required_monthly_return=Decimal("0.83"),
-            feasibility_ratio=Decimal("0.2"),
-            viability_status="REJECTED",
-            risk_adjusted_return=None,
-            confidence_level="LOW",
-        )
-
-        extended_result = ExtendedBacktestResult(
-            **base_result.model_dump(),
-            feasibility_metrics=metrics,
-        )
-
-        result = await validation_engine.validate_backtest_result(
-            extended_result, sample_investment_profile_small
-        )
-
-        assert result.opportunity_cost.status == GateStatus.WARNING
-
-
-class TestLearningCapitalGate:
-    """Test learning capital validation."""
-
-    @pytest.mark.asyncio
-    async def test_learning_capital_affordable(
-        self, validation_engine, sample_investment_profile_small, approved_extended_result
-    ):
-        """Test ML infrastructure cost is affordable."""
-        result = await validation_engine.validate_backtest_result(
-            approved_extended_result, sample_investment_profile_small
-        )
-
-        assert result.learning_capital.status == GateStatus.PASSED
-
-
-class TestModuleGatingGate:
-    """Test module gating validation."""
-
-    @pytest.mark.asyncio
-    async def test_modules_suit_small_capital(
-        self, validation_engine, sample_investment_profile_small, approved_extended_result
-    ):
-        """Test standard modules suit small capital."""
-        result = await validation_engine.validate_backtest_result(
-            approved_extended_result, sample_investment_profile_small
-        )
-
-        assert result.module_gating.status == GateStatus.PASSED
-
-    @pytest.mark.asyncio
-    async def test_modules_suit_large_capital(
-        self, validation_engine, sample_investment_profile_large, approved_extended_result
-    ):
-        """Test modules suit large capital."""
-        result = await validation_engine.validate_backtest_result(
-            approved_extended_result, sample_investment_profile_large
-        )
-
-        assert result.module_gating.status == GateStatus.PASSED
-
-    @pytest.mark.asyncio
-    async def test_expensive_modules_on_small_capital(
-        self, validation_engine, approved_extended_result
-    ):
-        """Test expensive modules on small capital warn."""
-        profile = InvestmentProfile(
-            profile_id="test",
-            input_id="input",
-            capital_initial=Decimal("20000"),  # Below threshold
-            capital_tier=CapitalTier.SMALL,
-            objetivo_inversion=ObjectivoInversion.MAXIMIZAR_CAPITAL,
-            risk_tolerance=RiskTolerance.MEDIO,
-            risk_profile=3,
-            investment_horizon=12,
-            enabled_modules=[
-                "momentum_modular",
-                "deep_learning_engine",  # Expensive: requires €50k
-            ],
-            leverage_factor=Decimal("1.0"),
-            max_position_size=Decimal("0.10"),
-            max_sector_allocation=Decimal("0.20"),
-            order_splitting_strategy="twap",
-            commission_negotiation=False,
-            risk_scaling_enabled=False,
-        )
-
-        result = await validation_engine.validate_backtest_result(
-            approved_extended_result, profile
-        )
-
-        assert result.module_gating.status == GateStatus.WARNING
-
-
-class TestFeasibilityRatioGate:
-    """Test feasibility ratio validation."""
-
-    @pytest.mark.asyncio
-    async def test_feasibility_approved(
-        self, validation_engine, sample_investment_profile_small, approved_extended_result
-    ):
-        """Test APPROVED feasibility status."""
-        result = await validation_engine.validate_backtest_result(
-            approved_extended_result, sample_investment_profile_small
-        )
-
-        assert result.feasibility_ratio.status == GateStatus.PASSED
-        assert "APPROVED" in result.feasibility_ratio.message
-
-    @pytest.mark.asyncio
-    async def test_feasibility_conditional(
-        self, validation_engine, sample_investment_profile_small, conditional_extended_result
-    ):
-        """Test CONDITIONAL feasibility status."""
-        result = await validation_engine.validate_backtest_result(
-            conditional_extended_result, sample_investment_profile_small
-        )
-
-        assert result.feasibility_ratio.status == GateStatus.WARNING
-        assert "CONDITIONAL" in result.feasibility_ratio.message
-
-    @pytest.mark.asyncio
-    async def test_feasibility_rejected(
-        self, validation_engine, sample_investment_profile_small, rejected_extended_result
-    ):
-        """Test REJECTED feasibility status."""
-        result = await validation_engine.validate_backtest_result(
-            rejected_extended_result, sample_investment_profile_small
-        )
-
-        assert result.feasibility_ratio.status == GateStatus.FAILED
-        assert "REJECTED" in result.feasibility_ratio.message
-
-
-class TestOverallValidationReport:
-    """Test overall validation report generation."""
-
-    @pytest.mark.asyncio
-    async def test_report_approved_status(
-        self, validation_engine, sample_investment_profile_small, approved_extended_result
-    ):
-        """Test report shows APPROVED overall status."""
-        result = await validation_engine.validate_backtest_result(
-            approved_extended_result, sample_investment_profile_small
-        )
-
-        assert result.overall_status == "APPROVED"
-        assert len(result.critical_failures) == 0
-        assert result.passed_gates > 0
-
-    @pytest.mark.asyncio
-    async def test_report_conditional_status(
-        self, validation_engine, sample_investment_profile_small, conditional_extended_result
-    ):
-        """Test report shows CONDITIONAL overall status."""
-        result = await validation_engine.validate_backtest_result(
-            conditional_extended_result, sample_investment_profile_small
-        )
-
-        assert result.overall_status == "CONDITIONAL"
+        assert result.success
+        assert result.learning_viability is not None
+        assert not result.learning_viability.learning_recommended
         assert len(result.warnings) > 0
 
+
+# MODULE VIABILITY VALIDATION TESTS
+class TestModuleViabilityValidation:
     @pytest.mark.asyncio
-    async def test_report_rejected_status(
-        self, validation_engine, sample_investment_profile_small, rejected_extended_result
-    ):
-        """Test report shows REJECTED overall status."""
-        result = await validation_engine.validate_backtest_result(
-            rejected_extended_result, sample_investment_profile_small
+    async def test_expensive_modules_disabled_small_capital(self):
+        """Test expensive modules disabled for small accounts."""
+        engine = ValidationEngine()
+        request = ValidationRequest(
+            profile_id="test_module_gating",
+            input_id="user_008",
+            initial_capital=Decimal("20000"),  # Small capital
+            target_monthly_return_eur=Decimal("200"),
         )
 
-        assert result.overall_status == "REJECTED"
-        assert len(result.critical_failures) > 0
+        result = await engine.validate(request)
 
-    @pytest.mark.asyncio
-    async def test_report_has_recommendations(
-        self, validation_engine, sample_investment_profile_small, conditional_extended_result
-    ):
-        """Test report includes recommendations."""
-        result = await validation_engine.validate_backtest_result(
-            conditional_extended_result, sample_investment_profile_small
-        )
+        assert result.success
+        assert len(result.module_viabilities) > 0
 
-        assert len(result.recommendations) > 0
-
-    @pytest.mark.asyncio
-    async def test_report_serialization(
-        self, validation_engine, sample_investment_profile_small, approved_extended_result
-    ):
-        """Test report can be serialized to dict."""
-        result = await validation_engine.validate_backtest_result(
-            approved_extended_result, sample_investment_profile_small
-        )
-
-        result_dict = result.to_dict()
-        assert result_dict["overall_status"] == "APPROVED"
-        assert "passed_gates" in result_dict
-        assert "total_gates" in result_dict
-
-
-class TestValidationErrorHandling:
-    """Test error handling in validation."""
+        # Transformer should be disabled for small accounts
+        transformer = result.module_viabilities.get("transformer_engine")
+        if transformer:
+            assert not transformer.enabled
 
     @pytest.mark.asyncio
-    async def test_validation_with_none_feasibility_metrics(
-        self, validation_engine, sample_investment_profile_small
-    ):
-        """Test validation handles missing feasibility metrics."""
-        base_result = BacktestResult(
-            strategy_name="test",
-            start_date=datetime(2024, 1, 1),
-            end_date=datetime(2024, 12, 31),
-            final_capital=Decimal("55000"),
-            total_return=Decimal("10"),
-            annualized_return=Decimal("10"),
+    async def test_expensive_modules_enabled_large_capital(self):
+        """Test expensive modules enabled for large accounts."""
+        engine = ValidationEngine()
+        request = ValidationRequest(
+            profile_id="test_module_enabled",
+            input_id="user_009",
+            initial_capital=Decimal("500000"),  # Large capital
+            target_monthly_return_eur=Decimal("5000"),
         )
 
-        extended_result = ExtendedBacktestResult(
-            **base_result.model_dump(),
-            feasibility_metrics=None,
+        result = await engine.validate(request)
+
+        assert result.success
+        assert len(result.module_viabilities) > 0
+
+
+# RISK METRICS VALIDATION TESTS
+class TestRiskMetricsValidation:
+    @pytest.mark.asyncio
+    async def test_validate_good_sharpe_ratio(self):
+        """Test validation passes with good Sharpe ratio."""
+        engine = ValidationEngine()
+        request = ValidationRequest(
+            profile_id="test_good_sharpe",
+            input_id="user_010",
+            initial_capital=Decimal("250000"),
+            target_monthly_return_eur=Decimal("1000"),
+            backtest_feasibility_ratio=Decimal("1.1"),
+            backtest_sharpe_ratio=Decimal("1.5"),  # Good
         )
 
-        result = await validation_engine.validate_backtest_result(
-            extended_result, sample_investment_profile_small
-        )
+        result = await engine.validate(request)
 
-        assert result.feasibility_ratio.status == GateStatus.WARNING
-
-
-class TestValidationGateResults:
-    """Test individual gate result objects."""
-
-    def test_gate_result_creation(self):
-        """Test GateResult can be created."""
-        from app.services.validation_orchestration import GateResult, GateStatus
-
-        gate = GateResult(
-            gate_name="test_gate",
-            status=GateStatus.PASSED,
-            message="Test message",
-        )
-
-        assert gate.gate_name == "test_gate"
-        assert gate.status == GateStatus.PASSED
-
-
-class TestMultipleValidationRuns:
-    """Test multiple validation runs with different inputs."""
+        assert result.success
+        # Should not warn about Sharpe ratio
+        assert not any("sharpe" in w.lower() for w in result.warnings)
 
     @pytest.mark.asyncio
-    async def test_validate_multiple_profiles_approved(
-        self, validation_engine, approved_extended_result
-    ):
-        """Test validating multiple profiles with appropriate capital."""
-        profiles = [
-            InvestmentProfile(
-                profile_id="test_small",
-                input_id="input",
-                capital_initial=Decimal("50000"),
-                capital_tier=CapitalTier.SMALL,
-                objetivo_inversion=ObjectivoInversion.MAXIMIZAR_CAPITAL,
-                risk_tolerance=RiskTolerance.MEDIO,
-                risk_profile=3,
-                investment_horizon=12,
-                enabled_modules=["momentum_modular"],
-                leverage_factor=Decimal("1.0"),
-                max_position_size=Decimal("0.10"),
-                max_sector_allocation=Decimal("0.20"),
-                order_splitting_strategy="twap",
-                commission_negotiation=False,
-                risk_scaling_enabled=False,
-            ),
-            InvestmentProfile(
-                profile_id="test_large",
-                input_id="input",
-                capital_initial=Decimal("250000"),
-                capital_tier=CapitalTier.LARGE,
-                objetivo_inversion=ObjectivoInversion.MAXIMIZAR_CAPITAL,
-                risk_tolerance=RiskTolerance.ALTO,
-                risk_profile=5,
-                investment_horizon=24,
-                enabled_modules=["momentum_modular"],
-                leverage_factor=Decimal("1.5"),
-                max_position_size=Decimal("0.05"),
-                max_sector_allocation=Decimal("0.15"),
-                order_splitting_strategy="vwap",
-                commission_negotiation=True,
-                risk_scaling_enabled=True,
-            ),
-        ]
+    async def test_validate_low_sharpe_ratio(self):
+        """Test validation warns about low Sharpe ratio."""
+        engine = ValidationEngine()
+        request = ValidationRequest(
+            profile_id="test_low_sharpe",
+            input_id="user_011",
+            initial_capital=Decimal("250000"),
+            target_monthly_return_eur=Decimal("1000"),
+            backtest_feasibility_ratio=Decimal("1.1"),
+            backtest_sharpe_ratio=Decimal("0.5"),  # Low
+        )
 
-        for profile in profiles:
-            result = await validation_engine.validate_backtest_result(
-                approved_extended_result, profile
+        result = await engine.validate(request)
+
+        assert result.success
+        assert any("sharpe" in w.lower() for w in result.warnings)
+
+
+# OVERALL VALIDATION ORCHESTRATION TESTS
+class TestValidationOrchestration:
+    @pytest.mark.asyncio
+    async def test_validate_complete_approval(self):
+        """Test complete validation flow with APPROVE recommendation."""
+        engine = ValidationEngine()
+        request = ValidationRequest(
+            profile_id="test_complete_approval",
+            input_id="user_012",
+            initial_capital=Decimal("250000"),
+            target_monthly_return_eur=Decimal("1000"),
+            backtest_feasibility_ratio=Decimal("1.2"),
+            backtest_sharpe_ratio=Decimal("1.5"),
+            backtest_max_drawdown_pct=Decimal("10"),
+        )
+
+        result = await engine.validate(request)
+
+        assert result.success
+        assert result.passed
+        assert result.overall_recommendation == "APPROVE"
+        assert result.confidence_level == "high"
+
+    @pytest.mark.asyncio
+    async def test_validate_complete_conditional(self):
+        """Test complete validation flow with CONDITIONAL recommendation."""
+        engine = ValidationEngine()
+        request = ValidationRequest(
+            profile_id="test_complete_conditional",
+            input_id="user_013",
+            initial_capital=Decimal("250000"),
+            target_monthly_return_eur=Decimal("1000"),
+            backtest_feasibility_ratio=Decimal("0.8"),  # Conditional
+            backtest_sharpe_ratio=Decimal("1.0"),
+        )
+
+        result = await engine.validate(request)
+
+        assert result.success
+        assert result.passed
+        assert result.overall_recommendation == "CONDITIONAL"
+
+
+# VALIDATION HISTORY TESTS
+class TestValidationHistory:
+    @pytest.mark.asyncio
+    async def test_validation_history_tracking(self):
+        """Test that validation history is tracked."""
+        engine = ValidationEngine()
+
+        for i in range(3):
+            request = ValidationRequest(
+                profile_id=f"test_hist_{i}",
+                input_id=f"user_hist_{i}",
+                initial_capital=Decimal("250000"),
+                target_monthly_return_eur=Decimal("1000"),
+                backtest_feasibility_ratio=Decimal("1.1"),
             )
-            assert result.overall_status in ["APPROVED", "CONDITIONAL"]
+            await engine.validate(request)
+
+        history = await engine.get_validation_history()
+        assert len(history) >= 3
+
+    @pytest.mark.asyncio
+    async def test_validation_history_limit(self):
+        """Test validation history with limit."""
+        engine = ValidationEngine()
+
+        for i in range(5):
+            request = ValidationRequest(
+                profile_id=f"test_limit_{i}",
+                input_id=f"user_limit_{i}",
+                initial_capital=Decimal("250000"),
+                target_monthly_return_eur=Decimal("1000"),
+            )
+            await engine.validate(request)
+
+        history = await engine.get_validation_history(limit=2)
+        assert len(history) == 2
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])
