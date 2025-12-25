@@ -1,447 +1,450 @@
 """
-T7.1: Unit Tests for PortfolioConstructor
+T7.1: PortfolioConstructor Tests
 
-Tests cover:
-- Equal-weight allocation
-- Mean-variance optimization
-- Risk parity allocation
-- Maximum Sharpe ratio optimization
-- Covariance matrix building
-- Portfolio volatility calculations
+Tests for portfolio construction and optimization across trading modules.
 """
 
 import pytest
-from app.services.portfolio_construction import (
+from decimal import Decimal
+from app.services.portfolio_constructor import (
     PortfolioConstructor,
-    OptimizationMethod,
+    get_portfolio_constructor,
+    PortfolioConstructionRequest,
 )
 
 
-@pytest.fixture
-def constructor():
-    """Create PortfolioConstructor instance."""
-    return PortfolioConstructor()
+# PORTFOLIO CONSTRUCTOR INITIALIZATION TESTS
+class TestPortfolioConstructorInitialization:
+    def test_constructor_init(self):
+        """Test constructor initialization."""
+        constructor = PortfolioConstructor()
+        assert len(constructor.construction_history) == 0
+
+    def test_constructor_singleton(self):
+        """Test constructor singleton pattern."""
+        c1 = get_portfolio_constructor()
+        c2 = get_portfolio_constructor()
+        assert c1 is c2
+
+    def test_constructor_status(self):
+        """Test constructor status reporting."""
+        constructor = PortfolioConstructor()
+        status = constructor.get_constructor_status()
+
+        assert "total_constructions" in status
+        assert "successful_constructions" in status
+        assert "average_sharpe" in status
 
 
-@pytest.fixture
-def sample_assets():
-    """Sample asset list."""
-    return ["AAPL", "MSFT", "GOOGL", "AMZN"]
-
-
-@pytest.fixture
-def sample_returns():
-    """Sample expected returns."""
-    return {
-        "AAPL": 0.12,
-        "MSFT": 0.14,
-        "GOOGL": 0.16,
-        "AMZN": 0.18,
-    }
-
-
-@pytest.fixture
-def sample_volatilities():
-    """Sample volatilities."""
-    return {
-        "AAPL": 0.20,
-        "MSFT": 0.18,
-        "GOOGL": 0.22,
-        "AMZN": 0.25,
-    }
-
-
-@pytest.fixture
-def sample_correlation_matrix():
-    """Sample correlation matrix."""
-    return {
-        "AAPL": {"AAPL": 1.0, "MSFT": 0.65, "GOOGL": 0.60, "AMZN": 0.55},
-        "MSFT": {"AAPL": 0.65, "MSFT": 1.0, "GOOGL": 0.70, "AMZN": 0.60},
-        "GOOGL": {"AAPL": 0.60, "MSFT": 0.70, "GOOGL": 1.0, "AMZN": 0.65},
-        "AMZN": {"AAPL": 0.55, "MSFT": 0.60, "GOOGL": 0.65, "AMZN": 1.0},
-    }
-
-
-# =============================================================================
-# Test Equal-Weight Allocation
-# =============================================================================
-
-class TestEqualWeightAllocation:
-    """Test equal-weight portfolio allocation."""
-
+# EFFICIENT FRONTIER PORTFOLIO TESTS
+class TestEfficientFrontierPortfolio:
     @pytest.mark.asyncio
-    async def test_equal_weight_four_assets(self, constructor, sample_assets):
-        """Test equal-weight allocation for four assets."""
-        allocation = await constructor._equal_weight_allocation(sample_assets)
-
-        assert allocation.allocation["AAPL"] == 0.25
-        assert allocation.allocation["MSFT"] == 0.25
-        assert allocation.allocation["GOOGL"] == 0.25
-        assert allocation.allocation["AMZN"] == 0.25
-        assert allocation.method == OptimizationMethod.EQUAL_WEIGHT.value
-        assert allocation.num_assets == 4
-
-    @pytest.mark.asyncio
-    async def test_equal_weight_allocation_sums_to_one(self, constructor, sample_assets):
-        """Test that allocation weights sum to 1.0."""
-        allocation = await constructor._equal_weight_allocation(sample_assets)
-        total_weight = sum(allocation.allocation.values())
-        assert abs(total_weight - 1.0) < 1e-6
-
-    @pytest.mark.asyncio
-    async def test_equal_weight_single_asset(self, constructor):
-        """Test equal-weight with single asset."""
-        allocation = await constructor._equal_weight_allocation(["SPY"])
-        assert allocation.allocation["SPY"] == 1.0
-        assert allocation.num_assets == 1
-
-    @pytest.mark.asyncio
-    async def test_equal_weight_not_optimized_flag(self, constructor, sample_assets):
-        """Test that equal-weight allocation is marked as not optimized."""
-        allocation = await constructor._equal_weight_allocation(sample_assets)
-        assert allocation.is_optimized is False
-
-
-# =============================================================================
-# Test Mean-Variance Optimization
-# =============================================================================
-
-class TestMeanVarianceOptimization:
-    """Test mean-variance optimization."""
-
-    @pytest.mark.asyncio
-    async def test_mean_variance_basic(
-        self, constructor, sample_assets, sample_returns, sample_volatilities, sample_correlation_matrix
-    ):
-        """Test basic mean-variance optimization."""
-        allocation = await constructor._mean_variance_optimization(
-            sample_assets, sample_returns, sample_volatilities, sample_correlation_matrix
+    async def test_construct_efficient_frontier(self):
+        """Test efficient frontier portfolio construction."""
+        constructor = PortfolioConstructor()
+        request = PortfolioConstructionRequest(
+            profile_id="test_efficient",
+            input_id="user_001",
+            capital_eur=Decimal("100000"),
+            risk_profile="balanced",
+            investment_objective="balanced_growth",
+            enabled_modules=["momentum", "mean_reversion", "machine_learning_basic"],
+            target_annual_return_pct=Decimal("12"),
+            max_acceptable_drawdown_pct=Decimal("15"),
         )
 
-        assert allocation.method == OptimizationMethod.MEAN_VARIANCE.value
-        assert allocation.is_optimized is True
-        assert allocation.expected_return > 0
-        assert allocation.expected_volatility > 0
-        assert allocation.sharpe_ratio > 0
+        result = await constructor.construct_portfolio(request)
+
+        assert result.success
+        assert result.allocation_method == "efficient_frontier"
+        assert len(result.allocations) == 3
+        assert sum(a.weight_pct for a in result.allocations) == pytest.approx(Decimal("100"), abs=Decimal("0.01"))
 
     @pytest.mark.asyncio
-    async def test_mean_variance_allocation_valid(
-        self, constructor, sample_assets, sample_returns, sample_volatilities, sample_correlation_matrix
-    ):
-        """Test that mean-variance allocation is valid (sums to 1)."""
-        allocation = await constructor._mean_variance_optimization(
-            sample_assets, sample_returns, sample_volatilities, sample_correlation_matrix
+    async def test_efficient_frontier_aggressive_profile(self):
+        """Test efficient frontier with aggressive risk profile."""
+        constructor = PortfolioConstructor()
+        request = PortfolioConstructionRequest(
+            profile_id="test_eff_aggressive",
+            input_id="user_002",
+            capital_eur=Decimal("50000"),
+            risk_profile="aggressive",
+            investment_objective="maximizar_capital",
+            enabled_modules=[
+                "momentum",
+                "machine_learning_basic",
+                "transformer_engine",
+                "deep_learning_engine",
+            ],
+            target_annual_return_pct=Decimal("20"),
+            max_acceptable_drawdown_pct=Decimal("20"),
         )
 
-        total_weight = sum(allocation.allocation.values())
-        assert abs(total_weight - 1.0) < 0.01
+        result = await constructor.construct_portfolio(request)
+
+        assert result.success
+        # Aggressive should favor higher-return, higher-volatility modules
+        high_return_weight = sum(
+            a.weight_pct for a in result.allocations
+            if a.module_name in ["transformer_engine", "deep_learning_engine"]
+        )
+        assert high_return_weight > Decimal("10")  # Should have meaningful allocation
 
     @pytest.mark.asyncio
-    async def test_mean_variance_without_correlation(
-        self, constructor, sample_assets, sample_returns, sample_volatilities
-    ):
-        """Test mean-variance falls back to equal-weight without correlation matrix."""
-        allocation = await constructor._mean_variance_optimization(
-            sample_assets, sample_returns, sample_volatilities, None
+    async def test_efficient_frontier_conservative_profile(self):
+        """Test efficient frontier with conservative risk profile."""
+        constructor = PortfolioConstructor()
+        request = PortfolioConstructionRequest(
+            profile_id="test_eff_conservative",
+            input_id="user_003",
+            capital_eur=Decimal("100000"),
+            risk_profile="conservative",
+            investment_objective="capital_preservation",
+            enabled_modules=["mean_reversion", "pairs_trading", "ensemble_strategy"],
+            target_annual_return_pct=Decimal("6"),
+            max_acceptable_drawdown_pct=Decimal("8"),
         )
 
-        # Should fall back to equal-weight
-        assert abs(allocation.allocation[sample_assets[0]] - 0.25) < 0.01
+        result = await constructor.construct_portfolio(request)
 
+        assert result.success
+        # Conservative should favor lower-volatility modules
+        low_vol_weight = sum(
+            a.weight_pct for a in result.allocations
+            if a.module_name in ["pairs_trading", "mean_reversion"]
+        )
+        assert low_vol_weight > Decimal("30")
+
+
+# RISK PARITY PORTFOLIO TESTS
+class TestRiskParityPortfolio:
     @pytest.mark.asyncio
-    async def test_mean_variance_positive_sharpe(
-        self, constructor, sample_assets, sample_returns, sample_volatilities, sample_correlation_matrix
-    ):
-        """Test that Sharpe ratio is positive for positive returns."""
-        allocation = await constructor._mean_variance_optimization(
-            sample_assets, sample_returns, sample_volatilities, sample_correlation_matrix
+    async def test_construct_risk_parity(self):
+        """Test risk-parity portfolio construction."""
+        constructor = PortfolioConstructor()
+        request = PortfolioConstructionRequest(
+            profile_id="test_risk_parity",
+            input_id="user_004",
+            capital_eur=Decimal("100000"),
+            risk_profile="balanced",
+            investment_objective="balanced_growth",
+            enabled_modules=["momentum", "mean_reversion"],
+            target_annual_return_pct=Decimal("10"),
+            max_acceptable_drawdown_pct=Decimal("15"),
         )
 
-        assert allocation.sharpe_ratio > 0
+        result = await constructor.construct_portfolio(request)
+
+        # Should use efficient frontier or risk parity (either is valid)
+        assert result.success
+        assert len(result.allocations) == 2
+        assert sum(a.weight_pct for a in result.allocations) == pytest.approx(Decimal("100"), abs=Decimal("0.01"))
 
 
-# =============================================================================
-# Test Risk Parity Allocation
-# =============================================================================
-
-class TestRiskParityAllocation:
-    """Test risk parity allocation."""
-
+# EQUAL WEIGHT PORTFOLIO TESTS
+class TestEqualWeightPortfolio:
     @pytest.mark.asyncio
-    async def test_risk_parity_basic(self, constructor, sample_assets, sample_volatilities):
-        """Test basic risk parity allocation."""
-        allocation = await constructor._risk_parity_allocation(sample_assets, sample_volatilities)
-
-        assert allocation.method == OptimizationMethod.RISK_PARITY.value
-        assert allocation.is_optimized is True
-        assert allocation.num_assets == 4
-
-    @pytest.mark.asyncio
-    async def test_risk_parity_weights_sum_to_one(self, constructor, sample_assets, sample_volatilities):
-        """Test that risk parity weights sum to 1.0."""
-        allocation = await constructor._risk_parity_allocation(sample_assets, sample_volatilities)
-        total_weight = sum(allocation.allocation.values())
-        assert abs(total_weight - 1.0) < 1e-6
-
-    @pytest.mark.asyncio
-    async def test_risk_parity_inverse_volatility(self, constructor, sample_assets, sample_volatilities):
-        """Test that higher volatility assets get lower weights."""
-        allocation = await constructor._risk_parity_allocation(sample_assets, sample_volatilities)
-
-        # AMZN has highest volatility (0.25), should have lowest weight
-        # MSFT has lowest volatility (0.18), should have highest weight
-        assert allocation.allocation["MSFT"] > allocation.allocation["AMZN"]
-        assert allocation.allocation["MSFT"] > allocation.allocation["GOOGL"]
-
-    @pytest.mark.asyncio
-    async def test_risk_parity_single_asset(self, constructor):
-        """Test risk parity with single asset."""
-        allocation = await constructor._risk_parity_allocation(["SPY"], {"SPY": 0.15})
-        assert allocation.allocation["SPY"] == 1.0
-
-
-# =============================================================================
-# Test Maximum Sharpe Ratio Optimization
-# =============================================================================
-
-class TestMaxSharpeOptimization:
-    """Test maximum Sharpe ratio optimization."""
-
-    @pytest.mark.asyncio
-    async def test_max_sharpe_basic(
-        self, constructor, sample_assets, sample_returns, sample_volatilities, sample_correlation_matrix
-    ):
-        """Test basic maximum Sharpe optimization."""
-        allocation = await constructor._max_sharpe_optimization(
-            sample_assets, sample_returns, sample_volatilities, sample_correlation_matrix
+    async def test_construct_equal_weight(self):
+        """Test equal-weight portfolio construction."""
+        constructor = PortfolioConstructor()
+        request = PortfolioConstructionRequest(
+            profile_id="test_equal_weight",
+            input_id="user_005",
+            capital_eur=Decimal("100000"),
+            risk_profile="balanced",
+            investment_objective="balanced_growth",
+            enabled_modules=["momentum", "mean_reversion", "pairs_trading"],
+            target_annual_return_pct=Decimal("10"),
+            max_acceptable_drawdown_pct=Decimal("15"),
         )
 
-        assert allocation.method == OptimizationMethod.MAX_SHARPE.value
-        assert allocation.is_optimized is True
-        assert allocation.sharpe_ratio > 0
+        result = await constructor.construct_portfolio(request)
+
+        assert result.success
+        assert len(result.allocations) == 3
+        # All weights should be positive and sum to 100%
+        total_weight = sum(a.weight_pct for a in result.allocations)
+        assert total_weight == pytest.approx(Decimal("100"), abs=Decimal("0.1"))
 
     @pytest.mark.asyncio
-    async def test_max_sharpe_allocation_valid(
-        self, constructor, sample_assets, sample_returns, sample_volatilities, sample_correlation_matrix
-    ):
-        """Test that max Sharpe allocation is valid."""
-        allocation = await constructor._max_sharpe_optimization(
-            sample_assets, sample_returns, sample_volatilities, sample_correlation_matrix
+    async def test_equal_weight_two_modules(self):
+        """Test portfolio with two modules."""
+        constructor = PortfolioConstructor()
+        request = PortfolioConstructionRequest(
+            profile_id="test_equal_two",
+            input_id="user_006",
+            capital_eur=Decimal("100000"),
+            risk_profile="balanced",
+            investment_objective="balanced_growth",
+            enabled_modules=["momentum", "mean_reversion"],
+            target_annual_return_pct=Decimal("10"),
+            max_acceptable_drawdown_pct=Decimal("15"),
         )
 
-        total_weight = sum(allocation.allocation.values())
-        assert abs(total_weight - 1.0) < 0.01
+        result = await constructor.construct_portfolio(request)
+
+        assert result.success
+        assert len(result.allocations) == 2
+        # Weights should sum to 100%
+        total_weight = sum(a.weight_pct for a in result.allocations)
+        assert total_weight == pytest.approx(Decimal("100"), abs=Decimal("0.1"))
+        # Total capital allocated should equal input capital
+        total_capital = sum(a.capital_allocation_eur for a in result.allocations)
+        assert total_capital == pytest.approx(Decimal("100000"), abs=Decimal("1"))
+
+
+# CAPITAL ALLOCATION TESTS
+class TestCapitalAllocation:
+    @pytest.mark.asyncio
+    async def test_capital_properly_allocated(self):
+        """Test that total capital is properly allocated."""
+        constructor = PortfolioConstructor()
+        request = PortfolioConstructionRequest(
+            profile_id="test_capital_alloc",
+            input_id="user_007",
+            capital_eur=Decimal("250000"),
+            risk_profile="balanced",
+            investment_objective="balanced_growth",
+            enabled_modules=["momentum", "mean_reversion", "machine_learning_basic"],
+            target_annual_return_pct=Decimal("12"),
+            max_acceptable_drawdown_pct=Decimal("15"),
+        )
+
+        result = await constructor.construct_portfolio(request)
+
+        assert result.success
+        total_allocated = sum(a.capital_allocation_eur for a in result.allocations)
+        assert total_allocated == pytest.approx(request.capital_eur, abs=Decimal("1"))
 
     @pytest.mark.asyncio
-    async def test_max_sharpe_without_correlation(
-        self, constructor, sample_assets, sample_returns, sample_volatilities
-    ):
-        """Test max Sharpe falls back without correlation matrix."""
-        allocation = await constructor._max_sharpe_optimization(
-            sample_assets, sample_returns, sample_volatilities, None
+    async def test_large_capital_allocation(self):
+        """Test allocation with large capital amount."""
+        constructor = PortfolioConstructor()
+        request = PortfolioConstructionRequest(
+            profile_id="test_large_capital",
+            input_id="user_008",
+            capital_eur=Decimal("1000000"),
+            risk_profile="aggressive",
+            investment_objective="maximizar_capital",
+            enabled_modules=["momentum", "machine_learning_basic", "transformer_engine"],
+            target_annual_return_pct=Decimal("15"),
+            max_acceptable_drawdown_pct=Decimal("20"),
         )
 
-        assert allocation.allocation[sample_assets[0]] > 0
+        result = await constructor.construct_portfolio(request)
+
+        assert result.success
+        total_allocated = sum(a.capital_allocation_eur for a in result.allocations)
+        assert total_allocated == pytest.approx(Decimal("1000000"), abs=Decimal("10"))
 
 
-# =============================================================================
-# Test Covariance Matrix Building
-# =============================================================================
+# PORTFOLIO METRICS TESTS
+class TestPortfolioMetrics:
+    @pytest.mark.asyncio
+    async def test_portfolio_metrics_calculated(self):
+        """Test that portfolio metrics are properly calculated."""
+        constructor = PortfolioConstructor()
+        request = PortfolioConstructionRequest(
+            profile_id="test_metrics",
+            input_id="user_009",
+            capital_eur=Decimal("100000"),
+            risk_profile="balanced",
+            investment_objective="balanced_growth",
+            enabled_modules=["momentum", "mean_reversion"],
+            target_annual_return_pct=Decimal("10"),
+            max_acceptable_drawdown_pct=Decimal("15"),
+        )
 
-class TestCovarianceMatrix:
-    """Test covariance matrix construction."""
+        result = await constructor.construct_portfolio(request)
+
+        assert result.success
+        assert result.expected_portfolio_return_pct > Decimal("0")
+        assert result.expected_portfolio_sharpe >= Decimal("0")
+        assert result.expected_portfolio_drawdown_pct > Decimal("0")
+        assert result.diversification_ratio >= Decimal("1")  # Should be >= 1 for diversified portfolios
 
     @pytest.mark.asyncio
-    async def test_covariance_matrix_diagonal(
-        self, constructor, sample_assets, sample_volatilities, sample_correlation_matrix
-    ):
-        """Test that covariance matrix diagonal equals variance."""
-        cov = await constructor._build_covariance_matrix(
-            sample_assets, sample_volatilities, sample_correlation_matrix
+    async def test_aggressive_portfolio_higher_return(self):
+        """Test that aggressive portfolios have higher expected returns."""
+        constructor = PortfolioConstructor()
+        request_agg = PortfolioConstructionRequest(
+            profile_id="test_agg_return",
+            input_id="user_010",
+            capital_eur=Decimal("100000"),
+            risk_profile="aggressive",
+            investment_objective="maximizar_capital",
+            enabled_modules=["transformer_engine", "deep_learning_engine", "reinforcement_learning"],
+            target_annual_return_pct=Decimal("20"),
+            max_acceptable_drawdown_pct=Decimal("25"),
         )
 
-        for asset in sample_assets:
-            # Variance = volatility^2
-            expected_var = sample_volatilities[asset] ** 2
-            actual_var = cov[asset][asset]
-            assert abs(actual_var - expected_var) < 1e-6
+        request_cons = PortfolioConstructionRequest(
+            profile_id="test_cons_return",
+            input_id="user_011",
+            capital_eur=Decimal("100000"),
+            risk_profile="conservative",
+            investment_objective="capital_preservation",
+            enabled_modules=["pairs_trading", "mean_reversion"],
+            target_annual_return_pct=Decimal("6"),
+            max_acceptable_drawdown_pct=Decimal("8"),
+        )
+
+        result_agg = await constructor.construct_portfolio(request_agg)
+        result_cons = await constructor.construct_portfolio(request_cons)
+
+        assert result_agg.success
+        assert result_cons.success
+        # Aggressive should have higher expected return
+        assert result_agg.expected_portfolio_return_pct > result_cons.expected_portfolio_return_pct
+
+
+# ALLOCATION RATIONALE TESTS
+class TestAllocationRationale:
+    @pytest.mark.asyncio
+    async def test_allocation_has_rationale(self):
+        """Test that each allocation has a rationale."""
+        constructor = PortfolioConstructor()
+        request = PortfolioConstructionRequest(
+            profile_id="test_rationale",
+            input_id="user_012",
+            capital_eur=Decimal("100000"),
+            risk_profile="balanced",
+            investment_objective="balanced_growth",
+            enabled_modules=["momentum", "mean_reversion"],
+            target_annual_return_pct=Decimal("10"),
+            max_acceptable_drawdown_pct=Decimal("15"),
+        )
+
+        result = await constructor.construct_portfolio(request)
+
+        assert result.success
+        for allocation in result.allocations:
+            assert allocation.rationale != ""
+            assert allocation.rationale is not None
+
+
+# SINGLE MODULE PORTFOLIO TESTS
+class TestSingleModulePortfolio:
+    @pytest.mark.asyncio
+    async def test_single_module_allocation(self):
+        """Test portfolio with single module (fallback to 100%)."""
+        constructor = PortfolioConstructor()
+        request = PortfolioConstructionRequest(
+            profile_id="test_single_module",
+            input_id="user_013",
+            capital_eur=Decimal("100000"),
+            risk_profile="balanced",
+            investment_objective="balanced_growth",
+            enabled_modules=["momentum"],
+            target_annual_return_pct=Decimal("12"),
+            max_acceptable_drawdown_pct=Decimal("15"),
+        )
+
+        result = await constructor.construct_portfolio(request)
+
+        assert result.success
+        assert len(result.allocations) == 1
+        assert result.allocations[0].weight_pct == Decimal("100")
+        assert result.allocations[0].capital_allocation_eur == Decimal("100000")
+
+
+# NO MODULES EDGE CASE TEST
+class TestNoModulesEdgeCase:
+    @pytest.mark.asyncio
+    async def test_no_modules_enabled(self):
+        """Test behavior when no modules are enabled."""
+        constructor = PortfolioConstructor()
+        request = PortfolioConstructionRequest(
+            profile_id="test_no_modules",
+            input_id="user_014",
+            capital_eur=Decimal("100000"),
+            risk_profile="balanced",
+            investment_objective="balanced_growth",
+            enabled_modules=[],
+            target_annual_return_pct=Decimal("10"),
+            max_acceptable_drawdown_pct=Decimal("15"),
+        )
+
+        result = await constructor.construct_portfolio(request)
+
+        # Should fail gracefully
+        assert result.success is False
+
+
+# CONSTRUCTION HISTORY TESTS
+class TestConstructionHistory:
+    @pytest.mark.asyncio
+    async def test_history_tracking(self):
+        """Test that construction history is tracked."""
+        constructor = PortfolioConstructor()
+
+        for i in range(3):
+            request = PortfolioConstructionRequest(
+                profile_id=f"test_hist_{i}",
+                input_id=f"user_hist_{i}",
+                capital_eur=Decimal("100000"),
+                risk_profile="balanced",
+                investment_objective="balanced_growth",
+                enabled_modules=["momentum", "mean_reversion"],
+                target_annual_return_pct=Decimal("10"),
+                max_acceptable_drawdown_pct=Decimal("15"),
+            )
+            await constructor.construct_portfolio(request)
+
+        history = await constructor.get_construction_history()
+        assert len(history) >= 3
 
     @pytest.mark.asyncio
-    async def test_covariance_matrix_symmetric(
-        self, constructor, sample_assets, sample_volatilities, sample_correlation_matrix
-    ):
-        """Test that covariance matrix is symmetric."""
-        cov = await constructor._build_covariance_matrix(
-            sample_assets, sample_volatilities, sample_correlation_matrix
-        )
+    async def test_history_limit(self):
+        """Test history retrieval with limit."""
+        constructor = PortfolioConstructor()
 
-        for asset1 in sample_assets:
-            for asset2 in sample_assets:
-                assert abs(cov[asset1][asset2] - cov[asset2][asset1]) < 1e-6
+        for i in range(5):
+            request = PortfolioConstructionRequest(
+                profile_id=f"test_limit_{i}",
+                input_id=f"user_limit_{i}",
+                capital_eur=Decimal("100000"),
+                risk_profile="balanced",
+                investment_objective="balanced_growth",
+                enabled_modules=["momentum", "mean_reversion"],
+                target_annual_return_pct=Decimal("10"),
+                max_acceptable_drawdown_pct=Decimal("15"),
+            )
+            await constructor.construct_portfolio(request)
 
+        history = await constructor.get_construction_history(limit=2)
+        assert len(history) == 2
+
+
+# DIVERSIFICATION RATIO TESTS
+class TestDiversificationRatio:
     @pytest.mark.asyncio
-    async def test_covariance_matrix_off_diagonal(
-        self, constructor, sample_assets, sample_volatilities, sample_correlation_matrix
-    ):
-        """Test that off-diagonal elements use correlation correctly."""
-        cov = await constructor._build_covariance_matrix(
-            sample_assets, sample_volatilities, sample_correlation_matrix
+    async def test_diversification_ratio_calculated(self):
+        """Test that diversification ratio is properly calculated."""
+        constructor = PortfolioConstructor()
+        request = PortfolioConstructionRequest(
+            profile_id="test_diversification",
+            input_id="user_015",
+            capital_eur=Decimal("100000"),
+            risk_profile="balanced",
+            investment_objective="balanced_growth",
+            enabled_modules=[
+                "momentum",
+                "mean_reversion",
+                "pairs_trading",
+                "ensemble_strategy",
+            ],
+            target_annual_return_pct=Decimal("10"),
+            max_acceptable_drawdown_pct=Decimal("15"),
         )
 
-        # Cov(A,B) = Corr(A,B) * Vol(A) * Vol(B)
-        expected_cov = (
-            sample_correlation_matrix["AAPL"]["MSFT"] *
-            sample_volatilities["AAPL"] *
-            sample_volatilities["MSFT"]
-        )
-        actual_cov = cov["AAPL"]["MSFT"]
-        assert abs(actual_cov - expected_cov) < 1e-6
+        result = await constructor.construct_portfolio(request)
+
+        assert result.success
+        assert result.diversification_ratio > Decimal("0")
+        # More modules should generally have better diversification
+        assert result.diversification_ratio > Decimal("1")
 
 
-# =============================================================================
-# Test Portfolio Volatility Calculation
-# =============================================================================
-
-class TestPortfolioVolatility:
-    """Test portfolio volatility calculation."""
-
-    @pytest.mark.asyncio
-    async def test_portfolio_volatility_single_asset(
-        self, constructor, sample_volatilities, sample_correlation_matrix
-    ):
-        """Test portfolio volatility for single asset equals asset volatility."""
-        cov = await constructor._build_covariance_matrix(
-            ["AAPL"], {"AAPL": sample_volatilities["AAPL"]}, sample_correlation_matrix
-        )
-
-        allocation = {"AAPL": 1.0}
-        vol = await constructor._calculate_portfolio_volatility(allocation, cov)
-
-        assert abs(vol - sample_volatilities["AAPL"]) < 1e-6
-
-    @pytest.mark.asyncio
-    async def test_portfolio_volatility_equal_weight(
-        self, constructor, sample_assets, sample_volatilities, sample_correlation_matrix
-    ):
-        """Test portfolio volatility for equal-weight allocation."""
-        cov = await constructor._build_covariance_matrix(
-            sample_assets, sample_volatilities, sample_correlation_matrix
-        )
-
-        allocation = {asset: 0.25 for asset in sample_assets}
-        vol = await constructor._calculate_portfolio_volatility(allocation, cov)
-
-        # Should be less than average volatility due to diversification
-        avg_vol = sum(sample_volatilities.values()) / len(sample_assets)
-        assert vol < avg_vol
-
-    @pytest.mark.asyncio
-    async def test_portfolio_volatility_positive(
-        self, constructor, sample_assets, sample_volatilities, sample_correlation_matrix
-    ):
-        """Test that portfolio volatility is always positive."""
-        cov = await constructor._build_covariance_matrix(
-            sample_assets, sample_volatilities, sample_correlation_matrix
-        )
-
-        allocation = {asset: 0.25 for asset in sample_assets}
-        vol = await constructor._calculate_portfolio_volatility(allocation, cov)
-
-        assert vol > 0
-
-
-# =============================================================================
-# Test Main Construct Portfolio Method
-# =============================================================================
-
-class TestConstructPortfolio:
-    """Test main construct_portfolio method."""
-
-    @pytest.mark.asyncio
-    async def test_construct_equal_weight_method(
-        self, constructor, sample_assets, sample_returns, sample_volatilities
-    ):
-        """Test constructing portfolio with equal-weight method."""
-        allocation = await constructor.construct_portfolio(
-            sample_assets, sample_returns, sample_volatilities,
-            method=OptimizationMethod.EQUAL_WEIGHT.value
-        )
-
-        assert allocation.method == OptimizationMethod.EQUAL_WEIGHT.value
-        assert all(abs(w - 0.25) < 1e-6 for w in allocation.allocation.values())
-
-    @pytest.mark.asyncio
-    async def test_construct_risk_parity_method(
-        self, constructor, sample_assets, sample_returns, sample_volatilities
-    ):
-        """Test constructing portfolio with risk parity method."""
-        allocation = await constructor.construct_portfolio(
-            sample_assets, sample_returns, sample_volatilities,
-            method=OptimizationMethod.RISK_PARITY.value
-        )
-
-        assert allocation.method == OptimizationMethod.RISK_PARITY.value
-        assert allocation.is_optimized is True
-
-    @pytest.mark.asyncio
-    async def test_construct_mean_variance_method(
-        self, constructor, sample_assets, sample_returns, sample_volatilities, sample_correlation_matrix
-    ):
-        """Test constructing portfolio with mean-variance method."""
-        allocation = await constructor.construct_portfolio(
-            sample_assets, sample_returns, sample_volatilities,
-            correlation_matrix=sample_correlation_matrix,
-            method=OptimizationMethod.MEAN_VARIANCE.value
-        )
-
-        assert allocation.method == OptimizationMethod.MEAN_VARIANCE.value
-        assert allocation.sharpe_ratio > 0
-
-    @pytest.mark.asyncio
-    async def test_construct_unknown_method_fallback(
-        self, constructor, sample_assets, sample_returns, sample_volatilities
-    ):
-        """Test that unknown method falls back to equal-weight."""
-        allocation = await constructor.construct_portfolio(
-            sample_assets, sample_returns, sample_volatilities,
-            method="unknown_method"
-        )
-
-        assert allocation.method == OptimizationMethod.EQUAL_WEIGHT.value
-
-    @pytest.mark.asyncio
-    async def test_construct_error_handling(
-        self, constructor, sample_assets, sample_returns, sample_volatilities
-    ):
-        """Test that errors are handled gracefully with fallback."""
-        # Call with minimal data should still succeed with fallback
-        allocation = await constructor.construct_portfolio(
-            sample_assets, {}, {},
-            method=OptimizationMethod.MEAN_VARIANCE.value
-        )
-
-        # Should fall back to equal-weight
-        assert allocation.allocation[sample_assets[0]] > 0
-
-
-# =============================================================================
-# Test Allocation Validation
-# =============================================================================
-
-class TestAllocationValidation:
-    """Test allocation validation."""
-
-    def test_validate_allocation_valid(self, constructor):
-        """Test validation of valid allocation."""
-        allocation = {"AAPL": 0.25, "MSFT": 0.25, "GOOGL": 0.25, "AMZN": 0.25}
-        assert constructor.validate_allocation(allocation) is True
-
-    def test_validate_allocation_small_error(self, constructor):
-        """Test validation allows small floating-point errors."""
-        allocation = {"AAPL": 0.25, "MSFT": 0.25, "GOOGL": 0.25, "AMZN": 0.2500000001}
-        assert constructor.validate_allocation(allocation) is True
-
-    def test_validate_allocation_invalid_sum(self, constructor):
-        """Test validation rejects invalid sums."""
-        allocation = {"AAPL": 0.30, "MSFT": 0.30, "GOOGL": 0.30, "AMZN": 0.30}
-        assert constructor.validate_allocation(allocation) is False
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

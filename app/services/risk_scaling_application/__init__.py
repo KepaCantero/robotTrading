@@ -1,15 +1,21 @@
 """
-Risk Scaling Application Services - T8.1
-
-Applies conditional risk scaling based on portfolio metrics and market conditions.
+T8.1: RiskScalingApplication - Conditional risk scaling based on market conditions
 """
 
-from app.services.risk_scaling_application.risk_scaling_applicator import (
-    RiskScalingApplicator,
-    RiskAdjustedAllocation,
+from .risk_scaling_applicator import (
+    RiskScalingApplication,
+    get_risk_scaler,
+)
+from .models import (
+    RiskScalingRequest,
+    RiskAdjustedPortfolio,
+    AdjustedAllocationWeight,
 )
 
 __all__ = [
-    "RiskScalingApplicator",
-    "RiskAdjustedAllocation",
+    "RiskScalingApplication",
+    "get_risk_scaler",
+    "RiskScalingRequest",
+    "RiskAdjustedPortfolio",
+    "AdjustedAllocationWeight",
 ]

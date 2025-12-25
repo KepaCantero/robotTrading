@@ -1,303 +1,350 @@
 """
-T8.1: Unit Tests for RiskScalingApplication
+T8.1: RiskScalingApplication Tests
 
-Tests cover:
-- Risk scaling factor calculation
-- Portfolio allocation adjustment
-- Rebalancing decisions
-- Edge cases and error handling
+Tests for conditional risk scaling based on market regime and drawdown.
 """
 
 import pytest
+from decimal import Decimal
+from app.services.portfolio_constructor import (
+    PortfolioConstructor,
+    PortfolioConstructionRequest,
+)
 from app.services.risk_scaling_application import (
-    RiskScalingApplicator,
+    RiskScalingApplication,
+    get_risk_scaler,
+    RiskScalingRequest,
 )
 
 
-@pytest.fixture
-def applicator():
-    """Create RiskScalingApplicator instance."""
-    return RiskScalingApplicator()
+# RISK SCALING APPLICATION INITIALIZATION TESTS
+class TestRiskScalingApplicationInitialization:
+    def test_scaler_init(self):
+        """Test scaler initialization."""
+        scaler = RiskScalingApplication()
+        assert len(scaler.scaling_history) == 0
+
+    def test_scaler_singleton(self):
+        """Test scaler singleton pattern."""
+        s1 = get_risk_scaler()
+        s2 = get_risk_scaler()
+        assert s1 is s2
+
+    def test_scaler_status(self):
+        """Test scaler status reporting."""
+        scaler = RiskScalingApplication()
+        status = scaler.get_scaler_status()
+
+        assert "total_scalings" in status
+        assert "successful_scalings" in status
+        assert "scaling_applied_count" in status
 
 
-@pytest.fixture
-def sample_allocation():
-    """Sample portfolio allocation."""
-    return {"AAPL": 0.30, "MSFT": 0.30, "GOOGL": 0.20, "AMZN": 0.20}
+# BULL MARKET RISK SCALING TESTS
+class TestBullMarketRiskScaling:
+    @pytest.mark.asyncio
+    async def test_bull_market_no_phase3(self):
+        """Test no scaling applied in bull market without PHASE 3."""
+        scaler = RiskScalingApplication()
+        constructor = PortfolioConstructor()
 
+        # Create base portfolio
+        profile_req = PortfolioConstructionRequest(
+            profile_id="test_bull_no_phase3",
+            input_id="user_001",
+            capital_eur=Decimal("100000"),
+            risk_profile="balanced",
+            investment_objective="balanced_growth",
+            enabled_modules=["momentum", "mean_reversion"],
+            target_annual_return_pct=Decimal("10"),
+            max_acceptable_drawdown_pct=Decimal("15"),
+        )
+        base_portfolio = await constructor.construct_portfolio(profile_req)
 
-# =============================================================================
-# Test Risk Scaling Factor Calculation
-# =============================================================================
+        # Apply risk scaling
+        request = RiskScalingRequest(
+            profile_id="test_bull_no_phase3",
+            input_id="user_001",
+            base_portfolio=base_portfolio,
+            market_regime="bull",
+            volatility_level="normal",
+            current_drawdown_pct=Decimal("5"),
+            max_acceptable_drawdown_pct=Decimal("15"),
+            phase3_enabled=False,
+        )
 
-class TestRiskScalingCalculation:
-    """Test risk scaling factor calculation."""
+        result = await scaler.apply_risk_scaling(request)
+
+        assert result.success
+        assert result.risk_scaling_applied is False
+        assert result.scaling_factor == Decimal("1.0")
 
     @pytest.mark.asyncio
-    async def test_normal_volatility_no_scaling(self, applicator):
-        """Test that normal volatility produces scale factor of ~1.0."""
-        scale_factor = await applicator._calculate_scale_factor(
-            portfolio_vol=0.15, market_vol=0.15, risk_tolerance=1.0,
-            max_scaling=2.0, min_scaling=0.5
+    async def test_bull_market_with_phase3(self):
+        """Test minor scaling in bull market with PHASE 3."""
+        scaler = RiskScalingApplication()
+        constructor = PortfolioConstructor()
+
+        profile_req = PortfolioConstructionRequest(
+            profile_id="test_bull_phase3",
+            input_id="user_002",
+            capital_eur=Decimal("100000"),
+            risk_profile="balanced",
+            investment_objective="balanced_growth",
+            enabled_modules=["momentum", "mean_reversion"],
+            target_annual_return_pct=Decimal("10"),
+            max_acceptable_drawdown_pct=Decimal("15"),
         )
-        # Should be close to 1.0 when market vol equals base vol
-        assert 0.95 < scale_factor < 1.05
+        base_portfolio = await constructor.construct_portfolio(profile_req)
+
+        request = RiskScalingRequest(
+            profile_id="test_bull_phase3",
+            input_id="user_002",
+            base_portfolio=base_portfolio,
+            market_regime="bull",
+            volatility_level="normal",
+            current_drawdown_pct=Decimal("5"),
+            max_acceptable_drawdown_pct=Decimal("15"),
+            phase3_enabled=True,  # PHASE 3 available
+        )
+
+        result = await scaler.apply_risk_scaling(request)
+
+        # Bull market with normal conditions and PHASE 3: should still not scale
+        assert result.success
+        assert result.risk_scaling_applied is False
+
+
+# BEAR MARKET RISK SCALING TESTS
+class TestBearMarketRiskScaling:
+    @pytest.mark.asyncio
+    async def test_bear_market_scales_down(self):
+        """Test risk scaling in bear market."""
+        scaler = RiskScalingApplication()
+        constructor = PortfolioConstructor()
+
+        profile_req = PortfolioConstructionRequest(
+            profile_id="test_bear_market",
+            input_id="user_003",
+            capital_eur=Decimal("100000"),
+            risk_profile="aggressive",
+            investment_objective="maximizar_capital",
+            enabled_modules=["momentum", "transformer_engine", "mean_reversion"],
+            target_annual_return_pct=Decimal("15"),
+            max_acceptable_drawdown_pct=Decimal("20"),
+        )
+        base_portfolio = await constructor.construct_portfolio(profile_req)
+
+        request = RiskScalingRequest(
+            profile_id="test_bear_market",
+            input_id="user_003",
+            base_portfolio=base_portfolio,
+            market_regime="bear",
+            volatility_level="normal",
+            current_drawdown_pct=Decimal("8"),
+            max_acceptable_drawdown_pct=Decimal("20"),
+            phase3_enabled=True,
+        )
+
+        result = await scaler.apply_risk_scaling(request)
+
+        assert result.success
+        assert result.risk_scaling_applied is True
+        assert result.scaling_factor < Decimal("1.0")  # Reduced in bear market
+        # Should favor low-volatility modules
+        momentum_adj = next((a for a in result.adjusted_allocations if a.module_name == "momentum"), None)
+        mean_rev_adj = next((a for a in result.adjusted_allocations if a.module_name == "mean_reversion"), None)
+        if momentum_adj and mean_rev_adj:
+            assert momentum_adj.adjusted_weight_pct < momentum_adj.original_weight_pct
+
+
+# HIGH VOLATILITY RISK SCALING TESTS
+class TestHighVolatilityRiskScaling:
+    @pytest.mark.asyncio
+    async def test_high_volatility_reduces_positions(self):
+        """Test position reduction in high volatility."""
+        scaler = RiskScalingApplication()
+        constructor = PortfolioConstructor()
+
+        profile_req = PortfolioConstructionRequest(
+            profile_id="test_high_vol",
+            input_id="user_004",
+            capital_eur=Decimal("100000"),
+            risk_profile="balanced",
+            investment_objective="balanced_growth",
+            enabled_modules=["momentum", "mean_reversion", "pairs_trading"],
+            target_annual_return_pct=Decimal("10"),
+            max_acceptable_drawdown_pct=Decimal("15"),
+        )
+        base_portfolio = await constructor.construct_portfolio(profile_req)
+
+        request = RiskScalingRequest(
+            profile_id="test_high_vol",
+            input_id="user_004",
+            base_portfolio=base_portfolio,
+            market_regime="sideways",
+            volatility_level="high",  # High volatility
+            current_drawdown_pct=Decimal("5"),
+            max_acceptable_drawdown_pct=Decimal("15"),
+            phase3_enabled=True,
+        )
+
+        result = await scaler.apply_risk_scaling(request)
+
+        assert result.success
+        assert result.risk_scaling_applied is True
+        # High volatility should significantly reduce scaling factor
+        assert result.scaling_factor < Decimal("1.0")
+        assert result.scaling_factor == pytest.approx(Decimal("0.75"), abs=Decimal("0.05"))
+
+
+# HIGH DRAWDOWN RISK SCALING TESTS
+class TestHighDrawdownRiskScaling:
+    @pytest.mark.asyncio
+    async def test_high_drawdown_triggers_scaling(self):
+        """Test scaling triggered by high drawdown."""
+        scaler = RiskScalingApplication()
+        constructor = PortfolioConstructor()
+
+        profile_req = PortfolioConstructionRequest(
+            profile_id="test_high_dd",
+            input_id="user_005",
+            capital_eur=Decimal("100000"),
+            risk_profile="balanced",
+            investment_objective="balanced_growth",
+            enabled_modules=["momentum", "mean_reversion"],
+            target_annual_return_pct=Decimal("10"),
+            max_acceptable_drawdown_pct=Decimal("15"),
+        )
+        base_portfolio = await constructor.construct_portfolio(profile_req)
+
+        request = RiskScalingRequest(
+            profile_id="test_high_dd",
+            input_id="user_005",
+            base_portfolio=base_portfolio,
+            market_regime="sideways",
+            volatility_level="normal",
+            current_drawdown_pct=Decimal("12"),  # 80% of max
+            max_acceptable_drawdown_pct=Decimal("15"),
+            phase3_enabled=True,
+        )
+
+        result = await scaler.apply_risk_scaling(request)
+
+        assert result.success
+        assert result.risk_scaling_applied is True
+        # Should have reduced scaling factor due to drawdown
+        assert result.scaling_factor < Decimal("1.0")
+
+
+# SCALING HISTORY TESTS
+class TestScalingHistory:
+    @pytest.mark.asyncio
+    async def test_history_tracking(self):
+        """Test that scaling history is tracked."""
+        scaler = RiskScalingApplication()
+        constructor = PortfolioConstructor()
+
+        for i in range(3):
+            profile_req = PortfolioConstructionRequest(
+                profile_id=f"test_hist_{i}",
+                input_id=f"user_hist_{i}",
+                capital_eur=Decimal("100000"),
+                risk_profile="balanced",
+                investment_objective="balanced_growth",
+                enabled_modules=["momentum", "mean_reversion"],
+                target_annual_return_pct=Decimal("10"),
+                max_acceptable_drawdown_pct=Decimal("15"),
+            )
+            base_portfolio = await constructor.construct_portfolio(profile_req)
+
+            request = RiskScalingRequest(
+                profile_id=f"test_hist_{i}",
+                input_id=f"user_hist_{i}",
+                base_portfolio=base_portfolio,
+                market_regime="sideways",
+                volatility_level="normal",
+                current_drawdown_pct=Decimal("5"),
+                max_acceptable_drawdown_pct=Decimal("15"),
+                phase3_enabled=False,
+            )
+            await scaler.apply_risk_scaling(request)
+
+        history = await scaler.get_scaling_history()
+        assert len(history) == 3  # Should have exactly 3 items from this loop
 
     @pytest.mark.asyncio
-    async def test_high_volatility_reduces_risk(self, applicator):
-        """Test that high market volatility reduces risk (scale < 1.0)."""
-        scale_factor = await applicator._calculate_scale_factor(
-            portfolio_vol=0.15, market_vol=0.25, risk_tolerance=1.0,
-            max_scaling=2.0, min_scaling=0.5
-        )
-        assert scale_factor < 1.0
+    async def test_history_limit(self):
+        """Test history retrieval with limit."""
+        scaler = RiskScalingApplication()
+        constructor = PortfolioConstructor()
 
+        for i in range(5):
+            profile_req = PortfolioConstructionRequest(
+                profile_id=f"test_limit_{i}",
+                input_id=f"user_limit_{i}",
+                capital_eur=Decimal("100000"),
+                risk_profile="balanced",
+                investment_objective="balanced_growth",
+                enabled_modules=["momentum", "mean_reversion"],
+                target_annual_return_pct=Decimal("10"),
+                max_acceptable_drawdown_pct=Decimal("15"),
+            )
+            base_portfolio = await constructor.construct_portfolio(profile_req)
+
+            request = RiskScalingRequest(
+                profile_id=f"test_limit_{i}",
+                input_id=f"user_limit_{i}",
+                base_portfolio=base_portfolio,
+                market_regime="sideways",
+                volatility_level="normal",
+                current_drawdown_pct=Decimal("5"),
+                max_acceptable_drawdown_pct=Decimal("15"),
+                phase3_enabled=False,
+            )
+            await scaler.apply_risk_scaling(request)
+
+        history = await scaler.get_scaling_history(limit=2)
+        assert len(history) == 2
+
+
+# ADJUSTMENT RATIONALE TESTS
+class TestAdjustmentRationale:
     @pytest.mark.asyncio
-    async def test_low_volatility_increases_risk(self, applicator):
-        """Test that low market volatility increases risk (scale > 1.0)."""
-        scale_factor = await applicator._calculate_scale_factor(
-            portfolio_vol=0.15, market_vol=0.10, risk_tolerance=1.0,
-            max_scaling=2.0, min_scaling=0.5
+    async def test_rationale_contains_reason(self):
+        """Test that adjustment rationale explains the decision."""
+        scaler = RiskScalingApplication()
+        constructor = PortfolioConstructor()
+
+        profile_req = PortfolioConstructionRequest(
+            profile_id="test_rationale",
+            input_id="user_006",
+            capital_eur=Decimal("100000"),
+            risk_profile="balanced",
+            investment_objective="balanced_growth",
+            enabled_modules=["momentum", "mean_reversion"],
+            target_annual_return_pct=Decimal("10"),
+            max_acceptable_drawdown_pct=Decimal("15"),
         )
-        assert scale_factor > 1.0
+        base_portfolio = await constructor.construct_portfolio(profile_req)
 
-    @pytest.mark.asyncio
-    async def test_risk_tolerance_affects_scaling(self, applicator):
-        """Test that risk tolerance multiplies scaling factor."""
-        scale_low_risk = await applicator._calculate_scale_factor(
-            portfolio_vol=0.15, market_vol=0.15, risk_tolerance=0.5,
-            max_scaling=2.0, min_scaling=0.5
-        )
-        scale_high_risk = await applicator._calculate_scale_factor(
-            portfolio_vol=0.15, market_vol=0.15, risk_tolerance=1.5,
-            max_scaling=2.0, min_scaling=0.5
-        )
-        assert scale_low_risk < scale_high_risk
-
-    @pytest.mark.asyncio
-    async def test_scaling_respects_bounds(self, applicator):
-        """Test that scaling respects min/max bounds."""
-        # Very high volatility should still respect max_scaling
-        scale_factor = await applicator._calculate_scale_factor(
-            portfolio_vol=0.15, market_vol=0.50, risk_tolerance=1.0,
-            max_scaling=2.0, min_scaling=0.5
-        )
-        assert scale_factor >= 0.5
-        assert scale_factor <= 2.0
-
-
-# =============================================================================
-# Test Apply Risk Scaling
-# =============================================================================
-
-class TestApplyRiskScaling:
-    """Test risk scaling application."""
-
-    @pytest.mark.asyncio
-    async def test_apply_scaling_normal_conditions(self, applicator, sample_allocation):
-        """Test risk scaling in normal volatility conditions."""
-        result = await applicator.apply_risk_scaling(
-            sample_allocation,
-            portfolio_volatility=0.15,
-            market_volatility=0.15,
-            risk_tolerance=1.0
+        request = RiskScalingRequest(
+            profile_id="test_rationale",
+            input_id="user_006",
+            base_portfolio=base_portfolio,
+            market_regime="bear",
+            volatility_level="normal",
+            current_drawdown_pct=Decimal("8"),
+            max_acceptable_drawdown_pct=Decimal("15"),
+            phase3_enabled=True,
         )
 
-        assert result.is_scaled is False  # No scaling in normal conditions
-        assert abs(sum(result.adjusted_allocation.values()) - 1.0) < 0.01
+        result = await scaler.apply_risk_scaling(request)
 
-    @pytest.mark.asyncio
-    async def test_apply_scaling_high_volatility(self, applicator, sample_allocation):
-        """Test risk scaling reduces allocation in high volatility."""
-        result = await applicator.apply_risk_scaling(
-            sample_allocation,
-            portfolio_volatility=0.15,
-            market_volatility=0.30,
-            risk_tolerance=1.0
-        )
-
-        assert result.is_scaled is True
-        assert result.risk_scale_factor < 1.0
-        # Scale factor should be less than 1.0 (reduced risk)
-        assert result.risk_scale_factor < 1.0
-
-    @pytest.mark.asyncio
-    async def test_apply_scaling_low_volatility(self, applicator, sample_allocation):
-        """Test risk scaling increases allocation in low volatility."""
-        result = await applicator.apply_risk_scaling(
-            sample_allocation,
-            portfolio_volatility=0.15,
-            market_volatility=0.08,
-            risk_tolerance=1.0
-        )
-
-        assert result.is_scaled is True
-        assert result.risk_scale_factor > 1.0
-        # Scale factor should be greater than 1.0 (increased risk)
-        assert result.risk_scale_factor > 1.0
-
-    @pytest.mark.asyncio
-    async def test_apply_scaling_allocation_sums_to_one(self, applicator, sample_allocation):
-        """Test that adjusted allocation sums to 1.0."""
-        result = await applicator.apply_risk_scaling(
-            sample_allocation,
-            portfolio_volatility=0.15,
-            market_volatility=0.20,
-            risk_tolerance=1.5
-        )
-
-        total = sum(result.adjusted_allocation.values())
-        assert abs(total - 1.0) < 0.01
-
-    @pytest.mark.asyncio
-    async def test_apply_scaling_preserves_asset_order(self, applicator, sample_allocation):
-        """Test that risk scaling preserves relative asset weights."""
-        result = await applicator.apply_risk_scaling(
-            sample_allocation,
-            portfolio_volatility=0.15,
-            market_volatility=0.20
-        )
-
-        # AAPL and MSFT both had 0.30 weight
-        aapl_weight = result.adjusted_allocation["AAPL"]
-        msft_weight = result.adjusted_allocation["MSFT"]
-        assert abs(aapl_weight - msft_weight) < 0.01
+        assert result.success
+        assert result.adjustment_rationale != ""
+        assert "Bear market" in result.adjustment_rationale or "scaling factor" in result.adjustment_rationale
 
 
-# =============================================================================
-# Test Scaling Reason Determination
-# =============================================================================
-
-class TestScalingReason:
-    """Test scaling reason determination."""
-
-    @pytest.mark.asyncio
-    async def test_no_scaling_reason(self, applicator):
-        """Test reason when scale factor is ~1.0."""
-        reason = await applicator._determine_scaling_reason(
-            scale_factor=1.0, portfolio_vol=0.15, market_vol=0.15
-        )
-        assert "No scaling" in reason
-
-    @pytest.mark.asyncio
-    async def test_increase_risk_reason(self, applicator):
-        """Test reason when scale factor > 1.0."""
-        reason = await applicator._determine_scaling_reason(
-            scale_factor=1.5, portfolio_vol=0.15, market_vol=0.10
-        )
-        assert "Increase risk" in reason
-
-    @pytest.mark.asyncio
-    async def test_reduce_risk_reason(self, applicator):
-        """Test reason when scale factor < 1.0."""
-        reason = await applicator._determine_scaling_reason(
-            scale_factor=0.7, portfolio_vol=0.15, market_vol=0.25
-        )
-        assert "Reduce risk" in reason
-
-
-# =============================================================================
-# Test Position Size Adjustment
-# =============================================================================
-
-class TestPositionSizeAdjustment:
-    """Test position size adjustment."""
-
-    def test_adjust_position_sizes_no_scaling(self, applicator, sample_allocation):
-        """Test position size adjustment with scale factor 1.0."""
-        position_sizes = applicator.adjust_position_sizes(
-            sample_allocation,
-            total_portfolio_value=100000,
-            scale_factor=1.0
-        )
-
-        # Total should equal portfolio value
-        assert abs(sum(position_sizes.values()) - 100000) < 1
-        # AAPL should be 30% of 100k
-        assert abs(position_sizes["AAPL"] - 30000) < 1
-
-    def test_adjust_position_sizes_scaled_down(self, applicator, sample_allocation):
-        """Test position size adjustment with scale down."""
-        position_sizes = applicator.adjust_position_sizes(
-            sample_allocation,
-            total_portfolio_value=100000,
-            scale_factor=0.8
-        )
-
-        # Total should equal scaled portfolio value
-        assert abs(sum(position_sizes.values()) - 80000) < 1
-
-    def test_adjust_position_sizes_scaled_up(self, applicator, sample_allocation):
-        """Test position size adjustment with scale up."""
-        position_sizes = applicator.adjust_position_sizes(
-            sample_allocation,
-            total_portfolio_value=100000,
-            scale_factor=1.2
-        )
-
-        # Total should equal scaled portfolio value
-        assert abs(sum(position_sizes.values()) - 120000) < 1
-
-
-# =============================================================================
-# Test Rebalancing Decisions
-# =============================================================================
-
-class TestRebalancingDecision:
-    """Test rebalancing decision logic."""
-
-    def test_should_not_rebalance_aligned(self, applicator):
-        """Test that aligned portfolios don't need rebalancing."""
-        current = {"AAPL": 0.30, "MSFT": 0.30, "GOOGL": 0.20, "AMZN": 0.20}
-        target = {"AAPL": 0.30, "MSFT": 0.30, "GOOGL": 0.20, "AMZN": 0.20}
-
-        should_rebalance = applicator.should_rebalance(current, target)
-        assert should_rebalance is False
-
-    def test_should_rebalance_drift_exceeds_threshold(self, applicator):
-        """Test that drift exceeding threshold triggers rebalancing."""
-        current = {"AAPL": 0.40, "MSFT": 0.25, "GOOGL": 0.20, "AMZN": 0.15}
-        target = {"AAPL": 0.30, "MSFT": 0.30, "GOOGL": 0.20, "AMZN": 0.20}
-
-        should_rebalance = applicator.should_rebalance(current, target, rebalance_threshold=0.05)
-        assert should_rebalance is True
-
-    def test_should_not_rebalance_drift_below_threshold(self, applicator):
-        """Test that drift below threshold doesn't trigger rebalancing."""
-        current = {"AAPL": 0.32, "MSFT": 0.29, "GOOGL": 0.20, "AMZN": 0.19}
-        target = {"AAPL": 0.30, "MSFT": 0.30, "GOOGL": 0.20, "AMZN": 0.20}
-
-        should_rebalance = applicator.should_rebalance(current, target, rebalance_threshold=0.05)
-        assert should_rebalance is False
-
-    def test_should_rebalance_custom_threshold(self, applicator):
-        """Test rebalancing with custom threshold."""
-        current = {"AAPL": 0.32, "MSFT": 0.29, "GOOGL": 0.20, "AMZN": 0.19}
-        target = {"AAPL": 0.30, "MSFT": 0.30, "GOOGL": 0.20, "AMZN": 0.20}
-
-        # With tight threshold, should rebalance
-        should_rebalance = applicator.should_rebalance(current, target, rebalance_threshold=0.01)
-        assert should_rebalance is True
-
-
-# =============================================================================
-# Test Error Handling
-# =============================================================================
-
-class TestErrorHandling:
-    """Test error handling."""
-
-    @pytest.mark.asyncio
-    async def test_apply_scaling_with_error_fallback(self, applicator, sample_allocation):
-        """Test that errors result in fallback (no scaling)."""
-        # Pass None values to trigger error internally
-        result = await applicator.apply_risk_scaling(
-            sample_allocation,
-            portfolio_volatility=None,  # Invalid
-            market_volatility=0.15
-        )
-
-        assert result.is_scaled is False
-        assert result.risk_scale_factor == 1.0
-        # Allocation should be unchanged
-        assert result.adjusted_allocation == sample_allocation
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])
