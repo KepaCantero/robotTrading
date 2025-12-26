@@ -28,6 +28,14 @@ from .pyfolio_integrator import (
     Tearsheet,
     get_pyfolio_integrator,
 )
+from .html_template_engine import (
+    HTMLTemplateEngine,
+    BrandingConfig,
+    ReportSection,
+    ReportConfig,
+    HTMLReport,
+    get_html_template_engine,
+)
 
 __all__ = [
     "ReportingGenerator",
@@ -48,4 +56,10 @@ __all__ = [
     "CapacityFade",
     "Tearsheet",
     "get_pyfolio_integrator",
+    "HTMLTemplateEngine",
+    "BrandingConfig",
+    "ReportSection",
+    "ReportConfig",
+    "HTMLReport",
+    "get_html_template_engine",
 ]
