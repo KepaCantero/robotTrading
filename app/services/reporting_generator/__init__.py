@@ -13,6 +13,21 @@ from .models import (
     AllocationSnapshot,
     PerformanceMetric,
 )
+from .quantstats_integrator import (
+    QuantStatsIntegrator,
+    AdvancedMetrics,
+    StatisticsReport,
+    get_quantstats_integrator,
+)
+from .pyfolio_integrator import (
+    PyFolioIntegrator,
+    FactorExposure,
+    FactorAnalysis,
+    PositionConcentration,
+    CapacityFade,
+    Tearsheet,
+    get_pyfolio_integrator,
+)
 
 __all__ = [
     "ReportingGenerator",
@@ -22,4 +37,15 @@ __all__ = [
     "StrategyMetrics",
     "AllocationSnapshot",
     "PerformanceMetric",
+    "QuantStatsIntegrator",
+    "AdvancedMetrics",
+    "StatisticsReport",
+    "get_quantstats_integrator",
+    "PyFolioIntegrator",
+    "FactorExposure",
+    "FactorAnalysis",
+    "PositionConcentration",
+    "CapacityFade",
+    "Tearsheet",
+    "get_pyfolio_integrator",
 ]
