@@ -11,6 +11,8 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Dict, List, Optional
 
+from fastapi import Depends
+
 from .broker_connector import (
     BrokerConnector,
     BrokerOrder,
@@ -386,7 +388,9 @@ import asyncio
 _manager: Optional[OrderManager] = None
 
 
-def get_order_manager(broker: Optional[BrokerConnector] = None) -> OrderManager:
+def get_order_manager(
+    broker: BrokerConnector = Depends(get_broker_connector),
+) -> OrderManager:
     """Get or create singleton OrderManager."""
     global _manager
     if _manager is None:

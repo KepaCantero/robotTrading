@@ -78,6 +78,15 @@ class Settings(BaseSettings):
     ib_api_key: Optional[str] = Field(default=None, description="Interactive Brokers API key")
     ib_secret: Optional[str] = Field(default=None, description="Interactive Brokers API secret")
 
+    # Alpaca
+    alpaca_api_key: Optional[str] = Field(default=None, description="Alpaca API key")
+    alpaca_api_secret: Optional[str] = Field(default=None, description="Alpaca API secret")
+    alpaca_base_url: str = Field(
+        default="https://paper-api.alpaca.markets",
+        description="Alpaca API base URL (paper or live)",
+    )
+    alpaca_paper_trading: bool = Field(default=True, description="Use Alpaca paper trading account")
+
     # Binance
     binance_api_key: Optional[str] = Field(default=None, description="Binance API key")
     binance_secret: Optional[str] = Field(default=None, description="Binance API secret")

@@ -53,6 +53,9 @@ requests>=2.31.0,<3.0.0
 aiohttp>=3.9.0,<4.0.0  # Required for async HTTP requests in DataEngine sources
 websockets>=12.0,<13.0  # Required for WebSocket streaming in DataEngine
 
+# Broker APIs
+alpaca-trade-api>=2.0.0,<3.0.0  # Alpaca broker API client
+
 # Redis (for caching if used)
 redis>=5.0.0,<6.0.0
 

@@ -301,3 +301,19 @@ class AlertToTradeMapper:
                 for sev in AlertSeverity
             },
         }
+
+
+# Singleton instance
+_mapper_instance: Optional["AlertToTradeMapper"] = None
+
+
+def get_alert_to_trade_mapper() -> "AlertToTradeMapper":
+    """Get or create the alert-to-trade mapper singleton.
+
+    Returns:
+        AlertToTradeMapper: Shared mapper instance
+    """
+    global _mapper_instance
+    if _mapper_instance is None:
+        _mapper_instance = AlertToTradeMapper()
+    return _mapper_instance

@@ -3,6 +3,10 @@ T16.1.1: BrokerConnector - Broker API integration
 
 Handles connections to broker APIs (Interactive Brokers, Alpaca, IBKR, etc.)
 Abstracts broker-specific APIs into unified interface.
+
+Uses adapter pattern to support multiple brokers:
+- AlpacaAdapter: Alpaca broker integration
+- PaperAdapter: Paper trading for testing/simulation
 """
 
 import logging
@@ -10,7 +14,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -106,16 +110,49 @@ class BrokerConnector:
 
     Supports multiple brokers with consistent interface.
     Handles authentication, order placement, position tracking, etc.
+
+    Uses adapter pattern - delegates to broker-specific adapters.
     """
 
     def __init__(self, broker_type: BrokerType = BrokerType.PAPER):
-        """Initialize broker connector."""
+        """Initialize broker connector with appropriate adapter.
+
+        Args:
+            broker_type: Type of broker to use
+        """
         self.broker_type = broker_type
-        self.account: Optional[BrokerAccount] = None
-        self.positions: Dict[str, BrokerPosition] = {}
-        self.orders: Dict[str, BrokerOrder] = {}
-        self.is_connected = False
+
+        # Create broker-specific adapter
+        if broker_type == BrokerType.ALPACA:
+            from .broker_adapters.alpaca_adapter import AlpacaAdapter
+            self.adapter: Any = AlpacaAdapter()
+        else:
+            # Default to paper trading for all other types
+            from .broker_adapters.paper_adapter import PaperAdapter
+            self.adapter: Any = PaperAdapter()
+
         logger.info(f"✅ BrokerConnector initialized for {broker_type.value}")
+
+    # Properties for compatibility
+    @property
+    def account(self) -> Optional[BrokerAccount]:
+        """Get account information."""
+        return self.adapter.account
+
+    @property
+    def positions(self) -> Dict[str, BrokerPosition]:
+        """Get positions."""
+        return self.adapter.positions
+
+    @property
+    def orders(self) -> Dict[str, BrokerOrder]:
+        """Get orders."""
+        return self.adapter.orders
+
+    @property
+    def is_connected(self) -> bool:
+        """Check connection status."""
+        return self.adapter.is_connected
 
     async def connect(
         self,
@@ -136,21 +173,12 @@ class BrokerConnector:
         Returns:
             True if connection successful
         """
-        try:
-            # Broker-specific connection logic would go here
-            self.account = BrokerAccount(
-                account_id=account_id or "paper_account",
-                broker_type=self.broker_type,
-                connected=True,
-                last_sync=datetime.now(),
-            )
-            self.is_connected = True
-            logger.info(f"✅ Connected to {self.broker_type.value}")
-            return True
-        except Exception as e:
-            logger.error(f"❌ Connection failed: {str(e)}")
-            self.is_connected = False
-            return False
+        return await self.adapter.connect(
+            api_key=api_key,
+            api_secret=api_secret,
+            account_id=account_id,
+            **kwargs
+        )
 
     async def disconnect(self) -> bool:
         """
@@ -159,11 +187,7 @@ class BrokerConnector:
         Returns:
             True if disconnected successfully
         """
-        self.is_connected = False
-        if self.account:
-            self.account.connected = False
-        logger.info(f"✅ Disconnected from {self.broker_type.value}")
-        return True
+        return await self.adapter.disconnect()
 
     async def get_account_info(self) -> Optional[BrokerAccount]:
         """
@@ -172,25 +196,16 @@ class BrokerConnector:
         Returns:
             BrokerAccount or None if not connected
         """
-        if not self.is_connected or not self.account:
-            logger.warning("⚠️ Not connected to broker")
-            return None
+        return await self.adapter.get_account_info()
 
-        self.account.last_sync = datetime.now()
-        return self.account
-
-    async def get_positions(self) -> Dict[str, BrokerPosition]:
+    async def get_positions(self) -> List[BrokerPosition]:
         """
         Get all open positions from broker.
 
         Returns:
-            Dict of symbol → BrokerPosition
+            List of BrokerPosition objects
         """
-        if not self.is_connected:
-            logger.warning("⚠️ Not connected to broker")
-            return {}
-
-        return self.positions
+        return await self.adapter.get_positions()
 
     async def get_position(self, symbol: str) -> Optional[BrokerPosition]:
         """
@@ -202,7 +217,7 @@ class BrokerConnector:
         Returns:
             BrokerPosition or None
         """
-        return self.positions.get(symbol)
+        return await self.adapter.get_position(symbol)
 
     async def place_order(
         self,
@@ -212,7 +227,7 @@ class BrokerConnector:
         order_type: OrderType = OrderType.MARKET,
         price: Optional[Decimal] = None,
         stop_price: Optional[Decimal] = None,
-    ) -> Optional[BrokerOrder]:
+    ) -> str:
         """
         Place order with broker.
 
@@ -225,26 +240,16 @@ class BrokerConnector:
             stop_price: Stop price (for stop orders)
 
         Returns:
-            BrokerOrder if successful, None otherwise
+            Order ID if successful
         """
-        if not self.is_connected:
-            logger.error("❌ Not connected to broker")
-            return None
-
-        order = BrokerOrder(
-            order_id=f"order_{len(self.orders)}",
+        return await self.adapter.place_order(
             symbol=symbol,
             side=side,
-            order_type=order_type,
             quantity=quantity,
+            order_type=order_type,
             price=price,
             stop_price=stop_price,
-            status=OrderStatus.SUBMITTED,
         )
-
-        self.orders[order.order_id] = order
-        logger.info(f"✅ Order placed: {side.value} {quantity} {symbol} at {order_type.value}")
-        return order
 
     async def cancel_order(self, order_id: str) -> bool:
         """
@@ -256,21 +261,9 @@ class BrokerConnector:
         Returns:
             True if canceled successfully
         """
-        if order_id not in self.orders:
-            logger.warning(f"⚠️ Order not found: {order_id}")
-            return False
+        return await self.adapter.cancel_order(order_id)
 
-        order = self.orders[order_id]
-        if order.status in (OrderStatus.CANCELED, OrderStatus.FILLED, OrderStatus.EXECUTED):
-            logger.warning(f"⚠️ Cannot cancel order in status: {order.status.value}")
-            return False
-
-        order.status = OrderStatus.CANCELED
-        order.updated_at = datetime.now()
-        logger.info(f"✅ Order canceled: {order_id}")
-        return True
-
-    async def get_order_status(self, order_id: str) -> Optional[OrderStatus]:
+    async def get_order_status(self, order_id: str) -> OrderStatus:
         """
         Get status of order.
 
@@ -278,20 +271,18 @@ class BrokerConnector:
             order_id: Order ID
 
         Returns:
-            OrderStatus or None
+            OrderStatus
         """
-        order = self.orders.get(order_id)
-        return order.status if order else None
+        return await self.adapter.get_order_status(order_id)
 
-    async def update_positions(self, positions: Dict[str, BrokerPosition]) -> None:
+    async def update_positions(self) -> Dict[str, BrokerPosition]:
         """
-        Update positions (typically from market data).
+        Update positions from broker.
 
-        Args:
-            positions: Dict of symbol → BrokerPosition
+        Returns:
+            Dict of symbol → BrokerPosition
         """
-        self.positions.update(positions)
-        logger.info(f"✅ Updated {len(positions)} positions")
+        return await self.adapter.update_positions()
 
     async def sync_account_balance(self) -> bool:
         """
@@ -300,26 +291,16 @@ class BrokerConnector:
         Returns:
             True if successful
         """
-        if not self.is_connected or not self.account:
-            logger.warning("⚠️ Not connected to broker")
-            return False
+        return await self.adapter.sync_account_balance()
 
-        # In real implementation, would fetch from broker API
-        self.account.last_sync = datetime.now()
-        logger.info("✅ Account balance synced")
-        return True
-
-    async def calculate_portfolio_value(self) -> Decimal:
+    async def calculate_portfolio_value(self) -> Optional[Decimal]:
         """
         Calculate total portfolio value.
 
         Returns:
-            Total portfolio value (cash + positions)
+            Total portfolio value (cash + positions) or None if failed
         """
-        total = self.account.cash_available if self.account else Decimal("0")
-        for position in self.positions.values():
-            total += position.market_value
-        return total
+        return await self.adapter.calculate_portfolio_value()
 
     def get_broker_type(self) -> BrokerType:
         """Get broker type."""
@@ -327,7 +308,7 @@ class BrokerConnector:
 
     def is_paper_trading(self) -> bool:
         """Check if using paper trading."""
-        return self.broker_type == BrokerType.PAPER
+        return self.adapter.is_paper_trading()
 
 
 # Singleton

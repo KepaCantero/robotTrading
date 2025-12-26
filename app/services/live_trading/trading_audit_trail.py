@@ -359,3 +359,19 @@ class TradingAuditTrail:
                 "latest": self.events[-1].timestamp.isoformat() if self.events else None,
             },
         }
+
+
+# Singleton instance
+_audit_trail_instance: Optional["TradingAuditTrail"] = None
+
+
+def get_trading_audit_trail() -> "TradingAuditTrail":
+    """Get or create the trading audit trail singleton.
+
+    Returns:
+        TradingAuditTrail: Shared audit trail instance
+    """
+    global _audit_trail_instance
+    if _audit_trail_instance is None:
+        _audit_trail_instance = TradingAuditTrail()
+    return _audit_trail_instance
