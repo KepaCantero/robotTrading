@@ -36,6 +36,12 @@ from .html_template_engine import (
     HTMLReport,
     get_html_template_engine,
 )
+from .visualization_generator import (
+    AdvancedVisualizationGenerator,
+    PlotlyChart,
+    ChartMetadata,
+    get_visualization_generator,
+)
 
 __all__ = [
     "ReportingGenerator",
@@ -62,4 +68,8 @@ __all__ = [
     "ReportConfig",
     "HTMLReport",
     "get_html_template_engine",
+    "AdvancedVisualizationGenerator",
+    "PlotlyChart",
+    "ChartMetadata",
+    "get_visualization_generator",
 ]
