@@ -424,3 +424,19 @@ class TradingBridgeOrchestrator:
             "errors": len(self.errors),
             "mapped_signals": len(self.mapper.signal_history),
         }
+
+
+# Singleton instance
+_orchestrator_instance: Optional[TradingBridgeOrchestrator] = None
+
+
+def get_trading_bridge_orchestrator() -> TradingBridgeOrchestrator:
+    """Get or create the trading bridge orchestrator singleton.
+
+    Returns:
+        TradingBridgeOrchestrator: Shared orchestrator instance
+    """
+    global _orchestrator_instance
+    if _orchestrator_instance is None:
+        _orchestrator_instance = TradingBridgeOrchestrator()
+    return _orchestrator_instance

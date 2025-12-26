@@ -15,6 +15,8 @@ from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional, Tuple
 
+from fastapi import Depends
+
 from .broker_connector import BrokerConnector, OrderSide, get_broker_connector
 
 logger = logging.getLogger(__name__)
@@ -319,7 +321,9 @@ class RiskGates:
 _gates: Optional[RiskGates] = None
 
 
-def get_risk_gates(broker: Optional[BrokerConnector] = None) -> RiskGates:
+def get_risk_gates(
+    broker: BrokerConnector = Depends(get_broker_connector),
+) -> RiskGates:
     """Get or create singleton RiskGates."""
     global _gates
     if _gates is None:

@@ -39,6 +39,7 @@ from fastapi.responses import JSONResponse
 from app.api.assets import router as assets_router
 from app.api.capa2_endpoints import router as capa2_router
 from app.api.cost_analysis import router as cost_analysis_router
+from app.api.live_trading import router as live_trading_router
 from app.api.market_data import router as market_data_router
 from app.api.momentum import router as momentum_router
 from app.api.optimization import router as optimization_router
@@ -48,6 +49,7 @@ from app.api.portfolio_analytics import router as portfolio_analytics_router
 from app.api.signals import router as signals_router
 from app.api.trading_error_handler import router as trading_error_handler_router
 from app.core.config import get_settings
+from app.core.database import init_database, close_database
 
 # IMPORTANT: Import logging_config FIRST to ensure all warnings/errors go to files
 
@@ -80,12 +82,28 @@ async def lifespan(app: FastAPI):
     logger.info(f"Starting {app_settings.app_name} v{app_settings.app_version}")
     logger.info(f"Debug mode: {app_settings.debug}")
     logger.info(f"Log level: {app_settings.log_level}")
+
+    # Initialize database and live trading tables
+    try:
+        await init_database()
+        logger.info("Database and live trading tables initialized")
+    except Exception as e:
+        logger.warning(f"Database initialization failed: {e}")
+
     logger.info("Application startup complete")
 
     yield
 
     # Shutdown
     logger.info("Application shutdown initiated")
+
+    # Close database connections
+    try:
+        await close_database()
+        logger.info("Database connections closed")
+    except Exception as e:
+        logger.warning(f"Error closing database connections: {e}")
+
     logger.info("Application shutdown complete")
 
 
@@ -120,6 +138,7 @@ app.include_router(paper_trading_router)
 app.include_router(portfolio_analytics_router)
 app.include_router(cost_analysis_router)
 app.include_router(optimization_router)
+app.include_router(live_trading_router)
 app.include_router(
     trading_error_handler_router,
     prefix="/trading-error-handler",

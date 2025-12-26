@@ -1,13 +1,25 @@
 """
-T16.1: Live Trading Bridge - Integration with broker APIs and live execution
+Live Trading Bridge - Comprehensive alert-to-trade execution system.
 
-Provides:
-- BrokerConnector: API integration with brokers (Interactive Brokers, Alpaca, etc.)
-- OrderManager: Order lifecycle management (placement, execution, cancellation)
-- RiskGates: Pre-trade risk validation (position limits, leverage, drawdown)
-- AccountSynchronizer: Portfolio reconciliation and balance sync
+This package provides a complete live trading bridge that:
+1. Monitors incoming alerts from the alerting system
+2. Maps alerts to trade signals using configurable rules
+3. Validates trades against risk gates
+4. Executes trades through broker APIs
+5. Records all executions and maintains audit trails
+
+Main Components:
+- TradingBridgeOrchestrator: Main orchestration engine
+- BrokerConnector: Unified broker API abstraction
+- OrderManager: Order lifecycle management
+- RiskGates: Pre-trade risk validation
+- AccountSynchronizer: Portfolio synchronization
+- AlertToTradeMapper: Alert-to-signal mapping
+- TradingAuditTrail: Compliance and audit logging
+- TradePersistenceManager: Database persistence
 """
 
+from .trading_bridge_orchestrator import TradingBridgeOrchestrator, get_trading_bridge_orchestrator
 from .broker_connector import (
     BrokerConnector,
     get_broker_connector,
@@ -24,14 +36,36 @@ from .account_synchronizer import (
     AccountSynchronizer,
     get_account_synchronizer,
 )
+from .alert_to_trade_mapper import (
+    AlertToTradeMapper,
+    get_alert_to_trade_mapper,
+)
+from .trading_audit_trail import (
+    TradingAuditTrail,
+    get_trading_audit_trail,
+)
+from .trade_persistence import (
+    TradePersistenceManager,
+    get_trade_persistence_manager,
+)
 
 __all__ = [
+    # Service Classes
+    "TradingBridgeOrchestrator",
     "BrokerConnector",
-    "get_broker_connector",
     "OrderManager",
-    "get_order_manager",
     "RiskGates",
-    "get_risk_gates",
     "AccountSynchronizer",
+    "AlertToTradeMapper",
+    "TradingAuditTrail",
+    "TradePersistenceManager",
+    # Singleton Getters
+    "get_trading_bridge_orchestrator",
+    "get_broker_connector",
+    "get_order_manager",
+    "get_risk_gates",
     "get_account_synchronizer",
+    "get_alert_to_trade_mapper",
+    "get_trading_audit_trail",
+    "get_trade_persistence_manager",
 ]

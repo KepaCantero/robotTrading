@@ -14,6 +14,8 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
 
+from fastapi import Depends
+
 from .broker_connector import BrokerAccount, BrokerConnector, BrokerPosition, get_broker_connector
 
 logger = logging.getLogger(__name__)
@@ -343,7 +345,9 @@ class AccountSynchronizer:
 _synchronizer: Optional[AccountSynchronizer] = None
 
 
-def get_account_synchronizer(broker: Optional[BrokerConnector] = None) -> AccountSynchronizer:
+def get_account_synchronizer(
+    broker: BrokerConnector = Depends(get_broker_connector),
+) -> AccountSynchronizer:
     """Get or create singleton AccountSynchronizer."""
     global _synchronizer
     if _synchronizer is None:
