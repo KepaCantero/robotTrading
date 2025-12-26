@@ -42,6 +42,17 @@ from .visualization_generator import (
     ChartMetadata,
     get_visualization_generator,
 )
+from .delivery_manager import (
+    ReportDeliveryManager,
+    ExportFormat,
+    DeliveryChannel,
+    ExportConfig,
+    EmailConfig,
+    S3Config,
+    ExportResult,
+    DeliveryResult,
+    get_delivery_manager,
+)
 
 __all__ = [
     "ReportingGenerator",
@@ -72,4 +83,13 @@ __all__ = [
     "PlotlyChart",
     "ChartMetadata",
     "get_visualization_generator",
+    "ReportDeliveryManager",
+    "ExportFormat",
+    "DeliveryChannel",
+    "ExportConfig",
+    "EmailConfig",
+    "S3Config",
+    "ExportResult",
+    "DeliveryResult",
+    "get_delivery_manager",
 ]
