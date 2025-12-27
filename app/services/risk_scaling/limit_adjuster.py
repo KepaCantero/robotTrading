@@ -16,12 +16,13 @@ logger = logging.getLogger(__name__)
 @dataclass
 class TradingLimits:
     """Trading limits for a position/portfolio."""
-    stop_loss_pct: Decimal          # Stop loss as % (e.g., 0.02 = 2%)
-    daily_loss_limit: Decimal       # Daily max loss in € or %
-    max_position_size: Decimal      # Max size for single position (€)
-    max_portfolio_leverage: Decimal # Max leverage for portfolio
-    min_margin_requirement: Decimal # Minimum margin (e.g., 0.25 = 25%)
-    max_drawdown_limit: Decimal     # Portfolio max drawdown before halt
+
+    stop_loss_pct: Decimal  # Stop loss as % (e.g., 0.02 = 2%)
+    daily_loss_limit: Decimal  # Daily max loss in € or %
+    max_position_size: Decimal  # Max size for single position (€)
+    max_portfolio_leverage: Decimal  # Max leverage for portfolio
+    min_margin_requirement: Decimal  # Minimum margin (e.g., 0.25 = 25%)
+    max_drawdown_limit: Decimal  # Portfolio max drawdown before halt
 
 
 class LimitAdjuster:
@@ -41,12 +42,12 @@ class LimitAdjuster:
     # Default limits by capital tier (as % of capital)
     DEFAULT_LIMITS_BY_TIER = {
         "micro": {
-            "stop_loss_pct": Decimal("0.02"),        # 2% stops
+            "stop_loss_pct": Decimal("0.02"),  # 2% stops
             "daily_loss_limit_pct": Decimal("0.05"),  # 5% daily max loss
-            "max_position_pct": Decimal("0.10"),      # 10% max per position
-            "leverage": Decimal("1.0"),               # No leverage
-            "margin_requirement": Decimal("0.50"),    # 50% margin
-            "max_drawdown_pct": Decimal("0.10"),      # 10% max drawdown
+            "max_position_pct": Decimal("0.10"),  # 10% max per position
+            "leverage": Decimal("1.0"),  # No leverage
+            "margin_requirement": Decimal("0.50"),  # 50% margin
+            "max_drawdown_pct": Decimal("0.10"),  # 10% max drawdown
         },
         "small": {
             "stop_loss_pct": Decimal("0.025"),
@@ -76,20 +77,20 @@ class LimitAdjuster:
 
     # Volatility multipliers (expand/contract limits)
     VOLATILITY_MULTIPLIERS = {
-        "very_low": Decimal("1.2"),    # Expand limits in calm markets
+        "very_low": Decimal("1.2"),  # Expand limits in calm markets
         "low": Decimal("1.1"),
-        "normal": Decimal("1.0"),      # Baseline
-        "high": Decimal("0.8"),        # Contract limits
-        "extreme": Decimal("0.5"),     # Severe contraction
+        "normal": Decimal("1.0"),  # Baseline
+        "high": Decimal("0.8"),  # Contract limits
+        "extreme": Decimal("0.5"),  # Severe contraction
     }
 
     # Drawdown multipliers (tighten as portfolio loses)
     DRAWDOWN_MULTIPLIERS = {
-        "healthy": Decimal("1.0"),      # < 5% drawdown
-        "caution": Decimal("0.8"),      # 5-10% drawdown
-        "warning": Decimal("0.6"),      # 10-15% drawdown
-        "critical": Decimal("0.3"),     # 15-20% drawdown
-        "halt": Decimal("0.0"),         # > 20% or hard stop hit
+        "healthy": Decimal("1.0"),  # < 5% drawdown
+        "caution": Decimal("0.8"),  # 5-10% drawdown
+        "warning": Decimal("0.6"),  # 10-15% drawdown
+        "critical": Decimal("0.3"),  # 15-20% drawdown
+        "halt": Decimal("0.0"),  # > 20% or hard stop hit
     }
 
     def __init__(self):
@@ -197,13 +198,16 @@ class LimitAdjuster:
             daily_loss_limit=base_limits.daily_loss_limit * multiplier,
             max_position_size=base_limits.max_position_size * multiplier,
             max_portfolio_leverage=base_limits.max_portfolio_leverage * multiplier,
-            min_margin_requirement=base_limits.min_margin_requirement / multiplier if multiplier > Decimal("0") else base_limits.min_margin_requirement,
+            min_margin_requirement=(
+                base_limits.min_margin_requirement / multiplier
+                if multiplier > Decimal("0")
+                else base_limits.min_margin_requirement
+            ),
             max_drawdown_limit=base_limits.max_drawdown_limit * multiplier,
         )
 
         reason = (
-            f"Drawdown {current_drawdown_pct:.1%} ({dd_state}) → "
-            f"multiplier {multiplier:.2f}x"
+            f"Drawdown {current_drawdown_pct:.1%} ({dd_state}) → " f"multiplier {multiplier:.2f}x"
         )
         logger.info(f"Limit adjustment for drawdown: {reason}")
 
@@ -320,9 +324,7 @@ class LimitAdjuster:
         within_limit = current_leverage <= leverage_limit
 
         if not within_limit:
-            logger.warning(
-                f"Leverage {current_leverage:.2f}x exceeds limit {leverage_limit:.2f}x"
-            )
+            logger.warning(f"Leverage {current_leverage:.2f}x exceeds limit {leverage_limit:.2f}x")
 
         return within_limit
 
@@ -389,9 +391,7 @@ class LimitAdjuster:
         )
 
         # Apply drawdown adjustment
-        final, dd_reason = self.adjust_limits_for_drawdown(
-            vol_adjusted, current_drawdown_pct
-        )
+        final, dd_reason = self.adjust_limits_for_drawdown(vol_adjusted, current_drawdown_pct)
 
         return {
             "stop_loss_pct": final.stop_loss_pct,

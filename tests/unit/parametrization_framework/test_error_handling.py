@@ -10,23 +10,24 @@ Tests cover:
 - Graceful degradation
 """
 
-import pytest
 import asyncio
 from datetime import datetime
 
+import pytest
+
 from app.services.error_handling import (
-    ErrorHandler,
-    ServiceException,
     BacktestException,
-    ValidationException,
     ConfigurationException,
-    ParameterizationException,
-    RecommendationException,
-    PortfolioException,
-    FallbackStrategy,
     ConservativeBacktestFallback,
-    EqualWeightPortfolioFallback,
     ConservativeRecommendationFallback,
+    EqualWeightPortfolioFallback,
+    ErrorHandler,
+    FallbackStrategy,
+    ParameterizationException,
+    PortfolioException,
+    RecommendationException,
+    ServiceException,
+    ValidationException,
 )
 
 
@@ -42,7 +43,7 @@ def sample_fallback_context():
     return {
         "capital": 50000,
         "strategy_name": "momentum_modular",
-        "assets": ["AAPL", "MSFT", "GOOGL"]
+        "assets": ["AAPL", "MSFT", "GOOGL"],
     }
 
 
@@ -50,15 +51,14 @@ def sample_fallback_context():
 # Test Custom Exception Classes
 # =============================================================================
 
+
 class TestCustomExceptions:
     """Test custom exception classes."""
 
     def test_service_exception_creation(self):
         """Test creating ServiceException."""
         exc = ServiceException(
-            service_name="TestService",
-            message="Test error",
-            error_code="TEST_ERROR"
+            service_name="TestService", message="Test error", error_code="TEST_ERROR"
         )
         assert exc.service_name == "TestService"
         assert exc.message == "Test error"
@@ -67,10 +67,7 @@ class TestCustomExceptions:
 
     def test_backtest_exception_creation(self):
         """Test creating BacktestException."""
-        exc = BacktestException(
-            message="Backtest failed",
-            error_code="BACKTEST_TIMEOUT"
-        )
+        exc = BacktestException(message="Backtest failed", error_code="BACKTEST_TIMEOUT")
         assert exc.service_name == "BacktestOrchestrator"
         assert exc.message == "Backtest failed"
         assert exc.error_code == "BACKTEST_TIMEOUT"
@@ -106,6 +103,7 @@ class TestCustomExceptions:
 # =============================================================================
 # Test Fallback Strategies
 # =============================================================================
+
 
 class TestFallbackStrategies:
     """Test fallback strategy implementations."""
@@ -143,7 +141,7 @@ class TestFallbackStrategies:
         assert result["is_fallback"] is True
         assert result["strategy"] == "equal_weight"
         assert len(result["allocation"]) == 3
-        assert abs(result["allocation"]["AAPL"] - 1/3) < 0.01
+        assert abs(result["allocation"]["AAPL"] - 1 / 3) < 0.01
 
     @pytest.mark.asyncio
     async def test_conservative_recommendation_fallback(self, sample_fallback_context):
@@ -166,30 +164,31 @@ class TestFallbackStrategies:
 # Test ErrorHandler with Fallback
 # =============================================================================
 
+
 class TestErrorHandlerWithFallback:
     """Test ErrorHandler with fallback strategies."""
 
     @pytest.mark.asyncio
     async def test_with_fallback_success(self, error_handler, sample_fallback_context):
         """Test with_fallback when function succeeds."""
+
         async def successful_fn():
             return {"result": "success"}
 
         result = await error_handler.with_fallback(
-            successful_fn,
-            fallback_context=sample_fallback_context
+            successful_fn, fallback_context=sample_fallback_context
         )
         assert result["result"] == "success"
 
     @pytest.mark.asyncio
     async def test_with_fallback_backtest_error(self, error_handler, sample_fallback_context):
         """Test with_fallback triggers backtest fallback on BacktestException."""
+
         async def failing_fn():
             raise BacktestException("Backtest timeout")
 
         result = await error_handler.with_fallback(
-            failing_fn,
-            fallback_context=sample_fallback_context
+            failing_fn, fallback_context=sample_fallback_context
         )
         assert result["is_fallback"] is True
         assert result["total_return"] == 0.05
@@ -197,12 +196,12 @@ class TestErrorHandlerWithFallback:
     @pytest.mark.asyncio
     async def test_with_fallback_portfolio_error(self, error_handler, sample_fallback_context):
         """Test with_fallback triggers portfolio fallback on PortfolioException."""
+
         async def failing_fn():
             raise PortfolioException("Optimization failed")
 
         result = await error_handler.with_fallback(
-            failing_fn,
-            fallback_context=sample_fallback_context
+            failing_fn, fallback_context=sample_fallback_context
         )
         assert result["is_fallback"] is True
         assert result["strategy"] == "equal_weight"
@@ -210,12 +209,12 @@ class TestErrorHandlerWithFallback:
     @pytest.mark.asyncio
     async def test_with_fallback_recommendation_error(self, error_handler, sample_fallback_context):
         """Test with_fallback triggers recommendation fallback."""
+
         async def failing_fn():
             raise RecommendationException("Scoring failed")
 
         result = await error_handler.with_fallback(
-            failing_fn,
-            fallback_context=sample_fallback_context
+            failing_fn, fallback_context=sample_fallback_context
         )
         assert result["is_fallback"] is True
         assert result["recommendation"] == "HOLD"
@@ -238,6 +237,7 @@ class TestErrorHandlerWithFallback:
     @pytest.mark.asyncio
     async def test_error_log_tracking(self, error_handler):
         """Test error log tracking."""
+
         async def failing_fn():
             raise BacktestException("Test error", error_code="TEST_CODE")
 
@@ -254,6 +254,7 @@ class TestErrorHandlerWithFallback:
 # =============================================================================
 # Test Retry Logic
 # =============================================================================
+
 
 class TestRetryLogic:
     """Test retry logic with exponential backoff."""
@@ -284,26 +285,19 @@ class TestRetryLogic:
                 raise ValueError("Temporary error")
             return "success"
 
-        result = await error_handler.with_retry(
-            sometimes_fails,
-            max_retries=3,
-            initial_delay=0.01
-        )
+        result = await error_handler.with_retry(sometimes_fails, max_retries=3, initial_delay=0.01)
         assert result == "success"
         assert call_count == 3
 
     @pytest.mark.asyncio
     async def test_retry_fails_after_max_retries(self, error_handler):
         """Test retry fails after max retries exceeded."""
+
         async def always_fails():
             raise ValueError("Persistent error")
 
         with pytest.raises(ValueError):
-            await error_handler.with_retry(
-                always_fails,
-                max_retries=2,
-                initial_delay=0.01
-            )
+            await error_handler.with_retry(always_fails, max_retries=2, initial_delay=0.01)
 
     @pytest.mark.asyncio
     async def test_retry_exponential_backoff(self, error_handler):
@@ -316,11 +310,7 @@ class TestRetryLogic:
                 raise ValueError("Temp error")
             return "success"
 
-        await error_handler.with_retry(
-            fails_then_succeeds,
-            max_retries=3,
-            initial_delay=0.01
-        )
+        await error_handler.with_retry(fails_then_succeeds, max_retries=3, initial_delay=0.01)
 
         # Verify delays increase exponentially
         assert len(call_times) == 3
@@ -333,39 +323,37 @@ class TestRetryLogic:
 # Test Timeout Protection
 # =============================================================================
 
+
 class TestTimeoutProtection:
     """Test timeout protection for functions."""
 
     @pytest.mark.asyncio
     async def test_timeout_with_fast_function(self, error_handler):
         """Test timeout with function that completes quickly."""
+
         async def fast_fn():
             await asyncio.sleep(0.01)
             return "fast_success"
 
-        result = await error_handler.with_timeout(
-            fast_fn,
-            timeout_seconds=1.0
-        )
+        result = await error_handler.with_timeout(fast_fn, timeout_seconds=1.0)
         assert result == "fast_success"
 
     @pytest.mark.asyncio
     async def test_timeout_exceeds_limit(self, error_handler):
         """Test timeout when function exceeds time limit."""
+
         async def slow_fn():
             await asyncio.sleep(0.5)
             return "slow_success"
 
         with pytest.raises(asyncio.TimeoutError):
-            await error_handler.with_timeout(
-                slow_fn,
-                timeout_seconds=0.1
-            )
+            await error_handler.with_timeout(slow_fn, timeout_seconds=0.1)
 
 
 # =============================================================================
 # Test Error Statistics
 # =============================================================================
+
 
 class TestErrorStatistics:
     """Test error statistics and reporting."""
@@ -381,6 +369,7 @@ class TestErrorStatistics:
     @pytest.mark.asyncio
     async def test_get_error_stats_with_errors(self, error_handler):
         """Test getting stats after errors."""
+
         async def failing_fn():
             raise BacktestException("Error occurred")
 
@@ -398,6 +387,7 @@ class TestErrorStatistics:
     @pytest.mark.asyncio
     async def test_clear_error_log(self, error_handler):
         """Test clearing error log."""
+
         async def failing_fn():
             raise BacktestException("Error")
 
@@ -414,6 +404,7 @@ class TestErrorStatistics:
     @pytest.mark.asyncio
     async def test_recent_errors_limit(self, error_handler):
         """Test that recent_errors is limited to last 5."""
+
         async def failing_fn():
             raise BacktestException("Error")
 
@@ -432,12 +423,14 @@ class TestErrorStatistics:
 # Test Fallback Strategy Registration
 # =============================================================================
 
+
 class TestFallbackRegistration:
     """Test custom fallback strategy registration."""
 
     @pytest.mark.asyncio
     async def test_register_custom_fallback(self, error_handler):
         """Test registering custom fallback strategy."""
+
         class CustomFallback(FallbackStrategy):
             async def execute(self, context):
                 return {"custom": "fallback"}
@@ -452,6 +445,7 @@ class TestFallbackRegistration:
     @pytest.mark.asyncio
     async def test_custom_fallback_execution(self, error_handler):
         """Test executing custom registered fallback."""
+
         class CustomFallback(FallbackStrategy):
             async def execute(self, context):
                 return {"custom": True, "service": "custom_service"}
@@ -464,10 +458,7 @@ class TestFallbackRegistration:
         async def failing_fn():
             raise ConfigurationException("Config failed")
 
-        result = await error_handler.with_fallback(
-            failing_fn,
-            fallback_context={}
-        )
+        result = await error_handler.with_fallback(failing_fn, fallback_context={})
         assert result["custom"] is True
         assert result["service"] == "custom_service"
 
@@ -476,12 +467,14 @@ class TestFallbackRegistration:
 # Integration Tests
 # =============================================================================
 
+
 class TestErrorHandlingIntegration:
     """Integration tests for error handling across scenarios."""
 
     @pytest.mark.asyncio
     async def test_multi_error_scenario(self, error_handler):
         """Test handling multiple different error types."""
+
         async def backtest_fails():
             raise BacktestException("Backtest timeout")
 
@@ -490,17 +483,13 @@ class TestErrorHandlingIntegration:
 
         # First error
         result1 = await error_handler.with_fallback(
-            backtest_fails,
-            fallback_context={"capital": 50000}
+            backtest_fails, fallback_context={"capital": 50000}
         )
         assert result1["is_fallback"] is True
         assert "total_return" in result1
 
         # Second error
-        result2 = await error_handler.with_fallback(
-            recommendation_fails,
-            fallback_context={}
-        )
+        result2 = await error_handler.with_fallback(recommendation_fails, fallback_context={})
         assert result2["is_fallback"] is True
         assert "recommendation" in result2
 
@@ -521,15 +510,10 @@ class TestErrorHandlingIntegration:
 
         # Use retry first
         try:
-            await error_handler.with_retry(
-                sometimes_fails,
-                max_retries=2,
-                initial_delay=0.01
-            )
+            await error_handler.with_retry(sometimes_fails, max_retries=2, initial_delay=0.01)
         except BacktestException:
             # Then use fallback
             result = await error_handler.with_fallback(
-                sometimes_fails,
-                fallback_context={"capital": 50000}
+                sometimes_fails, fallback_context={"capital": 50000}
             )
             assert result["is_fallback"] is True

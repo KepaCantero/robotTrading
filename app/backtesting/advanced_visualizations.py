@@ -13,12 +13,11 @@ Provides:
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import networkx as nx
 import numpy as np
 import pandas as pd
-from scipy import stats
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +35,6 @@ except ImportError:
 # Optional imports - plotly
 try:
     import plotly.graph_objects as go
-    import plotly.express as px
     from plotly.subplots import make_subplots
 
     PLOTLY_AVAILABLE = True
@@ -130,9 +128,7 @@ class AdvancedVisualizer:
             pos = nx.spring_layout(G, k=2, iterations=50, seed=42)
 
             # Draw network
-            nx.draw_networkx_nodes(
-                G, pos, node_color="lightblue", node_size=1000, ax=ax, alpha=0.9
-            )
+            nx.draw_networkx_nodes(G, pos, node_color="lightblue", node_size=1000, ax=ax, alpha=0.9)
 
             # Draw edges with varying width based on correlation strength
             edges = G.edges()
@@ -213,7 +209,8 @@ class AdvancedVisualizer:
             fig = go.Figure(
                 data=go.Parcoords(
                     dimensions=[
-                        dict(label=col, values=normalized_data[col]) for col in normalized_data.columns
+                        dict(label=col, values=normalized_data[col])
+                        for col in normalized_data.columns
                     ],
                     line=dict(color=data[color_col], colorscale="Viridis", showscale=True),
                 )
@@ -278,15 +275,21 @@ class AdvancedVisualizer:
                         z=data[z_col],
                         mode="markers",
                         marker=dict(
-                            size=4 if size_col is None else (data[size_col] / data[size_col].max() * 10),
+                            size=(
+                                4
+                                if size_col is None
+                                else (data[size_col] / data[size_col].max() * 10)
+                            ),
                             color=data[color_col],
                             colorscale="Viridis",
                             showscale=True,
                             colorbar=dict(title=color_col),
                         ),
                         text=data.index,
-                        hovertemplate=f"<b>{x_col}:</b> %{{x}}<br>" + f"<b>{y_col}:</b> %{{y}}<br>"
-                        + f"<b>{z_col}:</b> %{{z}}<br>" + "<extra></extra>",
+                        hovertemplate=f"<b>{x_col}:</b> %{{x}}<br>"
+                        + f"<b>{y_col}:</b> %{{y}}<br>"
+                        + f"<b>{z_col}:</b> %{{z}}<br>"
+                        + "<extra></extra>",
                     )
                 )
             else:
@@ -352,8 +355,12 @@ class AdvancedVisualizer:
             fig, ax = plt.subplots(figsize=figsize)
 
             # Fill underwater area
-            ax.fill_between(drawdown.index, drawdown.values, 0, color="red", alpha=0.3, label="Drawdown")
-            ax.plot(drawdown.index, drawdown.values, color="darkred", linewidth=1, label="Drawdown %")
+            ax.fill_between(
+                drawdown.index, drawdown.values, 0, color="red", alpha=0.3, label="Drawdown"
+            )
+            ax.plot(
+                drawdown.index, drawdown.values, color="darkred", linewidth=1, label="Drawdown %"
+            )
 
             # Formatting
             ax.set_title("Underwater (Drawdown) Chart", fontsize=14)
@@ -422,21 +429,27 @@ class AdvancedVisualizer:
 
             # Rolling return
             axes[0].plot(rolling_mean.index, rolling_mean.values, color="blue", linewidth=1.5)
-            axes[0].fill_between(rolling_mean.index, rolling_mean.values, 0, alpha=0.3, color="blue")
+            axes[0].fill_between(
+                rolling_mean.index, rolling_mean.values, 0, alpha=0.3, color="blue"
+            )
             axes[0].set_ylabel("Return (%)")
             axes[0].set_title(f"Rolling {window}-Day Metrics")
             axes[0].grid(True, alpha=0.3)
 
             # Rolling volatility
             axes[1].plot(rolling_std.index, rolling_std.values, color="orange", linewidth=1.5)
-            axes[1].fill_between(rolling_std.index, rolling_std.values, 0, alpha=0.3, color="orange")
+            axes[1].fill_between(
+                rolling_std.index, rolling_std.values, 0, alpha=0.3, color="orange"
+            )
             axes[1].set_ylabel("Volatility (%)")
             axes[1].grid(True, alpha=0.3)
 
             # Rolling Sharpe
             axes[2].plot(rolling_sharpe.index, rolling_sharpe.values, color="green", linewidth=1.5)
             axes[2].axhline(y=0, color="black", linestyle="-", linewidth=0.5)
-            axes[2].fill_between(rolling_sharpe.index, rolling_sharpe.values, 0, alpha=0.3, color="green")
+            axes[2].fill_between(
+                rolling_sharpe.index, rolling_sharpe.values, 0, alpha=0.3, color="green"
+            )
             axes[2].set_ylabel("Sharpe Ratio")
             axes[2].set_xlabel("Date")
             axes[2].grid(True, alpha=0.3)
@@ -506,7 +519,11 @@ class AdvancedVisualizer:
                 mask = regime_labels == regime
                 regime_returns = returns[mask]
                 cumulative = (1 + regime_returns).cumprod() - 1
-                ax.plot(cumulative.index, cumulative.values, label=regime_names.get(regime, f"Regime {regime}"))
+                ax.plot(
+                    cumulative.index,
+                    cumulative.values,
+                    label=regime_names.get(regime, f"Regime {regime}"),
+                )
 
             ax.set_title("Cumulative Returns by Regime")
             ax.set_ylabel("Return")
@@ -549,8 +566,16 @@ class AdvancedVisualizer:
                 stats_text += f"  Std Dev: {regime_rets.std():.4f}\n"
                 stats_text += f"  Sharpe: {regime_rets.mean() / (regime_rets.std() + 1e-8):.4f}\n\n"
 
-            ax.text(0.1, 0.9, stats_text, transform=ax.transAxes, fontsize=10, verticalalignment="top",
-                   fontfamily="monospace", bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5))
+            ax.text(
+                0.1,
+                0.9,
+                stats_text,
+                transform=ax.transAxes,
+                fontsize=10,
+                verticalalignment="top",
+                fontfamily="monospace",
+                bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5),
+            )
 
             plt.tight_layout()
 
@@ -598,7 +623,9 @@ class AdvancedVisualizer:
             monthly_returns.index = monthly_returns.index.to_period("M")
 
             # Create pivot table (year x month)
-            pivot_data = monthly_returns.groupby([monthly_returns.index.year, monthly_returns.index.month]).sum()
+            pivot_data = monthly_returns.groupby(
+                [monthly_returns.index.year, monthly_returns.index.month]
+            ).sum()
             pivot_table = pivot_data.unstack(fill_value=0)
 
             # Create heatmap
@@ -620,7 +647,20 @@ class AdvancedVisualizer:
             ax.set_xlabel("Month")
             ax.set_ylabel("Year")
             ax.set_xticklabels(
-                ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+                [
+                    "Jan",
+                    "Feb",
+                    "Mar",
+                    "Apr",
+                    "May",
+                    "Jun",
+                    "Jul",
+                    "Aug",
+                    "Sep",
+                    "Oct",
+                    "Nov",
+                    "Dec",
+                ],
                 rotation=0,
             )
 
@@ -663,8 +703,10 @@ class AdvancedVisualizer:
             # Create subplots
             numeric_cols = data.select_dtypes(include=[np.number]).columns[:6]
             fig = make_subplots(
-                rows=3, cols=2, subplot_titles=[str(col) for col in numeric_cols],
-                specs=[[{"type": "histogram"}, {"type": "box"}] for _ in range(3)]
+                rows=3,
+                cols=2,
+                subplot_titles=[str(col) for col in numeric_cols],
+                specs=[[{"type": "histogram"}, {"type": "box"}] for _ in range(3)],
             )
 
             # Add histograms and box plots
@@ -675,15 +717,15 @@ class AdvancedVisualizer:
                 # Histogram
                 fig.add_trace(
                     go.Histogram(x=data[col], name=str(col), nbinsx=30),
-                    row=row, col=col_idx if col_idx == 1 else 2
+                    row=row,
+                    col=col_idx if col_idx == 1 else 2,
                 )
 
                 # Box plot
                 if col_idx == 2 and i < len(numeric_cols) - 1:
                     next_col = numeric_cols[i + 1]
                     fig.add_trace(
-                        go.Box(y=data[next_col], name=str(next_col)),
-                        row=row, col=col_idx
+                        go.Box(y=data[next_col], name=str(next_col)), row=row, col=col_idx
                     )
 
             fig.update_layout(height=1000, title="Performance Metrics Dashboard", showlegend=False)

@@ -353,7 +353,6 @@ class TestSignalScoringEngine:
 
     def test_process_signals_multiple(self, signal_scoring_engine):
         """Test processing multiple signals."""
-        from datetime import datetime
 
         signal1 = Signal(
             symbol="AAPL",

@@ -16,7 +16,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Callable, Dict, List, Optional
 
-from .models import MetricPoint, MetricType, MetricsCollectionResult
+from .models import MetricPoint, MetricsCollectionResult, MetricType
 from .questdb_connector import QuestDBConnector
 
 logger = logging.getLogger(__name__)
@@ -58,9 +58,7 @@ class MetricsCollector:
         self._total_stored = 0
         self._total_errors = 0
 
-    def register_metric_source(
-        self, source_name: str, collector_func: Callable
-    ) -> None:
+    def register_metric_source(self, source_name: str, collector_func: Callable) -> None:
         """
         Register a metric source (collector function).
 
@@ -103,9 +101,7 @@ class MetricsCollector:
                     if metrics:
                         self._pending_metrics.extend(metrics)
                         metrics_collected += len(metrics)
-                        logger.debug(
-                            f"Collected {len(metrics)} metrics from {source_name}"
-                        )
+                        logger.debug(f"Collected {len(metrics)} metrics from {source_name}")
 
                 except Exception as e:
                     error_msg = f"Error collecting from {source_name}: {e}"
@@ -116,11 +112,7 @@ class MetricsCollector:
             # Store metrics to database if auto_flush enabled
             if self.auto_flush and self._pending_metrics:
                 try:
-                    stored_count = (
-                        await self.questdb.insert_metrics_batch(
-                            self._pending_metrics
-                        )
-                    )
+                    stored_count = await self.questdb.insert_metrics_batch(self._pending_metrics)
                     self._total_stored += stored_count
                     self._pending_metrics.clear()
                     logger.debug(f"Stored {stored_count} metrics to QuestDB")
@@ -160,10 +152,7 @@ class MetricsCollector:
                 success=False,
                 metrics_collected=metrics_collected,
                 metrics_failed=metrics_failed,
-                total_duration_ms=(
-                    datetime.utcnow() - start_time
-                ).total_seconds()
-                * 1000,
+                total_duration_ms=(datetime.utcnow() - start_time).total_seconds() * 1000,
                 errors=[str(e)],
             )
 
@@ -180,9 +169,7 @@ class MetricsCollector:
         )
 
         # Create continuous collection task
-        self._collection_task = asyncio.create_task(
-            self._continuous_collection_loop()
-        )
+        self._collection_task = asyncio.create_task(self._continuous_collection_loop())
 
     async def stop_continuous_collection(self) -> None:
         """Stop continuous metrics collection."""
@@ -213,9 +200,7 @@ class MetricsCollector:
                 result = await self.collect_once()
 
                 if not result.success:
-                    logger.warning(
-                        f"Collection cycle had errors: {result.errors}"
-                    )
+                    logger.warning(f"Collection cycle had errors: {result.errors}")
 
                 # Wait before next collection
                 await asyncio.sleep(self.collection_interval_seconds)
@@ -237,9 +222,7 @@ class MetricsCollector:
             return 0
 
         try:
-            count = await self.questdb.insert_metrics_batch(
-                self._pending_metrics
-            )
+            count = await self.questdb.insert_metrics_batch(self._pending_metrics)
             self._total_stored += count
             self._pending_metrics.clear()
             logger.info(f"Flushed {count} metrics to QuestDB")

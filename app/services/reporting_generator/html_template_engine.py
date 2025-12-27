@@ -7,11 +7,10 @@ report generation and delivery.
 """
 
 import logging
-from decimal import Decimal
-from datetime import datetime
-from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass
-from pathlib import Path
+from datetime import datetime
+from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -168,9 +167,7 @@ class HTMLTemplateEngine:
             # Add main content sections
             for section in sections:
                 if section.enabled:
-                    section_html = self._render_section(
-                        section, metrics, charts_data, tables_data
-                    )
+                    section_html = self._render_section(section, metrics, charts_data, tables_data)
                     html_parts.append(section_html)
 
             # Add disclaimers if enabled
@@ -235,9 +232,7 @@ class HTMLTemplateEngine:
 
             # Add company name
             if config.branding:
-                html += (
-                    f'  <div class="company-name">{config.branding.company_name}</div>\n'
-                )
+                html += f'  <div class="company-name">{config.branding.company_name}</div>\n'
 
             # Add report title
             html += f'  <h1 class="report-title">{self._escape_html(config.report_title)}</h1>\n'
@@ -259,9 +254,7 @@ class HTMLTemplateEngine:
             # Add generation date
             if config.report_date:
                 date_str = config.report_date.strftime("%B %d, %Y")
-                html += (
-                    f'  <p class="report-date">Generated: <strong>{date_str}</strong></p>\n'
-                )
+                html += f'  <p class="report-date">Generated: <strong>{date_str}</strong></p>\n'
 
             html += "</header>\n"
             return html
@@ -280,9 +273,7 @@ class HTMLTemplateEngine:
             for section in sections:
                 if section.enabled:
                     anchor = section.section_name.lower().replace(" ", "-")
-                    html += (
-                        f'    <li><a href="#{anchor}">{section.title}</a></li>\n'
-                    )
+                    html += f'    <li><a href="#{anchor}">{section.title}</a></li>\n'
 
             html += "  </ol>\n"
             html += "</nav>\n"
@@ -434,9 +425,7 @@ class HTMLTemplateEngine:
                     if table_rows:
                         headers = list(table_rows[0].keys())
                         for header in headers:
-                            html += (
-                                f"          <th>{self._format_label(header)}</th>\n"
-                            )
+                            html += f"          <th>{self._format_label(header)}</th>\n"
 
                     html += "        </tr>\n"
                     html += "      </thead>\n"

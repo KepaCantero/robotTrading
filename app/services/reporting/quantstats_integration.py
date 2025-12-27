@@ -5,17 +5,17 @@ Provides advanced performance metrics using QuantStats library.
 """
 
 import logging
-from decimal import Decimal
 from typing import Dict, Optional
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
 # Try to import QuantStats, fall back gracefully if not available
 try:
-    import quantstats as qs
+    pass
+
     QUANTSTATS_AVAILABLE = True
 except ImportError:
     QUANTSTATS_AVAILABLE = False
@@ -73,6 +73,7 @@ class QuantStatsIntegration:
             # Calculate using QuantStats
             # Avoid QuantStats plotting/output
             import warnings
+
             warnings.filterwarnings('ignore')
 
             # Total return
@@ -81,9 +82,7 @@ class QuantStatsIntegration:
             # Annual return
             years = len(returns) / periods_per_year
             if years > 0:
-                metrics["annual_return"] = (
-                    (1 + metrics["total_return"]) ** (1 / years) - 1
-                )
+                metrics["annual_return"] = (1 + metrics["total_return"]) ** (1 / years) - 1
 
             # Volatility
             metrics["volatility"] = float(returns.std() * np.sqrt(periods_per_year))
@@ -91,7 +90,9 @@ class QuantStatsIntegration:
             # Sharpe Ratio (risk-free rate = 0)
             if metrics["volatility"] > 0:
                 metrics["sharpe_ratio"] = float(
-                    (metrics["annual_return"] / metrics["volatility"]) if metrics["volatility"] > 0 else 0
+                    (metrics["annual_return"] / metrics["volatility"])
+                    if metrics["volatility"] > 0
+                    else 0
                 )
 
             # Sortino Ratio (downside volatility only)
@@ -102,9 +103,7 @@ class QuantStatsIntegration:
                 downside_volatility = 0.0
 
             metrics["sortino_ratio"] = float(
-                (metrics["annual_return"] / downside_volatility)
-                if downside_volatility > 0
-                else 0
+                (metrics["annual_return"] / downside_volatility) if downside_volatility > 0 else 0
             )
 
             # Max Drawdown
@@ -126,9 +125,7 @@ class QuantStatsIntegration:
             # Profit Factor
             gross_profit = returns[returns > 0].sum()
             gross_loss = abs(returns[returns < 0].sum())
-            metrics["profit_factor"] = float(
-                gross_profit / gross_loss if gross_loss > 0 else 0
-            )
+            metrics["profit_factor"] = float(gross_profit / gross_loss if gross_loss > 0 else 0)
 
             # Recovery Factor
             total_return_pct = metrics["total_return"]
@@ -141,14 +138,16 @@ class QuantStatsIntegration:
             returns_sign = returns > 0
             changes = returns_sign.astype(int).diff()
             streaks = changes.ne(0).cumsum()
-            consecutive_wins = (returns_sign * streaks).groupby(
-                (returns_sign * streaks)
-            ).size().max()
-            consecutive_losses = (~returns_sign * streaks).groupby(
-                (~returns_sign * streaks)
-            ).size().max()
+            consecutive_wins = (
+                (returns_sign * streaks).groupby((returns_sign * streaks)).size().max()
+            )
+            consecutive_losses = (
+                (~returns_sign * streaks).groupby((~returns_sign * streaks)).size().max()
+            )
             metrics["max_consecutive_wins"] = float(consecutive_wins if consecutive_wins > 0 else 0)
-            metrics["max_consecutive_losses"] = float(consecutive_losses if consecutive_losses > 0 else 0)
+            metrics["max_consecutive_losses"] = float(
+                consecutive_losses if consecutive_losses > 0 else 0
+            )
 
             # Information Ratio (vs benchmark if provided)
             if benchmark_returns is not None and len(benchmark_returns) == len(returns):
@@ -194,18 +193,14 @@ class QuantStatsIntegration:
             # Annual return
             years = len(returns) / periods_per_year
             if years > 0:
-                metrics["annual_return"] = (
-                    (1 + metrics["total_return"]) ** (1 / years) - 1
-                )
+                metrics["annual_return"] = (1 + metrics["total_return"]) ** (1 / years) - 1
 
             # Volatility
             metrics["volatility"] = float(returns.std() * np.sqrt(periods_per_year))
 
             # Sharpe Ratio
             if metrics["volatility"] > 0:
-                metrics["sharpe_ratio"] = float(
-                    metrics["annual_return"] / metrics["volatility"]
-                )
+                metrics["sharpe_ratio"] = float(metrics["annual_return"] / metrics["volatility"])
 
             # Max Drawdown
             cumulative = (1 + returns).cumprod()

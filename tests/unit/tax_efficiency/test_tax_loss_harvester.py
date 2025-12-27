@@ -8,14 +8,13 @@ Tests cover:
 - Annual tax benefit estimation with loss carryforward
 """
 
-import pytest
 from decimal import Decimal
-from datetime import datetime, timedelta
+
+import pytest
+
 from app.services.tax_efficiency.tax_loss_harvester import (
-    TaxLossHarvester,
     HarvestablePosition,
-    ReplacementPosition,
-    HarvestingOpportunity,
+    TaxLossHarvester,
 )
 
 
@@ -287,14 +286,22 @@ class TestEstimateAnnualTaxBenefit:
         """Combine losses from multiple positions."""
         positions = [
             HarvestablePosition(
-                symbol="AAPL", quantity=Decimal("100"), purchase_price=Decimal("100"),
-                current_price=Decimal("80"), unrealized_loss=Decimal("-2000"),
-                tax_benefit=Decimal("0"), hold_period_days=180,
+                symbol="AAPL",
+                quantity=Decimal("100"),
+                purchase_price=Decimal("100"),
+                current_price=Decimal("80"),
+                unrealized_loss=Decimal("-2000"),
+                tax_benefit=Decimal("0"),
+                hold_period_days=180,
             ),
             HarvestablePosition(
-                symbol="MSFT", quantity=Decimal("50"), purchase_price=Decimal("200"),
-                current_price=Decimal("150"), unrealized_loss=Decimal("-2500"),
-                tax_benefit=Decimal("0"), hold_period_days=200,
+                symbol="MSFT",
+                quantity=Decimal("50"),
+                purchase_price=Decimal("200"),
+                current_price=Decimal("150"),
+                unrealized_loss=Decimal("-2500"),
+                tax_benefit=Decimal("0"),
+                hold_period_days=200,
             ),
         ]
 
@@ -329,9 +336,7 @@ class TestEstimateAnnualTaxBenefit:
 
     def test_zero_losses(self, harvester):
         """Handle case with no losses."""
-        benefit_dict = harvester.estimate_annual_tax_benefit(
-            [], marginal_tax_rate=Decimal("0.25")
-        )
+        benefit_dict = harvester.estimate_annual_tax_benefit([], marginal_tax_rate=Decimal("0.25"))
 
         assert benefit_dict["total_harvestable_loss"] == Decimal("0")
         assert benefit_dict["usable_this_year"] == Decimal("0")
@@ -424,9 +429,7 @@ class TestCreateHarvestingOpportunity:
             (Decimal("0.25"), Decimal("1250")),
             (Decimal("0.35"), Decimal("1750")),
         ]:
-            opportunity = harvester.create_harvesting_opportunity(
-                position, marginal_tax_rate=rate
-            )
+            opportunity = harvester.create_harvesting_opportunity(position, marginal_tax_rate=rate)
             assert opportunity.total_tax_benefit == expected
 
 
@@ -469,9 +472,7 @@ class TestEdgeCases:
 
     def test_empty_positions_dict(self, harvester):
         """Handle empty positions dictionary."""
-        harvestable = harvester.identify_harvestable_positions(
-            {}, {}, {}, {}
-        )
+        harvestable = harvester.identify_harvestable_positions({}, {}, {}, {})
 
         assert len(harvestable) == 0
 

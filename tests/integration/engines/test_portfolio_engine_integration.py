@@ -11,14 +11,11 @@ Tests para verificar que Portfolio Engine funciona correctamente:
 
 import logging
 import sys
-from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Dict, List
 from uuid import uuid4
 
 import numpy as np
-import pytest
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent

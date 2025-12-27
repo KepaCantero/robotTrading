@@ -10,9 +10,8 @@ combined_scale = volatility_scale × sharpe_scale × loss_scale × drawdown_scal
 """
 
 import logging
-from datetime import datetime
-from decimal import Decimal, ROUND_HALF_UP
-from typing import Dict, List, Optional, Tuple
+from decimal import ROUND_HALF_UP, Decimal
+from typing import Dict, List, Optional
 
 from app.services.risk_scaling.drawdown_monitor import DrawdownMonitor
 from app.services.risk_scaling.loss_monitor import LossMonitor, TradeResult
@@ -23,8 +22,8 @@ from app.services.risk_scaling.models import (
     RiskLevel,
     RiskScalingFactors,
     RiskScalingReport,
-    RiskScalingState,
     RiskScalingSnapshot,
+    RiskScalingState,
 )
 from app.services.risk_scaling.sharpe_ratio_monitor import SharpeRatioMonitor
 from app.services.risk_scaling.volatility_monitor import PriceData, VolatilityMonitor
@@ -279,9 +278,7 @@ class RiskScalingOrchestrator:
         # Build reasons for adjustment
         reasons = []
         if scaling_factors.volatility_scale < Decimal("1.0"):
-            reasons.append(
-                f"High volatility: {scaling_factors.volatility_scale:.2f}x"
-            )
+            reasons.append(f"High volatility: {scaling_factors.volatility_scale:.2f}x")
         if scaling_factors.sharpe_scale < Decimal("1.0"):
             reasons.append(f"Weak performance: {scaling_factors.sharpe_scale:.2f}x")
         if scaling_factors.loss_scale < Decimal("1.0"):
@@ -345,22 +342,16 @@ class RiskScalingOrchestrator:
 
         if daily_returns:
             try:
-                sharpe_ratio = await self.sharpe_monitor.calculate_rolling_sharpe(
-                    daily_returns
-                )
+                sharpe_ratio = await self.sharpe_monitor.calculate_rolling_sharpe(daily_returns)
             except:
                 pass
 
         if trade_results:
-            consecutive_losses = self.loss_monitor.detect_consecutive_losses(
-                trade_results
-            )
+            consecutive_losses = self.loss_monitor.detect_consecutive_losses(trade_results)
 
         if equity_curve:
             try:
-                current_dd, max_dd = self.drawdown_monitor.calculate_drawdown(
-                    equity_curve
-                )
+                current_dd, max_dd = self.drawdown_monitor.calculate_drawdown(equity_curve)
             except:
                 pass
 

@@ -5,16 +5,17 @@ Tests sector and country concentration validation, rebalancing suggestions,
 and integration with the portfolio service.
 """
 
-import pytest
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
 
-from app.core.centralized_config import get_config, SectorCountryDiversificationConfig
-from app.models.portfolio import Portfolio, Position, MarketRegime, MarketRegimeData, AssetClass
-from app.services.sector_diversification_validator import SectorDiversificationValidator
+import pytest
+
+from app.core.centralized_config import SectorCountryDiversificationConfig, get_config
+from app.models.portfolio import AssetClass, Portfolio, Position
+from app.providers.paper_trading import PaperTradingPortfolioProvider
 from app.services.country_diversification_validator import CountryDiversificationValidator
 from app.services.portfolio_service import PortfolioService
-from app.providers.paper_trading import PaperTradingPortfolioProvider
+from app.services.sector_diversification_validator import SectorDiversificationValidator
 
 
 @pytest.fixture

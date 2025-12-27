@@ -15,12 +15,11 @@ Returns ExecutionPlan with optimized tranches and cost budgets.
 import logging
 from decimal import Decimal
 from typing import Dict, Optional
-from uuid import uuid4
 
 from .broker_negotiation_engine import get_broker_negotiation_engine
 from .execution_cost_monitor import get_execution_cost_monitor
 from .market_impact_estimator import get_market_impact_estimator
-from .models import ExecutionPlan, MarketImpactEstimate
+from .models import ExecutionPlan
 from .order_splitting_optimizer import get_order_splitting_optimizer
 
 logger = logging.getLogger(__name__)
@@ -49,7 +48,7 @@ class SmartOrderRouter:
 
     # Cost overrun thresholds for different actions
     COST_OVERRUN_WARNING = Decimal("0.05")  # 5% over plan = warning
-    COST_OVERRUN_ABORT = Decimal("0.15")    # 15% over plan = abort
+    COST_OVERRUN_ABORT = Decimal("0.15")  # 15% over plan = abort
 
     def __init__(self):
         """Initialize router with all specialist components."""
@@ -152,8 +151,7 @@ class SmartOrderRouter:
         commission_cost = total_size * commission_rate
 
         logger.info(
-            f"{symbol}: Commission rate: {commission_rate:.4%} "
-            f"(€{commission_cost:,.2f})"
+            f"{symbol}: Commission rate: {commission_rate:.4%} " f"(€{commission_cost:,.2f})"
         )
 
         # =====================================================================
@@ -195,8 +193,8 @@ class SmartOrderRouter:
             max_exec_time=max_execution_time_ms,
             constraints={
                 "max_per_tranche": total_size * Decimal("0.25"),  # 25% per tranche
-                "max_spread": Decimal("2"),                        # 2 bps max spread
-                "max_involvement_pct": Decimal("0.20"),           # 20% of tick volume
+                "max_spread": Decimal("2"),  # 2 bps max spread
+                "max_involvement_pct": Decimal("0.20"),  # 20% of tick volume
             },
         )
 
@@ -230,9 +228,7 @@ class SmartOrderRouter:
             total_tranches=total_tranches_for_monitoring,
         )
 
-        logger.info(
-            f"{symbol}: Execution {execution_plan.execution_id} monitoring started"
-        )
+        logger.info(f"{symbol}: Execution {execution_plan.execution_id} monitoring started")
 
         return execution_plan
 
@@ -264,14 +260,12 @@ class SmartOrderRouter:
         daily_volume = Decimal(str(daily_volume))
 
         # Get cost breakdown for different execution windows
-        window_costs = (
-            self.market_impact_estimator.estimate_slippage_for_different_windows(
-                symbol=symbol,
-                order_size=total_size,
-                daily_volume=daily_volume,
-                volatility_percentile=volatility_percentile,
-                asset_class=asset_class,
-            )
+        window_costs = self.market_impact_estimator.estimate_slippage_for_different_windows(
+            symbol=symbol,
+            order_size=total_size,
+            daily_volume=daily_volume,
+            volatility_percentile=volatility_percentile,
+            asset_class=asset_class,
         )
 
         # Add commission cost (same regardless of window)

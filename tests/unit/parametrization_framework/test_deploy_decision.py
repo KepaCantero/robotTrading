@@ -4,13 +4,14 @@ T10.1: DeployDecisionOrchestrator Tests
 Tests for master deployment decision orchestration.
 """
 
-import pytest
 from decimal import Decimal
-from datetime import datetime
+
+import pytest
+
 from app.services.deploy_decision_orchestrator import (
     DeployDecisionOrchestrator,
-    get_deploy_orchestrator,
     DeploymentInput,
+    get_deploy_orchestrator,
 )
 
 
@@ -144,7 +145,10 @@ class TestConditionalDecisions:
         result = await orch.make_decision(request)
 
         assert result.success
-        assert result.status in ["CONDITIONAL", "APPROVED"]  # Allow both as orchestrator may approve marginal case
+        assert result.status in [
+            "CONDITIONAL",
+            "APPROVED",
+        ]  # Allow both as orchestrator may approve marginal case
         assert result.confidence_level in ["medium", "low"]
 
     @pytest.mark.asyncio
@@ -458,7 +462,10 @@ class TestRationaleGeneration:
         result = await orch.make_decision(request)
 
         assert result.success
-        assert "risk" in result.rationale.risk_assessment.lower() or "drawdown" in result.rationale.risk_assessment.lower()
+        assert (
+            "risk" in result.rationale.risk_assessment.lower()
+            or "drawdown" in result.rationale.risk_assessment.lower()
+        )
 
 
 # RECOMMENDATION TEXT TESTS
@@ -494,7 +501,10 @@ class TestRecommendationText:
         result = await orch.make_decision(request)
 
         assert result.success
-        assert "approved" in result.recommendation_text.lower() or "deploy" in result.recommendation_text.lower()
+        assert (
+            "approved" in result.recommendation_text.lower()
+            or "deploy" in result.recommendation_text.lower()
+        )
 
     @pytest.mark.asyncio
     async def test_rejected_recommendation_text(self):
@@ -527,7 +537,10 @@ class TestRecommendationText:
         result = await orch.make_decision(request)
 
         assert result.success
-        assert "not recommended" in result.recommendation_text.lower() or "rejected" in result.recommendation_text.lower()
+        assert (
+            "not recommended" in result.recommendation_text.lower()
+            or "rejected" in result.recommendation_text.lower()
+        )
 
 
 # NEXT STEPS TESTS
@@ -598,7 +611,9 @@ class TestNextSteps:
 
         assert result.success
         assert len(result.next_steps) > 0
-        assert any("address" in step.lower() or "optimi" in step.lower() for step in result.next_steps)
+        assert any(
+            "address" in step.lower() or "optimi" in step.lower() for step in result.next_steps
+        )
 
 
 if __name__ == "__main__":

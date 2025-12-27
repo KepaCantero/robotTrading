@@ -6,7 +6,6 @@ Tests para WeightedEnsemble, RegimeBasedSelector y VotingEnsemble.
 
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
 
 import pytest
 

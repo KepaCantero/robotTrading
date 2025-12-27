@@ -11,16 +11,16 @@ Tests cover:
 - Persistence status reporting
 """
 
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
 
 import pytest
 
 from app.services.configuration_persistence import (
-    ConfigurationPersistence,
-    StrategyConfiguration,
-    ConfigurationSaveRequest,
     ConfigurationLoadRequest,
+    ConfigurationPersistence,
+    ConfigurationSaveRequest,
+    StrategyConfiguration,
     get_configuration_persistence,
 )
 
@@ -575,7 +575,6 @@ class TestErrorHandling:
         """Test error handling for invalid configuration data."""
         # This should not raise an error - Pydantic will validate
         # If data is invalid, the ConfigurationSaveRequest creation will fail
-        pass
 
     @pytest.mark.asyncio
     async def test_load_configuration_returns_error_response(self, persistence):

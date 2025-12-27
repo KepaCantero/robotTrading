@@ -24,7 +24,7 @@ This gate enforces:
 
 import logging
 from decimal import Decimal
-from typing import Dict, Literal, Tuple
+from typing import Dict, Tuple
 
 logger = logging.getLogger(__name__)
 

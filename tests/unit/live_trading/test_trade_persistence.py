@@ -4,20 +4,18 @@ T18.3: Live Trading Bridge - Trade Persistence Tests
 Tests for the trade persistence layer with SQLAlchemy ORM models.
 """
 
-import pytest
 from datetime import datetime, timedelta
 from decimal import Decimal
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+
+import pytest
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from app.services.live_trading.trade_persistence import (
-    TradePersistenceManager,
-    OrderRecord,
-    TradeRecord,
-    PositionHistory,
-    TradeStatistics,
     Base,
+    OrderRecord,
+    PositionHistory,
+    TradePersistenceManager,
+    TradeRecord,
 )
 
 

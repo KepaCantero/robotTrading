@@ -4,10 +4,11 @@ T11.1: ConfigurationPersistence - Models for configuration storage and retrieval
 Persists strategy configurations to in-memory store with optional persistence.
 """
 
-from pydantic import BaseModel, Field
-from typing import Optional, Dict, List, Any
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
 
 
 class StrategyConfiguration(BaseModel):
@@ -44,12 +45,18 @@ class StrategyConfiguration(BaseModel):
     recommendation_status: Optional[str] = Field(None, description="Recommendation status")
 
     # Deployment decision
-    deployment_status: Optional[str] = Field(None, description="Deployment decision: APPROVED/CONDITIONAL/REJECTED")
-    deployment_confidence: Optional[str] = Field(None, description="Decision confidence: high/medium/low")
+    deployment_status: Optional[str] = Field(
+        None, description="Deployment decision: APPROVED/CONDITIONAL/REJECTED"
+    )
+    deployment_confidence: Optional[str] = Field(
+        None, description="Decision confidence: high/medium/low"
+    )
 
     # Metadata
     created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
-    updated_at: datetime = Field(default_factory=datetime.utcnow, description="Last update timestamp")
+    updated_at: datetime = Field(
+        default_factory=datetime.utcnow, description="Last update timestamp"
+    )
     is_active: bool = Field(default=True, description="Whether configuration is active")
     notes: str = Field(default="", description="Optional notes about configuration")
 

@@ -5,16 +5,17 @@ Tests real-time quote updates, trade execution, order status updates,
 and connection management.
 """
 
-import pytest
+import asyncio
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
-import asyncio
 
+import pytest
+
+from app.services.live_trading.broker_adapters.alpaca_adapter import AlpacaAdapter
 from app.services.live_trading.broker_adapters.alpaca_client import (
     AlpacaClient,
     AlpacaClientError,
 )
-from app.services.live_trading.broker_adapters.alpaca_adapter import AlpacaAdapter
 from app.services.live_trading.broker_connector import (
     BrokerPosition,
     OrderStatus,
@@ -208,7 +209,7 @@ class TestAlpacaClientStreamingStoppage:
         """Test stopping stream when not running."""
         alpaca_client.is_streaming = False
 
-        result = await alpaca_client.stop_stream()
+        await alpaca_client.stop_stream()
 
         # Should return without error
 

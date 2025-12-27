@@ -11,18 +11,19 @@ for accounts with insufficient capital.
 """
 
 import logging
-import yaml
-from decimal import Decimal
 from datetime import datetime
-from typing import Dict, Optional, List
+from decimal import Decimal
 from pathlib import Path
+from typing import Dict, List, Optional
+
+import yaml
 
 from .models import (
     ModuleParameterConfig,
     ModuleParameterSet,
+    ParameterizationPreset,
     ParameterizationRequest,
     ParameterizationResult,
-    ParameterizationPreset,
 )
 
 logger = logging.getLogger(__name__)
@@ -59,7 +60,9 @@ class ModuleParametrizer:
 
         # Load module configuration
         if config_path is None:
-            config_path = Path(__file__).parent.parent.parent.parent / "config" / "module_parameters.yaml"
+            config_path = (
+                Path(__file__).parent.parent.parent.parent / "config" / "module_parameters.yaml"
+            )
 
         self.config_path = Path(config_path)
         self.module_templates = self._load_module_templates()
@@ -69,7 +72,9 @@ class ModuleParametrizer:
         """Load module parameter templates from YAML."""
         try:
             if not self.config_path.exists():
-                logger.warning(f"⚠️  Module config not found at {self.config_path}, using empty templates")
+                logger.warning(
+                    f"⚠️  Module config not found at {self.config_path}, using empty templates"
+                )
                 return {"modules": {}}
 
             with open(self.config_path, 'r') as f:
@@ -100,8 +105,7 @@ class ModuleParametrizer:
         try:
             # Step 1: Apply capital-tier gating to enabled modules
             gated_modules, disabled_modules = self._apply_capital_gating(
-                request.enabled_modules,
-                request.initial_capital
+                request.enabled_modules, request.initial_capital
             )
 
             # Step 2: Generate parameters for each enabled module
@@ -293,12 +297,8 @@ class ModuleParametrizer:
         low_priority = [m for m, c in module_parameters.items() if c.priority >= 7]
 
         # Calculate aggregate metrics
-        total_max_exposure = sum(
-            config.max_exposure for config in module_parameters.values()
-        )
-        total_cost = sum(
-            config.cost_estimate_usd for config in module_parameters.values()
-        )
+        total_max_exposure = sum(config.max_exposure for config in module_parameters.values())
+        total_cost = sum(config.cost_estimate_usd for config in module_parameters.values())
         avg_improvement = sum(
             config.estimated_improvement_pct for config in module_parameters.values()
         ) / max(1, len(module_parameters))
@@ -330,7 +330,9 @@ class ModuleParametrizer:
 
         # Check if any modules are enabled
         if parameter_set.total_modules_enabled == 0:
-            warnings.append("⚠️  No modules enabled after parametrization - profile may not be functional")
+            warnings.append(
+                "⚠️  No modules enabled after parametrization - profile may not be functional"
+            )
 
         # Check total exposure (should not exceed reasonable limits)
         if parameter_set.total_max_exposure > Decimal("1.5"):
@@ -340,7 +342,10 @@ class ModuleParametrizer:
             )
 
         # Check if high-priority modules are disabled
-        if parameter_set.total_modules_enabled > 0 and len(parameter_set.high_priority_modules) == 0:
+        if (
+            parameter_set.total_modules_enabled > 0
+            and len(parameter_set.high_priority_modules) == 0
+        ):
             warnings.append("⚠️  No high-priority modules enabled - may affect strategy consistency")
 
         # Check estimated cost
@@ -369,9 +374,8 @@ class ModuleParametrizer:
             "successful_parametrizations": sum(
                 1 for r in self.parametrization_history if r.success
             ),
-            "success_rate": sum(
-                1 for r in self.parametrization_history if r.success
-            ) / max(1, len(self.parametrization_history)),
+            "success_rate": sum(1 for r in self.parametrization_history if r.success)
+            / max(1, len(self.parametrization_history)),
             "total_modules_available": len(self.module_templates.get("modules", {})),
         }
 

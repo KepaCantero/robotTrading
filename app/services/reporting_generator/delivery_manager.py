@@ -9,15 +9,14 @@ Handles exporting reports to multiple formats and delivery channels:
 - Cloud storage (S3, optional)
 """
 
-import logging
-import asyncio
-from pathlib import Path
-from dataclasses import dataclass
-from decimal import Decimal
-from datetime import datetime
-from typing import Dict, List, Optional, Any
-from enum import Enum
 import json
+import logging
+from dataclasses import dataclass
+from datetime import datetime
+from decimal import Decimal
+from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -173,9 +172,7 @@ class ReportDeliveryManager:
             file_size_mb = Decimal(str(output_path.stat().st_size / (1024 * 1024)))
 
             # Calculate export time
-            export_time_ms = Decimal(
-                str((datetime.utcnow() - start_time).total_seconds() * 1000)
-            )
+            export_time_ms = Decimal(str((datetime.utcnow() - start_time).total_seconds() * 1000))
 
             self.exports_completed += 1
             logger.info(f"HTML export completed: {output_path}")
@@ -303,9 +300,7 @@ class ReportDeliveryManager:
             json_path.write_text(metrics_json, encoding="utf-8")
 
             file_size_mb = Decimal(str(json_path.stat().st_size / (1024 * 1024)))
-            export_time_ms = Decimal(
-                str((datetime.utcnow() - start_time).total_seconds() * 1000)
-            )
+            export_time_ms = Decimal(str((datetime.utcnow() - start_time).total_seconds() * 1000))
 
             self.exports_completed += 1
             logger.info(f"Excel export completed: {json_path}")
@@ -372,9 +367,7 @@ class ReportDeliveryManager:
             #     for recipient in email_config.recipient_emails:
             #         server.send_message(msg, email_config.sender_email, recipient)
 
-            delivery_time_ms = Decimal(
-                str((datetime.utcnow() - start_time).total_seconds() * 1000)
-            )
+            delivery_time_ms = Decimal(str((datetime.utcnow() - start_time).total_seconds() * 1000))
 
             self.deliveries_completed += 1
             recipient_str = ", ".join(email_config.recipient_emails)
@@ -447,9 +440,7 @@ class ReportDeliveryManager:
             # object_key = object_key or file_path.name
             # s3_client.upload_file(str(file_path), s3_config.bucket_name, object_key)
 
-            delivery_time_ms = Decimal(
-                str((datetime.utcnow() - start_time).total_seconds() * 1000)
-            )
+            delivery_time_ms = Decimal(str((datetime.utcnow() - start_time).total_seconds() * 1000))
 
             s3_path = (
                 f"s3://{s3_config.bucket_name}/{s3_config.prefix}/{object_key or file_path.name}"

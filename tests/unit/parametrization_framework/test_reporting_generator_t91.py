@@ -12,15 +12,16 @@ Tests:
 - History tracking and status reporting
 """
 
-import pytest
 from decimal import Decimal
-from datetime import datetime
-from app.services.reporting_generator.reporting_generator import ReportingGenerator
+
+import pytest
+
 from app.services.reporting_generator.models import (
+    AllocationSnapshot,
     ReportGenerationRequest,
     StrategyMetrics,
-    AllocationSnapshot,
 )
+from app.services.reporting_generator.reporting_generator import ReportingGenerator
 
 
 @pytest.fixture

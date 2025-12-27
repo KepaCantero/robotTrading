@@ -4,13 +4,11 @@ Tests for Stochastic RSI filtering in MomentumStrategy (TASK-IND-STOCH-2).
 REFACTORED: Uses TechnicalIndicatorCalculator instead of private methods.
 """
 
-from collections import deque
 from decimal import Decimal
 
 import pytest
 
 from app.models.market_data import Quote
-from app.models.signal import SignalType
 from app.services.momentum_analysis import TechnicalIndicatorCalculator
 from app.strategies.momentum import MomentumStrategy
 

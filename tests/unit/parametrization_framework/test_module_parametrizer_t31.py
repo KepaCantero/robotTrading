@@ -10,13 +10,15 @@ Tests:
 - Risk profile adjustments
 """
 
-import pytest
 from decimal import Decimal
-from app.services.module_parametrizer.module_parametrizer import ModuleParametrizer
+
+import pytest
+
 from app.services.module_parametrizer.models import (
-    ParameterizationRequest,
     ParameterizationPreset,
+    ParameterizationRequest,
 )
+from app.services.module_parametrizer.module_parametrizer import ModuleParametrizer
 
 
 @pytest.fixture
@@ -271,9 +273,9 @@ class TestModulePriorities:
         param_set = result.parameter_set
         # Check that modules are assigned priorities
         total_modules = (
-            len(param_set.high_priority_modules) +
-            len(param_set.medium_priority_modules) +
-            len(param_set.low_priority_modules)
+            len(param_set.high_priority_modules)
+            + len(param_set.medium_priority_modules)
+            + len(param_set.low_priority_modules)
         )
         assert total_modules == param_set.total_modules_enabled
 
@@ -318,8 +320,7 @@ class TestExposureAndCosts:
         assert result.parameter_set.total_max_exposure > Decimal("0")
         # Total exposure should be sum of individual exposures
         expected_exposure = sum(
-            config.max_exposure
-            for config in result.parameter_set.module_parameters.values()
+            config.max_exposure for config in result.parameter_set.module_parameters.values()
         )
         assert result.parameter_set.total_max_exposure == expected_exposure
 

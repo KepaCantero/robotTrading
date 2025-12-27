@@ -9,17 +9,17 @@ Tests cover:
 - Error handling and retry logic
 """
 
-import asyncio
-import pytest
 from datetime import datetime, timedelta
 from decimal import Decimal
 
+import pytest
+
 from app.services.metrics_database import (
-    QuestDBConnector,
+    AggregationType,
     MetricPoint,
     MetricType,
+    QuestDBConnector,
     TimeSeriesQuery,
-    AggregationType,
 )
 
 

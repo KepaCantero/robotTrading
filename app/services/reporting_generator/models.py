@@ -4,10 +4,11 @@ T9.1: ReportingGenerator - Models for performance reporting
 Generates comprehensive performance reports with visualizations and metrics.
 """
 
-from pydantic import BaseModel, Field
-from typing import List, Dict, Optional, Any
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
 
 
 class PerformanceMetric(BaseModel):
@@ -55,23 +56,15 @@ class ReportGenerationRequest(BaseModel):
     strategy_name: str = Field(..., description="Name of the strategy")
 
     # Historical performance data
-    backtest_metrics: StrategyMetrics = Field(
-        ..., description="Backtest performance metrics"
-    )
+    backtest_metrics: StrategyMetrics = Field(..., description="Backtest performance metrics")
 
     # Portfolio allocation
-    allocations: List[AllocationSnapshot] = Field(
-        ..., description="Portfolio allocations"
-    )
+    allocations: List[AllocationSnapshot] = Field(..., description="Portfolio allocations")
 
     # Additional context
     capital_eur: Decimal = Field(..., description="Capital in EUR")
-    target_annual_return_pct: Decimal = Field(
-        ..., description="Target annual return"
-    )
-    max_acceptable_drawdown_pct: Decimal = Field(
-        ..., description="Max acceptable drawdown"
-    )
+    target_annual_return_pct: Decimal = Field(..., description="Target annual return")
+    max_acceptable_drawdown_pct: Decimal = Field(..., description="Max acceptable drawdown")
 
     # Execution context
     execution_timestamp: datetime = Field(
@@ -101,23 +94,13 @@ class PerformanceReport(BaseModel):
     overall_rating: str = Field(
         default="neutral", description="Overall rating: excellent/good/neutral/poor"
     )
-    strengths: List[str] = Field(
-        default=[], description="Strategy strengths identified"
-    )
-    weaknesses: List[str] = Field(
-        default=[], description="Strategy weaknesses identified"
-    )
-    recommendations: List[str] = Field(
-        default=[], description="Recommendations for improvement"
-    )
+    strengths: List[str] = Field(default=[], description="Strategy strengths identified")
+    weaknesses: List[str] = Field(default=[], description="Strategy weaknesses identified")
+    recommendations: List[str] = Field(default=[], description="Recommendations for improvement")
 
     # Report metadata
-    html_content: Optional[str] = Field(
-        None, description="HTML report content"
-    )
-    charts_data: Optional[Dict[str, Any]] = Field(
-        None, description="Chart data for visualization"
-    )
+    html_content: Optional[str] = Field(None, description="HTML report content")
+    charts_data: Optional[Dict[str, Any]] = Field(None, description="Chart data for visualization")
 
     # Report timing
     generation_timestamp: datetime = Field(

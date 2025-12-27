@@ -826,9 +826,7 @@ class StrategyStockAllocator:
             macd_norm = (
                 1.0
                 if (macd is not None and macd > macd_signal)
-                else 0.0
-                if macd is not None
-                else 0.5
+                else 0.0 if macd is not None else 0.5
             )
             roc_norm = (
                 min(1.0, max(0.0, (roc_optimal + 0.1) / 0.2)) if roc_optimal is not None else 0.5

@@ -9,8 +9,6 @@ Tests cover:
 - Storage statistics
 """
 
-from decimal import Decimal
-from datetime import datetime
 
 import pytest
 
@@ -100,9 +98,7 @@ class TestSaveInvestmentProfile:
         assert profile_id == "test_profile_001"
 
     @pytest.mark.asyncio
-    async def test_save_profile_with_metadata(
-        self, repository, sample_investment_profile_dict
-    ):
+    async def test_save_profile_with_metadata(self, repository, sample_investment_profile_dict):
         """Test saving profile with metadata."""
         metadata = {"user_id": "user_123", "session_id": "session_456"}
 
@@ -137,7 +133,10 @@ class TestSaveBacktestConfig:
         for i in range(3):
             config_id = await repository.save_backtest_config(
                 config_id=f"backtest_config_{i:03d}",
-                config_data={**sample_backtest_config_dict, "initial_capital": str(50000 * (i + 1))},
+                config_data={
+                    **sample_backtest_config_dict,
+                    "initial_capital": str(50000 * (i + 1)),
+                },
             )
             ids.append(config_id)
 
@@ -177,9 +176,7 @@ class TestSaveDeploymentDecision:
     """Test saving deployment decisions."""
 
     @pytest.mark.asyncio
-    async def test_save_deployment_decision(
-        self, repository, sample_deployment_decision_dict
-    ):
+    async def test_save_deployment_decision(self, repository, sample_deployment_decision_dict):
         """Test saving deployment decision."""
         decision_id = await repository.save_deployment_decision(
             decision_id="deployment_decision_001",
@@ -300,9 +297,7 @@ class TestDeleteConfiguration:
     """Test deleting configurations."""
 
     @pytest.mark.asyncio
-    async def test_delete_existing_config(
-        self, repository, sample_investment_profile_dict
-    ):
+    async def test_delete_existing_config(self, repository, sample_investment_profile_dict):
         """Test deleting existing configuration."""
         profile_id = "profile_to_delete"
         await repository.save_investment_profile(
@@ -365,9 +360,7 @@ class TestUpdateConfiguration:
     """Test updating configurations."""
 
     @pytest.mark.asyncio
-    async def test_update_preserves_created_at(
-        self, repository, sample_investment_profile_dict
-    ):
+    async def test_update_preserves_created_at(self, repository, sample_investment_profile_dict):
         """Test update preserves created_at timestamp."""
         profile_id = "profile_update"
         await repository.save_investment_profile(

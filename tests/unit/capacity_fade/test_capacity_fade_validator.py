@@ -8,27 +8,26 @@ Tests all components:
 - CapacityFadeValidator (main orchestrator)
 """
 
-import pytest
 from decimal import Decimal
-from datetime import datetime
-import asyncio
+
+import pytest
 
 from app.services.capacity_fade_validation import (
-    CapacityFadeValidator,
     CapacityFadeRequest,
     CapacityFadeResponse,
+    CapacityFadeValidator,
     FeasibilityDecision,
 )
 from app.services.capacity_fade_validation.analyzers import (
+    AlphaDecayEstimator,
     HistoricalCapacityAnalyzer,
     LiquidityHeadroom,
-    AlphaDecayEstimator,
 )
-
 
 # ============================================================================
 # HistoricalCapacityAnalyzer Tests (5 tests)
 # ============================================================================
+
 
 class TestHistoricalCapacityAnalyzer:
     """Test HistoricalCapacityAnalyzer component."""
@@ -86,6 +85,7 @@ class TestHistoricalCapacityAnalyzer:
 # LiquidityHeadroom Tests (4 tests)
 # ============================================================================
 
+
 class TestLiquidityHeadroom:
     """Test LiquidityHeadroom component."""
 
@@ -135,6 +135,7 @@ class TestLiquidityHeadroom:
 # AlphaDecayEstimator Tests (6 tests)
 # ============================================================================
 
+
 class TestAlphaDecayEstimator:
     """Test AlphaDecayEstimator component."""
 
@@ -159,7 +160,9 @@ class TestAlphaDecayEstimator:
         # sqrt(250000/50000) = sqrt(5) ≈ 2.236
         # Estimated alpha = 10 / 2.236 ≈ 4.47
         assert "estimated_alpha_pct" in result
-        assert result["estimated_alpha_pct"] > Decimal("4") and result["estimated_alpha_pct"] < Decimal("5")
+        assert result["estimated_alpha_pct"] > Decimal("4") and result[
+            "estimated_alpha_pct"
+        ] < Decimal("5")
 
     def test_estimate_alpha_linear_model(self):
         """Test alpha estimation with linear decay model."""
@@ -232,6 +235,7 @@ class TestAlphaDecayEstimator:
 # ============================================================================
 # CapacityFadeValidator (Orchestrator) Tests (5 tests)
 # ============================================================================
+
 
 class TestCapacityFadeValidator:
     """Test CapacityFadeValidator orchestrator."""
@@ -358,6 +362,7 @@ class TestCapacityFadeValidator:
 # ============================================================================
 # Integration Tests (3 tests)
 # ============================================================================
+
 
 class TestCapacityFadeIntegration:
     """Integration tests combining multiple components."""

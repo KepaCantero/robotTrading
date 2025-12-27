@@ -12,7 +12,6 @@ import unittest
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-import numpy as np
 
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig

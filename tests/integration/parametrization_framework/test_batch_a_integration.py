@@ -8,18 +8,18 @@ Tests the complete end-to-end flow:
 Validates integration between risk management and reporting components.
 """
 
-import pytest
-import pandas as pd
-import numpy as np
 from decimal import Decimal
-from datetime import datetime
 
-from app.services.risk_scaling.risk_adjustment_calculator import get_risk_adjustment_calculator
-from app.services.risk_scaling.limit_adjuster import get_limit_adjuster
-from app.services.risk_scaling.risk_scaling_application import get_risk_scaling_application
-from app.services.reporting.report_templates import get_report_templates
+import numpy as np
+import pandas as pd
+import pytest
+
 from app.services.reporting.quantstats_integration import get_quantstats_integration
+from app.services.reporting.report_templates import get_report_templates
 from app.services.reporting.reporting_orchestrator import get_reporting_orchestrator
+from app.services.risk_scaling.limit_adjuster import get_limit_adjuster
+from app.services.risk_scaling.risk_adjustment_calculator import get_risk_adjustment_calculator
+from app.services.risk_scaling.risk_scaling_application import get_risk_scaling_application
 
 
 class TestBATCHA_RiskScalingReportingIntegration:
@@ -417,10 +417,7 @@ class TestBATCHA_RiskScalingReportingIntegration:
         # ===== PHASE 3: Validation =====
         # Verify end-to-end consistency
         assert report["summary"]["total_return"] == sample_backtest_result["total_return"]
-        assert (
-            report["recommendation"]["leverage"]
-            == float(risk_result["leverage"])
-        )
+        assert report["recommendation"]["leverage"] == float(risk_result["leverage"])
 
         # Verify report is suitable for deployment
         assert report["generated_at"] is not None

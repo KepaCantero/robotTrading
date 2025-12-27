@@ -13,19 +13,20 @@ Tests:
 - History tracking and status reporting
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
+
 from app.services.portfolio_constructor.models import (
-    PortfolioConstructionRequest,
     AllocationWeight,
     PortfolioAllocation,
+)
+from app.services.risk_scaling_application.models import (
+    RiskScalingRequest,
 )
 from app.services.risk_scaling_application.risk_scaling_applicator import (
     RiskScalingApplication,
     get_risk_scaler,
-)
-from app.services.risk_scaling_application.models import (
-    RiskScalingRequest,
 )
 
 

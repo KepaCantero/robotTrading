@@ -7,9 +7,9 @@ Tests all 10 advanced metrics:
 - Skewness, Kurtosis, Value at Risk, Conditional Value at Risk
 """
 
-import pytest
 from decimal import Decimal
-from datetime import datetime, timedelta
+
+import pytest
 
 from app.backtesting.advanced_metrics import AdvancedMetricsCalculator
 
@@ -24,9 +24,16 @@ def calculator():
 def sample_returns():
     """Sample returns for testing."""
     return [
-        Decimal("0.01"), Decimal("0.02"), Decimal("-0.01"),
-        Decimal("0.015"), Decimal("0.005"), Decimal("-0.005"),
-        Decimal("0.03"), Decimal("-0.02"), Decimal("0.01"), Decimal("0.02"),
+        Decimal("0.01"),
+        Decimal("0.02"),
+        Decimal("-0.01"),
+        Decimal("0.015"),
+        Decimal("0.005"),
+        Decimal("-0.005"),
+        Decimal("0.03"),
+        Decimal("-0.02"),
+        Decimal("0.01"),
+        Decimal("0.02"),
     ]
 
 
@@ -34,10 +41,17 @@ def sample_returns():
 def sample_equity_curve():
     """Sample equity curve for testing."""
     return [
-        Decimal("100000"), Decimal("101000"), Decimal("102050"),
-        Decimal("101050"), Decimal("102575"), Decimal("103050"),
-        Decimal("102050"), Decimal("104275"), Decimal("103210"),
-        Decimal("104420"), Decimal("106450"),
+        Decimal("100000"),
+        Decimal("101000"),
+        Decimal("102050"),
+        Decimal("101050"),
+        Decimal("102575"),
+        Decimal("103050"),
+        Decimal("102050"),
+        Decimal("104275"),
+        Decimal("103210"),
+        Decimal("104420"),
+        Decimal("106450"),
     ]
 
 
@@ -123,9 +137,11 @@ class TestUlcerIndex:
     def test_ulcer_index_with_large_drawdown(self, calculator):
         """Test Ulcer index with large drawdown."""
         equity = [
-            Decimal("100000"), Decimal("150000"),  # Peak
+            Decimal("100000"),
+            Decimal("150000"),  # Peak
             Decimal("75000"),  # 50% drawdown
-            Decimal("80000"), Decimal("85000"),
+            Decimal("80000"),
+            Decimal("85000"),
         ]
 
         ulcer = calculator.calculate_ulcer_index(equity)
@@ -241,9 +257,15 @@ class TestSkewness:
     def test_skewness_positive(self, calculator):
         """Test positive skewness."""
         returns = [
-            Decimal("-0.02"), Decimal("-0.01"), Decimal("0.01"),
-            Decimal("0.02"), Decimal("0.03"), Decimal("0.10"),
-            Decimal("-0.015"), Decimal("0.005"), Decimal("0.01"),
+            Decimal("-0.02"),
+            Decimal("-0.01"),
+            Decimal("0.01"),
+            Decimal("0.02"),
+            Decimal("0.03"),
+            Decimal("0.10"),
+            Decimal("-0.015"),
+            Decimal("0.005"),
+            Decimal("0.01"),
             Decimal("0.02"),
         ]
 
@@ -255,9 +277,15 @@ class TestSkewness:
     def test_skewness_negative(self, calculator):
         """Test negative skewness."""
         returns = [
-            Decimal("0.02"), Decimal("0.01"), Decimal("-0.01"),
-            Decimal("-0.02"), Decimal("-0.03"), Decimal("-0.10"),
-            Decimal("0.015"), Decimal("-0.005"), Decimal("-0.01"),
+            Decimal("0.02"),
+            Decimal("0.01"),
+            Decimal("-0.01"),
+            Decimal("-0.02"),
+            Decimal("-0.03"),
+            Decimal("-0.10"),
+            Decimal("0.015"),
+            Decimal("-0.005"),
+            Decimal("-0.01"),
             Decimal("-0.02"),
         ]
 
@@ -344,7 +372,9 @@ class TestConditionalValueAtRisk:
     def test_cvar_tail_averaging(self, calculator):
         """Test CVaR averages tail returns."""
         # Create returns with known tail
-        returns = [Decimal("0.01") for _ in range(90)] + [Decimal(f"-0.{i:02d}") for i in range(1, 11)]
+        returns = [Decimal("0.01") for _ in range(90)] + [
+            Decimal(f"-0.{i:02d}") for i in range(1, 11)
+        ]
 
         cvar = calculator.calculate_cvar(returns, confidence=0.95)
 
@@ -420,7 +450,7 @@ class TestEdgeCases:
     def test_single_trade(self, calculator):
         """Test with single trade (minimal data)."""
         returns = [Decimal("0.01")]
-        equity = [Decimal("100000"), Decimal("101000")]
+        [Decimal("100000"), Decimal("101000")]
 
         # Most metrics should return None or handle gracefully
         skew = calculator.calculate_skewness(returns)
@@ -429,7 +459,7 @@ class TestEdgeCases:
     def test_very_large_numbers(self, calculator):
         """Test with very large portfolio values."""
         returns = [Decimal("0.01"), Decimal("0.02")]
-        equity = [Decimal("1000000000"), Decimal("1010000000")]
+        [Decimal("1000000000"), Decimal("1010000000")]
 
         vol = calculator.calculate_annualized_volatility(returns)
         assert vol is not None
@@ -449,9 +479,7 @@ class TestMetricsIntegration:
     def test_profitable_strategy_metrics(self, calculator):
         """Test metrics for a profitable strategy."""
         returns = [Decimal("0.01"), Decimal("0.02"), Decimal("0.015")] * 10
-        equity = [
-            Decimal(f"{100000 + i * 500}") for i in range(31)
-        ]
+        equity = [Decimal(f"{100000 + i * 500}") for i in range(31)]
 
         metrics = calculator.calculate_all_advanced_metrics(
             returns=returns,
@@ -472,9 +500,7 @@ class TestMetricsIntegration:
     def test_losing_strategy_metrics(self, calculator):
         """Test metrics for a losing strategy."""
         returns = [Decimal("-0.01"), Decimal("-0.02"), Decimal("-0.015")] * 10
-        equity = [
-            Decimal(f"{100000 - i * 500}") for i in range(31)
-        ]
+        equity = [Decimal(f"{100000 - i * 500}") for i in range(31)]
 
         metrics = calculator.calculate_all_advanced_metrics(
             returns=returns,

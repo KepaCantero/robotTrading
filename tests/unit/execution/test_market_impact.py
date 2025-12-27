@@ -4,9 +4,10 @@ Unit tests for MarketImpactEstimator
 Tests market impact calculation, volatility adjustments, and slippage estimation.
 """
 
-import pytest
 import asyncio
 from decimal import Decimal
+
+import pytest
 
 from app.services.smart_order_routing.market_impact_estimator import (
     MarketImpactEstimator,

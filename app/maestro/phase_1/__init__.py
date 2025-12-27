@@ -13,28 +13,26 @@ T1.2: Absolute Return Optimizer
 - FeasibilityValidator: Validate target feasibility
 """
 
+from .absolute_return_optimizer import (
+    CapacityFadeAnalyzer,
+    FeasibilityValidator,
+    ParameterOptimizer,
+    TargetAlphaCalculator,
+)
+from .capital_tier_selector import (
+    CapitalTierSelector,
+    RiskProfileScaler,
+    StrategyFeatureGatekeeper,
+)
 from .models import (
+    AbsoluteReturnTarget,
+    AbsoluteReturnValidation,
     CapitalTier,
     CapitalTierConfig,
     CapitalTierResult,
     CapitalTierThresholds,
     RiskProfile,
     StrategyFeatures,
-    AbsoluteReturnTarget,
-    AbsoluteReturnValidation,
-)
-
-from .capital_tier_selector import (
-    CapitalTierSelector,
-    StrategyFeatureGatekeeper,
-    RiskProfileScaler,
-)
-
-from .absolute_return_optimizer import (
-    TargetAlphaCalculator,
-    CapacityFadeAnalyzer,
-    ParameterOptimizer,
-    FeasibilityValidator,
 )
 
 __all__ = [

@@ -10,21 +10,19 @@ of model overfitting including:
 - Actionable recommendations
 """
 
-import pytest
-import numpy as np
 from datetime import datetime
+
+import pytest
 
 from app.strategies.momentum_modular.learning import (
     AdvancedOverfittingDetector,
     OverfittingDetector,
     OverfittingMetrics,
+    OverfittingReport,
     OverfittingResult,
     OverfittingSeverity,
-    OverfittingReport,
     get_default_overfitting_config,
-    load_overfitting_config,
 )
-
 
 # ============================================================================
 # Fixtures
@@ -77,9 +75,9 @@ def moderate_overfitting_metrics():
                 train_loss=max(0.1, train_loss),
                 val_loss=max(0.1, val_loss),
                 train_metric=min(0.95, epoch * 0.03),
-                val_metric=min(0.95, epoch * 0.02)
-                if epoch < 10
-                else max(0.5, 0.2 - (epoch - 10) * 0.01),
+                val_metric=(
+                    min(0.95, epoch * 0.02) if epoch < 10 else max(0.5, 0.2 - (epoch - 10) * 0.01)
+                ),
                 l2_regularization=0.0001,
                 model_params_count=100000,
             )

@@ -8,7 +8,6 @@ portfolio exposure while locking in losses.
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional
 
@@ -18,6 +17,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class HarvestablePosition:
     """Position eligible for tax-loss harvesting."""
+
     symbol: str
     quantity: Decimal
     purchase_price: Decimal
@@ -30,6 +30,7 @@ class HarvestablePosition:
 @dataclass
 class ReplacementPosition:
     """Suggested replacement position to maintain exposure."""
+
     symbol: str
     quantity: Decimal
     target_allocation_pct: Decimal
@@ -39,6 +40,7 @@ class ReplacementPosition:
 @dataclass
 class HarvestingOpportunity:
     """Complete tax-harvesting opportunity."""
+
     position: HarvestablePosition
     replacement: Optional[ReplacementPosition]
     total_tax_benefit: Decimal
@@ -181,13 +183,14 @@ class TaxLossHarvester:
         # Default: suggest broad index fund for same asset class
         replacement_symbol, correlation = replacements.get(
             (harvested_symbol, asset_class),
-            ("SPY" if asset_class == "equity" else "AGG", Decimal("0.70"))
+            ("SPY" if asset_class == "equity" else "AGG", Decimal("0.70")),
         )
 
         return ReplacementPosition(
             symbol=replacement_symbol,
             quantity=harvested_quantity,
-            target_allocation_pct=(harvested_quantity * current_price) / Decimal("1000000"),  # Rough estimate
+            target_allocation_pct=(harvested_quantity * current_price)
+            / Decimal("1000000"),  # Rough estimate
             correlation_with_original=correlation,
         )
 
@@ -271,7 +274,9 @@ class TaxLossHarvester:
         )
 
         if replacement:
-            recommendation += f"\nReplace with {replacement.quantity} shares of {replacement.symbol}"
+            recommendation += (
+                f"\nReplace with {replacement.quantity} shares of {replacement.symbol}"
+            )
 
         return HarvestingOpportunity(
             position=position,

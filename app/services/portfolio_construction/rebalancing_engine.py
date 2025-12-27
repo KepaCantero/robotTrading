@@ -6,7 +6,7 @@ Executes periodic and threshold-based portfolio rebalancing with cost tracking.
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional
@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 class RebalancingFrequency(str, Enum):
     """Rebalancing frequency options."""
+
     DAILY = "daily"
     WEEKLY = "weekly"
     MONTHLY = "monthly"
@@ -26,6 +27,7 @@ class RebalancingFrequency(str, Enum):
 @dataclass
 class RebalancingTrade:
     """Single trade in a rebalancing event."""
+
     asset: str
     current_weight: Decimal
     target_weight: Decimal
@@ -36,6 +38,7 @@ class RebalancingTrade:
 @dataclass
 class RebalancingEvent:
     """Complete rebalancing event with all trades and metrics."""
+
     event_id: str
     timestamp: datetime
     reason: str  # "threshold" or "scheduled"
@@ -247,7 +250,9 @@ class RebalancingEngine:
 
         total_trades = sum(e.num_trades for e in self.rebalancing_events)
         total_cost = sum(e.total_transaction_cost for e in self.rebalancing_events)
-        avg_cost = total_cost / len(self.rebalancing_events) if self.rebalancing_events else Decimal("0")
+        avg_cost = (
+            total_cost / len(self.rebalancing_events) if self.rebalancing_events else Decimal("0")
+        )
 
         return {
             "total_events": len(self.rebalancing_events),

@@ -17,24 +17,16 @@ Exposes the complete CAPA 2 parametrization pipeline:
 import logging
 import uuid
 from datetime import datetime
-from typing import Dict, Any, Optional
 from decimal import Decimal
+from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Query
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel, Field
 
 # Import all CAPA 2 services
-from app.core.models.input_profile import InputProfile, InputProcessor
-from app.core.models.investment_profile import InvestmentProfile, ProfileGenerator
-from app.services.parametrization.module_parametrizer import ModuleParametrizer
-from app.services.backtesting_orchestration.backtest_orchestrator import BacktestOrchestrator
-from app.services.validation_orchestration.validation_engine import ValidationEngine
-from app.services.strategy_recommendation.strategy_recommender import StrategyRecommender
-from app.services.portfolio_construction.portfolio_constructor import PortfolioConstructor
-from app.services.risk_scaling_application import RiskScalingApplication
-from app.services.reporting.reporting_generator import ReportingGenerator
-from app.services.deployment.deploy_decision_orchestrator import DeployDecisionOrchestrator
+from app.core.models.input_profile import InputProcessor, InputProfile
 from app.services.configuration_persistence.configuration_repository import ConfigurationRepository
+from app.services.deployment.deploy_decision_orchestrator import DeployDecisionOrchestrator
 
 logger = logging.getLogger(__name__)
 
@@ -89,9 +81,13 @@ def get_configuration_repository() -> ConfigurationRepository:
 # Request/Response Models
 # ============================================================================
 
+
 class ProcessInputRequest(BaseModel):
     """User input for parametrization workflow."""
-    capital_initial: Decimal = Field(..., ge=Decimal("1"), le=Decimal("10000000"), description="Initial capital in EUR")
+
+    capital_initial: Decimal = Field(
+        ..., ge=Decimal("1"), le=Decimal("10000000"), description="Initial capital in EUR"
+    )
     objetivo_inversion: str = Field(..., description="Investment objective")
     risk_tolerance: str = Field(..., description="Risk tolerance level")
     investment_horizon: int = Field(..., ge=1, le=600, description="Investment horizon in months")
@@ -100,6 +96,7 @@ class ProcessInputRequest(BaseModel):
 
 class ProcessInputResponse(BaseModel):
     """Result of input processing."""
+
     input_id: str
     capital_initial: float
     objetivo_inversion: str
@@ -111,11 +108,13 @@ class ProcessInputResponse(BaseModel):
 
 class GenerateProfileRequest(BaseModel):
     """Request to generate investment profile."""
+
     input_id: str = Field(..., description="Input profile ID")
 
 
 class GenerateProfileResponse(BaseModel):
     """Generated investment profile."""
+
     profile_id: str
     capital_tier: str
     risk_profile: int
@@ -127,12 +126,14 @@ class GenerateProfileResponse(BaseModel):
 
 class ParametrizeModulesRequest(BaseModel):
     """Request to parametrize modules."""
+
     profile_id: str = Field(..., description="Investment profile ID")
     input_id: str = Field(..., description="Input profile ID")
 
 
 class ParametrizeModulesResponse(BaseModel):
     """Module parameter set."""
+
     parameter_set_id: str
     total_modules: int
     total_max_exposure: float
@@ -142,12 +143,14 @@ class ParametrizeModulesResponse(BaseModel):
 
 class ExecuteBacktestRequest(BaseModel):
     """Request to execute backtest."""
+
     parameter_set_id: str = Field(..., description="Module parameter set ID")
     profile_id: str = Field(..., description="Investment profile ID")
 
 
 class ExecuteBacktestResponse(BaseModel):
     """Backtest results."""
+
     job_id: str
     status: str
     total_return: Optional[float] = None
@@ -158,6 +161,7 @@ class ExecuteBacktestResponse(BaseModel):
 
 class BacktestStatusResponse(BaseModel):
     """Status of backtest job."""
+
     job_id: str
     status: str  # "pending", "running", "completed", "failed"
     progress: Optional[int] = None
@@ -168,6 +172,7 @@ class BacktestStatusResponse(BaseModel):
 
 class CompleteWorkflowRequest(BaseModel):
     """End-to-end workflow request."""
+
     capital_initial: Decimal = Field(..., ge=Decimal("1"), le=Decimal("10000000"))
     objetivo_inversion: str
     risk_tolerance: str
@@ -177,6 +182,7 @@ class CompleteWorkflowRequest(BaseModel):
 
 class DeploymentDecisionResponse(BaseModel):
     """Final deployment decision."""
+
     decision_id: str
     status: str  # "APPROVED", "CONDITIONAL", "REJECTED"
     confidence_level: str
@@ -192,6 +198,7 @@ class DeploymentDecisionResponse(BaseModel):
 
 class CompleteWorkflowResponse(BaseModel):
     """End-to-end workflow result."""
+
     workflow_id: str
     status: str
     input_profile: ProcessInputResponse
@@ -207,6 +214,7 @@ class CompleteWorkflowResponse(BaseModel):
 # Step 1: Process Input (T1.1)
 # ============================================================================
 
+
 @router.post("/process-input", response_model=ProcessInputResponse)
 async def process_input(request: ProcessInputRequest):
     """
@@ -221,7 +229,7 @@ async def process_input(request: ProcessInputRequest):
             objetivo_inversion=request.objetivo_inversion,
             risk_tolerance=request.risk_tolerance,
             investment_horizon=request.investment_horizon,
-            constraints=request.constraints or {}
+            constraints=request.constraints or {},
         )
 
         # Generate unique ID
@@ -236,7 +244,7 @@ async def process_input(request: ProcessInputRequest):
             risk_tolerance=input_profile.risk_tolerance,
             investment_horizon=input_profile.investment_horizon,
             validation_passed=True,
-            timestamp=datetime.now().isoformat()
+            timestamp=datetime.now().isoformat(),
         )
 
     except Exception as e:
@@ -247,6 +255,7 @@ async def process_input(request: ProcessInputRequest):
 # ============================================================================
 # Step 2: Generate Investment Profile (T2.1)
 # ============================================================================
+
 
 @router.post("/generate-profile", response_model=GenerateProfileResponse)
 async def generate_profile(request: GenerateProfileRequest):
@@ -270,7 +279,7 @@ async def generate_profile(request: GenerateProfileRequest):
             enabled_modules=["momentum_modular", "mean_reversion", "pairs_trading"],
             leverage_factor=1.5,
             max_position_size=0.15,
-            timestamp=datetime.now().isoformat()
+            timestamp=datetime.now().isoformat(),
         )
 
     except Exception as e:
@@ -281,6 +290,7 @@ async def generate_profile(request: GenerateProfileRequest):
 # ============================================================================
 # Step 3: Parametrize Modules (T3.1)
 # ============================================================================
+
 
 @router.post("/parametrize-modules", response_model=ParametrizeModulesResponse)
 async def parametrize_modules(request: ParametrizeModulesRequest):
@@ -304,7 +314,7 @@ async def parametrize_modules(request: ParametrizeModulesRequest):
                 "mean_reversion": {"max_position_size": 0.12, "stop_loss_pct": 3.0},
                 "pairs_trading": {"max_position_size": 0.10, "stop_loss_pct": 2.0},
             },
-            timestamp=datetime.now().isoformat()
+            timestamp=datetime.now().isoformat(),
         )
 
     except Exception as e:
@@ -315,6 +325,7 @@ async def parametrize_modules(request: ParametrizeModulesRequest):
 # ============================================================================
 # Step 4: Execute Backtest (T4.1) - ASYNC
 # ============================================================================
+
 
 @router.post("/execute-backtest", response_model=ExecuteBacktestResponse)
 async def execute_backtest(request: ExecuteBacktestRequest, background_tasks: BackgroundTasks):
@@ -333,23 +344,18 @@ async def execute_backtest(request: ExecuteBacktestRequest, background_tasks: Ba
             "progress": 0,
             "result": None,
             "error": None,
-            "created_at": datetime.now().isoformat()
+            "created_at": datetime.now().isoformat(),
         }
 
         # Schedule backtest execution in background
         background_tasks.add_task(
-            _execute_backtest_background,
-            job_id,
-            request.parameter_set_id,
-            request.profile_id
+            _execute_backtest_background, job_id, request.parameter_set_id, request.profile_id
         )
 
         logger.info(f"✅ Backtest job created: {job_id}")
 
         return ExecuteBacktestResponse(
-            job_id=job_id,
-            status="pending",
-            timestamp=datetime.now().isoformat()
+            job_id=job_id, status="pending", timestamp=datetime.now().isoformat()
         )
 
     except Exception as e:
@@ -375,7 +381,7 @@ async def _execute_backtest_background(job_id: str, parameter_set_id: str, profi
             "win_rate": 0.58,
             "profit_factor": 1.8,
             "total_trades": 52,
-            "final_capital": 115000
+            "final_capital": 115000,
         }
 
         _jobs[job_id]["status"] = "completed"
@@ -409,7 +415,7 @@ async def backtest_status(job_id: str):
             progress=job.get("progress"),
             result=job.get("result"),
             error=job.get("error"),
-            timestamp=datetime.now().isoformat()
+            timestamp=datetime.now().isoformat(),
         )
 
     except HTTPException:
@@ -422,6 +428,7 @@ async def backtest_status(job_id: str):
 # ============================================================================
 # Step 5: Complete End-to-End Workflow
 # ============================================================================
+
 
 @router.post("/complete-workflow", response_model=CompleteWorkflowResponse)
 async def complete_workflow(request: CompleteWorkflowRequest, background_tasks: BackgroundTasks):
@@ -451,7 +458,7 @@ async def complete_workflow(request: CompleteWorkflowRequest, background_tasks: 
             "stage": "input_processing",
             "results": {},
             "error": None,
-            "created_at": datetime.now().isoformat()
+            "created_at": datetime.now().isoformat(),
         }
 
         # Schedule workflow execution
@@ -470,7 +477,7 @@ async def complete_workflow(request: CompleteWorkflowRequest, background_tasks: 
                 risk_tolerance=request.risk_tolerance,
                 investment_horizon=request.investment_horizon,
                 validation_passed=True,
-                timestamp=datetime.now().isoformat()
+                timestamp=datetime.now().isoformat(),
             ),
             investment_profile=GenerateProfileResponse(
                 profile_id="pending",
@@ -479,21 +486,19 @@ async def complete_workflow(request: CompleteWorkflowRequest, background_tasks: 
                 enabled_modules=[],
                 leverage_factor=1.5,
                 max_position_size=0.15,
-                timestamp=datetime.now().isoformat()
+                timestamp=datetime.now().isoformat(),
             ),
             module_parameters=ParametrizeModulesResponse(
                 parameter_set_id="pending",
                 total_modules=0,
                 total_max_exposure=0.0,
                 modules_summary={},
-                timestamp=datetime.now().isoformat()
+                timestamp=datetime.now().isoformat(),
             ),
             backtest_result=ExecuteBacktestResponse(
-                job_id="pending",
-                status="pending",
-                timestamp=datetime.now().isoformat()
+                job_id="pending", status="pending", timestamp=datetime.now().isoformat()
             ),
-            timestamp=datetime.now().isoformat()
+            timestamp=datetime.now().isoformat(),
         )
 
     except Exception as e:
@@ -515,7 +520,7 @@ async def _execute_complete_workflow(workflow_id: str, request: CompleteWorkflow
             objetivo_inversion=request.objetivo_inversion,
             risk_tolerance=request.risk_tolerance,
             investment_horizon=request.investment_horizon,
-            constraints=request.constraints or {}
+            constraints=request.constraints or {},
         )
         input_id = f"input_{uuid.uuid4().hex[:8]}"
         results["input_profile"] = {
@@ -525,7 +530,7 @@ async def _execute_complete_workflow(workflow_id: str, request: CompleteWorkflow
             "risk_tolerance": request.risk_tolerance,
             "investment_horizon": request.investment_horizon,
             "validation_passed": True,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
         await asyncio.sleep(0.5)
 
@@ -539,7 +544,7 @@ async def _execute_complete_workflow(workflow_id: str, request: CompleteWorkflow
             "enabled_modules": ["momentum_modular", "mean_reversion"],
             "leverage_factor": 1.5,
             "max_position_size": 0.15,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
         await asyncio.sleep(0.5)
 
@@ -551,7 +556,7 @@ async def _execute_complete_workflow(workflow_id: str, request: CompleteWorkflow
             "total_modules": 17,
             "total_max_exposure": 3.0,
             "modules_summary": {},
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
         await asyncio.sleep(0.5)
 
@@ -563,7 +568,7 @@ async def _execute_complete_workflow(workflow_id: str, request: CompleteWorkflow
             "max_drawdown": -0.10,
             "feasibility_ratio": 1.1,
             "win_rate": 0.58,
-            "final_capital": 115000
+            "final_capital": 115000,
         }
         results["backtest_result"] = {
             "job_id": f"backtest_{uuid.uuid4().hex[:8]}",
@@ -571,7 +576,7 @@ async def _execute_complete_workflow(workflow_id: str, request: CompleteWorkflow
             "total_return": backtest_result["total_return"],
             "sharpe_ratio": backtest_result["sharpe_ratio"],
             "feasibility_ratio": backtest_result["feasibility_ratio"],
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
         await asyncio.sleep(1.0)
 
@@ -608,7 +613,7 @@ async def _execute_complete_workflow(workflow_id: str, request: CompleteWorkflow
             "risks": [],
             "recommendations": ["Deploy with weekly monitoring"],
             "next_steps": ["Review risk parameters", "Deploy strategy", "Monitor performance"],
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
         results["report_id"] = f"report_{uuid.uuid4().hex[:8]}"
         await asyncio.sleep(0.5)
@@ -643,7 +648,7 @@ async def workflow_status(workflow_id: str):
             "stage": job.get("stage"),
             "results": job.get("results", {}),
             "error": job.get("error"),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     except HTTPException:
@@ -657,13 +662,14 @@ async def workflow_status(workflow_id: str):
 # Utility Endpoints
 # ============================================================================
 
+
 @router.get("/health")
 async def health_check():
     """Health check for CAPA 2 API."""
     return {
         "status": "healthy",
         "service": "CAPA 2 Parametrization Framework",
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
     }
 
 
@@ -676,11 +682,11 @@ async def jobs_status():
             job_id: {
                 "status": job["status"],
                 "created_at": job.get("created_at"),
-                "stage": job.get("stage")
+                "stage": job.get("stage"),
             }
             for job_id, job in _jobs.items()
         },
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
     }
 
 

@@ -4,18 +4,19 @@ Unit tests for AlpacaAdapter - BrokerConnector interface implementation for Alpa
 Tests data transformation, state management, interface compliance, and error handling.
 """
 
-import pytest
 from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from app.services.live_trading.broker_adapters.alpaca_adapter import AlpacaAdapter
 from app.services.live_trading.broker_connector import (
     BrokerAccount,
-    BrokerPosition,
     BrokerOrder,
+    BrokerPosition,
     BrokerType,
-    OrderStatus,
     OrderSide,
+    OrderStatus,
 )
 
 
@@ -418,9 +419,7 @@ class TestAlpacaAdapterErrorHandling:
     @pytest.mark.asyncio
     async def test_place_order_error_graceful_fallback(self, alpaca_adapter):
         """Test graceful error handling in place_order."""
-        alpaca_adapter.client.submit_order = AsyncMock(
-            side_effect=Exception("API error")
-        )
+        alpaca_adapter.client.submit_order = AsyncMock(side_effect=Exception("API error"))
 
         with pytest.raises(Exception):
             await alpaca_adapter.place_order(
@@ -432,9 +431,7 @@ class TestAlpacaAdapterErrorHandling:
     @pytest.mark.asyncio
     async def test_get_positions_error_graceful_fallback(self, alpaca_adapter):
         """Test graceful error handling in get_positions."""
-        alpaca_adapter.client.get_positions = AsyncMock(
-            side_effect=Exception("Connection error")
-        )
+        alpaca_adapter.client.get_positions = AsyncMock(side_effect=Exception("Connection error"))
 
         positions = await alpaca_adapter.get_positions()
 
@@ -444,9 +441,7 @@ class TestAlpacaAdapterErrorHandling:
     @pytest.mark.asyncio
     async def test_get_account_info_error_graceful_fallback(self, alpaca_adapter):
         """Test graceful error handling in get_account_info."""
-        alpaca_adapter.client.get_account = AsyncMock(
-            side_effect=Exception("API error")
-        )
+        alpaca_adapter.client.get_account = AsyncMock(side_effect=Exception("API error"))
         alpaca_adapter.is_connected = True
 
         account = await alpaca_adapter.get_account_info()

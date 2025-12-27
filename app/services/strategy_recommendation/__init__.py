@@ -7,18 +7,18 @@ Provides:
 - StrategyRecommender: Generates personalized strategy recommendations
 """
 
-from .strategy_scorer import (
-    StrategyScorer,
-    get_strategy_scorer,
-)
 from .strategy_ranker import (
     StrategyRanker,
     get_strategy_ranker,
 )
 from .strategy_recommender import (
+    StrategyRecommendation,
     StrategyRecommender,
     get_strategy_recommender,
-    StrategyRecommendation,
+)
+from .strategy_scorer import (
+    StrategyScorer,
+    get_strategy_scorer,
 )
 
 __all__ = [

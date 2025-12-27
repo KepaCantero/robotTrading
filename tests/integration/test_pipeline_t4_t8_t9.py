@@ -12,34 +12,28 @@ Scenarios tested:
 - Multiple market regimes (bullish, bearish, sideways)
 """
 
-import pytest
-from decimal import Decimal
-from datetime import datetime, timedelta
-from typing import List, Dict, Any
-from pathlib import Path
 import tempfile
+from datetime import datetime
+from decimal import Decimal
+from pathlib import Path
+from typing import Dict, List
 
+
+from app.backtesting.models import BacktestResult
+from app.models.portfolio import Portfolio, Position
 from app.services.capacity_fade_validation import (
     CapacityFadeValidator,
 )
+from app.services.reporting_generator import (
+    get_delivery_manager,
+    get_html_template_engine,
+    get_pyfolio_integrator,
+    get_quantstats_integrator,
+    get_visualization_generator,
+)
 from app.services.risk_scaling_application import (
-    RiskScalingApplication,
     get_risk_scaler,
 )
-from app.services.reporting_generator import (
-    QuantStatsIntegrator,
-    PyFolioIntegrator,
-    HTMLTemplateEngine,
-    AdvancedVisualizationGenerator,
-    ReportDeliveryManager,
-    get_quantstats_integrator,
-    get_pyfolio_integrator,
-    get_html_template_engine,
-    get_visualization_generator,
-    get_delivery_manager,
-)
-from app.models.portfolio import Portfolio, Position
-from app.backtesting.models import BacktestResult
 
 
 class TestDataFactory:
@@ -54,6 +48,7 @@ class TestDataFactory:
     ) -> List[Decimal]:
         """Create realistic returns series."""
         import numpy as np
+
         np.random.seed(seed)
         returns = np.random.normal(base_return / 252, volatility / np.sqrt(252), length)
         return [Decimal(str(r)) for r in returns]
@@ -70,7 +65,7 @@ class TestDataFactory:
 
         cumulative_return = 1.0
         for ret in returns:
-            cumulative_return *= (1 + float(ret))
+            cumulative_return *= 1 + float(ret)
         final_return = (cumulative_return - 1) * 100
 
         total_trades = 150
@@ -81,7 +76,7 @@ class TestDataFactory:
         cumval = 1.0
         peak = 1.0
         for ret in returns:
-            cumval *= (1 + float(ret))
+            cumval *= 1 + float(ret)
             peak = max(peak, cumval)
             dd = (peak - cumval) / peak
             max_dd = max(max_dd, dd)
@@ -161,7 +156,7 @@ class TestPipelineT4T8T9:
             capital=Decimal("100000"),
             returns=self.data_factory.create_returns_series(
                 base_return=0.10,  # 10% annual
-                volatility=0.08,   # 8% volatility
+                volatility=0.08,  # 8% volatility
             ),
         )
 
@@ -206,7 +201,7 @@ class TestPipelineT4T8T9:
             capital=Decimal("100000"),
             returns=self.data_factory.create_returns_series(
                 base_return=0.25,  # 25% annual
-                volatility=0.20,   # 20% volatility
+                volatility=0.20,  # 20% volatility
             ),
         )
 
@@ -277,12 +272,14 @@ class TestPipelineT4T8T9:
             quantstats = get_quantstats_integrator()
             stats = quantstats.generate_statistics_report(returns=base_returns)
 
-            results.append({
-                "capital": capital,
-                "feasible": validation.feasible,
-                "scaled_value": scaled.total_value if scaled else Decimal("0"),
-                "sharpe": stats.basic_metrics.sharpe_ratio if stats else Decimal("0"),
-            })
+            results.append(
+                {
+                    "capital": capital,
+                    "feasible": validation.feasible,
+                    "scaled_value": scaled.total_value if scaled else Decimal("0"),
+                    "sharpe": stats.basic_metrics.sharpe_ratio if stats else Decimal("0"),
+                }
+            )
 
         # Verify results across all tiers
         assert len(results) == 4
@@ -444,9 +441,9 @@ class TestPipelineT4T8T9:
     def test_pipeline_end_to_end_workflow(self):
         """Test complete workflow from backtest to report delivery."""
         # Step 1: Create backtest results
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("INTEGRATION TEST: Complete E2E Pipeline")
-        print("="*70)
+        print("=" * 70)
 
         returns = self.data_factory.create_returns_series(0.20, 0.15, 252)
         backtest = self.data_factory.create_backtest_result(
@@ -539,9 +536,9 @@ class TestPipelineT4T8T9:
             print(f"    - HTML: {float(html_result.file_size_mb):.2f} MB")
             print(f"    - Excel: {float(excel_result.file_size_mb):.2f} MB")
 
-        print(f"\n" + "="*70)
+        print(f"\n" + "=" * 70)
         print("✅ END-TO-END PIPELINE TEST COMPLETED SUCCESSFULLY")
-        print("="*70 + "\n")
+        print("=" * 70 + "\n")
 
         # Verify all steps completed
         assert validation.feasible

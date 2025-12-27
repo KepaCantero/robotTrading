@@ -8,13 +8,14 @@ Tests:
 - Result aggregation and validation
 """
 
-import pytest
 from decimal import Decimal
-from datetime import datetime
+
+import pytest
 
 try:
     from app.services.backtest_orchestration.backtest_orchestrator import BacktestOrchestrator
     from app.services.backtest_orchestration.models import BacktestOrchestrationRequest
+
     HAS_BACKTEST_ORCHESTRATOR = True
 except ImportError:
     HAS_BACKTEST_ORCHESTRATOR = False
@@ -26,7 +27,7 @@ class TestFeasibilityRatioCalculation:
 
     def test_feasibility_ratio_approved(self):
         """Test feasibility_ratio >= 1.0 = APPROVED status."""
-        orchestrator = BacktestOrchestrator()
+        BacktestOrchestrator()
 
         # Simulate test: achieved 5.2% annual return, required 3.84% = ratio 1.35
         achieved_annual_pct = Decimal("5.2")
@@ -163,10 +164,10 @@ class TestReturnCalculations:
         annual_target = target_monthly * 12
 
         # €50k capital
-        required_alpha_50k = (annual_target / Decimal("50000") * 100)
+        required_alpha_50k = annual_target / Decimal("50000") * 100
 
         # €500k capital
-        required_alpha_500k = (annual_target / Decimal("500000") * 100)
+        required_alpha_500k = annual_target / Decimal("500000") * 100
 
         # Larger capital requires lower alpha
         assert required_alpha_500k < required_alpha_50k
@@ -238,7 +239,7 @@ class TestFeasibilityRatioExamples:
 
         # Calculate required alpha
         annual_target = monthly_target * 12  # €6,000
-        required_annual_pct = (annual_target / capital * 100)  # 12%
+        required_annual_pct = annual_target / capital * 100  # 12%
 
         # Realistic achievable alpha is maybe 5%
         achieved_annual_pct = Decimal("5.0")
@@ -256,7 +257,7 @@ class TestFeasibilityRatioExamples:
 
         # Calculate required alpha
         annual_target = monthly_target * 12  # €2,400
-        required_annual_pct = (annual_target / capital * 100)  # 2.4%
+        required_annual_pct = annual_target / capital * 100  # 2.4%
 
         # Assume achieved return is 1.8%
         achieved_annual_pct = Decimal("1.8")

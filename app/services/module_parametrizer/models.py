@@ -6,12 +6,13 @@ Dataclasses for module-level parameter generation and configuration.
 
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Dict, List, Optional, Any
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 
 class ParameterizationPreset(str, Enum):
     """Risk-based preset for module parameters."""
+
     CONSERVATIVE = "conservative"
     BALANCED = "balanced"
     AGGRESSIVE = "aggressive"
@@ -20,6 +21,7 @@ class ParameterizationPreset(str, Enum):
 @dataclass
 class ModuleParameterConfig:
     """Configuration parameters for a single trading module."""
+
     # Module identification
     module_name: str
     enabled: bool = True
@@ -46,6 +48,7 @@ class ModuleParameterConfig:
 @dataclass
 class ModuleParameterSet:
     """Collection of parameters for all enabled modules in a profile."""
+
     # Reference identifiers
     profile_id: str
     input_id: str
@@ -65,7 +68,9 @@ class ModuleParameterSet:
     risk_profile: str = ""  # conservative, moderate, aggressive
 
     # Validation metadata
-    total_max_exposure: Decimal = field(default=Decimal("0.0"))  # Sum of max_exposure across modules
+    total_max_exposure: Decimal = field(
+        default=Decimal("0.0")
+    )  # Sum of max_exposure across modules
     total_estimated_cost_usd: Decimal = field(default=Decimal("0.0"))  # Sum of module costs
     total_estimated_improvement_pct: Decimal = field(default=Decimal("0.0"))  # Average improvement
 
@@ -103,6 +108,7 @@ class ModuleParameterSet:
 @dataclass
 class ParameterizationRequest:
     """Request to parametrize modules based on investment profile."""
+
     profile_id: str
     input_id: str
     capital_tier: str  # micro, small, medium, large
@@ -115,9 +121,12 @@ class ParameterizationRequest:
 @dataclass
 class ParameterizationResult:
     """Result of module parametrization."""
+
     success: bool
     parameter_set: Optional[ModuleParameterSet] = None
     error_message: str = ""
     warnings: List[str] = field(default_factory=list)
-    disabled_modules: List[str] = field(default_factory=list)  # Modules disabled due to capital tier
+    disabled_modules: List[str] = field(
+        default_factory=list
+    )  # Modules disabled due to capital tier
     parametrization_time_ms: float = 0.0

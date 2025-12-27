@@ -31,7 +31,6 @@ from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.services.momentum_analysis import TechnicalIndicatorCalculator
 from app.strategies.mean_reversion import MeanReversionStrategy
 from app.strategies.momentum import MomentumStrategy
-from app.strategies.pairs_trading import PairsTradingStrategy
 
 
 class TestIndicatorCalculationRegression(unittest.TestCase):

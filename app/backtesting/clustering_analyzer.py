@@ -15,13 +15,11 @@ import logging
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
-import pandas as pd
-from sklearn.cluster import AgglomerativeClustering, DBSCAN
+from sklearn.cluster import DBSCAN, AgglomerativeClustering
 from sklearn.decomposition import PCA, FastICA
 from sklearn.manifold import TSNE
-from sklearn.metrics import silhouette_score, silhouette_samples
+from sklearn.metrics import silhouette_samples, silhouette_score
 from sklearn.preprocessing import StandardScaler
-from scipy.cluster.hierarchy import dendrogram, linkage
 
 logger = logging.getLogger(__name__)
 
@@ -42,10 +40,7 @@ class AdvancedClusteringAnalyzer:
         self.scaler = StandardScaler()
 
     def hierarchical_clustering(
-        self,
-        data: List[List[float]],
-        n_clusters: int = 3,
-        linkage_method: str = 'ward'
+        self, data: List[List[float]], n_clusters: int = 3, linkage_method: str = 'ward'
     ) -> Dict:
         """
         Perform hierarchical clustering with dendrogram.
@@ -70,14 +65,12 @@ class AdvancedClusteringAnalyzer:
             X_scaled = self.scaler.fit_transform(X)
 
             # Perform hierarchical clustering
-            clusterer = AgglomerativeClustering(
-                n_clusters=n_clusters,
-                linkage=linkage_method
-            )
+            clusterer = AgglomerativeClustering(n_clusters=n_clusters, linkage=linkage_method)
             labels = clusterer.fit_predict(X_scaled)
 
             # Calculate linkage matrix for dendrogram
             from scipy.cluster.hierarchy import linkage as scipy_linkage
+
             linkage_matrix = scipy_linkage(X_scaled, method=linkage_method)
 
             # Calculate silhouette score
@@ -100,10 +93,7 @@ class AdvancedClusteringAnalyzer:
             return None
 
     def dbscan_clustering(
-        self,
-        data: List[List[float]],
-        eps: float = 0.5,
-        min_samples: int = 5
+        self, data: List[List[float]], eps: float = 0.5, min_samples: int = 5
     ) -> Dict:
         """
         Perform DBSCAN density-based clustering.
@@ -166,7 +156,7 @@ class AdvancedClusteringAnalyzer:
         self,
         data: List[List[float]],
         n_components: Optional[int] = None,
-        variance_threshold: float = 0.95
+        variance_threshold: float = 0.95,
     ) -> Dict:
         """
         Perform Principal Component Analysis.
@@ -224,7 +214,7 @@ class AdvancedClusteringAnalyzer:
         self,
         data: List[List[float]],
         n_components: Optional[int] = None,
-        algorithm: str = 'parallel'
+        algorithm: str = 'parallel',
     ) -> Dict:
         """
         Perform Independent Component Analysis.
@@ -258,7 +248,7 @@ class AdvancedClusteringAnalyzer:
                 n_components=n_components,
                 algorithm=algorithm,
                 random_state=self.random_state,
-                max_iter=1000
+                max_iter=1000,
             )
             S = ica.fit_transform(X_scaled)
 
@@ -284,7 +274,7 @@ class AdvancedClusteringAnalyzer:
         data: List[List[float]],
         n_components: int = 2,
         perplexity: int = 30,
-        n_iter: int = 1000
+        n_iter: int = 1000,
     ) -> Dict:
         """
         Perform t-SNE dimensionality reduction for visualization.
@@ -326,7 +316,7 @@ class AdvancedClusteringAnalyzer:
                 perplexity=perplexity,
                 n_iter=n_iter,
                 random_state=self.random_state,
-                verbose=0
+                verbose=0,
             )
             X_tsne = tsne.fit_transform(X_scaled)
 
@@ -342,11 +332,7 @@ class AdvancedClusteringAnalyzer:
             logger.error(f"Error in t-SNE analysis: {e}")
             return None
 
-    def silhouette_analysis(
-        self,
-        data: List[List[float]],
-        labels: List[int]
-    ) -> Dict:
+    def silhouette_analysis(self, data: List[List[float]], labels: List[int]) -> Dict:
         """
         Analyze cluster quality using silhouette scores.
 
@@ -404,7 +390,7 @@ class AdvancedClusteringAnalyzer:
         self,
         data: List[List[float]],
         k_range: Tuple[int, int] = (2, 10),
-        method: str = 'silhouette'
+        method: str = 'silhouette',
     ) -> Dict:
         """
         Find optimal number of clusters using silhouette or elbow method.

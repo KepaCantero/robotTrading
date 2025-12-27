@@ -18,19 +18,15 @@ import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
-from typing import List
 
 import pytest
 
-from app.backtesting.data_loader import DataLoader
-from app.backtesting.engine import SimpleBacktester
 from app.engines.strategy_engines.ensemble import (
     RegimeBasedSelector,
     VotingEnsemble,
     WeightedEnsemble,
 )
 from app.models.market_data import Quote
-from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.strategies.factory import StrategyFactory
 
 logger = logging.getLogger(__name__)
@@ -361,7 +357,7 @@ class TestRegimeBasedSelectorIntegration:
                 volume=Decimal("1000000"),
             )
 
-            signals = selector.generate_signals(quote)
+            selector.generate_signals(quote)
 
         # Check regime detection
         regime, confidence = selector.get_current_regime()
@@ -560,7 +556,7 @@ class TestVotingEnsembleIntegration:
 
         # If unanimous signals exist, confidence should be boosted
         if len(signals) > 0:
-            is_unanimous = signals[0].metadata.get("is_unanimous", False)
+            signals[0].metadata.get("is_unanimous", False)
             # Confidence should reflect boost if unanimous
             assert isinstance(signals[0].confidence, (int, float))
             assert 0 <= signals[0].confidence <= 100

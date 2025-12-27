@@ -12,9 +12,10 @@ Tests cover:
 - Edge cases and error handling
 """
 
-import pytest
-from typing import List
+
 import numpy as np
+import pytest
+
 from app.backtesting.clustering_analyzer import AdvancedClusteringAnalyzer
 
 
@@ -184,7 +185,7 @@ class TestPCAAnalysis:
         result = analyzer.pca_analysis(sample_5d_data, n_components=3)
 
         cum_var = result['cumulative_variance']
-        assert all(cum_var[i] <= cum_var[i+1] for i in range(len(cum_var)-1))
+        assert all(cum_var[i] <= cum_var[i + 1] for i in range(len(cum_var) - 1))
 
     def test_pca_auto_components(self, analyzer, sample_5d_data):
         """Test PCA with automatic component selection."""
@@ -366,7 +367,7 @@ class TestSilhouetteAnalysis:
             "Strong structure",
             "Reasonable structure",
             "Weak structure",
-            "No substantial structure"
+            "No substantial structure",
         ]
 
     def test_silhouette_insufficient_clusters(self, analyzer, sample_2d_data):
@@ -501,9 +502,7 @@ class TestIntegration:
         assert result_pca is not None
 
         # t-SNE on PCA results
-        result_tsne = analyzer.tsne_visualization(
-            result_pca['transformed_data'], n_components=2
-        )
+        result_tsne = analyzer.tsne_visualization(result_pca['transformed_data'], n_components=2)
         assert result_tsne is not None
 
     def test_multiple_clustering_methods_consistency(self, analyzer, sample_2d_data):

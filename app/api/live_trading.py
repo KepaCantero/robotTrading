@@ -11,14 +11,19 @@ Endpoints:
   - Trading statistics and metrics
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Query
-from typing import Optional, List
-from datetime import datetime, timedelta
 import logging
+from datetime import datetime, timedelta
+from typing import Optional
 
-from app.services.live_trading.trading_bridge_orchestrator import (
-    TradingBridgeOrchestrator,
-    get_trading_bridge_orchestrator,
+from fastapi import APIRouter, Depends, HTTPException, Query
+
+from app.services.live_trading.account_synchronizer import (
+    AccountSynchronizer,
+    get_account_synchronizer,
+)
+from app.services.live_trading.alert_to_trade_mapper import (
+    AlertToTradeMapper,
+    get_alert_to_trade_mapper,
 )
 from app.services.live_trading.broker_connector import (
     BrokerConnector,
@@ -32,17 +37,13 @@ from app.services.live_trading.risk_gates import (
     RiskGates,
     get_risk_gates,
 )
-from app.services.live_trading.alert_to_trade_mapper import (
-    AlertToTradeMapper,
-    get_alert_to_trade_mapper,
-)
 from app.services.live_trading.trading_audit_trail import (
     TradingAuditTrail,
     get_trading_audit_trail,
 )
-from app.services.live_trading.account_synchronizer import (
-    AccountSynchronizer,
-    get_account_synchronizer,
+from app.services.live_trading.trading_bridge_orchestrator import (
+    TradingBridgeOrchestrator,
+    get_trading_bridge_orchestrator,
 )
 
 logger = logging.getLogger(__name__)
@@ -57,9 +58,7 @@ router = APIRouter(prefix="/live-trading", tags=["live-trading"])
 
 @router.post("/start")
 async def start_live_trading(
-    orchestrator: TradingBridgeOrchestrator = Depends(
-        get_trading_bridge_orchestrator
-    ),
+    orchestrator: TradingBridgeOrchestrator = Depends(get_trading_bridge_orchestrator),
 ) -> dict:
     """Start the live trading bridge.
 
@@ -79,9 +78,7 @@ async def start_live_trading(
 
 @router.post("/stop")
 async def stop_live_trading(
-    orchestrator: TradingBridgeOrchestrator = Depends(
-        get_trading_bridge_orchestrator
-    ),
+    orchestrator: TradingBridgeOrchestrator = Depends(get_trading_bridge_orchestrator),
 ) -> dict:
     """Stop the live trading bridge.
 
@@ -101,9 +98,7 @@ async def stop_live_trading(
 
 @router.get("/status")
 async def get_bridge_status(
-    orchestrator: TradingBridgeOrchestrator = Depends(
-        get_trading_bridge_orchestrator
-    ),
+    orchestrator: TradingBridgeOrchestrator = Depends(get_trading_bridge_orchestrator),
 ) -> dict:
     """Get current bridge status and statistics."""
     try:
@@ -467,9 +462,7 @@ async def list_executions(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
     limit: int = Query(100, ge=1, le=1000),
-    orchestrator: TradingBridgeOrchestrator = Depends(
-        get_trading_bridge_orchestrator
-    ),
+    orchestrator: TradingBridgeOrchestrator = Depends(get_trading_bridge_orchestrator),
 ) -> dict:
     """List execution records with optional filtering.
 
@@ -489,9 +482,7 @@ async def list_executions(
             executions = [e for e in executions if e.get("symbol") == symbol]
 
         if start_date or end_date:
-            start = (
-                datetime.fromisoformat(start_date) if start_date else datetime.min
-            )
+            start = datetime.fromisoformat(start_date) if start_date else datetime.min
             end = datetime.fromisoformat(end_date) if end_date else datetime.now()
             executions = [
                 e
@@ -512,9 +503,7 @@ async def list_executions(
 @router.get("/executions/{execution_id}")
 async def get_execution(
     execution_id: str,
-    orchestrator: TradingBridgeOrchestrator = Depends(
-        get_trading_bridge_orchestrator
-    ),
+    orchestrator: TradingBridgeOrchestrator = Depends(get_trading_bridge_orchestrator),
 ) -> dict:
     """Get details of a specific execution."""
     try:
@@ -565,14 +554,10 @@ async def get_audit_trail(
             events = [e for e in events if e.get("symbol") == symbol]
 
         if start_date or end_date:
-            start = (
-                datetime.fromisoformat(start_date) if start_date else datetime.min
-            )
+            start = datetime.fromisoformat(start_date) if start_date else datetime.min
             end = datetime.fromisoformat(end_date) if end_date else datetime.now()
             events = [
-                e
-                for e in events
-                if start <= datetime.fromisoformat(e.get("timestamp", "")) <= end
+                e for e in events if start <= datetime.fromisoformat(e.get("timestamp", "")) <= end
             ]
 
         return {
@@ -653,9 +638,7 @@ async def list_non_compliant_events(
 
 @router.get("/statistics")
 async def get_trading_statistics(
-    orchestrator: TradingBridgeOrchestrator = Depends(
-        get_trading_bridge_orchestrator
-    ),
+    orchestrator: TradingBridgeOrchestrator = Depends(get_trading_bridge_orchestrator),
 ) -> dict:
     """Get overall trading statistics and performance metrics."""
     try:

@@ -4,14 +4,15 @@ Unit tests for Risk Scaling Components (PHASE 3)
 Consolidated tests for SharpeRatioMonitor, LossMonitor, and DrawdownMonitor.
 """
 
-import pytest
 from datetime import datetime
 from decimal import Decimal
 
-from app.services.risk_scaling.sharpe_ratio_monitor import SharpeRatioMonitor
-from app.services.risk_scaling.loss_monitor import LossMonitor, TradeResult
+import pytest
+
 from app.services.risk_scaling.drawdown_monitor import DrawdownMonitor, EquityPoint
+from app.services.risk_scaling.loss_monitor import LossMonitor, TradeResult
 from app.services.risk_scaling.models import RiskScalingFactors
+from app.services.risk_scaling.sharpe_ratio_monitor import SharpeRatioMonitor
 
 
 class TestSharpeRatioMonitor:
@@ -74,19 +75,34 @@ class TestLossMonitor:
         """Test consecutive loss detection."""
         trades = [
             TradeResult(
-                trade_id="1", timestamp=datetime.now(), pnl=Decimal("-100"),
-                symbol="TEST", side="buy", entry_price=Decimal("100"),
-                exit_price=Decimal("99"), quantity=Decimal("1")
+                trade_id="1",
+                timestamp=datetime.now(),
+                pnl=Decimal("-100"),
+                symbol="TEST",
+                side="buy",
+                entry_price=Decimal("100"),
+                exit_price=Decimal("99"),
+                quantity=Decimal("1"),
             ),
             TradeResult(
-                trade_id="2", timestamp=datetime.now(), pnl=Decimal("-50"),
-                symbol="TEST", side="buy", entry_price=Decimal("100"),
-                exit_price=Decimal("99.5"), quantity=Decimal("1")
+                trade_id="2",
+                timestamp=datetime.now(),
+                pnl=Decimal("-50"),
+                symbol="TEST",
+                side="buy",
+                entry_price=Decimal("100"),
+                exit_price=Decimal("99.5"),
+                quantity=Decimal("1"),
             ),
             TradeResult(
-                trade_id="3", timestamp=datetime.now(), pnl=Decimal("100"),
-                symbol="TEST", side="buy", entry_price=Decimal("100"),
-                exit_price=Decimal("101"), quantity=Decimal("1")
+                trade_id="3",
+                timestamp=datetime.now(),
+                pnl=Decimal("100"),
+                symbol="TEST",
+                side="buy",
+                entry_price=Decimal("100"),
+                exit_price=Decimal("101"),
+                quantity=Decimal("1"),
             ),
         ]
 
@@ -104,12 +120,36 @@ class TestLossMonitor:
     def test_should_reset_loss_counter(self, monitor):
         """Test loss counter reset condition."""
         trades = [
-            TradeResult("1", datetime.now(), Decimal("100"), "TEST", "buy",
-                       Decimal("100"), Decimal("101"), Decimal("1")),
-            TradeResult("2", datetime.now(), Decimal("100"), "TEST", "buy",
-                       Decimal("100"), Decimal("101"), Decimal("1")),
-            TradeResult("3", datetime.now(), Decimal("100"), "TEST", "buy",
-                       Decimal("100"), Decimal("101"), Decimal("1")),
+            TradeResult(
+                "1",
+                datetime.now(),
+                Decimal("100"),
+                "TEST",
+                "buy",
+                Decimal("100"),
+                Decimal("101"),
+                Decimal("1"),
+            ),
+            TradeResult(
+                "2",
+                datetime.now(),
+                Decimal("100"),
+                "TEST",
+                "buy",
+                Decimal("100"),
+                Decimal("101"),
+                Decimal("1"),
+            ),
+            TradeResult(
+                "3",
+                datetime.now(),
+                Decimal("100"),
+                "TEST",
+                "buy",
+                Decimal("100"),
+                Decimal("101"),
+                Decimal("1"),
+            ),
         ]
 
         should_reset = monitor.should_reset_loss_counter(trades)
@@ -118,10 +158,26 @@ class TestLossMonitor:
     def test_calculate_win_rate(self, monitor):
         """Test win rate calculation."""
         trades = [
-            TradeResult("1", datetime.now(), Decimal("100"), "TEST", "buy",
-                       Decimal("100"), Decimal("101"), Decimal("1")),
-            TradeResult("2", datetime.now(), Decimal("-100"), "TEST", "buy",
-                       Decimal("100"), Decimal("99"), Decimal("1")),
+            TradeResult(
+                "1",
+                datetime.now(),
+                Decimal("100"),
+                "TEST",
+                "buy",
+                Decimal("100"),
+                Decimal("101"),
+                Decimal("1"),
+            ),
+            TradeResult(
+                "2",
+                datetime.now(),
+                Decimal("-100"),
+                "TEST",
+                "buy",
+                Decimal("100"),
+                Decimal("99"),
+                Decimal("1"),
+            ),
         ]
 
         win_rate = monitor.calculate_win_rate(trades)
@@ -130,10 +186,26 @@ class TestLossMonitor:
     def test_calculate_win_loss_ratio(self, monitor):
         """Test win/loss ratio."""
         trades = [
-            TradeResult("1", datetime.now(), Decimal("200"), "TEST", "buy",
-                       Decimal("100"), Decimal("101"), Decimal("1")),
-            TradeResult("2", datetime.now(), Decimal("-100"), "TEST", "buy",
-                       Decimal("100"), Decimal("99"), Decimal("1")),
+            TradeResult(
+                "1",
+                datetime.now(),
+                Decimal("200"),
+                "TEST",
+                "buy",
+                Decimal("100"),
+                Decimal("101"),
+                Decimal("1"),
+            ),
+            TradeResult(
+                "2",
+                datetime.now(),
+                Decimal("-100"),
+                "TEST",
+                "buy",
+                Decimal("100"),
+                Decimal("99"),
+                Decimal("1"),
+            ),
         ]
 
         ratio = monitor.calculate_average_win_loss_ratio(trades)
@@ -150,8 +222,11 @@ class TestDrawdownMonitor:
     def test_calculate_drawdown(self, monitor):
         """Test drawdown calculation."""
         equity_curve = [
-            Decimal("10000"), Decimal("11000"), Decimal("10500"),
-            Decimal("9500"), Decimal("9000"),
+            Decimal("10000"),
+            Decimal("11000"),
+            Decimal("10500"),
+            Decimal("9500"),
+            Decimal("9000"),
         ]
 
         current_dd, max_dd = monitor.calculate_drawdown(equity_curve)
@@ -161,7 +236,9 @@ class TestDrawdownMonitor:
     def test_calculate_drawdown_no_loss(self, monitor):
         """Test drawdown with only gains."""
         equity_curve = [
-            Decimal("10000"), Decimal("11000"), Decimal("12000"),
+            Decimal("10000"),
+            Decimal("11000"),
+            Decimal("12000"),
         ]
 
         current_dd, max_dd = monitor.calculate_drawdown(equity_curve)
@@ -199,7 +276,9 @@ class TestDrawdownMonitor:
     def test_has_recovered(self, monitor):
         """Test recovery detection."""
         equity_curve = [
-            Decimal("10000"), Decimal("9000"), Decimal("10500"),
+            Decimal("10000"),
+            Decimal("9000"),
+            Decimal("10500"),
         ]
 
         has_recovered = monitor.has_recovered(equity_curve)

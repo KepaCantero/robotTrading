@@ -9,9 +9,8 @@ Tests cover:
 - Event generation
 """
 
-import pytest
-from datetime import datetime, timedelta
 from decimal import Decimal
+
 
 from app.services.alerting_system import (
     AlertRule,
@@ -20,8 +19,6 @@ from app.services.alerting_system import (
     ChangeRule,
     ComparisonOperator,
     LogicOperator,
-    NotificationChannelType,
-    NotificationTarget,
     ThresholdRule,
 )
 from app.services.alerting_system.models import AlertEvaluationContext

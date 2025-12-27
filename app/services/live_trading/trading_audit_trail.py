@@ -16,13 +16,13 @@ from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional
 
-from app.services.alerting_system import AlertSeverity
 
 logger = logging.getLogger(__name__)
 
 
 class AuditEventType(Enum):
     """Types of audit trail events."""
+
     ALERT_RECEIVED = "alert_received"
     SIGNAL_GENERATED = "signal_generated"
     RISK_CHECK_PASSED = "risk_check_passed"
@@ -38,6 +38,7 @@ class AuditEventType(Enum):
 @dataclass
 class AuditEvent:
     """Single audit trail event."""
+
     event_id: str
     event_type: AuditEventType
     timestamp: datetime = field(default_factory=datetime.utcnow)
@@ -72,6 +73,7 @@ class AuditEvent:
 @dataclass
 class ComplianceReport:
     """Compliance report for audit period."""
+
     report_id: str
     start_date: datetime
     end_date: datetime
@@ -176,7 +178,7 @@ class TradingAuditTrail:
         # Enforce max events limit
         if len(self.events) > self.max_events:
             # Archive oldest events (simplified - would go to database)
-            self.events = self.events[-self.max_events:]
+            self.events = self.events[-self.max_events :]
 
         logger.info(f"📝 Audit event: {event_type.value} (event_id={event.event_id})")
         return event
@@ -268,15 +270,16 @@ class TradingAuditTrail:
         Returns:
             ComplianceReport
         """
-        period_events = [
-            e for e in self.events
-            if start_date <= e.timestamp <= end_date
-        ]
+        period_events = [e for e in self.events if start_date <= e.timestamp <= end_date]
 
         alert_events = [e for e in period_events if e.event_type == AuditEventType.ALERT_RECEIVED]
         trade_events = [e for e in period_events if e.event_type == AuditEventType.ORDER_PLACED]
-        execution_events = [e for e in period_events if e.event_type == AuditEventType.ORDER_EXECUTED]
-        failed_risks = [e for e in period_events if e.event_type == AuditEventType.RISK_CHECK_FAILED]
+        execution_events = [
+            e for e in period_events if e.event_type == AuditEventType.ORDER_EXECUTED
+        ]
+        failed_risks = [
+            e for e in period_events if e.event_type == AuditEventType.RISK_CHECK_FAILED
+        ]
         non_compliant = [e for e in period_events if not e.is_compliant]
 
         # Calculate metrics
@@ -290,24 +293,18 @@ class TradingAuditTrail:
             execution_times = []
             for exec_event in execution_events:
                 for trade_event in trade_events:
-                    if (exec_event.order_id == trade_event.order_id and
-                        exec_event.timestamp > trade_event.timestamp):
-                        time_diff = (
-                            exec_event.timestamp - trade_event.timestamp
-                        ).total_seconds()
+                    if (
+                        exec_event.order_id == trade_event.order_id
+                        and exec_event.timestamp > trade_event.timestamp
+                    ):
+                        time_diff = (exec_event.timestamp - trade_event.timestamp).total_seconds()
                         execution_times.append(time_diff)
             if execution_times:
                 avg_execution_time = sum(execution_times) / len(execution_times)
 
         # Count critical and high risk
-        critical_count = len([
-            e for e in alert_events
-            if e.details.get("severity") == "critical"
-        ])
-        high_risk_count = len([
-            e for e in trade_events
-            if e.risk_level == "high"
-        ])
+        critical_count = len([e for e in alert_events if e.details.get("severity") == "critical"])
+        high_risk_count = len([e for e in trade_events if e.risk_level == "high"])
 
         report = ComplianceReport(
             report_id=f"report_{len(period_events)}",

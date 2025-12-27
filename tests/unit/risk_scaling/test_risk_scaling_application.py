@@ -4,9 +4,10 @@ Tests for RiskScalingApplication (T8.1.3)
 Tests end-to-end risk scaling orchestration.
 """
 
-import pytest
 import asyncio
 from decimal import Decimal
+
+import pytest
 
 from app.services.risk_scaling.risk_scaling_application import (
     RiskScalingApplication,
@@ -164,7 +165,9 @@ class TestRiskScalingApplication:
         }
 
         is_valid, msg = await app.validate_order_against_limits(
-            order_size=Decimal("100000"),  # Within position limit but creates 2x leverage (exceeds 1.5x)
+            order_size=Decimal(
+                "100000"
+            ),  # Within position limit but creates 2x leverage (exceeds 1.5x)
             account_limits=limits,
             current_capital_deployed=Decimal("100000"),  # Already deployed 100k
             capital=Decimal("100000"),

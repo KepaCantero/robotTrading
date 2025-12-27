@@ -8,11 +8,9 @@ verificar la logica principal sin depender de datos historicos reales.
 from datetime import datetime
 from decimal import Decimal
 
-import pytest
 
 from app.engines.strategy_engines import ArbitrageStrategyEngine
 from app.models.market_data import Quote
-from app.models.portfolio import Portfolio
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 

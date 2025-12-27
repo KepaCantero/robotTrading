@@ -9,9 +9,7 @@ Tests for:
 """
 
 import json
-from datetime import datetime
 from pathlib import Path
-from typing import Dict
 
 import pytest
 
@@ -22,7 +20,6 @@ sys.path.insert(0, str(project_root))
 
 from app.optimization.robustness_scorer import (
     ProductionReadiness,
-    RiskFactor,
     RiskLevel,
     RobustnessReport,
     RobustnessScorer,

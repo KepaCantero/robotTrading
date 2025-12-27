@@ -20,18 +20,19 @@ accounts than to slowly bleed capital on infrastructure costs that exceed return
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Tuple
+from typing import Dict, Tuple
 
 from app.services.capital_viability_gate import CapitalViabilityValidator
 from app.services.execution_cost_analyzer import ExecutionCostAnalyzer
-from app.services.learning_capital_gate import LearningCapitalGate
 from app.services.expensive_module_gate import ExpensiveModuleGate
+from app.services.learning_capital_gate import LearningCapitalGate
 
 logger = logging.getLogger(__name__)
 
 
 class DeploymentStatus(str, Enum):
     """Status of deployment validation"""
+
     APPROVED = "approved"  # All gates passed - safe to deploy
     RESTRICTED = "restricted"  # Partial gates passed - deploy with restrictions
     REJECTED = "rejected"  # Critical gates failed - do not deploy
@@ -240,9 +241,7 @@ class DeploymentValidator:
             analysis["recommendations"].append(
                 f"Deploy with monitoring enabled and reduced position sizes"
             )
-            analysis["recommendations"].append(
-                f"Use {analysis['capital_tier']} tier configuration"
-            )
+            analysis["recommendations"].append(f"Use {analysis['capital_tier']} tier configuration")
 
         # ===== Log Decision =====
         DeploymentValidator._log_deployment_decision(analysis, status)
@@ -345,9 +344,7 @@ class DeploymentValidator:
         required_for_goal = monthly_profit_goal / Decimal("0.03")
 
         return {
-            "for_capital_viability": max(
-                required_for_goal, Decimal("10000")
-            ),
+            "for_capital_viability": max(required_for_goal, Decimal("10000")),
             "for_learning": LearningCapitalGate.MIN_CAPITAL_FOR_LEARNING,
             "for_expensive_modules": Decimal("50000"),  # Deep learning threshold
             "recommended": max(

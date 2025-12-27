@@ -9,7 +9,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class TimeSeriesData:
     """Time-series data point."""
+
     timestamp: datetime
     symbol: str
     open_price: Decimal
@@ -30,6 +31,7 @@ class TimeSeriesData:
 @dataclass
 class TradeRecord:
     """Trade record for database."""
+
     trade_id: str
     symbol: str
     side: str
@@ -154,7 +156,8 @@ class QuestDBConnector:
             return []
 
         results = [
-            d for d in self.ohlcv_data
+            d
+            for d in self.ohlcv_data
             if d.symbol == symbol and start_time <= d.timestamp <= end_time
         ]
         logger.info(f"✅ Query returned {len(results)} records")

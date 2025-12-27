@@ -10,7 +10,7 @@ Implements intelligent order splitting algorithms:
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 from .models import ExecutionPlan, OrderTranche, TimeWindow
 
@@ -36,7 +36,7 @@ class OrderSplittingOptimizer:
         "13:00-14:00": Decimal("0.10"),  # Post-lunch
         "14:00-15:00": Decimal("0.12"),  # Mid-afternoon
         "15:00-16:00": Decimal("0.20"),  # End of day rally
-        "16:00-": Decimal("0.18"),        # After-hours
+        "16:00-": Decimal("0.18"),  # After-hours
     }
 
     def __init__(self):
@@ -112,23 +112,22 @@ class OrderSplittingOptimizer:
                 break
 
             # Get max per tranche from constraints or use default (20% per tranche)
-            max_per_tranche = constraints.get(
-                "max_per_tranche",
-                total_size * Decimal("0.2")
-            )
+            max_per_tranche = constraints.get("max_per_tranche", total_size * Decimal("0.2"))
 
             tranche_size = min(remaining, total_size * vol_pct, max_per_tranche)
 
-            tranches.append(OrderTranche(
-                symbol=symbol,
-                size=tranche_size,
-                execution_time=current_time,
-                execution_window=TimeWindow(
-                    start=time_slot.split("-")[0],
-                    end=time_slot.split("-")[1] if "-" in time_slot else "16:30",
-                    name=f"vwap_slot_{len(tranches)}"
-                ),
-            ))
+            tranches.append(
+                OrderTranche(
+                    symbol=symbol,
+                    size=tranche_size,
+                    execution_time=current_time,
+                    execution_window=TimeWindow(
+                        start=time_slot.split("-")[0],
+                        end=time_slot.split("-")[1] if "-" in time_slot else "16:30",
+                        name=f"vwap_slot_{len(tranches)}",
+                    ),
+                )
+            )
             remaining -= tranche_size
             current_time += timedelta(hours=1)
 
@@ -164,11 +163,13 @@ class OrderSplittingOptimizer:
         current_time = datetime.now()
 
         for i in range(int(num_tranches)):
-            tranches.append(OrderTranche(
-                symbol=symbol,
-                size=tranche_size,
-                execution_time=current_time + timedelta(minutes=i*5),
-            ))
+            tranches.append(
+                OrderTranche(
+                    symbol=symbol,
+                    size=tranche_size,
+                    execution_time=current_time + timedelta(minutes=i * 5),
+                )
+            )
 
         return ExecutionPlan(
             symbol=symbol,
@@ -250,12 +251,14 @@ class OrderSplittingOptimizer:
             start_hour = int(window.start.split(":")[0])
             execution_time = current_time.replace(hour=start_hour, minute=0, second=0)
 
-            tranches.append(OrderTranche(
-                symbol=symbol,
-                size=size,
-                execution_time=execution_time,
-                execution_window=window,
-            ))
+            tranches.append(
+                OrderTranche(
+                    symbol=symbol,
+                    size=size,
+                    execution_time=execution_time,
+                    execution_window=window,
+                )
+            )
             remaining -= size
 
         return ExecutionPlan(

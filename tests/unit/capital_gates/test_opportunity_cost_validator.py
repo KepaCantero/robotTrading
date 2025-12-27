@@ -7,8 +7,8 @@ Tests three critical scenarios:
 3. Capital inflection point calculation
 """
 
-import pytest
 from decimal import Decimal
+
 
 from app.services.opportunity_cost_validator import OpportunityCostValidator
 
@@ -194,24 +194,20 @@ class TestOpportunityCostValidator:
         """
         When risk-free rate is high (e.g., 6%), it's harder to beat
         """
-        should_trade_low_rf, analysis_low = (
-            OpportunityCostValidator.is_active_trading_worthwhile(
-                capital=Decimal("50000"),
-                monthly_risk_free_rate=Decimal("0.02") / 12,  # 2% annual (low)
-                expected_monthly_alpha=Decimal("300"),  # Higher alpha
-                expected_trades_per_month=10,
-                commission_per_trade=Decimal("15"),
-            )
+        should_trade_low_rf, analysis_low = OpportunityCostValidator.is_active_trading_worthwhile(
+            capital=Decimal("50000"),
+            monthly_risk_free_rate=Decimal("0.02") / 12,  # 2% annual (low)
+            expected_monthly_alpha=Decimal("300"),  # Higher alpha
+            expected_trades_per_month=10,
+            commission_per_trade=Decimal("15"),
         )
 
-        should_trade_high_rf, analysis_high = (
-            OpportunityCostValidator.is_active_trading_worthwhile(
-                capital=Decimal("50000"),
-                monthly_risk_free_rate=Decimal("0.06") / 12,  # 6% annual (high)
-                expected_monthly_alpha=Decimal("100"),  # Same alpha
-                expected_trades_per_month=10,
-                commission_per_trade=Decimal("15"),
-            )
+        should_trade_high_rf, analysis_high = OpportunityCostValidator.is_active_trading_worthwhile(
+            capital=Decimal("50000"),
+            monthly_risk_free_rate=Decimal("0.06") / 12,  # 6% annual (high)
+            expected_monthly_alpha=Decimal("100"),  # Same alpha
+            expected_trades_per_month=10,
+            commission_per_trade=Decimal("15"),
         )
 
         # Passive return is higher with higher RF rate
@@ -255,34 +251,32 @@ class TestOpportunityCostValidator:
         Test scenarios with high commission (forex, options)
         """
         # Stock market: $7 commission
-        should_trade_stock, analysis_stock = (
-            OpportunityCostValidator.is_active_trading_worthwhile(
-                capital=Decimal("10000"),
-                expected_monthly_alpha=Decimal("50"),
-                expected_trades_per_month=10,
-                commission_per_trade=Decimal("7"),  # Low
-            )
+        should_trade_stock, analysis_stock = OpportunityCostValidator.is_active_trading_worthwhile(
+            capital=Decimal("10000"),
+            expected_monthly_alpha=Decimal("50"),
+            expected_trades_per_month=10,
+            commission_per_trade=Decimal("7"),  # Low
         )
 
         # Forex/options: $25 commission
-        should_trade_forex, analysis_forex = (
-            OpportunityCostValidator.is_active_trading_worthwhile(
-                capital=Decimal("10000"),
-                expected_monthly_alpha=Decimal("50"),
-                expected_trades_per_month=10,
-                commission_per_trade=Decimal("25"),  # High
-            )
+        should_trade_forex, analysis_forex = OpportunityCostValidator.is_active_trading_worthwhile(
+            capital=Decimal("10000"),
+            expected_monthly_alpha=Decimal("50"),
+            expected_trades_per_month=10,
+            commission_per_trade=Decimal("25"),  # High
         )
 
         # Higher commission costs more
         assert (
-            analysis_forex["total_commission_monthly"]
-            > analysis_stock["total_commission_monthly"]
+            analysis_forex["total_commission_monthly"] > analysis_stock["total_commission_monthly"]
         )
 
         # Stock market more likely to be viable
         if should_trade_stock:
-            assert should_trade_forex == False or analysis_stock["margin_monthly"] > analysis_forex["margin_monthly"]
+            assert (
+                should_trade_forex == False
+                or analysis_stock["margin_monthly"] > analysis_forex["margin_monthly"]
+            )
 
     def test_log_opportunity_cost_decision(self, caplog):
         """

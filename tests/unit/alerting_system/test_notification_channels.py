@@ -9,10 +9,9 @@ Tests cover:
 - Notification dispatcher
 """
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from datetime import datetime
-from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, patch
 
 from app.services.alerting_system import (
     AlertSeverity,
@@ -34,7 +33,7 @@ class TestWebhookChannel:
 
     def test_webhook_target_initialization(self):
         """Test webhook target initialization."""
-        channel = WebhookChannel()
+        WebhookChannel()
         target = NotificationTarget(
             channel_type=NotificationChannelType.WEBHOOK,
             endpoint="https://example.com/webhook",
@@ -62,7 +61,7 @@ class TestEmailChannel:
 
     def test_email_target_initialization(self):
         """Test email target initialization."""
-        channel = EmailChannel()
+        EmailChannel()
         target = NotificationTarget(
             channel_type=NotificationChannelType.EMAIL,
             endpoint="alert@example.com",
@@ -78,7 +77,7 @@ class TestSlackChannel:
 
     def test_slack_target_initialization(self):
         """Test Slack target initialization."""
-        channel = SlackChannel()
+        SlackChannel()
         target = NotificationTarget(
             channel_type=NotificationChannelType.SLACK,
             endpoint="https://hooks.slack.com/services/T00000000/B00000000/XXXX",
@@ -94,7 +93,7 @@ class TestDiscordChannel:
 
     def test_discord_target_initialization(self):
         """Test Discord target initialization."""
-        channel = DiscordChannel()
+        DiscordChannel()
         target = NotificationTarget(
             channel_type=NotificationChannelType.DISCORD,
             endpoint="https://discordapp.com/api/webhooks/123456/abcdef",
@@ -145,8 +144,10 @@ class TestNotificationDispatcher:
         )
 
         # Mock the channels
-        with patch.object(WebhookChannel, "send", new_callable=AsyncMock) as mock_webhook, \
-             patch.object(EmailChannel, "send", new_callable=AsyncMock) as mock_email:
+        with (
+            patch.object(WebhookChannel, "send", new_callable=AsyncMock) as mock_webhook,
+            patch.object(EmailChannel, "send", new_callable=AsyncMock) as mock_email,
+        ):
             mock_webhook.return_value = True
             mock_email.return_value = True
 

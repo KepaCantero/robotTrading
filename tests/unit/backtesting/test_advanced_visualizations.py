@@ -13,15 +13,13 @@ Tests all 8 visualization methods with various data scenarios:
 """
 
 import tempfile
-from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Tuple
 
 import numpy as np
 import pandas as pd
 import pytest
 
-from app.backtesting.advanced_visualizations import AdvancedVisualizer, MATPLOTLIB_AVAILABLE
+from app.backtesting.advanced_visualizations import MATPLOTLIB_AVAILABLE, AdvancedVisualizer
 
 
 class TestAdvancedVisualizer:
@@ -44,16 +42,18 @@ class TestAdvancedVisualizer:
         np.random.seed(42)
         n = 100
 
-        return pd.DataFrame({
-            "sharpe_ratio": np.random.uniform(0, 3, n),
-            "total_pnl": np.random.uniform(-10000, 50000, n),
-            "max_drawdown": np.random.uniform(-0.5, 0, n),
-            "win_rate": np.random.uniform(0, 1, n),
-            "return_pct": np.random.uniform(-0.2, 0.5, n),
-            "volatility": np.random.uniform(0, 0.3, n),
-            "sortino_ratio": np.random.uniform(0, 4, n),
-            "profit_factor": np.random.uniform(0.5, 3, n),
-        })
+        return pd.DataFrame(
+            {
+                "sharpe_ratio": np.random.uniform(0, 3, n),
+                "total_pnl": np.random.uniform(-10000, 50000, n),
+                "max_drawdown": np.random.uniform(-0.5, 0, n),
+                "win_rate": np.random.uniform(0, 1, n),
+                "return_pct": np.random.uniform(-0.2, 0.5, n),
+                "volatility": np.random.uniform(0, 0.3, n),
+                "sortino_ratio": np.random.uniform(0, 4, n),
+                "profit_factor": np.random.uniform(0.5, 3, n),
+            }
+        )
 
     @pytest.fixture
     def sample_equity_curve(self) -> pd.Series:
@@ -79,7 +79,9 @@ class TestAdvancedVisualizer:
         return pd.Series(labels, index=dates, name="regime")
 
     # Tests for plot_correlation_network
-    def test_correlation_network_basic(self, visualizer: AdvancedVisualizer, sample_numeric_data: pd.DataFrame):
+    def test_correlation_network_basic(
+        self, visualizer: AdvancedVisualizer, sample_numeric_data: pd.DataFrame
+    ):
         """Test basic correlation network generation."""
         result = visualizer.plot_correlation_network(sample_numeric_data)
 
@@ -184,7 +186,9 @@ class TestAdvancedVisualizer:
         assert result is None
 
     # Tests for plot_3d_scatter
-    def test_3d_scatter_basic(self, visualizer: AdvancedVisualizer, sample_numeric_data: pd.DataFrame):
+    def test_3d_scatter_basic(
+        self, visualizer: AdvancedVisualizer, sample_numeric_data: pd.DataFrame
+    ):
         """Test basic 3D scatter plot."""
         result = visualizer.plot_3d_scatter(
             sample_numeric_data,
@@ -212,7 +216,9 @@ class TestAdvancedVisualizer:
         if result is not None:
             assert result is not None
 
-    def test_3d_scatter_with_size(self, visualizer: AdvancedVisualizer, sample_numeric_data: pd.DataFrame):
+    def test_3d_scatter_with_size(
+        self, visualizer: AdvancedVisualizer, sample_numeric_data: pd.DataFrame
+    ):
         """Test 3D scatter with size dimension."""
         result = visualizer.plot_3d_scatter(
             sample_numeric_data,
@@ -225,7 +231,9 @@ class TestAdvancedVisualizer:
         if result is not None:
             assert result is not None
 
-    def test_3d_scatter_missing_column(self, visualizer: AdvancedVisualizer, sample_numeric_data: pd.DataFrame):
+    def test_3d_scatter_missing_column(
+        self, visualizer: AdvancedVisualizer, sample_numeric_data: pd.DataFrame
+    ):
         """Test 3D scatter with missing column."""
         result = visualizer.plot_3d_scatter(
             sample_numeric_data,
@@ -306,7 +314,9 @@ class TestAdvancedVisualizer:
         else:
             assert result is None
 
-    def test_underwater_drawdown_with_crash(self, visualizer: AdvancedVisualizer, temp_output_dir: str):
+    def test_underwater_drawdown_with_crash(
+        self, visualizer: AdvancedVisualizer, temp_output_dir: str
+    ):
         """Test underwater drawdown with significant crash."""
         dates = pd.date_range(start="2023-01-01", periods=100, freq="D")
         equity = pd.Series([100] * 50 + [50] * 50, index=dates, dtype=float)
@@ -319,7 +329,9 @@ class TestAdvancedVisualizer:
             assert result is None
 
     # Tests for plot_rolling_metrics
-    def test_rolling_metrics_basic(self, visualizer: AdvancedVisualizer, sample_equity_curve: pd.Series):
+    def test_rolling_metrics_basic(
+        self, visualizer: AdvancedVisualizer, sample_equity_curve: pd.Series
+    ):
         """Test basic rolling metrics plot."""
         result = visualizer.plot_rolling_metrics(sample_equity_curve, window=50)
 
@@ -341,7 +353,9 @@ class TestAdvancedVisualizer:
         else:
             assert result is None
 
-    def test_rolling_metrics_large_window(self, visualizer: AdvancedVisualizer, sample_equity_curve: pd.Series):
+    def test_rolling_metrics_large_window(
+        self, visualizer: AdvancedVisualizer, sample_equity_curve: pd.Series
+    ):
         """Test rolling metrics with window larger than data."""
         result = visualizer.plot_rolling_metrics(sample_equity_curve, window=500)
 
@@ -353,7 +367,9 @@ class TestAdvancedVisualizer:
     ):
         """Test rolling metrics with custom filename."""
         custom_file = "custom_rolling.png"
-        result = visualizer.plot_rolling_metrics(sample_equity_curve, window=50, output_file=custom_file)
+        result = visualizer.plot_rolling_metrics(
+            sample_equity_curve, window=50, output_file=custom_file
+        )
 
         if MATPLOTLIB_AVAILABLE:
             assert result is not None
@@ -362,7 +378,9 @@ class TestAdvancedVisualizer:
         else:
             assert result is None
 
-    def test_rolling_metrics_figsize(self, visualizer: AdvancedVisualizer, sample_equity_curve: pd.Series):
+    def test_rolling_metrics_figsize(
+        self, visualizer: AdvancedVisualizer, sample_equity_curve: pd.Series
+    ):
         """Test rolling metrics with custom figure size."""
         result = visualizer.plot_rolling_metrics(sample_equity_curve, window=50, figsize=(16, 10))
 
@@ -396,7 +414,9 @@ class TestAdvancedVisualizer:
     ):
         """Test regime performance with custom regime names."""
         regime_names = {0: "Bull Market", 1: "Sideways", 2: "Bear Market"}
-        result = visualizer.plot_regime_performance(sample_returns, sample_regime_labels, regime_names=regime_names)
+        result = visualizer.plot_regime_performance(
+            sample_returns, sample_regime_labels, regime_names=regime_names
+        )
 
         if MATPLOTLIB_AVAILABLE:
             assert result is not None
@@ -493,7 +513,9 @@ class TestAdvancedVisualizer:
         # Should handle gracefully
         assert result is None
 
-    def test_seasonality_heatmap_figsize(self, visualizer: AdvancedVisualizer, sample_returns: pd.Series):
+    def test_seasonality_heatmap_figsize(
+        self, visualizer: AdvancedVisualizer, sample_returns: pd.Series
+    ):
         """Test seasonality heatmap with custom figure size."""
         result = visualizer.plot_seasonality_heatmap(sample_returns, figsize=(16, 10))
 
@@ -503,7 +525,9 @@ class TestAdvancedVisualizer:
             assert result is None
 
     # Tests for generate_interactive_dashboard
-    def test_dashboard_basic(self, visualizer: AdvancedVisualizer, sample_numeric_data: pd.DataFrame):
+    def test_dashboard_basic(
+        self, visualizer: AdvancedVisualizer, sample_numeric_data: pd.DataFrame
+    ):
         """Test basic interactive dashboard generation."""
         result = visualizer.generate_interactive_dashboard(sample_numeric_data)
 
@@ -519,7 +543,9 @@ class TestAdvancedVisualizer:
         sample_equity_curve: pd.Series,
     ):
         """Test dashboard with equity curve."""
-        result = visualizer.generate_interactive_dashboard(sample_numeric_data, equity_curve=sample_equity_curve)
+        result = visualizer.generate_interactive_dashboard(
+            sample_numeric_data, equity_curve=sample_equity_curve
+        )
 
         if result is not None:
             assert result is not None
@@ -529,7 +555,9 @@ class TestAdvancedVisualizer:
     ):
         """Test dashboard with custom filename."""
         custom_file = "custom_dashboard.html"
-        result = visualizer.generate_interactive_dashboard(sample_numeric_data, output_file=custom_file)
+        result = visualizer.generate_interactive_dashboard(
+            sample_numeric_data, output_file=custom_file
+        )
 
         if result is not None:
             assert custom_file in result

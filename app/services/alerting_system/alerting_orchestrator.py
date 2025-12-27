@@ -9,26 +9,23 @@ NotificationDispatcher for comprehensive real-time alert monitoring.
 import asyncio
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import Dict, List, Optional, Callable, Any
+from datetime import datetime
+from typing import Callable, Dict, List, Optional
 
+from app.services.alerting_system.alert_manager import AlertManager
+from app.services.alerting_system.alert_rule_engine import AlertRuleEngine
+from app.services.alerting_system.metrics_driven_alerter import (
+    EvaluationStatistics,
+    MetricQueryConfig,
+    MetricsDrivenAlerter,
+)
 from app.services.alerting_system.models import (
-    AlertRule,
     AlertEvent,
-    AlertState,
+    AlertRule,
     AlertSeverity,
 )
-from app.services.alerting_system.metrics_driven_alerter import (
-    MetricsDrivenAlerter,
-    MetricQueryConfig,
-    EvaluationStatistics,
-)
-from app.services.alerting_system.alert_rule_engine import AlertRuleEngine
-from app.services.alerting_system.alert_manager import AlertManager
 from app.services.alerting_system.notification_channels import NotificationDispatcher
 from app.services.alerting_system.rule_templates import AlertRuleTemplates
-
 
 logger = logging.getLogger(__name__)
 
@@ -178,9 +175,7 @@ class AlertingOrchestrator:
                 1 for r in self.registered_rules.values() if r.enabled
             )
 
-            self.logger.info(
-                f"Registered {len(templates)} default alert rule templates"
-            )
+            self.logger.info(f"Registered {len(templates)} default alert rule templates")
 
         except Exception as e:
             self.logger.error(f"Error registering default rules: {str(e)}")
@@ -364,9 +359,9 @@ class AlertingOrchestrator:
 
             return AlertingHealth(
                 is_running=self.is_running,
-                is_evaluating=self.metrics_alerter.is_evaluating()
-                if self.metrics_alerter
-                else False,
+                is_evaluating=(
+                    self.metrics_alerter.is_evaluating() if self.metrics_alerter else False
+                ),
                 rules_registered=len(self.registered_rules),
                 enabled_rules=sum(1 for r in self.registered_rules.values() if r.enabled),
                 total_alerts_triggered=manager_stats.get("total_triggered", 0),
@@ -432,17 +427,11 @@ class AlertingOrchestrator:
 
     def get_rules_by_severity(self, severity: AlertSeverity) -> List[AlertRule]:
         """Get all rules with a specific severity."""
-        return [
-            r for r in self.registered_rules.values() if r.severity == severity
-        ]
+        return [r for r in self.registered_rules.values() if r.severity == severity]
 
     def get_rules_by_category(self, category: str) -> List[AlertRule]:
         """Get all rules with a specific category tag."""
-        return [
-            r
-            for r in self.registered_rules.values()
-            if r.tags.get("category") == category
-        ]
+        return [r for r in self.registered_rules.values() if r.tags.get("category") == category]
 
     async def reset_statistics(self) -> None:
         """Reset all statistics."""

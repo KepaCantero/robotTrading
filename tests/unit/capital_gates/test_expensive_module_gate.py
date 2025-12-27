@@ -10,10 +10,10 @@ Tests six critical scenarios:
 6. Fallback suggestions
 """
 
-import pytest
 from decimal import Decimal
 
-from app.services.expensive_module_gate import ExpensiveModuleGate, ExpenseLevelEnum
+
+from app.services.expensive_module_gate import ExpenseLevelEnum, ExpensiveModuleGate
 
 
 class TestExpensiveModuleGate:
@@ -181,9 +181,7 @@ class TestModuleRecommendations:
         """
         Micro tier ($10k): All expensive modules disabled
         """
-        recommendations = ExpensiveModuleGate.get_recommended_modules(
-            capital=Decimal("10000")
-        )
+        recommendations = ExpensiveModuleGate.get_recommended_modules(capital=Decimal("10000"))
 
         # All should be False for micro tier
         assert recommendations["transformer_engine"] == False
@@ -196,9 +194,7 @@ class TestModuleRecommendations:
         Small tier ($25k): Most expensive modules disabled
         Only simple transfer learning and feature analysis might be enabled
         """
-        recommendations = ExpensiveModuleGate.get_recommended_modules(
-            capital=Decimal("25000")
-        )
+        recommendations = ExpensiveModuleGate.get_recommended_modules(capital=Decimal("25000"))
 
         # Deep learning should still be disabled
         assert recommendations["deep_learning_engine"] == False
@@ -208,9 +204,7 @@ class TestModuleRecommendations:
         """
         Medium tier ($100k): Moderate modules enabled
         """
-        recommendations = ExpensiveModuleGate.get_recommended_modules(
-            capital=Decimal("100000")
-        )
+        recommendations = ExpensiveModuleGate.get_recommended_modules(capital=Decimal("100000"))
 
         # Moderate modules should be enabled
         assert recommendations["transfer_learning"] == True
@@ -224,9 +218,7 @@ class TestModuleRecommendations:
         """
         Large tier ($500k): All modules enabled
         """
-        recommendations = ExpensiveModuleGate.get_recommended_modules(
-            capital=Decimal("500000")
-        )
+        recommendations = ExpensiveModuleGate.get_recommended_modules(capital=Decimal("500000"))
 
         # All should be True for large tier
         assert recommendations["transformer_engine"] == True
@@ -314,9 +306,7 @@ class TestCostCalculation:
             "feature_importance_analysis": False,
         }
 
-        total_cost = ExpensiveModuleGate.get_total_expensive_module_cost(
-            capital, enabled_modules
-        )
+        total_cost = ExpensiveModuleGate.get_total_expensive_module_cost(capital, enabled_modules)
 
         expected_cost = Decimal("100000") * Decimal("0.01")
         assert abs(total_cost - expected_cost) < Decimal("10")
@@ -336,9 +326,7 @@ class TestCostCalculation:
             "feature_importance_analysis": True,  # 0.5%
         }
 
-        total_cost = ExpensiveModuleGate.get_total_expensive_module_cost(
-            capital, enabled_modules
-        )
+        total_cost = ExpensiveModuleGate.get_total_expensive_module_cost(capital, enabled_modules)
 
         # Total: 1% + 1% + 0.5% + 0.5% = 3%
         expected_cost = Decimal("200000") * Decimal("0.03")
@@ -360,9 +348,7 @@ class TestCostCalculation:
         }
         expected_alpha = Decimal("500")
 
-        summary = ExpensiveModuleGate.get_cost_summary(
-            capital, enabled_modules, expected_alpha
-        )
+        summary = ExpensiveModuleGate.get_cost_summary(capital, enabled_modules, expected_alpha)
 
         # Total cost: 3% = $3000
         assert summary["total_cost_monthly"] == Decimal("3000")

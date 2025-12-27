@@ -5,8 +5,8 @@ Generates performance reports and analysis summaries.
 """
 
 from app.services.reporting.reporting_generator import (
-    ReportingGenerator,
     PerformanceReport,
+    ReportingGenerator,
 )
 
 __all__ = [

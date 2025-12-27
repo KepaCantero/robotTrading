@@ -5,31 +5,34 @@ Dataclasses for investment profiles and related structures.
 """
 
 from dataclasses import dataclass, field
-from decimal import Decimal
 from datetime import datetime
-from typing import List, Dict, Optional
+from decimal import Decimal
 from enum import Enum
+from typing import Dict, List, Optional
 
 
 class CapitalTier(str, Enum):
     """Capital tier classification."""
-    MICRO = "micro"      # < €25k
-    SMALL = "small"      # €25k - €100k
-    MEDIUM = "medium"    # €100k - €500k
-    LARGE = "large"      # > €500k
+
+    MICRO = "micro"  # < €25k
+    SMALL = "small"  # €25k - €100k
+    MEDIUM = "medium"  # €100k - €500k
+    LARGE = "large"  # > €500k
 
 
 class InvestmentObjective(str, Enum):
     """Investment objectives."""
-    MAXIMIZAR_CAPITAL = "maximizar_capital"        # Capital maximization
+
+    MAXIMIZAR_CAPITAL = "maximizar_capital"  # Capital maximization
     MAXIMIZAR_DIVIDENDOS = "maximizar_dividendos"  # Dividend maximization
     CAPITAL_PRESERVATION = "capital_preservation"  # Capital preservation
-    BALANCED_GROWTH = "balanced_growth"            # Balanced growth
-    INCOME_GENERATION = "income_generation"        # Income generation
+    BALANCED_GROWTH = "balanced_growth"  # Balanced growth
+    INCOME_GENERATION = "income_generation"  # Income generation
 
 
 class RiskProfile(str, Enum):
     """User risk tolerance."""
+
     CONSERVATIVE = "conservative"
     MODERATE = "moderate"
     AGGRESSIVE = "aggressive"
@@ -38,6 +41,7 @@ class RiskProfile(str, Enum):
 @dataclass
 class ModuleConfig:
     """Configuration for a single module."""
+
     name: str
     enabled: bool
     priority: int  # 0 = highest, 10 = lowest
@@ -48,6 +52,7 @@ class ModuleConfig:
 @dataclass
 class InvestmentProfile:
     """Complete investment profile for a user."""
+
     # Required identifiers
     input_id: str
     capital_tier: CapitalTier
@@ -60,7 +65,9 @@ class InvestmentProfile:
     time_horizon_months: int  # 3, 12, 24, 36, 60+
 
     # Identifiers with defaults
-    profile_id: str = field(default_factory=lambda: f"PROF-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}")
+    profile_id: str = field(
+        default_factory=lambda: f"PROF-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
+    )
 
     # Module configuration
     enabled_modules: List[ModuleConfig] = field(default_factory=list)
@@ -119,9 +126,15 @@ class InvestmentProfile:
                 for m in self.enabled_modules
             ],
             # MAESTRO PHASE 1 fields
-            "required_annual_return_pct": str(self.required_annual_return_pct) if self.required_annual_return_pct else None,
+            "required_annual_return_pct": (
+                str(self.required_annual_return_pct) if self.required_annual_return_pct else None
+            ),
             "required_alpha_pct": str(self.required_alpha_pct) if self.required_alpha_pct else None,
-            "capacity_fade_adjusted_alpha": str(self.capacity_fade_adjusted_alpha) if self.capacity_fade_adjusted_alpha else None,
+            "capacity_fade_adjusted_alpha": (
+                str(self.capacity_fade_adjusted_alpha)
+                if self.capacity_fade_adjusted_alpha
+                else None
+            ),
             "position_size_pct": str(self.position_size_pct) if self.position_size_pct else None,
             "concurrent_positions": self.concurrent_positions,
             "feasibility_validation": self.feasibility_validation,
@@ -141,6 +154,7 @@ class InvestmentProfile:
 @dataclass
 class ProfileGenerationRequest:
     """Request to generate an investment profile."""
+
     input_id: str
     capital_initial: Decimal
     objective: InvestmentObjective
@@ -152,6 +166,7 @@ class ProfileGenerationRequest:
 @dataclass
 class ProfileGenerationResult:
     """Result of profile generation."""
+
     success: bool
     profile: Optional[InvestmentProfile] = None
     error_message: str = ""

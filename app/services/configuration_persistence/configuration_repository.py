@@ -9,12 +9,10 @@ Database layer for persisting:
 - Module parameters for reproducibility
 """
 
-import json
 import logging
+from dataclasses import dataclass
 from datetime import datetime
-from decimal import Decimal
 from typing import Dict, List, Optional
-from dataclasses import dataclass, asdict
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +20,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class StoredConfiguration:
     """Model for stored configuration."""
+
     config_id: str
     config_type: str  # backtest_config, investment_profile, deployment_decision
     created_at: str
@@ -130,8 +129,7 @@ class ConfigurationRepository:
         """Load all configurations of a specific type."""
         try:
             results = [
-                config for config in self._storage.values()
-                if config.config_type == config_type
+                config for config in self._storage.values() if config.config_type == config_type
             ]
             self.logger.info(f"📂 Loaded {len(results)} configurations of type {config_type}")
             return results
@@ -172,7 +170,11 @@ class ConfigurationRepository:
             stored = StoredConfiguration(
                 config_id=config_id,
                 config_type=config_type,
-                created_at=timestamp if config_id not in self._storage else self._storage[config_id].created_at,
+                created_at=(
+                    timestamp
+                    if config_id not in self._storage
+                    else self._storage[config_id].created_at
+                ),
                 updated_at=timestamp,
                 data=data,
                 metadata=metadata,

@@ -13,7 +13,7 @@ Capabilities:
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List
 from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -26,10 +26,10 @@ logger = logging.getLogger(__name__)
 class CapitalTier(str, Enum):
     """Capital-based account tier classification."""
 
-    MICRO = "micro"      # < €15k
-    SMALL = "small"      # €15k-€50k
-    MEDIUM = "medium"    # €50k-€250k
-    LARGE = "large"      # >= €250k
+    MICRO = "micro"  # < €15k
+    SMALL = "small"  # €15k-€50k
+    MEDIUM = "medium"  # €50k-€250k
+    LARGE = "large"  # >= €250k
 
 
 class InvestmentProfile(BaseModel):
@@ -51,53 +51,32 @@ class InvestmentProfile(BaseModel):
     # Identification
     profile_id: str = Field(
         default_factory=lambda: str(uuid4()),
-        description="Unique identifier for this investment profile"
+        description="Unique identifier for this investment profile",
     )
-    input_id: str = Field(
-        ...,
-        description="Reference to source InputProfile"
-    )
+    input_id: str = Field(..., description="Reference to source InputProfile")
 
     # Capital Classification
-    capital_initial: Decimal = Field(
-        ...,
-        gt=Decimal("0"),
-        description="Initial capital in EUR"
-    )
+    capital_initial: Decimal = Field(..., gt=Decimal("0"), description="Initial capital in EUR")
     capital_tier: CapitalTier = Field(
-        ...,
-        description="Tier classification (micro|small|medium|large)"
+        ..., description="Tier classification (micro|small|medium|large)"
     )
 
     # User Objectives
     objetivo_inversion: ObjectivoInversion = Field(
-        ...,
-        description="Investment objective mapped from user input"
+        ..., description="Investment objective mapped from user input"
     )
-    risk_tolerance: RiskTolerance = Field(
-        ...,
-        description="Risk tolerance level"
-    )
+    risk_tolerance: RiskTolerance = Field(..., description="Risk tolerance level")
 
     # Investment Profile Parameters
     risk_profile: int = Field(
-        ...,
-        ge=1,
-        le=7,
-        description="Risk scale 1-7 (conservative=1, aggressive=7)"
+        ..., ge=1, le=7, description="Risk scale 1-7 (conservative=1, aggressive=7)"
     )
 
-    investment_horizon: int = Field(
-        ...,
-        ge=1,
-        le=600,
-        description="Investment horizon in months"
-    )
+    investment_horizon: int = Field(..., ge=1, le=600, description="Investment horizon in months")
 
     # Module Activation
     enabled_modules: List[str] = Field(
-        ...,
-        description="Which strategy modules to activate based on capital tier & objective"
+        ..., description="Which strategy modules to activate based on capital tier & objective"
     )
 
     # Risk & Leverage
@@ -105,48 +84,43 @@ class InvestmentProfile(BaseModel):
         default=Decimal("1.0"),
         ge=Decimal("0"),
         le=Decimal("3.0"),
-        description="Leverage factor (1.0 = no leverage, 2.5 = max recommended)"
+        description="Leverage factor (1.0 = no leverage, 2.5 = max recommended)",
     )
 
     max_position_size: Decimal = Field(
-        ...,
-        gt=Decimal("0"),
-        description="Maximum position size as % of capital (0.0-1.0)"
+        ..., gt=Decimal("0"), description="Maximum position size as % of capital (0.0-1.0)"
     )
 
     max_sector_allocation: Decimal = Field(
         default=Decimal("0.30"),
         ge=Decimal("0"),
         le=Decimal("1.0"),
-        description="Max allocation to single sector"
+        description="Max allocation to single sector",
     )
 
     # Execution Parameters
     order_splitting_strategy: str = Field(
-        default="vwap",
-        description="Order splitting strategy (vwap|twap|poi)"
+        default="vwap", description="Order splitting strategy (vwap|twap|poi)"
     )
 
     commission_negotiation: bool = Field(
-        default=True,
-        description="Whether to negotiate commissions by volume"
+        default=True, description="Whether to negotiate commissions by volume"
     )
 
     # Risk Scaling
     risk_scaling_enabled: bool = Field(
-        default=False,
-        description="Whether to apply dynamic risk scaling (if PHASE 3 available)"
+        default=False, description="Whether to apply dynamic risk scaling (if PHASE 3 available)"
     )
 
     volatility_scale_range: tuple = Field(
         default=(Decimal("0.5"), Decimal("1.5")),
-        description="Range for volatility-based position scaling"
+        description="Range for volatility-based position scaling",
     )
 
     # Metadata
     created_at: str = Field(
         default_factory=lambda: __import__('datetime').datetime.now().isoformat(),
-        description="Timestamp of profile generation"
+        description="Timestamp of profile generation",
     )
 
     @field_validator('capital_tier', mode='before')
@@ -272,9 +246,7 @@ class ProfileGenerator:
 
             tier_value = capital_tier.value
             if tier_value not in self.config[objective_value]:
-                raise ValueError(
-                    f"No configuration for {objective_value} + {tier_value}"
-                )
+                raise ValueError(f"No configuration for {objective_value} + {tier_value}")
 
             profile_config = self.config[objective_value][tier_value]
 
@@ -324,5 +296,6 @@ class ProfileGenerator:
     def _check_risk_scaling_available() -> bool:
         """Check if PHASE 3 (risk scaling) is available in codebase."""
         import os
+
         path = "/Users/kepa.cantero/Projects/algoTrading/app/services/risk_scaling"
         return os.path.exists(path)

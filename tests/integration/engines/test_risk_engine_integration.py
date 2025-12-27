@@ -20,7 +20,6 @@ from pathlib import Path
 from uuid import uuid4
 
 import numpy as np
-import pytest
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent

@@ -8,21 +8,22 @@ Tests cover:
 - Error handling and recovery
 """
 
-import pytest
 from datetime import datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock
 
+import pytest
+
 from app.services.alerting_system import AlertEvent, AlertSeverity
 from app.services.live_trading.alert_to_trade_mapper import AlertToTradeRule, TradeSignalType
 from app.services.live_trading.broker_connector import (
-    BrokerConnector,
     BrokerAccount,
+    BrokerConnector,
     OrderSide,
     OrderStatus,
 )
+from app.services.live_trading.trading_audit_trail import AuditEventType, TradingAuditTrail
 from app.services.live_trading.trading_bridge_orchestrator import TradingBridgeOrchestrator
-from app.services.live_trading.trading_audit_trail import TradingAuditTrail, AuditEventType
 
 
 @pytest.mark.asyncio
@@ -33,22 +34,22 @@ class TestAlertToTradePipeline:
         """Test complete flow: alert → signal → risk check → trade."""
         # Create mock broker
         mock_broker = MagicMock(spec=BrokerConnector)
-        mock_broker.get_account_info = AsyncMock(return_value=BrokerAccount(
-            account_id="acc_001",
-            broker_type=None,
-            cash_available=Decimal("100000"),
-            portfolio_value=Decimal("500000"),
-        ))
-        mock_broker.calculate_portfolio_value = AsyncMock(
-            return_value=Decimal("500000")
+        mock_broker.get_account_info = AsyncMock(
+            return_value=BrokerAccount(
+                account_id="acc_001",
+                broker_type=None,
+                cash_available=Decimal("100000"),
+                portfolio_value=Decimal("500000"),
+            )
         )
-        mock_broker.place_order = AsyncMock(return_value=MagicMock(
-            order_id="order_001",
-            status=OrderStatus.SUBMITTED,
-        ))
-        mock_broker.get_order_status = AsyncMock(
-            return_value=OrderStatus.FILLED
+        mock_broker.calculate_portfolio_value = AsyncMock(return_value=Decimal("500000"))
+        mock_broker.place_order = AsyncMock(
+            return_value=MagicMock(
+                order_id="order_001",
+                status=OrderStatus.SUBMITTED,
+            )
         )
+        mock_broker.get_order_status = AsyncMock(return_value=OrderStatus.FILLED)
 
         # Setup bridge with audit trail
         bridge = TradingBridgeOrchestrator(broker=mock_broker)
@@ -90,22 +91,22 @@ class TestAlertToTradePipeline:
     async def test_multiple_alerts_separate_signals(self):
         """Test that different alerts generate separate trade signals."""
         mock_broker = MagicMock(spec=BrokerConnector)
-        mock_broker.get_account_info = AsyncMock(return_value=BrokerAccount(
-            account_id="acc_001",
-            broker_type=None,
-            cash_available=Decimal("100000"),
-            portfolio_value=Decimal("500000"),
-        ))
-        mock_broker.calculate_portfolio_value = AsyncMock(
-            return_value=Decimal("500000")
+        mock_broker.get_account_info = AsyncMock(
+            return_value=BrokerAccount(
+                account_id="acc_001",
+                broker_type=None,
+                cash_available=Decimal("100000"),
+                portfolio_value=Decimal("500000"),
+            )
         )
-        mock_broker.place_order = AsyncMock(return_value=MagicMock(
-            order_id="order_001",
-            status=OrderStatus.SUBMITTED,
-        ))
-        mock_broker.get_order_status = AsyncMock(
-            return_value=OrderStatus.PENDING
+        mock_broker.calculate_portfolio_value = AsyncMock(return_value=Decimal("500000"))
+        mock_broker.place_order = AsyncMock(
+            return_value=MagicMock(
+                order_id="order_001",
+                status=OrderStatus.SUBMITTED,
+            )
         )
+        mock_broker.get_order_status = AsyncMock(return_value=OrderStatus.PENDING)
 
         bridge = TradingBridgeOrchestrator(broker=mock_broker)
 
@@ -145,22 +146,22 @@ class TestAlertToTradePipeline:
     async def test_alert_severity_driven_position_sizing(self):
         """Test that alert severity determines position size."""
         mock_broker = MagicMock(spec=BrokerConnector)
-        mock_broker.get_account_info = AsyncMock(return_value=BrokerAccount(
-            account_id="acc_001",
-            broker_type=None,
-            cash_available=Decimal("100000"),
-            portfolio_value=Decimal("500000"),
-        ))
-        mock_broker.calculate_portfolio_value = AsyncMock(
-            return_value=Decimal("500000")
+        mock_broker.get_account_info = AsyncMock(
+            return_value=BrokerAccount(
+                account_id="acc_001",
+                broker_type=None,
+                cash_available=Decimal("100000"),
+                portfolio_value=Decimal("500000"),
+            )
         )
-        mock_broker.place_order = AsyncMock(return_value=MagicMock(
-            order_id="order_001",
-            status=OrderStatus.SUBMITTED,
-        ))
-        mock_broker.get_order_status = AsyncMock(
-            return_value=OrderStatus.PENDING
+        mock_broker.calculate_portfolio_value = AsyncMock(return_value=Decimal("500000"))
+        mock_broker.place_order = AsyncMock(
+            return_value=MagicMock(
+                order_id="order_001",
+                status=OrderStatus.SUBMITTED,
+            )
         )
+        mock_broker.get_order_status = AsyncMock(return_value=OrderStatus.PENDING)
 
         bridge = TradingBridgeOrchestrator(broker=mock_broker)
 
@@ -175,9 +176,9 @@ class TestAlertToTradePipeline:
 
         # Test different severities
         severities = [
-            (AlertSeverity.INFO, Decimal("50")),      # 100 * 0.5
+            (AlertSeverity.INFO, Decimal("50")),  # 100 * 0.5
             (AlertSeverity.WARNING, Decimal("100")),  # 100 * 1.0
-            (AlertSeverity.CRITICAL, Decimal("200")), # 100 * 2.0
+            (AlertSeverity.CRITICAL, Decimal("200")),  # 100 * 2.0
         ]
 
         for severity, expected_qty in severities:
@@ -196,22 +197,22 @@ class TestAlertToTradePipeline:
     async def test_cooldown_prevents_alert_spam(self):
         """Test that cooldown period prevents alert spam trading."""
         mock_broker = MagicMock(spec=BrokerConnector)
-        mock_broker.get_account_info = AsyncMock(return_value=BrokerAccount(
-            account_id="acc_001",
-            broker_type=None,
-            cash_available=Decimal("100000"),
-            portfolio_value=Decimal("500000"),
-        ))
-        mock_broker.calculate_portfolio_value = AsyncMock(
-            return_value=Decimal("500000")
+        mock_broker.get_account_info = AsyncMock(
+            return_value=BrokerAccount(
+                account_id="acc_001",
+                broker_type=None,
+                cash_available=Decimal("100000"),
+                portfolio_value=Decimal("500000"),
+            )
         )
-        mock_broker.place_order = AsyncMock(return_value=MagicMock(
-            order_id="order_001",
-            status=OrderStatus.SUBMITTED,
-        ))
-        mock_broker.get_order_status = AsyncMock(
-            return_value=OrderStatus.PENDING
+        mock_broker.calculate_portfolio_value = AsyncMock(return_value=Decimal("500000"))
+        mock_broker.place_order = AsyncMock(
+            return_value=MagicMock(
+                order_id="order_001",
+                status=OrderStatus.SUBMITTED,
+            )
         )
+        mock_broker.get_order_status = AsyncMock(return_value=OrderStatus.PENDING)
 
         bridge = TradingBridgeOrchestrator(broker=mock_broker)
 
@@ -257,22 +258,22 @@ class TestAuditTrailIntegration:
     async def test_audit_trail_records_all_events(self):
         """Test that audit trail records all trading bridge events."""
         mock_broker = MagicMock(spec=BrokerConnector)
-        mock_broker.get_account_info = AsyncMock(return_value=BrokerAccount(
-            account_id="acc_001",
-            broker_type=None,
-            cash_available=Decimal("100000"),
-            portfolio_value=Decimal("500000"),
-        ))
-        mock_broker.calculate_portfolio_value = AsyncMock(
-            return_value=Decimal("500000")
+        mock_broker.get_account_info = AsyncMock(
+            return_value=BrokerAccount(
+                account_id="acc_001",
+                broker_type=None,
+                cash_available=Decimal("100000"),
+                portfolio_value=Decimal("500000"),
+            )
         )
-        mock_broker.place_order = AsyncMock(return_value=MagicMock(
-            order_id="order_001",
-            status=OrderStatus.SUBMITTED,
-        ))
-        mock_broker.get_order_status = AsyncMock(
-            return_value=OrderStatus.FILLED
+        mock_broker.calculate_portfolio_value = AsyncMock(return_value=Decimal("500000"))
+        mock_broker.place_order = AsyncMock(
+            return_value=MagicMock(
+                order_id="order_001",
+                status=OrderStatus.SUBMITTED,
+            )
         )
+        mock_broker.get_order_status = AsyncMock(return_value=OrderStatus.FILLED)
 
         bridge = TradingBridgeOrchestrator(broker=mock_broker)
         audit_trail = TradingAuditTrail()
@@ -320,22 +321,22 @@ class TestAuditTrailIntegration:
     async def test_compliance_report_from_trading_session(self):
         """Test generating compliance report from trading session."""
         mock_broker = MagicMock(spec=BrokerConnector)
-        mock_broker.get_account_info = AsyncMock(return_value=BrokerAccount(
-            account_id="acc_001",
-            broker_type=None,
-            cash_available=Decimal("100000"),
-            portfolio_value=Decimal("500000"),
-        ))
-        mock_broker.calculate_portfolio_value = AsyncMock(
-            return_value=Decimal("500000")
+        mock_broker.get_account_info = AsyncMock(
+            return_value=BrokerAccount(
+                account_id="acc_001",
+                broker_type=None,
+                cash_available=Decimal("100000"),
+                portfolio_value=Decimal("500000"),
+            )
         )
-        mock_broker.place_order = AsyncMock(return_value=MagicMock(
-            order_id="order_001",
-            status=OrderStatus.SUBMITTED,
-        ))
-        mock_broker.get_order_status = AsyncMock(
-            return_value=OrderStatus.FILLED
+        mock_broker.calculate_portfolio_value = AsyncMock(return_value=Decimal("500000"))
+        mock_broker.place_order = AsyncMock(
+            return_value=MagicMock(
+                order_id="order_001",
+                status=OrderStatus.SUBMITTED,
+            )
         )
+        mock_broker.get_order_status = AsyncMock(return_value=OrderStatus.FILLED)
 
         bridge = TradingBridgeOrchestrator(broker=mock_broker)
         audit_trail = TradingAuditTrail()
@@ -407,9 +408,7 @@ class TestErrorRecovery:
                 Exception("Connection lost"),
             ]
         )
-        mock_broker.calculate_portfolio_value = AsyncMock(
-            return_value=Decimal("500000")
-        )
+        mock_broker.calculate_portfolio_value = AsyncMock(return_value=Decimal("500000"))
 
         bridge = TradingBridgeOrchestrator(broker=mock_broker)
 

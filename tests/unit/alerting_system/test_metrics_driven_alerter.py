@@ -4,15 +4,17 @@ T18.2: Advanced Alerting System - Metrics-Driven Alerter Tests
 Tests for the MetricsDrivenAlerter component that bridges metrics to alerts.
 """
 
-import pytest
 from decimal import Decimal
-from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
+import pytest
+
+from app.services.alerting_system.alert_manager import AlertManager
+from app.services.alerting_system.alert_rule_engine import AlertRuleEngine
 from app.services.alerting_system.metrics_driven_alerter import (
-    MetricsDrivenAlerter,
-    MetricQueryConfig,
     EvaluationStatistics,
+    MetricQueryConfig,
+    MetricsDrivenAlerter,
 )
 from app.services.alerting_system.models import (
     AlertRule,
@@ -20,8 +22,6 @@ from app.services.alerting_system.models import (
     ComparisonOperator,
     ThresholdRule,
 )
-from app.services.alerting_system.alert_rule_engine import AlertRuleEngine
-from app.services.alerting_system.alert_manager import AlertManager
 
 
 @pytest.fixture
@@ -307,9 +307,7 @@ class TestEvaluationCycle:
         config = MetricQueryConfig("TEST_METRIC")
         alerter.register_metric_alert_rule(rule, config)
 
-        metric_queries = {
-            "test_rule": {"current_value": Decimal("15.0")}
-        }
+        metric_queries = {"test_rule": {"current_value": Decimal("15.0")}}
 
         results = await alerter.evaluate_metric_rules(metric_queries)
 
@@ -374,6 +372,7 @@ class TestContinuousEvaluation:
     @pytest.mark.asyncio
     async def test_cannot_start_duplicate_evaluation(self, alerter):
         """Test that starting evaluation twice is handled."""
+
         async def mock_query_fn(rules):
             return {}
 

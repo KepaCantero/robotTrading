@@ -30,12 +30,10 @@ Integration Points:
 import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from app.services.account_configuration import AccountConfiguration, AccountTier
-from app.services.capital_tier_strategy_selector import RiskProfile, StrategySelection
-from app.services.capital_viability_gate import CapitalViabilityValidator
-from app.services.execution_cost_analyzer import ExecutionCostAnalyzer
+from app.services.capital_tier_strategy_selector import RiskProfile
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +56,7 @@ class AlphaTarget:
         confidence_score: 0-100% likelihood of achieving this target
         reasoning: Explanation of calculation
     """
+
     monthly_profit_goal: Decimal
     monthly_alpha_needed: Decimal
     gross_profit_needed: Decimal
@@ -95,6 +94,7 @@ class CapacityFadeEstimate:
         alpha_at_2x_capital: Projected alpha if capital doubles
         alpha_at_5x_capital: Projected alpha if capital goes to 5x
     """
+
     capital: Decimal
     base_monthly_alpha: Decimal
     estimated_decay_rate: Decimal  # % decay per 10x (0.0-1.0)
@@ -135,6 +135,7 @@ class OptimizedParameters:
         constraints: List of limiting factors
         recommendations: List of improvements
     """
+
     position_size_pct: Decimal
     position_size_usd: Decimal
     leverage_multiplier: Decimal
@@ -182,6 +183,7 @@ class MonthlyProfitForecast:
         percentile_5: 5th percentile P&L
         percentile_95: 95th percentile P&L
     """
+
     expected_monthly_profit: Decimal
     profit_confidence_interval: Tuple[Decimal, Decimal]
     expected_monthly_trades: int
@@ -223,6 +225,7 @@ class FeasibilityReport:
         recommendations: Actions to improve feasibility
         deployment_status: APPROVED / RESTRICTED / REJECTED
     """
+
     is_feasible: bool
     confidence_level: str
     required_alpha: Decimal
@@ -298,8 +301,12 @@ class AlphaTargetCalculator:
         # €100/month = very conservative (high confidence ~90%)
         # €800/month = realistic (medium confidence ~70%)
         # €5000/month = aggressive (low confidence ~40%)
-        goal_factor = (monthly_profit_goal / Decimal("1000")) * Decimal("10")  # Larger goals = less confidence
-        cost_ratio = (monthly_alpha_needed - monthly_profit_goal) / (monthly_profit_goal + Decimal("1"))
+        goal_factor = (monthly_profit_goal / Decimal("1000")) * Decimal(
+            "10"
+        )  # Larger goals = less confidence
+        cost_ratio = (monthly_alpha_needed - monthly_profit_goal) / (
+            monthly_profit_goal + Decimal("1")
+        )
         cost_factor = cost_ratio * Decimal("5")  # Higher costs relative to goal = less confidence
         confidence_score = Decimal("100") - goal_factor - cost_factor
         confidence_score = max(Decimal("10"), min(Decimal("100"), confidence_score))
@@ -335,10 +342,10 @@ class CapacityFadeAnalyzer:
 
     # Empirical decay rates by tier and strategy type
     DECAY_RATE_BY_TIER = {
-        AccountTier.MICRO: Decimal("0.05"),      # 5% per 10x (minimal impact at small scale)
-        AccountTier.SMALL: Decimal("0.08"),      # 8% per 10x
-        AccountTier.MEDIUM: Decimal("0.12"),     # 12% per 10x
-        AccountTier.LARGE: Decimal("0.15"),      # 15% per 10x (more impact at large scale)
+        AccountTier.MICRO: Decimal("0.05"),  # 5% per 10x (minimal impact at small scale)
+        AccountTier.SMALL: Decimal("0.08"),  # 8% per 10x
+        AccountTier.MEDIUM: Decimal("0.12"),  # 12% per 10x
+        AccountTier.LARGE: Decimal("0.15"),  # 15% per 10x (more impact at large scale)
     }
 
     @staticmethod
@@ -367,9 +374,7 @@ class CapacityFadeAnalyzer:
         if tier is None:
             tier = AccountConfiguration.get_tier(capital)
 
-        decay_rate = CapacityFadeAnalyzer.DECAY_RATE_BY_TIER.get(
-            tier, Decimal("0.10")
-        )
+        decay_rate = CapacityFadeAnalyzer.DECAY_RATE_BY_TIER.get(tier, Decimal("0.10"))
 
         # Calculate capital scaling factor
         # If we're scaling from €100k reference to €250k actual
@@ -487,7 +492,9 @@ class ParameterScaler:
         # Check daily loss limit
         daily_loss_limit = capital * risk_profile.max_daily_loss_pct
         if daily_loss_limit < capital * monthly_target_return / Decimal("20"):
-            constraints.append(f"Daily loss limit (€{daily_loss_limit:,.0f}) may constrain positions")
+            constraints.append(
+                f"Daily loss limit (€{daily_loss_limit:,.0f}) may constrain positions"
+            )
 
         required_alpha = capital * monthly_target_return
 
@@ -539,7 +546,10 @@ class ReturnDistributionValidator:
             gap = target_monthly_return - expected_monthly_alpha
             return False, f"Target exceeds expected alpha by {gap:,.0f}"
 
-        return True, f"Target {target_monthly_return:,.0f} achievable with alpha {expected_monthly_alpha:,.0f}"
+        return (
+            True,
+            f"Target {target_monthly_return:,.0f} achievable with alpha {expected_monthly_alpha:,.0f}",
+        )
 
 
 class MonthlyProfitForecaster:
@@ -593,7 +603,9 @@ class MonthlyProfitForecaster:
             expected_monthly_trades=expected_monthly_trades,
             expected_win_rate=expected_win_rate,
             expected_sharpe_ratio=sharpe_ratio,
-            expected_max_drawdown=-position_size * (Decimal("1") - expected_win_rate) * Decimal("0.10"),
+            expected_max_drawdown=-position_size
+            * (Decimal("1") - expected_win_rate)
+            * Decimal("0.10"),
             probability_of_target=probability_of_target,
             percentile_5=percentile_5,
             percentile_95=percentile_95,

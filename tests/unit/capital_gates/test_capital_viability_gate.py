@@ -7,8 +7,8 @@ Tests three critical scenarios:
 3. Boundary condition (exactly at threshold)
 """
 
-import pytest
 from decimal import Decimal
+
 
 from app.services.capital_viability_gate import CapitalViabilityValidator
 

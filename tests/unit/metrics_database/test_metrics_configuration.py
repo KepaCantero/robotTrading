@@ -5,18 +5,19 @@ Tests for metrics database configuration models and integration with
 centralized configuration system.
 """
 
-import pytest
+from datetime import datetime
 from decimal import Decimal
-from datetime import datetime, timedelta
 
+import pytest
+
+from app.core.centralized_config import get_config
 from app.services.metrics_database.models import (
-    MetricType,
-    QuestDBConfig,
+    MetricPoint,
     MetricsCollectorConfig,
     MetricsQueryEngineConfig,
-    MetricPoint,
+    MetricType,
+    QuestDBConfig,
 )
-from app.core.centralized_config import get_config
 
 
 class TestMetricsModelsConfiguration:

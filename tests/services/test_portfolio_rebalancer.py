@@ -5,7 +5,6 @@ Comprehensive tests for Portfolio Rebalancer (TASK-REB-1 and REB-2).
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-import pytest
 
 from app.services.portfolio_rebalancer import (
     DynamicCapitalAdjuster,

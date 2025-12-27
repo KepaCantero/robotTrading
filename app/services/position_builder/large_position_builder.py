@@ -50,9 +50,9 @@ class IntraDayExecutionScheduler:
 
     # Volatility peaks to avoid
     VOLATILITY_PEAKS = [
-        ("09:30", "10:00"),   # Opening auction
-        ("11:30", "13:00"),   # Lunch
-        ("15:00", "16:00"),   # Closing auction
+        ("09:30", "10:00"),  # Opening auction
+        ("11:30", "13:00"),  # Lunch
+        ("15:00", "16:00"),  # Closing auction
     ]
 
     def __init__(self):
@@ -82,9 +82,7 @@ class IntraDayExecutionScheduler:
         available = self.GOOD_EXECUTION_WINDOWS[:num_windows]
 
         if len(available) < num_windows:
-            logger.warning(
-                f"Only {len(available)} good windows available, requested {num_windows}"
-            )
+            logger.warning(f"Only {len(available)} good windows available, requested {num_windows}")
 
         logger.info(f"Selected {len(available)} good execution windows")
         return available
@@ -241,8 +239,7 @@ class LargePositionBuilder:
 
         if len(windows) < num_tranches:
             raise ValueError(
-                f"Only {len(windows)} good windows available, "
-                f"requested {num_tranches} tranches"
+                f"Only {len(windows)} good windows available, " f"requested {num_tranches} tranches"
             )
 
         logger.info(f"Selected {len(windows)} execution windows for {symbol}")
@@ -277,8 +274,7 @@ class LargePositionBuilder:
         )
 
         logger.info(
-            f"Execution plan created: {len(tranches)} tranches, "
-            f"strategy: intraday_phased"
+            f"Execution plan created: {len(tranches)} tranches, " f"strategy: intraday_phased"
         )
 
         return execution_plan
@@ -315,10 +311,7 @@ class LargePositionBuilder:
         num_windows = len(windows)
 
         if num_windows not in self.TRANCHE_WEIGHTS_BY_COUNT:
-            raise ValueError(
-                f"Unsupported number of tranches: {num_windows}. "
-                f"Must be 1-5."
-            )
+            raise ValueError(f"Unsupported number of tranches: {num_windows}. " f"Must be 1-5.")
 
         weights = self.TRANCHE_WEIGHTS_BY_COUNT[num_windows]
 
@@ -445,7 +438,8 @@ class LargePositionBuilder:
             "impact_reduction": impact_reduction,
             "impact_reduction_pct": impact_reduction_pct,
             "recommendation": (
-                "Split into tranches" if impact_reduction_pct > Decimal("20")
+                "Split into tranches"
+                if impact_reduction_pct > Decimal("20")
                 else "Single execution acceptable"
             ),
         }

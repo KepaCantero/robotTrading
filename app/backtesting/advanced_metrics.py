@@ -12,9 +12,8 @@ Calculates sophisticated financial metrics including:
 """
 
 import logging
-from datetime import datetime
 from decimal import Decimal
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 import numpy as np
 from scipy import stats
@@ -36,9 +35,7 @@ class AdvancedMetricsCalculator:
         self.risk_free_rate = float(risk_free_rate)
         self.confidence_level = confidence_level
 
-    def calculate_calmar_ratio(
-        self, cagr: Decimal, max_drawdown: Decimal
-    ) -> Optional[Decimal]:
+    def calculate_calmar_ratio(self, cagr: Decimal, max_drawdown: Decimal) -> Optional[Decimal]:
         """
         Calculate Calmar Ratio.
 
@@ -306,7 +303,9 @@ class AdvancedMetricsCalculator:
             logger.error(f"Error calculating Kurtosis: {e}")
             return None
 
-    def calculate_var(self, returns: List[Decimal], confidence: Optional[float] = None) -> Optional[Decimal]:
+    def calculate_var(
+        self, returns: List[Decimal], confidence: Optional[float] = None
+    ) -> Optional[Decimal]:
         """
         Calculate Value at Risk (VaR).
 
@@ -338,7 +337,9 @@ class AdvancedMetricsCalculator:
             logger.error(f"Error calculating VaR: {e}")
             return None
 
-    def calculate_cvar(self, returns: List[Decimal], confidence: Optional[float] = None) -> Optional[Decimal]:
+    def calculate_cvar(
+        self, returns: List[Decimal], confidence: Optional[float] = None
+    ) -> Optional[Decimal]:
         """
         Calculate Conditional Value at Risk (CVaR) / Expected Shortfall.
 

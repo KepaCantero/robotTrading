@@ -20,16 +20,17 @@ Architecture:
 """
 
 import logging
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
 from typing import Dict, List, Optional
 
-from app.services.portfolio_constructor import AllocationWeight, PortfolioAllocation
+
+from .limit_adjuster import LimitAdjuster
 from .models import (
-    RiskScalingRequest,
     RiskAdjustedPortfolio,
-    AdjustedAllocationWeight,
+    RiskScalingRequest,
 )
+from .realtime_monitor import RealTimeMonitor
 from .risk_adjustment_calculator import RiskAdjustmentCalculator, get_risk_adjustment_calculator
 
 logger = logging.getLogger(__name__)
@@ -50,16 +51,30 @@ class RiskScalingApplication:
     - Orchestrates end-to-end scaling workflow
     """
 
-    def __init__(self, calculator: Optional[RiskAdjustmentCalculator] = None):
+    def __init__(
+        self,
+        calculator: Optional[RiskAdjustmentCalculator] = None,
+        limit_adjuster: Optional[LimitAdjuster] = None,
+        monitor: Optional[RealTimeMonitor] = None,
+    ):
         """
         Initialize risk scaling application.
 
+        T8.1 PHASE 4 & 5: Full orchestration with limit adjustment and monitoring
+
         Args:
             calculator: RiskAdjustmentCalculator instance (optional for dependency injection)
+            limit_adjuster: LimitAdjuster instance (optional for dependency injection)
+            monitor: RealTimeMonitor instance (optional for dependency injection)
         """
         self.calculator = calculator or get_risk_adjustment_calculator()
+        self.limit_adjuster = limit_adjuster or LimitAdjuster()
+        self.monitor = monitor or RealTimeMonitor()
         self.scaling_history: List[RiskAdjustedPortfolio] = []
-        logger.info("✅ RiskScalingApplication initialized with RiskAdjustmentCalculator")
+        logger.info(
+            "✅ RiskScalingApplication initialized with RiskAdjustmentCalculator, "
+            "LimitAdjuster, and RealTimeMonitor (T8.1 PHASE 4 & 5)"
+        )
 
     async def apply_risk_scaling(
         self,
@@ -83,10 +98,14 @@ class RiskScalingApplication:
 
         try:
             # Check if scaling should be applied
-            should_scale = (
-                request.phase3_enabled
-                and (request.market_regime == "bear" or request.volatility_level == "high"
-                     or (request.current_drawdown_pct / max(request.max_acceptable_drawdown_pct, Decimal("1"))) > Decimal("0.7"))
+            should_scale = request.phase3_enabled and (
+                request.market_regime == "bear"
+                or request.volatility_level == "high"
+                or (
+                    request.current_drawdown_pct
+                    / max(request.max_acceptable_drawdown_pct, Decimal("1"))
+                )
+                > Decimal("0.7")
             )
 
             if not should_scale:
@@ -175,7 +194,6 @@ class RiskScalingApplication:
                 error_message=str(e),
             )
 
-
     async def get_scaling_history(
         self,
         limit: Optional[int] = None,
@@ -195,7 +213,9 @@ class RiskScalingApplication:
         avg_scaling_factor = Decimal("1.0")
         if applied_count > 0:
             factors = [
-                s.scaling_factor for s in self.scaling_history if s.risk_scaling_applied and s.success
+                s.scaling_factor
+                for s in self.scaling_history
+                if s.risk_scaling_applied and s.success
             ]
             if factors:
                 avg_scaling_factor = sum(factors) / len(factors)

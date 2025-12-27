@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class StrategyRecommendation:
     """Personalized strategy recommendation."""
+
     recommended_strategy: str
     confidence_level: str  # high, medium, low
     overall_score: Decimal  # 0-100
@@ -75,7 +76,9 @@ class StrategyRecommender:
 
         # Get best strategy and alternatives
         best = ranked_strategies[0]
-        alternatives = [s.strategy_name for s in ranked_strategies[1:min(4, len(ranked_strategies))]]
+        alternatives = [
+            s.strategy_name for s in ranked_strategies[1 : min(4, len(ranked_strategies))]
+        ]
 
         # Assess suitability based on profile
         suitability = await self._assess_suitability(best, objective, risk_profile)
@@ -216,7 +219,9 @@ class StrategyRecommender:
         risk_profile: str,
     ) -> Decimal:
         """Estimate maximum expected drawdown."""
-        drawdown_estimate = (Decimal("100") - strategy.risk_score) / Decimal("100") * Decimal("0.40")
+        drawdown_estimate = (
+            (Decimal("100") - strategy.risk_score) / Decimal("100") * Decimal("0.40")
+        )
 
         if risk_profile == "conservative":
             return -drawdown_estimate * Decimal("1.2")

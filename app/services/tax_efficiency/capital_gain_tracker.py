@@ -6,8 +6,8 @@ tax liability based on investor's tax bracket.
 """
 
 import logging
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional
 
@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class GainLossRecord:
     """Single realized gain or loss from a sale."""
+
     symbol: str
     quantity: Decimal
     purchase_date: datetime
@@ -31,6 +32,7 @@ class GainLossRecord:
 @dataclass
 class PositionGainLoss:
     """Unrealized gain/loss on a current position."""
+
     symbol: str
     quantity: Decimal
     purchase_date: datetime
@@ -44,6 +46,7 @@ class PositionGainLoss:
 @dataclass
 class TaxLotReport:
     """Complete tax reporting summary."""
+
     report_date: datetime
     total_short_term_gains: Decimal
     total_short_term_losses: Decimal
@@ -96,12 +99,14 @@ class CapitalGainTracker:
         if symbol not in self.position_history:
             self.position_history[symbol] = []
 
-        self.position_history[symbol].append({
-            "quantity": quantity,
-            "price": purchase_price,
-            "date": purchase_date,
-            "cost_basis": quantity * purchase_price,
-        })
+        self.position_history[symbol].append(
+            {
+                "quantity": quantity,
+                "price": purchase_price,
+                "date": purchase_date,
+                "cost_basis": quantity * purchase_price,
+            }
+        )
 
         logger.info(f"✅ Recorded purchase: {quantity} shares of {symbol} at €{purchase_price}")
 
@@ -140,7 +145,9 @@ class CapitalGainTracker:
         elif method == "LIFO":
             purchases.sort(key=lambda x: x["date"], reverse=True)
         else:  # AVERAGE_COST
-            avg_price = sum(p["cost_basis"] for p in purchases) / sum(p["quantity"] for p in purchases)
+            avg_price = sum(p["cost_basis"] for p in purchases) / sum(
+                p["quantity"] for p in purchases
+            )
             purchase_date = min(p["date"] for p in purchases)
             record = GainLossRecord(
                 symbol=symbol,
@@ -214,7 +221,9 @@ class CapitalGainTracker:
             # Calculate average cost basis
             purchases = self.position_history[symbol]
             total_cost = sum(p["cost_basis"] for p in purchases)
-            avg_price = total_cost / sum(p["quantity"] for p in purchases) if purchases else Decimal("0")
+            avg_price = (
+                total_cost / sum(p["quantity"] for p in purchases) if purchases else Decimal("0")
+            )
 
             current_value = positions.get(symbol, Decimal("0"))
             cost_basis = avg_price * quantity
@@ -226,7 +235,9 @@ class CapitalGainTracker:
 
             # Estimate tax
             tax_rate = Decimal("0.15") if is_long_term else Decimal("0.35")
-            estimated_tax = abs(unrealized_gain_loss) * tax_rate if unrealized_gain_loss > 0 else Decimal("0")
+            estimated_tax = (
+                abs(unrealized_gain_loss) * tax_rate if unrealized_gain_loss > 0 else Decimal("0")
+            )
 
             unrealized[symbol] = PositionGainLoss(
                 symbol=symbol,
@@ -245,32 +256,28 @@ class CapitalGainTracker:
     def get_short_term_gains(self) -> Decimal:
         """Calculate total short-term realized gains."""
         st_gains = sum(
-            g.gain_loss for g in self.realized_gains
-            if not g.is_long_term and g.gain_loss > 0
+            g.gain_loss for g in self.realized_gains if not g.is_long_term and g.gain_loss > 0
         )
         return st_gains
 
     def get_short_term_losses(self) -> Decimal:
         """Calculate total short-term realized losses."""
         st_losses = sum(
-            abs(g.gain_loss) for g in self.realized_gains
-            if not g.is_long_term and g.gain_loss < 0
+            abs(g.gain_loss) for g in self.realized_gains if not g.is_long_term and g.gain_loss < 0
         )
         return st_losses
 
     def get_long_term_gains(self) -> Decimal:
         """Calculate total long-term realized gains."""
         lt_gains = sum(
-            g.gain_loss for g in self.realized_gains
-            if g.is_long_term and g.gain_loss > 0
+            g.gain_loss for g in self.realized_gains if g.is_long_term and g.gain_loss > 0
         )
         return lt_gains
 
     def get_long_term_losses(self) -> Decimal:
         """Calculate total long-term realized losses."""
         lt_losses = sum(
-            abs(g.gain_loss) for g in self.realized_gains
-            if g.is_long_term and g.gain_loss < 0
+            abs(g.gain_loss) for g in self.realized_gains if g.is_long_term and g.gain_loss < 0
         )
         return lt_losses
 
@@ -329,9 +336,7 @@ class CapitalGainTracker:
             net_long_term=net_lt,
             net_capital_gain_loss=net_capital,
             projected_annual_tax=self.project_annual_tax(),
-            unrealized_gains_summary={
-                g.symbol: g.gain_loss for g in self.realized_gains
-            },
+            unrealized_gains_summary={g.symbol: g.gain_loss for g in self.realized_gains},
         )
 
 

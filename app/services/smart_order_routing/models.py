@@ -6,11 +6,11 @@ All models use Pydantic for validation with strict mode and type checking.
 """
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -47,39 +47,25 @@ class OrderTranche(BaseModel):
     )
 
     tranche_id: str = Field(
-        default_factory=lambda: str(uuid4()),
-        description="Unique identifier for this tranche"
+        default_factory=lambda: str(uuid4()), description="Unique identifier for this tranche"
     )
     symbol: str = Field(..., description="Trading symbol (e.g., 'AAPL')")
     size: Decimal = Field(
-        ...,
-        gt=Decimal("0"),
-        description="Size of this tranche in currency units (€)"
+        ..., gt=Decimal("0"), description="Size of this tranche in currency units (€)"
     )
-    execution_time: datetime = Field(
-        ...,
-        description="Scheduled execution time"
-    )
+    execution_time: datetime = Field(..., description="Scheduled execution time")
     execution_window: Optional[TimeWindow] = Field(
-        None,
-        description="Time window constraints for execution"
+        None, description="Time window constraints for execution"
     )
-    target_price: Optional[Decimal] = Field(
-        None,
-        description="Target execution price (optional)"
-    )
+    target_price: Optional[Decimal] = Field(None, description="Target execution price (optional)")
     status: str = Field(
-        default="pending",
-        description="pending | submitted | filled | partial | rejected"
+        default="pending", description="pending | submitted | filled | partial | rejected"
     )
     actual_price: Optional[Decimal] = Field(
-        None,
-        description="Actual execution price (filled after execution)"
+        None, description="Actual execution price (filled after execution)"
     )
     actual_size: Decimal = Field(
-        default=Decimal("0"),
-        ge=Decimal("0"),
-        description="Actual executed size"
+        default=Decimal("0"), ge=Decimal("0"), description="Actual executed size"
     )
 
     @field_validator("status")
@@ -124,45 +110,32 @@ class ExecutionPlan(BaseModel):
     )
 
     execution_id: str = Field(
-        default_factory=lambda: str(uuid4()),
-        description="Unique execution plan identifier"
+        default_factory=lambda: str(uuid4()), description="Unique execution plan identifier"
     )
     symbol: str = Field(..., description="Trading symbol")
     total_size: Decimal = Field(
-        ...,
-        gt=Decimal("0"),
-        description="Total order size in currency units (€)"
+        ..., gt=Decimal("0"), description="Total order size in currency units (€)"
     )
     tranches: List[OrderTranche] = Field(
-        ...,
-        description="List of execution tranches (empty for dynamic strategies like POI)"
+        ..., description="List of execution tranches (empty for dynamic strategies like POI)"
     )
     strategy: str = Field(
-        ...,
-        description="Execution strategy: vwap | twap | poi | intraday_phased"
+        ..., description="Execution strategy: vwap | twap | poi | intraday_phased"
     )
     cost_budget: Optional[Decimal] = Field(
-        None,
-        ge=Decimal("0"),
-        description="Max allowed execution cost in €"
+        None, ge=Decimal("0"), description="Max allowed execution cost in €"
     )
     max_execution_time_ms: int = Field(
-        default=300_000,
-        gt=0,
-        description="Max execution time in milliseconds"
+        default=300_000, gt=0, description="Max execution time in milliseconds"
     )
     estimated_avg_price: Optional[Decimal] = Field(
-        None,
-        gt=Decimal("0"),
-        description="Estimated average fill price"
+        None, gt=Decimal("0"), description="Estimated average fill price"
     )
     constraints: Dict[str, Decimal] = Field(
-        default_factory=dict,
-        description="Execution constraints (max_per_tranche, max_spread, etc)"
+        default_factory=dict, description="Execution constraints (max_per_tranche, max_spread, etc)"
     )
     created_at: datetime = Field(
-        default_factory=datetime.now,
-        description="Plan creation timestamp"
+        default_factory=datetime.now, description="Plan creation timestamp"
     )
 
     @field_validator("strategy")
@@ -225,40 +198,24 @@ class MarketImpactEstimate(BaseModel):
 
     symbol: str = Field(..., description="Trading symbol")
     participation_rate: Decimal = Field(
-        ...,
-        ge=Decimal("0"),
-        le=Decimal("1"),
-        description="Order size / daily volume"
+        ..., ge=Decimal("0"), le=Decimal("1"), description="Order size / daily volume"
     )
     sqrt_impact: Decimal = Field(
-        ...,
-        ge=Decimal("0"),
-        description="sqrt(participation_rate) - market impact multiplier"
+        ..., ge=Decimal("0"), description="sqrt(participation_rate) - market impact multiplier"
     )
     volatility_multiplier: Decimal = Field(
-        ...,
-        ge=Decimal("0"),
-        description="Volatility adjustment factor"
+        ..., ge=Decimal("0"), description="Volatility adjustment factor"
     )
     spread_impact: Decimal = Field(
-        ...,
-        ge=Decimal("0"),
-        description="Bid-ask spread impact in basis points"
+        ..., ge=Decimal("0"), description="Bid-ask spread impact in basis points"
     )
     estimated_slippage_bps: Decimal = Field(
-        ...,
-        ge=Decimal("0"),
-        description="Total estimated slippage in basis points (1 bps = 0.01%)"
+        ..., ge=Decimal("0"), description="Total estimated slippage in basis points (1 bps = 0.01%)"
     )
     estimated_slippage_usd: Decimal = Field(
-        ...,
-        ge=Decimal("0"),
-        description="Total estimated slippage in currency units (€)"
+        ..., ge=Decimal("0"), description="Total estimated slippage in currency units (€)"
     )
-    created_at: datetime = Field(
-        default_factory=datetime.now,
-        description="Estimate timestamp"
-    )
+    created_at: datetime = Field(default_factory=datetime.now, description="Estimate timestamp")
 
     @field_validator("estimated_slippage_bps")
     @classmethod
@@ -290,33 +247,17 @@ class ExecutionMonitoring(BaseModel):
 
     execution_id: str = Field(..., description="Execution plan ID being monitored")
     planned_cost: Decimal = Field(
-        ...,
-        ge=Decimal("0"),
-        description="Planned maximum cost budget in €"
+        ..., ge=Decimal("0"), description="Planned maximum cost budget in €"
     )
     actual_costs: Decimal = Field(
-        default=Decimal("0"),
-        ge=Decimal("0"),
-        description="Actual accumulated costs so far in €"
+        default=Decimal("0"), ge=Decimal("0"), description="Actual accumulated costs so far in €"
     )
-    tranches_completed: int = Field(
-        default=0,
-        ge=0,
-        description="Number of tranches completed"
-    )
-    tranches_total: int = Field(
-        ...,
-        gt=0,
-        description="Total number of tranches in execution plan"
-    )
+    tranches_completed: int = Field(default=0, ge=0, description="Number of tranches completed")
+    tranches_total: int = Field(..., gt=0, description="Total number of tranches in execution plan")
     started_at: datetime = Field(
-        default_factory=datetime.now,
-        description="Execution start timestamp"
+        default_factory=datetime.now, description="Execution start timestamp"
     )
-    completed_at: Optional[datetime] = Field(
-        None,
-        description="Execution completion timestamp"
-    )
+    completed_at: Optional[datetime] = Field(None, description="Execution completion timestamp")
 
     @property
     def cost_overrun(self) -> Decimal:
@@ -381,19 +322,14 @@ class CommissionTier(BaseModel):
 
     name: str = Field(..., description="Tier name (retail, semi_pro, pro, institutional)")
     min_volume: Decimal = Field(
-        ...,
-        ge=Decimal("0"),
-        description="Minimum volume to qualify for this tier"
+        ..., ge=Decimal("0"), description="Minimum volume to qualify for this tier"
     )
-    max_volume: Optional[Decimal] = Field(
-        None,
-        description="Maximum volume (None = unlimited)"
-    )
+    max_volume: Optional[Decimal] = Field(None, description="Maximum volume (None = unlimited)")
     commission_rate: Decimal = Field(
         ...,
         ge=Decimal("0"),
         le=Decimal("0.01"),
-        description="Commission rate as decimal (e.g., 0.001 = 0.1%)"
+        description="Commission rate as decimal (e.g., 0.001 = 0.1%)",
     )
 
     @field_validator("max_volume")

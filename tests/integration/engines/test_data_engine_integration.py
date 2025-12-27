@@ -13,9 +13,7 @@ Tests para verificar funcionalidad completa del DataEngine:
 import asyncio
 import sys
 from datetime import datetime, timedelta
-from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict
 
 import pytest
 

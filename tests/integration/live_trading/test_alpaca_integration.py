@@ -9,18 +9,17 @@ Use a paper trading account only!
 """
 
 import os
-import pytest
 from decimal import Decimal
-from datetime import datetime
+
+import pytest
 
 from app.services.live_trading.broker_connector import (
     BrokerConnector,
     BrokerType,
     OrderSide,
-    OrderType,
     OrderStatus,
+    OrderType,
 )
-
 
 # Skip all tests in this module if Alpaca credentials are not set
 pytestmark = pytest.mark.skipif(

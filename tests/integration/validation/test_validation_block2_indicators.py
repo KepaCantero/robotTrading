@@ -8,8 +8,6 @@ Tests para verificar:
 """
 
 import unittest
-from decimal import Decimal
-from typing import List
 
 import numpy as np
 import pandas as pd
@@ -107,8 +105,8 @@ class TestIndicatorCoherenceWithPandasTA(unittest.TestCase):
 
         if our_macd is not None and macd_ta is not None:
             pandas_macd = macd_ta.iloc[-1]["MACD_12_26_9"]
-            pandas_signal = macd_ta.iloc[-1]["MACDs_12_26_9"]
-            pandas_hist = macd_ta.iloc[-1]["MACDh_12_26_9"]
+            macd_ta.iloc[-1]["MACDs_12_26_9"]
+            macd_ta.iloc[-1]["MACDh_12_26_9"]
 
             # Comparar MACD line
             macd_diff = abs(our_macd - pandas_macd)
@@ -140,7 +138,7 @@ class TestIndicatorLag(unittest.TestCase):
 
         # Verificar que el último valor de RSI corresponde al último precio
         # Si hay lag, el último RSI estaría calculado con el penúltimo precio
-        last_price = prices[-1]
+        prices[-1]
         if rsi_values:
             last_rsi = rsi_values[-1]
 
@@ -215,7 +213,7 @@ class TestConfigurationPersistence(unittest.TestCase):
         """Comprobar que MACD periods no están hardcodeados."""
         # MACD usa fast=12, slow=26, signal=9 por defecto
         # Verificar que estos valores vienen de configuración o son defaults razonables
-        strategy_config = get_strategy_config("momentum")
+        get_strategy_config("momentum")
 
         # Los períodos de MACD pueden venir de config o usar defaults
         # Lo importante es que no estén hardcodeados en múltiples lugares

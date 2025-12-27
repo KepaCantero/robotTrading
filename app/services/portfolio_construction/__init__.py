@@ -8,28 +8,28 @@ Provides:
 - T18.1.3: AllocationRecommender - Smart allocation recommendations
 """
 
-from app.services.portfolio_construction.portfolio_constructor import (
-    PortfolioConstructor,
-    PortfolioAllocation,
-    OptimizationMethod,
-)
 from app.services.portfolio_construction.allocation_manager import (
     AllocationManager,
-    get_allocation_manager,
-    AllocationSnapshot,
     AllocationMetrics,
+    AllocationSnapshot,
+    get_allocation_manager,
+)
+from app.services.portfolio_construction.allocation_recommender import (
+    AllocationRecommendation,
+    AllocationRecommender,
+    get_allocation_recommender,
+)
+from app.services.portfolio_construction.portfolio_constructor import (
+    OptimizationMethod,
+    PortfolioAllocation,
+    PortfolioConstructor,
 )
 from app.services.portfolio_construction.rebalancing_engine import (
     RebalancingEngine,
-    get_rebalancing_engine,
     RebalancingEvent,
-    RebalancingTrade,
     RebalancingFrequency,
-)
-from app.services.portfolio_construction.allocation_recommender import (
-    AllocationRecommender,
-    get_allocation_recommender,
-    AllocationRecommendation,
+    RebalancingTrade,
+    get_rebalancing_engine,
 )
 
 __all__ = [

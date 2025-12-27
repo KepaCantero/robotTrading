@@ -7,8 +7,8 @@ into final deployment decision (APPROVED, CONDITIONAL, REJECTED).
 
 import logging
 from dataclasses import dataclass, field
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class DeploymentAnalysis:
     """Analysis components contributing to deployment decision."""
+
     validation_passed: bool
     validation_failures: List[str]
     validation_warnings: List[str]
@@ -40,6 +41,7 @@ class DeploymentAnalysis:
 @dataclass
 class DeploymentDecision:
     """Final deployment decision with comprehensive analysis."""
+
     decision_status: str  # APPROVED, CONDITIONAL, REJECTED
     confidence_level: str  # high, medium, low
 
@@ -93,35 +95,29 @@ class DeploymentDecisionOrchestrator:
         validation_passed: bool,
         validation_failures: List[str],
         validation_warnings: List[str],
-
         # Backtest inputs
         feasibility_ratio: Decimal,
         backtest_return: Decimal,
         backtest_sharpe: Decimal,
         backtest_max_drawdown: Decimal,
-
         # Recommendation inputs
         recommendation_score: Decimal,
         recommendation_confidence: str,
         recommendation_alternatives: List[str],
-
         # Portfolio inputs
         portfolio_quality: Decimal,
         portfolio_diversification_score: Decimal,
         portfolio_concentration_risk: Decimal,
         portfolio_num_assets: int,
-
         # Risk assessment inputs
         portfolio_risk_level: str,
         estimated_max_loss: Decimal,
-
         # User profile inputs
         capital_tier: str,
         objective: str,
         risk_profile: str,
         target_monthly_return: Decimal,
         initial_capital: Decimal,
-
     ) -> DeploymentDecision:
         """
         Orchestrate deployment decision based on comprehensive analysis.
@@ -172,7 +168,7 @@ class DeploymentDecisionOrchestrator:
             portfolio_diversification_score,
             portfolio_concentration_risk,
             portfolio_num_assets,
-            portfolio_risk_level
+            portfolio_risk_level,
         )
 
         # Step 5: Perform comprehensive risk assessment
@@ -181,7 +177,7 @@ class DeploymentDecisionOrchestrator:
             estimated_max_loss,
             portfolio_risk_level,
             risk_profile,
-            initial_capital
+            initial_capital,
         )
 
         # Step 6: Determine primary decision status
@@ -191,7 +187,7 @@ class DeploymentDecisionOrchestrator:
             recommendation_assessment,
             portfolio_assessment,
             risk_assessment,
-            backtest_sharpe
+            backtest_sharpe,
         )
 
         # Step 7: Generate reasoning
@@ -200,15 +196,12 @@ class DeploymentDecisionOrchestrator:
             validation_assessment,
             feasibility_assessment,
             recommendation_assessment,
-            portfolio_assessment
+            portfolio_assessment,
         )
 
         # Step 8: Generate remediation steps if not approved
         remediation_steps = await self._generate_remediation(
-            decision_status,
-            validation_failures,
-            feasibility_assessment,
-            recommendation_assessment
+            decision_status, validation_failures, feasibility_assessment, recommendation_assessment
         )
 
         # Step 9: Create comprehensive analysis object
@@ -216,19 +209,15 @@ class DeploymentDecisionOrchestrator:
             validation_passed=validation_assessment["passed"],
             validation_failures=validation_failures,
             validation_warnings=validation_warnings,
-
             feasibility_ratio=feasibility_ratio,
             feasibility_assessment=feasibility_assessment["assessment"],
-
             recommendation_confidence=recommendation_confidence,
             recommendation_score=recommendation_score,
-
             portfolio_quality=portfolio_quality,
             portfolio_risk_assessment=portfolio_risk_level,
-
             capital_tier=capital_tier,
             objective=objective,
-            risk_profile=risk_profile
+            risk_profile=risk_profile,
         )
 
         # Step 10: Create final deployment decision
@@ -240,7 +229,7 @@ class DeploymentDecisionOrchestrator:
             risk_warnings=risk_assessment["warnings"],
             analysis=analysis,
             remediation_steps=remediation_steps,
-            alternative_strategies=recommendation_alternatives
+            alternative_strategies=recommendation_alternatives,
         )
 
         # Store in history and metrics
@@ -255,17 +244,14 @@ class DeploymentDecisionOrchestrator:
         return decision
 
     async def _assess_validation(
-        self,
-        passed: bool,
-        failures: List[str],
-        warnings: List[str]
+        self, passed: bool, failures: List[str], warnings: List[str]
     ) -> Dict:
         """Assess validation status."""
         return {
             "passed": passed,
             "num_failures": len(failures),
             "num_warnings": len(warnings),
-            "assessment": "PASSED" if passed else "FAILED"
+            "assessment": "PASSED" if passed else "FAILED",
         }
 
     async def _assess_feasibility(self, ratio: Decimal) -> Dict:
@@ -280,33 +266,27 @@ class DeploymentDecisionOrchestrator:
             assessment = "NOT_VIABLE"
             level = "weak"
 
-        return {
-            "ratio": ratio,
-            "assessment": assessment,
-            "level": level
-        }
+        return {"ratio": ratio, "assessment": assessment, "level": level}
 
-    async def _assess_recommendation(
-        self,
-        score: Decimal,
-        confidence: str
-    ) -> Dict:
+    async def _assess_recommendation(self, score: Decimal, confidence: str) -> Dict:
         """Assess recommendation quality."""
-        score_level = "strong" if score >= Decimal("75") else (
-            "moderate" if score >= Decimal("60") else "weak"
+        score_level = (
+            "strong"
+            if score >= Decimal("75")
+            else ("moderate" if score >= Decimal("60") else "weak")
         )
 
         confidence_weight = (
-            Decimal("1.0") if confidence == "high" else (
-                Decimal("0.7") if confidence == "medium" else Decimal("0.4")
-            )
+            Decimal("1.0")
+            if confidence == "high"
+            else (Decimal("0.7") if confidence == "medium" else Decimal("0.4"))
         )
 
         return {
             "score": score,
             "confidence": confidence,
             "score_level": score_level,
-            "confidence_weight": confidence_weight
+            "confidence_weight": confidence_weight,
         }
 
     async def _assess_portfolio_quality(
@@ -315,21 +295,29 @@ class DeploymentDecisionOrchestrator:
         diversification: Decimal,
         concentration: Decimal,
         num_assets: int,
-        risk_level: str
+        risk_level: str,
     ) -> Dict:
         """Assess portfolio quality."""
-        quality_level = "excellent" if quality >= Decimal("80") else (
-            "good" if quality >= Decimal("65") else (
-                "acceptable" if quality >= Decimal("50") else "poor"
+        quality_level = (
+            "excellent"
+            if quality >= Decimal("80")
+            else (
+                "good"
+                if quality >= Decimal("65")
+                else ("acceptable" if quality >= Decimal("50") else "poor")
             )
         )
 
-        diversification_level = "well_diversified" if diversification >= Decimal("75") else (
-            "adequately_diversified" if diversification >= Decimal("60") else "concentrated"
+        diversification_level = (
+            "well_diversified"
+            if diversification >= Decimal("75")
+            else ("adequately_diversified" if diversification >= Decimal("60") else "concentrated")
         )
 
-        concentration_risk = "low" if concentration <= Decimal("20") else (
-            "moderate" if concentration <= Decimal("40") else "high"
+        concentration_risk = (
+            "low"
+            if concentration <= Decimal("20")
+            else ("moderate" if concentration <= Decimal("40") else "high")
         )
 
         return {
@@ -340,7 +328,7 @@ class DeploymentDecisionOrchestrator:
             "concentration": concentration,
             "concentration_risk": concentration_risk,
             "num_assets": num_assets,
-            "risk_level": risk_level
+            "risk_level": risk_level,
         }
 
     async def _assess_risk(
@@ -349,7 +337,7 @@ class DeploymentDecisionOrchestrator:
         estimated_max_loss: Decimal,
         portfolio_risk_level: str,
         user_risk_profile: str,
-        initial_capital: Decimal
+        initial_capital: Decimal,
     ) -> Dict:
         """Assess risk compatibility."""
         warnings = []
@@ -363,7 +351,7 @@ class DeploymentDecisionOrchestrator:
         profile_risk_map = {
             "conservative": ["low", "medium"],
             "moderate": ["low", "medium", "high"],
-            "aggressive": ["medium", "high"]
+            "aggressive": ["medium", "high"],
         }
 
         compatible = portfolio_risk_level in profile_risk_map.get(user_risk_profile, [])
@@ -381,7 +369,7 @@ class DeploymentDecisionOrchestrator:
             "drawdown": drawdown_abs,
             "estimated_max_loss": estimated_max_loss,
             "risk_compatible": compatible,
-            "warnings": warnings
+            "warnings": warnings,
         }
 
     async def _determine_decision_status(
@@ -391,7 +379,7 @@ class DeploymentDecisionOrchestrator:
         recommendation: Dict,
         portfolio: Dict,
         risk: Dict,
-        sharpe_ratio: Decimal
+        sharpe_ratio: Decimal,
     ) -> Tuple[str, str]:
         """Determine final decision status."""
 
@@ -452,7 +440,7 @@ class DeploymentDecisionOrchestrator:
         validation: Dict,
         feasibility: Dict,
         recommendation: Dict,
-        portfolio: Dict
+        portfolio: Dict,
     ) -> Tuple[str, List[str]]:
         """Generate reasoning for decision."""
         supporting = []
@@ -490,11 +478,7 @@ class DeploymentDecisionOrchestrator:
         return primary, supporting
 
     async def _generate_remediation(
-        self,
-        decision: str,
-        validation_failures: List[str],
-        feasibility: Dict,
-        recommendation: Dict
+        self, decision: str, validation_failures: List[str], feasibility: Dict, recommendation: Dict
     ) -> List[str]:
         """Generate remediation steps if needed."""
         steps = []
@@ -503,7 +487,7 @@ class DeploymentDecisionOrchestrator:
             steps = [
                 "Monitor backtest results against live trading",
                 "Implement position sizing from portfolio allocation",
-                "Set up risk monitoring alerts"
+                "Set up risk monitoring alerts",
             ]
 
         elif decision == "CONDITIONAL":
@@ -534,7 +518,7 @@ class DeploymentDecisionOrchestrator:
                 "conditional": 0,
                 "rejected": 0,
                 "avg_feasibility": Decimal("0"),
-                "decisions": []
+                "decisions": [],
             }
 
         metrics = self.decision_metrics[timestamp]
@@ -548,16 +532,14 @@ class DeploymentDecisionOrchestrator:
             metrics["rejected"] += 1
 
         metrics["avg_feasibility"] = (
-            (metrics.get("avg_feasibility", Decimal("0")) * (metrics["total"] - 1) +
-             decision.analysis.feasibility_ratio) / metrics["total"]
-        )
+            metrics.get("avg_feasibility", Decimal("0")) * (metrics["total"] - 1)
+            + decision.analysis.feasibility_ratio
+        ) / metrics["total"]
 
         metrics["decisions"].append(decision.decision_id)
 
     async def get_decision_history(
-        self,
-        limit: Optional[int] = None,
-        status_filter: Optional[str] = None
+        self, limit: Optional[int] = None, status_filter: Optional[str] = None
     ) -> List[DeploymentDecision]:
         """
         Get decision history with optional filtering.
@@ -586,7 +568,7 @@ class DeploymentDecisionOrchestrator:
                 "total_decisions": 0,
                 "approval_rate": Decimal("0"),
                 "conditional_rate": Decimal("0"),
-                "rejection_rate": Decimal("0")
+                "rejection_rate": Decimal("0"),
             }
 
         total = len(self.decision_history)
@@ -602,7 +584,7 @@ class DeploymentDecisionOrchestrator:
             "approval_rate": Decimal(approved) / Decimal(total) * Decimal("100"),
             "conditional_rate": Decimal(conditional) / Decimal(total) * Decimal("100"),
             "rejection_rate": Decimal(rejected) / Decimal(total) * Decimal("100"),
-            "avg_feasibility_ratio": self._calculate_avg_feasibility()
+            "avg_feasibility_ratio": self._calculate_avg_feasibility(),
         }
 
     def _calculate_avg_feasibility(self) -> Decimal:
@@ -610,9 +592,7 @@ class DeploymentDecisionOrchestrator:
         if not self.decision_history:
             return Decimal("0")
 
-        total_feasibility = sum(
-            d.analysis.feasibility_ratio for d in self.decision_history
-        )
+        total_feasibility = sum(d.analysis.feasibility_ratio for d in self.decision_history)
         return total_feasibility / Decimal(len(self.decision_history))
 
     def get_orchestrator_status(self) -> Dict:
@@ -621,9 +601,8 @@ class DeploymentDecisionOrchestrator:
             "total_decisions_processed": len(self.decision_history),
             "metrics_entries": len(self.decision_metrics),
             "last_decision": (
-                self.decision_history[-1].decision_id
-                if self.decision_history else None
-            )
+                self.decision_history[-1].decision_id if self.decision_history else None
+            ),
         }
 
 

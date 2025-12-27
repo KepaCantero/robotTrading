@@ -8,9 +8,9 @@ Tests cover:
 - Event aggregation
 """
 
-import pytest
 from datetime import datetime, timedelta
 from decimal import Decimal
+
 
 from app.services.alerting_system import (
     AlertEvent,
@@ -18,8 +18,6 @@ from app.services.alerting_system import (
     AlertRule,
     AlertSeverity,
     AlertState,
-    ThresholdRule,
-    ComparisonOperator,
 )
 
 
@@ -180,9 +178,7 @@ class TestAlertStateMachine:
         manager.trigger_alert(rule, event)
 
         # Acknowledge
-        acknowledged = manager.acknowledge_alert(
-            "rule_001", acknowledged_by="user@example.com"
-        )
+        acknowledged = manager.acknowledge_alert("rule_001", acknowledged_by="user@example.com")
         assert acknowledged is not None
         assert acknowledged.state == AlertState.ACKNOWLEDGED
         assert acknowledged.acknowledged_at is not None

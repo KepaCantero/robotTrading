@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 class RiskLevel(Enum):
     """Risk severity levels."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -33,6 +34,7 @@ class RiskLevel(Enum):
 @dataclass
 class RiskLimit:
     """Risk limit configuration."""
+
     name: str
     enabled: bool
     threshold: Decimal
@@ -44,6 +46,7 @@ class RiskLimit:
 @dataclass
 class RiskCheckResult:
     """Result of risk check."""
+
     passed: bool
     risk_level: RiskLevel
     violations: List[str] = None
@@ -117,7 +120,7 @@ class RiskGates:
             return RiskCheckResult(False, RiskLevel.CRITICAL, violations)
 
         # Get current positions
-        positions = await self.broker.get_positions()
+        await self.broker.get_positions()
 
         # Check 1: Position size
         order_value = quantity * price
@@ -147,7 +150,9 @@ class RiskGates:
 
         # Check 4: Leverage
         if account.buying_power > 0:
-            leverage = account.portfolio_value / account.equity if account.equity > 0 else Decimal("1")
+            leverage = (
+                account.portfolio_value / account.equity if account.equity > 0 else Decimal("1")
+            )
             if leverage > self.max_leverage:
                 violations.append(
                     f"Current leverage {leverage:.2f}x exceeds max {self.max_leverage:.2f}x"
@@ -156,7 +161,11 @@ class RiskGates:
 
         # Check 5: Cash reserve (for sell orders, check if buy)
         if side == OrderSide.BUY:
-            cash_pct = account.cash_available / account.portfolio_value if account.portfolio_value > 0 else Decimal("0")
+            cash_pct = (
+                account.cash_available / account.portfolio_value
+                if account.portfolio_value > 0
+                else Decimal("0")
+            )
             if cash_pct < self.min_cash_reserve:
                 warnings.append(
                     f"Cash reserve {cash_pct:.1%} below target {self.min_cash_reserve:.1%}"
@@ -283,9 +292,7 @@ class RiskGates:
 
         for (sym1, sym2), corr in correlations.items():
             if corr > max_correlation:
-                violations.append(
-                    f"High correlation {corr:.2f} between {sym1} and {sym2}"
-                )
+                violations.append(f"High correlation {corr:.2f} between {sym1} and {sym2}")
 
         passed = len(violations) == 0
         risk_level = RiskLevel.MEDIUM if violations else RiskLevel.LOW

@@ -2,16 +2,16 @@
 T7.1: PortfolioConstructor - Portfolio construction and optimization
 """
 
+from .models import (
+    AllocationWeight,
+    PortfolioAllocation,
+    PortfolioConstructionRequest,
+    RiskAdjustedPortfolio,
+    RiskScalingRequest,
+)
 from .portfolio_constructor import (
     PortfolioConstructor,
     get_portfolio_constructor,
-)
-from .models import (
-    PortfolioConstructionRequest,
-    PortfolioAllocation,
-    AllocationWeight,
-    RiskScalingRequest,
-    RiskAdjustedPortfolio,
 )
 
 __all__ = [

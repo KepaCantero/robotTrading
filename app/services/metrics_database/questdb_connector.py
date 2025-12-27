@@ -15,8 +15,8 @@ from .models import (
     AggregatedMetrics,
     AggregationType,
     MetricPoint,
-    MetricType,
     MetricsStorageStats,
+    MetricType,
     TimeSeriesQuery,
 )
 
@@ -208,9 +208,7 @@ class QuestDBConnector:
             self._pending_metrics.extend(metrics_to_flush)
             return 0
 
-    async def query_metrics(
-        self, query: TimeSeriesQuery
-    ) -> List[MetricPoint]:
+    async def query_metrics(self, query: TimeSeriesQuery) -> List[MetricPoint]:
         """
         Query metrics from database.
 
@@ -279,8 +277,7 @@ class QuestDBConnector:
 
         try:
             logger.debug(
-                f"Querying aggregated {metric_type.value} "
-                f"interval: {interval_minutes}m"
+                f"Querying aggregated {metric_type.value} " f"interval: {interval_minutes}m"
             )
 
             # In production: execute aggregation query

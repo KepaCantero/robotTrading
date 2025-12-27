@@ -4,16 +4,18 @@ T8.1: RiskScalingApplication Tests
 Tests for conditional risk scaling based on market regime and drawdown.
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
+
 from app.services.portfolio_constructor import (
-    PortfolioConstructor,
     PortfolioConstructionRequest,
+    PortfolioConstructor,
 )
 from app.services.risk_scaling_application import (
     RiskScalingApplication,
-    get_risk_scaler,
     RiskScalingRequest,
+    get_risk_scaler,
 )
 
 
@@ -152,8 +154,12 @@ class TestBearMarketRiskScaling:
         assert result.risk_scaling_applied is True
         assert result.scaling_factor < Decimal("1.0")  # Reduced in bear market
         # Should favor low-volatility modules
-        momentum_adj = next((a for a in result.adjusted_allocations if a.module_name == "momentum"), None)
-        mean_rev_adj = next((a for a in result.adjusted_allocations if a.module_name == "mean_reversion"), None)
+        momentum_adj = next(
+            (a for a in result.adjusted_allocations if a.module_name == "momentum"), None
+        )
+        mean_rev_adj = next(
+            (a for a in result.adjusted_allocations if a.module_name == "mean_reversion"), None
+        )
         if momentum_adj and mean_rev_adj:
             assert momentum_adj.adjusted_weight_pct < momentum_adj.original_weight_pct
 
@@ -343,7 +349,10 @@ class TestAdjustmentRationale:
 
         assert result.success
         assert result.adjustment_rationale != ""
-        assert "Bear market" in result.adjustment_rationale or "scaling factor" in result.adjustment_rationale
+        assert (
+            "Bear market" in result.adjustment_rationale
+            or "scaling factor" in result.adjustment_rationale
+        )
 
 
 if __name__ == "__main__":

@@ -11,18 +11,20 @@ Tests:
 - Risk level assessment
 """
 
-import pytest
 from dataclasses import dataclass
 from decimal import Decimal
+
+import pytest
+
 from app.services.strategy_recommendation.strategy_recommender import (
     StrategyRecommender,
-    StrategyRecommendation,
 )
 
 
 @dataclass
 class MockRankedStrategy:
     """Mock ranked strategy for testing."""
+
     strategy_name: str
     overall_score: Decimal
     return_score: Decimal

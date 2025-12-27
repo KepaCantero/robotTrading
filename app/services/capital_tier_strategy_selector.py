@@ -26,13 +26,13 @@ Design Principles:
 """
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional, Tuple
 
 from app.services.account_configuration import AccountConfiguration, AccountTier
-from app.services.deployment_validator import DeploymentValidator, DeploymentStatus
+from app.services.deployment_validator import DeploymentStatus, DeploymentValidator
 from app.services.expensive_module_gate import ExpensiveModuleGate
 from app.services.learning_capital_gate import LearningCapitalGate
 
@@ -41,6 +41,7 @@ logger = logging.getLogger(__name__)
 
 class EnsembleType(str, Enum):
     """Types of ensemble strategies available"""
+
     WEIGHTED = "weighted"
     REGIME_BASED = "regime_based"
     VOTING = "voting"
@@ -49,6 +50,7 @@ class EnsembleType(str, Enum):
 
 class PositionSizingStrategy(str, Enum):
     """Position sizing strategies per tier"""
+
     FIXED_PCT = "fixed_pct"  # Fixed % of capital
     KELLY_CRITERION = "kelly_criterion"  # Kelly-based sizing
     VOLATILITY_ADJUSTED = "volatility_adjusted"  # Adjusted for volatility
@@ -73,6 +75,7 @@ class StrategySelection:
         reasoning: Explanation of why this selection was made
         tier: Account tier this selection is for
     """
+
     primary_strategy: str
     secondary_strategies: List[str]
     ensemble_type: EnsembleType
@@ -97,6 +100,7 @@ class RiskProfile:
         modules_enabled: Dict of which ML modules are available
         position_sizing_strategy: How positions should be sized
     """
+
     tier: str
     max_position_size: Decimal
     max_concurrent_trades: int
@@ -140,6 +144,7 @@ class StrategyCapabilities:
         feature_importance_analysis: Whether feature importance analysis is available
         advanced_risk_management: Whether advanced risk features are available
     """
+
     learning: bool
     transfer_learning: bool
     deep_learning: bool
@@ -164,6 +169,7 @@ class DeploymentReport:
         tier: Account tier
         capital: Account capital amount
     """
+
     status: DeploymentStatus
     account_id: Optional[str]
     issues: List[str]
@@ -236,10 +242,10 @@ class CapitalTierStrategySelector:
     # ========================================================================
 
     LEVERAGE_ALLOWANCES = {
-        AccountTier.MICRO: Decimal("1.0"),      # No leverage
-        AccountTier.SMALL: Decimal("1.25"),     # Up to 1.25x
-        AccountTier.MEDIUM: Decimal("1.5"),     # Up to 1.5x
-        AccountTier.LARGE: Decimal("2.5"),      # Up to 2.5x (for €250k+)
+        AccountTier.MICRO: Decimal("1.0"),  # No leverage
+        AccountTier.SMALL: Decimal("1.25"),  # Up to 1.25x
+        AccountTier.MEDIUM: Decimal("1.5"),  # Up to 1.5x
+        AccountTier.LARGE: Decimal("2.5"),  # Up to 2.5x (for €250k+)
     }
 
     # ========================================================================
@@ -247,10 +253,10 @@ class CapitalTierStrategySelector:
     # ========================================================================
 
     DRAWDOWN_TOLERANCE = {
-        AccountTier.MICRO: Decimal("0.05"),     # 5% max drawdown
-        AccountTier.SMALL: Decimal("0.08"),     # 8% max drawdown
-        AccountTier.MEDIUM: Decimal("0.10"),    # 10% max drawdown
-        AccountTier.LARGE: Decimal("0.15"),     # 15% max drawdown (can sustain longer periods)
+        AccountTier.MICRO: Decimal("0.05"),  # 5% max drawdown
+        AccountTier.SMALL: Decimal("0.08"),  # 8% max drawdown
+        AccountTier.MEDIUM: Decimal("0.10"),  # 10% max drawdown
+        AccountTier.LARGE: Decimal("0.15"),  # 15% max drawdown (can sustain longer periods)
     }
 
     def __init__(self, capital: Decimal, account_id: str = None):
@@ -330,7 +336,7 @@ class CapitalTierStrategySelector:
             - Leverage allowed scales from 1.0x (micro) to 2.5x (large)
             - Drawdown tolerance scales with capital stability
         """
-        trading_limits = AccountConfiguration.get_safe_trading_limits(self.capital)
+        AccountConfiguration.get_safe_trading_limits(self.capital)
 
         # Determine position sizing strategy by tier
         if self.tier == AccountTier.MICRO:
@@ -361,7 +367,9 @@ class CapitalTierStrategySelector:
         # Validate the profile
         is_valid, reason = risk_profile.validate()
         if not is_valid:
-            logger.warning(f"[{self.account_id or 'UNKNOWN'}] Risk profile validation failed: {reason}")
+            logger.warning(
+                f"[{self.account_id or 'UNKNOWN'}] Risk profile validation failed: {reason}"
+            )
 
         logger.info(
             f"[{self.account_id or 'UNKNOWN'}] Risk profile: "
@@ -392,35 +400,31 @@ class CapitalTierStrategySelector:
 
         # Transfer learning (medium+ only)
         transfer_learning = (
-            self.tier in [AccountTier.MEDIUM, AccountTier.LARGE]
-            and learning_enabled
+            self.tier in [AccountTier.MEDIUM, AccountTier.LARGE] and learning_enabled
         )
 
         # Deep learning (medium+ only, if enabled)
-        deep_learning = (
-            self.tier in [AccountTier.MEDIUM, AccountTier.LARGE]
-            and self.config.get("expensive_modules_enabled", False)
+        deep_learning = self.tier in [AccountTier.MEDIUM, AccountTier.LARGE] and self.config.get(
+            "expensive_modules_enabled", False
         )
 
         # Transformers (large only, if enabled)
-        transformer_models = (
-            self.tier == AccountTier.LARGE
-            and self.config.get("expensive_modules_enabled", False)
+        transformer_models = self.tier == AccountTier.LARGE and self.config.get(
+            "expensive_modules_enabled", False
         )
 
         # Ensemble methods (small+ only)
         ensemble_methods = self.tier in [AccountTier.SMALL, AccountTier.MEDIUM, AccountTier.LARGE]
 
         # Hyperparameter optimization (medium+ only)
-        hyperparameter_opt = (
-            self.tier in [AccountTier.MEDIUM, AccountTier.LARGE]
-            and self.config.get("expensive_modules_enabled", False)
-        )
+        hyperparameter_opt = self.tier in [
+            AccountTier.MEDIUM,
+            AccountTier.LARGE,
+        ] and self.config.get("expensive_modules_enabled", False)
 
         # Feature importance (medium+ only)
         feature_importance = (
-            self.tier in [AccountTier.MEDIUM, AccountTier.LARGE]
-            and learning_enabled
+            self.tier in [AccountTier.MEDIUM, AccountTier.LARGE] and learning_enabled
         )
 
         capabilities = StrategyCapabilities(

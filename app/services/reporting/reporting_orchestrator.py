@@ -6,13 +6,12 @@ Integrates templates, metrics, and portfolio data to generate comprehensive repo
 
 import logging
 from datetime import datetime
-from decimal import Decimal
 from typing import Dict, Optional
 
 import pandas as pd
 
-from app.services.reporting.report_templates import get_report_templates
 from app.services.reporting.quantstats_integration import get_quantstats_integration
+from app.services.reporting.report_templates import get_report_templates
 
 logger = logging.getLogger(__name__)
 
@@ -122,12 +121,8 @@ class ReportingOrchestrator:
         return {
             "volatility": backtest_result.get("volatility", 0),
             "max_drawdown": backtest_result.get("max_drawdown", 0),
-            "var_95": self._calculate_var(
-                backtest_result.get("monthly_returns", []), 0.95
-            ),
-            "cvar_95": self._calculate_cvar(
-                backtest_result.get("monthly_returns", []), 0.95
-            ),
+            "var_95": self._calculate_var(backtest_result.get("monthly_returns", []), 0.95),
+            "cvar_95": self._calculate_cvar(backtest_result.get("monthly_returns", []), 0.95),
             "calmar_ratio": self._calculate_calmar(
                 backtest_result.get("total_return", 0),
                 backtest_result.get("max_drawdown", -0.01),
@@ -150,7 +145,7 @@ class ReportingOrchestrator:
             return 0.0
         sorted_returns = sorted(returns)
         index = int(len(sorted_returns) * (1 - confidence))
-        tail = sorted_returns[:max(index, 1)]
+        tail = sorted_returns[: max(index, 1)]
         return float(sum(tail) / len(tail)) if tail else 0.0
 
     @staticmethod

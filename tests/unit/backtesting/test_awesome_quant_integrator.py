@@ -9,10 +9,10 @@ import pandas as pd
 import pytest
 
 from app.backtesting.awesome_quant_integrator import (
-    AwesomeQuantIntegrator,
     EMPYRICAL_AVAILABLE,
     PYFOLIO_AVAILABLE,
     QUANTSTATS_AVAILABLE,
+    AwesomeQuantIntegrator,
 )
 
 

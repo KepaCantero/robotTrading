@@ -3,7 +3,7 @@
 # check_all.sh - Chequeo y corrección completa
 # ===========================================
 # Ejecuta todos los fixes posibles
-# Solo chequea archivos de producción (app/) y tests/ 
+# Solo chequea archivos de producción (app/) y tests/
 # ===========================================
 
 set -euo pipefail
@@ -41,19 +41,3 @@ run_fix "Isort" isort $APP_DIRS
 run_fix "Autoflake (elimina imports/vars sin usar)" autoflake --in-place --remove-unused-variables --remove-all-unused-imports -r $APP_DIRS
 run_fix "Ruff --fix" ruff $APP_DIRS --fix
 
-# ============================================
-section "LINTING Y REPORTES"
-run_fix "Flake8" flake8 $APP_DIRS --max-line-length=100 --statistics || true
-run_fix "Pylint" pylint $APP_DIRS || true
-
-# ============================================
-section "TYPE CHECKING"
-run_fix "Mypy" mypy $APP_DIRS || true
-
-# ============================================
-section "SECURITY CHECK"
-run_fix "Bandit" bandit -r $APP_DIRS -ll || true
-
-# ============================================
-section "CHEQUEO Y FIX COMPLETO FINALIZADO"
-echo -e "${GREEN}Todos los fixes posibles han sido aplicados.${NC}"

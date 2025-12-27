@@ -12,15 +12,16 @@ Tests:
 - History tracking and status reporting
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
+
+from app.services.portfolio_constructor.models import (
+    PortfolioConstructionRequest,
+)
 from app.services.portfolio_constructor.portfolio_constructor import (
     PortfolioConstructor,
     get_portfolio_constructor,
-)
-from app.services.portfolio_constructor.models import (
-    PortfolioConstructionRequest,
-    PortfolioAllocation,
 )
 
 
@@ -330,13 +331,8 @@ class TestAllocationMethods:
 
         assert result.success is True
         # Total allocated capital should equal total capital
-        total_allocated = sum(
-            a.capital_allocation_eur for a in result.allocations
-        )
-        assert (
-            total_allocated
-            == Decimal("100000")
-        )
+        total_allocated = sum(a.capital_allocation_eur for a in result.allocations)
+        assert total_allocated == Decimal("100000")
 
 
 class TestPortfolioHistory:

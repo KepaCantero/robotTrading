@@ -12,7 +12,6 @@ import unittest
 from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict
 
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.metrics import MetricsCalculator

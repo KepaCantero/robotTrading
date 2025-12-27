@@ -9,7 +9,7 @@ Sub-components for capacity fade analysis:
 
 import logging
 from decimal import Decimal
-from typing import Dict, Optional, List
+from typing import Dict
 
 from .models import LiquidityReport
 
@@ -52,14 +52,14 @@ class HistoricalCapacityAnalyzer:
         try:
             # Calculate relative capital scaling
             backtest_to_target_ratio = target_capital_usd / backtest_capital_usd
-            current_to_target_ratio = target_capital_usd / current_capital_usd
+            target_capital_usd / current_capital_usd
 
             # Apply fade based on historical degradation patterns
             # Conservative: more fade, moderate: balanced, aggressive: less fade
             fade_factors = {
                 "conservative": Decimal("0.65"),  # 35% fade per 10x capital
-                "moderate": Decimal("0.75"),      # 25% fade per 10x capital
-                "aggressive": Decimal("0.85"),    # 15% fade per 10x capital
+                "moderate": Decimal("0.75"),  # 25% fade per 10x capital
+                "aggressive": Decimal("0.85"),  # 15% fade per 10x capital
             }
             fade_factor = fade_factors.get(confidence_level, fade_factors["conservative"])
 
@@ -219,7 +219,11 @@ class AlphaDecayEstimator:
                 )
 
             fade_ratio = base_alpha_pct - estimated_alpha if base_alpha_pct > 0 else Decimal("0")
-            fade_pct = (fade_ratio / base_alpha_pct * Decimal("100")) if base_alpha_pct > 0 else Decimal("0")
+            fade_pct = (
+                (fade_ratio / base_alpha_pct * Decimal("100"))
+                if base_alpha_pct > 0
+                else Decimal("0")
+            )
 
             result = {
                 "base_alpha_pct": base_alpha_pct,
@@ -263,7 +267,9 @@ class AlphaDecayEstimator:
             annual_return = target_monthly_return_usd * Decimal("12")
             required_alpha = (annual_return / target_capital_usd) * Decimal("100")
 
-            logger.info(f"✅ Required alpha: {required_alpha:.2f}% for €{target_monthly_return_usd:,.0f}/month")
+            logger.info(
+                f"✅ Required alpha: {required_alpha:.2f}% for €{target_monthly_return_usd:,.0f}/month"
+            )
             return required_alpha
 
         except Exception as e:

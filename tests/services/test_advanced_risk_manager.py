@@ -14,7 +14,6 @@ from app.services.advanced_risk_manager import (
     CircuitBreaker,
     DrawdownMonitor,
     RiskRewardValidator,
-    StrategyExposureLimiter,
     TradeRiskLimiter,
 )
 

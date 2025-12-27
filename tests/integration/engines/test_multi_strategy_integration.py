@@ -6,7 +6,7 @@ Tests para verificar que los engines funcionan correctamente en backtests multi-
 
 import logging
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -19,7 +19,6 @@ sys.path.insert(0, str(project_root))
 import pandas as pd
 
 from app.engines.context_engine import ContextEngine
-from app.engines.data_engine import DataEngine
 from app.engines.strategy_engines import (
     MeanReversionStrategyEngine,
     ModularMomentumStrategyEngine,
@@ -172,7 +171,7 @@ class TestMultiStrategyBacktestIntegration:
 
         # Procesar quotes
         for quote in quotes[:10]:  # Solo primeros 10 para velocidad
-            signals = engine.generate_signals(quote)
+            engine.generate_signals(quote)
             # No assert estricto - puede no haber señales
 
         # Verificar que se llamó al contexto

@@ -6,7 +6,6 @@ Valida que los indicadores coinciden con pandas_ta.
 """
 
 import unittest
-from decimal import Decimal
 
 import numpy as np
 

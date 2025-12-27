@@ -4,36 +4,28 @@ Comprehensive test suite for T17.1: External Integrations
 Tests for QuestDBConnector, DagsterOrchestrator, MLflowTracker, and ZiplineIntegrator
 """
 
-import pytest
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import List
+
+import pytest
 
 from app.services.external_integrations import (
-    QuestDBConnector,
     DagsterOrchestrator,
     MLflowTracker,
+    QuestDBConnector,
     ZiplineIntegrator,
+)
+from app.services.external_integrations.dagster_orchestrator import (
+    JobStatus,
+    PipelineStep,
 )
 from app.services.external_integrations.questdb_connector import (
     TimeSeriesData,
     TradeRecord,
 )
-from app.services.external_integrations.dagster_orchestrator import (
-    DagsterJob,
-    PipelineStep,
-    JobStatus,
-)
-from app.services.external_integrations.mlflow_tracker import (
-    MLModel,
-    Experiment,
-)
 from app.services.external_integrations.zipline_integrator import (
     BacktestConfig,
-    BacktestResult,
-    ZiplineOrder,
 )
-
 
 # ============================================================================
 # QUESTDB CONNECTOR TESTS (35 tests)
@@ -174,11 +166,7 @@ class TestQuestDBConnectorOHLCVOperations:
             )
             await connector.insert_ohlcv(data)
 
-        results = await connector.query_ohlcv(
-            "AAPL",
-            now - timedelta(days=5),
-            now
-        )
+        results = await connector.query_ohlcv("AAPL", now - timedelta(days=5), now)
         assert len(results) == 3
         assert all(r.symbol == "AAPL" for r in results)
 
@@ -410,10 +398,7 @@ class TestDagsterJobManagement:
         job = await orchestrator.create_job("test_job", "backtest")
         await orchestrator.execute_job(job.job_id)
 
-        result = await orchestrator.complete_job(
-            job.job_id,
-            result={"return": "0.15"}
-        )
+        result = await orchestrator.complete_job(job.job_id, result={"return": "0.15"})
         assert result is True
         assert orchestrator.jobs[job.job_id].status == JobStatus.SUCCESS
         assert len(orchestrator.job_history) == 1
@@ -463,8 +448,8 @@ class TestDagsterJobManagement:
     async def test_list_jobs(self):
         """Test listing jobs."""
         orchestrator = DagsterOrchestrator()
-        job1 = await orchestrator.create_job("job1", "backtest")
-        job2 = await orchestrator.create_job("job2", "data_fetch")
+        await orchestrator.create_job("job1", "backtest")
+        await orchestrator.create_job("job2", "data_fetch")
 
         jobs = await orchestrator.list_jobs()
         assert len(jobs) == 2
@@ -474,7 +459,7 @@ class TestDagsterJobManagement:
         """Test listing jobs filtered by status."""
         orchestrator = DagsterOrchestrator()
         job1 = await orchestrator.create_job("job1", "backtest")
-        job2 = await orchestrator.create_job("job2", "data_fetch")
+        await orchestrator.create_job("job2", "data_fetch")
 
         await orchestrator.execute_job(job1.job_id)
         await orchestrator.complete_job(job1.job_id)
@@ -515,11 +500,7 @@ class TestDagsterScheduling:
     async def test_schedule_job(self):
         """Test job scheduling."""
         orchestrator = DagsterOrchestrator()
-        schedule_id = await orchestrator.schedule_job(
-            "daily_backtest",
-            "backtest",
-            "0 0 * * *"
-        )
+        schedule_id = await orchestrator.schedule_job("daily_backtest", "backtest", "0 0 * * *")
         assert "schedule_" in schedule_id
 
     @pytest.mark.asyncio
@@ -598,7 +579,7 @@ class TestDagsterOrchestrationStatus:
         """Test orchestration status report."""
         orchestrator = DagsterOrchestrator()
         job1 = await orchestrator.create_job("job1", "backtest")
-        job2 = await orchestrator.create_job("job2", "data_fetch")
+        await orchestrator.create_job("job2", "data_fetch")
 
         await orchestrator.execute_job(job1.job_id)
         await orchestrator.complete_job(job1.job_id)
@@ -822,9 +803,9 @@ class TestMLflowModelManagement:
         tracker = MLflowTracker()
 
         metrics = {"accuracy": Decimal("0.95")}
-        model1 = await tracker.register_model("test_model", "xgboost", metrics)
-        model2 = await tracker.register_model("test_model", "neural_network", metrics)
-        model3 = await tracker.register_model("other_model", "ensemble", metrics)
+        await tracker.register_model("test_model", "xgboost", metrics)
+        await tracker.register_model("test_model", "neural_network", metrics)
+        await tracker.register_model("other_model", "ensemble", metrics)
 
         versions = await tracker.get_model_versions("test_model")
         assert len(versions) == 2

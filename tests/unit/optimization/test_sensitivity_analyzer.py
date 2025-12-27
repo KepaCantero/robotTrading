@@ -11,11 +11,9 @@ Tests for:
 
 import json
 import logging
-from datetime import datetime
 from pathlib import Path
 from typing import Dict, Union
 
-import numpy as np
 import pytest
 
 # Add project root to path

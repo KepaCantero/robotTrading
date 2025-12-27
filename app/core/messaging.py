@@ -5,20 +5,21 @@ Optimized for single-instance deployment with memory constraints.
 """
 
 import logging
-import json
 import pickle
-from typing import Any, Dict, Optional, Callable
-from threading import Thread
 import time
+from threading import Thread
+from typing import Any, Callable, Dict, Optional
 
 try:
     import redis
+
     HAS_REDIS = True
 except ImportError:
     HAS_REDIS = False
 
 try:
     import zmq
+
     HAS_ZMQ = True
 except ImportError:
     HAS_ZMQ = False
@@ -37,7 +38,7 @@ class MessageBus:
         redis_host: str = "localhost",
         redis_port: int = 6379,
         use_zmq: bool = False,
-        zmq_port: int = 5555
+        zmq_port: int = 5555,
     ):
         self.redis_host = redis_host
         self.redis_port = redis_port
@@ -55,7 +56,7 @@ class MessageBus:
                     decode_responses=False,  # Binary mode for pickle
                     socket_connect_timeout=5,
                     socket_timeout=5,
-                    max_connections=10
+                    max_connections=10,
                 )
                 self.redis_client.ping()
                 logger.info("✅ Redis connected for messaging")
@@ -76,11 +77,11 @@ class MessageBus:
     def publish(self, channel: str, message: Dict[str, Any]) -> bool:
         """
         Publish message to channel.
-        
+
         Args:
             channel: Channel name (e.g., 'market-ticks', 'signals', 'orders')
             message: Message dictionary
-            
+
         Returns:
             True if published successfully
         """
@@ -105,11 +106,11 @@ class MessageBus:
     def subscribe(self, channel: str, callback: Callable[[Dict[str, Any]], None]) -> Thread:
         """
         Subscribe to channel and call callback for each message.
-        
+
         Args:
             channel: Channel name
             callback: Function to call with message data
-            
+
         Returns:
             Thread running the subscription
         """
@@ -123,11 +124,12 @@ class MessageBus:
 
     def _subscribe_redis(self, channel: str, callback: Callable) -> Thread:
         """Subscribe using Redis pub/sub."""
+
         def _run():
             try:
                 pubsub = self.redis_client.pubsub(ignore_subscribe_messages=True)
                 pubsub.subscribe(channel)
-                
+
                 for message in pubsub.listen():
                     if message['type'] == 'message':
                         try:
@@ -144,12 +146,13 @@ class MessageBus:
 
     def _subscribe_zmq(self, channel: str, callback: Callable) -> Thread:
         """Subscribe using ZeroMQ."""
+
         def _run():
             try:
                 socket = self.zmq_context.socket(zmq.SUB)
                 socket.connect(f"tcp://localhost:5555")
                 socket.setsockopt_string(zmq.SUBSCRIBE, channel)
-                
+
                 while True:
                     try:
                         data = socket.recv(zmq.NOBLOCK)
@@ -188,10 +191,10 @@ def get_message_bus() -> MessageBus:
     global _message_bus
     if _message_bus is None:
         import os
+
         _message_bus = MessageBus(
             redis_host=os.getenv('REDIS_HOST', 'localhost'),
             redis_port=int(os.getenv('REDIS_PORT', '6379')),
-            use_zmq=os.getenv('USE_ZMQ', 'false').lower() == 'true'
+            use_zmq=os.getenv('USE_ZMQ', 'false').lower() == 'true',
         )
     return _message_bus
-

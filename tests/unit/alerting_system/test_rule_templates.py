@@ -10,8 +10,9 @@ Validates:
 - Edge cases and boundary values
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
 
 from app.services.alerting_system.models import (
     AlertSeverity,
@@ -413,9 +414,7 @@ class TestTemplateDeduplication:
         avg_critical = sum(t.deduplicate_minutes for t in critical_templates) / len(
             critical_templates
         )
-        avg_warning = sum(t.deduplicate_minutes for t in warning_templates) / len(
-            warning_templates
-        )
+        avg_warning = sum(t.deduplicate_minutes for t in warning_templates) / len(warning_templates)
 
         assert avg_critical < avg_warning
 

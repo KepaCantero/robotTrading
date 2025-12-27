@@ -10,12 +10,13 @@ Handles:
 """
 
 import asyncio
+import json
 import logging
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Callable, Dict, List, Optional
+
 import websockets
-import json
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,6 @@ logger = logging.getLogger(__name__)
 class AlpacaClientError(Exception):
     """Base exception for Alpaca client errors."""
 
-    pass
 
 
 class AlpacaClient:
@@ -199,9 +199,9 @@ class AlpacaClient:
                 "type": order.order_type,
                 "status": order.status,
                 "filled_qty": float(order.filled_qty) if order.filled_qty else 0,
-                "filled_avg_price": float(order.filled_avg_price)
-                if order.filled_avg_price
-                else None,
+                "filled_avg_price": (
+                    float(order.filled_avg_price) if order.filled_avg_price else None
+                ),
                 "created_at": order.created_at.isoformat() if order.created_at else None,
                 "updated_at": order.updated_at.isoformat() if order.updated_at else None,
             }
@@ -260,9 +260,9 @@ class AlpacaClient:
                 "type": order.order_type,
                 "status": order.status,
                 "filled_qty": float(order.filled_qty) if order.filled_qty else 0,
-                "filled_avg_price": float(order.filled_avg_price)
-                if order.filled_avg_price
-                else None,
+                "filled_avg_price": (
+                    float(order.filled_avg_price) if order.filled_avg_price else None
+                ),
                 "created_at": order.created_at.isoformat() if order.created_at else None,
                 "updated_at": order.updated_at.isoformat() if order.updated_at else None,
             }
@@ -309,9 +309,7 @@ class AlpacaClient:
             logger.error(f"❌ Failed to get positions: {str(e)}")
             raise AlpacaClientError(f"get_positions failed: {str(e)}")
 
-    async def get_orders(
-        self, status: str = "open", limit: int = 100
-    ) -> List[Dict[str, Any]]:
+    async def get_orders(self, status: str = "open", limit: int = 100) -> List[Dict[str, Any]]:
         """Get orders from Alpaca.
 
         Args:
@@ -339,9 +337,9 @@ class AlpacaClient:
                     "type": order.order_type,
                     "status": order.status,
                     "filled_qty": float(order.filled_qty) if order.filled_qty else 0,
-                    "filled_avg_price": float(order.filled_avg_price)
-                    if order.filled_avg_price
-                    else None,
+                    "filled_avg_price": (
+                        float(order.filled_avg_price) if order.filled_avg_price else None
+                    ),
                 }
                 for order in orders
             ]

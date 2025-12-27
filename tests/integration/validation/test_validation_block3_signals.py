@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 
 from app.models.market_data import Quote
-from app.models.signal import Signal, SignalType
+from app.models.signal import SignalType
 from app.services.momentum_analysis import TechnicalIndicatorCalculator
 from app.strategies.mean_reversion import MeanReversionStrategy
 from app.strategies.momentum import MomentumStrategy
@@ -135,7 +135,7 @@ class TestMomentumSignalCoherence(unittest.TestCase):
             if signals:
                 # Obtener últimos valores de indicadores
                 if hasattr(self.strategy, 'last_rsi') and self.strategy.last_rsi is not None:
-                    rsi = self.strategy.last_rsi
+                    self.strategy.last_rsi
 
                     for signal in signals:
                         if signal.signal_type == SignalType.BUY:
@@ -345,7 +345,7 @@ class TestMeanReversionThresholds(unittest.TestCase):
                 volume=Decimal("1000000"),
             )
             quotes.append(quote)
-            signals_before = len(all_signals)
+            len(all_signals)
             signals = self.strategy.generate_signals(quote)
             all_signals.extend(signals)
 

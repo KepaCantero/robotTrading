@@ -61,8 +61,7 @@ class InputProfile(BaseModel):
 
     # Identification
     input_id: str = Field(
-        default_factory=lambda: str(uuid4()),
-        description="Unique identifier for this input"
+        default_factory=lambda: str(uuid4()), description="Unique identifier for this input"
     )
 
     # Core Investment Parameters
@@ -70,36 +69,28 @@ class InputProfile(BaseModel):
         ...,
         gt=Decimal("0"),
         le=Decimal("10000000"),
-        description="Initial capital in EUR (€1 to €10M)"
+        description="Initial capital in EUR (€1 to €10M)",
     )
 
     objetivo_inversion: ObjectivoInversion = Field(
-        ...,
-        description="User investment objective (maximizar_capital, etc.)"
+        ..., description="User investment objective (maximizar_capital, etc.)"
     )
 
-    risk_tolerance: RiskTolerance = Field(
-        ...,
-        description="User risk tolerance (bajo/medio/alto)"
-    )
+    risk_tolerance: RiskTolerance = Field(..., description="User risk tolerance (bajo/medio/alto)")
 
     investment_horizon: int = Field(
-        ...,
-        ge=1,
-        le=600,
-        description="Investment horizon in months (1-50 years)"
+        ..., ge=1, le=600, description="Investment horizon in months (1-50 years)"
     )
 
     # Optional Parameters
     constraints: Optional[Dict] = Field(
-        default=None,
-        description="Optional constraints (sector limits, etc.)"
+        default=None, description="Optional constraints (sector limits, etc.)"
     )
 
     # Metadata
     created_at: str = Field(
         default_factory=lambda: __import__('datetime').datetime.now().isoformat(),
-        description="Timestamp of input creation"
+        description="Timestamp of input creation",
     )
 
     @field_validator('capital_initial', mode='before')
@@ -159,8 +150,7 @@ class InputProfile(BaseModel):
             except ValueError:
                 valid_values = [e.value for e in RiskTolerance]
                 raise ValueError(
-                    f"Invalid risk_tolerance: {v}. "
-                    f"Must be one of: {', '.join(valid_values)}"
+                    f"Invalid risk_tolerance: {v}. " f"Must be one of: {', '.join(valid_values)}"
                 )
         return v
 
@@ -234,7 +224,12 @@ class InputProcessor:
                 raise ValueError(f"Input must be dictionary, got {type(user_input)}")
 
             # Check required fields
-            required_fields = ["capital_initial", "objetivo_inversion", "risk_tolerance", "investment_horizon"]
+            required_fields = [
+                "capital_initial",
+                "objetivo_inversion",
+                "risk_tolerance",
+                "investment_horizon",
+            ]
             missing = [f for f in required_fields if f not in user_input]
             if missing:
                 raise ValueError(f"Missing required fields: {', '.join(missing)}")
@@ -288,7 +283,10 @@ class InputProcessor:
             )
 
         # Check capital size vs objective
-        if profile.capital_initial < Decimal("50000") and profile.objetivo_inversion == ObjectivoInversion.MAXIMIZAR_DIVIDENDOS:
+        if (
+            profile.capital_initial < Decimal("50000")
+            and profile.objetivo_inversion == ObjectivoInversion.MAXIMIZAR_DIVIDENDOS
+        ):
             warnings.append(
                 "Warning: small capital (< €50k) with dividend objective "
                 "may have limited diversification."
@@ -306,5 +304,5 @@ class InputProcessor:
                 self.processed_count / (self.processed_count + self.error_count)
                 if (self.processed_count + self.error_count) > 0
                 else 0
-            )
+            ),
         }

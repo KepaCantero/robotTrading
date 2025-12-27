@@ -87,20 +87,14 @@ class MetricsQueryEngine:
                     return self._query_cache[cache_key]
 
             # Execute query
-            logger.debug(
-                f"Querying {metric_type.value} "
-                f"from {start_time} to {end_time}"
-            )
+            logger.debug(f"Querying {metric_type.value} " f"from {start_time} to {end_time}")
 
             results = await self.questdb.query_metrics(query)
 
             # Apply limit
             if len(results) > limit:
                 results = results[:limit]
-                logger.warning(
-                    f"Query returned {len(results)} results, "
-                    f"limited to {limit}"
-                )
+                logger.warning(f"Query returned {len(results)} results, " f"limited to {limit}")
 
             # Cache results
             if self.cache_enabled:
@@ -173,10 +167,7 @@ class MetricsQueryEngine:
             List of AggregatedMetrics (candles)
         """
         try:
-            logger.debug(
-                f"Querying OHLC {metric_type.value} "
-                f"interval: {interval_minutes}m"
-            )
+            logger.debug(f"Querying OHLC {metric_type.value} " f"interval: {interval_minutes}m")
 
             results = await self.questdb.query_aggregated(
                 metric_type=metric_type,
@@ -344,9 +335,7 @@ class MetricsQueryEngine:
         if metrics[-1] not in downsampled:
             downsampled.append(metrics[-1])
 
-        logger.debug(
-            f"Downsampled from {len(metrics)} to {len(downsampled)} points"
-        )
+        logger.debug(f"Downsampled from {len(metrics)} to {len(downsampled)} points")
 
         return downsampled
 
@@ -371,9 +360,7 @@ class MetricsQueryEngine:
         if cache_key not in self._cache_timestamps:
             return False
 
-        age_seconds = (
-            datetime.utcnow() - self._cache_timestamps[cache_key]
-        ).total_seconds()
+        age_seconds = (datetime.utcnow() - self._cache_timestamps[cache_key]).total_seconds()
 
         return age_seconds < self._cache_ttl_seconds
 

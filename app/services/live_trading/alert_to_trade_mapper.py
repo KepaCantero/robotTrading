@@ -15,7 +15,8 @@ from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional
 
-from app.services.alerting_system import AlertEvent, AlertSeverity
+from app.services.alerting_system import AlertSeverity
+
 from .broker_connector import OrderSide, OrderType
 
 logger = logging.getLogger(__name__)
@@ -23,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 class TradeSignalType(Enum):
     """Types of trade signals from alerts."""
+
     LONG = "long"
     SHORT = "short"
     REDUCE_POSITION = "reduce_position"
@@ -33,6 +35,7 @@ class TradeSignalType(Enum):
 @dataclass
 class AlertToTradeRule:
     """Rule mapping alert to trade action."""
+
     rule_id: str
     alert_rule_id: str
     enabled: bool = True
@@ -59,6 +62,7 @@ class AlertToTradeRule:
 @dataclass
 class TradeSignal:
     """Trade signal generated from alert."""
+
     signal_id: str
     alert_id: str
     alert_rule_id: str
@@ -175,20 +179,17 @@ class AlertToTradeMapper:
 
         # Check quiet period
         if rule.last_triggered_at:
-            from datetime import timedelta
+            pass
+
             time_since_trigger = (
                 datetime.utcnow() - rule.last_triggered_at
             ).total_seconds() / 60  # minutes
             if time_since_trigger < rule.quiet_period_minutes:
-                logger.warning(
-                    f"⚠️ Trade rule in quiet period: {rule.rule_id}"
-                )
+                logger.warning(f"⚠️ Trade rule in quiet period: {rule.rule_id}")
                 return None
 
         # Calculate quantity based on severity
-        severity_multiplier = rule.severity_multipliers.get(
-            severity, Decimal("1.0")
-        )
+        severity_multiplier = rule.severity_multipliers.get(severity, Decimal("1.0"))
         quantity = rule.base_quantity * severity_multiplier
 
         # Apply risk-based limits
@@ -201,17 +202,12 @@ class AlertToTradeMapper:
         quantity = Decimal(int(quantity))
 
         if quantity <= 0:
-            logger.warning(
-                f"⚠️ Calculated quantity too small: {quantity}"
-            )
+            logger.warning(f"⚠️ Calculated quantity too small: {quantity}")
             return None
 
         # Determine order parameters
         order_side = OrderSide.BUY if rule.signal_type == TradeSignalType.LONG else OrderSide.SELL
-        order_type = (
-            OrderType.LIMIT if rule.use_limit_orders
-            else OrderType.MARKET
-        )
+        order_type = OrderType.LIMIT if rule.use_limit_orders else OrderType.MARKET
 
         # Calculate limit price if needed
         limit_price = None
@@ -271,10 +267,7 @@ class AlertToTradeMapper:
         Returns:
             List of pending TradeSignal objects
         """
-        pending = [
-            s for s in self.signals.values()
-            if not hasattr(s, 'order_id') or not s.order_id
-        ]
+        pending = [s for s in self.signals.values() if not hasattr(s, 'order_id') or not s.order_id]
 
         if alert_rule_id:
             pending = [s for s in pending if s.alert_rule_id == alert_rule_id]

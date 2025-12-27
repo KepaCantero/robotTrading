@@ -1,14 +1,16 @@
 """Unit tests for T9.1 HTMLTemplateEngine component"""
 
-import pytest
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
+
+import pytest
+
 from app.services.reporting_generator.html_template_engine import (
-    HTMLTemplateEngine,
     BrandingConfig,
-    ReportSection,
-    ReportConfig,
     HTMLReport,
+    HTMLTemplateEngine,
+    ReportConfig,
+    ReportSection,
     get_html_template_engine,
 )
 
@@ -280,7 +282,10 @@ class TestHTMLTemplateEngine:
         report = self.engine.render_report(config)
 
         # When include_disclaimers is False, the Performance Disclaimer section should not be present
-        assert "Performance Disclaimer" not in report.content or report.metadata["has_disclaimers"] == False
+        assert (
+            "Performance Disclaimer" not in report.content
+            or report.metadata["has_disclaimers"] == False
+        )
 
     # HTML Escaping Tests
     def test_html_escaping_in_title(self):

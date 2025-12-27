@@ -8,15 +8,16 @@ Tests:
 - Feasibility validation
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
 
 from app.maestro.phase_1 import (
     AbsoluteReturnTarget,
-    TargetAlphaCalculator,
     CapacityFadeAnalyzer,
-    ParameterOptimizer,
     FeasibilityValidator,
+    ParameterOptimizer,
+    TargetAlphaCalculator,
 )
 
 
@@ -361,7 +362,7 @@ class TestFeasibilityValidation:
             commission_per_trade=Decimal("0"),
             expected_trades_per_month=0,
         )
-        result_small = validator.validate_target(target_small)
+        validator.validate_target(target_small)
         result_large = validator.validate_target(target_large)
         # Large capital should be more feasible due to less aggressive target ratio
         assert result_large.is_feasible is True

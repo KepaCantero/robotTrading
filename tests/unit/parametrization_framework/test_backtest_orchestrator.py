@@ -4,14 +4,16 @@ T4.1: BacktestOrchestrator Tests
 Tests for BacktestOrchestrator, backtesting execution, and feasibility calculation.
 """
 
-import pytest
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
+
+import pytest
+
 from app.services.backtest_orchestration import (
-    BacktestOrchestrator,
-    get_backtest_orchestrator,
     BacktestOrchestrationRequest,
+    BacktestOrchestrator,
     BacktestStatus,
+    get_backtest_orchestrator,
 )
 
 
@@ -262,7 +264,7 @@ class TestBacktestResultValidation:
         orchestrator = BacktestOrchestrator()
 
         # Create a mock result with good Sharpe ratio
-        from app.services.backtest_orchestration.models import BacktestResult, BacktestMetrics
+        from app.services.backtest_orchestration.models import BacktestMetrics, BacktestResult
 
         metrics = BacktestMetrics(
             total_return_pct=Decimal("15.0"),
@@ -305,7 +307,7 @@ class TestBacktestResultValidation:
         """Test validation warns about low Sharpe ratio."""
         orchestrator = BacktestOrchestrator()
 
-        from app.services.backtest_orchestration.models import BacktestResult, BacktestMetrics
+        from app.services.backtest_orchestration.models import BacktestMetrics, BacktestResult
 
         metrics = BacktestMetrics(
             total_return_pct=Decimal("5.0"),

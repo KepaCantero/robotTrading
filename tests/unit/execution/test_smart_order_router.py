@@ -4,9 +4,10 @@ Unit tests for SmartOrderRouter
 Tests order routing orchestration, cost estimation, and plan validation.
 """
 
-import pytest
 import asyncio
 from decimal import Decimal
+
+import pytest
 
 from app.services.smart_order_routing.smart_order_router import SmartOrderRouter
 
@@ -284,9 +285,8 @@ class TestSmartOrderRouter:
                 OrderTranche(
                     symbol="AAPL",
                     size=Decimal("50000"),
-                    execution_time=router.cost_monitor.executions.get(
-                        "dummy", None
-                    ) or __import__("datetime").datetime.now(),
+                    execution_time=router.cost_monitor.executions.get("dummy", None)
+                    or __import__("datetime").datetime.now(),
                 ),
             ],
             strategy="vwap",

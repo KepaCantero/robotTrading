@@ -18,24 +18,24 @@ from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional, Tuple
 
-from app.services.alerting_system import AlertEvent, AlertManager, AlertSeverity
+from app.services.alerting_system import AlertEvent, AlertManager
+
 from .alert_to_trade_mapper import AlertToTradeMapper, TradeSignal
 from .broker_connector import (
     BrokerConnector,
-    BrokerOrder,
     OrderSide,
     OrderStatus,
-    OrderType,
     get_broker_connector,
 )
 from .order_manager import OrderManager
-from .risk_gates import RiskGates, RiskCheckResult, RiskLevel
+from .risk_gates import RiskCheckResult, RiskGates, RiskLevel
 
 logger = logging.getLogger(__name__)
 
 
 class BridgeStatus(Enum):
     """Trading bridge operational status."""
+
     IDLE = "idle"
     MONITORING = "monitoring"
     ALERT_RECEIVED = "alert_received"
@@ -49,6 +49,7 @@ class BridgeStatus(Enum):
 @dataclass
 class AlertToTradeExecution:
     """Record of alert-triggered trade execution."""
+
     execution_id: str
     alert_id: str
     signal_id: str
@@ -259,7 +260,9 @@ class TradingBridgeOrchestrator:
         warnings = []
 
         # Check position size
-        position_value = signal.quantity * signal.price if signal.price else signal.quantity * Decimal("100")
+        position_value = (
+            signal.quantity * signal.price if signal.price else signal.quantity * Decimal("100")
+        )
         if position_value > self.risk_gates.max_position_size:
             violations.append(f"Position size ${position_value} exceeds limit")
 
@@ -271,8 +274,8 @@ class TradingBridgeOrchestrator:
         if position_value > account.cash_available * self.risk_gates.max_leverage:
             warnings.append("Trade would exceed leverage limit")
 
-        risk_level = RiskLevel.CRITICAL if violations else (
-            RiskLevel.HIGH if warnings else RiskLevel.LOW
+        risk_level = (
+            RiskLevel.CRITICAL if violations else (RiskLevel.HIGH if warnings else RiskLevel.LOW)
         )
 
         return RiskCheckResult(
@@ -359,9 +362,7 @@ class TradingBridgeOrchestrator:
                 elif status in (OrderStatus.CANCELED, OrderStatus.REJECTED):
                     execution.execution_status = status
                     execution.error_message = f"Order {status.value}"
-                    logger.warning(
-                        f"⚠️ Order {status.value}: {execution.order_id}"
-                    )
+                    logger.warning(f"⚠️ Order {status.value}: {execution.order_id}")
                     break
 
                 checks += 1
@@ -402,14 +403,16 @@ class TradingBridgeOrchestrator:
         Returns:
             Statistics dictionary
         """
-        successful = len([
-            e for e in self.execution_history
-            if e.execution_status == OrderStatus.FILLED
-        ])
-        failed = len([
-            e for e in self.execution_history
-            if e.execution_status in (OrderStatus.CANCELED, OrderStatus.REJECTED)
-        ])
+        successful = len(
+            [e for e in self.execution_history if e.execution_status == OrderStatus.FILLED]
+        )
+        failed = len(
+            [
+                e
+                for e in self.execution_history
+                if e.execution_status in (OrderStatus.CANCELED, OrderStatus.REJECTED)
+            ]
+        )
 
         return {
             "status": self.status.value,
@@ -417,10 +420,13 @@ class TradingBridgeOrchestrator:
             "total_executions": len(self.execution_history),
             "successful_trades": successful,
             "failed_trades": failed,
-            "pending_orders": len([
-                e for e in self.executions.values()
-                if e.execution_status in (OrderStatus.PENDING, OrderStatus.SUBMITTED)
-            ]),
+            "pending_orders": len(
+                [
+                    e
+                    for e in self.executions.values()
+                    if e.execution_status in (OrderStatus.PENDING, OrderStatus.SUBMITTED)
+                ]
+            ),
             "errors": len(self.errors),
             "mapped_signals": len(self.mapper.signal_history),
         }

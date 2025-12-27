@@ -8,12 +8,9 @@ Tests for:
 - Volume filters (TASK-IND-5)
 """
 
-from datetime import datetime
 from decimal import Decimal
 
-import pytest
 
-from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.services.momentum_analysis import TechnicalIndicatorCalculator
 from app.services.position_sizing_engine import PositionSizingEngine
 

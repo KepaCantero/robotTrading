@@ -53,9 +53,7 @@ class AlertManager:
         # Deduplication tracking: (rule_id, symbol, portfolio_id) -> last_trigger_time
         self.last_triggered_times: Dict[str, datetime] = {}
 
-    def should_trigger_alert(
-        self, rule: AlertRule, event: AlertEvent
-    ) -> bool:
+    def should_trigger_alert(self, rule: AlertRule, event: AlertEvent) -> bool:
         """
         Check if alert should be triggered based on deduplication.
 
@@ -134,14 +132,12 @@ class AlertManager:
             The resolved AlertEvent, or None if not found
         """
         # Find alert to resolve
-        alert_key = None
         event = None
 
         if event_id:
             # Find by event ID
             for key, evt in self.active_alerts.items():
                 if evt.event_id == event_id:
-                    alert_key = key
                     event = evt
                     break
         else:
@@ -151,14 +147,12 @@ class AlertManager:
                     AlertState.TRIGGERED,
                     AlertState.ACKNOWLEDGED,
                 ]:
-                    alert_key = key
                     event = evt
                     break
 
         if not event:
             logger.warning(
-                f"No active alert found to resolve: "
-                f"rule_id={rule_id}, event_id={event_id}"
+                f"No active alert found to resolve: " f"rule_id={rule_id}, event_id={event_id}"
             )
             return None
 
@@ -199,13 +193,11 @@ class AlertManager:
             The acknowledged AlertEvent, or None if not found
         """
         # Find alert to acknowledge
-        alert_key = None
         event = None
 
         if event_id:
             for key, evt in self.active_alerts.items():
                 if evt.event_id == event_id:
-                    alert_key = key
                     event = evt
                     break
         else:
@@ -214,14 +206,12 @@ class AlertManager:
                     AlertState.TRIGGERED,
                     AlertState.RESOLVED,
                 ]:
-                    alert_key = key
                     event = evt
                     break
 
         if not event:
             logger.warning(
-                f"No active alert found to acknowledge: "
-                f"rule_id={rule_id}, event_id={event_id}"
+                f"No active alert found to acknowledge: " f"rule_id={rule_id}, event_id={event_id}"
             )
             return None
 
@@ -271,9 +261,7 @@ class AlertManager:
 
         return False
 
-    def get_active_alerts(
-        self, rule_id: Optional[str] = None
-    ) -> List[AlertEvent]:
+    def get_active_alerts(self, rule_id: Optional[str] = None) -> List[AlertEvent]:
         """
         Get list of active alerts.
 
@@ -316,11 +304,7 @@ class AlertManager:
             List of recent AlertEvents
         """
         cutoff = datetime.utcnow() - timedelta(minutes=minutes)
-        return [
-            a
-            for a in self.active_alerts.values()
-            if a.triggered_at >= cutoff
-        ]
+        return [a for a in self.active_alerts.values() if a.triggered_at >= cutoff]
 
     def get_alert_statistics(self) -> Dict:
         """
@@ -397,9 +381,7 @@ class AlertManager:
         """Create unique key for alert."""
         return f"{rule.rule_id}:{event.symbol}:{event.portfolio_id}:{event.metric_name}"
 
-    def _record_history(
-        self, event_id: str, rule_id: str, action: str, details: Dict
-    ) -> None:
+    def _record_history(self, event_id: str, rule_id: str, action: str, details: Dict) -> None:
         """Record alert history entry."""
         history = AlertHistory(
             history_id=f"hist_{uuid4().hex[:12]}",
