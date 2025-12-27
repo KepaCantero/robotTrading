@@ -12,7 +12,6 @@ Tests six critical scenarios:
 
 from decimal import Decimal
 
-
 from app.services.expensive_module_gate import ExpenseLevelEnum, ExpensiveModuleGate
 
 

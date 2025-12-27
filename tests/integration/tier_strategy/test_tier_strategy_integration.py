@@ -9,7 +9,6 @@ These tests verify the complete workflow integration across multiple components.
 
 from decimal import Decimal
 
-
 from app.services.account_configuration import AccountTier
 from app.services.capital_tier_strategy_selector import (
     CapitalTierStrategySelector,

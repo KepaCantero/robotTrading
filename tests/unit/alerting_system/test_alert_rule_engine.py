@@ -11,7 +11,6 @@ Tests cover:
 
 from decimal import Decimal
 
-
 from app.services.alerting_system import (
     AlertRule,
     AlertRuleEngine,

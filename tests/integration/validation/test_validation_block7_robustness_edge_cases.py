@@ -12,7 +12,6 @@ import unittest
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig
 from app.models.market_data import Quote

@@ -11,7 +11,6 @@ Tests cover:
 from datetime import datetime
 from decimal import Decimal
 
-
 from app.services.alerting_system import (
     AlertEvent,
     AlertHistory,

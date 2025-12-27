@@ -7,7 +7,6 @@ Validates that accounts are safe for live deployment before going live.
 
 from decimal import Decimal
 
-
 from app.services.deployment_validator import (
     DeploymentStatus,
     DeploymentValidator,

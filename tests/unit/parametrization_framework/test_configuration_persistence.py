@@ -9,7 +9,6 @@ Tests cover:
 - Storage statistics
 """
 
-
 import pytest
 
 from app.services.configuration_persistence import ConfigurationRepository

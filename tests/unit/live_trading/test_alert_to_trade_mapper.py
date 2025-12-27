@@ -12,7 +12,6 @@ Tests cover:
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-
 from app.services.alerting_system import AlertSeverity
 from app.services.live_trading.alert_to_trade_mapper import (
     AlertToTradeMapper,

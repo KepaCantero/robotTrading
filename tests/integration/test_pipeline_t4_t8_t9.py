@@ -18,7 +18,6 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Dict, List
 
-
 from app.backtesting.models import BacktestResult
 from app.models.portfolio import Portfolio, Position
 from app.services.capacity_fade_validation import (

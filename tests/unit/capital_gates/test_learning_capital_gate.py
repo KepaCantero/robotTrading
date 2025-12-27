@@ -12,7 +12,6 @@ Tests six critical scenarios:
 
 from decimal import Decimal
 
-
 from app.services.learning_capital_gate import LearningCapitalGate
 
 

@@ -6,7 +6,6 @@ Tests account tier classification and configuration recommendations.
 
 from decimal import Decimal
 
-
 from app.services.account_configuration import (
     AccountConfiguration,
     AccountTier,
