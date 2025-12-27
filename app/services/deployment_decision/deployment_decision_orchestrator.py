@@ -614,5 +614,6 @@ def get_deployment_decision_orchestrator() -> DeploymentDecisionOrchestrator:
     """Get or create singleton DeploymentDecisionOrchestrator."""
     global _orchestrator
     if _orchestrator is None:
+        pass
 
     return _orchestrator

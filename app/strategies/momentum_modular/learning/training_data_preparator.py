@@ -267,7 +267,7 @@ class TrainingDataPreparator:
         # Construir secuencias deslizantes
         for i in range(min_sequence_length, len(indicators_df)):
             # Obtener ventana de datos históricos
-            historical_window = indicators_df.iloc[i - sequence_length: i + 1]
+            historical_window = indicators_df.iloc[i - sequence_length : i + 1]
 
             # Construir secuencia de features históricas
             historical_data = []
@@ -372,9 +372,7 @@ class TrainingDataPreparator:
                     'price': (
                         float(quote.bid)
                         if hasattr(quote, 'bid')
-                        else float(quote.close)
-                        if hasattr(quote, 'close')
-                        else 0.0
+                        else float(quote.close) if hasattr(quote, 'close') else 0.0
                     ),
                     'volume': float(getattr(quote, 'volume', 0)),
                     'timestamp': quote.timestamp if hasattr(quote, 'timestamp') else df.index[i],
@@ -395,9 +393,7 @@ class TrainingDataPreparator:
             price = (
                 float(quote.bid)
                 if hasattr(quote, 'bid')
-                else float(quote.close)
-                if hasattr(quote, 'close')
-                else 0.0
+                else float(quote.close) if hasattr(quote, 'close') else 0.0
             )
             volume = float(getattr(quote, 'volume', 0))
 

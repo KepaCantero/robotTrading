@@ -69,7 +69,7 @@ class VolatilityDetector(BaseMarketDetector):
 
         # Calcular percentil del ATR actual
         current_atr = atr_history[-1]
-        sorted_atr = sorted(atr_history[-self.percentile_window:])
+        sorted_atr = sorted(atr_history[-self.percentile_window :])
         percentile = (
             (sorted_atr.index(current_atr) / len(sorted_atr)) * 100
             if current_atr in sorted_atr

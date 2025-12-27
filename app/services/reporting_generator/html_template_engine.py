@@ -709,5 +709,6 @@ def get_html_template_engine() -> HTMLTemplateEngine:
     """Get or create HTMLTemplateEngine singleton."""
     global _html_engine_instance
     if _html_engine_instance is None:
+        pass
 
     return _html_engine_instance

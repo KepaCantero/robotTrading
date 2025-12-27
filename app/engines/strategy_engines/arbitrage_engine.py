@@ -299,7 +299,7 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
             features["half_life_days"] = half_life if half_life is not None else 0.0
 
             # Relative spread position (0-1 scale within recent range)
-            recent_spreads = spreads[-self.lookback_period:]
+            recent_spreads = spreads[-self.lookback_period :]
             spread_min = min(recent_spreads)
             spread_max = max(recent_spreads)
             spread_range = spread_max - spread_min
@@ -428,10 +428,10 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
 
             # Calculate spread metrics
             spreads = [a - b for a, b in zip(p1, p2)]
-            spread_mean = float(np.mean(spreads[-self.lookback_period:]))
+            spread_mean = float(np.mean(spreads[-self.lookback_period :]))
             spread_std = (
-                float(np.std(spreads[-self.lookback_period:]))
-                if np.std(spreads[-self.lookback_period:]) > 0
+                float(np.std(spreads[-self.lookback_period :]))
+                if np.std(spreads[-self.lookback_period :]) > 0
                 else 1e-8
             )
             current_spread = spreads[-1]
@@ -917,7 +917,7 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
         if len(spreads) < self.lookback_period:
             return None
 
-        recent_spreads = spreads[-self.lookback_period:]
+        recent_spreads = spreads[-self.lookback_period :]
         return {
             "mean": float(np.mean(recent_spreads)),
             "std": float(np.std(recent_spreads)),

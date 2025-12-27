@@ -30,7 +30,7 @@ try:
     MATPLOTLIB_AVAILABLE = True
 except ImportError:
     MATPLOTLIB_AVAILABLE = False
-    logger.warning("matplotlib not available. Static visualizations disabled."
+    logger.warning("matplotlib not available. Static visualizations disabled.")
 
 # Optional imports - plotly
 try:
@@ -40,17 +40,17 @@ try:
     PLOTLY_AVAILABLE = True
 except ImportError:
     PLOTLY_AVAILABLE = False
-    logger.warning("plotly not available. Interactive visualizations disabled."
+    logger.warning("plotly not available. Interactive visualizations disabled.")
 
 
 class AdvancedVisualizer:
     """
     Advanced visualization suite for comprehensive backtest analysis.
 
-    Supports both static (matplotlib and interactive (plotly visualizations.
+    Supports both static (matplotlib) and interactive (plotly) visualizations.
     """
 
-    def __init__(self, output_dir: str = "reports/meta_analyzer", dpi: int = 150:
+    def __init__(self, output_dir: str = "reports/meta_analyzer", dpi: int = 150):
         """
         Initialize AdvancedVisualizer.
 
@@ -58,27 +58,27 @@ class AdvancedVisualizer:
             output_dir: Directory for saving visualizations
             dpi: DPI for matplotlib figures
         """
-        self.output_dir = Path(output_dir
-        self.output_dir.mkdir(parents=True, exist_ok=True
+        self.output_dir = Path(output_dir)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
         self.dpi = dpi
 
         # Configure matplotlib style if available
         if MATPLOTLIB_AVAILABLE:
             try:
-                plt.style.use("seaborn-v0_8-darkgrid"
-                sns.set_palette("husl"
+                plt.style.use("seaborn-v0_8-darkgrid")
+                sns.set_palette("husl")
             except Exception as e:
-                logger.warning(f"Could not set matplotlib style: {e}"
+                logger.warning(f"Could not set matplotlib style: {e}")
 
-        logger.info(f"AdvancedVisualizer initialized: output_dir={self.output_dir}, dpi={dpi}"
+        logger.info(f"AdvancedVisualizer initialized: output_dir={self.output_dir}, dpi={dpi}")
 
     def plot_correlation_network(
         self,
         data: pd.DataFrame,
         threshold: float = 0.3,
-        figsize: Tuple[int, int] = (14, 10,
+        figsize: Tuple[int, int] = (14, 10),
         output_file: Optional[str] = None,
-     -> Optional[Any]:
+    ) -> Optional[Any]:
         """
         Plot correlation network using networkx.
 
@@ -86,52 +86,52 @@ class AdvancedVisualizer:
 
         Args:
             data: DataFrame with numeric columns
-            threshold: Minimum correlation to draw edge (default: 0.3
+            threshold: Minimum correlation to draw edge (default: 0.3)
             figsize: Figure size
-            output_file: Output filename (default: correlation_network.png
+            output_file: Output filename (default: correlation_network.png)
 
         Returns:
             Figure object or None if plotting fails
         """
         if not MATPLOTLIB_AVAILABLE:
-            logger.warning("matplotlib not available. Skipping correlation network plot."
+            logger.warning("matplotlib not available. Skipping correlation network plot.")
             return None
 
         try:
             # Select numeric columns
-            numeric_data = data.select_dtypes(include=[np.number]
-            if numeric_data.empty or len(numeric_data.columns < 2:
-                logger.warning("Not enough numeric columns for correlation network"
+            numeric_data = data.select_dtypes(include=[np.number])
+            if numeric_data.empty or len(numeric_data.columns) < 2:
+                logger.warning("Not enough numeric columns for correlation network")
                 return None
 
             # Calculate correlation matrix
-            corr_matrix = numeric_data.corr(
+            corr_matrix = numeric_data.corr()
 
             # Create graph
-            G = nx.Graph(
+            G = nx.Graph()
 
-            # Add nodes (metrics
+            # Add nodes (metrics)
             for col in corr_matrix.columns:
-                G.add_node(col
+                G.add_node(col)
 
             # Add edges for correlations above threshold
-            for i, col1 in enumerate(corr_matrix.columns:
-                for col2 in corr_matrix.columns[i + 1:]:
-                    corr_value = abs(corr_matrix.loc[col1, col2]
+            for i, col1 in enumerate(corr_matrix.columns):
+                for col2 in corr_matrix.columns[i + 1 :]:
+                    corr_value = abs(corr_matrix.loc[col1, col2])
                     if corr_value >= threshold:
-                        G.add_edge(col1, col2, weight=corr_value
+                        G.add_edge(col1, col2, weight=corr_value)
 
             # Create figure
-            fig, ax = plt.subplots(figsize=figsize
+            fig, ax = plt.subplots(figsize=figsize)
 
             # Layout
-            pos = nx.spring_layout(G, k=2, iterations=50, seed=42
+            pos = nx.spring_layout(G, k=2, iterations=50, seed=42)
 
             # Draw network
-            nx.draw_networkx_nodes(G, pos, node_color="lightblue", node_size=1000, ax=ax, alpha=0.9
+            nx.draw_networkx_nodes(G, pos, node_color="lightblue", node_size=1000, ax=ax, alpha=0.9)
 
             # Draw edges with varying width based on correlation strength
-            edges = G.edges(
+            edges = G.edges()
             weights = [G[u][v]["weight"] for u, v in edges]
             nx.draw_networkx_edges(
                 G,
@@ -141,24 +141,24 @@ class AdvancedVisualizer:
                 edge_color=weights,
                 edge_cmap=plt.cm.coolwarm,
                 ax=ax,
-            
+            )
 
             # Draw labels
-            nx.draw_networkx_labels(G, pos, font_size=9, font_weight="bold", ax=ax
+            nx.draw_networkx_labels(G, pos, font_size=9, font_weight="bold", ax=ax)
 
-            ax.set_title("Correlation Network (threshold={}", threshold, fontsize=14
-            ax.axis("of"
+            ax.set_title("Correlation Network (threshold={})".format(threshold), fontsize=14)
+            ax.axis("off")
 
             # Save figure
-            output_path = self.output_dir / (output_file or "correlation_network.png"
-            plt.savefig(output_path, dpi=self.dpi, bbox_inches="tight"
-            plt.close(
+            output_path = self.output_dir / (output_file or "correlation_network.png")
+            plt.savefig(output_path, dpi=self.dpi, bbox_inches="tight")
+            plt.close()
 
-            logger.info(f"Correlation network saved: {output_path}"
+            logger.info(f"Correlation network saved: {output_path}")
             return fig
 
         except Exception as e:
-            logger.error(f"Error plotting correlation network: {e}", exc_info=True
+            logger.error(f"Error plotting correlation network: {e}", exc_info=True)
             return None
 
     def plot_parallel_coordinates(
@@ -167,32 +167,32 @@ class AdvancedVisualizer:
         color_col: Optional[str] = None,
         max_cols: int = 10,
         output_file: Optional[str] = None,
-     -> Optional[str]:
+    ) -> Optional[str]:
         """
-        Plot parallel coordinates using plotly (interactive.
+        Plot parallel coordinates using plotly (interactive).
 
         Args:
             data: DataFrame with numeric columns
-            color_col: Column to use for coloring (default: first numeric column
-            max_cols: Maximum number of columns to include (default: 10
+            color_col: Column to use for coloring (default: first numeric column)
+            max_cols: Maximum number of columns to include (default: 10)
             output_file: Output HTML filename
 
         Returns:
             Path to saved HTML file or None
         """
         if not PLOTLY_AVAILABLE:
-            logger.warning("plotly not available. Skipping parallel coordinates plot."
+            logger.warning("plotly not available. Skipping parallel coordinates plot.")
             return None
 
         try:
-            numeric_data = data.select_dtypes(include=[np.number].copy(
+            numeric_data = data.select_dtypes(include=[np.number]).copy()
             if numeric_data.empty:
-                logger.warning("No numeric columns for parallel coordinates"
+                logger.warning("No numeric columns for parallel coordinates")
                 return None
 
             # Limit columns
-            if len(numeric_data.columns > max_cols:
-                numeric_data = numeric_data.iloc[:,:max_cols]
+            if len(numeric_data.columns) > max_cols:
+                numeric_data = numeric_data.iloc[:, :max_cols]
 
             # Determine color column
             if color_col is None:
@@ -201,7 +201,7 @@ class AdvancedVisualizer:
                 color_col = numeric_data.columns[0]
 
             # Normalize data for better visualization
-            normalized_data = (numeric_data - numeric_data.min() / (
+            normalized_data = (numeric_data - numeric_data.min()) / (
                 numeric_data.max() - numeric_data.min() + 1e-8
             )
 
@@ -556,7 +556,7 @@ class AdvancedVisualizer:
 
             # Statistics by regime
             ax = axes[3]
-            ax.axis("of")
+            ax.axis("off")
             stats_text = "Regime Statistics:\n\n"
             for regime in unique_regimes:
                 mask = regime_labels == regime

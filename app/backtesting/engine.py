@@ -686,7 +686,9 @@ class SimpleBacktester:
             )
             return
 
-        logger.info(f"✅ EXECUTING BUY: {signal.symbol} qty={position_size} price={execution_price}")
+        logger.info(
+            f"✅ EXECUTING BUY: {signal.symbol} qty={position_size} price={execution_price}"
+        )
 
         # Build reason from signal metadata
         reason = self._build_trade_reason(signal, market_data)

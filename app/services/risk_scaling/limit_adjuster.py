@@ -415,5 +415,6 @@ def get_limit_adjuster() -> LimitAdjuster:
     """Get or create singleton LimitAdjuster."""
     global _adjuster
     if _adjuster is None:
+        pass
 
     return _adjuster

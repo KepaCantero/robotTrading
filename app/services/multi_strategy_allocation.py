@@ -383,6 +383,7 @@ def get_multi_strategy_manager(
     """Get global multi-strategy allocation manager."""
     global _multi_strategy_manager
     if _multi_strategy_manager is None:
+        pass
 
     return _multi_strategy_manager
 
@@ -391,6 +392,6 @@ def get_dynamic_selector() -> DynamicPortfolioSelector:
     """Get global dynamic portfolio selector."""
     global _dynamic_selector
     if _dynamic_selector is None:
-        manager = get_multi_strategy_manager()
+        get_multi_strategy_manager()
 
     return _dynamic_selector

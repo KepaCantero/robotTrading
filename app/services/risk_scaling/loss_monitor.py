@@ -344,7 +344,7 @@ class LossMonitor:
             return False, "Insufficient trade history"
 
         # Get early and recent periods
-        early = trade_results[-early_window - recent_window: -recent_window]
+        early = trade_results[-early_window - recent_window : -recent_window]
         recent = trade_results[-recent_window:]
 
         early_wins = sum(1 for t in early if t.is_winning())

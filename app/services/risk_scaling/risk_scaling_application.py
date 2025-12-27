@@ -235,5 +235,6 @@ def get_risk_scaling_application() -> RiskScalingApplication:
     """Get or create singleton RiskScalingApplication."""
     global _application
     if _application is None:
+        pass
 
     return _application

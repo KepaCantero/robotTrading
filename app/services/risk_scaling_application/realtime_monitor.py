@@ -509,5 +509,6 @@ def get_realtime_monitor() -> RealTimeMonitor:
     """Get or create singleton RealTimeMonitor."""
     global _monitor
     if _monitor is None:
+        pass
 
     return _monitor

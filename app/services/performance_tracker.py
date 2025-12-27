@@ -79,7 +79,7 @@ class PerformanceTracker:
         # Add to history
         self.cycle_metrics.append(self.current_cycle)
         if len(self.cycle_metrics) > self.max_history:
-            self.cycle_metrics = self.cycle_metrics[-self.max_history:]
+            self.cycle_metrics = self.cycle_metrics[-self.max_history :]
 
         self.current_cycle = None
         return metrics_dict
@@ -161,5 +161,6 @@ def get_performance_tracker() -> PerformanceTracker:
     """Get global performance tracker instance."""
     global _performance_tracker
     if _performance_tracker is None:
+        pass
 
     return _performance_tracker

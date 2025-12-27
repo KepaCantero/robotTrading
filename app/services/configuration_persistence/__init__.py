@@ -25,7 +25,8 @@ from app.services.configuration_persistence.models import (
     VersionedConfiguration,
 )
 
-    # Repository (type-based)
+# Repository (type-based)
+__all__ = [
     "ConfigurationRepository",
     "StoredConfiguration",
     # Persistence (strategy-centric)

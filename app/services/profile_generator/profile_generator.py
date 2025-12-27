@@ -594,5 +594,6 @@ def get_profile_generator(config_path: Optional[str] = None) -> ProfileGenerator
     """Get or create singleton ProfileGenerator."""
     global _generator
     if _generator is None:
+        pass
 
     return _generator

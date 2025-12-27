@@ -58,8 +58,8 @@ class TrendDetector(BaseMarketDetector):
     def _detect_ema_cross(self, price_history: List[float]) -> Dict:
         """Detectar tendencia usando cruce de EMAs."""
         # Calcular EMAs
-        ema_fast = self._calculate_ema(price_history[-self.ema_fast_period:])
-        ema_slow = self._calculate_ema(price_history[-self.ema_slow_period:])
+        ema_fast = self._calculate_ema(price_history[-self.ema_fast_period :])
+        ema_slow = self._calculate_ema(price_history[-self.ema_slow_period :])
         current_price = price_history[-1]
 
         if ema_fast is None or ema_slow is None:

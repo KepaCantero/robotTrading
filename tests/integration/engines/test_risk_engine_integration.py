@@ -82,7 +82,7 @@ class TestRiskEngine:
         engine = RiskEngine(config)
 
         assert engine.enabled
-        assert engine.not _initialized
+        assert not engine._initialized
 
         engine.initialize()
         assert engine._initialized
@@ -193,7 +193,7 @@ class TestDrawdownController:
         controller = DrawdownController(config)
 
         assert controller.max_drawdown_limit == 0.20
-        assert controller.not circuit_breaker_active
+        assert not controller.circuit_breaker_active
 
     def test_assess_drawdown(self):
         """Test evaluación de drawdown."""

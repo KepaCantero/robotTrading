@@ -11,6 +11,7 @@ from .models import (
 )
 from .strategy_recommender import StrategyRecommender, get_strategy_recommender
 
+__all__ = [
     "StrategyRecommender",
     "get_strategy_recommender",
     "StrategyRecommendationRequest",

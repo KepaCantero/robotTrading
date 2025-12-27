@@ -370,5 +370,6 @@ def get_backtest_orchestrator() -> BacktestOrchestrator:
     """Get or create singleton BacktestOrchestrator."""
     global _orchestrator
     if _orchestrator is None:
+        pass
 
     return _orchestrator

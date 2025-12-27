@@ -217,9 +217,9 @@ class RegimeAnalyzer:
             # Normalize to get probabilities
             transition_probs = transition_matrix.copy()
             for i in range(n_regimes):
-                row_sum = transition_matrix[i,:].sum()
+                row_sum = transition_matrix[i, :].sum()
                 if row_sum > 0:
-                    transition_probs[i,:] /= row_sum
+                    transition_probs[i, :] /= row_sum
 
             # Regime names
             regime_names = [

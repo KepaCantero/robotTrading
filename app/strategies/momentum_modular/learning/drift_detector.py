@@ -1389,7 +1389,7 @@ class AdvancedOverfittingDetector:
         if len(self.metrics_history) < 5:
             return "unknown"
 
-        recent_metrics = self.metrics_history[-self.extrapolation_window:]
+        recent_metrics = self.metrics_history[-self.extrapolation_window :]
 
         # Get valid training and validation metrics
         train_losses = [m.train_loss for m in recent_metrics]

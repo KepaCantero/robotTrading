@@ -81,7 +81,7 @@ HybridLearningEngine = None
 HYBRID_AVAILABLE = False
 
 # Construir __all__ dinámicamente
-
+__all__ = [
     # Base
     "BaseLearningEngine",
     # Drift detection [TASK-4.2-DRIFT]

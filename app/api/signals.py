@@ -30,7 +30,7 @@ def get_signal_scorer_service() -> SignalScorerService:
     global _signal_scorer_service
     if _signal_scorer_service is None:
         portfolio_provider = PaperTradingPortfolioProvider()
-        portfolio_service = PortfolioService(portfolio_provider)
+        PortfolioService(portfolio_provider)
 
     return _signal_scorer_service
 

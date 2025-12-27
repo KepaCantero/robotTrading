@@ -280,7 +280,7 @@ class ExecutionCostAnalyzer:
             return None  # Not enough history
 
         recent = list(self.slippage_history)[-window_size:]
-        older = list(self.slippage_history)[-window_size * 2: -window_size]
+        older = list(self.slippage_history)[-window_size * 2 : -window_size]
 
         recent_avg = sum(recent) / len(recent)
         older_avg = sum(older) / len(older)

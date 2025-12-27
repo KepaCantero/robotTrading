@@ -172,7 +172,7 @@ class TestStreamingIntegration:
 
         # Detener
         await manager.stop()
-        assert manager.not _running
+        assert not manager._running
 
     def test_streaming_manager_status(self, data_engine_config):
         """Test estado del streaming manager."""
@@ -285,8 +285,8 @@ class TestDataEngineIntegration:
         cache = DistributedCache(config)
 
         assert cache is not None
-        assert cache.not use_redis
-        assert cache.not use_postgres
+        assert not cache.use_redis
+        assert not cache.use_postgres
 
         status = cache.get_status()
         assert status['redis_enabled'] == False

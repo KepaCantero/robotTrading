@@ -391,4 +391,4 @@ class AlertManager:
 
         # Keep history size bounded
         if len(self.alert_history) > self._max_history:
-            self.alert_history = self.alert_history[-self._max_history:]
+            self.alert_history = self.alert_history[-self._max_history :]

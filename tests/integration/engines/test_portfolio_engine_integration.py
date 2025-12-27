@@ -84,7 +84,7 @@ class TestPortfolioEngine:
         engine = PortfolioEngine(config)
 
         assert engine.enabled
-        assert engine.not _initialized
+        assert not engine._initialized
 
         engine.initialize()
         assert engine._initialized

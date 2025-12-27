@@ -160,7 +160,7 @@ def render_objective_card(metric_name: str, value: float, test_name: str = ""):
     else:
         display_value = f"{value:.2f}"
 
-    metric_label = metric_name.replace('_', ' ').title()
+    metric_name.replace('_', ' ').title()
 
     st.markdown(
         """

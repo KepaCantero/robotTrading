@@ -28,7 +28,8 @@ from .trade_persistence import TradePersistenceManager, get_trade_persistence_ma
 from .trading_audit_trail import TradingAuditTrail, get_trading_audit_trail
 from .trading_bridge_orchestrator import TradingBridgeOrchestrator, get_trading_bridge_orchestrator
 
-    # Service Classes
+# Service Classes
+__all__ = [
     "TradingBridgeOrchestrator",
     "BrokerConnector",
     "OrderManager",

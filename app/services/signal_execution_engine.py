@@ -232,7 +232,7 @@ class SignalExecutionEngine:
 
         # Mantener tamaño máximo del historial
         if len(self.execution_history) > self.max_history_size:
-            self.execution_history = self.execution_history[-self.max_history_size:]
+            self.execution_history = self.execution_history[-self.max_history_size :]
 
     def get_execution_statistics(self) -> Dict[str, Any]:
         """Obtener estadísticas de ejecución."""

@@ -279,5 +279,6 @@ def get_order_splitting_optimizer() -> OrderSplittingOptimizer:
     """Get or create global OrderSplittingOptimizer instance."""
     global _order_splitting_optimizer
     if _order_splitting_optimizer is None:
+        pass
 
     return _order_splitting_optimizer

@@ -387,7 +387,7 @@ class TestPairsTradingOnlyPortfolio:
         test_symbols = symbols[:20]
 
         for i, symbol1 in enumerate(test_symbols):
-            for symbol2 in test_symbols[i + 1:]:
+            for symbol2 in test_symbols[i + 1 :]:
                 try:
                     df1 = real_historical_data[symbol1]
                     df2 = real_historical_data[symbol2]

@@ -44,6 +44,7 @@ if POSTGRESQL_AVAILABLE:
     class CacheEntry(Base):
         """Modelo de entrada de cache en PostgreSQL."""
 
+        __tablename__ = 'cache_entries'
 
         key = Column(String(255), primary_key=True)
         data = Column(LargeBinary, nullable=False)
@@ -54,6 +55,7 @@ if POSTGRESQL_AVAILABLE:
         expires_at = Column(DateTime, index=True)
         metadata_json = Column(Text)  # JSON metadata
 
+        __table_args__ = (
             Index('idx_symbol_source', 'symbol', 'source'),
             Index('idx_expires_at', 'expires_at'),
         )

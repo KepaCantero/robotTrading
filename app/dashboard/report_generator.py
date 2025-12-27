@@ -140,18 +140,18 @@ def generate_report_markdown(
 def _generate_performance_summary(metrics: Dict) -> str:
     """Generate textual performance summary."""
 
-    win_rate = float(metrics.get('win_rate', 0))
+    float(metrics.get('win_rate', 0))
     sharpe = metrics.get('sharpe_ratio', 0)
-    drawdown = float(metrics.get('max_drawdown_percentage', 0))
+    float(metrics.get('max_drawdown_percentage', 0))
 
     if sharpe and float(sharpe) > 2:
-        performance = "excellent"
+        pass
     elif sharpe and float(sharpe) > 1:
-        performance = "good"
+        pass
     elif sharpe and float(sharpe) > 0:
-        performance = "positive"
+        pass
     else:
-        performance = "poor"
+        pass
 
     summary = """
 The {performance} strategy performance shows a win rate of {win_rate:.1f}%
@@ -274,7 +274,7 @@ def generate_backend_test_summary(
         from app.dashboard.multi_strategy_utils import generate_multi_strategy_summary_text
 
         # Generate multi-strategy specific summary
-        summary_text = generate_multi_strategy_summary_text(multi_strategy_results)
+        generate_multi_strategy_summary_text(multi_strategy_results)
 
         # Add header
         report = """# 🧩 Multi-Strategy Backend Test Result Summary
@@ -372,7 +372,7 @@ def _generate_comprehensive_backend_report(
 ) -> str:
     """Generate comprehensive backend test report."""
 
-    period_days = (end_date - start_date).days
+    (end_date - start_date).days
 
     # Section 1: Context
     context = """# 🧩 Backend Test Result Summary
@@ -698,9 +698,9 @@ def _generate_module_analysis(all_results: List[Dict]) -> str:
 """
 
     for result in all_results:
-        module_name = result.get("module", "Unknown")
-        trades = result.get("total_trades", 0)
-        win_rate = result.get("win_rate", 0)
+        result.get("module", "Unknown")
+        result.get("total_trades", 0)
+        result.get("win_rate", 0)
 
         analysis += """
 ### {module_name}
@@ -740,7 +740,7 @@ def _analyze_module_behavior(module_name: str, result: Dict) -> str:
 
 def _generate_behavior_analysis(all_results: List[Dict], strategy: str) -> str:
     """Generate behavior analysis section."""
-    total_trades = sum(r.get("total_trades", 0) for r in all_results)
+    sum(r.get("total_trades", 0) for r in all_results)
     avg_win_rate = (
         statistics.mean([float(r.get("win_rate", 0)) for r in all_results if r.get("win_rate")])
         if all_results
@@ -942,17 +942,11 @@ def _generate_conclusion(metrics: Dict, avg_return: float, avg_win_rate: float) 
 
     # Determine status
     if avg_return > 10 and avg_win_rate > 55:
-        status = "🟢 APROBADO"
-        description = "Strategy is profitable and consistent"
-        recommendation = "PROCEED with paper trading"
+        pass
     elif avg_return > 0 and avg_win_rate > 40:
-        status = "🟠 NECESITA AJUSTE"
-        description = "Strategy is viable but needs optimization"
-        recommendation = "OPTIMIZE parameters before live trading"
+        pass
     else:
-        status = "🔴 FALLIDO"
-        description = "Strategy needs significant improvement"
-        recommendation = "RETRAIN or redesign strategy"
+        pass
 
     return """
 ## 7. 📁 Conclusión Técnica

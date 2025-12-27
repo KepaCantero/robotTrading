@@ -101,24 +101,20 @@ class BacktestReportGenerator:
 
         # Calculate key metrics
         win_rate = float(performance.win_rate)
-        total_return = float(result.total_return)
+        float(result.total_return)
         sharpe = float(performance.sharpe_ratio) if performance.sharpe_ratio else 0
-        max_dd = float(performance.max_drawdown)
-        total_trades = performance.total_trades
+        float(performance.max_drawdown)
+        performance.total_trades
 
         # Performance assessment
         if win_rate >= 60 and sharpe >= 1.5:
-            assessment = "STRONG"
-            color = "🟢"
+            pass
         elif win_rate >= 50 and sharpe >= 1.0:
-            assessment = "GOOD"
-            color = "🟡"
+            pass
         elif win_rate >= 40 and sharpe >= 0.5:
-            assessment = "MODERATE"
-            color = "🟠"
+            pass
         else:
-            assessment = "WEAK"
-            color = "🔴"
+            pass
 
         return """# Executive Summary
 
@@ -161,7 +157,7 @@ class BacktestReportGenerator:
 
     def _generate_technical_analysis(self, result: BacktestResult, config: BacktestConfig) -> str:
         """Generate technical analysis."""
-        perf = result.performance
+        result.performance
 
         return """# Technical Analysis Report
 
@@ -229,7 +225,7 @@ Max Position Size: {float(config.max_position_size):.2f}%
 
     def _generate_risk_analysis(self, result: BacktestResult, config: BacktestConfig) -> str:
         """Generate risk analysis."""
-        perf = result.performance
+        result.performance
 
         return """# Risk Analysis Report
 
@@ -408,9 +404,9 @@ Max Position Size: {float(config.max_position_size):.2f}%
         if not result.equity_curve:
             return "No equity curve data available."
 
-        max_val = max(x[1] for x in result.equity_curve)
-        min_val = min(x[1] for x in result.equity_curve)
-        recovery_time = len(result.equity_curve) // 2
+        max(x[1] for x in result.equity_curve)
+        min(x[1] for x in result.equity_curve)
+        len(result.equity_curve) // 2
 
         return """
 - **Peak Equity:** ${float(max_val):,.2f}

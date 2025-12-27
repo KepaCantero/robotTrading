@@ -427,5 +427,6 @@ def get_strategy_recommender() -> StrategyRecommender:
     """Get or create singleton StrategyRecommender."""
     global _recommender
     if _recommender is None:
+        pass
 
     return _recommender

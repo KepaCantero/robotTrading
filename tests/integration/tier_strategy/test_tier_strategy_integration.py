@@ -39,8 +39,8 @@ class TestFullFlowMicroAccount:
 
         # 4. Get features
         features = self.selector.get_enabled_features()
-        assert features.not learning
-        assert features.not deep_learning
+        assert not features.learning
+        assert not features.deep_learning
 
         # 5. Validate deployment
         report = self.selector.validate_deployment(
@@ -138,8 +138,8 @@ class TestFullFlowSmallAccount:
         assert features.ensemble_methods
 
         # Should NOT have deep learning
-        assert features.not deep_learning
-        assert features.not transformer_models
+        assert not features.deep_learning
+        assert not features.transformer_models
 
     def test_small_leverage_enabled(self):
         """Small accounts can use leverage"""
@@ -350,7 +350,7 @@ class TestCapabilityProgression:
         """Deep learning available for medium+ only"""
         for capital in [Decimal("10000"), Decimal("30000")]:
             features = CapitalTierStrategySelector(capital).get_enabled_features()
-            assert features.not deep_learning
+            assert not features.deep_learning
 
         # Medium/Large may have deep learning based on config
         # Just verify the progression makes sense
@@ -364,7 +364,7 @@ class TestCapabilityProgression:
         """Transformer models only for large accounts"""
         for capital in [Decimal("10000"), Decimal("30000"), Decimal("100000")]:
             features = CapitalTierStrategySelector(capital).get_enabled_features()
-            assert features.not transformer_models
+            assert not features.transformer_models
 
         CapitalTierStrategySelector(Decimal("500000")).get_enabled_features()
         # Transformers may be enabled for large if config allows
@@ -372,7 +372,7 @@ class TestCapabilityProgression:
     def test_ensemble_methods_small_plus(self):
         """Ensemble methods for small+ accounts"""
         micro_features = CapitalTierStrategySelector(Decimal("10000")).get_enabled_features()
-        assert micro_features.not ensemble_methods
+        assert not micro_features.ensemble_methods
 
         for capital in [Decimal("30000"), Decimal("100000"), Decimal("500000")]:
             features = CapitalTierStrategySelector(capital).get_enabled_features()
@@ -471,4 +471,4 @@ class TestRealWorldScenarios:
 
         features = selector.get_enabled_features()
         # Conservative on features for small accounts
-        assert features.not deep_learning
+        assert not features.deep_learning

@@ -906,6 +906,7 @@ def get_config() -> CentralizedConfig:
     """Get the global configuration instance."""
     global _config
     if _config is None:
+        pass
 
     return _config
 
@@ -933,7 +934,6 @@ def reload_config():
 def set_config(config: CentralizedConfig):
     """Set the global configuration instance."""
     global _config
-
 
 
 def validate_config() -> bool:

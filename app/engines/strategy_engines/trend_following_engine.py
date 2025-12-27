@@ -207,7 +207,7 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
 
             # Volume ratio
             if len(volumes) >= self.volume_lookback:
-                avg_volume = sum(volumes[-self.volume_lookback:]) / self.volume_lookback
+                avg_volume = sum(volumes[-self.volume_lookback :]) / self.volume_lookback
                 current_volume = volumes[-1] if volumes else 0
                 features["volume_ratio"] = current_volume / avg_volume if avg_volume > 0 else 1.0
             else:
@@ -276,7 +276,7 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
 
             # Calcular ratio de volumen
             if len(volumes) >= self.volume_lookback:
-                avg_volume = sum(volumes[-self.volume_lookback:]) / self.volume_lookback
+                avg_volume = sum(volumes[-self.volume_lookback :]) / self.volume_lookback
                 current_volume = volumes[-1] if volumes else 0
                 volume_ratio = current_volume / avg_volume if avg_volume > 0 else 1.0
             else:

@@ -5,7 +5,6 @@ Provides professional HTML templates for strategy performance reports.
 """
 
 import logging
-from datetime import datetime
 from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
@@ -245,10 +244,10 @@ class ReportTemplates:
 
     def _generate_performance_summary_html(self, summary: Dict) -> str:
         """Generate performance summary cards."""
-        total_return_pct = (summary.get("total_return", 0) or 0) * 100
-        sharpe = summary.get("sharpe_ratio", 0) or 0
-        max_dd_pct = (summary.get("max_drawdown", 0) or 0) * 100
-        win_rate_pct = (summary.get("win_rate", 0) or 0) * 100
+        (summary.get("total_return", 0) or 0) * 100
+        summary.get("sharpe_ratio", 0) or 0
+        (summary.get("max_drawdown", 0) or 0) * 100
+        (summary.get("win_rate", 0) or 0) * 100
 
         return """
         <h2>📈 Performance Summary</h2>
@@ -300,7 +299,7 @@ class ReportTemplates:
         for key, (label, formatter) in metric_definitions.items():
             value = metrics.get(key, 0)
             if value is not None:
-                formatted = formatter(value)
+                formatter(value)
                 html += """
                 <tr>
                     <td>{label}</td>
@@ -339,7 +338,7 @@ class ReportTemplates:
         for key, (label, formatter) in risk_definitions.items():
             value = risk_metrics.get(key, 0)
             if value is not None:
-                formatted = formatter(value)
+                formatter(value)
                 html += """
                 <tr>
                     <td>{label}</td>
@@ -371,7 +370,7 @@ class ReportTemplates:
         sorted_allocation = sorted(allocation.items(), key=lambda x: x[1], reverse=True)
 
         for asset, weight in sorted_allocation:
-            weight_pct = weight * 100
+            weight * 100
             html += """
             <tr>
                 <td><strong>{asset}</strong></td>
@@ -425,5 +424,6 @@ def get_report_templates() -> ReportTemplates:
     """Get or create singleton ReportTemplates."""
     global _templates
     if _templates is None:
+        pass
 
     return _templates

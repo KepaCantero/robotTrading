@@ -209,5 +209,6 @@ def get_strategy_scorer() -> StrategyScorer:
     """Get or create singleton StrategyScorer."""
     global _scorer
     if _scorer is None:
+        pass
 
     return _scorer

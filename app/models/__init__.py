@@ -35,7 +35,8 @@ from .signal import (
     SignalType,
 )
 
-    # Portfolio models
+# Portfolio models
+__all__ = [
     "AssetClass",
     "Position",
     "Portfolio",

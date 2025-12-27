@@ -260,10 +260,10 @@ class TestFeatureCapabilities:
         selector = CapitalTierStrategySelector(Decimal("10000"))
         capabilities = selector.get_enabled_features()
 
-        assert capabilities.not learning
-        assert capabilities.not deep_learning
-        assert capabilities.not transformer_models
-        assert capabilities.not ensemble_methods
+        assert not capabilities.learning
+        assert not capabilities.deep_learning
+        assert not capabilities.transformer_models
+        assert not capabilities.ensemble_methods
 
     def test_small_features_minimal(self):
         """Small accounts have minimal features"""
@@ -272,8 +272,8 @@ class TestFeatureCapabilities:
 
         # Small accounts may have learning conditionally
         # but not deep learning
-        assert capabilities.not deep_learning
-        assert capabilities.not transformer_models
+        assert not capabilities.deep_learning
+        assert not capabilities.transformer_models
 
     def test_medium_features_enabled(self):
         """Medium accounts have moderate features"""
@@ -299,7 +299,7 @@ class TestFeatureCapabilities:
         """Transformer models only for large accounts"""
         for capital in [Decimal("10000"), Decimal("30000"), Decimal("100000")]:
             capabilities = CapitalTierStrategySelector(capital).get_enabled_features()
-            assert capabilities.not transformer_models
+            assert not capabilities.transformer_models
 
     def test_transfer_learning_medium_plus(self):
         """Transfer learning available for medium+ accounts"""
@@ -307,8 +307,8 @@ class TestFeatureCapabilities:
         small_cap = CapitalTierStrategySelector(Decimal("30000")).get_enabled_features()
         medium_cap = CapitalTierStrategySelector(Decimal("100000")).get_enabled_features()
 
-        assert micro_cap.not transfer_learning
-        assert small_cap.not transfer_learning
+        assert not micro_cap.transfer_learning
+        assert not small_cap.transfer_learning
         assert medium_cap.transfer_learning
 
     def test_ensemble_methods_small_plus(self):
@@ -316,7 +316,7 @@ class TestFeatureCapabilities:
         micro_cap = CapitalTierStrategySelector(Decimal("10000")).get_enabled_features()
         small_cap = CapitalTierStrategySelector(Decimal("30000")).get_enabled_features()
 
-        assert micro_cap.not ensemble_methods
+        assert not micro_cap.ensemble_methods
         assert small_cap.ensemble_methods
 
 

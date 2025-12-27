@@ -658,7 +658,7 @@ class PyFolioIntegrator:
             month_num = 1
 
             for i in range(0, len(returns), days_per_month):
-                month_returns = returns[i: i + days_per_month]
+                month_returns = returns[i : i + days_per_month]
                 if month_returns:
                     # Compound returns: product(1 + r) - 1
                     monthly_ret = Decimal("1")
@@ -700,5 +700,6 @@ def get_pyfolio_integrator() -> PyFolioIntegrator:
     """Get or create PyFolioIntegrator singleton."""
     global _pyfolio_integrator_instance
     if _pyfolio_integrator_instance is None:
+        pass
 
     return _pyfolio_integrator_instance
