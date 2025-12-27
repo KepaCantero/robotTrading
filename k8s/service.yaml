@@ -1,0 +1,160 @@
+---
+# Service for AlgoTrading API - ClusterIP (internal access)
+apiVersion: v1
+kind: Service
+metadata:
+  name: algotrading-api
+  namespace: algotrading
+  labels:
+    app: algotrading
+    component: api
+spec:
+  type: ClusterIP
+  selector:
+    app: algotrading
+    component: api
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http
+      protocol: TCP
+    - name: metrics
+      port: 8001
+      targetPort: metrics
+      protocol: TCP
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+
+---
+# Service for AlgoTrading API - LoadBalancer (external access)
+# Alternatively use Ingress for better control
+apiVersion: v1
+kind: Service
+metadata:
+  name: algotrading-api-lb
+  namespace: algotrading
+  labels:
+    app: algotrading
+    component: api
+  annotations:
+    service.spec.loadBalancerSourceRanges: "0.0.0.0/0"
+    # AWS-specific annotations
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+spec:
+  type: LoadBalancer
+  selector:
+    app: algotrading
+    component: api
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+    - name: https
+      port: 443
+      targetPort: http
+      protocol: TCP
+  sessionAffinity: ClientIP
+
+---
+# Service for PostgreSQL - ClusterIP (internal access only)
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: algotrading
+  labels:
+    app: postgres
+    component: database
+spec:
+  type: ClusterIP
+  clusterIP: None  # Headless service for StatefulSet
+  selector:
+    app: postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+      protocol: TCP
+
+---
+# Service for Redis - ClusterIP (internal access only)
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: algotrading
+  labels:
+    app: redis
+    component: cache
+spec:
+  type: ClusterIP
+  selector:
+    app: redis
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+      protocol: TCP
+
+---
+# Service for Prometheus in monitoring namespace
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: monitoring
+  labels:
+    app: prometheus
+spec:
+  type: ClusterIP
+  selector:
+    app: prometheus
+  ports:
+    - name: prometheus
+      port: 9090
+      targetPort: 9090
+      protocol: TCP
+
+---
+# Service for Grafana in monitoring namespace
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: monitoring
+  labels:
+    app: grafana
+spec:
+  type: ClusterIP
+  selector:
+    app: grafana
+  ports:
+    - name: grafana
+      port: 3000
+      targetPort: 3000
+      protocol: TCP
+
+---
+# Headless Service for StatefulSets (optional)
+apiVersion: v1
+kind: Service
+metadata:
+  name: algotrading-api-headless
+  namespace: algotrading
+  labels:
+    app: algotrading
+    component: api
+spec:
+  clusterIP: None  # Headless service
+  selector:
+    app: algotrading
+    component: api
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http
+      protocol: TCP

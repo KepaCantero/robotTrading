@@ -1,0 +1,125 @@
+---
+# Kustomization file for managing K8s manifests
+# Enables environment-specific customization, overlays, and patches
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: algotrading
+  namespace: algotrading
+
+# Common labels applied to all resources
+commonLabels:
+  app: algotrading
+  managed-by: kustomize
+  version: v1
+
+# Common annotations applied to all resources
+commonAnnotations:
+  description: "Algorithmic Trading Platform"
+  owner: "DevOps Team"
+
+# Namespace for all resources
+namespace: algotrading
+
+# Resources to include
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secrets.yaml
+  - rbac.yaml
+  - service.yaml
+  - deployment.yaml
+  - ingress.yaml
+  - hpa.yaml
+  - network-policy.yaml
+
+# Images to replace/patch
+images:
+  - name: algotrading
+    newName: ghcr.io/YOUR_ORG/algotrading
+    newTag: latest  # Override with specific version in overlays
+
+# Replicas override (useful for different environments)
+replicas:
+  - name: algotrading-api
+    count: 3
+
+# Replace/patch values
+patchesStrategicMerge:
+  - |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: algotrading-api
+    spec:
+      template:
+        spec:
+          containers:
+          - name: api
+            resources:
+              requests:
+                cpu: 500m
+                memory: 512Mi
+              limits:
+                cpu: 2000m
+                memory: 2Gi
+
+# JSON patch operations
+patchesJson6902:
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: algotrading-api
+    patch: |-
+      - op: add
+        path: /spec/template/spec/affinity/nodeAffinity/preferredDuringSchedulingIgnoredDuringExecution/0/weight
+        value: 100
+
+# Variable substitutions
+vars:
+  - name: DATABASE_HOST
+    objref:
+      kind: ConfigMap
+      name: algotrading-config
+      apiVersion: v1
+    fieldref:
+      fieldpath: data.DATABASE_HOST
+
+  - name: REDIS_HOST
+    objref:
+      kind: ConfigMap
+      name: algotrading-config
+      apiVersion: v1
+    fieldref:
+      fieldpath: data.REDIS_HOST
+
+# Namespace generation
+namespaceSelector: {}
+
+# ConfigMap generation options
+configMapGenerator:
+  - name: algotrading-config-generated
+    literals:
+      - APP_VERSION=1.0.0
+      - BUILD_DATE=$(date)
+    envs:
+      - config.env
+
+# Secret generation options
+secretGenerator:
+  - name: algotrading-secrets-generated
+    type: Opaque
+    files:
+      - api-secret.txt
+      - database-password.txt
+    literals:
+      - ENVIRONMENT=production
+
+# Sort order of resources in output
+sortOptions:
+  order: fifo
+
+# Validation settings
+validation: {}

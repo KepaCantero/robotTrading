@@ -1,0 +1,142 @@
+---
+# Horizontal Pod Autoscaler for AlgoTrading API
+# Automatically scales the number of pods based on CPU and memory usage
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: algotrading-api-hpa
+  namespace: algotrading
+  labels:
+    app: algotrading
+    component: api
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: algotrading-api
+
+  # Min and max replicas
+  minReplicas: 3
+  maxReplicas: 10
+
+  metrics:
+    # CPU-based scaling (target 70% CPU utilization)
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+
+    # Memory-based scaling (target 80% memory utilization)
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+
+  # Custom metrics (requires Prometheus adapter)
+  # - type: Pods
+  #   pods:
+  #     metric:
+  #       name: http_requests_per_second
+  #     target:
+  #       type: AverageValue
+  #       averageValue: "1000"
+
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300  # Wait 5 minutes before scaling down
+      policies:
+        - type: Percent
+          value: 50  # Scale down by 50%
+          periodSeconds: 15
+        - type: Pods
+          value: 2   # Or remove max 2 pods
+          periodSeconds: 15
+      selectPolicy: Min  # Use most conservative policy
+
+    scaleUp:
+      stabilizationWindowSeconds: 0  # Scale up immediately
+      policies:
+        - type: Percent
+          value: 100  # Double the pods
+          periodSeconds: 15
+        - type: Pods
+          value: 4    # Or add max 4 pods
+          periodSeconds: 15
+      selectPolicy: Max  # Use most aggressive policy
+
+---
+# Vertical Pod Autoscaler (VPA) - optional, for right-sizing resources
+# Requires VPA to be installed in cluster
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: algotrading-api-vpa
+  namespace: algotrading
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: algotrading-api
+
+  updatePolicy:
+    updateMode: "Auto"  # Automatically update pod resources
+    # Other options: "Initial", "Recreate", "Off"
+
+  resourcePolicy:
+    containerPolicies:
+      - containerName: api
+        minAllowed:
+          cpu: 250m
+          memory: 256Mi
+        maxAllowed:
+          cpu: 4000m
+          memory: 4Gi
+        controlledResources: ["cpu", "memory"]
+        # Exclude certain containers from VPA
+        # - containerName: sidecar
+        #   controlledResources: []
+
+---
+# Pod Disruption Budget - ensures minimum availability during disruptions
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: algotrading-api-pdb
+  namespace: algotrading
+spec:
+  minAvailable: 2  # Always keep at least 2 pods running
+  selector:
+    matchLabels:
+      app: algotrading
+      component: api
+  unhealthyPodEvictionPolicy: AlwaysAllow  # Allow eviction of unhealthy pods
+
+---
+# PodDisruptionBudget for PostgreSQL
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: postgres-pdb
+  namespace: algotrading
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: postgres
+
+---
+# PodDisruptionBudget for Redis
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: redis-pdb
+  namespace: algotrading
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: redis

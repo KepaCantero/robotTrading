@@ -1,0 +1,145 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+docs/
+README.md
+CHANGELOG.md
+LICENSE
+
+# Development
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+*.prof
+
+# Testing
+tests/
+test_*.py
+*_test.py
+conftest.py
+pytest.ini
+tox.ini
+coverage.xml
+.github/
+
+# IDE
+*.sublime-project
+*.sublime-workspace
+.vscode
+.idea
+*.iml
+.eclipse
+.project
+.pydevproject
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+pgdata/
+mysql_data/
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Package managers
+package-lock.json
+yarn.lock
+requirements-dev.txt
+requirements-test.txt
+
+# CI/CD
+.gitlab-ci.yml
+.travis.yml
+Jenkinsfile
+azure-pipelines.yml
+
+# Kubernetes
+k8s/
+helm/
+*.yaml
+*.yml
+!docker-compose.yml
+
+# Temporary files
+*.tmp
+tmp/
+temp/
+.tmp/
+
+# Build artifacts
+dist/
+build/
+*.whl
+
+# Docker (for multi-stage)
+Dockerfile.*
+docker-compose*.yml
+.dockerignore
+
+# Node modules (if any frontend)
+node_modules/
+npm-debug.log
+
+# Cache
+.cache/
+.pytest_cache/
+.mypy_cache/
+
+# OS specific
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Secret files
+.env*
+*.key
+*.pem
+*.crt
+secrets/

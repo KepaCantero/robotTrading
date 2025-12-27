@@ -1,0 +1,214 @@
+---
+# Network Policy - Deny all ingress traffic by default (default deny policy)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: algotrading
+spec:
+  podSelector: {}  # Applies to all pods
+  policyTypes:
+    - Ingress  # Deny all incoming traffic
+
+---
+# Network Policy - Allow traffic to AlgoTrading API from specific sources
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-algotrading-api
+  namespace: algotrading
+  labels:
+    app: algotrading
+spec:
+  podSelector:
+    matchLabels:
+      app: algotrading
+      component: api
+  policyTypes:
+    - Ingress
+
+  ingress:
+    # Allow from ingress-nginx
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8000
+        - protocol: TCP
+          port: 8001  # metrics
+
+    # Allow from Prometheus in monitoring namespace
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+      ports:
+        - protocol: TCP
+          port: 8001  # metrics port
+
+    # Allow from other API pods (for inter-pod communication)
+    - from:
+        - podSelector:
+            matchLabels:
+              app: algotrading
+              component: api
+      ports:
+        - protocol: TCP
+          port: 8000
+
+---
+# Network Policy - Allow traffic from API to database
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-to-db
+  namespace: algotrading
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres
+  policyTypes:
+    - Ingress
+
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: algotrading
+              component: api
+      ports:
+        - protocol: TCP
+          port: 5432
+
+---
+# Network Policy - Allow traffic from API to Redis
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-to-redis
+  namespace: algotrading
+spec:
+  podSelector:
+    matchLabels:
+      app: redis
+  policyTypes:
+    - Ingress
+
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: algotrading
+              component: api
+      ports:
+        - protocol: TCP
+          port: 6379
+
+---
+# Network Policy - Allow DNS traffic (required for service discovery)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns
+  namespace: algotrading
+spec:
+  podSelector: {}  # Applies to all pods
+  policyTypes:
+    - Egress
+
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53  # DNS
+
+    - to:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+        - protocol: UDP
+
+---
+# Network Policy - Allow outbound traffic for specific services
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-egress
+  namespace: algotrading
+spec:
+  podSelector:
+    matchLabels:
+      app: algotrading
+      component: api
+  policyTypes:
+    - Egress
+
+  egress:
+    # Allow DNS
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+
+    # Allow to database
+    - to:
+        - podSelector:
+            matchLabels:
+              app: postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+
+    # Allow to Redis
+    - to:
+        - podSelector:
+            matchLabels:
+              app: redis
+      ports:
+        - protocol: TCP
+          port: 6379
+
+    # Allow external traffic (for external APIs like Alpaca)
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 443  # HTTPS
+        - protocol: TCP
+          port: 80   # HTTP
+
+---
+# Network Policy for Prometheus - allow scraping metrics
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-prometheus-scrape
+  namespace: monitoring
+spec:
+  podSelector: {}  # Applies to all pods in monitoring namespace
+  policyTypes:
+    - Ingress
+
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: prometheus
+      ports:
+        - protocol: TCP
+          port: 9090
+
+    # Allow access from outside monitoring namespace
+    - from:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 9090
