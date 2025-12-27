@@ -164,7 +164,7 @@ class TestCapacityFadeValidator:
             target_capital_usd=Decimal("250000"),
             target_monthly_return_usd=Decimal("800"),
             avg_position_size_usd=Decimal("10000"),
-            avg_daily_volume_multiplier=Decimal("1.0"),
+            avg_daily_volume_multiplier=Decimal("2.0"),
             fade_model="sqrt",
             confidence_level="conservative",
         )

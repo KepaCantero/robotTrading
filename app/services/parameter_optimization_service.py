@@ -30,7 +30,7 @@ class OptimizationState:
     """State tracking for optimization process."""
 
     current_iteration: int = 0
-    best_score: float = float("-in")
+    best_score: float = float("-inf")
     best_parameters: Dict[str, Union[float, int]] = None
     optimization_history: List[Dict[str, Any]] = None
     convergence_count: int = 0
