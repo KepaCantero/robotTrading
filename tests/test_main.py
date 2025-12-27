@@ -2,17 +2,22 @@
 Tests for main FastAPI application.
 """
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
 
-client = TestClient(app)
+
+@pytest.fixture
+def client():
+    """Create test client."""
+    return TestClient(app)
 
 
 class TestHealthEndpoints:
     """Test health check endpoints."""
 
-    def test_health_endpoint_returns_ok_status(self):
+    def test_health_endpoint_returns_ok_status(self, client):
         """Test health endpoint returns OK status."""
         response = client.get("/health")
         assert response.status_code == 200
