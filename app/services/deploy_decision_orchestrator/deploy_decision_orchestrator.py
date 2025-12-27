@@ -15,6 +15,11 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional
 
+from app.services.capacity_fade_validation import (
+    CapacityFadeValidator,
+    CapacityFadeRequest,
+    FeasibilityDecision,
+)
 from .models import DeploymentDecision, DeploymentInput, DeploymentRationale
 
 logger = logging.getLogger(__name__)
@@ -56,7 +61,8 @@ class DeployDecisionOrchestrator:
     def __init__(self):
         """Initialize orchestrator."""
         self.decision_history: List[DeploymentDecision] = []
-        logger.info("✅ DeployDecisionOrchestrator initialized")
+        self.capacity_fade_validator = CapacityFadeValidator()  # T4.1 injection
+        logger.info("✅ DeployDecisionOrchestrator initialized with T4.1 CapacityFadeValidator")
 
     async def make_decision(
         self,
@@ -99,10 +105,9 @@ class DeployDecisionOrchestrator:
                 deployment_input.win_rate_pct,
             )
 
-            # Step 5: Assess capacity fade (T4.1 PHASE 6 Integration)
-            capacity_fade_score = await self._assess_capacity_fade(
-                deployment_input.capacity_fade_feasible,
-                deployment_input.estimated_alpha_at_scale,
+            # Step 5: Assess capacity fade (T4.1 Integration - Active Validation)
+            capacity_fade_score, capacity_fade_feasible, capacity_fade_alpha = await self._assess_capacity_fade(
+                deployment_input
             )
 
             # Step 6: Calculate overall score (weighted average)
@@ -122,7 +127,7 @@ class DeployDecisionOrchestrator:
                 deployment_input.recommendation_status,
                 deployment_input.validation_passed,
                 deployment_input.feasibility_ratio,
-                deployment_input.capacity_fade_feasible,
+                capacity_fade_feasible,  # Use result from T4.1 validator
             )
 
             # Step 8: Generate rationale
@@ -281,34 +286,82 @@ class DeployDecisionOrchestrator:
         return sum(scores) / len(scores)
 
     async def _assess_capacity_fade(
-        self, capacity_fade_feasible: Optional[bool], estimated_alpha: Optional[Decimal]
-    ) -> Decimal:
+        self, deployment_input: DeploymentInput
+    ) -> tuple:
         """
-        Assess capacity fade score.
+        Assess capacity fade score using T4.1 CapacityFadeValidator.
 
-        T4.1 Capacity Fade Validation Integration (PHASE 6)
-        Evaluates whether strategy alpha can be sustained as capital scales.
+        T4.1 Capacity Fade Validation Integration (CRITICAL - 40% weight)
+        Evaluates whether strategy alpha can be sustained as capital scales to €250k+.
+
+        Returns:
+            (capacity_fade_score, capacity_fade_feasible, estimated_alpha)
         """
-        # If capacity fade not provided, assume neutral (50)
-        if capacity_fade_feasible is None:
-            return Decimal("50")
+        try:
+            # If capital data not provided, skip validation (backward compatibility)
+            if (
+                deployment_input.current_capital is None
+                or deployment_input.target_capital is None
+            ):
+                logger.warning("⚠️ Capacity fade validation skipped: missing capital data")
+                return Decimal("50"), None, None
 
-        # If capacity fade check fails, severe penalty
-        if not capacity_fade_feasible:
-            return Decimal("20")
+            # Build request for T4.1 validator
+            fade_request = CapacityFadeRequest(
+                profile_id=deployment_input.profile_id,
+                input_id=deployment_input.input_id,
+                base_alpha_pct=deployment_input.annual_return_pct,  # Use backtest alpha
+                backtest_capital_usd=deployment_input.current_capital,
+                backtest_duration_years=Decimal("3"),  # Default assumption
+                current_capital_usd=deployment_input.current_capital,
+                target_capital_usd=deployment_input.target_capital,
+                target_monthly_return_usd=Decimal("800"),  # Default: €800/month
+                avg_position_size_usd=deployment_input.target_capital / Decimal("10"),  # 10% avg
+                avg_daily_volume_multiplier=Decimal("1.0"),
+                fade_model="sqrt",  # Conservative model
+                confidence_level="conservative",
+            )
 
-        # If feasible, score based on estimated alpha at scale
-        if estimated_alpha is None:
-            return Decimal("75")
+            # Call T4.1 validator
+            response = await self.capacity_fade_validator.validate_capacity_feasibility(fade_request)
 
-        if estimated_alpha >= Decimal("5"):
-            return Decimal("100")  # Strong alpha at scale
-        elif estimated_alpha >= Decimal("3"):
-            return Decimal("85")  # Good alpha at scale
-        elif estimated_alpha >= Decimal("1"):
-            return Decimal("70")  # Marginal alpha at scale
-        else:
-            return Decimal("40")  # Weak alpha at scale
+            if not response.success:
+                logger.error(f"❌ T4.1 validation failed: {response.error_message}")
+                return Decimal("20"), False, Decimal("0")
+
+            # Extract results from T4.1
+            feasibility_decision = response.feasibility_gate.decision
+            estimated_alpha = response.analysis.estimated_alpha_at_target
+
+            # Map T4.1 decision to feasibility boolean
+            is_feasible = feasibility_decision != FeasibilityDecision.REJECTED
+
+            # Score based on alpha at scale
+            if estimated_alpha >= Decimal("5"):
+                score = Decimal("100")  # Strong alpha at scale
+            elif estimated_alpha >= Decimal("3"):
+                score = Decimal("85")  # Good alpha at scale (meets €800/month requirement)
+            elif estimated_alpha >= Decimal("1"):
+                score = Decimal("70")  # Marginal alpha at scale
+            else:
+                score = Decimal("40")  # Weak alpha at scale
+
+            # Apply penalty if feasibility is conditional or rejected
+            if feasibility_decision == FeasibilityDecision.CONDITIONAL:
+                score = max(Decimal("40"), score - Decimal("20"))  # -20 for conditional
+            elif feasibility_decision == FeasibilityDecision.REJECTED:
+                score = Decimal("20")  # Hard penalty for rejected
+
+            logger.info(
+                f"✅ T4.1 Capacity Fade Validation: {feasibility_decision.value}, "
+                f"alpha={estimated_alpha:.2f}%, score={score:.0f}"
+            )
+
+            return score, is_feasible, estimated_alpha
+
+        except Exception as e:
+            logger.error(f"❌ T4.1 Capacity Fade validation error: {str(e)}")
+            return Decimal("20"), False, Decimal("0")
 
     async def _calculate_overall_score(
         self,
@@ -321,21 +374,26 @@ class DeployDecisionOrchestrator:
         """
         Calculate weighted overall score.
 
-        T4.1 PHASE 6: Includes capacity fade validation in scoring.
+        T4.1 Integration: Capacity fade is CRITICAL gate (40% weight).
 
-        Weights:
-        - Feasibility: 40%
-        - Validation: 25% (reduced from 30% to make room for capacity fade)
-        - Recommendation: 15% (reduced from 20%)
-        - Risk: 10%
-        - Capacity Fade: 10% (new T4.1 integration)
+        Weights (T4.1 Critical Integration):
+        - Capacity Fade: 40% (CRITICAL - Prevents unsustainable scaling)
+        - Feasibility: 25% (Return feasibility)
+        - Validation: 15% (Technical validation)
+        - Risk: 12% (Risk metrics)
+        - Recommendation: 8% (Strategy quality)
+
+        Rationale:
+        - Capacity fade is hardest gate: strategies must sustain alpha at €250k+
+        - Without capacity fade validation, strategy will fail at scale
+        - Other metrics secondary to capacity viability
         """
         weighted_score = (
-            feasibility * Decimal("0.40")
-            + validation * Decimal("0.25")
-            + recommendation * Decimal("0.15")
-            + risk * Decimal("0.10")
-            + capacity_fade * Decimal("0.10")
+            capacity_fade * Decimal("0.40")  # CRITICAL: 40%
+            + feasibility * Decimal("0.25")
+            + validation * Decimal("0.15")
+            + risk * Decimal("0.12")
+            + recommendation * Decimal("0.08")
         )
 
         return weighted_score
@@ -449,9 +507,7 @@ class DeployDecisionOrchestrator:
         if recommendation_score >= Decimal("80"):
             recommendation_text = f"✅ Strong recommendation score ({recommendation_score:.0f}/100). Strategy shows high potential."
         elif recommendation_score >= Decimal("65"):
-            recommendation_text = (
-                f"👍 Good recommendation score ({recommendation_score:.0f}/100). Strategy is viable."
-            )
+            recommendation_text = f"👍 Good recommendation score ({recommendation_score:.0f}/100). Strategy is viable."
         elif recommendation_score >= Decimal("50"):
             recommendation_text = f"➖ Neutral recommendation score ({recommendation_score:.0f}/100). Marginal viability."
         else:
@@ -671,5 +727,7 @@ def get_deploy_orchestrator() -> DeployDecisionOrchestrator:
     """Get or create singleton DeployDecisionOrchestrator."""
     global _orchestrator
     if _orchestrator is None:
+        _orchestrator = DeployDecisionOrchestrator()
+        logger.info("✅ DeployDecisionOrchestrator singleton initialized")
 
     return _orchestrator
