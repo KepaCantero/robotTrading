@@ -16,11 +16,11 @@ import tempfile
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Dict, List
 
 from app.backtesting.models import BacktestResult
 from app.models.portfolio import Portfolio, Position
 from app.services.capacity_fade_validation import (
+    CapacityFadeRequest,
     CapacityFadeValidator,
 )
 from app.services.reporting_generator import (
@@ -39,12 +39,39 @@ class TestDataFactory:
     """Factory for creating realistic test data."""
 
     @staticmethod
+    def backtest_to_capacity_request(
+        backtest: "BacktestResult",
+        profile_id: str = "test_profile",
+        input_id: str = "test_input",
+        current_capital: Decimal = Decimal("100000"),
+        target_capital: Decimal = Decimal("150000"),
+    ) -> CapacityFadeRequest:
+        """Convert BacktestResult to CapacityFadeRequest."""
+        # Extract required fields
+        base_alpha = backtest.total_return  # Total return percentage
+        backtest_capital = current_capital  # Initial capital used in backtest
+        avg_position_size = current_capital / Decimal("5")  # 5 positions average
+
+        return CapacityFadeRequest(
+            profile_id=profile_id,
+            input_id=input_id,
+            base_alpha_pct=Decimal(str(base_alpha)),
+            backtest_capital_usd=backtest_capital,
+            backtest_duration_years=Decimal("1"),  # 1 year from Jan 2023 to Jan 2024
+            current_capital_usd=current_capital,
+            target_capital_usd=target_capital,
+            avg_position_size_usd=avg_position_size,
+            fade_model="sqrt",
+            confidence_level="conservative",
+        )
+
+    @staticmethod
     def create_returns_series(
         base_return: float,
         volatility: float,
         length: int = 252,
         seed: int = 42,
-    ) -> List[Decimal]:
+    ) -> list[Decimal]:
         """Create realistic returns series."""
         import numpy as np
 
@@ -56,7 +83,7 @@ class TestDataFactory:
     def create_backtest_result(
         strategy_name: str = "TestStrategy",
         capital: Decimal = Decimal("100000"),
-        returns: List[Decimal] = None,
+        returns: list[Decimal] = None,
     ) -> BacktestResult:
         """Create a mock backtest result."""
         if returns is None:
@@ -84,7 +111,6 @@ class TestDataFactory:
             strategy_name=strategy_name,
             start_date=datetime(2023, 1, 1),
             end_date=datetime(2024, 1, 1),
-            initial_capital=capital,
             final_capital=capital * Decimal(str(cumulative_return)),
             total_return=Decimal(str(final_return)),
             sharpe_ratio=Decimal("1.5"),
@@ -102,7 +128,7 @@ class TestDataFactory:
     @staticmethod
     def create_portfolio(
         capital: Decimal = Decimal("100000"),
-        positions: Dict[str, Decimal] = None,
+        positions: dict[str, Decimal] = None,
     ) -> Portfolio:
         """Create a mock portfolio."""
         if positions is None:
@@ -114,23 +140,29 @@ class TestDataFactory:
                 "NVDA": Decimal("10000"),
             }
 
+        from app.models.portfolio import AssetClass
+
         portfolio_positions = [
             Position(
                 symbol=symbol,
+                asset_class=AssetClass.EQUITY,
                 quantity=Decimal("100"),
-                entry_price=value / Decimal("100"),
-                current_price=value / Decimal("100") * Decimal("1.05"),
+                avg_price=value / Decimal("100"),
+                market_price=value / Decimal("100") * Decimal("1.05"),
+                unrealized_pnl=(value / Decimal("100") * Decimal("1.05") - value / Decimal("100"))
+                * Decimal("100"),
+                broker="PAPER",
             )
             for symbol, value in positions.items()
         ]
 
         return Portfolio(
             portfolio_id="test_portfolio",
-            total_value=capital,
             cash=capital * Decimal("0.5"),
-            leverage=Decimal("1.0"),
             positions=portfolio_positions,
-            created_at=datetime.utcnow(),
+            broker="PAPER",
+            currency="USD",
+            timestamp=datetime.utcnow(),
         )
 
 
@@ -147,7 +179,7 @@ class TestPipelineT4T8T9:
     # SCENARIO 1: Conservative Strategy, Moderate Capital
     # ========================================================================
 
-    def test_pipeline_conservative_strategy(self):
+    async def test_pipeline_conservative_strategy(self):
         """Test full pipeline with conservative strategy at moderate capital."""
         # T4.1: Validate capacity fade
         backtest = self.data_factory.create_backtest_result(
@@ -159,14 +191,15 @@ class TestPipelineT4T8T9:
             ),
         )
 
-        validation_result = self.validator.validate_capacity_feasibility(
-            backtest_result=backtest,
+        request = self.data_factory.backtest_to_capacity_request(
+            backtest=backtest,
+            current_capital=Decimal("100000"),
             target_capital=Decimal("150000"),
-            annual_target_return=Decimal("0.12"),
         )
+        response = await self.validator.validate_capacity_feasibility(request)
 
-        assert validation_result.feasible is True
-        assert validation_result.estimated_alpha_at_scale >= Decimal("0.09")
+        assert response.feasibility_gate.approved
+        assert response.analysis.estimated_alpha_at_target >= Decimal("0.09")
 
         # T8.1: Apply risk scaling
         portfolio = self.data_factory.create_portfolio(capital=Decimal("150000"))
@@ -192,7 +225,7 @@ class TestPipelineT4T8T9:
     # SCENARIO 2: Aggressive Strategy, High Capital
     # ========================================================================
 
-    def test_pipeline_aggressive_strategy_high_capital(self):
+    async def test_pipeline_aggressive_strategy_high_capital(self):
         """Test full pipeline with aggressive strategy at high capital tier."""
         # T4.1: Validate capacity
         backtest = self.data_factory.create_backtest_result(
@@ -204,15 +237,16 @@ class TestPipelineT4T8T9:
             ),
         )
 
-        validation_result = self.validator.validate_capacity_feasibility(
-            backtest_result=backtest,
+        request = self.data_factory.backtest_to_capacity_request(
+            backtest=backtest,
+            current_capital=Decimal("100000"),
             target_capital=Decimal("250000"),
-            annual_target_return=Decimal("0.20"),
         )
+        response = await self.validator.validate_capacity_feasibility(request)
 
         # Aggressive strategy may show alpha decay at higher scales
-        assert validation_result is not None
-        assert validation_result.base_alpha > Decimal("0")
+        assert response is not None
+        assert response.analysis.base_alpha_pct > Decimal("0")
 
         # T8.1: Risk scaling may be more conservative
         portfolio = self.data_factory.create_portfolio(capital=Decimal("250000"))
@@ -226,17 +260,31 @@ class TestPipelineT4T8T9:
         # T9.1: Generate comprehensive report
         returns = self.data_factory.create_returns_series(0.25, 0.20, 252)
 
+        # Calculate metrics from returns
+        import numpy as np
+        returns_array = np.array([float(r) for r in returns])
+        annual_vol = Decimal(str(np.std(returns_array) * np.sqrt(252))) * Decimal("100")
+        annual_ret = Decimal(str((np.prod(1 + returns_array) - 1))) * Decimal("100")
+
         quantstats = get_quantstats_integrator()
-        stats = quantstats.generate_statistics_report(returns=returns)
+        stats = quantstats.generate_statistics_report(
+            returns=returns,
+            annual_return_pct=annual_ret,
+            annual_volatility_pct=annual_vol,
+            sharpe_ratio=Decimal("1.5"),
+            max_drawdown_pct=Decimal("-15.0"),
+            win_rate_pct=Decimal("0.60"),
+            num_trades=150,
+        )
 
         assert stats is not None
-        assert float(stats.basic_metrics.total_return) > 15  # >15% annual return
+        assert float(stats.annual_return_pct) > 15  # >15% annual return
 
     # ========================================================================
     # SCENARIO 3: Multi-Capital Tier Analysis
     # ========================================================================
 
-    def test_pipeline_multi_capital_tiers(self):
+    async def test_pipeline_multi_capital_tiers(self):
         """Test pipeline across multiple capital tiers."""
         base_returns = self.data_factory.create_returns_series(0.15, 0.12, 252)
 
@@ -257,11 +305,12 @@ class TestPipelineT4T8T9:
             )
 
             # T4.1: Capacity validation
-            validation = self.validator.validate_capacity_feasibility(
-                backtest_result=backtest,
+            request = self.data_factory.backtest_to_capacity_request(
+                backtest=backtest,
+                current_capital=capital,
                 target_capital=capital * Decimal("1.5"),
-                annual_target_return=Decimal("0.15"),
             )
+            response = await self.validator.validate_capacity_feasibility(request)
 
             # T8.1: Risk scaling
             portfolio = self.data_factory.create_portfolio(capital=capital)
@@ -269,14 +318,29 @@ class TestPipelineT4T8T9:
 
             # T9.1: Reporting
             quantstats = get_quantstats_integrator()
-            stats = quantstats.generate_statistics_report(returns=base_returns)
+            # Calculate required metrics from returns
+            import numpy as np
+
+            returns_array = np.array([float(r) for r in base_returns])
+            annual_vol = Decimal(str(np.std(returns_array) * np.sqrt(252))) * Decimal("100")
+            annual_ret = Decimal(str(np.prod(1 + returns_array) - 1)) * Decimal("100")
+
+            stats = quantstats.generate_statistics_report(
+                returns=base_returns,
+                annual_return_pct=annual_ret,
+                annual_volatility_pct=annual_vol,
+                sharpe_ratio=Decimal("1.5"),
+                max_drawdown_pct=Decimal("-15.0"),
+                win_rate_pct=Decimal("0.60"),
+                num_trades=150,
+            )
 
             results.append(
                 {
                     "capital": capital,
-                    "feasible": validation.feasible,
+                    "feasible": response.feasibility_gate.approved,
                     "scaled_value": scaled.total_value if scaled else Decimal("0"),
-                    "sharpe": stats.basic_metrics.sharpe_ratio if stats else Decimal("0"),
+                    "sharpe": stats.sharpe_ratio if stats else Decimal("0"),
                 }
             )
 
@@ -290,7 +354,7 @@ class TestPipelineT4T8T9:
     # SCENARIO 4: Full Report Generation Pipeline
     # ========================================================================
 
-    def test_pipeline_full_report_generation(self):
+    async def test_pipeline_full_report_generation(self):
         """Test complete report generation across all components."""
         # Create realistic backtest
         returns = self.data_factory.create_returns_series(0.18, 0.14, 252)
@@ -301,12 +365,13 @@ class TestPipelineT4T8T9:
         )
 
         # T4.1: Validate
-        validation = self.validator.validate_capacity_feasibility(
-            backtest_result=backtest,
+        request = self.data_factory.backtest_to_capacity_request(
+            backtest=backtest,
+            current_capital=Decimal("100000"),
             target_capital=Decimal("200000"),
-            annual_target_return=Decimal("0.15"),
         )
-        assert validation.feasible
+        response = await self.validator.validate_capacity_feasibility(request)
+        assert response.feasibility_gate.approved
 
         # T8.1: Scale portfolio
         portfolio = self.data_factory.create_portfolio(capital=Decimal("200000"))
@@ -315,8 +380,21 @@ class TestPipelineT4T8T9:
 
         # T9.1 PHASE 1: Generate advanced metrics
         quantstats = get_quantstats_integrator()
+        # Calculate metrics from returns
+        import numpy as np
+
+        returns_array = np.array([float(r) for r in returns])
+        annual_vol = Decimal(str(np.std(returns_array) * np.sqrt(252))) * Decimal("100")
+        annual_ret = Decimal(str(np.prod(1 + returns_array) - 1)) * Decimal("100")
+
         stats_report = quantstats.generate_statistics_report(
             returns=returns,
+            annual_return_pct=annual_ret,
+            annual_volatility_pct=annual_vol,
+            sharpe_ratio=Decimal("1.8"),
+            max_drawdown_pct=Decimal("-12.0"),
+            win_rate_pct=Decimal("0.58"),
+            num_trades=140,
             benchmark_returns=self.data_factory.create_returns_series(0.08, 0.10),
         )
         assert stats_report is not None
@@ -377,7 +455,7 @@ class TestPipelineT4T8T9:
     # SCENARIO 5: Market Regime Stress Test
     # ========================================================================
 
-    def test_pipeline_market_regimes(self):
+    async def test_pipeline_market_regimes(self):
         """Test pipeline across different market regimes."""
         scenarios = {
             "bullish": {
@@ -411,17 +489,18 @@ class TestPipelineT4T8T9:
             )
 
             # T4.1: Capacity validation
-            validation = self.validator.validate_capacity_feasibility(
-                backtest_result=backtest,
+            request = self.data_factory.backtest_to_capacity_request(
+                backtest=backtest,
+                current_capital=Decimal("100000"),
                 target_capital=Decimal("150000"),
-                annual_target_return=Decimal("0.10"),
             )
+            response = await self.validator.validate_capacity_feasibility(request)
 
             # In bearish regime, validation may fail or show low alpha
             if regime_name == "bearish":
-                assert validation.estimated_alpha_at_scale < Decimal("0.10")
+                assert response.analysis.estimated_alpha_at_target < Decimal("0.10")
             else:
-                assert validation.estimated_alpha_at_scale > Decimal("0")
+                assert response.analysis.estimated_alpha_at_target > Decimal("0")
 
             # T8.1: Risk scaling adapts
             portfolio = self.data_factory.create_portfolio(capital=Decimal("150000"))
@@ -437,7 +516,7 @@ class TestPipelineT4T8T9:
     # SCENARIO 6: Complete End-to-End Workflow
     # ========================================================================
 
-    def test_pipeline_end_to_end_workflow(self):
+    async def test_pipeline_end_to_end_workflow(self):
         """Test complete workflow from backtest to report delivery."""
         # Step 1: Create backtest results
         print("\n" + "=" * 70)
@@ -450,39 +529,40 @@ class TestPipelineT4T8T9:
             capital=Decimal("100000"),
             returns=returns,
         )
-        print(f"\n✓ STEP 1: Backtest created")
+        print("\n✓ STEP 1: Backtest created")
         print(f"  - Strategy: {backtest.strategy_name}")
-        print(f"  - Initial Capital: €{float(backtest.initial_capital):,.0f}")
+        print(f"  - Starting Capital: €100,000")
         print(f"  - Total Return: {float(backtest.total_return):.1f}%")
 
         # Step 2: T4.1 - Validate capacity
         target_capital = Decimal("250000")
-        validation = self.validator.validate_capacity_feasibility(
-            backtest_result=backtest,
+        request = self.data_factory.backtest_to_capacity_request(
+            backtest=backtest,
+            current_capital=Decimal("100000"),
             target_capital=target_capital,
-            annual_target_return=Decimal("0.15"),
         )
-        print(f"\n✓ STEP 2: T4.1 Capacity Validation")
+        response = await self.validator.validate_capacity_feasibility(request)
+        print("\n✓ STEP 2: T4.1 Capacity Validation")
         print(f"  - Target Capital: €{float(target_capital):,.0f}")
-        print(f"  - Base Alpha: {float(validation.base_alpha):.1f}%")
-        print(f"  - Estimated Alpha at Scale: {float(validation.estimated_alpha_at_scale):.1f}%")
-        print(f"  - Feasible: {validation.feasible}")
+        print(f"  - Base Alpha: {float(response.analysis.base_alpha_pct):.1f}%")
+        print(f"  - Estimated Alpha at Scale: {float(response.analysis.estimated_alpha_at_target):.1f}%")
+        print(f"  - Feasible: {response.feasibility_gate.approved}")
 
         # Step 3: T8.1 - Apply risk scaling
         portfolio = self.data_factory.create_portfolio(capital=target_capital)
         scaled_portfolio = self.risk_scaler.apply_scaling(portfolio=portfolio)
-        print(f"\n✓ STEP 3: T8.1 Risk Scaling")
+        print("\n✓ STEP 3: T8.1 Risk Scaling")
         print(f"  - Original Portfolio Value: €{float(portfolio.total_value):,.0f}")
         print(f"  - Scaled Portfolio Value: €{float(scaled_portfolio.total_value):,.0f}")
         print(f"  - Positions: {len(scaled_portfolio.positions)}")
 
         # Step 4: T9.1 - Generate comprehensive report
-        print(f"\n✓ STEP 4: T9.1 Report Generation")
+        print("\n✓ STEP 4: T9.1 Report Generation")
 
         # Phase 1: Metrics
         quantstats = get_quantstats_integrator()
         stats = quantstats.generate_statistics_report(returns=returns)
-        print(f"  - Phase 1: Advanced metrics calculated")
+        print("  - Phase 1: Advanced metrics calculated")
         print(f"    - Sharpe Ratio: {float(stats.basic_metrics.sharpe_ratio):.2f}")
         print(f"    - Max Drawdown: {float(stats.basic_metrics.max_drawdown):.2f}%")
 
@@ -494,7 +574,7 @@ class TestPipelineT4T8T9:
             positions=None,
             transactions=None,
         )
-        print(f"  - Phase 2: Factor analysis completed")
+        print("  - Phase 2: Factor analysis completed")
 
         # Phase 3: HTML template
         html_engine = get_html_template_engine()
@@ -531,11 +611,11 @@ class TestPipelineT4T8T9:
                 Path(tmpdir) / "metrics.xlsx",
                 include_timestamp=False,
             )
-            print(f"  - Phase 5: Report exported to HTML and Excel")
+            print("  - Phase 5: Report exported to HTML and Excel")
             print(f"    - HTML: {float(html_result.file_size_mb):.2f} MB")
             print(f"    - Excel: {float(excel_result.file_size_mb):.2f} MB")
 
-        print(f"\n" + "=" * 70)
+        print("\n" + "=" * 70)
         print("✅ END-TO-END PIPELINE TEST COMPLETED SUCCESSFULLY")
         print("=" * 70 + "\n")
 
@@ -559,7 +639,7 @@ class TestPipelineEdgeCases:
         self.risk_scaler = get_risk_scaler()
         self.data_factory = TestDataFactory()
 
-    def test_pipeline_insufficient_alpha(self):
+    async def test_pipeline_insufficient_alpha(self):
         """Test pipeline when alpha is insufficient for target capital."""
         returns = TestDataFactory.create_returns_series(0.02, 0.08, 252)  # Low return
         backtest = self.data_factory.create_backtest_result(
@@ -567,13 +647,14 @@ class TestPipelineEdgeCases:
             returns=returns,
         )
 
-        validation = self.validator.validate_capacity_feasibility(
-            backtest_result=backtest,
+        request = self.data_factory.backtest_to_capacity_request(
+            backtest=backtest,
+            current_capital=Decimal("100000"),
             target_capital=Decimal("250000"),
-            annual_target_return=Decimal("0.20"),  # High target
         )
+        response = await self.validator.validate_capacity_feasibility(request)
 
-        assert validation.estimated_alpha_at_scale < Decimal("0.20")
+        assert response.analysis.estimated_alpha_at_target < Decimal("0.20")
 
     def test_pipeline_high_volatility(self):
         """Test pipeline with high volatility returns."""
@@ -584,23 +665,37 @@ class TestPipelineEdgeCases:
         )
 
         quantstats = get_quantstats_integrator()
-        stats = quantstats.generate_statistics_report(returns=returns)
+        # Calculate metrics from returns
+        import numpy as np
+
+        returns_array = np.array([float(r) for r in returns])
+        annual_vol = Decimal(str(np.std(returns_array) * np.sqrt(252))) * Decimal("100")
+        annual_ret = Decimal(str(np.prod(1 + returns_array) - 1)) * Decimal("100")
+
+        stats = quantstats.generate_statistics_report(
+            returns=returns,
+            annual_return_pct=annual_ret,
+            annual_volatility_pct=annual_vol,
+            sharpe_ratio=Decimal("0.9"),
+            max_drawdown_pct=Decimal("-25.0"),
+            win_rate_pct=Decimal("0.55"),
+            num_trades=160,
+        )
 
         assert stats is not None
-        assert float(stats.basic_metrics.volatility_pct) > 30
+        assert float(stats.annual_volatility_pct) > 30
 
     def test_pipeline_zero_positions_portfolio(self):
         """Test pipeline with empty portfolio."""
         portfolio = Portfolio(
             portfolio_id="empty",
-            total_value=Decimal("100000"),
             cash=Decimal("100000"),
-            leverage=Decimal("1.0"),
             positions=[],
-            created_at=datetime.utcnow(),
+            broker="PAPER",
+            currency="USD",
         )
 
-        risk_scaler = get_risk_scaling_application()
+        risk_scaler = get_risk_scaler()
         scaled = risk_scaler.apply_scaling(portfolio=portfolio)
 
         assert scaled is not None
