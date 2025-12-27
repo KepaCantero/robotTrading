@@ -16,7 +16,6 @@ from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 
-
 from app.services.reporting_generator.delivery_manager import (
     DeliveryChannel,
     DeliveryResult,

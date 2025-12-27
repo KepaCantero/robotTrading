@@ -9,7 +9,6 @@ Tests three critical scenarios:
 
 from decimal import Decimal
 
-
 from app.services.opportunity_cost_validator import OpportunityCostValidator
 
 

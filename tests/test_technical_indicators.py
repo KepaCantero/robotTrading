@@ -10,7 +10,6 @@ Tests for:
 
 from decimal import Decimal
 
-
 from app.services.momentum_analysis import TechnicalIndicatorCalculator
 from app.services.position_sizing_engine import PositionSizingEngine
 

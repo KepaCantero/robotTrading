@@ -9,7 +9,6 @@ Tests three critical scenarios:
 
 from decimal import Decimal
 
-
 from app.services.capital_viability_gate import CapitalViabilityValidator
 
 

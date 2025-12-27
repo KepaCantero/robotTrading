@@ -15,7 +15,6 @@ capital tiers with realistic trading scenarios.
 
 from decimal import Decimal
 
-
 from app.services.absolute_return_optimizer import (
     AbsoluteReturnOptimizer,
     AlphaTargetCalculator,

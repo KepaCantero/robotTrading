@@ -25,7 +25,6 @@ class AlpacaClientError(Exception):
     """Base exception for Alpaca client errors."""
 
 
-
 class AlpacaClient:
     """Low-level Alpaca API wrapper."""
 

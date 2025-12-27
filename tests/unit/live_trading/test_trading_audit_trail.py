@@ -12,7 +12,6 @@ Tests cover:
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-
 from app.services.live_trading.trading_audit_trail import (
     AuditEventType,
     ComplianceReport,

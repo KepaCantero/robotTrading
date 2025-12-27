@@ -12,7 +12,6 @@ Tests cover:
 - Edge cases and error handling
 """
 
-
 import numpy as np
 import pytest
 

@@ -15,7 +15,6 @@ cost, and module expense domains.
 
 from decimal import Decimal
 
-
 from app.services.capital_viability_gate import CapitalViabilityValidator
 from app.services.execution_cost_analyzer import ExecutionCostAnalyzer
 from app.services.expensive_module_gate import ExpensiveModuleGate

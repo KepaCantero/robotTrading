@@ -9,7 +9,6 @@ import logging
 from decimal import Decimal
 from typing import Dict
 
-
 logger = logging.getLogger(__name__)
 
 
