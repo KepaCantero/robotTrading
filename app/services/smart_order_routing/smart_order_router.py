@@ -346,6 +346,6 @@ def get_smart_order_router() -> SmartOrderRouter:
     """Get or create global SmartOrderRouter instance."""
     global _smart_order_router
     if _smart_order_router is None:
-        pass
+        _smart_order_router = SmartOrderRouter()
 
     return _smart_order_router

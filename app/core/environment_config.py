@@ -357,7 +357,7 @@ def get_config() -> CentralizedConfig:
     """Get the global configuration instance."""
     global _config
     if _config is None:
-        pass
+        _config = CentralizedConfig()
 
     return _config
 

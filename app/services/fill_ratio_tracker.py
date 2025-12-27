@@ -213,6 +213,6 @@ def get_fill_ratio_tracker() -> FillRatioTracker:
     """Get global fill ratio tracker instance."""
     global _fill_tracker
     if _fill_tracker is None:
-        pass
+        _fill_tracker = FillTracker()
 
     return _fill_tracker

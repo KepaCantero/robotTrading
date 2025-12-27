@@ -700,6 +700,6 @@ def get_pyfolio_integrator() -> PyFolioIntegrator:
     """Get or create PyFolioIntegrator singleton."""
     global _pyfolio_integrator_instance
     if _pyfolio_integrator_instance is None:
-        pass
+        _pyfolio_integrator_instance = PyFolioIntegrator()
 
     return _pyfolio_integrator_instance

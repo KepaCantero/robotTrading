@@ -388,6 +388,6 @@ def get_module_parametrizer(config_path: Optional[str] = None) -> ModuleParametr
     """Get or create singleton ModuleParametrizer."""
     global _parametrizer
     if _parametrizer is None:
-        pass
+        _parametrizer = ModuleParametrizer()
 
     return _parametrizer

@@ -415,6 +415,6 @@ def get_execution_cost_monitor() -> ExecutionCostMonitor:
     """Get or create global ExecutionCostMonitor instance."""
     global _execution_cost_monitor
     if _execution_cost_monitor is None:
-        pass
+        _execution_cost_monitor = ExecutionCostMonitor()
 
     return _execution_cost_monitor

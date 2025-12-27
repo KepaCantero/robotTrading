@@ -615,6 +615,6 @@ def get_paper_trading_service() -> PaperTradingService:
     """Get the global paper trading service instance."""
     global _paper_trading_service
     if _paper_trading_service is None:
-        pass
+        _paper_trading_service = PaperTradingService()
 
     return _paper_trading_service

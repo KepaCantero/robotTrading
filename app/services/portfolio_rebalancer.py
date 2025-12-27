@@ -295,6 +295,6 @@ def get_portfolio_rebalancer() -> PortfolioRebalancer:
     """Get global portfolio rebalancer instance."""
     global _portfolio_rebalancer
     if _portfolio_rebalancer is None:
-        pass
+        _portfolio_rebalancer = PortfolioRebalancer()
 
     return _portfolio_rebalancer

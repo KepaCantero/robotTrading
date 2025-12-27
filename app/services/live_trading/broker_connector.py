@@ -325,6 +325,6 @@ def get_broker_connector(broker_type: BrokerType = BrokerType.PAPER) -> BrokerCo
     """Get or create singleton BrokerConnector."""
     global _connector
     if _connector is None:
-        pass
+        _connector = BrokerConnector()
 
     return _connector

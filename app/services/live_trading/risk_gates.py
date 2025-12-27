@@ -334,6 +334,6 @@ def get_risk_gates(
     """Get or create singleton RiskGates."""
     global _gates
     if _gates is None:
-        pass
+        _gates = Gates()
 
     return _gates
