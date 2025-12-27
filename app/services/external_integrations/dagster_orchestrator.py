@@ -282,5 +282,7 @@ def get_dagster_orchestrator() -> DagsterOrchestrator:
     """Get or create singleton DagsterOrchestrator."""
     global _orchestrator
     if _orchestrator is None:
+        _orchestrator = DagsterOrchestrator()
+        logger.info("✅ DagsterOrchestrator singleton initialized")
 
     return _orchestrator

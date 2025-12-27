@@ -302,5 +302,7 @@ def get_wash_sale_detector() -> WashSaleDetector:
     """Get or create singleton WashSaleDetector."""
     global _detector
     if _detector is None:
+        _detector = WashSaleDetector()
+        logger.info("✅ WashSaleDetector singleton initialized")
 
     return _detector

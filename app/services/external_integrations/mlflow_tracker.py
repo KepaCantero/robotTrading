@@ -230,5 +230,7 @@ def get_mlflow_tracker() -> MLflowTracker:
     """Get or create singleton MLflowTracker."""
     global _tracker
     if _tracker is None:
+        _tracker = MLflowTracker()
+        logger.info("✅ MLflowTracker singleton initialized")
 
     return _tracker
