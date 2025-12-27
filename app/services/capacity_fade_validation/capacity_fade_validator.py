@@ -379,5 +379,7 @@ def get_capacity_fade_validator() -> CapacityFadeValidator:
     """Get or create singleton CapacityFadeValidator."""
     global _validator
     if _validator is None:
+        _validator = CapacityFadeValidator()
+        logger.info("✅ CapacityFadeValidator singleton initialized")
 
     return _validator
