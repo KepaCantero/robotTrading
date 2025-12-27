@@ -122,6 +122,8 @@ class TradeRecord(Base):
 class PositionHistory(Base):
     """ORM Model for position history snapshots."""
 
+    __tablename__ = "position_history"
+
     position_id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     symbol = Column(String(10), nullable=False, index=True)
     timestamp = Column(DateTime, nullable=False, index=True)
@@ -149,6 +151,8 @@ class PositionHistory(Base):
 
 class TradeStatistics(Base):
     """ORM Model for aggregated trade statistics."""
+
+    __tablename__ = "trade_statistics"
 
     stat_id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     date = Column(DateTime, nullable=False, index=True, unique=True)
