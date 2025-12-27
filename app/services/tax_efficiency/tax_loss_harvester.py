@@ -294,5 +294,7 @@ def get_tax_loss_harvester() -> TaxLossHarvester:
     """Get or create singleton TaxLossHarvester."""
     global _harvester
     if _harvester is None:
+        _harvester = TaxLossHarvester()
+        logger.info("✅ TaxLossHarvester singleton initialized")
 
     return _harvester

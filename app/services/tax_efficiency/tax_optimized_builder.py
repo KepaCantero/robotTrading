@@ -241,5 +241,7 @@ def get_tax_optimized_builder() -> TaxOptimizedPortfolioBuilder:
     """Get or create singleton TaxOptimizedPortfolioBuilder."""
     global _builder
     if _builder is None:
+        _builder = TaxOptimizedPortfolioBuilder()
+        logger.info("✅ TaxOptimizedPortfolioBuilder singleton initialized")
 
     return _builder

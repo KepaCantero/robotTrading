@@ -223,5 +223,7 @@ def get_questdb_connector(
     """Get or create singleton QuestDBConnector."""
     global _connector
     if _connector is None:
+        _connector = QuestDBConnector()
+        logger.info("✅ QuestDBConnector singleton initialized")
 
     return _connector

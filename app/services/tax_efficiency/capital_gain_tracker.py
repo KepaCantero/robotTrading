@@ -348,5 +348,7 @@ def get_capital_gain_tracker() -> CapitalGainTracker:
     """Get or create singleton CapitalGainTracker."""
     global _tracker
     if _tracker is None:
+        _tracker = CapitalGainTracker()
+        logger.info("✅ CapitalGainTracker singleton initialized")
 
     return _tracker
