@@ -183,5 +183,6 @@ def get_broker_negotiation_engine() -> BrokerNegotiationEngine:
     """Get or create global BrokerNegotiationEngine instance."""
     global _broker_negotiation_engine
     if _broker_negotiation_engine is None:
+        pass
 
     return _broker_negotiation_engine

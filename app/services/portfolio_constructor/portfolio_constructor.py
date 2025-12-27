@@ -576,5 +576,6 @@ def get_portfolio_constructor() -> PortfolioConstructor:
     """Get or create singleton PortfolioConstructor."""
     global _constructor
     if _constructor is None:
+        pass
 
     return _constructor

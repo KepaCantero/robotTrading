@@ -418,5 +418,6 @@ def get_validation_engine() -> ValidationEngine:
     """Get or create singleton ValidationEngine."""
     global _engine
     if _engine is None:
+        pass
 
     return _engine

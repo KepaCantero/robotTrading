@@ -84,7 +84,7 @@ class HMMRegimeDetector:
 
             # Crear matriz de observaciones
             observations = np.column_stack(
-                [returns[-self.window_size:], volatility[-self.window_size:]]
+                [returns[-self.window_size :], volatility[-self.window_size :]]
             )
 
             if self.scaler:
@@ -133,8 +133,8 @@ class HMMRegimeDetector:
             volatility = self._calculate_rolling_volatility(returns)
 
             # Usar ventana reciente
-            recent_returns = returns[-self.window_size:]
-            recent_volatility = volatility[-self.window_size:]
+            recent_returns = returns[-self.window_size :]
+            recent_volatility = volatility[-self.window_size :]
 
             observations = np.column_stack([recent_returns, recent_volatility])
 
@@ -189,7 +189,7 @@ class HMMRegimeDetector:
             # Rolling std
             volatility = np.zeros(len(returns))
             for i in range(window, len(returns)):
-                volatility[i] = np.std(returns[i - window: i])
+                volatility[i] = np.std(returns[i - window : i])
             # Llenar primeros valores con el primer valor calculado
             volatility[:window] = volatility[window] if len(returns) > window else np.std(returns)
 

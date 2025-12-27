@@ -195,5 +195,6 @@ def get_reporting_orchestrator() -> ReportingOrchestrator:
     """Get or create singleton ReportingOrchestrator."""
     global _orchestrator
     if _orchestrator is None:
+        pass
 
     return _orchestrator

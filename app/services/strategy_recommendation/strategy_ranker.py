@@ -246,5 +246,6 @@ def get_strategy_ranker() -> StrategyRanker:
     """Get or create singleton StrategyRanker."""
     global _ranker
     if _ranker is None:
+        pass
 
     return _ranker

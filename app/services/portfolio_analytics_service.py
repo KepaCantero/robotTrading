@@ -242,7 +242,8 @@ class PortfolioAnalyticsService:
 
         # Top holdings
         top_holdings = []
-        for position in sorted(portfolio.positions, key=lambda p: p.market_value, reverse=True)[:10
+        for position in sorted(portfolio.positions, key=lambda p: p.market_value, reverse=True)[
+            :10
         ]:
             top_holdings.append(
                 {

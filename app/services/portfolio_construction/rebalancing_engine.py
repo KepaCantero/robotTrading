@@ -302,5 +302,6 @@ def get_rebalancing_engine(
     """Get or create singleton RebalancingEngine."""
     global _engine
     if _engine is None:
+        pass
 
     return _engine

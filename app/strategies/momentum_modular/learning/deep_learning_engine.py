@@ -358,7 +358,7 @@ class DeepLearningEngine(BaseLearningEngine):
                 h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
                 c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
                 out, _ = self.lstm(x, (h0, c0))
-                out = self.fc(out[:, -1,:])
+                out = self.fc(out[:, -1, :])
                 out = self.sigmoid(out)
                 return out
 
@@ -378,7 +378,7 @@ class DeepLearningEngine(BaseLearningEngine):
             def forward(self, x):
                 h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
                 out, _ = self.gru(x, h0)
-                out = self.fc(out[:, -1,:])
+                out = self.fc(out[:, -1, :])
                 out = self.sigmoid(out)
                 return out
 
@@ -415,7 +415,7 @@ class DeepLearningEngine(BaseLearningEngine):
                 attn_out = self.dropout(attn_out)
 
                 # Usar última posición para predicción (o promedio de todas las posiciones)
-                out = self.fc(attn_out[:, -1,:])
+                out = self.fc(attn_out[:, -1, :])
                 out = self.sigmoid(out)
                 return out
 
@@ -474,13 +474,13 @@ class DeepLearningEngine(BaseLearningEngine):
 
                 # Añadir positional encoding
                 seq_len = x.size(1)
-                x = x + self.pos_encoder[:,:seq_len,:]
+                x = x + self.pos_encoder[:, :seq_len, :]
 
                 # Transformer encoder
                 x = self.transformer_encoder(x)
 
                 # Usar última posición para predicción
-                x = x[:, -1,:]
+                x = x[:, -1, :]
                 x = self.dropout(x)
                 x = self.fc(x)
                 x = self.sigmoid(x)
@@ -756,10 +756,10 @@ class DeepLearningEngine(BaseLearningEngine):
         # Normalizar por feature
         sequences_norm = sequences.copy()
         for i in range(sequences.shape[2]):
-            feature_data = sequences[:,:, i]
+            feature_data = sequences[:, :, i]
             mean = feature_data.mean()
             std = feature_data.std() + 1e-8
-            sequences_norm[:,:, i] = (feature_data - mean) / std
+            sequences_norm[:, :, i] = (feature_data - mean) / std
 
         # Normalizar labels si son continuos
         if labels is not None and labels.dtype in [np.float32, np.float64]:

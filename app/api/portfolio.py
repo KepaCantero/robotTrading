@@ -24,7 +24,7 @@ def get_portfolio_service() -> PortfolioService:
     """Get portfolio service instance."""
     global _portfolio_service
     if _portfolio_service is None:
-        provider = PaperTradingPortfolioProvider()
+        PaperTradingPortfolioProvider()
 
     return _portfolio_service
 

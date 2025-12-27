@@ -40,7 +40,7 @@ class VolatilityRegimeDetector:
         if len(prices) < window + 1:
             return 0.0
 
-        returns = np.diff(prices[-window - 1:]) / prices[-window - 1: -1]
+        returns = np.diff(prices[-window - 1 :]) / prices[-window - 1 : -1]
         return float(np.std(returns))
 
     def detect(
@@ -65,12 +65,12 @@ class VolatilityRegimeDetector:
 
             # Construir historial de volatilidad
             if volatility_history:
-                vol_history = volatility_history[-self.window_size:]
+                vol_history = volatility_history[-self.window_size :]
             else:
                 # Calcular historial de volatilidad
                 vol_history = []
                 for i in range(20, len(prices)):
-                    window_prices = prices[max(0, i - self.window_size): i + 1]
+                    window_prices = prices[max(0, i - self.window_size) : i + 1]
                     vol = self._calculate_volatility(window_prices)
                     vol_history.append(vol)
 
@@ -78,8 +78,8 @@ class VolatilityRegimeDetector:
             vol_history.append(current_vol)
 
             # Actualizar histórico
-            self.historical_volatility.extend(vol_history[-self.window_size:])
-            self.historical_volatility = self.historical_volatility[-self.window_size:]
+            self.historical_volatility.extend(vol_history[-self.window_size :])
+            self.historical_volatility = self.historical_volatility[-self.window_size :]
 
             if len(self.historical_volatility) < self.min_samples:
                 return {

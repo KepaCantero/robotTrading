@@ -509,7 +509,8 @@ class BacktestMetaAnalyzer:
 
             # 3. Heatmap de correlaciones
             if len(self.df_results.select_dtypes(include=[np.number]).columns) > 1:
-                numeric_cols = self.df_results.select_dtypes(include=[np.number]).columns[:10
+                numeric_cols = self.df_results.select_dtypes(include=[np.number]).columns[
+                    :10
                 ]  # Top 10
                 corr = self.df_results[numeric_cols].corr()
                 fig, ax = plt.subplots(figsize=(10, 8))

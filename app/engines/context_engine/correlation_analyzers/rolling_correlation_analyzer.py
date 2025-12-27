@@ -51,7 +51,7 @@ class RollingCorrelationAnalyzer:
 
             # Última matriz de correlación
             if len(rolling_corr) > 0:
-                last_corr = rolling_corr.iloc[-len(returns_data):].values
+                last_corr = rolling_corr.iloc[-len(returns_data) :].values
                 avg_corr = float(np.mean(np.triu(last_corr, k=1)[np.triu(last_corr, k=1) != 0]))
             else:
                 last_corr = df.corr().values

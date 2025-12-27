@@ -560,5 +560,6 @@ def get_reporting_generator() -> ReportingGenerator:
     """Get or create singleton ReportingGenerator."""
     global _generator
     if _generator is None:
+        pass
 
     return _generator

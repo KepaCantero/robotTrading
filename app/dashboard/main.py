@@ -705,9 +705,9 @@ if execute_button:
                     st.markdown("---")
                     st.success("📄 **Backend Test Result Summary Generated**")
                     st.markdown(
-                        """
+                        f"""
                     **Location:** `{summary_file.relative_to(project_root)}`
-
+                    
                     **To view:** Open the file in your editor or download it.
                     """
                     )
@@ -728,10 +728,10 @@ if execute_button:
 
         except Exception as e:
             st.error(f"❌ Error: {e}")
-            logger.exception("Backtest failed"
+            logger.exception("Backtest failed")
 
 # Module Information Panel
-st.header(f"📦 Module: {selected_module}"
+st.header(f"📦 Module: {selected_module}")
 module_info = {
     "all": {
         "description": "Execute backtests across all system modules",
@@ -741,7 +741,7 @@ module_info = {
     "TechnicalAnalyst": {
         "description": "Technical analysis module using RSI, EMA, and volume indicators",
         "metrics": ["RSI", "EMA trend", "Volume ratio", "Signal strength"],
-        "good_metrics": "RSI < 40 (oversold, EMA trend > 0, Volume > 1.0x",
+        "good_metrics": "RSI < 40 (oversold), EMA trend > 0, Volume > 1.0x",
     },
     "RiskManager": {
         "description": "Risk management module for position sizing and exposure control",
@@ -762,34 +762,34 @@ module_info = {
 
 if selected_module in module_info:
     info = module_info[selected_module]
-    col1, col2 = st.columns([2, 1]
+    col1, col2 = st.columns([2, 1])
     with col1:
-        st.markdown(f"**Description**: {info['description']}"
-        st.markdown(f"**Metrics**: {', '.join(info['metrics']}"
-        st.markdown(f"**Good Indicators**: {info['good_metrics']}"
+        st.markdown(f"**Description**: {info['description']}")
+        st.markdown(f"**Metrics**: {', '.join(info['metrics'])}")
+        st.markdown(f"**Good Indicators**: {info['good_metrics']}")
     with col2:
         if "backtest_results" in session_state and session_state.backtest_results:
             module_results = [
-                k for k in session_state.backtest_results.keys( if k.startswith(selected_module
+                k for k in session_state.backtest_results.keys() if k.startswith(selected_module)
             ]
             if module_results:
-                st.success(f"✅ {len(module_results} result(s available"
+                st.success(f"✅ {len(module_results)} result(s) available")
             else:
-                st.warning("⚠️ No results yet"
+                st.warning("⚠️ No results yet")
         else:
-            st.info("ℹ️ No backtests executed"
+            st.info("ℹ️ No backtests executed")
 
-st.divider(
+st.divider()
 
 # MODULE INFO PANEL
-st.subheader(f"📦 Module Information: {selected_module}"
+st.subheader(f"📦 Module Information: {selected_module}")
 
 # Module descriptions
 module_info = {
     "TechnicalAnalyst": {
-        "description": "Análisis técnico usando múltiples indicadores (RSI, EMA, Volume. Genera señales de compra/venta basadas en análisis técnico.",
+        "description": "Análisis técnico usando múltiples indicadores (RSI, EMA, Volume). Genera señales de compra/venta basadas en análisis técnico.",
         "metrics": "RSI, EMA trend, Volume ratio, Signal strength",
-        "indicators": "RSI < 40 (oversold, EMA trend > 0, Volume > 1.0x",
+        "indicators": "RSI < 40 (oversold), EMA trend > 0, Volume > 1.0x",
     },
     "RiskManager": {
         "description": "Gestión de riesgo con control de exposición y tamaño de posición. Valida señales según límites de riesgo.",
@@ -829,58 +829,58 @@ if selected_module in module_info or selected_module == "all":
 
         # Show static module info
         st.info(
-            """
+            f"""
 **Description**: {info['description']}
 
 **Metrics**: {info['metrics']}
 
 **Good Indicators**: {info['indicators']}
         """
-        
+        )
 
         # Count available results for this module
         if "backtest_results" in session_state and session_state.backtest_results:
             module_results_count = sum(
                 1
-                for key in session_state.backtest_results.keys(
-                if key.lower(.startswith(selected_module.lower( + "_"
-            
+                for key in session_state.backtest_results.keys()
+                if key.lower().startswith(selected_module.lower() + "_")
+            )
 
             if module_results_count > 0:
-                st.success(f"✅ {module_results_count} result(s available for {selected_module}"
+                st.success(f"✅ {module_results_count} result(s) available for {selected_module}")
 
                 # Collect all results for this module
                 module_results = []
-                for key in session_state.backtest_results.keys(:
-                    if key.lower(.startswith(selected_module.lower( + "_":
+                for key in session_state.backtest_results.keys():
+                    if key.lower().startswith(selected_module.lower() + "_"):
                         result = session_state.backtest_results[key]
-                        module_results.append((key, result
+                        module_results.append((key, result))
 
                 # Show summary table of all results
                 if module_results:
-                    st.markdown("---"
-                    st.markdown("### 📊 All Backtest Results Summary"
+                    st.markdown("---")
+                    st.markdown("### 📊 All Backtest Results Summary")
 
                     # Create table data with module-specific metrics
                     table_data = []
                     for key, result in module_results:
                         # Extract config and timestamp from key
-                        parts = key.split('_'
-                        config_name = parts[1] if len(parts > 1 else 'unknown'
+                        parts = key.split('_')
+                        config_name = parts[1] if len(parts) > 1 else 'unknown'
 
                         # Get module-specific decision metrics
                         module_metrics = {
                             "Config": config_name,
                             "Trades": result.performance.total_trades,
-                            "Win Rate": f"{float(result.performance.win_rate:.1f}%",
-                            "PnL": f"${float(result.performance.total_pnl:,.2f}",
+                            "Win Rate": f"{float(result.performance.win_rate):.1f}%",
+                            "PnL": f"${float(result.performance.total_pnl):,.2f}",
                             "Sharpe": (
-                                f"{float(result.performance.sharpe_ratio:.2f}"
+                                f"{float(result.performance.sharpe_ratio):.2f}"
                                 if result.performance.sharpe_ratio
                                 else "N/A"
-                            ,
-                            "Max DD": f"{float(result.performance.max_drawdown_percentage:.2f}%",
-                            "Final Capital": f"${float(result.final_capital:,.2f}",
+                            ),
+                            "Max DD": f"{float(result.performance.max_drawdown_percentage):.2f}%",
+                            "Final Capital": f"${float(result.final_capital):,.2f}",
                         }
 
                         # Add module-specific decision metrics
@@ -892,7 +892,7 @@ if selected_module in module_info or selected_module == "all":
                                     "EMA Trend": "N/A",
                                     "Volume Ratio": "N/A",
                                 }
-                            
+                            )
                         elif selected_module == "RiskManager":
                             # Decisions: Position size limits, Risk per trade, Stop loss triggers
                             module_metrics.update(
@@ -901,7 +901,7 @@ if selected_module in module_info or selected_module == "all":
                                     "Max Exposure": "60%",
                                     "Stop Loss Hits": "N/A",
                                 }
-                            
+                            )
                         elif selected_module == "SignalScorer":
                             # Decisions: Signal acceptance rate, Quality scores, Priority ranking
                             module_metrics.update(
@@ -910,7 +910,7 @@ if selected_module in module_info or selected_module == "all":
                                     "Acceptance Rate": "N/A",
                                     "Priority": "High",
                                 }
-                            
+                            )
                         elif selected_module == "PortfolioService":
                             # Decisions: Portfolio allocation, Diversification, Cash balance
                             module_metrics.update(
@@ -919,7 +919,7 @@ if selected_module in module_info or selected_module == "all":
                                     "Diversification": "N/A",
                                     "Cash %": "N/A",
                                 }
-                            
+                            )
                         elif selected_module == "ExecutionEngine":
                             # Decisions: Execution success rate, Slippage, Commission costs
                             module_metrics.update(
@@ -928,88 +928,88 @@ if selected_module in module_info or selected_module == "all":
                                     "Slippage": "<0.1%",
                                     "Commission": "Included",
                                 }
-                            
+                            )
 
-                        table_data.append(module_metrics
+                        table_data.append(module_metrics)
 
                     # Display as dataframe
-                    df = pd.DataFrame(table_data
-                    st.dataframe(df, use_container_width=True, hide_index=True
+                    df = pd.DataFrame(table_data)
+                    st.dataframe(df, use_container_width=True, hide_index=True)
 
     else:
         st.info(
             "Showing results from all modules. Select a specific module to see detailed information."
-        
+        )
 
         # Show summary of available modules
-        available_modules = set(
+        available_modules = set()
         if "backtest_results" in session_state:
-            for key in session_state.backtest_results.keys(:
-                parts = key.split('_'
+            for key in session_state.backtest_results.keys():
+                parts = key.split('_')
                 if parts:
-                    available_modules.add(parts[0]
+                    available_modules.add(parts[0])
 
         if available_modules:
-            st.write(f"**Available results for**: {', '.join(sorted(available_modules}"
+            st.write(f"**Available results for**: {', '.join(sorted(available_modules))}")
 else:
-    st.warning(f"⚠️ No information available for module: {selected_module}"
+    st.warning(f"⚠️ No information available for module: {selected_module}")
 
-st.divider(
+st.divider()
 
 # Display results with module/preset selector
 if session_state.backtest_results:
     # Let user select which result to view
-    all_keys = list(session_state.backtest_results.keys(
+    all_keys = list(session_state.backtest_results.keys())
 
     # Filter by selected module AND strategy
     if selected_module == "all":
         # Show ALL results when "all" is selected
-        combined_key_lower = f"_{selected_strategy.lower(}"
-        filtered_keys = [k for k in all_keys if combined_key_lower in k.lower(]
+        combined_key_lower = f"_{selected_strategy.lower()}"
+        filtered_keys = [k for k in all_keys if combined_key_lower in k.lower()]
 
         if not filtered_keys:
             st.warning(
                 f"⚠️ No results for any module with strategy '{selected_strategy}'. Execute backtest to see results."
-            
-            st.stop(
+            )
+            st.stop()
     else:
         # Try both case-sensitive and case-insensitive matching
-        combined_key_lower = f"{selected_module.lower(}_{selected_strategy.lower(}"
+        combined_key_lower = f"{selected_module.lower()}_{selected_strategy.lower()}"
         combined_key_exact = f"{selected_module}_{selected_strategy}"
 
         filtered_keys = [
             k
             for k in all_keys
-            if k.lower(.startswith(combined_key_lower or k.startswith(combined_key_exact
+            if k.lower().startswith(combined_key_lower) or k.startswith(combined_key_exact)
         ]
 
         # If no results for this specific combination, show message and no results
         if not filtered_keys:
             st.warning(
                 f"⚠️ No results for {selected_module} + {selected_strategy}. Execute backtest to see results."
-            
-            st.stop(  # Don't show any results
+            )
+            st.stop()  # Don't show any results
 
     available_keys = filtered_keys
 
     # Create selector for results
-    if len(available_keys > 1:
+    if len(available_keys) > 1:
         result_key = st.selectbox(
             "📊 Select Backtest Result",
             options=available_keys,
-            index=len(available_keys - 1,  # Default to most recent
+            index=len(available_keys) - 1,  # Default to most recent
             help="Select which backtest result to display",
             key=f"result_selector_{selected_module}_{selected_strategy}",
-        
+        )
     else:
         result_key = available_keys[0] if available_keys else all_keys[-1]
 
     result = session_state.backtest_results[result_key]
 
     # Metrics dashboard with improved styling - 3 columns with 2 metrics each
-    st.markdown("### 📊 Performance Metrics"
+    st.markdown("### 📊 Performance Metrics")
 
-    col1, col2, col3 = st.columns(3
+    col1, col2, col3 = st.columns(3)
 
     with col1:
         st.markdown(
@@ -1018,15 +1018,15 @@ if session_state.backtest_results:
             <h3 style="margin: 0; color: #1f77b4;">📊 Total Trades</h3>
             <h2 style="margin: 10px 0 0 0; color: #262730;">{}</h2>
         </div>
-        """, 
+        """.format(
                 result.performance.total_trades
-            ,
+            ),
             unsafe_allow_html=True,
-        
+        )
 
-        st.markdown("<br>", unsafe_allow_html=True
+        st.markdown("<br>", unsafe_allow_html=True)
 
-        pnl_value = float(result.performance.total_pnl
+        pnl_value = float(result.performance.total_pnl)
         pnl_color = "#28a745" if pnl_value >= 0 else "#dc3545"
         pnl_sign = "+" if pnl_value >= 0 else ""
         st.markdown(
@@ -1035,14 +1035,14 @@ if session_state.backtest_results:
             <h3 style="margin: 0; color: {};">💰 Total P&L</h3>
             <h2 style="margin: 10px 0 0 0; color: {};">{}$ {:.2f}</h2>
         </div>
-        """, 
+        """.format(
                 pnl_color, pnl_color, pnl_color, pnl_sign, pnl_value
-            ,
+            ),
             unsafe_allow_html=True,
-        
+        )
 
     with col2:
-        win_rate = float(result.performance.win_rate
+        win_rate = float(result.performance.win_rate)
         win_color = "#28a745" if win_rate >= 50 else "#ffc107" if win_rate >= 30 else "#dc3545"
         st.markdown(
             """
@@ -1050,22 +1050,20 @@ if session_state.backtest_results:
             <h3 style="margin: 0; color: {};">✅ Win Rate</h3>
             <h2 style="margin: 10px 0 0 0; color: {};">{:.1f}%</h2>
         </div>
-        """, 
+        """.format(
                 win_color, win_color, win_color, win_rate
-            ,
+            ),
             unsafe_allow_html=True,
-        
+        )
 
-        st.markdown("<br>", unsafe_allow_html=True
+        st.markdown("<br>", unsafe_allow_html=True)
 
-        sharpe = float(result.performance.sharpe_ratio if result.performance.sharpe_ratio else None
+        sharpe = float(result.performance.sharpe_ratio) if result.performance.sharpe_ratio else None
         sharpe_color = (
             "#28a745"
             if sharpe and sharpe > 1
-            else "#ffc107"
-            if sharpe and sharpe > 0
-            else "#dc3545"
-        
+            else "#ffc107" if sharpe and sharpe > 0 else "#dc3545"
+        )
         sharpe_display = f"{sharpe:.2f}" if sharpe is not None else "N/A"
         st.markdown(
             """
@@ -1073,14 +1071,14 @@ if session_state.backtest_results:
             <h3 style="margin: 0; color: {};">📈 Sharpe Ratio</h3>
             <h2 style="margin: 10px 0 0 0; color: {};">{}</h2>
         </div>
-        """, 
+        """.format(
                 sharpe_color, sharpe_color, sharpe_color, sharpe_display
-            ,
+            ),
             unsafe_allow_html=True,
-        
+        )
 
     with col3:
-        max_dd = float(result.performance.max_drawdown_percentage
+        max_dd = float(result.performance.max_drawdown_percentage)
         dd_color = "#dc3545" if max_dd > 20 else "#ffc107" if max_dd > 10 else "#28a745"
         st.markdown(
             """
@@ -1088,33 +1086,33 @@ if session_state.backtest_results:
             <h3 style="margin: 0; color: {};">📉 Max Drawdown</h3>
             <h2 style="margin: 10px 0 0 0; color: {};">{:.2f}%</h2>
         </div>
-        """, 
+        """.format(
                 dd_color, dd_color, dd_color, max_dd
-            ,
+            ),
             unsafe_allow_html=True,
-        
+        )
 
-        st.markdown("<br>", unsafe_allow_html=True
+        st.markdown("<br>", unsafe_allow_html=True)
 
-        final_cap = float(result.final_capital
+        final_cap = float(result.final_capital)
         st.markdown(
             """
         <div style="background-color: #f0f2f6; padding: 20px; border-radius: 10px; border-left: 5px solid #6c757d;">
             <h3 style="margin: 0; color: #6c757d;">💼 Final Capital</h3>
             <h2 style="margin: 10px 0 0 0; color: #262730;">${:,.2f}</h2>
         </div>
-        """, 
+        """.format(
                 final_cap
-            ,
+            ),
             unsafe_allow_html=True,
-        
+        )
 
     # Equity curve
-    st.subheader("📈 Equity Curve"
-    if result.equity_curve and len(result.equity_curve > 0:
+    st.subheader("📈 Equity Curve")
+    if result.equity_curve and len(result.equity_curve) > 0:
         equity_df = pd.DataFrame(
-            [{"Date": eq[0], "Equity": float(eq[1]} for eq in result.equity_curve]
-        
+            [{"Date": eq[0], "Equity": float(eq[1])} for eq in result.equity_curve]
+        )
 
         if not equity_df.empty:
             fig = px.line(
@@ -1122,46 +1120,47 @@ if session_state.backtest_results:
                 x="Date",
                 y="Equity",
                 title="Portfolio Value Over Time",
-                labels={"Equity": "Portfolio Value ($"},
-            
-            fig.update_layout(height=400
-            st.plotly_chart(fig, use_container_width=True
+                labels={"Equity": "Portfolio Value ($)"},
+            )
+            fig.update_layout(height=400)
+            st.plotly_chart(fig, use_container_width=True)
         else:
-            st.info("No equity curve data available"
+            st.info("No equity curve data available")
     else:
-        st.info("No equity curve data available"
+        st.info("No equity curve data available")
 
     # Trade log with improved styling
-    st.markdown("---"
-    st.markdown("### 📋 Trade Log"
-    if result.trades and len(result.trades > 0:
+    st.markdown("---")
+    st.markdown("### 📋 Trade Log")
+    if result.trades and len(result.trades) > 0:
         trades_data = []
         for trade in result.trades:
-            pnl_val = float(trade.pnl if trade.pnl else 0.0
+            pnl_val = float(trade.pnl) if trade.pnl else 0.0
             trades_data.append(
                 {
                     "ID": trade.trade_id[:8],
                     "Symbol": trade.symbol,
                     "Side": "🟢 BUY" if trade.side == "BUY" else "🔴 SELL",
-                    "Quantity": f"{float(trade.quantity:,.2f}",
-                    "Entry Price": f"${float(trade.entry_price:,.2f}",
-                    "Exit Price": f"${float(trade.exit_price:,.2f}" if trade.exit_price else "N/A",
+                    "Quantity": f"{float(trade.quantity):,.2f}",
+                    "Entry Price": f"${float(trade.entry_price):,.2f}",
+                    "Exit Price": f"${float(trade.exit_price):,.2f}" if trade.exit_price else "N/A",
                     "Entry Time": (
-                        trade.entry_time.strftime("%Y-%m-%d %H:%M" if trade.entry_time else "N/A"
-                    ,
+                        trade.entry_time.strftime("%Y-%m-%d %H:%M") if trade.entry_time else "N/A"
+                    ),
                     "Exit Time": (
-                        trade.exit_time.strftime("%Y-%m-%d %H:%M" if trade.exit_time else "N/A"
-                    ,
+                        trade.exit_time.strftime("%Y-%m-%d %H:%M") if trade.exit_time else "N/A"
+                    ),
                     "P&L": f"${pnl_val:+,.2f}",
                     "Status": (
                         "✅ " + trade.status.value
                         if trade.status.value == "CLOSED"
                         else "⏳ " + trade.status.value
-                    ,
+                    ),
                     "Reason": (
-                        (trade.reason[:30] + "..."
-                        if trade.reason and len(trade.reason > 30
-                        else (trade.reason or "N/A"),
+                        (trade.reason[:30] + "...")
+                        if trade.reason and len(trade.reason) > 30
+                        else (trade.reason or "N/A")
+                    ),
                 }
             )
 

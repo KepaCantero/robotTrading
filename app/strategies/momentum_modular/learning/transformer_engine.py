@@ -188,7 +188,7 @@ class TransformerEngine(BaseLearningEngine):
 
         for i in range(len(data) - sequence_length):
             # Extraer features de la ventana
-            window_data = data[i: i + sequence_length]
+            window_data = data[i : i + sequence_length]
 
             # Convertir a array (asumiendo features numéricas)
             features = []
@@ -335,13 +335,13 @@ class TransformerEngine(BaseLearningEngine):
 
                         # Añadir positional encoding sinusoidal
                         seq_len = x.size(1)
-                        x = x + self.pos_encoder[:,:seq_len,:]
+                        x = x + self.pos_encoder[:, :seq_len, :]
 
                         # Transformer encoder
                         x = self.transformer_encoder(x)
 
                         # Usar última posición para predicción
-                        x = x[:, -1,:]
+                        x = x[:, -1, :]
                         x = self.dropout(x)
                         x = self.fc(x)
                         return x

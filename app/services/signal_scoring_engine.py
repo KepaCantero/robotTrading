@@ -423,5 +423,6 @@ def get_signal_scoring_engine(cooldown_minutes: int = 10) -> SignalScoringEngine
     """Get global signal scoring engine instance."""
     global _signal_scoring_engine
     if _signal_scoring_engine is None:
+        pass
 
     return _signal_scoring_engine

@@ -289,5 +289,6 @@ def get_portfolio_config_manager(
     """Get global portfolio configuration manager instance."""
     global _portfolio_config_manager
     if _portfolio_config_manager is None:
+        pass
 
     return _portfolio_config_manager

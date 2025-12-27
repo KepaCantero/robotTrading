@@ -77,7 +77,7 @@ class StrategyRecommender:
         # Get best strategy and alternatives
         best = ranked_strategies[0]
         alternatives = [
-            s.strategy_name for s in ranked_strategies[1: min(4, len(ranked_strategies))]
+            s.strategy_name for s in ranked_strategies[1 : min(4, len(ranked_strategies))]
         ]
 
         # Assess suitability based on profile
@@ -278,5 +278,6 @@ def get_strategy_recommender() -> StrategyRecommender:
     """Get or create singleton StrategyRecommender."""
     global _recommender
     if _recommender is None:
+        pass
 
     return _recommender

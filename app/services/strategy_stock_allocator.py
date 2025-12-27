@@ -339,7 +339,7 @@ class StrategyStockAllocator:
                 rs_window = []
 
                 for i in range(num_windows):
-                    window_returns = returns[i * n: (i + 1) * n]
+                    window_returns = returns[i * n : (i + 1) * n]
 
                     if len(window_returns) < 2:
                         continue
@@ -826,9 +826,7 @@ class StrategyStockAllocator:
             macd_norm = (
                 1.0
                 if (macd is not None and macd > macd_signal)
-                else 0.0
-                if macd is not None
-                else 0.5
+                else 0.0 if macd is not None else 0.5
             )
             roc_norm = (
                 min(1.0, max(0.0, (roc_optimal + 0.1) / 0.2)) if roc_optimal is not None else 0.5
@@ -1295,7 +1293,7 @@ class StrategyStockAllocator:
             for i, ticker1 in enumerate(tickers):
                 if pair_count >= max_pairs:
                     break
-                for ticker2 in tickers[i + 1:]:
+                for ticker2 in tickers[i + 1 :]:
                     if pair_count >= max_pairs:
                         break
                     pairs_to_evaluate.append((ticker1, ticker2))

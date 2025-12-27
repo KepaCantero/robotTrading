@@ -44,7 +44,7 @@ def get_alerting_orchestrator() -> AlertingOrchestrator:
     """
     global _orchestrator
     if _orchestrator is None:
-
+        _orchestrator = AlertingOrchestrator()
     return _orchestrator
 
 
@@ -95,8 +95,10 @@ async def stop_alerting() -> None:
 def reset_alerting_orchestrator() -> None:
     """Reset the singleton orchestrator (for testing)."""
     global _orchestrator
+    _orchestrator = None
 
 
+__all__ = [
     # Services
     "AlertRuleEngine",
     "AlertManager",
@@ -126,5 +128,3 @@ def reset_alerting_orchestrator() -> None:
     "stop_alerting",
     "reset_alerting_orchestrator",
 ]
-
-

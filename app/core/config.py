@@ -251,11 +251,11 @@ class Settings(BaseSettings):
 # Global settings instance (will be created lazily to avoid validation issues)
 
 
-
 def get_global_settings() -> Settings:
     """Get or create global settings instance."""
     global _settings_instance
     if _settings_instance is None:
+        pass
 
     return _settings_instance
 

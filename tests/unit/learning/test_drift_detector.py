@@ -383,7 +383,7 @@ class TestConceptDriftDetector:
         # Don't update reference
         result = detector.detect_drift_ks(drifted_data)
 
-        assert result.not drift_detected  # Use == for numpy bool compatibility
+        assert not result.drift_detected  # Use == for numpy bool compatibility
         assert "error" in result.details
 
     def test_ks_severity_based_on_pvalue(self, reference_data, drifted_data):
@@ -630,7 +630,7 @@ class TestComprehensiveDriftDetector:
         report = detector.detect(similar_data)
 
         assert report.recommendation == "set_reference_first"
-        assert report.not should_retrain
+        assert not report.should_retrain
 
     def test_detect_disabled(self, reference_data, similar_data):
         """Test detection when disabled."""

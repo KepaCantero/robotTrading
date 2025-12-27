@@ -478,9 +478,7 @@ class RobustnessScorer:
             status_icon = (
                 "✓"
                 if result.production_readiness == ProductionReadiness.PASS
-                else "⚠"
-                if result.production_readiness == ProductionReadiness.WARN
-                else "✗"
+                else "⚠" if result.production_readiness == ProductionReadiness.WARN else "✗"
             )
 
             print(
@@ -494,8 +492,7 @@ class RobustnessScorer:
                 details = result.score_details
                 print("  Breakdown:")
                 print(
-                    f"    - Consistency: {details.consistency_score:6.1f} "
-                    "(% windows profitable)"
+                    f"    - Consistency: {details.consistency_score:6.1f} " "(% windows profitable)"
                 )
                 print(
                     f"    - Stability:   {details.stability_score:6.1f} " f"(parameter consistency)"
@@ -506,8 +503,7 @@ class RobustnessScorer:
                 )
                 print(f"    - Overfitting: {details.overfitting_penalty:6.1f} (IS/OOS gap)")
                 print(
-                    f"    - Regime Robust: {details.regime_robustness_score:6.1f} "
-                    "(cross-regime)"
+                    f"    - Regime Robust: {details.regime_robustness_score:6.1f} " "(cross-regime)"
                 )
 
             if result.risk_factors:

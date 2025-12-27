@@ -439,5 +439,6 @@ def get_trading_bridge_orchestrator() -> TradingBridgeOrchestrator:
     """
     global _orchestrator_instance
     if _orchestrator_instance is None:
+        pass
 
     return _orchestrator_instance

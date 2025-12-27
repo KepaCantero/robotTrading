@@ -133,7 +133,7 @@ class VolatilityMonitor:
             atrs: List[Decimal] = []
             for i in range(self.atr_period, len(prices)):
                 atr = self.calculate_atr(
-                    prices[i - self.atr_period: i + 1], period=self.atr_period
+                    prices[i - self.atr_period : i + 1], period=self.atr_period
                 )
                 atrs.append(atr)
 
