@@ -9,9 +9,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.services.smart_order_routing.market_impact_estimator import (
-    MarketImpactEstimator,
-)
+from app.services.smart_order_routing.market_impact_estimator import MarketImpactEstimator
 
 
 class TestMarketImpactEstimator:

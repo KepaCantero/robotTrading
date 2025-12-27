@@ -374,7 +374,7 @@ class TestConceptDriftDetector:
         # P-value should be very low for very different distributions
         assert result.p_value is not None
         assert result.p_value < 0.05
-        assert result.drift_detected == True  # Use == for numpy bool compatibility
+        assert result.drift_detected  # Use == for numpy bool compatibility
 
     def test_ks_insufficient_reference_data(self, drifted_data):
         """Test KS test with insufficient reference data."""
@@ -383,7 +383,7 @@ class TestConceptDriftDetector:
         # Don't update reference
         result = detector.detect_drift_ks(drifted_data)
 
-        assert result.drift_detected == False  # Use == for numpy bool compatibility
+        assert result.not drift_detected  # Use == for numpy bool compatibility
         assert "error" in result.details
 
     def test_ks_severity_based_on_pvalue(self, reference_data, drifted_data):
@@ -588,7 +588,7 @@ class TestComprehensiveDriftDetector:
         """Test comprehensive detector initialization."""
         detector = ComprehensiveDriftDetector(sample_config)
 
-        assert detector.enabled == True
+        assert detector.enabled
         assert detector.psi_detector is not None
         assert detector.adwin_detector is not None
         assert detector.ks_detector is not None
@@ -630,7 +630,7 @@ class TestComprehensiveDriftDetector:
         report = detector.detect(similar_data)
 
         assert report.recommendation == "set_reference_first"
-        assert report.should_retrain == False
+        assert report.not should_retrain
 
     def test_detect_disabled(self, reference_data, similar_data):
         """Test detection when disabled."""
@@ -674,8 +674,8 @@ class TestAutoRetrainingTrigger:
         """Test trigger initialization."""
         trigger = AutoRetrainingTrigger()
 
-        assert trigger.retrain_on_drift == True
-        assert trigger.retrain_on_overfitting == True
+        assert trigger.retrain_on_drift
+        assert trigger.retrain_on_overfitting
 
     def test_should_retrain_time_based(self):
         """Test time-based retraining trigger."""
@@ -788,7 +788,7 @@ class TestDataClasses:
         )
 
         assert report.feature_name == "test_feature"
-        assert report.overall_drift == True
+        assert report.overall_drift
 
 
 # ============================================================================
@@ -827,7 +827,7 @@ class TestEdgeCases:
 
         # Should not crash with single element
         drift = detector.add_element(100.0)
-        assert drift == False
+        assert not drift
 
     def test_comprehensive_with_1d_data(self):
         """Test comprehensive detector with 1D data."""

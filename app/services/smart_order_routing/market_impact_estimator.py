@@ -277,5 +277,5 @@ def get_market_impact_estimator() -> MarketImpactEstimator:
     """Get or create global MarketImpactEstimator instance."""
     global _market_impact_estimator
     if _market_impact_estimator is None:
-        _market_impact_estimator = MarketImpactEstimator()
+
     return _market_impact_estimator

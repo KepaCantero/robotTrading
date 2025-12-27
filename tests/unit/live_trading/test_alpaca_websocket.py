@@ -12,14 +12,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from app.services.live_trading.broker_adapters.alpaca_adapter import AlpacaAdapter
-from app.services.live_trading.broker_adapters.alpaca_client import (
-    AlpacaClient,
-    AlpacaClientError,
-)
-from app.services.live_trading.broker_connector import (
-    BrokerPosition,
-    OrderStatus,
-)
+from app.services.live_trading.broker_adapters.alpaca_client import AlpacaClient, AlpacaClientError
+from app.services.live_trading.broker_connector import BrokerPosition, OrderStatus
 
 
 @pytest.fixture

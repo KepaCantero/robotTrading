@@ -116,7 +116,7 @@ class OpportunityCostValidator:
                     f"Active strategy is {(margin / passive_monthly):.0%} better than passive. "
                     f"Active: ${active_monthly:.2f}/mo (${active_annual:.2f}/yr) vs "
                     f"Passive: ${passive_monthly:.2f}/mo (${passive_annual:.2f}/yr). "
-                    f"Trade with confidence."
+                    "Trade with confidence."
                 )
             else:
                 # Active is better but margin is small
@@ -125,7 +125,7 @@ class OpportunityCostValidator:
                 reason = (
                     f"Active strategy slightly better than passive (+${margin:.2f}/mo). "
                     f"Active: ${active_monthly:.2f}/mo vs Passive: ${passive_monthly:.2f}/mo. "
-                    f"Small margin of safety."
+                    "Small margin of safety."
                 )
         else:
             # Passive is better - recommend holding cash
@@ -135,7 +135,7 @@ class OpportunityCostValidator:
             reason = (
                 f"Passive return (${passive_monthly:.2f}/mo) exceeds active strategy "
                 f"(${active_monthly:.2f}/mo) by ${disadvantage:.2f}/mo. "
-                f"Recommend holding cash/treasury bills instead of trading. "
+                "Recommend holding cash/treasury bills instead of trading. "
                 f"Cost of trading (${total_commission:.2f}/mo commission) exceeds alpha."
             )
 

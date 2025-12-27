@@ -9,10 +9,9 @@ Version: 1.0.0
 License: MIT
 """
 
-__version__ = "1.0.0"
-__author__ = "AlgoTrading MVP Team"
-__email__ = "team@algotrading-mvp.com"
-__description__ = "Algorithmic Trading System MVP"
+
+
+
 
 # Core application metadata
 APP_NAME = "AlgoTrading MVP"

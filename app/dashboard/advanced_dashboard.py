@@ -198,7 +198,7 @@ def render_metric_card(
         display_value = str(value)
 
     st.markdown(
-        f"""
+        """
     <div class="metric-card {color_class}">
         <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;">{label}</div>
         <div style="font-size: 2rem; font-weight: bold;">{emoji} {display_value}</div>
@@ -565,7 +565,7 @@ def main():
                 test_items = list(available_tests.items())
                 for i in range(0, num_tests, cols_per_row):
                     cols = st.columns(cols_per_row)
-                    for j, (display_name, test_name) in enumerate(test_items[i : i + cols_per_row]):
+                    for j, (display_name, test_name) in enumerate(test_items[i: i + cols_per_row]):
                         with cols[j]:
                             checkbox_key = f"test_{test_name}_{use_multi_strategy}"
                             checkbox_value = st.checkbox(
@@ -681,72 +681,72 @@ def main():
                 col1, col2, col3 = st.columns(3)
                 with col1:
                     sharpe_bad = st.number_input(
-                        "Bad", value=thresholds['sharpe']['bad'], key="sharpe_bad", format="%.2f"
+                        "Bad", value=thresholds['sharpe']['bad'], key="sharpe_bad", format="%.2"
                     )
                 with col2:
                     sharpe_warn = st.number_input(
-                        "Warn", value=thresholds['sharpe']['warn'], key="sharpe_warn", format="%.2f"
+                        "Warn", value=thresholds['sharpe']['warn'], key="sharpe_warn", format="%.2"
                     )
                 with col3:
                     sharpe_good = st.number_input(
-                        "Good", value=thresholds['sharpe']['good'], key="sharpe_good", format="%.2f"
+                        "Good", value=thresholds['sharpe']['good'], key="sharpe_good", format="%.2"
                     )
 
                 st.write("**Max Drawdown (%)**")
                 col1, col2, col3 = st.columns(3)
                 with col1:
                     dd_bad = st.number_input(
-                        "Bad", value=thresholds['drawdown']['bad'], key="dd_bad", format="%.2f"
+                        "Bad", value=thresholds['drawdown']['bad'], key="dd_bad", format="%.2"
                     )
                 with col2:
                     dd_warn = st.number_input(
-                        "Warn", value=thresholds['drawdown']['warn'], key="dd_warn", format="%.2f"
+                        "Warn", value=thresholds['drawdown']['warn'], key="dd_warn", format="%.2"
                     )
                 with col3:
                     dd_good = st.number_input(
-                        "Good", value=thresholds['drawdown']['good'], key="dd_good", format="%.2f"
+                        "Good", value=thresholds['drawdown']['good'], key="dd_good", format="%.2"
                     )
 
                 st.write("**Win Rate (%)**")
                 col1, col2, col3 = st.columns(3)
                 with col1:
                     wr_bad = st.number_input(
-                        "Bad", value=thresholds['winrate']['bad'] * 100, key="wr_bad", format="%.1f"
+                        "Bad", value=thresholds['winrate']['bad'] * 100, key="wr_bad", format="%.1"
                     )
                 with col2:
                     wr_warn = st.number_input(
                         "Warn",
                         value=thresholds['winrate']['warn'] * 100,
                         key="wr_warn",
-                        format="%.1f",
+                        format="%.1",
                     )
                 with col3:
                     wr_good = st.number_input(
                         "Good",
                         value=thresholds['winrate']['good'] * 100,
                         key="wr_good",
-                        format="%.1f",
+                        format="%.1",
                     )
 
                 st.write("**Return (%)**")
                 col1, col2, col3 = st.columns(3)
                 with col1:
                     ret_bad = st.number_input(
-                        "Bad", value=thresholds['return_pct']['bad'], key="ret_bad", format="%.2f"
+                        "Bad", value=thresholds['return_pct']['bad'], key="ret_bad", format="%.2"
                     )
                 with col2:
                     ret_warn = st.number_input(
                         "Warn",
                         value=thresholds['return_pct']['warn'],
                         key="ret_warn",
-                        format="%.2f",
+                        format="%.2",
                     )
                 with col3:
                     ret_good = st.number_input(
                         "Good",
                         value=thresholds['return_pct']['good'],
                         key="ret_good",
-                        format="%.2f",
+                        format="%.2",
                     )
 
             # Update thresholds (inside sidebar, using sidebar variables)
@@ -989,15 +989,15 @@ def main():
 
                         if complete_count > 0:
                             st.success(
-                                f"🎓 **Learning Engines Analysis Available:** "
+                                "🎓 **Learning Engines Analysis Available:** "
                                 f"{complete_count} de {len(learning_engine_results)} tienen datos completos "
-                                f"(antes/después del entrenamiento). "
-                                f"Ve a la tab '🎓 Training Analysis' para ver detalles."
+                                "(antes/después del entrenamiento). "
+                                "Ve a la tab '🎓 Training Analysis' para ver detalles."
                             )
                         else:
                             st.info(
                                 f"ℹ️ **Learning Engines:** {len(learning_engine_results)} resultados encontrados, "
-                                f"pero sin datos de comparación. Ejecuta nuevos tests para ver análisis de entrenamiento."
+                                "pero sin datos de comparación. Ejecuta nuevos tests para ver análisis de entrenamiento."
                             )
 
                     # Top Performers
@@ -1263,7 +1263,7 @@ def main():
                             comparison_count += 1
                             logger.debug(
                                 f"✅ Learning engine {row.get('learning_engine', 'unknown')} "
-                                f"tiene datos de comparación (antes y después)"
+                                "tiene datos de comparación (antes y después)"
                             )
 
                     logger.info(
@@ -1435,7 +1435,9 @@ def main():
                                     else (
                                         return_imp
                                         if metric == 'return_pct'
-                                        else winrate_imp if metric == 'win_rate' else dd_imp
+                                        else winrate_imp
+                                        if metric == 'win_rate'
+                                        else dd_imp
                                     )
                                 )
 
@@ -1465,12 +1467,12 @@ def main():
                         st.warning(
                             f"⚠️ Se encontraron {len(learning_engine_results)} resultados de learning engines "
                             f"({', '.join([str(le) for le in learning_engines_found[:5]]) if learning_engines_found else 'unknown'}), "
-                            f"pero sin datos de comparación (before/after training).\n\n"
-                            f"**Posibles causas:**\n"
-                            f"1. Los resultados fueron guardados antes de implementar la funcionalidad de comparación\n"
-                            f"2. Los learning engines fallaron durante el entrenamiento\n"
-                            f"3. Los datos no se guardaron correctamente en el JSON\n\n"
-                            f"**Solución:** Ejecuta nuevos tests con 'Learning Engines' habilitado para ver la comparación antes/después."
+                            "pero sin datos de comparación (before/after training).\n\n"
+                            "**Posibles causas:**\n"
+                            "1. Los resultados fueron guardados antes de implementar la funcionalidad de comparación\n"
+                            "2. Los learning engines fallaron durante el entrenamiento\n"
+                            "3. Los datos no se guardaron correctamente en el JSON\n\n"
+                            "**Solución:** Ejecuta nuevos tests con 'Learning Engines' habilitado para ver la comparación antes/después."
                         )
                         logger.warning(
                             f"⚠️ {len(learning_engine_results)} learning engine results encontrados "
@@ -2266,13 +2268,13 @@ def main():
                     config['backtests']['multi_strategy']['strategies'] = params.get(
                         'strategies', ["momentum", "mean_reversion", "pairs_trading"]
                     )
-                    config['backtests']['multi_strategy']['enable_dynamic_reallocation'] = (
-                        params.get('enable_dynamic_reallocation', True)
-                    )
+                    config['backtests']['multi_strategy'][
+                        'enable_dynamic_reallocation'
+                    ] = params.get('enable_dynamic_reallocation', True)
                     if params.get('enable_dynamic_reallocation', True):
-                        config['backtests']['multi_strategy']['reallocation_frequency_days'] = (
-                            params.get('reallocation_frequency', 30)
-                        )
+                        config['backtests']['multi_strategy'][
+                            'reallocation_frequency_days'
+                        ] = params.get('reallocation_frequency', 30)
 
                 # Enable/disable specific backtests
                 for test_name in [
@@ -2381,9 +2383,7 @@ def main():
                                     ComprehensiveBacktestRunner,
                                 )
 
-                                logger.info(
-                                    "✅ ComprehensiveBacktestRunner importado correctamente"
-                                )
+                                logger.info("✅ ComprehensiveBacktestRunner importado correctamente")
                             except Exception as import_error:
                                 logger.error(f"Error durante import: {import_error}", exc_info=True)
                                 raise

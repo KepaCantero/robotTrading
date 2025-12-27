@@ -12,10 +12,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.services.tax_efficiency.tax_loss_harvester import (
-    HarvestablePosition,
-    TaxLossHarvester,
-)
+from app.services.tax_efficiency.tax_loss_harvester import HarvestablePosition, TaxLossHarvester
 
 
 @pytest.fixture

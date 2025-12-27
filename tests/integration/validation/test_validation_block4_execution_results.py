@@ -75,7 +75,7 @@ class TestGranularLogging(unittest.TestCase):
             self.assertIsNotNone(trade.entry_price, "Trade debe tener entry_price")
             if trade.pnl is not None:
                 self.assertFalse(
-                    str(trade.pnl).lower() in ["nan", "inf", "-inf"],
+                    str(trade.pnl).lower() in ["nan", "in", "-in"],
                     f"Trade PnL no debe ser NaN/Inf: {trade.pnl}",
                 )
 

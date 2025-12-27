@@ -25,7 +25,6 @@ from app.services.configuration_persistence.models import (
     VersionedConfiguration,
 )
 
-__all__ = [
     # Repository (type-based)
     "ConfigurationRepository",
     "StoredConfiguration",

@@ -15,11 +15,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional
 
-from .models import (
-    DeploymentDecision,
-    DeploymentInput,
-    DeploymentRationale,
-)
+from .models import DeploymentDecision, DeploymentInput, DeploymentRationale
 
 logger = logging.getLogger(__name__)
 
@@ -453,7 +449,9 @@ class DeployDecisionOrchestrator:
         if recommendation_score >= Decimal("80"):
             recommendation_text = f"✅ Strong recommendation score ({recommendation_score:.0f}/100). Strategy shows high potential."
         elif recommendation_score >= Decimal("65"):
-            recommendation_text = f"👍 Good recommendation score ({recommendation_score:.0f}/100). Strategy is viable."
+            recommendation_text = (
+                f"👍 Good recommendation score ({recommendation_score:.0f}/100). Strategy is viable."
+            )
         elif recommendation_score >= Decimal("50"):
             recommendation_text = f"➖ Neutral recommendation score ({recommendation_score:.0f}/100). Marginal viability."
         else:
@@ -481,8 +479,8 @@ class DeployDecisionOrchestrator:
         capacity_fade_text = ""
         if input_data.capacity_fade_feasible is False:
             capacity_fade_text = (
-                f"❌ Capital fade analysis: Strategy alpha fades below minimum threshold at target capital. "
-                f"Cannot scale to €250k while maintaining required returns."
+                "❌ Capital fade analysis: Strategy alpha fades below minimum threshold at target capital. "
+                "Cannot scale to €250k while maintaining required returns."
             )
         elif input_data.capacity_fade_feasible is True:
             if (
@@ -491,7 +489,7 @@ class DeployDecisionOrchestrator:
             ):
                 capacity_fade_text = (
                     f"✅ Capacity fade analysis: Strategy maintains strong alpha ({input_data.estimated_alpha_at_scale:.1f}%) "
-                    f"when scaled to target capital. Good capacity for growth."
+                    "when scaled to target capital. Good capacity for growth."
                 )
             elif (
                 input_data.estimated_alpha_at_scale
@@ -499,17 +497,17 @@ class DeployDecisionOrchestrator:
             ):
                 capacity_fade_text = (
                     f"⚠️ Capacity fade analysis: Strategy alpha moderates to {input_data.estimated_alpha_at_scale:.1f}% "
-                    f"at target capital. Feasible but with less margin."
+                    "at target capital. Feasible but with less margin."
                 )
             else:
                 capacity_fade_text = (
-                    f"⚠️ Capacity fade analysis: Strategy reaches target capital but with marginal alpha. "
-                    f"May need optimization for scale."
+                    "⚠️ Capacity fade analysis: Strategy reaches target capital but with marginal alpha. "
+                    "May need optimization for scale."
                 )
         else:
             capacity_fade_text = (
-                f"➖ Capacity fade analysis: Not evaluated. Assuming capacity-neutral scaling. "
-                f"Recommend capacity fade validation before large-scale deployment."
+                "➖ Capacity fade analysis: Not evaluated. Assuming capacity-neutral scaling. "
+                "Recommend capacity fade validation before large-scale deployment."
             )
 
         # Critical factors
@@ -580,17 +578,17 @@ class DeployDecisionOrchestrator:
         """Generate human-readable recommendation text."""
         if status == "APPROVED":
             text = (
-                f"✅ Recommended for deployment. This strategy demonstrates strong fundamentals "
+                "✅ Recommended for deployment. This strategy demonstrates strong fundamentals "
                 f"with an overall confidence score of {score:.0f}/100. "
                 f"{rationale.overall_assessment} "
-                f"Consider deploying with normal monitoring."
+                "Consider deploying with normal monitoring."
             )
         elif status == "CONDITIONAL":
             text = (
                 f"⚠️ Conditionally approved subject to improvements. Overall score: {score:.0f}/100. "
                 f"{rationale.overall_assessment} "
                 f"Recommended improvements: {', '.join(rationale.improvement_areas[:2])}. "
-                f"Deploy with enhanced monitoring and consider phased rollout."
+                "Deploy with enhanced monitoring and consider phased rollout."
             )
         else:
             text = (
@@ -673,5 +671,5 @@ def get_deploy_orchestrator() -> DeployDecisionOrchestrator:
     """Get or create singleton DeployDecisionOrchestrator."""
     global _orchestrator
     if _orchestrator is None:
-        _orchestrator = DeployDecisionOrchestrator()
+
     return _orchestrator

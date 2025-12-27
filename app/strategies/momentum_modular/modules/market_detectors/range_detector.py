@@ -70,7 +70,7 @@ class RangeDetector(BaseMarketDetector):
 
     def _detect_price_range(self, price_history: List[float]) -> Dict:
         """Detectar rango basado en tamaño de movimiento de precios."""
-        recent_prices = price_history[-self.lookback_period :]
+        recent_prices = price_history[-self.lookback_period:]
         price_range = max(recent_prices) - min(recent_prices)
         avg_price = sum(recent_prices) / len(recent_prices)
 

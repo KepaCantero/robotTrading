@@ -357,21 +357,21 @@ def get_config() -> CentralizedConfig:
     """Get the global configuration instance."""
     global _config
     if _config is None:
-        _config = CentralizedConfig()
+
     return _config
 
 
 def reload_config() -> CentralizedConfig:
     """Reload the configuration."""
     global _config
-    _config = CentralizedConfig()
+
     return _config
 
 
 def set_config(config: CentralizedConfig) -> None:
     """Set the global configuration instance."""
     global _config
-    _config = config
+
 
 
 # Environment-specific configuration loading

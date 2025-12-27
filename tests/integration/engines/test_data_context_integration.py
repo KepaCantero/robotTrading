@@ -38,7 +38,7 @@ class TestDataEngineIntegration:
 
         engine = MomentumStrategyEngine(config)
 
-        assert engine.data_engine_enabled == True
+        assert engine.data_engine_enabled
         # DataEngine puede no inicializarse si no hay fuentes configuradas
         # pero no debe fallar
 
@@ -53,7 +53,7 @@ class TestDataEngineIntegration:
         engine.set_data_engine(data_engine)
 
         assert engine.data_engine is not None
-        assert engine.data_engine_enabled == True
+        assert engine.data_engine_enabled
 
 
 class TestContextEngineIntegration:
@@ -65,7 +65,7 @@ class TestContextEngineIntegration:
 
         engine = MomentumStrategyEngine(config)
 
-        assert engine.context_engine_enabled == True
+        assert engine.context_engine_enabled
 
     def test_set_context_engine_externally(self):
         """Test configurar ContextEngine externamente."""
@@ -76,7 +76,7 @@ class TestContextEngineIntegration:
         engine.set_context_engine(context_engine)
 
         assert engine.context_engine is not None
-        assert engine.context_engine_enabled == True
+        assert engine.context_engine_enabled
 
     def test_get_context_analysis(self):
         """Test obtener análisis de contexto desde Strategy Engine."""
@@ -121,8 +121,8 @@ class TestIntegratedStrategyEngines:
 
         engine = MomentumStrategyEngine(config)
 
-        assert engine.data_engine_enabled == True
-        assert engine.context_engine_enabled == True
+        assert engine.data_engine_enabled
+        assert engine.context_engine_enabled
 
     def test_strategy_metrics_include_engines(self):
         """Test que las métricas incluyen llamadas a engines."""

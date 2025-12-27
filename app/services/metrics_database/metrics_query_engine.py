@@ -9,13 +9,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Dict, List, Optional
 
-from .models import (
-    AggregatedMetrics,
-    AggregationType,
-    MetricPoint,
-    MetricType,
-    TimeSeriesQuery,
-)
+from .models import AggregatedMetrics, AggregationType, MetricPoint, MetricType, TimeSeriesQuery
 from .questdb_connector import QuestDBConnector
 
 logger = logging.getLogger(__name__)

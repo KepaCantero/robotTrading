@@ -8,9 +8,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.services.smart_order_routing.execution_cost_monitor import (
-    ExecutionCostMonitor,
-)
+from app.services.smart_order_routing.execution_cost_monitor import ExecutionCostMonitor
 
 
 class TestExecutionCostMonitor:

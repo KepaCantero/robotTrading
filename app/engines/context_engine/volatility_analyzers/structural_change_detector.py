@@ -61,7 +61,7 @@ class StructuralChangeDetector:
 
         try:
             # Calcular returns
-            returns = np.diff(prices[-self.window_size :]) / prices[-self.window_size : -1]
+            returns = np.diff(prices[-self.window_size:]) / prices[-self.window_size: -1]
 
             # CUSUM test (requiere statsmodels)
             if not STATSMODELS_AVAILABLE:
@@ -122,7 +122,7 @@ class StructuralChangeDetector:
 
         try:
             # Usar ventana reciente
-            recent_prices = prices[-self.window_size :]
+            recent_prices = prices[-self.window_size:]
 
             # Calcular returns
             returns = np.diff(recent_prices) / recent_prices[:-1]

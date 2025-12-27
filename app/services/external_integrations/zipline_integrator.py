@@ -258,5 +258,5 @@ def get_zipline_integrator() -> ZiplineIntegrator:
     """Get or create singleton ZiplineIntegrator."""
     global _integrator
     if _integrator is None:
-        _integrator = ZiplineIntegrator()
+
     return _integrator

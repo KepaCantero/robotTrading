@@ -16,9 +16,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.services.portfolio_constructor.models import (
-    PortfolioConstructionRequest,
-)
+from app.services.portfolio_constructor.models import PortfolioConstructionRequest
 from app.services.portfolio_constructor.portfolio_constructor import (
     PortfolioConstructor,
     get_portfolio_constructor,

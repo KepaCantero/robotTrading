@@ -8,10 +8,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.services.portfolio_constructor import (
-    PortfolioConstructionRequest,
-    PortfolioConstructor,
-)
+from app.services.portfolio_constructor import PortfolioConstructionRequest, PortfolioConstructor
 from app.services.risk_scaling_application import (
     RiskScalingApplication,
     RiskScalingRequest,

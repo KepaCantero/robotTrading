@@ -138,7 +138,7 @@ class MetricsCollector:
             )
 
             logger.info(
-                f"Collection cycle complete: "
+                "Collection cycle complete: "
                 f"{metrics_collected} collected, "
                 f"{metrics_failed} failed, "
                 f"{duration_ms:.2f}ms"
@@ -164,7 +164,7 @@ class MetricsCollector:
 
         self._collection_running = True
         logger.info(
-            f"Starting continuous metrics collection "
+            "Starting continuous metrics collection "
             f"(interval: {self.collection_interval_seconds}s)"
         )
 

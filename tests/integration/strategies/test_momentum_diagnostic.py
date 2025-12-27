@@ -159,7 +159,7 @@ class TestMomentumRiskCheck:
 
         # risk_check debería pasar
         result = self.strategy.risk_check(signal, portfolio)
-        assert result == True, f"risk_check should pass with sufficient cash, got {result}"
+        assert result, f"risk_check should pass with sufficient cash, got {result}"
 
     def test_risk_check_buy_insufficient_cash(self):
         """Verificar que risk_check rechaza BUY cuando no hay cash suficiente."""
@@ -187,7 +187,7 @@ class TestMomentumRiskCheck:
         )
 
         result = self.strategy.risk_check(signal, portfolio)
-        assert result == False, "risk_check should reject when insufficient cash"
+        assert not result, "risk_check should reject when insufficient cash"
 
     def test_risk_check_exposure_limit(self):
         """Verificar que risk_check respeta el límite de exposición (80%)."""
@@ -232,7 +232,7 @@ class TestMomentumRiskCheck:
         )
 
         result = self.strategy.risk_check(signal, portfolio)
-        assert result == False, "risk_check should reject when exposure > 80%"
+        assert not result, "risk_check should reject when exposure > 80%"
 
     def test_risk_check_sell_with_position(self):
         """Verificar que risk_check aprueba SELL cuando hay posición."""
@@ -271,7 +271,7 @@ class TestMomentumRiskCheck:
         )
 
         result = self.strategy.risk_check(signal, portfolio)
-        assert result == True, "risk_check should pass SELL when position exists"
+        assert result, "risk_check should pass SELL when position exists"
 
     def test_risk_check_sell_without_position(self):
         """Verificar que risk_check rechaza SELL cuando no hay posición."""
@@ -298,7 +298,7 @@ class TestMomentumRiskCheck:
         )
 
         result = self.strategy.risk_check(signal, portfolio)
-        assert result == False, "risk_check should reject SELL when no position exists"
+        assert not result, "risk_check should reject SELL when no position exists"
 
 
 class TestMomentumPositionSize:
@@ -583,7 +583,7 @@ class TestMomentumIntegration:
         # Total value = $50k cash + $15k positions = $65k
         # Exposure = $15k / $65k = 23% < 80%
         # New position = $50k * 10% = $5k < $50k cash
-        assert result == True, "risk_check should pass for realistic scenario"
+        assert result, "risk_check should pass for realistic scenario"
 
 
 class TestMomentumEdgeCases:
@@ -638,7 +638,7 @@ class TestMomentumEdgeCases:
 
         result = self.strategy.risk_check(signal, portfolio)
         # Debería pasar porque 45% < 50% (límite por defecto)
-        assert result == True, "risk_check should pass at 45% exposure (below 50% limit)"
+        assert result, "risk_check should pass at 45% exposure (below 50% limit)"
 
     def test_risk_check_with_zero_cash(self):
         """Test con cash = 0."""
@@ -665,7 +665,7 @@ class TestMomentumEdgeCases:
         )
 
         result = self.strategy.risk_check(signal, portfolio)
-        assert result == False, "risk_check should reject with zero cash"
+        assert not result, "risk_check should reject with zero cash"
 
     def test_get_position_size_with_very_low_cash(self):
         """Test de position_size con cash muy bajo."""

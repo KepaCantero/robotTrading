@@ -180,8 +180,8 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
 
             # Price range metrics
             if len(prices) >= self.lookback_period:
-                period_high = max(prices[-self.lookback_period :])
-                period_low = min(prices[-self.lookback_period :])
+                period_high = max(prices[-self.lookback_period:])
+                period_low = min(prices[-self.lookback_period:])
                 price_range = period_high - period_low
 
                 features["period_high"] = float(period_high)

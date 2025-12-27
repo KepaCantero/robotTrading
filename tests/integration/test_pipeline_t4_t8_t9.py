@@ -21,10 +21,7 @@ import pytest
 
 from app.backtesting.models import BacktestResult
 from app.models.portfolio import Portfolio, Position
-from app.services.capacity_fade_validation import (
-    CapacityFadeRequest,
-    CapacityFadeValidator,
-)
+from app.services.capacity_fade_validation import CapacityFadeRequest, CapacityFadeValidator
 from app.services.reporting_generator import (
     get_delivery_manager,
     get_html_template_engine,
@@ -32,9 +29,7 @@ from app.services.reporting_generator import (
     get_quantstats_integrator,
     get_visualization_generator,
 )
-from app.services.risk_scaling_application import (
-    get_risk_scaler,
-)
+from app.services.risk_scaling_application import get_risk_scaler
 
 
 class TestDataFactory:
@@ -540,7 +535,7 @@ class TestPipelineT4T8T9:
         )
         print("\n✓ STEP 1: Backtest created")
         print(f"  - Strategy: {backtest.strategy_name}")
-        print(f"  - Starting Capital: €100,000")
+        print("  - Starting Capital: €100,000")
         print(f"  - Total Return: {float(backtest.total_return):.1f}%")
 
         # Step 2: T4.1 - Validate capacity

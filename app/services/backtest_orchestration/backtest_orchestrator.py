@@ -283,7 +283,7 @@ class BacktestOrchestrator:
         feasibility_ratio = achieved_annual_return_pct / required_annual_return_pct
 
         logger.debug(
-            f"Feasibility calculation: "
+            "Feasibility calculation: "
             f"required={required_annual_return_pct:.2f}%, "
             f"achieved={achieved_annual_return_pct:.2f}%, "
             f"ratio={feasibility_ratio:.2f}"
@@ -313,27 +313,27 @@ class BacktestOrchestrator:
             if result.metrics.sharpe_ratio < Decimal("1.0"):
                 warnings.append(
                     f"⚠️  Low Sharpe ratio ({result.metrics.sharpe_ratio:.2f}) - "
-                    f"consider adjusting parameters"
+                    "consider adjusting parameters"
                 )
 
             # Check max drawdown (should be < 20%)
             if result.metrics.max_drawdown_pct > Decimal("20"):
                 warnings.append(
                     f"⚠️  High max drawdown ({result.metrics.max_drawdown_pct:.2f}%) - "
-                    f"consider adding risk management"
+                    "consider adding risk management"
                 )
 
             # Check win rate (should be > 40%)
             if result.metrics.win_rate_pct < Decimal("40"):
                 warnings.append(
                     f"⚠️  Low win rate ({result.metrics.win_rate_pct:.2f}%) - "
-                    f"may indicate poor signal quality"
+                    "may indicate poor signal quality"
                 )
 
         # Check feasibility ratio
         if feasibility_ratio < Decimal("1.0"):
             warnings.append(
-                f"⚠️  Cannot consistently meet return target "
+                "⚠️  Cannot consistently meet return target "
                 f"(feasibility_ratio={feasibility_ratio:.2f})"
             )
 
@@ -370,5 +370,5 @@ def get_backtest_orchestrator() -> BacktestOrchestrator:
     """Get or create singleton BacktestOrchestrator."""
     global _orchestrator
     if _orchestrator is None:
-        _orchestrator = BacktestOrchestrator()
+
     return _orchestrator

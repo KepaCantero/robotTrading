@@ -251,7 +251,7 @@ class AlertRuleEngine:
 
         # Keep history size bounded
         if len(self.evaluation_history) > self._max_history:
-            self.evaluation_history = self.evaluation_history[-self._max_history :]
+            self.evaluation_history = self.evaluation_history[-self._max_history:]
 
     def get_evaluation_stats(self) -> Dict:
         """Get statistics about rule evaluation."""

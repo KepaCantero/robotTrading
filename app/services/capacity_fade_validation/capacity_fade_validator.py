@@ -11,11 +11,7 @@ import logging
 from decimal import Decimal
 from typing import Optional
 
-from .analyzers import (
-    AlphaDecayEstimator,
-    HistoricalCapacityAnalyzer,
-    LiquidityHeadroom,
-)
+from .analyzers import AlphaDecayEstimator, HistoricalCapacityAnalyzer, LiquidityHeadroom
 from .models import (
     CapacityFadeAnalysis,
     CapacityFadeRequest,
@@ -301,7 +297,7 @@ class CapacityFadeValidator:
         if not alpha_sufficient and required_alpha > 0:
             decision = FeasibilityDecision.REJECTED
             message = (
-                f"Alpha insufficient at target capital: "
+                "Alpha insufficient at target capital: "
                 f"{estimated_alpha:.2f}% < {required_alpha:.2f}% required"
             )
             recommendations.append("Strategy cannot generate required returns at target capital")
@@ -314,7 +310,7 @@ class CapacityFadeValidator:
         if fade_pct > Decimal("40") or liquidity_constrained:
             decision = FeasibilityDecision.CONDITIONAL
             message = (
-                f"Alpha sufficient but with constraints: "
+                "Alpha sufficient but with constraints: "
                 f"{estimated_alpha:.2f}% alpha after {fade_pct:.1f}% fade"
             )
             if fade_pct > Decimal("40"):
@@ -330,7 +326,7 @@ class CapacityFadeValidator:
         # Approved: sufficient alpha with reasonable fade
         decision = FeasibilityDecision.APPROVED
         message = (
-            f"Strategy feasible at target capital: "
+            "Strategy feasible at target capital: "
             f"{estimated_alpha:.2f}% alpha after {fade_pct:.1f}% fade"
         )
         if fade_pct > Decimal("20"):
@@ -383,5 +379,5 @@ def get_capacity_fade_validator() -> CapacityFadeValidator:
     """Get or create singleton CapacityFadeValidator."""
     global _validator
     if _validator is None:
-        _validator = CapacityFadeValidator()
+
     return _validator

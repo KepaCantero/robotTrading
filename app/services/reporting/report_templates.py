@@ -209,7 +209,7 @@ class ReportTemplates:
         Returns:
             Complete HTML string
         """
-        html = f"""
+        html = """
         <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -250,7 +250,7 @@ class ReportTemplates:
         max_dd_pct = (summary.get("max_drawdown", 0) or 0) * 100
         win_rate_pct = (summary.get("win_rate", 0) or 0) * 100
 
-        return f"""
+        return """
         <h2>📈 Performance Summary</h2>
         <div class="metrics-grid">
             <div class="metric-card {'positive' if total_return_pct >= 0 else 'negative'}">
@@ -301,7 +301,7 @@ class ReportTemplates:
             value = metrics.get(key, 0)
             if value is not None:
                 formatted = formatter(value)
-                html += f"""
+                html += """
                 <tr>
                     <td>{label}</td>
                     <td class="number">{formatted}</td>
@@ -340,7 +340,7 @@ class ReportTemplates:
             value = risk_metrics.get(key, 0)
             if value is not None:
                 formatted = formatter(value)
-                html += f"""
+                html += """
                 <tr>
                     <td>{label}</td>
                     <td class="number">{formatted}</td>
@@ -372,7 +372,7 @@ class ReportTemplates:
 
         for asset, weight in sorted_allocation:
             weight_pct = weight * 100
-            html += f"""
+            html += """
             <tr>
                 <td><strong>{asset}</strong></td>
                 <td class="number">{weight_pct:.1f}%</td>
@@ -396,7 +396,7 @@ class ReportTemplates:
         drawdown_pct: float,
     ) -> str:
         """Generate simple one-page summary."""
-        return f"""
+        return """
         <!DOCTYPE html>
         <html>
         <head>
@@ -425,5 +425,5 @@ def get_report_templates() -> ReportTemplates:
     """Get or create singleton ReportTemplates."""
     global _templates
     if _templates is None:
-        _templates = ReportTemplates()
+
     return _templates

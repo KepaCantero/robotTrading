@@ -299,7 +299,7 @@ class RobustnessScorer:
                 RiskFactor(
                     name="High Parameter Sensitivity",
                     severity=RiskLevel.MEDIUM,
-                    description=f"Parameters are very sensitive to small changes "
+                    description="Parameters are very sensitive to small changes "
                     f"(sensitivity score: {scores['sensitivity']:.1f})",
                     recommendation="Small parameter changes cause large performance swings",
                     impact_on_score=8.0,
@@ -312,7 +312,7 @@ class RobustnessScorer:
                 RiskFactor(
                     name="Overfitting Detected",
                     severity=RiskLevel.HIGH,
-                    description=f"Large in-sample vs out-of-sample gap "
+                    description="Large in-sample vs out-of-sample gap "
                     f"(overfitting penalty: {scores['overfitting']:.1f})",
                     recommendation="Strategy performs much better on training data than test data",
                     impact_on_score=15.0,
@@ -325,7 +325,7 @@ class RobustnessScorer:
                 RiskFactor(
                     name="Regime Dependence",
                     severity=RiskLevel.MEDIUM,
-                    description=f"Performance varies significantly across market regimes "
+                    description="Performance varies significantly across market regimes "
                     f"(score: {scores['regime_robustness']:.1f})",
                     recommendation="Strategy may fail in different market conditions",
                     impact_on_score=10.0,
@@ -465,7 +465,7 @@ class RobustnessScorer:
         print("=" * 90)
         print(f"Analysis Date: {report.analysis_date.isoformat()}")
         print(f"Summary Score: {report.summary_score:.1f}/100")
-        print(f"\nDeployment Status:")
+        print("\nDeployment Status:")
         print(f"  ✓ PASS (Ready):   {report.deployable_count}")
         print(f"  ⚠ WARN (Caution): {report.warning_count}")
         print(f"  ✗ FAIL (Too risky): {report.failed_count}")
@@ -478,7 +478,9 @@ class RobustnessScorer:
             status_icon = (
                 "✓"
                 if result.production_readiness == ProductionReadiness.PASS
-                else "⚠" if result.production_readiness == ProductionReadiness.WARN else "✗"
+                else "⚠"
+                if result.production_readiness == ProductionReadiness.WARN
+                else "✗"
             )
 
             print(
@@ -490,31 +492,31 @@ class RobustnessScorer:
 
             if result.score_details:
                 details = result.score_details
-                print(f"  Breakdown:")
+                print("  Breakdown:")
                 print(
                     f"    - Consistency: {details.consistency_score:6.1f} "
-                    f"(% windows profitable)"
+                    "(% windows profitable)"
                 )
                 print(
                     f"    - Stability:   {details.stability_score:6.1f} " f"(parameter consistency)"
                 )
                 print(
                     f"    - Sensitivity: {details.sensitivity_score:6.1f} "
-                    f"(robustness to changes)"
+                    "(robustness to changes)"
                 )
                 print(f"    - Overfitting: {details.overfitting_penalty:6.1f} (IS/OOS gap)")
                 print(
                     f"    - Regime Robust: {details.regime_robustness_score:6.1f} "
-                    f"(cross-regime)"
+                    "(cross-regime)"
                 )
 
             if result.risk_factors:
-                print(f"  Risk Factors:")
+                print("  Risk Factors:")
                 for factor in result.risk_factors:
                     print(f"    [{factor.severity.value}] {factor.name}: {factor.description}")
 
             if result.recommendations:
-                print(f"  Recommendations:")
+                print("  Recommendations:")
                 for rec in result.recommendations:
                     print(f"    {rec}")
 

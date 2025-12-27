@@ -19,11 +19,7 @@ from .absolute_return_optimizer import (
     ParameterOptimizer,
     TargetAlphaCalculator,
 )
-from .capital_tier_selector import (
-    CapitalTierSelector,
-    RiskProfileScaler,
-    StrategyFeatureGatekeeper,
-)
+from .capital_tier_selector import CapitalTierSelector, RiskProfileScaler, StrategyFeatureGatekeeper
 from .models import (
     AbsoluteReturnTarget,
     AbsoluteReturnValidation,
@@ -35,7 +31,6 @@ from .models import (
     StrategyFeatures,
 )
 
-__all__ = [
     # Models
     "CapitalTier",
     "CapitalTierConfig",

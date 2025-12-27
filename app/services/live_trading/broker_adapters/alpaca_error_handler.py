@@ -403,7 +403,7 @@ class ErrorRecoveryManager:
     def __repr__(self) -> str:
         """String representation."""
         return (
-            f"ErrorRecoveryManager("
+            "ErrorRecoveryManager("
             f"circuit={self.circuit_breaker}, "
             f"position_sync={self.position_sync_recovery})"
         )

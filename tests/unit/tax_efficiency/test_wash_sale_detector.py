@@ -13,10 +13,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.services.tax_efficiency.wash_sale_detector import (
-    Trade,
-    WashSaleDetector,
-)
+from app.services.tax_efficiency.wash_sale_detector import Trade, WashSaleDetector
 
 
 @pytest.fixture

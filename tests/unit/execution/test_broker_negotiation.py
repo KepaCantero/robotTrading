@@ -8,9 +8,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.services.smart_order_routing.broker_negotiation_engine import (
-    BrokerNegotiationEngine,
-)
+from app.services.smart_order_routing.broker_negotiation_engine import BrokerNegotiationEngine
 
 
 class TestBrokerNegotiationEngine:

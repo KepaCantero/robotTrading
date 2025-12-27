@@ -134,7 +134,7 @@ class TestStrategyStockAllocatorIntegration:
             strategy_counts[strategy] = strategy_counts.get(strategy, 0) + 1
             total_allocated += metrics.capital
 
-        logger.info(f"📊 Allocation by strategy:")
+        logger.info("📊 Allocation by strategy:")
         for strategy, count in strategy_counts.items():
             strategy_capital = sum(
                 m.capital for m in result.allocations.values() if m.strategy == strategy
@@ -200,7 +200,7 @@ class TestStrategyStockAllocatorIntegration:
             )
 
         # Verify each strategy has allocations
-        logger.info(f"📊 Portfolio composition:")
+        logger.info("📊 Portfolio composition:")
         for strategy, positions in portfolio_by_strategy.items():
             total_cap = sum(p['capital'] for p in positions)
             logger.info(
@@ -264,7 +264,7 @@ class TestStrategyStockAllocatorIntegration:
         utilization = total_allocated / total_capital
         residual = result.residual_capital
 
-        logger.info(f"📊 Capital utilization:")
+        logger.info("📊 Capital utilization:")
         logger.info(f"  Allocated: ${total_allocated:,.2f} ({utilization:.1%})")
         logger.info(f"  Residual: ${residual:,.2f} ({residual/total_capital:.1%})")
 

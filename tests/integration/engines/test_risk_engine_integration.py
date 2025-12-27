@@ -81,11 +81,11 @@ class TestRiskEngine:
         config = {'enabled': True}
         engine = RiskEngine(config)
 
-        assert engine.enabled == True
-        assert engine._initialized == False
+        assert engine.enabled
+        assert engine.not _initialized
 
         engine.initialize()
-        assert engine._initialized == True
+        assert engine._initialized
 
     def test_assess_risk(self):
         """Test evaluación de riesgo básica."""
@@ -193,7 +193,7 @@ class TestDrawdownController:
         controller = DrawdownController(config)
 
         assert controller.max_drawdown_limit == 0.20
-        assert controller.circuit_breaker_active == False
+        assert controller.not circuit_breaker_active
 
     def test_assess_drawdown(self):
         """Test evaluación de drawdown."""
@@ -275,7 +275,7 @@ class TestRiskAttribution:
         config = {'use_factor_models': True}
         attributor = RiskAttributor(config)
 
-        assert attributor.use_factor_models == True
+        assert attributor.use_factor_models
 
     def test_attribute_risk(self):
         """Test atribución de riesgo."""

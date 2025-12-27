@@ -178,7 +178,7 @@ class TestAutoRetrainingTrigger:
 
         trigger = AutoRetrainingTrigger(config)
 
-        assert trigger.retrain_on_drift == True
+        assert trigger.retrain_on_drift
         assert trigger.retrain_interval_days == 30
         assert isinstance(trigger.drift_detector, ConceptDriftDetector)
         assert isinstance(trigger.overfitting_detector, OverfittingDetector)

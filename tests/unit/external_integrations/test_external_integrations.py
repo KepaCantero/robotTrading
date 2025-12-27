@@ -15,17 +15,9 @@ from app.services.external_integrations import (
     QuestDBConnector,
     ZiplineIntegrator,
 )
-from app.services.external_integrations.dagster_orchestrator import (
-    JobStatus,
-    PipelineStep,
-)
-from app.services.external_integrations.questdb_connector import (
-    TimeSeriesData,
-    TradeRecord,
-)
-from app.services.external_integrations.zipline_integrator import (
-    BacktestConfig,
-)
+from app.services.external_integrations.dagster_orchestrator import JobStatus, PipelineStep
+from app.services.external_integrations.questdb_connector import TimeSeriesData, TradeRecord
+from app.services.external_integrations.zipline_integrator import BacktestConfig
 
 # ============================================================================
 # QUESTDB CONNECTOR TESTS (35 tests)

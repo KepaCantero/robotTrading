@@ -14,7 +14,6 @@ from .symbol_normalizer import SymbolNormalizer
 from .timestamp_normalizer import TimestampNormalizer
 from .unified_normalizer import UnifiedNormalizer
 
-__all__ = [
     "TimestampNormalizer",
     "SymbolNormalizer",
     "PriceNormalizer",

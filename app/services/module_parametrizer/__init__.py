@@ -11,12 +11,8 @@ from .models import (
     ParameterizationRequest,
     ParameterizationResult,
 )
-from .module_parametrizer import (
-    ModuleParametrizer,
-    get_module_parametrizer,
-)
+from .module_parametrizer import ModuleParametrizer, get_module_parametrizer
 
-__all__ = [
     "ModuleParametrizer",
     "get_module_parametrizer",
     "ModuleParameterConfig",

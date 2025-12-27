@@ -150,7 +150,7 @@ class MessageBus:
         def _run():
             try:
                 socket = self.zmq_context.socket(zmq.SUB)
-                socket.connect(f"tcp://localhost:5555")
+                socket.connect("tcp://localhost:5555")
                 socket.setsockopt_string(zmq.SUBSCRIBE, channel)
 
                 while True:
@@ -192,7 +192,6 @@ def get_message_bus() -> MessageBus:
     if _message_bus is None:
         import os
 
-        _message_bus = MessageBus(
             redis_host=os.getenv('REDIS_HOST', 'localhost'),
             redis_port=int(os.getenv('REDIS_PORT', '6379')),
             use_zmq=os.getenv('USE_ZMQ', 'false').lower() == 'true',

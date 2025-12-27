@@ -175,7 +175,7 @@ class ReportingOrchestrator:
             # Add recommendation to summary
             html = html.replace(
                 "</div>\n            </div>\n        </body>",
-                f"""</div>
+                """</div>
                 <div class="summary">
                     <h3>Recommendation</h3>
                     <p>{recommendation_text}</p>
@@ -195,5 +195,5 @@ def get_reporting_orchestrator() -> ReportingOrchestrator:
     """Get or create singleton ReportingOrchestrator."""
     global _orchestrator
     if _orchestrator is None:
-        _orchestrator = ReportingOrchestrator()
+
     return _orchestrator

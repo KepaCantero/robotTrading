@@ -434,22 +434,22 @@ class RiskScalingOrchestrator:
         if combined < Decimal("0.5"):
             summary = (
                 f"Critical risk reduction active (scale {combined:.2f}x). "
-                f"Review market conditions and positions immediately."
+                "Review market conditions and positions immediately."
             )
         elif combined < Decimal("0.8"):
             summary = (
                 f"Significant risk reduction applied (scale {combined:.2f}x). "
-                f"Monitor conditions closely."
+                "Monitor conditions closely."
             )
         elif combined < Decimal("1.0"):
             summary = (
                 f"Moderate risk reduction in effect (scale {combined:.2f}x). "
-                f"Normal trading with caution."
+                "Normal trading with caution."
             )
         else:
             summary = (
                 f"Normal trading conditions (scale {combined:.2f}x). "
-                f"All risk metrics within acceptable ranges."
+                "All risk metrics within acceptable ranges."
             )
 
         return summary

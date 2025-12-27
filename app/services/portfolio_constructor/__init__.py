@@ -9,12 +9,8 @@ from .models import (
     RiskAdjustedPortfolio,
     RiskScalingRequest,
 )
-from .portfolio_constructor import (
-    PortfolioConstructor,
-    get_portfolio_constructor,
-)
+from .portfolio_constructor import PortfolioConstructor, get_portfolio_constructor
 
-__all__ = [
     "PortfolioConstructor",
     "get_portfolio_constructor",
     "PortfolioConstructionRequest",

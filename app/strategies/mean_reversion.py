@@ -232,7 +232,7 @@ class MeanReversionStrategy(BaseStrategy):
                 if not existing_position:
                     logger.info(
                         f"⚠️ MEAN_REVERSION risk_check REJECTED SELL {signal.symbol}: "
-                        f"No position exists to sell"
+                        "No position exists to sell"
                     )
                     return False
                 # Now calculate sell quantity and verify we have enough

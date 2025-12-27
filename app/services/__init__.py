@@ -17,7 +17,6 @@ from .signal_evaluation_engine import SignalEvaluationEngine
 from .signal_execution_engine import SignalExecutionEngine
 from .signal_scorer import SignalScorerService
 
-__all__ = [
     # Servicios principales
     "PortfolioService",
     "SignalScorerService",

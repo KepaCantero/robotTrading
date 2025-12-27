@@ -13,9 +13,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.services.tax_efficiency.capital_gain_tracker import (
-    CapitalGainTracker,
-)
+from app.services.tax_efficiency.capital_gain_tracker import CapitalGainTracker
 
 
 @pytest.fixture

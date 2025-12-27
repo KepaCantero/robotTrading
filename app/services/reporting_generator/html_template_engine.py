@@ -29,7 +29,7 @@ class BrandingConfig:
     primary_color: str = "#1f77b4"  # Default matplotlib blue
     secondary_color: str = "#ff7f0e"  # Default matplotlib orange
     accent_color: str = "#2ca02c"  # Default matplotlib green
-    font_family: str = "Segoe UI, Tahoma, Geneva, Verdana, sans-serif"
+    font_family: str = "Segoe UI, Tahoma, Geneva, Verdana, sans-seri"
     report_footer_text: Optional[str] = None
 
 
@@ -240,14 +240,14 @@ class HTMLTemplateEngine:
             # Add subtitle if provided
             if config.report_subtitle:
                 html += (
-                    f'  <h2 class="report-subtitle">'
+                    '  <h2 class="report-subtitle">'
                     f'{self._escape_html(config.report_subtitle)}</h2>\n'
                 )
 
             # Add strategy name if provided
             if config.strategy_name:
                 html += (
-                    f'  <p class="strategy-name">'
+                    '  <p class="strategy-name">'
                     f'Strategy: <strong>{self._escape_html(config.strategy_name)}</strong></p>\n'
                 )
 
@@ -546,7 +546,7 @@ class HTMLTemplateEngine:
         if not branding:
             branding = BrandingConfig(company_name="AlgoTrading")
 
-        css = f"""
+        css = """
     * {{
       margin: 0;
       padding: 0;
@@ -709,5 +709,5 @@ def get_html_template_engine() -> HTMLTemplateEngine:
     """Get or create HTMLTemplateEngine singleton."""
     global _html_engine_instance
     if _html_engine_instance is None:
-        _html_engine_instance = HTMLTemplateEngine()
+
     return _html_engine_instance

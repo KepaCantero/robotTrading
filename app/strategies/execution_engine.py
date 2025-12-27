@@ -300,7 +300,7 @@ class ExecutionEngine:
     def __repr__(self) -> str:
         """Representación detallada del motor."""
         return (
-            f"ExecutionEngine("
+            "ExecutionEngine("
             f"running={self.is_running}, "
             f"cycles={self.cycle_count}, "
             f"signals_generated={self.total_signals_generated}, "

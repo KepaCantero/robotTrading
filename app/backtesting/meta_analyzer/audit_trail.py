@@ -131,7 +131,7 @@ class AuditTrail:
         try:
             # Branch
             result = subprocess.run(
-                ['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
+                ['git', 'rev-parse', '--abbrev-re', 'HEAD'],
                 capture_output=True,
                 text=True,
                 check=True,
@@ -144,7 +144,7 @@ class AuditTrail:
         try:
             # Check si hay cambios sin commit
             result = subprocess.run(
-                ['git', 'diff', '--quiet'], capture_output=True, check=False, timeout=5
+                ['git', 'dif', '--quiet'], capture_output=True, check=False, timeout=5
             )
             git_info['is_dirty'] = result.returncode != 0
         except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):

@@ -165,7 +165,7 @@ class BacktestOrchestrator:
             )
 
             self.logger.info(
-                f"✅ Backtest complete: "
+                "✅ Backtest complete: "
                 f"return={extended_result.total_return:.2f}%, "
                 f"feasibility_ratio={feasibility_metrics.feasibility_ratio:.2f}"
             )

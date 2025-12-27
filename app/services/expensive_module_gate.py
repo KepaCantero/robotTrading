@@ -186,7 +186,7 @@ class ExpensiveModuleGate:
                     "enabled": False,
                     "reason": (
                         f"Module cost ${cost_monthly:.2f}/mo ({cost_ratio:.0%} of alpha ${expected_monthly_alpha:.2f}/mo) "
-                        f"exceeds acceptable threshold (30%). Not economically justified."
+                        "exceeds acceptable threshold (30%). Not economically justified."
                     ),
                     "recommendation": "DISABLE",
                     "cost_estimate_monthly": cost_monthly,
@@ -402,6 +402,8 @@ class ExpensiveModuleGate:
             "recommendation": (
                 "COST_ACCEPTABLE"
                 if cost_ratio < Decimal("0.50")
-                else "COST_HIGH" if cost_ratio < Decimal("1.0") else "COST_CRITICAL"
+                else "COST_HIGH"
+                if cost_ratio < Decimal("1.0")
+                else "COST_CRITICAL"
             ),
         }

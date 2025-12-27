@@ -361,5 +361,5 @@ def get_account_synchronizer(
     """Get or create singleton AccountSynchronizer."""
     global _synchronizer
     if _synchronizer is None:
-        _synchronizer = AccountSynchronizer(broker)
+
     return _synchronizer

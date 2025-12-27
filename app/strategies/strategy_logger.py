@@ -349,7 +349,7 @@ class StrategyLogger:
     def __repr__(self) -> str:
         """Representación detallada del logger."""
         return (
-            f"StrategyLogger("
+            "StrategyLogger("
             f"logs={len(self.logs)}, "
             f"path={self.log_path}, "
             f"created={self.created_at})"

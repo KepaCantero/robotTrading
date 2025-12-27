@@ -317,7 +317,7 @@ class ParameterStabilityMetrics:
         report.overall_stability_score = self._calculate_overall_stability(report)
 
         logger.info(
-            f"Stability analysis complete. "
+            "Stability analysis complete. "
             f"Stable: {len(report.stable_parameters)}, "
             f"Unstable: {len(report.unstable_parameters)}"
         )
@@ -436,22 +436,22 @@ class ParameterStabilityMetrics:
             if result.stability_score < 30.0:
                 recommendations[param_name] = (
                     f"REMOVE: Very unstable (score={result.stability_score:.1f}). "
-                    f"Parameter varies too much across windows."
+                    "Parameter varies too much across windows."
                 )
             elif result.stability_score < 50.0:
                 recommendations[param_name] = (
                     f"SIMPLIFY: Unstable (score={result.stability_score:.1f}). "
-                    f"Consider fixed value or reduce complexity."
+                    "Consider fixed value or reduce complexity."
                 )
             elif 50.0 <= result.stability_score < 70.0:
                 recommendations[param_name] = (
                     f"MONITOR: Moderately stable (score={result.stability_score:.1f}). "
-                    f"Watch for consistency in production."
+                    "Watch for consistency in production."
                 )
             elif result.stability_score >= 90.0:
                 recommendations[param_name] = (
                     f"EXCELLENT: Very stable (score={result.stability_score:.1f}). "
-                    f"Robust parameter, safe to use."
+                    "Robust parameter, safe to use."
                 )
 
         return recommendations

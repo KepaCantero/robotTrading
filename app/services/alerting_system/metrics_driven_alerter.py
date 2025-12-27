@@ -15,12 +15,7 @@ from uuid import uuid4
 
 from app.services.alerting_system.alert_manager import AlertManager
 from app.services.alerting_system.alert_rule_engine import AlertRuleEngine
-from app.services.alerting_system.models import (
-    AlertEvent,
-    AlertRule,
-    AlertState,
-    ChangeRule,
-)
+from app.services.alerting_system.models import AlertEvent, AlertRule, AlertState, ChangeRule
 
 logger = logging.getLogger(__name__)
 

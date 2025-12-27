@@ -10,9 +10,7 @@ These tests verify the complete workflow integration across multiple components.
 from decimal import Decimal
 
 from app.services.account_configuration import AccountTier
-from app.services.capital_tier_strategy_selector import (
-    CapitalTierStrategySelector,
-)
+from app.services.capital_tier_strategy_selector import CapitalTierStrategySelector
 from app.services.deployment_validator import DeploymentStatus
 
 
@@ -41,8 +39,8 @@ class TestFullFlowMicroAccount:
 
         # 4. Get features
         features = self.selector.get_enabled_features()
-        assert features.learning == False
-        assert features.deep_learning == False
+        assert features.not learning
+        assert features.not deep_learning
 
         # 5. Validate deployment
         report = self.selector.validate_deployment(
@@ -124,7 +122,7 @@ class TestFullFlowSmallAccount:
         assert risk.leverage_allowed == Decimal("1.25")
 
         features = self.selector.get_enabled_features()
-        assert features.ensemble_methods == True
+        assert features.ensemble_methods
 
         report = self.selector.validate_deployment(
             monthly_profit_goal=Decimal("200"),
@@ -137,11 +135,11 @@ class TestFullFlowSmallAccount:
         features = self.selector.get_enabled_features()
 
         # Should have ensemble methods
-        assert features.ensemble_methods == True
+        assert features.ensemble_methods
 
         # Should NOT have deep learning
-        assert features.deep_learning == False
-        assert features.transformer_models == False
+        assert features.not deep_learning
+        assert features.not transformer_models
 
     def test_small_leverage_enabled(self):
         """Small accounts can use leverage"""
@@ -186,9 +184,9 @@ class TestFullFlowMediumAccount:
         assert risk.leverage_allowed == Decimal("1.5")
 
         features = self.selector.get_enabled_features()
-        assert features.ensemble_methods == True
-        assert features.transfer_learning == True
-        assert features.feature_importance_analysis == True
+        assert features.ensemble_methods
+        assert features.transfer_learning
+        assert features.feature_importance_analysis
 
         report = self.selector.validate_deployment(
             monthly_profit_goal=Decimal("500"),
@@ -243,9 +241,9 @@ class TestFullFlowLargeAccount:
         assert risk.leverage_allowed == Decimal("2.5")
 
         features = self.selector.get_enabled_features()
-        assert features.ensemble_methods == True
-        assert features.transfer_learning == True
-        assert features.feature_importance_analysis == True
+        assert features.ensemble_methods
+        assert features.transfer_learning
+        assert features.feature_importance_analysis
 
         report = self.selector.validate_deployment(
             monthly_profit_goal=Decimal("2000"),
@@ -352,7 +350,7 @@ class TestCapabilityProgression:
         """Deep learning available for medium+ only"""
         for capital in [Decimal("10000"), Decimal("30000")]:
             features = CapitalTierStrategySelector(capital).get_enabled_features()
-            assert features.deep_learning == False
+            assert features.not deep_learning
 
         # Medium/Large may have deep learning based on config
         # Just verify the progression makes sense
@@ -366,7 +364,7 @@ class TestCapabilityProgression:
         """Transformer models only for large accounts"""
         for capital in [Decimal("10000"), Decimal("30000"), Decimal("100000")]:
             features = CapitalTierStrategySelector(capital).get_enabled_features()
-            assert features.transformer_models == False
+            assert features.not transformer_models
 
         CapitalTierStrategySelector(Decimal("500000")).get_enabled_features()
         # Transformers may be enabled for large if config allows
@@ -374,11 +372,11 @@ class TestCapabilityProgression:
     def test_ensemble_methods_small_plus(self):
         """Ensemble methods for small+ accounts"""
         micro_features = CapitalTierStrategySelector(Decimal("10000")).get_enabled_features()
-        assert micro_features.ensemble_methods == False
+        assert micro_features.not ensemble_methods
 
         for capital in [Decimal("30000"), Decimal("100000"), Decimal("500000")]:
             features = CapitalTierStrategySelector(capital).get_enabled_features()
-            assert features.ensemble_methods == True
+            assert features.ensemble_methods
 
 
 class TestConsistencyAcrossInstances:
@@ -437,7 +435,7 @@ class TestRealWorldScenarios:
 
         # Should enable advanced features
         features = selector.get_enabled_features()
-        assert features.ensemble_methods == True
+        assert features.ensemble_methods
 
         # Should validate successfully with sufficient alpha for large account modules
         report = selector.validate_deployment(
@@ -473,4 +471,4 @@ class TestRealWorldScenarios:
 
         features = selector.get_enabled_features()
         # Conservative on features for small accounts
-        assert features.deep_learning == False
+        assert features.not deep_learning

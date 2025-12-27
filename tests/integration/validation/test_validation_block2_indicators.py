@@ -206,7 +206,7 @@ class TestConfigurationPersistence(unittest.TestCase):
                 self.assertEqual(
                     strategy.ema_period,
                     ema_period,
-                    f"ema_period en strategy debe coincidir con config",
+                    "ema_period en strategy debe coincidir con config",
                 )
 
     def test_macd_periods_not_hardcoded(self):

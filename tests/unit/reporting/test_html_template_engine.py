@@ -208,7 +208,7 @@ class TestHTMLTemplateEngine:
         """Test report with multiple sections."""
         sections = [
             ReportSection(
-                section_name="perf",
+                section_name="per",
                 title="Performance",
                 content={},
                 section_type="metrics",

@@ -176,7 +176,7 @@ class ReportingGenerator:
         allocation: Dict[str, float],
     ) -> str:
         """Generate HTML report."""
-        html = f"""
+        html = """
         <html>
             <head>
                 <title>Strategy Report: {strategy_name}</title>

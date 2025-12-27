@@ -33,7 +33,6 @@ logger = logging.getLogger(__name__)
 class OrderRecord(Base):
     """ORM Model for order records."""
 
-    __tablename__ = "orders"
 
     order_id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     symbol = Column(String(10), nullable=False, index=True)
@@ -57,7 +56,6 @@ class OrderRecord(Base):
     # Relationships
     trades = relationship("TradeRecord", back_populates="order")
 
-    __table_args__ = (
         Index("idx_symbol_created", "symbol", "created_at"),
         Index("idx_status_created", "status", "created_at"),
     )
@@ -84,7 +82,6 @@ class OrderRecord(Base):
 class TradeRecord(Base):
     """ORM Model for executed trade records."""
 
-    __tablename__ = "trades"
 
     trade_id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     order_id = Column(String(36), ForeignKey("orders.order_id"), nullable=False, index=True)
@@ -102,7 +99,6 @@ class TradeRecord(Base):
     # Relationships
     order = relationship("OrderRecord", back_populates="trades")
 
-    __table_args__ = (Index("idx_symbol_execution", "symbol", "execution_time"),)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
@@ -124,7 +120,6 @@ class TradeRecord(Base):
 class PositionHistory(Base):
     """ORM Model for position history snapshots."""
 
-    __tablename__ = "position_history"
 
     position_id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     symbol = Column(String(10), nullable=False, index=True)
@@ -136,7 +131,6 @@ class PositionHistory(Base):
     unrealized_pnl_pct = Column(Numeric(10, 4), nullable=False)
     cost_basis = Column(Numeric(18, 8), nullable=False)
 
-    __table_args__ = (Index("idx_symbol_timestamp", "symbol", "timestamp"),)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
@@ -156,7 +150,6 @@ class PositionHistory(Base):
 class TradeStatistics(Base):
     """ORM Model for aggregated trade statistics."""
 
-    __tablename__ = "trade_statistics"
 
     stat_id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     date = Column(DateTime, nullable=False, index=True, unique=True)
@@ -506,5 +499,5 @@ def get_trade_persistence_manager() -> TradePersistenceManager:
     """
     global _persistence_manager_instance
     if _persistence_manager_instance is None:
-        _persistence_manager_instance = TradePersistenceManager()
+
     return _persistence_manager_instance

@@ -1180,7 +1180,7 @@ class MonteCarloSimulator:
 
         for _ in range(n_blocks):
             start_idx = np.random.randint(0, len(returns) - self.block_size + 1)
-            sampled.extend(returns[start_idx : start_idx + self.block_size])
+            sampled.extend(returns[start_idx: start_idx + self.block_size])
 
         return np.array(sampled[:n_periods])
 

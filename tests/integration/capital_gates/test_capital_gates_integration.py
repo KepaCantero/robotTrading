@@ -69,7 +69,7 @@ class TestT032LearningGateExpensiveModuleGateInteraction:
             expected_monthly_alpha=Decimal("50"),
             learning_enabled=True,
         )
-        assert learning_viable == False
+        assert not learning_viable
         assert learning_analysis["learning_recommended"] == False
 
         # Modules disabled
@@ -77,7 +77,7 @@ class TestT032LearningGateExpensiveModuleGateInteraction:
             capital=Decimal("10000"),
             expected_monthly_alpha=Decimal("50"),
         )
-        assert all(v == False for v in modules_enabled.values())
+        assert all(not v for v in modules_enabled.values())
 
     def test_medium_account_selective_enabling(self):
         """Medium account ($75k): learning enabled, some modules enabled"""
@@ -87,7 +87,7 @@ class TestT032LearningGateExpensiveModuleGateInteraction:
             expected_monthly_alpha=Decimal("500"),
             learning_enabled=True,
         )
-        assert learning_viable == True
+        assert learning_viable
         assert learning_analysis["learning_recommended"] == True
 
         # Some modules enabled (not all)
@@ -122,7 +122,7 @@ class TestT033MultiGateDecisionFlow:
             expected_monthly_alpha=Decimal("100"),
             learning_enabled=True,
         )
-        assert learning_viable == False
+        assert not learning_viable
         assert learn_analysis["learning_recommended"] == False
 
         # Modules disabled
@@ -130,7 +130,7 @@ class TestT033MultiGateDecisionFlow:
             capital=capital,
             expected_monthly_alpha=Decimal("100"),
         )
-        assert all(v == False for v in enabled_modules.values())
+        assert all(not v for v in enabled_modules.values())
 
     def test_large_account_permissive_across_all_gates(self):
         """Large account permitted across all gates"""
@@ -154,7 +154,7 @@ class TestT033MultiGateDecisionFlow:
             volatility_percentile=50,
             num_concurrent_trades=3,
         )
-        assert should_execute == True
+        assert should_execute
 
         # Learning enabled
         learning_viable, learn_analysis = LearningCapitalGate.is_learning_viable(
@@ -162,7 +162,7 @@ class TestT033MultiGateDecisionFlow:
             expected_monthly_alpha=Decimal("3000"),
             learning_enabled=True,
         )
-        assert learning_viable == True
+        assert learning_viable
         assert learn_analysis["learning_recommended"] == True
 
         # Modules enabled
@@ -170,7 +170,7 @@ class TestT033MultiGateDecisionFlow:
             capital=capital,
             expected_monthly_alpha=Decimal("3000"),
         )
-        assert any(v == True for v in enabled_modules.values())
+        assert any(v for v in enabled_modules.values())
 
 
 class TestT034AuditTrailConsistency:
@@ -294,7 +294,7 @@ class TestT035EdgeCasesAndBoundaryConditions:
         assert cap_result["is_viable"] == False  # Capital goal difficult
         assert exec_result[0] == False  # Execution rejected
         assert learn_result[0] == False  # Learning disabled
-        assert all(v == False for v in modules_result.values())  # Modules disabled
+        assert all(not v for v in modules_result.values())  # Modules disabled
 
     def test_concurrent_trades_amplify_cost_rejection(self):
         """Concurrent trades increase rejection likelihood"""
@@ -307,7 +307,7 @@ class TestT035EdgeCasesAndBoundaryConditions:
             volatility_percentile=50,
             num_concurrent_trades=1,
         )
-        assert single_viable == True
+        assert single_viable
 
         # Concurrent trades rejected or barely accepted
         triple_viable, triple_analysis = analyzer.should_execute_trade(
@@ -341,7 +341,7 @@ class TestT035EdgeCasesAndBoundaryConditions:
             volatility_percentile=90,
             num_concurrent_trades=5,
         )
-        assert exec_viable == True
+        assert exec_viable
 
         # Learning passes
         learn_viable, _ = LearningCapitalGate.is_learning_viable(
@@ -349,7 +349,7 @@ class TestT035EdgeCasesAndBoundaryConditions:
             expected_monthly_alpha=Decimal("3000"),
             learning_enabled=True,
         )
-        assert learn_viable == True
+        assert learn_viable
 
         # Modules enabled
         modules_enabled, _ = ExpensiveModuleGate.get_enabled_modules(

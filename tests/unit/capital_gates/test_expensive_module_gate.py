@@ -29,7 +29,7 @@ class TestExpensiveModuleGate:
             expected_monthly_alpha=Decimal("100"),
         )
 
-        assert should_enable == False
+        assert not should_enable
         assert analysis["recommendation"] == "DISABLE"
         assert "fallback" in analysis
         assert analysis["fallback"] == "supervised_learning_engine"
@@ -44,7 +44,7 @@ class TestExpensiveModuleGate:
             expected_monthly_alpha=Decimal("500"),
         )
 
-        assert should_enable == True
+        assert should_enable
         assert analysis["recommendation"] == "ENABLE"
         assert analysis["enabled"] == True
 
@@ -59,7 +59,7 @@ class TestExpensiveModuleGate:
             expected_monthly_alpha=Decimal("200"),
         )
 
-        assert should_enable == False
+        assert not should_enable
         assert analysis["recommendation"] == "DISABLE"
         assert "$50,000" in analysis["reason"]
 
@@ -73,7 +73,7 @@ class TestExpensiveModuleGate:
             expected_monthly_alpha=Decimal("300"),
         )
 
-        assert should_enable == True
+        assert should_enable
         assert analysis["recommendation"] == "ENABLE"
 
     def test_transfer_learning_enabled_small_capital(self):
@@ -87,7 +87,7 @@ class TestExpensiveModuleGate:
             expected_monthly_alpha=Decimal("200"),
         )
 
-        assert should_enable == True
+        assert should_enable
         assert analysis["recommendation"] == "ENABLE"
 
     def test_feature_importance_enabled_medium_capital(self):
@@ -101,7 +101,7 @@ class TestExpensiveModuleGate:
             expected_monthly_alpha=Decimal("200"),
         )
 
-        assert should_enable == True
+        assert should_enable
         assert analysis["recommendation"] == "ENABLE"
 
     def test_invalid_module_name(self):
@@ -114,7 +114,7 @@ class TestExpensiveModuleGate:
             expected_monthly_alpha=Decimal("100"),
         )
 
-        assert should_enable == False
+        assert not should_enable
         assert analysis["recommendation"] == "NOT_FOUND"
 
     def test_zero_capital_rejected(self):
@@ -125,7 +125,7 @@ class TestExpensiveModuleGate:
             expected_monthly_alpha=Decimal("100"),
         )
 
-        assert should_enable == False
+        assert not should_enable
         assert analysis["recommendation"] == "INCREASE_CAPITAL"
 
     def test_cost_estimation_transformer_engine(self):
@@ -257,7 +257,7 @@ class TestGetEnabledModules:
         )
 
         # All modules should be disabled
-        assert all(enabled == False for enabled in enabled_modules.values())
+        assert all(not enabled for enabled in enabled_modules.values())
 
     def test_get_enabled_modules_medium_account(self):
         """
@@ -269,7 +269,7 @@ class TestGetEnabledModules:
         )
 
         # Some modules should be enabled
-        assert any(enabled == True for enabled in enabled_modules.values())
+        assert any(enabled for enabled in enabled_modules.values())
         # Deep learning should be enabled
         assert enabled_modules["deep_learning_engine"] == True
 
@@ -373,7 +373,7 @@ class TestRealWorldScenarios:
         )
 
         # All expensive modules disabled
-        assert all(v == False for v in enabled_modules.values())
+        assert all(not v for v in enabled_modules.values())
 
         # No cost
         total_cost = ExpensiveModuleGate.get_total_expensive_module_cost(
@@ -431,7 +431,7 @@ class TestStrictCostRatioEnforcement:
 
         # Cost: $50k * 1% = $500
         # Ratio: $500 / $2000 = 25%
-        assert should_enable == True
+        assert should_enable
         assert analysis["cost_ratio"] < Decimal("0.30")
 
     def test_deep_learning_cost_ratio_excessive(self):
@@ -449,7 +449,7 @@ class TestStrictCostRatioEnforcement:
 
         # Cost: $50k * 1% = $500
         # Ratio: $500 / $500 = 100%
-        assert should_enable == False
+        assert not should_enable
         assert analysis["cost_ratio"] > Decimal("0.30")
 
 

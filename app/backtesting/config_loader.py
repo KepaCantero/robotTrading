@@ -240,11 +240,11 @@ def get_config(config_path: Optional[str] = None) -> ConfigLoader:
     """
     global _global_config
     if _global_config is None:
-        _global_config = ConfigLoader(config_path)
+
     return _global_config
 
 
 def reset_config() -> None:
     """Reset global configuration instance."""
     global _global_config
-    _global_config = None
+

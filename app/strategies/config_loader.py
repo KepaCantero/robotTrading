@@ -282,7 +282,7 @@ class StrategyConfigLoader:
     def __repr__(self) -> str:
         """Representación detallada del loader."""
         return (
-            f"StrategyConfigLoader("
+            "StrategyConfigLoader("
             f"path={self.config_path}, "
             f"loaded={self.last_loaded is not None}, "
             f"strategies={len(self.config.get('strategies', {}))})"

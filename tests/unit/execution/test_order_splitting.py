@@ -8,9 +8,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.services.smart_order_routing.order_splitting_optimizer import (
-    OrderSplittingOptimizer,
-)
+from app.services.smart_order_routing.order_splitting_optimizer import OrderSplittingOptimizer
 
 
 class TestOrderSplittingOptimizer:

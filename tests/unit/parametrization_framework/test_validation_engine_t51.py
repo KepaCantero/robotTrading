@@ -14,9 +14,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.services.validation_engine.models import (
-    ValidationRequest,
-)
+from app.services.validation_engine.models import ValidationRequest
 from app.services.validation_engine.validation_engine import ValidationEngine
 
 

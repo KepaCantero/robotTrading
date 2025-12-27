@@ -20,7 +20,6 @@ from .models import (
 )
 from .questdb_connector import QuestDBConnector
 
-__all__ = [
     # Services
     "MetricsCollector",
     "MetricsQueryEngine",
@@ -35,5 +34,4 @@ __all__ = [
     "MetricsStorageStats",
 ]
 
-__version__ = "1.0.0"
-__author__ = "MAESTRO Team"
+

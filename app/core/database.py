@@ -69,7 +69,7 @@ def get_database_engine() -> AsyncEngine:
 
         try:
             # Create async engine with connection pooling
-            _engine = create_async_engine(
+
                 settings.get_database_url_async(),
                 echo=settings.database_echo,
                 poolclass=QueuePool if settings.is_production() else NullPool,
@@ -108,7 +108,6 @@ def get_session_factory() -> async_sessionmaker[AsyncSession]:
         try:
             engine = get_database_engine()
 
-            _session_factory = async_sessionmaker(
                 engine,
                 class_=AsyncSession,
                 expire_on_commit=False,  # Prevent lazy loading issues
@@ -226,9 +225,8 @@ async def close_database() -> None:
     try:
         if _engine:
             await _engine.dispose()
-            _engine = None
 
-        _session_factory = None
+
 
         logger.info("Database connections closed successfully")
 
@@ -342,7 +340,7 @@ async def execute_scalar(query: str, params: Optional[dict] = None) -> any:
 
 
 # Export commonly used items
-__all__ = [
+
     "Base",
     "metadata",
     "get_database_engine",

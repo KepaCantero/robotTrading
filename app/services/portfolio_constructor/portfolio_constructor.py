@@ -14,11 +14,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional
 
-from .models import (
-    AllocationWeight,
-    PortfolioAllocation,
-    PortfolioConstructionRequest,
-)
+from .models import AllocationWeight, PortfolioAllocation, PortfolioConstructionRequest
 
 logger = logging.getLogger(__name__)
 
@@ -279,7 +275,7 @@ class PortfolioConstructor:
                         module_name=module,
                         weight_pct=weight,
                         capital_allocation_eur=capital,
-                        rationale=f"Efficient frontier optimization: Sharpe ratio weighting",
+                        rationale="Efficient frontier optimization: Sharpe ratio weighting",
                     )
                 )
 
@@ -580,5 +576,5 @@ def get_portfolio_constructor() -> PortfolioConstructor:
     """Get or create singleton PortfolioConstructor."""
     global _constructor
     if _constructor is None:
-        _constructor = PortfolioConstructor()
+
     return _constructor

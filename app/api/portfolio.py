@@ -25,7 +25,7 @@ def get_portfolio_service() -> PortfolioService:
     global _portfolio_service
     if _portfolio_service is None:
         provider = PaperTradingPortfolioProvider()
-        _portfolio_service = PortfolioService(provider)
+
     return _portfolio_service
 
 

@@ -43,10 +43,7 @@ from .quantstats_integrator import (
     StatisticsReport,
     get_quantstats_integrator,
 )
-from .reporting_generator import (
-    ReportingGenerator,
-    get_reporting_generator,
-)
+from .reporting_generator import ReportingGenerator, get_reporting_generator
 from .visualization_generator import (
     AdvancedVisualizationGenerator,
     ChartMetadata,
@@ -54,7 +51,6 @@ from .visualization_generator import (
     get_visualization_generator,
 )
 
-__all__ = [
     "ReportingGenerator",
     "get_reporting_generator",
     "PerformanceReport",

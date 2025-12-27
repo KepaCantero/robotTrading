@@ -246,7 +246,7 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
                 spreads = [
                     p1 - p2
                     for p1, p2 in zip(
-                        prices1[-self.lookback_period :], prices2[-self.lookback_period :]
+                        prices1[-self.lookback_period:], prices2[-self.lookback_period:]
                     )
                 ]
                 if len(spreads) > 0 and np.std(spreads) > 0:
@@ -356,7 +356,7 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
             spreads = [
                 p1 - p2
                 for p1, p2 in zip(
-                    prices1[-self.lookback_period :], prices2[-self.lookback_period :]
+                    prices1[-self.lookback_period:], prices2[-self.lookback_period:]
                 )
             ]
             spread_mean = float(np.mean(spreads))

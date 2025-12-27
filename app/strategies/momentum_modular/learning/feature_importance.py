@@ -315,8 +315,7 @@ class SHAPAnalyzer:
                 'std_importance': float(np.std(feature_importance)),
                 'max_importance': float(np.max(feature_importance)),
                 'min_importance': float(np.min(feature_importance)),
-                'top_features': sorted(importance_dict.items(), key=lambda x: x[1], reverse=True)[
-                    :10
+                'top_features': sorted(importance_dict.items(), key=lambda x: x[1], reverse=True)[:10
                 ],
             }
 
@@ -420,7 +419,7 @@ class SHAPAnalyzer:
             explainer = self._create_explainer(model, X, "auto")
 
             # Calcular SHAP values para esta instancia
-            instance = X[instance_idx : instance_idx + 1]
+            instance = X[instance_idx: instance_idx + 1]
 
             if isinstance(explainer, shap.TreeExplainer):
                 shap_values = explainer.shap_values(instance)

@@ -163,7 +163,7 @@ def render_objective_card(metric_name: str, value: float, test_name: str = ""):
     metric_label = metric_name.replace('_', ' ').title()
 
     st.markdown(
-        f"""
+        """
     <div style="
         background-color: {bg_color};
         color: white;
@@ -512,7 +512,7 @@ def main():
             st.warning(
                 """
             ⚠️ No se encontraron resultados de backtesting.
-            
+
             Ejecuta algunos backtests primero:
             ```bash
             python scripts/run_comprehensive_backtest.py baseline grid_search

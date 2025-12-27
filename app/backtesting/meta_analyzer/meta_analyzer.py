@@ -509,12 +509,11 @@ class BacktestMetaAnalyzer:
 
             # 3. Heatmap de correlaciones
             if len(self.df_results.select_dtypes(include=[np.number]).columns) > 1:
-                numeric_cols = self.df_results.select_dtypes(include=[np.number]).columns[
-                    :10
+                numeric_cols = self.df_results.select_dtypes(include=[np.number]).columns[:10
                 ]  # Top 10
                 corr = self.df_results[numeric_cols].corr()
                 fig, ax = plt.subplots(figsize=(10, 8))
-                sns.heatmap(corr, annot=True, fmt='.2f', cmap='coolwarm', center=0, ax=ax)
+                sns.heatmap(corr, annot=True, fmt='.2', cmap='coolwarm', center=0, ax=ax)
                 ax.set_title('Matriz de Correlaciones')
                 plt.savefig(
                     self.output_dir / 'correlation_heatmap.png', dpi=150, bbox_inches='tight'

@@ -551,7 +551,7 @@ class ProfileGenerator:
             }
 
             logger.info(
-                f"📊 MAESTRO PHASE 1 Integration Complete:\n"
+                "📊 MAESTRO PHASE 1 Integration Complete:\n"
                 f"  Required Alpha: {profile.required_alpha_pct}%\n"
                 f"  Capacity Fade Adjusted: {profile.capacity_fade_adjusted_alpha}%\n"
                 f"  Position Size: {profile.position_size_pct}%\n"
@@ -594,5 +594,5 @@ def get_profile_generator(config_path: Optional[str] = None) -> ProfileGenerator
     """Get or create singleton ProfileGenerator."""
     global _generator
     if _generator is None:
-        _generator = ProfileGenerator(config_path)
+
     return _generator

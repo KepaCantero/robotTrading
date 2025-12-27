@@ -19,37 +19,15 @@ Main Components:
 - TradePersistenceManager: Database persistence
 """
 
-from .account_synchronizer import (
-    AccountSynchronizer,
-    get_account_synchronizer,
-)
-from .alert_to_trade_mapper import (
-    AlertToTradeMapper,
-    get_alert_to_trade_mapper,
-)
-from .broker_connector import (
-    BrokerConnector,
-    get_broker_connector,
-)
-from .order_manager import (
-    OrderManager,
-    get_order_manager,
-)
-from .risk_gates import (
-    RiskGates,
-    get_risk_gates,
-)
-from .trade_persistence import (
-    TradePersistenceManager,
-    get_trade_persistence_manager,
-)
-from .trading_audit_trail import (
-    TradingAuditTrail,
-    get_trading_audit_trail,
-)
+from .account_synchronizer import AccountSynchronizer, get_account_synchronizer
+from .alert_to_trade_mapper import AlertToTradeMapper, get_alert_to_trade_mapper
+from .broker_connector import BrokerConnector, get_broker_connector
+from .order_manager import OrderManager, get_order_manager
+from .risk_gates import RiskGates, get_risk_gates
+from .trade_persistence import TradePersistenceManager, get_trade_persistence_manager
+from .trading_audit_trail import TradingAuditTrail, get_trading_audit_trail
 from .trading_bridge_orchestrator import TradingBridgeOrchestrator, get_trading_bridge_orchestrator
 
-__all__ = [
     # Service Classes
     "TradingBridgeOrchestrator",
     "BrokerConnector",

@@ -120,10 +120,10 @@ class BacktestReportGenerator:
             assessment = "WEAK"
             color = "🔴"
 
-        return f"""# Executive Summary
+        return """# Executive Summary
 
-**Backtest ID:** {config.strategy_name}  
-**Period:** {result.start_date.strftime('%Y-%m-%d')} to {result.end_date.strftime('%Y-%m-%d')}  
+**Backtest ID:** {config.strategy_name}
+**Period:** {result.start_date.strftime('%Y-%m-%d')} to {result.end_date.strftime('%Y-%m-%d')}
 **Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}
 
 ## Performance Overview
@@ -163,7 +163,7 @@ class BacktestReportGenerator:
         """Generate technical analysis."""
         perf = result.performance
 
-        return f"""# Technical Analysis Report
+        return """# Technical Analysis Report
 
 ## Backtest Configuration
 
@@ -231,7 +231,7 @@ Max Position Size: {float(config.max_position_size):.2f}%
         """Generate risk analysis."""
         perf = result.performance
 
-        return f"""# Risk Analysis Report
+        return """# Risk Analysis Report
 
 ## Risk Exposure
 
@@ -412,7 +412,7 @@ Max Position Size: {float(config.max_position_size):.2f}%
         min_val = min(x[1] for x in result.equity_curve)
         recovery_time = len(result.equity_curve) // 2
 
-        return f"""
+        return """
 - **Peak Equity:** ${float(max_val):,.2f}
 - **Trough Equity:** ${float(min_val):,.2f}
 - **Recovery Time:** ~{recovery_time} days

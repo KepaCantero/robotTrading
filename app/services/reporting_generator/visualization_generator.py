@@ -322,7 +322,7 @@ class AdvancedVisualizationGenerator:
             periods_list = []
 
             for i in range(window, len(returns_array)):
-                window_returns = returns_array[i - window : i]
+                window_returns = returns_array[i - window: i]
                 mean_ret = np.mean(window_returns)
                 std_ret = np.std(window_returns)
                 sharpe = (mean_ret / std_ret * np.sqrt(252)) if std_ret > 0 else 0
@@ -427,7 +427,7 @@ class AdvancedVisualizationGenerator:
             current_month = 1
 
             for i in range(0, len(returns_array), days_per_month):
-                month_ret = returns_array[i : i + days_per_month]
+                month_ret = returns_array[i: i + days_per_month]
                 if len(month_ret) > 0:
                     # Compound returns
                     monthly_ret = (np.prod(1 + month_ret) - 1) * 100
@@ -608,5 +608,5 @@ def get_visualization_generator() -> AdvancedVisualizationGenerator:
     """Get or create AdvancedVisualizationGenerator singleton."""
     global _viz_generator_instance
     if _viz_generator_instance is None:
-        _viz_generator_instance = AdvancedVisualizationGenerator()
+
     return _viz_generator_instance

@@ -85,7 +85,7 @@ class GARCHAnalyzer:
                 )
 
             # Entrenar
-            self.fitted_model = self.model.fit(disp='off')
+            self.fitted_model = self.model.fit(disp='of')
 
             logger.info("GARCH model entrenado exitosamente")
             return True

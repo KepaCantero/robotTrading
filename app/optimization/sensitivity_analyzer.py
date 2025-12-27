@@ -125,7 +125,7 @@ class SensitivityAnalyzer:
                 "elasticity_thresholds": {
                     "robust": (0.0, 0.5),  # elasticity < 0.5 = robust
                     "normal": (0.5, 2.0),  # 0.5 <= elasticity < 2.0 = normal
-                    "critical": (2.0, float("inf")),  # elasticity >= 2.0 = critical
+                    "critical": (2.0, float("in")),  # elasticity >= 2.0 = critical
                 },
                 "monte_carlo": {
                     "enabled": True,
@@ -186,7 +186,7 @@ class SensitivityAnalyzer:
         report.overall_robustness_score = self._calculate_overall_robustness(report)
 
         logger.info(
-            f"Sensitivity analysis complete. "
+            "Sensitivity analysis complete. "
             f"Robust: {len(report.robust_parameters)}, "
             f"Normal: {len(report.normal_parameters)}, "
             f"Critical: {len(report.critical_parameters)}"

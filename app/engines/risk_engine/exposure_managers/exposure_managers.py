@@ -401,7 +401,7 @@ class ExposureManager(BaseExposureManager):
 
         # Mantener historial limitado
         if len(self.exposure_violations) > self.max_violation_history:
-            self.exposure_violations = self.exposure_violations[-self.max_violation_history :]
+            self.exposure_violations = self.exposure_violations[-self.max_violation_history:]
 
         return violations
 

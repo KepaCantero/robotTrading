@@ -5,10 +5,7 @@ Calculates feasibility_ratio for deployment decisions.
 Integrates with existing backtesting infrastructure.
 """
 
-from .backtest_orchestrator import (
-    BacktestOrchestrator,
-    get_backtest_orchestrator,
-)
+from .backtest_orchestrator import BacktestOrchestrator, get_backtest_orchestrator
 from .models import (
     BacktestConfig,
     BacktestMetrics,
@@ -18,7 +15,6 @@ from .models import (
     BacktestStatus,
 )
 
-__all__ = [
     "BacktestOrchestrator",
     "get_backtest_orchestrator",
     "BacktestConfig",

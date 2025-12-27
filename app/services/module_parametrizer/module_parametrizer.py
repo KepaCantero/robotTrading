@@ -338,7 +338,7 @@ class ModuleParametrizer:
         if parameter_set.total_max_exposure > Decimal("1.5"):
             warnings.append(
                 f"⚠️  Total max exposure {parameter_set.total_max_exposure} > 1.5 - "
-                f"may indicate excessive portfolio exposure"
+                "may indicate excessive portfolio exposure"
             )
 
         # Check if high-priority modules are disabled
@@ -346,13 +346,15 @@ class ModuleParametrizer:
             parameter_set.total_modules_enabled > 0
             and len(parameter_set.high_priority_modules) == 0
         ):
-            warnings.append("⚠️  No high-priority modules enabled - may affect strategy consistency")
+            warnings.append(
+                "⚠️  No high-priority modules enabled - may affect strategy consistency"
+            )
 
         # Check estimated cost
         if parameter_set.total_estimated_cost_usd > Decimal("1000"):
             warnings.append(
                 f"⚠️  Estimated infrastructure cost ${parameter_set.total_estimated_cost_usd:.0f} "
-                f"- verify budget before deployment"
+                "- verify budget before deployment"
             )
 
         return warnings
@@ -388,5 +390,5 @@ def get_module_parametrizer(config_path: Optional[str] = None) -> ModuleParametr
     """Get or create singleton ModuleParametrizer."""
     global _parametrizer
     if _parametrizer is None:
-        _parametrizer = ModuleParametrizer(config_path)
+
     return _parametrizer

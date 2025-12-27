@@ -156,9 +156,9 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
             volumes = [float(getattr(q, "volume", 0)) for q in historical_data]
 
         if len(prices) >= self.lookback_period:
-            window_prices = prices[-self.lookback_period :]
-            window_highs = highs[-self.lookback_period :] if highs else window_prices
-            window_lows = lows[-self.lookback_period :] if lows else window_prices
+            window_prices = prices[-self.lookback_period:]
+            window_highs = highs[-self.lookback_period:] if highs else window_prices
+            window_lows = lows[-self.lookback_period:] if lows else window_prices
 
             range_high = max(window_highs)
             range_low = min(window_lows)
@@ -258,9 +258,9 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
             lows = list(self.low_history)
             volumes = list(self.volume_history)
 
-            window_prices = prices[-self.lookback_period :]
-            window_highs = highs[-self.lookback_period :]
-            window_lows = lows[-self.lookback_period :]
+            window_prices = prices[-self.lookback_period:]
+            window_highs = highs[-self.lookback_period:]
+            window_lows = lows[-self.lookback_period:]
 
             range_high = max(window_highs)
             range_low = min(window_lows)

@@ -153,7 +153,7 @@ def _generate_performance_summary(metrics: Dict) -> str:
     else:
         performance = "poor"
 
-    summary = f"""
+    summary = """
 The {performance} strategy performance shows a win rate of {win_rate:.1f}%
 with a Sharpe ratio of {sharpe or 'N/A'} and maximum drawdown of {drawdown:.2f}%.
 
@@ -171,7 +171,7 @@ def _generate_decision_analysis(result: Dict) -> str:
     buy_count = sum(1 for t in result["trades"] if t.get("side") == "buy")
     sell_count = sum(1 for t in result["trades"] if t.get("side") == "sell")
 
-    return f"""
+    return """
 - Buy signals: {buy_count}
 - Sell signals: {sell_count}
 - Most frequent reason: (analyze from trade reasons)
@@ -277,10 +277,10 @@ def generate_backend_test_summary(
         summary_text = generate_multi_strategy_summary_text(multi_strategy_results)
 
         # Add header
-        report = f"""# 🧩 Multi-Strategy Backend Test Result Summary
+        report = """# 🧩 Multi-Strategy Backend Test Result Summary
 
-**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}  
-**Audit Level:** Multi-Strategy Portfolio Analysis  
+**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}
+**Audit Level:** Multi-Strategy Portfolio Analysis
 **Classification:** Technical Backend Audit Report
 **Strategy:** {strategy}
 **Preset:** {preset}
@@ -375,10 +375,10 @@ def _generate_comprehensive_backend_report(
     period_days = (end_date - start_date).days
 
     # Section 1: Context
-    context = f"""# 🧩 Backend Test Result Summary
+    context = """# 🧩 Backend Test Result Summary
 
-**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}  
-**Audit Level:** Comprehensive System-Wide Analysis  
+**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}
+**Audit Level:** Comprehensive System-Wide Analysis
 **Classification:** Technical Backend Audit Report
 
 ---
@@ -438,7 +438,7 @@ The backtest evaluated the following system modules:
     avg_win_rate = metrics.get("avg_win_rate", 0)
     avg_return = metrics.get("avg_total_return", 0)
 
-    results = f"""
+    results = """
 ## 2. 📊 Resultados Globales
 
 ### Trade Statistics
@@ -702,7 +702,7 @@ def _generate_module_analysis(all_results: List[Dict]) -> str:
         trades = result.get("total_trades", 0)
         win_rate = result.get("win_rate", 0)
 
-        analysis += f"""
+        analysis += """
 ### {module_name}
 
 **Performance:**
@@ -747,7 +747,7 @@ def _generate_behavior_analysis(all_results: List[Dict], strategy: str) -> str:
         else 0
     )
 
-    return f"""
+    return """
 ## 4. 🔍 Análisis de Comportamiento
 
 ### Market Regime Response
@@ -865,7 +865,7 @@ def _generate_findings_and_recommendations(
     if metrics.get("total_trades", 0) < 20:
         findings += "- **INFO:** Low trade count limits statistical significance\n"
 
-    findings += f"""
+    findings += """
 ### Recommended Improvements
 
 **Area: Signal Generation**
@@ -873,7 +873,7 @@ def _generate_findings_and_recommendations(
 - **Rationale:** Avoid false entries in choppy markets
 - **Implementation:** Filter signals when ATR < 1% (low volatility = sideways market)
 
-**Area: Exit Logic**  
+**Area: Exit Logic**
 - **Recommendation:** Implement trailing stop
 - **Rationale:** Capture extended trends without premature exits
 - **Implementation:** Dynamic stop loss that follows price favorably
@@ -926,7 +926,7 @@ def _generate_findings_and_recommendations(
 ### Next Steps
 
 1. ✅ **Complete current analysis** *(this report)*
-2. 🔄 **Optimize parameters:** Walk-forward analysis  
+2. 🔄 **Optimize parameters:** Walk-forward analysis
 3. 📊 **Monte Carlo simulation:** 1000 trade resamples for robustness validation
 4. 🧪 **Out-of-sample validation:** Test on unseen data (2025)
 5. 📈 **Benchmark comparison:** Compare vs SPY for alpha/beta metrics
@@ -954,7 +954,7 @@ def _generate_conclusion(metrics: Dict, avg_return: float, avg_win_rate: float) 
         description = "Strategy needs significant improvement"
         recommendation = "RETRAIN or redesign strategy"
 
-    return f"""
+    return """
 ## 7. 📁 Conclusión Técnica
 
 ### Diagnóstico General

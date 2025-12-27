@@ -52,7 +52,7 @@ class TestExportConfig:
         with tempfile.TemporaryDirectory() as tmpdir:
             config = ExportConfig(
                 format=ExportFormat.PDF,
-                output_path=Path(tmpdir) / "report.pdf",
+                output_path=Path(tmpdir) / "report.pd",
             )
 
             assert config.include_timestamp is True
@@ -272,7 +272,7 @@ class TestReportDeliveryManager:
     def test_export_to_pdf_fallback(self):
         """Test PDF export falls back to HTML."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            output_path = Path(tmpdir) / "report.pdf"
+            output_path = Path(tmpdir) / "report.pd"
             result = self.manager.export_to_pdf(
                 self.sample_html, output_path, include_timestamp=False
             )
@@ -285,7 +285,7 @@ class TestReportDeliveryManager:
     def test_export_to_pdf_quality_parameter(self):
         """Test PDF export accepts quality parameter."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            output_path = Path(tmpdir) / "report.pdf"
+            output_path = Path(tmpdir) / "report.pd"
             result = self.manager.export_to_pdf(
                 self.sample_html,
                 output_path,
@@ -298,7 +298,7 @@ class TestReportDeliveryManager:
     def test_export_to_pdf_with_timestamp(self):
         """Test PDF export with timestamp."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            output_path = Path(tmpdir) / "report.pdf"
+            output_path = Path(tmpdir) / "report.pd"
             result = self.manager.export_to_pdf(
                 self.sample_html, output_path, include_timestamp=True
             )

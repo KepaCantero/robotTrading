@@ -103,7 +103,7 @@ class SmartOrderRouter:
         if total_size < self.MIN_ORDER_SIZE_FOR_ROUTING:
             raise ValueError(
                 f"Order size €{total_size:,.0f} below minimum €{self.MIN_ORDER_SIZE_FOR_ROUTING:,.0f} "
-                f"for smart routing (use simple execution)"
+                "for smart routing (use simple execution)"
             )
 
         logger.info(
@@ -117,7 +117,7 @@ class SmartOrderRouter:
 
         if daily_volume <= 0:
             raise ValueError(
-                f"daily_volume must be positive for market impact estimation "
+                "daily_volume must be positive for market impact estimation "
                 f"(got {daily_volume})"
             )
 
@@ -346,5 +346,5 @@ def get_smart_order_router() -> SmartOrderRouter:
     """Get or create global SmartOrderRouter instance."""
     global _smart_order_router
     if _smart_order_router is None:
-        _smart_order_router = SmartOrderRouter()
+
     return _smart_order_router

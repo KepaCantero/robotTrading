@@ -421,15 +421,15 @@ class InsightGenerator:
 
             metric_keys = [
                 ("return_pct", "Total Return", ".1%"),
-                ("sharpe_ratio", "Sharpe Ratio", ".2f"),
-                ("sortino_ratio", "Sortino Ratio", ".2f"),
+                ("sharpe_ratio", "Sharpe Ratio", ".2"),
+                ("sortino_ratio", "Sortino Ratio", ".2"),
                 ("max_drawdown", "Max Drawdown", ".1%"),
                 ("volatility", "Volatility", ".1%"),
                 ("win_rate", "Win Rate", ".1%"),
-                ("profit_factor", "Profit Factor", ".2f"),
+                ("profit_factor", "Profit Factor", ".2"),
                 ("total_trades", "Total Trades", "d"),
-                ("avg_trade_pnl", "Avg Trade P&L", ".0f"),
-                ("calmar_ratio", "Calmar Ratio", ".2f"),
+                ("avg_trade_pnl", "Avg Trade P&L", ".0"),
+                ("calmar_ratio", "Calmar Ratio", ".2"),
             ]
 
             for key, label, fmt in metric_keys:
@@ -437,11 +437,11 @@ class InsightGenerator:
                     value = metrics[key]
                     if fmt == ".1%":
                         formatted = f"{value*100:.1f}%"
-                    elif fmt == ".2f":
+                    elif fmt == ".2":
                         formatted = f"{value:.2f}"
                     elif fmt == "d":
                         formatted = f"{int(value)}"
-                    elif fmt == ".0f":
+                    elif fmt == ".0":
                         formatted = f"{value:.0f}"
                     else:
                         formatted = str(value)

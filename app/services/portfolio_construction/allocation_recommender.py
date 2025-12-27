@@ -294,7 +294,7 @@ class AllocationRecommender:
                 remaining_weight = (Decimal("1.0") - Decimal(len(allocation)) * cap) / Decimal(
                     remaining
                 )
-                for asset in assets[len(allocation) :]:
+                for asset in assets[len(allocation):]:
                     allocation[asset] = remaining_weight
         else:
             allocation = {asset: base_weight for asset in assets}
@@ -350,5 +350,5 @@ def get_allocation_recommender() -> AllocationRecommender:
     """Get or create singleton AllocationRecommender."""
     global _recommender
     if _recommender is None:
-        _recommender = AllocationRecommender()
+
     return _recommender

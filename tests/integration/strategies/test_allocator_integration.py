@@ -138,7 +138,7 @@ def test_allocation():
             total_capital=total_capital,
             strategy_allocations=None,  # Use defaults
         )
-        print(f"✅ Allocation completed")
+        print("✅ Allocation completed")
     except Exception as e:
         print(f"❌ Allocation failed: {e}")
         import traceback
@@ -199,7 +199,7 @@ def test_allocation():
     print("\n8️⃣ Validation Summary:")
     print(f"   ✅ Validation passed: {result.validation_passed}")
     if not result.validation_passed:
-        print(f"   ❌ Errors:")
+        print("   ❌ Errors:")
         for error in result.validation_errors:
             print(f"      - {error}")
 
@@ -239,10 +239,10 @@ def test_allocation():
 
     # Check 4: Validation passed
     if result.validation_passed:
-        print(f"   ✅ Validation passed")
+        print("   ✅ Validation passed")
         checks_passed += 1
     else:
-        print(f"   ⚠️  Validation failed (but allocations created)")
+        print("   ⚠️  Validation failed (but allocations created)")
 
     # Check 5: Residual capital reasonable
     residual_pct = (result.residual_capital / total_capital) * 100
@@ -257,7 +257,7 @@ def test_allocation():
         print(f"   ✅ Pairs found: {len(result.pairs)}")
         checks_passed += 1
     else:
-        print(f"   ⚠️  No pairs found (may be expected if no cointegrated pairs)")
+        print("   ⚠️  No pairs found (may be expected if no cointegrated pairs)")
 
     print(f"\n✅ Quality checks: {checks_passed}/{total_checks} passed")
 

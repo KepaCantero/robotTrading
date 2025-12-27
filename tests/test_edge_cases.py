@@ -59,7 +59,7 @@ class TestTechnicalIndicatorsEdgeCases:
         """Test RSI calculation with infinite values."""
         prices = [
             100.0,
-            float("inf"),
+            float("in"),
             105.0,
             110.0,
             108.0,

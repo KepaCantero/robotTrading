@@ -30,7 +30,7 @@ class TestOpportunityCostValidator:
             commission_per_trade=Decimal("15"),
         )
 
-        assert should_trade == False
+        assert not should_trade
         assert analysis["recommendation"] == "HOLD_CASH"
         assert analysis["passive_monthly_return"] > analysis["active_monthly_return"]
         assert "$40" in analysis["reason"] or "40" in str(analysis["passive_monthly_return"])
@@ -64,8 +64,8 @@ class TestOpportunityCostValidator:
             commission_per_trade=Decimal("15"),
         )
 
-        assert should_trade1 == False
-        assert should_trade2 == True
+        assert not should_trade1
+        assert should_trade2
         assert analysis2["recommendation"] == "TRADE"
 
     def test_minimum_alpha_for_trading(self):
@@ -173,7 +173,7 @@ class TestOpportunityCostValidator:
             commission_per_trade=Decimal("15"),
         )
 
-        assert should_trade == False
+        assert not should_trade
         assert analysis["recommendation"] == "HOLD_CASH"
 
     def test_negative_expected_alpha(self):
@@ -187,7 +187,7 @@ class TestOpportunityCostValidator:
             commission_per_trade=Decimal("15"),
         )
 
-        assert should_trade == False
+        assert not should_trade
 
     def test_high_risk_free_rate_scenario(self):
         """
@@ -273,7 +273,7 @@ class TestOpportunityCostValidator:
         # Stock market more likely to be viable
         if should_trade_stock:
             assert (
-                should_trade_forex == False
+                not should_trade_forex
                 or analysis_stock["margin_monthly"] > analysis_forex["margin_monthly"]
             )
 
@@ -319,7 +319,7 @@ class TestRealWorldScenarios:
         # Active: $100 - $70 = $30/month
         # Passive wins! Recommend holding cash
 
-        assert should_trade == False
+        assert not should_trade
         assert analysis["recommendation"] == "HOLD_CASH"
 
     def test_crypto_account_medium_capital(self):
@@ -360,6 +360,6 @@ class TestRealWorldScenarios:
         # Active wins, but margin vs passive is $833/mo which is < passive($1,666),
         # so it's TRADE_WITH_CAUTION, not high confidence TRADE
 
-        assert should_trade == True
+        assert should_trade
         assert analysis["recommendation"] in ["TRADE", "TRADE_WITH_CAUTION"]
         assert analysis["active_monthly_return"] > Decimal("2400")  # ~$2,500

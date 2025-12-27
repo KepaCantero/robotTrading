@@ -223,5 +223,5 @@ def get_questdb_connector(
     """Get or create singleton QuestDBConnector."""
     global _connector
     if _connector is None:
-        _connector = QuestDBConnector(host, port)
+
     return _connector

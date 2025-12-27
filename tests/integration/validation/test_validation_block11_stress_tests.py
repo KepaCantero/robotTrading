@@ -184,7 +184,7 @@ class TestSharpeCalculationConsistency(unittest.TestCase):
             # Con retornos mayormente positivos, Sharpe debe ser positivo
             # (aunque pequeño por la desviación)
             self.assertFalse(
-                str(sharpe).lower() in ["nan", "inf", "-inf"],
+                str(sharpe).lower() in ["nan", "in", "-in"],
                 f"Sharpe no debe ser NaN o Inf: {sharpe}",
             )
 
@@ -310,7 +310,7 @@ class TestTradeReturnDistribution(unittest.TestCase):
                 negative_ratio,
                 0.99,  # Menos del 99% negativos
                 f"Patrón anómalo: {negative_ratio*100:.1f}% trades negativos "
-                f"(posibles señales invertidas)",
+                "(posibles señales invertidas)",
             )
 
 

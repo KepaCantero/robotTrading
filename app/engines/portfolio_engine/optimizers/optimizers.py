@@ -12,7 +12,6 @@ from .optimizers import (
     RiskParityOptimizer,
 )
 
-__all__ = [
     "BaseOptimizer",
     "MarkowitzOptimizer",
     "RiskParityOptimizer",

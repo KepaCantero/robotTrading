@@ -196,7 +196,7 @@ class DrawdownMonitor:
         if has_recovered and self.halt_triggered_at is not None:
             recovery_time = datetime.now() - self.halt_triggered_at
             logger.info(
-                f"Recovery to all-time high achieved! "
+                "Recovery to all-time high achieved! "
                 f"Recovery time: {recovery_time.total_seconds() / 3600:.1f} hours"
             )
             self.halt_triggered_at = None
@@ -343,7 +343,7 @@ class DrawdownMonitor:
             action = "REDUCE_50"
             desc = (
                 f"Drawdown at {current_drawdown:.1%}. Reduce positions to 50% "
-                f"of normal sizing. Monitor closely."
+                "of normal sizing. Monitor closely."
             )
         elif level == "CAUTION":
             action = "REDUCE_20"

@@ -6,10 +6,7 @@ Tests account tier classification and configuration recommendations.
 
 from decimal import Decimal
 
-from app.services.account_configuration import (
-    AccountConfiguration,
-    AccountTier,
-)
+from app.services.account_configuration import AccountConfiguration, AccountTier
 
 
 class TestAccountTierClassification:
@@ -97,7 +94,7 @@ class TestPositionSizeValidation:
             position_size=Decimal("200"),  # Exactly 2%
         )
 
-        assert is_valid == True
+        assert is_valid
 
     def test_micro_rejects_oversized_position(self):
         """Micro tier should reject positions > 2%"""
@@ -106,7 +103,7 @@ class TestPositionSizeValidation:
             position_size=Decimal("500"),  # 5% - too large
         )
 
-        assert is_valid == False
+        assert not is_valid
         assert "$500" in reason
 
     def test_small_max_position_5_percent(self):
@@ -116,7 +113,7 @@ class TestPositionSizeValidation:
             position_size=Decimal("1500"),  # Exactly 5%
         )
 
-        assert is_valid == True
+        assert is_valid
 
     def test_large_max_position_10_percent(self):
         """Large tier max position should be 10% of capital"""
@@ -125,7 +122,7 @@ class TestPositionSizeValidation:
             position_size=Decimal("50000"),  # Exactly 10%
         )
 
-        assert is_valid == True
+        assert is_valid
 
     def test_position_validation_includes_reason(self):
         """Position validation should include helpful reason"""

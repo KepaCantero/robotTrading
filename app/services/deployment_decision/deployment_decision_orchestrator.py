@@ -363,7 +363,7 @@ class DeploymentDecisionOrchestrator:
 
         # Maximum loss assessment
         if estimated_max_loss < -initial_capital * Decimal("0.40"):
-            warnings.append(f"Potential loss exceeds 40% of capital")
+            warnings.append("Potential loss exceeds 40% of capital")
 
         return {
             "drawdown": drawdown_abs,
@@ -451,13 +451,13 @@ class DeploymentDecisionOrchestrator:
                 f"recommendation ({recommendation['confidence']} confidence) and "
                 f"quality portfolio ({portfolio['quality_level']})."
             )
-            supporting.append(f"Feasibility ratio supports deployment")
+            supporting.append("Feasibility ratio supports deployment")
             supporting.append(f"Portfolio quality is {portfolio['quality_level']}")
             supporting.append(f"Recommendation confidence is {recommendation['confidence']}")
 
         elif decision == "CONDITIONAL":
             primary = (
-                f"Strategy shows promise but requires optimization or monitoring. "
+                "Strategy shows promise but requires optimization or monitoring. "
                 f"Feasibility is {feasibility['assessment']}."
             )
             if feasibility["assessment"] == "MARGINAL":
@@ -614,5 +614,5 @@ def get_deployment_decision_orchestrator() -> DeploymentDecisionOrchestrator:
     """Get or create singleton DeploymentDecisionOrchestrator."""
     global _orchestrator
     if _orchestrator is None:
-        _orchestrator = DeploymentDecisionOrchestrator()
+
     return _orchestrator

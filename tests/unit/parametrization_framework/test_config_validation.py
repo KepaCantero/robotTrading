@@ -378,7 +378,7 @@ class TestCrossReferenceValidation:
                                 f"{objective}/{tier} references undefined module '{module}'"
                             )
 
-        assert not errors, f"Invalid module references:\n" + "\n".join(errors)
+        assert not errors, "Invalid module references:\n" + "\n".join(errors)
 
     def test_no_orphaned_module_configurations(
         self, investment_profiles_config, module_parameters_config

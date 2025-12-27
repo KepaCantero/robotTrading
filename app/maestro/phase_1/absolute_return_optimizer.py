@@ -13,10 +13,7 @@ from decimal import Decimal
 from typing import Dict
 
 from .capital_tier_selector import CapitalTierSelector
-from .models import (
-    AbsoluteReturnTarget,
-    AbsoluteReturnValidation,
-)
+from .models import AbsoluteReturnTarget, AbsoluteReturnValidation
 
 logger = logging.getLogger(__name__)
 
