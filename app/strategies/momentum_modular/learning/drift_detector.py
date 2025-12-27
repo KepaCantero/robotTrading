@@ -1613,7 +1613,7 @@ class AdvancedOverfittingDetector:
             return None
 
         # Find epoch with best validation metric
-        best_val_loss = float("in")
+        best_val_loss = float("inf")
         best_epoch = None
 
         for i, m in enumerate(self.metrics_history):

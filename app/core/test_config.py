@@ -206,7 +206,7 @@ def get_test_config_manager() -> TestConfigManager:
     """Get global test configuration manager."""
     global _test_config_manager
     if _test_config_manager is None:
-        pass
+        _test_config_manager = TestConfigManager()
 
     return _test_config_manager
 

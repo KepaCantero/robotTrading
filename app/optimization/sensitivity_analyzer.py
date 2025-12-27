@@ -125,7 +125,7 @@ class SensitivityAnalyzer:
                 "elasticity_thresholds": {
                     "robust": (0.0, 0.5),  # elasticity < 0.5 = robust
                     "normal": (0.5, 2.0),  # 0.5 <= elasticity < 2.0 = normal
-                    "critical": (2.0, float("in")),  # elasticity >= 2.0 = critical
+                    "critical": (2.0, float("inf")),  # elasticity >= 2.0 = critical
                 },
                 "monte_carlo": {
                     "enabled": True,

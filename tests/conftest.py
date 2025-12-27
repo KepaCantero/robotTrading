@@ -4,11 +4,23 @@ Pytest configuration and shared fixtures for AlgoTrading tests.
 This module provides common fixtures and configuration for all tests.
 """
 
+import os
 from decimal import Decimal
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from dotenv import load_dotenv
 from fastapi.testclient import TestClient
+
+# Load test environment variables from .env.test before importing app
+test_env_file = Path(__file__).parent.parent / ".env.test"
+if test_env_file.exists():
+    load_dotenv(test_env_file)
+else:
+    # Fallback: Set essential test environment variables
+    os.environ.setdefault("DEBUG", "true")
+    os.environ.setdefault("SECRET_KEY", "test-secret-key-do-not-use-in-production")
 
 from app.main import app
 from app.models.assets import Asset, AssetClass, AssetRanking, Exchange

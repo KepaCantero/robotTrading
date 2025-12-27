@@ -91,7 +91,7 @@ class TestSensitivityAnalyzerInitialization:
                 "elasticity_thresholds": {
                     "robust": (0.0, 0.3),
                     "normal": (0.3, 2.0),
-                    "critical": (2.0, float("in")),
+                    "critical": (2.0, float("inf")),
                 },
             }
         }

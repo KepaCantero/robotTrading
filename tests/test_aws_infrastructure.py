@@ -15,7 +15,7 @@ class TestAWSInfrastructureConfig:
     def setup_method(self):
         """Set up test fixtures."""
         self.config_path = Path("config/aws_infrastructure.yaml")
-        self.terraform_path = Path("infrastructure/terraform/main.t")
+        self.terraform_path = Path("infrastructure/terraform/main.tf")
         self.user_data_path = Path("infrastructure/terraform/user_data.sh")
 
     def test_aws_config_file_exists(self):
