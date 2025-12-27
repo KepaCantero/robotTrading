@@ -1,0 +1,26 @@
+---
+# Kubernetes Namespace for AlgoTrading Application
+# Provides logical isolation and resource grouping
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: algotrading
+  labels:
+    name: algotrading
+    environment: production
+---
+# Namespace for monitoring stack (Prometheus, Grafana)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+  labels:
+    name: monitoring
+---
+# Namespace for ingress controller
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ingress-nginx
+  labels:
+    name: ingress-nginx

@@ -1,8 +1,9 @@
 # Multi-stage Dockerfile for AlgoTrading
-# TASK-7: Configuración de CI/CD pipeline
+# FASE 5: Cloud Deployment - Production-ready containerization
+# Supports multiple build targets: production, development, testing
 
 # Build stage
-FROM python:3.9-slim as builder
+FROM python:3.11-slim as builder
 
 # Set build arguments
 ARG BUILD_DATE
@@ -38,7 +39,7 @@ COPY . .
 RUN pip install -e .
 
 # Production stage
-FROM python:3.9-slim as production
+FROM python:3.11-slim as production
 
 # Set build arguments
 ARG BUILD_DATE
@@ -54,12 +55,23 @@ LABEL org.opencontainers.image.title="AlgoTrading API" \
       org.opencontainers.image.vendor="AlgoTrading Team" \
       org.opencontainers.image.licenses="MIT"
 
-# Set environment variables
+# Set environment variables (MUST be before any numeric library imports)
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    ENVIRONMENT=production
+    ENVIRONMENT=production \
+    OMP_NUM_THREADS=1 \
+    OPENBLAS_NUM_THREADS=1 \
+    MKL_NUM_THREADS=1 \
+    NUMEXPR_NUM_THREADS=1 \
+    VECLIB_MAXIMUM_THREADS=1 \
+    MKL_SERVICE_FORCE_INTEL=1 \
+    KMP_DUPLICATE_LIB_OK=TRUE \
+    PYTORCH_ENABLE_MPS_FALLBACK=1 \
+    TF_CPP_MIN_LOG_LEVEL=2 \
+    CUDA_VISIBLE_DEVICES="" \
+    TORCH_USE_CUDA_DSA=0
 
 # Create non-root user
 RUN groupadd -r algotrading && useradd -r -g algotrading algotrading
@@ -74,7 +86,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy Python dependencies from builder stage
-COPY --from=builder /usr/local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code

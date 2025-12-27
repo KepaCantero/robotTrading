@@ -1,0 +1,165 @@
+---
+# ServiceAccount for AlgoTrading API
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: algotrading-api
+  namespace: algotrading
+  labels:
+    app: algotrading
+    component: api
+
+---
+# Role for AlgoTrading API (namespace-scoped permissions)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: algotrading-api
+  namespace: algotrading
+  labels:
+    app: algotrading
+    component: api
+rules:
+  # Pods - read only
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "list", "watch"]
+
+  # ConfigMaps - read only
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "watch"]
+
+  # Secrets - read only
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list"]
+
+  # Services - read only
+  - apiGroups: [""]
+    resources: ["services", "endpoints"]
+    verbs: ["get", "list", "watch"]
+
+  # Deployments - read only
+  - apiGroups: ["apps"]
+    resources: ["deployments", "statefulsets"]
+    verbs: ["get", "list", "watch"]
+
+  # Leases - for leader election (optional)
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+---
+# RoleBinding - bind Role to ServiceAccount
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: algotrading-api
+  namespace: algotrading
+  labels:
+    app: algotrading
+    component: api
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: algotrading-api
+subjects:
+  - kind: ServiceAccount
+    name: algotrading-api
+    namespace: algotrading
+
+---
+# ClusterRole for cross-namespace access (optional)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: algotrading-api
+  labels:
+    app: algotrading
+    component: api
+rules:
+  # Nodes - read metrics
+  - apiGroups: [""]
+    resources: ["nodes", "nodes/stats", "nodes/metrics"]
+    verbs: ["get", "list"]
+
+  # Namespaces - read
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "list"]
+
+  # PersistentVolumes - read
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list"]
+
+---
+# ClusterRoleBinding for ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: algotrading-api
+  labels:
+    app: algotrading
+    component: api
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: algotrading-api
+subjects:
+  - kind: ServiceAccount
+    name: algotrading-api
+    namespace: algotrading
+
+---
+# ServiceAccount for Prometheus
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus
+  namespace: monitoring
+  labels:
+    app: prometheus
+
+---
+# ClusterRole for Prometheus (requires broad access for scraping)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: prometheus
+  labels:
+    app: prometheus
+rules:
+  - apiGroups: [""]
+    resources:
+      - nodes
+      - nodes/proxy
+      - services
+      - endpoints
+      - pods
+    verbs: ["get", "list", "watch"]
+  - apiGroups:
+      - extensions
+    resources:
+      - ingresses
+    verbs: ["get", "list", "watch"]
+  - nonResourceURLs: ["/metrics"]
+    verbs: ["get"]
+
+---
+# ClusterRoleBinding for Prometheus
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus
+  labels:
+    app: prometheus
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus
+subjects:
+  - kind: ServiceAccount
+    name: prometheus
+    namespace: monitoring

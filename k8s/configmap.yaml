@@ -1,0 +1,123 @@
+---
+# ConfigMap for AlgoTrading Application Configuration
+# Contains non-sensitive configuration data
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: algotrading-config
+  namespace: algotrading
+  labels:
+    app: algotrading
+    component: config
+data:
+  # Application environment
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+
+  # Database configuration
+  DATABASE_HOST: "postgres.algotrading.svc.cluster.local"
+  DATABASE_PORT: "5432"
+  DATABASE_NAME: "algotrading"
+
+  # Redis configuration
+  REDIS_HOST: "redis.algotrading.svc.cluster.local"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+
+  # QuestDB configuration
+  QUESTDB_HOST: "questdb.algotrading.svc.cluster.local"
+  QUESTDB_PORT: "8812"
+  QUESTDB_HTTP_PORT: "9000"
+
+  # Prometheus configuration
+  PROMETHEUS_HOST: "prometheus.monitoring.svc.cluster.local"
+  PROMETHEUS_PORT: "9090"
+
+  # Grafana configuration
+  GRAFANA_HOST: "grafana.monitoring.svc.cluster.local"
+  GRAFANA_PORT: "3000"
+
+  # API configuration
+  API_HOST: "0.0.0.0"
+  API_PORT: "8000"
+  API_WORKERS: "4"
+
+  # Alpaca broker configuration
+  ALPACA_BASE_URL: "https://api.alpaca.markets"
+  ALPACA_PAPER_TRADING: "true"
+
+  # Monitoring thresholds
+  MAX_DRAWDOWN_THRESHOLD: "0.25"
+  LEVERAGE_RATIO_THRESHOLD: "3.0"
+  MIN_WIN_RATE_THRESHOLD: "0.40"
+  MAX_API_RESPONSE_TIME_MS: "5000"
+  MIN_MODEL_ACCURACY_THRESHOLD: "0.80"
+
+  # Feature flags
+  ENABLE_LIVE_TRADING: "true"
+  ENABLE_BACKTESTING: "true"
+  ENABLE_PAPER_TRADING: "true"
+  ENABLE_MONITORING: "true"
+  ENABLE_ALERTING: "true"
+---
+# ConfigMap for Prometheus configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring
+  labels:
+    app: prometheus
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+      external_labels:
+        cluster: 'algotrading-prod'
+        environment: 'production'
+
+    scrape_configs:
+      - job_name: 'algotrading-api'
+        static_configs:
+          - targets: ['algotrading-api:8000']
+        metrics_path: '/metrics'
+
+      - job_name: 'prometheus'
+        static_configs:
+          - targets: ['localhost:9090']
+
+      - job_name: 'kubernetes-nodes'
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        kubernetes_sd_configs:
+          - role: node
+
+      - job_name: 'kubernetes-pods'
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: true
+---
+# ConfigMap for Grafana datasources
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: monitoring
+  labels:
+    app: grafana
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus:9090
+        isDefault: true
+        editable: true
