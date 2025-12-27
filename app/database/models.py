@@ -31,7 +31,7 @@ from app.database import Base
 class User(Base):
     """User model for authentication and authorization."""
 
-
+    __tablename__ = "users"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
@@ -65,7 +65,7 @@ class User(Base):
 class APIKey(Base):
     """API Key model for external API access."""
 
-
+    __tablename__ = "api_keys"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
@@ -93,7 +93,7 @@ class APIKey(Base):
 class Portfolio(Base):
     """Portfolio model for managing trading portfolios."""
 
-
+    __tablename__ = "portfolios"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
@@ -134,7 +134,7 @@ class Portfolio(Base):
 class Asset(Base):
     """Asset model for storing financial instruments."""
 
-
+    __tablename__ = "assets"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     symbol: Mapped[str] = mapped_column(String(20), unique=True, nullable=False, index=True)
@@ -166,7 +166,7 @@ class Asset(Base):
 class Position(Base):
     """Position model for tracking portfolio positions."""
 
-
+    __tablename__ = "positions"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     portfolio_id: Mapped[uuid.UUID] = mapped_column(
@@ -204,7 +204,7 @@ class Position(Base):
 class Trade(Base):
     """Trade model for recording executed trades."""
 
-
+    __tablename__ = "trades"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     portfolio_id: Mapped[uuid.UUID] = mapped_column(
@@ -248,7 +248,7 @@ class Trade(Base):
 class MarketData(Base):
     """Market data model for storing price and volume data."""
 
-
+    __tablename__ = "market_data"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     asset_id: Mapped[uuid.UUID] = mapped_column(
@@ -284,7 +284,7 @@ class MarketData(Base):
 class Signal(Base):
     """Signal model for storing trading signals."""
 
-
+    __tablename__ = "signals"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     asset_id: Mapped[uuid.UUID] = mapped_column(
@@ -318,7 +318,7 @@ class Signal(Base):
 class Backtest(Base):
     """Backtest model for storing backtest results."""
 
-
+    __tablename__ = "backtests"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     portfolio_id: Mapped[uuid.UUID] = mapped_column(
@@ -361,7 +361,7 @@ class Backtest(Base):
 class RiskMetrics(Base):
     """Risk metrics model for storing portfolio risk calculations."""
 
-
+    __tablename__ = "risk_metrics"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     portfolio_id: Mapped[uuid.UUID] = mapped_column(
@@ -396,7 +396,7 @@ class RiskMetrics(Base):
 class SystemLog(Base):
     """System log model for storing application logs."""
 
-
+    __tablename__ = "system_logs"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     level: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
