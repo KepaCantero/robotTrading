@@ -5,15 +5,15 @@ Creates HTML reports with performance metrics, visualizations, and recommendatio
 """
 
 import logging
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
 from typing import Dict, List, Optional
 
 from .models import (
+    AllocationSnapshot,
     PerformanceReport,
     ReportGenerationRequest,
     StrategyMetrics,
-    AllocationSnapshot,
 )
 
 logger = logging.getLogger(__name__)
@@ -156,9 +156,7 @@ class ReportingGenerator:
                 error_message=str(e),
             )
 
-    async def _assess_overall_performance(
-        self, metrics: StrategyMetrics
-    ) -> str:
+    async def _assess_overall_performance(self, metrics: StrategyMetrics) -> str:
         """Assess overall performance rating."""
         scores = []
 
@@ -242,9 +240,7 @@ class ReportingGenerator:
 
         # High win rate
         if metrics.win_rate_pct >= Decimal("55"):
-            strengths.append(
-                f"Strong win rate ({metrics.win_rate_pct:.1f}% of trades profitable)"
-            )
+            strengths.append(f"Strong win rate ({metrics.win_rate_pct:.1f}% of trades profitable)")
 
         # High profit factor
         if metrics.profit_factor >= Decimal("2.0"):
@@ -271,9 +267,7 @@ class ReportingGenerator:
 
         # Low Sharpe ratio
         if metrics.sharpe_ratio < Decimal("0.5"):
-            weaknesses.append(
-                f"Poor risk-adjusted returns (Sharpe: {metrics.sharpe_ratio:.2f})"
-            )
+            weaknesses.append(f"Poor risk-adjusted returns (Sharpe: {metrics.sharpe_ratio:.2f})")
 
         # Below target return
         if metrics.annual_return_pct < target_return * Decimal("0.8"):
@@ -301,9 +295,7 @@ class ReportingGenerator:
 
         # High volatility
         if metrics.volatility_pct > Decimal("25"):
-            weaknesses.append(
-                f"High portfolio volatility ({metrics.volatility_pct:.1f}% annual)"
-            )
+            weaknesses.append(f"High portfolio volatility ({metrics.volatility_pct:.1f}% annual)")
 
         return weaknesses if weaknesses else []
 
@@ -318,12 +310,8 @@ class ReportingGenerator:
 
         # If no weaknesses, suggest optimization
         if not weaknesses:
-            recommendations.append(
-                "Consider rebalancing to optimize risk-return further"
-            )
-            recommendations.append(
-                "Monitor performance regularly and adjust as needed"
-            )
+            recommendations.append("Consider rebalancing to optimize risk-return further")
+            recommendations.append("Monitor performance regularly and adjust as needed")
             return recommendations
 
         # Address drawdown issues
@@ -343,33 +331,21 @@ class ReportingGenerator:
             recommendations.append(
                 "Increase allocation to higher-return modules (momentum, ML strategies)"
             )
-            recommendations.append(
-                "Consider enabling additional growth-oriented strategies"
-            )
-            recommendations.append(
-                "Review module parameters - may need more aggressive tuning"
-            )
+            recommendations.append("Consider enabling additional growth-oriented strategies")
+            recommendations.append("Review module parameters - may need more aggressive tuning")
 
         # Address win rate issues
         if any("win rate" in w.lower() for w in weaknesses):
-            recommendations.append(
-                "Improve entry/exit logic in selected modules"
-            )
+            recommendations.append("Improve entry/exit logic in selected modules")
             recommendations.append(
                 "Consider ensemble approach to combine strengths of multiple strategies"
             )
-            recommendations.append(
-                "Reduce position size to protect against losing streaks"
-            )
+            recommendations.append("Reduce position size to protect against losing streaks")
 
         # Address volatility issues
         if any("volatility" in w.lower() for w in weaknesses):
-            recommendations.append(
-                "Reduce leverage or position sizes"
-            )
-            recommendations.append(
-                "Add less volatile strategies to portfolio mix"
-            )
+            recommendations.append("Reduce leverage or position sizes")
+            recommendations.append("Add less volatile strategies to portfolio mix")
 
         return recommendations if recommendations else ["Continue monitoring strategy performance"]
 

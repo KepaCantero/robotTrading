@@ -30,13 +30,14 @@ accounts and upgrade modules only when capital and trading volume increase.
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Literal, Set, Tuple
+from typing import Dict, Tuple
 
 logger = logging.getLogger(__name__)
 
 
 class ExpenseLevelEnum(str, Enum):
     """Cost classification for modules"""
+
     CHEAP = "cheap"  # <0.1% of capital per month
     MODERATE = "moderate"  # 0.1-0.5% of capital per month
     EXPENSIVE = "expensive"  # 0.5-2% of capital per month
@@ -207,7 +208,11 @@ class ExpensiveModuleGate:
                     ),
                     "recommendation": "DISABLE",
                     "cost_estimate_monthly": cost_monthly,
-                    "cost_ratio": (cost_monthly / expected_monthly_alpha) if expected_monthly_alpha > Decimal("0") else Decimal("999"),
+                    "cost_ratio": (
+                        (cost_monthly / expected_monthly_alpha)
+                        if expected_monthly_alpha > Decimal("0")
+                        else Decimal("999")
+                    ),
                     "capital_tier": capital_tier,
                     "module_name": module_name,
                     "fallback": module.get("fallback", "none"),
@@ -223,7 +228,11 @@ class ExpensiveModuleGate:
             ),
             "recommendation": "ENABLE",
             "cost_estimate_monthly": cost_monthly,
-            "cost_ratio": (cost_monthly / expected_monthly_alpha) if expected_monthly_alpha > Decimal("0") else Decimal("999"),
+            "cost_ratio": (
+                (cost_monthly / expected_monthly_alpha)
+                if expected_monthly_alpha > Decimal("0")
+                else Decimal("999")
+            ),
             "capital_tier": capital_tier,
             "module_name": module_name,
             "expense_level": module["expense_level"].value,
@@ -372,9 +381,7 @@ class ExpensiveModuleGate:
         Returns:
             Dict with total costs and ratios
         """
-        total_cost = ExpensiveModuleGate.get_total_expensive_module_cost(
-            capital, enabled_modules
-        )
+        total_cost = ExpensiveModuleGate.get_total_expensive_module_cost(capital, enabled_modules)
 
         cost_ratio = (
             total_cost / expected_monthly_alpha
@@ -386,15 +393,15 @@ class ExpensiveModuleGate:
 
         return {
             "total_cost_monthly": total_cost,
-            "total_cost_pct_of_capital": (total_cost / capital * 100) if capital > Decimal("0") else Decimal("0"),
+            "total_cost_pct_of_capital": (
+                (total_cost / capital * 100) if capital > Decimal("0") else Decimal("0")
+            ),
             "cost_ratio_of_alpha": cost_ratio,
             "enabled_module_count": enabled_count,
             "total_module_count": len(enabled_modules),
             "recommendation": (
                 "COST_ACCEPTABLE"
                 if cost_ratio < Decimal("0.50")
-                else "COST_HIGH"
-                if cost_ratio < Decimal("1.0")
-                else "COST_CRITICAL"
+                else "COST_HIGH" if cost_ratio < Decimal("1.0") else "COST_CRITICAL"
             ),
         }

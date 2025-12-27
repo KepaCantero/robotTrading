@@ -5,27 +5,25 @@ Tests for the main orchestrator that manages the alerting system lifecycle
 and coordinates all alerting components.
 """
 
-import pytest
 import asyncio
-from datetime import datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 from app.services.alerting_system.alerting_orchestrator import (
-    AlertingOrchestrator,
     AlertingHealth,
-    AlertingStatistics,
-)
-from app.services.alerting_system.models import (
-    AlertRule,
-    AlertEvent,
-    AlertState,
-    AlertSeverity,
-    ComparisonOperator,
-    LogicOperator,
-    ThresholdRule,
+    AlertingOrchestrator,
 )
 from app.services.alerting_system.metrics_driven_alerter import MetricQueryConfig
+from app.services.alerting_system.models import (
+    AlertEvent,
+    AlertRule,
+    AlertSeverity,
+    AlertState,
+    ComparisonOperator,
+    ThresholdRule,
+)
 from app.services.alerting_system.rule_templates import AlertRuleTemplates
 
 

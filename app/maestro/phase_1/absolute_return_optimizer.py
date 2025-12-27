@@ -10,13 +10,13 @@ Transforms target EUR per month into operational parameters:
 
 import logging
 from decimal import Decimal
-from typing import Optional, Dict
+from typing import Dict
 
+from .capital_tier_selector import CapitalTierSelector
 from .models import (
     AbsoluteReturnTarget,
     AbsoluteReturnValidation,
 )
-from .capital_tier_selector import CapitalTierSelector
 
 logger = logging.getLogger(__name__)
 
@@ -87,11 +87,11 @@ class CapacityFadeAnalyzer:
     # Capacity fade multipliers by scale
     # Based on empirical research: larger capital = smaller alpha due to market impact
     CAPACITY_FADE_CURVE = {
-        Decimal("10000"): Decimal("1.0"),     # Baseline, no fade
-        Decimal("50000"): Decimal("0.95"),    # -5% fade
-        Decimal("100000"): Decimal("0.90"),   # -10% fade
-        Decimal("250000"): Decimal("0.85"),   # -15% fade
-        Decimal("500000"): Decimal("0.80"),   # -20% fade
+        Decimal("10000"): Decimal("1.0"),  # Baseline, no fade
+        Decimal("50000"): Decimal("0.95"),  # -5% fade
+        Decimal("100000"): Decimal("0.90"),  # -10% fade
+        Decimal("250000"): Decimal("0.85"),  # -15% fade
+        Decimal("500000"): Decimal("0.80"),  # -20% fade
         Decimal("1000000"): Decimal("0.75"),  # -25% fade
     }
 
@@ -177,7 +177,9 @@ class ParameterOptimizer:
         # Calculate required position sizing
         # If signal return = 2%, need position_size_pct = target_alpha / signal_return
         if expected_signal_return_pct <= 0:
-            raise ValueError(f"Expected signal return must be positive, got {expected_signal_return_pct}%")
+            raise ValueError(
+                f"Expected signal return must be positive, got {expected_signal_return_pct}%"
+            )
 
         required_position_pct = (target_alpha_pct / expected_signal_return_pct).quantize(
             Decimal("0.01")

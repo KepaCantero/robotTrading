@@ -9,7 +9,6 @@ import logging
 from decimal import Decimal
 from typing import Dict
 
-from app.services.account_configuration import AccountTier
 
 logger = logging.getLogger(__name__)
 
@@ -30,27 +29,27 @@ class BrokerNegotiationEngine:
 
     # Base commission rates for each tier
     COMMISSION_TIERS = {
-        "retail": Decimal("0.001"),              # 0.1%
-        "semi_pro": Decimal("0.0005"),           # 0.05%
-        "pro": Decimal("0.0003"),                # 0.03%
-        "institutional": Decimal("0.0002"),      # 0.02%
+        "retail": Decimal("0.001"),  # 0.1%
+        "semi_pro": Decimal("0.0005"),  # 0.05%
+        "pro": Decimal("0.0003"),  # 0.03%
+        "institutional": Decimal("0.0002"),  # 0.02%
     }
 
     # Volume thresholds for tier qualification
     VOLUME_THRESHOLDS = {
-        "institutional": Decimal("1000000"),     # €1M+
-        "pro": Decimal("250000"),                # €250k-€1M
-        "semi_pro": Decimal("50000"),            # €50k-€250k
-        "retail": Decimal("0"),                  # <€50k
+        "institutional": Decimal("1000000"),  # €1M+
+        "pro": Decimal("250000"),  # €250k-€1M
+        "semi_pro": Decimal("50000"),  # €50k-€250k
+        "retail": Decimal("0"),  # <€50k
     }
 
     # Asset-class adjustment multipliers
     ASSET_CLASS_ADJUSTMENTS = {
-        "equity": Decimal("1.0"),                # No adjustment
-        "crypto": Decimal("1.5"),                # 50% premium (higher risk)
-        "forex": Decimal("0.5"),                 # 50% discount (higher volume)
-        "commodity": Decimal("1.2"),             # 20% premium
-        "bond": Decimal("0.7"),                  # 30% discount
+        "equity": Decimal("1.0"),  # No adjustment
+        "crypto": Decimal("1.5"),  # 50% premium (higher risk)
+        "forex": Decimal("0.5"),  # 50% discount (higher volume)
+        "commodity": Decimal("1.2"),  # 20% premium
+        "bond": Decimal("0.7"),  # 30% discount
     }
 
     def __init__(self):

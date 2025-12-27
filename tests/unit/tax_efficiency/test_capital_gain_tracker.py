@@ -8,14 +8,13 @@ Tests cover:
 - Tax liability projection
 """
 
-import pytest
-from decimal import Decimal
 from datetime import datetime, timedelta
+from decimal import Decimal
+
+import pytest
+
 from app.services.tax_efficiency.capital_gain_tracker import (
     CapitalGainTracker,
-    GainLossRecord,
-    PositionGainLoss,
-    TaxLotReport,
 )
 
 
@@ -65,8 +64,12 @@ class TestRecordPositionPurchase:
 
     def test_record_purchases_different_symbols(self, tracker):
         """Record purchases for different symbols."""
-        tracker.record_position_purchase("AAPL", Decimal("100"), Decimal("150"), datetime(2025, 1, 1))
-        tracker.record_position_purchase("MSFT", Decimal("50"), Decimal("300"), datetime(2025, 1, 5))
+        tracker.record_position_purchase(
+            "AAPL", Decimal("100"), Decimal("150"), datetime(2025, 1, 1)
+        )
+        tracker.record_position_purchase(
+            "MSFT", Decimal("50"), Decimal("300"), datetime(2025, 1, 5)
+        )
 
         assert "AAPL" in tracker.position_history
         assert "MSFT" in tracker.position_history
@@ -92,7 +95,9 @@ class TestRecordPositionSalesFIFO:
         # First purchase (oldest)
         tracker.record_position_purchase("AAPL", Decimal("100"), Decimal("100"), base_date)
         # Second purchase (newer)
-        tracker.record_position_purchase("AAPL", Decimal("100"), Decimal("110"), base_date + timedelta(days=100))
+        tracker.record_position_purchase(
+            "AAPL", Decimal("100"), Decimal("110"), base_date + timedelta(days=100)
+        )
 
         # Sell 150 shares - should use 100 from first lot + 50 from second lot
         gains = tracker.record_position_sale(
@@ -130,7 +135,9 @@ class TestRecordPositionSalesLIFO:
         # First purchase (oldest)
         tracker.record_position_purchase("AAPL", Decimal("100"), Decimal("100"), base_date)
         # Second purchase (newer)
-        tracker.record_position_purchase("AAPL", Decimal("100"), Decimal("110"), base_date + timedelta(days=100))
+        tracker.record_position_purchase(
+            "AAPL", Decimal("100"), Decimal("110"), base_date + timedelta(days=100)
+        )
 
         # Sell 150 shares - should use 100 from second lot + 50 from first lot (LIFO order)
         gains = tracker.record_position_sale(
@@ -151,7 +158,11 @@ class TestRecordPositionSalesAverageCost:
         """AVERAGE_COST: Single lot uses actual price."""
         tracker.record_position_purchase("AAPL", Decimal("100"), Decimal("100"), base_date)
         gains = tracker.record_position_sale(
-            "AAPL", Decimal("100"), Decimal("120"), base_date + timedelta(days=400), method="AVERAGE_COST"
+            "AAPL",
+            Decimal("100"),
+            Decimal("120"),
+            base_date + timedelta(days=400),
+            method="AVERAGE_COST",
         )
 
         assert len(gains) == 1
@@ -160,11 +171,17 @@ class TestRecordPositionSalesAverageCost:
     def test_average_cost_multiple_lots(self, tracker, base_date):
         """AVERAGE_COST: Multiple lots use weighted average."""
         tracker.record_position_purchase("AAPL", Decimal("100"), Decimal("100"), base_date)
-        tracker.record_position_purchase("AAPL", Decimal("100"), Decimal("110"), base_date + timedelta(days=100))
+        tracker.record_position_purchase(
+            "AAPL", Decimal("100"), Decimal("110"), base_date + timedelta(days=100)
+        )
 
         # Average cost: (100*100 + 100*110) / 200 = €105
         gains = tracker.record_position_sale(
-            "AAPL", Decimal("200"), Decimal("120"), base_date + timedelta(days=400), method="AVERAGE_COST"
+            "AAPL",
+            Decimal("200"),
+            Decimal("120"),
+            base_date + timedelta(days=400),
+            method="AVERAGE_COST",
         )
 
         assert len(gains) == 1
@@ -181,8 +198,8 @@ class TestCalculateUnrealizedGains:
 
         unrealized = tracker.calculate_unrealized_gains(
             {"AAPL": Decimal("12000")},  # Current value
-            {"AAPL": Decimal("120")},     # Current price
-            {"AAPL": Decimal("100")},     # Quantity
+            {"AAPL": Decimal("120")},  # Current price
+            {"AAPL": Decimal("100")},  # Quantity
         )
 
         assert "AAPL" in unrealized
@@ -453,7 +470,11 @@ class TestEdgeCases:
         """Handle fractional shares correctly."""
         tracker.record_position_purchase("AAPL", Decimal("100.5"), Decimal("150.25"), base_date)
         gains = tracker.record_position_sale(
-            "AAPL", Decimal("100.5"), Decimal("160.75"), base_date + timedelta(days=400), method="FIFO"
+            "AAPL",
+            Decimal("100.5"),
+            Decimal("160.75"),
+            base_date + timedelta(days=400),
+            method="FIFO",
         )
 
         expected_gain = (Decimal("160.75") - Decimal("150.25")) * Decimal("100.5")
@@ -478,7 +499,11 @@ class TestEdgeCases:
         """Maintain decimal precision in calculations."""
         tracker.record_position_purchase("AAPL", Decimal("33.333"), Decimal("150.123"), base_date)
         gains = tracker.record_position_sale(
-            "AAPL", Decimal("33.333"), Decimal("160.456"), base_date + timedelta(days=400), method="FIFO"
+            "AAPL",
+            Decimal("33.333"),
+            Decimal("160.456"),
+            base_date + timedelta(days=400),
+            method="FIFO",
         )
 
         expected_gain = (Decimal("160.456") - Decimal("150.123")) * Decimal("33.333")

@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class RankedStrategy:
     """Strategy with rank and comparison metrics."""
+
     rank: int
     strategy_name: str
     overall_score: Decimal
@@ -71,7 +72,9 @@ class StrategyRanker:
         # Calculate percentiles
         ranked = []
         for rank, score in enumerate(sorted_scores, start=1):
-            percentile = Decimal("100") * (Decimal("1") - Decimal(rank - 1) / Decimal(len(sorted_scores)))
+            percentile = Decimal("100") * (
+                Decimal("1") - Decimal(rank - 1) / Decimal(len(sorted_scores))
+            )
 
             ranked_strategy = RankedStrategy(
                 rank=rank,
@@ -146,10 +149,7 @@ class StrategyRanker:
         Returns:
             Comparison data for specified strategies
         """
-        comparison = [
-            s for s in self.current_ranking
-            if s.strategy_name in strategy_names
-        ]
+        comparison = [s for s in self.current_ranking if s.strategy_name in strategy_names]
         return comparison
 
     async def get_ranking_gaps(self) -> Dict[str, Decimal]:
@@ -225,7 +225,9 @@ class StrategyRanker:
             "better_return": strategy1 if s1.return_score > s2.return_score else strategy2,
             "better_risk": strategy1 if s1.risk_score > s2.risk_score else strategy2,
             "better_stability": strategy1 if s1.stability_score > s2.stability_score else strategy2,
-            "better_consistency": strategy1 if s1.consistency_score > s2.consistency_score else strategy2,
+            "better_consistency": (
+                strategy1 if s1.consistency_score > s2.consistency_score else strategy2
+            ),
         }
 
     def get_ranker_status(self) -> Dict:

@@ -8,14 +8,14 @@ Tests cover:
 - Edge cases and boundary conditions
 """
 
-import pytest
-from decimal import Decimal
 from datetime import datetime, timedelta
+from decimal import Decimal
+
+import pytest
+
 from app.services.tax_efficiency.wash_sale_detector import (
-    WashSaleDetector,
     Trade,
-    WashSaleViolation,
-    CostBasisAdjustment,
+    WashSaleDetector,
 )
 
 
@@ -246,7 +246,9 @@ class TestDetectWashSale:
         )
 
         # Detection requires cost basis info - same as other tests
-        assert violation is None or (violation is not None and violation.replacement_trade == buy_trade)
+        assert violation is None or (
+            violation is not None and violation.replacement_trade == buy_trade
+        )
 
 
 class TestAdjustCostBasis:
@@ -287,8 +289,8 @@ class TestAdjustCostBasis:
 
     def test_adjustments_different_symbols(self, detector):
         """Track adjustments for different symbols."""
-        adj_aapl = detector.adjust_cost_basis("AAPL", Decimal("10000"), Decimal("500"))
-        adj_msft = detector.adjust_cost_basis("MSFT", Decimal("50000"), Decimal("2000"))
+        detector.adjust_cost_basis("AAPL", Decimal("10000"), Decimal("500"))
+        detector.adjust_cost_basis("MSFT", Decimal("50000"), Decimal("2000"))
 
         assert len(detector.cost_basis_adjustments) == 2
         assert "AAPL" in detector.cost_basis_adjustments
@@ -371,10 +373,9 @@ class TestIsSubstantiallyIdentical:
 
     def test_order_independence(self, detector):
         """Result should be same regardless of order."""
-        assert (
-            detector.is_substantially_identical("VOO", "SPY")
-            == detector.is_substantially_identical("SPY", "VOO")
-        )
+        assert detector.is_substantially_identical(
+            "VOO", "SPY"
+        ) == detector.is_substantially_identical("SPY", "VOO")
 
     def test_correlation_threshold_parameter(self, detector):
         """Correlation threshold parameter should be accepted."""
@@ -585,9 +586,7 @@ class TestEdgeCases:
 
     def test_very_large_disallowed_loss(self, detector):
         """Handle very large disallowed losses."""
-        adjustment = detector.adjust_cost_basis(
-            "AAPL", Decimal("1000000"), Decimal("100000")
-        )
+        adjustment = detector.adjust_cost_basis("AAPL", Decimal("1000000"), Decimal("100000"))
 
         assert adjustment.adjusted_cost_basis == Decimal("1100000")
 
@@ -615,4 +614,6 @@ class TestEdgeCases:
         violation = detector.detect_wash_sale(sell_trade, [buy_trade])
 
         # Violation requires cost basis > sale price
-        assert violation is None or (violation is not None and abs(violation.days_between - 15) <= 1)
+        assert violation is None or (
+            violation is not None and abs(violation.days_between - 15) <= 1
+        )

@@ -9,11 +9,12 @@ Tests:
 - Error recovery manager
 """
 
-import pytest
 from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, patch
-import asyncio
+from unittest.mock import AsyncMock, MagicMock
 
+import pytest
+
+from app.services.live_trading.broker_adapters.alpaca_adapter import AlpacaAdapter
 from app.services.live_trading.broker_adapters.alpaca_error_handler import (
     AlpacaErrorClassifier,
     CircuitBreaker,
@@ -23,7 +24,6 @@ from app.services.live_trading.broker_adapters.alpaca_error_handler import (
     PositionSyncRecovery,
     RetryConfig,
 )
-from app.services.live_trading.broker_adapters.alpaca_adapter import AlpacaAdapter
 from app.services.live_trading.broker_connector import BrokerPosition
 
 
@@ -323,9 +323,7 @@ class TestAlpacaAdapterRetryLogic:
         adapter = AlpacaAdapter()
         mock_operation = AsyncMock(return_value="success")
 
-        result = await adapter._retry_with_backoff(
-            "test_operation", mock_operation
-        )
+        result = await adapter._retry_with_backoff("test_operation", mock_operation)
 
         assert result == "success"
         mock_operation.assert_called_once()
@@ -341,9 +339,7 @@ class TestAlpacaAdapterRetryLogic:
             "success",
         ]
 
-        result = await adapter._retry_with_backoff(
-            "test_operation", mock_operation
-        )
+        result = await adapter._retry_with_backoff("test_operation", mock_operation)
 
         assert result == "success"
         assert mock_operation.call_count == 3

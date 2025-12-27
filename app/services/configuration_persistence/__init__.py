@@ -8,20 +8,20 @@ Provides two complementary services:
 - ConfigurationPersistence: Comprehensive strategy configuration storage with versioning
 """
 
-from app.services.configuration_persistence.configuration_repository import (
-    ConfigurationRepository,
-    StoredConfiguration,
-)
 from app.services.configuration_persistence.configuration_persistence import (
     ConfigurationPersistence,
     get_configuration_persistence,
 )
+from app.services.configuration_persistence.configuration_repository import (
+    ConfigurationRepository,
+    StoredConfiguration,
+)
 from app.services.configuration_persistence.models import (
-    StrategyConfiguration,
-    ConfigurationSaveRequest,
+    ConfigurationListResponse,
     ConfigurationLoadRequest,
     ConfigurationLoadResponse,
-    ConfigurationListResponse,
+    ConfigurationSaveRequest,
+    StrategyConfiguration,
     VersionedConfiguration,
 )
 

@@ -1,17 +1,18 @@
 """Unit tests for T8.1 RealTimeMonitor component"""
 
-import pytest
-from decimal import Decimal
 from datetime import datetime, timedelta
+from decimal import Decimal
+
+import pytest
+
 from app.services.portfolio_constructor import AllocationWeight
 from app.services.risk_scaling_application.limit_adjuster import (
     AdjustedLimit,
     LimitBreach,
 )
 from app.services.risk_scaling_application.realtime_monitor import (
-    RealTimeMonitor,
-    PositionSnapshot,
     MonitoringAlert,
+    RealTimeMonitor,
 )
 
 
@@ -281,9 +282,7 @@ class TestRealTimeMonitor:
             ),
         ]
 
-        alert = self.monitor.recommend_scaling_adjustment(
-            breaches, Decimal("1.0")
-        )
+        alert = self.monitor.recommend_scaling_adjustment(breaches, Decimal("1.0"))
 
         assert alert is not None
         assert alert.severity == "critical"
@@ -319,9 +318,7 @@ class TestRealTimeMonitor:
             ),
         ]
 
-        alert = self.monitor.recommend_scaling_adjustment(
-            breaches, Decimal("1.0")
-        )
+        alert = self.monitor.recommend_scaling_adjustment(breaches, Decimal("1.0"))
 
         assert alert is not None
         assert alert.severity == "warning"

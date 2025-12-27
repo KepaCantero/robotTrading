@@ -8,10 +8,6 @@ Provides:
 - ZiplineIntegrator: Advanced backtesting framework
 """
 
-from .questdb_connector import (
-    QuestDBConnector,
-    get_questdb_connector,
-)
 from .dagster_orchestrator import (
     DagsterOrchestrator,
     get_dagster_orchestrator,
@@ -19,6 +15,10 @@ from .dagster_orchestrator import (
 from .mlflow_tracker import (
     MLflowTracker,
     get_mlflow_tracker,
+)
+from .questdb_connector import (
+    QuestDBConnector,
+    get_questdb_connector,
 )
 from .zipline_integrator import (
     ZiplineIntegrator,

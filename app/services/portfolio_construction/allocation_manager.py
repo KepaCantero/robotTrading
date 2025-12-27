@@ -5,7 +5,7 @@ Manages current portfolio allocations, tracks deviations, and maintains allocati
 """
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional
@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class AllocationSnapshot:
     """Snapshot of portfolio allocation at a point in time."""
+
     timestamp: datetime
     allocations: Dict[str, Decimal]  # {asset: weight}
     total_value: Decimal
@@ -25,6 +26,7 @@ class AllocationSnapshot:
 @dataclass
 class AllocationMetrics:
     """Metrics for current allocation."""
+
     concentration_ratio: Decimal  # Largest position / total
     herfindahl_index: Decimal  # Sum of squared weights (0-1)
     num_positions: int

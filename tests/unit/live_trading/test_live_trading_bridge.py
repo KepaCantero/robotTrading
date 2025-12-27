@@ -4,17 +4,19 @@ T16.1: Live Trading Bridge - Comprehensive unit tests
 Tests for BrokerConnector, OrderManager, RiskGates, and AccountSynchronizer
 """
 
-import pytest
 from decimal import Decimal
-from datetime import datetime, timedelta
-import asyncio
 
+import pytest
+
+from app.services.live_trading.account_synchronizer import (
+    AccountSynchronizer,
+)
 from app.services.live_trading.broker_connector import (
     BrokerConnector,
     BrokerType,
+    OrderSide,
     OrderStatus,
     OrderType,
-    OrderSide,
 )
 from app.services.live_trading.order_manager import (
     OrderManager,
@@ -22,9 +24,6 @@ from app.services.live_trading.order_manager import (
 from app.services.live_trading.risk_gates import (
     RiskGates,
     RiskLevel,
-)
-from app.services.live_trading.account_synchronizer import (
-    AccountSynchronizer,
 )
 
 
@@ -103,9 +102,7 @@ class TestBrokerConnector:
     async def test_cancel_order(self, broker):
         """Test canceling an order."""
         await broker.connect()
-        order = await broker.place_order(
-            "AAPL", OrderSide.BUY, Decimal("100")
-        )
+        order = await broker.place_order("AAPL", OrderSide.BUY, Decimal("100"))
         assert order is not None
 
         result = await broker.cancel_order(order.order_id)
@@ -114,9 +111,7 @@ class TestBrokerConnector:
     async def test_order_status(self, broker):
         """Test getting order status."""
         await broker.connect()
-        order = await broker.place_order(
-            "AAPL", OrderSide.BUY, Decimal("100")
-        )
+        order = await broker.place_order("AAPL", OrderSide.BUY, Decimal("100"))
         status = await broker.get_order_status(order.order_id)
         assert status == OrderStatus.SUBMITTED
 
@@ -128,9 +123,7 @@ class TestOrderManager:
     async def test_place_order(self, order_manager, broker):
         """Test placing order through manager."""
         await broker.connect()
-        order = await order_manager.place_order(
-            "AAPL", OrderSide.BUY, Decimal("100")
-        )
+        order = await order_manager.place_order("AAPL", OrderSide.BUY, Decimal("100"))
         assert order is not None
         assert order.symbol == "AAPL"
         assert order.order_id in order_manager.pending_orders
@@ -138,9 +131,7 @@ class TestOrderManager:
     async def test_cancel_order(self, order_manager, broker):
         """Test canceling order."""
         await broker.connect()
-        order = await order_manager.place_order(
-            "AAPL", OrderSide.BUY, Decimal("100")
-        )
+        order = await order_manager.place_order("AAPL", OrderSide.BUY, Decimal("100"))
         result = await order_manager.cancel_order(order.order_id)
         assert result is True
 
@@ -285,9 +276,7 @@ class TestLiveTradingIntegration:
         assert result is not None
 
         # 3. Place order
-        order = await order_manager.place_order(
-            "AAPL", OrderSide.BUY, Decimal("100")
-        )
+        order = await order_manager.place_order("AAPL", OrderSide.BUY, Decimal("100"))
         assert order is not None
 
         # 4. Record execution

@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
@@ -478,9 +478,7 @@ class RobustnessScorer:
             status_icon = (
                 "✓"
                 if result.production_readiness == ProductionReadiness.PASS
-                else "⚠"
-                if result.production_readiness == ProductionReadiness.WARN
-                else "✗"
+                else "⚠" if result.production_readiness == ProductionReadiness.WARN else "✗"
             )
 
             print(

@@ -12,19 +12,20 @@ Returns ValidationReport with detailed gate status and recommendations.
 """
 
 import logging
-from decimal import Decimal
-from typing import Dict, List, Optional
 from dataclasses import dataclass, field
+from decimal import Decimal
 from enum import Enum
+from typing import Dict, List, Optional
 
 from app.core.models.investment_profile import CapitalTier, InvestmentProfile
-from app.services.backtesting_orchestration import ExtendedBacktestResult, FeasibilityMetrics
+from app.services.backtesting_orchestration import ExtendedBacktestResult
 
 logger = logging.getLogger(__name__)
 
 
 class GateStatus(str, Enum):
     """Status of individual validation gates."""
+
     PASSED = "passed"
     WARNING = "warning"
     FAILED = "failed"
@@ -34,6 +35,7 @@ class GateStatus(str, Enum):
 @dataclass
 class GateResult:
     """Result of a single gate validation."""
+
     gate_name: str
     status: GateStatus
     message: str
@@ -149,18 +151,10 @@ class ValidationEngine:
             capital_viability = self._validate_capital_viability(
                 extended_result, investment_profile
             )
-            execution_costs = self._validate_execution_costs(
-                extended_result, investment_profile
-            )
-            opportunity_cost = self._validate_opportunity_cost(
-                extended_result, investment_profile
-            )
-            learning_capital = self._validate_learning_capital(
-                extended_result, investment_profile
-            )
-            module_gating = self._validate_module_gating(
-                extended_result, investment_profile
-            )
+            execution_costs = self._validate_execution_costs(extended_result, investment_profile)
+            opportunity_cost = self._validate_opportunity_cost(extended_result, investment_profile)
+            learning_capital = self._validate_learning_capital(extended_result, investment_profile)
+            module_gating = self._validate_module_gating(extended_result, investment_profile)
             feasibility_ratio = self._validate_feasibility_ratio(extended_result)
 
             # Count passed gates
@@ -187,9 +181,7 @@ class ValidationEngine:
                 overall_status = "APPROVED"
 
             # Collect recommendations
-            recommendations = [
-                g.recommendation for g in all_gates if g.recommendation
-            ]
+            recommendations = [g.recommendation for g in all_gates if g.recommendation]
 
             # Create report
             report = ValidationReport(
@@ -237,9 +229,7 @@ class ValidationEngine:
                 CapitalTier.LARGE: Decimal("250000"),
             }
 
-            minimum = tier_minimums.get(
-                investment_profile.capital_tier, Decimal("10000")
-            )
+            minimum = tier_minimums.get(investment_profile.capital_tier, Decimal("10000"))
 
             if capital >= minimum:
                 return GateResult(
@@ -421,7 +411,8 @@ class ValidationEngine:
             }
 
             expensive_modules = [
-                m for m in enabled_modules
+                m
+                for m in enabled_modules
                 if m in module_thresholds and capital < module_thresholds[m]
             ]
 

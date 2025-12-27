@@ -6,7 +6,7 @@ Provides professional HTML templates for strategy performance reports.
 
 import logging
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
 

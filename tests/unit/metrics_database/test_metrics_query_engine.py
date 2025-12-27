@@ -10,19 +10,19 @@ Tests cover:
 - Change percentage calculation
 """
 
-import pytest
 from datetime import datetime, timedelta
 from decimal import Decimal
 from unittest.mock import AsyncMock
 
+import pytest
+
 from app.services.metrics_database import (
-    MetricsQueryEngine,
-    QuestDBConnector,
-    MetricPoint,
-    MetricType,
-    TimeSeriesQuery,
-    AggregationType,
     AggregatedMetrics,
+    AggregationType,
+    MetricPoint,
+    MetricsQueryEngine,
+    MetricType,
+    QuestDBConnector,
 )
 
 
@@ -240,8 +240,8 @@ class TestMetricsQueryEngineOHLC:
                 metric_type=MetricType.PORTFOLIO_RETURN,
                 symbol=None,
                 portfolio_id=None,
-                period_start=start_time + timedelta(minutes=i*5),
-                period_end=start_time + timedelta(minutes=(i+1)*5),
+                period_start=start_time + timedelta(minutes=i * 5),
+                period_end=start_time + timedelta(minutes=(i + 1) * 5),
                 aggregation_type=AggregationType.CLOSE,
                 close_value=Decimal(str(0.01 * (i + 1))),
             )

@@ -16,15 +16,16 @@ Uses objective-driven weighting:
 """
 
 import logging
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
+
 from .models import (
-    StrategyRecommendationRequest,
-    StrategyRecommendation,
     ObjectiveWeights,
-    StrategyScore,
     RecommendationSuggestion,
+    StrategyRecommendation,
+    StrategyRecommendationRequest,
+    StrategyScore,
 )
 
 logger = logging.getLogger(__name__)
@@ -130,9 +131,7 @@ class StrategyRecommender:
             recommendation.suggestions = suggestions
 
             # Identify strengths and weaknesses
-            strengths, weaknesses = self._identify_characteristics(
-                component_scores, weights
-            )
+            strengths, weaknesses = self._identify_characteristics(component_scores, weights)
             recommendation.strengths = strengths
             recommendation.weaknesses = weaknesses
 
@@ -254,9 +253,7 @@ class StrategyRecommender:
         if not component_scores:
             return Decimal("0")
 
-        total_contribution = sum(
-            score.contribution for score in component_scores.values()
-        )
+        total_contribution = sum(score.contribution for score in component_scores.values())
 
         # Normalize by sum of weights
         total_weight = sum(score.weight for score in component_scores.values())
@@ -378,9 +375,7 @@ class StrategyRecommender:
         for metric_name, score in component_scores.items():
             if score.normalized_score >= Decimal("80"):
                 metric_readable = score.metric_name
-                strengths.append(
-                    f"Strong {metric_readable} performance ({score.metric_value:.2f})"
-                )
+                strengths.append(f"Strong {metric_readable} performance ({score.metric_value:.2f})")
             elif score.normalized_score < Decimal("40"):
                 metric_readable = score.metric_name
                 weaknesses.append(

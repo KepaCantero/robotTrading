@@ -135,7 +135,10 @@ class TestInsightGenerator:
         insights_text = " ".join(insights)
 
         # Should mention various metrics
-        assert any(keyword in insights_text for keyword in ["return", "Sharpe", "drawdown", "win rate", "volatility"])
+        assert any(
+            keyword in insights_text
+            for keyword in ["return", "Sharpe", "drawdown", "win rate", "volatility"]
+        )
 
     def test_statistical_insights_empty_metrics(self, generator: InsightGenerator):
         """Test insight generation with empty metrics."""
@@ -219,9 +222,7 @@ class TestInsightGenerator:
         # All recommendations should be valid
         assert all(isinstance(r, dict) for r in recommendations)
 
-    def test_recommendations_poor_metrics(
-        self, generator: InsightGenerator, poor_metrics: dict
-    ):
+    def test_recommendations_poor_metrics(self, generator: InsightGenerator, poor_metrics: dict):
         """Test recommendation generation with poor metrics."""
         recommendations = generator.generate_recommendations(poor_metrics)
 
@@ -231,9 +232,7 @@ class TestInsightGenerator:
         priorities = [r.get("priority") for r in recommendations]
         assert "HIGH" in priorities
 
-    def test_recommendations_structure(
-        self, generator: InsightGenerator, good_metrics: dict
-    ):
+    def test_recommendations_structure(self, generator: InsightGenerator, good_metrics: dict):
         """Test recommendation structure."""
         recommendations = generator.generate_recommendations(good_metrics)
 
@@ -292,9 +291,7 @@ class TestInsightGenerator:
         self, generator: InsightGenerator, poor_metrics: dict
     ):
         """Test markdown report includes warnings."""
-        report = generator.format_markdown_report(
-            "Test", poor_metrics, include_warnings=True
-        )
+        report = generator.format_markdown_report("Test", poor_metrics, include_warnings=True)
 
         assert "⚠️ Risk Warnings" in report
 
@@ -302,9 +299,7 @@ class TestInsightGenerator:
         self, generator: InsightGenerator, good_metrics: dict
     ):
         """Test markdown report without warnings section."""
-        report = generator.format_markdown_report(
-            "Test", good_metrics, include_warnings=False
-        )
+        report = generator.format_markdown_report("Test", good_metrics, include_warnings=False)
 
         # Should still have other sections
         assert "Performance Summary" in report
@@ -336,9 +331,7 @@ class TestInsightGenerator:
         sample_regimes: dict,
     ):
         """Test markdown report with regime analysis."""
-        report = generator.format_markdown_report(
-            "Test", good_metrics, regimes=sample_regimes
-        )
+        report = generator.format_markdown_report("Test", good_metrics, regimes=sample_regimes)
 
         assert "Regime Analysis" in report
         assert "Bull Market" in report or "Neutral Market" in report
@@ -416,9 +409,7 @@ class TestInsightGenerator:
 
     def test_special_characters_in_strategy_name(self, generator: InsightGenerator):
         """Test report with special characters in strategy name."""
-        report = generator.format_markdown_report(
-            "Test Strategy @#$% 123", {}
-        )
+        report = generator.format_markdown_report("Test Strategy @#$% 123", {})
 
         assert "Test Strategy @#$% 123" in report
 

@@ -5,14 +5,15 @@ Data models for strategy recommendation requests and results.
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Literal
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
+from typing import Dict, List, Literal, Optional
 
 
 @dataclass
 class ObjectiveWeights:
     """Weights for objective-driven scoring."""
+
     sharpe_weight: Decimal
     return_weight: Decimal
     drawdown_weight: Decimal
@@ -24,6 +25,7 @@ class ObjectiveWeights:
 @dataclass
 class StrategyScore:
     """Score for a single strategy metric."""
+
     metric_name: str
     metric_value: Decimal
     normalized_score: Decimal  # 0-100
@@ -34,6 +36,7 @@ class StrategyScore:
 @dataclass
 class RecommendationSuggestion:
     """Suggestion for strategy improvement."""
+
     suggestion_text: str
     priority: Literal["high", "medium", "low"]
     estimated_impact: str  # e.g., "+0.5 Sharpe ratio", "Reduce drawdown by 5%"
@@ -42,6 +45,7 @@ class RecommendationSuggestion:
 @dataclass
 class StrategyRecommendationRequest:
     """Request for strategy recommendation."""
+
     profile_id: str
     input_id: str
     objective: str  # maximizar_capital, dividendos, preservation, growth, income
@@ -57,6 +61,7 @@ class StrategyRecommendationRequest:
 @dataclass
 class StrategyRecommendation:
     """Result of strategy recommendation."""
+
     success: bool
     profile_id: str
     recommendation_timestamp: datetime = field(default_factory=datetime.utcnow)

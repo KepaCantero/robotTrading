@@ -1062,9 +1062,7 @@ if session_state.backtest_results:
         sharpe_color = (
             "#28a745"
             if sharpe and sharpe > 1
-            else "#ffc107"
-            if sharpe and sharpe > 0
-            else "#dc3545"
+            else "#ffc107" if sharpe and sharpe > 0 else "#dc3545"
         )
         sharpe_display = f"{sharpe:.2f}" if sharpe is not None else "N/A"
         st.markdown(

@@ -10,15 +10,12 @@ Tests para verificar:
 import unittest
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import List
 
 import pytest
 
 from app.models.market_data import Quote
-from app.models.signal import Signal, SignalType
 from app.services.portfolio_builder import PortfolioBuilder
 from app.services.portfolio_config_manager import get_portfolio_config_manager
-from app.strategies.mean_reversion import MeanReversionStrategy
 from app.strategies.momentum import MomentumStrategy
 
 

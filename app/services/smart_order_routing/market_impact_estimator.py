@@ -29,21 +29,21 @@ class MarketImpactEstimator:
     # Base market impact coefficients (empirically calibrated)
     # These are typical values; can be adjusted per asset class/market
     BASE_IMPACT_BPS = {
-        "equity": Decimal("10"),       # 10 bps base impact
-        "crypto": Decimal("20"),       # 20 bps (more volatile)
-        "forex": Decimal("5"),         # 5 bps (more liquid)
-        "commodity": Decimal("15"),    # 15 bps
-        "bond": Decimal("8"),          # 8 bps
+        "equity": Decimal("10"),  # 10 bps base impact
+        "crypto": Decimal("20"),  # 20 bps (more volatile)
+        "forex": Decimal("5"),  # 5 bps (more liquid)
+        "commodity": Decimal("15"),  # 15 bps
+        "bond": Decimal("8"),  # 8 bps
     }
 
     # Volatility impact multipliers
     # Higher volatility → higher market impact
     VOLATILITY_MULTIPLIERS = {
-        0: Decimal("0.5"),      # Very low vol (0-10th percentile)
-        1: Decimal("0.7"),      # Low vol (10-30th percentile)
-        2: Decimal("1.0"),      # Normal vol (30-70th percentile)
-        3: Decimal("1.5"),      # High vol (70-90th percentile)
-        4: Decimal("2.0"),      # Very high vol (90-100th percentile)
+        0: Decimal("0.5"),  # Very low vol (0-10th percentile)
+        1: Decimal("0.7"),  # Low vol (10-30th percentile)
+        2: Decimal("1.0"),  # Normal vol (30-70th percentile)
+        3: Decimal("1.5"),  # High vol (70-90th percentile)
+        4: Decimal("2.0"),  # Very high vol (90-100th percentile)
     }
 
     # Time decay factor (earlier execution = higher impact per unit)
@@ -135,19 +135,15 @@ class MarketImpactEstimator:
         if time_window_ms > 60_000:
             # Calculate number of doublings beyond base 60s
             num_doublings = (time_window_ms / Decimal("60000")).ln() / Decimal("2").ln()
-            time_decay = self.TIME_DECAY_FACTOR ** num_doublings
+            time_decay = self.TIME_DECAY_FACTOR**num_doublings
 
-        logger.debug(
-            f"{symbol}: Time window {time_window_ms}ms → decay factor {time_decay}"
-        )
+        logger.debug(f"{symbol}: Time window {time_window_ms}ms → decay factor {time_decay}")
 
         # 5. Calculate base market impact (in basis points)
         base_impact = self.BASE_IMPACT_BPS.get(asset_class, Decimal("10"))
 
         # Combine factors: base × sqrt(participation) × volatility × time_decay
-        market_impact_bps = (
-            base_impact * sqrt_impact * volatility_multiplier * time_decay
-        )
+        market_impact_bps = base_impact * sqrt_impact * volatility_multiplier * time_decay
 
         # 6. Calculate spread impact
         # Spread cost is typically: spread × (0.5 + participation_impact)
@@ -229,11 +225,11 @@ class MarketImpactEstimator:
             Dict with time_window_ms → estimated_slippage_bps mapping
         """
         windows = [
-            60_000,      # 1 minute (extreme urgency)
-            300_000,     # 5 minutes
-            600_000,     # 10 minutes
-            1_800_000,   # 30 minutes
-            3_600_000,   # 1 hour
+            60_000,  # 1 minute (extreme urgency)
+            300_000,  # 5 minutes
+            600_000,  # 10 minutes
+            1_800_000,  # 30 minutes
+            3_600_000,  # 1 hour
         ]
 
         results = {}
@@ -255,11 +251,9 @@ class MarketImpactEstimator:
             time_decay = Decimal("1.0")
             if time_window_ms > 60_000:
                 num_doublings = (time_window_ms / Decimal("60000")).ln() / Decimal("2").ln()
-                time_decay = self.TIME_DECAY_FACTOR ** num_doublings
+                time_decay = self.TIME_DECAY_FACTOR**num_doublings
 
-            market_impact_bps = (
-                base_impact * sqrt_impact * volatility_multiplier * time_decay
-            )
+            market_impact_bps = base_impact * sqrt_impact * volatility_multiplier * time_decay
             spread_impact = Decimal("1") * self.SPREAD_COEFFICIENT * sqrt_impact
             total_slippage = min(market_impact_bps + spread_impact, Decimal("500"))
 

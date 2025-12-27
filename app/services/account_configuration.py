@@ -15,17 +15,18 @@ Tiers:
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, Optional
+from typing import Dict
 
 logger = logging.getLogger(__name__)
 
 
 class AccountTier(str, Enum):
     """Capital tier classifications"""
-    MICRO = "micro"      # < $15k
-    SMALL = "small"      # $15k - $50k
-    MEDIUM = "medium"    # $50k - $250k
-    LARGE = "large"      # $250k+
+
+    MICRO = "micro"  # < $15k
+    SMALL = "small"  # $15k - $50k
+    MEDIUM = "medium"  # $50k - $250k
+    LARGE = "large"  # $250k+
 
 
 class AccountConfiguration:

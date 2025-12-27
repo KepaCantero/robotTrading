@@ -9,8 +9,7 @@ Evaluates alert rules against incoming metrics with support for:
 """
 
 import logging
-from datetime import datetime, timedelta
-from decimal import Decimal
+from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 
 from .models import (
@@ -20,7 +19,6 @@ from .models import (
     AlertSeverity,
     AlertState,
     ChangeRule,
-    ComparisonOperator,
     LogicOperator,
     ThresholdRule,
 )
@@ -91,14 +89,11 @@ class AlertRuleEngine:
         try:
             # Evaluate threshold rules
             threshold_results = [
-                self._evaluate_threshold_rule(tr, context)
-                for tr in rule.threshold_rules
+                self._evaluate_threshold_rule(tr, context) for tr in rule.threshold_rules
             ]
 
             # Evaluate change rules
-            change_results = [
-                self._evaluate_change_rule(cr, context) for cr in rule.change_rules
-            ]
+            change_results = [self._evaluate_change_rule(cr, context) for cr in rule.change_rules]
 
             # Combine results with logic operator
             all_results = threshold_results + change_results
@@ -116,9 +111,7 @@ class AlertRuleEngine:
                 # Create alert event
                 event = self._create_alert_event(rule, context, all_results)
                 self._record_evaluation(rule.rule_id, context, triggered, event)
-                logger.warning(
-                    f"Alert triggered: {rule.rule_id} ({rule.name}) - {event.message}"
-                )
+                logger.warning(f"Alert triggered: {rule.rule_id} ({rule.name}) - {event.message}")
                 return True, event
             else:
                 self._record_evaluation(rule.rule_id, context, triggered, None)
@@ -129,9 +122,7 @@ class AlertRuleEngine:
             self._record_evaluation(rule.rule_id, context, False, None, str(e))
             return False, None
 
-    def evaluate_all_rules(
-        self, context: AlertEvaluationContext
-    ) -> List[AlertEvent]:
+    def evaluate_all_rules(self, context: AlertEvaluationContext) -> List[AlertEvent]:
         """
         Evaluate all registered rules.
 
@@ -149,9 +140,7 @@ class AlertRuleEngine:
                 if triggered and event:
                     events.append(event)
             except Exception as e:
-                logger.error(
-                    f"Error evaluating rule {rule_id} in batch: {e}"
-                )
+                logger.error(f"Error evaluating rule {rule_id} in batch: {e}")
 
         return events
 
@@ -172,9 +161,7 @@ class AlertRuleEngine:
         # Evaluate comparison
         return rule.evaluate(context.current_value)
 
-    def _evaluate_change_rule(
-        self, rule: ChangeRule, context: AlertEvaluationContext
-    ) -> bool:
+    def _evaluate_change_rule(self, rule: ChangeRule, context: AlertEvaluationContext) -> bool:
         """Evaluate change rule."""
         # Check symbol and portfolio filters
         if rule.symbol and rule.symbol != context.symbol:
@@ -304,9 +291,7 @@ class AlertRuleEngine:
             "total_rules": len(self.rules),
             "enabled_rules": sum(1 for r in self.rules.values() if r.enabled),
             "by_severity": {
-                severity.value: sum(
-                    1 for r in self.rules.values() if r.severity == severity
-                )
+                severity.value: sum(1 for r in self.rules.values() if r.severity == severity)
                 for severity in AlertSeverity
             },
             "rule_ids": list(self.rules.keys()),

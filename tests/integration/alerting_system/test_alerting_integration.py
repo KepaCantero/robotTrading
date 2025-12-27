@@ -5,30 +5,26 @@ End-to-end tests for complete alerting pipeline:
 metrics → evaluation → alert → notification
 """
 
-import pytest
 import asyncio
 from decimal import Decimal
-from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
+
+import pytest
 
 from app.services.alerting_system import (
     get_alerting_orchestrator,
-    initialize_alerting_orchestrator,
-    start_alerting,
-    stop_alerting,
     reset_alerting_orchestrator,
 )
+from app.services.alerting_system.metrics_driven_alerter import MetricQueryConfig
 from app.services.alerting_system.models import (
-    AlertRule,
     AlertEvent,
-    AlertState,
+    AlertRule,
     AlertSeverity,
+    AlertState,
+    ChangeRule,
     ComparisonOperator,
     ThresholdRule,
-    ChangeRule,
 )
-from app.services.alerting_system.metrics_driven_alerter import MetricQueryConfig
-from app.services.alerting_system.rule_templates import AlertRuleTemplates
 
 
 @pytest.fixture(autouse=True)
@@ -46,10 +42,7 @@ class TestAlertingPipelineIntegration:
     async def test_full_pipeline_metric_to_notification(self):
         """Test complete pipeline: metric → evaluation → alert → notification."""
         orchestrator = get_alerting_orchestrator()
-        await orchestrator.initialize(
-            metrics_query_engine=None,
-            auto_register_templates=False
-        )
+        await orchestrator.initialize(metrics_query_engine=None, auto_register_templates=False)
 
         # Register a rule
         rule = AlertRule(
@@ -81,9 +74,7 @@ class TestAlertingPipelineIntegration:
 
         # Evaluate metrics
         if orchestrator.metrics_alerter:
-            results = await orchestrator.metrics_alerter.evaluate_metric_rules(
-                metric_queries
-            )
+            results = await orchestrator.metrics_alerter.evaluate_metric_rules(metric_queries)
             assert results["total_rules"] == 1
             assert len(results["triggered_alerts"]) > 0
 
@@ -91,10 +82,7 @@ class TestAlertingPipelineIntegration:
     async def test_deduplication_prevents_duplicate_alerts(self):
         """Test that deduplication prevents duplicate alerts."""
         orchestrator = get_alerting_orchestrator()
-        await orchestrator.initialize(
-            metrics_query_engine=None,
-            auto_register_templates=False
-        )
+        await orchestrator.initialize(metrics_query_engine=None, auto_register_templates=False)
 
         rule = AlertRule(
             rule_id="dup_test",
@@ -121,15 +109,11 @@ class TestAlertingPipelineIntegration:
 
         # First evaluation
         if orchestrator.metrics_alerter:
-            results1 = await orchestrator.metrics_alerter.evaluate_metric_rules(
-                metric_queries
-            )
-            initial_triggered = len(results1["triggered_alerts"])
+            results1 = await orchestrator.metrics_alerter.evaluate_metric_rules(metric_queries)
+            len(results1["triggered_alerts"])
 
             # Second evaluation (should be deduplicated)
-            results2 = await orchestrator.metrics_alerter.evaluate_metric_rules(
-                metric_queries
-            )
+            results2 = await orchestrator.metrics_alerter.evaluate_metric_rules(metric_queries)
             second_triggered = len(results2["triggered_alerts"])
 
             # Second evaluation should have no new alerts due to deduplication
@@ -139,10 +123,7 @@ class TestAlertingPipelineIntegration:
     async def test_alert_state_transitions(self):
         """Test alert state transitions: TRIGGERED → RESOLVED."""
         orchestrator = get_alerting_orchestrator()
-        await orchestrator.initialize(
-            metrics_query_engine=None,
-            auto_register_templates=False
-        )
+        await orchestrator.initialize(metrics_query_engine=None, auto_register_templates=False)
 
         # First register a rule so alert manager knows about it
         rule = AlertRule(
@@ -175,10 +156,7 @@ class TestAlertingPipelineIntegration:
     async def test_multiple_rules_evaluation(self):
         """Test evaluating multiple rules simultaneously."""
         orchestrator = get_alerting_orchestrator()
-        await orchestrator.initialize(
-            metrics_query_engine=None,
-            auto_register_templates=False
-        )
+        await orchestrator.initialize(metrics_query_engine=None, auto_register_templates=False)
 
         # Register multiple rules
         for i in range(3):
@@ -203,14 +181,12 @@ class TestAlertingPipelineIntegration:
         # Metric queries for multiple rules
         metric_queries = {
             "rule_0": {"current_value": Decimal("15.0")},  # Triggers
-            "rule_1": {"current_value": Decimal("5.0")},   # No trigger
+            "rule_1": {"current_value": Decimal("5.0")},  # No trigger
             "rule_2": {"current_value": Decimal("20.0")},  # Triggers
         }
 
         if orchestrator.metrics_alerter:
-            results = await orchestrator.metrics_alerter.evaluate_metric_rules(
-                metric_queries
-            )
+            results = await orchestrator.metrics_alerter.evaluate_metric_rules(metric_queries)
             assert results["total_rules"] == 3
             assert len(results["triggered_alerts"]) == 2  # 2 rules triggered
 
@@ -218,10 +194,7 @@ class TestAlertingPipelineIntegration:
     async def test_change_rules_with_windows(self):
         """Test change rules over time windows."""
         orchestrator = get_alerting_orchestrator()
-        await orchestrator.initialize(
-            metrics_query_engine=None,
-            auto_register_templates=False
-        )
+        await orchestrator.initialize(metrics_query_engine=None, auto_register_templates=False)
 
         rule = AlertRule(
             rule_id="change_test",
@@ -249,9 +222,7 @@ class TestAlertingPipelineIntegration:
         }
 
         if orchestrator.metrics_alerter:
-            results = await orchestrator.metrics_alerter.evaluate_metric_rules(
-                metric_queries
-            )
+            results = await orchestrator.metrics_alerter.evaluate_metric_rules(metric_queries)
             # 25% decline exceeds -20% threshold
             assert len(results["triggered_alerts"]) > 0
 
@@ -263,10 +234,7 @@ class TestRuleTemplateIntegration:
     async def test_auto_register_all_templates(self):
         """Test auto-registration of all default templates."""
         orchestrator = get_alerting_orchestrator()
-        await orchestrator.initialize(
-            metrics_query_engine=None,
-            auto_register_templates=True
-        )
+        await orchestrator.initialize(metrics_query_engine=None, auto_register_templates=True)
 
         assert len(orchestrator.registered_rules) == 12
         assert "portfolio_drawdown_warning" in orchestrator.registered_rules
@@ -277,10 +245,7 @@ class TestRuleTemplateIntegration:
     async def test_portfolio_drawdown_rules(self):
         """Test portfolio drawdown alert thresholds."""
         orchestrator = get_alerting_orchestrator()
-        await orchestrator.initialize(
-            metrics_query_engine=None,
-            auto_register_templates=True
-        )
+        await orchestrator.initialize(metrics_query_engine=None, auto_register_templates=True)
 
         # Get drawdown rules
         drawdown_rules = orchestrator.get_rules_by_category("portfolio_risk")
@@ -299,10 +264,7 @@ class TestRuleTemplateIntegration:
     async def test_rule_filtering_by_severity(self):
         """Test retrieving rules by severity."""
         orchestrator = get_alerting_orchestrator()
-        await orchestrator.initialize(
-            metrics_query_engine=None,
-            auto_register_templates=True
-        )
+        await orchestrator.initialize(metrics_query_engine=None, auto_register_templates=True)
 
         critical_rules = orchestrator.get_rules_by_severity(AlertSeverity.CRITICAL)
         warning_rules = orchestrator.get_rules_by_severity(AlertSeverity.WARNING)
@@ -320,10 +282,7 @@ class TestAlertingStatistics:
     async def test_statistics_tracking_enabled_rules(self):
         """Test that statistics track enabled rules."""
         orchestrator = get_alerting_orchestrator()
-        await orchestrator.initialize(
-            metrics_query_engine=None,
-            auto_register_templates=True
-        )
+        await orchestrator.initialize(metrics_query_engine=None, auto_register_templates=True)
 
         # All templates should be enabled by default
         total_rules = orchestrator.statistics.total_rules
@@ -339,10 +298,7 @@ class TestAlertingStatistics:
     async def test_evaluation_statistics(self):
         """Test evaluation statistics tracking."""
         orchestrator = get_alerting_orchestrator()
-        await orchestrator.initialize(
-            metrics_query_engine=None,
-            auto_register_templates=False
-        )
+        await orchestrator.initialize(metrics_query_engine=None, auto_register_templates=False)
 
         rule = AlertRule(
             rule_id="stats_test",
@@ -362,9 +318,7 @@ class TestAlertingStatistics:
 
         if orchestrator.metrics_alerter:
             # Evaluate once
-            metric_queries = {
-                "stats_test": {"current_value": Decimal("15.0")}
-            }
+            metric_queries = {"stats_test": {"current_value": Decimal("15.0")}}
             await orchestrator.metrics_alerter.evaluate_metric_rules(metric_queries)
 
             stats = orchestrator.get_statistics()
@@ -376,7 +330,7 @@ class TestAlertingStatistics:
         orchestrator = get_alerting_orchestrator()
         await orchestrator.initialize(
             metrics_query_engine=MagicMock(),  # Provide a mock metrics engine
-            auto_register_templates=True
+            auto_register_templates=True,
         )
 
         health = orchestrator.get_health_status()
@@ -395,10 +349,7 @@ class TestErrorHandlingIntegration:
     async def test_graceful_degradation_with_rule_error(self):
         """Test that one rule error doesn't stop other evaluations."""
         orchestrator = get_alerting_orchestrator()
-        await orchestrator.initialize(
-            metrics_query_engine=None,
-            auto_register_templates=False
-        )
+        await orchestrator.initialize(metrics_query_engine=None, auto_register_templates=False)
 
         # Register two rules
         for i in range(2):
@@ -425,9 +376,7 @@ class TestErrorHandlingIntegration:
         }
 
         if orchestrator.metrics_alerter:
-            results = await orchestrator.metrics_alerter.evaluate_metric_rules(
-                metric_queries
-            )
+            results = await orchestrator.metrics_alerter.evaluate_metric_rules(metric_queries)
             # Should handle None gracefully
             assert results["total_rules"] == 2
 
@@ -435,10 +384,7 @@ class TestErrorHandlingIntegration:
     async def test_missing_metric_data_handling(self):
         """Test handling of missing metric data."""
         orchestrator = get_alerting_orchestrator()
-        await orchestrator.initialize(
-            metrics_query_engine=None,
-            auto_register_templates=False
-        )
+        await orchestrator.initialize(metrics_query_engine=None, auto_register_templates=False)
 
         rule = AlertRule(
             rule_id="missing_data",
@@ -464,10 +410,7 @@ class TestConcurrentOperations:
     async def test_concurrent_rule_registrations(self):
         """Test concurrent rule registration."""
         orchestrator = get_alerting_orchestrator()
-        await orchestrator.initialize(
-            metrics_query_engine=None,
-            auto_register_templates=False
-        )
+        await orchestrator.initialize(metrics_query_engine=None, auto_register_templates=False)
 
         async def register_rule(i):
             rule = AlertRule(
@@ -480,9 +423,7 @@ class TestConcurrentOperations:
             await orchestrator.register_custom_rule(rule, config)
 
         # Register 5 rules concurrently
-        await asyncio.gather(
-            *[register_rule(i) for i in range(5)]
-        )
+        await asyncio.gather(*[register_rule(i) for i in range(5)])
 
         assert len(orchestrator.registered_rules) == 5
 
@@ -490,10 +431,7 @@ class TestConcurrentOperations:
     async def test_concurrent_evaluations(self):
         """Test concurrent rule evaluations."""
         orchestrator = get_alerting_orchestrator()
-        await orchestrator.initialize(
-            metrics_query_engine=None,
-            auto_register_templates=False
-        )
+        await orchestrator.initialize(metrics_query_engine=None, auto_register_templates=False)
 
         # Register rules
         for i in range(3):
@@ -515,18 +453,11 @@ class TestConcurrentOperations:
 
         async def evaluate_metrics(batch):
             if orchestrator.metrics_alerter:
-                metric_queries = {
-                    f"eval_{i}": {"current_value": Decimal("15.0")}
-                    for i in range(3)
-                }
-                return await orchestrator.metrics_alerter.evaluate_metric_rules(
-                    metric_queries
-                )
+                metric_queries = {f"eval_{i}": {"current_value": Decimal("15.0")} for i in range(3)}
+                return await orchestrator.metrics_alerter.evaluate_metric_rules(metric_queries)
 
         # Evaluate concurrently
-        results = await asyncio.gather(
-            *[evaluate_metrics(i) for i in range(3)]
-        )
+        results = await asyncio.gather(*[evaluate_metrics(i) for i in range(3)])
 
         assert len(results) == 3
 

@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class PortfolioSnapshot:
     """Snapshot of portfolio state."""
+
     timestamp: datetime
     total_value: Decimal
     cash: Decimal
@@ -36,6 +37,7 @@ class PortfolioSnapshot:
 @dataclass
 class Reconciliation:
     """Reconciliation result."""
+
     timestamp: datetime
     is_balanced: bool
     discrepancies: List[str] = None
@@ -224,7 +226,9 @@ class AccountSynchronizer:
         )
 
         self.reconciliation_history.append(reconciliation)
-        logger.info(f"{'✅' if is_balanced else '⚠️'} Position reconciliation: {len(discrepancies)} discrepancies")
+        logger.info(
+            f"{'✅' if is_balanced else '⚠️'} Position reconciliation: {len(discrepancies)} discrepancies"
+        )
 
         return reconciliation
 
@@ -320,7 +324,11 @@ class AccountSynchronizer:
         if not account:
             return {}
 
-        margin_pct = (account.margin_used / account.equity * Decimal("100")) if account.equity > 0 else Decimal("0")
+        margin_pct = (
+            (account.margin_used / account.equity * Decimal("100"))
+            if account.equity > 0
+            else Decimal("0")
+        )
 
         return {
             "margin_used": account.margin_used,
@@ -337,7 +345,9 @@ class AccountSynchronizer:
             "is_synced": self.last_sync is not None,
             "num_snapshots": len(self.snapshots),
             "num_reconciliations": len(self.reconciliation_history),
-            "last_reconciliation": self.reconciliation_history[-1] if self.reconciliation_history else None,
+            "last_reconciliation": (
+                self.reconciliation_history[-1] if self.reconciliation_history else None
+            ),
         }
 
 

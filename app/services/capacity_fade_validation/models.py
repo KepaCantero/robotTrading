@@ -5,15 +5,17 @@ Data structures for capacity fade analysis and validation.
 Used to validate that strategy alpha remains sustainable as capital scales.
 """
 
+from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import List, Optional
-from datetime import datetime
+
 from pydantic import BaseModel, Field
 
 
 class FeasibilityDecision(Enum):
     """Feasibility gate decision."""
+
     APPROVED = "approved"  # Alpha sufficient at target capital
     CONDITIONAL = "conditional"  # Alpha marginal, needs monitoring
     REJECTED = "rejected"  # Alpha insufficient at target capital
@@ -51,7 +53,9 @@ class CapacityFadeAnalysis(BaseModel):
     liquidity_constrained: bool = False
 
     # Fade factors
-    factors: dict = Field(default_factory=dict)  # {"model_decay": 0.15, "liquidity_penalty": 0.05, ...}
+    factors: dict = Field(
+        default_factory=dict
+    )  # {"model_decay": 0.15, "liquidity_penalty": 0.05, ...}
 
     # Timestamps
     analysis_timestamp: datetime = Field(default_factory=datetime.now)
@@ -82,7 +86,9 @@ class CapacityFadeRequest(BaseModel):
     input_id: str
 
     # Backtest results
-    base_alpha_pct: Decimal = Field(ge=Decimal("0"), le=Decimal("100"))  # Achieved return % in backtest
+    base_alpha_pct: Decimal = Field(
+        ge=Decimal("0"), le=Decimal("100")
+    )  # Achieved return % in backtest
     backtest_capital_usd: Decimal = Field(gt=Decimal("0"))  # Capital used in backtest
     backtest_duration_years: Decimal = Field(gt=Decimal("0"))
 
@@ -97,7 +103,9 @@ class CapacityFadeRequest(BaseModel):
     avg_position_size_usd: Decimal = Field(gt=Decimal("0"))
 
     # Market data (for liquidity headroom)
-    avg_daily_volume_multiplier: Decimal = Field(gt=Decimal("0"), default=Decimal("1.0"))  # 1.0 = 1x avg volume
+    avg_daily_volume_multiplier: Decimal = Field(
+        gt=Decimal("0"), default=Decimal("1.0")
+    )  # 1.0 = 1x avg volume
 
     # Fade model configuration
     fade_model: str = "sqrt"  # "sqrt", "linear", or "empirical"

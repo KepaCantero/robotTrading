@@ -37,7 +37,7 @@ except ImportError:
     logger.debug("empyrical not available - some features will be disabled")
 
 try:
-    import pyfolio
+    pass
 
     PYFOLIO_AVAILABLE = True
     logger.info("pyfolio library available")
@@ -133,9 +133,7 @@ class AwesomeQuantIntegrator:
             if benchmark_returns is not None:
                 metrics["beta"] = float(qs.stats.beta(returns, benchmark_returns))
                 metrics["alpha"] = float(qs.stats.alpha(returns, benchmark_returns))
-                metrics["correlation"] = float(
-                    qs.stats.correlation(returns, benchmark_returns)
-                )
+                metrics["correlation"] = float(qs.stats.correlation(returns, benchmark_returns))
 
             logger.info(f"Calculated {len(metrics)} quantstats metrics")
             return metrics
@@ -257,9 +255,7 @@ class AwesomeQuantIntegrator:
 
             downside = returns[returns < 0]
             downside_std = downside.std() if len(downside) > 0 else returns.std()
-            metrics["sortino_ratio"] = float(
-                excess_returns.mean() / downside_std * np.sqrt(252)
-            )
+            metrics["sortino_ratio"] = float(excess_returns.mean() / downside_std * np.sqrt(252))
 
             # Drawdown
             cumulative = (1 + returns).cumprod()
@@ -283,9 +279,7 @@ class AwesomeQuantIntegrator:
             metrics["skewness"] = float(returns.skew())
             metrics["kurtosis"] = float(returns.kurtosis())
             metrics["var_95"] = float(np.percentile(returns, 5))
-            metrics["cvar_95"] = float(
-                returns[returns <= np.percentile(returns, 5)].mean()
-            )
+            metrics["cvar_95"] = float(returns[returns <= np.percentile(returns, 5)].mean())
 
             logger.info(f"Calculated {len(metrics)} pyfolio metrics")
             return metrics
@@ -353,9 +347,7 @@ class AwesomeQuantIntegrator:
         if QUANTSTATS_AVAILABLE:
             unified.update(self.calculate_quantstats_metrics(returns, benchmark_returns))
         if EMPYRICAL_AVAILABLE:
-            empyrical_metrics = self.calculate_empyrical_metrics(
-                returns, benchmark_returns
-            )
+            empyrical_metrics = self.calculate_empyrical_metrics(returns, benchmark_returns)
             # Only add metrics not already present
             for k, v in empyrical_metrics.items():
                 if k not in unified:

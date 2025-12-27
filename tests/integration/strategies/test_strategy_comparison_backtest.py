@@ -28,7 +28,6 @@ from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig
 from app.backtesting.multi_strategy_engine import MultiStrategyBacktester
 from app.models.market_data import Quote
-from app.services.multi_strategy_allocation import MultiStrategyAllocationManager
 from app.services.portfolio_builder import PortfolioBuilder
 from app.services.portfolio_config_manager import get_portfolio_config_manager
 from app.strategies.mean_reversion import MeanReversionStrategy

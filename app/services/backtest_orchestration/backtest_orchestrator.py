@@ -9,19 +9,17 @@ Calculates feasibility_ratio: achieved_return / required_return
 """
 
 import logging
-import os
+from datetime import datetime
 from decimal import Decimal
-from datetime import datetime, date
-from typing import Dict, Optional, List
-from pathlib import Path
+from typing import Dict, List, Optional
 
 from .models import (
     BacktestConfig,
-    BacktestResult,
     BacktestMetrics,
-    BacktestStatus,
     BacktestOrchestrationRequest,
     BacktestOrchestrationResult,
+    BacktestResult,
+    BacktestStatus,
 )
 
 logger = logging.getLogger(__name__)
@@ -52,6 +50,7 @@ class BacktestOrchestrator:
         if self._backtest_engine is None:
             try:
                 from app.backtesting.engine import SimpleBacktester
+
                 self._backtest_engine = SimpleBacktester
                 logger.debug("✅ SimpleBacktester loaded")
             except ImportError as e:
@@ -64,6 +63,7 @@ class BacktestOrchestrator:
         if self._data_loader is None:
             try:
                 from app.backtesting.data_loader import DataLoader
+
                 self._data_loader = DataLoader
                 logger.debug("✅ DataLoader loaded")
             except ImportError as e:

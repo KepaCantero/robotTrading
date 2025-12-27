@@ -11,7 +11,6 @@ Comprehensive tests for:
 """
 
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch
 
 import numpy as np
 import pytest
@@ -263,11 +262,10 @@ class TestADWINDetector:
         detector = ADWINDetector({"delta": 0.002})
 
         np.random.seed(42)
-        drift_detected = False
         for _ in range(100):
             value = np.random.normal(100, 5)
             if detector.add_element(value):
-                drift_detected = True
+                pass
 
         # Should rarely detect drift in stable stream
         assert detector.width > 0

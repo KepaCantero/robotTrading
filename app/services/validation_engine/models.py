@@ -5,14 +5,15 @@ Data models for validation requests and results.
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Literal
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
+from typing import Dict, List, Optional
 
 
 @dataclass
 class ModuleViabilityAnalysis:
     """Analysis of module viability."""
+
     module_name: str
     enabled: bool
     reason: str
@@ -24,6 +25,7 @@ class ModuleViabilityAnalysis:
 @dataclass
 class CapitalViabilityAnalysis:
     """Analysis of capital viability for profit goals."""
+
     is_viable: bool
     required_alpha_pct: Decimal
     expected_alpha_pct: Decimal
@@ -35,6 +37,7 @@ class CapitalViabilityAnalysis:
 @dataclass
 class LearningViabilityAnalysis:
     """Analysis of learning module viability."""
+
     learning_recommended: bool
     reason: str
     recommendation: str
@@ -47,6 +50,7 @@ class LearningViabilityAnalysis:
 @dataclass
 class FeasibilityAnalysis:
     """Analysis of feasibility ratio."""
+
     feasibility_ratio: Decimal
     feasibility_status: str  # APPROVED, CONDITIONAL, REJECTED
     is_viable: bool
@@ -56,6 +60,7 @@ class FeasibilityAnalysis:
 @dataclass
 class ValidationRequest:
     """Request for validation."""
+
     profile_id: str
     input_id: str
     initial_capital: Decimal
@@ -73,6 +78,7 @@ class ValidationRequest:
 @dataclass
 class ValidationResult:
     """Result of validation."""
+
     success: bool
     profile_id: str
     validation_timestamp: datetime = field(default_factory=datetime.utcnow)

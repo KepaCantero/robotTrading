@@ -15,8 +15,8 @@ Formula:
 import logging
 import math
 import statistics
-from datetime import datetime, timedelta
-from decimal import Decimal, ROUND_HALF_UP
+from datetime import datetime
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
@@ -239,9 +239,7 @@ class SharpeRatioMonitor:
             return Decimal("0")
 
         # Calculate excess returns
-        excess_returns = [
-            p - b for p, b in zip(portfolio_returns, benchmark_returns)
-        ]
+        excess_returns = [p - b for p, b in zip(portfolio_returns, benchmark_returns)]
 
         # Mean excess return
         mean_excess = sum(excess_returns) / Decimal(len(excess_returns))
@@ -277,7 +275,7 @@ class SharpeRatioMonitor:
         # Split into two halves
         mid = len(history) - window
         recent_window = history[mid:]
-        prior_window = history[mid - window:mid]
+        prior_window = history[mid - window : mid]
 
         mean_recent = sum(recent_window) / Decimal(len(recent_window))
         mean_prior = sum(prior_window) / Decimal(len(prior_window))

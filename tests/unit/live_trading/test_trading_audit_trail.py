@@ -9,15 +9,14 @@ Tests cover:
 - Statistics collection
 """
 
-import pytest
 from datetime import datetime, timedelta
 from decimal import Decimal
 
+
 from app.services.live_trading.trading_audit_trail import (
-    TradingAuditTrail,
-    AuditEvent,
     AuditEventType,
     ComplianceReport,
+    TradingAuditTrail,
 )
 
 

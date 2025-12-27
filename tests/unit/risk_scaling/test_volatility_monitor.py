@@ -4,11 +4,12 @@ Unit tests for VolatilityMonitor (PHASE 3)
 Tests ATR calculation, volatility scaling, and spike detection.
 """
 
-import pytest
 from datetime import datetime
 from decimal import Decimal
 
-from app.services.risk_scaling.volatility_monitor import VolatilityMonitor, PriceData
+import pytest
+
+from app.services.risk_scaling.volatility_monitor import PriceData, VolatilityMonitor
 
 
 class TestVolatilityMonitor:

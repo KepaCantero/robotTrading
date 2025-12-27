@@ -13,7 +13,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.services.data_validation_service import DataQualityIssue, DataValidationService, OHLCData
+from app.services.data_validation_service import DataValidationService, OHLCData
 
 
 class TestDataValidationService:

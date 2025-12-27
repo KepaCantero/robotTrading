@@ -7,17 +7,13 @@ capital → tier → strategy → features → deployment
 These tests verify the complete workflow integration across multiple components.
 """
 
-import pytest
 from decimal import Decimal
 
+
+from app.services.account_configuration import AccountTier
 from app.services.capital_tier_strategy_selector import (
     CapitalTierStrategySelector,
-    StrategySelection,
-    RiskProfile,
-    StrategyCapabilities,
-    DeploymentReport,
 )
-from app.services.account_configuration import AccountConfiguration, AccountTier
 from app.services.deployment_validator import DeploymentStatus
 
 
@@ -341,15 +337,15 @@ class TestCapabilityProgression:
     def test_learning_progression(self):
         """Learning availability progresses with tier"""
         accounts = [
-            (Decimal("10000"), False),   # Micro: disabled
-            (Decimal("30000"), False),   # Small: conditional
-            (Decimal("100000"), True),   # Medium: should have
-            (Decimal("500000"), True),   # Large: should have
+            (Decimal("10000"), False),  # Micro: disabled
+            (Decimal("30000"), False),  # Small: conditional
+            (Decimal("100000"), True),  # Medium: should have
+            (Decimal("500000"), True),  # Large: should have
         ]
 
         for capital, expected_learning in accounts:
             selector = CapitalTierStrategySelector(capital)
-            config = selector.config
+            selector.config
             # Note: Features can be further gated by deployment validator
             # but configuration recommends learning for medium+
 
@@ -373,7 +369,7 @@ class TestCapabilityProgression:
             features = CapitalTierStrategySelector(capital).get_enabled_features()
             assert features.transformer_models == False
 
-        features_large = CapitalTierStrategySelector(Decimal("500000")).get_enabled_features()
+        CapitalTierStrategySelector(Decimal("500000")).get_enabled_features()
         # Transformers may be enabled for large if config allows
 
     def test_ensemble_methods_small_plus(self):

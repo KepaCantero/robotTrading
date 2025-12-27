@@ -12,7 +12,7 @@ Implements:
 import logging
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Callable, Dict, Optional, Any
+from typing import Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -204,9 +204,7 @@ class CircuitBreaker:
 
         if self.state == self.OPEN:
             # Try to transition to half-open after timeout
-            if self.last_failure_time and datetime.now() > (
-                self.last_failure_time + self.timeout
-            ):
+            if self.last_failure_time and datetime.now() > (self.last_failure_time + self.timeout):
                 self._half_open()
                 return True
             return False
@@ -217,9 +215,7 @@ class CircuitBreaker:
     def _open(self) -> None:
         """Open circuit - stop accepting requests."""
         self.state = self.OPEN
-        logger.error(
-            f"❌ Circuit breaker OPEN: {self.failure_count} failures detected"
-        )
+        logger.error(f"❌ Circuit breaker OPEN: {self.failure_count} failures detected")
 
     def _close(self) -> None:
         """Close circuit - resume normal operation."""
@@ -271,7 +267,7 @@ class RetryConfig:
         Returns:
             float: Delay in seconds
         """
-        delay = self.base_delay * (self.backoff_factor ** attempt)
+        delay = self.base_delay * (self.backoff_factor**attempt)
         return min(delay, self.max_delay)
 
 
@@ -299,9 +295,7 @@ class PositionSyncRecovery:
     def record_sync_failure(self) -> None:
         """Record failed sync."""
         self.sync_failure_count += 1
-        logger.warning(
-            f"⚠️  Position sync failed ({self.sync_failure_count}/{self.max_retries})"
-        )
+        logger.warning(f"⚠️  Position sync failed ({self.sync_failure_count}/{self.max_retries})")
 
     def should_retry(self) -> bool:
         """Check if should retry sync.
@@ -378,8 +372,7 @@ class ErrorRecoveryManager:
         strategy = self.classifier.get_strategy(error_type)
 
         logger.warning(
-            f"⚠️  API error [{error_type.value}]: {str(error)} "
-            f"→ Strategy: {strategy.value}"
+            f"⚠️  API error [{error_type.value}]: {str(error)} " f"→ Strategy: {strategy.value}"
         )
 
         if strategy == ErrorRecoveryStrategy.ALERT:

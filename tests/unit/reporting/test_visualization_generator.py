@@ -9,17 +9,16 @@ Tests cover:
 - Error handling
 """
 
-import pytest
 import json
-import numpy as np
-from decimal import Decimal
 from datetime import datetime
-from unittest.mock import patch
+from decimal import Decimal
+
+import numpy as np
 
 from app.services.reporting_generator.visualization_generator import (
     AdvancedVisualizationGenerator,
-    PlotlyChart,
     ChartMetadata,
+    PlotlyChart,
     get_visualization_generator,
 )
 
@@ -177,7 +176,13 @@ class TestAdvancedVisualizationGenerator:
 
     def test_cumulative_returns_chart_with_benchmark(self):
         """Test cumulative returns chart with benchmark returns."""
-        benchmark = [Decimal("0.008"), Decimal("0.009"), Decimal("-0.005"), Decimal("0.010"), Decimal("0.003")]
+        benchmark = [
+            Decimal("0.008"),
+            Decimal("0.009"),
+            Decimal("-0.005"),
+            Decimal("0.010"),
+            Decimal("0.003"),
+        ]
 
         chart = self.generator.generate_cumulative_returns_chart(
             self.sample_returns, benchmark_returns=benchmark
@@ -256,9 +261,7 @@ class TestAdvancedVisualizationGenerator:
     def test_drawdown_waterfall_with_custom_title(self):
         """Test drawdown waterfall with custom title."""
         custom_title = "My Drawdown Analysis"
-        chart = self.generator.generate_drawdown_waterfall(
-            self.sample_returns, title=custom_title
-        )
+        chart = self.generator.generate_drawdown_waterfall(self.sample_returns, title=custom_title)
 
         assert chart.title == custom_title
 
@@ -282,7 +285,10 @@ class TestAdvancedVisualizationGenerator:
         assert isinstance(colors, list)
         # Colors should be danger (red) for negative, success (green) for positive
         for i, color in enumerate(colors):
-            assert color in [self.generator.default_colors["danger"], self.generator.default_colors["success"]]
+            assert color in [
+                self.generator.default_colors["danger"],
+                self.generator.default_colors["success"],
+            ]
 
     def test_drawdown_waterfall_with_no_drawdown(self):
         """Test drawdown waterfall with only positive returns."""
@@ -403,13 +409,28 @@ class TestAdvancedVisualizationGenerator:
         chart = self.generator.generate_heatmap_monthly_returns(self.extended_returns)
 
         months = chart.data[0]["x"]
-        expected_months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        expected_months = [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec",
+        ]
         assert months == expected_months
 
     def test_heatmap_custom_title(self):
         """Test heatmap with custom title."""
         custom_title = "My Monthly Returns"
-        chart = self.generator.generate_heatmap_monthly_returns(self.extended_returns, title=custom_title)
+        chart = self.generator.generate_heatmap_monthly_returns(
+            self.extended_returns, title=custom_title
+        )
 
         assert chart.title == custom_title
 
@@ -427,7 +448,7 @@ class TestAdvancedVisualizationGenerator:
         long_returns = [Decimal(str(0.0005)) for _ in range(504)]
         chart = self.generator.generate_heatmap_monthly_returns(long_returns)
 
-        matrix = chart.data[0]["z"]
+        chart.data[0]["z"]
         years = chart.data[0]["y"]
         # Should span at least 2 years
         assert len(years) >= 2
@@ -480,7 +501,7 @@ class TestAdvancedVisualizationGenerator:
 
         colors = chart.data[0]["marker"]["color"]
         assert colors[0] == self.generator.default_colors["success"]  # Positive → green
-        assert colors[1] == self.generator.default_colors["danger"]   # Negative → red
+        assert colors[1] == self.generator.default_colors["danger"]  # Negative → red
 
     def test_factor_exposures_zero_line(self):
         """Test factor exposures includes zero line."""

@@ -9,12 +9,10 @@ Tests para verificar que Portfolio Engine y Risk Engine se integran correctament
 
 import logging
 import sys
-from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 from uuid import uuid4
 
-import pytest
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
@@ -26,7 +24,6 @@ from app.engines.risk_engine import RiskEngine
 from app.engines.risk_engine.drawdown_controllers import DrawdownController
 from app.engines.risk_engine.var_calculators import HistoricalVaRCalculator
 from app.engines.strategy_engines import ModularMomentumStrategyEngine, MomentumStrategyEngine
-from app.models.market_data import Quote
 from app.models.portfolio import AssetClass, Portfolio, Position
 
 logging.basicConfig(
@@ -70,7 +67,7 @@ class TestPortfolioEngineIntegration:
 
         # Crear Strategy Engine
         strategy_config = {'rsi_period': 14}
-        strategy_engine = MomentumStrategyEngine(strategy_config)
+        MomentumStrategyEngine(strategy_config)
 
         # Verificar que Portfolio Engine está disponible
         assert portfolio_engine._initialized == True
@@ -117,7 +114,7 @@ class TestRiskEngineIntegration:
 
         # Crear Strategy Engine
         strategy_config = {'rsi_period': 14}
-        strategy_engine = MomentumStrategyEngine(strategy_config)
+        MomentumStrategyEngine(strategy_config)
 
         # Verificar que Risk Engine está disponible
         assert risk_engine._initialized == True
@@ -162,7 +159,7 @@ class TestIntegratedSystem:
         risk_engine.initialize()
 
         strategy_config = {'rsi_period': 14}
-        strategy_engine = MomentumStrategyEngine(strategy_config)
+        MomentumStrategyEngine(strategy_config)
 
         # Verificar que todos están inicializados
         assert portfolio_engine._initialized == True

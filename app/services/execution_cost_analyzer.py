@@ -13,7 +13,7 @@ that exceed strategy alpha, especially on small accounts.
 import logging
 from collections import deque
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +64,9 @@ class ExecutionCostAnalyzer:
             return
 
         self.slippage_history.append(slippage_pct)
-        logger.debug(f"Trade slippage recorded: {slippage_pct:.3%} (history size: {len(self.slippage_history)})")
+        logger.debug(
+            f"Trade slippage recorded: {slippage_pct:.3%} (history size: {len(self.slippage_history)})"
+        )
 
     def get_current_slippage_estimate(self, volatility_percentile: int) -> Decimal:
         """
@@ -216,7 +218,9 @@ class ExecutionCostAnalyzer:
             "total_cost": total_cost,
             "cost_ratio": cost_ratio,
             "expected_alpha": expected_alpha,
-            "net_profit": expected_alpha - total_cost if expected_alpha > Decimal("0") else Decimal("0"),
+            "net_profit": (
+                expected_alpha - total_cost if expected_alpha > Decimal("0") else Decimal("0")
+            ),
             "reason": reason,
             "regime": regime,
             "volatility_percentile": volatility_percentile,
@@ -245,7 +249,8 @@ class ExecutionCostAnalyzer:
         median = (
             slippages_sorted[len(slippages) // 2]
             if len(slippages) % 2 == 1
-            else (slippages_sorted[len(slippages) // 2 - 1] + slippages_sorted[len(slippages) // 2]) / 2
+            else (slippages_sorted[len(slippages) // 2 - 1] + slippages_sorted[len(slippages) // 2])
+            / 2
         )
 
         return {

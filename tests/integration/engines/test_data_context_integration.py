@@ -9,12 +9,8 @@ Tests para verificar que los módulos 1 y 2 se integran correctamente con Strate
 
 import logging
 import sys
-from datetime import datetime, timedelta
-from decimal import Decimal
 from pathlib import Path
-from typing import List
 
-import pytest
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
@@ -23,7 +19,6 @@ sys.path.insert(0, str(project_root))
 from app.engines.context_engine import ContextEngine
 from app.engines.data_engine import DataEngine
 from app.engines.strategy_engines import MomentumStrategyEngine
-from app.models.market_data import Quote
 
 logging.basicConfig(
     level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'

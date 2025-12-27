@@ -11,12 +11,11 @@ Tests cover:
 - Error handling and validation
 """
 
-import pytest
 import asyncio
-from decimal import Decimal
+
+import pytest
 import pytest_asyncio
-from fastapi.testclient import TestClient
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
 from app.main import app
 
@@ -33,6 +32,7 @@ async def client():
 # Test Input Processing (T1.1 via API)
 # =============================================================================
 
+
 class TestProcessInput:
     """Test input processing endpoint."""
 
@@ -46,7 +46,7 @@ class TestProcessInput:
                 "objetivo_inversion": "MAXIMIZAR_CAPITAL",
                 "risk_tolerance": "MEDIO",
                 "investment_horizon": 24,
-            }
+            },
         )
 
         assert response.status_code == 200
@@ -66,7 +66,7 @@ class TestProcessInput:
                 "objetivo_inversion": "CAPITAL_PRESERVATION",
                 "risk_tolerance": "BAJO",
                 "investment_horizon": 12,
-            }
+            },
         )
 
         assert response.status_code == 200
@@ -83,7 +83,7 @@ class TestProcessInput:
                 "objetivo_inversion": "MAXIMIZAR_CAPITAL",
                 "risk_tolerance": "ALTO",
                 "investment_horizon": 600,
-            }
+            },
         )
 
         assert response.status_code == 200
@@ -100,11 +100,8 @@ class TestProcessInput:
                 "objetivo_inversion": "MAXIMIZAR_DIVIDENDOS",
                 "risk_tolerance": "MEDIO",
                 "investment_horizon": 36,
-                "constraints": {
-                    "max_sector_allocation": 0.20,
-                    "min_dividend_yield": 0.03
-                }
-            }
+                "constraints": {"max_sector_allocation": 0.20, "min_dividend_yield": 0.03},
+            },
         )
 
         assert response.status_code == 200
@@ -121,7 +118,7 @@ class TestProcessInput:
                 "objetivo_inversion": "MAXIMIZAR_CAPITAL",
                 "risk_tolerance": "MEDIO",
                 "investment_horizon": 24,
-            }
+            },
         )
 
         # Either returns validation error or 400 from Pydantic validation
@@ -137,7 +134,7 @@ class TestProcessInput:
                 "objetivo_inversion": "MAXIMIZAR_CAPITAL",
                 "risk_tolerance": "MEDIO",
                 "investment_horizon": 700,  # Too high
-            }
+            },
         )
 
         # Either returns validation error or 400 from Pydantic validation
@@ -148,6 +145,7 @@ class TestProcessInput:
 # Test Profile Generation (T2.1 via API)
 # =============================================================================
 
+
 class TestGenerateProfile:
     """Test profile generation endpoint."""
 
@@ -155,8 +153,7 @@ class TestGenerateProfile:
     async def test_generate_profile(self, client):
         """Test generating investment profile."""
         response = await client.post(
-            "/capa2/generate-profile",
-            json={"input_id": "input_12345678_1234567890"}
+            "/capa2/generate-profile", json={"input_id": "input_12345678_1234567890"}
         )
 
         assert response.status_code == 200
@@ -172,8 +169,7 @@ class TestGenerateProfile:
     async def test_generate_profile_has_modules(self, client):
         """Test that profile includes enabled modules."""
         response = await client.post(
-            "/capa2/generate-profile",
-            json={"input_id": "input_12345678_1234567890"}
+            "/capa2/generate-profile", json={"input_id": "input_12345678_1234567890"}
         )
 
         assert response.status_code == 200
@@ -185,8 +181,7 @@ class TestGenerateProfile:
     async def test_generate_profile_capital_tier(self, client):
         """Test that profile has valid capital tier."""
         response = await client.post(
-            "/capa2/generate-profile",
-            json={"input_id": "input_12345678_1234567890"}
+            "/capa2/generate-profile", json={"input_id": "input_12345678_1234567890"}
         )
 
         assert response.status_code == 200
@@ -198,6 +193,7 @@ class TestGenerateProfile:
 # Test Module Parametrization (T3.1 via API)
 # =============================================================================
 
+
 class TestParametrizeModules:
     """Test module parametrization endpoint."""
 
@@ -208,8 +204,8 @@ class TestParametrizeModules:
             "/capa2/parametrize-modules",
             json={
                 "profile_id": "profile_12345678_1234567890",
-                "input_id": "input_12345678_1234567890"
-            }
+                "input_id": "input_12345678_1234567890",
+            },
         )
 
         assert response.status_code == 200
@@ -227,8 +223,8 @@ class TestParametrizeModules:
             "/capa2/parametrize-modules",
             json={
                 "profile_id": "profile_12345678_1234567890",
-                "input_id": "input_12345678_1234567890"
-            }
+                "input_id": "input_12345678_1234567890",
+            },
         )
 
         assert response.status_code == 200
@@ -244,6 +240,7 @@ class TestParametrizeModules:
 # Test Backtest Execution (T4.1 via API - ASYNC)
 # =============================================================================
 
+
 class TestExecuteBacktest:
     """Test backtest execution endpoint (async)."""
 
@@ -254,8 +251,8 @@ class TestExecuteBacktest:
             "/capa2/execute-backtest",
             json={
                 "parameter_set_id": "params_12345678_1234567890",
-                "profile_id": "profile_12345678_1234567890"
-            }
+                "profile_id": "profile_12345678_1234567890",
+            },
         )
 
         assert response.status_code == 200
@@ -272,8 +269,8 @@ class TestExecuteBacktest:
             "/capa2/execute-backtest",
             json={
                 "parameter_set_id": "params_12345678_1234567890",
-                "profile_id": "profile_12345678_1234567890"
-            }
+                "profile_id": "profile_12345678_1234567890",
+            },
         )
         job_id = submit_response.json()["job_id"]
 
@@ -293,8 +290,8 @@ class TestExecuteBacktest:
             "/capa2/execute-backtest",
             json={
                 "parameter_set_id": "params_12345678_1234567890",
-                "profile_id": "profile_12345678_1234567890"
-            }
+                "profile_id": "profile_12345678_1234567890",
+            },
         )
         job_id = submit_response.json()["job_id"]
 
@@ -328,6 +325,7 @@ class TestExecuteBacktest:
 # Test Complete Workflow (End-to-End)
 # =============================================================================
 
+
 class TestCompleteWorkflow:
     """Test end-to-end workflow endpoint."""
 
@@ -341,7 +339,7 @@ class TestCompleteWorkflow:
                 "objetivo_inversion": "MAXIMIZAR_CAPITAL",
                 "risk_tolerance": "MEDIO",
                 "investment_horizon": 24,
-            }
+            },
         )
 
         assert response.status_code == 200
@@ -360,7 +358,7 @@ class TestCompleteWorkflow:
                 "objetivo_inversion": "MAXIMIZAR_CAPITAL",
                 "risk_tolerance": "MEDIO",
                 "investment_horizon": 24,
-            }
+            },
         )
 
         assert response.status_code == 200
@@ -381,7 +379,7 @@ class TestCompleteWorkflow:
                 "objetivo_inversion": "MAXIMIZAR_CAPITAL",
                 "risk_tolerance": "MEDIO",
                 "investment_horizon": 24,
-            }
+            },
         )
         workflow_id = submit_response.json()["workflow_id"]
 
@@ -404,7 +402,7 @@ class TestCompleteWorkflow:
                 "objetivo_inversion": "MAXIMIZAR_CAPITAL",
                 "risk_tolerance": "MEDIO",
                 "investment_horizon": 24,
-            }
+            },
         )
         workflow_id = submit_response.json()["workflow_id"]
 
@@ -435,6 +433,7 @@ class TestCompleteWorkflow:
 # =============================================================================
 # Test Utility Endpoints
 # =============================================================================
+
 
 class TestUtilityEndpoints:
     """Test utility and health check endpoints."""
@@ -469,8 +468,8 @@ class TestUtilityEndpoints:
             "/capa2/execute-backtest",
             json={
                 "parameter_set_id": "params_12345678_1234567890",
-                "profile_id": "profile_12345678_1234567890"
-            }
+                "profile_id": "profile_12345678_1234567890",
+            },
         )
 
         # Check jobs status
@@ -485,6 +484,7 @@ class TestUtilityEndpoints:
 # Test Error Handling & Validation
 # =============================================================================
 
+
 class TestErrorHandling:
     """Test error handling and validation."""
 
@@ -492,8 +492,7 @@ class TestErrorHandling:
     async def test_invalid_json_request(self, client):
         """Test handling of invalid JSON request."""
         response = await client.post(
-            "/capa2/process-input",
-            json={"invalid": "data"}  # Missing required fields
+            "/capa2/process-input", json={"invalid": "data"}  # Missing required fields
         )
 
         assert response.status_code == 422  # Validation error
@@ -507,7 +506,7 @@ class TestErrorHandling:
                 "capital_initial": 50000,
                 "objetivo_inversion": "MAXIMIZAR_CAPITAL",
                 # Missing risk_tolerance and investment_horizon
-            }
+            },
         )
 
         assert response.status_code == 422
@@ -522,7 +521,7 @@ class TestErrorHandling:
                 "objetivo_inversion": "INVALID_OBJECTIVE",
                 "risk_tolerance": "MEDIO",
                 "investment_horizon": 24,
-            }
+            },
         )
 
         # API accepts string, validation happens downstream
@@ -532,6 +531,7 @@ class TestErrorHandling:
 # =============================================================================
 # Test API Documentation
 # =============================================================================
+
 
 class TestAPIDocumentation:
     """Test API documentation endpoints."""
@@ -561,6 +561,7 @@ class TestAPIDocumentation:
 # Integration Test: Full User Journey
 # =============================================================================
 
+
 class TestFullUserJourney:
     """Test complete user journey through the API."""
 
@@ -575,28 +576,21 @@ class TestFullUserJourney:
                 "objetivo_inversion": "MAXIMIZAR_CAPITAL",
                 "risk_tolerance": "MEDIO",
                 "investment_horizon": 24,
-            }
+            },
         )
         assert input_response.status_code == 200
         input_data = input_response.json()
         input_id = input_data["input_id"]
 
         # Step 2: Generate profile
-        profile_response = await client.post(
-            "/capa2/generate-profile",
-            json={"input_id": input_id}
-        )
+        profile_response = await client.post("/capa2/generate-profile", json={"input_id": input_id})
         assert profile_response.status_code == 200
         profile_data = profile_response.json()
         profile_id = profile_data["profile_id"]
 
         # Step 3: Parametrize modules
         params_response = await client.post(
-            "/capa2/parametrize-modules",
-            json={
-                "profile_id": profile_id,
-                "input_id": input_id
-            }
+            "/capa2/parametrize-modules", json={"profile_id": profile_id, "input_id": input_id}
         )
         assert params_response.status_code == 200
         params_data = params_response.json()
@@ -605,10 +599,7 @@ class TestFullUserJourney:
         # Step 4: Execute backtest
         backtest_response = await client.post(
             "/capa2/execute-backtest",
-            json={
-                "parameter_set_id": parameter_set_id,
-                "profile_id": profile_id
-            }
+            json={"parameter_set_id": parameter_set_id, "profile_id": profile_id},
         )
         assert backtest_response.status_code == 200
         backtest_data = backtest_response.json()

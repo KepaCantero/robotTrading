@@ -5,14 +5,15 @@ Dataclasses for backtesting orchestration, execution, and result handling.
 """
 
 from dataclasses import dataclass, field
+from datetime import date, datetime
 from decimal import Decimal
-from datetime import datetime, date
-from typing import Dict, List, Optional, Any
 from enum import Enum
+from typing import Dict, List, Optional
 
 
 class BacktestStatus(str, Enum):
     """Status of a backtest execution."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -23,6 +24,7 @@ class BacktestStatus(str, Enum):
 @dataclass
 class BacktestConfig:
     """Configuration for a single backtest execution."""
+
     # Test metadata
     test_id: str
     profile_id: str
@@ -55,6 +57,7 @@ class BacktestConfig:
 @dataclass
 class BacktestMetrics:
     """Performance metrics from a backtest."""
+
     # Returns
     total_return_pct: Decimal
     annual_return_pct: Decimal
@@ -88,6 +91,7 @@ class BacktestMetrics:
 @dataclass
 class BacktestResult:
     """Result of a single backtest execution."""
+
     # Execution metadata
     test_id: str
     profile_id: str
@@ -138,19 +142,24 @@ class BacktestResult:
             "peak_capital": str(self.peak_capital),
             "validation_passed": self.validation_passed,
             "execution_duration_seconds": self.execution_duration_seconds,
-            "metrics": {
-                "total_return_pct": str(self.metrics.total_return_pct),
-                "annual_return_pct": str(self.metrics.annual_return_pct),
-                "sharpe_ratio": str(self.metrics.sharpe_ratio),
-                "max_drawdown_pct": str(self.metrics.max_drawdown_pct),
-                "win_rate_pct": str(self.metrics.win_rate_pct),
-            } if self.metrics else None,
+            "metrics": (
+                {
+                    "total_return_pct": str(self.metrics.total_return_pct),
+                    "annual_return_pct": str(self.metrics.annual_return_pct),
+                    "sharpe_ratio": str(self.metrics.sharpe_ratio),
+                    "max_drawdown_pct": str(self.metrics.max_drawdown_pct),
+                    "win_rate_pct": str(self.metrics.win_rate_pct),
+                }
+                if self.metrics
+                else None
+            ),
         }
 
 
 @dataclass
 class BacktestOrchestrationRequest:
     """Request to orchestrate backtesting for a profile."""
+
     profile_id: str
     input_id: str
     module_parameter_set_id: str
@@ -167,6 +176,7 @@ class BacktestOrchestrationRequest:
 @dataclass
 class BacktestOrchestrationResult:
     """Result of backtest orchestration."""
+
     success: bool
     backtest_result: Optional[BacktestResult] = None
     error_message: str = ""

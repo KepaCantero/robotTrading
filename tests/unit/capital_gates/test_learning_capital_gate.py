@@ -10,8 +10,8 @@ Tests six critical scenarios:
 6. Recommended learning config by tier
 """
 
-import pytest
 from decimal import Decimal
+
 
 from app.services.learning_capital_gate import LearningCapitalGate
 

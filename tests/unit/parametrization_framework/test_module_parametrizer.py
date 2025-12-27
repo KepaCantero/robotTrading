@@ -4,13 +4,14 @@ T3.1: ModuleParametrizer Tests
 Tests for ModuleParametrizer, module parameter generation, and capital-tier gating.
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
+
 from app.services.module_parametrizer import (
     ModuleParametrizer,
-    get_module_parametrizer,
     ParameterizationRequest,
-    ParameterizationPreset,
+    get_module_parametrizer,
 )
 
 

@@ -7,11 +7,9 @@ todos los problemas que impiden que Momentum ejecute trades.
 
 from datetime import datetime, timedelta
 from decimal import Decimal
-from unittest.mock import Mock, patch
 
 import pytest
 
-from app.core.centralized_config import get_strategy_config
 from app.models.market_data import Quote
 from app.models.portfolio import AssetClass, Portfolio, Position
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType

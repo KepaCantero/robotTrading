@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class BacktestConfig:
     """Backtest configuration."""
+
     strategy_name: str
     capital: Decimal
     start_date: datetime
@@ -30,6 +31,7 @@ class BacktestConfig:
 @dataclass
 class BacktestResult:
     """Backtest execution result."""
+
     backtest_id: str
     strategy_name: str
     total_return: Decimal = Decimal("0")
@@ -47,6 +49,7 @@ class BacktestResult:
 @dataclass
 class ZiplineOrder:
     """Order in Zipline backtest."""
+
     order_id: str
     symbol: str
     amount: int  # Zipline uses integers

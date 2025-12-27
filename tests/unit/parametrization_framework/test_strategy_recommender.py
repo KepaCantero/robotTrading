@@ -4,12 +4,14 @@ T6.1: StrategyRecommender Tests
 Tests for objective-driven strategy recommendation and scoring.
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
+
 from app.services.strategy_recommender import (
+    StrategyRecommendationRequest,
     StrategyRecommender,
     get_strategy_recommender,
-    StrategyRecommendationRequest,
 )
 
 

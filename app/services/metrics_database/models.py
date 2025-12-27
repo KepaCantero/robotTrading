@@ -8,11 +8,12 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Callable, Dict, List, Optional, Any
+from typing import Any, Callable, Dict, List, Optional
 
 
 class MetricType(str, Enum):
     """Types of metrics tracked."""
+
     # Risk metrics
     PORTFOLIO_RETURN = "portfolio_return"
     PORTFOLIO_DRAWDOWN = "portfolio_drawdown"
@@ -45,6 +46,7 @@ class MetricType(str, Enum):
 
 class AggregationType(str, Enum):
     """Types of time-series aggregations."""
+
     OPEN = "open"
     HIGH = "high"
     LOW = "low"
@@ -62,6 +64,7 @@ class AggregationType(str, Enum):
 @dataclass
 class MetricPoint:
     """Single metric data point."""
+
     timestamp: datetime
     metric_type: MetricType
     value: Decimal
@@ -84,6 +87,7 @@ class MetricPoint:
 @dataclass
 class TimeSeriesQuery:
     """Query specification for time-series data."""
+
     metric_type: MetricType
     start_time: datetime
     end_time: datetime
@@ -105,6 +109,7 @@ class TimeSeriesQuery:
 @dataclass
 class AggregatedMetrics:
     """Aggregated metrics for a time period."""
+
     metric_type: MetricType
     symbol: Optional[str]
     portfolio_id: Optional[str]
@@ -153,6 +158,7 @@ class AggregatedMetrics:
 @dataclass
 class MetricsCollectionResult:
     """Result of metrics collection operation."""
+
     success: bool
     metrics_collected: int
     metrics_failed: int
@@ -171,6 +177,7 @@ class MetricsCollectionResult:
 @dataclass
 class MetricsStorageStats:
     """Statistics about metrics storage."""
+
     total_metrics_stored: int
     metric_types: int
     date_range_start: datetime
@@ -195,6 +202,7 @@ class MetricsStorageStats:
 @dataclass
 class MetricStatistics:
     """Statistical metrics for a time period."""
+
     metric_type: MetricType
     symbol: Optional[str]
     portfolio_id: Optional[str]
@@ -251,6 +259,7 @@ class MetricStatistics:
 @dataclass
 class CandlePoint:
     """OHLC candlestick data point."""
+
     timestamp: datetime
     metric_type: MetricType
     symbol: Optional[str]
@@ -282,6 +291,7 @@ class CandlePoint:
 @dataclass
 class CachedResult:
     """Cached query result."""
+
     query_hash: str
     result: List[Any]
     timestamp: datetime
@@ -296,6 +306,7 @@ class CachedResult:
 @dataclass
 class CollectorSource:
     """Definition of a metric collection source."""
+
     name: str
     collector_fn: Callable
     enabled: bool = True
@@ -306,7 +317,7 @@ class CollectorSource:
         """Execute collection."""
         try:
             return await self.collector_fn()
-        except Exception as e:
+        except Exception:
             # Log error but don't raise to allow other sources to continue
             return []
 
@@ -314,6 +325,7 @@ class CollectorSource:
 @dataclass
 class QuestDBConfig:
     """QuestDB connection and configuration."""
+
     host: str = "localhost"
     port: int = 5432
     database: str = "qdb"
@@ -330,8 +342,7 @@ class QuestDBConfig:
     def connection_string(self) -> str:
         """Generate PostgreSQL connection string for QuestDB."""
         return (
-            f"postgresql://{self.user}:{self.password}@"
-            f"{self.host}:{self.port}/{self.database}"
+            f"postgresql://{self.user}:{self.password}@" f"{self.host}:{self.port}/{self.database}"
         )
 
     def to_dict(self) -> Dict:
@@ -350,6 +361,7 @@ class QuestDBConfig:
 @dataclass
 class MetricsCollectorConfig:
     """MetricsCollector configuration."""
+
     enabled: bool = True
     collection_interval_seconds: int = 60
     batch_size: int = 1000
@@ -370,6 +382,7 @@ class MetricsCollectorConfig:
 @dataclass
 class MetricsQueryEngineConfig:
     """MetricsQueryEngine configuration."""
+
     cache_enabled: bool = True
     cache_ttl_seconds: int = 300  # 5 minutes
     max_query_points: int = 100000

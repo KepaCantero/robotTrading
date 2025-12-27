@@ -8,10 +8,9 @@ Tests cover:
 - Notification dispatch
 """
 
-import pytest
-from datetime import datetime, timedelta
 from decimal import Decimal
-from unittest.mock import AsyncMock, patch
+
+import pytest
 
 from app.services.alerting_system import (
     AlertEvent,
@@ -21,7 +20,6 @@ from app.services.alerting_system import (
     AlertSeverity,
     ChangeRule,
     ComparisonOperator,
-    LogicOperator,
     NotificationChannelType,
     NotificationTarget,
     ThresholdRule,

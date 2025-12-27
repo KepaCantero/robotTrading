@@ -10,14 +10,14 @@ Fallback chain: Try efficient frontier → risk parity → equal weight
 """
 
 import logging
-from decimal import Decimal
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple
+from decimal import Decimal
+from typing import Dict, List, Optional
 
 from .models import (
-    PortfolioConstructionRequest,
-    PortfolioAllocation,
     AllocationWeight,
+    PortfolioAllocation,
+    PortfolioConstructionRequest,
 )
 
 logger = logging.getLogger(__name__)
@@ -139,9 +139,7 @@ class PortfolioConstructor:
             )
 
             # Try efficient frontier first
-            allocation = await self._construct_efficient_frontier_portfolio(
-                request, risk_config
-            )
+            allocation = await self._construct_efficient_frontier_portfolio(request, risk_config)
             if allocation.success:
                 allocation.allocation_method = "efficient_frontier"
                 self.construction_history.append(allocation)
@@ -248,13 +246,14 @@ class PortfolioConstructor:
 
             # Apply risk profile adjustment
             efficiency_weight = risk_config["efficiency_weight"]
-            equal_weight = (Decimal("1") - efficiency_weight) / len(request.enabled_modules) * Decimal("100")
+            equal_weight = (
+                (Decimal("1") - efficiency_weight) / len(request.enabled_modules) * Decimal("100")
+            )
 
             adjusted_weights = {}
             for module in request.enabled_modules:
-                adjusted = (
-                    weights[module] * efficiency_weight
-                    + equal_weight * (Decimal("1") - efficiency_weight)
+                adjusted = weights[module] * efficiency_weight + equal_weight * (
+                    Decimal("1") - efficiency_weight
                 )
                 adjusted_weights[module] = adjusted
 
@@ -372,7 +371,9 @@ class PortfolioConstructor:
             expected_returns = {}
             for module in request.enabled_modules:
                 if module in self.MODULE_CHARACTERISTICS:
-                    expected_returns[module] = self.MODULE_CHARACTERISTICS[module]["expected_return"]
+                    expected_returns[module] = self.MODULE_CHARACTERISTICS[module][
+                        "expected_return"
+                    ]
                 else:
                     expected_returns[module] = Decimal("10")
 
@@ -488,10 +489,14 @@ class PortfolioConstructor:
                 if module in self.MODULE_CHARACTERISTICS:
                     char = self.MODULE_CHARACTERISTICS[module]
                     portfolio_return += char["expected_return"] * weight_per_module / Decimal("100")
-                    portfolio_volatility += (char["volatility_score"] * weight_per_module / Decimal("100")) ** 2
+                    portfolio_volatility += (
+                        char["volatility_score"] * weight_per_module / Decimal("100")
+                    ) ** 2
                 else:
                     portfolio_return += Decimal("10") * weight_per_module / Decimal("100")
-                    portfolio_volatility += (Decimal("0.15") * weight_per_module / Decimal("100")) ** 2
+                    portfolio_volatility += (
+                        Decimal("0.15") * weight_per_module / Decimal("100")
+                    ) ** 2
 
             portfolio_volatility = portfolio_volatility.sqrt()
             portfolio_sharpe = (

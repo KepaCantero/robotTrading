@@ -5,12 +5,12 @@ Tests deployment validation orchestration across all capital gates.
 Validates that accounts are safe for live deployment before going live.
 """
 
-import pytest
 from decimal import Decimal
 
+
 from app.services.deployment_validator import (
-    DeploymentValidator,
     DeploymentStatus,
+    DeploymentValidator,
 )
 
 
@@ -202,36 +202,24 @@ class TestDeploymentReadinessScore:
 
     def test_micro_account_low_score(self):
         """Micro account should have low readiness score"""
-        score = DeploymentValidator.get_deployment_readiness_score(
-            Decimal("10000")
-        )
+        score = DeploymentValidator.get_deployment_readiness_score(Decimal("10000"))
         assert score < 40.0
 
     def test_small_account_moderate_score(self):
         """Small account should have moderate readiness score"""
-        score = DeploymentValidator.get_deployment_readiness_score(
-            Decimal("30000")
-        )
+        score = DeploymentValidator.get_deployment_readiness_score(Decimal("30000"))
         assert 40.0 <= score < 80.0
 
     def test_large_account_high_score(self):
         """Large account should have high readiness score"""
-        score = DeploymentValidator.get_deployment_readiness_score(
-            Decimal("300000")
-        )
+        score = DeploymentValidator.get_deployment_readiness_score(Decimal("300000"))
         assert score >= 80.0
 
     def test_readiness_increases_with_capital(self):
         """Readiness score should increase with capital"""
-        score_10k = DeploymentValidator.get_deployment_readiness_score(
-            Decimal("10000")
-        )
-        score_100k = DeploymentValidator.get_deployment_readiness_score(
-            Decimal("100000")
-        )
-        score_500k = DeploymentValidator.get_deployment_readiness_score(
-            Decimal("500000")
-        )
+        score_10k = DeploymentValidator.get_deployment_readiness_score(Decimal("10000"))
+        score_100k = DeploymentValidator.get_deployment_readiness_score(Decimal("100000"))
+        score_500k = DeploymentValidator.get_deployment_readiness_score(Decimal("500000"))
 
         assert score_10k < score_100k < score_500k
 
@@ -266,15 +254,11 @@ class TestMinimumCapitalRecommendation:
 
     def test_high_goal_requires_more_capital(self):
         """Higher profit goals require more capital"""
-        recommendations_500 = (
-            DeploymentValidator.get_minimum_capital_recommendation(
-                monthly_profit_goal=Decimal("500"),
-            )
+        recommendations_500 = DeploymentValidator.get_minimum_capital_recommendation(
+            monthly_profit_goal=Decimal("500"),
         )
-        recommendations_2000 = (
-            DeploymentValidator.get_minimum_capital_recommendation(
-                monthly_profit_goal=Decimal("2000"),
-            )
+        recommendations_2000 = DeploymentValidator.get_minimum_capital_recommendation(
+            monthly_profit_goal=Decimal("2000"),
         )
 
         assert (

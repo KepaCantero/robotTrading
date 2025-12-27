@@ -242,45 +242,21 @@ class TradingThresholds(BaseModel):
         return v
 
     # T18.1: Metrics Database Configuration
-    metrics_db_enabled: bool = Field(
-        default=True, description="Enable metrics database collection"
-    )
+    metrics_db_enabled: bool = Field(default=True, description="Enable metrics database collection")
     metrics_collection_interval: int = Field(
         default=60, description="Metrics collection interval in seconds"
     )
-    metrics_batch_size: int = Field(
-        default=1000, description="Metrics batch size for inserts"
-    )
-    metrics_retention_days: int = Field(
-        default=90, description="Metrics retention period in days"
-    )
-    questdb_host: str = Field(
-        default="localhost", description="QuestDB host"
-    )
-    questdb_port: int = Field(
-        default=5432, description="QuestDB port"
-    )
-    questdb_database: str = Field(
-        default="qdb", description="QuestDB database name"
-    )
-    questdb_user: str = Field(
-        default="admin", description="QuestDB user"
-    )
-    questdb_password: str = Field(
-        default="quest", description="QuestDB password"
-    )
-    questdb_pool_size: int = Field(
-        default=10, description="QuestDB connection pool size"
-    )
-    questdb_max_retries: int = Field(
-        default=3, description="QuestDB maximum retries"
-    )
-    metrics_cache_enabled: bool = Field(
-        default=True, description="Enable metrics query caching"
-    )
-    metrics_cache_ttl_seconds: int = Field(
-        default=300, description="Metrics cache TTL in seconds"
-    )
+    metrics_batch_size: int = Field(default=1000, description="Metrics batch size for inserts")
+    metrics_retention_days: int = Field(default=90, description="Metrics retention period in days")
+    questdb_host: str = Field(default="localhost", description="QuestDB host")
+    questdb_port: int = Field(default=5432, description="QuestDB port")
+    questdb_database: str = Field(default="qdb", description="QuestDB database name")
+    questdb_user: str = Field(default="admin", description="QuestDB user")
+    questdb_password: str = Field(default="quest", description="QuestDB password")
+    questdb_pool_size: int = Field(default=10, description="QuestDB connection pool size")
+    questdb_max_retries: int = Field(default=3, description="QuestDB maximum retries")
+    metrics_cache_enabled: bool = Field(default=True, description="Enable metrics query caching")
+    metrics_cache_ttl_seconds: int = Field(default=300, description="Metrics cache TTL in seconds")
 
 
 class StrategyConfig(BaseModel):

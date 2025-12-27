@@ -30,30 +30,30 @@ class RiskAdjustmentCalculator:
 
     # Position scaling multipliers by feasibility ratio
     POSITION_SCALING = {
-        "very_high": (1.3, 1.5),      # >= 1.5: Can increase positions
-        "high": (1.0, 1.5),            # 1.0-1.5: Hold or slightly increase
-        "acceptable": (0.8, 1.0),      # 0.7-1.0: Scale down slightly
-        "marginal": (0.5, 0.7),        # 0.5-0.7: Scale down significantly
-        "unviable": (0.0, 0.5),        # < 0.5: Reject or minimal sizing
+        "very_high": (1.3, 1.5),  # >= 1.5: Can increase positions
+        "high": (1.0, 1.5),  # 1.0-1.5: Hold or slightly increase
+        "acceptable": (0.8, 1.0),  # 0.7-1.0: Scale down slightly
+        "marginal": (0.5, 0.7),  # 0.5-0.7: Scale down significantly
+        "unviable": (0.0, 0.5),  # < 0.5: Reject or minimal sizing
     }
 
     # Capital tier multipliers (affect max leverage/position sizing)
     CAPITAL_TIER_MULTIPLIERS = {
-        "micro": Decimal("0.5"),       # €1k-€15k: Tight controls
-        "small": Decimal("0.75"),      # €15k-€50k: Moderate controls
-        "medium": Decimal("1.0"),      # €50k-€250k: Standard controls
-        "large": Decimal("1.25"),      # €250k+: More flexibility
+        "micro": Decimal("0.5"),  # €1k-€15k: Tight controls
+        "small": Decimal("0.75"),  # €15k-€50k: Moderate controls
+        "medium": Decimal("1.0"),  # €50k-€250k: Standard controls
+        "large": Decimal("1.25"),  # €250k+: More flexibility
     }
 
     # Stop loss widening factors (based on volatility/risk_tolerance)
     STOP_LOSS_WIDENING = {
-        1: Decimal("0.5"),   # Very tight stops (1% risk tolerance)
+        1: Decimal("0.5"),  # Very tight stops (1% risk tolerance)
         2: Decimal("0.7"),
         3: Decimal("0.9"),
         4: Decimal("1.1"),
         5: Decimal("1.3"),
         6: Decimal("1.5"),
-        7: Decimal("2.0"),   # Wide stops (7 = aggressive)
+        7: Decimal("2.0"),  # Wide stops (7 = aggressive)
     }
 
     def __init__(self):
@@ -110,9 +110,7 @@ class RiskAdjustmentCalculator:
         )
 
         # Apply capital tier modifier
-        tier_multiplier = self.CAPITAL_TIER_MULTIPLIERS.get(
-            capital_tier.lower(), Decimal("1.0")
-        )
+        tier_multiplier = self.CAPITAL_TIER_MULTIPLIERS.get(capital_tier.lower(), Decimal("1.0"))
         final_scale = scale_factor * tier_multiplier
 
         # Cap scale to reasonable range
@@ -156,7 +154,10 @@ class RiskAdjustmentCalculator:
         else:
             # Moderate: interpolate
             weight = Decimal(str((risk_tolerance - 3) / 2.0))  # 0-1
-            return Decimal(str(scale_min)) + (Decimal(str(scale_max)) - Decimal(str(scale_min))) * weight
+            return (
+                Decimal(str(scale_min))
+                + (Decimal(str(scale_max)) - Decimal(str(scale_min))) * weight
+            )
 
     def calculate_leverage_adjustment(
         self,
@@ -181,16 +182,18 @@ class RiskAdjustmentCalculator:
 
         # Base leverage by tier
         base_leverage = {
-            "micro": Decimal("1.0"),      # No leverage for small accounts
+            "micro": Decimal("1.0"),  # No leverage for small accounts
             "small": Decimal("1.0"),
-            "medium": Decimal("1.5"),     # 1.5x leverage allowed
-            "large": Decimal("2.0"),      # 2x leverage allowed
+            "medium": Decimal("1.5"),  # 1.5x leverage allowed
+            "large": Decimal("2.0"),  # 2x leverage allowed
         }.get(capital_tier.lower(), Decimal("1.0"))
 
         # Reduce leverage if strategy not viable
         if feasibility_ratio < Decimal("0.7"):
             leverage = base_leverage * Decimal("0.5")
-            reason = f"Low feasibility ({feasibility_ratio:.2f}) → reduce leverage to {leverage:.2f}x"
+            reason = (
+                f"Low feasibility ({feasibility_ratio:.2f}) → reduce leverage to {leverage:.2f}x"
+            )
         elif feasibility_ratio < Decimal("1.0"):
             leverage = base_leverage * Decimal("0.75")
             reason = f"Marginal feasibility ({feasibility_ratio:.2f}) → {leverage:.2f}x leverage"

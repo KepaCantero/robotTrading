@@ -16,7 +16,7 @@ Reset: When equity reaches new all-time high
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 from typing import List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
@@ -312,9 +312,7 @@ class DrawdownMonitor:
         return {
             "current_underwater_days": current_underwater,
             "avg_underwater_days": (
-                sum(underwater_periods) / len(underwater_periods)
-                if underwater_periods
-                else 0
+                sum(underwater_periods) / len(underwater_periods) if underwater_periods else 0
             ),
             "max_underwater_days": max(underwater_periods) if underwater_periods else 0,
             "num_underwater_periods": len(underwater_periods),
@@ -350,8 +348,7 @@ class DrawdownMonitor:
         elif level == "CAUTION":
             action = "REDUCE_20"
             desc = (
-                f"Drawdown at {current_drawdown:.1%}. Reduce positions to 80% "
-                f"of normal sizing."
+                f"Drawdown at {current_drawdown:.1%}. Reduce positions to 80% " f"of normal sizing."
             )
         else:
             action = "NORMAL"

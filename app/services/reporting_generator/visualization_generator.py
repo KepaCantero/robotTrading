@@ -5,13 +5,14 @@ Generates professional interactive visualizations for performance reports using 
 Charts are optimized for HTML embedding and interactive exploration.
 """
 
-import logging
-from decimal import Decimal
-from datetime import datetime
-from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass
-import numpy as np
 import json
+import logging
+from dataclasses import dataclass
+from datetime import datetime
+from decimal import Decimal
+from typing import Any, Dict, List, Optional
+
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -34,11 +35,13 @@ class PlotlyChart:
 
     def to_json(self) -> str:
         """Convert chart to JSON for HTML embedding."""
-        return json.dumps({
-            "data": self.data,
-            "layout": self.layout,
-            "config": self.config,
-        })
+        return json.dumps(
+            {
+                "data": self.data,
+                "layout": self.layout,
+                "config": self.config,
+            }
+        )
 
     def to_html_div(self) -> str:
         """Generate HTML div with embedded Plotly chart."""
@@ -143,19 +146,21 @@ class AdvancedVisualizationGenerator:
                 benchmark_cumulative = np.cumprod(1 + benchmark_array) - 1
                 benchmark_pct = benchmark_cumulative * 100
 
-                data.append({
-                    "x": periods,
-                    "y": benchmark_pct.tolist(),
-                    "type": "scatter",
-                    "mode": "lines",
-                    "name": "Benchmark",
-                    "line": {
-                        "color": self.default_colors["warning"],
-                        "width": 2,
-                        "dash": "dash",
-                    },
-                    "hovertemplate": "Period: %{x}<br>Return: %{y:.2f}%<extra></extra>",
-                })
+                data.append(
+                    {
+                        "x": periods,
+                        "y": benchmark_pct.tolist(),
+                        "type": "scatter",
+                        "mode": "lines",
+                        "name": "Benchmark",
+                        "line": {
+                            "color": self.default_colors["warning"],
+                            "width": 2,
+                            "dash": "dash",
+                        },
+                        "hovertemplate": "Period: %{x}<br>Return: %{y:.2f}%<extra></extra>",
+                    }
+                )
 
             layout = {
                 "title": {"text": title, "x": 0.5, "xanchor": "center"},
@@ -225,16 +230,20 @@ class AdvancedVisualizationGenerator:
                     current_dd += dd
                 else:
                     if current_dd < 0:
-                        significant_dd.append({
-                            "start": start_idx,
-                            "end": i - 1,
-                            "depth": current_dd,
-                        })
+                        significant_dd.append(
+                            {
+                                "start": start_idx,
+                                "end": i - 1,
+                                "depth": current_dd,
+                            }
+                        )
                     current_dd = 0
 
             # Data for waterfall
-            x_labels = [f"Period {i}" for i in periods[::max(1, len(periods)//20)]]  # Sample every nth
-            y_values = drawdown[::max(1, len(periods)//20)].tolist()
+            x_labels = [
+                f"Period {i}" for i in periods[:: max(1, len(periods) // 20)]
+            ]  # Sample every nth
+            y_values = drawdown[:: max(1, len(periods) // 20)].tolist()
 
             data = [
                 {
@@ -242,7 +251,14 @@ class AdvancedVisualizationGenerator:
                     "y": y_values,
                     "type": "bar",
                     "marker": {
-                        "color": [self.default_colors["danger"] if v < 0 else self.default_colors["success"] for v in y_values],
+                        "color": [
+                            (
+                                self.default_colors["danger"]
+                                if v < 0
+                                else self.default_colors["success"]
+                            )
+                            for v in y_values
+                        ],
                     },
                     "hovertemplate": "%{x}<br>Drawdown: %{y:.2f}%<extra></extra>",
                 }
@@ -306,7 +322,7 @@ class AdvancedVisualizationGenerator:
             periods_list = []
 
             for i in range(window, len(returns_array)):
-                window_returns = returns_array[i - window:i]
+                window_returns = returns_array[i - window : i]
                 mean_ret = np.mean(window_returns)
                 std_ret = np.std(window_returns)
                 sharpe = (mean_ret / std_ret * np.sqrt(252)) if std_ret > 0 else 0
@@ -411,7 +427,7 @@ class AdvancedVisualizationGenerator:
             current_month = 1
 
             for i in range(0, len(returns_array), days_per_month):
-                month_ret = returns_array[i:i + days_per_month]
+                month_ret = returns_array[i : i + days_per_month]
                 if len(month_ret) > 0:
                     # Compound returns
                     monthly_ret = (np.prod(1 + month_ret) - 1) * 100
@@ -434,8 +450,18 @@ class AdvancedVisualizationGenerator:
                 matrix[year_idx[y], m - 1] = ret
 
             month_names = [
-                "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+                "Jan",
+                "Feb",
+                "Mar",
+                "Apr",
+                "May",
+                "Jun",
+                "Jul",
+                "Aug",
+                "Sep",
+                "Oct",
+                "Nov",
+                "Dec",
             ]
 
             data = [

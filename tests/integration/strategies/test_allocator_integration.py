@@ -19,7 +19,6 @@ import pytest
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.core.centralized_config import get_config
 
 # Now import app modules
 from app.services.strategy_stock_allocator import StrategyStockAllocator

@@ -13,7 +13,6 @@ import sys
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 import pytest
 
 # Add project root to path
@@ -22,7 +21,6 @@ sys.path.insert(0, str(project_root))
 
 from app.strategies.momentum_modular.learning.feature_importance import (
     SHAP_AVAILABLE,
-    AttentionWeightsAnalyzer,
     FeatureImportanceAnalyzer,
     FeatureSelector,
     SHAPAnalyzer,

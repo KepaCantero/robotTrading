@@ -17,7 +17,7 @@ Reset: When 3+ winning trades occur in a row
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 from typing import List, Optional
 
 logger = logging.getLogger(__name__)
@@ -169,7 +169,11 @@ class LossMonitor:
             return False
 
         # Get recent trades
-        recent = trade_results[-lookback_trades:] if len(trade_results) >= lookback_trades else trade_results
+        recent = (
+            trade_results[-lookback_trades:]
+            if len(trade_results) >= lookback_trades
+            else trade_results
+        )
 
         # Count consecutive wins from the end
         consecutive_wins = 0
@@ -228,7 +232,9 @@ class LossMonitor:
         if not trade_results:
             return Decimal("0")
 
-        recent = trade_results[-window_trades:] if len(trade_results) >= window_trades else trade_results
+        recent = (
+            trade_results[-window_trades:] if len(trade_results) >= window_trades else trade_results
+        )
         wins = sum(1 for t in recent if t.is_winning())
         win_rate = (Decimal(wins) / Decimal(len(recent))) * Decimal("100")
 
@@ -254,7 +260,9 @@ class LossMonitor:
         if not trade_results:
             return None
 
-        recent = trade_results[-window_trades:] if len(trade_results) >= window_trades else trade_results
+        recent = (
+            trade_results[-window_trades:] if len(trade_results) >= window_trades else trade_results
+        )
 
         wins = [t.pnl for t in recent if t.is_winning()]
         losses = [abs(t.pnl) for t in recent if t.is_losing()]
@@ -310,8 +318,7 @@ class LossMonitor:
             )
         else:
             recommendation = (
-                f"No loss streak. Maintain normal sizing (1.0x). "
-                f"Win rate: {win_rate:.1f}%"
+                f"No loss streak. Maintain normal sizing (1.0x). " f"Win rate: {win_rate:.1f}%"
             )
 
         return loss_scale, recommendation
@@ -337,7 +344,7 @@ class LossMonitor:
             return False, "Insufficient trade history"
 
         # Get early and recent periods
-        early = trade_results[-early_window - recent_window:-recent_window]
+        early = trade_results[-early_window - recent_window : -recent_window]
         recent = trade_results[-recent_window:]
 
         early_wins = sum(1 for t in early if t.is_winning())

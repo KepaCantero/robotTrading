@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class StrategyMetrics:
     """Performance metrics for a strategy."""
+
     strategy_name: str
     total_return: Decimal  # 10% = 0.10
     annual_return: Decimal
@@ -30,6 +31,7 @@ class StrategyMetrics:
 @dataclass
 class StrategyScore:
     """Composite score for a strategy."""
+
     strategy_name: str
     overall_score: Decimal  # 0-100
     return_score: Decimal  # 0-100

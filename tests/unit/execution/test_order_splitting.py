@@ -4,8 +4,9 @@ Unit tests for OrderSplittingOptimizer
 Tests VWAP, TWAP, POI, and intraday_phased splitting strategies.
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
 
 from app.services.smart_order_routing.order_splitting_optimizer import (
     OrderSplittingOptimizer,

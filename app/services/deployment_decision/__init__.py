@@ -5,9 +5,9 @@ and risk assessment into final deployment decision (APPROVED, CONDITIONAL, REJEC
 """
 
 from .deployment_decision_orchestrator import (
-    DeploymentDecisionOrchestrator,
-    DeploymentDecision,
     DeploymentAnalysis,
+    DeploymentDecision,
+    DeploymentDecisionOrchestrator,
     get_deployment_decision_orchestrator,
 )
 

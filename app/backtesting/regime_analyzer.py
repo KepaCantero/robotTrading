@@ -9,7 +9,7 @@ Provides:
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional
 
 import numpy as np
 import pandas as pd
@@ -78,7 +78,9 @@ class RegimeAnalyzer:
             features_valid = features[valid_idx]
 
             if len(features_valid) < self.n_regimes:
-                logger.warning(f"Not enough valid data points ({len(features_valid)}) for {self.n_regimes} regimes")
+                logger.warning(
+                    f"Not enough valid data points ({len(features_valid)}) for {self.n_regimes} regimes"
+                )
                 return pd.Series([0] * len(returns), index=returns.index)
 
             # Standardize features
@@ -103,7 +105,9 @@ class RegimeAnalyzer:
             regime_mapping = {old: new for new, (old, _) in enumerate(sorted_regimes)}
 
             # Remap labels: 0=Bear, 1=Neutral, 2=Bull
-            regime_labels_remapped = np.array([regime_mapping[label] for label in regime_labels_valid])
+            regime_labels_remapped = np.array(
+                [regime_mapping[label] for label in regime_labels_valid]
+            )
 
             # Create full series with initial NaNs mapped to neutral (1)
             full_labels = np.ones(len(returns), dtype=int)
@@ -325,7 +329,7 @@ class RegimeAnalyzer:
                 test_returns = returns.iloc[test_start:test_end]
 
                 # Detect regimes on training window
-                train_regimes = self.detect_regimes(train_returns)
+                self.detect_regimes(train_returns)
 
                 # Analyze test period performance
                 if len(test_returns) > 0:
@@ -333,23 +337,27 @@ class RegimeAnalyzer:
                     test_volatility = test_returns.std()
                     test_sharpe = test_return / (test_volatility + 1e-8) * np.sqrt(252)
 
-                    robustness_results["period_results"].append({
-                        "period": period,
-                        "train_start": train_start,
-                        "train_end": train_end,
-                        "test_start": test_start,
-                        "test_end": test_end,
-                        "test_return": float(test_return),
-                        "test_volatility": float(test_volatility),
-                        "test_sharpe": float(test_sharpe),
-                    })
+                    robustness_results["period_results"].append(
+                        {
+                            "period": period,
+                            "train_start": train_start,
+                            "train_end": train_end,
+                            "test_start": test_start,
+                            "test_end": test_end,
+                            "test_return": float(test_return),
+                            "test_volatility": float(test_volatility),
+                            "test_sharpe": float(test_sharpe),
+                        }
+                    )
 
             # Calculate robustness metrics
             if robustness_results["period_results"]:
                 returns_list = [r["test_return"] for r in robustness_results["period_results"]]
                 robustness_results["avg_return"] = float(np.mean(returns_list))
                 robustness_results["std_return"] = float(np.std(returns_list))
-                robustness_results["consistency"] = float(1 - np.std(returns_list) / (np.mean(np.abs(returns_list)) + 1e-8))
+                robustness_results["consistency"] = float(
+                    1 - np.std(returns_list) / (np.mean(np.abs(returns_list)) + 1e-8)
+                )
 
             logger.info(f"Out-of-sample robustness testing completed ({test_periods} periods)")
             return robustness_results

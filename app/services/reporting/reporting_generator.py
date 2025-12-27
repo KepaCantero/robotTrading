@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class PerformanceReport:
     """Performance report data."""
+
     report_id: str
     strategy_name: str
     generated_at: str
@@ -71,9 +72,7 @@ class ReportingGenerator:
             # Extract and organize metrics
             summary = await self._generate_summary(strategy_name, backtest_result)
             metrics = await self._extract_metrics(backtest_result)
-            risk_metrics = await self._calculate_risk_metrics(
-                backtest_result, monthly_returns
-            )
+            risk_metrics = await self._calculate_risk_metrics(backtest_result, monthly_returns)
 
             # Generate HTML report
             html_report = await self._generate_html_report(
@@ -131,7 +130,7 @@ class ReportingGenerator:
         if monthly_returns:
             avg_return = sum(monthly_returns) / len(monthly_returns)
             variance = sum((r - avg_return) ** 2 for r in monthly_returns) / len(monthly_returns)
-            volatility = variance ** 0.5
+            volatility = variance**0.5
         else:
             volatility = 0.0
 

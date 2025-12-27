@@ -7,28 +7,30 @@ Integrates MAESTRO PHASE 1 for absolute return optimization and feasibility vali
 """
 
 import logging
-import yaml
-from decimal import Decimal
 from datetime import datetime
-from typing import Dict, List, Optional
+from decimal import Decimal
 from pathlib import Path
+from typing import Dict, List, Optional
+
+import yaml
+
+from app.maestro.phase_1 import (
+    AbsoluteReturnTarget,
+    CapacityFadeAnalyzer,
+    CapitalTierSelector,
+    FeasibilityValidator,
+    ParameterOptimizer,
+    TargetAlphaCalculator,
+)
 
 from .models import (
     CapitalTier,
     InvestmentObjective,
-    RiskProfile,
     InvestmentProfile,
     ModuleConfig,
     ProfileGenerationRequest,
     ProfileGenerationResult,
-)
-from app.maestro.phase_1 import (
-    CapitalTierSelector,
-    TargetAlphaCalculator,
-    CapacityFadeAnalyzer,
-    ParameterOptimizer,
-    FeasibilityValidator,
-    AbsoluteReturnTarget,
+    RiskProfile,
 )
 
 logger = logging.getLogger(__name__)
@@ -58,7 +60,9 @@ class ProfileGenerator:
 
         # Load profile configuration
         if config_path is None:
-            config_path = Path(__file__).parent.parent.parent.parent / "config" / "investment_profiles.yaml"
+            config_path = (
+                Path(__file__).parent.parent.parent.parent / "config" / "investment_profiles.yaml"
+            )
 
         self.config_path = Path(config_path)
         self.profile_templates = self._load_profile_templates()
@@ -76,7 +80,9 @@ class ProfileGenerator:
         """Load investment profile templates from YAML."""
         try:
             if not self.config_path.exists():
-                logger.warning(f"⚠️  Config not found at {self.config_path}, using default templates")
+                logger.warning(
+                    f"⚠️  Config not found at {self.config_path}, using default templates"
+                )
                 return self._get_default_templates()
 
             with open(self.config_path, 'r') as f:
@@ -115,7 +121,13 @@ class ProfileGenerator:
                 "large": {
                     "risk": "moderate",
                     "max_leverage": 2.5,
-                    "modules": ["momentum", "ml_basic", "transformer", "deep_learning", "reinforcement_learning"],
+                    "modules": [
+                        "momentum",
+                        "ml_basic",
+                        "transformer",
+                        "deep_learning",
+                        "reinforcement_learning",
+                    ],
                     "max_position_size": 3.0,
                     "rebalance_days": 7,
                 },
@@ -145,7 +157,12 @@ class ProfileGenerator:
                 "large": {
                     "risk": "moderate",
                     "max_leverage": 2.0,
-                    "modules": ["dividend_tracking", "ml_basic", "income_optimizer", "tax_optimizer"],
+                    "modules": [
+                        "dividend_tracking",
+                        "ml_basic",
+                        "income_optimizer",
+                        "tax_optimizer",
+                    ],
                     "max_position_size": 3.0,
                     "rebalance_days": 30,
                 },
@@ -205,7 +222,13 @@ class ProfileGenerator:
                 "large": {
                     "risk": "moderate",
                     "max_leverage": 2.0,
-                    "modules": ["momentum", "ml_basic", "transformer", "deep_learning", "risk_monitor"],
+                    "modules": [
+                        "momentum",
+                        "ml_basic",
+                        "transformer",
+                        "deep_learning",
+                        "risk_monitor",
+                    ],
                     "max_position_size": 2.0,
                     "rebalance_days": 7,
                 },
@@ -228,14 +251,25 @@ class ProfileGenerator:
                 "medium": {
                     "risk": "moderate",
                     "max_leverage": 1.3,
-                    "modules": ["dividend_tracking", "income_optimizer", "ml_basic", "risk_monitor"],
+                    "modules": [
+                        "dividend_tracking",
+                        "income_optimizer",
+                        "ml_basic",
+                        "risk_monitor",
+                    ],
                     "max_position_size": 4.0,
                     "rebalance_days": 30,
                 },
                 "large": {
                     "risk": "moderate",
                     "max_leverage": 1.5,
-                    "modules": ["dividend_tracking", "income_optimizer", "ml_basic", "transformer", "risk_monitor"],
+                    "modules": [
+                        "dividend_tracking",
+                        "income_optimizer",
+                        "ml_basic",
+                        "transformer",
+                        "risk_monitor",
+                    ],
                     "max_position_size": 2.0,
                     "rebalance_days": 30,
                 },
@@ -278,7 +312,7 @@ class ProfileGenerator:
             if template is None:
                 return ProfileGenerationResult(
                     success=False,
-                    error_message=f"No template found for {objective.value} / {capital_tier.value}"
+                    error_message=f"No template found for {objective.value} / {capital_tier.value}",
                 )
 
             # Step 4: Create investment profile with MAESTRO PHASE 1 integration
@@ -399,7 +433,9 @@ class ProfileGenerator:
             enabled_modules=enabled_modules,
             max_leverage=max_leverage,
             max_position_size_pct=max_position_size,
-            max_daily_loss_pct=Decimal("1.0") if risk_profile == RiskProfile.AGGRESSIVE else Decimal("0.5"),
+            max_daily_loss_pct=(
+                Decimal("1.0") if risk_profile == RiskProfile.AGGRESSIVE else Decimal("0.5")
+            ),
             rebalance_frequency_days=rebalance_days,
             risk_scaling_enabled=(tier in [CapitalTier.MEDIUM, CapitalTier.LARGE]),
             adaptive_position_sizing=True,
@@ -426,15 +462,22 @@ class ProfileGenerator:
         if len(profile.enabled_modules) == 0:
             warnings.append("⚠️  No modules enabled - profile may not be functional")
         elif len(profile.enabled_modules) > 8:
-            warnings.append(f"⚠️  Many modules enabled ({len(profile.enabled_modules)}) - may increase computation time")
+            warnings.append(
+                f"⚠️  Many modules enabled ({len(profile.enabled_modules)}) - may increase computation time"
+            )
 
         # Check leverage appropriateness
-        if profile.max_leverage > Decimal("2.0") and profile.risk_profile == RiskProfile.CONSERVATIVE:
+        if (
+            profile.max_leverage > Decimal("2.0")
+            and profile.risk_profile == RiskProfile.CONSERVATIVE
+        ):
             warnings.append("⚠️  High leverage with conservative risk profile - conflict detected")
 
         return warnings
 
-    def _integrate_maestro_phase_1(self, profile: InvestmentProfile, request: ProfileGenerationRequest) -> None:
+    def _integrate_maestro_phase_1(
+        self, profile: InvestmentProfile, request: ProfileGenerationRequest
+    ) -> None:
         """
         Enhance profile with MAESTRO PHASE 1 absolute return optimization.
 
@@ -460,8 +503,8 @@ class ProfileGenerator:
             # Step 1: Calculate required annual return percentage
             annual_target = request.target_monthly_return_eur * 12
             profile.required_annual_return_pct = (
-                (annual_target / request.capital_initial * 100).quantize(Decimal("0.01"))
-            )
+                annual_target / request.capital_initial * 100
+            ).quantize(Decimal("0.01"))
 
             # Step 2: Calculate required alpha percentage
             profile.required_alpha_pct = self.alpha_calculator.calculate_required_alpha(target)
@@ -482,7 +525,9 @@ class ProfileGenerator:
                 "BALANCED": (Decimal("3"), Decimal("8")),
                 "AGGRESSIVE": (Decimal("4"), Decimal("12")),
             }
-            min_realistic, max_realistic = realistic_alpha_ranges.get(strategy_type, (Decimal("3"), Decimal("8")))
+            min_realistic, max_realistic = realistic_alpha_ranges.get(
+                strategy_type, (Decimal("3"), Decimal("8"))
+            )
             profile.capacity_fade_adjusted_alpha = self.fade_analyzer.estimate_capacity_fade(
                 request.capital_initial, max_realistic
             )
@@ -502,9 +547,7 @@ class ProfileGenerator:
                 "is_feasible": validation_result.is_feasible,
                 "confidence_level": validation_result.confidence_level,
                 "recommendation": validation_result.recommendation,
-                "monthly_costs": {
-                    k: str(v) for k, v in validation_result.monthly_costs.items()
-                },
+                "monthly_costs": {k: str(v) for k, v in validation_result.monthly_costs.items()},
             }
 
             logger.info(
@@ -524,7 +567,9 @@ class ProfileGenerator:
         """Get cached profile by ID."""
         return self.profile_cache.get(profile_id)
 
-    async def get_generation_history(self, limit: Optional[int] = None) -> List[ProfileGenerationResult]:
+    async def get_generation_history(
+        self, limit: Optional[int] = None
+    ) -> List[ProfileGenerationResult]:
         """Get profile generation history."""
         results = self.generation_history
         if limit:
@@ -536,7 +581,8 @@ class ProfileGenerator:
         return {
             "total_profiles_generated": len(self.generation_history),
             "profiles_cached": len(self.profile_cache),
-            "success_rate": sum(1 for r in self.generation_history if r.success) / max(1, len(self.generation_history)),
+            "success_rate": sum(1 for r in self.generation_history if r.success)
+            / max(1, len(self.generation_history)),
         }
 
 

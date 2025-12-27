@@ -11,12 +11,12 @@ Comprehensive tests for:
 
 from datetime import datetime, timedelta
 from decimal import Decimal
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import numpy as np
 import pytest
 
-from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics
+from app.backtesting.models import BacktestConfig
 from app.backtesting.walk_forward_validator import (
     ComprehensiveValidator,
     CrossValidationTemporal,
@@ -146,7 +146,7 @@ def sample_quotes():
 @pytest.fixture
 def sample_signals(sample_quotes):
     """Generate sample signals matching quotes."""
-    from app.models.signal import Signal, SignalType
+    from app.models.signal import SignalType
 
     signals = []
     for i, quote in enumerate(sample_quotes):

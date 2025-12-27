@@ -26,7 +26,6 @@ import sys
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import List
 
 import pandas as pd
 import pytest

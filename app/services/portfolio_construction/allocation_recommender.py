@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class AllocationRecommendation:
     """Smart allocation recommendation."""
+
     allocation: Dict[str, Decimal]  # {asset: weight}
     reasoning: str  # Explanation for recommendation
     confidence: str  # high, medium, low
@@ -59,7 +60,9 @@ class AllocationRecommender:
         """
         if risk_profile == "conservative":
             allocation = await self._conservative_allocation(available_assets)
-            reasoning = "Conservative profile: Focus on stability with fixed income and dividend stocks"
+            reasoning = (
+                "Conservative profile: Focus on stability with fixed income and dividend stocks"
+            )
             expected_return = Decimal("0.04")
             expected_vol = Decimal("0.08")
             sharpe = Decimal("0.50")
@@ -285,11 +288,13 @@ class AllocationRecommender:
         # Cap at 15% max per asset
         cap = Decimal("0.15")
         if base_weight > cap:
-            allocation = {asset: cap for asset in assets[:int(1/0.15)]}
+            allocation = {asset: cap for asset in assets[: int(1 / 0.15)]}
             remaining = len(assets) - len(allocation)
             if remaining > 0:
-                remaining_weight = (Decimal("1.0") - Decimal(len(allocation)) * cap) / Decimal(remaining)
-                for asset in assets[len(allocation):]:
+                remaining_weight = (Decimal("1.0") - Decimal(len(allocation)) * cap) / Decimal(
+                    remaining
+                )
+                for asset in assets[len(allocation) :]:
                     allocation[asset] = remaining_weight
         else:
             allocation = {asset: base_weight for asset in assets}

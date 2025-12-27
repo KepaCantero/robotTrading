@@ -49,7 +49,7 @@ from app.api.portfolio_analytics import router as portfolio_analytics_router
 from app.api.signals import router as signals_router
 from app.api.trading_error_handler import router as trading_error_handler_router
 from app.core.config import get_settings
-from app.core.database import init_database, close_database
+from app.core.database import close_database, init_database
 
 # IMPORTANT: Import logging_config FIRST to ensure all warnings/errors go to files
 

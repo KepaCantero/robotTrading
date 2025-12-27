@@ -13,15 +13,17 @@ Tests:
   - Feasibility validation
 """
 
-import pytest
 from decimal import Decimal
-from app.services.profile_generator.profile_generator import ProfileGenerator
+
+import pytest
+
 from app.services.profile_generator.models import (
-    InvestmentObjective,
-    RiskProfile,
     CapitalTier,
+    InvestmentObjective,
     ProfileGenerationRequest,
+    RiskProfile,
 )
+from app.services.profile_generator.profile_generator import ProfileGenerator
 
 
 @pytest.fixture

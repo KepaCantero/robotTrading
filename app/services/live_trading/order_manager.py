@@ -7,7 +7,7 @@ Integrates with BrokerConnector for actual order operations.
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional
 
@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class OrderExecution:
     """Record of order execution."""
+
     order_id: str
     symbol: str
     quantity: Decimal
@@ -40,6 +41,7 @@ class OrderExecution:
 @dataclass
 class OrderError:
     """Order error information."""
+
     order_id: str
     symbol: str
     error_code: str
@@ -203,7 +205,12 @@ class OrderManager:
                 return None
 
             status = await self.get_order_status(order_id)
-            if status in (OrderStatus.FILLED, OrderStatus.EXECUTED, OrderStatus.CANCELED, OrderStatus.REJECTED):
+            if status in (
+                OrderStatus.FILLED,
+                OrderStatus.EXECUTED,
+                OrderStatus.CANCELED,
+                OrderStatus.REJECTED,
+            ):
                 # Move to executed
                 self.pending_orders.pop(order_id, None)
                 self.executed_orders[order_id] = order

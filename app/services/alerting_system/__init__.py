@@ -12,11 +12,11 @@ Provides rule-based alerting with webhook/email/Slack/Discord integration:
 from .alert_manager import AlertManager
 from .alert_rule_engine import AlertRuleEngine
 from .alerting_orchestrator import (
-    AlertingOrchestrator,
     AlertingHealth,
+    AlertingOrchestrator,
     AlertingStatistics,
 )
-from .metrics_driven_alerter import MetricsDrivenAlerter, MetricQueryConfig
+from .metrics_driven_alerter import MetricQueryConfig, MetricsDrivenAlerter
 from .models import (
     AlertEvent,
     AlertHistory,
@@ -64,8 +64,7 @@ async def initialize_alerting_orchestrator(metrics_query_engine=None) -> Alertin
     """
     orchestrator = get_alerting_orchestrator()
     await orchestrator.initialize(
-        metrics_query_engine=metrics_query_engine,
-        auto_register_templates=True
+        metrics_query_engine=metrics_query_engine, auto_register_templates=True
     )
     return orchestrator
 
@@ -86,8 +85,7 @@ async def start_alerting(
     """
     orchestrator = get_alerting_orchestrator()
     await orchestrator.start(
-        evaluation_interval_seconds=evaluation_interval_seconds,
-        metric_query_fn=metric_query_fn
+        evaluation_interval_seconds=evaluation_interval_seconds, metric_query_fn=metric_query_fn
     )
     return orchestrator
 

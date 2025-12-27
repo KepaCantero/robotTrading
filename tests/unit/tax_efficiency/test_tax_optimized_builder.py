@@ -8,12 +8,14 @@ Tests cover:
 - Tax report generation
 """
 
-import pytest
-from decimal import Decimal
 from datetime import datetime, timedelta
+from decimal import Decimal
+
+import pytest
+
 from app.services.tax_efficiency.tax_optimized_builder import (
-    TaxOptimizedPortfolioBuilder,
     TaxOptimizedAllocation,
+    TaxOptimizedPortfolioBuilder,
 )
 
 
@@ -405,8 +407,11 @@ class TestIntegration:
             "AAPL", Decimal("100"), Decimal("100"), datetime.now()
         )
         builder.gain_tracker.record_position_sale(
-            "AAPL", Decimal("100"), Decimal("120"),
-            datetime.now() + timedelta(days=400), method="FIFO"
+            "AAPL",
+            Decimal("100"),
+            Decimal("120"),
+            datetime.now() + timedelta(days=400),
+            method="FIFO",
         )
 
         # Generate report

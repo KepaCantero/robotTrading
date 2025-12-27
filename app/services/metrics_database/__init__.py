@@ -13,9 +13,9 @@ from .models import (
     AggregatedMetrics,
     AggregationType,
     MetricPoint,
-    MetricType,
     MetricsCollectionResult,
     MetricsStorageStats,
+    MetricType,
     TimeSeriesQuery,
 )
 from .questdb_connector import QuestDBConnector

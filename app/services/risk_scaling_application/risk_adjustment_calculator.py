@@ -12,9 +12,10 @@ Responsibilities:
 
 import logging
 from decimal import Decimal
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 from app.services.portfolio_constructor import AllocationWeight
+
 from .models import AdjustedAllocationWeight
 
 logger = logging.getLogger(__name__)

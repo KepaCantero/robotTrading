@@ -15,8 +15,8 @@ import logging
 import statistics
 from dataclasses import dataclass
 from datetime import datetime
-from decimal import Decimal, ROUND_HALF_UP
-from typing import Dict, List, Optional, Tuple
+from decimal import ROUND_HALF_UP, Decimal
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -132,7 +132,9 @@ class VolatilityMonitor:
             # Calculate ATR for each period in lookback window
             atrs: List[Decimal] = []
             for i in range(self.atr_period, len(prices)):
-                atr = self.calculate_atr(prices[i - self.atr_period:i + 1], period=self.atr_period)
+                atr = self.calculate_atr(
+                    prices[i - self.atr_period : i + 1], period=self.atr_period
+                )
                 atrs.append(atr)
 
             self.atr_history[symbol] = atrs

@@ -9,7 +9,6 @@ Tests para:
 """
 
 import logging
-from datetime import datetime
 from decimal import Decimal
 
 import pytest
@@ -20,7 +19,7 @@ from app.services.currency_hedging_engine import (
     HedgeRecommendation,
     HedgeUrgency,
 )
-from app.services.forex_data_service import ForexDataFetcher, get_forex_fetcher, reset_forex_fetcher
+from app.services.forex_data_service import ForexDataFetcher, reset_forex_fetcher
 from app.services.portfolio_risk_manager import PortfolioRiskManager, RiskViolation
 from app.services.portfolio_service import PortfolioService
 

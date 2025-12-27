@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class AdjustedLimit:
     """Adjusted position limit after scaling."""
+
     module_name: str
     original_limit: Decimal
     adjusted_limit: Decimal
@@ -34,6 +35,7 @@ class AdjustedLimit:
 @dataclass
 class LimitBreach:
     """Position limit breach detection."""
+
     module_name: str
     current_position: Decimal
     adjusted_limit: Decimal
@@ -339,7 +341,9 @@ class LimitAdjuster:
                 reductions[breach.module_name] = {
                     "target_position": float(reduction_target),
                     "reduce_by": float(reduction_amount),
-                    "percentage": float((reduction_amount / breach.current_position) * Decimal("100")),
+                    "percentage": float(
+                        (reduction_amount / breach.current_position) * Decimal("100")
+                    ),
                 }
 
             return True, {

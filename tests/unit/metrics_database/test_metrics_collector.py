@@ -10,16 +10,17 @@ Tests cover:
 """
 
 import asyncio
-import pytest
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
+
+import pytest
 
 from app.services.metrics_database import (
-    MetricsCollector,
-    QuestDBConnector,
     MetricPoint,
+    MetricsCollector,
     MetricType,
+    QuestDBConnector,
 )
 
 
@@ -47,6 +48,7 @@ class TestMetricsCollectorRegistration:
 
     def test_register_single_source(self, metrics_collector):
         """Test registering a single metric source."""
+
         async def collect_func():
             return []
 
@@ -56,6 +58,7 @@ class TestMetricsCollectorRegistration:
 
     def test_register_multiple_sources(self, metrics_collector):
         """Test registering multiple metric sources."""
+
         async def collect_func1():
             return []
 
@@ -71,6 +74,7 @@ class TestMetricsCollectorRegistration:
 
     def test_register_overwrites_existing(self, metrics_collector):
         """Test that registering overwrites existing source."""
+
         async def collect_func1():
             return []
 
@@ -126,6 +130,7 @@ class TestMetricsCollectorCollection:
     @pytest.mark.asyncio
     async def test_collect_once_multiple_sources(self, metrics_collector):
         """Test collection cycle with multiple sources."""
+
         async def collect_func1():
             return [
                 MetricPoint(
@@ -155,6 +160,7 @@ class TestMetricsCollectorCollection:
     @pytest.mark.asyncio
     async def test_collect_once_with_error(self, metrics_collector):
         """Test collection with source error."""
+
         async def good_func():
             return [
                 MetricPoint(
@@ -180,6 +186,7 @@ class TestMetricsCollectorCollection:
     @pytest.mark.asyncio
     async def test_collect_once_auto_flush(self, metrics_collector):
         """Test auto-flush during collection."""
+
         async def collect_func():
             return [
                 MetricPoint(
@@ -428,6 +435,7 @@ class TestMetricsCollectorIntegration:
     @pytest.mark.asyncio
     async def test_register_and_collect_multiple_sources(self, metrics_collector):
         """Test registering and collecting from multiple sources."""
+
         async def portfolio_metrics():
             return [
                 MetricPoint(

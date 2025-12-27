@@ -1,15 +1,17 @@
 """Unit tests for T9.1 PyFolioIntegrator component"""
 
-import pytest
-from decimal import Decimal
 from datetime import datetime, timedelta
+from decimal import Decimal
+
 import numpy as np
+import pytest
+
 from app.services.reporting_generator.pyfolio_integrator import (
-    PyFolioIntegrator,
-    FactorExposure,
-    FactorAnalysis,
-    PositionConcentration,
     CapacityFade,
+    FactorAnalysis,
+    FactorExposure,
+    PositionConcentration,
+    PyFolioIntegrator,
     Tearsheet,
     get_pyfolio_integrator,
 )
@@ -320,9 +322,7 @@ class TestPyFolioIntegrator:
     # Factor Analysis Tests
     def test_analyze_factor_exposure_no_factors(self):
         """Test factor analysis with no factors provided."""
-        analysis = self.integrator.analyze_factor_exposure(
-            returns=self.returns, factor_data={}
-        )
+        analysis = self.integrator.analyze_factor_exposure(returns=self.returns, factor_data={})
 
         assert analysis.num_periods == len(self.returns)
         assert len(analysis.factors) == 0

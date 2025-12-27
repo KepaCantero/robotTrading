@@ -4,8 +4,9 @@ Tests for RiskAdjustmentCalculator (T8.1.1)
 Tests position scaling, leverage adjustment, and stop loss calculations.
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
 
 from app.services.risk_scaling.risk_adjustment_calculator import (
     RiskAdjustmentCalculator,
@@ -248,7 +249,7 @@ class TestRiskAdjustmentCalculator:
         assert result["leverage"] <= Decimal("1.0"), "Should minimize leverage"
         assert (
             result["pct_capital_at_risk"] <= Decimal("0.25"),
-            "Should limit risk to 25% capital"
+            "Should limit risk to 25% capital",
         )
 
     def test_comprehensive_returns_all_fields(self, calculator):

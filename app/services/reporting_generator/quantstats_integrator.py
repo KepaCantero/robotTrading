@@ -11,10 +11,10 @@ Responsibilities:
 """
 
 import logging
-from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
 from datetime import datetime
-import pandas as pd
+from decimal import Decimal
+from typing import Dict, List, Optional
+
 import numpy as np
 from scipy import stats
 
@@ -168,9 +168,7 @@ class QuantStatsIntegrator:
             returns_array = np.array(returns)
 
         # Calculate Calmar ratio
-        calmar = self._calculate_calmar_ratio(
-            returns_array, max_drawdown_pct
-        )
+        calmar = self._calculate_calmar_ratio(returns_array, max_drawdown_pct)
 
         # Calculate stability index
         stability = self._calculate_stability_index(returns_array)
@@ -197,9 +195,7 @@ class QuantStatsIntegrator:
                 benchmark_array = np.array([float(r) for r in benchmark_returns])
             else:
                 benchmark_array = np.array(benchmark_returns)
-            info_ratio = self._calculate_information_ratio(
-                returns_array, benchmark_array
-            )
+            info_ratio = self._calculate_information_ratio(returns_array, benchmark_array)
 
         # Calculate kurtosis and skewness using scipy
         try:
@@ -274,8 +270,16 @@ class QuantStatsIntegrator:
 
         # Calculate monthly returns distribution
         monthly_dist = self._calculate_monthly_distribution(returns_array)
-        best_month = Decimal(str(np.max([v for v in monthly_dist.values()]) * 100)) if monthly_dist else Decimal("0")
-        worst_month = Decimal(str(np.min([v for v in monthly_dist.values()]) * 100)) if monthly_dist else Decimal("0")
+        best_month = (
+            Decimal(str(np.max([v for v in monthly_dist.values()]) * 100))
+            if monthly_dist
+            else Decimal("0")
+        )
+        worst_month = (
+            Decimal(str(np.min([v for v in monthly_dist.values()]) * 100))
+            if monthly_dist
+            else Decimal("0")
+        )
 
         report = StatisticsReport(
             report_date=datetime.utcnow(),
@@ -469,7 +473,7 @@ class QuantStatsIntegrator:
             # No downside returns, Sortino is infinite (use 0 as fallback)
             return Decimal("0")
 
-        downside_variance = np.mean(downside_returns ** 2)
+        downside_variance = np.mean(downside_returns**2)
         downside_deviation = np.sqrt(downside_variance)
 
         if downside_deviation == 0 or np.isnan(downside_deviation):

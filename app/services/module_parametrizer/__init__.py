@@ -4,16 +4,16 @@ Applies profile parameters to 17+ trading modules based on capital tier, objecti
 Implements capital-tier-aware gating to disable expensive/complex modules for small accounts.
 """
 
-from .module_parametrizer import (
-    ModuleParametrizer,
-    get_module_parametrizer,
-)
 from .models import (
     ModuleParameterConfig,
     ModuleParameterSet,
+    ParameterizationPreset,
     ParameterizationRequest,
     ParameterizationResult,
-    ParameterizationPreset,
+)
+from .module_parametrizer import (
+    ModuleParametrizer,
+    get_module_parametrizer,
 )
 
 __all__ = [

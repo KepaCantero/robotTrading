@@ -8,10 +8,11 @@ Orchestrates final decision to deploy strategy or not based on:
 - Portfolio metrics
 """
 
-from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
+from typing import Dict, List, Optional
+
+from pydantic import BaseModel, Field
 
 
 class DeploymentInput(BaseModel):
@@ -23,9 +24,7 @@ class DeploymentInput(BaseModel):
     strategy_name: str = Field(..., description="Strategy name")
 
     # From backtest results
-    feasibility_ratio: Decimal = Field(
-        ..., description="Feasibility ratio (actual/target return)"
-    )
+    feasibility_ratio: Decimal = Field(..., description="Feasibility ratio (actual/target return)")
     annual_return_pct: Decimal = Field(..., description="Annual return %")
     max_drawdown_pct: Decimal = Field(..., description="Max drawdown %")
     sharpe_ratio: Decimal = Field(..., description="Sharpe ratio")
@@ -33,37 +32,40 @@ class DeploymentInput(BaseModel):
 
     # From validation engine
     validation_passed: bool = Field(..., description="Validation gates passed")
-    validation_failures: List[str] = Field(
-        default=[], description="Validation failure reasons"
-    )
-    validation_warnings: List[str] = Field(
-        default=[], description="Validation warnings"
-    )
+    validation_failures: List[str] = Field(default=[], description="Validation failure reasons")
+    validation_warnings: List[str] = Field(default=[], description="Validation warnings")
 
     # From strategy recommender
-    recommendation_score: Decimal = Field(
-        ..., description="Recommendation score (0-100)"
-    )
+    recommendation_score: Decimal = Field(..., description="Recommendation score (0-100)")
     recommendation_status: str = Field(
         ..., description="Status: STRONG_BUY/BUY/HOLD/REVIEW/NOT_RECOMMENDED"
     )
-    recommendation_confidence: str = Field(
-        ..., description="Confidence level: high/medium/low"
-    )
+    recommendation_confidence: str = Field(..., description="Confidence level: high/medium/low")
 
     # From portfolio constructor
     num_modules: int = Field(..., description="Number of modules in portfolio")
-    top_allocation_pct: Decimal = Field(
-        ..., description="Largest allocation % (concentration)"
-    )
-    diversification_ratio: Decimal = Field(
-        ..., description="Portfolio diversification ratio"
-    )
+    top_allocation_pct: Decimal = Field(..., description="Largest allocation % (concentration)")
+    diversification_ratio: Decimal = Field(..., description="Portfolio diversification ratio")
 
     # User targets
     target_annual_return_pct: Decimal = Field(..., description="User target return %")
-    max_acceptable_drawdown_pct: Decimal = Field(
-        ..., description="User max acceptable drawdown %"
+    max_acceptable_drawdown_pct: Decimal = Field(..., description="User max acceptable drawdown %")
+
+    # T4.1: Capacity fade validation results (optional, added in PHASE 6)
+    capacity_fade_feasible: Optional[bool] = Field(
+        default=None, description="T4.1 capacity fade feasibility"
+    )
+    estimated_alpha_at_scale: Optional[Decimal] = Field(
+        default=None, description="T4.1 estimated alpha at target capital"
+    )
+    capacity_fade_assessment: Optional[str] = Field(
+        default=None, description="T4.1 capacity fade assessment details"
+    )
+    current_capital: Optional[Decimal] = Field(
+        default=None, description="Current capital (for capacity fade analysis)"
+    )
+    target_capital: Optional[Decimal] = Field(
+        default=None, description="Target capital (for capacity fade analysis)"
     )
 
     execution_timestamp: datetime = Field(
@@ -78,20 +80,15 @@ class DeploymentRationale(BaseModel):
     validation_assessment: str = Field(..., description="Validation analysis")
     recommendation_assessment: str = Field(..., description="Recommendation analysis")
     risk_assessment: str = Field(..., description="Risk assessment")
-    diversification_assessment: str = Field(
-        ..., description="Diversification assessment"
+    diversification_assessment: str = Field(..., description="Diversification assessment")
+    capacity_fade_assessment: Optional[str] = Field(
+        default=None, description="T4.1 capacity fade analysis (PHASE 6)"
     )
     overall_assessment: str = Field(..., description="Overall decision rationale")
 
-    critical_factors: List[str] = Field(
-        ..., description="Critical factors influencing decision"
-    )
-    improvement_areas: List[str] = Field(
-        ..., description="Areas for improvement if applicable"
-    )
-    conditions: List[str] = Field(
-        default=[], description="Conditions for conditional approval"
-    )
+    critical_factors: List[str] = Field(..., description="Critical factors influencing decision")
+    improvement_areas: List[str] = Field(..., description="Areas for improvement if applicable")
+    conditions: List[str] = Field(default=[], description="Conditions for conditional approval")
 
 
 class DeploymentDecision(BaseModel):
@@ -107,36 +104,29 @@ class DeploymentDecision(BaseModel):
         ...,
         description="Deployment status: APPROVED/CONDITIONAL/REJECTED",
     )
-    confidence_level: str = Field(
-        ..., description="Decision confidence: high/medium/low"
-    )
+    confidence_level: str = Field(..., description="Decision confidence: high/medium/low")
 
     # Scoring components (0-100)
     feasibility_score: Decimal = Field(..., description="Feasibility score (0-100)")
     validation_score: Decimal = Field(..., description="Validation score (0-100)")
-    recommendation_score: Decimal = Field(
-        ..., description="Recommendation score (0-100)"
-    )
+    recommendation_score: Decimal = Field(..., description="Recommendation score (0-100)")
     risk_score: Decimal = Field(..., description="Risk assessment score (0-100)")
+    capacity_fade_score: Optional[Decimal] = Field(
+        default=None, description="T4.1 Capacity fade score (0-100, PHASE 6)"
+    )
     overall_score: Decimal = Field(..., description="Overall decision score (0-100)")
 
     # Detailed rationale
     rationale: DeploymentRationale = Field(..., description="Decision rationale")
 
     # Summary metrics
-    key_metrics: Dict[str, Decimal] = Field(
-        ..., description="Key metrics for decision"
-    )
+    key_metrics: Dict[str, Decimal] = Field(..., description="Key metrics for decision")
 
     # Recommendation for user
-    recommendation_text: str = Field(
-        ..., description="Human-readable recommendation"
-    )
+    recommendation_text: str = Field(..., description="Human-readable recommendation")
 
     # Next steps if conditional
-    next_steps: List[str] = Field(
-        default=[], description="Suggested next steps"
-    )
+    next_steps: List[str] = Field(default=[], description="Suggested next steps")
 
     decision_timestamp: datetime = Field(
         default_factory=datetime.utcnow, description="Decision time"

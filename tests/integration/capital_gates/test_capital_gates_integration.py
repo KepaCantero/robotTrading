@@ -13,13 +13,13 @@ capital erosion across economic viability, execution efficiency, learning
 cost, and module expense domains.
 """
 
-import pytest
 from decimal import Decimal
+
 
 from app.services.capital_viability_gate import CapitalViabilityValidator
 from app.services.execution_cost_analyzer import ExecutionCostAnalyzer
-from app.services.learning_capital_gate import LearningCapitalGate
 from app.services.expensive_module_gate import ExpensiveModuleGate
+from app.services.learning_capital_gate import LearningCapitalGate
 
 
 class TestT031CapitalViabilityExecutionCostInteraction:

@@ -5,10 +5,10 @@ Tests authentication, order management, account info, positions, and error handl
 Uses mocked alpaca-trade-api responses.
 """
 
-import pytest
-from datetime import datetime
 from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from app.services.live_trading.broker_adapters.alpaca_client import (
     AlpacaClient,
@@ -417,13 +417,13 @@ class TestAlpacaClientConnectionManagement:
         """Test starting WebSocket stream."""
         # This is a placeholder for WebSocket implementation
         # For now, just verify the method exists and can be called
-        result = await alpaca_client.start_stream(["AAPL", "TSLA"])
+        await alpaca_client.start_stream(["AAPL", "TSLA"])
         # No assertion - method is not yet implemented, just verify no error
 
     @pytest.mark.asyncio
     async def test_stop_stream(self, alpaca_client):
         """Test stopping WebSocket stream."""
-        result = await alpaca_client.stop_stream()
+        await alpaca_client.stop_stream()
         # No assertion - method is not yet implemented, just verify no error
 
 

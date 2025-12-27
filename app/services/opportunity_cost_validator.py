@@ -13,7 +13,7 @@ then the optimal action is to HOLD CASH, not trade.
 
 import logging
 from decimal import Decimal
-from typing import Dict, Literal, Tuple
+from typing import Dict, Tuple
 
 logger = logging.getLogger(__name__)
 

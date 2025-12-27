@@ -4,13 +4,13 @@ Unit tests for T1.1: InputProcessor
 Tests input validation, enum constraints, and error handling.
 """
 
-import pytest
 from decimal import Decimal
-from datetime import datetime
+
+import pytest
 
 from app.core.models.input_profile import (
-    InputProfile,
     InputProcessor,
+    InputProfile,
     ObjectivoInversion,
     RiskTolerance,
 )
@@ -25,7 +25,7 @@ class TestInputProfileModel:
             capital_initial=Decimal("250000"),
             objetivo_inversion="maximizar_capital",
             risk_tolerance="medio",
-            investment_horizon=12
+            investment_horizon=12,
         )
 
         assert profile.capital_initial == Decimal("250000")
@@ -40,7 +40,7 @@ class TestInputProfileModel:
             capital_initial="100000",
             objetivo_inversion="maximizar_capital",
             risk_tolerance="bajo",
-            investment_horizon=24
+            investment_horizon=24,
         )
 
         assert isinstance(profile.capital_initial, Decimal)
@@ -52,7 +52,7 @@ class TestInputProfileModel:
             capital_initial=50000,
             objetivo_inversion="maximizar_dividendos",
             risk_tolerance="medio",
-            investment_horizon=12
+            investment_horizon=12,
         )
 
         assert isinstance(profile.capital_initial, Decimal)
@@ -64,7 +64,7 @@ class TestInputProfileModel:
             capital_initial=250000.50,
             objetivo_inversion="capital_preservation",
             risk_tolerance="bajo",
-            investment_horizon=36
+            investment_horizon=36,
         )
 
         assert isinstance(profile.capital_initial, Decimal)
@@ -77,7 +77,7 @@ class TestInputProfileModel:
                 capital_initial=0,
                 objetivo_inversion="maximizar_capital",
                 risk_tolerance="medio",
-                investment_horizon=12
+                investment_horizon=12,
             )
 
     def test_invalid_capital_negative(self):
@@ -87,7 +87,7 @@ class TestInputProfileModel:
                 capital_initial=Decimal("-100000"),
                 objetivo_inversion="maximizar_capital",
                 risk_tolerance="medio",
-                investment_horizon=12
+                investment_horizon=12,
             )
 
     def test_invalid_capital_too_large(self):
@@ -97,7 +97,7 @@ class TestInputProfileModel:
                 capital_initial=Decimal("11000000"),
                 objetivo_inversion="maximizar_capital",
                 risk_tolerance="medio",
-                investment_horizon=12
+                investment_horizon=12,
             )
 
     def test_invalid_objetivo_inversion(self):
@@ -107,7 +107,7 @@ class TestInputProfileModel:
                 capital_initial=250000,
                 objetivo_inversion="invalid_objetivo",
                 risk_tolerance="medio",
-                investment_horizon=12
+                investment_horizon=12,
             )
 
     def test_valid_objetivo_inversion_all_types(self):
@@ -117,13 +117,13 @@ class TestInputProfileModel:
             "maximizar_dividendos",
             "capital_preservation",
             "balanced_growth",
-            "income_generation"
+            "income_generation",
         ]:
             profile = InputProfile(
                 capital_initial=100000,
                 objetivo_inversion=objetivo,
                 risk_tolerance="medio",
-                investment_horizon=12
+                investment_horizon=12,
             )
             assert profile.objetivo_inversion.value == objetivo
 
@@ -134,7 +134,7 @@ class TestInputProfileModel:
                 capital_initial=250000,
                 objetivo_inversion="maximizar_capital",
                 risk_tolerance="muy_alto",
-                investment_horizon=12
+                investment_horizon=12,
             )
 
     def test_valid_risk_tolerance_all_types(self):
@@ -144,7 +144,7 @@ class TestInputProfileModel:
                 capital_initial=100000,
                 objetivo_inversion="maximizar_capital",
                 risk_tolerance=risk,
-                investment_horizon=12
+                investment_horizon=12,
             )
             assert profile.risk_tolerance.value == risk
 
@@ -155,7 +155,7 @@ class TestInputProfileModel:
                 capital_initial=250000,
                 objetivo_inversion="maximizar_capital",
                 risk_tolerance="medio",
-                investment_horizon=0
+                investment_horizon=0,
             )
 
     def test_invalid_investment_horizon_too_long(self):
@@ -165,7 +165,7 @@ class TestInputProfileModel:
                 capital_initial=250000,
                 objetivo_inversion="maximizar_capital",
                 risk_tolerance="medio",
-                investment_horizon=601
+                investment_horizon=601,
             )
 
     def test_valid_investment_horizon_range(self):
@@ -175,7 +175,7 @@ class TestInputProfileModel:
                 capital_initial=100000,
                 objetivo_inversion="maximizar_capital",
                 risk_tolerance="medio",
-                investment_horizon=horizon
+                investment_horizon=horizon,
             )
             assert profile.investment_horizon == horizon
 
@@ -187,7 +187,7 @@ class TestInputProfileModel:
             objetivo_inversion="maximizar_capital",
             risk_tolerance="medio",
             investment_horizon=12,
-            constraints=constraints
+            constraints=constraints,
         )
         assert profile.constraints == constraints
 
@@ -197,7 +197,7 @@ class TestInputProfileModel:
             capital_initial=Decimal("25000"),
             objetivo_inversion="maximizar_capital",
             risk_tolerance="bajo",
-            investment_horizon=12
+            investment_horizon=12,
         )
         assert profile.capital_flag == "small"
 
@@ -207,7 +207,7 @@ class TestInputProfileModel:
             capital_initial=Decimal("100000"),
             objetivo_inversion="maximizar_capital",
             risk_tolerance="medio",
-            investment_horizon=12
+            investment_horizon=12,
         )
         assert profile.capital_flag == "medium"
 
@@ -217,7 +217,7 @@ class TestInputProfileModel:
             capital_initial=Decimal("500000"),
             objetivo_inversion="maximizar_capital",
             risk_tolerance="alto",
-            investment_horizon=12
+            investment_horizon=12,
         )
         assert profile.capital_flag == "large"
 
@@ -227,7 +227,7 @@ class TestInputProfileModel:
             capital_initial=Decimal("250000"),
             objetivo_inversion="maximizar_capital",
             risk_tolerance="medio",
-            investment_horizon=12
+            investment_horizon=12,
         )
         assert profile.is_large_account is True
 
@@ -237,7 +237,7 @@ class TestInputProfileModel:
             capital_initial=Decimal("249999"),
             objetivo_inversion="maximizar_capital",
             risk_tolerance="medio",
-            investment_horizon=12
+            investment_horizon=12,
         )
         assert profile.is_large_account is False
 
@@ -247,7 +247,7 @@ class TestInputProfileModel:
             capital_initial=Decimal("250000"),
             objetivo_inversion="maximizar_capital",
             risk_tolerance="medio",
-            investment_horizon=12
+            investment_horizon=12,
         )
         profile_dict = profile.to_dict()
 
@@ -274,7 +274,7 @@ class TestInputProcessor:
             "capital_initial": 250000,
             "objetivo_inversion": "maximizar_capital",
             "risk_tolerance": "medio",
-            "investment_horizon": 12
+            "investment_horizon": 12,
         }
 
     def test_processor_initialization(self, processor):
@@ -293,12 +293,14 @@ class TestInputProcessor:
 
     def test_process_input_with_string_capital(self, processor):
         """Test processing with string capital."""
-        profile = processor.process_input({
-            "capital_initial": "100000",
-            "objetivo_inversion": "maximizar_dividendos",
-            "risk_tolerance": "bajo",
-            "investment_horizon": 24
-        })
+        profile = processor.process_input(
+            {
+                "capital_initial": "100000",
+                "objetivo_inversion": "maximizar_dividendos",
+                "risk_tolerance": "bajo",
+                "investment_horizon": 24,
+            }
+        )
 
         assert profile.capital_initial == Decimal("100000")
         assert processor.processed_count == 1
@@ -306,24 +308,28 @@ class TestInputProcessor:
     def test_process_input_missing_field(self, processor):
         """Test processing with missing required field."""
         with pytest.raises(ValueError, match="Missing required fields"):
-            processor.process_input({
-                "capital_initial": 250000,
-                "objetivo_inversion": "maximizar_capital",
-                "risk_tolerance": "medio"
-                # missing investment_horizon
-            })
+            processor.process_input(
+                {
+                    "capital_initial": 250000,
+                    "objetivo_inversion": "maximizar_capital",
+                    "risk_tolerance": "medio",
+                    # missing investment_horizon
+                }
+            )
 
         assert processor.error_count == 1
 
     def test_process_input_invalid_capital(self, processor):
         """Test processing with invalid capital."""
         with pytest.raises(ValueError):
-            processor.process_input({
-                "capital_initial": 0,
-                "objetivo_inversion": "maximizar_capital",
-                "risk_tolerance": "medio",
-                "investment_horizon": 12
-            })
+            processor.process_input(
+                {
+                    "capital_initial": 0,
+                    "objetivo_inversion": "maximizar_capital",
+                    "risk_tolerance": "medio",
+                    "investment_horizon": 12,
+                }
+            )
 
         assert processor.error_count == 1
 
@@ -340,7 +346,7 @@ class TestInputProcessor:
             capital_initial=250000,
             objetivo_inversion="maximizar_capital",
             risk_tolerance="medio",
-            investment_horizon=12
+            investment_horizon=12,
         )
 
         is_valid, warnings = processor.validate_consistency(profile)
@@ -353,7 +359,7 @@ class TestInputProcessor:
             capital_initial=250000,
             objetivo_inversion="capital_preservation",
             risk_tolerance="alto",
-            investment_horizon=12
+            investment_horizon=12,
         )
 
         is_valid, warnings = processor.validate_consistency(profile)
@@ -367,7 +373,7 @@ class TestInputProcessor:
             capital_initial=250000,
             objetivo_inversion="maximizar_capital",
             risk_tolerance="alto",
-            investment_horizon=6
+            investment_horizon=6,
         )
 
         is_valid, warnings = processor.validate_consistency(profile)
@@ -381,7 +387,7 @@ class TestInputProcessor:
             capital_initial=Decimal("25000"),
             objetivo_inversion="maximizar_dividendos",
             risk_tolerance="bajo",
-            investment_horizon=12
+            investment_horizon=12,
         )
 
         is_valid, warnings = processor.validate_consistency(profile)
@@ -404,7 +410,7 @@ class TestInputProcessor:
         stats = processor.get_stats()
         assert stats["processed"] == 2
         assert stats["errors"] == 1
-        assert stats["success_rate"] == pytest.approx(2/3, rel=0.01)
+        assert stats["success_rate"] == pytest.approx(2 / 3, rel=0.01)
 
     def test_processor_multiple_inputs(self, processor):
         """Test processor handles multiple inputs sequentially."""
@@ -413,20 +419,20 @@ class TestInputProcessor:
                 "capital_initial": 50000,
                 "objetivo_inversion": "maximizar_capital",
                 "risk_tolerance": "bajo",
-                "investment_horizon": 24
+                "investment_horizon": 24,
             },
             {
                 "capital_initial": 250000,
                 "objetivo_inversion": "maximizar_dividendos",
                 "risk_tolerance": "medio",
-                "investment_horizon": 12
+                "investment_horizon": 12,
             },
             {
                 "capital_initial": 1000000,
                 "objetivo_inversion": "capital_preservation",
                 "risk_tolerance": "bajo",
-                "investment_horizon": 60
-            }
+                "investment_horizon": 60,
+            },
         ]
 
         profiles = [processor.process_input(inp) for inp in inputs]
@@ -435,5 +441,5 @@ class TestInputProcessor:
         assert processor.processed_count == 3
         assert processor.error_count == 0
         assert profiles[0].capital_flag == "medium"  # €50k is medium (>= €50k, < €250k)
-        assert profiles[1].capital_flag == "large"   # €250k is large (>= €250k)
+        assert profiles[1].capital_flag == "large"  # €250k is large (>= €250k)
         assert profiles[2].is_large_account is True  # €1M is large account

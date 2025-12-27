@@ -7,7 +7,7 @@ into a final APPROVED|CONDITIONAL|REJECTED deployment decision.
 
 import logging
 from dataclasses import dataclass
-from typing import Dict, Optional, List
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class DeploymentDecision:
     """Final deployment decision with rationale."""
+
     status: str  # "APPROVED", "CONDITIONAL", "REJECTED"
     decision_id: str
     confidence_level: str  # "HIGH", "MODERATE", "LOW"
@@ -89,20 +90,14 @@ class DeployDecisionOrchestrator:
 
             # Determine status based on decision matrix
             status, confidence = await self._determine_status(
-                validation_passed,
-                feasibility_ratio,
-                recommendation_score,
-                sharpe_ratio
+                validation_passed, feasibility_ratio, recommendation_score, sharpe_ratio
             )
 
             # Generate reasons, risks, and recommendations
             reasons = await self._generate_reasons(
-                status, validation_passed, feasibility_ratio,
-                recommendation_score, sharpe_ratio
+                status, validation_passed, feasibility_ratio, recommendation_score, sharpe_ratio
             )
-            risks = await self._identify_risks(
-                feasibility_ratio, sharpe_ratio, allocation
-            )
+            risks = await self._identify_risks(feasibility_ratio, sharpe_ratio, allocation)
             recommendations = await self._generate_recommendations(
                 status, feasibility_ratio, recommendation_score
             )
@@ -121,7 +116,7 @@ class DeployDecisionOrchestrator:
                 reasons=reasons,
                 risks=risks,
                 recommendations=recommendations,
-                next_steps=next_steps
+                next_steps=next_steps,
             )
 
             self.logger.info(
@@ -156,13 +151,17 @@ class DeployDecisionOrchestrator:
             return "REJECTED", "LOW"
 
         # Feasibility and recommendation matrix
-        if (feasibility_ratio >= self.APPROVAL_THRESHOLDS["feasibility_ratio_approved"] and
-            recommendation_score >= self.APPROVAL_THRESHOLDS["recommendation_score_approved"]):
+        if (
+            feasibility_ratio >= self.APPROVAL_THRESHOLDS["feasibility_ratio_approved"]
+            and recommendation_score >= self.APPROVAL_THRESHOLDS["recommendation_score_approved"]
+        ):
             confidence = "HIGH" if sharpe_ratio > 1.0 else "MODERATE"
             return "APPROVED", confidence
 
-        elif (feasibility_ratio >= self.APPROVAL_THRESHOLDS["feasibility_ratio_conditional"] and
-              recommendation_score >= self.APPROVAL_THRESHOLDS["recommendation_score_conditional"]):
+        elif (
+            feasibility_ratio >= self.APPROVAL_THRESHOLDS["feasibility_ratio_conditional"]
+            and recommendation_score >= self.APPROVAL_THRESHOLDS["recommendation_score_conditional"]
+        ):
             return "CONDITIONAL", "MODERATE"
 
         else:
@@ -222,7 +221,11 @@ class DeployDecisionOrchestrator:
 
         # Check allocation concentration
         # Handle nested allocation structure {"allocation": {...}, "sharpe_ratio": ...}
-        allocation_weights = allocation.get("allocation", allocation) if isinstance(allocation.get("allocation"), dict) else allocation
+        allocation_weights = (
+            allocation.get("allocation", allocation)
+            if isinstance(allocation.get("allocation"), dict)
+            else allocation
+        )
         weight_values = [v for v in allocation_weights.values() if isinstance(v, (int, float))]
         max_weight = max(weight_values) if weight_values else 0.0
         if max_weight > 0.50:
@@ -293,4 +296,5 @@ class DeployDecisionOrchestrator:
     def _get_timestamp() -> str:
         """Get current timestamp."""
         from datetime import datetime
+
         return datetime.now().strftime("%Y%m%d_%H%M%S")

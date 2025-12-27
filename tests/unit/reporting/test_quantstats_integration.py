@@ -4,13 +4,14 @@ Tests for QuantStatsIntegration (T9.1.2)
 Tests advanced metrics calculation from returns series.
 """
 
-import pytest
-import pandas as pd
 import numpy as np
+import pandas as pd
+import pytest
+
 from app.services.reporting.quantstats_integration import (
+    QUANTSTATS_AVAILABLE,
     QuantStatsIntegration,
     get_quantstats_integration,
-    QUANTSTATS_AVAILABLE,
 )
 
 

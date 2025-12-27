@@ -7,12 +7,12 @@ risk decomposition capabilities.
 """
 
 import logging
-from decimal import Decimal
-from datetime import datetime
-from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass, field
+from datetime import datetime
+from decimal import Decimal
+from typing import Dict, List, Optional
+
 import numpy as np
-from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -177,19 +177,13 @@ class Tearsheet:
             "max_drawdown_pct": float(self.max_drawdown_pct),
             "win_rate_pct": float(self.win_rate_pct),
             "systematic_return_pct": (
-                float(self.systematic_return_pct)
-                if self.systematic_return_pct
-                else None
+                float(self.systematic_return_pct) if self.systematic_return_pct else None
             ),
             "idiosyncratic_return_pct": (
-                float(self.idiosyncratic_return_pct)
-                if self.idiosyncratic_return_pct
-                else None
+                float(self.idiosyncratic_return_pct) if self.idiosyncratic_return_pct else None
             ),
             "systematic_volatility_pct": (
-                float(self.systematic_volatility_pct)
-                if self.systematic_volatility_pct
-                else None
+                float(self.systematic_volatility_pct) if self.systematic_volatility_pct else None
             ),
             "idiosyncratic_volatility_pct": (
                 float(self.idiosyncratic_volatility_pct)
@@ -197,19 +191,11 @@ class Tearsheet:
                 else None
             ),
             "position_concentration": (
-                self.position_concentration.to_dict()
-                if self.position_concentration
-                else None
+                self.position_concentration.to_dict() if self.position_concentration else None
             ),
-            "factor_analysis": (
-                self.factor_analysis.to_dict() if self.factor_analysis else None
-            ),
-            "capacity_fade": (
-                self.capacity_fade.to_dict() if self.capacity_fade else None
-            ),
-            "monthly_returns": {
-                k: float(v) for k, v in self.monthly_returns.items()
-            },
+            "factor_analysis": (self.factor_analysis.to_dict() if self.factor_analysis else None),
+            "capacity_fade": (self.capacity_fade.to_dict() if self.capacity_fade else None),
+            "monthly_returns": {k: float(v) for k, v in self.monthly_returns.items()},
             "best_day_pct": float(self.best_day_pct),
             "worst_day_pct": float(self.worst_day_pct),
         }
@@ -307,9 +293,7 @@ class PyFolioIntegrator:
             # Calculate position concentration if positions provided
             position_concentration = None
             if positions:
-                position_concentration = (
-                    self._calculate_position_concentration(positions)
-                )
+                position_concentration = self._calculate_position_concentration(positions)
 
             # Create tearsheet
             tearsheet = Tearsheet(
@@ -419,11 +403,7 @@ class PyFolioIntegrator:
             for i, factor_name in enumerate(factor_names):
                 t_stat = betas[i] / std_errors[i + 1] if std_errors[i + 1] > 0 else 0
                 # Two-tailed t-test
-                p_value = 2 * (
-                    1 - scipy_stats.t.cdf(abs(t_stat), n - k)
-                    if (n - k) > 0
-                    else 1.0
-                )
+                p_value = 2 * (1 - scipy_stats.t.cdf(abs(t_stat), n - k) if (n - k) > 0 else 1.0)
                 significant = p_value < (1 - confidence_level)
 
                 exposures.append(
@@ -438,7 +418,9 @@ class PyFolioIntegrator:
 
             # Calculate factor contributions (% of return from each factor)
             factor_returns = {}
-            total_factor_return = sum(betas[i] * np.mean(factor_data[fn]) for i, fn in enumerate(factor_names))
+            total_factor_return = sum(
+                betas[i] * np.mean(factor_data[fn]) for i, fn in enumerate(factor_names)
+            )
             mean_ret = np.mean(returns_array)
             for i, factor_name in enumerate(factor_names):
                 factor_contribution = (
@@ -470,9 +452,7 @@ class PyFolioIntegrator:
             logger.error(f"Factor exposure analysis failed: {e}")
             raise
 
-    def calculate_position_concentration(
-        self, positions: List[Dict]
-    ) -> PositionConcentration:
+    def calculate_position_concentration(self, positions: List[Dict]) -> PositionConcentration:
         """
         Calculate concentration metrics for portfolio positions.
 
@@ -500,9 +480,7 @@ class PyFolioIntegrator:
                 )
 
             # Extract position values
-            position_values = [
-                float(p.get("value", 0)) for p in positions
-            ]
+            position_values = [float(p.get("value", 0)) for p in positions]
             position_values = [v for v in position_values if v > 0]
 
             if not position_values:
@@ -528,13 +506,11 @@ class PyFolioIntegrator:
             herfindahl = Decimal(str(np.sum(weights**2)))
 
             # Effective number of positions: 1 / Herfindahl
-            effective_n = (
-                Decimal(str(1.0 / float(herfindahl))) if herfindahl > 0 else Decimal("0")
-            )
+            effective_n = Decimal(str(1.0 / float(herfindahl))) if herfindahl > 0 else Decimal("0")
 
             # Top 5 concentration
             sorted_weights = np.sort(weights)[::-1]  # Descending
-            top_5_weights = sorted_weights[:min(5, len(sorted_weights))]
+            top_5_weights = sorted_weights[: min(5, len(sorted_weights))]
             top_5_pct = Decimal(str(np.sum(top_5_weights) * 100))
 
             # Diversification ratio: average weight volatility / portfolio volatility
@@ -542,9 +518,7 @@ class PyFolioIntegrator:
             avg_weight = 1.0 / len(weights) if len(weights) > 0 else 0
             weight_std = np.std(weights)
             diversification_ratio = (
-                Decimal(str(1.0 + weight_std / avg_weight))
-                if avg_weight > 0
-                else Decimal("1")
+                Decimal(str(1.0 + weight_std / avg_weight)) if avg_weight > 0 else Decimal("1")
             )
 
             return PositionConcentration(
@@ -672,9 +646,7 @@ class PyFolioIntegrator:
     # HELPER METHODS
     # ========================================================================
 
-    def _calculate_monthly_returns(
-        self, returns: List[Decimal]
-    ) -> Dict[str, Decimal]:
+    def _calculate_monthly_returns(self, returns: List[Decimal]) -> Dict[str, Decimal]:
         """Calculate aggregated monthly returns."""
         try:
             if not returns or len(returns) < 20:
@@ -691,7 +663,7 @@ class PyFolioIntegrator:
                     # Compound returns: product(1 + r) - 1
                     monthly_ret = Decimal("1")
                     for r in month_returns:
-                        monthly_ret *= (Decimal("1") + r)
+                        monthly_ret *= Decimal("1") + r
                     monthly_ret -= Decimal("1")
                     monthly_dict[f"Month_{month_num}"] = monthly_ret * Decimal("100")
                     month_num += 1
@@ -702,9 +674,7 @@ class PyFolioIntegrator:
             logger.warning(f"Monthly return calculation failed: {e}")
             return {}
 
-    def _calculate_position_concentration(
-        self, positions: List[Dict]
-    ) -> PositionConcentration:
+    def _calculate_position_concentration(self, positions: List[Dict]) -> PositionConcentration:
         """Helper to calculate position concentration."""
         return self.calculate_position_concentration(positions)
 

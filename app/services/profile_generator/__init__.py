@@ -3,18 +3,18 @@
 Generates investment profiles based on user capital, objective, and risk tolerance.
 """
 
-from .profile_generator import (
-    ProfileGenerator,
-    get_profile_generator,
-)
 from .models import (
     CapitalTier,
     InvestmentObjective,
-    RiskProfile,
     InvestmentProfile,
     ModuleConfig,
     ProfileGenerationRequest,
     ProfileGenerationResult,
+    RiskProfile,
+)
+from .profile_generator import (
+    ProfileGenerator,
+    get_profile_generator,
 )
 
 __all__ = [

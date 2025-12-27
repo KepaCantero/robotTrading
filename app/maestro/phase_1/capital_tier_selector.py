@@ -10,13 +10,11 @@ Dynamically selects strategy configuration based on available capital:
 
 import logging
 from decimal import Decimal
-from typing import Optional, Tuple
+from typing import Optional
 
 from .models import (
     CapitalTier,
-    CapitalTierConfig,
     CapitalTierResult,
-    CapitalTierThresholds,
     RiskProfile,
     StrategyFeatures,
 )

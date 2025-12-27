@@ -4,24 +4,23 @@ Unit Tests for PHASE 1 T1.2: Absolute Return Optimizer
 Tests core service class, data validation, and specialist components.
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
 
 from app.services.absolute_return_optimizer import (
     AbsoluteReturnOptimizer,
+    AlphaTarget,
     AlphaTargetCalculator,
     CapacityFadeAnalyzer,
+    CapacityFadeEstimate,
+    MonthlyProfitForecaster,
+    OptimizedParameters,
     ParameterScaler,
     ReturnDistributionValidator,
-    MonthlyProfitForecaster,
-    AlphaTarget,
-    CapacityFadeEstimate,
-    OptimizedParameters,
-    MonthlyProfitForecast,
-    FeasibilityReport,
 )
-from app.services.capital_tier_strategy_selector import RiskProfile, PositionSizingStrategy
 from app.services.account_configuration import AccountTier
+from app.services.capital_tier_strategy_selector import PositionSizingStrategy, RiskProfile
 
 
 class TestAbsoluteReturnOptimizerInitialization:
@@ -35,10 +34,7 @@ class TestAbsoluteReturnOptimizerInitialization:
 
     def test_init_with_account_id(self):
         """Initialize with account ID"""
-        optimizer = AbsoluteReturnOptimizer(
-            Decimal("100000"),
-            account_id="ACC_001"
-        )
+        optimizer = AbsoluteReturnOptimizer(Decimal("100000"), account_id="ACC_001")
         assert optimizer.account_id == "ACC_001"
 
     def test_init_zero_capital_raises(self):
@@ -93,12 +89,10 @@ class TestAlphaTargetCalculator:
     def test_different_tax_rates(self):
         """Alpha calculation adjusts for tax rate"""
         alpha_20pct = AlphaTargetCalculator.calculate_required_alpha(
-            Decimal("800"),
-            tax_rate=Decimal("0.20")
+            Decimal("800"), tax_rate=Decimal("0.20")
         )
         alpha_30pct = AlphaTargetCalculator.calculate_required_alpha(
-            Decimal("800"),
-            tax_rate=Decimal("0.30")
+            Decimal("800"), tax_rate=Decimal("0.30")
         )
 
         # Higher tax = more gross profit needed = more alpha

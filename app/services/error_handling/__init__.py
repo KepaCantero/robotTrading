@@ -5,18 +5,18 @@ Provides error handling, fallback strategies, and graceful degradation for all s
 """
 
 from app.services.error_handling.error_handler import (
-    ServiceException,
     BacktestException,
-    ValidationException,
     ConfigurationException,
-    ParameterizationException,
-    RecommendationException,
-    PortfolioException,
-    FallbackStrategy,
     ConservativeBacktestFallback,
-    EqualWeightPortfolioFallback,
     ConservativeRecommendationFallback,
+    EqualWeightPortfolioFallback,
     ErrorHandler,
+    FallbackStrategy,
+    ParameterizationException,
+    PortfolioException,
+    RecommendationException,
+    ServiceException,
+    ValidationException,
     service_error_handler,
 )
 

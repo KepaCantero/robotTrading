@@ -8,10 +8,9 @@ Tests cover:
 - State transitions
 """
 
-import pytest
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
-from uuid import uuid4
+
 
 from app.services.alerting_system import (
     AlertEvent,
@@ -21,7 +20,6 @@ from app.services.alerting_system import (
     AlertState,
     ChangeRule,
     ComparisonOperator,
-    LogicOperator,
     NotificationChannelType,
     NotificationTarget,
     ThresholdRule,

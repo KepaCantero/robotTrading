@@ -10,9 +10,10 @@ Tests seasonal pattern analysis including:
 - Markdown report generation
 """
 
-import pytest
 from datetime import datetime, timedelta
 from decimal import Decimal
+
+import pytest
 
 from app.backtesting.seasonality_analyzer import SeasonalityAnalyzer
 
@@ -41,7 +42,7 @@ def sample_equity_curve_12_months():
         else:
             daily_change = 0.0002  # +0.02% daily
 
-        equity *= (1 + daily_change)
+        equity *= 1 + daily_change
         curve.append((date, Decimal(str(round(equity, 2)))))
 
     return curve
@@ -66,7 +67,7 @@ def sample_equity_curve_5_years():
         else:  # Q3 weak
             daily_change = -0.0003
 
-        equity *= (1 + daily_change)
+        equity *= 1 + daily_change
         curve.append((date, Decimal(str(round(equity, 2)))))
 
     return curve
@@ -83,7 +84,7 @@ def sample_equity_curve_no_seasonality():
         date = start_date + timedelta(days=day)
         # Consistent daily change (no seasonality)
         daily_change = 0.0005
-        equity *= (1 + daily_change)
+        equity *= 1 + daily_change
         curve.append((date, Decimal(str(round(equity, 2)))))
 
     return curve
@@ -148,7 +149,9 @@ class TestMonthlyReturnsAnalysis:
         assert result is not None
         assert result['best_month'] is not None
         assert result['worst_month'] is not None
-        assert result['best_month']['cumulative_return'] > result['worst_month']['cumulative_return']
+        assert (
+            result['best_month']['cumulative_return'] > result['worst_month']['cumulative_return']
+        )
 
 
 class TestQuarterlyReturnsAnalysis:
@@ -231,7 +234,7 @@ class TestBestWorstMonths:
         if len(worst_months) > 1:
             returns = [m['cumulative_return'] for m in worst_months]
             # Worst months should be sorted ascending (lowest first)
-            assert all(returns[i] <= returns[i+1] for i in range(len(returns)-1))
+            assert all(returns[i] <= returns[i + 1] for i in range(len(returns) - 1))
 
     def test_insufficient_data_returns_none(self, analyzer):
         """Test with insufficient data."""
@@ -265,9 +268,7 @@ class TestSeasonalityStrength:
         # Should be relatively low
         assert float(strength) < 0.5
 
-    def test_seasonality_strength_with_pattern_higher(
-        self, analyzer, sample_equity_curve_5_years
-    ):
+    def test_seasonality_strength_with_pattern_higher(self, analyzer, sample_equity_curve_5_years):
         """Test that strong patterns have higher strength."""
         strong_strength = analyzer.get_seasonality_strength(sample_equity_curve_5_years)
         weak_strength = analyzer.get_seasonality_strength(sample_equity_curve_no_seasonality)
@@ -387,8 +388,18 @@ class TestMonthNameHelper:
     def test_all_month_names(self, analyzer):
         """Test all month names are correctly mapped."""
         month_names = [
-            "January", "February", "March", "April", "May", "June",
-            "July", "August", "September", "October", "November", "December"
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
         ]
 
         for i, expected_name in enumerate(month_names, 1):

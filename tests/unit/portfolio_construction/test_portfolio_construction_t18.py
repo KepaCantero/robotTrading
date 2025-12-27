@@ -7,18 +7,17 @@ Tests for:
 - AllocationRecommender: Smart allocation recommendations
 """
 
-import pytest
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Dict
+
+import pytest
 
 from app.services.portfolio_construction import (
     AllocationManager,
-    RebalancingEngine,
     AllocationRecommender,
+    RebalancingEngine,
     RebalancingFrequency,
 )
-
 
 # ============================================================================
 # ALLOCATION MANAGER TESTS (25 tests)

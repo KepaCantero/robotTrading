@@ -9,11 +9,11 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 from .models import (
-    StrategyConfiguration,
-    ConfigurationSaveRequest,
+    ConfigurationListResponse,
     ConfigurationLoadRequest,
     ConfigurationLoadResponse,
-    ConfigurationListResponse,
+    ConfigurationSaveRequest,
+    StrategyConfiguration,
     VersionedConfiguration,
 )
 
@@ -273,16 +273,10 @@ class ConfigurationPersistence:
         results = list(self._configurations.values())
 
         if strategy_name:
-            results = [
-                c
-                for c in results
-                if strategy_name.lower() in c.strategy_name.lower()
-            ]
+            results = [c for c in results if strategy_name.lower() in c.strategy_name.lower()]
 
         if deployment_status:
-            results = [
-                c for c in results if c.deployment_status == deployment_status
-            ]
+            results = [c for c in results if c.deployment_status == deployment_status]
 
         return results
 

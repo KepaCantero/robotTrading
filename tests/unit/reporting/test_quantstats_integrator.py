@@ -1,12 +1,14 @@
 """Unit tests for T9.1 QuantStatsIntegrator component"""
 
-import pytest
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
+
 import numpy as np
+import pytest
+
 from app.services.reporting_generator.quantstats_integrator import (
-    QuantStatsIntegrator,
     AdvancedMetrics,
+    QuantStatsIntegrator,
     StatisticsReport,
     get_quantstats_integrator,
 )
@@ -143,26 +145,20 @@ class TestQuantStatsIntegrator:
     # Calmar Ratio Tests
     def test_calculate_calmar_ratio_valid(self):
         """Test Calmar ratio calculation with valid inputs."""
-        calmar = self.integrator._calculate_calmar_ratio(
-            self.returns, Decimal("15")
-        )
+        calmar = self.integrator._calculate_calmar_ratio(self.returns, Decimal("15"))
 
         assert calmar > Decimal("0")
         assert isinstance(calmar, Decimal)
 
     def test_calculate_calmar_ratio_zero_drawdown(self):
         """Test Calmar ratio with zero drawdown."""
-        calmar = self.integrator._calculate_calmar_ratio(
-            self.returns, Decimal("0")
-        )
+        calmar = self.integrator._calculate_calmar_ratio(self.returns, Decimal("0"))
 
         assert calmar == Decimal("0")
 
     def test_calculate_calmar_ratio_none_drawdown(self):
         """Test Calmar ratio with None drawdown."""
-        calmar = self.integrator._calculate_calmar_ratio(
-            self.returns, None
-        )
+        calmar = self.integrator._calculate_calmar_ratio(self.returns, None)
 
         assert calmar == Decimal("0")
 
@@ -253,9 +249,7 @@ class TestQuantStatsIntegrator:
     def test_calculate_information_ratio(self):
         """Test Information ratio calculation."""
         benchmark = self.returns + np.random.normal(0, 0.005, len(self.returns))
-        info_ratio = self.integrator._calculate_information_ratio(
-            self.returns, benchmark
-        )
+        info_ratio = self.integrator._calculate_information_ratio(self.returns, benchmark)
 
         assert isinstance(info_ratio, Decimal)
 

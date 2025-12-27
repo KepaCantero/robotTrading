@@ -11,12 +11,11 @@ Tracks:
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
-from uuid import uuid4
+from typing import Dict, List, Tuple
 
-from .models import ExecutionMonitoring, OrderTranche
+from .models import ExecutionMonitoring
 
 logger = logging.getLogger(__name__)
 
@@ -241,9 +240,7 @@ class ExecutionCostMonitor:
         total_slippage = sum(c["slippage_cost"] for c in costs)
         total_commission = sum(c["commission_cost"] for c in costs)
         avg_slippage_bps = (
-            sum(c["slippage_bps"] for c in costs) / len(costs)
-            if costs
-            else Decimal("0")
+            sum(c["slippage_bps"] for c in costs) / len(costs) if costs else Decimal("0")
         )
 
         return {
@@ -284,7 +281,7 @@ class ExecutionCostMonitor:
         if execution_id not in self.executions:
             raise ValueError(f"Execution {execution_id} not found")
 
-        monitoring = self.executions[execution_id]
+        self.executions[execution_id]
 
         # Calculate actual slippage (excluding commission)
         costs = self.tranche_costs.get(execution_id, [])
@@ -360,16 +357,11 @@ class ExecutionCostMonitor:
         monitoring = self.executions[execution_id]
 
         # Remaining budget
-        remaining = max(
-            Decimal("0"),
-            monitoring.planned_cost - monitoring.actual_costs
-        )
+        remaining = max(Decimal("0"), monitoring.planned_cost - monitoring.actual_costs)
 
         # If execution in progress, estimate total cost
         if monitoring.tranches_completed > 0 and monitoring.tranches_total > 0:
-            avg_cost_per_tranche = (
-                monitoring.actual_costs / monitoring.tranches_completed
-            )
+            avg_cost_per_tranche = monitoring.actual_costs / monitoring.tranches_completed
             estimated_total = avg_cost_per_tranche * monitoring.tranches_total
         else:
             estimated_total = monitoring.actual_costs

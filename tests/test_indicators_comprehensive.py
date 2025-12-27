@@ -26,8 +26,6 @@ Cada indicador se prueba con:
 """
 
 import unittest
-from decimal import Decimal
-from typing import List, Optional
 
 from app.services.momentum_analysis import TechnicalIndicatorCalculator
 
@@ -792,8 +790,8 @@ class TestIndicatorIntegration(unittest.TestCase):
         """Test: Los indicadores deben ser consistentes entre sí."""
         # Datos de tendencia alcista
         prices = [100.0 + i * 1.0 for i in range(50)]
-        highs = [p + 0.5 for p in prices]
-        lows = [p - 0.5 for p in prices]
+        [p + 0.5 for p in prices]
+        [p - 0.5 for p in prices]
         closes = prices[:]
 
         rsi = self.calculator.calculate_rsi(prices, 14)

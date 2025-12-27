@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 
 class BrokerType(Enum):
     """Supported broker types."""
+
     INTERACTIVE_BROKERS = "ib"
     ALPACA = "alpaca"
     TRADIER = "tradier"
@@ -30,6 +31,7 @@ class BrokerType(Enum):
 
 class OrderStatus(Enum):
     """Order status states."""
+
     PENDING = "pending"
     SUBMITTED = "submitted"
     ACKNOWLEDGED = "acknowledged"
@@ -43,6 +45,7 @@ class OrderStatus(Enum):
 
 class OrderType(Enum):
     """Order types."""
+
     MARKET = "market"
     LIMIT = "limit"
     STOP = "stop"
@@ -52,6 +55,7 @@ class OrderType(Enum):
 
 class OrderSide(Enum):
     """Buy or Sell."""
+
     BUY = "buy"
     SELL = "sell"
 
@@ -59,6 +63,7 @@ class OrderSide(Enum):
 @dataclass
 class BrokerAccount:
     """Broker account information."""
+
     account_id: str
     broker_type: BrokerType
     currency: str = "USD"
@@ -76,6 +81,7 @@ class BrokerAccount:
 @dataclass
 class BrokerPosition:
     """Position from broker."""
+
     symbol: str
     quantity: Decimal
     avg_price: Decimal
@@ -88,6 +94,7 @@ class BrokerPosition:
 @dataclass
 class BrokerOrder:
     """Order placed with broker."""
+
     order_id: str
     symbol: str
     side: OrderSide
@@ -125,10 +132,12 @@ class BrokerConnector:
         # Create broker-specific adapter
         if broker_type == BrokerType.ALPACA:
             from .broker_adapters.alpaca_adapter import AlpacaAdapter
+
             self.adapter: Any = AlpacaAdapter()
         else:
             # Default to paper trading for all other types
             from .broker_adapters.paper_adapter import PaperAdapter
+
             self.adapter: Any = PaperAdapter()
 
         logger.info(f"✅ BrokerConnector initialized for {broker_type.value}")
@@ -159,7 +168,7 @@ class BrokerConnector:
         api_key: Optional[str] = None,
         api_secret: Optional[str] = None,
         account_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> bool:
         """
         Connect to broker API.
@@ -174,10 +183,7 @@ class BrokerConnector:
             True if connection successful
         """
         return await self.adapter.connect(
-            api_key=api_key,
-            api_secret=api_secret,
-            account_id=account_id,
-            **kwargs
+            api_key=api_key, api_secret=api_secret, account_id=account_id, **kwargs
         )
 
     async def disconnect(self) -> bool:

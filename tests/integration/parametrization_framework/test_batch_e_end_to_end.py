@@ -5,16 +5,18 @@ Tests complete BATCH E pipeline:
 ProfileGenerator → ModuleParametrizer → BacktestOrchestrator → ValidationEngine → StrategyRecommender
 """
 
-import pytest
 from decimal import Decimal
-from app.services.profile_generator.profile_generator import ProfileGenerator
+
+import pytest
+
+from app.services.module_parametrizer.models import ParameterizationRequest
+from app.services.module_parametrizer.module_parametrizer import ModuleParametrizer
 from app.services.profile_generator.models import (
     InvestmentObjective,
-    RiskProfile,
     ProfileGenerationRequest,
+    RiskProfile,
 )
-from app.services.module_parametrizer.module_parametrizer import ModuleParametrizer
-from app.services.module_parametrizer.models import ParameterizationRequest
+from app.services.profile_generator.profile_generator import ProfileGenerator
 
 
 @pytest.fixture
@@ -108,7 +110,9 @@ class TestModuleParametrizerIntegration:
     """Test ModuleParametrizer with ProfileGenerator output."""
 
     @pytest.mark.asyncio
-    async def test_parametrize_after_profile_generation(self, profile_generator, module_parametrizer):
+    async def test_parametrize_after_profile_generation(
+        self, profile_generator, module_parametrizer
+    ):
         """Test parametrization using profile from ProfileGenerator."""
         # Step 1: Generate profile
         profile_request = ProfileGenerationRequest(

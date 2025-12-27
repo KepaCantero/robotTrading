@@ -8,23 +8,19 @@ Provides the bridge between real-time metrics and rule-based alerting.
 import asyncio
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional
 from uuid import uuid4
 
-from app.services.alerting_system.models import (
-    AlertEvent,
-    AlertSeverity,
-    AlertState,
-    AlertRule,
-    ChangeRule,
-    ThresholdRule,
-    AlertEvaluationContext,
-)
 from app.services.alerting_system.alert_manager import AlertManager
 from app.services.alerting_system.alert_rule_engine import AlertRuleEngine
-
+from app.services.alerting_system.models import (
+    AlertEvent,
+    AlertRule,
+    AlertState,
+    ChangeRule,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -86,9 +82,7 @@ class EvaluationStatistics:
             "total_evaluations": self.total_evaluations,
             "avg_evaluation_time_ms": round(self.avg_evaluation_time_ms, 2),
             "last_evaluation_at": (
-                self.last_evaluation_at.isoformat()
-                if self.last_evaluation_at
-                else None
+                self.last_evaluation_at.isoformat() if self.last_evaluation_at else None
             ),
             "uptime_seconds": round(uptime_seconds, 0),
         }
@@ -200,9 +194,7 @@ class MetricsDrivenAlerter:
 
                 if should_trigger:
                     # Create and trigger alert
-                    alert_event = await self._create_and_trigger_alert(
-                        rule, metric_data
-                    )
+                    alert_event = await self._create_and_trigger_alert(rule, metric_data)
                     results["triggered_alerts"].append(
                         {
                             "rule_id": rule_id,
@@ -327,7 +319,9 @@ class MetricsDrivenAlerter:
             rule_id=rule.rule_id,
             severity=rule.severity,
             state=AlertState.TRIGGERED,
-            metric_name=self.metric_query_configs.get(rule.rule_id, MetricQueryConfig("unknown")).metric_name,
+            metric_name=self.metric_query_configs.get(
+                rule.rule_id, MetricQueryConfig("unknown")
+            ).metric_name,
             metric_value=current_value,
             symbol=symbol,
             portfolio_id=portfolio_id,
@@ -362,9 +356,7 @@ class MetricsDrivenAlerter:
             return
 
         self.is_running = True
-        self.logger.info(
-            f"Starting continuous evaluation with {interval_seconds}s interval"
-        )
+        self.logger.info(f"Starting continuous evaluation with {interval_seconds}s interval")
 
         async def evaluation_loop():
             while self.is_running:

@@ -8,17 +8,18 @@ Tests cover:
 - Complete pipeline workflows
 """
 
-import pytest
 from datetime import datetime, timedelta
 from decimal import Decimal
 from unittest.mock import AsyncMock
 
+import pytest
+
 from app.services.metrics_database import (
+    MetricPoint,
     MetricsCollector,
     MetricsQueryEngine,
-    QuestDBConnector,
-    MetricPoint,
     MetricType,
+    QuestDBConnector,
 )
 
 

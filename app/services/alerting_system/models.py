@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional
 
 class AlertSeverity(str, Enum):
     """Alert severity levels."""
+
     INFO = "info"
     WARNING = "warning"
     CRITICAL = "critical"
@@ -20,6 +21,7 @@ class AlertSeverity(str, Enum):
 
 class AlertState(str, Enum):
     """Alert state machine states."""
+
     TRIGGERED = "triggered"
     RESOLVED = "resolved"
     ACKNOWLEDGED = "acknowledged"
@@ -28,6 +30,7 @@ class AlertState(str, Enum):
 
 class ComparisonOperator(str, Enum):
     """Comparison operators for threshold-based rules."""
+
     GREATER_THAN = ">"
     GREATER_THAN_OR_EQUAL = ">="
     LESS_THAN = "<"
@@ -38,12 +41,14 @@ class ComparisonOperator(str, Enum):
 
 class LogicOperator(str, Enum):
     """Logic operators for rule composition."""
+
     AND = "and"
     OR = "or"
 
 
 class NotificationChannelType(str, Enum):
     """Supported notification channels."""
+
     WEBHOOK = "webhook"
     EMAIL = "email"
     SLACK = "slack"
@@ -53,6 +58,7 @@ class NotificationChannelType(str, Enum):
 @dataclass
 class NotificationTarget:
     """Configuration for a notification channel."""
+
     channel_type: NotificationChannelType
     endpoint: str  # URL for webhook, email for EMAIL, channel ID for Slack/Discord
     enabled: bool = True
@@ -77,6 +83,7 @@ class NotificationTarget:
 @dataclass
 class ThresholdRule:
     """Single threshold-based rule."""
+
     metric_name: str
     operator: ComparisonOperator
     threshold: Decimal
@@ -113,6 +120,7 @@ class ThresholdRule:
 @dataclass
 class ChangeRule:
     """Percentage change rule over time window."""
+
     metric_name: str
     change_percent: Decimal  # Trigger if change > this percentage
     window_minutes: int  # Time window to measure change
@@ -135,6 +143,7 @@ class ChangeRule:
 @dataclass
 class AlertRule:
     """Alert rule definition."""
+
     rule_id: str
     name: str
     description: str
@@ -179,6 +188,7 @@ class AlertRule:
 @dataclass
 class AlertEvent:
     """Alert event triggered by rule."""
+
     event_id: str
     rule_id: str
     severity: AlertSeverity
@@ -220,13 +230,16 @@ class AlertEvent:
             "message": self.message,
             "details": self.details,
             "notifications_sent": self.notifications_sent,
-            "last_notification_at": self.last_notification_at.isoformat() if self.last_notification_at else None,
+            "last_notification_at": (
+                self.last_notification_at.isoformat() if self.last_notification_at else None
+            ),
         }
 
 
 @dataclass
 class AlertHistory:
     """Alert history entry."""
+
     history_id: str
     event_id: str
     rule_id: str
@@ -249,6 +262,7 @@ class AlertHistory:
 @dataclass
 class AlertEvaluationContext:
     """Context for alert rule evaluation."""
+
     metric_name: str
     current_value: Decimal
     symbol: Optional[str] = None
@@ -271,6 +285,7 @@ class AlertEvaluationContext:
 @dataclass
 class NotificationPayload:
     """Payload for notification delivery."""
+
     event_id: str
     rule_id: str
     rule_name: str

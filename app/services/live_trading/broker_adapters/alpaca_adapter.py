@@ -27,10 +27,8 @@ from app.services.live_trading.broker_connector import (
 from .alpaca_client import AlpacaClient, AlpacaClientError
 from .alpaca_error_handler import (
     AlpacaErrorClassifier,
-    CircuitBreaker,
     ErrorRecoveryManager,
     ErrorRecoveryStrategy,
-    PositionSyncRecovery,
     RetryConfig,
 )
 
@@ -99,8 +97,7 @@ class AlpacaAdapter:
             # Get initial positions
             positions_data = await self.client.get_positions()
             self.positions = {
-                pos["symbol"]: self._transform_position(pos)
-                for pos in positions_data
+                pos["symbol"]: self._transform_position(pos) for pos in positions_data
             }
 
             # Register streaming handlers for real-time updates
@@ -279,8 +276,7 @@ class AlpacaAdapter:
             positions_data = await self.client.get_positions()
 
             self.positions = {
-                pos["symbol"]: self._transform_position(pos)
-                for pos in positions_data
+                pos["symbol"]: self._transform_position(pos) for pos in positions_data
             }
 
             return list(self.positions.values())
@@ -426,12 +422,16 @@ class AlpacaAdapter:
             filled_quantity=filled_qty,
             avg_filled_price=filled_avg_price,
             status=self._map_order_status(alpaca_order["status"]),
-            created_at=datetime.fromisoformat(alpaca_order["created_at"].replace("Z", "+00:00"))
-            if alpaca_order.get("created_at")
-            else datetime.utcnow(),
-            updated_at=datetime.fromisoformat(alpaca_order["updated_at"].replace("Z", "+00:00"))
-            if alpaca_order.get("updated_at")
-            else None,
+            created_at=(
+                datetime.fromisoformat(alpaca_order["created_at"].replace("Z", "+00:00"))
+                if alpaca_order.get("created_at")
+                else datetime.utcnow()
+            ),
+            updated_at=(
+                datetime.fromisoformat(alpaca_order["updated_at"].replace("Z", "+00:00"))
+                if alpaca_order.get("updated_at")
+                else None
+            ),
         )
 
     def _map_order_status(self, alpaca_status: str) -> OrderStatus:
@@ -490,7 +490,9 @@ class AlpacaAdapter:
                 if pos.market_value != Decimal("0"):
                     pos.unrealized_pl_pct = (pos.unrealized_pl / pos.market_value) * Decimal("100")
 
-                logger.debug(f"📊 {symbol} updated: ${last_price} (P&L: {pos.unrealized_pl_pct:.2f}%)")
+                logger.debug(
+                    f"📊 {symbol} updated: ${last_price} (P&L: {pos.unrealized_pl_pct:.2f}%)"
+                )
 
         except Exception as e:
             logger.error(f"❌ Error processing quote update: {str(e)}")
@@ -533,7 +535,9 @@ class AlpacaAdapter:
                 new_status = self._map_order_status(status)
 
                 self.orders[order_id].status = new_status
-                self.orders[order_id].filled_quantity = Decimal(str(order_data.get("filled_qty", 0)))
+                self.orders[order_id].filled_quantity = Decimal(
+                    str(order_data.get("filled_qty", 0))
+                )
                 self.orders[order_id].avg_filled_price = Decimal(
                     str(order_data.get("filled_avg_price", 0))
                 )
@@ -596,9 +600,7 @@ class AlpacaAdapter:
 
                 # Check if retryable
                 if strategy != ErrorRecoveryStrategy.RETRY:
-                    logger.error(
-                        f"❌ {operation_name} failed with non-retryable error: {str(e)}"
-                    )
+                    logger.error(f"❌ {operation_name} failed with non-retryable error: {str(e)}")
                     raise
 
                 # Calculate backoff delay
@@ -611,9 +613,7 @@ class AlpacaAdapter:
                     await asyncio.sleep(delay)
 
         # All retries exhausted
-        logger.error(
-            f"❌ {operation_name} failed after {self.retry_config.max_attempts} attempts"
-        )
+        logger.error(f"❌ {operation_name} failed after {self.retry_config.max_attempts} attempts")
         raise AlpacaClientError(f"{operation_name} failed: {str(last_error)}")
 
     async def _sync_positions_with_recovery(self) -> Dict[str, BrokerPosition]:
@@ -675,9 +675,7 @@ class AlpacaAdapter:
             },
             "position_sync": {
                 "failures": self.error_manager.position_sync_recovery.sync_failure_count,
-                "last_sync": str(
-                    self.error_manager.position_sync_recovery.last_successful_sync
-                ),
+                "last_sync": str(self.error_manager.position_sync_recovery.last_successful_sync),
                 "is_stale": self.error_manager.position_sync_recovery.is_stale(),
             },
             "retry_config": {

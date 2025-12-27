@@ -8,22 +8,25 @@ Defines:
 - AbsoluteReturnTarget with feasibility validation
 """
 
-from enum import Enum
 from decimal import Decimal
-from typing import ClassVar, Dict, List, Optional, Set
-from pydantic import BaseModel, Field, validator
+from enum import Enum
+from typing import ClassVar, Dict, List, Optional
+
+from pydantic import BaseModel, Field
 
 
 class CapitalTier(str, Enum):
     """Capital tier classification."""
-    MICRO = "micro"          # < €15k
-    SMALL = "small"          # €15k - €50k
-    MEDIUM = "medium"        # €50k - €250k
-    LARGE = "large"          # €250k+
+
+    MICRO = "micro"  # < €15k
+    SMALL = "small"  # €15k - €50k
+    MEDIUM = "medium"  # €50k - €250k
+    LARGE = "large"  # €250k+
 
 
 class CapitalTierThresholds(BaseModel):
     """Capital threshold definitions."""
+
     MICRO_MAX: ClassVar[Decimal] = Decimal("15000")
     SMALL_MIN: ClassVar[Decimal] = Decimal("15000")
     SMALL_MAX: ClassVar[Decimal] = Decimal("50000")
@@ -34,10 +37,17 @@ class CapitalTierThresholds(BaseModel):
 
 class RiskProfile(BaseModel):
     """Risk profile for given capital tier."""
+
     risk_level: int = Field(..., ge=1, le=7, description="Risk level 1-7")
-    max_position_size: Decimal = Field(..., ge=Decimal("0.01"), le=Decimal("1.0"), description="Max position as % of capital")
-    max_drawdown_acceptable: Decimal = Field(..., ge=Decimal("0.01"), le=Decimal("0.50"), description="Max acceptable drawdown")
-    leverage_allowed: Decimal = Field(..., ge=Decimal("0"), le=Decimal("3.0"), description="Max leverage multiplier")
+    max_position_size: Decimal = Field(
+        ..., ge=Decimal("0.01"), le=Decimal("1.0"), description="Max position as % of capital"
+    )
+    max_drawdown_acceptable: Decimal = Field(
+        ..., ge=Decimal("0.01"), le=Decimal("0.50"), description="Max acceptable drawdown"
+    )
+    leverage_allowed: Decimal = Field(
+        ..., ge=Decimal("0"), le=Decimal("3.0"), description="Max leverage multiplier"
+    )
     max_daily_loss: Decimal = Field(..., ge=Decimal("0"), description="Max daily loss in EUR")
     diversification_min: int = Field(..., ge=1, le=50, description="Minimum concurrent positions")
     pain_tolerance: str = Field(..., description="VERY_LOW / LOW / MEDIUM / HIGH / VERY_HIGH")
@@ -45,6 +55,7 @@ class RiskProfile(BaseModel):
 
 class StrategyFeatures(BaseModel):
     """Strategy features that can be enabled/disabled."""
+
     momentum: bool = True
     mean_reversion: bool = False
     machine_learning: bool = False
@@ -77,6 +88,7 @@ class StrategyFeatures(BaseModel):
 
 class CapitalTierConfig(BaseModel):
     """Complete configuration for a capital tier."""
+
     tier: CapitalTier = Field(..., description="Capital tier")
     capital_range: tuple = Field(..., description="(min, max) capital in EUR")
     risk_profile: RiskProfile = Field(..., description="Risk settings for tier")
@@ -87,13 +99,20 @@ class CapitalTierConfig(BaseModel):
 
 class AbsoluteReturnTarget(BaseModel):
     """Target return specification for validation."""
+
     target_euros_monthly: Decimal = Field(..., gt=0, description="Target return in EUR per month")
     capital: Decimal = Field(..., gt=0, description="Available capital in EUR")
     time_horizon_months: int = Field(..., ge=1, le=240, description="Time horizon in months")
-    risk_free_rate: Decimal = Field(default=Decimal("0.04"), ge=0, le=1, description="Risk-free rate annually")
+    risk_free_rate: Decimal = Field(
+        default=Decimal("0.04"), ge=0, le=1, description="Risk-free rate annually"
+    )
     tax_rate: Decimal = Field(default=Decimal("0.19"), ge=0, le=1, description="Tax rate")
-    commission_per_trade: Decimal = Field(default=Decimal("10"), ge=0, description="Commission per trade in EUR")
-    expected_trades_per_month: int = Field(default=10, ge=0, le=1000, description="Expected trades per month")
+    commission_per_trade: Decimal = Field(
+        default=Decimal("10"), ge=0, description="Commission per trade in EUR"
+    )
+    expected_trades_per_month: int = Field(
+        default=10, ge=0, le=1000, description="Expected trades per month"
+    )
 
     class Config:
         json_schema_extra = {
@@ -115,18 +134,20 @@ class AbsoluteReturnTarget(BaseModel):
 
     def required_alpha_monthly(self) -> Decimal:
         """Calculate required monthly alpha after tax and commission."""
-        monthly_total_cost = (
-            (self.commission_per_trade * self.expected_trades_per_month) +
-            (self.target_euros_monthly * self.tax_rate)
+        monthly_total_cost = (self.commission_per_trade * self.expected_trades_per_month) + (
+            self.target_euros_monthly * self.tax_rate
         )
         return self.target_euros_monthly + monthly_total_cost
 
 
 class AbsoluteReturnValidation(BaseModel):
     """Validation result for absolute return target."""
+
     is_feasible: bool = Field(..., description="Is target feasible?")
     required_alpha_pct: Decimal = Field(..., description="Required alpha as % of capital annually")
-    capacity_fade_adjusted_alpha: Optional[Decimal] = Field(None, description="Alpha after capacity fade estimate")
+    capacity_fade_adjusted_alpha: Optional[Decimal] = Field(
+        None, description="Alpha after capacity fade estimate"
+    )
     recommendation: str = Field(..., description="Recommendation text")
     confidence_level: str = Field(..., description="HIGH / MEDIUM / LOW confidence in feasibility")
     monthly_costs: Dict[str, Decimal] = Field(default={}, description="Breakdown of monthly costs")
@@ -134,6 +155,7 @@ class AbsoluteReturnValidation(BaseModel):
 
 class CapitalTierResult(BaseModel):
     """Result of capital tier analysis."""
+
     tier: CapitalTier = Field(..., description="Detected capital tier")
     capital: Decimal = Field(..., description="Capital amount")
     risk_profile: RiskProfile = Field(..., description="Assigned risk profile")

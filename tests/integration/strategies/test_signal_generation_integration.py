@@ -10,10 +10,9 @@ Tests signal generation for:
 
 import logging
 import sys
-from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
-from typing import Dict, List
+from typing import List
 
 import pandas as pd
 import pytest
@@ -22,7 +21,6 @@ import pytest
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.core.centralized_config import get_config
 from app.models.market_data import Quote
 from app.services.strategy_stock_allocator import StrategyStockAllocator
 from app.strategies.mean_reversion import MeanReversionStrategy

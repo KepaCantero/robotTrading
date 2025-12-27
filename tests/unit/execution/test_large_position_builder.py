@@ -4,13 +4,14 @@ Unit tests for LargePositionBuilder
 Tests position building strategies, execution window selection, and impact analysis.
 """
 
-import pytest
 import asyncio
 from decimal import Decimal
 
+import pytest
+
 from app.services.position_builder.large_position_builder import (
-    LargePositionBuilder,
     IntraDayExecutionScheduler,
+    LargePositionBuilder,
 )
 
 

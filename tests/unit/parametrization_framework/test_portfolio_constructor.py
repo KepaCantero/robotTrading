@@ -4,12 +4,14 @@ T7.1: PortfolioConstructor Tests
 Tests for portfolio construction and optimization across trading modules.
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
+
 from app.services.portfolio_constructor import (
+    PortfolioConstructionRequest,
     PortfolioConstructor,
     get_portfolio_constructor,
-    PortfolioConstructionRequest,
 )
 
 
@@ -58,7 +60,9 @@ class TestEfficientFrontierPortfolio:
         assert result.success
         assert result.allocation_method == "efficient_frontier"
         assert len(result.allocations) == 3
-        assert sum(a.weight_pct for a in result.allocations) == pytest.approx(Decimal("100"), abs=Decimal("0.01"))
+        assert sum(a.weight_pct for a in result.allocations) == pytest.approx(
+            Decimal("100"), abs=Decimal("0.01")
+        )
 
     @pytest.mark.asyncio
     async def test_efficient_frontier_aggressive_profile(self):
@@ -85,7 +89,8 @@ class TestEfficientFrontierPortfolio:
         assert result.success
         # Aggressive should favor higher-return, higher-volatility modules
         high_return_weight = sum(
-            a.weight_pct for a in result.allocations
+            a.weight_pct
+            for a in result.allocations
             if a.module_name in ["transformer_engine", "deep_learning_engine"]
         )
         assert high_return_weight > Decimal("10")  # Should have meaningful allocation
@@ -110,7 +115,8 @@ class TestEfficientFrontierPortfolio:
         assert result.success
         # Conservative should favor lower-volatility modules
         low_vol_weight = sum(
-            a.weight_pct for a in result.allocations
+            a.weight_pct
+            for a in result.allocations
             if a.module_name in ["pairs_trading", "mean_reversion"]
         )
         assert low_vol_weight > Decimal("30")
@@ -138,7 +144,9 @@ class TestRiskParityPortfolio:
         # Should use efficient frontier or risk parity (either is valid)
         assert result.success
         assert len(result.allocations) == 2
-        assert sum(a.weight_pct for a in result.allocations) == pytest.approx(Decimal("100"), abs=Decimal("0.01"))
+        assert sum(a.weight_pct for a in result.allocations) == pytest.approx(
+            Decimal("100"), abs=Decimal("0.01")
+        )
 
 
 # EQUAL WEIGHT PORTFOLIO TESTS
@@ -261,7 +269,9 @@ class TestPortfolioMetrics:
         assert result.expected_portfolio_return_pct > Decimal("0")
         assert result.expected_portfolio_sharpe >= Decimal("0")
         assert result.expected_portfolio_drawdown_pct > Decimal("0")
-        assert result.diversification_ratio >= Decimal("1")  # Should be >= 1 for diversified portfolios
+        assert result.diversification_ratio >= Decimal(
+            "1"
+        )  # Should be >= 1 for diversified portfolios
 
     @pytest.mark.asyncio
     async def test_aggressive_portfolio_higher_return(self):
@@ -273,7 +283,11 @@ class TestPortfolioMetrics:
             capital_eur=Decimal("100000"),
             risk_profile="aggressive",
             investment_objective="maximizar_capital",
-            enabled_modules=["transformer_engine", "deep_learning_engine", "reinforcement_learning"],
+            enabled_modules=[
+                "transformer_engine",
+                "deep_learning_engine",
+                "reinforcement_learning",
+            ],
             target_annual_return_pct=Decimal("20"),
             max_acceptable_drawdown_pct=Decimal("25"),
         )

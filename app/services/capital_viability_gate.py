@@ -13,7 +13,7 @@ If profit goal is unreachable, system disables trading and recommends action.
 
 import logging
 from decimal import Decimal
-from typing import Dict, Literal
+from typing import Dict
 
 logger = logging.getLogger(__name__)
 
@@ -121,9 +121,7 @@ class CapitalViabilityValidator:
 
         # Use provided expected_alpha_per_trade if available
         if expected_alpha_per_trade is not None and expected_alpha_per_trade > Decimal("0"):
-            expected_alpha_pct = (
-                expected_alpha_per_trade * Decimal(expected_trades_per_month)
-            )
+            expected_alpha_pct = expected_alpha_per_trade * Decimal(expected_trades_per_month)
         else:
             # Default: use conservative estimate (2-5% monthly)
             # Larger accounts can be more optimistic (closer to 5%)
@@ -134,7 +132,9 @@ class CapitalViabilityValidator:
                 expected_alpha_pct = (
                     CapitalViabilityValidator.MIN_ACHIEVABLE_ALPHA
                     + CapitalViabilityValidator.MAX_ACHIEVABLE_ALPHA
-                ) / Decimal("2")  # 3.5%
+                ) / Decimal(
+                    "2"
+                )  # 3.5%
             else:
                 expected_alpha_pct = CapitalViabilityValidator.MIN_ACHIEVABLE_ALPHA
 
@@ -154,7 +154,9 @@ class CapitalViabilityValidator:
         if not is_viable:
             if required_alpha_pct > Decimal("0.20"):
                 # Completely unreachable
-                recommended_capital = required_alpha * Decimal("20")  # Need 20x less alpha requirement
+                recommended_capital = required_alpha * Decimal(
+                    "20"
+                )  # Need 20x less alpha requirement
                 recommendation = "INCREASE_CAPITAL"
                 reason = (
                     f"Goal UNREACHABLE: requires {required_alpha_pct:.1%} monthly alpha. "

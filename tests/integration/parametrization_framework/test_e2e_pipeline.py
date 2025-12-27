@@ -14,25 +14,23 @@ Covers:
 - Data flow integrity
 """
 
+from decimal import Decimal
+from pathlib import Path
+
 import pytest
 import yaml
-from pathlib import Path
-from decimal import Decimal
-from typing import Dict, Any
 
 from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 from app.core.models.investment_profile import (
     CapitalTier,
-    InvestmentProfile,
     ProfileGenerator,
 )
 from app.services.parametrization.module_parametrizer import (
     ModuleParametrizer,
-    ModuleParameterSet,
 )
 
-
 # ===================== FIXTURES =====================
+
 
 @pytest.fixture
 def investment_profiles_config():
@@ -69,7 +67,7 @@ def sample_input_profile_micro() -> InputProfile:
         capital_initial=Decimal("10000"),
         objetivo_inversion=ObjectivoInversion.MAXIMIZAR_CAPITAL,
         risk_tolerance=RiskTolerance.MEDIO,
-        investment_horizon=12
+        investment_horizon=12,
     )
 
 
@@ -80,7 +78,7 @@ def sample_input_profile_small() -> InputProfile:
         capital_initial=Decimal("30000"),
         objetivo_inversion=ObjectivoInversion.BALANCED_GROWTH,
         risk_tolerance=RiskTolerance.MEDIO,
-        investment_horizon=24
+        investment_horizon=24,
     )
 
 
@@ -91,7 +89,7 @@ def sample_input_profile_medium() -> InputProfile:
         capital_initial=Decimal("100000"),
         objetivo_inversion=ObjectivoInversion.MAXIMIZAR_DIVIDENDOS,
         risk_tolerance=RiskTolerance.MEDIO,
-        investment_horizon=36
+        investment_horizon=36,
     )
 
 
@@ -102,11 +100,12 @@ def sample_input_profile_large() -> InputProfile:
         capital_initial=Decimal("500000"),
         objetivo_inversion=ObjectivoInversion.CAPITAL_PRESERVATION,
         risk_tolerance=RiskTolerance.BAJO,
-        investment_horizon=60
+        investment_horizon=60,
     )
 
 
 # ===================== PIPELINE INTEGRATION TESTS =====================
+
 
 class TestCompleteE2EPipeline:
     """Test complete T1.1→T2.1→T3.1 pipeline."""
@@ -177,13 +176,12 @@ class TestCompleteE2EPipeline:
 
 # ===================== OBJECTIVE COVERAGE TESTS =====================
 
+
 class TestAllObjectiveE2E:
     """Test all 5 investment objectives across all tiers."""
 
     @pytest.mark.asyncio
-    async def test_maximizar_capital_all_tiers(
-        self, profile_generator, module_parametrizer
-    ):
+    async def test_maximizar_capital_all_tiers(self, profile_generator, module_parametrizer):
         """Test maximizar_capital objective across all 4 tiers."""
         capital_amounts = {
             CapitalTier.MICRO: Decimal("10000"),
@@ -208,9 +206,7 @@ class TestAllObjectiveE2E:
             assert set(module_params.modules.keys()) == set(investment_profile.enabled_modules)
 
     @pytest.mark.asyncio
-    async def test_maximizar_dividendos_all_tiers(
-        self, profile_generator, module_parametrizer
-    ):
+    async def test_maximizar_dividendos_all_tiers(self, profile_generator, module_parametrizer):
         """Test maximizar_dividendos objective across all 4 tiers."""
         capital_amounts = {
             CapitalTier.MICRO: Decimal("10000"),
@@ -237,9 +233,7 @@ class TestAllObjectiveE2E:
             assert any("dividend" in name.lower() for name in enabled_names)
 
     @pytest.mark.asyncio
-    async def test_capital_preservation_all_tiers(
-        self, profile_generator, module_parametrizer
-    ):
+    async def test_capital_preservation_all_tiers(self, profile_generator, module_parametrizer):
         """Test capital_preservation objective across all 4 tiers."""
         capital_amounts = {
             CapitalTier.MICRO: Decimal("10000"),
@@ -263,13 +257,12 @@ class TestAllObjectiveE2E:
             assert len(module_params.modules) > 0
             # Preservation objectives should include defensive modules
             enabled_names = set(investment_profile.enabled_modules)
-            assert any("defensive" in name.lower() or "hedge" in name.lower()
-                      for name in enabled_names)
+            assert any(
+                "defensive" in name.lower() or "hedge" in name.lower() for name in enabled_names
+            )
 
     @pytest.mark.asyncio
-    async def test_balanced_growth_all_tiers(
-        self, profile_generator, module_parametrizer
-    ):
+    async def test_balanced_growth_all_tiers(self, profile_generator, module_parametrizer):
         """Test balanced_growth objective across all 4 tiers."""
         capital_amounts = {
             CapitalTier.MICRO: Decimal("10000"),
@@ -293,9 +286,7 @@ class TestAllObjectiveE2E:
             assert len(module_params.modules) > 0
 
     @pytest.mark.asyncio
-    async def test_income_generation_all_tiers(
-        self, profile_generator, module_parametrizer
-    ):
+    async def test_income_generation_all_tiers(self, profile_generator, module_parametrizer):
         """Test income_generation objective across all 4 tiers."""
         capital_amounts = {
             CapitalTier.MICRO: Decimal("10000"),
@@ -319,20 +310,23 @@ class TestAllObjectiveE2E:
             assert len(module_params.modules) > 0
             # Income objectives should include income-generating modules
             enabled_names = set(investment_profile.enabled_modules)
-            assert any("dividend" in name.lower() or "call" in name.lower() or
-                      "put" in name.lower() or "collar" in name.lower()
-                      for name in enabled_names)
+            assert any(
+                "dividend" in name.lower()
+                or "call" in name.lower()
+                or "put" in name.lower()
+                or "collar" in name.lower()
+                for name in enabled_names
+            )
 
 
 # ===================== PARAMETER CONSISTENCY TESTS =====================
+
 
 class TestParameterConsistency:
     """Test parameter consistency across pipeline."""
 
     @pytest.mark.asyncio
-    async def test_risk_profile_consistency(
-        self, profile_generator, module_parametrizer
-    ):
+    async def test_risk_profile_consistency(self, profile_generator, module_parametrizer):
         """Test that risk_profile is consistent from profile to parameters."""
         input_profile = InputProfile(
             capital_initial=Decimal("50000"),
@@ -354,9 +348,7 @@ class TestParameterConsistency:
                 assert 0.5 <= module_param.risk_adjustment <= 2.0
 
     @pytest.mark.asyncio
-    async def test_leverage_applied_correctly(
-        self, profile_generator, module_parametrizer
-    ):
+    async def test_leverage_applied_correctly(self, profile_generator, module_parametrizer):
         """Test that leverage from profile is applied to module parameters."""
         input_profile = InputProfile(
             capital_initial=Decimal("100000"),
@@ -376,9 +368,7 @@ class TestParameterConsistency:
         assert len(module_params.modules) > 0
 
     @pytest.mark.asyncio
-    async def test_enabled_modules_match_parameters(
-        self, profile_generator, module_parametrizer
-    ):
+    async def test_enabled_modules_match_parameters(self, profile_generator, module_parametrizer):
         """Test that all enabled modules have parameters generated."""
         input_profile = InputProfile(
             capital_initial=Decimal("75000"),
@@ -405,7 +395,6 @@ class TestParameterConsistency:
             (Decimal("500000"), CapitalTier.LARGE),
         ]
 
-        previous_max_size = 0
         for capital, expected_tier in tiers_and_capitals:
             input_profile = InputProfile(
                 capital_initial=capital,
@@ -434,13 +423,12 @@ class TestParameterConsistency:
 
 # ===================== ERROR HANDLING & EDGE CASES =====================
 
+
 class TestEdgeCasesAndErrors:
     """Test edge cases and error handling in pipeline."""
 
     @pytest.mark.asyncio
-    async def test_minimum_capital_micro(
-        self, profile_generator, module_parametrizer
-    ):
+    async def test_minimum_capital_micro(self, profile_generator, module_parametrizer):
         """Test minimum capital for micro tier."""
         input_profile = InputProfile(
             capital_initial=Decimal("1000"),  # Below €15k threshold
@@ -456,9 +444,7 @@ class TestEdgeCasesAndErrors:
         assert len(module_params.modules) > 0
 
     @pytest.mark.asyncio
-    async def test_boundary_capital_small_to_medium(
-        self, profile_generator, module_parametrizer
-    ):
+    async def test_boundary_capital_small_to_medium(self, profile_generator, module_parametrizer):
         """Test boundary between small and medium tiers."""
         # Just below €50k
         input_profile_small = InputProfile(
@@ -483,9 +469,7 @@ class TestEdgeCasesAndErrors:
         assert profile_medium.capital_tier == CapitalTier.MEDIUM
 
     @pytest.mark.asyncio
-    async def test_multiple_objectives_same_capital(
-        self, profile_generator, module_parametrizer
-    ):
+    async def test_multiple_objectives_same_capital(self, profile_generator, module_parametrizer):
         """Test all objectives for same capital amount."""
         objectives = [
             ObjectivoInversion.MAXIMIZAR_CAPITAL,
@@ -512,9 +496,7 @@ class TestEdgeCasesAndErrors:
             assert set(module_params.modules.keys()) == set(investment_profile.enabled_modules)
 
     @pytest.mark.asyncio
-    async def test_risk_tolerance_influences_profile(
-        self, profile_generator, module_parametrizer
-    ):
+    async def test_risk_tolerance_influences_profile(self, profile_generator, module_parametrizer):
         """Test that risk tolerance influences investment profile."""
         low_risk_input = InputProfile(
             capital_initial=Decimal("50000"),

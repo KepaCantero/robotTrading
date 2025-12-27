@@ -6,7 +6,6 @@ Constructs optimal portfolios using mean-variance optimization and equal-weighti
 
 import logging
 from dataclasses import dataclass
-from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional
 
@@ -15,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 class OptimizationMethod(str, Enum):
     """Portfolio optimization methods."""
+
     MEAN_VARIANCE = "mean_variance"  # Efficient frontier
     EQUAL_WEIGHT = "equal_weight"  # 1/N allocation
     RISK_PARITY = "risk_parity"  # Risk-based weighting
@@ -24,6 +24,7 @@ class OptimizationMethod(str, Enum):
 @dataclass
 class PortfolioAllocation:
     """Result of portfolio optimization."""
+
     allocation: Dict[str, float]  # {asset: weight}
     method: str  # Optimization method used
     expected_return: float  # Expected annual return
@@ -100,9 +101,7 @@ class PortfolioConstructor:
             # Return equal-weight fallback on error
             return await self._equal_weight_allocation(assets)
 
-    async def _equal_weight_allocation(
-        self, assets: List[str]
-    ) -> PortfolioAllocation:
+    async def _equal_weight_allocation(self, assets: List[str]) -> PortfolioAllocation:
         """Simple 1/N equal-weight allocation."""
         n = len(assets)
         weight = 1.0 / n
@@ -117,7 +116,7 @@ class PortfolioConstructor:
             diversification_ratio=1.0,
             num_assets=n,
             is_optimized=False,
-            optimization_details={"note": "Equal-weight fallback"}
+            optimization_details={"note": "Equal-weight fallback"},
         )
 
     async def _mean_variance_optimization(
@@ -141,9 +140,7 @@ class PortfolioConstructor:
             return await self._equal_weight_allocation(assets)
 
         # Build correlation-adjusted covariance
-        cov_matrix = await self._build_covariance_matrix(
-            assets, volatilities, correlation_matrix
-        )
+        cov_matrix = await self._build_covariance_matrix(assets, volatilities, correlation_matrix)
 
         # Calculate portfolio metrics for equal-weight (simple approximation)
         allocation = {asset: 1.0 / n for asset in assets}
@@ -167,8 +164,8 @@ class PortfolioConstructor:
             is_optimized=True,
             optimization_details={
                 "target_return": target_return,
-                "optimization_type": "minimum_variance"
-            }
+                "optimization_type": "minimum_variance",
+            },
         )
 
     async def _risk_parity_allocation(
@@ -199,7 +196,7 @@ class PortfolioConstructor:
             diversification_ratio=1.0,
             num_assets=n,
             is_optimized=True,
-            optimization_details={"note": "Risk parity weighting"}
+            optimization_details={"note": "Risk parity weighting"},
         )
 
     async def _max_sharpe_optimization(
@@ -220,9 +217,7 @@ class PortfolioConstructor:
             return await self._equal_weight_allocation(assets)
 
         # Build covariance matrix
-        cov_matrix = await self._build_covariance_matrix(
-            assets, volatilities, correlation_matrix
-        )
+        cov_matrix = await self._build_covariance_matrix(assets, volatilities, correlation_matrix)
 
         # Calculate Sharpe ratio for equal-weight (simple approximation)
         allocation = {asset: 1.0 / n for asset in assets}
@@ -241,7 +236,7 @@ class PortfolioConstructor:
             diversification_ratio=1.0,
             num_assets=n,
             is_optimized=True,
-            optimization_details={"target_metric": "maximum_sharpe_ratio"}
+            optimization_details={"target_metric": "maximum_sharpe_ratio"},
         )
 
     async def _build_covariance_matrix(
@@ -257,7 +252,9 @@ class PortfolioConstructor:
             for asset2 in assets:
                 vol1 = volatilities.get(asset1, 0.1)
                 vol2 = volatilities.get(asset2, 0.1)
-                corr = correlation_matrix.get(asset1, {}).get(asset2, 1.0 if asset1 == asset2 else 0.0)
+                corr = correlation_matrix.get(asset1, {}).get(
+                    asset2, 1.0 if asset1 == asset2 else 0.0
+                )
                 cov[asset1][asset2] = corr * vol1 * vol2
         return cov
 
@@ -275,7 +272,7 @@ class PortfolioConstructor:
                 w2 = allocation[asset2]
                 cov = cov_matrix.get(asset1, {}).get(asset2, 0.0)
                 variance += w1 * w2 * cov
-        return variance ** 0.5
+        return variance**0.5
 
     async def _calculate_diversification_ratio(
         self,

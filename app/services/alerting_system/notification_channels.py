@@ -9,12 +9,9 @@ Supports:
 """
 
 import asyncio
-import json
 import logging
-from typing import Optional
 
 from .models import (
-    AlertEvent,
     NotificationChannelType,
     NotificationPayload,
     NotificationTarget,
@@ -26,9 +23,7 @@ logger = logging.getLogger(__name__)
 class NotificationChannel:
     """Base class for notification channels."""
 
-    async def send(
-        self, target: NotificationTarget, payload: NotificationPayload
-    ) -> bool:
+    async def send(self, target: NotificationTarget, payload: NotificationPayload) -> bool:
         """
         Send notification.
 
@@ -45,9 +40,7 @@ class NotificationChannel:
 class WebhookChannel(NotificationChannel):
     """HTTP Webhook notification channel."""
 
-    async def send(
-        self, target: NotificationTarget, payload: NotificationPayload
-    ) -> bool:
+    async def send(self, target: NotificationTarget, payload: NotificationPayload) -> bool:
         """Send notification via webhook."""
         if not target.enabled:
             logger.debug(f"Webhook channel disabled: {target.endpoint}")
@@ -64,9 +57,7 @@ class WebhookChannel(NotificationChannel):
 
             data = payload.to_dict()
 
-            async with httpx.AsyncClient(
-                timeout=target.timeout_seconds
-            ) as client:
+            async with httpx.AsyncClient(timeout=target.timeout_seconds) as client:
                 response = await client.post(
                     target.endpoint,
                     json=data,
@@ -81,8 +72,7 @@ class WebhookChannel(NotificationChannel):
                     return True
                 else:
                     logger.warning(
-                        f"Webhook failed: {target.endpoint} "
-                        f"(status: {response.status_code})"
+                        f"Webhook failed: {target.endpoint} " f"(status: {response.status_code})"
                     )
                     return False
 
@@ -97,9 +87,7 @@ class WebhookChannel(NotificationChannel):
 class EmailChannel(NotificationChannel):
     """Email notification channel."""
 
-    async def send(
-        self, target: NotificationTarget, payload: NotificationPayload
-    ) -> bool:
+    async def send(self, target: NotificationTarget, payload: NotificationPayload) -> bool:
         """Send notification via email."""
         if not target.enabled:
             logger.debug(f"Email channel disabled: {target.endpoint}")
@@ -119,9 +107,7 @@ class EmailChannel(NotificationChannel):
 class SlackChannel(NotificationChannel):
     """Slack notification channel."""
 
-    async def send(
-        self, target: NotificationTarget, payload: NotificationPayload
-    ) -> bool:
+    async def send(self, target: NotificationTarget, payload: NotificationPayload) -> bool:
         """Send notification via Slack."""
         if not target.enabled:
             logger.debug(f"Slack channel disabled: {target.endpoint}")
@@ -156,9 +142,9 @@ class SlackChannel(NotificationChannel):
                             },
                             {
                                 "title": "Value",
-                                "value": str(payload.metric_value)
-                                if payload.metric_value
-                                else "N/A",
+                                "value": (
+                                    str(payload.metric_value) if payload.metric_value else "N/A"
+                                ),
                                 "short": True,
                             },
                             {
@@ -173,9 +159,7 @@ class SlackChannel(NotificationChannel):
                 ],
             }
 
-            async with httpx.AsyncClient(
-                timeout=target.timeout_seconds
-            ) as client:
+            async with httpx.AsyncClient(timeout=target.timeout_seconds) as client:
                 response = await client.post(
                     target.endpoint,
                     json=slack_payload,
@@ -186,9 +170,7 @@ class SlackChannel(NotificationChannel):
                     logger.info(f"Slack message sent to: {target.endpoint}")
                     return True
                 else:
-                    logger.warning(
-                        f"Slack send failed (status: {response.status_code})"
-                    )
+                    logger.warning(f"Slack send failed (status: {response.status_code})")
                     return False
 
         except Exception as e:
@@ -199,9 +181,7 @@ class SlackChannel(NotificationChannel):
 class DiscordChannel(NotificationChannel):
     """Discord notification channel."""
 
-    async def send(
-        self, target: NotificationTarget, payload: NotificationPayload
-    ) -> bool:
+    async def send(self, target: NotificationTarget, payload: NotificationPayload) -> bool:
         """Send notification via Discord."""
         if not target.enabled:
             logger.debug(f"Discord channel disabled: {target.endpoint}")
@@ -222,9 +202,7 @@ class DiscordChannel(NotificationChannel):
                 "embeds": [
                     {
                         "title": payload.message,
-                        "color": color_map.get(
-                            payload.severity.value, 9807270
-                        ),  # Gray default
+                        "color": color_map.get(payload.severity.value, 9807270),  # Gray default
                         "fields": [
                             {
                                 "name": "Severity",
@@ -238,9 +216,9 @@ class DiscordChannel(NotificationChannel):
                             },
                             {
                                 "name": "Current Value",
-                                "value": str(payload.metric_value)
-                                if payload.metric_value
-                                else "N/A",
+                                "value": (
+                                    str(payload.metric_value) if payload.metric_value else "N/A"
+                                ),
                                 "inline": True,
                             },
                             {
@@ -254,9 +232,7 @@ class DiscordChannel(NotificationChannel):
                 ],
             }
 
-            async with httpx.AsyncClient(
-                timeout=target.timeout_seconds
-            ) as client:
+            async with httpx.AsyncClient(timeout=target.timeout_seconds) as client:
                 response = await client.post(
                     target.endpoint,
                     json=discord_payload,
@@ -267,9 +243,7 @@ class DiscordChannel(NotificationChannel):
                     logger.info(f"Discord message sent to: {target.endpoint}")
                     return True
                 else:
-                    logger.warning(
-                        f"Discord send failed (status: {response.status_code})"
-                    )
+                    logger.warning(f"Discord send failed (status: {response.status_code})")
                     return False
 
         except Exception as e:
@@ -312,9 +286,7 @@ class NotificationDispatcher:
             return 0
 
         # Send to all targets concurrently
-        tasks = [
-            self._send_with_retry(target, payload) for target in targets
-        ]
+        tasks = [self._send_with_retry(target, payload) for target in targets]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         # Count successes
@@ -324,9 +296,7 @@ class NotificationDispatcher:
         self.notification_stats["total_sent"] += success_count
         self.notification_stats["total_failed"] += len(results) - success_count
 
-        logger.info(
-            f"Notifications dispatched: {success_count}/{len(targets)} successful"
-        )
+        logger.info(f"Notifications dispatched: {success_count}/{len(targets)} successful")
 
         return success_count
 
@@ -347,7 +317,7 @@ class NotificationDispatcher:
 
                 # Wait before retry
                 if attempt < target.retry_count - 1:
-                    await asyncio.sleep(2 ** attempt)  # Exponential backoff
+                    await asyncio.sleep(2**attempt)  # Exponential backoff
 
             except Exception as e:
                 logger.error(f"Retry {attempt + 1} failed: {e}")

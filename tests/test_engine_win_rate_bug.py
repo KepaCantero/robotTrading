@@ -7,7 +7,7 @@ Este test simula exactamente el escenario que causa el problema:
 """
 
 import unittest
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 
 from app.backtesting.engine import SimpleBacktester
@@ -107,7 +107,7 @@ class TestWinRateBug(unittest.TestCase):
             self.backtester._process_signal(buy_signal, buy_quote)
 
         # Precio promedio = (100 + 105 + 110) / 3 = 105
-        avg_price = (Decimal("100") + Decimal("105") + Decimal("110")) / Decimal("3")
+        (Decimal("100") + Decimal("105") + Decimal("110")) / Decimal("3")
 
         # SELL a precio mayor que promedio
         sell_price = Decimal("108")  # Mayor que promedio (105)

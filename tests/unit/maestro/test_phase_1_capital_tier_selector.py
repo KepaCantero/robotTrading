@@ -8,14 +8,15 @@ Tests:
 - Module gating
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
 
 from app.maestro.phase_1 import (
     CapitalTier,
     CapitalTierSelector,
-    StrategyFeatureGatekeeper,
     RiskProfileScaler,
+    StrategyFeatureGatekeeper,
     StrategyFeatures,
 )
 

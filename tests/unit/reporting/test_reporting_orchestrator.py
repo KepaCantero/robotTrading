@@ -4,10 +4,11 @@ Tests for ReportingOrchestrator (T9.1.3)
 Tests end-to-end report generation orchestration.
 """
 
-import pytest
 import asyncio
-import pandas as pd
+
 import numpy as np
+import pandas as pd
+import pytest
 
 from app.services.reporting.reporting_orchestrator import (
     ReportingOrchestrator,

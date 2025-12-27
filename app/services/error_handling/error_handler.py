@@ -8,12 +8,12 @@ Provides:
 - Retry logic with exponential backoff
 """
 
+import asyncio
 import logging
 from abc import ABC, abstractmethod
-from typing import Callable, Optional, TypeVar, Any, Dict, List
+from datetime import datetime
 from functools import wraps
-from datetime import datetime, timedelta
-import asyncio
+from typing import Any, Callable, Dict, List, Optional, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +23,7 @@ T = TypeVar('T')
 # =============================================================================
 # Custom Exception Classes
 # =============================================================================
+
 
 class ServiceException(Exception):
     """Base exception for all service errors."""
@@ -81,18 +82,17 @@ class PortfolioException(ServiceException):
 # Fallback Strategy Pattern
 # =============================================================================
 
+
 class FallbackStrategy(ABC):
     """Abstract base class for fallback strategies."""
 
     @abstractmethod
     async def execute(self, context: Dict[str, Any]) -> Any:
         """Execute fallback strategy."""
-        pass
 
     @abstractmethod
     def can_handle(self, exception: ServiceException) -> bool:
         """Check if this strategy can handle the exception."""
-        pass
 
 
 class ConservativeBacktestFallback(FallbackStrategy):
@@ -103,7 +103,7 @@ class ConservativeBacktestFallback(FallbackStrategy):
         logger.warning("🟡 Using conservative backtest fallback strategy")
 
         # Use historical average returns as fallback
-        capital = context.get("capital", 50000)
+        context.get("capital", 50000)
         return {
             "strategy_name": context.get("strategy_name", "fallback"),
             "total_return": 0.05,  # Conservative 5% annual return
@@ -112,7 +112,7 @@ class ConservativeBacktestFallback(FallbackStrategy):
             "feasibility_ratio": 0.8,  # Slightly conservative
             "viability_status": "CONDITIONAL",
             "is_fallback": True,
-            "fallback_reason": "Using conservative backtest model"
+            "fallback_reason": "Using conservative backtest model",
         }
 
     def can_handle(self, exception: ServiceException) -> bool:
@@ -138,7 +138,7 @@ class EqualWeightPortfolioFallback(FallbackStrategy):
             "allocation": allocation,
             "strategy": "equal_weight",
             "is_fallback": True,
-            "fallback_reason": "Using equal-weight allocation"
+            "fallback_reason": "Using equal-weight allocation",
         }
 
     def can_handle(self, exception: ServiceException) -> bool:
@@ -157,12 +157,9 @@ class ConservativeRecommendationFallback(FallbackStrategy):
             "recommendation": "HOLD",
             "confidence_level": "LOW",
             "score": 50,  # Neutral score
-            "reasons": [
-                "Recommendation engine unavailable",
-                "Using fallback recommendation"
-            ],
+            "reasons": ["Recommendation engine unavailable", "Using fallback recommendation"],
             "is_fallback": True,
-            "fallback_reason": "Recommendation engine failed"
+            "fallback_reason": "Recommendation engine failed",
         }
 
     def can_handle(self, exception: ServiceException) -> bool:
@@ -173,6 +170,7 @@ class ConservativeRecommendationFallback(FallbackStrategy):
 # =============================================================================
 # Error Handler with Retry & Fallback
 # =============================================================================
+
 
 class ErrorHandler:
     """
@@ -203,11 +201,7 @@ class ErrorHandler:
         self.logger.info(f"📝 Registered fallback strategy: {strategy.__class__.__name__}")
 
     async def with_fallback(
-        self,
-        async_fn: Callable,
-        *args,
-        fallback_context: Optional[Dict[str, Any]] = None,
-        **kwargs
+        self, async_fn: Callable, *args, fallback_context: Optional[Dict[str, Any]] = None, **kwargs
     ) -> Any:
         """
         Execute async function with fallback strategy on exception.
@@ -232,7 +226,7 @@ class ErrorHandler:
                 "timestamp": datetime.now().isoformat(),
                 "service": e.service_name,
                 "error_code": e.error_code,
-                "message": e.message
+                "message": e.message,
             }
             self.error_log.append(error_entry)
 
@@ -252,12 +246,7 @@ class ErrorHandler:
             raise
 
     async def with_retry(
-        self,
-        async_fn: Callable,
-        *args,
-        max_retries: int = 3,
-        initial_delay: float = 0.5,
-        **kwargs
+        self, async_fn: Callable, *args, max_retries: int = 3, initial_delay: float = 0.5, **kwargs
     ) -> Any:
         """
         Execute async function with exponential backoff retry.
@@ -298,11 +287,7 @@ class ErrorHandler:
         raise last_exception
 
     async def with_timeout(
-        self,
-        async_fn: Callable,
-        timeout_seconds: float = 30.0,
-        *args,
-        **kwargs
+        self, async_fn: Callable, timeout_seconds: float = 30.0, *args, **kwargs
     ) -> Any:
         """
         Execute async function with timeout protection.
@@ -320,10 +305,7 @@ class ErrorHandler:
             asyncio.TimeoutError: If function exceeds timeout
         """
         try:
-            return await asyncio.wait_for(
-                async_fn(*args, **kwargs),
-                timeout=timeout_seconds
-            )
+            return await asyncio.wait_for(async_fn(*args, **kwargs), timeout=timeout_seconds)
         except asyncio.TimeoutError:
             self.logger.error(
                 f"❌ Function {async_fn.__name__} exceeded timeout of {timeout_seconds}s"
@@ -335,7 +317,7 @@ class ErrorHandler:
         return {
             "total_errors": self.error_count,
             "error_log": self.error_log,
-            "recent_errors": self.error_log[-5:] if self.error_log else []
+            "recent_errors": self.error_log[-5:] if self.error_log else [],
         }
 
     def clear_error_log(self) -> None:
@@ -349,6 +331,7 @@ class ErrorHandler:
 # Decorator for Service Methods
 # =============================================================================
 
+
 def service_error_handler(fallback_context: Optional[Dict[str, Any]] = None):
     """
     Decorator for wrapping service methods with error handling.
@@ -358,10 +341,11 @@ def service_error_handler(fallback_context: Optional[Dict[str, Any]] = None):
         async def my_service_method(self):
             return await self._actual_implementation()
     """
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args, **kwargs):
-            error_handler = ErrorHandler()
+            ErrorHandler()
 
             async def execute():
                 return await func(*args, **kwargs)
@@ -375,9 +359,7 @@ def service_error_handler(fallback_context: Optional[Dict[str, Any]] = None):
             except Exception as e:
                 logger.error(f"❌ Unexpected error in {func.__name__}: {e}")
                 raise ServiceException(
-                    service_name=func.__module__,
-                    message=str(e),
-                    error_code="UNKNOWN_ERROR"
+                    service_name=func.__module__, message=str(e), error_code="UNKNOWN_ERROR"
                 )
 
         return wrapper

@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 class JobStatus(Enum):
     """Job execution status."""
+
     PENDING = "pending"
     RUNNING = "running"
     SUCCESS = "success"
@@ -25,6 +26,7 @@ class JobStatus(Enum):
 @dataclass
 class DagsterJob:
     """Dagster job definition."""
+
     job_id: str
     name: str
     job_type: str  # backtest, data_fetch, train_model, etc.
@@ -40,6 +42,7 @@ class DagsterJob:
 @dataclass
 class PipelineStep:
     """Step in a pipeline."""
+
     step_id: str
     name: str
     job_type: str

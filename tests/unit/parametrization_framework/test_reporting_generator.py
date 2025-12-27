@@ -4,15 +4,16 @@ T9.1: ReportingGenerator Tests
 Tests for comprehensive performance report generation.
 """
 
-import pytest
 from decimal import Decimal
-from datetime import datetime
+
+import pytest
+
 from app.services.reporting_generator import (
-    ReportingGenerator,
-    get_reporting_generator,
-    ReportGenerationRequest,
-    StrategyMetrics,
     AllocationSnapshot,
+    ReportGenerationRequest,
+    ReportingGenerator,
+    StrategyMetrics,
+    get_reporting_generator,
 )
 
 

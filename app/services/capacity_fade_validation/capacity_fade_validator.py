@@ -11,17 +11,17 @@ import logging
 from decimal import Decimal
 from typing import Optional
 
+from .analyzers import (
+    AlphaDecayEstimator,
+    HistoricalCapacityAnalyzer,
+    LiquidityHeadroom,
+)
 from .models import (
     CapacityFadeAnalysis,
     CapacityFadeRequest,
     CapacityFadeResponse,
     FeasibilityDecision,
     FeasibilityGate,
-)
-from .analyzers import (
-    HistoricalCapacityAnalyzer,
-    LiquidityHeadroom,
-    AlphaDecayEstimator,
 )
 
 logger = logging.getLogger(__name__)
@@ -116,7 +116,9 @@ class CapacityFadeValidator:
             # Step 2: Calculate liquidity constraints
             liquidity_report = self.liquidity_analyzer.calculate_headroom(
                 position_size_usd=request.avg_position_size_usd,
-                daily_volume_usd=request.avg_position_size_usd * Decimal("10") * request.avg_daily_volume_multiplier,
+                daily_volume_usd=request.avg_position_size_usd
+                * Decimal("10")
+                * request.avg_daily_volume_multiplier,
                 max_allowed_pct=Decimal("5.0"),
             )
 
@@ -126,7 +128,9 @@ class CapacityFadeValidator:
                 current_capital_usd=request.current_capital_usd,
                 target_capital_usd=request.target_capital_usd,
                 fade_model=request.fade_model,
-                liquidity_penalty_pct=Decimal("0") if liquidity_report.headroom_available else Decimal("2.0"),
+                liquidity_penalty_pct=(
+                    Decimal("0") if liquidity_report.headroom_available else Decimal("2.0")
+                ),
             )
 
             if "error" in alpha_decay:
@@ -301,7 +305,9 @@ class CapacityFadeValidator:
                 f"{estimated_alpha:.2f}% < {required_alpha:.2f}% required"
             )
             recommendations.append("Strategy cannot generate required returns at target capital")
-            recommendations.append("Consider: (1) Improving alpha, (2) Reducing target capital, (3) Lowering return targets")
+            recommendations.append(
+                "Consider: (1) Improving alpha, (2) Reducing target capital, (3) Lowering return targets"
+            )
             return decision, message, recommendations
 
         # Marginal case: alpha sufficient but with constraints
@@ -312,9 +318,13 @@ class CapacityFadeValidator:
                 f"{estimated_alpha:.2f}% alpha after {fade_pct:.1f}% fade"
             )
             if fade_pct > Decimal("40"):
-                recommendations.append(f"High alpha fade ({fade_pct:.1f}%), requires close monitoring")
+                recommendations.append(
+                    f"High alpha fade ({fade_pct:.1f}%), requires close monitoring"
+                )
             if liquidity_constrained:
-                recommendations.append("Position sizing constrained by liquidity, may limit strategy effectiveness")
+                recommendations.append(
+                    "Position sizing constrained by liquidity, may limit strategy effectiveness"
+                )
             return decision, message, recommendations
 
         # Approved: sufficient alpha with reasonable fade
@@ -360,9 +370,7 @@ class CapacityFadeValidator:
         if required_alpha > 0:
             alpha_text += f" (Required: {required_alpha:.2f}%)"
 
-        summary = (
-            f"{decision_text}: Strategy {profile_id} capacity validation - {alpha_text}"
-        )
+        summary = f"{decision_text}: Strategy {profile_id} capacity validation - {alpha_text}"
 
         return summary
 

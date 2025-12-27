@@ -13,17 +13,15 @@ These tests ensure the complete decision flow works correctly across
 capital tiers with realistic trading scenarios.
 """
 
-import pytest
 from decimal import Decimal
 
-from app.services.capital_tier_strategy_selector import CapitalTierStrategySelector
+
 from app.services.absolute_return_optimizer import (
     AbsoluteReturnOptimizer,
     AlphaTargetCalculator,
     CapacityFadeAnalyzer,
-    ParameterScaler,
 )
-from app.services.deployment_validator import DeploymentStatus
+from app.services.capital_tier_strategy_selector import CapitalTierStrategySelector
 
 
 class TestMicroAccountOptimization:
@@ -311,10 +309,10 @@ class TestRealWorldScenarios:
         """Optimization improves as capital tiers up"""
         # Test progression: micro → small → medium → large
         scenarios = [
-            (Decimal("10000"), Decimal("50"), Decimal("150")),       # Micro
-            (Decimal("30000"), Decimal("200"), Decimal("800")),      # Small
-            (Decimal("100000"), Decimal("500"), Decimal("5000")),    # Medium
-            (Decimal("250000"), Decimal("800"), Decimal("50000")),   # Large
+            (Decimal("10000"), Decimal("50"), Decimal("150")),  # Micro
+            (Decimal("30000"), Decimal("200"), Decimal("800")),  # Small
+            (Decimal("100000"), Decimal("500"), Decimal("5000")),  # Medium
+            (Decimal("250000"), Decimal("800"), Decimal("50000")),  # Large
         ]
 
         for capital, goal, alpha in scenarios:

@@ -6,8 +6,8 @@ from .base_learning_engine import BaseLearningEngine
 
 # Drift detection y overfitting (siempre disponibles) [TASK-4.2-DRIFT]
 from .drift_detector import (
-    ADWINDetector,
     AdvancedOverfittingDetector,
+    ADWINDetector,
     AutoRetrainingTrigger,
     ComprehensiveDriftDetector,
     ComprehensiveDriftReport,
@@ -19,8 +19,8 @@ from .drift_detector import (
     OverfittingDetector,
     OverfittingMetrics,
     OverfittingReport,
-    OverfittingSeverity,
     OverfittingResult,
+    OverfittingSeverity,
     PSIDetector,
     get_default_drift_config,
     get_default_overfitting_config,

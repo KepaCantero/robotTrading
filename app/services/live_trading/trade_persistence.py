@@ -8,14 +8,22 @@ Implements SQLAlchemy ORM models and database operations for persistent storage.
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import List, Optional, Dict, Any
-from sqlalchemy import (
-    Column, String, Numeric, DateTime, JSON, ForeignKey, Index,
-    select, and_, desc
-)
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import relationship
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
+
+from sqlalchemy import (
+    JSON,
+    Column,
+    DateTime,
+    ForeignKey,
+    Index,
+    Numeric,
+    String,
+    and_,
+    desc,
+    select,
+)
+from sqlalchemy.orm import relationship
 
 from app.core.database import Base, get_session_factory
 
@@ -24,6 +32,7 @@ logger = logging.getLogger(__name__)
 
 class OrderRecord(Base):
     """ORM Model for order records."""
+
     __tablename__ = "orders"
 
     order_id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
@@ -31,8 +40,12 @@ class OrderRecord(Base):
     side = Column(String(10), nullable=False)  # BUY, SELL
     quantity = Column(Numeric(18, 8), nullable=False)
     price = Column(Numeric(18, 8), nullable=True)
-    order_type = Column(String(20), nullable=False)  # MARKET, LIMIT, STOP, STOP_LIMIT, TRAILING_STOP
-    status = Column(String(20), nullable=False, index=True)  # PENDING, SUBMITTED, ACKNOWLEDGED, EXECUTED, etc.
+    order_type = Column(
+        String(20), nullable=False
+    )  # MARKET, LIMIT, STOP, STOP_LIMIT, TRAILING_STOP
+    status = Column(
+        String(20), nullable=False, index=True
+    )  # PENDING, SUBMITTED, ACKNOWLEDGED, EXECUTED, etc.
     broker_name = Column(String(20), nullable=False)
     broker_order_id = Column(String(50), nullable=True, unique=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
@@ -70,6 +83,7 @@ class OrderRecord(Base):
 
 class TradeRecord(Base):
     """ORM Model for executed trade records."""
+
     __tablename__ = "trades"
 
     trade_id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
@@ -88,9 +102,7 @@ class TradeRecord(Base):
     # Relationships
     order = relationship("OrderRecord", back_populates="trades")
 
-    __table_args__ = (
-        Index("idx_symbol_execution", "symbol", "execution_time"),
-    )
+    __table_args__ = (Index("idx_symbol_execution", "symbol", "execution_time"),)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
@@ -111,6 +123,7 @@ class TradeRecord(Base):
 
 class PositionHistory(Base):
     """ORM Model for position history snapshots."""
+
     __tablename__ = "position_history"
 
     position_id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
@@ -123,9 +136,7 @@ class PositionHistory(Base):
     unrealized_pnl_pct = Column(Numeric(10, 4), nullable=False)
     cost_basis = Column(Numeric(18, 8), nullable=False)
 
-    __table_args__ = (
-        Index("idx_symbol_timestamp", "symbol", "timestamp"),
-    )
+    __table_args__ = (Index("idx_symbol_timestamp", "symbol", "timestamp"),)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
@@ -144,6 +155,7 @@ class PositionHistory(Base):
 
 class TradeStatistics(Base):
     """ORM Model for aggregated trade statistics."""
+
     __tablename__ = "trade_statistics"
 
     stat_id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
@@ -222,7 +234,11 @@ class TradePersistenceManager:
                     symbol=order_data["symbol"],
                     side=order_data["side"],
                     quantity=Decimal(str(order_data["quantity"])),
-                    price=Decimal(str(order_data.get("price", 0))) if order_data.get("price") else None,
+                    price=(
+                        Decimal(str(order_data.get("price", 0)))
+                        if order_data.get("price")
+                        else None
+                    ),
                     order_type=order_data["order_type"],
                     status=order_data["status"],
                     broker_name=order_data["broker_name"],
@@ -331,9 +347,11 @@ class TradePersistenceManager:
         """
         try:
             async with self.async_session() as session:
-                stmt = select(TradeRecord).where(
-                    TradeRecord.symbol == symbol
-                ).order_by(desc(TradeRecord.execution_time))
+                stmt = (
+                    select(TradeRecord)
+                    .where(TradeRecord.symbol == symbol)
+                    .order_by(desc(TradeRecord.execution_time))
+                )
                 result = await session.execute(stmt)
                 trades = result.scalars().all()
                 return [trade.to_dict() for trade in trades]
@@ -356,12 +374,16 @@ class TradePersistenceManager:
         """
         try:
             async with self.async_session() as session:
-                stmt = select(TradeRecord).where(
-                    and_(
-                        TradeRecord.execution_time >= start_date,
-                        TradeRecord.execution_time <= end_date,
+                stmt = (
+                    select(TradeRecord)
+                    .where(
+                        and_(
+                            TradeRecord.execution_time >= start_date,
+                            TradeRecord.execution_time <= end_date,
+                        )
                     )
-                ).order_by(desc(TradeRecord.execution_time))
+                    .order_by(desc(TradeRecord.execution_time))
+                )
                 result = await session.execute(stmt)
                 trades = result.scalars().all()
                 return [trade.to_dict() for trade in trades]
@@ -370,9 +392,7 @@ class TradePersistenceManager:
             self.logger.error(f"Error retrieving trades by date: {str(e)}")
             return []
 
-    async def get_position_history(
-        self, symbol: str, limit: int = 100
-    ) -> List[Dict[str, Any]]:
+    async def get_position_history(self, symbol: str, limit: int = 100) -> List[Dict[str, Any]]:
         """Get position history for a symbol.
 
         Args:
@@ -384,9 +404,12 @@ class TradePersistenceManager:
         """
         try:
             async with self.async_session() as session:
-                stmt = select(PositionHistory).where(
-                    PositionHistory.symbol == symbol
-                ).order_by(desc(PositionHistory.timestamp)).limit(limit)
+                stmt = (
+                    select(PositionHistory)
+                    .where(PositionHistory.symbol == symbol)
+                    .order_by(desc(PositionHistory.timestamp))
+                    .limit(limit)
+                )
                 result = await session.execute(stmt)
                 positions = result.scalars().all()
                 return [pos.to_dict() for pos in positions]
@@ -406,9 +429,7 @@ class TradePersistenceManager:
         """
         try:
             async with self.async_session() as session:
-                stmt = select(TradeStatistics).where(
-                    TradeStatistics.date == date
-                )
+                stmt = select(TradeStatistics).where(TradeStatistics.date == date)
                 result = await session.execute(stmt)
                 stats = result.scalars().first()
                 return stats.to_dict() if stats else None
@@ -417,7 +438,9 @@ class TradePersistenceManager:
             self.logger.error(f"Error retrieving statistics: {str(e)}")
             return None
 
-    async def update_order_status(self, order_id: str, status: str, executed_at: Optional[datetime] = None) -> bool:
+    async def update_order_status(
+        self, order_id: str, status: str, executed_at: Optional[datetime] = None
+    ) -> bool:
         """Update order status.
 
         Args:

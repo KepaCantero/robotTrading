@@ -4,16 +4,18 @@ T2.1: ProfileGenerator Tests
 Tests for ProfileGenerator, InvestmentProfile, and related models.
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
+
 from app.services.profile_generator import (
-    ProfileGenerator,
-    get_profile_generator,
-    InvestmentProfile,
     CapitalTier,
     InvestmentObjective,
-    RiskProfile,
+    InvestmentProfile,
     ProfileGenerationRequest,
+    ProfileGenerator,
+    RiskProfile,
+    get_profile_generator,
 )
 
 
@@ -36,7 +38,9 @@ class TestProfileGeneratorInitialization:
         generator = ProfileGenerator()
         assert len(generator.profile_templates) > 0
         # Check for either flat or nested structure
-        has_profiles = ('profiles' in generator.profile_templates) or ('maximizar_capital' in generator.profile_templates)
+        has_profiles = ('profiles' in generator.profile_templates) or (
+            'maximizar_capital' in generator.profile_templates
+        )
         assert has_profiles
 
 

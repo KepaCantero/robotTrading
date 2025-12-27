@@ -5,20 +5,18 @@ Tests capital tier classification, strategy selection, risk profiling,
 and feature gating for different account capital levels.
 """
 
-import pytest
 from decimal import Decimal
 
+import pytest
+
+from app.services.account_configuration import AccountTier
 from app.services.capital_tier_strategy_selector import (
     CapitalTierStrategySelector,
-    StrategySelection,
-    RiskProfile,
-    StrategyCapabilities,
-    DeploymentReport,
     EnsembleType,
     PositionSizingStrategy,
+    StrategySelection,
     get_selector,
 )
-from app.services.account_configuration import AccountTier
 from app.services.deployment_validator import DeploymentStatus
 
 
@@ -33,10 +31,7 @@ class TestCapitalTierStrategyInitialization:
 
     def test_init_with_account_id(self):
         """Initialize with account ID"""
-        selector = CapitalTierStrategySelector(
-            Decimal("100000"),
-            account_id="ACC_001"
-        )
+        selector = CapitalTierStrategySelector(Decimal("100000"), account_id="ACC_001")
         assert selector.account_id == "ACC_001"
 
     def test_init_zero_capital_raises(self):
@@ -196,22 +191,36 @@ class TestRiskProfile:
 
     def test_leverage_scales_with_capital(self):
         """Leverage increases with capital tier"""
-        leverage_micro = CapitalTierStrategySelector(Decimal("10000")).get_risk_profile().leverage_allowed
-        leverage_large = CapitalTierStrategySelector(Decimal("500000")).get_risk_profile().leverage_allowed
+        leverage_micro = (
+            CapitalTierStrategySelector(Decimal("10000")).get_risk_profile().leverage_allowed
+        )
+        leverage_large = (
+            CapitalTierStrategySelector(Decimal("500000")).get_risk_profile().leverage_allowed
+        )
 
         assert leverage_micro < leverage_large
 
     def test_drawdown_tolerance_scales(self):
         """Drawdown tolerance increases with capital"""
         dd_micro = CapitalTierStrategySelector(Decimal("10000")).get_risk_profile().max_drawdown_pct
-        dd_large = CapitalTierStrategySelector(Decimal("500000")).get_risk_profile().max_drawdown_pct
+        dd_large = (
+            CapitalTierStrategySelector(Decimal("500000")).get_risk_profile().max_drawdown_pct
+        )
 
         assert dd_micro < dd_large
 
     def test_position_sizing_strategy(self):
         """Different tiers use different position sizing strategies"""
-        micro_pos = CapitalTierStrategySelector(Decimal("10000")).get_risk_profile().position_sizing_strategy
-        large_pos = CapitalTierStrategySelector(Decimal("500000")).get_risk_profile().position_sizing_strategy
+        micro_pos = (
+            CapitalTierStrategySelector(Decimal("10000"))
+            .get_risk_profile()
+            .position_sizing_strategy
+        )
+        large_pos = (
+            CapitalTierStrategySelector(Decimal("500000"))
+            .get_risk_profile()
+            .position_sizing_strategy
+        )
 
         # Micro should use simple fixed %, large should use Kelly
         assert micro_pos == PositionSizingStrategy.FIXED_PCT
@@ -233,8 +242,12 @@ class TestRiskProfile:
 
     def test_concurrent_trades_scales(self):
         """Max concurrent trades increases with tier"""
-        trades_micro = CapitalTierStrategySelector(Decimal("10000")).get_risk_profile().max_concurrent_trades
-        trades_large = CapitalTierStrategySelector(Decimal("500000")).get_risk_profile().max_concurrent_trades
+        trades_micro = (
+            CapitalTierStrategySelector(Decimal("10000")).get_risk_profile().max_concurrent_trades
+        )
+        trades_large = (
+            CapitalTierStrategySelector(Decimal("500000")).get_risk_profile().max_concurrent_trades
+        )
 
         assert trades_micro < trades_large
 
@@ -442,7 +455,7 @@ class TestConsistency:
 
             strategy = selector.select_strategies()
             risk = selector.get_risk_profile()
-            features = selector.get_enabled_features()
+            selector.get_enabled_features()
 
             # Verify all methods agree on tier
             assert strategy.tier == risk.tier
@@ -463,7 +476,7 @@ class TestConsistency:
 
         config_learning = selector.config.get("learning_enabled", False)
         risk_learning = selector.get_risk_profile().learning_enabled
-        features_learning = selector.get_enabled_features().learning
+        selector.get_enabled_features().learning
 
         # All should align (though features_learning may be stricter)
         if config_learning:

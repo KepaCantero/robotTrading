@@ -216,7 +216,7 @@ class TestPositionManagement(unittest.TestCase):
         buy_quote = self._create_quote(symbol, buy_price, datetime(2024, 1, 1))
         self.backtester._process_signal(buy_signal, buy_quote)
 
-        initial_position = self.backtester.positions.get(symbol, Decimal("0"))
+        self.backtester.positions.get(symbol, Decimal("0"))
 
         # SELL parcial (esto depende de cómo se calcula sell_quantity)
         sell_signal = self._create_signal(symbol, SignalType.SELL, sell_price, datetime(2024, 1, 2))

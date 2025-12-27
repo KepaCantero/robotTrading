@@ -10,14 +10,14 @@ Tests:
 - Overall status determination
 """
 
-import pytest
 from decimal import Decimal
-from app.services.validation_engine.validation_engine import ValidationEngine
+
+import pytest
+
 from app.services.validation_engine.models import (
     ValidationRequest,
-    CapitalViabilityAnalysis,
-    FeasibilityAnalysis,
 )
+from app.services.validation_engine.validation_engine import ValidationEngine
 
 
 @pytest.fixture
@@ -177,7 +177,9 @@ class TestRiskMetricsValidation:
 
         assert result.success is True
         # May have no risk warnings
-        risk_warnings = [w for w in result.warnings if any(x in w.lower() for x in ["sharpe", "drawdown"])]
+        risk_warnings = [
+            w for w in result.warnings if any(x in w.lower() for x in ["sharpe", "drawdown"])
+        ]
         assert len(risk_warnings) == 0
 
 

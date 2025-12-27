@@ -126,10 +126,7 @@ class RiskScalingMonitor:
             return []
 
         cutoff = datetime.now() - timedelta(days=days)
-        return [
-            s for s in self.portfolio_history[portfolio_id]
-            if s.timestamp >= cutoff
-        ]
+        return [s for s in self.portfolio_history[portfolio_id] if s.timestamp >= cutoff]
 
     async def subscribe_to_alerts(
         self,
@@ -279,10 +276,7 @@ class RiskScalingMonitor:
             List of matching alerts
         """
         cutoff = datetime.now() - timedelta(hours=hours_back)
-        filtered = [
-            a for a in self.alert_log
-            if a.timestamp >= cutoff
-        ]
+        filtered = [a for a in self.alert_log if a.timestamp >= cutoff]
 
         if portfolio_id:
             filtered = [a for a in filtered if a.portfolio_id == portfolio_id]
@@ -344,8 +338,7 @@ class RiskScalingMonitor:
         # Cleanup old snapshots
         cutoff = datetime.now() - timedelta(days=self.history_retention_days)
         self.portfolio_history[portfolio_id] = [
-            s for s in self.portfolio_history[portfolio_id]
-            if s.timestamp >= cutoff
+            s for s in self.portfolio_history[portfolio_id] if s.timestamp >= cutoff
         ]
 
     async def generate_daily_report(
@@ -367,9 +360,7 @@ class RiskScalingMonitor:
         state = self.portfolio_states[portfolio_id]
 
         # Get alerts from last 24 hours
-        recent_alerts = await self.get_alert_history(
-            portfolio_id=portfolio_id, hours_back=24
-        )
+        recent_alerts = await self.get_alert_history(portfolio_id=portfolio_id, hours_back=24)
 
         return RiskScalingReport(
             portfolio_id=portfolio_id,
@@ -423,9 +414,7 @@ class RiskScalingMonitor:
         """
         status = await self.get_scaling_status(portfolio_id)
         trends = await self.get_scaling_trends(portfolio_id, days=7)
-        recent_alerts = await self.get_alert_history(
-            portfolio_id=portfolio_id, hours_back=24
-        )
+        recent_alerts = await self.get_alert_history(portfolio_id=portfolio_id, hours_back=24)
 
         return {
             "portfolio_id": portfolio_id,

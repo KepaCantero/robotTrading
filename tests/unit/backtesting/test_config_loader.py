@@ -263,9 +263,7 @@ class TestConfigLoader:
         loader1.config["metric_thresholds"]["sharpe_ratio"]["excellent"] = 5.0
 
         # Other loader should not be affected
-        assert (
-            loader2.get("metric_thresholds.sharpe_ratio.excellent") == 2.0
-        )
+        assert loader2.get("metric_thresholds.sharpe_ratio.excellent") == 2.0
 
     def test_clustering_config(self, loader):
         """Test getting clustering configuration."""

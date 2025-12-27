@@ -4,8 +4,8 @@ Unit Tests for T0.4: Account Configuration
 Tests account tier classification and configuration recommendations.
 """
 
-import pytest
 from decimal import Decimal
+
 
 from app.services.account_configuration import (
     AccountConfiguration,
@@ -144,9 +144,7 @@ class TestTierUpgrade:
 
     def test_micro_upgrade_path(self):
         """Micro tier should have upgrade path to small"""
-        upgrade_path = AccountConfiguration.get_tier_upgrade_capital(
-            Decimal("10000")
-        )
+        upgrade_path = AccountConfiguration.get_tier_upgrade_capital(Decimal("10000"))
 
         assert upgrade_path["current_tier"] == "micro"
         assert upgrade_path["next_tier"] == "small"
@@ -155,9 +153,7 @@ class TestTierUpgrade:
 
     def test_small_upgrade_path(self):
         """Small tier should have upgrade path to medium"""
-        upgrade_path = AccountConfiguration.get_tier_upgrade_capital(
-            Decimal("30000")
-        )
+        upgrade_path = AccountConfiguration.get_tier_upgrade_capital(Decimal("30000"))
 
         assert upgrade_path["current_tier"] == "small"
         assert upgrade_path["next_tier"] == "medium"
@@ -165,9 +161,7 @@ class TestTierUpgrade:
 
     def test_large_no_upgrade_path(self):
         """Large tier should have no upgrade path"""
-        upgrade_path = AccountConfiguration.get_tier_upgrade_capital(
-            Decimal("500000")
-        )
+        upgrade_path = AccountConfiguration.get_tier_upgrade_capital(Decimal("500000"))
 
         assert upgrade_path["current_tier"] == "large"
         assert upgrade_path["is_max_tier"] == True
@@ -175,9 +169,7 @@ class TestTierUpgrade:
 
     def test_upgrade_capital_shortfall(self):
         """Upgrade path should show capital shortfall"""
-        upgrade_path = AccountConfiguration.get_tier_upgrade_capital(
-            Decimal("30000")
-        )
+        upgrade_path = AccountConfiguration.get_tier_upgrade_capital(Decimal("30000"))
 
         assert upgrade_path["capital_shortfall"] == Decimal("20000")
 
@@ -187,9 +179,7 @@ class TestSafeTradingLimits:
 
     def test_micro_safe_limits(self):
         """Micro tier safe limits should be conservative"""
-        limits = AccountConfiguration.get_safe_trading_limits(
-            Decimal("10000")
-        )
+        limits = AccountConfiguration.get_safe_trading_limits(Decimal("10000"))
 
         assert limits["tier"] == "micro"
         assert limits["max_concurrent_trades"] == 1
@@ -198,9 +188,7 @@ class TestSafeTradingLimits:
 
     def test_small_safe_limits(self):
         """Small tier safe limits should be moderate"""
-        limits = AccountConfiguration.get_safe_trading_limits(
-            Decimal("30000")
-        )
+        limits = AccountConfiguration.get_safe_trading_limits(Decimal("30000"))
 
         assert limits["tier"] == "small"
         assert limits["max_concurrent_trades"] == 2
@@ -209,9 +197,7 @@ class TestSafeTradingLimits:
 
     def test_medium_safe_limits(self):
         """Medium tier safe limits should be balanced"""
-        limits = AccountConfiguration.get_safe_trading_limits(
-            Decimal("100000")
-        )
+        limits = AccountConfiguration.get_safe_trading_limits(Decimal("100000"))
 
         assert limits["tier"] == "medium"
         assert limits["max_concurrent_trades"] == 3
@@ -220,9 +206,7 @@ class TestSafeTradingLimits:
 
     def test_large_safe_limits(self):
         """Large tier safe limits should be permissive"""
-        limits = AccountConfiguration.get_safe_trading_limits(
-            Decimal("500000")
-        )
+        limits = AccountConfiguration.get_safe_trading_limits(Decimal("500000"))
 
         assert limits["tier"] == "large"
         assert limits["max_concurrent_trades"] == 5
@@ -231,9 +215,7 @@ class TestSafeTradingLimits:
 
     def test_safe_limits_include_dollar_amounts(self):
         """Safe limits should include dollar amounts"""
-        limits = AccountConfiguration.get_safe_trading_limits(
-            Decimal("100000")
-        )
+        limits = AccountConfiguration.get_safe_trading_limits(Decimal("100000"))
 
         assert "max_position_size" in limits
         assert "max_daily_loss_dollars" in limits
@@ -246,15 +228,11 @@ class TestFeatureRecommendations:
 
     def test_micro_no_learning(self):
         """Micro tier should not recommend learning"""
-        assert not AccountConfiguration.is_feature_recommended(
-            Decimal("10000"), "learning"
-        )
+        assert not AccountConfiguration.is_feature_recommended(Decimal("10000"), "learning")
 
     def test_small_learning_conditional(self):
         """Small tier learning is conditionally recommended"""
-        assert AccountConfiguration.is_feature_recommended(
-            Decimal("30000"), "learning"
-        )
+        assert AccountConfiguration.is_feature_recommended(Decimal("30000"), "learning")
 
     def test_micro_no_expensive_modules(self):
         """Micro tier should not recommend expensive modules"""
@@ -264,18 +242,12 @@ class TestFeatureRecommendations:
 
     def test_medium_expensive_modules(self):
         """Medium tier should recommend expensive modules"""
-        assert AccountConfiguration.is_feature_recommended(
-            Decimal("100000"), "expensive_modules"
-        )
+        assert AccountConfiguration.is_feature_recommended(Decimal("100000"), "expensive_modules")
 
     def test_large_all_features(self):
         """Large tier should recommend all features"""
-        assert AccountConfiguration.is_feature_recommended(
-            Decimal("500000"), "learning"
-        )
-        assert AccountConfiguration.is_feature_recommended(
-            Decimal("500000"), "expensive_modules"
-        )
+        assert AccountConfiguration.is_feature_recommended(Decimal("500000"), "learning")
+        assert AccountConfiguration.is_feature_recommended(Decimal("500000"), "expensive_modules")
 
 
 class TestAllTierRecommendations:

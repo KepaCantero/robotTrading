@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class Trade:
     """Record of a buy or sell transaction."""
+
     symbol: str
     date: datetime
     side: str  # 'BUY' or 'SELL'
@@ -29,6 +30,7 @@ class Trade:
 @dataclass
 class WashSaleViolation:
     """Detected wash-sale violation."""
+
     sale_trade: Trade
     replacement_trade: Trade
     violation_date: datetime
@@ -41,6 +43,7 @@ class WashSaleViolation:
 @dataclass
 class CostBasisAdjustment:
     """Cost basis adjustment due to wash-sale."""
+
     original_cost_basis: Decimal
     disallowed_loss: Decimal
     adjusted_cost_basis: Decimal  # original + disallowed loss
@@ -107,7 +110,9 @@ class WashSaleDetector:
                 continue
 
             # Check if the sale resulted in a loss
-            loss_amount = (sell_trade.price - self.get_cost_basis_per_share(sell_trade.symbol)) * sell_trade.quantity
+            loss_amount = (
+                sell_trade.price - self.get_cost_basis_per_share(sell_trade.symbol)
+            ) * sell_trade.quantity
             if loss_amount >= 0:
                 continue  # No loss, no wash-sale
 
@@ -124,8 +129,10 @@ class WashSaleDetector:
             )
 
             self.violation_history.append(violation)
-            logger.warning(f"⚠️ Wash-sale violation detected: {sell_trade.symbol} sale on {sell_trade.date.date()}, "
-                          f"replacement purchase on {buy_trade.date.date()}")
+            logger.warning(
+                f"⚠️ Wash-sale violation detected: {sell_trade.symbol} sale on {sell_trade.date.date()}, "
+                f"replacement purchase on {buy_trade.date.date()}"
+            )
 
             return violation
 
@@ -164,8 +171,10 @@ class WashSaleDetector:
 
         self.cost_basis_adjustments[symbol].append(adjustment)
 
-        logger.info(f"✅ Cost basis adjusted for {symbol}: "
-                   f"€{original_cost_basis:,.2f} → €{adjusted_basis:,.2f}")
+        logger.info(
+            f"✅ Cost basis adjusted for {symbol}: "
+            f"€{original_cost_basis:,.2f} → €{adjusted_basis:,.2f}"
+        )
 
         return adjustment
 
@@ -224,7 +233,9 @@ class WashSaleDetector:
         # Check both directions
         return (symbol1, symbol2) in identical_pairs or (symbol2, symbol1) in identical_pairs
 
-    def get_cost_basis_per_share(self, symbol: str, quantity_owned: Decimal = Decimal("1")) -> Decimal:
+    def get_cost_basis_per_share(
+        self, symbol: str, quantity_owned: Decimal = Decimal("1")
+    ) -> Decimal:
         """
         Get adjusted cost basis per share.
 
@@ -240,9 +251,7 @@ class WashSaleDetector:
         if symbol not in self.cost_basis_adjustments:
             return Decimal("0")
 
-        total_adjustment = sum(
-            adj.disallowed_loss for adj in self.cost_basis_adjustments[symbol]
-        )
+        total_adjustment = sum(adj.disallowed_loss for adj in self.cost_basis_adjustments[symbol])
 
         if quantity_owned <= 0:
             return Decimal("0")
@@ -268,7 +277,9 @@ class WashSaleDetector:
                 }
                 for v in self.violation_history
             ],
-            "total_disallowed_losses": float(sum(v.disallowed_loss for v in self.violation_history)),
+            "total_disallowed_losses": float(
+                sum(v.disallowed_loss for v in self.violation_history)
+            ),
             "cost_basis_adjustments": {
                 symbol: [
                     {

@@ -10,23 +10,22 @@ Tests cover:
 - Error handling
 """
 
-import pytest
 import json
 import tempfile
-from pathlib import Path
-from decimal import Decimal
 from datetime import datetime
-from unittest.mock import patch, MagicMock
+from decimal import Decimal
+from pathlib import Path
+
 
 from app.services.reporting_generator.delivery_manager import (
-    ReportDeliveryManager,
-    ExportFormat,
     DeliveryChannel,
-    ExportConfig,
-    EmailConfig,
-    S3Config,
-    ExportResult,
     DeliveryResult,
+    EmailConfig,
+    ExportConfig,
+    ExportFormat,
+    ExportResult,
+    ReportDeliveryManager,
+    S3Config,
     get_delivery_manager,
 )
 
@@ -194,7 +193,9 @@ class TestReportDeliveryManager:
         """Test that HTML export creates parent directories."""
         with tempfile.TemporaryDirectory() as tmpdir:
             output_path = Path(tmpdir) / "reports" / "2024" / "report.html"
-            result = self.manager.export_to_html(self.sample_html, output_path, include_timestamp=False)
+            result = self.manager.export_to_html(
+                self.sample_html, output_path, include_timestamp=False
+            )
 
             assert result.success is True
             assert output_path.exists()
@@ -204,7 +205,9 @@ class TestReportDeliveryManager:
         """Test HTML export with timestamp in filename."""
         with tempfile.TemporaryDirectory() as tmpdir:
             output_path = Path(tmpdir) / "report.html"
-            result = self.manager.export_to_html(self.sample_html, output_path, include_timestamp=True)
+            result = self.manager.export_to_html(
+                self.sample_html, output_path, include_timestamp=True
+            )
 
             assert result.success is True
             assert "_" in result.file_path.stem  # Timestamp separator
@@ -214,7 +217,9 @@ class TestReportDeliveryManager:
         """Test HTML export calculates file size."""
         with tempfile.TemporaryDirectory() as tmpdir:
             output_path = Path(tmpdir) / "report.html"
-            result = self.manager.export_to_html(self.sample_html, output_path, include_timestamp=False)
+            result = self.manager.export_to_html(
+                self.sample_html, output_path, include_timestamp=False
+            )
 
             assert result.success is True
             assert result.file_size_mb > Decimal("0")
@@ -223,7 +228,9 @@ class TestReportDeliveryManager:
         """Test HTML export measures export time."""
         with tempfile.TemporaryDirectory() as tmpdir:
             output_path = Path(tmpdir) / "report.html"
-            result = self.manager.export_to_html(self.sample_html, output_path, include_timestamp=False)
+            result = self.manager.export_to_html(
+                self.sample_html, output_path, include_timestamp=False
+            )
 
             assert result.success is True
             assert result.export_time_ms >= Decimal("0")
@@ -241,7 +248,9 @@ class TestReportDeliveryManager:
         """Test that HTML content is preserved in export."""
         with tempfile.TemporaryDirectory() as tmpdir:
             output_path = Path(tmpdir) / "report.html"
-            result = self.manager.export_to_html(self.sample_html, output_path, include_timestamp=False)
+            result = self.manager.export_to_html(
+                self.sample_html, output_path, include_timestamp=False
+            )
 
             assert result.success is True
             content = result.file_path.read_text(encoding="utf-8")
@@ -305,7 +314,9 @@ class TestReportDeliveryManager:
         """Test basic Excel export."""
         with tempfile.TemporaryDirectory() as tmpdir:
             output_path = Path(tmpdir) / "metrics.xlsx"
-            result = self.manager.export_to_excel(self.sample_metrics, output_path, include_timestamp=False)
+            result = self.manager.export_to_excel(
+                self.sample_metrics, output_path, include_timestamp=False
+            )
 
             assert result.success is True
             assert result.format == ExportFormat.EXCEL
@@ -314,7 +325,9 @@ class TestReportDeliveryManager:
         """Test Excel export falls back to JSON format."""
         with tempfile.TemporaryDirectory() as tmpdir:
             output_path = Path(tmpdir) / "metrics.xlsx"
-            result = self.manager.export_to_excel(self.sample_metrics, output_path, include_timestamp=False)
+            result = self.manager.export_to_excel(
+                self.sample_metrics, output_path, include_timestamp=False
+            )
 
             # Should create JSON file as fallback
             assert result.success is True
@@ -325,7 +338,9 @@ class TestReportDeliveryManager:
         """Test Excel export creates valid JSON."""
         with tempfile.TemporaryDirectory() as tmpdir:
             output_path = Path(tmpdir) / "metrics.xlsx"
-            result = self.manager.export_to_excel(self.sample_metrics, output_path, include_timestamp=False)
+            result = self.manager.export_to_excel(
+                self.sample_metrics, output_path, include_timestamp=False
+            )
 
             json_file = output_path.with_suffix(".json")
             content = json.loads(json_file.read_text())
@@ -336,7 +351,9 @@ class TestReportDeliveryManager:
         """Test Excel export with timestamp."""
         with tempfile.TemporaryDirectory() as tmpdir:
             output_path = Path(tmpdir) / "metrics.xlsx"
-            result = self.manager.export_to_excel(self.sample_metrics, output_path, include_timestamp=True)
+            result = self.manager.export_to_excel(
+                self.sample_metrics, output_path, include_timestamp=True
+            )
 
             assert result.success is True
             assert "_" in result.file_path.stem
@@ -589,7 +606,9 @@ class TestIntegrationDelivery:
     def setup_method(self):
         """Setup test fixtures."""
         self.manager = ReportDeliveryManager()
-        self.sample_html = "<html><head><title>Full Report</title></head><body>Complete Report</body></html>"
+        self.sample_html = (
+            "<html><head><title>Full Report</title></head><body>Complete Report</body></html>"
+        )
         self.sample_metrics = {
             "sharpe_ratio": 1.8,
             "max_drawdown": -0.12,

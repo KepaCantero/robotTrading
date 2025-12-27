@@ -9,7 +9,6 @@ Tests para verificar:
 """
 
 import unittest
-from collections import Counter
 from datetime import datetime, timedelta
 from decimal import Decimal
 
@@ -17,7 +16,6 @@ from app.backtesting.engine import SimpleBacktester
 from app.backtesting.metrics import MetricsCalculator
 from app.backtesting.models import BacktestConfig
 from app.models.market_data import Quote
-from app.models.portfolio import Portfolio
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.strategies.momentum import MomentumStrategy
 
@@ -301,7 +299,7 @@ class TestTradeReturnDistribution(unittest.TestCase):
 
         if result.trades:
             # Contar trades positivos y negativos
-            positive_trades = [t for t in result.trades if t.pnl and t.pnl > 0]
+            [t for t in result.trades if t.pnl and t.pnl > 0]
             negative_trades = [t for t in result.trades if t.pnl and t.pnl < 0]
 
             total_trades = len(result.trades)

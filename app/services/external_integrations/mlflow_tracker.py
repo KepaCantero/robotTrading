@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class MLModel:
     """ML model definition."""
+
     model_id: str
     name: str
     model_type: str  # neural_network, xgboost, ensemble, etc.
@@ -31,6 +32,7 @@ class MLModel:
 @dataclass
 class Experiment:
     """Experiment tracking."""
+
     experiment_id: str
     name: str
     description: str

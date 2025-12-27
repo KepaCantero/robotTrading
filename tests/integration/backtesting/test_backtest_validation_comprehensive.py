@@ -13,11 +13,10 @@ Validaciones según especificaciones:
 import unittest
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List
+from typing import List
 
-from app.backtesting.engine import SimpleBacktester
 from app.models.market_data import Quote
-from app.models.portfolio import AssetClass, Portfolio, Position
+from app.models.portfolio import Portfolio
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.services.momentum_analysis import TechnicalIndicatorCalculator
 from app.strategies.mean_reversion import MeanReversionStrategy

@@ -22,7 +22,7 @@ Feasibility Ratio Formula:
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -145,7 +145,9 @@ class BacktestOrchestrator:
             )
 
             # Step 3: Calculate feasibility metrics
-            target_euros = target_euros_per_month or investment_profile.capital_initial * Decimal("0.04") / Decimal("12")
+            target_euros = target_euros_per_month or investment_profile.capital_initial * Decimal(
+                "0.04"
+            ) / Decimal("12")
             feasibility_metrics = self._calculate_feasibility_metrics(
                 backtest_result=backtest_result,
                 capital=investment_profile.capital_initial,
@@ -218,7 +220,8 @@ class BacktestOrchestrator:
             equity_curve=[],  # Will be calculated by backtest engine
             start_date=data_start_date,
             end_date=data_end_date,
-            final_capital=backtest_config.initial_capital * (Decimal("1") + simulated_return / Decimal("100")),
+            final_capital=backtest_config.initial_capital
+            * (Decimal("1") + simulated_return / Decimal("100")),
             total_return=simulated_return,
             annualized_return=simulated_return,  # Simplified for MVP
         )
@@ -255,12 +258,15 @@ class BacktestOrchestrator:
         diversification_factor = max(diversification_factor, Decimal("0.8"))
 
         # Adjust by risk profile (higher risk = potentially higher return, but more volatility)
-        risk_adjustment = Decimal("1") + (Decimal(investment_profile.risk_profile) * Decimal("0.05"))
+        risk_adjustment = Decimal("1") + (
+            Decimal(investment_profile.risk_profile) * Decimal("0.05")
+        )
 
         simulated_return = base * diversification_factor * risk_adjustment
 
         # Add realistic variance (+/- 20%)
         import random
+
         variance = random.uniform(-0.2, 0.2)
         simulated_return = simulated_return * (Decimal("1") + Decimal(str(variance)))
 

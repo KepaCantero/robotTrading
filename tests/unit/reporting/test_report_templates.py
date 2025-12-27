@@ -5,6 +5,7 @@ Tests HTML template generation for performance reports.
 """
 
 import pytest
+
 from app.services.reporting.report_templates import ReportTemplates, get_report_templates
 
 
@@ -20,7 +21,12 @@ class TestReportTemplates:
         """Test HTML generation produces valid HTML structure."""
         html = templates.generate_performance_report_html(
             strategy_name="Test Strategy",
-            summary={"total_return": 0.15, "sharpe_ratio": 1.5, "max_drawdown": -0.10, "win_rate": 0.55},
+            summary={
+                "total_return": 0.15,
+                "sharpe_ratio": 1.5,
+                "max_drawdown": -0.10,
+                "win_rate": 0.55,
+            },
             metrics={"total_trades": 100, "profit_factor": 2.0},
             risk_metrics={"volatility": 0.12, "var_95": -0.08},
             allocation={"AAPL": 0.5, "GOOGL": 0.3, "MSFT": 0.2},
@@ -35,7 +41,12 @@ class TestReportTemplates:
         """Test HTML includes performance metrics."""
         html = templates.generate_performance_report_html(
             strategy_name="Momentum",
-            summary={"total_return": 0.25, "sharpe_ratio": 2.0, "max_drawdown": -0.05, "win_rate": 0.65},
+            summary={
+                "total_return": 0.25,
+                "sharpe_ratio": 2.0,
+                "max_drawdown": -0.05,
+                "win_rate": 0.65,
+            },
             metrics={"total_trades": 50, "profit_factor": 3.5},
             risk_metrics={},
             allocation={},
@@ -119,7 +130,12 @@ class TestReportTemplates:
         """Test negative returns get proper styling."""
         html = templates.generate_performance_report_html(
             strategy_name="Loser",
-            summary={"total_return": -0.15, "sharpe_ratio": -0.5, "max_drawdown": -0.30, "win_rate": 0.30},
+            summary={
+                "total_return": -0.15,
+                "sharpe_ratio": -0.5,
+                "max_drawdown": -0.30,
+                "win_rate": 0.30,
+            },
             metrics={},
             risk_metrics={},
             allocation={},

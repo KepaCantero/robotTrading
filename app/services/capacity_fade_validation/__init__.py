@@ -15,15 +15,15 @@ Models:
 - FeasibilityGate: Final approval decision (APPROVED/CONDITIONAL/REJECTED)
 """
 
+from .capacity_fade_validator import CapacityFadeValidator
 from .models import (
     CapacityFadeAnalysis,
     CapacityFadeRequest,
     CapacityFadeResponse,
-    FeasibilityGate,
     FeasibilityDecision,
+    FeasibilityGate,
     LiquidityReport,
 )
-from .capacity_fade_validator import CapacityFadeValidator
 
 __all__ = [
     "CapacityFadeAnalysis",

@@ -7,7 +7,6 @@ tax-efficient portfolio allocations.
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional
 
@@ -21,6 +20,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class TaxOptimizedAllocation:
     """Tax-optimized portfolio allocation."""
+
     base_allocation: Dict[str, Decimal]  # symbol → weight
     tax_adjusted_allocation: Dict[str, Decimal]  # symbol → adjusted weight
     harvesting_opportunities: List[str]  # symbols to harvest
@@ -91,7 +91,7 @@ class TaxOptimizedPortfolioBuilder:
         # Step 2: Check each harvestable position
         for position in harvestable:
             # Calculate current vs target weight
-            current_weight = (current_positions.get(position.symbol, Decimal("0")) / capital)
+            current_weight = current_positions.get(position.symbol, Decimal("0")) / capital
             target_weight = base_allocation.get(position.symbol, Decimal("0"))
 
             # Only harvest if position is overweight or we're below target allocation
@@ -220,8 +220,7 @@ class TaxOptimizedPortfolioBuilder:
         Higher score = better tax efficiency.
         """
         # More long-term gains = higher efficiency
-        total_gains = (gain_report.total_long_term_gains +
-                      gain_report.total_short_term_gains)
+        total_gains = gain_report.total_long_term_gains + gain_report.total_short_term_gains
 
         if total_gains <= 0:
             return Decimal("100")  # No gains = no tax

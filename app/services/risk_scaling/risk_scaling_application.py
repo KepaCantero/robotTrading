@@ -9,8 +9,8 @@ import logging
 from decimal import Decimal
 from typing import Dict, Optional
 
-from app.services.risk_scaling.risk_adjustment_calculator import get_risk_adjustment_calculator
 from app.services.risk_scaling.limit_adjuster import get_limit_adjuster
+from app.services.risk_scaling.risk_adjustment_calculator import get_risk_adjustment_calculator
 
 logger = logging.getLogger(__name__)
 
@@ -92,10 +92,9 @@ class RiskScalingApplication:
             final_position = min(scaled_position, max_allowed_position)
 
             # Step 5: Check if position should be halted
-            is_halted = (
-                current_drawdown_pct > Decimal("0.20") or
-                limits["max_position_eur"] == Decimal("0")
-            )
+            is_halted = current_drawdown_pct > Decimal("0.20") or limits[
+                "max_position_eur"
+            ] == Decimal("0")
 
             result = {
                 "base_position_size": base_position_size,
@@ -107,7 +106,9 @@ class RiskScalingApplication:
                 "leverage_reason": lev_reason,
                 "limits": limits,
                 "capital_at_risk": final_position * leverage,
-                "pct_capital_at_risk": (final_position * leverage / capital) if capital > 0 else Decimal("0"),
+                "pct_capital_at_risk": (
+                    (final_position * leverage / capital) if capital > 0 else Decimal("0")
+                ),
                 "is_halted": is_halted,
                 "halt_reason": "Excessive drawdown" if is_halted else None,
             }
@@ -155,7 +156,11 @@ class RiskScalingApplication:
             )
 
         # Check leverage limit
-        new_leverage = (current_capital_deployed + order_size) / capital if capital > Decimal("0") else Decimal("0")
+        new_leverage = (
+            (current_capital_deployed + order_size) / capital
+            if capital > Decimal("0")
+            else Decimal("0")
+        )
         if new_leverage > account_limits["max_leverage"]:
             return False, (
                 f"New leverage {new_leverage:.2f}x exceeds limit "
@@ -191,9 +196,11 @@ class RiskScalingApplication:
         current_capital_deployed = Decimal(str(current_capital_deployed))
         current_drawdown_pct = Decimal(str(current_drawdown_pct))
 
-        current_leverage = (current_capital_deployed / capital) if capital > Decimal("0") else Decimal("0")
+        current_leverage = (
+            (current_capital_deployed / capital) if capital > Decimal("0") else Decimal("0")
+        )
         available_capital = capital - current_capital_deployed
-        risk_used_pct = (current_drawdown_pct * Decimal("100"))
+        current_drawdown_pct * Decimal("100")
 
         # Determine risk state
         if current_drawdown_pct < Decimal("0.05"):

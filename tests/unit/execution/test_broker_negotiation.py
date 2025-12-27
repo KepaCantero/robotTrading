@@ -4,8 +4,9 @@ Unit tests for BrokerNegotiationEngine
 Tests commission tier calculation, asset class adjustments, and savings analysis.
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
 
 from app.services.smart_order_routing.broker_negotiation_engine import (
     BrokerNegotiationEngine,

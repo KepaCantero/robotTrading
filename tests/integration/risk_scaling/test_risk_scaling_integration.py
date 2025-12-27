@@ -9,27 +9,22 @@ Tests the complete PHASE 3 system end-to-end, including:
 - Alert generation and dashboard data
 """
 
-import pytest
-import asyncio
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import List
 
-from app.services.risk_scaling.volatility_monitor import VolatilityMonitor, PriceData
-from app.services.risk_scaling.sharpe_ratio_monitor import SharpeRatioMonitor
-from app.services.risk_scaling.loss_monitor import LossMonitor, TradeResult
-from app.services.risk_scaling.drawdown_monitor import DrawdownMonitor, EquityPoint
-from app.services.risk_scaling.risk_scaling_orchestrator import RiskScalingOrchestrator
-from app.services.risk_scaling.risk_scaling_monitor import RiskScalingMonitor
+import pytest
+
+from app.services.risk_scaling.loss_monitor import TradeResult
 from app.services.risk_scaling.models import (
-    RiskScalingFactors,
-    RiskScalingState,
     RiskAlert,
     RiskAlertType,
     RiskLevel,
-    Signal,
-    AdjustedSignal,
+    RiskScalingFactors,
+    RiskScalingState,
 )
+from app.services.risk_scaling.risk_scaling_monitor import RiskScalingMonitor
+from app.services.risk_scaling.risk_scaling_orchestrator import RiskScalingOrchestrator
+from app.services.risk_scaling.volatility_monitor import PriceData
 
 
 class TestRiskScalingFullFlow:
@@ -118,10 +113,14 @@ class TestRiskScalingFullFlow:
 
     @pytest.mark.asyncio
     async def test_full_orchestrator_flow(
-        self, orchestrator, sample_price_data, sample_returns, sample_trade_results, sample_equity_curve
+        self,
+        orchestrator,
+        sample_price_data,
+        sample_returns,
+        sample_trade_results,
+        sample_equity_curve,
     ):
         """Test complete orchestrator flow with all 4 monitors."""
-        portfolio_id = "test_portfolio"
 
         # Calculate scaling factors
         scaling_factors = await orchestrator.calculate_scaling_factors(
@@ -373,8 +372,13 @@ class TestRiskScalingFullFlow:
         status_aapl = await monitor.get_scaling_status("portfolio_AAPL")
         status_tsla = await monitor.get_scaling_status("portfolio_TSLA")
 
-        assert status_aapl.scaling_factors.volatility_scale > status_tsla.scaling_factors.volatility_scale
-        assert status_aapl.scaling_factors.combined_scale > status_tsla.scaling_factors.combined_scale
+        assert (
+            status_aapl.scaling_factors.volatility_scale
+            > status_tsla.scaling_factors.volatility_scale
+        )
+        assert (
+            status_aapl.scaling_factors.combined_scale > status_tsla.scaling_factors.combined_scale
+        )
 
     @pytest.mark.asyncio
     async def test_dashboard_data_generation(self, monitor):

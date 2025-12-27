@@ -69,7 +69,9 @@ class TestRegimeAnalyzer:
         assert regimes.min() >= 0
         assert regimes.max() < analyzer.n_regimes
 
-    def test_detect_regimes_output_series(self, analyzer: RegimeAnalyzer, sample_returns: pd.Series):
+    def test_detect_regimes_output_series(
+        self, analyzer: RegimeAnalyzer, sample_returns: pd.Series
+    ):
         """Test regime detection returns Series."""
         regimes = analyzer.detect_regimes(sample_returns)
 
@@ -77,7 +79,9 @@ class TestRegimeAnalyzer:
         assert regimes.name == "regime"
         assert len(regimes) == len(sample_returns)
 
-    def test_detect_regimes_stores_labels(self, analyzer: RegimeAnalyzer, sample_returns: pd.Series):
+    def test_detect_regimes_stores_labels(
+        self, analyzer: RegimeAnalyzer, sample_returns: pd.Series
+    ):
         """Test that detected regimes are stored internally."""
         regimes = analyzer.detect_regimes(sample_returns)
 
@@ -93,7 +97,9 @@ class TestRegimeAnalyzer:
         assert regimes is not None
         assert len(regimes) == 10
 
-    def test_detect_regimes_bull_market(self, analyzer: RegimeAnalyzer, bull_market_returns: pd.Series):
+    def test_detect_regimes_bull_market(
+        self, analyzer: RegimeAnalyzer, bull_market_returns: pd.Series
+    ):
         """Test regime detection on bull market data."""
         regimes = analyzer.detect_regimes(bull_market_returns)
 
@@ -102,7 +108,9 @@ class TestRegimeAnalyzer:
         unique_regimes = len(regimes.unique())
         assert 1 <= unique_regimes <= analyzer.n_regimes
 
-    def test_detect_regimes_bear_market(self, analyzer: RegimeAnalyzer, bear_market_returns: pd.Series):
+    def test_detect_regimes_bear_market(
+        self, analyzer: RegimeAnalyzer, bear_market_returns: pd.Series
+    ):
         """Test regime detection on bear market data."""
         regimes = analyzer.detect_regimes(bear_market_returns)
 
@@ -123,7 +131,9 @@ class TestRegimeAnalyzer:
 
         assert regimes1.equals(regimes2)
 
-    def test_detect_regimes_different_window(self, analyzer: RegimeAnalyzer, sample_returns: pd.Series):
+    def test_detect_regimes_different_window(
+        self, analyzer: RegimeAnalyzer, sample_returns: pd.Series
+    ):
         """Test regime detection with different window size."""
         analyzer_large_window = RegimeAnalyzer(n_regimes=3, window=50, random_state=42)
         regimes = analyzer_large_window.detect_regimes(sample_returns)
@@ -187,7 +197,9 @@ class TestRegimeAnalyzer:
         # Bull should have better (higher) Sharpe than Bear
         assert bull_sharpe > bear_sharpe
 
-    def test_analyze_regime_performance_default_labels(self, analyzer: RegimeAnalyzer, sample_returns: pd.Series):
+    def test_analyze_regime_performance_default_labels(
+        self, analyzer: RegimeAnalyzer, sample_returns: pd.Series
+    ):
         """Test regime analysis uses stored labels by default."""
         analyzer.detect_regimes(sample_returns)
         analysis = analyzer.analyze_regime_performance(sample_returns)
@@ -322,7 +334,9 @@ class TestRegimeAnalyzer:
     def test_out_of_sample_robustness_insufficient_data(self, analyzer: RegimeAnalyzer):
         """Test robustness with insufficient data."""
         short_returns = pd.Series(np.random.normal(0, 0.02, 100))
-        robustness = analyzer.out_of_sample_regime_robustness(short_returns, test_periods=5, train_window=252)
+        robustness = analyzer.out_of_sample_regime_robustness(
+            short_returns, test_periods=5, train_window=252
+        )
 
         assert robustness == {}
 
@@ -356,7 +370,9 @@ class TestRegimeAnalyzer:
         assert "transition_matrix" in transitions
 
         # Robustness test
-        robustness = analyzer.out_of_sample_regime_robustness(mixed_market_returns, test_periods=2, train_window=252)
+        robustness = analyzer.out_of_sample_regime_robustness(
+            mixed_market_returns, test_periods=2, train_window=252
+        )
         assert isinstance(robustness, dict)
 
     def test_get_regime_names(self, analyzer: RegimeAnalyzer):
@@ -380,7 +396,7 @@ class TestRegimeAnalyzer:
     def test_multiple_detections(self, analyzer: RegimeAnalyzer, sample_returns: pd.Series):
         """Test multiple regime detections overwrite previous."""
         # First detection
-        regimes1 = analyzer.detect_regimes(sample_returns)
+        analyzer.detect_regimes(sample_returns)
         assert analyzer.get_regime_labels() is not None
 
         # Second detection (different data)

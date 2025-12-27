@@ -13,16 +13,17 @@ Validates:
 """
 
 import logging
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
 from typing import Dict, List, Optional
+
 from .models import (
+    CapitalViabilityAnalysis,
+    FeasibilityAnalysis,
+    LearningViabilityAnalysis,
+    ModuleViabilityAnalysis,
     ValidationRequest,
     ValidationResult,
-    CapitalViabilityAnalysis,
-    LearningViabilityAnalysis,
-    FeasibilityAnalysis,
-    ModuleViabilityAnalysis,
 )
 
 logger = logging.getLogger(__name__)
@@ -50,6 +51,7 @@ class ValidationEngine:
         if self._capital_viability_validator is None:
             try:
                 from app.services.capital_viability_gate import CapitalViabilityValidator
+
                 self._capital_viability_validator = CapitalViabilityValidator
                 logger.debug("✅ CapitalViabilityValidator loaded")
             except ImportError as e:
@@ -62,6 +64,7 @@ class ValidationEngine:
         if self._expensive_module_gate is None:
             try:
                 from app.services.expensive_module_gate import ExpensiveModuleGate
+
                 self._expensive_module_gate = ExpensiveModuleGate
                 logger.debug("✅ ExpensiveModuleGate loaded")
             except ImportError as e:
@@ -74,6 +77,7 @@ class ValidationEngine:
         if self._learning_capital_gate is None:
             try:
                 from app.services.learning_capital_gate import LearningCapitalGate
+
                 self._learning_capital_gate = LearningCapitalGate
                 logger.debug("✅ LearningCapitalGate loaded")
             except ImportError as e:
@@ -105,9 +109,7 @@ class ValidationEngine:
             result.capital_viability = capital_viability
 
             if not capital_viability.is_viable:
-                result.critical_failures.append(
-                    f"Capital viability: {capital_viability.reason}"
-                )
+                result.critical_failures.append(f"Capital viability: {capital_viability.reason}")
                 logger.warning(f"❌ Capital viability check failed for {request.profile_id}")
 
             # Step 2: Validate feasibility ratio (if backtest data provided)
@@ -118,24 +120,20 @@ class ValidationEngine:
                 )
                 result.feasibility = feasibility
 
-                if not feasibility.is_viable and request.backtest_feasibility_ratio < Decimal("0.7"):
-                    result.critical_failures.append(
-                        f"Feasibility: {feasibility.reason}"
-                    )
+                if not feasibility.is_viable and request.backtest_feasibility_ratio < Decimal(
+                    "0.7"
+                ):
+                    result.critical_failures.append(f"Feasibility: {feasibility.reason}")
                     logger.warning(f"❌ Feasibility check failed for {request.profile_id}")
                 elif not feasibility.is_viable:
-                    result.warnings.append(
-                        f"Feasibility: {feasibility.reason}"
-                    )
+                    result.warnings.append(f"Feasibility: {feasibility.reason}")
 
             # Step 3: Validate learning viability
             learning_viability = self._validate_learning_viability(request)
             result.learning_viability = learning_viability
 
             if not learning_viability.learning_recommended and request.learning_enabled:
-                result.warnings.append(
-                    f"Learning not recommended: {learning_viability.reason}"
-                )
+                result.warnings.append(f"Learning not recommended: {learning_viability.reason}")
                 logger.warning(f"⚠️  Learning viability warning for {request.profile_id}")
 
             # Step 4: Validate module viability (expensive modules)
@@ -143,8 +141,7 @@ class ValidationEngine:
             result.module_viabilities = module_viabilities
 
             expensive_modules_disabled = [
-                name for name, analysis in module_viabilities.items()
-                if not analysis.enabled
+                name for name, analysis in module_viabilities.items() if not analysis.enabled
             ]
             if expensive_modules_disabled:
                 result.warnings.append(
@@ -152,7 +149,10 @@ class ValidationEngine:
                 )
 
             # Step 5: Validate risk metrics (if provided)
-            if request.backtest_sharpe_ratio is not None or request.backtest_max_drawdown_pct is not None:
+            if (
+                request.backtest_sharpe_ratio is not None
+                or request.backtest_max_drawdown_pct is not None
+            ):
                 risk_warnings = self._validate_risk_metrics(request)
                 result.warnings.extend(risk_warnings)
 
@@ -379,7 +379,9 @@ class ValidationEngine:
 
         # Adjust based on risk metric warnings (Sharpe, drawdown)
         # Don't count learning/module viability warnings in confidence calculation
-        risk_warnings = [w for w in result.warnings if any(x in w.lower() for x in ["sharpe", "drawdown"])]
+        risk_warnings = [
+            w for w in result.warnings if any(x in w.lower() for x in ["sharpe", "drawdown"])
+        ]
         if len(risk_warnings) >= 2:
             result.confidence_level = "low"
             if result.overall_recommendation == "APPROVE":

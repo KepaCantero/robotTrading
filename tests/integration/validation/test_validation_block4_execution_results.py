@@ -7,20 +7,14 @@ Tests para verificar:
 - Slippage y comisiones (descontados correctamente según preset Conservative)
 """
 
-import json
 import unittest
 from datetime import datetime, timedelta
 from decimal import Decimal
-from pathlib import Path
 
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig
-from app.backtesting.multi_strategy_engine import MultiStrategyBacktester
 from app.models.market_data import Quote
-from app.models.portfolio import AssetClass, Portfolio, Position
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
-from app.services.portfolio_builder import PortfolioBuilder
-from app.services.portfolio_config_manager import get_portfolio_config_manager
 
 
 class TestGranularLogging(unittest.TestCase):

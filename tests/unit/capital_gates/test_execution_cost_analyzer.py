@@ -9,8 +9,9 @@ Tests five critical scenarios:
 5. Concurrent trades cost amplification
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
 
 from app.services.execution_cost_analyzer import ExecutionCostAnalyzer
 

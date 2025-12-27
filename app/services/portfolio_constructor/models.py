@@ -5,7 +5,8 @@ Data structures for portfolio construction and allocation.
 """
 
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import List, Optional
+
 from pydantic import BaseModel, Field
 
 
