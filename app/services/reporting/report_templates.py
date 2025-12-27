@@ -424,6 +424,6 @@ def get_report_templates() -> ReportTemplates:
     """Get or create singleton ReportTemplates."""
     global _templates
     if _templates is None:
-        pass
+        _templates = ReportTemplates()
 
     return _templates

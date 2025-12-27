@@ -53,7 +53,7 @@ class ParameterOptimizationService:
             failed_optimizations=0,
             avg_optimization_time=0.0,
             best_strategy="",
-            best_score=float("-in"),
+            best_score=float("-inf"),
             last_optimization_date=datetime.now(),
             artifacts_count=0,
         )
