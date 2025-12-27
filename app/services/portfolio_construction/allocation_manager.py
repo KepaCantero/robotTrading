@@ -250,6 +250,6 @@ def get_allocation_manager(
     """Get or create singleton AllocationManager."""
     global _manager
     if _manager is None:
-        pass
+        _manager = AllocationManager()
 
     return _manager

@@ -350,6 +350,6 @@ def get_allocation_recommender() -> AllocationRecommender:
     """Get or create singleton AllocationRecommender."""
     global _recommender
     if _recommender is None:
-        pass
+        _recommender = AllocationRecommender()
 
     return _recommender

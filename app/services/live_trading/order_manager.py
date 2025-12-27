@@ -401,6 +401,6 @@ def get_order_manager(
     """Get or create singleton OrderManager."""
     global _manager
     if _manager is None:
-        pass
+        _manager = Manager()
 
     return _manager

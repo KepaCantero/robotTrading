@@ -383,7 +383,7 @@ def get_multi_strategy_manager(
     """Get global multi-strategy allocation manager."""
     global _multi_strategy_manager
     if _multi_strategy_manager is None:
-        pass
+        _multi_strategy_manager = MultiStrategyManager()
 
     return _multi_strategy_manager
 

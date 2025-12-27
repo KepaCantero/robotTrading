@@ -29,7 +29,7 @@ def get_strategy_registry() -> StrategyRegistry:
     """Obtener instancia del registry de estrategias."""
     global _strategy_registry
     if _strategy_registry is None:
-        pass
+        _strategy_registry = StrategyRegistry()
 
     return _strategy_registry
 
@@ -38,7 +38,7 @@ def get_config_loader() -> StrategyConfigLoader:
     """Obtener instancia del cargador de configuración."""
     global _config_loader
     if _config_loader is None:
-        pass
+        _config_loader = ConfigLoader()
 
     return _config_loader
 
@@ -47,7 +47,7 @@ def get_strategy_logger() -> StrategyLogger:
     """Obtener instancia del logger de estrategias."""
     global _strategy_logger
     if _strategy_logger is None:
-        pass
+        _strategy_logger = StrategyLogger()
 
     return _strategy_logger
 

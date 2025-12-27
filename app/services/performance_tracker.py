@@ -161,6 +161,6 @@ def get_performance_tracker() -> PerformanceTracker:
     """Get global performance tracker instance."""
     global _performance_tracker
     if _performance_tracker is None:
-        pass
+        _performance_tracker = PerformanceTracker()
 
     return _performance_tracker

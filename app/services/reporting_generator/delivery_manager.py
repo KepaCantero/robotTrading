@@ -494,6 +494,6 @@ def get_delivery_manager() -> ReportDeliveryManager:
     """Get or create ReportDeliveryManager singleton."""
     global _delivery_manager_instance
     if _delivery_manager_instance is None:
-        pass
+        _delivery_manager_instance = ReportDeliveryManager()
 
     return _delivery_manager_instance

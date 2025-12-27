@@ -369,6 +369,6 @@ def get_trading_audit_trail() -> "TradingAuditTrail":
     """
     global _audit_trail_instance
     if _audit_trail_instance is None:
-        pass
+        _audit_trail_instance = AuditTrailInstance()
 
     return _audit_trail_instance

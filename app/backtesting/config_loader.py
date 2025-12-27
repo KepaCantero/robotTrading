@@ -240,7 +240,7 @@ def get_config(config_path: Optional[str] = None) -> ConfigLoader:
     """
     global _global_config
     if _global_config is None:
-        pass
+        _global_config = ConfigLoader()
 
     return _global_config
 

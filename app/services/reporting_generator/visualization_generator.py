@@ -608,6 +608,6 @@ def get_visualization_generator() -> AdvancedVisualizationGenerator:
     """Get or create AdvancedVisualizationGenerator singleton."""
     global _viz_generator_instance
     if _viz_generator_instance is None:
-        pass
+        _viz_generator_instance = AdvancedVisualizationGenerator()
 
     return _viz_generator_instance

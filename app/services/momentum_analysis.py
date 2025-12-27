@@ -1170,6 +1170,6 @@ def get_momentum_analysis_service() -> MomentumAnalysisService:
     """Get global momentum analysis service instance."""
     global _momentum_service
     if _momentum_service is None:
-        pass
+        _momentum_service = MomentumService()
 
     return _momentum_service

@@ -310,6 +310,6 @@ def get_configuration_persistence() -> ConfigurationPersistence:
     """Get or create singleton ConfigurationPersistence."""
     global _persistence
     if _persistence is None:
-        pass
+        _persistence = ConfigurationPersistence()
 
     return _persistence

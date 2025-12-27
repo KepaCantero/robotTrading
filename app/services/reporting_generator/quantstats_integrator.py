@@ -559,6 +559,6 @@ def get_quantstats_integrator() -> QuantStatsIntegrator:
     """Get or create singleton QuantStatsIntegrator."""
     global _integrator
     if _integrator is None:
-        pass
+        _integrator = QuantStatsIntegrator()
 
     return _integrator
