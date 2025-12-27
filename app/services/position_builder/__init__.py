@@ -8,12 +8,8 @@ Components:
 - IntraDayExecutionScheduler: Schedules optimal execution times
 """
 
-from .large_position_builder import (
-    LargePositionBuilder,
-    get_large_position_builder,
-)
+from .large_position_builder import LargePositionBuilder, get_large_position_builder
 
-__all__ = [
     "LargePositionBuilder",
     "get_large_position_builder",
 ]

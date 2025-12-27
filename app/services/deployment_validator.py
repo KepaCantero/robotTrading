@@ -119,12 +119,12 @@ class DeploymentValidator:
         if cap_analysis["severity"] == "CRITICAL":
             analysis["issues"].append(
                 f"Capital viability: Monthly goal ${monthly_profit_goal:.2f} is unrealistic for ${capital:,.0f} capital. "
-                f"Severity: CRITICAL"
+                "Severity: CRITICAL"
             )
         elif cap_analysis["severity"] == "WARNING":
             analysis["warnings"].append(
                 f"Capital viability: Monthly goal ${monthly_profit_goal:.2f} is challenging for ${capital:,.0f} capital. "
-                f"Consider reducing goal or increasing capital."
+                "Consider reducing goal or increasing capital."
             )
 
         # ===== GATE 2: Execution Cost Analysis =====
@@ -172,7 +172,7 @@ class DeploymentValidator:
             analysis["warnings"].append(
                 f"Learning capital gate: Learning infrastructure cost ${learning_analysis['learning_cost_monthly']:.2f}/mo "
                 f"({learning_analysis['cost_benefit_ratio']:.0%} of alpha) exceeds threshold. "
-                f"Consider disabling learning."
+                "Consider disabling learning."
             )
 
         # ===== GATE 4: Expensive Module Gate =====
@@ -201,13 +201,13 @@ class DeploymentValidator:
             analysis["issues"].append(
                 f"Expensive modules: Total module cost ${total_module_cost:.2f}/mo "
                 f"({cost_summary['cost_ratio_of_alpha']:.0%} of alpha) is critical. "
-                f"Disable expensive modules or increase capital."
+                "Disable expensive modules or increase capital."
             )
         elif cost_summary["recommendation"] == "COST_HIGH":
             analysis["warnings"].append(
                 f"Expensive modules: Total module cost ${total_module_cost:.2f}/mo "
                 f"({cost_summary['cost_ratio_of_alpha']:.0%} of alpha) is high. "
-                f"Consider disabling some modules."
+                "Consider disabling some modules."
             )
 
         # ===== Determine Overall Status =====
@@ -226,20 +226,20 @@ class DeploymentValidator:
         if status == DeploymentStatus.REJECTED:
             if capital < Decimal("15000"):
                 analysis["recommendations"].append(
-                    f"Increase capital to at least $15,000 for micro-tier account support"
+                    "Increase capital to at least $15,000 for micro-tier account support"
                 )
             if capital < Decimal("25000") and learning_enabled:
                 analysis["recommendations"].append(
-                    f"Disable learning infrastructure until capital reaches $25,000+"
+                    "Disable learning infrastructure until capital reaches $25,000+"
                 )
             if capital < Decimal("50000") and expensive_modules_enabled:
                 analysis["recommendations"].append(
-                    f"Disable expensive ML modules until capital reaches $50,000+"
+                    "Disable expensive ML modules until capital reaches $50,000+"
                 )
 
         elif status == DeploymentStatus.RESTRICTED:
             analysis["recommendations"].append(
-                f"Deploy with monitoring enabled and reduced position sizes"
+                "Deploy with monitoring enabled and reduced position sizes"
             )
             analysis["recommendations"].append(f"Use {analysis['capital_tier']} tier configuration")
 

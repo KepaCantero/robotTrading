@@ -275,7 +275,7 @@ class SharpeRatioMonitor:
         # Split into two halves
         mid = len(history) - window
         recent_window = history[mid:]
-        prior_window = history[mid - window : mid]
+        prior_window = history[mid - window: mid]
 
         mean_recent = sum(recent_window) / Decimal(len(recent_window))
         mean_prior = sum(prior_window) / Decimal(len(prior_window))

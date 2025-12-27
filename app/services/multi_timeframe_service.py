@@ -172,7 +172,7 @@ def get_multi_timeframe_service() -> MultiTimeframeConfirmation:
     """Get global multi-timeframe confirmation service."""
     global _multi_timeframe_service
     if _multi_timeframe_service is None:
-        _multi_timeframe_service = MultiTimeframeConfirmation(
+
             timeframes=["15m", "1h", "4h", "1d"], min_confirmations=2
         )
     return _multi_timeframe_service

@@ -25,22 +25,10 @@ from app.services.live_trading.alert_to_trade_mapper import (
     AlertToTradeMapper,
     get_alert_to_trade_mapper,
 )
-from app.services.live_trading.broker_connector import (
-    BrokerConnector,
-    get_broker_connector,
-)
-from app.services.live_trading.order_manager import (
-    OrderManager,
-    get_order_manager,
-)
-from app.services.live_trading.risk_gates import (
-    RiskGates,
-    get_risk_gates,
-)
-from app.services.live_trading.trading_audit_trail import (
-    TradingAuditTrail,
-    get_trading_audit_trail,
-)
+from app.services.live_trading.broker_connector import BrokerConnector, get_broker_connector
+from app.services.live_trading.order_manager import OrderManager, get_order_manager
+from app.services.live_trading.risk_gates import RiskGates, get_risk_gates
+from app.services.live_trading.trading_audit_trail import TradingAuditTrail, get_trading_audit_trail
 from app.services.live_trading.trading_bridge_orchestrator import (
     TradingBridgeOrchestrator,
     get_trading_bridge_orchestrator,

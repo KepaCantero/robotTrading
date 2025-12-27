@@ -127,12 +127,12 @@ class PortfolioBuilder:
             if failed_symbols and "rate limit" in str(failed_symbols).lower():
                 raise ValueError(
                     f"Rate limited by yfinance. Failed to load {len(failed_symbols)} symbols. "
-                    f"Please try again later or add CSV files to data/historical/ for: "
+                    "Please try again later or add CSV files to data/historical/ for: "
                     f"{', '.join(failed_symbols[:5])}{'...' if len(failed_symbols) > 5 else ''}"
                 )
             else:
                 raise ValueError(
-                    f"No market data loaded for portfolio. "
+                    "No market data loaded for portfolio. "
                     f"Failed to load {len(failed_symbols)} symbols: "
                     f"{', '.join(failed_symbols[:5])}{'...' if len(failed_symbols) > 5 else ''}"
                 )

@@ -317,7 +317,7 @@ class ComprehensiveBacktestLoader:
             return None
 
         # Retornar el mejor
-        return max(valid_results, key=lambda x: x.get(metric, float('-inf')))
+        return max(valid_results, key=lambda x: x.get(metric, float('-in')))
 
     def get_summary_stats(self) -> Dict[str, Any]:
         """

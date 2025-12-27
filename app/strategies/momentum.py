@@ -382,7 +382,7 @@ class MomentumStrategy(BaseStrategy):
         if raw_signals:
             logger.info(
                 f"🔍 MOMENTUM: {len(raw_signals)} raw signals generated for {market_data.symbol}, "
-                f"processing through signal scoring engine..."
+                "processing through signal scoring engine..."
             )
             # In backtesting, we want to evaluate all signals without cooldown
             # But we still want scoring and ranking
@@ -422,7 +422,7 @@ class MomentumStrategy(BaseStrategy):
                 if not existing_position:
                     logger.info(
                         f"⚠️ MOMENTUM risk_check REJECTED SELL {signal.symbol}: "
-                        f"No position exists to sell"
+                        "No position exists to sell"
                     )
                     return False
                 # Now calculate sell quantity and verify we have enough

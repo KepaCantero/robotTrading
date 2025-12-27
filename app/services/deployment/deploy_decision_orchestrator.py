@@ -179,21 +179,21 @@ class DeployDecisionOrchestrator:
         reasons = []
 
         if status == "APPROVED":
-            reasons.append(f"✅ All validation gates passed")
+            reasons.append("✅ All validation gates passed")
             reasons.append(f"✅ Feasibility ratio {feasibility_ratio:.2f} exceeds 1.0 threshold")
             reasons.append(f"✅ Recommendation score {recommendation_score:.1f} is strong")
             if sharpe_ratio > 1.0:
                 reasons.append(f"✅ Excellent risk-adjusted returns (Sharpe: {sharpe_ratio:.2f})")
 
         elif status == "CONDITIONAL":
-            reasons.append(f"⚠️  Validation passed but with conditions")
+            reasons.append("⚠️  Validation passed but with conditions")
             reasons.append(f"⚠️  Feasibility ratio {feasibility_ratio:.2f} is moderate (0.7-1.0)")
             reasons.append(f"⚠️  Recommendation score {recommendation_score:.1f} is acceptable")
-            reasons.append(f"⚠️  Strategy requires optimization before full deployment")
+            reasons.append("⚠️  Strategy requires optimization before full deployment")
 
         else:  # REJECTED
             if not validation_passed:
-                reasons.append(f"❌ Validation gates failed")
+                reasons.append("❌ Validation gates failed")
             if feasibility_ratio < 0.7:
                 reasons.append(f"❌ Feasibility ratio {feasibility_ratio:.2f} too low")
             if recommendation_score < 60:

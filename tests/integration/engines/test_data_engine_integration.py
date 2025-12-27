@@ -85,7 +85,7 @@ class TestCacheIntegration:
         key = "test:key:123"
         value = {"test": "data", "number": 42}
         success = await cache.set(key, value, ttl=60)
-        assert success == True
+        assert success
 
         # Obtener
         cached = await cache.get(key)
@@ -109,7 +109,7 @@ class TestCacheIntegration:
 
         # Eliminar
         success = await cache.delete(key)
-        assert success == True
+        assert success
 
         # Verificar que no existe
         assert await cache.get(key) is None
@@ -168,11 +168,11 @@ class TestStreamingIntegration:
 
         # Iniciar
         await manager.start()
-        assert manager._running == True
+        assert manager._running
 
         # Detener
         await manager.stop()
-        assert manager._running == False
+        assert manager.not _running
 
     def test_streaming_manager_status(self, data_engine_config):
         """Test estado del streaming manager."""
@@ -285,8 +285,8 @@ class TestDataEngineIntegration:
         cache = DistributedCache(config)
 
         assert cache is not None
-        assert cache.use_redis == False
-        assert cache.use_postgres == False
+        assert cache.not use_redis
+        assert cache.not use_postgres
 
         status = cache.get_status()
         assert status['redis_enabled'] == False

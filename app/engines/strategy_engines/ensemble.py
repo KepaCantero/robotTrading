@@ -349,7 +349,7 @@ class WeightedEnsemble(BaseStrategyEnsemble):
             if len(history) < 5:  # Mínimo 5 registros para actualizar
                 continue
 
-            recent = history[-self.performance_lookback :]
+            recent = history[-self.performance_lookback:]
 
             if self.weight_method == "sharpe":
                 avg_sharpe = np.mean([h.get("sharpe", 0) for h in recent])
@@ -458,7 +458,7 @@ class RegimeBasedSelector(BaseStrategyEnsemble):
         if current_price > 0:
             self.price_history.append(current_price)
             if len(self.price_history) > self.regime_lookback * 2:
-                self.price_history = self.price_history[-self.regime_lookback * 2 :]
+                self.price_history = self.price_history[-self.regime_lookback * 2:]
 
         # Detectar régimen actual
         self._detect_regime()
@@ -485,7 +485,7 @@ class RegimeBasedSelector(BaseStrategyEnsemble):
             self.regime_confidence = 0.0
             return
 
-        prices = np.array(self.price_history[-self.regime_lookback :])
+        prices = np.array(self.price_history[-self.regime_lookback:])
 
         # Calcular retorno y volatilidad
         returns = np.diff(prices) / prices[:-1]

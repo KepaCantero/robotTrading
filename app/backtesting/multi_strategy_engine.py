@@ -146,7 +146,7 @@ class MultiStrategyBacktester:
             logger.warning(
                 f"⚠️ Stock allocation {'validation failed' if self.allocation_result else 'failed to execute'}: "
                 f"{self.allocation_result.validation_errors if self.allocation_result else 'Exception during execution'}. "
-                f"Falling back to portfolio config filtering."
+                "Falling back to portfolio config filtering."
             )
             # Fall back to old method if allocation fails
             use_allocator = False
@@ -155,7 +155,7 @@ class MultiStrategyBacktester:
             logger.info(
                 f"✅ Stock allocation successful: {len(self.allocation_result.allocations)} stocks assigned, "
                 f"${self.allocation_result.residual_capital:,.2f} residual capital, "
-                f"validation PASSED"
+                "validation PASSED"
             )
             # Log breakdown by strategy
             strategy_counts = {}
@@ -188,7 +188,7 @@ class MultiStrategyBacktester:
             if len(filtered_quotes) < len(quotes):
                 logger.info(
                     f"{strategy_name}: Filtered {len(quotes)} quotes to {len(filtered_quotes)} "
-                    f"based on sector configuration"
+                    "based on sector configuration"
                 )
 
             # Generate signals for this strategy
@@ -263,7 +263,7 @@ class MultiStrategyBacktester:
                 logger.warning(
                     f"{strategy_name}: ⚠️  No signals generated after processing {quotes_processed} quotes. "
                     f"Sample symbols: {sorted(list(sample_symbols))[:10]}. "
-                    f"This may indicate: missing historical data, filter conditions too strict, or strategy logic issue."
+                    "This may indicate: missing historical data, filter conditions too strict, or strategy logic issue."
                 )
 
                 # Also log to diagnostic logger to track this issue
@@ -351,14 +351,14 @@ class MultiStrategyBacktester:
 
             # Log allocation summary
             logger.info(
-                f"📊 Stock Allocation Summary: "
+                "📊 Stock Allocation Summary: "
                 f"{len(self.allocation_result.allocations)} stocks assigned, "
                 f"${self.allocation_result.residual_capital:,.2f} residual capital, "
                 f"validation={'PASSED' if self.allocation_result.validation_passed else 'FAILED'}"
             )
 
         logger.info(
-            f"Multi-strategy backtest completed: "
+            "Multi-strategy backtest completed: "
             f"{consolidated['combined']['total_initial_capital']:,.2f} initial -> "
             f"{consolidated['combined']['total_final_capital']:,.2f} final "
             f"({consolidated['combined']['total_return']:.2f}% return)"
@@ -635,7 +635,7 @@ class MultiStrategyBacktester:
         if not assigned_symbols:
             logger.warning(
                 f"No symbols assigned to {strategy_name} by allocator, "
-                f"falling back to portfolio config"
+                "falling back to portfolio config"
             )
             return self._filter_quotes_by_strategy(quotes, strategy_name)
 

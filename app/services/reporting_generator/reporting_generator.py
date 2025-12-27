@@ -9,12 +9,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional
 
-from .models import (
-    AllocationSnapshot,
-    PerformanceReport,
-    ReportGenerationRequest,
-    StrategyMetrics,
-)
+from .models import AllocationSnapshot, PerformanceReport, ReportGenerationRequest, StrategyMetrics
 
 logger = logging.getLogger(__name__)
 
@@ -390,7 +385,7 @@ class ReportingGenerator:
         recommendations: List[str],
     ) -> str:
         """Generate HTML report content."""
-        html = f"""
+        html = """
         <!DOCTYPE html>
         <html>
         <head>
@@ -453,7 +448,7 @@ class ReportingGenerator:
         """
 
         for alloc in request.allocations:
-            html += f"""
+            html += """
                     <tr>
                         <td>{alloc.module_name}</td>
                         <td>{alloc.allocation_pct:.2f}%</td>
@@ -467,7 +462,7 @@ class ReportingGenerator:
         """
 
         if strengths:
-            html += f"""
+            html += """
                 <h2>Strengths</h2>
                 <div class="strengths">
                     <ul>
@@ -480,7 +475,7 @@ class ReportingGenerator:
         """
 
         if weaknesses:
-            html += f"""
+            html += """
                 <h2>Areas for Improvement</h2>
                 <div class="weaknesses">
                     <ul>
@@ -493,7 +488,7 @@ class ReportingGenerator:
         """
 
         if recommendations:
-            html += f"""
+            html += """
                 <h2>Recommendations</h2>
                 <div class="recommendations">
                     <ul>
@@ -565,5 +560,5 @@ def get_reporting_generator() -> ReportingGenerator:
     """Get or create singleton ReportingGenerator."""
     global _generator
     if _generator is None:
-        _generator = ReportingGenerator()
+
     return _generator

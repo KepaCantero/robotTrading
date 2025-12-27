@@ -33,7 +33,7 @@ class TestLearningCapitalGate:
             learning_enabled=True,
         )
 
-        assert learning_viable == False
+        assert not learning_viable
         assert analysis["recommendation"] == "DISABLE_LEARNING"
         assert analysis["severity"] == "CRITICAL"
         assert analysis["capital_tier"] == "micro"
@@ -54,7 +54,7 @@ class TestLearningCapitalGate:
             learning_enabled=True,
         )
 
-        assert learning_viable == False
+        assert not learning_viable
         assert analysis["recommendation"] == "DISABLE_LEARNING"
         assert analysis["severity"] == "CRITICAL"
         assert analysis["capital_tier"] == "small"
@@ -76,7 +76,7 @@ class TestLearningCapitalGate:
             learning_enabled=True,
         )
 
-        assert learning_viable == True
+        assert learning_viable
         assert analysis["recommendation"] == "ENABLE_LEARNING"
         assert analysis["severity"] == "OK"
         assert analysis["capital_tier"] == "medium"
@@ -97,7 +97,7 @@ class TestLearningCapitalGate:
             learning_enabled=True,
         )
 
-        assert learning_viable == True
+        assert learning_viable
         assert analysis["recommendation"] == "ENABLE_LEARNING"
         assert analysis["severity"] == "OK"
         assert analysis["capital_tier"] == "large"
@@ -114,7 +114,7 @@ class TestLearningCapitalGate:
             learning_enabled=False,
         )
 
-        assert learning_viable == False
+        assert not learning_viable
         assert analysis["recommendation"] == "LEARNING_DISABLED"
         assert analysis["severity"] == "OK"
 
@@ -129,7 +129,7 @@ class TestLearningCapitalGate:
             learning_enabled=True,
         )
 
-        assert learning_viable == False
+        assert not learning_viable
         assert analysis["recommendation"] == "DISABLE_LEARNING"
         assert analysis["severity"] == "CRITICAL"
 
@@ -144,7 +144,7 @@ class TestLearningCapitalGate:
             learning_enabled=True,
         )
 
-        assert learning_viable == False
+        assert not learning_viable
         assert analysis["recommendation"] == "DISABLE_LEARNING"
 
     def test_zero_capital_rejected(self):
@@ -156,7 +156,7 @@ class TestLearningCapitalGate:
             learning_enabled=True,
         )
 
-        assert learning_viable == False
+        assert not learning_viable
         assert analysis["severity"] == "CRITICAL"
 
     def test_cost_benefit_ratio_escalation(self):
@@ -314,7 +314,7 @@ class TestRealWorldScenarios:
         )
 
         # Should be disabled - too small
-        assert learning_viable == False
+        assert not learning_viable
         assert analysis["severity"] == "CRITICAL"
         assert analysis["recommendation"] == "DISABLE_LEARNING"
 
@@ -330,7 +330,7 @@ class TestRealWorldScenarios:
         )
 
         # Should be viable
-        assert learning_viable == True
+        assert learning_viable
         assert analysis["severity"] == "OK"
         assert analysis["recommendation"] == "ENABLE_LEARNING"
         # Cost should be reasonable (20% of alpha)
@@ -348,7 +348,7 @@ class TestRealWorldScenarios:
         )
 
         # Should be highly viable
-        assert learning_viable == True
+        assert learning_viable
         assert analysis["severity"] == "OK"
         assert analysis["recommendation"] == "ENABLE_LEARNING"
         # Cost should be very low ratio
@@ -367,7 +367,7 @@ class TestRealWorldScenarios:
         )
 
         # Still below absolute $25k threshold, so disabled
-        assert learning_viable == False
+        assert not learning_viable
         assert analysis["severity"] == "CRITICAL"
 
     def test_exactly_at_minimum_capital_threshold(self):
@@ -383,7 +383,7 @@ class TestRealWorldScenarios:
         )
 
         # Should be viable (at threshold with good alpha)
-        assert learning_viable == True
+        assert learning_viable
         assert analysis["capital_tier"] == "small"
 
     def test_just_above_minimum_capital_threshold(self):
@@ -401,7 +401,7 @@ class TestRealWorldScenarios:
         )
 
         # Should be viable (above $25k threshold with good alpha)
-        assert learning_viable == True
+        assert learning_viable
         assert analysis["recommendation"] == "ENABLE_LEARNING"
 
 
@@ -480,7 +480,7 @@ class TestEdgeCases:
             learning_enabled=True,
         )
 
-        assert learning_viable == False
+        assert not learning_viable
         assert analysis["cost_benefit_ratio"] > Decimal("1.0")
 
     def test_very_high_capital_very_low_alpha(self):
@@ -499,7 +499,7 @@ class TestEdgeCases:
         )
 
         # Should be viable - cost ratio is well below threshold
-        assert learning_viable == True
+        assert learning_viable
         assert analysis["cost_benefit_ratio"] < Decimal("0.30")
 
     def test_minimum_capital_with_different_alpha(self):

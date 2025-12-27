@@ -280,7 +280,7 @@ class StrategyStockAllocator:
             logger.error(
                 f"🚨 CRITICAL: All {len(historical_data)} stocks were rejected! "
                 f"Check: LOOKBACK_MAX_DAYS={min_days}, MIN_LIQUIDITY_USD={self.config.MIN_LIQUIDITY_USD}, "
-                f"data format issues (NaNs, gaps, etc.). Review rejection logs above."
+                "data format issues (NaNs, gaps, etc.). Review rejection logs above."
             )
 
         self.filtered_stocks = filtered
@@ -339,7 +339,7 @@ class StrategyStockAllocator:
                 rs_window = []
 
                 for i in range(num_windows):
-                    window_returns = returns[i * n : (i + 1) * n]
+                    window_returns = returns[i * n: (i + 1) * n]
 
                     if len(window_returns) < 2:
                         continue
@@ -678,7 +678,7 @@ class StrategyStockAllocator:
                 try:
                     # Fit GARCH(1,1) model
                     model = arch_model(clean_returns * 100, vol='Garch', p=1, q=1, rescale=False)
-                    fitted = model.fit(disp='off')
+                    fitted = model.fit(disp='of')
 
                     # Forecast volatility
                     forecast = fitted.forecast(horizon=self.config.GARCH_FORECAST_HORIZON)
@@ -738,9 +738,9 @@ class StrategyStockAllocator:
             if self.config.DYNAMIC_WINDOW_ENABLED and len(prices) >= self.config.SLOPE_WINDOW_MIN:
                 window_min = self.config.SLOPE_WINDOW_MIN
                 window_max = min(self.config.SLOPE_WINDOW_MAX, len(prices))
-                best_slope_mse = float('inf')
+                best_slope_mse = float('in')
                 best_slope_pct = 0.0
-                best_roc_mse = float('inf')
+                best_roc_mse = float('in')
                 best_roc = roc
 
                 # Try different windows (step by 5 days for efficiency)
@@ -826,7 +826,9 @@ class StrategyStockAllocator:
             macd_norm = (
                 1.0
                 if (macd is not None and macd > macd_signal)
-                else 0.0 if macd is not None else 0.5
+                else 0.0
+                if macd is not None
+                else 0.5
             )
             roc_norm = (
                 min(1.0, max(0.0, (roc_optimal + 0.1) / 0.2)) if roc_optimal is not None else 0.5
@@ -1293,7 +1295,7 @@ class StrategyStockAllocator:
             for i, ticker1 in enumerate(tickers):
                 if pair_count >= max_pairs:
                     break
-                for ticker2 in tickers[i + 1 :]:
+                for ticker2 in tickers[i + 1:]:
                     if pair_count >= max_pairs:
                         break
                     pairs_to_evaluate.append((ticker1, ticker2))
@@ -2014,7 +2016,7 @@ class StrategyStockAllocator:
 
                     if remaining_unused > 0.01:
                         logger.info(
-                            f"✅ Redistributed capital respecting limits. "
+                            "✅ Redistributed capital respecting limits. "
                             f"Allocated: ${sum(alloc.capital for alloc in final_allocations.values()):,.2f}, "
                             f"residual: ${remaining_unused:,.2f} (limits reached)"
                         )

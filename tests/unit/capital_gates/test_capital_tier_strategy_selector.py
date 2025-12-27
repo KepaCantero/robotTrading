@@ -260,10 +260,10 @@ class TestFeatureCapabilities:
         selector = CapitalTierStrategySelector(Decimal("10000"))
         capabilities = selector.get_enabled_features()
 
-        assert capabilities.learning == False
-        assert capabilities.deep_learning == False
-        assert capabilities.transformer_models == False
-        assert capabilities.ensemble_methods == False
+        assert capabilities.not learning
+        assert capabilities.not deep_learning
+        assert capabilities.not transformer_models
+        assert capabilities.not ensemble_methods
 
     def test_small_features_minimal(self):
         """Small accounts have minimal features"""
@@ -272,8 +272,8 @@ class TestFeatureCapabilities:
 
         # Small accounts may have learning conditionally
         # but not deep learning
-        assert capabilities.deep_learning == False
-        assert capabilities.transformer_models == False
+        assert capabilities.not deep_learning
+        assert capabilities.not transformer_models
 
     def test_medium_features_enabled(self):
         """Medium accounts have moderate features"""
@@ -281,8 +281,8 @@ class TestFeatureCapabilities:
         capabilities = selector.get_enabled_features()
 
         # Medium should have transfer learning and ensemble methods
-        assert capabilities.ensemble_methods == True
-        assert capabilities.feature_importance_analysis == True
+        assert capabilities.ensemble_methods
+        assert capabilities.feature_importance_analysis
 
     def test_large_features_full(self):
         """Large accounts have all features"""
@@ -290,16 +290,16 @@ class TestFeatureCapabilities:
         capabilities = selector.get_enabled_features()
 
         # Large accounts should have most features
-        assert capabilities.learning == True
-        assert capabilities.ensemble_methods == True
-        assert capabilities.feature_importance_analysis == True
+        assert capabilities.learning
+        assert capabilities.ensemble_methods
+        assert capabilities.feature_importance_analysis
         # Note: transformer_models depends on config
 
     def test_transformer_only_for_large(self):
         """Transformer models only for large accounts"""
         for capital in [Decimal("10000"), Decimal("30000"), Decimal("100000")]:
             capabilities = CapitalTierStrategySelector(capital).get_enabled_features()
-            assert capabilities.transformer_models == False
+            assert capabilities.not transformer_models
 
     def test_transfer_learning_medium_plus(self):
         """Transfer learning available for medium+ accounts"""
@@ -307,17 +307,17 @@ class TestFeatureCapabilities:
         small_cap = CapitalTierStrategySelector(Decimal("30000")).get_enabled_features()
         medium_cap = CapitalTierStrategySelector(Decimal("100000")).get_enabled_features()
 
-        assert micro_cap.transfer_learning == False
-        assert small_cap.transfer_learning == False
-        assert medium_cap.transfer_learning == True
+        assert micro_cap.not transfer_learning
+        assert small_cap.not transfer_learning
+        assert medium_cap.transfer_learning
 
     def test_ensemble_methods_small_plus(self):
         """Ensemble methods for small+ accounts"""
         micro_cap = CapitalTierStrategySelector(Decimal("10000")).get_enabled_features()
         small_cap = CapitalTierStrategySelector(Decimal("30000")).get_enabled_features()
 
-        assert micro_cap.ensemble_methods == False
-        assert small_cap.ensemble_methods == True
+        assert micro_cap.not ensemble_methods
+        assert small_cap.ensemble_methods
 
 
 class TestDeploymentValidation:
@@ -481,7 +481,7 @@ class TestConsistency:
         # All should align (though features_learning may be stricter)
         if config_learning:
             # Config says yes, but features may gate it
-            assert risk_learning == True
+            assert risk_learning
 
 
 class TestEdgeCases:

@@ -11,10 +11,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.services.alerting_system import (
-    get_alerting_orchestrator,
-    reset_alerting_orchestrator,
-)
+from app.services.alerting_system import get_alerting_orchestrator, reset_alerting_orchestrator
 from app.services.alerting_system.metrics_driven_alerter import MetricQueryConfig
 from app.services.alerting_system.models import (
     AlertEvent,

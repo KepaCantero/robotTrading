@@ -69,7 +69,7 @@ class TestPortfolioEngineIntegration:
         MomentumStrategyEngine(strategy_config)
 
         # Verificar que Portfolio Engine está disponible
-        assert portfolio_engine._initialized == True
+        assert portfolio_engine._initialized
         assert portfolio_engine.optimizer is not None
 
     def test_portfolio_optimization_with_strategy_signals(self):
@@ -116,7 +116,7 @@ class TestRiskEngineIntegration:
         MomentumStrategyEngine(strategy_config)
 
         # Verificar que Risk Engine está disponible
-        assert risk_engine._initialized == True
+        assert risk_engine._initialized
         assert risk_engine.var_calculator is not None
         assert risk_engine.drawdown_controller is not None
 
@@ -161,8 +161,8 @@ class TestIntegratedSystem:
         MomentumStrategyEngine(strategy_config)
 
         # Verificar que todos están inicializados
-        assert portfolio_engine._initialized == True
-        assert risk_engine._initialized == True
+        assert portfolio_engine._initialized
+        assert risk_engine._initialized
 
         # Portfolio puede ser evaluado por Risk Engine
         portfolio = create_test_portfolio()
@@ -193,8 +193,8 @@ class TestIntegratedSystem:
         )
 
         # Todos pueden usar los mismos Portfolio y Risk Engines
-        assert portfolio_engine._initialized == True
-        assert risk_engine._initialized == True
+        assert portfolio_engine._initialized
+        assert risk_engine._initialized
 
         # Evaluar riesgo de portfolio común
         portfolio = create_test_portfolio()

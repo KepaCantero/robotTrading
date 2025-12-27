@@ -254,5 +254,5 @@ def get_quantstats_integration() -> QuantStatsIntegration:
     """Get or create singleton QuantStatsIntegration."""
     global _integration
     if _integration is None:
-        _integration = QuantStatsIntegration()
+
     return _integration

@@ -6,14 +6,8 @@ from decimal import Decimal
 import pytest
 
 from app.services.portfolio_constructor import AllocationWeight
-from app.services.risk_scaling_application.limit_adjuster import (
-    AdjustedLimit,
-    LimitBreach,
-)
-from app.services.risk_scaling_application.realtime_monitor import (
-    MonitoringAlert,
-    RealTimeMonitor,
-)
+from app.services.risk_scaling_application.limit_adjuster import AdjustedLimit, LimitBreach
+from app.services.risk_scaling_application.realtime_monitor import MonitoringAlert, RealTimeMonitor
 
 
 def create_allocation(name, weight, capital=Decimal("30000")):

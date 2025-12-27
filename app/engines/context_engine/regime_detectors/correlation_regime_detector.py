@@ -107,7 +107,7 @@ class CorrelationRegimeDetector:
             returns_dict = {}
             for symbol, prices in price_data.items():
                 returns = np.diff(prices[-min_length:]) / prices[-min_length:-1]
-                returns_dict[symbol] = returns[-self.window_size :]
+                returns_dict[symbol] = returns[-self.window_size:]
 
             # Crear matriz de returns
             returns_matrix = np.array([returns_dict[symbol] for symbol in symbols]).T

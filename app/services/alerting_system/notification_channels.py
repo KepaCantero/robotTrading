@@ -11,11 +11,7 @@ Supports:
 import asyncio
 import logging
 
-from .models import (
-    NotificationChannelType,
-    NotificationPayload,
-    NotificationTarget,
-)
+from .models import NotificationChannelType, NotificationPayload, NotificationTarget
 
 logger = logging.getLogger(__name__)
 
@@ -118,7 +114,7 @@ class SlackChannel(NotificationChannel):
 
             # Format message for Slack
             color_map = {
-                "info": "#36a64f",
+                "info": "#36a64",
                 "warning": "#ff9900",
                 "critical": "#ff0000",
             }

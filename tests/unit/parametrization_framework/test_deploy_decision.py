@@ -83,8 +83,8 @@ class TestApprovedDecisions:
 
         request = DeploymentInput(
             decision_id="test_approved_conf_001",
-            profile_id="profile_approved_conf",
-            input_id="user_approved_conf",
+            profile_id="profile_approved_con",
+            input_id="user_approved_con",
             strategy_name="High Confidence Strategy",
             feasibility_ratio=Decimal("1.5"),
             annual_return_pct=Decimal("32"),

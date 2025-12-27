@@ -14,11 +14,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.services.alerting_system.models import (
-    AlertSeverity,
-    ComparisonOperator,
-    LogicOperator,
-)
+from app.services.alerting_system.models import AlertSeverity, ComparisonOperator, LogicOperator
 from app.services.alerting_system.rule_templates import AlertRuleTemplates
 
 

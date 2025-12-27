@@ -13,11 +13,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from app.services.alerting_system import (
-    AlertSeverity,
-    NotificationChannelType,
-    NotificationTarget,
-)
+from app.services.alerting_system import AlertSeverity, NotificationChannelType, NotificationTarget
 from app.services.alerting_system.models import NotificationPayload
 from app.services.alerting_system.notification_channels import (
     DiscordChannel,
@@ -96,7 +92,7 @@ class TestDiscordChannel:
         DiscordChannel()
         target = NotificationTarget(
             channel_type=NotificationChannelType.DISCORD,
-            endpoint="https://discordapp.com/api/webhooks/123456/abcdef",
+            endpoint="https://discordapp.com/api/webhooks/123456/abcde",
             enabled=True,
         )
 

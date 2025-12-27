@@ -330,7 +330,7 @@ class ValidationEngine:
             if request.backtest_sharpe_ratio < Decimal("1.0"):
                 warnings.append(
                     f"⚠️  Low Sharpe ratio ({request.backtest_sharpe_ratio:.2f}) - "
-                    f"consider adjusting parameters"
+                    "consider adjusting parameters"
                 )
 
         # Validate max drawdown
@@ -338,7 +338,7 @@ class ValidationEngine:
             if request.backtest_max_drawdown_pct > Decimal("20"):
                 warnings.append(
                     f"⚠️  High max drawdown ({request.backtest_max_drawdown_pct:.2f}%) - "
-                    f"consider adding risk management"
+                    "consider adding risk management"
                 )
 
         return warnings
@@ -418,5 +418,5 @@ def get_validation_engine() -> ValidationEngine:
     """Get or create singleton ValidationEngine."""
     global _engine
     if _engine is None:
-        _engine = ValidationEngine()
+
     return _engine

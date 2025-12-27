@@ -167,7 +167,7 @@ class AlertSystem(BaseAlertSystem):
             # Guardar en historial
             self.alert_history.extend(filtered_alerts)
             if len(self.alert_history) > self.max_alert_history:
-                self.alert_history = self.alert_history[-self.max_alert_history :]
+                self.alert_history = self.alert_history[-self.max_alert_history:]
 
             return filtered_alerts
 

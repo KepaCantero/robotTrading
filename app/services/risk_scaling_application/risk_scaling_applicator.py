@@ -25,10 +25,7 @@ from decimal import Decimal
 from typing import Dict, List, Optional
 
 from .limit_adjuster import LimitAdjuster
-from .models import (
-    RiskAdjustedPortfolio,
-    RiskScalingRequest,
-)
+from .models import RiskAdjustedPortfolio, RiskScalingRequest
 from .realtime_monitor import RealTimeMonitor
 from .risk_adjustment_calculator import RiskAdjustmentCalculator, get_risk_adjustment_calculator
 
@@ -237,5 +234,5 @@ def get_risk_scaler() -> RiskScalingApplication:
     """Get or create singleton RiskScalingApplication."""
     global _scaler
     if _scaler is None:
-        _scaler = RiskScalingApplication()
+
     return _scaler

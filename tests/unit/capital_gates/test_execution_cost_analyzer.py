@@ -42,7 +42,7 @@ class TestExecutionCostAnalyzer:
             num_concurrent_trades=1,
         )
 
-        assert should_execute == True
+        assert should_execute
         assert analysis["cost_ratio"] < Decimal("0.50")
         assert "$25" in analysis["reason"] or "$25.00" in analysis["reason"]
         assert analysis["regime"] == "normal"
@@ -66,7 +66,7 @@ class TestExecutionCostAnalyzer:
             num_concurrent_trades=1,
         )
 
-        assert should_execute1 == True
+        assert should_execute1
         assert analysis1["cost_ratio"] < Decimal("0.50")
 
         # Extreme volatility - should reject
@@ -77,7 +77,7 @@ class TestExecutionCostAnalyzer:
             num_concurrent_trades=1,
         )
 
-        assert should_execute2 == False
+        assert not should_execute2
         assert analysis2["cost_ratio"] > Decimal("0.50")
 
     def test_commission_dominance_detection(self, analyzer):
@@ -219,7 +219,7 @@ class TestExecutionCostAnalyzer:
             num_concurrent_trades=1,
         )
 
-        assert should_execute == False
+        assert not should_execute
         assert analysis["cost_ratio"] > Decimal("1.0")
 
     def test_negative_alpha_always_rejected(self, analyzer):
@@ -233,7 +233,7 @@ class TestExecutionCostAnalyzer:
             num_concurrent_trades=1,
         )
 
-        assert should_execute == False
+        assert not should_execute
 
     def test_log_trade_decision(self, analyzer, caplog):
         """
@@ -321,7 +321,7 @@ class TestRealWorldScenarios:
 
         # Commission: $20, Slippage: $10 (0.2% of $5k), Total: $30
         # Cost ratio: 30/50 = 60% → REJECTED (exceeds 50%)
-        assert should_execute == False
+        assert not should_execute
         assert analysis["total_cost"] >= Decimal("30")
 
     def test_large_account_absorbs_costs_better(self):
@@ -343,7 +343,7 @@ class TestRealWorldScenarios:
 
         # Commission: $20, Slippage: $200 (0.2% of $100k), Total: $220
         # Cost ratio: 220/500 = 44% → ACCEPTED (under 50%)
-        assert should_execute == True
+        assert should_execute
         assert analysis["cost_ratio"] < Decimal("0.50")
 
     def test_stock_market_vs_crypto_scenarios(self):
@@ -379,5 +379,5 @@ class TestRealWorldScenarios:
         # Stock should have lower cost
         assert analysis_stock["total_cost"] < analysis_crypto["total_cost"]
         # Stock may pass, crypto may fail
-        assert should_stock == True
-        assert should_crypto == False
+        assert should_stock
+        assert not should_crypto

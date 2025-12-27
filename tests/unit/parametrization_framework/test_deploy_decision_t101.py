@@ -22,9 +22,7 @@ from app.services.deploy_decision_orchestrator.deploy_decision_orchestrator impo
     DeployDecisionOrchestrator,
     get_deploy_orchestrator,
 )
-from app.services.deploy_decision_orchestrator.models import (
-    DeploymentInput,
-)
+from app.services.deploy_decision_orchestrator.models import DeploymentInput
 
 
 @pytest.fixture

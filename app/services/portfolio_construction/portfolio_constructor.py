@@ -151,7 +151,7 @@ class PortfolioConstructor:
             allocation, assets, volatilities, cov_matrix
         )
 
-        self.logger.info(f"📊 Mean-variance optimization completed")
+        self.logger.info("📊 Mean-variance optimization completed")
 
         return PortfolioAllocation(
             allocation=allocation,
@@ -185,7 +185,7 @@ class PortfolioConstructor:
         total_inv_vol = sum(inv_vols.values())
         allocation = {asset: inv_vols[asset] / total_inv_vol for asset in assets}
 
-        self.logger.info(f"📊 Risk parity allocation completed")
+        self.logger.info("📊 Risk parity allocation completed")
 
         return PortfolioAllocation(
             allocation=allocation,

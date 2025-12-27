@@ -134,8 +134,8 @@ class DataLoader:
 
         except Exception as e:
             logger.error(f"Error loading CSV for {symbol}: {e}")
-            logger.warning("Falling back to yfinance...")
-            return self._load_from_yfinance(symbol, start_date, end_date)
+            logger.warning("Falling back to yfinance..."
+            return self._load_from_yfinance(symbol, start_date, end_date
 
     def _load_from_yfinance(
         self,
@@ -143,41 +143,41 @@ class DataLoader:
         start_date: datetime,
         end_date: datetime,
         timeframe: str = "1d",
-    ) -> List[Quote]:
+     -> List[Quote]:
         """
         Load data from Yahoo Finance using multiple methods as fallbacks.
 
         Tries:
-        1. Yahoo Finance v8 API directly (most reliable)
-        2. yfinance (secondary)
-        3. yahoo_fin (fallback)
+        1. Yahoo Finance v8 API directly (most reliable
+        2. yfinance (secondary
+        3. yahoo_fin (fallback
         """
-        # Try Yahoo Finance v8 API directly first (most reliable)
-        quotes = self._load_from_yahoo_v8_api(symbol, start_date, end_date, timeframe)
+        # Try Yahoo Finance v8 API directly first (most reliable
+        quotes = self._load_from_yahoo_v8_api(symbol, start_date, end_date, timeframe
         if quotes:
-            logger.info(f"Loaded {len(quotes)} quotes from Yahoo Finance v8 API for {symbol}")
+            logger.info(f"Loaded {len(quotes} quotes from Yahoo Finance v8 API for {symbol}"
             return quotes
 
         # Try yfinance second
         if HAS_YFINANCE:
             try:
-                ticker = yf.Ticker(symbol)
+                ticker = yf.Ticker(symbol
                 interval = "1d" if timeframe == "1d" else "1h"
-                hist = ticker.history(start=start_date, end=end_date, interval=interval)
+                hist = ticker.history(start=start_date, end=end_date, interval=interval
 
                 if not hist.empty:
-                    quotes = self._convert_yfinance_to_quotes(hist, symbol)
-                    logger.info(f"Loaded {len(quotes)} quotes from yfinance for {symbol}")
+                    quotes = self._convert_yfinance_to_quotes(hist, symbol
+                    logger.info(f"Loaded {len(quotes} quotes from yfinance for {symbol}"
                     return quotes
             except Exception as e:
-                logger.debug(f"yfinance failed for {symbol}: {e}, trying yahoo_fin...")
+                logger.debug(f"yfinance failed for {symbol}: {e}, trying yahoo_fin..."
 
         # Fallback to yahoo_fin
         if HAS_YAHOO_FIN:
             try:
                 # yahoo_fin uses mm/dd/yyyy format
-                start_str = start_date.strftime("%m/%d/%Y")
-                end_str = end_date.strftime("%m/%d/%Y")
+                start_str = start_date.strftime("%m/%d/%Y"
+                end_str = end_date.strftime("%m/%d/%Y"
                 interval = "1d" if timeframe == "1d" else "1wk"
 
                 df = yahoo_fin_get_data(
@@ -186,16 +186,16 @@ class DataLoader:
                     end_date=end_str,
                     index_as_date=True,
                     interval=interval,
-                )
+                
 
                 if df is not None and not df.empty:
-                    quotes = self._convert_dataframe_to_quotes(df, symbol)
-                    logger.info(f"Loaded {len(quotes)} quotes from yahoo_fin for {symbol}")
+                    quotes = self._convert_dataframe_to_quotes(df, symbol
+                    logger.info(f"Loaded {len(quotes} quotes from yahoo_fin for {symbol}"
                     return quotes
             except Exception as e:
-                logger.debug(f"yahoo_fin failed for {symbol}: {e}")
+                logger.debug(f"yahoo_fin failed for {symbol}: {e}"
 
-        logger.warning(f"No data available from Yahoo Finance for {symbol}")
+        logger.warning(f"No data available from Yahoo Finance for {symbol}"
         return []
 
     def _load_from_yahoo_v8_api(
@@ -204,7 +204,7 @@ class DataLoader:
         start_date: datetime,
         end_date: datetime,
         timeframe: str = "1d",
-    ) -> List[Quote]:
+     -> List[Quote]:
         """
         Load data from Yahoo Finance v8 API directly.
         This is the most reliable method that avoids rate limits.
@@ -213,8 +213,8 @@ class DataLoader:
             import requests
 
             # Convert dates to Unix timestamps
-            period1 = int(start_date.timestamp())
-            period2 = int(end_date.timestamp())
+            period1 = int(start_date.timestamp(
+            period2 = int(end_date.timestamp(
 
             # Map timeframe to interval
             interval_map = {
@@ -222,9 +222,9 @@ class DataLoader:
                 "1h": "1h",
                 "1m": "1m",
             }
-            interval = interval_map.get(timeframe, "1d")
+            interval = interval_map.get(timeframe, "1d"
 
-            url = "https://query1.finance.yahoo.com/v8/finance/chart/{}".format(symbol)
+            url = "https://query1.finance.yahoo.com/v8/finance/chart/{}", symbol
             params = {
                 "period1": period1,
                 "period2": period2,
@@ -234,71 +234,71 @@ class DataLoader:
             }
 
             headers = {
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7 AppleWebKit/537.36 (KHTML, like Gecko Chrome/120.0.0.0 Safari/537.36',
                 'Accept': 'application/json',
                 'Accept-Language': 'en-US,en;q=0.9',
                 'Referer': 'https://finance.yahoo.com/',
             }
 
-            response = requests.get(url, params=params, headers=headers, timeout=30)
+            response = requests.get(url, params=params, headers=headers, timeout=30
 
             if response.status_code != 200:
                 logger.debug(
                     f"Yahoo Finance v8 API returned status {response.status_code} for {symbol}"
-                )
+                
                 return []
 
-            data = response.json()
+            data = response.json(
 
             if "chart" not in data or not data["chart"]["result"]:
-                logger.debug(f"No data in Yahoo Finance v8 API response for {symbol}")
+                logger.debug(f"No data in Yahoo Finance v8 API response for {symbol}"
                 return []
 
             result = data["chart"]["result"][0]
 
             if "timestamp" not in result or "indicators" not in result:
-                logger.debug(f"Invalid response structure from Yahoo Finance v8 API for {symbol}")
+                logger.debug(f"Invalid response structure from Yahoo Finance v8 API for {symbol}"
                 return []
 
             timestamps = result["timestamp"]
             quote = result["indicators"]["quote"][0]
 
             quotes = []
-            for i, ts in enumerate(timestamps):
-                date = datetime.fromtimestamp(ts)
+            for i, ts in enumerate(timestamps:
+                date = datetime.fromtimestamp(ts
                 if start_date <= date <= end_date:
                     close = (
                         quote["close"][i]
-                        if i < len(quote["close"]) and quote["close"][i] is not None
+                        if i < len(quote["close"] and quote["close"][i] is not None
                         else None
-                    )
+                    
                     if close is None:
                         continue
 
                     open_price = (
                         quote["open"][i]
-                        if i < len(quote["open"]) and quote["open"][i] is not None
+                        if i < len(quote["open"] and quote["open"][i] is not None
                         else close
-                    )
+                    
                     high = (
                         quote["high"][i]
-                        if i < len(quote["high"]) and quote["high"][i] is not None
+                        if i < len(quote["high"] and quote["high"][i] is not None
                         else close
-                    )
+                    
                     low = (
                         quote["low"][i]
-                        if i < len(quote["low"]) and quote["low"][i] is not None
+                        if i < len(quote["low"] and quote["low"][i] is not None
                         else close
-                    )
+                    
                     volume_raw = (
                         quote["volume"][i]
-                        if i < len(quote["volume"]) and quote["volume"][i] is not None
+                        if i < len(quote["volume"] and quote["volume"][i] is not None
                         else 0
-                    )
-                    # Cap volume at 10B to avoid validation errors (NVDA can have >1B shares)
-                    max_volume = Decimal("10000000000")  # 10B shares
+                    
+                    # Cap volume at 10B to avoid validation errors (NVDA can have >1B shares
+                    max_volume = Decimal("10000000000"  # 10B shares
                     volume = (
-                        min(Decimal(str(volume_raw)), max_volume) if volume_raw else Decimal("0")
+                        min(Decimal(str(volume_raw), max_volume) if volume_raw else Decimal("0")
                     )
 
                     quotes.append(

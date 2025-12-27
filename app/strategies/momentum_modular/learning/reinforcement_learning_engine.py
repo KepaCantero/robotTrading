@@ -440,13 +440,13 @@ class ReinforcementLearningEngine(BaseLearningEngine):
                 gamma=algorithm_params.get("gamma", 0.99),
                 buffer_size=algorithm_params.get("buffer_size", 100000),
                 learning_starts=algorithm_params.get("learning_starts", 100),
-                ent_coef=algorithm_params.get("ent_coef", "auto"),  # Auto-tune entropy coefficient
+                ent_coef=algorithm_params.get("ent_coe", "auto"),  # Auto-tune entropy coefficient
                 verbose=algorithm_params.get("verbose", 1),
             )
         else:
             raise ValueError(
                 f"Algoritmo {self.algorithm} no soportado. "
-                f"Opciones: ppo, a2c, ddpg, dqn, td3, sac"
+                "Opciones: ppo, a2c, ddpg, dqn, td3, sac"
             )
 
         # Entrenar

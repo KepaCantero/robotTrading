@@ -250,5 +250,5 @@ def get_allocation_manager(
     """Get or create singleton AllocationManager."""
     global _manager
     if _manager is None:
-        _manager = AllocationManager(rebalancing_threshold)
+
     return _manager

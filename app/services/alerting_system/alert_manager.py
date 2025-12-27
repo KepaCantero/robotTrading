@@ -13,12 +13,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 from uuid import uuid4
 
-from .models import (
-    AlertEvent,
-    AlertHistory,
-    AlertRule,
-    AlertState,
-)
+from .models import AlertEvent, AlertHistory, AlertRule, AlertState
 
 logger = logging.getLogger(__name__)
 
@@ -396,4 +391,4 @@ class AlertManager:
 
         # Keep history size bounded
         if len(self.alert_history) > self._max_history:
-            self.alert_history = self.alert_history[-self._max_history :]
+            self.alert_history = self.alert_history[-self._max_history:]

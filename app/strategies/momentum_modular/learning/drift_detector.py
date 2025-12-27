@@ -1389,7 +1389,7 @@ class AdvancedOverfittingDetector:
         if len(self.metrics_history) < 5:
             return "unknown"
 
-        recent_metrics = self.metrics_history[-self.extrapolation_window :]
+        recent_metrics = self.metrics_history[-self.extrapolation_window:]
 
         # Get valid training and validation metrics
         train_losses = [m.train_loss for m in recent_metrics]
@@ -1613,7 +1613,7 @@ class AdvancedOverfittingDetector:
             return None
 
         # Find epoch with best validation metric
-        best_val_loss = float("inf")
+        best_val_loss = float("in")
         best_epoch = None
 
         for i, m in enumerate(self.metrics_history):

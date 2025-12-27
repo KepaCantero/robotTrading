@@ -114,7 +114,7 @@ class RiskScalingApplication:
             }
 
             logger.info(
-                f"Risk scaling applied: "
+                "Risk scaling applied: "
                 f"€{base_position_size:,.0f} → €{final_position:,.0f} "
                 f"(feasibility {feasibility_ratio:.2f})"
             )
@@ -235,5 +235,5 @@ def get_risk_scaling_application() -> RiskScalingApplication:
     """Get or create singleton RiskScalingApplication."""
     global _application
     if _application is None:
-        _application = RiskScalingApplication()
+
     return _application

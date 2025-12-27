@@ -83,11 +83,11 @@ class TestPortfolioEngine:
         config = {'enabled': True}
         engine = PortfolioEngine(config)
 
-        assert engine.enabled == True
-        assert engine._initialized == False
+        assert engine.enabled
+        assert engine.not _initialized
 
         engine.initialize()
-        assert engine._initialized == True
+        assert engine._initialized
 
     def test_get_portfolio(self):
         """Test obtener portfolio."""
@@ -242,7 +242,7 @@ class TestPortfolioRebalancers:
         )
 
         # Con threshold 5%, desviación de 5% debería trigger rebalance
-        assert should_rebalance == True
+        assert should_rebalance
 
     def test_time_based_rebalancer(self):
         """Test time-based rebalancer."""
@@ -257,7 +257,7 @@ class TestPortfolioRebalancers:
         should_rebalance = rebalancer.should_rebalance(
             current_weights, target_weights, portfolio_value
         )
-        assert should_rebalance == True
+        assert should_rebalance
 
     def test_volatility_targeting_rebalancer(self):
         """Test volatility-targeting rebalancer."""

@@ -65,7 +65,7 @@ class TestMicroAccountOptimization:
             risk_profile=risk_profile,
         )
         assert report.tier == "micro"
-        assert params is not None or report.is_feasible == False
+        assert params is not None or report.not is_feasible
 
     def test_micro_conservative_goal(self):
         """Micro account with conservative €50/month goal"""
@@ -419,5 +419,5 @@ class TestOptimizationEdgeCases:
         )
 
         # Should be rejected with clear messaging
-        assert report.is_feasible == False
+        assert report.not is_feasible
         assert report.gap < Decimal("0")  # Shortfall

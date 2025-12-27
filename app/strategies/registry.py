@@ -241,7 +241,7 @@ class StrategyRegistry:
         """Representación detallada del registry."""
         loaded = list(self.strategies.keys())
         return (
-            f"StrategyRegistry("
+            "StrategyRegistry("
             f"loaded={len(loaded)}, "
             f"active='{self.active_strategy}', "
             f"strategies={loaded})"

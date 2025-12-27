@@ -299,7 +299,7 @@ class VolatilityTargetingRebalancer(BaseRebalancer):
 
         if should_rebalance:
             self.logger.info(
-                f"Volatility-targeting rebalance triggered: "
+                "Volatility-targeting rebalance triggered: "
                 f"current volatility {portfolio_volatility:.2%}, "
                 f"target {self.target_volatility:.2%}, "
                 f"deviation {deviation:.2%}"
@@ -409,7 +409,7 @@ class TransactionCostAwareRebalancer(BaseRebalancer):
 
         if not should_rebalance:
             self.logger.info(
-                f"Transaction cost-aware rebalance skipped: "
+                "Transaction cost-aware rebalance skipped: "
                 f"estimated benefit {estimated_benefit:.2f} < total cost {total_cost:.2f}"
             )
 

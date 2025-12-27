@@ -126,7 +126,7 @@ class TestWinRateBug(unittest.TestCase):
             self.assertGreater(
                 performance.win_rate,
                 Decimal("0"),
-                f"Win rate no debe ser 0% cuando se vende por encima del promedio. "
+                "Win rate no debe ser 0% cuando se vende por encima del promedio. "
                 f"Win rate={performance.win_rate}%, winning={performance.winning_trades}, "
                 f"total={performance.total_trades}",
             )

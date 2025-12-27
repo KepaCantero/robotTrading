@@ -98,7 +98,7 @@ class TimestampNormalizer:
         # Formato común: YYYY-MM-DD HH:MM:SS
         formats = [
             '%Y-%m-%d %H:%M:%S',
-            '%Y-%m-%d %H:%M:%S.%f',
+            '%Y-%m-%d %H:%M:%S.%',
             '%Y-%m-%d',
             '%Y/%m/%d %H:%M:%S',
             '%Y/%m/%d',

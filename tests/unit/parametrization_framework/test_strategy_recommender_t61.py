@@ -16,9 +16,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.services.strategy_recommendation.strategy_recommender import (
-    StrategyRecommender,
-)
+from app.services.strategy_recommendation.strategy_recommender import StrategyRecommender
 
 
 @dataclass

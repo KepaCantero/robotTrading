@@ -89,13 +89,13 @@ if STREAMLIT_AVAILABLE:
         st.markdown(
             """
         ### 📋 Instrucciones
-        
+
         1. **Configura el directorio** con los resultados de backtests
         2. **Opcionalmente**, especifica la ruta al archivo de configuración YAML (para umbrales)
         3. **Haz clic en "Cargar y Analizar"** para ejecutar el análisis completo
-        
+
         ### 🎯 Características
-        
+
         - **Alert Engine**: Detecta problemas críticos automáticamente
         - **Performance Matrix**: Visualiza rendimiento por estrategia/engine
         - **Meta-Analyzer View**: Correlaciones y clusters

@@ -8,9 +8,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.services.live_trading.account_synchronizer import (
-    AccountSynchronizer,
-)
+from app.services.live_trading.account_synchronizer import AccountSynchronizer
 from app.services.live_trading.broker_connector import (
     BrokerConnector,
     BrokerType,
@@ -18,13 +16,8 @@ from app.services.live_trading.broker_connector import (
     OrderStatus,
     OrderType,
 )
-from app.services.live_trading.order_manager import (
-    OrderManager,
-)
-from app.services.live_trading.risk_gates import (
-    RiskGates,
-    RiskLevel,
-)
+from app.services.live_trading.order_manager import OrderManager
+from app.services.live_trading.risk_gates import RiskGates, RiskLevel
 
 
 @pytest.fixture

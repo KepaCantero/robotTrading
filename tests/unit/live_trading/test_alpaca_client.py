@@ -10,10 +10,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.services.live_trading.broker_adapters.alpaca_client import (
-    AlpacaClient,
-    AlpacaClientError,
-)
+from app.services.live_trading.broker_adapters.alpaca_client import AlpacaClient, AlpacaClientError
 
 
 @pytest.fixture

@@ -9,7 +9,6 @@ from app.services.deployment.deploy_decision_orchestrator import (
     DeploymentDecision,
 )
 
-__all__ = [
     "DeployDecisionOrchestrator",
     "DeploymentDecision",
 ]

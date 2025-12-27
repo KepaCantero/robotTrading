@@ -12,12 +12,7 @@ import logging
 from decimal import Decimal
 from typing import Optional
 
-from .models import (
-    CapitalTier,
-    CapitalTierResult,
-    RiskProfile,
-    StrategyFeatures,
-)
+from .models import CapitalTier, CapitalTierResult, RiskProfile, StrategyFeatures
 
 logger = logging.getLogger(__name__)
 

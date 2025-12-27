@@ -21,12 +21,7 @@ from typing import Dict, List, Optional, Tuple
 from app.services.alerting_system import AlertEvent, AlertManager
 
 from .alert_to_trade_mapper import AlertToTradeMapper, TradeSignal
-from .broker_connector import (
-    BrokerConnector,
-    OrderSide,
-    OrderStatus,
-    get_broker_connector,
-)
+from .broker_connector import BrokerConnector, OrderSide, OrderStatus, get_broker_connector
 from .order_manager import OrderManager
 from .risk_gates import RiskCheckResult, RiskGates, RiskLevel
 
@@ -213,7 +208,7 @@ class TradingBridgeOrchestrator:
                 return None
 
             if risk_result.risk_level == RiskLevel.HIGH:
-                logger.warning(f"⚠️ High risk trade - proceeding with caution")
+                logger.warning("⚠️ High risk trade - proceeding with caution")
 
             # Execute trade
             self.status = BridgeStatus.EXECUTING
@@ -444,5 +439,5 @@ def get_trading_bridge_orchestrator() -> TradingBridgeOrchestrator:
     """
     global _orchestrator_instance
     if _orchestrator_instance is None:
-        _orchestrator_instance = TradingBridgeOrchestrator()
+
     return _orchestrator_instance

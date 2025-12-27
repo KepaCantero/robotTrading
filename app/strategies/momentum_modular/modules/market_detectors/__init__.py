@@ -8,7 +8,6 @@ from .range_detector import RangeDetector
 from .trend_detector import TrendDetector
 from .volatility_detector import VolatilityDetector
 
-__all__ = [
     "BaseMarketDetector",
     "TrendDetector",
     "VolatilityDetector",

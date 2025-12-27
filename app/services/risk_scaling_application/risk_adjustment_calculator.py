@@ -399,5 +399,5 @@ def get_risk_adjustment_calculator() -> RiskAdjustmentCalculator:
     """Get or create singleton RiskAdjustmentCalculator."""
     global _calculator
     if _calculator is None:
-        _calculator = RiskAdjustmentCalculator()
+
     return _calculator

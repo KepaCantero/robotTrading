@@ -549,5 +549,5 @@ def get_advanced_risk_manager() -> AdvancedRiskManager:
     """Get global advanced risk manager instance."""
     global _advanced_risk_manager
     if _advanced_risk_manager is None:
-        _advanced_risk_manager = AdvancedRiskManager()
+
     return _advanced_risk_manager

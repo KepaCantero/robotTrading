@@ -906,7 +906,7 @@ def get_config() -> CentralizedConfig:
     """Get the global configuration instance."""
     global _config
     if _config is None:
-        _config = CentralizedConfig()
+
     return _config
 
 
@@ -926,14 +926,14 @@ def get_strategy_config(strategy_name: str) -> Optional[StrategyConfig]:
 def reload_config():
     """Reload the configuration from files."""
     global _config
-    _config = None
+
     return get_config()
 
 
 def set_config(config: CentralizedConfig):
     """Set the global configuration instance."""
     global _config
-    _config = config
+
 
 
 def validate_config() -> bool:

@@ -14,10 +14,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.services.module_parametrizer.models import (
-    ParameterizationPreset,
-    ParameterizationRequest,
-)
+from app.services.module_parametrizer.models import ParameterizationPreset, ParameterizationRequest
 from app.services.module_parametrizer.module_parametrizer import ModuleParametrizer
 
 

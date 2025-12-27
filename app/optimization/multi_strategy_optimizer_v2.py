@@ -48,7 +48,7 @@ class MultiStrategyOptimizerV2:
         # Results storage
         self.optimization_results: List[Dict[str, Any]] = []
         self.best_config: Optional[Dict[str, Any]] = None
-        self.best_score: float = -float('inf')
+        self.best_score: float = -float('in')
 
         # Load data once
         self.quotes: Dict[str, List[Quote]] = {}

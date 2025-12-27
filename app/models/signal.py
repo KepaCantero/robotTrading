@@ -168,7 +168,7 @@ class Signal(BaseModel):
             if self.confidence < 70.0:
                 raise ValueError(
                     f"Strong signal ({self.strength}) with low confidence ({self.confidence}). "
-                    f"Strong signals should have confidence >= 70.0"
+                    "Strong signals should have confidence >= 70.0"
                 )
 
         # Weak signals should have low confidence
@@ -176,7 +176,7 @@ class Signal(BaseModel):
             if self.confidence > 80.0:
                 raise ValueError(
                     f"Weak signal with high confidence ({self.confidence}). "
-                    f"Weak signals should have confidence <= 80.0"
+                    "Weak signals should have confidence <= 80.0"
                 )
 
         # HOLD signals should have moderate confidence
@@ -184,7 +184,7 @@ class Signal(BaseModel):
             if self.confidence > 90.0:
                 raise ValueError(
                     f"HOLD signal with very high confidence ({self.confidence}). "
-                    f"HOLD signals should have moderate confidence"
+                    "HOLD signals should have moderate confidence"
                 )
 
         return self

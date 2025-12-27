@@ -208,7 +208,7 @@ class DrawdownController(BaseDrawdownController):
         # Últimos N valores
         recent_values = [
             float(entry['portfolio_value'])
-            for entry in self.portfolio_value_history[-self.rolling_window :]
+            for entry in self.portfolio_value_history[-self.rolling_window:]
         ]
 
         # Peak en ventana
@@ -231,7 +231,7 @@ class DrawdownController(BaseDrawdownController):
                 window_values = [
                     float(entry['portfolio_value'])
                     for entry in self.portfolio_value_history[
-                        max(0, i - self.rolling_window) : i + 1
+                        max(0, i - self.rolling_window): i + 1
                     ]
                 ]
                 if window_values:

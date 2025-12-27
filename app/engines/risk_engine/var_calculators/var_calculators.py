@@ -321,7 +321,7 @@ class GARCHVaRCalculator(BaseVaRCalculator):
             from arch import arch_model
 
             model = arch_model(returns * 100, vol='Garch', p=1, q=1)
-            fitted_model = model.fit(disp='off')
+            fitted_model = model.fit(disp='of')
 
             # Obtener volatilidad condicional
             forecast = fitted_model.forecast(horizon=1)

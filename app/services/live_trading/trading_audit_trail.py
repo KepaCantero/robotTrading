@@ -177,7 +177,7 @@ class TradingAuditTrail:
         # Enforce max events limit
         if len(self.events) > self.max_events:
             # Archive oldest events (simplified - would go to database)
-            self.events = self.events[-self.max_events :]
+            self.events = self.events[-self.max_events:]
 
         logger.info(f"📝 Audit event: {event_type.value} (event_id={event.event_id})")
         return event
@@ -369,5 +369,5 @@ def get_trading_audit_trail() -> "TradingAuditTrail":
     """
     global _audit_trail_instance
     if _audit_trail_instance is None:
-        _audit_trail_instance = TradingAuditTrail()
+
     return _audit_trail_instance

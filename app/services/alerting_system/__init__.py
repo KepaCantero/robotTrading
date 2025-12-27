@@ -11,11 +11,7 @@ Provides rule-based alerting with webhook/email/Slack/Discord integration:
 
 from .alert_manager import AlertManager
 from .alert_rule_engine import AlertRuleEngine
-from .alerting_orchestrator import (
-    AlertingHealth,
-    AlertingOrchestrator,
-    AlertingStatistics,
-)
+from .alerting_orchestrator import AlertingHealth, AlertingOrchestrator, AlertingStatistics
 from .metrics_driven_alerter import MetricQueryConfig, MetricsDrivenAlerter
 from .models import (
     AlertEvent,
@@ -48,7 +44,7 @@ def get_alerting_orchestrator() -> AlertingOrchestrator:
     """
     global _orchestrator
     if _orchestrator is None:
-        _orchestrator = AlertingOrchestrator()
+
     return _orchestrator
 
 
@@ -99,10 +95,8 @@ async def stop_alerting() -> None:
 def reset_alerting_orchestrator() -> None:
     """Reset the singleton orchestrator (for testing)."""
     global _orchestrator
-    _orchestrator = None
 
 
-__all__ = [
     # Services
     "AlertRuleEngine",
     "AlertManager",
@@ -133,5 +127,4 @@ __all__ = [
     "reset_alerting_orchestrator",
 ]
 
-__version__ = "1.0.0"
-__author__ = "MAESTRO Team"
+

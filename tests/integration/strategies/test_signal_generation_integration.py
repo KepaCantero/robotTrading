@@ -112,7 +112,7 @@ class TestMultiStrategySignalGeneration:
                 strategy_allocations[strategy] = []
             strategy_allocations[strategy].append(ticker)
 
-        logger.info(f"Portfolio allocation:")
+        logger.info("Portfolio allocation:")
         for strategy, tickers in strategy_allocations.items():
             logger.info(f"  {strategy}: {len(tickers)} tickers")
 
@@ -238,7 +238,7 @@ class TestMomentumOnlyPortfolio:
         top_momentum = sorted(momentum_scores.items(), key=lambda x: x[1], reverse=True)[:10]
         top_symbols = [symbol for (symbol, score) in top_momentum]
 
-        logger.info(f"Top 10 Momentum Assets:")
+        logger.info("Top 10 Momentum Assets:")
         for i, (symbol, score) in enumerate(top_momentum, 1):
             logger.info(f"  {i:2d}. {symbol:6s}: {score:.4f}")
 
@@ -284,7 +284,7 @@ class TestMomentumOnlyPortfolio:
         assert len(signals) >= 0, "Should generate signals (or 0 if conditions not met)"
 
         if signals:
-            logger.info(f"Sample signals:")
+            logger.info("Sample signals:")
             for signal in signals[:5]:
                 logger.info(f"  {signal.symbol}: {signal.signal_type} at ${signal.price}")
 
@@ -315,7 +315,7 @@ class TestMeanReversionOnlyPortfolio:
         top_mr = sorted(mr_scores.items(), key=lambda x: x[1], reverse=True)[:10]
         top_symbols = [symbol for (symbol, score) in top_mr]
 
-        logger.info(f"Top 10 Mean Reversion Assets:")
+        logger.info("Top 10 Mean Reversion Assets:")
         for i, (symbol, score) in enumerate(top_mr, 1):
             logger.info(f"  {i:2d}. {symbol:6s}: {score:.4f}")
 
@@ -361,7 +361,7 @@ class TestMeanReversionOnlyPortfolio:
         assert len(signals) >= 0, "Should generate signals (or 0 if conditions not met)"
 
         if signals:
-            logger.info(f"Sample signals:")
+            logger.info("Sample signals:")
             for signal in signals[:5]:
                 logger.info(f"  {signal.symbol}: {signal.signal_type} at ${signal.price}")
 
@@ -387,7 +387,7 @@ class TestPairsTradingOnlyPortfolio:
         test_symbols = symbols[:20]
 
         for i, symbol1 in enumerate(test_symbols):
-            for symbol2 in test_symbols[i + 1 :]:
+            for symbol2 in test_symbols[i + 1:]:
                 try:
                     df1 = real_historical_data[symbol1]
                     df2 = real_historical_data[symbol2]
@@ -467,7 +467,7 @@ class TestPairsTradingOnlyPortfolio:
         assert len(signals) >= 0, "Should generate signals (or 0 if conditions not met)"
 
         if signals:
-            logger.info(f"Sample signals:")
+            logger.info("Sample signals:")
             for signal in signals[:5]:
                 logger.info(f"  {signal.symbol}: {signal.signal_type} at ${signal.price}")
 

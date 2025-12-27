@@ -293,7 +293,7 @@ class StrategyRecommender:
                 suggestions.append(
                     RecommendationSuggestion(
                         suggestion_text=(
-                            f"Improve risk-adjusted returns: Sharpe ratio is "
+                            "Improve risk-adjusted returns: Sharpe ratio is "
                             f"{sharpe_score.metric_value:.2f}, target is 1.5+"
                         ),
                         priority="high" if sharpe_score.weight > Decimal("0.30") else "medium",
@@ -309,7 +309,7 @@ class StrategyRecommender:
                     RecommendationSuggestion(
                         suggestion_text=(
                             f"Increase returns: {return_score.metric_value:.1f}% annual, "
-                            f"target is 15%+"
+                            "target is 15%+"
                         ),
                         priority="high" if return_score.weight > Decimal("0.30") else "medium",
                         estimated_impact="+5% annual return with optimization",
@@ -323,7 +323,7 @@ class StrategyRecommender:
                 suggestions.append(
                     RecommendationSuggestion(
                         suggestion_text=(
-                            f"Reduce downside risk: Max drawdown is "
+                            "Reduce downside risk: Max drawdown is "
                             f"{drawdown_score.metric_value:.1f}%, target is <10%"
                         ),
                         priority="high" if drawdown_score.weight > Decimal("0.30") else "medium",
@@ -338,7 +338,7 @@ class StrategyRecommender:
                 suggestions.append(
                     RecommendationSuggestion(
                         suggestion_text=(
-                            f"Improve downside-risk-adjusted returns: Sortino ratio is "
+                            "Improve downside-risk-adjusted returns: Sortino ratio is "
                             f"{sortino_score.metric_value:.2f}, target is 2.0+"
                         ),
                         priority="medium",
@@ -353,7 +353,7 @@ class StrategyRecommender:
                 suggestions.append(
                     RecommendationSuggestion(
                         suggestion_text=(
-                            f"Increase dividend income: Current yield is "
+                            "Increase dividend income: Current yield is "
                             f"{dividend_score.metric_value:.1f}%, target is 4%+"
                         ),
                         priority="high" if dividend_score.weight > Decimal("0.30") else "low",
@@ -427,5 +427,5 @@ def get_strategy_recommender() -> StrategyRecommender:
     """Get or create singleton StrategyRecommender."""
     global _recommender
     if _recommender is None:
-        _recommender = StrategyRecommender()
+
     return _recommender

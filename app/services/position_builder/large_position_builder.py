@@ -491,5 +491,5 @@ def get_large_position_builder() -> LargePositionBuilder:
     """Get or create global LargePositionBuilder instance."""
     global _large_position_builder
     if _large_position_builder is None:
-        _large_position_builder = LargePositionBuilder()
+
     return _large_position_builder

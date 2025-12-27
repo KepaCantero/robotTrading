@@ -187,7 +187,7 @@ class LossMonitor:
 
         if should_reset:
             logger.info(
-                f"Loss counter reset condition met: "
+                "Loss counter reset condition met: "
                 f"{consecutive_wins} consecutive wins >= {self.reset_threshold}"
             )
             self.consecutive_loss_count = 0
@@ -344,7 +344,7 @@ class LossMonitor:
             return False, "Insufficient trade history"
 
         # Get early and recent periods
-        early = trade_results[-early_window - recent_window : -recent_window]
+        early = trade_results[-early_window - recent_window: -recent_window]
         recent = trade_results[-recent_window:]
 
         early_wins = sum(1 for t in early if t.is_winning())

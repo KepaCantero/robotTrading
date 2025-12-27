@@ -677,5 +677,5 @@ def get_asset_identification_service() -> AssetIdentificationService:
     """Get global asset identification service instance."""
     global _asset_service
     if _asset_service is None:
-        _asset_service = AssetIdentificationService()
+
     return _asset_service

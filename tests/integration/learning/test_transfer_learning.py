@@ -66,7 +66,7 @@ class TestModelRegistry:
                 tags=['production', 'high_accuracy'],
             )
 
-            assert success == True
+            assert success
 
             # Verificar que se guardó
             entry = registry.get_model('test_model_1')
@@ -109,7 +109,7 @@ class TestModelRegistry:
                 original_model, 'test_model', 'bull', 'supervised', 'xgboost'
             )
 
-            assert success == True
+            assert success
 
             loaded_model = registry.load_model('test_model')
 
@@ -134,7 +134,7 @@ class TestFineTuner:
 
         tuner = FineTuner(config)
 
-        assert tuner.freeze_layers == True
+        assert tuner.freeze_layers
         assert tuner.freeze_n_layers == 2
         assert tuner.learning_rate_multiplier == 0.1
 

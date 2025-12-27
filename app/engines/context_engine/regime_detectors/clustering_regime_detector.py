@@ -127,7 +127,7 @@ class ClusteringRegimeDetector:
 
             for i in range(20, len(prices)):
                 window_prices = (
-                    prices[i - window_size : i + 1] if i >= window_size else prices[: i + 1]
+                    prices[i - window_size: i + 1] if i >= window_size else prices[: i + 1]
                 )
                 features = self._extract_features(window_prices)
                 if len(features) > 0:

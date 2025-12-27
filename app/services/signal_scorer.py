@@ -231,7 +231,7 @@ class SignalScorerService:
 
         # Mantener tamaño máximo del historial
         if len(self.signal_history) > self.max_history_size:
-            self.signal_history = self.signal_history[-self.max_history_size :]
+            self.signal_history = self.signal_history[-self.max_history_size:]
 
     # Métodos de compatibilidad mantenidos
     async def get_next_actionable_signal(self) -> Optional[Signal]:

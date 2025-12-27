@@ -9,12 +9,8 @@ from .models import (
     StrategyRecommendationRequest,
     StrategyScore,
 )
-from .strategy_recommender import (
-    StrategyRecommender,
-    get_strategy_recommender,
-)
+from .strategy_recommender import StrategyRecommender, get_strategy_recommender
 
-__all__ = [
     "StrategyRecommender",
     "get_strategy_recommender",
     "StrategyRecommendationRequest",

@@ -647,14 +647,14 @@ class LearningEngineUpdater:
             # Dependencias faltantes - no es crítico, solo registramos y continuamos
             logger.debug(
                 f"⚠️ Reentrenamiento omitido: dependencias faltantes ({e}). "
-                f"El backtest continúa sin reentrenamiento."
+                "El backtest continúa sin reentrenamiento."
             )
             return False
         except Exception as e:
             # Cualquier otro error - no es crítico, registramos y continuamos
             logger.warning(
                 f"⚠️ Error en reentrenamiento (no crítico): {type(e).__name__}: {e}. "
-                f"El backtest continúa sin reentrenamiento."
+                "El backtest continúa sin reentrenamiento."
             )
             # No loguear el stack trace completo para errores no críticos
             return False
@@ -912,7 +912,7 @@ class LearningEngineUpdater:
                     top_features = analysis_result.get("top_features", {})
                     if top_features:
                         logger.info(
-                            f"🌟 Top 5 features por importancia: "
+                            "🌟 Top 5 features por importancia: "
                             f"{', '.join(list(top_features.keys())[:5])}"
                         )
 
@@ -928,17 +928,17 @@ class LearningEngineUpdater:
                     recommendations = analysis_result.get("recommendations", [])
                     if recommendations:
                         logger.info(
-                            f"💡 Feature Engineering Recommendations: "
+                            "💡 Feature Engineering Recommendations: "
                             f"{'; '.join(recommendations[:3])}"
                         )
 
                 logger.info(
-                    f"✅ Feature importance analysis completado "
+                    "✅ Feature importance analysis completado "
                     f"({len(analysis_result.get('top_features', {}))} features analizados)"
                 )
             else:
                 logger.debug(
-                    f"⚠️ Feature importance analysis no disponible: "
+                    "⚠️ Feature importance analysis no disponible: "
                     f"{analysis_result.get('error', 'Unknown error') if analysis_result else 'No result'}"
                 )
 

@@ -128,7 +128,7 @@ class LearningCapitalGate:
             learning_viable = False
             reason = (
                 f"Expected monthly alpha ${expected_monthly_alpha:.2f} is not positive; "
-                f"learning cannot improve negative returns"
+                "learning cannot improve negative returns"
             )
             recommendation = "DISABLE_LEARNING"
             severity = "CRITICAL"
@@ -144,7 +144,7 @@ class LearningCapitalGate:
                     f"Capital ${capital:,.0f} is below minimum viability threshold "
                     f"${LearningCapitalGate.MIN_CAPITAL_FOR_LEARNING:,.0f} (shortfall: ${disadvantage:,.0f}). "
                     f"Learning infrastructure cost (${learning_cost_monthly:.2f}/mo) exceeds benefit on small accounts. "
-                    f"Recommend simple, deterministic strategies instead."
+                    "Recommend simple, deterministic strategies instead."
                 )
                 recommendation = "DISABLE_LEARNING"
                 severity = "CRITICAL"
@@ -154,7 +154,7 @@ class LearningCapitalGate:
                 reason = (
                     f"Learning cost ${learning_cost_monthly:.2f}/mo ({cost_ratio:.0%} of alpha ${expected_monthly_alpha:.2f}/mo) "
                     f"exceeds acceptable threshold ({LearningCapitalGate.MAX_LEARNING_COST_RATIO:.0%}). "
-                    f"Cost of learning infrastructure outweighs expected benefit."
+                    "Cost of learning infrastructure outweighs expected benefit."
                 )
                 recommendation = "DISABLE_LEARNING"
                 severity = "WARNING"
@@ -166,7 +166,7 @@ class LearningCapitalGate:
                     f"Learning viable: Capital ${capital:,.0f} (${capital_tier} tier), "
                     f"learning cost ${learning_cost_monthly:.2f}/mo ({cost_ratio:.0%} of alpha). "
                     f"Net benefit after learning: ${margin:.2f}/mo. "
-                    f"Learning infrastructure justified."
+                    "Learning infrastructure justified."
                 )
                 recommendation = "ENABLE_LEARNING"
                 severity = "OK"

@@ -206,7 +206,7 @@ def get_test_config_manager() -> TestConfigManager:
     """Get global test configuration manager."""
     global _test_config_manager
     if _test_config_manager is None:
-        _test_config_manager = TestConfigManager()
+
     return _test_config_manager
 
 
@@ -220,7 +220,7 @@ def cleanup_test_environment() -> None:
     global _test_config_manager
     if _test_config_manager is not None:
         _test_config_manager.cleanup_test_environment()
-        _test_config_manager = None
+
 
 
 def get_test_config() -> TestEnvironmentConfig:

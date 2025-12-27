@@ -169,7 +169,7 @@ class Position(BaseModel):
             expected_unrealized = self.quantity * (self.market_price - self.avg_price)
             if abs(self.unrealized_pnl - expected_unrealized) > Decimal("0.01"):
                 raise ValueError(
-                    f"Unrealized P&L calculation mismatch. "
+                    "Unrealized P&L calculation mismatch. "
                     f"Expected: {expected_unrealized}, Got: {self.unrealized_pnl}"
                 )
 

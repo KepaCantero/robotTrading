@@ -30,7 +30,7 @@ class ExportFormat(Enum):
     """Supported report export formats."""
 
     HTML = "html"
-    PDF = "pdf"
+    PDF = "pd"
     EXCEL = "excel"
 
 
@@ -203,7 +203,7 @@ class ReportDeliveryManager:
         self,
         html_content: str,
         output_path: Path,
-        wkhtmltopdf_path: str = "wkhtmltopdf",
+        wkhtmltopdf_path: str = "wkhtmltopd",
         include_timestamp: bool = True,
         quality: str = "high",
     ) -> ExportResult:
@@ -494,5 +494,5 @@ def get_delivery_manager() -> ReportDeliveryManager:
     """Get or create ReportDeliveryManager singleton."""
     global _delivery_manager_instance
     if _delivery_manager_instance is None:
-        _delivery_manager_instance = ReportDeliveryManager()
+
     return _delivery_manager_instance

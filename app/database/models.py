@@ -30,7 +30,6 @@ from app.database import Base
 class User(Base):
     """User model for authentication and authorization."""
 
-    __tablename__ = "users"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
@@ -52,7 +51,6 @@ class User(Base):
         "APIKey", back_populates="user", cascade="all, delete-orphan"
     )
 
-    __table_args__ = (
         Index("idx_users_email", "email"),
         Index("idx_users_username", "username"),
         Index("idx_users_created_at", "created_at"),
@@ -63,7 +61,6 @@ class User(Base):
 class APIKey(Base):
     """API Key model for external API access."""
 
-    __tablename__ = "api_keys"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
@@ -80,7 +77,6 @@ class APIKey(Base):
     # Relationships
     user: Mapped["User"] = relationship("User", back_populates="api_keys")
 
-    __table_args__ = (
         Index("idx_api_keys_key_hash", "key_hash"),
         Index("idx_api_keys_user_id", "user_id"),
         Index("idx_api_keys_expires_at", "expires_at"),
@@ -90,7 +86,6 @@ class APIKey(Base):
 class Portfolio(Base):
     """Portfolio model for managing trading portfolios."""
 
-    __tablename__ = "portfolios"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
@@ -119,7 +114,6 @@ class Portfolio(Base):
         "Backtest", back_populates="portfolio", cascade="all, delete-orphan"
     )
 
-    __table_args__ = (
         Index("idx_portfolios_user_id", "user_id"),
         Index("idx_portfolios_name", "name"),
         Index("idx_portfolios_created_at", "created_at"),
@@ -130,7 +124,6 @@ class Portfolio(Base):
 class Asset(Base):
     """Asset model for storing financial instruments."""
 
-    __tablename__ = "assets"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     symbol: Mapped[str] = mapped_column(String(20), unique=True, nullable=False, index=True)
@@ -150,7 +143,6 @@ class Asset(Base):
     trades: Mapped[List["Trade"]] = relationship("Trade", back_populates="asset")
     market_data: Mapped[List["MarketData"]] = relationship("MarketData", back_populates="asset")
 
-    __table_args__ = (
         Index("idx_assets_symbol", "symbol"),
         Index("idx_assets_asset_class", "asset_class"),
         Index("idx_assets_exchange", "exchange"),
@@ -161,7 +153,6 @@ class Asset(Base):
 class Position(Base):
     """Position model for tracking portfolio positions."""
 
-    __tablename__ = "positions"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     portfolio_id: Mapped[uuid.UUID] = mapped_column(
@@ -186,7 +177,6 @@ class Position(Base):
     portfolio: Mapped["Portfolio"] = relationship("Portfolio", back_populates="positions")
     asset: Mapped["Asset"] = relationship("Asset", back_populates="positions")
 
-    __table_args__ = (
         Index("idx_positions_portfolio_id", "portfolio_id"),
         Index("idx_positions_asset_id", "asset_id"),
         Index("idx_positions_updated_at", "updated_at"),
@@ -198,7 +188,6 @@ class Position(Base):
 class Trade(Base):
     """Trade model for recording executed trades."""
 
-    __tablename__ = "trades"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     portfolio_id: Mapped[uuid.UUID] = mapped_column(
@@ -226,7 +215,6 @@ class Trade(Base):
     portfolio: Mapped["Portfolio"] = relationship("Portfolio", back_populates="trades")
     asset: Mapped["Asset"] = relationship("Asset", back_populates="trades")
 
-    __table_args__ = (
         Index("idx_trades_portfolio_id", "portfolio_id"),
         Index("idx_trades_asset_id", "asset_id"),
         Index("idx_trades_order_id", "order_id"),
@@ -241,7 +229,6 @@ class Trade(Base):
 class MarketData(Base):
     """Market data model for storing price and volume data."""
 
-    __tablename__ = "market_data"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     asset_id: Mapped[uuid.UUID] = mapped_column(
@@ -259,7 +246,6 @@ class MarketData(Base):
     # Relationships
     asset: Mapped["Asset"] = relationship("Asset", back_populates="market_data")
 
-    __table_args__ = (
         Index("idx_market_data_asset_id", "asset_id"),
         Index("idx_market_data_timestamp", "timestamp"),
         Index("idx_market_data_asset_timestamp", "asset_id", "timestamp"),
@@ -276,7 +262,6 @@ class MarketData(Base):
 class Signal(Base):
     """Signal model for storing trading signals."""
 
-    __tablename__ = "signals"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     asset_id: Mapped[uuid.UUID] = mapped_column(
@@ -294,7 +279,6 @@ class Signal(Base):
     # Relationships
     asset: Mapped["Asset"] = relationship("Asset")
 
-    __table_args__ = (
         Index("idx_signals_asset_id", "asset_id"),
         Index("idx_signals_strategy_name", "strategy_name"),
         Index("idx_signals_signal_type", "signal_type"),
@@ -309,7 +293,6 @@ class Signal(Base):
 class Backtest(Base):
     """Backtest model for storing backtest results."""
 
-    __tablename__ = "backtests"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     portfolio_id: Mapped[uuid.UUID] = mapped_column(
@@ -336,7 +319,6 @@ class Backtest(Base):
     # Relationships
     portfolio: Mapped["Portfolio"] = relationship("Portfolio", back_populates="backtests")
 
-    __table_args__ = (
         Index("idx_backtests_portfolio_id", "portfolio_id"),
         Index("idx_backtests_strategy_name", "strategy_name"),
         Index("idx_backtests_start_date", "start_date"),
@@ -351,7 +333,6 @@ class Backtest(Base):
 class RiskMetrics(Base):
     """Risk metrics model for storing portfolio risk calculations."""
 
-    __tablename__ = "risk_metrics"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     portfolio_id: Mapped[uuid.UUID] = mapped_column(
@@ -375,7 +356,6 @@ class RiskMetrics(Base):
     # Relationships
     portfolio: Mapped["Portfolio"] = relationship("Portfolio")
 
-    __table_args__ = (
         Index("idx_risk_metrics_portfolio_id", "portfolio_id"),
         Index("idx_risk_metrics_calculation_date", "calculation_date"),
         Index("idx_risk_metrics_portfolio_date", "portfolio_id", "calculation_date"),
@@ -385,7 +365,6 @@ class RiskMetrics(Base):
 class SystemLog(Base):
     """System log model for storing application logs."""
 
-    __tablename__ = "system_logs"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     level: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
@@ -395,7 +374,6 @@ class SystemLog(Base):
     timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
-    __table_args__ = (
         Index("idx_system_logs_level", "level"),
         Index("idx_system_logs_service", "service"),
         Index("idx_system_logs_timestamp", "timestamp"),

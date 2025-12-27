@@ -59,7 +59,7 @@ class HyperparameterOptimizer:
 
         self.results: List[Dict[str, Any]] = []
         self.best_config: Optional[Dict[str, Any]] = None
-        self.best_score: float = float('-inf')
+        self.best_score: float = float('-in')
 
         # Espacio de búsqueda de parámetros
         self.parameter_space = self._define_parameter_space()

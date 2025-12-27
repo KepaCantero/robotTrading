@@ -415,7 +415,7 @@ class PairsTradingStrategy(BaseStrategy):
                 if not existing_position:
                     logger.info(
                         f"⚠️ PAIRS_TRADING risk_check REJECTED SELL {signal.symbol}: "
-                        f"No position exists to sell"
+                        "No position exists to sell"
                     )
                     return False
                 # Now calculate sell quantity and verify we have enough

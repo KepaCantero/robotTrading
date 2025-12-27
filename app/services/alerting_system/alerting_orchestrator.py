@@ -19,11 +19,7 @@ from app.services.alerting_system.metrics_driven_alerter import (
     MetricQueryConfig,
     MetricsDrivenAlerter,
 )
-from app.services.alerting_system.models import (
-    AlertEvent,
-    AlertRule,
-    AlertSeverity,
-)
+from app.services.alerting_system.models import AlertEvent, AlertRule, AlertSeverity
 from app.services.alerting_system.notification_channels import NotificationDispatcher
 from app.services.alerting_system.rule_templates import AlertRuleTemplates
 

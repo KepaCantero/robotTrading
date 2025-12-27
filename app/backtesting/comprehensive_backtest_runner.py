@@ -131,9 +131,9 @@ class ComprehensiveBacktestRunner:
         self.config_path = config_path  # Guardar para auditoría
         self.results: List[Dict[str, Any]] = []
         # Store complete BacktestResult objects for quantstats/pyfolio analysis
-        self.backtest_results_objects: List[Tuple[str, BacktestResult]] = (
-            []
-        )  # (test_name, BacktestResult)
+        self.backtest_results_objects: List[
+            Tuple[str, BacktestResult]
+        ] = []  # (test_name, BacktestResult)
         self.output_dir = Path(self.config['reporting']['output_directory'])
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -378,7 +378,7 @@ class ComprehensiveBacktestRunner:
                 f"    ⚠️ {engine_type} learning engine NO inicializado en main thread (previene mutex.cc blocking)"
             )
             logger.warning(
-                f"    💡 El entrenamiento se hará SOLO en subprocess sin predicciones en main process"
+                "    💡 El entrenamiento se hará SOLO en subprocess sin predicciones en main process"
             )
             # Para cualquier tipo de learning engine, permitir que se entrene en subprocess
             if learning_engine_name in ['deep', 'transformer', 'supervised', 'reinforcement']:
@@ -390,7 +390,7 @@ class ComprehensiveBacktestRunner:
 
         # Si learning_engine no está inicializado (ESPERADO en main thread para evitar mutex.cc)
         if strategy.learning_engine is None:
-            logger.info(f"    ℹ️ Learning engine NO inicializado en main thread (mutex prevention)")
+            logger.info("    ℹ️ Learning engine NO inicializado en main thread (mutex prevention)")
             # Si learning_engine_name no se proporciona, determinar del tipo configurado
             if learning_engine_name is None:
                 learning_engine_name = strategy._learning_engine_type or 'supervised'
@@ -1471,7 +1471,7 @@ class ComprehensiveBacktestRunner:
 
         best_result = None
         best_metric_value = (
-            float('-inf') if optimize_metric in ['sharpe_ratio', 'total_pnl'] else 0.0
+            float('-in') if optimize_metric in ['sharpe_ratio', 'total_pnl'] else 0.0
         )
 
         for i, param_combo in enumerate(param_combinations):
@@ -1593,7 +1593,7 @@ class ComprehensiveBacktestRunner:
         results = []
         best_result = None
         best_metric_value = (
-            float('-inf') if optimize_metric in ['sharpe_ratio', 'total_pnl'] else 0.0
+            float('-in') if optimize_metric in ['sharpe_ratio', 'total_pnl'] else 0.0
         )
 
         initial_capital = Decimal(str(self.config['input']['initial_capital']))
@@ -2097,7 +2097,7 @@ class ComprehensiveBacktestRunner:
         )
 
         best_thresholds = None
-        best_sharpe = float('-inf')
+        best_sharpe = float('-in')
 
         for param_combo in param_combinations:
             try:
@@ -3151,8 +3151,8 @@ class ComprehensiveBacktestRunner:
         # Paso 3: Análisis comparativo entre regímenes
         if len(results) > 1:
             logger.info("\n  📊 Análisis Comparativo de Regímenes:")
-            best_sharpe = max(results, key=lambda x: x.get('sharpe_ratio', float('-inf')))
-            best_pnl = max(results, key=lambda x: x.get('total_pnl', float('-inf')))
+            best_sharpe = max(results, key=lambda x: x.get('sharpe_ratio', float('-in')))
+            best_pnl = max(results, key=lambda x: x.get('total_pnl', float('-in')))
             best_win_rate = max(
                 [r for r in results if r.get('win_rate', 0) > 0],
                 key=lambda x: x.get('win_rate', 0),
@@ -3227,7 +3227,7 @@ class ComprehensiveBacktestRunner:
                             param_config = filter_config['parameters'][param_name]
                             current_thresholds[param] = param_config.get('default', 50)
 
-        best_sharpe = float('-inf')
+        best_sharpe = float('-in')
         best_thresholds = current_thresholds.copy()
         best_result = None
         iteration = 0
@@ -3350,7 +3350,7 @@ class ComprehensiveBacktestRunner:
             'total_pnl': best_result['total_pnl'] if best_result else 0.0,
             'return_pct': best_result['return_pct'] if best_result else 0.0,
             'win_rate': best_result['win_rate'] if best_result else 0.0,
-            'sharpe_ratio': best_sharpe if best_sharpe > float('-inf') else 0.0,
+            'sharpe_ratio': best_sharpe if best_sharpe > float('-in') else 0.0,
             'max_drawdown': best_result['max_drawdown'] if best_result else 0.0,
             'total_trades': best_result['total_trades'] if best_result else 0,
             'final_capital': float(self.config['input']['initial_capital'])
@@ -3870,7 +3870,7 @@ class ComprehensiveBacktestRunner:
         # Convertir resultados al formato estándar
         results = []
         best_config = optimization_results.get('best_config', {})
-        optimization_results.get('best_score', float('-inf'))
+        optimization_results.get('best_score', float('-in'))
 
         strategy = None  # Para guardar pesos si hay learning engine
 
@@ -3914,7 +3914,7 @@ class ComprehensiveBacktestRunner:
 
             if result_dict['is_best']:
                 logger.info(
-                    f"  ✅ Mejor configuración encontrada: "
+                    "  ✅ Mejor configuración encontrada: "
                     f"Score={score:.4f}, Sharpe={result_data.get('sharpe_ratio', 0):.2f}, "
                     f"PnL=${result_data.get('total_pnl', 0):.2f}"
                 )
@@ -4096,7 +4096,9 @@ class ComprehensiveBacktestRunner:
 
             logger.info("✅ Análisis meta completado")
         except ImportError:
-            logger.warning("⚠️ BacktestMetaAnalyzer no disponible. Instala dependencias opcionales.")
+            logger.warning(
+                "⚠️ BacktestMetaAnalyzer no disponible. Instala dependencias opcionales."
+            )
         except Exception as e:
             logger.error(f"❌ Error en análisis meta: {e}", exc_info=True)
 

@@ -133,8 +133,8 @@ class SupervisedLearningEngine(BaseLearningEngine):
             from sklearn.model_selection import train_test_split  # noqa: F401
         except ImportError as e:
             raise ImportError(
-                f"scikit-learn es requerido para SupervisedLearningEngine. "
-                f"Instala con: pip install scikit-learn>=1.3.0\n"
+                "scikit-learn es requerido para SupervisedLearningEngine. "
+                "Instala con: pip install scikit-learn>=1.3.0\n"
                 f"Error al verificar: {e}"
             )
 
