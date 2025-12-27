@@ -17,6 +17,8 @@ from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 
+import pytest
+
 from app.backtesting.models import BacktestResult
 from app.models.portfolio import Portfolio, Position
 from app.services.capacity_fade_validation import (
@@ -179,6 +181,7 @@ class TestPipelineT4T8T9:
     # SCENARIO 1: Conservative Strategy, Moderate Capital
     # ========================================================================
 
+    @pytest.mark.asyncio
     async def test_pipeline_conservative_strategy(self):
         """Test full pipeline with conservative strategy at moderate capital."""
         # T4.1: Validate capacity fade
@@ -204,7 +207,7 @@ class TestPipelineT4T8T9:
         # T8.1: Apply risk scaling
         portfolio = self.data_factory.create_portfolio(capital=Decimal("150000"))
 
-        scaled_portfolio = self.risk_scaler.apply_scaling(
+        scaled_portfolio = await self.risk_scaler.apply_risk_scaling(
             portfolio=portfolio,
             risk_monitors=None,  # Simplified for integration test
         )
@@ -225,6 +228,7 @@ class TestPipelineT4T8T9:
     # SCENARIO 2: Aggressive Strategy, High Capital
     # ========================================================================
 
+    @pytest.mark.asyncio
     async def test_pipeline_aggressive_strategy_high_capital(self):
         """Test full pipeline with aggressive strategy at high capital tier."""
         # T4.1: Validate capacity
@@ -250,7 +254,7 @@ class TestPipelineT4T8T9:
 
         # T8.1: Risk scaling may be more conservative
         portfolio = self.data_factory.create_portfolio(capital=Decimal("250000"))
-        scaled_portfolio = self.risk_scaler.apply_scaling(
+        scaled_portfolio = await self.risk_scaler.apply_risk_scaling(
             portfolio=portfolio,
             risk_monitors=None,
         )
@@ -262,6 +266,7 @@ class TestPipelineT4T8T9:
 
         # Calculate metrics from returns
         import numpy as np
+
         returns_array = np.array([float(r) for r in returns])
         annual_vol = Decimal(str(np.std(returns_array) * np.sqrt(252))) * Decimal("100")
         annual_ret = Decimal(str((np.prod(1 + returns_array) - 1))) * Decimal("100")
@@ -284,6 +289,7 @@ class TestPipelineT4T8T9:
     # SCENARIO 3: Multi-Capital Tier Analysis
     # ========================================================================
 
+    @pytest.mark.asyncio
     async def test_pipeline_multi_capital_tiers(self):
         """Test pipeline across multiple capital tiers."""
         base_returns = self.data_factory.create_returns_series(0.15, 0.12, 252)
@@ -314,7 +320,7 @@ class TestPipelineT4T8T9:
 
             # T8.1: Risk scaling
             portfolio = self.data_factory.create_portfolio(capital=capital)
-            scaled = self.risk_scaler.apply_scaling(portfolio=portfolio)
+            scaled = await self.risk_scaler.apply_risk_scaling(portfolio=portfolio)
 
             # T9.1: Reporting
             quantstats = get_quantstats_integrator()
@@ -354,6 +360,7 @@ class TestPipelineT4T8T9:
     # SCENARIO 4: Full Report Generation Pipeline
     # ========================================================================
 
+    @pytest.mark.asyncio
     async def test_pipeline_full_report_generation(self):
         """Test complete report generation across all components."""
         # Create realistic backtest
@@ -375,7 +382,7 @@ class TestPipelineT4T8T9:
 
         # T8.1: Scale portfolio
         portfolio = self.data_factory.create_portfolio(capital=Decimal("200000"))
-        scaled_portfolio = self.risk_scaler.apply_scaling(portfolio=portfolio)
+        scaled_portfolio = await self.risk_scaler.apply_risk_scaling(portfolio=portfolio)
         assert scaled_portfolio is not None
 
         # T9.1 PHASE 1: Generate advanced metrics
@@ -455,6 +462,7 @@ class TestPipelineT4T8T9:
     # SCENARIO 5: Market Regime Stress Test
     # ========================================================================
 
+    @pytest.mark.asyncio
     async def test_pipeline_market_regimes(self):
         """Test pipeline across different market regimes."""
         scenarios = {
@@ -504,7 +512,7 @@ class TestPipelineT4T8T9:
 
             # T8.1: Risk scaling adapts
             portfolio = self.data_factory.create_portfolio(capital=Decimal("150000"))
-            scaled = self.risk_scaler.apply_scaling(portfolio=portfolio)
+            scaled = await self.risk_scaler.apply_risk_scaling(portfolio=portfolio)
             assert scaled is not None
 
             # T9.1: Reporting works for all regimes
@@ -516,6 +524,7 @@ class TestPipelineT4T8T9:
     # SCENARIO 6: Complete End-to-End Workflow
     # ========================================================================
 
+    @pytest.mark.asyncio
     async def test_pipeline_end_to_end_workflow(self):
         """Test complete workflow from backtest to report delivery."""
         # Step 1: Create backtest results
@@ -545,12 +554,14 @@ class TestPipelineT4T8T9:
         print("\n✓ STEP 2: T4.1 Capacity Validation")
         print(f"  - Target Capital: €{float(target_capital):,.0f}")
         print(f"  - Base Alpha: {float(response.analysis.base_alpha_pct):.1f}%")
-        print(f"  - Estimated Alpha at Scale: {float(response.analysis.estimated_alpha_at_target):.1f}%")
+        print(
+            f"  - Estimated Alpha at Scale: {float(response.analysis.estimated_alpha_at_target):.1f}%"
+        )
         print(f"  - Feasible: {response.feasibility_gate.approved}")
 
         # Step 3: T8.1 - Apply risk scaling
         portfolio = self.data_factory.create_portfolio(capital=target_capital)
-        scaled_portfolio = self.risk_scaler.apply_scaling(portfolio=portfolio)
+        scaled_portfolio = await self.risk_scaler.apply_risk_scaling(portfolio=portfolio)
         print("\n✓ STEP 3: T8.1 Risk Scaling")
         print(f"  - Original Portfolio Value: €{float(portfolio.total_value):,.0f}")
         print(f"  - Scaled Portfolio Value: €{float(scaled_portfolio.total_value):,.0f}")
@@ -620,7 +631,7 @@ class TestPipelineT4T8T9:
         print("=" * 70 + "\n")
 
         # Verify all steps completed
-        assert validation.feasible
+        assert response.feasibility_gate.approved
         assert scaled_portfolio.total_value > Decimal("0")
         assert stats is not None
         assert tearsheet is not None
@@ -639,6 +650,7 @@ class TestPipelineEdgeCases:
         self.risk_scaler = get_risk_scaler()
         self.data_factory = TestDataFactory()
 
+    @pytest.mark.asyncio
     async def test_pipeline_insufficient_alpha(self):
         """Test pipeline when alpha is insufficient for target capital."""
         returns = TestDataFactory.create_returns_series(0.02, 0.08, 252)  # Low return
@@ -685,7 +697,8 @@ class TestPipelineEdgeCases:
         assert stats is not None
         assert float(stats.annual_volatility_pct) > 30
 
-    def test_pipeline_zero_positions_portfolio(self):
+    @pytest.mark.asyncio
+    async def test_pipeline_zero_positions_portfolio(self):
         """Test pipeline with empty portfolio."""
         portfolio = Portfolio(
             portfolio_id="empty",
@@ -696,7 +709,7 @@ class TestPipelineEdgeCases:
         )
 
         risk_scaler = get_risk_scaler()
-        scaled = risk_scaler.apply_scaling(portfolio=portfolio)
+        scaled = await risk_scaler.apply_risk_scaling(portfolio=portfolio)
 
         assert scaled is not None
         assert len(scaled.positions) == 0
