@@ -4,13 +4,11 @@ FASE 6.1: XAI Models - Data structures for explainability results
 Defines Pydantic models for SHAP, LIME, and feature importance explanations.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
-
 
 # ============================================================================
 # SHAP Explanation Models
@@ -41,11 +39,7 @@ class SHAPExplanation(BaseModel):
 
     def get_top_features(self, n: int = 5) -> List[SHAPValue]:
         """Get top n most important features by absolute SHAP value."""
-        sorted_values = sorted(
-            self.shap_values,
-            key=lambda x: abs(x.shap_value),
-            reverse=True
-        )
+        sorted_values = sorted(self.shap_values, key=lambda x: abs(x.shap_value), reverse=True)
         return sorted_values[:n]
 
 
@@ -53,8 +47,7 @@ class SHAPSummaryPlot(BaseModel):
     """SHAP summary statistics."""
 
     feature_importance: Dict[str, float] = Field(
-        ...,
-        description="Average absolute SHAP values per feature"
+        ..., description="Average absolute SHAP values per feature"
     )
     mean_prediction: float = Field(..., description="Mean prediction value")
     std_prediction: float = Field(..., description="Std deviation of predictions")
@@ -99,14 +92,8 @@ class FeatureImportance(BaseModel):
     """Feature importance metrics."""
 
     feature_name: str = Field(..., description="Name of the feature")
-    importance_score: float = Field(
-        ...,
-        description="Importance score (0-1 or 0-100)"
-    )
-    method: str = Field(
-        ...,
-        description="Method used (shap, permutation, gain, cover, etc.)"
-    )
+    importance_score: float = Field(..., description="Importance score (0-1 or 0-100)")
+    method: str = Field(..., description="Method used (shap, permutation, gain, cover, etc.)")
     rank: Optional[int] = Field(None, description="Ranking among all features")
 
 
@@ -124,11 +111,7 @@ class FeatureImportanceReport(BaseModel):
 
     def get_top_features(self, n: int = 10) -> List[FeatureImportance]:
         """Get top n most important features."""
-        sorted_features = sorted(
-            self.features,
-            key=lambda x: x.importance_score,
-            reverse=True
-        )
+        sorted_features = sorted(self.features, key=lambda x: x.importance_score, reverse=True)
         return sorted_features[:n]
 
 
@@ -153,8 +136,7 @@ class PredictionExplanation(BaseModel):
 
     # Feature importance
     feature_importance: Optional[List[FeatureImportance]] = Field(
-        None,
-        description="Feature importance scores"
+        None, description="Feature importance scores"
     )
 
     timestamp: datetime = Field(default_factory=datetime.now)
@@ -181,10 +163,7 @@ class PDPExplanation(BaseModel):
     """Partial Dependence Plot (PDP) data."""
 
     model_name: str = Field(..., description="Model name")
-    partial_dependences: List[PartialDependence] = Field(
-        ...,
-        description="PDP for each feature"
-    )
+    partial_dependences: List[PartialDependence] = Field(..., description="PDP for each feature")
 
 
 class ICEExplanation(BaseModel):
@@ -211,26 +190,22 @@ class InterpretationReport(BaseModel):
 
     # Feature importance
     feature_importance: Optional[FeatureImportanceReport] = Field(
-        None,
-        description="Overall feature importance"
+        None, description="Overall feature importance"
     )
 
     # Example predictions with explanations
     sample_explanations: List[PredictionExplanation] = Field(
-        default_factory=list,
-        description="Sample predictions with explanations"
+        default_factory=list, description="Sample predictions with explanations"
     )
 
     # Model insights
     insights: Dict[str, Any] = Field(
-        default_factory=dict,
-        description="Key insights about model behavior"
+        default_factory=dict, description="Key insights about model behavior"
     )
 
     # Recommendations
     recommendations: List[str] = Field(
-        default_factory=list,
-        description="Recommendations based on interpretation"
+        default_factory=list, description="Recommendations based on interpretation"
     )
 
     class Config:

@@ -6,10 +6,9 @@ Provides methods to explain model predictions using SHAP and LIME techniques.
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
-from sklearn.inspection import permutation_importance
 
 logger = logging.getLogger(__name__)
 
@@ -289,9 +288,7 @@ class FeatureImportanceCalculator:
             # importance_dict = {name: score for name, score in zip(feature_names, result.importances_mean)}
 
             # Simulated importance scores
-            importance_dict = {
-                name: float(np.abs(np.random.randn())) for name in feature_names
-            }
+            importance_dict = {name: float(np.abs(np.random.randn())) for name in feature_names}
 
             # Normalize to 0-1
             max_importance = max(importance_dict.values()) or 1
@@ -326,7 +323,9 @@ class FeatureImportanceCalculator:
                 return {}
 
             importances = self.model.feature_importances_
-            importance_dict = {name: float(score) for name, score in zip(feature_names, importances)}
+            importance_dict = {
+                name: float(score) for name, score in zip(feature_names, importances)
+            }
 
             logger.info(f"✅ Calculated tree-based importance for {len(feature_names)} features")
             return importance_dict
@@ -354,9 +353,7 @@ class FeatureImportanceCalculator:
             results = {}
 
             # Permutation importance
-            perm_importance = await self.calculate_permutation_importance(
-                feature_names, n_repeats
-            )
+            perm_importance = await self.calculate_permutation_importance(feature_names, n_repeats)
             if perm_importance:
                 results["permutation"] = perm_importance
 

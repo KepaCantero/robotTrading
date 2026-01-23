@@ -418,9 +418,7 @@ class PyFolioIntegrator:
 
             # Calculate factor contributions (% of return from each factor)
             factor_returns = {}
-            total_factor_return = sum(
-                betas[i] * np.mean(factor_data[fn]) for i, fn in enumerate(factor_names)
-            )
+            sum(betas[i] * np.mean(factor_data[fn]) for i, fn in enumerate(factor_names))
             mean_ret = np.mean(returns_array)
             for i, factor_name in enumerate(factor_names):
                 factor_contribution = (

@@ -2,18 +2,18 @@
 Tests for XAI Explainer (SHAP, LIME, Feature Importance)
 """
 
-import pytest
+from unittest.mock import Mock
+
 import numpy as np
-from datetime import datetime
-from unittest.mock import Mock, AsyncMock, patch
+import pytest
 
 from app.services.xai.explainer import (
-    SHAPExplainer,
-    LIMEExplainer,
     FeatureImportanceCalculator,
-    get_shap_explainer,
-    get_lime_explainer,
+    LIMEExplainer,
+    SHAPExplainer,
     get_importance_calculator,
+    get_lime_explainer,
+    get_shap_explainer,
 )
 
 
@@ -63,9 +63,7 @@ class TestSHAPExplainer:
         assert explainer.connected is True
 
     @pytest.mark.asyncio
-    async def test_explain_prediction(
-        self, sample_model, sample_data, sample_input, feature_names
-    ):
+    async def test_explain_prediction(self, sample_model, sample_data, sample_input, feature_names):
         """Test single prediction explanation."""
         explainer = SHAPExplainer(sample_model, sample_data)
         await explainer.connect()
@@ -99,9 +97,7 @@ class TestSHAPExplainer:
             assert "base_value" in shap_val
 
     @pytest.mark.asyncio
-    async def test_explain_batch(
-        self, sample_model, sample_data, feature_names
-    ):
+    async def test_explain_batch(self, sample_model, sample_data, feature_names):
         """Test batch prediction explanation."""
         explainer = SHAPExplainer(sample_model, sample_data)
         await explainer.connect()
@@ -122,9 +118,7 @@ class TestSHAPExplainer:
     ):
         """Test explanation when not connected."""
         explainer = SHAPExplainer(sample_model, sample_data)
-        explanation = await explainer.explain_prediction(
-            sample_input, feature_names
-        )
+        explanation = await explainer.explain_prediction(sample_input, feature_names)
         assert explanation == {}
 
     def test_get_explainer_status(self, sample_model, sample_data):
@@ -154,9 +148,7 @@ class TestLIMEExplainer:
         assert explainer.connected is True
 
     @pytest.mark.asyncio
-    async def test_explain_prediction(
-        self, sample_model, sample_data, sample_input, feature_names
-    ):
+    async def test_explain_prediction(self, sample_model, sample_data, sample_input, feature_names):
         """Test single prediction explanation."""
         explainer = LIMEExplainer(sample_model, sample_data)
         await explainer.connect()
@@ -179,9 +171,7 @@ class TestLIMEExplainer:
         explainer = LIMEExplainer(sample_model, sample_data)
         await explainer.connect()
 
-        explanation = await explainer.explain_prediction(
-            sample_input, feature_names
-        )
+        explanation = await explainer.explain_prediction(sample_input, feature_names)
 
         for feat in explanation["explanation"]:
             assert "feature_name" in feat
@@ -207,9 +197,7 @@ class TestFeatureImportanceCalculator:
         assert calc.y_data is not None
 
     @pytest.mark.asyncio
-    async def test_calculate_permutation_importance(
-        self, sample_model, sample_data, feature_names
-    ):
+    async def test_calculate_permutation_importance(self, sample_model, sample_data, feature_names):
         """Test permutation importance calculation."""
         y_data = np.random.randn(100)
         calc = FeatureImportanceCalculator(sample_model, sample_data, y_data)
@@ -220,9 +208,7 @@ class TestFeatureImportanceCalculator:
         assert all(0 <= score <= 1 for score in importance.values())
 
     @pytest.mark.asyncio
-    async def test_calculate_tree_importance(
-        self, sample_model, sample_data, feature_names
-    ):
+    async def test_calculate_tree_importance(self, sample_model, sample_data, feature_names):
         """Test tree-based importance calculation."""
         # Add feature_importances_ to mock model
         sample_model.feature_importances_ = np.random.randn(len(feature_names))
@@ -235,9 +221,7 @@ class TestFeatureImportanceCalculator:
         assert len(importance) == len(feature_names)
 
     @pytest.mark.asyncio
-    async def test_calculate_all_importance_methods(
-        self, sample_model, sample_data, feature_names
-    ):
+    async def test_calculate_all_importance_methods(self, sample_model, sample_data, feature_names):
         """Test calculating importance with all methods."""
         sample_model.feature_importances_ = np.random.randn(len(feature_names))
         y_data = np.random.randn(100)

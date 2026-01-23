@@ -174,12 +174,21 @@ class VolatilityMonitor:
         Returns:
             Scaling factor (0.5 to 1.5), quantized to 3 decimals
         """
-        if average_atr == Decimal("0"):
+        # CRITICAL: Handle zero values to prevent division by zero
+        if average_atr == Decimal("0") or average_atr is None:
             logger.warning(f"{symbol}: Average ATR is 0, returning base scale")
+            return base_scale
+
+        if current_atr == Decimal("0") or current_atr is None:
+            logger.warning(f"{symbol}: Current ATR is 0, returning base scale")
             return base_scale
 
         # Calculate ratio: current / average
         atr_ratio = current_atr / average_atr
+
+        # CRITICAL: Protect against near-zero ratio causing scale explosion
+        min_ratio = Decimal("0.01")  # 1% minimum ratio
+        atr_ratio = max(atr_ratio, min_ratio)
 
         # Scale = base / ratio
         # If ratio < 1: scale > base (low vol → larger positions)

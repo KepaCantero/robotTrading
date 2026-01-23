@@ -22,7 +22,7 @@ _portfolio_service: Optional[PortfolioService] = None
 
 def get_portfolio_service() -> PortfolioService:
     """Get portfolio service instance."""
-    global _portfolio_service
+    # global _portfolio_service  # F824 removed
     if _portfolio_service is None:
         PaperTradingPortfolioProvider()
 

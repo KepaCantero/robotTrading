@@ -165,7 +165,7 @@ class TestExecutionCostAnalyzer:
         assert stats["min"] == Decimal("0.001")
         assert stats["max"] == Decimal("0.002")
         assert stats["avg"] == Decimal("0.0015")
-        assert stats["has_history"] == True
+        assert stats["has_history"]
 
     def test_slippage_with_history(self, analyzer):
         """

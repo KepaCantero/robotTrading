@@ -3,7 +3,6 @@ Tests for Knowledge Graph Builder (Neo4j integration)
 """
 
 import pytest
-from unittest.mock import Mock, AsyncMock, patch
 
 from app.services.knowledge_graph.graph_builder import (
     KnowledgeGraphBuilder,
@@ -120,9 +119,7 @@ class TestAssetNodeCreation:
         assert graph_builder.nodes_created >= count
 
     @pytest.mark.asyncio
-    async def test_create_asset_nodes_without_connection(
-        self, graph_builder, sample_assets
-    ):
+    async def test_create_asset_nodes_without_connection(self, graph_builder, sample_assets):
         """Test creating nodes without connection."""
         count = await graph_builder.create_asset_nodes(sample_assets)
         assert count == 0
@@ -149,9 +146,7 @@ class TestStrategyNodeCreation:
     """Test strategy node creation."""
 
     @pytest.mark.asyncio
-    async def test_create_strategy_nodes(
-        self, graph_builder, sample_strategies
-    ):
+    async def test_create_strategy_nodes(self, graph_builder, sample_strategies):
         """Test creating strategy nodes."""
         await graph_builder.connect()
         count = await graph_builder.create_strategy_nodes(sample_strategies)
@@ -159,9 +154,7 @@ class TestStrategyNodeCreation:
         assert count == len(sample_strategies)
 
     @pytest.mark.asyncio
-    async def test_create_strategy_nodes_without_connection(
-        self, graph_builder, sample_strategies
-    ):
+    async def test_create_strategy_nodes_without_connection(self, graph_builder, sample_strategies):
         """Test creating strategy nodes without connection."""
         count = await graph_builder.create_strategy_nodes(sample_strategies)
         assert count == 0
@@ -171,14 +164,10 @@ class TestRelationshipCreation:
     """Test relationship creation."""
 
     @pytest.mark.asyncio
-    async def test_create_correlation_relationships(
-        self, graph_builder, sample_correlations
-    ):
+    async def test_create_correlation_relationships(self, graph_builder, sample_correlations):
         """Test creating correlation relationships."""
         await graph_builder.connect()
-        count = await graph_builder.create_correlation_relationships(
-            sample_correlations
-        )
+        count = await graph_builder.create_correlation_relationships(sample_correlations)
 
         assert count == len(sample_correlations)
         assert graph_builder.relationships_created >= count
@@ -192,9 +181,7 @@ class TestRelationshipCreation:
             {"strategy": "value_strategy", "symbol": "MSFT", "weight": 0.8},
         ]
 
-        count = await graph_builder.create_strategy_asset_relationships(
-            relationships
-        )
+        count = await graph_builder.create_strategy_asset_relationships(relationships)
 
         assert count == len(relationships)
 
@@ -275,9 +262,7 @@ class TestStrategyQuery:
         """Test finding best strategies for an asset."""
         await graph_builder.connect()
 
-        strategies = await graph_builder.find_best_strategies_for_asset(
-            "AAPL", limit=10
-        )
+        strategies = await graph_builder.find_best_strategies_for_asset("AAPL", limit=10)
 
         assert isinstance(strategies, list)
         assert len(strategies) <= 10
@@ -329,9 +314,7 @@ class TestNetworkAnalysis:
         await graph_builder.connect()
 
         current_assets = ["AAPL"]
-        recommendations = await graph_builder.get_asset_portfolio_recommendations(
-            current_assets
-        )
+        recommendations = await graph_builder.get_asset_portfolio_recommendations(current_assets)
 
         for rec in recommendations:
             assert "symbol" in rec
@@ -352,9 +335,7 @@ class TestKnowledgeGraphSingleton:
     @pytest.mark.asyncio
     async def test_singleton_with_params(self):
         """Test singleton with parameters."""
-        builder1 = get_knowledge_graph_builder(
-            graph_uri="bolt://custom:7687"
-        )
+        builder1 = get_knowledge_graph_builder(graph_uri="bolt://custom:7687")
         builder2 = get_knowledge_graph_builder(
             graph_uri="bolt://other:7687"  # Different URI, same instance
         )

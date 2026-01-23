@@ -55,7 +55,7 @@ class TestEmptyDataset(unittest.TestCase):
 
         # El backtester lanza ValueError cuando no hay market data
         with self.assertRaises(ValueError):
-            result = self.backtester.run_backtest(
+            self.backtester.run_backtest(
                 market_data=quotes,
                 signals=signals,
                 start_date=datetime(2024, 1, 1),
@@ -115,7 +115,7 @@ class TestNaNPriceHandling(unittest.TestCase):
     def test_nan_in_price_does_not_break_execution(self):
         """NaN en close/open/high/low: sistema debe ignorar o imputar sin romper."""
         # Crear quote con valores válidos primero
-        quote = Quote(
+        Quote(
             symbol="AAPL",
             timestamp=datetime(2024, 1, 1),
             open=Decimal("200"),

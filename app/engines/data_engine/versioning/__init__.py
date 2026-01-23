@@ -7,4 +7,3 @@ Incluye:
 - Rollback capabilities
 - Version history
 """
-

@@ -6,9 +6,9 @@ Integrates market data, financial factors, and machine learning utilities.
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -170,13 +170,9 @@ class QlibConnector:
         try:
             # In production: calculate using Qlib's factor engine
             for symbol in symbols:
-                factor_data[symbol] = {
-                    factor: Decimal("0.0") for factor in factors
-                }
+                factor_data[symbol] = {factor: Decimal("0.0") for factor in factors}
 
-            logger.info(
-                f"✅ Calculated {len(factors)} factors for {len(symbols)} symbols"
-            )
+            logger.info(f"✅ Calculated {len(factors)} factors for {len(symbols)} symbols")
             return factor_data
 
         except Exception as e:

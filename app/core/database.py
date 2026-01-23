@@ -221,8 +221,8 @@ async def close_database() -> None:
     This function should be called during application shutdown
     to properly close all database connections.
     """
-    global _engine, _session_factory
-
+    # # global _engine  # F824 removed, _session_factory
+    # F824 removed  # noqa: E114
     try:
         if _engine:
             await _engine.dispose()

@@ -6,4 +6,3 @@ Incluye:
 - Correlación condicional (DCC-GARCH)
 - Network analysis de correlaciones
 """
-

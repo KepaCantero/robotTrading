@@ -1,3 +1,11 @@
+import logging
+import os
+import sys
+import warnings
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
+from typing import Optional
+
 """
 Logging Configuration Module
 
@@ -5,12 +13,6 @@ Thresholds logging to ensure all warnings and errors are written to files.
 This prevents loss of important diagnostic information.
 """
 
-import logging
-import sys
-import warnings
-from logging.handlers import RotatingFileHandler
-from pathlib import Path
-from typing import Optional
 
 # Configure Python warnings to reduce noise
 # Suppress known warnings that are expected and handled gracefully
@@ -143,7 +145,6 @@ def setup_module_loggers() -> None:
 
 # Initialize logging on import
 # This ensures logging is configured as soon as this module is imported
-import os
 
 env = os.getenv("ENVIRONMENT", "development")
 

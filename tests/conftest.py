@@ -22,9 +22,9 @@ else:
     os.environ.setdefault("DEBUG", "true")
     os.environ.setdefault("SECRET_KEY", "test-secret-key-do-not-use-in-production")
 
-from app.main import app
-from app.models.assets import Asset, AssetClass, AssetRanking, Exchange
-from app.models.momentum import MomentumStrategy, TechnicalIndicators, Timeframe
+from app.main import app  # noqa: E402
+from app.models.assets import Asset, AssetClass, AssetRanking, Exchange  # noqa: E402
+from app.models.momentum import MomentumStrategy, TechnicalIndicators, Timeframe  # noqa: E402
 
 
 @pytest.fixture
@@ -119,7 +119,7 @@ def mock_momentum_service():
     service.get_technical_indicators.return_value = indicators
 
     # Mock analyze_asset_momentum
-    from app.models.momentum import MomentumAnalysis, MomentumSignal, MomentumType
+    from app.models.momentum import MomentumAnalysis, MomentumSignal, MomentumType  # noqa: E402
 
     analysis = MomentumAnalysis(
         symbol="AAPL",

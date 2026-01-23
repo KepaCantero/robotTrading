@@ -370,9 +370,22 @@ class AutomatedBacktestRunner:
             )
 
             # Entrenar modelo con datos históricos (primeros 70%)
+            # CRITICAL: Add temporal gap to prevent data leakage
             split_idx = int(len(self.quotes) * 0.7)
+            gap_size = min(20, int(len(self.quotes) * 0.02))  # 2% or 20 periods gap
+
             training_quotes = self.quotes[:split_idx]
-            test_quotes = self.quotes[split_idx:]
+            # Skip 'gap_size' periods between train and test to prevent leakage
+            test_start_idx = split_idx + gap_size
+            test_quotes = self.quotes[test_start_idx:] if test_start_idx < len(self.quotes) else []
+
+            if len(test_quotes) < 10:
+                logger.warning("⚠️ Insufficient test data after temporal gap, reducing gap")
+                test_quotes = self.quotes[split_idx:]
+
+            logger.info(
+                f"Train/Test split: {len(training_quotes)} train, {gap_size} gap, {len(test_quotes)} test"
+            )
 
             # Entrenar learning engine
             if hasattr(strategy, 'learning_engine') and strategy.learning_engine:

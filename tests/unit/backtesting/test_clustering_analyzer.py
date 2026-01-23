@@ -71,7 +71,7 @@ class TestHierarchicalClustering:
 
         unique_labels = set(result['labels'])
         assert len(unique_labels) <= 3
-        assert all(isinstance(l, int) for var_l in result['labels'])
+        assert all(isinstance(var_l, int) for var_l in result['labels'])
 
     def test_hierarchical_clustering_different_linkage(self, analyzer, sample_2d_data):
         """Test different linkage methods."""

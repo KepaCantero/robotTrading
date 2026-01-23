@@ -415,7 +415,7 @@ class TestTierInformation:
         selector = CapitalTierStrategySelector(Decimal("500000"))
         upgrade_path = selector.get_upgrade_path()
 
-        assert upgrade_path["is_max_tier"] == True
+        assert upgrade_path["is_max_tier"]
         assert upgrade_path["next_tier"] is None
 
 

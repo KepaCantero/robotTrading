@@ -666,7 +666,7 @@ class TestPipelineEdgeCases:
     def test_pipeline_high_volatility(self):
         """Test pipeline with high volatility returns."""
         returns = TestDataFactory.create_returns_series(0.15, 0.40, 252)  # High vol
-        backtest = self.data_factory.create_backtest_result(
+        self.data_factory.create_backtest_result(
             capital=Decimal("100000"),
             returns=returns,
         )

@@ -92,7 +92,7 @@ class FinancialModelingPrepSource(BaseDataSource):
             url = f"{self.base_url}/profile/AAPL"
             async with self.session.get(url, params={'apikey': self.api_key}) as response:
                 return response.status == 200
-        except:
+        except Exception:
             return False
 
     async def get_company_profile(self, symbol: str) -> Optional[Dict[str, Any]]:
@@ -249,7 +249,7 @@ class AlphaVantageFundamentalSource(BaseDataSource):
             params = {'function': 'OVERVIEW', 'symbol': 'AAPL', 'apikey': self.api_key}
             async with self.session.get(self.base_url, params=params) as response:
                 return response.status == 200
-        except:
+        except Exception:
             return False
 
     async def get_company_overview(self, symbol: str) -> Optional[Dict[str, Any]]:

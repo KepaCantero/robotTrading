@@ -5,7 +5,6 @@ Handles metrics export in multiple formats (Prometheus, JSON, CSV) and
 supports real-time streaming to monitoring backends.
 """
 
-import asyncio
 import json
 import logging
 from datetime import datetime
@@ -59,17 +58,13 @@ class MetricsExporter:
             )
 
             # Verify Prometheus connectivity
-            async with self.session.get(
-                f"{self.prometheus_url}/-/healthy"
-            ) as resp:
+            async with self.session.get(f"{self.prometheus_url}/-/healthy") as resp:
                 if resp.status == 200:
                     logger.info("✅ Connected to Prometheus")
                     return True
 
         except Exception as e:
-            logger.warning(
-                f"⚠️ Failed to connect to Prometheus: {str(e)}"
-            )
+            logger.warning(f"⚠️ Failed to connect to Prometheus: {str(e)}")
 
         return False
 
@@ -130,18 +125,14 @@ class MetricsExporter:
                     )
                     return True
                 else:
-                    logger.error(
-                        f"❌ PushGateway push failed: HTTP {resp.status}"
-                    )
+                    logger.error(f"❌ PushGateway push failed: HTTP {resp.status}")
                     return False
 
         except Exception as e:
             logger.error(f"❌ Failed to push metrics: {str(e)}")
             return False
 
-    async def query_prometheus(
-        self, query: str, time: Optional[str] = None
-    ) -> Optional[Dict]:
+    async def query_prometheus(self, query: str, time: Optional[str] = None) -> Optional[Dict]:
         """
         Query Prometheus for metric data.
 
@@ -170,9 +161,7 @@ class MetricsExporter:
                     logger.debug(f"✅ Prometheus query successful: {query}")
                     return data
                 else:
-                    logger.error(
-                        f"❌ Prometheus query failed: HTTP {resp.status}"
-                    )
+                    logger.error(f"❌ Prometheus query failed: HTTP {resp.status}")
                     return None
 
         except Exception as e:
@@ -215,12 +204,10 @@ class MetricsExporter:
             ) as resp:
                 if resp.status == 200:
                     data = await resp.json()
-                    logger.debug(f"✅ Prometheus range query successful")
+                    logger.debug("✅ Prometheus range query successful")
                     return data
                 else:
-                    logger.error(
-                        f"❌ Prometheus range query failed: HTTP {resp.status}"
-                    )
+                    logger.error(f"❌ Prometheus range query failed: HTTP {resp.status}")
                     return None
 
         except Exception as e:
@@ -278,9 +265,7 @@ class MetricsExporter:
 
         for metric_name, value in metrics_data.items():
             # Add HELP and TYPE lines
-            lines.append(
-                f"# HELP {metric_name} Trading system metric"
-            )
+            lines.append(f"# HELP {metric_name} Trading system metric")
             lines.append(f"# TYPE {metric_name} gauge")
 
             # Add metric value
@@ -311,7 +296,7 @@ class MetricsExporter:
                 timeout=aiohttp.ClientTimeout(total=5),
             ) as resp:
                 health["prometheus"] = resp.status == 200
-        except:
+        except Exception:
             health["prometheus"] = False
 
         # Check PushGateway
@@ -321,7 +306,7 @@ class MetricsExporter:
                 timeout=aiohttp.ClientTimeout(total=5),
             ) as resp:
                 health["pushgateway"] = resp.status == 200
-        except:
+        except Exception:
             health["pushgateway"] = False
 
         logger.info(

@@ -22,7 +22,7 @@ import pytest
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.strategies.momentum_modular.learning.learning_updater import (
+from app.strategies.momentum_modular.learning.learning_updater import (  # noqa: E402
     LearningEngineUpdater,
     load_transfer_learning_config,
 )
@@ -284,7 +284,7 @@ class TestPublicAPIMethods:
         ):
             updater = LearningEngineUpdater(mock_learning_engine)
 
-            models = updater.get_available_pretrained_models(regime="bull")
+            models = updater.get_available_pretrained_models(regime="bull")  # noqa: F841
 
             mock_transfer_manager.list_models.assert_called_with(regime="bull")
 

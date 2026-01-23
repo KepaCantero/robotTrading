@@ -1,4 +1,7 @@
+from app.models.allocation import StockAllocationSettings
+
 """
+    from app.core.centralized_config import StockAllocationSettings
 Integration Tests: Signal Generation with Real Data
 
 Tests signal generation for:
@@ -21,12 +24,12 @@ import pytest
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.models.market_data import Quote
-from app.services.strategy_stock_allocator import StrategyStockAllocator
-from app.strategies.mean_reversion import MeanReversionStrategy
-from app.strategies.momentum import MomentumStrategy
-from app.strategies.pairs_trading import PairsTradingStrategy
-from tests.integration.data.test_data_loader import load_all_csv_data
+from app.models.market_data import Quote  # noqa: E402
+from app.services.strategy_stock_allocator import StrategyStockAllocator  # noqa: E402
+from app.strategies.mean_reversion import MeanReversionStrategy  # noqa: E402
+from app.strategies.momentum import MomentumStrategy  # noqa: E402
+from app.strategies.pairs_trading import PairsTradingStrategy  # noqa: E402
+from tests.integration.data.test_data_loader import load_all_csv_data  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -72,7 +75,6 @@ def real_historical_data():
 @pytest.fixture(scope="module")
 def allocator():
     """Create StrategyStockAllocator instance."""
-    from app.core.centralized_config import StockAllocationSettings
 
     return StrategyStockAllocator(StockAllocationSettings())
 

@@ -7,4 +7,3 @@ Incluye:
 - Validación de calidad (checksums, rangos válidos)
 - Data quality metrics
 """
-

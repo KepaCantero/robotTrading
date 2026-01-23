@@ -9,7 +9,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -84,8 +84,7 @@ class FinRLIntegrator:
         self.training_history: List[Dict] = []
         self.connected = False
         logger.info(
-            f"✅ FinRLIntegrator initialized "
-            f"(algorithm={self.training_config.algorithm})"
+            f"✅ FinRLIntegrator initialized " f"(algorithm={self.training_config.algorithm})"
         )
 
     async def connect(self) -> bool:
@@ -122,9 +121,7 @@ class FinRLIntegrator:
         try:
             # In production: configure StockTradingEnv with data
             # self.env.setup(data, symbols, self.env_config)
-            logger.info(
-                f"✅ Prepared RL environment for {len(symbols)} symbols"
-            )
+            logger.info(f"✅ Prepared RL environment for {len(symbols)} symbols")
             return True
 
         except Exception as e:
@@ -175,8 +172,7 @@ class FinRLIntegrator:
             self.training_history.append(results)
 
             logger.info(
-                f"✅ Trained {config.algorithm} model "
-                f"({config.total_timesteps} timesteps)"
+                f"✅ Trained {config.algorithm} model " f"({config.total_timesteps} timesteps)"
             )
             return results
 
@@ -319,9 +315,7 @@ class FinRLIntegrator:
             "training_history_size": len(self.training_history),
             "environment_config": {
                 "initial_capital": float(self.env_config.initial_capital),
-                "transaction_cost": float(
-                    self.env_config.transaction_cost_rate
-                ),
+                "transaction_cost": float(self.env_config.transaction_cost_rate),
                 "max_stocks": self.env_config.max_stock_holds,
             },
         }

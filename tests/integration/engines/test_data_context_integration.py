@@ -1,4 +1,6 @@
 """
+        from app.engines.strategy_engines import MeanReversionStrategyEngine
+        from app.engines.strategy_engines import MeanReversionStrategyEngine
 Integration Tests: DataEngine y ContextEngine con Strategy Engines
 
 Tests para verificar que los módulos 1 y 2 se integran correctamente con Strategy Engines:
@@ -15,9 +17,12 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.engines.context_engine import ContextEngine
-from app.engines.data_engine import DataEngine
-from app.engines.strategy_engines import MomentumStrategyEngine
+from app.engines.context_engine import ContextEngine  # noqa: E402
+from app.engines.data_engine import DataEngine  # noqa: E402
+from app.engines.strategy_engines import (  # noqa: E402
+    MeanReversionStrategyEngine,
+    MomentumStrategyEngine,
+)
 
 logging.basicConfig(
     level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -150,7 +155,7 @@ class TestIntegratedStrategyEngines:
 
         assert 'data_engine_enabled' in status
         assert 'context_engine_enabled' in status
-        assert status['context_engine_enabled'] == True
+        assert status['context_engine_enabled'] is True
 
 
 class TestMultiStrategyIntegration:
@@ -158,7 +163,6 @@ class TestMultiStrategyIntegration:
 
     def test_multiple_engines_share_context_engine(self):
         """Test que múltiples engines pueden compartir ContextEngine."""
-        from app.engines.strategy_engines import MeanReversionStrategyEngine
 
         # Crear ContextEngine compartido
         shared_context = ContextEngine({})
@@ -176,7 +180,6 @@ class TestMultiStrategyIntegration:
 
     def test_multiple_engines_share_data_engine(self):
         """Test que múltiples engines pueden compartir DataEngine."""
-        from app.engines.strategy_engines import MeanReversionStrategyEngine
 
         # Crear DataEngine compartido
         shared_data = DataEngine({'sources': {}})

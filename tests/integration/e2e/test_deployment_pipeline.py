@@ -5,19 +5,13 @@ Tests the complete flow:
 T4.1 (Capacity Fade) → T8.1 (Risk Scaling) → T9.1 (Reporting) → T10.1 (DeployDecisionOrchestrator)
 """
 
-import pytest
-from datetime import datetime
 from decimal import Decimal
 
+import pytest
+
 from app.models.deployment import DeploymentInput
-from app.services.capacity_fade_validation import (
-    CapacityFadeValidator,
-    CapacityFadeRequest,
-    FeasibilityDecision,
-)
+from app.services.capacity_fade_validation import CapacityFadeRequest, CapacityFadeValidator
 from app.services.deploy_decision_orchestrator import DeployDecisionOrchestrator
-from app.services.risk_scaling_application import RiskScalingApplication
-from app.services.reporting_generator import ReportingGenerator
 
 
 class TestDeploymentPipeline:
@@ -113,9 +107,7 @@ class TestDeploymentPipeline:
         assert decision.confidence_level == "low"
 
     @pytest.mark.asyncio
-    async def test_marginal_strategy_conditional(
-        self, orchestrator, marginal_strategy_input
-    ):
+    async def test_marginal_strategy_conditional(self, orchestrator, marginal_strategy_input):
         """Test that marginal strategy gets CONDITIONAL status."""
         decision = await orchestrator.make_decision(marginal_strategy_input)
 
@@ -124,9 +116,7 @@ class TestDeploymentPipeline:
         assert Decimal("40") <= decision.overall_score <= Decimal("70")
 
     @pytest.mark.asyncio
-    async def test_capacity_fade_validation_integrated(
-        self, orchestrator, strong_strategy_input
-    ):
+    async def test_capacity_fade_validation_integrated(self, orchestrator, strong_strategy_input):
         """Test that T4.1 capacity fade validation is properly integrated."""
         decision = await orchestrator.make_decision(strong_strategy_input)
 
@@ -347,7 +337,7 @@ class TestCapacityFadeIntegration:
         response = await validator.validate_capacity_feasibility(request)
 
         assert response.success is True
-        assert response.feasibility_gate.decision != None
+        assert response.feasibility_gate.decision is not None
         assert response.analysis.estimated_alpha_at_target > Decimal("0")
         assert response.analysis.required_alpha_pct > Decimal("0")
 

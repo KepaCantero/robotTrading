@@ -18,7 +18,7 @@ import numpy as np
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.strategies.momentum_modular.learning.drift_detector import (
+from app.strategies.momentum_modular.learning.drift_detector import (  # noqa: E402
     AutoRetrainingTrigger,
     ConceptDriftDetector,
     OverfittingDetector,
@@ -192,8 +192,8 @@ class TestAutoRetrainingTrigger:
 
         result = trigger.should_retrain(timestamp=datetime.now())
 
-        assert result['should_retrain'] == True
-        assert result['time_based'] == True
+        assert result['should_retrain'] is True
+        assert result['time_based'] is True
         assert 'time_based' in result['reasons'][0]
 
     def test_drift_based_retraining(self):
@@ -235,7 +235,7 @@ class TestAutoRetrainingTrigger:
 
         assert 'performance_degradation' in result
         if result.get('performance_degradation', {}).get('degradation_detected', False):
-            assert result['should_retrain'] == True
+            assert result['should_retrain'] is True
             assert 'performance_degradation' in result['reasons'][0]
 
     def test_combined_triggers(self):

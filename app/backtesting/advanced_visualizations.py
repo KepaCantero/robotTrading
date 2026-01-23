@@ -545,7 +545,7 @@ class AdvancedVisualizer:
             ax = axes[2]
             regime_counts = regime_labels.value_counts().sort_index()
             colors = plt.cm.viridis(np.linspace(0, 1, len(regime_counts)))
-            bars = ax.bar(
+            ax.bar(
                 [regime_names.get(r, f"Regime {r}") for r in regime_counts.index],
                 regime_counts.values,
                 color=colors,

@@ -87,9 +87,7 @@ class RetryManager:
             try:
                 result = await func(*args, **kwargs)
                 if attempt > 0:
-                    self.logger.info(
-                        f"✅ {operation_name} succeeded on attempt {attempt + 1}"
-                    )
+                    self.logger.info(f"✅ {operation_name} succeeded on attempt {attempt + 1}")
                 return result
 
             except retryable_exceptions as e:
@@ -133,8 +131,7 @@ class RetryManager:
         """
         # Exponential backoff: initial_delay * (base ^ attempt)
         exponential_delay = int(
-            self.config.initial_delay_ms
-            * float(self.config.exponential_base ** attempt)
+            self.config.initial_delay_ms * float(self.config.exponential_base**attempt)
         )
 
         # Cap at max delay

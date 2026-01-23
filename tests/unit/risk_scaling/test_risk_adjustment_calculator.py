@@ -247,7 +247,7 @@ class TestRiskAdjustmentCalculator:
         # Should reduce position and leverage significantly
         assert result["position_size"] <= Decimal("25000"), "Should reduce position"
         assert result["leverage"] <= Decimal("1.0"), "Should minimize leverage"
-        assert (
+        assert (  # noqa: F631
             result["pct_capital_at_risk"] <= Decimal("0.25"),
             "Should limit risk to 25% capital",
         )

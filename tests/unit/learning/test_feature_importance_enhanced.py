@@ -23,7 +23,7 @@ import pytest
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.strategies.momentum_modular.learning.feature_importance import (
+from app.strategies.momentum_modular.learning.feature_importance import (  # noqa: E402
     BuiltInImportanceAnalyzer,
     ComprehensiveFeatureAnalyzer,
     ComprehensiveImportanceReport,
@@ -570,7 +570,7 @@ class TestFeatureStabilityTracker:
         assert "unstable_features" in report
         # f2 should be stable (constant importance)
         if "f2" in report["feature_stability"]:
-            assert report["feature_stability"]["f2"]["is_stable"] == True
+            assert report["feature_stability"]["f2"]["is_stable"] is True
 
     def test_detect_trends(self):
         """Test trend detection."""
@@ -888,7 +888,7 @@ class TestStabilityIntegration:
 
             # Run multiple analyses
             for _ in range(3):
-                report = analyzer.analyze(
+                report = analyzer.analyze(  # noqa: F841
                     model=model,
                     X=X,
                     y=y,

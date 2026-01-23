@@ -79,7 +79,7 @@ class TestStrategiesSignalGeneration(unittest.TestCase):
         # Verificar que se generan señales después de suficiente histórico
         # Nota: Puede que no genere señales en las primeras iteraciones por falta de histórico
         # Verificamos que el proceso completo funciona sin errores
-        buy_signals = [s for s in all_signals if s.signal_type == SignalType.BUY]
+        [s for s in all_signals if s.signal_type == SignalType.BUY]
         # Con 20 días puede no ser suficiente para generar señales confiables
         # Verificamos que no hay errores y que se puede procesar
         self.assertIsInstance(all_signals, list, "Debe retornar lista de señales")
@@ -165,8 +165,5 @@ class TestStrategiesSignalGeneration(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    from datetime import timedelta
-
-    from app.models.signal import SignalType
 
     unittest.main()

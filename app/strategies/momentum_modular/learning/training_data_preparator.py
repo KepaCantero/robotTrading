@@ -1,4 +1,5 @@
 """
+            from app.strategies.momentum_modular.learning.feature_extractor import FeatureExtractor
 TrainingDataPreparator - Prepara datos de entrenamiento completos para learning engines.
 """
 
@@ -9,6 +10,8 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 try:
     import pandas_ta_classic as ta
@@ -23,10 +26,12 @@ except ImportError:
         PANDAS_TA_AVAILABLE = False
         logger.warning("pandas-ta-classic o pandas-ta no disponible. Funcionalidad limitada.")
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING  # noqa: E402
 
-from app.backtesting.models import Trade, TradeStatus
-from app.models.market_data import Quote
+from app.backtesting.models import Trade, TradeStatus  # noqa: E402
+from app.models.market_data import Quote  # noqa: E402
+
+# from app.models.market_data import Quote  # F811 duplicate
 
 if TYPE_CHECKING:
     from app.strategies.momentum_modular.learning.feature_extractor import FeatureExtractor
@@ -48,7 +53,6 @@ class TrainingDataPreparator:
         """
         # Lazy import de FeatureExtractor solo cuando se necesite
         if feature_extractor is None:
-            from app.strategies.momentum_modular.learning.feature_extractor import FeatureExtractor
 
             self.feature_extractor = FeatureExtractor()
         else:
@@ -267,7 +271,7 @@ class TrainingDataPreparator:
         # Construir secuencias deslizantes
         for i in range(min_sequence_length, len(indicators_df)):
             # Obtener ventana de datos históricos
-            historical_window = indicators_df.iloc[i - sequence_length : i + 1]
+            indicators_df.iloc[i - sequence_length : i + 1]
 
             # Construir secuencia de features históricas
             historical_data = []
@@ -631,6 +635,7 @@ class TrainingDataPreparator:
         df: pd.DataFrame,
         current_idx: int,
         lookahead_days: int = 10,
+        training_cutoff: Optional[datetime] = None,
     ) -> Optional[int]:
         """
         Generar label para un timestamp con mejor granularidad.
@@ -638,11 +643,37 @@ class TrainingDataPreparator:
         Label = 0 si hubo trades pero no exitosos.
         None si no hubo trades (se excluye del dataset para evitar desbalanceo).
 
+        IMPORTANT: This method uses FUTURE data for labels (by design for ML training).
+        - ONLY use this for TRAINING with HISTORICAL data that is FULLY COMPLETED
+        - NEVER use labels generated this way for live inference
+        - The model learns patterns from past data to predict future outcomes
+        - training_cutoff ensures we don't use data too close to present
+
+        Args:
+            timestamp: Current timestamp for label generation
+            trades_map: Map of trade dates to trades
+            df: Price DataFrame
+            current_idx: Current index in DataFrame
+            lookahead_days: Days to look ahead for trades (default 10)
+            training_cutoff: If set, don't generate labels for timestamps after this date
+
         Returns:
             int: 0 o 1, o None si no hay trades en la ventana
         """
+        # LOOK-AHEAD BIAS PROTECTION: Don't label data too close to present
+        if training_cutoff and timestamp > training_cutoff:
+            logger.debug(
+                f"Skipping label for {timestamp} - after training cutoff {training_cutoff}"
+            )
+            return None
+
         # Buscar trades en ventana lookahead
         end_timestamp = timestamp + timedelta(days=lookahead_days)
+
+        # CRITICAL: Ensure end_timestamp doesn't exceed training_cutoff + lookahead
+        if training_cutoff and end_timestamp > training_cutoff + timedelta(days=lookahead_days):
+            logger.debug("Truncating lookahead window at training cutoff")
+            end_timestamp = training_cutoff + timedelta(days=lookahead_days)
 
         # Buscar trades en esta ventana
         relevant_trades = []

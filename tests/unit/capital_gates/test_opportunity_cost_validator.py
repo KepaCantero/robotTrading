@@ -123,7 +123,7 @@ class TestOpportunityCostValidator:
         # So viability will be MODERATE and trading_recommended will be False
 
         assert analysis["viability"] in ["MODERATE"]
-        assert analysis["trading_recommended"] == False
+        assert not analysis["trading_recommended"]
         assert analysis["minimum_alpha_pct_of_capital"] > Decimal("0.03")
 
     def test_capital_tier_viability_small(self):
@@ -142,7 +142,7 @@ class TestOpportunityCostValidator:
         # This is MODERATE
 
         assert analysis["viability"] in ["MODERATE", "GOOD"]
-        assert analysis["trading_recommended"] == True
+        assert analysis["trading_recommended"]
 
     def test_capital_tier_viability_medium(self):
         """
@@ -160,7 +160,7 @@ class TestOpportunityCostValidator:
         # This is GOOD
 
         assert analysis["viability"] == "GOOD"
-        assert analysis["trading_recommended"] == True
+        assert analysis["trading_recommended"]
 
     def test_zero_expected_alpha(self):
         """

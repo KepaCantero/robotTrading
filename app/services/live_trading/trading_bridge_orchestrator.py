@@ -12,11 +12,13 @@ Coordinates the complete flow from alert trigger to order execution:
 
 import asyncio
 import logging
+from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Deque, Dict, List, Optional, Set, Tuple
+from uuid import uuid4
 
 from app.services.alerting_system import AlertEvent, AlertManager
 
@@ -115,14 +117,21 @@ class TradingBridgeOrchestrator:
         self.risk_gates = risk_gates or RiskGates(self.broker)
         self.mapper = AlertToTradeMapper()
 
-        # Tracking
+        # Tracking (deque with maxlen to prevent memory leaks)
         self.status = BridgeStatus.IDLE
         self.executions: Dict[str, AlertToTradeExecution] = {}
-        self.execution_history: List[AlertToTradeExecution] = []
+        self.execution_history: Deque[AlertToTradeExecution] = deque(maxlen=10000)
         self.errors: Dict[str, Tuple[AlertEvent, str]] = {}
         self.is_active = False
 
-        logger.info("✅ TradingBridgeOrchestrator initialized")
+        # Idempotency: Track processed alert IDs to prevent duplicates
+        self._processed_alert_ids: Set[str] = set()
+        self._max_processed_ids = 50000  # Limit memory for processed IDs
+
+        # CONCURRENCY: Lock for thread-safe order execution
+        self._execution_lock = asyncio.Lock()
+
+        logger.info("✅ TradingBridgeOrchestrator initialized with concurrency protection")
 
     async def start(self) -> bool:
         """
@@ -169,70 +178,91 @@ class TradingBridgeOrchestrator:
             logger.warning("⚠️ Trading bridge not active, ignoring alert")
             return None
 
-        try:
-            self.status = BridgeStatus.ALERT_RECEIVED
-            logger.info(f"🔔 Processing alert: {alert_event.event_id}")
-
-            # Get broker account for portfolio value
-            account = await self.broker.get_account_info()
-            if not account:
-                logger.error("❌ Failed to get broker account info")
+        # CONCURRENCY: Acquire lock for thread-safe execution
+        async with self._execution_lock:
+            # IDEMPOTENCY CHECK: Prevent duplicate processing (inside lock)
+            if alert_event.event_id in self._processed_alert_ids:
+                logger.warning(f"⚠️ Alert already processed (idempotency): {alert_event.event_id}")
+                # Return existing execution if available
+                for exec_id, execution in self.executions.items():
+                    if execution.alert_id == alert_event.event_id:
+                        return execution
                 return None
 
-            portfolio_value = await self.broker.calculate_portfolio_value()
-            current_price = alert_event.metric_value or Decimal("100")
+            try:
+                self.status = BridgeStatus.ALERT_RECEIVED
+                logger.info(f"🔔 Processing alert: {alert_event.event_id}")
 
-            # Map alert to trade signal
-            self.status = BridgeStatus.SIGNAL_MAPPED
-            signal = self.mapper.map_alert_to_signal(
-                alert_id=alert_event.event_id,
-                alert_rule_id=alert_event.rule_id,
-                symbol=alert_event.symbol or "SPY",
-                severity=alert_event.severity,
-                current_price=current_price,
-                portfolio_value=portfolio_value,
-            )
+                # Mark as processed BEFORE execution to prevent race conditions
+                self._processed_alert_ids.add(alert_event.event_id)
 
-            if not signal:
-                logger.warning(f"⚠️ No trade signal generated for alert: {alert_event.event_id}")
-                return None
+                # Cleanup old processed IDs to prevent memory leak
+                if len(self._processed_alert_ids) > self._max_processed_ids:
+                    # Remove oldest half
+                    to_remove = list(self._processed_alert_ids)[: self._max_processed_ids // 2]
+                    for old_id in to_remove:
+                        self._processed_alert_ids.discard(old_id)
 
-            # Validate risk gates
-            self.status = BridgeStatus.RISK_CHECK
-            risk_result = await self._validate_risk_gates(signal, account)
+                # Get broker account for portfolio value
+                account = await self.broker.get_account_info()
+                if not account:
+                    logger.error("❌ Failed to get broker account info")
+                    return None
 
-            if not risk_result.passed:
-                error_msg = f"Risk validation failed: {', '.join(risk_result.violations)}"
-                logger.error(f"❌ {error_msg}")
-                self.errors[alert_event.event_id] = (alert_event, error_msg)
-                return None
+                portfolio_value = await self.broker.calculate_portfolio_value()
+                current_price = alert_event.metric_value or Decimal("100")
 
-            if risk_result.risk_level == RiskLevel.HIGH:
-                logger.warning("⚠️ High risk trade - proceeding with caution")
-
-            # Execute trade
-            self.status = BridgeStatus.EXECUTING
-            execution = await self._execute_trade(signal, alert_event)
-
-            if execution:
-                self.status = BridgeStatus.EXECUTED
-                self.executions[execution.execution_id] = execution
-                self.execution_history.append(execution)
-                logger.info(
-                    f"✅ Trade executed: {execution.execution_id} "
-                    f"({execution.side.value} {execution.quantity} {execution.symbol})"
+                # Map alert to trade signal
+                self.status = BridgeStatus.SIGNAL_MAPPED
+                signal = self.mapper.map_alert_to_signal(
+                    alert_id=alert_event.event_id,
+                    alert_rule_id=alert_event.rule_id,
+                    symbol=alert_event.symbol or "SPY",
+                    severity=alert_event.severity,
+                    current_price=current_price,
+                    portfolio_value=portfolio_value,
                 )
-                return execution
-            else:
-                logger.error("❌ Trade execution failed")
-                return None
 
-        except Exception as e:
-            self.status = BridgeStatus.ERROR
-            logger.error(f"❌ Error processing alert: {str(e)}")
-            if hasattr(alert_event, 'event_id'):
-                self.errors[alert_event.event_id] = (alert_event, str(e))
-            return None
+                if not signal:
+                    logger.warning(f"⚠️ No trade signal generated for alert: {alert_event.event_id}")
+                    return None
+
+                # Validate risk gates
+                self.status = BridgeStatus.RISK_CHECK
+                risk_result = await self._validate_risk_gates(signal, account)
+
+                if not risk_result.passed:
+                    error_msg = f"Risk validation failed: {', '.join(risk_result.violations)}"
+                    logger.error(f"❌ {error_msg}")
+                    self.errors[alert_event.event_id] = (alert_event, error_msg)
+                    return None
+
+                if risk_result.risk_level == RiskLevel.HIGH:
+                    logger.warning("⚠️ High risk trade - proceeding with caution")
+
+                # Execute trade
+                self.status = BridgeStatus.EXECUTING
+                execution = await self._execute_trade(signal, alert_event)
+
+                if execution:
+                    self.status = BridgeStatus.EXECUTED
+                    self.executions[execution.execution_id] = execution
+                    self.execution_history.append(execution)
+                    logger.info(
+                        f"✅ Trade executed: {execution.execution_id} "
+                        f"({execution.side.value} {execution.quantity} {execution.symbol})"
+                    )
+                    return execution
+                else:
+                    logger.error("❌ Trade execution failed")
+                    return None
+
+            except Exception as e:
+                self.status = BridgeStatus.ERROR
+                logger.error(f"❌ Error processing alert: {str(e)}")
+                if hasattr(alert_event, 'event_id'):
+                    self.errors[alert_event.event_id] = (alert_event, str(e))
+                return None
 
     async def _validate_risk_gates(
         self,
@@ -309,9 +339,9 @@ class TradingBridgeOrchestrator:
                 logger.error(f"❌ Failed to place order for signal: {signal.signal_id}")
                 return None
 
-            # Create execution record
+            # Create execution record with unique UUID
             execution = AlertToTradeExecution(
-                execution_id=f"exec_{len(self.executions)}",
+                execution_id=f"exec_{uuid4().hex}",
                 alert_id=signal.alert_id,
                 signal_id=signal.signal_id,
                 order_id=order.order_id,
@@ -439,6 +469,6 @@ def get_trading_bridge_orchestrator() -> TradingBridgeOrchestrator:
     """
     global _orchestrator_instance
     if _orchestrator_instance is None:
-        _orchestrator_instance = OrchestratorInstance()
+        _orchestrator_instance = TradingBridgeOrchestrator()
 
     return _orchestrator_instance

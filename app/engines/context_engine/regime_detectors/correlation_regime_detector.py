@@ -64,7 +64,7 @@ class CorrelationRegimeDetector:
             self.pca.fit(returns_matrix)
             explained_variance = np.sum(self.pca.explained_variance_ratio_)
             return float(explained_variance)
-        except:
+        except Exception:
             return 0.0
 
     def detect(

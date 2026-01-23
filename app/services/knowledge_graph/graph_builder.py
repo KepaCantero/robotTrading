@@ -6,8 +6,7 @@ market correlations, and trading pattern discovery.
 """
 
 import logging
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -395,10 +394,7 @@ class KnowledgeGraphBuilder:
                 "num_relationships": 150,
                 "average_degree": 15,
                 "clustering_coefficient": 0.35,
-                "top_strategies": [
-                    {"name": f"STRAT{i}", "degree": 10 - i}
-                    for i in range(5)
-                ],
+                "top_strategies": [{"name": f"STRAT{i}", "degree": 10 - i} for i in range(5)],
             }
 
             logger.info("✅ Retrieved strategy network statistics")

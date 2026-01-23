@@ -293,7 +293,7 @@ class TestErrorHandlingWorkflows:
         """Test circuit breaker opening and recovery workflow."""
         # Trigger multiple API errors to open circuit breaker
         for _ in range(5):
-            error_response = client.post(
+            client.post(
                 "/portfolio/simulate-trade",
                 params={"symbol": "INVALID", "quantity": 100, "price": 150.0},
             )

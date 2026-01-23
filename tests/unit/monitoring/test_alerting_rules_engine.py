@@ -5,11 +5,12 @@ Tests alert rule evaluation, triggering, and management.
 """
 
 import pytest
+
 from app.services.monitoring import (
-    get_alerting_engine,
+    AlertConditionType,
     AlertRule,
     AlertSeverity,
-    AlertConditionType,
+    get_alerting_engine,
 )
 
 
@@ -94,9 +95,7 @@ class TestAlertingRulesEngine:
 
         alerts = await engine.evaluate_rules(metrics)
         assert len(alerts) > 0
-        assert any(
-            a.rule_id == "rule_max_drawdown" for a in alerts
-        )
+        assert any(a.rule_id == "rule_max_drawdown" for a in alerts)
 
     @pytest.mark.asyncio
     async def test_threshold_not_exceeded(self, engine):
@@ -107,9 +106,7 @@ class TestAlertingRulesEngine:
 
         alerts = await engine.evaluate_rules(metrics)
         # Should not trigger drawdown alert
-        drawdown_alerts = [
-            a for a in alerts if a.rule_id == "rule_max_drawdown"
-        ]
+        drawdown_alerts = [a for a in alerts if a.rule_id == "rule_max_drawdown"]
         assert len(drawdown_alerts) == 0
 
     @pytest.mark.asyncio
@@ -133,7 +130,7 @@ class TestAlertingRulesEngine:
 
         # Condition no longer met
         metrics2 = {"max_drawdown_pct": 15.0}
-        alerts2 = await engine.evaluate_rules(metrics2)
+        await engine.evaluate_rules(metrics2)
         # Alert should be resolved
 
     def test_get_active_alerts(self, engine):
@@ -190,7 +187,7 @@ class TestAlertingRulesEngine:
         metrics_anomaly = {"custom_metric": 200.0}
         import asyncio
 
-        alerts = asyncio.run(engine.evaluate_rules(metrics_anomaly))
+        asyncio.run(engine.evaluate_rules(metrics_anomaly))
         # Should detect anomaly
 
     def test_change_detection(self, engine):
@@ -210,14 +207,10 @@ class TestAlertingRulesEngine:
         import asyncio
 
         # Add baseline
-        asyncio.run(
-            engine.evaluate_rules({"portfolio_value_usd": 100000.0})
-        )
+        asyncio.run(engine.evaluate_rules({"portfolio_value_usd": 100000.0}))
 
         # Add change
-        asyncio.run(
-            engine.evaluate_rules({"portfolio_value_usd": 115000.0})
-        )
+        asyncio.run(engine.evaluate_rules({"portfolio_value_usd": 115000.0}))
         # Should detect > 10% change
 
     def test_metric_history_storage(self, engine):

@@ -168,8 +168,8 @@ def _generate_decision_analysis(result: Dict) -> str:
     if not result.get("trades"):
         return "No trades executed."
 
-    buy_count = sum(1 for t in result["trades"] if t.get("side") == "buy")
-    sell_count = sum(1 for t in result["trades"] if t.get("side") == "sell")
+    sum(1 for t in result["trades"] if t.get("side") == "buy")
+    sum(1 for t in result["trades"] if t.get("side") == "sell")
 
     return """
 - Buy signals: {buy_count}
@@ -741,7 +741,7 @@ def _analyze_module_behavior(module_name: str, result: Dict) -> str:
 def _generate_behavior_analysis(all_results: List[Dict], strategy: str) -> str:
     """Generate behavior analysis section."""
     sum(r.get("total_trades", 0) for r in all_results)
-    avg_win_rate = (
+    (
         statistics.mean([float(r.get("win_rate", 0)) for r in all_results if r.get("win_rate")])
         if all_results
         else 0

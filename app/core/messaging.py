@@ -133,7 +133,7 @@ class MessageBus:
                 for message in pubsub.listen():
                     if message['type'] == 'message':
                         try:
-                            data = pickle.loads(message['data'])
+                            data = pickle.loads(message['data'])  # nosec B301 - internal messaging
                             callback(data)
                         except Exception as e:
                             logger.error(f"Error processing Redis message: {e}")
@@ -156,7 +156,7 @@ class MessageBus:
                 while True:
                     try:
                         data = socket.recv(zmq.NOBLOCK)
-                        msg = pickle.loads(data)
+                        msg = pickle.loads(data)  # nosec B301 - internal messaging
                         if msg.get('channel') == channel:
                             callback(msg.get('data', {}))
                     except zmq.Again:

@@ -29,7 +29,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
 
         # Generate unique request ID
         request_id = str(uuid.uuid4())
-        request.request_id = request_id
+        request.request_id = request_id  # type: ignore
 
         # Record start time
         start_time = time.time()
@@ -68,7 +68,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
     async def _log_request_start(self, request: Request) -> None:
         """Log request start."""
         metadata = {
-            "request_id": request.request_id,
+            "request_id": request.request_id,  # type: ignore
             "method": request.method,
             "path": request.url.path,
             "query_params": dict(request.query_params),
@@ -89,7 +89,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
     ) -> None:
         """Log request completion."""
         metadata = {
-            "request_id": request.request_id,
+            "request_id": request.request_id,  # type: ignore
             "method": request.method,
             "path": request.url.path,
             "status_code": response.status_code,
@@ -131,7 +131,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
     ) -> None:
         """Log request error."""
         metadata = {
-            "request_id": request.request_id,
+            "request_id": request.request_id,  # type: ignore
             "method": request.method,
             "path": request.url.path,
             "process_time": process_time,
@@ -153,7 +153,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
         if hasattr(exc, "details") and isinstance(exc.details, dict):
             exc.details.update(
                 {
-                    "request_id": request.request_id,
+                    "request_id": request.request_id,  # type: ignore
                     "method": request.method,
                     "path": request.url.path,
                     "client_ip": request.client.host if request.client else None,
@@ -172,16 +172,16 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
 
         # Add request ID if not already present
         if not hasattr(request, "request_id"):
-            request.request_id = str(uuid.uuid4())
+            request.request_id = str(uuid.uuid4())  # type: ignore
 
         # Add request start time
-        request.start_time = time.time()
+        request.start_time = time.time()  # type: ignore
 
         # Process request
         response = await call_next(request)
 
         # Add request ID to response headers
-        response.headers["X-Request-ID"] = request.request_id
+        response.headers["X-Request-ID"] = request.request_id  # type: ignore
 
         return response
 
@@ -219,7 +219,7 @@ class RateLimitingMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, requests_per_minute: int = 60):
         super().__init__(app)
         self.requests_per_minute = requests_per_minute
-        self.request_counts = {}
+        self.request_counts = {}  # type: ignore
         self.logger = logging.getLogger(__name__)
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:

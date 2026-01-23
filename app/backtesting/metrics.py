@@ -322,16 +322,16 @@ class MetricsCalculator:
             if std_return == 0:
                 return Decimal("0")
 
-            # Annualize
+            # Annualize returns and volatility
+            # Assuming daily returns, annualize by multiplying mean by 252 and std by sqrt(252)
             annual_return = mean_return * 252  # Trading days
             annual_std = std_return * np.sqrt(252)
-            risk_free_daily = float(self.risk_free_rate) / 252
 
-            sharpe = (
-                (annual_return - (risk_free_daily * 252)) / annual_std
-                if annual_std > 0
-                else Decimal("0")
-            )
+            # Risk-free rate is already annualized (e.g., 0.02 = 2% annual)
+            annual_risk_free = float(self.risk_free_rate)
+
+            # Sharpe = (Annualized Return - Risk Free Rate) / Annualized Volatility
+            sharpe = (annual_return - annual_risk_free) / annual_std if annual_std > 0 else 0.0
             return Decimal(str(sharpe))
 
         except Exception as e:
@@ -364,25 +364,35 @@ class MetricsCalculator:
             # Fallback to manual calculation
             mean_return = np.mean(returns_array)
 
-            # Calculate downside deviation
-            downside_returns = [r for r in returns_array if r < 0]
-            if not downside_returns:
+            # Calculate downside deviation (correct formula)
+            # Target is daily risk-free rate, not zero
+            daily_risk_free = float(self.risk_free_rate) / 252
+            target_return = daily_risk_free
+
+            # Downside deviation: sqrt(mean(min(r - target, 0)^2))
+            # Only count returns below target, penalizing them by squared distance
+            downside_diff = np.minimum(returns_array - target_return, 0)
+            downside_squared = downside_diff**2
+
+            if len(downside_squared) == 0 or np.sum(downside_squared) == 0:
                 return Decimal("0")
 
-            downside_std = np.std(downside_returns)
+            # Downside deviation (target-based semi-deviation)
+            downside_std = np.sqrt(np.mean(downside_squared))
 
             if downside_std == 0:
                 return Decimal("0")
 
             # Annualize
             annual_return = mean_return * 252
+            annual_risk_free = float(self.risk_free_rate)
             annual_downside_std = downside_std * np.sqrt(252)
-            risk_free_daily = float(self.risk_free_rate) / 252
 
+            # Sortino = (Annualized Return - Risk Free) / Annualized Downside Deviation
             sortino = (
-                (annual_return - (risk_free_daily * 252)) / annual_downside_std
+                (annual_return - annual_risk_free) / annual_downside_std
                 if annual_downside_std > 0
-                else Decimal("0")
+                else 0.0
             )
             return Decimal(str(sortino))
 

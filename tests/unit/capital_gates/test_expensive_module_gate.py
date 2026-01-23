@@ -46,7 +46,7 @@ class TestExpensiveModuleGate:
 
         assert should_enable
         assert analysis["recommendation"] == "ENABLE"
-        assert analysis["enabled"] == True
+        assert analysis["enabled"]
 
     def test_deep_learning_disabled_small_capital(self):
         """
@@ -183,10 +183,10 @@ class TestModuleRecommendations:
         recommendations = ExpensiveModuleGate.get_recommended_modules(capital=Decimal("10000"))
 
         # All should be False for micro tier
-        assert recommendations["transformer_engine"] == False
-        assert recommendations["deep_learning_engine"] == False
-        assert recommendations["reinforcement_learning_engine"] == False
-        assert recommendations["hyperparameter_optimizer"] == False
+        assert not recommendations["transformer_engine"]
+        assert not recommendations["deep_learning_engine"]
+        assert not recommendations["reinforcement_learning_engine"]
+        assert not recommendations["hyperparameter_optimizer"]
 
     def test_small_tier_recommendations(self):
         """
@@ -196,8 +196,8 @@ class TestModuleRecommendations:
         recommendations = ExpensiveModuleGate.get_recommended_modules(capital=Decimal("25000"))
 
         # Deep learning should still be disabled
-        assert recommendations["deep_learning_engine"] == False
-        assert recommendations["transformer_engine"] == False
+        assert not recommendations["deep_learning_engine"]
+        assert not recommendations["transformer_engine"]
 
     def test_medium_tier_recommendations(self):
         """
@@ -206,12 +206,12 @@ class TestModuleRecommendations:
         recommendations = ExpensiveModuleGate.get_recommended_modules(capital=Decimal("100000"))
 
         # Moderate modules should be enabled
-        assert recommendations["transfer_learning"] == True
-        assert recommendations["feature_importance_analysis"] == True
-        assert recommendations["deep_learning_engine"] == True
-        assert recommendations["hyperparameter_optimizer"] == True
+        assert recommendations["transfer_learning"]
+        assert recommendations["feature_importance_analysis"]
+        assert recommendations["deep_learning_engine"]
+        assert recommendations["hyperparameter_optimizer"]
         # Transformer is VERY_EXPENSIVE and should be disabled even at $100k
-        assert recommendations["transformer_engine"] == False
+        assert not recommendations["transformer_engine"]
 
     def test_large_tier_recommendations(self):
         """
@@ -220,10 +220,10 @@ class TestModuleRecommendations:
         recommendations = ExpensiveModuleGate.get_recommended_modules(capital=Decimal("500000"))
 
         # All should be True for large tier
-        assert recommendations["transformer_engine"] == True
-        assert recommendations["deep_learning_engine"] == True
-        assert recommendations["reinforcement_learning_engine"] == True
-        assert recommendations["hyperparameter_optimizer"] == True
+        assert recommendations["transformer_engine"]
+        assert recommendations["deep_learning_engine"]
+        assert recommendations["reinforcement_learning_engine"]
+        assert recommendations["hyperparameter_optimizer"]
 
     def test_capital_tier_classification(self):
         """Test capital tier boundaries"""
@@ -271,7 +271,7 @@ class TestGetEnabledModules:
         # Some modules should be enabled
         assert any(enabled for enabled in enabled_modules.values())
         # Deep learning should be enabled
-        assert enabled_modules["deep_learning_engine"] == True
+        assert enabled_modules["deep_learning_engine"]
 
     def test_get_enabled_modules_large_account(self):
         """
@@ -392,11 +392,11 @@ class TestRealWorldScenarios:
         )
 
         # Deep learning should be borderline enabled
-        assert enabled_modules["deep_learning_engine"] == True
+        assert enabled_modules["deep_learning_engine"]
         # Transfer learning should be enabled
-        assert enabled_modules["transfer_learning"] == True
+        assert enabled_modules["transfer_learning"]
         # Transformer should be disabled
-        assert enabled_modules["transformer_engine"] == False
+        assert not enabled_modules["transformer_engine"]
 
     def test_professional_trader_500k_capital(self):
         """

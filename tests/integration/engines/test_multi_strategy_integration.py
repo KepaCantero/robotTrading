@@ -16,16 +16,16 @@ import pytest
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-import pandas as pd
+import pandas as pd  # noqa: E402
 
-from app.engines.context_engine import ContextEngine
-from app.engines.strategy_engines import (
+from app.engines.context_engine import ContextEngine  # noqa: E402
+from app.engines.strategy_engines import (  # noqa: E402
     MeanReversionStrategyEngine,
     ModularMomentumStrategyEngine,
     MomentumStrategyEngine,
 )
-from app.models.market_data import Quote
-from tests.integration.data.test_data_loader import load_all_csv_data
+from app.models.market_data import Quote  # noqa: E402
+from tests.integration.data.test_data_loader import load_all_csv_data  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -98,7 +98,7 @@ class TestMultiStrategyBacktestIntegration:
 
         # Verificar que los engines están usando ContextEngine
         momentum_status = momentum_engine.get_status()
-        assert momentum_status['context_engine_enabled'] == True
+        assert momentum_status['context_engine_enabled'] is True
 
         # Verificar métricas
         momentum_metrics = momentum_engine.get_metrics()
@@ -139,7 +139,7 @@ class TestMultiStrategyBacktestIntegration:
 
         # Verificar integración
         status = engine.get_status()
-        assert status['context_engine_enabled'] == True
+        assert status['context_engine_enabled'] is True
 
     def test_engines_use_context_for_signal_adjustment(self):
         """Test que los engines usan contexto para ajustar señales."""

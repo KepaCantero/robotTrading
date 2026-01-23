@@ -489,14 +489,14 @@ class StrategyStockAllocator:
                 return result
 
             adf_result = adfuller(clean_series, autolag='AIC')
-            adf_statistic, adf_pvalue = adf_result[0], adf_result[1]
+            adf_statistic, adf_pvalue = adf_result[0], adf_result[1]  # noqa: F841
             result["adf_pvalue"] = float(adf_pvalue)
             result["adf_stationary"] = adf_pvalue < self.config.ADF_P_VALUE_THRESHOLD
 
             # KPSS Test (null hypothesis: stationary) - REQUIRED: use statsmodels
             try:
                 kpss_result = kpss(clean_series, regression='ct', nlags='auto')
-                kpss_statistic, kpss_pvalue = kpss_result[0], kpss_result[1]
+                kpss_statistic, kpss_pvalue = kpss_result[0], kpss_result[1]  # noqa: F841
                 result["kpss_pvalue"] = float(kpss_pvalue)
                 result["kpss_stationary"] = kpss_pvalue > self.config.KPSS_P_VALUE_THRESHOLD
             except Exception as e:
@@ -823,12 +823,12 @@ class StrategyStockAllocator:
 
             # Normalize metrics for scoring
             (rsi / 100.0) if rsi is not None else 0.5
-            macd_norm = (
+            _macd_norm = (  # noqa: F841
                 1.0
                 if (macd is not None and macd > macd_signal)
                 else 0.0 if macd is not None else 0.5
             )
-            roc_norm = (
+            _roc_norm = (  # noqa: F841
                 min(1.0, max(0.0, (roc_optimal + 0.1) / 0.2)) if roc_optimal is not None else 0.5
             )
             sortino_norm = min(1.0, max(0.0, sortino / 2.0)) if sortino is not None else 0.5
@@ -950,8 +950,8 @@ class StrategyStockAllocator:
                 inv_tau = 1.0 / half_life
                 inv_tau_norm = min(1.0, max(0.0, (inv_tau - 0.01) / 0.1))  # 0.01-0.11 range
 
-            z_score_norm = min(1.0, abs(z_score) / 3.0)  # Normalize |Z-score|
-            garch_norm = (
+            _z_score_norm = min(1.0, abs(z_score) / 3.0)  # Normalize |Z-score|  # noqa: F841
+            _garch_norm = (  # noqa: F841
                 min(1.0, max(0.0, (garch_vol - 0.1) / 0.3)) if garch_vol is not None else 0.5
             )
             sortino_norm = min(1.0, max(0.0, sortino / 2.0)) if sortino is not None else 0.5
@@ -1032,7 +1032,7 @@ class StrategyStockAllocator:
             cointegration_score = 0.0
             half_life = None
             hedge_ratio = 1.0
-            spread_residuals = None
+            spread_residuals = None  # noqa: F841
             spread_z_score = None
             garch_normalized_z = None
 
@@ -1053,7 +1053,7 @@ class StrategyStockAllocator:
                     model = OLS(prices2, prices1).fit()
                     hedge_ratio = float(model.params[0])
                     residuals = model.resid
-                    spread_residuals = residuals  # Store for GARCH normalization
+                    _spread_residuals = residuals  # Store for GARCH normalization  # noqa: F841
 
                     # ADF test on residuals - STRICT: p < 0.01 to avoid spurious relationships
                     adf_result = adfuller(residuals, autolag='AIC')

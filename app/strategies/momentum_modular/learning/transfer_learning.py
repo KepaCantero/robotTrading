@@ -258,7 +258,7 @@ class ModelRegistry:
 
         try:
             with open(model_path, 'rb') as f:
-                model = pickle.load(f)
+                model = pickle.load(f)  # nosec B301 - trusted model data
             logger.info(f"Modelo {model_id} cargado desde {model_path}")
             return model
         except Exception as e:

@@ -25,19 +25,19 @@ import numpy as np
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.engines.risk_engine import RiskEngine
-from app.engines.risk_engine.alert_system import AlertSystem
-from app.engines.risk_engine.correlation_analyzers import CorrelationAnalyzer
-from app.engines.risk_engine.drawdown_controllers import DrawdownController
-from app.engines.risk_engine.exposure_managers import ExposureManager
-from app.engines.risk_engine.risk_attribution import RiskAttributor
-from app.engines.risk_engine.stress_testers import StressTester
-from app.engines.risk_engine.var_calculators import (
+from app.engines.risk_engine import RiskEngine  # noqa: E402
+from app.engines.risk_engine.alert_system import AlertSystem  # noqa: E402
+from app.engines.risk_engine.correlation_analyzers import CorrelationAnalyzer  # noqa: E402
+from app.engines.risk_engine.drawdown_controllers import DrawdownController  # noqa: E402
+from app.engines.risk_engine.exposure_managers import ExposureManager  # noqa: E402
+from app.engines.risk_engine.risk_attribution import RiskAttributor  # noqa: E402
+from app.engines.risk_engine.stress_testers import StressTester  # noqa: E402
+from app.engines.risk_engine.var_calculators import (  # noqa: E402
     HistoricalVaRCalculator,
     MonteCarloVaRCalculator,
     ParametricVaRCalculator,
 )
-from app.models.portfolio import AssetClass, Portfolio, Position
+from app.models.portfolio import AssetClass, Portfolio, Position  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'

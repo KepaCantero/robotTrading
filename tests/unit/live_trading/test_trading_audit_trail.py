@@ -90,7 +90,7 @@ class TestEventRetrieval:
             alert_id="evt_001",
         )
 
-        event2 = trail.log_event(
+        trail.log_event(
             event_type=AuditEventType.ORDER_PLACED,
             alert_id="evt_001",
             order_id="order_001",

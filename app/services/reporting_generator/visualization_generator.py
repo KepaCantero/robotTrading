@@ -443,7 +443,7 @@ class AdvancedVisualizationGenerator:
             # Reshape into matrix (years x months)
             unique_years = sorted(set(years))
             year_idx = {year: i for i, year in enumerate(unique_years)}
-            month_idx = {m: i for i, m in enumerate(range(1, 13))}
+            {m: i for i, m in enumerate(range(1, 13))}
 
             matrix = np.zeros((len(unique_years), 12))
             for y, m, ret in zip(years, months, monthly_returns):

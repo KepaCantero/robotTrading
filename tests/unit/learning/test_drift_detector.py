@@ -532,7 +532,7 @@ class TestOverfittingDetector:
 
         result = detector.detect_overfitting()
 
-        assert result["overfitting_detected"] == False or result["gap_ratio"] < 0.1
+        assert not result["overfitting_detected"] or result["gap_ratio"] < 0.1
 
     def test_detect_overfitting(self):
         """Test detecting overfitting when train/val diverge."""
@@ -558,7 +558,7 @@ class TestOverfittingDetector:
 
         result = detector.detect_overfitting()
 
-        assert result["overfitting_detected"] == False
+        assert not result["overfitting_detected"]
         assert result["reason"] == "insufficient_data"
 
     def test_get_learning_curves(self):
@@ -686,7 +686,7 @@ class TestAutoRetrainingTrigger:
 
         result = trigger.should_retrain()
 
-        assert result["time_based"] == True
+        assert result["time_based"]
         assert "time_based" in result["reasons"][0]
 
     def test_should_retrain_no_history(self):
@@ -695,7 +695,7 @@ class TestAutoRetrainingTrigger:
 
         result = trigger.should_retrain()
 
-        assert result["time_based"] == False
+        assert not result["time_based"]
 
     def test_record_retrain(self):
         """Test recording retrain."""
@@ -763,7 +763,7 @@ class TestDataClasses:
 
         d = result.to_dict()
 
-        assert d["drift_detected"] == True
+        assert d["drift_detected"]
         assert d["detector_name"] == "psi"
         assert d["statistic"] == 0.35
         assert d["severity"] == "medium"

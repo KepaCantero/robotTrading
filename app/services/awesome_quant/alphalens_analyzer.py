@@ -8,7 +8,7 @@ alpha generation sources and factor performance.
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -304,9 +304,7 @@ class AlphalsensAnalyzer:
                 ],
             }
 
-            self.analysis_results[
-                f"report_{len(self.analysis_results)}"
-            ] = report
+            self.analysis_results[f"report_{len(self.analysis_results)}"] = report
             logger.info("✅ Generated factor analysis report")
             return report
 

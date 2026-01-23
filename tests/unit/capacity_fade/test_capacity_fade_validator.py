@@ -8,18 +8,19 @@ Comprehensive tests for:
 - CapacityFadeValidator (orchestrator)
 """
 
-import pytest
 from decimal import Decimal
 
+import pytest
+
 from app.services.capacity_fade_validation import (
-    CapacityFadeValidator,
     CapacityFadeRequest,
+    CapacityFadeValidator,
     FeasibilityDecision,
 )
 from app.services.capacity_fade_validation.analyzers import (
+    AlphaDecayEstimator,
     HistoricalCapacityAnalyzer,
     LiquidityHeadroom,
-    AlphaDecayEstimator,
 )
 
 

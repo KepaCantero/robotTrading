@@ -618,7 +618,7 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
         )
 
         if current_price > 0 and price_other > 0:
-            is_first_leg = current_symbol == pair_key.split("_")[0]
+            current_symbol == pair_key.split("_")[0]
 
             # Determine which is relatively more expensive
             if current_price > price_other * (1 + float(self.min_spread_pct)):

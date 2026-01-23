@@ -177,7 +177,7 @@ class TestMaxPositionPerSymbol(unittest.TestCase):
         )
 
         # Crear señal para comprar más AAPL
-        quote = Quote(
+        Quote(
             symbol="AAPL",
             timestamp=datetime(2024, 1, 1),
             open=Decimal("200"),

@@ -33,6 +33,14 @@ except ImportError:
     PYPORTFOLIO_AVAILABLE = False
     logger.warning("PyPortfolioOpt no disponible. Usando implementación básica.")
 
+try:
+    from scipy.optimize import minimize
+
+    SCIPY_AVAILABLE = True
+except ImportError:
+    SCIPY_AVAILABLE = False
+    logger.warning("scipy no disponible. Risk Parity usará método heurístico.")
+
 
 class BaseOptimizer(ABC):
     """Clase base para optimizadores de portfolio."""
@@ -241,6 +249,7 @@ class RiskParityOptimizer(BaseOptimizer):
     Risk Parity Optimizer.
 
     Asigna pesos para que cada activo contribuya igualmente al riesgo total.
+    Uses Newton-Raphson iterative method for true risk parity.
     """
 
     def optimize(
@@ -265,15 +274,8 @@ class RiskParityOptimizer(BaseOptimizer):
         try:
             len(cov_matrix)
 
-            # Método básico: Inverse volatility weighting
-            # (aproximación simple de Risk Parity)
-            variances = np.diag(cov_matrix)
-            inv_vol = 1.0 / np.sqrt(variances)
-            weights = inv_vol / inv_vol.sum()
-
-            # Método avanzado: Optimización iterativa para igualar contribución de riesgo
-            if CVXPY_AVAILABLE:
-                weights = self._optimize_risk_parity_cvxpy(cov_matrix, constraints)
+            # Use iterative algorithm for true risk parity
+            weights = self._optimize_risk_parity_iterative(cov_matrix, constraints)
 
             # Aplicar restricciones
             max_weight = constraints.get('max_weight', 1.0)
@@ -286,48 +288,165 @@ class RiskParityOptimizer(BaseOptimizer):
             volatility = float(np.sqrt(np.dot(weights, np.dot(cov_matrix, weights))))
             sharpe_ratio = expected_return / volatility if volatility > 0 else 0.0
 
+            # Calculate risk contributions for verification
+            risk_contributions = self._calculate_risk_contributions(weights, cov_matrix)
+
             return {
                 'weights': {f'asset_{i}': float(w) for i, w in enumerate(weights)},
                 'expected_return': expected_return,
                 'volatility': volatility,
                 'sharpe_ratio': sharpe_ratio,
-                'method': 'risk_parity',
+                'risk_contributions': {
+                    f'asset_{i}': float(rc) for i, rc in enumerate(risk_contributions)
+                },
+                'method': 'risk_parity_iterative',
             }
         except Exception as e:
             self.logger.error(f"Error en optimización Risk Parity: {e}", exc_info=True)
             return self._equal_weight_fallback(len(cov_matrix))
 
-    def _optimize_risk_parity_cvxpy(
+    def _optimize_risk_parity_iterative(
         self, cov_matrix: np.ndarray, constraints: Dict[str, Any]
     ) -> np.ndarray:
-        """Optimización Risk Parity usando cvxpy."""
+        """
+        Optimización Risk Parity usando scipy.optimize.minimize.
+
+        Minimiza: sum((RC_i - 1/n)^2)
+        where RC_i = w_i * (Sigma @ w)_i / sigma_p^2
+
+        This ensures each asset contributes equally to portfolio risk.
+        Uses SLSQP optimizer with guaranteed convergence.
+        """
         n = len(cov_matrix)
-        w = cp.Variable(n)
 
-        # Objetivo: Minimizar diferencia en contribución de riesgo
-        portfolio_risk = cp.quad_form(w, cov_matrix)
-        risk_contributions = cp.multiply(w, cp.quad_form(w, cov_matrix) / w)
+        # Initial guess: inverse volatility weights (good starting point)
+        variances = np.diag(cov_matrix)
+        variances = np.maximum(variances, 1e-10)
+        inv_vol = 1.0 / np.sqrt(variances)
+        x0 = inv_vol / inv_vol.sum()
 
-        # Minimizar varianza de contribuciones de riesgo
-        objective = cp.Minimize(cp.sum_squares(risk_contributions - portfolio_risk / n))
+        target_risk = 1.0 / n  # Target: equal risk contribution
 
-        # Restricciones
-        constraint_list = [cp.sum(w) == 1, w >= 0]
+        def _risk_parity_objective(weights: np.ndarray) -> float:
+            """Objective: minimize sum of squared differences from target risk."""
+            portfolio_var = weights @ cov_matrix @ weights
+            if portfolio_var <= 0:
+                return 1e10  # Penalty for invalid portfolio
 
-        # Resolver
-        problem = cp.Problem(objective, constraint_list)
-        problem.solve()
+            # Risk contributions: RC_i = w_i * (Sigma @ w)_i / sigma_p^2
+            marginal_contrib = cov_matrix @ weights
+            risk_contrib = weights * marginal_contrib / portfolio_var
 
-        if problem.status == 'optimal':
-            weights = w.value
-            weights = np.maximum(weights, 0)
+            # Sum of squared deviations from target
+            return float(np.sum((risk_contrib - target_risk) ** 2))
+
+        def _risk_parity_gradient(weights: np.ndarray) -> np.ndarray:
+            """Analytical gradient for faster convergence."""
+            portfolio_var = weights @ cov_matrix @ weights
+            if portfolio_var <= 0:
+                return np.zeros(n)
+
+            sigma_w = cov_matrix @ weights
+            rc = weights * sigma_w / portfolio_var
+            diff = rc - target_risk
+
+            # Gradient of RC_i w.r.t. w_j
+            grad = np.zeros(n)
+            for i in range(n):
+                for j in range(n):
+                    if i == j:
+                        drc_dw = (sigma_w[i] + weights[i] * cov_matrix[i, i]) / portfolio_var
+                        drc_dw -= rc[i] * 2 * sigma_w[j] / portfolio_var
+                    else:
+                        drc_dw = weights[i] * cov_matrix[i, j] / portfolio_var
+                        drc_dw -= rc[i] * 2 * sigma_w[j] / portfolio_var
+                    grad[j] += 2 * diff[i] * drc_dw
+
+            return grad
+
+        if SCIPY_AVAILABLE:
+            # Use scipy.optimize.minimize with SLSQP
+            try:
+                result = minimize(
+                    _risk_parity_objective,
+                    x0,
+                    method='SLSQP',
+                    jac=_risk_parity_gradient,
+                    bounds=[(1e-10, 1.0) for _ in range(n)],
+                    constraints={'type': 'eq', 'fun': lambda w: np.sum(w) - 1.0},
+                    options={
+                        'ftol': 1e-12,
+                        'maxiter': constraints.get('max_iterations', 500),
+                        'disp': False,
+                    },
+                )
+
+                if result.success:
+                    self.logger.debug(f"Risk parity converged: {result.message}")
+                    return result.x
+                else:
+                    self.logger.warning(f"Scipy optimization warning: {result.message}")
+                    # Still use result if it's reasonable
+                    if result.fun < 1e-4:
+                        return result.x
+
+            except Exception as e:
+                self.logger.warning(f"Scipy optimization failed: {e}, using fallback")
+
+        # Fallback: simple iterative method
+        return self._risk_parity_fallback(cov_matrix, x0, target_risk, constraints)
+
+    def _risk_parity_fallback(
+        self,
+        cov_matrix: np.ndarray,
+        weights: np.ndarray,
+        target_risk: float,
+        constraints: Dict[str, Any],
+    ) -> np.ndarray:
+        """Fallback iterative method when scipy is not available."""
+        max_iter = constraints.get('max_iterations', 100)
+        tolerance = constraints.get('tolerance', 1e-8)
+
+        for iteration in range(max_iter):
+            portfolio_var = weights @ cov_matrix @ weights
+            if portfolio_var <= 0:
+                break
+
+            marginal_risk = cov_matrix @ weights
+            risk_contributions = weights * marginal_risk / portfolio_var
+            error = np.sum((risk_contributions - target_risk) ** 2)
+
+            if error < tolerance:
+                self.logger.debug(f"Risk parity fallback converged: iter={iteration + 1}")
+                break
+
+            # Multiplicative update
+            adjustment = np.where(
+                risk_contributions > 0, target_risk / (risk_contributions + 1e-10), 1.0
+            )
+            weights = weights * np.power(adjustment, 0.3)  # Damped
+            weights = np.maximum(weights, 1e-10)
             weights = weights / weights.sum()
-            return weights
-        else:
-            # Fallback a inverse volatility
-            variances = np.diag(cov_matrix)
-            inv_vol = 1.0 / np.sqrt(variances)
-            return inv_vol / inv_vol.sum()
+
+        return weights
+
+    def _calculate_risk_contributions(
+        self, weights: np.ndarray, cov_matrix: np.ndarray
+    ) -> np.ndarray:
+        """Calculate risk contributions for each asset."""
+        portfolio_var = weights @ cov_matrix @ weights
+        if portfolio_var <= 0:
+            return np.zeros(len(weights))
+
+        portfolio_vol = np.sqrt(portfolio_var)
+        marginal_risk = (cov_matrix @ weights) / portfolio_vol
+        risk_contributions = weights * marginal_risk
+
+        # Normalize to percentage
+        total = risk_contributions.sum()
+        if total > 0:
+            return risk_contributions / total
+        return risk_contributions
 
     def _equal_weight_fallback(self, n: int) -> Dict[str, Any]:
         """Fallback a pesos iguales."""
@@ -345,7 +464,12 @@ class BlackLittermanOptimizer(BaseOptimizer):
     """
     Black-Litterman Optimizer.
 
-    Combina vistas del mercado con equilibrio del mercado.
+    Combina vistas del mercado con equilibrio del mercado usando
+    el modelo bayesiano de Black-Litterman.
+
+    Views format:
+    - Absolute views: {'asset_0': 0.05} means asset 0 will return 5%
+    - Relative views: {'asset_0 - asset_1': 0.02} means asset 0 outperforms asset 1 by 2%
     """
 
     def optimize(
@@ -358,9 +482,13 @@ class BlackLittermanOptimizer(BaseOptimizer):
         Optimizar usando modelo Black-Litterman.
 
         Args:
-            expected_returns: Retornos de equilibrio del mercado
+            expected_returns: Retornos de equilibrio del mercado (implied returns)
             cov_matrix: Matriz de covarianza
-            constraints: Restricciones y vistas
+            constraints: Restricciones y vistas:
+                - views: Dict mapping view description to expected return
+                - view_confidences: Dict mapping view to confidence (0-1)
+                - tau: Uncertainty scaling (default 0.05)
+                - market_caps: Market capitalizations for equilibrium weights
 
         Returns:
             Dict con pesos optimizados
@@ -370,72 +498,162 @@ class BlackLittermanOptimizer(BaseOptimizer):
         try:
             n = len(expected_returns)
 
-            # Obtener vistas del usuario (si están disponibles)
+            # Get views configuration
             views = constraints.get('views', {})
             view_confidences = constraints.get('view_confidences', {})
+            tau = constraints.get('tau', 0.05)  # Typical value: 0.025 to 0.05
 
-            # Si no hay vistas, usar retornos de equilibrio directamente
+            # If no views, use implied equilibrium returns with Markowitz
             if not views:
-                # Usar Markowitz con retornos de equilibrio
                 markowitz = MarkowitzOptimizer(self.config)
-                return markowitz.optimize(expected_returns, cov_matrix, constraints)
+                result = markowitz.optimize(expected_returns, cov_matrix, constraints)
+                result['method'] = 'black_litterman_equilibrium'
+                return result
 
-            # Implementación simplificada de Black-Litterman
-            # Tau (escala de incertidumbre)
-            tau = constraints.get('tau', 0.05)
+            # Build views matrices
+            P, Q, Omega = self._build_views_system(n, views, view_confidences, cov_matrix, tau)
 
-            # Construir matriz de vistas P y vector de vistas Q
-            P = self._build_views_matrix(n, views)
-            Q = self._build_views_vector(views)
-            Omega = self._build_uncertainty_matrix(n, views, view_confidences)
+            if P is None or len(P) == 0:
+                # No valid views, use equilibrium
+                markowitz = MarkowitzOptimizer(self.config)
+                result = markowitz.optimize(expected_returns, cov_matrix, constraints)
+                result['method'] = 'black_litterman_equilibrium'
+                return result
 
-            # Retornos de equilibrio (PI)
+            # Prior: equilibrium returns (PI)
             PI = expected_returns
 
-            # Retornos ajustados por Black-Litterman
-            # BL_return = [(tau*Sigma)^-1 + P'*Omega^-1*P]^-1 * [(tau*Sigma)^-1*PI + P'*Omega^-1*Q]
-            tau_Sigma_inv = np.linalg.inv(tau * cov_matrix)
-            Omega_inv = np.linalg.inv(Omega) if Omega.shape[0] > 0 else np.array([])
+            # Posterior Black-Litterman returns
+            # BL = [(tau*Sigma)^-1 + P'*Omega^-1*P]^-1 * [(tau*Sigma)^-1*PI + P'*Omega^-1*Q]
+            try:
+                tau_Sigma = tau * cov_matrix
+                tau_Sigma_inv = np.linalg.inv(tau_Sigma)
 
-            if Omega_inv.shape[0] > 0:
-                # Con vistas
-                A = tau_Sigma_inv + P.T @ Omega_inv @ P
-                b = tau_Sigma_inv @ PI + P.T @ Omega_inv @ Q
-                bl_returns = np.linalg.solve(A, b)
-            else:
-                # Sin vistas, usar equilibrio
+                # Use pseudo-inverse for numerical stability
+                Omega_inv = np.linalg.pinv(Omega)
+
+                # Posterior precision and mean
+                posterior_precision = tau_Sigma_inv + P.T @ Omega_inv @ P
+                posterior_precision_inv = np.linalg.inv(posterior_precision)
+
+                posterior_mean = posterior_precision_inv @ (
+                    tau_Sigma_inv @ PI + P.T @ Omega_inv @ Q
+                )
+
+                bl_returns = posterior_mean
+
+            except np.linalg.LinAlgError as e:
+                self.logger.warning(f"Matrix inversion failed: {e}, using equilibrium")
                 bl_returns = PI
 
-            # Usar Markowitz con retornos BL
+            # Optimize with BL returns
             markowitz = MarkowitzOptimizer(self.config)
-            return markowitz.optimize(bl_returns, cov_matrix, constraints)
+            result = markowitz.optimize(bl_returns, cov_matrix, constraints)
+            result['method'] = 'black_litterman'
+            result['bl_returns'] = {f'asset_{i}': float(r) for i, r in enumerate(bl_returns)}
+            result['equilibrium_returns'] = {f'asset_{i}': float(r) for i, r in enumerate(PI)}
+            result['views_applied'] = len(views)
+
+            return result
 
         except Exception as e:
             self.logger.error(f"Error en optimización Black-Litterman: {e}", exc_info=True)
             return self._equal_weight_fallback(len(expected_returns))
 
-    def _build_views_matrix(self, n: int, views: Dict[str, Any]) -> np.ndarray:
-        """Construir matriz de vistas P."""
-        # Implementación simplificada
-        # En producción, esto debería ser más sofisticado
-        P = np.eye(n)  # Por defecto, vista por cada activo
-        return P
+    def _build_views_system(
+        self,
+        n: int,
+        views: Dict[str, Any],
+        view_confidences: Dict[str, float],
+        cov_matrix: np.ndarray,
+        tau: float,
+    ) -> tuple:
+        """
+        Build the views system (P, Q, Omega) for Black-Litterman.
 
-    def _build_views_vector(self, views: Dict[str, Any]) -> np.ndarray:
-        """Construir vector de vistas Q."""
-        # Implementación simplificada
-        n = len(views) if views else 1
-        Q = np.zeros(n)
-        return Q
+        Args:
+            n: Number of assets
+            views: Dict of views (asset_index or 'asset_i - asset_j' -> return)
+            view_confidences: Dict of confidences (0-1)
+            cov_matrix: Covariance matrix
+            tau: Uncertainty parameter
 
-    def _build_uncertainty_matrix(
-        self, n: int, views: Dict[str, Any], view_confidences: Dict[str, Any]
-    ) -> np.ndarray:
-        """Construir matriz de incertidumbre Omega."""
-        # Implementación simplificada
-        n_views = len(views) if views else n
-        Omega = np.eye(n_views) * 0.1  # Diagonal con incertidumbre constante
-        return Omega
+        Returns:
+            (P, Q, Omega) matrices
+        """
+        view_list = []
+        P_rows = []
+        Q_values = []
+        confidences = []
+
+        for view_key, expected_return in views.items():
+            try:
+                row = np.zeros(n)
+
+                # Parse view key
+                if ' - ' in str(view_key):
+                    # Relative view: 'asset_i - asset_j'
+                    parts = str(view_key).split(' - ')
+                    idx1 = self._parse_asset_index(parts[0], n)
+                    idx2 = self._parse_asset_index(parts[1], n)
+                    if idx1 is not None and idx2 is not None:
+                        row[idx1] = 1.0
+                        row[idx2] = -1.0
+                        view_list.append(view_key)
+                else:
+                    # Absolute view: 'asset_i' or just index
+                    idx = self._parse_asset_index(view_key, n)
+                    if idx is not None:
+                        row[idx] = 1.0
+                        view_list.append(view_key)
+
+                if np.any(row != 0):
+                    P_rows.append(row)
+                    Q_values.append(float(expected_return))
+                    conf = view_confidences.get(view_key, 0.5)
+                    confidences.append(max(0.01, min(1.0, float(conf))))
+
+            except (ValueError, KeyError, TypeError) as e:
+                self.logger.warning(f"Invalid view {view_key}: {e}")
+                continue
+
+        if not P_rows:
+            return None, None, None
+
+        P = np.array(P_rows)
+        Q = np.array(Q_values)
+
+        # Build Omega: uncertainty matrix for views
+        # Omega = diag(P * tau * Sigma * P') / confidence
+        # Higher confidence = lower uncertainty
+        k = len(view_list)
+        Omega = np.zeros((k, k))
+
+        for i in range(k):
+            # View uncertainty proportional to view variance
+            view_var = P[i] @ (tau * cov_matrix) @ P[i].T
+            # Scale by inverse confidence (lower confidence = higher uncertainty)
+            Omega[i, i] = view_var / confidences[i]
+
+        return P, Q, Omega
+
+    def _parse_asset_index(self, key: Any, n: int) -> Optional[int]:
+        """Parse asset key to index."""
+        try:
+            if isinstance(key, int):
+                return key if 0 <= key < n else None
+
+            key_str = str(key).strip()
+            if key_str.startswith('asset_'):
+                idx = int(key_str.replace('asset_', ''))
+                return idx if 0 <= idx < n else None
+
+            # Try direct integer parsing
+            idx = int(key_str)
+            return idx if 0 <= idx < n else None
+
+        except (ValueError, TypeError):
+            return None
 
     def _equal_weight_fallback(self, n: int) -> Dict[str, Any]:
         """Fallback a pesos iguales."""

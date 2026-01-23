@@ -92,7 +92,7 @@ class TimestampNormalizer:
         # Formato ISO
         try:
             return datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
-        except:
+        except Exception:
             pass
 
         # Formato común: YYYY-MM-DD HH:MM:SS
@@ -111,7 +111,7 @@ class TimestampNormalizer:
         for fmt in formats:
             try:
                 return datetime.strptime(timestamp_str, fmt)
-            except:
+            except Exception:
                 continue
 
         raise ValueError(f"No se pudo parsear timestamp string: {timestamp_str}")

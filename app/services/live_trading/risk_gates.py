@@ -7,6 +7,8 @@ Validates orders against risk limits before execution:
 - Maximum drawdown limits
 - Daily loss limits
 - Concentration limits
+
+Uses centralized configuration from app.core.centralized_config.
 """
 
 import logging
@@ -16,6 +18,8 @@ from enum import Enum
 from typing import Dict, List, Optional, Tuple
 
 from fastapi import Depends
+
+from app.core.centralized_config import get_config
 
 from .broker_connector import BrokerConnector, OrderSide, get_broker_connector
 
@@ -72,23 +76,39 @@ class RiskGates:
     """
 
     def __init__(self, broker: Optional[BrokerConnector] = None):
-        """Initialize risk gates."""
+        """Initialize risk gates with centralized configuration."""
         self.broker = broker or get_broker_connector()
 
-        # Risk limits (default values)
-        self.max_position_size = Decimal("50000")  # Max € per position
+        # Load risk limits from centralized configuration
+        config = get_config()
+        thresholds = config.trading
+
+        # Risk limits from centralized config (with fallback defaults)
+        self.max_position_size = Decimal("50000")  # Max € per position (absolute value)
         self.max_leverage = Decimal("2.0")  # Max 2x leverage
-        self.max_concentration = Decimal("0.15")  # Max 15% in single position
-        self.max_daily_loss = Decimal("0.05")  # Max 5% daily loss
-        self.max_drawdown = Decimal("0.20")  # Max 20% drawdown
-        self.min_cash_reserve = Decimal("0.10")  # Keep 10% cash
+        self.max_concentration = Decimal(str(thresholds.max_sector_exposure))  # From config: 0.30
+        self.max_daily_loss = Decimal(str(thresholds.daily_loss_limit))  # From config: 0.05
+        self.max_drawdown = Decimal(str(thresholds.max_drawdown_limit))  # From config: 0.15
+        self.min_cash_reserve = Decimal(str(1 - thresholds.max_total_exposure))  # Derived: 0.20
+
+        # Additional risk parameters from config
+        self.stop_loss_pct = Decimal(str(thresholds.stop_loss_pct))  # From config: 0.05
+        self.max_risk_per_trade = Decimal(str(thresholds.max_risk_per_trade))  # From config: 0.02
+        self.circuit_breaker_daily_loss = Decimal(
+            str(thresholds.circuit_breaker_daily_loss)
+        )  # 0.03
+        self.circuit_breaker_drawdown = Decimal(str(thresholds.circuit_breaker_drawdown))  # 0.10
 
         # Tracking
         self.daily_pnl = Decimal("0")
         self.max_intraday_value = Decimal("0")
         self.current_drawdown = Decimal("0")
+        self.circuit_breaker_active = False
 
-        logger.info("✅ RiskGates initialized")
+        logger.info(
+            f"✅ RiskGates initialized with centralized config "
+            f"(max_daily_loss={self.max_daily_loss:.1%}, max_drawdown={self.max_drawdown:.1%})"
+        )
 
     async def validate_order(
         self,
@@ -112,6 +132,11 @@ class RiskGates:
         violations = []
         warnings = []
         risk_level = RiskLevel.LOW
+
+        # CRITICAL CHECK 0: Circuit breaker
+        if self.circuit_breaker_active:
+            violations.append("Trading halted: circuit breaker active due to excessive losses")
+            return RiskCheckResult(False, RiskLevel.CRITICAL, violations)
 
         # Get account info
         account = await self.broker.get_account_info()
@@ -171,8 +196,51 @@ class RiskGates:
                     f"Cash reserve {cash_pct:.1%} below target {self.min_cash_reserve:.1%}"
                 )
 
+        # Check 6: Daily loss limit (CRITICAL)
+        daily_loss_passed, daily_loss_msg = await self.check_daily_loss(abs(self.daily_pnl))
+        if not daily_loss_passed:
+            violations.append(daily_loss_msg)
+            risk_level = RiskLevel.CRITICAL
+            # Activate circuit breaker
+            self._activate_circuit_breaker("daily_loss_exceeded")
+
+        # Check 7: Drawdown limit (CRITICAL)
+        if self.max_intraday_value > 0:
+            drawdown_passed, drawdown_msg = await self.check_drawdown(
+                account.portfolio_value, self.max_intraday_value
+            )
+            if not drawdown_passed:
+                violations.append(drawdown_msg)
+                risk_level = RiskLevel.CRITICAL
+                # Activate circuit breaker
+                self._activate_circuit_breaker("drawdown_exceeded")
+
+        # Update max intraday value for drawdown tracking
+        if account.portfolio_value > self.max_intraday_value:
+            self.max_intraday_value = account.portfolio_value
+
         passed = len(violations) == 0
         return RiskCheckResult(passed, risk_level, violations, warnings)
+
+    def _activate_circuit_breaker(self, reason: str) -> None:
+        """Activate circuit breaker to halt all trading."""
+        if not self.circuit_breaker_active:
+            self.circuit_breaker_active = True
+            logger.critical(f"CIRCUIT BREAKER ACTIVATED: {reason}")
+
+    def reset_circuit_breaker(self) -> None:
+        """Reset circuit breaker (manual override only)."""
+        self.circuit_breaker_active = False
+        self.daily_pnl = Decimal("0")
+        self.max_intraday_value = Decimal("0")
+        logger.warning("Circuit breaker RESET - trading resumed")
+
+    def update_daily_pnl(self, pnl_change: Decimal) -> None:
+        """Update daily P&L tracking."""
+        self.daily_pnl += pnl_change
+        # Check if we should activate circuit breaker
+        if self.daily_pnl < -abs(self.circuit_breaker_daily_loss):
+            self._activate_circuit_breaker(f"daily_loss={self.daily_pnl}")
 
     async def check_daily_loss(self, daily_loss: Decimal) -> Tuple[bool, str]:
         """
@@ -334,6 +402,6 @@ def get_risk_gates(
     """Get or create singleton RiskGates."""
     global _gates
     if _gates is None:
-        _gates = Gates()
+        _gates = RiskGates(broker=broker)
 
     return _gates

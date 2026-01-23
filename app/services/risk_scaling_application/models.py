@@ -1,13 +1,15 @@
+from decimal import Decimal
+from typing import List, Optional
+
+from pydantic import BaseModel, Field
+
+from app.services.portfolio_constructor import AllocationWeight, PortfolioAllocation
+
 """
 T8.1: RiskScalingApplication Models
 
 Data structures for conditional risk scaling application.
 """
-
-from decimal import Decimal
-from typing import List, Optional
-
-from pydantic import BaseModel, Field
 
 
 class RiskScalingRequest(BaseModel):
@@ -58,7 +60,6 @@ class RiskAdjustedPortfolio(BaseModel):
 
 
 # Import from T7.1 models for type hints
-from app.services.portfolio_constructor import AllocationWeight, PortfolioAllocation
 
 # Update forward references
 RiskScalingRequest.model_rebuild()

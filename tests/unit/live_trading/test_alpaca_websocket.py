@@ -120,14 +120,6 @@ class TestAlpacaClientStreamMessageProcessing:
         mock_handler = AsyncMock()
         alpaca_client.register_quote_handler(mock_handler)
 
-        quote_data = {
-            "T": "q",
-            "S": "AAPL",
-            "bp": "150.50",
-            "ap": "150.60",
-            "bs": 100,
-            "as": 200,
-        }
         message = '{"T": "q", "S": "AAPL", "bp": "150.50", "ap": "150.60"}'
 
         await alpaca_client._process_stream_message(message)

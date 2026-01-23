@@ -14,7 +14,7 @@ from fastapi.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
 
-from app.models.optimization import (
+from app.models.optimization import (  # noqa: E402
     OptimizationArtifact,
     OptimizationConfig,
     OptimizationMethod,
@@ -28,8 +28,8 @@ from app.models.optimization import (
     ParameterOptimizationRequest,
     ParameterType,
 )
-from app.services.cost_analysis_service import CostAnalysisService
-from app.services.parameter_optimization_service import ParameterOptimizationService
+from app.services.cost_analysis_service import CostAnalysisService  # noqa: E402
+from app.services.parameter_optimization_service import ParameterOptimizationService  # noqa: E402
 
 router = APIRouter(prefix="/optimization", tags=["Parameter Optimization"])
 

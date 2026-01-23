@@ -16,10 +16,11 @@ from decimal import Decimal
 from typing import Dict, List, Optional
 
 from app.services.capacity_fade_validation import (
-    CapacityFadeValidator,
     CapacityFadeRequest,
+    CapacityFadeValidator,
     FeasibilityDecision,
 )
+
 from .models import DeploymentDecision, DeploymentInput, DeploymentRationale
 
 logger = logging.getLogger(__name__)
@@ -106,9 +107,11 @@ class DeployDecisionOrchestrator:
             )
 
             # Step 5: Assess capacity fade (T4.1 Integration - Active Validation)
-            capacity_fade_score, capacity_fade_feasible, capacity_fade_alpha = await self._assess_capacity_fade(
-                deployment_input
-            )
+            (
+                capacity_fade_score,
+                capacity_fade_feasible,
+                capacity_fade_alpha,
+            ) = await self._assess_capacity_fade(deployment_input)
 
             # Step 6: Calculate overall score (weighted average)
             overall_score = await self._calculate_overall_score(
@@ -285,9 +288,7 @@ class DeployDecisionOrchestrator:
 
         return sum(scores) / len(scores)
 
-    async def _assess_capacity_fade(
-        self, deployment_input: DeploymentInput
-    ) -> tuple:
+    async def _assess_capacity_fade(self, deployment_input: DeploymentInput) -> tuple:
         """
         Assess capacity fade score using T4.1 CapacityFadeValidator.
 
@@ -299,10 +300,7 @@ class DeployDecisionOrchestrator:
         """
         try:
             # If capital data not provided, skip validation (backward compatibility)
-            if (
-                deployment_input.current_capital is None
-                or deployment_input.target_capital is None
-            ):
+            if deployment_input.current_capital is None or deployment_input.target_capital is None:
                 logger.warning("⚠️ Capacity fade validation skipped: missing capital data")
                 return Decimal("50"), None, None
 
@@ -323,7 +321,9 @@ class DeployDecisionOrchestrator:
             )
 
             # Call T4.1 validator
-            response = await self.capacity_fade_validator.validate_capacity_feasibility(fade_request)
+            response = await self.capacity_fade_validator.validate_capacity_feasibility(
+                fade_request
+            )
 
             if not response.success:
                 logger.error(f"❌ T4.1 validation failed: {response.error_message}")

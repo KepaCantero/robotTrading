@@ -372,7 +372,7 @@ class TestLimitsAndRebalancingRegression(unittest.TestCase):
             broker="test",
         )
 
-        quote = Quote(
+        Quote(
             symbol="AAPL",
             timestamp=datetime(2024, 1, 1),
             open=Decimal("200"),

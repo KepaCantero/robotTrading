@@ -197,8 +197,8 @@ class TestLearningCapitalGate:
         assert analysis_medium["cost_benefit_ratio"] > analysis_large["cost_benefit_ratio"]
 
         # Micro should be disabled (below capital threshold), others enabled
-        assert analysis_micro["learning_recommended"] == False
-        assert analysis_large["learning_recommended"] == True
+        assert not analysis_micro["learning_recommended"]
+        assert analysis_large["learning_recommended"]
 
     def test_minimum_capital_for_learning_calculation(self):
         """
@@ -231,7 +231,7 @@ class TestLearningCapitalGate:
         """Test recommended config for micro account"""
         config = LearningCapitalGate.get_recommended_learning_config(capital=Decimal("10000"))
 
-        assert config["learning_enabled"] == False
+        assert not config["learning_enabled"]
         assert "too small" in config["reason"].lower()
 
     def test_recommended_learning_config_small(self):
@@ -239,13 +239,13 @@ class TestLearningCapitalGate:
         config = LearningCapitalGate.get_recommended_learning_config(capital=Decimal("20000"))
 
         # Small account: learning only if capital >= $25k
-        assert config["learning_enabled"] == False
+        assert not config["learning_enabled"]
 
     def test_recommended_learning_config_medium(self):
         """Test recommended config for medium account"""
         config = LearningCapitalGate.get_recommended_learning_config(capital=Decimal("50000"))
 
-        assert config["learning_enabled"] == True
+        assert config["learning_enabled"]
         assert "learning_config" in config
         # Medium tier should have weekly retraining
         assert config["learning_config"]["rebalance_frequency_days"] == 7
@@ -254,11 +254,11 @@ class TestLearningCapitalGate:
         """Test recommended config for large account"""
         config = LearningCapitalGate.get_recommended_learning_config(capital=Decimal("500000"))
 
-        assert config["learning_enabled"] == True
+        assert config["learning_enabled"]
         assert "learning_config" in config
         # Large tier should have more frequent retraining
         assert config["learning_config"]["rebalance_frequency_days"] == 3
-        assert config["learning_config"]["enable_transfer_learning"] == True
+        assert config["learning_config"]["enable_transfer_learning"]
 
     def test_capital_tier_classification(self):
         """Test capital tier classification"""

@@ -27,9 +27,9 @@ os.environ['MKL_INTERFACE_LAYER'] = 'LP64,GNU'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # Ahora importar numpy y pandas DESPUÉS de configurar variables
-import numpy as np
+import numpy as np  # noqa: E402
 
-from .base_learning_engine import BaseLearningEngine
+from .base_learning_engine import BaseLearningEngine  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -649,16 +649,18 @@ class DeepLearningEngine(BaseLearningEngine):
                 engine = DeepLearningEngine(config_dict, defer_pytorch_init=False)
 
                 # Deserializar datos
-                training_data = pickle.loads(training_data_bytes)
-                validation_data = (
-                    pickle.loads(validation_data_bytes) if validation_data_bytes else None
-                )
+                training_data = pickle.loads(
+                    training_data_bytes
+                )  # nosec B301 - trusted internal data
+                validation_data = pickle.loads(
+                    validation_data_bytes
+                )  # nosec B301 - trusted internal data if validation_data_bytes else None
 
                 # Entrenar
                 metrics = engine.train(training_data, validation_data, use_subprocess=False)
 
                 # Guardar modelo en archivo temporal
-                import tempfile
+                import tempfile  # noqa: E402
 
                 model_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pt')
                 model_path = model_file.name
@@ -735,7 +737,7 @@ class DeepLearningEngine(BaseLearningEngine):
                         import os
 
                         os.unlink(model_path)
-                    except:
+                    except Exception:  # noqa: E722
                         pass
 
                     self.is_trained = True

@@ -1,3 +1,18 @@
+import asyncio
+import logging
+import uuid
+from datetime import datetime
+from decimal import Decimal
+from typing import Any, Dict, Optional
+
+from fastapi import APIRouter, BackgroundTasks, HTTPException
+from pydantic import BaseModel, Field
+
+from app.core.models.input_profile import InputProcessor, InputProfile
+from app.services.configuration_persistence.configuration_repository import ConfigurationRepository
+from app.services.deployment.deploy_decision_orchestrator import DeployDecisionOrchestrator
+
+# import asyncio  # F811 duplicate from line 10
 """
 T13.1: CAPA 2 API Endpoints - Parametrization Framework REST API
 
@@ -14,20 +29,7 @@ Exposes the complete CAPA 2 parametrization pipeline:
 10. DeployDecisionOrchestrator (T10.1)
 """
 
-import logging
-import uuid
-from datetime import datetime
-from decimal import Decimal
-from typing import Any, Dict, Optional
-
-from fastapi import APIRouter, BackgroundTasks, HTTPException
-from pydantic import BaseModel, Field
-
 # Import all CAPA 2 services
-from app.core.models.input_profile import InputProcessor, InputProfile
-from app.services.configuration_persistence.configuration_repository import ConfigurationRepository
-from app.services.deployment.deploy_decision_orchestrator import DeployDecisionOrchestrator
-
 logger = logging.getLogger(__name__)
 
 # Initialize router
@@ -508,14 +510,13 @@ async def complete_workflow(request: CompleteWorkflowRequest, background_tasks: 
 
 async def _execute_complete_workflow(workflow_id: str, request: CompleteWorkflowRequest):
     """Execute complete workflow in background."""
-    import asyncio
 
     try:
         results = {}
 
         # Stage 1: Process input (T1.1)
         _jobs[workflow_id]["stage"] = "input_processing"
-        input_profile = InputProfile(
+        InputProfile(
             capital_initial=request.capital_initial,
             objetivo_inversion=request.objetivo_inversion,
             risk_tolerance=request.risk_tolerance,
@@ -691,4 +692,3 @@ async def jobs_status():
 
 
 # Import asyncio for background tasks
-import asyncio

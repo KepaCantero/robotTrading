@@ -1,3 +1,16 @@
+import unittest
+from datetime import datetime, timedelta
+from decimal import Decimal
+
+import numpy as np
+
+from app.models.market_data import Quote
+from app.models.signal import SignalType
+from app.services.momentum_analysis import TechnicalIndicatorCalculator
+from app.strategies.mean_reversion import MeanReversionStrategy
+from app.strategies.momentum import MomentumStrategy
+from app.strategies.pairs_trading import PairsTradingStrategy
+
 """
 BLOQUE 3 — Pruebas de Señales
 
@@ -6,17 +19,6 @@ Tests para verificar:
 - Coherencia de señales (justificación por indicadores)
 - No solapamiento (no hay señales simultáneas opuestas)
 """
-
-import unittest
-from datetime import datetime, timedelta
-from decimal import Decimal
-
-from app.models.market_data import Quote
-from app.models.signal import SignalType
-from app.services.momentum_analysis import TechnicalIndicatorCalculator
-from app.strategies.mean_reversion import MeanReversionStrategy
-from app.strategies.momentum import MomentumStrategy
-from app.strategies.pairs_trading import PairsTradingStrategy
 
 
 class TestMomentumSignalCoherence(unittest.TestCase):
@@ -631,10 +633,6 @@ class TestSignalFrequency(unittest.TestCase):
             f"Mean Reversion genera demasiadas señales: {annual_signals}/año (esperado: <100)",
         )
 
-
-import numpy as np
-
-from app.services.momentum_analysis import TechnicalIndicatorCalculator
 
 if __name__ == "__main__":
     unittest.main()

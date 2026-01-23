@@ -337,9 +337,7 @@ class TestReportDeliveryManager:
         """Test Excel export creates valid JSON."""
         with tempfile.TemporaryDirectory() as tmpdir:
             output_path = Path(tmpdir) / "metrics.xlsx"
-            result = self.manager.export_to_excel(
-                self.sample_metrics, output_path, include_timestamp=False
-            )
+            self.manager.export_to_excel(self.sample_metrics, output_path, include_timestamp=False)
 
             json_file = output_path.with_suffix(".json")
             content = json.loads(json_file.read_text())

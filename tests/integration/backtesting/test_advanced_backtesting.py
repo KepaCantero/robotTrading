@@ -545,7 +545,7 @@ class TestAdvancedBacktestingMethods:
         for signal in original_signals:
             # Add random time offset
             time_offset = random.randint(-5, 5)  # ±5 days
-            new_timestamp = signal.timestamp + timedelta(days=time_offset)
+            signal.timestamp + timedelta(days=time_offset)
 
             randomized_signal = Signal(
                 symbol="TEST_SYMBOL",

@@ -232,7 +232,7 @@ class ParameterStabilityMetrics:
         # High variance = low convergence (0.0)
         max_variance = np.var(optimal_values)
         if max_variance > 0:
-            convergence = 1.0 - min(weighted_variance / max_variance, 1.0)
+            convergence = 1.0 - min(weighted_variance / max_variance, 1.0)  # type: ignore
         else:
             convergence = 1.0
 

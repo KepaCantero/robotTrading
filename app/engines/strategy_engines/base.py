@@ -556,25 +556,25 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         if self.data_engine:
             try:
                 status["data_engine_status"] = self.data_engine.get_status()
-            except:
+            except Exception:
                 pass
 
         if self.context_engine:
             try:
                 status["context_engine_status"] = "available"
-            except:
+            except Exception:
                 pass
 
         if self.portfolio_engine:
             try:
                 status["portfolio_engine_status"] = self.portfolio_engine.get_status()
-            except:
+            except Exception:
                 pass
 
         if self.risk_engine:
             try:
                 status["risk_engine_status"] = self.risk_engine.get_status()
-            except:
+            except Exception:
                 pass
 
         return status

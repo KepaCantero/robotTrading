@@ -284,7 +284,7 @@ class RedditSentimentSource(BaseDataSource):
                 f"{self.base_url}/r/wallstreetbets/hot.json?limit=1"
             ) as response:
                 return response.status == 200
-        except:
+        except Exception:
             return False
 
     async def get_sentiment(

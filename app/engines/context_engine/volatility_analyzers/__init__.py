@@ -6,4 +6,3 @@ Incluye:
 - Regímenes de volatilidad
 - Volatility clustering (GARCH models)
 """
-

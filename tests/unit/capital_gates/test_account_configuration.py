@@ -46,8 +46,8 @@ class TestAccountConfigurationRetrieval:
 
         assert config["tier"] == "micro"
         assert config["position_size_pct"] == Decimal("0.02")
-        assert config["learning_enabled"] == False
-        assert config["expensive_modules_enabled"] == False
+        assert not config["learning_enabled"]
+        assert not config["expensive_modules_enabled"]
 
     def test_get_configuration_small(self):
         """Get configuration for small account"""
@@ -55,8 +55,8 @@ class TestAccountConfigurationRetrieval:
 
         assert config["tier"] == "small"
         assert config["position_size_pct"] == Decimal("0.05")
-        assert config["learning_enabled"] == True  # Conditional
-        assert config["expensive_modules_enabled"] == False
+        assert config["learning_enabled"]  # Conditional
+        assert not config["expensive_modules_enabled"]
 
     def test_get_configuration_medium(self):
         """Get configuration for medium account"""
@@ -64,8 +64,8 @@ class TestAccountConfigurationRetrieval:
 
         assert config["tier"] == "medium"
         assert config["position_size_pct"] == Decimal("0.08")
-        assert config["learning_enabled"] == True
-        assert config["expensive_modules_enabled"] == True
+        assert config["learning_enabled"]
+        assert config["expensive_modules_enabled"]
 
     def test_get_configuration_large(self):
         """Get configuration for large account"""
@@ -73,8 +73,8 @@ class TestAccountConfigurationRetrieval:
 
         assert config["tier"] == "large"
         assert config["position_size_pct"] == Decimal("0.10")
-        assert config["learning_enabled"] == True
-        assert config["expensive_modules_enabled"] == True
+        assert config["learning_enabled"]
+        assert config["expensive_modules_enabled"]
 
     def test_configuration_includes_capital(self):
         """Configuration should include account capital"""
@@ -160,7 +160,7 @@ class TestTierUpgrade:
         upgrade_path = AccountConfiguration.get_tier_upgrade_capital(Decimal("500000"))
 
         assert upgrade_path["current_tier"] == "large"
-        assert upgrade_path["is_max_tier"] == True
+        assert upgrade_path["is_max_tier"]
         assert upgrade_path["next_tier"] is None
 
     def test_upgrade_capital_shortfall(self):
@@ -288,7 +288,7 @@ class TestRealWorldScenarios:
         limits = AccountConfiguration.get_safe_trading_limits(Decimal("50000"))
 
         assert config["tier"] == "medium"
-        assert config["learning_enabled"] == True
+        assert config["learning_enabled"]
         assert limits["max_concurrent_trades"] == 3
         assert limits["max_position_size"] == Decimal("4000")
 
@@ -298,6 +298,6 @@ class TestRealWorldScenarios:
         limits = AccountConfiguration.get_safe_trading_limits(Decimal("500000"))
 
         assert config["tier"] == "large"
-        assert config["expensive_modules_enabled"] == True
+        assert config["expensive_modules_enabled"]
         assert limits["max_concurrent_trades"] == 5
         assert limits["max_position_size"] == Decimal("50000")

@@ -269,13 +269,11 @@ class TestAWSInfrastructureConfig:
 
         # Check that multi-AZ is disabled for MVP
         rds = config["rds"]
-        assert rds.get("multi_az", True) == False  # Should be False for MVP
+        assert not rds.get("multi_az", True)  # Should be False for MVP
 
         # Check that automatic failover is disabled for MVP
         elasticache = config["elasticache"]
-        assert (
-            elasticache.get("automatic_failover_enabled", True) == False
-        )  # Should be False for MVP
+        assert not elasticache.get("automatic_failover_enabled", True)  # Should be False for MVP
 
     def test_environment_variables(self):
         """Test environment variable configuration."""

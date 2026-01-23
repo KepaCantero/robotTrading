@@ -5,6 +5,7 @@ Manages order placement, execution tracking, cancellation, and error handling.
 Integrates with BrokerConnector for actual order operations.
 """
 
+import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -389,7 +390,7 @@ class OrderManager:
 
 
 # Import asyncio at module level for poll_order_status
-import asyncio
+# import pandas as pd  # F401 unused
 
 # Singleton
 _manager: Optional[OrderManager] = None
@@ -401,6 +402,6 @@ def get_order_manager(
     """Get or create singleton OrderManager."""
     global _manager
     if _manager is None:
-        _manager = Manager()
+        _manager = OrderManager()
 
     return _manager

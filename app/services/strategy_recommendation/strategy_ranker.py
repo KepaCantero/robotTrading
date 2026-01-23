@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Dict, List, Optional
 
+from .strategy_scorer import StrategyScore
+
 logger = logging.getLogger(__name__)
 
 
@@ -246,6 +248,6 @@ def get_strategy_ranker() -> StrategyRanker:
     """Get or create singleton StrategyRanker."""
     global _ranker
     if _ranker is None:
-        _ranker = Ranker()
+        _ranker = StrategyRanker()
 
     return _ranker

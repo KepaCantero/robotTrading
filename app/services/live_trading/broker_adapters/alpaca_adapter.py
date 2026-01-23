@@ -702,6 +702,177 @@ class AlpacaAdapter:
         """
         return BrokerType.ALPACA
 
+    async def execute_trade(
+        self,
+        symbol: str,
+        side: OrderSide,
+        quantity: Decimal,
+        order_type: OrderType = OrderType.MARKET,
+        price: Optional[Decimal] = None,
+        stop_price: Optional[Decimal] = None,
+        stop_loss_pct: Optional[Decimal] = None,
+        take_profit_pct: Optional[Decimal] = None,
+    ) -> Dict[str, Any]:
+        """
+        Execute a complete trade with risk management.
+
+        This is the main entry point for trade execution that:
+        1. Validates the order parameters
+        2. Checks risk limits
+        3. Places the order with the broker
+        4. Optionally places stop-loss and take-profit orders
+        5. Returns execution details
+
+        Args:
+            symbol: Stock symbol (e.g., 'AAPL')
+            side: Order side (BUY or SELL)
+            quantity: Number of shares
+            order_type: Order type (MARKET, LIMIT, STOP, STOP_LIMIT)
+            price: Limit price (for limit orders)
+            stop_price: Stop price (for stop orders)
+            stop_loss_pct: Optional stop-loss percentage (e.g., 0.02 for 2%)
+            take_profit_pct: Optional take-profit percentage (e.g., 0.05 for 5%)
+
+        Returns:
+            Dict with execution details:
+                - order_id: Primary order ID
+                - status: Order status
+                - filled_qty: Quantity filled
+                - filled_avg_price: Average fill price
+                - stop_loss_order_id: Stop-loss order ID (if applicable)
+                - take_profit_order_id: Take-profit order ID (if applicable)
+                - timestamp: Execution timestamp
+
+        Raises:
+            Exception: If trade execution fails
+        """
+        if not self.is_connected:
+            raise Exception("Not connected to Alpaca - cannot execute trade")
+
+        # Validate quantity
+        if quantity <= Decimal("0"):
+            raise ValueError(f"Invalid quantity: {quantity}. Must be > 0")
+
+        # Check account has sufficient buying power for BUY orders
+        if side == OrderSide.BUY:
+            account = await self.get_account_info()
+            if account:
+                estimated_cost = quantity * (price or Decimal("0"))
+                if price is None:
+                    # For market orders, we need current price estimate
+                    # Using buying power check only
+                    if estimated_cost > account.buying_power:
+                        raise ValueError(
+                            f"Insufficient buying power: {account.buying_power} < estimated cost"
+                        )
+
+        execution_result = {
+            "symbol": symbol,
+            "side": side.value,
+            "requested_qty": str(quantity),
+            "order_type": order_type.value,
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+
+        try:
+            # Execute primary order with retry logic
+            order_id = await self._retry_with_backoff(
+                f"execute_trade_{symbol}",
+                self.place_order,
+                symbol=symbol,
+                side=side,
+                quantity=quantity,
+                order_type=order_type,
+                price=price,
+                stop_price=stop_price,
+            )
+
+            execution_result["order_id"] = order_id
+            execution_result["status"] = "submitted"
+
+            # Wait briefly for order to be processed
+            await asyncio.sleep(0.5)
+
+            # Get order status
+            order_status = await self.get_order_status(order_id)
+            execution_result["order_status"] = order_status.value
+
+            # Get fill details if available
+            if order_id in self.orders:
+                order = self.orders[order_id]
+                execution_result["filled_qty"] = str(order.filled_quantity)
+                execution_result["filled_avg_price"] = str(order.avg_filled_price)
+
+            # Place bracket orders (stop-loss and take-profit) if specified
+            if order_status in [OrderStatus.FILLED, OrderStatus.PARTIALLY_FILLED]:
+                filled_price = (
+                    self.orders[order_id].avg_filled_price if order_id in self.orders else price
+                )
+
+                # CRITICAL FIX: Use FILLED quantity, not original quantity for partial fills
+                filled_qty = (
+                    self.orders[order_id].filled_quantity if order_id in self.orders else quantity
+                )
+
+                if filled_qty <= Decimal("0"):
+                    logger.warning("⚠️ No filled quantity for bracket orders")
+                else:
+                    if filled_price and stop_loss_pct:
+                        sl_price = filled_price * (Decimal("1") - stop_loss_pct)
+                        try:
+                            sl_order_id = await self.place_order(
+                                symbol=symbol,
+                                side=OrderSide.SELL if side == OrderSide.BUY else OrderSide.BUY,
+                                quantity=filled_qty,  # Use filled quantity, not original
+                                order_type=OrderType.STOP,
+                                stop_price=sl_price.quantize(Decimal("0.01")),
+                            )
+                            execution_result["stop_loss_order_id"] = sl_order_id
+                            execution_result["stop_loss_price"] = str(sl_price)
+                            execution_result["stop_loss_qty"] = str(filled_qty)
+                            logger.info(
+                                f"✅ Stop-loss order placed: {sl_order_id} @ ${sl_price:.2f} for {filled_qty} shares"
+                            )
+                        except Exception as e:
+                            logger.warning(f"⚠️ Failed to place stop-loss order: {e}")
+
+                    if filled_price and take_profit_pct:
+                        tp_price = filled_price * (Decimal("1") + take_profit_pct)
+                        try:
+                            tp_order_id = await self.place_order(
+                                symbol=symbol,
+                                side=OrderSide.SELL if side == OrderSide.BUY else OrderSide.BUY,
+                                quantity=filled_qty,  # Use filled quantity, not original
+                                order_type=OrderType.LIMIT,
+                                price=tp_price.quantize(Decimal("0.01")),
+                            )
+                            execution_result["take_profit_order_id"] = tp_order_id
+                            execution_result["take_profit_price"] = str(tp_price)
+                            execution_result["take_profit_qty"] = str(filled_qty)
+                            logger.info(
+                                f"✅ Take-profit order placed: {tp_order_id} @ ${tp_price:.2f} for {filled_qty} shares"
+                            )
+                        except Exception as e:
+                            logger.warning(f"⚠️ Failed to place take-profit order: {e}")
+
+            logger.info(
+                f"✅ Trade executed: {side.value} {quantity} {symbol} "
+                f"(order_id={order_id}, status={order_status.value})"
+            )
+
+            return execution_result
+
+        except AlpacaClientError as e:
+            execution_result["status"] = "failed"
+            execution_result["error"] = str(e)
+            logger.error(f"❌ Trade execution failed: {e}")
+            raise
+        except Exception as e:
+            execution_result["status"] = "failed"
+            execution_result["error"] = str(e)
+            logger.error(f"❌ Unexpected error in trade execution: {e}")
+            raise
+
     def __repr__(self) -> str:
         """String representation."""
         status = "🟢 Connected" if self.is_connected else "🔴 Disconnected"

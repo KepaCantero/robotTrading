@@ -6,4 +6,3 @@ Incluye:
 - Clustering (KMeans, DBSCAN)
 - Análisis de correlaciones dinámicas
 """
-

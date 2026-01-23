@@ -157,7 +157,7 @@ class ResourceAwareTuner:
             return False
         try:
             return torch.cuda.is_available()
-        except:
+        except Exception:
             return False
 
     def should_continue(self) -> bool:
@@ -412,7 +412,7 @@ class HyperparameterTuner:
                 fig = vis.plot_param_importances(self.study)
                 if output_path:
                     fig.write_html(f"{output_path}_param_importances.html")
-            except:
+            except Exception:
                 logger.warning("No se pudo generar param importances (pocos trials completados)")
 
             logger.info(f"Visualizaciones generadas en {output_path}")

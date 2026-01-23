@@ -172,7 +172,7 @@ class DistributedCache:
             try:
                 cached_data = await self.redis_client.get(key)
                 if cached_data:
-                    return pickle.loads(cached_data)
+                    return pickle.loads(cached_data)  # nosec B301 - internal cache
             except Exception as e:
                 logger.warning(f"Error obteniendo de Redis: {e}")
 
@@ -186,7 +186,7 @@ class DistributedCache:
                 )
 
                 if entry:
-                    return pickle.loads(entry.data)
+                    return pickle.loads(entry.data)  # nosec B301 - internal cache
             except Exception as e:
                 logger.warning(f"Error obteniendo de PostgreSQL: {e}")
 

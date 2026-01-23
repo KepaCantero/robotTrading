@@ -308,6 +308,6 @@ def get_alert_to_trade_mapper() -> "AlertToTradeMapper":
     """
     global _mapper_instance
     if _mapper_instance is None:
-        _mapper_instance = MapperInstance()
+        _mapper_instance = AlertToTradeMapper()
 
     return _mapper_instance

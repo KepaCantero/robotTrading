@@ -5,7 +5,6 @@ MLflow for tracking model training, metrics, and versioning.
 Upgraded to use real MLflow server for production-grade experiment tracking.
 """
 
-import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -98,9 +97,7 @@ class MLflowTracker:
                     return True
 
         except Exception as e:
-            logger.warning(
-                f"⚠️ MLflow server unavailable ({self.host}:{self.port}): {str(e)}"
-            )
+            logger.warning(f"⚠️ MLflow server unavailable ({self.host}:{self.port}): {str(e)}")
             self.connected = False
             if self.session:
                 await self.session.close()
@@ -116,13 +113,13 @@ class MLflowTracker:
                     async with self.session.post(
                         urljoin(
                             self.base_url,
-                            f"/api/2.0/mlflow/runs/end-run",
+                            f"/api/2.0/mlflow/runs/end-run",  # noqa: F541
                         ),
                         json={"run_id": self.active_run_id},
                     ) as resp:
                         if resp.status == 200:
                             logger.info(f"✅ Ended active run: {self.active_run_id}")
-                except:
+                except Exception:
                     pass
 
             if self.session:
@@ -222,9 +219,7 @@ class MLflowTracker:
                             f"⚠️ MLflow run creation failed (HTTP {resp.status}), using local tracking"
                         )
             except Exception as e:
-                logger.warning(
-                    f"⚠️ Failed to start MLflow run: {str(e)}, using local tracking"
-                )
+                logger.warning(f"⚠️ Failed to start MLflow run: {str(e)}, using local tracking")
 
         # Always store locally as backup
         run = {
@@ -324,9 +319,7 @@ class MLflowTracker:
                     if resp.status == 200:
                         logger.info(f"✅ MLflow run ended: {status}")
                     else:
-                        logger.warning(
-                            f"⚠️ Failed to end MLflow run (HTTP {resp.status})"
-                        )
+                        logger.warning(f"⚠️ Failed to end MLflow run (HTTP {resp.status})")
             except Exception as e:
                 logger.warning(f"⚠️ Failed to end MLflow run: {str(e)}")
 
@@ -372,7 +365,7 @@ class MLflowTracker:
                     json=payload,
                 ) as resp:
                     if resp.status == 200:
-                        data = await resp.json()
+                        _data = await resp.json()  # noqa: F841
                         logger.info(f"✅ Registered model in MLflow: {model_name}")
                     else:
                         logger.warning(
@@ -424,18 +417,14 @@ class MLflowTracker:
                 async with self.session.post(
                     urljoin(
                         self.base_url,
-                        f"/api/2.0/mlflow/model-versions/transition-stage",
+                        f"/api/2.0/mlflow/model-versions/transition-stage",  # noqa: F541
                     ),
                     json=payload,
                 ) as resp:
                     if resp.status == 200:
-                        logger.info(
-                            f"✅ Promoted model to {stage} in MLflow: {model.name}"
-                        )
+                        logger.info(f"✅ Promoted model to {stage} in MLflow: {model.name}")
                     else:
-                        logger.warning(
-                            f"⚠️ MLflow model promotion failed (HTTP {resp.status})"
-                        )
+                        logger.warning(f"⚠️ MLflow model promotion failed (HTTP {resp.status})")
             except Exception as e:
                 logger.warning(f"⚠️ Failed to promote model in MLflow: {str(e)}")
 
@@ -489,9 +478,7 @@ class MLflowTracker:
 _tracker: Optional[MLflowTracker] = None
 
 
-def get_mlflow_tracker(
-    host: str = "localhost", port: int = 5000
-) -> MLflowTracker:
+def get_mlflow_tracker(host: str = "localhost", port: int = 5000) -> MLflowTracker:
     """Get or create singleton MLflowTracker with optional server configuration."""
     global _tracker
     if _tracker is None:

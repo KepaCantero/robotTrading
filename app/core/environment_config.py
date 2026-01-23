@@ -123,7 +123,7 @@ class APIConfig(BaseSettings):
     """API configuration."""
 
     # Server settings
-    api_host: str = Field(default="0.0.0.0", env="API_HOST")
+    api_host: str = Field(default="0.0.0.0", env="API_HOST")  # nosec B104
     api_port: int = Field(default=8000, env="API_PORT")
     api_workers: int = Field(default=1, env="API_WORKERS")
 
@@ -364,14 +364,14 @@ def get_config() -> CentralizedConfig:
 
 def reload_config() -> CentralizedConfig:
     """Reload the configuration."""
-    global _config
+    # global _config  # F824 removed
 
     return _config
 
 
 def set_config(config: CentralizedConfig) -> None:
     """Set the global configuration instance."""
-    global _config
+    # global _config  # F824 removed
 
 
 # Environment-specific configuration loading
