@@ -25,7 +25,18 @@ def alpaca_adapter():
     """Create AlpacaAdapter instance for testing."""
     adapter = AlpacaAdapter()
     # Mock the client to avoid real API calls
-    adapter.client = AsyncMock()
+    # Use MagicMock for sync methods, AsyncMock for async methods
+    mock_client = MagicMock()
+    # Set up async methods as AsyncMock
+    mock_client.authenticate = AsyncMock(return_value=True)
+    mock_client.get_account = AsyncMock(return_value={})
+    mock_client.submit_order = AsyncMock(return_value=MagicMock(id="test_order"))
+    mock_client.cancel_order = AsyncMock(return_value=True)
+    mock_client.get_order = AsyncMock(return_value={})
+    mock_client.get_positions = AsyncMock(return_value=[])
+    mock_client.start_stream = AsyncMock(return_value=None)
+    mock_client.stop_stream = AsyncMock(return_value=None)
+    adapter.client = mock_client
     return adapter
 
 
@@ -224,15 +235,9 @@ class TestAlpacaAdapterOrderManagement:
     @pytest.mark.asyncio
     async def test_place_order(self, alpaca_adapter):
         """Test placing an order."""
-        mock_order = {
-            "id": "order_new",
-            "qty": 100,
-            "filled_qty": 0,
-            "status": "new",
-            "type": "MARKET",
-        }
-
-        alpaca_adapter.client.submit_order = AsyncMock(return_value=mock_order)
+        mock_order = MagicMock(id="order_new")
+        alpaca_adapter.client.submit_order = AsyncMock(return_value=mock_order.id)
+        alpaca_adapter.is_connected = True
 
         order_id = await alpaca_adapter.place_order(
             symbol="AAPL",
@@ -247,6 +252,7 @@ class TestAlpacaAdapterOrderManagement:
     async def test_cancel_order(self, alpaca_adapter):
         """Test canceling an order."""
         alpaca_adapter.client.cancel_order = AsyncMock(return_value=True)
+        alpaca_adapter.is_connected = True
         # Pre-populate orders dict
         alpaca_adapter.orders["order_to_cancel"] = MagicMock()
 
@@ -264,6 +270,7 @@ class TestAlpacaAdapterOrderManagement:
         }
 
         alpaca_adapter.client.get_order = AsyncMock(return_value=mock_order)
+        alpaca_adapter.is_connected = True
 
         status = await alpaca_adapter.get_order_status("order_check")
 
@@ -336,6 +343,7 @@ class TestAlpacaAdapterPositions:
         ]
 
         alpaca_adapter.client.get_positions = AsyncMock(return_value=mock_positions)
+        alpaca_adapter.is_connected = True
 
         positions = await alpaca_adapter.get_positions()
 
@@ -357,6 +365,7 @@ class TestAlpacaAdapterPositions:
         ]
 
         alpaca_adapter.client.get_positions = AsyncMock(return_value=mock_positions)
+        alpaca_adapter.is_connected = True
 
         position = await alpaca_adapter.get_position("AAPL")
 
@@ -369,6 +378,7 @@ class TestAlpacaAdapterPositions:
         mock_positions = []
 
         alpaca_adapter.client.get_positions = AsyncMock(return_value=mock_positions)
+        alpaca_adapter.is_connected = True
 
         position = await alpaca_adapter.get_position("NOTFOUND")
 
@@ -387,6 +397,7 @@ class TestAlpacaAdapterPositions:
         ]
 
         alpaca_adapter.client.get_positions = AsyncMock(return_value=mock_positions)
+        alpaca_adapter.is_connected = True
 
         positions_dict = await alpaca_adapter.update_positions()
 
@@ -456,15 +467,9 @@ class TestAlpacaAdapterStateManagement:
     @pytest.mark.asyncio
     async def test_order_caching(self, alpaca_adapter):
         """Test order state caching."""
-        mock_order = {
-            "id": "cached_order",
-            "qty": 100,
-            "filled_qty": 50,
-            "status": "partially_filled",
-            "type": "MARKET",
-        }
-
-        alpaca_adapter.client.submit_order = AsyncMock(return_value=mock_order)
+        mock_order = MagicMock(id="cached_order")
+        alpaca_adapter.client.submit_order = AsyncMock(return_value=mock_order.id)
+        alpaca_adapter.is_connected = True
 
         order_id = await alpaca_adapter.place_order(
             symbol="AAPL",
@@ -488,6 +493,7 @@ class TestAlpacaAdapterStateManagement:
         ]
 
         alpaca_adapter.client.get_positions = AsyncMock(return_value=mock_positions)
+        alpaca_adapter.is_connected = True
 
         await alpaca_adapter.get_positions()
 

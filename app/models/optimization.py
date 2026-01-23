@@ -38,9 +38,7 @@ class ParameterConstraint(BaseModel):
     min_value: Union[float, int] = Field(..., description="Minimum value for the parameter")
     max_value: Union[float, int] = Field(..., description="Maximum value for the parameter")
     step_size: Optional[Union[float, int]] = Field(None, description="Step size for optimization")
-    parameter_type: ParameterType = Field(
-        ..., description="Type of parameter", env="PARAMETER_TYPE"
-    )
+    parameter_type: ParameterType = Field(..., description="Type of parameter")
 
     @model_validator(mode="after")
     def validate_values(self):
@@ -52,11 +50,9 @@ class ParameterConstraint(BaseModel):
 class OptimizationParameter(BaseModel):
     """Parameter to be optimized."""
 
-    name: str = Field(..., description="Name of the parameter", env="NAME")
+    name: str = Field(..., description="Name of the parameter")
     current_value: Union[float, int] = Field(..., description="Current value of the parameter")
-    constraints: ParameterConstraint = Field(
-        ..., description="Constraints for optimization", env="CONSTRAINTS"
-    )
+    constraints: ParameterConstraint = Field(..., description="Constraints for optimization")
     description: Optional[str] = Field(None, description="Description of the parameter")
 
     @model_validator(mode="after")
@@ -75,24 +71,19 @@ class WalkForwardConfig(BaseModel):
         ...,
         ge=30,
         description="Initial training period in days",
-        env="INITIAL_TRAIN_PERIOD",
     )
-    retrain_frequency: int = Field(
-        ..., ge=1, description="Retraining frequency in days", env="RETRAIN_FREQUENCY"
-    )
-    test_period: int = Field(..., ge=7, description="Test period in days", env="TEST_PERIOD")
+    retrain_frequency: int = Field(..., ge=1, description="Retraining frequency in days")
+    test_period: int = Field(..., ge=7, description="Test period in days")
     min_train_period: int = Field(
         ...,
         ge=30,
         description="Minimum training period in days",
-        env="MIN_TRAIN_PERIOD",
     )
     max_train_period: Optional[int] = Field(None, description="Maximum training period in days")
     purged_period: int = Field(
         0,
         ge=0,
         description="Purged period to avoid look-ahead bias",
-        env="PURGED_PERIOD",
     )
 
     @field_validator("test_period")
@@ -110,26 +101,24 @@ class WalkForwardConfig(BaseModel):
 class PurgedKFoldConfig(BaseModel):
     """Configuration for Purged K-Fold Cross Validation."""
 
-    n_splits: int = Field(5, ge=2, le=10, description="Number of splits for K-Fold", env="N_SPLITS")
+    n_splits: int = Field(5, ge=2, le=10, description="Number of splits for K-Fold")
     purged_period: int = Field(
         1,
         ge=0,
         description="Purged period to avoid look-ahead bias",
-        env="PURGED_PERIOD",
     )
     embargo_period: int = Field(
         1,
         ge=0,
         description="Embargo period to avoid look-ahead bias",
-        env="EMBARGO_PERIOD",
     )
-    shuffle: bool = Field(False, description="Whether to shuffle the data", env="SHUFFLE")
+    shuffle: bool = Field(False, description="Whether to shuffle the data")
 
 
 class OptimizationConfig(BaseModel):
     """Configuration for parameter optimization."""
 
-    method: OptimizationMethod = Field(..., description="Optimization method to use", env="METHOD")
+    method: OptimizationMethod = Field(..., description="Optimization method to use")
     walk_forward_config: Optional[WalkForwardConfig] = Field(
         None, description="Walk-forward configuration"
     )
@@ -141,14 +130,12 @@ class OptimizationConfig(BaseModel):
         ge=1,
         le=1000,
         description="Maximum optimization iterations",
-        env="MAX_ITERATIONS",
     )
     convergence_threshold: float = Field(
         0.001,
         ge=0.0001,
         le=0.1,
         description="Convergence threshold",
-        env="CONVERGENCE_THRESHOLD",
     )
     random_seed: Optional[int] = Field(None, description="Random seed for reproducibility")
 
@@ -181,44 +168,26 @@ class OptimizationResult(BaseModel):
     optimized_parameters: Dict[str, Union[float, int]] = Field(
         ..., description="Optimized parameter values"
     )
-    best_score: float = Field(..., description="Best optimization score", env="BEST_SCORE")
+    best_score: float = Field(..., description="Best optimization score")
     optimization_history: List[Dict[str, Any]] = Field(
         default_factory=list, description="Optimization history"
     )
-    convergence_achieved: bool = Field(
-        ..., description="Whether convergence was achieved", env="CONVERGENCE_ACHIEVED"
-    )
-    iterations_completed: int = Field(
-        ..., description="Number of iterations completed", env="ITERATIONS_COMPLETED"
-    )
-    optimization_time: float = Field(
-        ..., description="Optimization time in seconds", env="OPTIMIZATION_TIME"
-    )
-    method_used: OptimizationMethod = Field(
-        ..., description="Optimization method used", env="METHOD_USED"
-    )
-    created_at: datetime = Field(
-        default_factory=datetime.now, description="Creation timestamp", env="CREATED_AT"
-    )
+    convergence_achieved: bool = Field(..., description="Whether convergence was achieved")
+    iterations_completed: int = Field(..., description="Number of iterations completed")
+    optimization_time: float = Field(..., description="Optimization time in seconds")
+    method_used: OptimizationMethod = Field(..., description="Optimization method used")
+    created_at: datetime = Field(default_factory=datetime.now, description="Creation timestamp")
 
 
 class OutOfSampleTest(BaseModel):
     """Out-of-sample test configuration and results."""
 
-    test_start_date: date = Field(
-        ..., description="Start date for out-of-sample testing", env="TEST_START_DATE"
-    )
-    test_end_date: date = Field(
-        ..., description="End date for out-of-sample testing", env="TEST_END_DATE"
-    )
-    train_start_date: date = Field(
-        ..., description="Start date for training data", env="TRAIN_START_DATE"
-    )
-    train_end_date: date = Field(
-        ..., description="End date for training data", env="TRAIN_END_DATE"
-    )
+    test_start_date: date = Field(..., description="Start date for out-of-sample testing")
+    test_end_date: date = Field(..., description="End date for out-of-sample testing")
+    train_start_date: date = Field(..., description="Start date for training data")
+    train_end_date: date = Field(..., description="End date for training data")
     parameters: Dict[str, Union[float, int]] = Field(..., description="Parameters to test")
-    strategy_name: str = Field(..., description="Name of the strategy to test", env="STRATEGY_NAME")
+    strategy_name: str = Field(..., description="Name of the strategy to test")
 
     @model_validator(mode="after")
     def validate_dates(self):
@@ -232,65 +201,37 @@ class OutOfSampleTest(BaseModel):
 class OutOfSampleResult(BaseModel):
     """Results of out-of-sample testing."""
 
-    test_config: OutOfSampleTest = Field(..., description="Test configuration", env="TEST_CONFIG")
-    total_return: float = Field(
-        ..., description="Total return during test period", env="TOTAL_RETURN"
-    )
-    sharpe_ratio: float = Field(
-        ..., description="Sharpe ratio during test period", env="SHARPE_RATIO"
-    )
-    max_drawdown: float = Field(
-        ..., description="Maximum drawdown during test period", env="MAX_DRAWDOWN"
-    )
-    win_rate: float = Field(
-        ..., ge=0, le=1, description="Win rate during test period", env="WIN_RATE"
-    )
-    profit_factor: float = Field(
-        ..., description="Profit factor during test period", env="PROFIT_FACTOR"
-    )
-    total_trades: int = Field(..., ge=0, description="Total number of trades", env="TOTAL_TRADES")
+    test_config: OutOfSampleTest = Field(..., description="Test configuration")
+    total_return: float = Field(..., description="Total return during test period")
+    sharpe_ratio: float = Field(..., description="Sharpe ratio during test period")
+    max_drawdown: float = Field(..., description="Maximum drawdown during test period")
+    win_rate: float = Field(..., ge=0, le=1, description="Win rate during test period")
+    profit_factor: float = Field(..., description="Profit factor during test period")
+    total_trades: int = Field(..., ge=0, description="Total number of trades")
     avg_trade_duration: float = Field(
         ...,
         ge=0,
         description="Average trade duration in days",
-        env="AVG_TRADE_DURATION",
     )
-    volatility: float = Field(
-        ..., ge=0, description="Volatility during test period", env="VOLATILITY"
-    )
-    calmar_ratio: float = Field(
-        ..., description="Calmar ratio during test period", env="CALMAR_RATIO"
-    )
-    sortino_ratio: float = Field(
-        ..., description="Sortino ratio during test period", env="SORTINO_RATIO"
-    )
-    created_at: datetime = Field(
-        default_factory=datetime.now, description="Creation timestamp", env="CREATED_AT"
-    )
+    volatility: float = Field(..., ge=0, description="Volatility during test period")
+    calmar_ratio: float = Field(..., description="Calmar ratio during test period")
+    sortino_ratio: float = Field(..., description="Sortino ratio during test period")
+    created_at: datetime = Field(default_factory=datetime.now, description="Creation timestamp")
 
 
 class ParameterOptimizationRequest(BaseModel):
     """Request model for parameter optimization."""
 
-    strategy_name: str = Field(
-        ..., description="Name of the strategy to optimize", env="STRATEGY_NAME"
-    )
+    strategy_name: str = Field(..., description="Name of the strategy to optimize")
     parameters: List[OptimizationParameter] = Field(
         ..., min_length=1, description="Parameters to optimize"
     )
-    optimization_config: OptimizationConfig = Field(
-        ..., description="Optimization configuration", env="OPTIMIZATION_CONFIG"
-    )
-    data_start_date: date = Field(
-        ..., description="Start date for optimization data", env="DATA_START_DATE"
-    )
-    data_end_date: date = Field(
-        ..., description="End date for optimization data", env="DATA_END_DATE"
-    )
+    optimization_config: OptimizationConfig = Field(..., description="Optimization configuration")
+    data_start_date: date = Field(..., description="Start date for optimization data")
+    data_end_date: date = Field(..., description="End date for optimization data")
     cost_analysis_enabled: bool = Field(
         True,
         description="Whether to include cost analysis",
-        env="COST_ANALYSIS_ENABLED",
     )
 
     @model_validator(mode="after")
@@ -303,67 +244,50 @@ class ParameterOptimizationRequest(BaseModel):
 class OutOfSampleTestRequest(BaseModel):
     """Request model for out-of-sample testing."""
 
-    test_config: OutOfSampleTest = Field(
-        ..., description="Out-of-sample test configuration", env="TEST_CONFIG"
-    )
+    test_config: OutOfSampleTest = Field(..., description="Out-of-sample test configuration")
     cost_analysis_enabled: bool = Field(
         True,
         description="Whether to include cost analysis",
-        env="COST_ANALYSIS_ENABLED",
     )
 
 
 class OptimizationArtifact(BaseModel):
     """Artifact for storing optimization results."""
 
-    artifact_id: str = Field(..., description="Unique artifact identifier", env="ARTIFACT_ID")
-    optimization_result: OptimizationResult = Field(
-        ..., description="Optimization result", env="OPTIMIZATION_RESULT"
-    )
+    artifact_id: str = Field(..., description="Unique artifact identifier")
+    optimization_result: OptimizationResult = Field(..., description="Optimization result")
     out_of_sample_results: List[OutOfSampleResult] = Field(
         default_factory=list, description="Out-of-sample test results"
     )
-    strategy_name: str = Field(
-        ..., description="Name of the optimized strategy", env="STRATEGY_NAME"
-    )
+    strategy_name: str = Field(..., description="Name of the optimized strategy")
     optimization_date: datetime = Field(
         default_factory=datetime.now,
         description="Optimization date",
-        env="OPTIMIZATION_DATE",
     )
-    version: str = Field("1.0", description="Artifact version", env="VERSION")
+    version: str = Field("1.0", description="Artifact version")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
-    class Config:
-        json_encoders = {
+    model_config = {
+        "json_encoders": {
             datetime: lambda v: v.isoformat(),
             date: lambda v: v.isoformat(),
             Decimal: lambda v: float(v),
         }
+    }
 
 
 class OptimizationMetrics(BaseModel):
     """Metrics for optimization performance."""
 
-    optimization_score: float = Field(
-        ..., description="Overall optimization score", env="OPTIMIZATION_SCORE"
-    )
-    stability_score: float = Field(
-        ..., ge=0, le=1, description="Parameter stability score", env="STABILITY_SCORE"
-    )
-    robustness_score: float = Field(
-        ..., ge=0, le=1, description="Robustness score", env="ROBUSTNESS_SCORE"
-    )
-    overfitting_risk: float = Field(
-        ..., ge=0, le=1, description="Overfitting risk score", env="OVERFITTING_RISK"
-    )
-    cost_efficiency: float = Field(
-        ..., ge=0, le=1, description="Cost efficiency score", env="COST_EFFICIENCY"
-    )
-    sharpe_ratio: float = Field(..., description="Sharpe ratio", env="SHARPE_RATIO")
-    max_drawdown: float = Field(..., description="Maximum drawdown", env="MAX_DRAWDOWN")
-    win_rate: float = Field(..., ge=0, le=1, description="Win rate", env="WIN_RATE")
-    profit_factor: float = Field(..., description="Profit factor", env="PROFIT_FACTOR")
+    optimization_score: float = Field(..., description="Overall optimization score")
+    stability_score: float = Field(..., ge=0, le=1, description="Parameter stability score")
+    robustness_score: float = Field(..., ge=0, le=1, description="Robustness score")
+    overfitting_risk: float = Field(..., ge=0, le=1, description="Overfitting risk score")
+    cost_efficiency: float = Field(..., ge=0, le=1, description="Cost efficiency score")
+    sharpe_ratio: float = Field(..., description="Sharpe ratio")
+    max_drawdown: float = Field(..., description="Maximum drawdown")
+    win_rate: float = Field(..., ge=0, le=1, description="Win rate")
+    profit_factor: float = Field(..., description="Profit factor")
 
     @field_validator("overfitting_risk")
     @classmethod
@@ -380,38 +304,29 @@ class OptimizationSummary(BaseModel):
         ...,
         ge=0,
         description="Total number of optimizations performed",
-        env="TOTAL_OPTIMIZATIONS",
     )
     successful_optimizations: int = Field(
         ...,
         ge=0,
         description="Number of successful optimizations",
-        env="SUCCESSFUL_OPTIMIZATIONS",
     )
     failed_optimizations: int = Field(
         ...,
         ge=0,
         description="Number of failed optimizations",
-        env="FAILED_OPTIMIZATIONS",
     )
     avg_optimization_time: float = Field(
         ...,
         ge=0,
         description="Average optimization time in seconds",
-        env="AVG_OPTIMIZATION_TIME",
     )
-    best_strategy: str = Field(
-        ..., description="Name of the best performing strategy", env="BEST_STRATEGY"
-    )
-    best_score: float = Field(..., description="Best optimization score achieved", env="BEST_SCORE")
-    last_optimization_date: datetime = Field(
-        ..., description="Date of last optimization", env="LAST_OPTIMIZATION_DATE"
-    )
+    best_strategy: str = Field(..., description="Name of the best performing strategy")
+    best_score: float = Field(..., description="Best optimization score achieved")
+    last_optimization_date: datetime = Field(..., description="Date of last optimization")
     artifacts_count: int = Field(
         ...,
         ge=0,
         description="Number of optimization artifacts stored",
-        env="ARTIFACTS_COUNT",
     )
 
     @model_validator(mode="after")

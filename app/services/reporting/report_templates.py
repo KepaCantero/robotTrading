@@ -208,6 +208,8 @@ class ReportTemplates:
         Returns:
             Complete HTML string
         """
+        from datetime import datetime
+
         html = """
         <!DOCTYPE html>
         <html lang="en">
@@ -215,21 +217,21 @@ class ReportTemplates:
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Strategy Report: {strategy_name}</title>
-            {self.CSS_STYLE}
+            {css_style}
         </head>
         <body>
             <div class="container">
                 <h1>📊 Strategy Performance Report</h1>
                 <div class="header-info">
                     <strong>Strategy:</strong> {strategy_name}<br>
-                    <strong>Generated:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}<br>
+                    <strong>Generated:</strong> {generated_time}<br>
                     <strong>Report Type:</strong> Comprehensive Performance Analysis
                 </div>
 
-                {self._generate_performance_summary_html(summary)}
-                {self._generate_metrics_table_html(metrics)}
-                {self._generate_risk_metrics_table_html(risk_metrics)}
-                {self._generate_allocation_table_html(allocation)}
+                {performance_summary}
+                {metrics_table}
+                {risk_metrics_table}
+                {allocation_table}
 
                 <div class="footer">
                     <p>This report was automatically generated. Past performance does not guarantee future results.</p>
@@ -238,21 +240,32 @@ class ReportTemplates:
             </div>
         </body>
         </html>
-        """
+        """.format(
+            strategy_name=strategy_name,
+            css_style=self.CSS_STYLE,
+            generated_time=datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC'),
+            performance_summary=self._generate_performance_summary_html(summary),
+            metrics_table=self._generate_metrics_table_html(metrics),
+            risk_metrics_table=self._generate_risk_metrics_table_html(risk_metrics),
+            allocation_table=self._generate_allocation_table_html(allocation),
+        )
         logger.info(f"Generated HTML report for strategy: {strategy_name}")
         return html
 
     def _generate_performance_summary_html(self, summary: Dict) -> str:
         """Generate performance summary cards."""
-        (summary.get("total_return", 0) or 0) * 100
-        summary.get("sharpe_ratio", 0) or 0
-        (summary.get("max_drawdown", 0) or 0) * 100
-        (summary.get("win_rate", 0) or 0) * 100
+        total_return_pct = (summary.get("total_return", 0) or 0) * 100
+        sharpe = summary.get("sharpe_ratio", 0) or 0
+        max_dd_pct = (summary.get("max_drawdown", 0) or 0) * 100
+        win_rate_pct = (summary.get("win_rate", 0) or 0) * 100
+
+        return_class = "positive" if total_return_pct >= 0 else "negative"
+        win_rate_class = "positive" if win_rate_pct >= 50 else "negative"
 
         return """
         <h2>📈 Performance Summary</h2>
         <div class="metrics-grid">
-            <div class="metric-card {'positive' if total_return_pct >= 0 else 'negative'}">
+            <div class="metric-card {return_class}">
                 <div class="metric-label">Total Return</div>
                 <div class="metric-value">{total_return_pct:+.2f}%</div>
             </div>
@@ -264,12 +277,19 @@ class ReportTemplates:
                 <div class="metric-label">Max Drawdown</div>
                 <div class="metric-value">{max_dd_pct:.2f}%</div>
             </div>
-            <div class="metric-card {'positive' if win_rate_pct >= 50 else 'negative'}">
+            <div class="metric-card {win_rate_class}">
                 <div class="metric-label">Win Rate</div>
                 <div class="metric-value">{win_rate_pct:.1f}%</div>
             </div>
         </div>
-        """
+        """.format(
+            return_class=return_class,
+            win_rate_class=win_rate_class,
+            total_return_pct=total_return_pct,
+            sharpe=sharpe,
+            max_dd_pct=max_dd_pct,
+            win_rate_pct=win_rate_pct,
+        )
 
     def _generate_metrics_table_html(self, metrics: Dict) -> str:
         """Generate performance metrics table."""
@@ -296,17 +316,23 @@ class ReportTemplates:
             "total_trades": ("Total Trades", lambda x: f"{int(x)}"),
         }
 
+        rows = []
         for key, (label, formatter) in metric_definitions.items():
             value = metrics.get(key, 0)
             if value is not None:
-                formatter(value)
-                html += """
+                formatted = formatter(value)
+                rows.append(
+                    """
                 <tr>
                     <td>{label}</td>
                     <td class="number">{formatted}</td>
                 </tr>
-                """
+                """.format(
+                        label=label, formatted=formatted
+                    )
+                )
 
+        html += "".join(rows)
         html += """
             </tbody>
         </table>
@@ -335,17 +361,23 @@ class ReportTemplates:
             "calmar_ratio": ("Calmar Ratio", lambda x: f"{x:.2f}"),
         }
 
+        rows = []
         for key, (label, formatter) in risk_definitions.items():
             value = risk_metrics.get(key, 0)
             if value is not None:
-                formatter(value)
-                html += """
+                formatted = formatter(value)
+                rows.append(
+                    """
                 <tr>
                     <td>{label}</td>
                     <td class="number">{formatted}</td>
                 </tr>
-                """
+                """.format(
+                        label=label, formatted=formatted
+                    )
+                )
 
+        html += "".join(rows)
         html += """
             </tbody>
         </table>
@@ -369,18 +401,25 @@ class ReportTemplates:
 
         sorted_allocation = sorted(allocation.items(), key=lambda x: x[1], reverse=True)
 
+        rows = []
         for asset, weight in sorted_allocation:
-            weight * 100
-            html += """
+            weight_pct = weight * 100
+            bar_width = weight_pct * 2
+            rows.append(
+                """
             <tr>
                 <td><strong>{asset}</strong></td>
                 <td class="number">{weight_pct:.1f}%</td>
                 <td>
-                    <div class="allocation-bar" style="width: {weight_pct * 2}px;"></div>
+                    <div class="allocation-bar" style="width: {bar_width}px;"></div>
                 </td>
             </tr>
-            """
+            """.format(
+                    asset=asset, weight_pct=weight_pct, bar_width=bar_width
+                )
+            )
 
+        html += "".join(rows)
         html += """
             </tbody>
         </table>
@@ -400,7 +439,7 @@ class ReportTemplates:
         <html>
         <head>
             <title>{strategy_name} Summary</title>
-            {self.CSS_STYLE}
+            {css_style}
         </head>
         <body>
             <div class="container">
@@ -413,7 +452,13 @@ class ReportTemplates:
             </div>
         </body>
         </html>
-        """
+        """.format(
+            strategy_name=strategy_name,
+            css_style=self.CSS_STYLE,
+            return_pct=return_pct,
+            sharpe=sharpe,
+            drawdown_pct=drawdown_pct,
+        )
 
 
 # Singleton

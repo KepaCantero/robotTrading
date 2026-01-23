@@ -24,6 +24,13 @@ from .models import (
 logger = logging.getLogger(__name__)
 
 
+# Sentinel object for in-memory "connection pool"
+class _InMemoryPool:
+    """Sentinel class to represent in-memory storage pool."""
+
+    pass
+
+
 class QuestDBConnector:
     """
     Async client for QuestDB time-series database.
@@ -120,7 +127,7 @@ class QuestDBConnector:
 
             except ImportError:
                 logger.warning("asyncpg not installed - using in-memory storage")
-                self._connection_pool = None
+                self._connection_pool = _InMemoryPool()
                 self._is_connected = True
                 self._use_real_db = False
                 self._in_memory_storage: List[MetricPoint] = []
@@ -129,7 +136,7 @@ class QuestDBConnector:
 
             except Exception as db_error:
                 logger.warning(f"QuestDB connection failed: {db_error} - using in-memory storage")
-                self._connection_pool = None
+                self._connection_pool = _InMemoryPool()
                 self._is_connected = True
                 self._use_real_db = False
                 self._in_memory_storage: List[MetricPoint] = []
@@ -146,6 +153,10 @@ class QuestDBConnector:
                 # Flush any pending metrics
                 if self._pending_metrics:
                     await self._flush_metrics()
+
+                # Close real pool if it's an asyncpg pool
+                if not isinstance(self._connection_pool, _InMemoryPool):
+                    await self._connection_pool.close()
 
                 self._connection_pool = None
                 self._is_connected = False
@@ -230,7 +241,9 @@ class QuestDBConnector:
         self._pending_metrics.clear()
 
         try:
-            if getattr(self, '_use_real_db', False) and self._connection_pool:
+            if getattr(self, '_use_real_db', False) and not isinstance(
+                self._connection_pool, _InMemoryPool
+            ):
                 # Real database insert using asyncpg
                 async with self._connection_pool.acquire() as conn:
                     # Prepare batch insert
@@ -301,7 +314,9 @@ class QuestDBConnector:
                 f"from {query.start_time} to {query.end_time}"
             )
 
-            if getattr(self, '_use_real_db', False) and self._connection_pool:
+            if getattr(self, '_use_real_db', False) and not isinstance(
+                self._connection_pool, _InMemoryPool
+            ):
                 # Real database query using asyncpg
                 async with self._connection_pool.acquire() as conn:
                     sql = """
@@ -423,7 +438,9 @@ class QuestDBConnector:
             Latest metric value, or None if not found
         """
         try:
-            if getattr(self, '_use_real_db', False) and self._connection_pool:
+            if getattr(self, '_use_real_db', False) and not isinstance(
+                self._connection_pool, _InMemoryPool
+            ):
                 async with self._connection_pool.acquire() as conn:
                     sql = """
                         SELECT value FROM metrics

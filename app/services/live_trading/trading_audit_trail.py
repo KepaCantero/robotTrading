@@ -308,6 +308,16 @@ class AuditPersistence:
             logger.error(f"Failed to get non-compliant events: {e}")
             return []
 
+    def close(self) -> None:
+        """Close database connection and cleanup resources."""
+        try:
+            if hasattr(self._local, 'connection') and self._local.connection is not None:
+                self._local.connection.close()
+                self._local.connection = None
+                logger.debug("AuditPersistence connection closed")
+        except Exception as e:
+            logger.warning(f"Error closing AuditPersistence connection: {e}")
+
 
 # Singleton persistence instance
 _audit_persistence: Optional[AuditPersistence] = None
@@ -544,7 +554,7 @@ class TradingAuditTrail:
         Returns:
             List of recent audit events
         """
-        return list(reversed(self.events[-limit:]))
+        return list(reversed(list(self.events)[-limit:]))
 
     def generate_compliance_report(
         self,

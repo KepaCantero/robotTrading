@@ -34,6 +34,30 @@ class RiskLevel(Enum):
     HIGH = "high"
     CRITICAL = "critical"
 
+    def __lt__(self, other):
+        if not isinstance(other, RiskLevel):
+            return NotImplemented
+        order = {"low": 0, "medium": 1, "high": 2, "critical": 3}
+        return order[self.value] < order[other.value]
+
+    def __le__(self, other):
+        if not isinstance(other, RiskLevel):
+            return NotImplemented
+        order = {"low": 0, "medium": 1, "high": 2, "critical": 3}
+        return order[self.value] <= order[other.value]
+
+    def __gt__(self, other):
+        if not isinstance(other, RiskLevel):
+            return NotImplemented
+        order = {"low": 0, "medium": 1, "high": 2, "critical": 3}
+        return order[self.value] > order[other.value]
+
+    def __ge__(self, other):
+        if not isinstance(other, RiskLevel):
+            return NotImplemented
+        order = {"low": 0, "medium": 1, "high": 2, "critical": 3}
+        return order[self.value] >= order[other.value]
+
 
 @dataclass
 class RiskLimit:
@@ -308,9 +332,7 @@ class RiskGates:
 
         if target_quantity > max_qty:
             adjusted_qty = max_qty
-            logger.warning(
-                f"⚠️ Adjusted {symbol} quantity from {target_quantity} to {adjusted_qty}"
-            )
+            logger.warning(f"⚠️ Adjusted {symbol} quantity from {target_quantity} to {adjusted_qty}")
             return False, adjusted_qty
 
         return True, target_quantity

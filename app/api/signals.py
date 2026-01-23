@@ -27,10 +27,13 @@ _signal_scorer_service: Optional[SignalScorerService] = None
 
 def get_signal_scorer_service() -> SignalScorerService:
     """Get signal scorer service instance."""
-    # global _signal_scorer_service  # F824 removed
+    global _signal_scorer_service
+
     if _signal_scorer_service is None:
         portfolio_provider = PaperTradingPortfolioProvider()
-        PortfolioService(portfolio_provider)
+        portfolio_service = PortfolioService(portfolio_provider)
+        _signal_scorer_service = SignalScorerService(portfolio_service)
+        logger.info("SignalScorerService singleton initialized")
 
     return _signal_scorer_service
 

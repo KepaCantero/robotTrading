@@ -385,7 +385,9 @@ class ReportingGenerator:
         recommendations: List[str],
     ) -> str:
         """Generate HTML report content."""
-        html = """
+        timestamp = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
+
+        html = f"""
         <!DOCTYPE html>
         <html>
         <head>
@@ -398,7 +400,7 @@ class ReportingGenerator:
                 .metric {{ display: inline-block; margin: 20px; padding: 15px; background: #f9f9f9; border-radius: 5px; }}
                 .metric-value {{ font-size: 24px; font-weight: bold; color: #007bff; }}
                 .metric-label {{ font-size: 12px; color: #666; }}
-                .rating-{rating} {{ color: #28a745; }}
+                .rating-excellent {{ color: #28a745; }}
                 .rating-good {{ color: #17a2b8; }}
                 .rating-neutral {{ color: #ffc107; }}
                 .rating-poor {{ color: #dc3545; }}
@@ -414,7 +416,7 @@ class ReportingGenerator:
         <body>
             <div class="container">
                 <h1>{request.strategy_name} Performance Report</h1>
-                <p><strong>Generated:</strong> {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}</p>
+                <p><strong>Generated:</strong> {timestamp}</p>
                 <p><strong>Profile ID:</strong> {request.profile_id}</p>
 
                 <h2>Overall Rating: <span class="rating-{rating}">{rating.upper()}</span></h2>
@@ -448,7 +450,7 @@ class ReportingGenerator:
         """
 
         for alloc in request.allocations:
-            html += """
+            html += f"""
                     <tr>
                         <td>{alloc.module_name}</td>
                         <td>{alloc.allocation_pct:.2f}%</td>

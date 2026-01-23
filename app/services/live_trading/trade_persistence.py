@@ -74,10 +74,10 @@ class OrderRecord(Base):
             "status": self.status,
             "broker_name": self.broker_name,
             "broker_order_id": self.broker_order_id,
-            "created_at": self.created_at.isoformat(),
+            "created_at": self.created_at.isoformat() if self.created_at else None,
             "executed_at": self.executed_at.isoformat() if self.executed_at else None,
             "error_message": self.error_message,
-            "retry_count": int(self.retry_count),
+            "retry_count": int(self.retry_count) if self.retry_count is not None else 0,
         }
 
 
@@ -87,7 +87,7 @@ class TradeRecord(Base):
     __tablename__ = "trade_records"
 
     trade_id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
-    order_id = Column(String(36), ForeignKey("orders.order_id"), nullable=False, index=True)
+    order_id = Column(String(36), ForeignKey("order_records.order_id"), nullable=False, index=True)
     symbol = Column(String(10), nullable=False, index=True)
     quantity = Column(Numeric(18, 8), nullable=False)
     execution_price = Column(Numeric(18, 8), nullable=False)
@@ -110,10 +110,10 @@ class TradeRecord(Base):
             "symbol": self.symbol,
             "quantity": float(self.quantity),
             "execution_price": float(self.execution_price),
-            "execution_time": self.execution_time.isoformat(),
-            "commission": float(self.commission),
-            "slippage": float(self.slippage),
-            "market_impact": float(self.market_impact),
+            "execution_time": self.execution_time.isoformat() if self.execution_time else None,
+            "commission": float(self.commission) if self.commission is not None else 0.0,
+            "slippage": float(self.slippage) if self.slippage is not None else 0.0,
+            "market_impact": float(self.market_impact) if self.market_impact is not None else 0.0,
             "side": self.side,
             "fill_type": self.fill_type,
         }
@@ -225,7 +225,7 @@ class TradePersistenceManager:
             Order ID
         """
         try:
-            async with self.async_session() as session:
+            async for session in self.session_factory():
                 order = OrderRecord(
                     symbol=order_data["symbol"],
                     side=order_data["side"],
@@ -260,7 +260,7 @@ class TradePersistenceManager:
             Trade ID
         """
         try:
-            async with self.async_session() as session:
+            async for session in self.session_factory():
                 trade = TradeRecord(
                     order_id=trade_data["order_id"],
                     symbol=trade_data["symbol"],
@@ -293,7 +293,7 @@ class TradePersistenceManager:
             Position ID
         """
         try:
-            async with self.async_session() as session:
+            async for session in self.session_factory():
                 position = PositionHistory(
                     symbol=position_data["symbol"],
                     timestamp=position_data["timestamp"],
@@ -322,7 +322,7 @@ class TradePersistenceManager:
             Order dictionary or None
         """
         try:
-            async with self.async_session() as session:
+            async for session in self.session_factory():
                 stmt = select(OrderRecord).where(OrderRecord.order_id == order_id)
                 result = await session.execute(stmt)
                 order = result.scalars().first()
@@ -342,7 +342,7 @@ class TradePersistenceManager:
             List of trade dictionaries
         """
         try:
-            async with self.async_session() as session:
+            async for session in self.session_factory():
                 stmt = (
                     select(TradeRecord)
                     .where(TradeRecord.symbol == symbol)
@@ -369,7 +369,7 @@ class TradePersistenceManager:
             List of trade dictionaries
         """
         try:
-            async with self.async_session() as session:
+            async for session in self.session_factory():
                 stmt = (
                     select(TradeRecord)
                     .where(
@@ -399,7 +399,7 @@ class TradePersistenceManager:
             List of position history dictionaries
         """
         try:
-            async with self.async_session() as session:
+            async for session in self.session_factory():
                 stmt = (
                     select(PositionHistory)
                     .where(PositionHistory.symbol == symbol)
@@ -424,7 +424,7 @@ class TradePersistenceManager:
             Statistics dictionary or None
         """
         try:
-            async with self.async_session() as session:
+            async for session in self.session_factory():
                 stmt = select(TradeStatistics).where(TradeStatistics.date == date)
                 result = await session.execute(stmt)
                 stats = result.scalars().first()
@@ -448,7 +448,7 @@ class TradePersistenceManager:
             True if successful
         """
         try:
-            async with self.async_session() as session:
+            async for session in self.session_factory():
                 stmt = select(OrderRecord).where(OrderRecord.order_id == order_id)
                 result = await session.execute(stmt)
                 order = result.scalars().first()
@@ -477,7 +477,7 @@ class TradePersistenceManager:
             Total count
         """
         try:
-            async with self.async_session() as session:
+            async for session in self.session_factory():
                 if symbol:
                     stmt = select(TradeRecord).where(TradeRecord.symbol == symbol)
                 else:

@@ -325,6 +325,8 @@ class TimeSeriesGANGenerator:
         self.config = config or GANConfig()
         self.sequence_length: int = 30  # 30-day sequences
         self.connected = False
+        # Reproducible random state
+        self._rng = np.random.default_rng(self.config.random_state)
         logger.info("✅ TimeSeriesGANGenerator initialized")
 
     async def connect(self) -> bool:

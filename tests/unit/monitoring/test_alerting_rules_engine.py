@@ -5,12 +5,14 @@ Tests alert rule evaluation, triggering, and management.
 """
 
 import pytest
+import pytest_asyncio
 
 from app.services.monitoring import (
     AlertConditionType,
     AlertRule,
     AlertSeverity,
     get_alerting_engine,
+    reset_alerting_engine,
 )
 
 
@@ -19,10 +21,11 @@ class TestAlertingRulesEngine:
 
     @pytest.fixture
     def engine(self):
-        """Create engine instance."""
+        """Create fresh engine instance for each test."""
+        reset_alerting_engine()
         return get_alerting_engine()
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def engine_with_session(self):
         """Create engine with session."""
         engine = get_alerting_engine()

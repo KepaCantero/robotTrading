@@ -16,25 +16,50 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 # Optional library imports with graceful fallback
+# Note: quantstats and empyrical import yfinance which uses Python 3.10+ union syntax
+# We use lazy import to avoid this issue at module load time
+_qs = None
+_ep = None
 QUANTSTATS_AVAILABLE = False
 EMPYRICAL_AVAILABLE = False
 PYFOLIO_AVAILABLE = False
 
-try:
-    import quantstats as qs
 
-    QUANTSTATS_AVAILABLE = True
-    logger.info("quantstats library available")
-except ImportError:
-    logger.debug("quantstats not available - some features will be disabled")
+def _ensure_quantstats():
+    """Lazy import quantstats to avoid Python version compatibility issues."""
+    global _qs, QUANTSTATS_AVAILABLE
+    if _qs is None:
+        try:
+            import quantstats as qs_module
 
-try:
-    import empyrical
+            _qs = qs_module
+            QUANTSTATS_AVAILABLE = True
+            logger.info("quantstats library available")
+        except (ImportError, TypeError) as e:
+            # TypeError occurs on Python 3.9 due to yfinance dependency
+            QUANTSTATS_AVAILABLE = False
+            _qs = None
+            logger.debug(f"quantstats not available: {e}")
+    return _qs
 
-    EMPYRICAL_AVAILABLE = True
-    logger.info("empyrical library available")
-except ImportError:
-    logger.debug("empyrical not available - some features will be disabled")
+
+def _ensure_empyrical():
+    """Lazy import empyrical to avoid Python version compatibility issues."""
+    global _ep, EMPYRICAL_AVAILABLE
+    if _ep is None:
+        try:
+            import empyrical as ep_module
+
+            _ep = ep_module
+            EMPYRICAL_AVAILABLE = True
+            logger.info("empyrical library available")
+        except (ImportError, TypeError) as e:
+            # TypeError occurs on Python 3.9 due to yfinance dependency
+            EMPYRICAL_AVAILABLE = False
+            _ep = None
+            logger.debug(f"empyrical not available: {e}")
+    return _ep
+
 
 try:
     pass
@@ -93,7 +118,8 @@ class AwesomeQuantIntegrator:
         Returns:
             Dictionary of quantstats-derived metrics
         """
-        if not QUANTSTATS_AVAILABLE:
+        qs_module = _ensure_quantstats()
+        if qs_module is None:
             logger.warning("quantstats not available")
             return {}
 
@@ -101,39 +127,41 @@ class AwesomeQuantIntegrator:
             metrics = {}
 
             # Basic stats
-            metrics["return_pct"] = float(qs.stats.total_return(returns))
-            metrics["cagr"] = float(qs.stats.cagr(returns))
-            metrics["sharpe"] = float(qs.stats.sharpe(returns))
-            metrics["sortino"] = float(qs.stats.sortino(returns))
-            metrics["calmar"] = float(qs.stats.calmar(returns))
+            metrics["return_pct"] = float(qs_module.stats.total_return(returns))
+            metrics["cagr"] = float(qs_module.stats.cagr(returns))
+            metrics["sharpe"] = float(qs_module.stats.sharpe(returns))
+            metrics["sortino"] = float(qs_module.stats.sortino(returns))
+            metrics["calmar"] = float(qs_module.stats.calmar(returns))
 
             # Drawdown metrics
-            metrics["max_drawdown"] = float(qs.stats.max_drawdown(returns))
-            metrics["avg_drawdown"] = float(qs.stats.avg_drawdown(returns))
-            metrics["underwater"] = float(qs.stats.underwater(returns).min())
+            metrics["max_drawdown"] = float(qs_module.stats.max_drawdown(returns))
+            metrics["avg_drawdown"] = float(qs_module.stats.avg_drawdown(returns))
+            metrics["underwater"] = float(qs_module.stats.underwater(returns).min())
 
             # Volatility and risk
-            metrics["volatility"] = float(qs.stats.volatility(returns))
-            metrics["var_95"] = float(qs.stats.value_at_risk(returns, 0.95))
-            metrics["cvar_95"] = float(qs.stats.conditional_value_at_risk(returns, 0.95))
+            metrics["volatility"] = float(qs_module.stats.volatility(returns))
+            metrics["var_95"] = float(qs_module.stats.value_at_risk(returns, 0.95))
+            metrics["cvar_95"] = float(qs_module.stats.conditional_value_at_risk(returns, 0.95))
 
             # Win metrics
-            metrics["win_rate"] = float(qs.stats.win_rate(returns))
-            metrics["best_day"] = float(qs.stats.best(returns))
-            metrics["worst_day"] = float(qs.stats.worst(returns))
-            metrics["avg_win"] = float(qs.stats.avg_win(returns))
-            metrics["avg_loss"] = float(qs.stats.avg_loss(returns))
+            metrics["win_rate"] = float(qs_module.stats.win_rate(returns))
+            metrics["best_day"] = float(qs_module.stats.best(returns))
+            metrics["worst_day"] = float(qs_module.stats.worst(returns))
+            metrics["avg_win"] = float(qs_module.stats.avg_win(returns))
+            metrics["avg_loss"] = float(qs_module.stats.avg_loss(returns))
 
             # Other metrics
-            metrics["profit_factor"] = float(qs.stats.profit_factor(returns))
-            metrics["payoff_ratio"] = float(qs.stats.payoff_ratio(returns))
-            metrics["recovery_factor"] = float(qs.stats.recovery_factor(returns))
+            metrics["profit_factor"] = float(qs_module.stats.profit_factor(returns))
+            metrics["payoff_ratio"] = float(qs_module.stats.payoff_ratio(returns))
+            metrics["recovery_factor"] = float(qs_module.stats.recovery_factor(returns))
 
             # Benchmark comparison (if provided)
             if benchmark_returns is not None:
-                metrics["beta"] = float(qs.stats.beta(returns, benchmark_returns))
-                metrics["alpha"] = float(qs.stats.alpha(returns, benchmark_returns))
-                metrics["correlation"] = float(qs.stats.correlation(returns, benchmark_returns))
+                metrics["beta"] = float(qs_module.stats.beta(returns, benchmark_returns))
+                metrics["alpha"] = float(qs_module.stats.alpha(returns, benchmark_returns))
+                metrics["correlation"] = float(
+                    qs_module.stats.correlation(returns, benchmark_returns)
+                )
 
             logger.info(f"Calculated {len(metrics)} quantstats metrics")
             return metrics
@@ -159,7 +187,8 @@ class AwesomeQuantIntegrator:
         Returns:
             Dictionary of empyrical-derived metrics
         """
-        if not EMPYRICAL_AVAILABLE:
+        ep_module = _ensure_empyrical()
+        if ep_module is None:
             logger.warning("empyrical not available")
             return {}
 
@@ -167,20 +196,20 @@ class AwesomeQuantIntegrator:
             metrics = {}
 
             # Return metrics
-            metrics["total_return"] = float(empyrical.total_return(returns))
-            metrics["annual_return"] = float(empyrical.annual_return(returns))
-            metrics["cumulative_returns"] = float(empyrical.cum_returns(returns).iloc[-1])
+            metrics["total_return"] = float(ep_module.total_return(returns))
+            metrics["annual_return"] = float(ep_module.annual_return(returns))
+            metrics["cumulative_returns"] = float(ep_module.cum_returns(returns).iloc[-1])
 
             # Risk metrics
-            metrics["volatility"] = float(empyrical.annual_volatility(returns))
-            metrics["downside_volatility"] = float(empyrical.downside_volatility(returns))
-            metrics["max_drawdown"] = float(empyrical.max_drawdown(returns))
+            metrics["volatility"] = float(ep_module.annual_volatility(returns))
+            metrics["downside_volatility"] = float(ep_module.downside_volatility(returns))
+            metrics["max_drawdown"] = float(ep_module.max_drawdown(returns))
 
             # Risk-adjusted metrics
-            metrics["sharpe_ratio"] = float(empyrical.sharpe_ratio(returns))
-            metrics["sortino_ratio"] = float(empyrical.sortino_ratio(returns))
-            metrics["calmar_ratio"] = float(empyrical.calmar_ratio(returns))
-            metrics["omega_ratio"] = float(empyrical.omega_ratio(returns))
+            metrics["sharpe_ratio"] = float(ep_module.sharpe_ratio(returns))
+            metrics["sortino_ratio"] = float(ep_module.sortino_ratio(returns))
+            metrics["calmar_ratio"] = float(ep_module.calmar_ratio(returns))
+            metrics["omega_ratio"] = float(ep_module.omega_ratio(returns))
 
             # Win metrics
             metrics["win_rate"] = float(
@@ -190,21 +219,21 @@ class AwesomeQuantIntegrator:
             # Tail metrics
             metrics["var_95"] = float(np.percentile(returns, 5))
             metrics["cvar_95"] = float(returns[returns <= np.percentile(returns, 5)].mean())
-            metrics["skewness"] = float(empyrical.skewness(returns))
-            metrics["kurtosis"] = float(empyrical.kurtosis(returns))
+            metrics["skewness"] = float(ep_module.skewness(returns))
+            metrics["kurtosis"] = float(ep_module.kurtosis(returns))
 
             # Drawdown analysis
-            drawdowns = empyrical.drawdown(returns)
+            drawdowns = ep_module.drawdown(returns)
             metrics["avg_drawdown"] = float(drawdowns[drawdowns < 0].mean())
 
             # Benchmark metrics (if provided)
             if benchmark_returns is not None and len(benchmark_returns) == len(returns):
-                metrics["alpha"] = float(empyrical.alpha(returns, benchmark_returns))
-                metrics["beta"] = float(empyrical.beta(returns, benchmark_returns))
+                metrics["alpha"] = float(ep_module.alpha(returns, benchmark_returns))
+                metrics["beta"] = float(ep_module.beta(returns, benchmark_returns))
                 excess_returns = returns - benchmark_returns
                 metrics["information_ratio"] = float(
-                    empyrical.annual_return(excess_returns)
-                    / empyrical.annual_volatility(excess_returns)
+                    ep_module.annual_return(excess_returns)
+                    / ep_module.annual_volatility(excess_returns)
                 )
 
             logger.info(f"Calculated {len(metrics)} empyrical metrics")

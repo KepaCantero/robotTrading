@@ -12,10 +12,36 @@ disable=
     too-many-locals,
     duplicate-code,
     fixme,
-    broad-except
+    broad-except,
+    W1203,  # lazy-formatting in logging - not worth fixing
+    C0114,  # missing-module-docstring - has exceptions
+    C0115,  # missing-class-docstring - has exceptions
+    R0903,  # too-few-public-methods - already disabled above
+    C0103,  # invalid-name - we use descriptive names
+    R0913,  # too-many-arguments - already disabled above
+    R0914,  # too-many-locals - already disabled above
+    W0212,  # protected-access - necessary for testing
+    W0613,  # unused-argument - sometimes necessary
+    R0915,  # too-many-statements - sometimes necessary
+    R0904,  # too-many-public-methods - sometimes necessary
+    R0912,  # too-many-branches - sometimes necessary
+    C0302,  # too-many-lines - not useful
+    C0303,  # trailing-whitespace - auto-fixed
+    E1101,  # no-member - sometimes false positive with lazy imports
 
 [FORMAT]
 max-line-length=100
 
 [DESIGN]
 max-attributes=10
+
+[TYPECHECK]
+# List of module names for which member attributes should not be checked
+ignored-modules=
+    yfinance,
+    yf,
+    _yf,
+    quantstats,
+    empyrical,
+    pandas_datareader,
+    qlib

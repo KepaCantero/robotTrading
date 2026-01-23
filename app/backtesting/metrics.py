@@ -20,13 +20,27 @@ from app.backtesting.models import PerformanceMetrics, Trade
 logger = logging.getLogger(__name__)
 
 # Optional: empyrical-reloaded for standard financial metrics
-try:
-    import empyrical as ep
+# Note: empyrical imports yfinance which uses Python 3.10+ union syntax
+# We use lazy import to avoid this issue at module load time
+_ep = None
+EMPYRICAL_AVAILABLE = False
 
-    EMPYRICAL_AVAILABLE = True
-except ImportError:
-    EMPYRICAL_AVAILABLE = False
-    logger.debug("empyrical-reloaded no disponible. Usando implementaciones manuales.")
+
+def _ensure_empyrical():
+    """Lazy import empyrical to avoid Python version compatibility issues."""
+    global _ep, EMPYRICAL_AVAILABLE
+    if _ep is None:
+        try:
+            import empyrical as ep_module
+
+            _ep = ep_module
+            EMPYRICAL_AVAILABLE = True
+        except (ImportError, TypeError) as e:
+            # TypeError occurs on Python 3.9 due to yfinance dependency
+            EMPYRICAL_AVAILABLE = False
+            _ep = None
+            logger.debug(f"empyrical-reloaded not available: {e}")
+    return _ep
 
 
 class MetricsCalculator:
@@ -300,12 +314,13 @@ class MetricsCalculator:
             returns_array = np.array([float(r) for r in returns])
 
             # Use empyrical if available (industry standard)
-            if EMPYRICAL_AVAILABLE:
+            ep_module = _ensure_empyrical()
+            if ep_module is not None:
                 try:
                     # Convert annual risk-free rate to daily for empyrical
                     # (empyrical expects daily rate when period='daily')
                     daily_risk_free = float(self.risk_free_rate) / 252
-                    sharpe = ep.sharpe_ratio(
+                    sharpe = ep_module.sharpe_ratio(
                         returns_array, risk_free=daily_risk_free, period='daily', annualization=252
                     )
                     # Handle NaN
@@ -347,11 +362,12 @@ class MetricsCalculator:
             returns_array = np.array([float(r) for r in returns])
 
             # Use empyrical if available (industry standard)
-            if EMPYRICAL_AVAILABLE:
+            ep_module = _ensure_empyrical()
+            if ep_module is not None:
                 try:
                     # Convert annual risk-free rate to daily for empyrical
                     daily_risk_free = float(self.risk_free_rate) / 252
-                    sortino = ep.sortino_ratio(
+                    sortino = ep_module.sortino_ratio(
                         returns_array, risk_free=daily_risk_free, period='daily', annualization=252
                     )
                     # Handle NaN

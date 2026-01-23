@@ -19,6 +19,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Deque, Dict, List, Optional, Set, Tuple
 from uuid import uuid4
+from itertools import islice
 
 from app.services.alerting_system import AlertEvent, AlertManager
 
@@ -224,9 +225,7 @@ class TradingBridgeOrchestrator:
                 )
 
                 if not signal:
-                    logger.warning(
-                        f"⚠️ No trade signal generated for alert: {alert_event.event_id}"
-                    )
+                    logger.warning(f"⚠️ No trade signal generated for alert: {alert_event.event_id}")
                     return None
 
                 # Validate risk gates
@@ -421,7 +420,11 @@ class TradingBridgeOrchestrator:
         Returns:
             List of recent AlertToTradeExecution
         """
-        return list(reversed(self.execution_history[-limit:]))
+        # Use islice for deque compatibility, then reverse to get most recent first
+        recent = list(
+            islice(self.execution_history, max(0, len(self.execution_history) - limit), None)
+        )
+        return list(reversed(recent))
 
     def get_bridge_statistics(self) -> dict:
         """

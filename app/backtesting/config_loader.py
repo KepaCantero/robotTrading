@@ -233,18 +233,19 @@ def get_config(config_path: Optional[str] = None) -> ConfigLoader:
     Get global configuration instance (singleton pattern).
 
     Args:
-        config_path: Path to config file (only used on first call)
+        config_path: Path to config file (only used on first call or after reset)
 
     Returns:
         ConfigLoader instance
     """
     global _global_config
     if _global_config is None:
-        _global_config = ConfigLoader()
+        _global_config = ConfigLoader(config_path)
 
     return _global_config
 
 
 def reset_config() -> None:
     """Reset global configuration instance."""
-    # global _global_config  # F824 removed
+    global _global_config
+    _global_config = None

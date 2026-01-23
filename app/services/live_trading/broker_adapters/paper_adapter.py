@@ -30,17 +30,19 @@ logger = logging.getLogger(__name__)
 class PaperAdapter:
     """Adapter that simulates broker for paper trading."""
 
-    def __init__(self, initial_cash: Decimal = Decimal("100000")):
+    def __init__(self, initial_cash: Decimal = Decimal("100000"), auto_fill_orders: bool = False):
         """Initialize paper trading adapter.
 
         Args:
             initial_cash: Starting cash balance (default $100,000)
+            auto_fill_orders: Whether to automatically fill market orders (default False for testing)
         """
         self.account: Optional[BrokerAccount] = None
         self.positions: Dict[str, BrokerPosition] = {}
         self.orders: Dict[str, BrokerOrder] = {}
         self.is_connected = False
         self.initial_cash = initial_cash
+        self.auto_fill_orders = auto_fill_orders
 
     async def connect(
         self,
@@ -70,6 +72,7 @@ class PaperAdapter:
             equity=self.initial_cash,
             margin_used=Decimal("0"),
             multiplier=Decimal("1"),
+            connected=True,  # Set connected to True
         )
 
         self.is_connected = True
@@ -134,8 +137,8 @@ class PaperAdapter:
             # Cache order
             self.orders[order_id] = order
 
-            # Simulate immediate execution for market orders
-            if order_type == OrderType.MARKET:
+            # Simulate immediate execution for market orders if auto_fill is enabled
+            if self.auto_fill_orders and order_type == OrderType.MARKET:
                 order.status = OrderStatus.FILLED
                 order.filled_quantity = quantity
                 order.updated_at = datetime.utcnow()

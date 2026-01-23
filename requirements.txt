@@ -23,7 +23,7 @@ yahoo-fin>=0.8.9,<1.0.0  # Alternative to yfinance (yahoo_fin)
 requests-html>=0.10.0,<1.0.0  # Required by yahoo_fin
 
 # Configuration
-pyyaml>=6.0,<7.0
+pyyaml>=6.0  # Allow any 6.x version for compatibility
 
 # Optimization (NEW - Multi-Strategy Optimizer)
 optuna>=3.4.0,<4.0.0
@@ -50,11 +50,12 @@ gymnasium>=0.29.0,<1.0.0  # Newer gym API (optional)
 # HTTP & API Clients
 httpx>=0.25.0,<0.28.0  # <0.28 required for starlette TestClient compatibility
 requests>=2.31.0,<3.0.0
-aiohttp>=3.9.0,<4.0.0  # Required for async HTTP requests in DataEngine sources
-websockets>=12.0,<13.0  # Required for WebSocket streaming in DataEngine
+aiohttp>=3.8.0,<4.0.0  # Required for async HTTP requests in DataEngine sources
+websockets>=10.0,<13.0  # Required for WebSocket streaming in DataEngine
 
 # Broker APIs
-alpaca-trade-api>=2.0.0,<3.0.0  # Alpaca broker API client
+alpaca-trade-api>=2.0.0,<3.0.0  # Alpaca broker API client (legacy, consider migrating to alpaca-py)
+alpaca-py>=0.1.0  # Modern Alpaca SDK with better Python 3.13 support
 
 # Redis (for caching if used)
 redis>=5.0.0,<6.0.0
@@ -70,3 +71,5 @@ quantstats>=0.0.62,<1.0.0  # Portfolio analytics and HTML reports
 empyrical-reloaded>=0.5.0,<1.0.0  # Risk and performance metrics (standard library)
 pyfolio-reloaded>=0.9.5,<1.0.0  # Portfolio and risk analytics with tearsheets
 
+aiosqlite>=0.19.0
+greenlet>=3.0.0

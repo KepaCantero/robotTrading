@@ -6,9 +6,11 @@ Tests for the trade persistence layer with SQLAlchemy ORM models.
 
 from datetime import datetime, timedelta
 from decimal import Decimal
+from unittest.mock import AsyncMock, patch
 
 import pytest
-from sqlalchemy.ext.asyncio import create_async_engine
+import pytest_asyncio
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from app.services.live_trading.trade_persistence import (
     Base,
@@ -19,7 +21,7 @@ from app.services.live_trading.trade_persistence import (
 )
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_db():
     """Create in-memory test database."""
     engine = create_async_engine(
@@ -36,13 +38,31 @@ async def test_db():
     await engine.dispose()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def persistence_manager(test_db):
     """Create persistence manager with test database."""
-    manager = TradePersistenceManager("sqlite+aiosqlite:///:memory:")
-    await manager.initialize()
+    from sqlalchemy.ext.asyncio import async_sessionmaker
+
+    manager = TradePersistenceManager()
+
+    # Create session factory for test database
+    async_session_factory = async_sessionmaker(
+        bind=test_db,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+
+    # Create a session factory that yields sessions
+    def get_session_factory():
+        async def factory():
+            async with async_session_factory() as session:
+                yield session
+
+        return factory
+
+    manager.session_factory = get_session_factory()
     yield manager
-    await manager.shutdown()
+    # No shutdown needed for mock
 
 
 class TestOrderRecordModel:
@@ -179,8 +199,7 @@ class TestTradePersistenceManager:
     @pytest.mark.asyncio
     async def test_manager_initialization(self, persistence_manager):
         """Test manager initialization."""
-        assert persistence_manager.engine is not None
-        assert persistence_manager.async_session is not None
+        assert persistence_manager.session_factory is not None
 
     @pytest.mark.asyncio
     async def test_save_order(self, persistence_manager):

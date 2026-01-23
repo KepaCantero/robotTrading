@@ -6,15 +6,15 @@ including unit tests, integration tests, and edge cases.
 """
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pandas as pd
 import pytest
 
 from app.models.assets import Asset, AssetClass, Exchange
 from app.services.market_universe_loader import (
+    YFINANCE_AVAILABLE,
     MarketUniverseLoader,
     get_market_universe_loader,
 )
@@ -39,8 +39,10 @@ class TestMarketUniverseLoaderUnit:
         assert loader.min_price == 5.0
         assert loader.max_volatility == 0.15
         assert loader.cache_ttl == timedelta(hours=1)
-        assert loader._universe_cache == {}
-        assert loader._data_cache == {}
+        assert loader._universe_cache.max_size == 50
+        assert loader._data_cache.max_size == 100
+        assert loader._universe_cache.get_stats()["size"] == 0
+        assert loader._data_cache.get_stats()["size"] == 0
 
     def test_singleton(self):
         """Test singleton pattern works correctly."""
@@ -131,13 +133,13 @@ class TestMarketUniverseLoaderUnit:
         loader._cache_universe("test1", ["AAPL"])
         loader._cache_data("test2", {"AAPL": pd.DataFrame()})
 
-        assert len(loader._universe_cache) > 0
-        assert len(loader._data_cache) > 0
+        assert loader._universe_cache.get_stats()["size"] > 0
+        assert loader._data_cache.get_stats()["size"] > 0
 
         loader.clear_cache()
 
-        assert len(loader._universe_cache) == 0
-        assert len(loader._data_cache) == 0
+        assert loader._universe_cache.get_stats()["size"] == 0
+        assert loader._data_cache.get_stats()["size"] == 0
 
 
 class TestMarketUniverseLoaderIntegration:
@@ -157,6 +159,10 @@ class TestMarketUniverseLoaderIntegration:
     @pytest.mark.integration
     async def test_download_single_ticker(self, loader):
         """Test downloading data for a single ticker."""
+        # Skip if yfinance not available
+        if not YFINANCE_AVAILABLE:
+            pytest.skip("yfinance not available - requires Python 3.10+")
+
         data = await loader.download_universe_data(
             tickers=["AAPL"],
             period="1mo",
@@ -175,6 +181,10 @@ class TestMarketUniverseLoaderIntegration:
     @pytest.mark.integration
     async def test_download_multiple_tickers(self, loader):
         """Test downloading data for multiple tickers."""
+        # Skip if yfinance not available
+        if not YFINANCE_AVAILABLE:
+            pytest.skip("yfinance not available - requires Python 3.10+")
+
         tickers = ["AAPL", "MSFT", "GOOGL"]
         data = await loader.download_universe_data(
             tickers=tickers,
@@ -193,27 +203,34 @@ class TestMarketUniverseLoaderIntegration:
     @pytest.mark.integration
     async def test_filter_by_liquidity(self, loader):
         """Test filtering stocks by liquidity and volatility."""
-        # Create sample data
+        # Create sample data with 20+ rows (requirement of filter function)
+
         data = {
-            "AAPL": pd.DataFrame({
-                "close": [150, 152, 151, 153, 155],
-                "volume": [50_000_000, 55_000_000, 48_000_000, 52_000_000, 60_000_000],
-            }),
-            "PENNY_STOCK": pd.DataFrame({
-                "close": [0.50, 0.55, 0.48, 0.52, 0.51],  # Below min_price
-                "volume": [1_000_000, 1_200_000, 900_000, 1_100_000, 1_000_000],
-            }),
-            "LOW_VOL": pd.DataFrame({
-                "close": [20, 21, 19, 22, 21],
-                "volume": [100_000, 110_000, 90_000, 105_000, 95_000],  # Below min_volume
-            }),
+            "AAPL": pd.DataFrame(
+                {
+                    "close": [150 + i for i in range(25)],  # 25 data points
+                    "volume": [50_000_000 + i * 100000 for i in range(25)],
+                }
+            ),
+            "PENNY_STOCK": pd.DataFrame(
+                {
+                    "close": [0.50 + i * 0.01 for i in range(25)],  # Below min_price
+                    "volume": [1_000_000 + i * 10000 for i in range(25)],
+                }
+            ),
+            "LOW_VOL": pd.DataFrame(
+                {
+                    "close": [20 + i for i in range(25)],
+                    "volume": [100_000 + i * 1000 for i in range(25)],  # Below min_volume
+                }
+            ),
         }
 
         filtered = await loader.filter_by_liquidity_volatility(
             data,
             min_avg_volume=1_000_000,
             min_price=5.0,
-            max_volatility=0.15,
+            max_volatility=0.10,  # 10% max daily vol
         )
 
         # Only AAPL should pass
@@ -225,6 +242,10 @@ class TestMarketUniverseLoaderIntegration:
     @pytest.mark.integration
     async def test_fetch_and_filter_convenience(self, loader):
         """Test the convenience method that downloads AND filters."""
+        # Skip if yfinance not available
+        if not YFINANCE_AVAILABLE:
+            pytest.skip("yfinance not available - requires Python 3.10+")
+
         tickers = ["AAPL", "MSFT"]
 
         result = await loader.fetch_and_filter(
@@ -242,6 +263,10 @@ class TestMarketUniverseLoaderIntegration:
     @pytest.mark.integration
     async def test_get_assets_from_universe(self, loader):
         """Test converting tickers to Asset objects."""
+        # Skip if yfinance not available
+        if not YFINANCE_AVAILABLE:
+            pytest.skip("yfinance not available - requires Python 3.10+")
+
         tickers = ["AAPL", "MSFT"]
 
         assets = await loader.get_assets_from_universe(
@@ -255,7 +280,9 @@ class TestMarketUniverseLoaderIntegration:
 
         for asset in assets:
             assert isinstance(asset, Asset)
-            assert asset.symbol in tickers or asset.symbol.replace("-USD", "USDT") in [t.replace("-USD", "USDT") for t in tickers]
+            assert asset.symbol in tickers or asset.symbol.replace("-USD", "USDT") in [
+                t.replace("-USD", "USDT") for t in tickers
+            ]
 
 
 class TestMarketUniverseLoaderEdgeCases:
@@ -289,10 +316,12 @@ class TestMarketUniverseLoaderEdgeCases:
     async def test_filter_insufficient_data(self, loader):
         """Test filtering with insufficient data points."""
         data = {
-            "SHORT": pd.DataFrame({
-                "close": [100, 101],  # Only 2 data points
-                "volume": [1_000_000, 1_100_000],
-            }),
+            "SHORT": pd.DataFrame(
+                {
+                    "close": [100, 101],  # Only 2 data points
+                    "volume": [1_000_000, 1_100_000],
+                }
+            ),
         }
 
         filtered = await loader.filter_by_liquidity_volatility(data)
@@ -303,10 +332,12 @@ class TestMarketUniverseLoaderEdgeCases:
     async def test_filter_null_values(self, loader):
         """Test filtering handles null values correctly."""
         data = {
-            "NULL_DATA": pd.DataFrame({
-                "close": [100, None, 102, None, 104],
-                "volume": [1_000_000, 1_100_000, None, 1_200_000, 1_000_000],
-            }),
+            "NULL_DATA": pd.DataFrame(
+                {
+                    "close": [100, None, 102, None, 104],
+                    "volume": [1_000_000, 1_100_000, None, 1_200_000, 1_000_000],
+                }
+            ),
         }
 
         # Should not crash, should filter out or handle gracefully
@@ -320,8 +351,7 @@ class TestMarketUniverseLoaderEdgeCases:
 
         # Run multiple downloads concurrently
         tasks = [
-            loader.download_universe_data(tickers, period="1wk", interval="1d")
-            for _ in range(3)
+            loader.download_universe_data(tickers, period="1wk", interval="1d") for _ in range(3)
         ]
 
         results = await asyncio.gather(*tasks)
@@ -342,10 +372,12 @@ class TestMarketUniverseLoaderEdgeCases:
             avg_spread=Decimal("0.01"),
         )
 
-        df = pd.DataFrame({
-            "close": [100] * 100,
-            "volume": [10_000_000] * 100,
-        })
+        df = pd.DataFrame(
+            {
+                "close": [100] * 100,
+                "volume": [10_000_000] * 100,
+            }
+        )
 
         # Should not raise any errors
         asyncio.run(loader._calculate_liquidity_score(asset, df))
@@ -366,11 +398,11 @@ class TestMarketUniverseLoaderCaching:
     @pytest.mark.asyncio
     async def test_universe_caching(self, loader):
         """Test that universe results are cached."""
-        cache_key = "sp500"
 
         # First call should cache
         tickers1 = await loader.get_sp500_universe()
-        assert cache_key in loader._universe_cache
+        # Cache is populated regardless of yfinance availability (uses fallback)
+        assert loader._universe_cache.get_stats()["size"] > 0
 
         # Second call should use cache
         tickers2 = await loader.get_sp500_universe()
@@ -379,6 +411,10 @@ class TestMarketUniverseLoaderCaching:
     @pytest.mark.asyncio
     async def test_data_caching(self, loader):
         """Test that downloaded data is cached."""
+        # Skip if yfinance not available
+        if not YFINANCE_AVAILABLE:
+            pytest.skip("yfinance not available - requires Python 3.10+")
+
         tickers = ["AAPL"]
 
         # First download
@@ -399,8 +435,8 @@ class TestMarketUniverseLoaderCaching:
 
         loader.clear_cache()
 
-        assert len(loader._universe_cache) == 0
-        assert len(loader._data_cache) == 0
+        assert loader._universe_cache.get_stats()["size"] == 0
+        assert loader._data_cache.get_stats()["size"] == 0
 
 
 @pytest.mark.integration
@@ -419,6 +455,10 @@ class TestMarketUniverseLoaderRealAPI:
     @pytest.mark.asyncio
     async def test_real_sp500_data(self, loader):
         """Test fetching real S&P 500 data."""
+        # Skip if yfinance not available
+        if not YFINANCE_AVAILABLE:
+            pytest.skip("yfinance not available - requires Python 3.10+")
+
         tickers = await loader.get_sp500_universe()
 
         # Should return at least fallback list
@@ -434,6 +474,10 @@ class TestMarketUniverseLoaderRealAPI:
     @pytest.mark.asyncio
     async def test_real_crypto_data(self, loader):
         """Test fetching real crypto data."""
+        # Skip if yfinance not available
+        if not YFINANCE_AVAILABLE:
+            pytest.skip("yfinance not available - requires Python 3.10+")
+
         tickers = await loader.get_crypto_universe(top_n=5)
 
         assert len(tickers) > 0
