@@ -8,9 +8,7 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 # Import from core exceptions to avoid circular dependencies
-from app.core.exceptions import (
-    AlgoTradingError,
-)
+from app.core.exceptions import AlgoTradingError
 from app.exceptions.error_handler import (
     algotrading_exception_handler,
     generic_exception_handler,
@@ -30,9 +28,9 @@ def setup_error_handling(app: FastAPI) -> None:
     """Setup error handling for FastAPI application."""
 
     # Add exception handlers
-    app.add_exception_handler(AlgoTradingError, algotrading_exception_handler)
-    app.add_exception_handler(RequestValidationError, validation_exception_handler)
-    app.add_exception_handler(StarletteHTTPException, starlette_http_exception_handler)
+    app.add_exception_handler(AlgoTradingError, algotrading_exception_handler)  # type: ignore
+    app.add_exception_handler(RequestValidationError, validation_exception_handler)  # type: ignore
+    app.add_exception_handler(StarletteHTTPException, starlette_http_exception_handler)  # type: ignore
     app.add_exception_handler(Exception, generic_exception_handler)
 
     # Add middleware (order matters!)
@@ -60,30 +58,3 @@ def create_error_handling_app() -> FastAPI:
     # Export main classes and functions
 
     # Main classes
-    __all__ = [
-        "AlgoTradingError",
-        "ConfigurationError",
-        "ValidationError",
-        "BusinessLogicError",
-        "MarketDataError",
-        "TradingError",
-        "PortfolioError",
-        "SignalError",
-        "BacktestError",
-        "DatabaseError",
-        "APIError",
-        # Helper functions
-        "raise_configuration_error",
-        "raise_validation_error",
-        "raise_business_logic_error",
-        "raise_market_data_error",
-        "raise_trading_error",
-        # Handler
-        "ErrorHandler",
-        "error_handler",
-        # Functions
-        "create_error_response",
-        # FastAPI integration
-        "setup_error_handling",
-        "create_error_handling_app",
-    ]

@@ -258,7 +258,7 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
             lows = list(self.low_history)
             volumes = list(self.volume_history)
 
-            window_prices = prices[-self.lookback_period :]
+            prices[-self.lookback_period :]
             window_highs = highs[-self.lookback_period :]
             window_lows = lows[-self.lookback_period :]
 

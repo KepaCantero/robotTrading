@@ -328,7 +328,7 @@ class PairsTradingStrategy(BaseStrategy):
                                                 half_life_passed = True  # Pass if out of bounds
                                         else:
                                             half_life_passed = True  # Pass if not mean-reverting
-                                    except:
+                                    except Exception:
                                         half_life_passed = True  # Pass on error
                     except Exception as e:
                         logger.debug(f"Error calculating spread filters: {e}")

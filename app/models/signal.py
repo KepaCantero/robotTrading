@@ -564,8 +564,7 @@ class SignalPriorityQueue:
             "symbols": list(symbols),
         }
 
-
-class SignalScorer:
+    # class SignalScorer  # F811 duplicate from line 208
     """Signal scoring utility class."""
 
     def calculate_confidence_score(

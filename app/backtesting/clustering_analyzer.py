@@ -80,7 +80,7 @@ class AdvancedClusteringAnalyzer:
                 sil_score = 0.0
 
             return {
-                'labels': [int(l) for var_l in labels],
+                'labels': [int(var_l) for var_l in labels],
                 'n_clusters': n_clusters,
                 'linkage_method': linkage_method,
                 'linkage_matrix': linkage_matrix.tolist(),
@@ -139,7 +139,7 @@ class AdvancedClusteringAnalyzer:
                 sil_score = 0.0
 
             return {
-                'labels': [int(l) for var_l in labels],
+                'labels': [int(var_l) for var_l in labels],
                 'n_clusters': n_clusters,
                 'n_noise_points': n_noise,
                 'eps': eps,
@@ -481,7 +481,7 @@ class AdvancedClusteringAnalyzer:
         """Get size of each cluster."""
         sizes = {}
         for label in set(labels):
-            sizes[int(label)] = int(sum(1 for var_l in labels if l == label))
+            sizes[int(label)] = int(sum(1 for var_l in labels if var_l == label))
         return sizes
 
     @staticmethod

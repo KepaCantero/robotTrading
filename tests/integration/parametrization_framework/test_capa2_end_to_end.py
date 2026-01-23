@@ -179,7 +179,7 @@ class TestFullPipelineOrchestration:
         from app.services.deployment.deploy_decision_orchestrator import DeployDecisionOrchestrator
 
         # Step 1: Create input profile (T1.1)
-        input_profile = InputProfile(
+        InputProfile(
             capital_initial=Decimal("100000"),
             objetivo_inversion="MAXIMIZAR_CAPITAL",
             risk_tolerance="MEDIO",
@@ -635,7 +635,7 @@ class TestConcurrentOperations:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             # Submit a job
-            submit_resp = await client.post(
+            await client.post(
                 "/capa2/execute-backtest",
                 json={"parameter_set_id": "params_test", "profile_id": "profile_test"},
             )

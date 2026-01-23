@@ -145,12 +145,35 @@ class ParametricVaRCalculator(BaseVaRCalculator):
             if isinstance(returns, (pd.Series, list)):
                 returns = np.array(returns)
 
+            # Z-score para confidence level
+            from scipy import stats
+
+            # CRITICAL: Test for normality before using parametric VaR
+            # Parametric VaR assumes normal distribution which often doesn't hold
+            is_normal = True
+            normality_warning = None
+
+            if len(returns) >= 20:  # Need sufficient samples for test
+                try:
+                    # Jarque-Bera test for normality
+                    jb_stat, jb_pvalue = stats.jarque_bera(returns)
+                    if jb_pvalue < 0.05:  # Reject normality at 5% significance
+                        is_normal = False
+                        # Calculate excess kurtosis and skewness
+                        kurt = stats.kurtosis(returns)
+                        skew = stats.skew(returns)
+                        normality_warning = (
+                            f"Returns are NOT normally distributed (JB p-value={jb_pvalue:.4f}, "
+                            f"skew={skew:.2f}, kurtosis={kurt:.2f}). "
+                            f"Parametric VaR may UNDERESTIMATE risk by 15-30%."
+                        )
+                        logger.warning(f"VaR WARNING: {normality_warning}")
+                except Exception as e:
+                    logger.debug(f"Normality test failed: {e}")
+
             # Calcular media y desviación estándar
             mean_return = np.mean(returns)
             std_return = np.std(returns)
-
-            # Z-score para confidence level
-            from scipy import stats
 
             z_score = stats.norm.ppf(1 - self.confidence_level)
 
@@ -180,6 +203,8 @@ class ParametricVaRCalculator(BaseVaRCalculator):
                 'mean_return': float(mean_return),
                 'std_return': float(std_return),
                 'z_score': float(z_score),
+                'is_normal_distribution': is_normal,
+                'normality_warning': normality_warning,
             }
         except ImportError:
             self.logger.warning("scipy no disponible. Usando aproximación básica.")

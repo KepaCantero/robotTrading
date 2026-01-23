@@ -412,7 +412,7 @@ class TestSignalsAPIIntegration:
         assert "success" in data
         assert "message" in data
         assert "signal" in data
-        assert data["success"] == False
+        assert not data["success"]
         assert "No signals found" in data["message"]
 
     def test_get_signal_statistics_success(self, client):

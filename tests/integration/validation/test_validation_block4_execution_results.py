@@ -344,7 +344,7 @@ class TestSlippageAndCommissions(unittest.TestCase):
             metadata={"strategy": "momentum"},
         )
 
-        result = backtester.run_backtest(
+        backtester.run_backtest(
             market_data=[quote],
             signals=[signal],
             start_date=datetime(2024, 1, 1),
@@ -616,6 +616,5 @@ class TestTradePnLCalculation(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    from datetime import timedelta
 
     unittest.main()

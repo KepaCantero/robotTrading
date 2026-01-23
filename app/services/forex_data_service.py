@@ -222,15 +222,14 @@ _forex_fetcher: Optional[ForexDataFetcher] = None
 
 def get_forex_fetcher() -> ForexDataFetcher:
     """Get or create global ForexDataFetcher instance."""
-    global _forex_fetcher
+    # global _forex_fetcher  # F824 removed
     if _forex_fetcher is None:
-
         logger.info("Initialized global ForexDataFetcher")
     return _forex_fetcher
 
 
 def reset_forex_fetcher() -> None:
     """Reset global ForexDataFetcher (for testing)."""
-    global _forex_fetcher
+    # global _forex_fetcher  # F824 removed
 
     logger.debug("Reset global ForexDataFetcher")

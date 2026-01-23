@@ -34,7 +34,7 @@ class TestT031CapitalViabilityExecutionCostInteraction:
             commission_per_trade=Decimal("15"),
             expected_trades_per_month=10,
         )
-        assert capital_analysis["is_viable"] == True
+        assert capital_analysis["is_viable"]
 
         # Execution cost varies with volatility
         analyzer = ExecutionCostAnalyzer(commission_per_trade=Decimal("15"))
@@ -54,8 +54,8 @@ class TestT031CapitalViabilityExecutionCostInteraction:
         )
 
         # Normal vol trade accepted, high vol trade rejected
-        assert normal_vol[0] == True  # should_execute
-        assert high_vol[0] == False  # should_execute
+        assert normal_vol[0]  # should_execute
+        assert not high_vol[0]  # should_execute
 
 
 class TestT032LearningGateExpensiveModuleGateInteraction:
@@ -70,7 +70,7 @@ class TestT032LearningGateExpensiveModuleGateInteraction:
             learning_enabled=True,
         )
         assert not learning_viable
-        assert learning_analysis["learning_recommended"] == False
+        assert not learning_analysis["learning_recommended"]
 
         # Modules disabled
         modules_enabled, _ = ExpensiveModuleGate.get_enabled_modules(
@@ -88,15 +88,15 @@ class TestT032LearningGateExpensiveModuleGateInteraction:
             learning_enabled=True,
         )
         assert learning_viable
-        assert learning_analysis["learning_recommended"] == True
+        assert learning_analysis["learning_recommended"]
 
         # Some modules enabled (not all)
         modules_enabled, _ = ExpensiveModuleGate.get_enabled_modules(
             capital=Decimal("75000"),
             expected_monthly_alpha=Decimal("500"),
         )
-        assert modules_enabled["deep_learning_engine"] == True
-        assert modules_enabled["transformer_engine"] == False
+        assert modules_enabled["deep_learning_engine"]
+        assert not modules_enabled["transformer_engine"]
 
 
 class TestT033MultiGateDecisionFlow:
@@ -123,7 +123,7 @@ class TestT033MultiGateDecisionFlow:
             learning_enabled=True,
         )
         assert not learning_viable
-        assert learn_analysis["learning_recommended"] == False
+        assert not learn_analysis["learning_recommended"]
 
         # Modules disabled
         enabled_modules, _ = ExpensiveModuleGate.get_enabled_modules(
@@ -144,7 +144,7 @@ class TestT033MultiGateDecisionFlow:
             commission_per_trade=Decimal("15"),
             expected_trades_per_month=20,
         )
-        assert cap_analysis["is_viable"] == True
+        assert cap_analysis["is_viable"]
 
         # Execution cost passes even with concurrency
         analyzer = ExecutionCostAnalyzer(commission_per_trade=Decimal("15"))
@@ -163,7 +163,7 @@ class TestT033MultiGateDecisionFlow:
             learning_enabled=True,
         )
         assert learning_viable
-        assert learn_analysis["learning_recommended"] == True
+        assert learn_analysis["learning_recommended"]
 
         # Modules enabled
         enabled_modules, _ = ExpensiveModuleGate.get_enabled_modules(
@@ -237,7 +237,7 @@ class TestT035EdgeCasesAndBoundaryConditions:
             expected_monthly_alpha=Decimal("300"),
             learning_enabled=True,
         )
-        assert below[0] == False
+        assert not below[0]
 
         # At threshold
         at = LearningCapitalGate.is_learning_viable(
@@ -245,7 +245,7 @@ class TestT035EdgeCasesAndBoundaryConditions:
             expected_monthly_alpha=Decimal("300"),
             learning_enabled=True,
         )
-        assert at[0] == True
+        assert at[0]
 
         # Above threshold
         above = LearningCapitalGate.is_learning_viable(
@@ -253,7 +253,7 @@ class TestT035EdgeCasesAndBoundaryConditions:
             expected_monthly_alpha=Decimal("300"),
             learning_enabled=True,
         )
-        assert above[0] == True
+        assert above[0]
 
     def test_multiple_gates_reject_simultaneously(self):
         """Multiple gates reject small account simultaneously"""
@@ -291,9 +291,9 @@ class TestT035EdgeCasesAndBoundaryConditions:
         )
 
         # Multiple rejection points
-        assert cap_result["is_viable"] == False  # Capital goal difficult
-        assert exec_result[0] == False  # Execution rejected
-        assert learn_result[0] == False  # Learning disabled
+        assert not cap_result["is_viable"]  # Capital goal difficult
+        assert not exec_result[0]  # Execution rejected
+        assert not learn_result[0]  # Learning disabled
         assert all(not v for v in modules_result.values())  # Modules disabled
 
     def test_concurrent_trades_amplify_cost_rejection(self):
@@ -331,7 +331,7 @@ class TestT035EdgeCasesAndBoundaryConditions:
             commission_per_trade=Decimal("15"),
             expected_trades_per_month=50,
         )
-        assert cap_analysis["is_viable"] == True
+        assert cap_analysis["is_viable"]
 
         # Execution passes
         analyzer = ExecutionCostAnalyzer(commission_per_trade=Decimal("15"))

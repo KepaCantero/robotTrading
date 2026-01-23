@@ -479,7 +479,7 @@ class TestAssetAPIEdgeCases:
     def test_get_liquid_assets_empty_universe(self, client):
         """Test liquid assets with empty universe."""
         mock_service = AsyncMock()
-        empty_universe = AssetUniverse(asset_class=AssetClass.EQUITY, assets=[], top_n=20)
+        AssetUniverse(asset_class=AssetClass.EQUITY, assets=[], top_n=20)
         mock_service.get_top_liquid_assets.return_value = []
 
         try:
@@ -610,7 +610,7 @@ class TestAssetAPIEdgeCases:
             )
             large_assets.append(asset)
 
-        large_universe = AssetUniverse(
+        AssetUniverse(
             asset_class=AssetClass.EQUITY,
             assets=large_assets,
             top_n=100,  # Changed from 1000 to comply with model validation

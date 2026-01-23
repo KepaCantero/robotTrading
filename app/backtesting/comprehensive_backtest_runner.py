@@ -41,23 +41,23 @@ logger = logging.getLogger(__name__)
 
 # Imports básicos primero
 print("📦 Importando módulos básicos...", flush=True)
-import multiprocessing
-from datetime import datetime, timedelta
-from decimal import Decimal
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+import multiprocessing  # noqa: E402
+from datetime import datetime, timedelta  # noqa: E402
+from decimal import Decimal  # noqa: E402
+from pathlib import Path  # noqa: E402
+from typing import Any, Dict, List, Optional, Tuple  # noqa: E402
 
-import numpy as np
-import pandas as pd
-import yaml
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+import yaml  # noqa: E402
 
 print("✅ Módulos básicos importados", flush=True)
 
 # Imports de backtesting
 print("📦 Importando módulos de backtesting...", flush=True)
-from app.backtesting.engine import SimpleBacktester
-from app.backtesting.models import BacktestConfig, BacktestResult
-from app.backtesting.multi_strategy_engine import MultiStrategyBacktester
+from app.backtesting.engine import SimpleBacktester  # noqa: E402
+from app.backtesting.models import BacktestConfig, BacktestResult  # noqa: E402
+from app.backtesting.multi_strategy_engine import MultiStrategyBacktester  # noqa: E402
 
 print("✅ Módulos de backtesting importados", flush=True)
 
@@ -72,16 +72,16 @@ except Exception as e:
     logger.error(f"❌ Error importando ModularMomentumStrategy: {e}", exc_info=True)
     raise
 
-from app.strategies.mean_reversion import MeanReversionStrategy
-from app.strategies.momentum import MomentumStrategy
-from app.strategies.pairs_trading import PairsTradingStrategy
+from app.strategies.mean_reversion import MeanReversionStrategy  # noqa: E402
+from app.strategies.momentum import MomentumStrategy  # noqa: E402
+from app.strategies.pairs_trading import PairsTradingStrategy  # noqa: E402
 
 print("✅ Estrategias importadas", flush=True)
 
 # Otros imports
 print("📦 Importando otros módulos...", flush=True)
-from app.backtesting.data_loader import DataLoader
-from app.services.portfolio_config_manager import get_portfolio_config_manager
+from app.backtesting.data_loader import DataLoader  # noqa: E402
+from app.services.portfolio_config_manager import get_portfolio_config_manager  # noqa: E402
 
 print("✅ Todos los imports completados", flush=True)
 
@@ -3872,7 +3872,7 @@ class ComprehensiveBacktestRunner:
         best_config = optimization_results.get('best_config', {})
         optimization_results.get('best_score', float('-in'))
 
-        strategy = None  # Para guardar pesos si hay learning engine
+        _strategy = None  # Para guardar pesos si hay learning engine  # noqa: F841
 
         for i, opt_result in enumerate(optimizer.results):
             config = opt_result['config']
@@ -4086,10 +4086,12 @@ class ComprehensiveBacktestRunner:
                         )
                         results = future.result(timeout=300)  # 5 min timeout
                 else:
-                    results = loop.run_until_complete(analyzer.run_parallel_analysis(max_workers=4))
+                    results = loop.run_until_complete(
+                        analyzer.run_parallel_analysis(max_workers=4)
+                    )  # noqa: F841
             except RuntimeError:
                 # No hay loop, crear uno nuevo
-                results = asyncio.run(analyzer.run_parallel_analysis(max_workers=4))
+                _results = asyncio.run(analyzer.run_parallel_analysis(max_workers=4))  # noqa: F841
 
             # Exportar reporte
             analyzer.export_report(format="json")

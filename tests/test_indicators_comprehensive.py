@@ -117,7 +117,7 @@ class TestRSIComprehensive(unittest.TestCase):
         # Si acepta None, debe manejarlo; si no, debe lanzar error
         # En Python, las operaciones con None lanzan TypeError
         try:
-            result = self.calculator.calculate_rsi(prices, period=14)
+            self.calculator.calculate_rsi(prices, period=14)
             # Si no lanza error, puede retornar None o un valor
             # Esto es válido si la implementación maneja None
         except (TypeError, ValueError):
@@ -455,7 +455,7 @@ class TestATRComprehensive(unittest.TestCase):
         # En la implementación actual, se usa len(highs) en el bucle, lo que puede causar IndexError
         # Este test verifica que la implementación maneja esto correctamente
         try:
-            result = self.calculator.calculate_atr(highs, lows, closes, period=14)
+            self.calculator.calculate_atr(highs, lows, closes, period=14)
             # Si no falla, puede retornar None o un valor calculado con la longitud mínima
         except (IndexError, ValueError):
             # Si lanza error, es válido - la implementación actual puede tener esta limitación
@@ -792,7 +792,7 @@ class TestIndicatorIntegration(unittest.TestCase):
         prices = [100.0 + i * 1.0 for i in range(50)]
         [p + 0.5 for p in prices]
         [p - 0.5 for p in prices]
-        closes = prices[:]
+        prices[:]
 
         rsi = self.calculator.calculate_rsi(prices, 14)
         ema = self.calculator.calculate_ema(prices, 20)

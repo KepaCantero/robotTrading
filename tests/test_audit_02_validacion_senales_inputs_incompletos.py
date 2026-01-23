@@ -212,7 +212,7 @@ class TestSignalErrorHandling:
         """Test signal scorer with incomplete market data."""
 
         # Should handle incomplete data gracefully
-        incomplete_market_data = {
+        {
             "symbol": "AAPL",
             # Missing bid/ask
             "price": Decimal("100.0"),

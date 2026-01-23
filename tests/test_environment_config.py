@@ -15,7 +15,7 @@ class TestAPIConfig:
         config = APIConfig(
             secret_key="12345678901234567890123456789012",
         )
-        assert config.api_host == "0.0.0.0"
+        assert config.api_host == "0.0.0.0"  # nosec B104
         assert config.api_port == 8000
 
 

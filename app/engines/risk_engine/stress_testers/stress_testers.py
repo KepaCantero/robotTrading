@@ -272,7 +272,7 @@ class StressTester:
                 worst = max(losses, key=lambda x: x['loss_percentage'])
                 summary['worst_case_scenario'] = worst['scenario']
                 summary['max_loss'] = worst['loss_percentage']
-                summary['average_loss'] = np.mean([l['loss_percentage'] for var_l in losses])
+                summary['average_loss'] = np.mean([var_l["loss_percentage"] for var_l in losses])
 
         # Analizar resultados Monte Carlo
         if 'monte_carlo' in results and 'statistics' in results['monte_carlo']:

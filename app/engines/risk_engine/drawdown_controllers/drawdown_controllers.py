@@ -269,9 +269,11 @@ class DrawdownController(BaseDrawdownController):
                 break
 
         # Encontrar fin del drawdown (cuando vuelve al peak)
+        # CRITICAL: Use tolerance for float comparison, not == 0
+        tolerance = 1e-8
         end_idx = max_dd_idx
         for i in range(max_dd_idx + 1, len(drawdowns)):
-            if drawdowns[i] == 0:
+            if abs(drawdowns[i]) < tolerance:  # Near zero means back to peak
                 end_idx = i
                 break
 

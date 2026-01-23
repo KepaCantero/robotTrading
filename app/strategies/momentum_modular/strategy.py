@@ -469,19 +469,19 @@ class ModularMomentumStrategy(BaseStrategy):
 
         indicators = {}
 
-        # RSI
+        # RSI - CRITICAL: Use None instead of neutral 50.0 to force proper handling
         rsi = self.indicator_calculator.calculate_rsi(prices, period=14)
-        indicators['rsi'] = rsi if rsi is not None else 50.0
+        indicators['rsi'] = rsi  # Can be None - filters must handle this
 
         # EMAs
         ema_fast = self.indicator_calculator.calculate_ema(prices, period=12)
         ema_slow = self.indicator_calculator.calculate_ema(prices, period=26)
-        indicators['ema_fast'] = ema_fast if ema_fast is not None else 0.0
-        indicators['ema_slow'] = ema_slow if ema_slow is not None else 0.0
+        indicators['ema_fast'] = ema_fast  # Can be None
+        indicators['ema_slow'] = ema_slow  # Can be None
 
-        # Momentum / ROC
+        # Momentum / ROC - CRITICAL: Use None instead of neutral 0.0
         momentum = self.indicator_calculator.calculate_roc(prices, period=14)
-        indicators['momentum_roc'] = momentum if momentum is not None else 0.0
+        indicators['momentum_roc'] = momentum  # Can be None - filters must handle this
 
         # Volume
         if len(volumes) >= 20:
@@ -519,9 +519,10 @@ class ModularMomentumStrategy(BaseStrategy):
             indicators['relative_atr'] = 0.0
             indicators['atr_percentile'] = 50.0
 
-        # StochRSI (simplificado)
-        indicators['stoch_rsi_k'] = 50.0  # TODO: Implementar cálculo real
-        indicators['stoch_rsi_d'] = 50.0
+        # StochRSI - CRITICAL: Use None instead of neutral 50.0 to force proper handling
+        stoch_rsi_k, stoch_rsi_d = self._calculate_stochastic_rsi(indicators['rsi'], period=14)
+        indicators['stoch_rsi_k'] = stoch_rsi_k  # Can be None - filters must handle this
+        indicators['stoch_rsi_d'] = stoch_rsi_d  # Can be None - filters must handle this
 
         # Precio actual
         indicators['price'] = prices[-1]
@@ -606,13 +607,61 @@ class ModularMomentumStrategy(BaseStrategy):
             f"❌ No se cumple el modo de combinación ({self.combination_mode}) - no se genera señal"
         )
 
-        # Revisar condiciones de venta (oversold/sobrecomprado)
-        # Por ahora solo generamos señales BUY
-        # TODO: Implementar lógica de SELL cuando hay posición abierta
+        # Revisar condiciones de venta
+        # Generar SELL si hay condiciones de salida
+        sell_passed_filters = [
+            filter_name.replace('_sell', '')
+            for filter_name in filter_results
+            if filter_name.endswith('_sell') and filter_results[filter_name].get('passed', False)
+        ]
+
         market_type = market_context.get('type', 'unknown')
-        if market_type == 'trend_down':
-            # Considerar venta si hay posición
-            return None  # Por ahora solo compras
+        market_strength = market_context.get('strength', 0.5)
+
+        # Condiciones para señal SELL:
+        # 1. Tendencia bajista con mayoría de filtros de venta pasando
+        # 2. RSI en sobrecompra (>70) con momentum negativo
+        # 3. Cruce EMA bajista con volumen alto
+        should_sell = False
+        sell_reason = None
+
+        if self.combination_mode == "ALL":
+            should_sell = len(sell_passed_filters) >= len(self.filters)
+        elif self.combination_mode == "MAJORITY":
+            required = max(1, (len(self.filters) + 1) // 2)
+            should_sell = len(sell_passed_filters) >= required
+        elif self.combination_mode == "ANY":
+            should_sell = len(sell_passed_filters) > 0
+
+        # Condiciones adicionales de mercado para SELL
+        # CRITICAL: Use None as default, not neutral values that could cause false positives
+        rsi = filter_results.get('rsi_filter', {}).get('value')
+        momentum = filter_results.get('momentum_filter', {}).get('value')
+
+        # Sobrecompra extrema (only if RSI is available)
+        if rsi is not None and isinstance(rsi, (int, float)) and rsi > 75:
+            should_sell = True
+            sell_reason = "OVERBOUGHT"
+            logger.debug(f"🔴 SELL signal: RSI overbought ({rsi:.1f})")
+
+        # Tendencia bajista fuerte
+        if market_type == 'trend_down' and market_strength > 0.7:
+            should_sell = True
+            sell_reason = "STRONG_DOWNTREND"
+            logger.debug(f"🔴 SELL signal: Strong downtrend ({market_strength:.2f})")
+
+        # Momentum negativo significativo (only if momentum is available)
+        if momentum is not None and isinstance(momentum, (int, float)) and momentum < -0.03:
+            should_sell = True
+            sell_reason = "NEGATIVE_MOMENTUM"
+            logger.debug(f"🔴 SELL signal: Negative momentum ({momentum:.3f})")
+
+        if should_sell:
+            logger.debug(
+                f"✅ SELL signal generated: {len(sell_passed_filters)} filters passed, "
+                f"reason={sell_reason or 'FILTERS'}"
+            )
+            return SignalType.SELL
 
         return None
 
@@ -867,6 +916,85 @@ class ModularMomentumStrategy(BaseStrategy):
                         logger.debug(
                             f"🔧 Ajustando estrategia.{threshold_name}: {current} → {new_value}"
                         )
+
+    def _calculate_stochastic_rsi(
+        self,
+        current_rsi: float,
+        period: int = 14,
+        smooth_k: int = 3,
+        smooth_d: int = 3,
+    ) -> tuple:
+        """
+        Calculate Stochastic RSI from RSI values.
+
+        StochRSI = (RSI - Lowest RSI) / (Highest RSI - Lowest RSI) * 100
+
+        Uses historical RSI values stored in price_history to compute
+        the stochastic oscillator of RSI.
+
+        Args:
+            current_rsi: Current RSI value
+            period: Lookback period for StochRSI calculation
+            smooth_k: Smoothing period for %K line
+            smooth_d: Smoothing period for %D line (signal)
+
+        Returns:
+            tuple: (stoch_rsi_k, stoch_rsi_d) or (None, None) if insufficient data
+        """
+        # Build RSI history from price history
+        if not hasattr(self, '_rsi_history'):
+            self._rsi_history = deque(maxlen=period + smooth_k + smooth_d)
+            self._stoch_k_history = deque(maxlen=smooth_d)
+
+        # Add current RSI to history
+        if current_rsi is not None:
+            self._rsi_history.append(current_rsi)
+
+        # Need at least 'period' RSI values
+        if len(self._rsi_history) < period:
+            return None, None
+
+        # Get last 'period' RSI values
+        rsi_window = list(self._rsi_history)[-period:]
+
+        # Calculate raw Stochastic RSI
+        lowest_rsi = min(rsi_window)
+        highest_rsi = max(rsi_window)
+
+        # Handle flat RSI (no range)
+        if highest_rsi == lowest_rsi:
+            return None, None
+
+        # StochRSI = (Current RSI - Lowest RSI) / (Highest RSI - Lowest RSI) * 100
+        stoch_rsi_raw = ((current_rsi - lowest_rsi) / (highest_rsi - lowest_rsi)) * 100
+
+        # Store for %K smoothing
+        self._stoch_k_history.append(stoch_rsi_raw)
+
+        # Calculate smoothed %K (SMA of raw StochRSI)
+        if len(self._stoch_k_history) >= smooth_k:
+            k_values = list(self._stoch_k_history)[-smooth_k:]
+            stoch_rsi_k = sum(k_values) / len(k_values)
+        else:
+            stoch_rsi_k = stoch_rsi_raw
+
+        # Calculate %D (SMA of %K) - signal line
+        if not hasattr(self, '_stoch_d_history'):
+            self._stoch_d_history = deque(maxlen=smooth_d)
+
+        self._stoch_d_history.append(stoch_rsi_k)
+
+        if len(self._stoch_d_history) >= smooth_d:
+            d_values = list(self._stoch_d_history)[-smooth_d:]
+            stoch_rsi_d = sum(d_values) / len(d_values)
+        else:
+            stoch_rsi_d = stoch_rsi_k
+
+        # Clamp values to 0-100 range
+        stoch_rsi_k = max(0.0, min(100.0, stoch_rsi_k))
+        stoch_rsi_d = max(0.0, min(100.0, stoch_rsi_d))
+
+        return round(stoch_rsi_k, 2), round(stoch_rsi_d, 2)
 
     def _calculate_recent_win_rate(self) -> float:
         """Calcular win rate de trades recientes."""

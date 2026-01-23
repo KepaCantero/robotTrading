@@ -38,7 +38,7 @@ def get_config_loader() -> StrategyConfigLoader:
     """Obtener instancia del cargador de configuración."""
     global _config_loader
     if _config_loader is None:
-        _config_loader = ConfigLoader()
+        _config_loader = StrategyConfigLoader()
 
     return _config_loader
 
@@ -54,7 +54,7 @@ def get_strategy_logger() -> StrategyLogger:
 
 def get_execution_engine() -> ExecutionEngine:
     """Obtener instancia del motor de ejecución."""
-    global _execution_engine
+    # global _execution_engine  # F824 removed
     if _execution_engine is None:
         get_strategy_registry()
         get_strategy_logger()

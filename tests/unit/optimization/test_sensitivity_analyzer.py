@@ -18,11 +18,11 @@ import pytest
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
-import sys
+import sys  # noqa: E402
 
 sys.path.insert(0, str(project_root))
 
-from app.optimization.sensitivity_analyzer import (
+from app.optimization.sensitivity_analyzer import (  # noqa: E402
     SensitivityAnalyzer,
     SensitivityReport,
     SensitivityResult,

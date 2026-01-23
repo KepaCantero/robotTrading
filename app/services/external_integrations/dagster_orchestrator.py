@@ -5,7 +5,6 @@ Dagster for orchestrating data pipelines, backtests, and model training.
 Upgraded to use real Dagster server API for production-grade orchestration.
 """
 
-import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -98,18 +97,14 @@ class DagsterOrchestrator:
             )
 
             # Test connectivity via health check
-            async with self.session.get(
-                urljoin(self.base_url, "/api/health")
-            ) as resp:
+            async with self.session.get(urljoin(self.base_url, "/api/health")) as resp:
                 if resp.status == 200:
                     self.connected = True
                     logger.info(f"✅ Connected to Dagster server ({self.host}:{self.port})")
                     return True
 
         except Exception as e:
-            logger.warning(
-                f"⚠️ Dagster server unavailable ({self.host}:{self.port}): {str(e)}"
-            )
+            logger.warning(f"⚠️ Dagster server unavailable ({self.host}:{self.port}): {str(e)}")
             self.connected = False
             if self.session:
                 await self.session.close()
@@ -172,9 +167,7 @@ class DagsterOrchestrator:
                             f"⚠️ Dagster job creation failed (HTTP {resp.status}), using local tracking"
                         )
             except Exception as e:
-                logger.warning(
-                    f"⚠️ Failed to create Dagster job: {str(e)}, using local tracking"
-                )
+                logger.warning(f"⚠️ Failed to create Dagster job: {str(e)}, using local tracking")
 
         # Always store locally as backup
         self.jobs[job.job_id] = job
@@ -213,9 +206,7 @@ class DagsterOrchestrator:
                             f"⚠️ Dagster execution failed (HTTP {resp.status}), using local tracking"
                         )
             except Exception as e:
-                logger.warning(
-                    f"⚠️ Failed to execute on Dagster: {str(e)}, using local tracking"
-                )
+                logger.warning(f"⚠️ Failed to execute on Dagster: {str(e)}, using local tracking")
 
         # Always update local state
         job.status = JobStatus.RUNNING
@@ -338,9 +329,7 @@ class DagsterOrchestrator:
                     if resp.status == 200:
                         data = await resp.json()
                         pipeline_id = data.get("pipelineId", pipeline_id)
-                        logger.info(
-                            f"✅ Created Dagster pipeline: {pipeline_name} ({pipeline_id})"
-                        )
+                        logger.info(f"✅ Created Dagster pipeline: {pipeline_name} ({pipeline_id})")
                     else:
                         logger.warning(
                             f"⚠️ Dagster pipeline creation failed (HTTP {resp.status}), using local tracking"
@@ -350,9 +339,7 @@ class DagsterOrchestrator:
                     f"⚠️ Failed to create Dagster pipeline: {str(e)}, using local tracking"
                 )
 
-        logger.info(
-            f"✅ Created pipeline: {pipeline_name} ({len(steps)} steps, ID: {pipeline_id})"
-        )
+        logger.info(f"✅ Created pipeline: {pipeline_name} ({len(steps)} steps, ID: {pipeline_id})")
         return pipeline_id
 
     async def execute_pipeline(self, pipeline_id: str) -> bool:
@@ -380,14 +367,10 @@ class DagsterOrchestrator:
                     json=payload,
                 ) as resp:
                     if resp.status == 200:
-                        logger.info(
-                            f"✅ Pipeline executing on Dagster: {pipeline_id}"
-                        )
+                        logger.info(f"✅ Pipeline executing on Dagster: {pipeline_id}")
                         return True
                     else:
-                        logger.warning(
-                            f"⚠️ Dagster pipeline execution failed (HTTP {resp.status})"
-                        )
+                        logger.warning(f"⚠️ Dagster pipeline execution failed (HTTP {resp.status})")
             except Exception as e:
                 logger.warning(f"⚠️ Failed to execute pipeline on Dagster: {str(e)}")
 
@@ -397,9 +380,7 @@ class DagsterOrchestrator:
         for step in steps:
             # Check dependencies
             if step.depends_on:
-                logger.info(
-                    f"  - Step {step.name} depends on: {', '.join(step.depends_on)}"
-                )
+                logger.info(f"  - Step {step.name} depends on: {', '.join(step.depends_on)}")
 
             logger.info(f"  - Executing step: {step.name} ({step.job_type})")
 
@@ -469,9 +450,7 @@ class DagsterOrchestrator:
                                 job_id=job_data.get("jobId", ""),
                                 name=job_data.get("name", ""),
                                 job_type=job_data.get("jobType", ""),
-                                status=JobStatus(
-                                    job_data.get("status", "pending").lower()
-                                ),
+                                status=JobStatus(job_data.get("status", "pending").lower()),
                                 created_at=datetime.fromisoformat(
                                     job_data.get("createdAt", datetime.now().isoformat())
                                 ),
@@ -521,9 +500,7 @@ class DagsterOrchestrator:
         # Try to get status from Dagster if connected
         if self.connected and self.session:
             try:
-                async with self.session.get(
-                    urljoin(self.base_url, "/api/status")
-                ) as resp:
+                async with self.session.get(urljoin(self.base_url, "/api/status")) as resp:
                     if resp.status == 200:
                         data = await resp.json()
                         return {

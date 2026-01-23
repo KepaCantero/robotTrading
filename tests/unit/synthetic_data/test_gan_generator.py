@@ -2,9 +2,8 @@
 Tests for GAN-based Synthetic Data Generator
 """
 
-import pytest
 import numpy as np
-from unittest.mock import Mock, AsyncMock
+import pytest
 
 from app.services.synthetic_data.gan_generator import (
     GANConfig,

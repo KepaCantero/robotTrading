@@ -5,12 +5,11 @@ Prometheus-based alerting with configurable rules for trading system monitoring.
 Supports threshold-based, anomaly-based, and composite alerts with webhook delivery.
 """
 
-import asyncio
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Callable, Dict, List, Optional
+from typing import Dict, List, Optional
 
 import aiohttp
 
@@ -247,9 +246,7 @@ class AlertingRulesEngine:
         logger.info(f"✅ Disabled rule: {rule_id}")
         return True
 
-    async def evaluate_rules(
-        self, metrics: Dict[str, float]
-    ) -> List[Alert]:
+    async def evaluate_rules(self, metrics: Dict[str, float]) -> List[Alert]:
         """
         Evaluate all rules against current metric values.
 
@@ -266,15 +263,13 @@ class AlertingRulesEngine:
             if metric_name not in self.metric_history:
                 self.metric_history[metric_name] = []
 
-            self.metric_history[metric_name].append(
-                (datetime.now().timestamp(), value)
-            )
+            self.metric_history[metric_name].append((datetime.now().timestamp(), value))
 
             # Keep only last N values
             if len(self.metric_history[metric_name]) > self.history_size:
-                self.metric_history[metric_name] = self.metric_history[
-                    metric_name
-                ][-self.history_size :]
+                self.metric_history[metric_name] = self.metric_history[metric_name][
+                    -self.history_size :
+                ]
 
         # Evaluate rules for updated metrics
         for rule in self.rules.values():
@@ -286,9 +281,7 @@ class AlertingRulesEngine:
 
             if condition_met:
                 await self._handle_alert_triggered(rule, metric_value)
-                new_alerts.append(
-                    self._create_alert(rule, metric_value, condition_met)
-                )
+                new_alerts.append(self._create_alert(rule, metric_value, condition_met))
             else:
                 # Condition no longer met
                 if rule.rule_id in self.active_alerts:
@@ -312,9 +305,7 @@ class AlertingRulesEngine:
 
         return False
 
-    def _evaluate_threshold(
-        self, value: float, threshold: float, op: str
-    ) -> bool:
+    def _evaluate_threshold(self, value: float, threshold: float, op: str) -> bool:
         """Evaluate threshold condition."""
         if op == ">":
             return value > threshold
@@ -340,9 +331,7 @@ class AlertingRulesEngine:
         period_start = now - rule.change_period_sec
 
         # Get values within the period
-        period_values = [
-            (ts, v) for ts, v in history if ts >= period_start
-        ]
+        period_values = [(ts, v) for ts, v in history if ts >= period_start]
 
         if not period_values:
             return False
@@ -365,14 +354,12 @@ class AlertingRulesEngine:
         values = [v for _, v in history[-100:]]  # Last 100 values
         mean = sum(values) / len(values)
         variance = sum((v - mean) ** 2 for v in values) / len(values)
-        std_dev = variance ** 0.5
+        std_dev = variance**0.5
 
         threshold = mean + (std_dev * rule.std_dev_multiplier)
         return value > threshold
 
-    async def _handle_alert_triggered(
-        self, rule: AlertRule, metric_value: float
-    ) -> None:
+    async def _handle_alert_triggered(self, rule: AlertRule, metric_value: float) -> None:
         """Handle alert triggered actions."""
         rule.last_fired_at = datetime.now()
         rule.fire_count += 1
@@ -406,20 +393,14 @@ class AlertingRulesEngine:
                 if resp.status == 200:
                     logger.info(f"✅ Webhook delivered: {rule.name}")
                 else:
-                    logger.warning(
-                        f"⚠️ Webhook delivery failed (HTTP {resp.status}): {rule.name}"
-                    )
+                    logger.warning(f"⚠️ Webhook delivery failed (HTTP {resp.status}): {rule.name}")
 
         except Exception as e:
             logger.error(f"❌ Webhook error: {str(e)}")
 
-    def _create_alert(
-        self, rule: AlertRule, value: float, condition_met: bool
-    ) -> Alert:
+    def _create_alert(self, rule: AlertRule, value: float, condition_met: bool) -> Alert:
         """Create an alert instance."""
-        condition_desc = (
-            f"{rule.metric_name} {rule.comparison_op} {rule.threshold_value}"
-        )
+        condition_desc = f"{rule.metric_name} {rule.comparison_op} {rule.threshold_value}"
 
         alert = Alert(
             alert_id=f"alert_{rule.rule_id}_{datetime.now().timestamp()}",
@@ -445,13 +426,9 @@ class AlertingRulesEngine:
 
     def get_recent_alerts(self, limit: int = 100) -> List[Alert]:
         """Get recent alerts."""
-        return sorted(
-            self.alerts, key=lambda a: a.triggered_at, reverse=True
-        )[:limit]
+        return sorted(self.alerts, key=lambda a: a.triggered_at, reverse=True)[:limit]
 
-    def get_alerts_by_severity(
-        self, severity: AlertSeverity
-    ) -> List[Alert]:
+    def get_alerts_by_severity(self, severity: AlertSeverity) -> List[Alert]:
         """Get alerts by severity."""
         return [a for a in self.alerts if a.severity == severity]
 
@@ -460,9 +437,7 @@ class AlertingRulesEngine:
         return {
             "total_rules": len(self.rules),
             "enabled_rules": sum(1 for r in self.rules.values() if r.enabled),
-            "disabled_rules": sum(
-                1 for r in self.rules.values() if not r.enabled
-            ),
+            "disabled_rules": sum(1 for r in self.rules.values() if not r.enabled),
             "active_alerts": len(self.active_alerts),
             "total_alerts": len(self.alerts),
             "rules": {
@@ -471,9 +446,7 @@ class AlertingRulesEngine:
                     "enabled": rule.enabled,
                     "severity": rule.severity.value,
                     "fire_count": rule.fire_count,
-                    "last_fired": rule.last_fired_at.isoformat()
-                    if rule.last_fired_at
-                    else None,
+                    "last_fired": rule.last_fired_at.isoformat() if rule.last_fired_at else None,
                 }
                 for rule_id, rule in self.rules.items()
             },

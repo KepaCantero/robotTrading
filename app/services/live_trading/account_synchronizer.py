@@ -6,13 +6,16 @@ Synchronizes local portfolio state with broker account:
 - Position verification
 - Cash tracking
 - Margin utilization monitoring
+
+MEMORY: Uses deque with maxlen to prevent unbounded memory growth.
 """
 
 import logging
+from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Deque, Dict, List, Optional, Tuple
 
 from fastapi import Depends
 
@@ -67,10 +70,11 @@ class AccountSynchronizer:
         self.broker = broker or get_broker_connector()
         self.local_positions: Dict[str, BrokerPosition] = {}
         self.local_cash = Decimal("0")
-        self.snapshots: List[PortfolioSnapshot] = []
-        self.reconciliation_history: List[Reconciliation] = []
+        # MEMORY: Use deque with maxlen to prevent unbounded growth
+        self.snapshots: Deque[PortfolioSnapshot] = deque(maxlen=1440)  # 24h at 1min intervals
+        self.reconciliation_history: Deque[Reconciliation] = deque(maxlen=1000)
         self.last_sync: Optional[datetime] = None
-        logger.info("✅ AccountSynchronizer initialized")
+        logger.info("✅ AccountSynchronizer initialized with bounded history")
 
     async def sync_account(self) -> bool:
         """
@@ -361,6 +365,6 @@ def get_account_synchronizer(
     """Get or create singleton AccountSynchronizer."""
     global _synchronizer
     if _synchronizer is None:
-        _synchronizer = Synchronizer()
+        _synchronizer = AccountSynchronizer(broker=broker)
 
     return _synchronizer

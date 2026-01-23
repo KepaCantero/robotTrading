@@ -29,7 +29,7 @@ class TestCapitalViabilityValidator:
             expected_alpha_per_trade=None,  # Use default estimate
         )
 
-        assert result["is_viable"] == False
+        assert not result["is_viable"]
         assert "UNREACHABLE" in result["reason"] or "DIFFICULT" in result["reason"]
         assert result["severity"] == "CRITICAL"
         assert result["recommendation"] in ["INCREASE_CAPITAL", "REDUCE_GOAL"]
@@ -49,7 +49,7 @@ class TestCapitalViabilityValidator:
             expected_alpha_per_trade=None,
         )
 
-        assert result["is_viable"] == True
+        assert result["is_viable"]
         assert result["severity"] == "OK"
         assert result["recommendation"] == "PROCEED"
         assert result["required_alpha_pct"] < Decimal("0.10")
@@ -71,7 +71,7 @@ class TestCapitalViabilityValidator:
         )
 
         # Should be viable - 1% is achievable
-        assert result["is_viable"] == True
+        assert result["is_viable"]
         assert result["recommendation"] == "PROCEED"
 
     def test_minimum_viable_capital_calculation(self):
@@ -103,7 +103,7 @@ class TestCapitalViabilityValidator:
             commission_per_trade=Decimal("15"),
             expected_trades_per_month=10,
         )
-        assert result["is_viable"] == True
+        assert result["is_viable"]
 
     def test_zero_capital_rejected(self):
         """Zero or negative capital should be rejected"""
@@ -115,7 +115,7 @@ class TestCapitalViabilityValidator:
             expected_trades_per_month=10,
         )
 
-        assert result["is_viable"] == False
+        assert not result["is_viable"]
         assert result["severity"] == "CRITICAL"
 
     def test_negative_goal_rejected(self):
@@ -128,7 +128,7 @@ class TestCapitalViabilityValidator:
             expected_trades_per_month=10,
         )
 
-        assert result["is_viable"] == False
+        assert not result["is_viable"]
 
     def test_invalid_tax_rate_rejected(self):
         """Tax rate >= 100% or < 0% should be rejected"""
@@ -141,7 +141,7 @@ class TestCapitalViabilityValidator:
             expected_trades_per_month=10,
         )
 
-        assert result["is_viable"] == False
+        assert not result["is_viable"]
         assert result["severity"] == "CRITICAL"
 
         # Test negative tax
@@ -153,7 +153,7 @@ class TestCapitalViabilityValidator:
             expected_trades_per_month=10,
         )
 
-        assert result["is_viable"] == False
+        assert not result["is_viable"]
 
     def test_high_commission_scenario(self):
         """
@@ -183,8 +183,8 @@ class TestCapitalViabilityValidator:
         )
 
         # Low commission should be viable, high commission might not be
-        if result_high_commission["is_viable"] == False:
-            assert result_low_commission["is_viable"] == True
+        if not result_high_commission["is_viable"]:
+            assert result_low_commission["is_viable"]
 
     def test_log_viability_check(self, caplog):
         """
@@ -248,7 +248,7 @@ class TestCapitalTierRequirements:
         )
 
         # Should be viable
-        assert result["is_viable"] == True
+        assert result["is_viable"]
         assert result["severity"] == "OK"
 
     def test_medium_tier_50k_flexible(self):
@@ -264,7 +264,7 @@ class TestCapitalTierRequirements:
         )
 
         # Should be easily viable
-        assert result["is_viable"] == True
+        assert result["is_viable"]
         assert result["severity"] == "OK"
         assert result["required_alpha_pct"] < Decimal("0.04")
 
@@ -282,7 +282,7 @@ class TestEdgeCases:
             expected_trades_per_month=0,  # No trades means no commission cost
         )
 
-        assert result["is_viable"] == True
+        assert result["is_viable"]
         # No alpha needed if goal is $0 and no trades
         assert result["required_alpha_pct"] == Decimal("0")
 
@@ -301,7 +301,7 @@ class TestEdgeCases:
 
         # With zero trades, commissions are zero, so goal is viable
         # (Though practically unrealistic to make $100 with zero trades)
-        assert result["is_viable"] == True
+        assert result["is_viable"]
         assert result["required_alpha_pct"] < Decimal("0.02")  # Very small alpha needed
 
     def test_very_high_capital(self):
@@ -315,6 +315,6 @@ class TestEdgeCases:
         )
 
         # Should be viable
-        assert result["is_viable"] == True
+        assert result["is_viable"]
         # Required alpha should be tiny (<1%)
         assert result["required_alpha_pct"] < Decimal("0.01")

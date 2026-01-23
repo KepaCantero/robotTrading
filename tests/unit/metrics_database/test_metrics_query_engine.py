@@ -106,7 +106,7 @@ class TestMetricsQueryEngineMetricRange:
         start_time = datetime.utcnow() - timedelta(hours=1)
         end_time = datetime.utcnow()
 
-        results = await query_engine.query_metric_range(
+        await query_engine.query_metric_range(
             metric_type=MetricType.PORTFOLIO_RETURN,
             start_time=start_time,
             end_time=end_time,
@@ -311,7 +311,7 @@ class TestMetricsQueryEngineStatistics:
         start_time = datetime.utcnow() - timedelta(days=1)
         end_time = datetime.utcnow()
 
-        result = await query_engine.query_statistics(
+        await query_engine.query_statistics(
             metric_type=MetricType.POSITION_SIZE,
             start_time=start_time,
             end_time=end_time,

@@ -230,7 +230,7 @@ class TestBrokerNegotiationEngine:
 
     def test_commission_cost_calculation(self, engine):
         """Test actual commission cost calculation."""
-        rate = engine.get_rate_for_volume(
+        engine.get_rate_for_volume(
             symbol="AAPL",
             volume_usd=Decimal("100000"),
             asset_class="equity",

@@ -1,26 +1,10 @@
 #!/usr/bin/env python3
-"""
-Test de comparación de estrategias - Ejecuta 4 backtests y genera comparativa.
-
-Este test ejecuta backtests con:
-1. Multi-strategy (all_strategies)
-2. Solo Momentum
-3. Solo Pairs Trading
-4. Solo Mean Reversion
-
-Y genera una comparativa de resultados al final.
-"""
-
 import logging
 import sys
 from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from typing import Dict, List
-
-# Add project root to path
-project_root = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(project_root))
 
 import pandas as pd
 
@@ -34,6 +18,24 @@ from app.strategies.mean_reversion import MeanReversionStrategy
 from app.strategies.momentum import MomentumStrategy
 from app.strategies.pairs_trading import PairsTradingStrategy
 from tests.integration.data.test_data_loader import load_all_csv_data
+
+"""
+Test de comparación de estrategias - Ejecuta 4 backtests y genera comparativa.
+
+Este test ejecuta backtests con:
+1. Multi-strategy (all_strategies)
+2. Solo Momentum
+3. Solo Pairs Trading
+4. Solo Mean Reversion
+
+Y genera una comparativa de resultados al final.
+"""
+
+
+# Add project root to path
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
+
 
 logging.basicConfig(
     level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'

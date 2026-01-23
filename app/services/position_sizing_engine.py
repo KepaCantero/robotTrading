@@ -1,3 +1,6 @@
+import logging
+
+logger = logging.getLogger(__name__)
 """
 Position Sizing Engine with ATR-Based Dynamic Stop Loss.
 
@@ -5,8 +8,8 @@ TASK-IND-2: Implements dynamic stop loss based on ATR (Average True Range).
 Uses ATR * 2 as default multiplier for adaptive stop loss that adjusts to volatility.
 """
 
-from decimal import Decimal
-from typing import Optional
+from decimal import Decimal  # noqa: E402
+from typing import Optional  # noqa: E402
 
 
 class PositionSizingEngine:
@@ -104,12 +107,34 @@ class PositionSizingEngine:
         risk_amount = capital * Decimal(str(risk_per_trade_pct)) / Decimal("100")
 
         # TASK-IND-4: Use ATR-based stop distance if available
-        if atr is not None:
+        if atr is not None and atr > 0:
             stop_distance = Decimal(str(atr)) * self.atr_multiplier
 
+            # CRITICAL VALIDATION: Ensure stop distance is reasonable vs entry price
+            # Stop distance should not exceed 20% of entry price (sanity check)
+            max_stop_pct = Decimal("0.20")
+            max_stop_distance = entry_price * max_stop_pct
+
+            if stop_distance > max_stop_distance:
+                logger.warning(
+                    f"ATR stop distance {stop_distance} exceeds 20% of price {entry_price}, "
+                    f"capping at {max_stop_distance}"
+                )
+                stop_distance = max_stop_distance
+
             if stop_distance > 0:
-                # Calculate shares based on ATR stop distance
+                # Calculate shares: risk_amount / stop_distance_per_share
+                # This gives us how many shares we can buy where losing stop_distance per share
+                # equals our total risk amount
                 shares = risk_amount / stop_distance
+
+                # Verify result makes sense
+                position_value = shares * entry_price
+                if position_value > capital:
+                    # Cap at available capital
+                    shares = capital / entry_price
+                    logger.debug(f"Position size capped at available capital: {shares} shares")
+
                 return shares
 
         # Fallback: Use fixed percentage stop (e.g., 5%)

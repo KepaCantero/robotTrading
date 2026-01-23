@@ -94,7 +94,7 @@ class IBKRSource(BaseDataSource):
         try:
             # Verificar que la conexión está activa
             return self._ib.isConnected() if hasattr(self, '_ib') else False
-        except:
+        except Exception:
             return False
 
     async def get_ohlcv(
@@ -220,7 +220,7 @@ class BinanceSource(BaseDataSource):
             # Ping a la API
             async with self.session.get(f"{self.base_url}/api/v3/ping") as response:
                 return response.status == 200
-        except:
+        except Exception:
             return False
 
     async def get_ohlcv(
@@ -358,7 +358,7 @@ class AlpacaSource(BaseDataSource):
             # Verificar cuenta
             async with self.session.get(f"{self.base_url}/v2/account") as response:
                 return response.status == 200
-        except:
+        except Exception:
             return False
 
     async def get_ohlcv(
@@ -484,7 +484,7 @@ class PolygonSource(BaseDataSource):
                 f"{self.base_url}/v2/reference/status", params={'apiKey': self.api_key}
             ) as response:
                 return response.status == 200
-        except:
+        except Exception:
             return False
 
     async def get_ohlcv(

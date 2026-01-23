@@ -237,7 +237,7 @@ async def starlette_http_exception_handler(
     request: Request, exc: StarletteHTTPException
 ) -> JSONResponse:
     """Handle Starlette HTTP exceptions."""
-    return error_handler.handle_http_exception(exc, request)
+    return error_handler.handle_http_exception(exc, request)  # type: ignore
 
 
 async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:

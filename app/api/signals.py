@@ -27,7 +27,7 @@ _signal_scorer_service: Optional[SignalScorerService] = None
 
 def get_signal_scorer_service() -> SignalScorerService:
     """Get signal scorer service instance."""
-    global _signal_scorer_service
+    # global _signal_scorer_service  # F824 removed
     if _signal_scorer_service is None:
         portfolio_provider = PaperTradingPortfolioProvider()
         PortfolioService(portfolio_provider)

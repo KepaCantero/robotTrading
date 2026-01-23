@@ -172,7 +172,7 @@ class SensitivityAnalyzer:
             )
 
             report.parameter_results[param_name] = result
-            report.stability_heatmap[param_name] = result.variations_tested
+            report.stability_heatmap[param_name] = result.variations_tested  # type: ignore
 
             # Classify parameter by sensitivity level
             if result.sensitivity_level == "ROBUST":
@@ -218,7 +218,7 @@ class SensitivityAnalyzer:
             if isinstance(param_value, int):
                 varied_value = int(param_value * (1 + variation_pct))
             else:
-                varied_value = param_value * (1 + variation_pct)
+                varied_value = param_value * (1 + variation_pct)  # type: ignore
 
             # Ensure value stays within reasonable bounds (e.g., > 0)
             if varied_value <= 0:
@@ -266,7 +266,7 @@ class SensitivityAnalyzer:
             logger.warning(f"Base performance for {param_name} is invalid, using fallback")
             base_perf = np.mean(list(performances.values()))
 
-        result.elasticity_score = self._calculate_elasticity(performances, varied_values)
+        result.elasticity_score = self._calculate_elasticity(performances, varied_values)  # type: ignore
         result.sensitivity_level = self._classify_sensitivity(result.elasticity_score)
 
         # Detect optimal value and plateau width
@@ -274,7 +274,7 @@ class SensitivityAnalyzer:
             optimal_variation = max(performances, key=performances.get)
             result.optimal_value = varied_values[optimal_variation]
             result.plateau_width = self._calculate_plateau_width(
-                performances, varied_values, base_perf
+                performances, varied_values, base_perf  # type: ignore
             )
 
         # Calculate confidence intervals

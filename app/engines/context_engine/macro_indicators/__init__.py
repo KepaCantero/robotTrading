@@ -7,4 +7,3 @@ Incluye:
 - Sector rotation
 - Market breadth indicators
 """
-

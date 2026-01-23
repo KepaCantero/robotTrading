@@ -21,25 +21,25 @@ import numpy as np
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.engines.portfolio_engine import PortfolioEngine
-from app.engines.portfolio_engine.meta_learners import (
+from app.engines.portfolio_engine import PortfolioEngine  # noqa: E402
+from app.engines.portfolio_engine.meta_learners import (  # noqa: E402
     EnsembleMetaLearner,
     HistoricalPerformanceLearner,
 )
-from app.engines.portfolio_engine.optimizers import (
+from app.engines.portfolio_engine.optimizers import (  # noqa: E402
     BlackLittermanOptimizer,
     KellyCriterionOptimizer,
     MarkowitzOptimizer,
     RiskParityOptimizer,
 )
-from app.engines.portfolio_engine.rebalancers import (
+from app.engines.portfolio_engine.rebalancers import (  # noqa: E402
     ThresholdRebalancer,
     TimeBasedRebalancer,
     TransactionCostAwareRebalancer,
     VolatilityTargetingRebalancer,
 )
-from app.models.portfolio import AssetClass, Portfolio, Position
-from app.providers.paper_trading import PaperTradingPortfolioProvider
+from app.models.portfolio import AssetClass, Portfolio, Position  # noqa: E402
+from app.providers.paper_trading import PaperTradingPortfolioProvider  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'

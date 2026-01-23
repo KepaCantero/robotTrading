@@ -131,6 +131,6 @@ def get_preset_manager() -> ParameterPresetManager:
     """Get global preset manager instance."""
     global _preset_manager
     if _preset_manager is None:
-        _preset_manager = PresetManager()
+        _preset_manager = ParameterPresetManager()
 
     return _preset_manager

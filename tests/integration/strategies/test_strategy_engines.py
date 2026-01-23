@@ -13,6 +13,8 @@ Verifica:
 3. Integración con Learning Engines
 4. Callbacks
 5. Métricas y estado
+from app.engines.context_engine import ContextEngine
+from app.engines.data_engine import DataEngine
 """
 
 """
@@ -21,20 +23,20 @@ Integration Tests: Strategy Engines (Módulo 3)
 Tests para los nuevos Strategy Engines refactorizados.
 """
 
-import logging
-import sys
-from datetime import datetime
-from decimal import Decimal
-from pathlib import Path
+import logging  # noqa: E402
+import sys  # noqa: E402
+from datetime import datetime  # noqa: E402
+from decimal import Decimal  # noqa: E402
+from pathlib import Path  # noqa: E402
 
-import pandas as pd
-import pytest
+import pandas as pd  # noqa: E402
+import pytest  # noqa: E402
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.engines.strategy_engines import (
+from app.engines.strategy_engines import (  # noqa: E402
     BreakoutStrategyEngine,
     MeanReversionStrategyEngine,
     ModularMomentumStrategyEngine,
@@ -42,9 +44,9 @@ from app.engines.strategy_engines import (
     PairsTradingStrategyEngine,
     TrendFollowingStrategyEngine,
 )
-from app.models.market_data import Quote
-from app.models.signal import SignalType
-from tests.integration.data.test_data_loader import load_all_csv_data
+from app.models.market_data import Quote  # noqa: E402
+from app.models.signal import SignalType  # noqa: E402
+from tests.integration.data.test_data_loader import load_all_csv_data  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'

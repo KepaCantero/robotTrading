@@ -27,7 +27,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 
 
-
 class User(Base):
     """User model for authentication and authorization."""
 
@@ -61,7 +60,6 @@ class User(Base):
     )
 
 
-
 class APIKey(Base):
     """API Key model for external API access."""
 
@@ -87,7 +85,6 @@ class APIKey(Base):
         Index("idx_api_keys_user_id", "user_id"),
         Index("idx_api_keys_expires_at", "expires_at"),
     )
-
 
 
 class Portfolio(Base):
@@ -130,7 +127,6 @@ class Portfolio(Base):
     )
 
 
-
 class Asset(Base):
     """Asset model for storing financial instruments."""
 
@@ -160,7 +156,6 @@ class Asset(Base):
         Index("idx_assets_exchange", "exchange"),
         Index("idx_assets_currency", "currency"),
     )
-
 
 
 class Position(Base):
@@ -198,7 +193,6 @@ class Position(Base):
         UniqueConstraint("portfolio_id", "asset_id", name="uq_positions_portfolio_asset"),
         CheckConstraint("quantity != 0", name="ck_positions_quantity_nonzero"),
     )
-
 
 
 class Trade(Base):
@@ -244,7 +238,6 @@ class Trade(Base):
     )
 
 
-
 class MarketData(Base):
     """Market data model for storing price and volume data."""
 
@@ -280,7 +273,6 @@ class MarketData(Base):
     )
 
 
-
 class Signal(Base):
     """Signal model for storing trading signals."""
 
@@ -312,7 +304,6 @@ class Signal(Base):
         CheckConstraint("confidence >= 0 AND confidence <= 100", name="ck_signals_confidence"),
         CheckConstraint("price > 0", name="ck_signals_price_positive"),
     )
-
 
 
 class Backtest(Base):
@@ -357,7 +348,6 @@ class Backtest(Base):
     )
 
 
-
 class RiskMetrics(Base):
     """Risk metrics model for storing portfolio risk calculations."""
 
@@ -390,7 +380,6 @@ class RiskMetrics(Base):
         Index("idx_risk_metrics_calculation_date", "calculation_date"),
         Index("idx_risk_metrics_portfolio_date", "portfolio_id", "calculation_date"),
     )
-
 
 
 class SystemLog(Base):

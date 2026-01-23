@@ -27,9 +27,9 @@ os.environ['MKL_INTERFACE_LAYER'] = 'LP64,GNU'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # Ahora importar numpy y pandas DESPUÉS de configurar variables
-import numpy as np
+import numpy as np  # noqa: E402
 
-from .base_learning_engine import BaseLearningEngine
+from .base_learning_engine import BaseLearningEngine  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ def _ensure_pytorch_imported():
         os.environ['OMP_NUM_THREADS'] = '1'
         os.environ['MKL_NUM_THREADS'] = '1'
         os.environ['NUMEXPR_MAX_THREADS'] = '1'
-        os.environ['OPENBLAS_NUM_THREADS'] = '1'
+        os.environ['OPENBLAS_NUM_THREADS'] = '1'  # noqa: E114
         os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
         os.environ['CUDA_VISIBLE_DEVICES'] = ''
         os.environ['MKL_SERVICE_FORCE_INTEL'] = '1'

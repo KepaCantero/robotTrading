@@ -148,7 +148,7 @@ class MultiStrategyOptimizerV2:
             "take_profit": params.get("mean_reversion.take_profit_pct", 0.12),
             "max_position_size": params.get("global.position_size_pct", 0.05),
         }
-        strategies["mean_reversion"] = MeanReversionStrategy(mean_rev_config)
+        strategies["mean_reversion"] = MeanReversionStrategy(mean_rev_config)  # type: ignore
 
         # Pairs Trading
         pairs_config = {
@@ -161,7 +161,7 @@ class MultiStrategyOptimizerV2:
             "take_profit": 0.08,
             "max_position_size": params.get("global.position_size_pct", 0.05),
         }
-        strategies["pairs_trading"] = PairsTradingStrategy(pairs_config)
+        strategies["pairs_trading"] = PairsTradingStrategy(pairs_config)  # type: ignore
 
         return strategies
 

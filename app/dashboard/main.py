@@ -19,27 +19,30 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
-import streamlit as st
-from streamlit import session_state
+import pandas as pd  # noqa: E402
+import plotly.express as px  # noqa: E402
+import plotly.graph_objects as go  # noqa: E402
+import streamlit as st  # noqa: E402
+from streamlit import session_state  # noqa: E402
 
-from app.backtesting.data_loader import DataLoader
-from app.backtesting.engine import SimpleBacktester
-from app.backtesting.models import BacktestConfig
-from app.backtesting.multi_strategy_engine import MultiStrategyBacktester
+from app.backtesting.data_loader import DataLoader  # noqa: E402
+from app.backtesting.engine import SimpleBacktester  # noqa: E402
+from app.backtesting.models import BacktestConfig  # noqa: E402
+from app.backtesting.multi_strategy_engine import MultiStrategyBacktester  # noqa: E402
 
 # IMPORTANT: Import logging_config FIRST to ensure all warnings/errors go to files
-from app.dashboard.comprehensive_data_loader import ComprehensiveBacktestLoader
-from app.dashboard.multi_strategy_utils import (
+from app.dashboard.comprehensive_data_loader import ComprehensiveBacktestLoader  # noqa: E402
+from app.dashboard.multi_strategy_utils import (  # noqa: E402
     generate_multi_strategy_summary_text,
     save_multi_strategy_results,
 )
-from app.dashboard.report_generator import generate_backend_test_summary, save_backtest_result
-from app.strategies.mean_reversion import MeanReversionStrategy
-from app.strategies.momentum import MomentumStrategy
-from app.strategies.pairs_trading import PairsTradingStrategy
+from app.dashboard.report_generator import (  # noqa: E402
+    generate_backend_test_summary,
+    save_backtest_result,
+)
+from app.strategies.mean_reversion import MeanReversionStrategy  # noqa: E402
+from app.strategies.momentum import MomentumStrategy  # noqa: E402
+from app.strategies.pairs_trading import PairsTradingStrategy  # noqa: E402
 
 # Logging is already configured by logging_config module
 logger = logging.getLogger(__name__)
@@ -707,7 +710,7 @@ if execute_button:
                     st.markdown(
                         f"""
                     **Location:** `{summary_file.relative_to(project_root)}`
-                    
+
                     **To view:** Open the file in your editor or download it.
                     """
                     )
@@ -1239,7 +1242,7 @@ if session_state.backtest_results:
                                 return 'background-color: #fff3cd; color: #856404'
                             else:
                                 return 'background-color: #f8d7da; color: #721c24'
-                    except:
+                    except Exception:  # noqa: E722
                         pass
                 return ''
 

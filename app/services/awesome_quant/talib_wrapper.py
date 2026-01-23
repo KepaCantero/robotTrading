@@ -5,7 +5,6 @@ TA-Lib provides 200+ technical indicators for price and volume analysis.
 """
 
 import logging
-from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
 
@@ -260,10 +259,7 @@ class TALibWrapper:
         slow_ema = await self.calculate_ema(prices, slow_period)
 
         # Calculate MACD line
-        macd_line = [
-            fast_ema[i] - slow_ema[i]
-            for i in range(len(slow_ema))
-        ]
+        macd_line = [fast_ema[i] - slow_ema[i] for i in range(len(slow_ema))]
 
         # Calculate Signal line (EMA of MACD)
         if len(macd_line) < signal_period:
@@ -277,7 +273,7 @@ class TALibWrapper:
             for i in range(len(signal_line))
         ]
 
-        return macd_line[-len(signal_line):], signal_line, histogram
+        return macd_line[-len(signal_line) :], signal_line, histogram
 
     async def calculate_bollinger_bands(
         self,
@@ -373,9 +369,7 @@ class TALibWrapper:
         """Get wrapper status."""
         return {
             "connected": self.connected,
-            "total_indicators": sum(
-                len(v) for v in self.available_indicators.values()
-            ),
+            "total_indicators": sum(len(v) for v in self.available_indicators.values()),
             "indicator_categories": list(self.available_indicators.keys()),
             "symbols_analyzed": len(self.calculated_indicators),
         }

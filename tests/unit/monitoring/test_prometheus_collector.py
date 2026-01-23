@@ -5,7 +5,8 @@ Tests metric collection, storage, and export functionality.
 """
 
 import pytest
-from app.services.monitoring import get_prometheus_collector, MetricType
+
+from app.services.monitoring import get_prometheus_collector
 
 
 class TestPrometheusMetricsCollector:
@@ -60,9 +61,7 @@ class TestPrometheusMetricsCollector:
     def test_observe_histogram(self, collector):
         """Test recording histogram observations."""
         for i in range(10):
-            collector.observe_histogram(
-                "api_response_time_milliseconds", float(i * 100)
-            )
+            collector.observe_histogram("api_response_time_milliseconds", float(i * 100))
 
         value = collector.get_metric_value("api_response_time_milliseconds")
         assert value == 10.0  # Count of observations

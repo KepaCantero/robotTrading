@@ -68,7 +68,7 @@ class OutlierDetector:
                 values_array = np.array([float(v) for v in values])
             else:
                 values_array = np.array(values)
-        except:
+        except Exception:
             logger.error("Error convirtiendo valores a array")
             return {
                 'outliers': [],

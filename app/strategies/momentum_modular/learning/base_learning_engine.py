@@ -165,7 +165,7 @@ class BaseLearningEngine(ABC):
 
         try:
             with open(load_path, 'rb') as f:
-                saved_data = pickle.load(f)
+                saved_data = pickle.load(f)  # nosec B301 - trusted model data
                 self.model = saved_data['model']
                 self.is_trained = True
             logger.info(f"{self.name}: Modelo cargado desde {load_path}")

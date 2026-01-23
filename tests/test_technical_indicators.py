@@ -89,7 +89,6 @@ class TestATRStopLoss:
 
         entry_price = Decimal("100")
         atr = 2.5  # ATR value
-        stop_loss_pct = 0.05  # Fallback percentage
 
         # Test BUY: should be below entry price
         stop_loss = calculator.calculate_stop_loss_price(entry_price, "buy", atr=atr)

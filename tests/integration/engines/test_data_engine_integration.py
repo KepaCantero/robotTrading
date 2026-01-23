@@ -1,3 +1,14 @@
+import asyncio
+import sys
+from datetime import datetime, timedelta
+from pathlib import Path
+
+import pytest
+
+from app.engines.data_engine import DataEngine
+from app.engines.data_engine.cache.distributed_cache import DistributedCache
+from app.engines.data_engine.streaming.websocket_streaming import WebSocketStreamingManager
+
 """
 Integration Tests: DataEngine (Módulo 1)
 
@@ -10,20 +21,10 @@ Tests para verificar funcionalidad completa del DataEngine:
 - Streaming WebSocket
 """
 
-import asyncio
-import sys
-from datetime import datetime, timedelta
-from pathlib import Path
-
-import pytest
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
-
-from app.engines.data_engine import DataEngine
-from app.engines.data_engine.cache.distributed_cache import DistributedCache
-from app.engines.data_engine.streaming.websocket_streaming import WebSocketStreamingManager
 
 
 @pytest.fixture
@@ -289,5 +290,5 @@ class TestDataEngineIntegration:
         assert not cache.use_postgres
 
         status = cache.get_status()
-        assert status['redis_enabled'] == False
-        assert status['postgres_enabled'] == False
+        assert not status['redis_enabled']
+        assert not status['postgres_enabled']

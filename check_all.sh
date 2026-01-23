@@ -39,7 +39,7 @@ section "FORMATEO Y ORDEN DE IMPORTS - FIX AUTOMÁTICO"
 run_fix "Black" black $APP_DIRS
 run_fix "Isort" isort $APP_DIRS
 run_fix "Autoflake (elimina imports/vars sin usar)" autoflake --in-place --remove-unused-variables --remove-all-unused-imports -r $APP_DIRS
-run_fix "Ruff --fix" ruff $APP_DIRS --fix
+run_fix "Ruff --fix" ruff check $APP_DIRS --fix
 
 # ============================================
 section "LINTING Y REPORTES"

@@ -183,7 +183,7 @@ class MultiStrategyOptimizer:
                 "max_position_size": Decimal("0.08"),
             }
         )
-        strategies["mean_reversion"] = MeanReversionStrategy(mr_config)
+        strategies["mean_reversion"] = MeanReversionStrategy(mr_config)  # type: ignore
 
         # Create Pairs Trading strategy
         pt_config = params["pairs_trading"].copy()
@@ -197,7 +197,7 @@ class MultiStrategyOptimizer:
                 "hedge_ratio_threshold": Decimal("0.1"),
             }
         )
-        strategies["pairs_trading"] = PairsTradingStrategy(pt_config)
+        strategies["pairs_trading"] = PairsTradingStrategy(pt_config)  # type: ignore
 
         return strategies
 

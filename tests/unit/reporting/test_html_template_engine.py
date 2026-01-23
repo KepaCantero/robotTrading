@@ -283,8 +283,7 @@ class TestHTMLTemplateEngine:
 
         # When include_disclaimers is False, the Performance Disclaimer section should not be present
         assert (
-            "Performance Disclaimer" not in report.content
-            or report.metadata["has_disclaimers"] == False
+            "Performance Disclaimer" not in report.content or not report.metadata["has_disclaimers"]
         )
 
     # HTML Escaping Tests

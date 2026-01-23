@@ -247,4 +247,4 @@ def get_config(config_path: Optional[str] = None) -> ConfigLoader:
 
 def reset_config() -> None:
     """Reset global configuration instance."""
-    global _global_config
+    # global _global_config  # F824 removed

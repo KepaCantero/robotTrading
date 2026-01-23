@@ -366,7 +366,7 @@ class SHAPAnalyzer:
             try:
                 # Intentar DeepExplainer primero
                 return shap.DeepExplainer(model, background)
-            except:
+            except Exception:
                 # Fallback a KernelExplainer
                 return shap.KernelExplainer(model.predict, background)
         else:
@@ -952,10 +952,10 @@ class PermutationImportanceAnalyzer:
             return self._fallback_permutation_importance(model, X, y, feature_names)
 
         try:
-            # Subsample if dataset is too large
+            # Subsample if dataset is too large (with isolated random state)
             if len(X) > self.max_samples:
-                np.random.seed(self.random_state)
-                indices = np.random.choice(len(X), self.max_samples, replace=False)
+                rng = np.random.default_rng(self.random_state)
+                indices = rng.choice(len(X), self.max_samples, replace=False)
                 X_sample = X[indices]
                 y_sample = y[indices]
             else:
@@ -1056,15 +1056,15 @@ class PermutationImportanceAnalyzer:
                 # Classification
                 baseline_score = np.mean(baseline_pred == y)
 
-            # Calculate importance for each feature
+            # Calculate importance for each feature (with isolated random state)
             importances = []
-            np.random.seed(self.random_state)
+            rng = np.random.default_rng(self.random_state)
 
             for i in range(n_features):
                 scores = []
                 for _ in range(self.n_repeats):
                     X_permuted = X.copy()
-                    np.random.shuffle(X_permuted[:, i])
+                    rng.shuffle(X_permuted[:, i])
                     permuted_pred = model.predict(X_permuted)
 
                     if hasattr(y, 'dtype') and np.issubdtype(y.dtype, np.floating):

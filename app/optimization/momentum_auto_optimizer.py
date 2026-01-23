@@ -183,7 +183,7 @@ class MomentumAutoOptimizer:
 
             # Run walk-forward validation
             wf_config = self.auto_opt_config.get("recalibration", {}).get("walk_forward", {})
-            validator = WalkForwardValidator(
+            validator = WalkForwardValidator(  # type: ignore
                 train_years=wf_config.get("train_years", 2),
                 validation_years=wf_config.get("validation_years", 0.5),
                 step_years=wf_config.get("step_years", 0.5),
@@ -216,7 +216,7 @@ class MomentumAutoOptimizer:
                     continue
 
                 # Run backtest
-                config = BacktestConfig(
+                config = BacktestConfig(  # type: ignore
                     strategy_name="momentum",
                     initial_capital=Decimal("50000"),
                     commission_per_trade=Decimal("1.0"),

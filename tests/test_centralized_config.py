@@ -163,7 +163,7 @@ class TestAPIConfig:
         """Test default API config values."""
         config = APIConfig()
 
-        assert config.host == "0.0.0.0"
+        assert config.host == "0.0.0.0"  # nosec B104
         assert config.port == 8000
         assert config.workers == 1
         assert config.secret_key == "your-secret-key-change-in-production"

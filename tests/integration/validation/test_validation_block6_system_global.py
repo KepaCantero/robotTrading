@@ -289,9 +289,5 @@ class TestSharpeAndDrawdown(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    from datetime import timedelta
-
-    from app.models.market_data import Quote
-    from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
     unittest.main()

@@ -54,18 +54,18 @@ def get_default_config() -> Dict[str, Any]:
             "min_windows": 3,
             "min_trades_per_window": 10,
             "thresholds": {
-                "min_consistency": 0.6,
-                "max_return_std": 0.3,
-                "min_avg_sharpe": 0.5,
-                "max_avg_drawdown": -0.20,
+                "min_consistency": 0.8,  # Increased from 0.6 - require 80% profitable windows
+                "max_return_std": 0.25,  # Tightened from 0.3 - less variance allowed
+                "min_avg_sharpe": 0.7,  # Increased from 0.5 - higher bar for Sharpe
+                "max_avg_drawdown": -0.15,  # Tightened from -0.20 - less drawdown tolerance
             },
         },
         "cross_validation": {
             "enabled": True,
             "n_folds": 5,
             "thresholds": {
-                "min_consistency_score": 0.6,
-                "max_return_variance": 0.25,
+                "min_consistency_score": 0.8,  # Increased from 0.6 - require 80% positive folds
+                "max_return_variance": 0.20,  # Tightened from 0.25 - less variance allowed
             },
         },
         "stress_testing": {
@@ -192,6 +192,8 @@ class SyntheticDataGenerator:
     - GBM (Geometric Brownian Motion)
     - OU (Ornstein-Uhlenbeck for mean reversion)
     - Jump Diffusion
+
+    REPRODUCIBILITY: Uses np.random.default_rng for isolated random state.
     """
 
     def __init__(self, config: Dict[str, Any]):
@@ -202,6 +204,9 @@ class SyntheticDataGenerator:
         self.annual_volatility = config.get("annual_volatility", 0.20)
         self.annual_drift = config.get("annual_drift", 0.05)
         self.volume_noise = config.get("volume_noise", 0.30)
+        # Reproducible random state
+        self.random_state = config.get("random_state", 42)
+        self._rng = np.random.default_rng(self.random_state)
 
     def generate_gbm_prices(
         self,
@@ -219,13 +224,15 @@ class SyntheticDataGenerator:
         mu = drift if drift is not None else self.annual_drift / 252
         sigma = volatility if volatility is not None else self.annual_volatility / np.sqrt(252)
 
-        prices = [self.base_price]
-        for _ in range(n_days - 1):
-            dW = np.random.normal(0, 1)
-            price = prices[-1] * np.exp((mu - 0.5 * sigma**2) + sigma * dW)
-            prices.append(max(price, 0.01))  # Floor at 0.01
+        # Vectorized GBM generation for reproducibility
+        dW = self._rng.standard_normal(n_days - 1)
+        log_returns = (mu - 0.5 * sigma**2) + sigma * dW
+        prices = np.empty(n_days)
+        prices[0] = self.base_price
+        prices[1:] = self.base_price * np.exp(np.cumsum(log_returns))
+        prices = np.maximum(prices, 0.01)  # Floor at 0.01
 
-        return self._prices_to_quotes(prices, start_date, symbol)
+        return self._prices_to_quotes(prices.tolist(), start_date, symbol)
 
     def generate_ou_prices(
         self,
@@ -243,13 +250,15 @@ class SyntheticDataGenerator:
         mean = mu if mu is not None else self.base_price
         sigma = self.annual_volatility / np.sqrt(252)
 
-        prices = [self.base_price]
-        for _ in range(n_days - 1):
-            dW = np.random.normal(0, 1)
-            price = prices[-1] + theta * (mean - prices[-1]) + sigma * dW
-            prices.append(max(price, 0.01))
+        # OU process with reproducible random state
+        dW = self._rng.standard_normal(n_days - 1)
+        prices = np.empty(n_days)
+        prices[0] = self.base_price
+        for i in range(n_days - 1):
+            prices[i + 1] = prices[i] + theta * (mean - prices[i]) + sigma * dW[i]
+        prices = np.maximum(prices, 0.01)
 
-        return self._prices_to_quotes(prices, start_date, symbol)
+        return self._prices_to_quotes(prices.tolist(), start_date, symbol)
 
     def generate_jump_diffusion_prices(
         self,
@@ -262,23 +271,26 @@ class SyntheticDataGenerator:
     ) -> List[Quote]:
         """
         Generate prices with jumps (Merton jump-diffusion model).
+        REPRODUCIBLE: Uses self._rng for all random draws.
         """
         mu = self.annual_drift / 252
         sigma = self.annual_volatility / np.sqrt(252)
 
-        prices = [self.base_price]
-        for _ in range(n_days - 1):
-            dW = np.random.normal(0, 1)
+        # Pre-generate all random numbers for reproducibility
+        n = n_days - 1
+        dW = self._rng.standard_normal(n)
+        jump_occurs = self._rng.random(n) < jump_intensity
+        jump_sizes = self._rng.normal(jump_mean, jump_std, n)
+        jumps = np.where(jump_occurs, jump_sizes, 0.0)
 
-            # Jump component
-            jump = 0
-            if np.random.random() < jump_intensity:
-                jump = np.random.normal(jump_mean, jump_std)
+        # Vectorized price generation
+        log_returns = (mu - 0.5 * sigma**2) + sigma * dW + jumps
+        prices = np.empty(n_days)
+        prices[0] = self.base_price
+        prices[1:] = self.base_price * np.exp(np.cumsum(log_returns))
+        prices = np.maximum(prices, 0.01)
 
-            price = prices[-1] * np.exp((mu - 0.5 * sigma**2) + sigma * dW + jump)
-            prices.append(max(price, 0.01))
-
-        return self._prices_to_quotes(prices, start_date, symbol)
+        return self._prices_to_quotes(prices.tolist(), start_date, symbol)
 
     def generate_flash_crash_scenario(
         self,
@@ -1070,6 +1082,7 @@ class MonteCarloSimulator:
     Monte Carlo Simulation for strategy robustness testing.
 
     Uses bootstrap resampling to estimate confidence intervals.
+    REPRODUCIBILITY: Uses np.random.default_rng for isolated random state.
     """
 
     def __init__(
@@ -1085,6 +1098,9 @@ class MonteCarloSimulator:
         self.n_simulations = config.get("n_simulations", 1000)
         self.confidence_levels = config.get("confidence_levels", [0.95, 0.99])
         self.block_size = config.get("block_size", 20)
+        # Reproducible random state
+        self.random_state = config.get("random_state", 42)
+        self._rng = np.random.default_rng(self.random_state)
 
     def run_simulation(
         self,
@@ -1174,15 +1190,17 @@ class MonteCarloSimulator:
         }
 
     def _block_bootstrap(self, returns: np.ndarray, n_periods: int) -> np.ndarray:
-        """Perform block bootstrap resampling."""
+        """Perform block bootstrap resampling with reproducible random state."""
         n_blocks = int(np.ceil(n_periods / self.block_size))
-        sampled = []
+        max_start = len(returns) - self.block_size + 1
 
-        for _ in range(n_blocks):
-            start_idx = np.random.randint(0, len(returns) - self.block_size + 1)
-            sampled.extend(returns[start_idx : start_idx + self.block_size])
+        # Pre-generate all random indices for reproducibility
+        start_indices = self._rng.integers(0, max_start, size=n_blocks)
 
-        return np.array(sampled[:n_periods])
+        # Vectorized block collection
+        sampled = np.concatenate([returns[idx : idx + self.block_size] for idx in start_indices])
+
+        return sampled[:n_periods]
 
     def _calculate_max_drawdown(self, equity: List[float]) -> float:
         """Calculate maximum drawdown from equity curve."""

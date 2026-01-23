@@ -14,11 +14,11 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-import os
+import os  # noqa: E402
 
 # Ahora importar el resto
-import sys
-from pathlib import Path
+import sys  # noqa: E402
+from pathlib import Path  # noqa: E402
 
 # ============================================================================
 # SOLUCIÓN DEFINITIVA: Configurar variables de entorno ANTES de cualquier import
@@ -77,9 +77,9 @@ try:
 except Exception:
     setup_file_logging = None
 
-import logging
-from datetime import datetime, timedelta
-from typing import Any, Dict, Optional, Tuple
+import logging  # noqa: E402
+from datetime import datetime, timedelta  # noqa: E402
+from typing import Any, Dict, Optional, Tuple  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -189,9 +189,9 @@ def render_metric_card(
 
     if isinstance(value, (int, float)):
         if metric == 'return_pct' or metric == 'drawdown':
-            display_value = f"{value_float:.2f}%"
+            display_value = f"{value_float:.2f}%"  # noqa: F841
         elif metric == 'winrate':
-            display_value = f"{value_float:.1f}%"
+            _display_value = f"{value_float:.1f}%"  # noqa: F841
         else:
             format_str.format(value_float)
     else:

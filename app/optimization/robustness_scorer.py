@@ -237,7 +237,7 @@ class RobustnessScorer:
             sensitivity_score=scores["sensitivity"],
             overfitting_penalty=scores["overfitting"],
             regime_robustness_score=scores["regime_robustness"],
-            overall_score=np.mean(list(scores.values())),
+            overall_score=np.mean(list(scores.values())),  # type: ignore
             weighted_score=weighted_score,
         )
 

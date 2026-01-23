@@ -7,8 +7,7 @@ for training data augmentation and backtesting.
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
@@ -45,6 +44,9 @@ class GANConfig:
     save_interval: int = 100  # Save model every N epochs
     display_interval: int = 50  # Display loss every N epochs
 
+    # REPRODUCIBILITY: Random seed for all stochastic operations
+    random_state: int = 42
+
     def __post_init__(self):
         """Set default layer sizes if not provided."""
         if self.generator_layers is None:
@@ -54,7 +56,11 @@ class GANConfig:
 
 
 class SyntheticDataGenerator:
-    """Generate synthetic market data using GANs."""
+    """
+    Generate synthetic market data using GANs.
+
+    REPRODUCIBILITY: Uses np.random.default_rng for all random operations.
+    """
 
     def __init__(self, config: Optional[GANConfig] = None):
         """
@@ -70,7 +76,9 @@ class SyntheticDataGenerator:
         self.training_history = []
         self.connected = False
         self.data_scaler = None
-        logger.info("✅ SyntheticDataGenerator initialized")
+        # Reproducible random state
+        self._rng = np.random.default_rng(self.config.random_state)
+        logger.info("✅ SyntheticDataGenerator initialized with seed=%d", self.config.random_state)
 
     async def connect(self) -> bool:
         """Initialize GAN models and training setup."""
@@ -119,19 +127,17 @@ class SyntheticDataGenerator:
                         "min": training_data.min(axis=0),
                         "max": training_data.max(axis=0),
                     }
-                    normalized_data = (
-                        training_data - self.data_scaler["min"]
-                    ) / (self.data_scaler["max"] - self.data_scaler["min"] + 1e-8)
+                    (training_data - self.data_scaler["min"]) / (
+                        self.data_scaler["max"] - self.data_scaler["min"] + 1e-8
+                    )
                 else:  # zscore
                     self.data_scaler = {
                         "mean": training_data.mean(axis=0),
                         "std": training_data.std(axis=0),
                     }
-                    normalized_data = (
-                        training_data - self.data_scaler["mean"]
-                    ) / (self.data_scaler["std"] + 1e-8)
+                    (training_data - self.data_scaler["mean"]) / (self.data_scaler["std"] + 1e-8)
             else:
-                normalized_data = training_data
+                pass
 
             # Simulate training process
             for epoch in range(self.config.epochs):
@@ -142,12 +148,12 @@ class SyntheticDataGenerator:
                 # 4. Train generator to fool discriminator
                 # 5. Track losses
 
-                # Simulated losses
+                # Simulated losses (reproducible)
                 discriminator_loss = float(
-                    np.abs(np.random.randn()) * 0.5 * (1 - epoch / self.config.epochs)
+                    np.abs(self._rng.standard_normal()) * 0.5 * (1 - epoch / self.config.epochs)
                 )
                 generator_loss = float(
-                    np.abs(np.random.randn()) * 0.5 * (1 - epoch / self.config.epochs)
+                    np.abs(self._rng.standard_normal()) * 0.5 * (1 - epoch / self.config.epochs)
                 )
 
                 self.training_history.append(
@@ -202,20 +208,25 @@ class SyntheticDataGenerator:
 
         try:
             if noise is None:
-                noise = np.random.randn(num_samples, self.config.latent_dim)
+                noise = self._rng.standard_normal((num_samples, self.config.latent_dim))
 
             # In production: synthetic_data = self.generator.predict(noise)
 
-            # Simulated synthetic data generation (realistic OHLCV structure)
-            synthetic_data = np.random.randn(num_samples, self.config.output_dim)
+            # Simulated synthetic data generation (reproducible OHLCV structure)
+            synthetic_data = self._rng.standard_normal((num_samples, self.config.output_dim))
 
             # Make it more realistic: High > Close > Low, Volume > 0
+            # Pre-generate all random values for reproducibility
+            close_deltas = self._rng.standard_normal(num_samples) * 2
+            high_deltas = np.abs(self._rng.standard_normal(num_samples))
+            low_deltas = np.abs(self._rng.standard_normal(num_samples))
+
             for i in range(num_samples):
                 # Normalize OHLCV to realistic ranges
                 open_price = np.abs(synthetic_data[i, 0]) + 100  # Open ~100-102
-                close_price = open_price + np.random.randn() * 2  # Close near open
-                high_price = max(open_price, close_price) + np.abs(np.random.randn())
-                low_price = min(open_price, close_price) - np.abs(np.random.randn())
+                close_price = open_price + close_deltas[i]  # Close near open
+                high_price = max(open_price, close_price) + high_deltas[i]
+                low_price = min(open_price, close_price) - low_deltas[i]
                 volume = np.abs(synthetic_data[i, 4]) * 1000000 + 1000000  # Volume > 1M
 
                 synthetic_data[i] = [open_price, high_price, low_price, close_price, volume]
@@ -224,8 +235,7 @@ class SyntheticDataGenerator:
             if self.config.normalize_data and self.data_scaler:
                 if "min" in self.data_scaler:  # minmax scaling
                     synthetic_data = (
-                        synthetic_data
-                        * (self.data_scaler["max"] - self.data_scaler["min"])
+                        synthetic_data * (self.data_scaler["max"] - self.data_scaler["min"])
                         + self.data_scaler["min"]
                     )
                 else:  # zscore scaling
@@ -353,20 +363,27 @@ class TimeSeriesGANGenerator:
             # In production: use LSTM-based generator
             # synthetic_sequences = self.lstm_generator.predict(noise)
 
-            # Simulated: generate realistic price sequences
+            # Simulated: generate realistic price sequences (reproducible)
             synthetic_sequences = np.zeros((num_sequences, seq_len, 5))
 
+            # Pre-generate all random values for reproducibility
+            total_steps = num_sequences * seq_len
+            price_changes = self._rng.standard_normal(total_steps) * 2
+            high_deltas = np.abs(self._rng.standard_normal(total_steps))
+            low_deltas = np.abs(self._rng.standard_normal(total_steps))
+            volumes = np.abs(self._rng.standard_normal(total_steps)) * 1000000 + 1000000
+
+            idx = 0
             for s in range(num_sequences):
                 # Generate random walk price series
                 price = 100.0
                 for t in range(seq_len):
                     # Random walk for price
-                    price_change = np.random.randn() * 2
                     open_price = price
-                    close_price = price + price_change
-                    high_price = max(open_price, close_price) + np.abs(np.random.randn())
-                    low_price = min(open_price, close_price) - np.abs(np.random.randn())
-                    volume = np.abs(np.random.randn()) * 1000000 + 1000000
+                    close_price = price + price_changes[idx]
+                    high_price = max(open_price, close_price) + high_deltas[idx]
+                    low_price = min(open_price, close_price) - low_deltas[idx]
+                    volume = volumes[idx]
 
                     synthetic_sequences[s, t] = [
                         open_price,
@@ -376,6 +393,7 @@ class TimeSeriesGANGenerator:
                         volume,
                     ]
                     price = close_price
+                    idx += 1
 
             logger.info(f"✅ Generated {num_sequences} synthetic sequences")
             return synthetic_sequences

@@ -228,7 +228,7 @@ class TestStrategySignalLogic(unittest.TestCase):
         )
 
         signals = self.momentum.generate_signals(quote)
-        buy_signals = [s for s in signals if s.signal_type == SignalType.BUY]
+        [s for s in signals if s.signal_type == SignalType.BUY]
 
         # Después de suficiente histórico, debería generar señales BUY
         # (Puede que no en la primera ejecución, depende del histórico)
@@ -242,7 +242,7 @@ class TestStrategySignalLogic(unittest.TestCase):
         )
 
         signals = self.momentum.generate_signals(quote)
-        sell_signals = [s for s in signals if s.signal_type == SignalType.SELL]
+        [s for s in signals if s.signal_type == SignalType.SELL]
 
         # Después de suficiente histórico, debería generar señales SELL
         self.assertIsInstance(signals, list, "Debe retornar lista de señales")
@@ -467,7 +467,7 @@ class TestBacktestingEngineValidation(unittest.TestCase):
     def test_balance_updates_correctly(self):
         """Verificar que balance se actualiza correctamente."""
         initial_cash = Decimal("100000")
-        portfolio = Portfolio(
+        Portfolio(
             portfolio_id="test",
             cash=initial_cash,
             positions=[],

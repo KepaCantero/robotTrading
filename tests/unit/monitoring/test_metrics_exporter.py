@@ -5,7 +5,9 @@ Tests metrics export to Prometheus and other formats.
 """
 
 import json
+
 import pytest
+
 from app.services.monitoring import get_metrics_exporter
 
 
@@ -182,9 +184,7 @@ class TestMetricsExporter:
         data = json.loads(json_export)
 
         # Should preserve precision
-        assert isinstance(
-            data["metrics"]["precise_metric"], float
-        )
+        assert isinstance(data["metrics"]["precise_metric"], float)
 
     def test_large_metric_values(self, exporter):
         """Test exporting very large metric values."""

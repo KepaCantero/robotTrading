@@ -159,6 +159,8 @@ class CorrelationAnalyzer(BaseCorrelationAnalyzer):
             correlation_matrix = returns_df.corr()
 
         # Convertir a dict
+        # CRITICAL: Do NOT convert NaN to 0.0 - that would falsely indicate decorrelation
+        # NaN means "insufficient data" which is different from "zero correlation"
         result = {}
         for symbol1 in correlation_matrix.index:
             result[symbol1] = {}
@@ -167,7 +169,10 @@ class CorrelationAnalyzer(BaseCorrelationAnalyzer):
                 if pd.notna(corr):
                     result[symbol1][symbol2] = float(corr)
                 else:
-                    result[symbol1][symbol2] = 0.0
+                    # Use None to indicate missing data, not 0.0
+                    # Downstream code must handle None appropriately
+                    result[symbol1][symbol2] = None
+                    logger.debug(f"Correlation {symbol1}-{symbol2} is NaN (insufficient data)")
 
         return result
 
@@ -182,10 +187,12 @@ class CorrelationAnalyzer(BaseCorrelationAnalyzer):
                 if symbol1 != symbol2 and symbol1 in correlation_matrix:
                     if symbol2 in correlation_matrix[symbol1]:
                         corr = correlation_matrix[symbol1][symbol2]
-                        correlations.append(corr)
+                        # Skip None values (insufficient data)
+                        if corr is not None:
+                            correlations.append(corr)
 
         if not correlations:
-            return {'average': 0.0, 'max': 0.0, 'min': 0.0, 'std': 0.0}
+            return {'average': None, 'max': None, 'min': None, 'std': None, 'count': 0}
 
         return {
             'average': float(np.mean(correlations)),

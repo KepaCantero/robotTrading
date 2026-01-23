@@ -420,7 +420,7 @@ class TestRepositories:
         """Test UserRepository get_by_username method."""
         repo = UserRepository(User, db_session)
 
-        user = repo.create(
+        repo.create(
             username="testuser",
             email="test@example.com",
             hashed_password="hashed_password",
@@ -433,7 +433,7 @@ class TestRepositories:
         """Test UserRepository get_by_email method."""
         repo = UserRepository(User, db_session)
 
-        user = repo.create(
+        repo.create(
             username="testuser",
             email="test@example.com",
             hashed_password="hashed_password",
@@ -446,7 +446,7 @@ class TestRepositories:
         """Test AssetRepository get_by_symbol method."""
         repo = AssetRepository(Asset, db_session)
 
-        asset = repo.create(symbol="AAPL", name="Apple Inc.", asset_class="stock")
+        repo.create(symbol="AAPL", name="Apple Inc.", asset_class="stock")
         retrieved_asset = repo.get_by_symbol("AAPL")
         assert retrieved_asset is not None
         assert retrieved_asset.symbol == "AAPL"
@@ -461,7 +461,7 @@ class TestRepositories:
             email="test@example.com",
             hashed_password="hashed_password",
         )
-        portfolio = portfolio_repo.create(
+        portfolio_repo.create(
             user_id=user.id,
             name="Test Portfolio",
             initial_cash=Decimal("10000.00"),
@@ -495,7 +495,7 @@ class TestDatabaseUtilities:
             mock_manager.get_sync_session.return_value = mock_session
 
             try:
-                with DatabaseSession() as session:
+                with DatabaseSession():
                     raise ValueError("Test exception")
             except ValueError:
                 pass

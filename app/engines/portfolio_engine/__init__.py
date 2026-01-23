@@ -280,7 +280,7 @@ class PortfolioEngine(BasePortfolioEngine):
                     'successful_operations': self.portfolio_service.successful_operations,
                     'failed_operations': self.portfolio_service.failed_operations,
                 }
-            except:
+            except Exception:
                 pass
 
         return status

@@ -166,7 +166,7 @@ class GridSearchOptimizer:
             "take_profit": Decimal(str(mean_rev_params.get("take_profit_pct", 0.10))),
             "max_position_size": Decimal("0.05"),
         }
-        strategies["mean_reversion"] = MeanReversionStrategy(mean_rev_config)
+        strategies["mean_reversion"] = MeanReversionStrategy(mean_rev_config)  # type: ignore
 
         # Pairs Trading
         pairs_config = {
@@ -179,7 +179,7 @@ class GridSearchOptimizer:
             "take_profit": Decimal("0.08"),
             "max_position_size": Decimal("0.05"),
         }
-        strategies["pairs_trading"] = PairsTradingStrategy(pairs_config)
+        strategies["pairs_trading"] = PairsTradingStrategy(pairs_config)  # type: ignore
 
         return strategies
 
@@ -192,7 +192,7 @@ class GridSearchOptimizer:
 
         # Create validator
         wf_config = self.preset_config.get("grid_search", {}).get("walk_forward", {})
-        validator = WalkForwardValidator(
+        validator = WalkForwardValidator(  # type: ignore
             train_years=wf_config.get("train_years", 4),
             validation_years=wf_config.get("validation_years", 1),
             step_years=wf_config.get("step_years", 1),
@@ -223,7 +223,7 @@ class GridSearchOptimizer:
             # Run backtest on validation period
             from app.backtesting.models import BacktestConfig
 
-            config = BacktestConfig(
+            BacktestConfig(  # type: ignore
                 strategy_name="multi_strategy",
                 initial_capital=self.total_capital,
                 commission_per_trade=Decimal("1.0"),

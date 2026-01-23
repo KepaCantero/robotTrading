@@ -7,7 +7,7 @@ and provides status information.
 
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from typing import Dict, List, Optional
 
@@ -108,9 +108,7 @@ class HealthCheckManager:
         try:
             start_time = datetime.utcnow()
             is_healthy = await health_check_func()
-            response_time_ms = (
-                datetime.utcnow() - start_time
-            ).total_seconds() * 1000
+            response_time_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
 
             if is_healthy:
                 # Service is healthy

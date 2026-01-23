@@ -607,7 +607,7 @@ class TestAdvancedVisualizer:
         """Test that output directory is created properly."""
         with tempfile.TemporaryDirectory() as tmpdir:
             custom_dir = str(Path(tmpdir) / "custom" / "nested" / "dir")
-            visualizer = AdvancedVisualizer(output_dir=custom_dir)
+            AdvancedVisualizer(output_dir=custom_dir)
 
             assert Path(custom_dir).exists()
 

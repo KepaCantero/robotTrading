@@ -800,7 +800,7 @@ class LearningEngineUpdater:
             if pnl is not None and not isinstance(pnl, (int, float, Decimal)):
                 try:
                     pnl = Decimal(str(pnl))
-                except:
+                except Exception:
                     pnl = Decimal("0")
             elif pnl is None:
                 pnl = Decimal("0")

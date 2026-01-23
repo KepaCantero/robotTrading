@@ -8,7 +8,8 @@ TODO: Complete implementation in PHASE 4
 """
 
 from decimal import Decimal
-from typing import List, Optional
+from typing import List
+
 from pydantic import BaseModel, Field
 
 
@@ -23,11 +24,19 @@ class DeploymentInput(BaseModel):
     max_drawdown_pct: Decimal = Field(..., ge=0, le=100, description="Maximum drawdown %")
     sharpe_ratio: Decimal = Field(..., description="Sharpe ratio of strategy")
     win_rate_pct: Decimal = Field(..., ge=0, le=100, description="Win rate %")
-    feasibility_ratio: Decimal = Field(..., ge=0, description="Feasibility ratio (alpha sustainability)")
+    feasibility_ratio: Decimal = Field(
+        ..., ge=0, description="Feasibility ratio (alpha sustainability)"
+    )
     validation_passed: bool = Field(..., description="Whether validation passed")
-    validation_failures: List[str] = Field(default_factory=list, description="List of validation failures")
-    recommendation_score: Decimal = Field(..., ge=0, le=100, description="Recommendation score 0-100")
-    recommendation_status: str = Field(..., description="Recommendation status (strong_buy, buy, hold, etc.)")
+    validation_failures: List[str] = Field(
+        default_factory=list, description="List of validation failures"
+    )
+    recommendation_score: Decimal = Field(
+        ..., ge=0, le=100, description="Recommendation score 0-100"
+    )
+    recommendation_status: str = Field(
+        ..., description="Recommendation status (strong_buy, buy, hold, etc.)"
+    )
     current_capital: Decimal = Field(..., gt=0, description="Current capital in EUR")
     target_capital: Decimal = Field(..., gt=0, description="Target capital in EUR")
 

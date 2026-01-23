@@ -1,37 +1,12 @@
-"""
-AlgoTrading MVP - Main FastAPI Application
-
-Main entry point for the AlgoTrading MVP system.
-Implements health checks, CORS configuration, and basic error handling.
-
-Author: AlgoTrading MVP Team
-Version: 1.0.0
-"""
-
-# ============================================================================
-# SOLUCIÓN DEFINITIVA: Configurar variables de entorno ANTES de cualquier import
-# Esto previene bloqueos de threading con mutex.cc
-# Debe ir ANTES de importar numpy, pandas, torch, o cualquier otra librería
-# ============================================================================
-import os
-
-os.environ['OMP_NUM_THREADS'] = '1'
-os.environ['OPENBLAS_NUM_THREADS'] = '1'
-os.environ['MKL_NUM_THREADS'] = '1'
-os.environ['NUMEXPR_NUM_THREADS'] = '1'
-os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
-os.environ['MKL_SERVICE_FORCE_INTEL'] = '1'
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
-os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
-os.environ['FOR_DISABLE_CONSOLE_CTRL_HANDLER'] = '1'
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-os.environ['CUDA_VISIBLE_DEVICES'] = ''
-os.environ['TORCH_USE_CUDA_DSA'] = '0'
-
 import logging
+import os
+import platform
+import sys
 from contextlib import asynccontextmanager
+from datetime import datetime
 from typing import Any, Dict
 
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -51,8 +26,37 @@ from app.api.trading_error_handler import router as trading_error_handler_router
 from app.core.config import get_settings
 from app.core.database import close_database, init_database
 
-# IMPORTANT: Import logging_config FIRST to ensure all warnings/errors go to files
+"""
+AlgoTrading MVP - Main FastAPI Application
 
+Main entry point for the AlgoTrading MVP system.
+Implements health checks, CORS configuration, and basic error handling.
+
+Author: AlgoTrading MVP Team
+Version: 1.0.0
+"""
+
+# ============================================================================
+# SOLUCIÓN DEFINITIVA: Configurar variables de entorno ANTES de cualquier import
+# Esto previene bloqueos de threading con mutex.cc
+# Debe ir ANTES de importar numpy, pandas, torch, o cualquier otra librería
+# ============================================================================
+
+os.environ['OMP_NUM_THREADS'] = '1'
+os.environ['OPENBLAS_NUM_THREADS'] = '1'
+os.environ['MKL_NUM_THREADS'] = '1'
+os.environ['NUMEXPR_NUM_THREADS'] = '1'
+os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
+os.environ['MKL_SERVICE_FORCE_INTEL'] = '1'
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
+os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
+os.environ['FOR_DISABLE_CONSOLE_CTRL_HANDLER'] = '1'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
+os.environ['TORCH_USE_CUDA_DSA'] = '0'
+
+
+# IMPORTANT: Import logging_config FIRST to ensure all warnings/errors go to files
 # Get application settings (lazy loading to avoid validation issues during
 # import)
 settings = None
@@ -185,9 +189,6 @@ async def detailed_health_check() -> Dict[str, Any]:
     Returns:
         Dict with detailed health information
     """
-    import platform
-    import sys
-    from datetime import datetime
 
     return {
         "status": "ok",
@@ -230,6 +231,7 @@ async def internal_error_handler(request, exc):
 
 
 if __name__ == "__main__":
-    import uvicorn
 
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True, log_level="info")
+    uvicorn.run(
+        "app.main:app", host="0.0.0.0", port=8000, reload=True, log_level="info"
+    )  # nosec B104

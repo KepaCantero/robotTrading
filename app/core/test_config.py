@@ -218,7 +218,7 @@ def setup_test_environment() -> TestEnvironmentConfig:
 
 def cleanup_test_environment() -> None:
     """Cleanup test environment."""
-    global _test_config_manager
+    # global _test_config_manager  # F824 removed
     if _test_config_manager is not None:
         _test_config_manager.cleanup_test_environment()
 

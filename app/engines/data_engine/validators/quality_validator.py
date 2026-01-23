@@ -168,7 +168,7 @@ class QualityValidator:
         try:
             # Serializar datos a string
             data_str = str(sorted([str(d) for d in data]))
-            return hashlib.md5(data_str.encode()).hexdigest()
+            return hashlib.md5(data_str.encode(), usedforsecurity=False).hexdigest()  # nosec B324
         except Exception as e:
             logger.error(f"Error calculando checksum: {e}")
             return ""

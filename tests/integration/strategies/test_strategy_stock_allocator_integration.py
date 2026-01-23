@@ -1,5 +1,8 @@
-#!/usr/bin/env python3
+from app.services.data_loader import load_all_csv_data
+
+# !/usr/bin/env python3
 """
+        from tests.integration.data.test_data_loader import load_all_csv_data
 Integration Test for StrategyStockAllocator with Real Data
 
 Tests the complete allocation pipeline using real CSV data from data/historical/:
@@ -18,10 +21,10 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-import pytest
+import pytest  # noqa: E402
 
-from app.core.centralized_config import StockAllocationSettings
-from app.services.strategy_stock_allocator import StrategyStockAllocator
+from app.core.centralized_config import StockAllocationSettings  # noqa: E402
+from app.services.strategy_stock_allocator import StrategyStockAllocator  # noqa: E402
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -50,7 +53,6 @@ class TestStrategyStockAllocatorIntegration:
     def real_historical_data(self, historical_data_dir):
         """Load real historical data from CSV files."""
         # Use shared data loader utility
-        from tests.integration.data.test_data_loader import load_all_csv_data
 
         historical_data = load_all_csv_data(data_dir=historical_data_dir, min_days=40)
         logger.info(f"Loaded historical data for {len(historical_data)} symbols")

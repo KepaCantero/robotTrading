@@ -1,3 +1,13 @@
+import json
+import logging
+import sys
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, Optional
+
+from app.engines.context_engine import ContextEngine
+from app.engines.data_engine import DataEngine
+
 """
 Integration & Health Validation System
 
@@ -8,19 +18,11 @@ Sistema completo de validación que verifica:
 - Dashboard state JSON se genera correctamente
 """
 
-import json
-import logging
-import sys
-from datetime import datetime
-from pathlib import Path
-from typing import Any, Dict, Optional
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.engines.context_engine import ContextEngine
-from app.engines.data_engine import DataEngine
 
 logger = logging.getLogger(__name__)
 
@@ -395,7 +397,7 @@ class SystemIntegrityValidator:
 
         try:
             # Inicializar ambos engines
-            data_engine = DataEngine({'sources': {}})
+            DataEngine({'sources': {}})
             context_engine = ContextEngine({})
 
             # Check: Verificar que ambos engines pueden trabajar juntos

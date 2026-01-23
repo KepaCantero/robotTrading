@@ -7,19 +7,13 @@ and accessing deployment status information.
 
 import logging
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict
 
 from fastapi import APIRouter, HTTPException, Query
 
 from app.models.deployment import DeploymentInput
-from app.services.deploy_decision_orchestrator import (
-    DeployDecisionOrchestrator,
-    get_deploy_orchestrator,
-)
-from app.services.external_integrations import (
-    get_health_check_manager,
-    get_retry_manager,
-)
+from app.services.deploy_decision_orchestrator import get_deploy_orchestrator
+from app.services.external_integrations import get_health_check_manager
 
 logger = logging.getLogger(__name__)
 
@@ -195,9 +189,7 @@ async def health_check() -> Dict:
             },
             "summary": {
                 "total_services": len(all_health),
-                "healthy_services": len(
-                    [s for s in all_health.values() if s.status == "healthy"]
-                ),
+                "healthy_services": len([s for s in all_health.values() if s.status == "healthy"]),
                 "degraded_services": degraded_count,
                 "unhealthy_services": unhealthy_count,
             },
@@ -225,12 +217,8 @@ async def deployment_status() -> Dict:
         health_manager = get_health_check_manager()
 
         decision_count = len(orchestrator.decision_history)
-        approved_count = sum(
-            1 for d in orchestrator.decision_history if d.status == "APPROVED"
-        )
-        rejected_count = sum(
-            1 for d in orchestrator.decision_history if d.status == "REJECTED"
-        )
+        approved_count = sum(1 for d in orchestrator.decision_history if d.status == "APPROVED")
+        rejected_count = sum(1 for d in orchestrator.decision_history if d.status == "REJECTED")
         conditional_count = sum(
             1 for d in orchestrator.decision_history if d.status == "CONDITIONAL"
         )

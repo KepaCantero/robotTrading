@@ -8,9 +8,8 @@ Includes counters, gauges, histograms, and summary metrics for comprehensive mon
 import logging
 import time
 from datetime import datetime
-from decimal import Decimal
-from typing import Dict, List, Optional
 from enum import Enum
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -376,9 +375,7 @@ class PrometheusMetricsCollector:
         logger.debug(f"✅ Observed histogram {metric_name}: {value}")
         return True
 
-    def _build_key(
-        self, metric_name: str, labels: Optional[Dict[str, str]] = None
-    ) -> str:
+    def _build_key(self, metric_name: str, labels: Optional[Dict[str, str]] = None) -> str:
         """Build metric key with labels."""
         if not labels:
             return metric_name

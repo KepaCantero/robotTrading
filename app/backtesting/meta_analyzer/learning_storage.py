@@ -262,10 +262,10 @@ class LearningEngineStorage:
             if file_path.suffix in ['.pt', '.pth']:
                 if not TORCH_AVAILABLE:
                     raise ImportError("PyTorch no disponible para cargar .pt")
-                data = torch.load(file_path, map_location='cpu')
+                data = torch.load(file_path, map_location='cpu')  # nosec B614
             elif file_path.suffix == '.pkl':
                 with open(file_path, 'rb') as f:
-                    data = pickle.load(f)
+                    data = pickle.load(f)  # nosec B301 - internal trusted storage
             else:
                 raise ValueError(f"Formato no soportado: {file_path.suffix}")
 

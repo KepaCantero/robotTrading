@@ -144,7 +144,7 @@ class AlphaVantageFeed(DataFeedInterface):
 
             quote_data = data["Global Quote"]
 
-            return Quote(
+            return Quote(  # type: ignore
                 symbol=symbol,
                 bid=Decimal(quote_data.get("05. price", "0")),
                 ask=Decimal(quote_data.get("05. price", "0")),
@@ -210,7 +210,7 @@ class AlphaVantageFeed(DataFeedInterface):
 
                 if start_date <= date <= end_date:
                     historical_data.append(
-                        HistoricalData(
+                        HistoricalData(  # type: ignore
                             symbol=symbol,
                             timestamp=date,
                             open=Decimal(values["1. open"]),
@@ -289,7 +289,7 @@ class YahooFinanceFeed(DataFeedInterface):
                 logger.warning(f"No close price for {symbol}")
                 return None
 
-            return Quote(
+            return Quote(  # type: ignore
                 symbol=symbol,
                 bid=Decimal(str(latest_close)),
                 ask=Decimal(str(latest_close)),
@@ -357,7 +357,7 @@ class YahooFinanceFeed(DataFeedInterface):
 
                 if start_date <= date <= end_date:
                     historical_data.append(
-                        HistoricalData(
+                        HistoricalData(  # type: ignore
                             symbol=symbol,
                             timestamp=date,
                             open=Decimal(str(quote["open"][i] or 0)),
@@ -457,7 +457,7 @@ class MockDataFeed(DataFeedInterface):
 
         quote_data = self._mock_data[symbol]["quote"]
 
-        return Quote(
+        return Quote(  # type: ignore
             symbol=symbol,
             bid=quote_data["bid"],
             ask=quote_data["ask"],
@@ -497,7 +497,7 @@ class MockDataFeed(DataFeedInterface):
             price = base_price * (Decimal("1") + price_change)
 
             historical_data.append(
-                HistoricalData(
+                HistoricalData(  # type: ignore
                     symbol=symbol,
                     timestamp=current_date,
                     open=price,
