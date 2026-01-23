@@ -6,7 +6,6 @@ Tests for the trade persistence layer with SQLAlchemy ORM models.
 
 from datetime import datetime, timedelta
 from decimal import Decimal
-from unittest.mock import AsyncMock, patch
 
 import pytest
 import pytest_asyncio

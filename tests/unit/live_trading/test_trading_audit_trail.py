@@ -16,14 +16,11 @@ use the TradingAuditTrail.
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
-import tempfile
-import shutil
 
 import pytest
 
 from app.services.live_trading.trading_audit_trail import (
     AuditEventType,
-    AuditPersistence,
     ComplianceReport,
     TradingAuditTrail,
 )

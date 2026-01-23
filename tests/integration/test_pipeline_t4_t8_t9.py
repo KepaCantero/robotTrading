@@ -26,7 +26,6 @@ from app.services.portfolio_constructor.models import (
     AllocationWeight,
     PortfolioAllocation,
 )
-from app.services.risk_scaling_application.models import RiskScalingRequest
 from app.services.reporting_generator import (
     get_delivery_manager,
     get_html_template_engine,
@@ -35,7 +34,7 @@ from app.services.reporting_generator import (
     get_visualization_generator,
 )
 from app.services.risk_scaling_application import get_risk_scaler
-from app.services.risk_scaling_application.models import RiskAdjustedPortfolio
+from app.services.risk_scaling_application.models import RiskScalingRequest
 
 
 class TestDataFactory:
