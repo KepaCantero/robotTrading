@@ -147,7 +147,11 @@ class AssetIdentificationService:
                     avg_volume = Decimal(str(int(df['volume'].mean())))
 
                     asset = Asset(
-                        symbol=binance_tickers[i] if i < len(binance_tickers) else ticker.replace("-USD", "USDT"),
+                        symbol=(
+                            binance_tickers[i]
+                            if i < len(binance_tickers)
+                            else ticker.replace("-USD", "USDT")
+                        ),
                         name=ticker.replace("-USD", ""),  # Simplified
                         asset_class=AssetClass.CRYPTO,
                         exchange=Exchange.BINANCE,

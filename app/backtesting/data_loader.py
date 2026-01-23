@@ -16,12 +16,28 @@ from typing import List, Optional
 import pandas as pd
 
 # Try multiple Yahoo Finance libraries as fallbacks
-try:
-    import yfinance as yf
+# Note: yfinance uses Python 3.10+ union syntax (X | Y), which causes TypeError in Python 3.9
+# We use lazy import to avoid this issue at module load time
+_yf = None
+HAS_YFINANCE = False
 
-    HAS_YFINANCE = True
-except ImportError:
-    HAS_YFINANCE = False
+
+def _ensure_yfinance():
+    """Lazy import yfinance to avoid Python version compatibility issues."""
+    global _yf, HAS_YFINANCE
+    if _yf is None:
+        try:
+            import yfinance as yf_module
+
+            _yf = yf_module
+            HAS_YFINANCE = True
+        except (ImportError, TypeError) as e:
+            # TypeError occurs on Python 3.9 due to union syntax in yfinance
+            HAS_YFINANCE = False
+            _yf = None
+            logger.debug(f"yfinance not available: {e}")
+    return _yf
+
 
 try:
     from yahoo_fin.stock_info import get_data as yahoo_fin_get_data
@@ -159,9 +175,10 @@ class DataLoader:
             return quotes
 
         # Try yfinance second
-        if HAS_YFINANCE:
+        yf_module = _ensure_yfinance()
+        if yf_module is not None:
             try:
-                ticker = yf.Ticker(symbol)
+                ticker = yf_module.Ticker(symbol)
                 interval = "1d" if timeframe == "1d" else "1h"
                 hist = ticker.history(start=start_date, end=end_date, interval=interval)
 

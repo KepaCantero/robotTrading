@@ -504,9 +504,7 @@ class StockAllocationSettings(BaseSettings):
             raise ValueError("Exposure limits must be between 0 and 1")
         return v
 
-    class Config:
-        env_prefix = "STOCK_ALLOCATION_"
-        case_sensitive = False
+    model_config = {"env_prefix": "STOCK_ALLOCATION_", "case_sensitive": False}
 
 
 class DatabaseConfig(BaseModel):

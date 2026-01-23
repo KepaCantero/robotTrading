@@ -335,11 +335,16 @@ class TestKnowledgeGraphSingleton:
     @pytest.mark.asyncio
     async def test_singleton_with_params(self):
         """Test singleton with parameters."""
+        # Reset singleton to allow fresh initialization for this test
+        import app.services.knowledge_graph.graph_builder as gb_module
+
+        gb_module._graph_builder = None
+
         builder1 = get_knowledge_graph_builder(graph_uri="bolt://custom:7687")
-        builder2 = get_knowledge_graph_builder(
-            graph_uri="bolt://other:7687"  # Different URI, same instance
-        )
+        # Same instance returned, params ignored on second call
+        builder2 = get_knowledge_graph_builder(graph_uri="bolt://other:7687")
         assert builder1 is builder2
+        # First initialization wins
         assert builder1.graph_uri == "bolt://custom:7687"
 
 

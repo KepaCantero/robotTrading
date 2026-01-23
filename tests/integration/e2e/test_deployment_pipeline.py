@@ -8,6 +8,7 @@ T4.1 (Capacity Fade) → T8.1 (Risk Scaling) → T9.1 (Reporting) → T10.1 (Dep
 from decimal import Decimal
 
 import pytest
+import pytest_asyncio
 
 from app.models.deployment import DeploymentInput
 from app.services.capacity_fade_validation import CapacityFadeRequest, CapacityFadeValidator
@@ -17,7 +18,7 @@ from app.services.deploy_decision_orchestrator import DeployDecisionOrchestrator
 class TestDeploymentPipeline:
     """Test complete deployment decision pipeline."""
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def orchestrator(self):
         """Create orchestrator instance."""
         return DeployDecisionOrchestrator()
@@ -30,15 +31,31 @@ class TestDeploymentPipeline:
             profile_id="profile_strong_001",
             input_id="input_strong_001",
             strategy_name="Strong Momentum Strategy",
+            # From backtest results
+            feasibility_ratio=Decimal("1.1"),  # Good feasibility
             annual_return_pct=Decimal("15.0"),
             max_drawdown_pct=Decimal("20.0"),
             sharpe_ratio=Decimal("1.8"),
             win_rate_pct=Decimal("58.0"),
-            feasibility_ratio=Decimal("1.1"),  # Good feasibility
+            # From validation engine
             validation_passed=True,
             validation_failures=[],
+            validation_warnings=[],
+            # From strategy recommender
             recommendation_score=Decimal("75"),
-            recommendation_status="strong_buy",
+            recommendation_status="STRONG_BUY",
+            recommendation_confidence="high",
+            # From portfolio constructor
+            num_modules=5,
+            top_allocation_pct=Decimal("25.0"),
+            diversification_ratio=Decimal("0.85"),
+            # User targets
+            target_annual_return_pct=Decimal("20.0"),
+            max_acceptable_drawdown_pct=Decimal("25.0"),
+            # T4.1: Capacity fade validation results
+            capacity_fade_feasible=True,
+            estimated_alpha_at_scale=Decimal("18.5"),
+            capacity_fade_assessment="Alpha sustainable at scale",
             current_capital=Decimal("100000"),
             target_capital=Decimal("250000"),
         )
@@ -51,15 +68,31 @@ class TestDeploymentPipeline:
             profile_id="profile_weak_001",
             input_id="input_weak_001",
             strategy_name="Weak Mean Reversion Strategy",
+            # From backtest results
+            feasibility_ratio=Decimal("0.6"),  # Poor feasibility
             annual_return_pct=Decimal("2.0"),  # Weak alpha
             max_drawdown_pct=Decimal("35.0"),  # High drawdown
             sharpe_ratio=Decimal("0.5"),  # Poor Sharpe
             win_rate_pct=Decimal("48.0"),  # Below 50%
-            feasibility_ratio=Decimal("0.6"),  # Poor feasibility
+            # From validation engine
             validation_passed=False,
             validation_failures=["Sharpe ratio too low", "Win rate below threshold"],
+            validation_warnings=["High risk detected"],
+            # From strategy recommender
             recommendation_score=Decimal("25"),  # Poor recommendation
-            recommendation_status="not_recommended",
+            recommendation_status="NOT_RECOMMENDED",
+            recommendation_confidence="low",
+            # From portfolio constructor
+            num_modules=3,
+            top_allocation_pct=Decimal("40.0"),  # High concentration
+            diversification_ratio=Decimal("0.5"),  # Poor diversification
+            # User targets
+            target_annual_return_pct=Decimal("10.0"),
+            max_acceptable_drawdown_pct=Decimal("20.0"),
+            # T4.1: Capacity fade validation results
+            capacity_fade_feasible=False,
+            estimated_alpha_at_scale=Decimal("1.5"),
+            capacity_fade_assessment="Alpha degrades significantly at scale",
             current_capital=Decimal("50000"),
             target_capital=Decimal("250000"),
         )
@@ -72,15 +105,31 @@ class TestDeploymentPipeline:
             profile_id="profile_marginal_001",
             input_id="input_marginal_001",
             strategy_name="Marginal Breakout Strategy",
+            # From backtest results
+            feasibility_ratio=Decimal("0.85"),  # Marginal feasibility
             annual_return_pct=Decimal("8.0"),  # Moderate alpha
             max_drawdown_pct=Decimal("28.0"),
             sharpe_ratio=Decimal("1.0"),  # Moderate Sharpe
             win_rate_pct=Decimal("52.0"),  # Slightly positive
-            feasibility_ratio=Decimal("0.85"),  # Marginal feasibility
+            # From validation engine
             validation_passed=True,
             validation_failures=[],
+            validation_warnings=["Some risk factors detected"],
+            # From strategy recommender
             recommendation_score=Decimal("55"),  # Neutral recommendation
-            recommendation_status="hold",
+            recommendation_status="HOLD",
+            recommendation_confidence="medium",
+            # From portfolio constructor
+            num_modules=4,
+            top_allocation_pct=Decimal("30.0"),
+            diversification_ratio=Decimal("0.70"),
+            # User targets
+            target_annual_return_pct=Decimal("12.0"),
+            max_acceptable_drawdown_pct=Decimal("25.0"),
+            # T4.1: Capacity fade validation results
+            capacity_fade_feasible=True,
+            estimated_alpha_at_scale=Decimal("9.0"),
+            capacity_fade_assessment="Alpha slightly degrades at scale",
             current_capital=Decimal("75000"),
             target_capital=Decimal("200000"),
         )
@@ -138,15 +187,31 @@ class TestDeploymentPipeline:
             profile_id="profile_highrisk_001",
             input_id="input_highrisk_001",
             strategy_name="High Risk Strategy",
+            # From backtest results
+            feasibility_ratio=Decimal("1.0"),
             annual_return_pct=Decimal("20.0"),  # High return
             max_drawdown_pct=Decimal("50.0"),  # Very high drawdown
             sharpe_ratio=Decimal("1.0"),
             win_rate_pct=Decimal("55.0"),
-            feasibility_ratio=Decimal("1.0"),
+            # From validation engine
             validation_passed=True,
             validation_failures=[],
+            validation_warnings=["High drawdown risk"],
+            # From strategy recommender
             recommendation_score=Decimal("60"),
-            recommendation_status="hold",
+            recommendation_status="HOLD",
+            recommendation_confidence="medium",
+            # From portfolio constructor
+            num_modules=4,
+            top_allocation_pct=Decimal("35.0"),
+            diversification_ratio=Decimal("0.75"),
+            # User targets
+            target_annual_return_pct=Decimal("15.0"),
+            max_acceptable_drawdown_pct=Decimal("20.0"),  # Lower than actual drawdown
+            # T4.1: Capacity fade validation results
+            capacity_fade_feasible=True,
+            estimated_alpha_at_scale=Decimal("22.0"),
+            capacity_fade_assessment="Alpha stable at scale",
             current_capital=Decimal("100000"),
             target_capital=Decimal("250000"),
         )
@@ -183,19 +248,35 @@ class TestDeploymentPipeline:
             profile_id="profile_val_fail_001",
             input_id="input_val_fail_001",
             strategy_name="Failed Validation Strategy",
+            # From backtest results
+            feasibility_ratio=Decimal("1.0"),
             annual_return_pct=Decimal("10.0"),
             max_drawdown_pct=Decimal("25.0"),
             sharpe_ratio=Decimal("1.5"),
             win_rate_pct=Decimal("55.0"),
-            feasibility_ratio=Decimal("1.0"),
+            # From validation engine
             validation_passed=False,
             validation_failures=[
                 "Signal generation failed",
                 "Risk metrics invalid",
                 "Data quality issues",
             ],
+            validation_warnings=["Multiple validation issues"],
+            # From strategy recommender
             recommendation_score=Decimal("60"),
-            recommendation_status="hold",
+            recommendation_status="HOLD",
+            recommendation_confidence="low",
+            # From portfolio constructor
+            num_modules=4,
+            top_allocation_pct=Decimal("30.0"),
+            diversification_ratio=Decimal("0.75"),
+            # User targets
+            target_annual_return_pct=Decimal("15.0"),
+            max_acceptable_drawdown_pct=Decimal("25.0"),
+            # T4.1: Capacity fade validation results
+            capacity_fade_feasible=None,
+            estimated_alpha_at_scale=None,
+            capacity_fade_assessment=None,
             current_capital=Decimal("100000"),
             target_capital=Decimal("250000"),
         )
@@ -214,15 +295,31 @@ class TestDeploymentPipeline:
             profile_id="profile_feasible_high_001",
             input_id="input_feasible_high_001",
             strategy_name="Highly Feasible Strategy",
+            # From backtest results
+            feasibility_ratio=Decimal("1.5"),  # Very good feasibility
             annual_return_pct=Decimal("10.0"),
             max_drawdown_pct=Decimal("20.0"),
             sharpe_ratio=Decimal("1.5"),
             win_rate_pct=Decimal("55.0"),
-            feasibility_ratio=Decimal("1.5"),  # Very good feasibility
+            # From validation engine
             validation_passed=True,
             validation_failures=[],
+            validation_warnings=[],
+            # From strategy recommender
             recommendation_score=Decimal("70"),
-            recommendation_status="buy",
+            recommendation_status="BUY",
+            recommendation_confidence="high",
+            # From portfolio constructor
+            num_modules=5,
+            top_allocation_pct=Decimal("25.0"),
+            diversification_ratio=Decimal("0.85"),
+            # User targets
+            target_annual_return_pct=Decimal("12.0"),
+            max_acceptable_drawdown_pct=Decimal("25.0"),
+            # T4.1: Capacity fade validation results
+            capacity_fade_feasible=True,
+            estimated_alpha_at_scale=Decimal("12.0"),
+            capacity_fade_assessment="Excellent sustainability",
             current_capital=Decimal("100000"),
             target_capital=Decimal("250000"),
         )
@@ -232,15 +329,31 @@ class TestDeploymentPipeline:
             profile_id="profile_feasible_low_001",
             input_id="input_feasible_low_001",
             strategy_name="Low Feasibility Strategy",
+            # From backtest results
+            feasibility_ratio=Decimal("0.65"),  # Poor feasibility
             annual_return_pct=Decimal("10.0"),
             max_drawdown_pct=Decimal("20.0"),
             sharpe_ratio=Decimal("1.5"),
             win_rate_pct=Decimal("55.0"),
-            feasibility_ratio=Decimal("0.65"),  # Poor feasibility
+            # From validation engine
             validation_passed=True,
             validation_failures=[],
+            validation_warnings=["Low feasibility detected"],
+            # From strategy recommender
             recommendation_score=Decimal("70"),
-            recommendation_status="buy",
+            recommendation_status="BUY",
+            recommendation_confidence="medium",
+            # From portfolio constructor
+            num_modules=4,
+            top_allocation_pct=Decimal("30.0"),
+            diversification_ratio=Decimal("0.70"),
+            # User targets
+            target_annual_return_pct=Decimal("12.0"),
+            max_acceptable_drawdown_pct=Decimal("25.0"),
+            # T4.1: Capacity fade validation results
+            capacity_fade_feasible=True,
+            estimated_alpha_at_scale=Decimal("8.0"),
+            capacity_fade_assessment="Poor sustainability",
             current_capital=Decimal("100000"),
             target_capital=Decimal("250000"),
         )
@@ -260,15 +373,31 @@ class TestDeploymentPipeline:
             profile_id="profile_rec_score_001",
             input_id="input_rec_score_001",
             strategy_name="Base Strategy",
+            # From backtest results
+            feasibility_ratio=Decimal("1.0"),
             annual_return_pct=Decimal("10.0"),
             max_drawdown_pct=Decimal("20.0"),
             sharpe_ratio=Decimal("1.5"),
             win_rate_pct=Decimal("55.0"),
-            feasibility_ratio=Decimal("1.0"),
+            # From validation engine
             validation_passed=True,
             validation_failures=[],
+            validation_warnings=[],
+            # From strategy recommender
             recommendation_score=Decimal("50"),  # Base recommendation
-            recommendation_status="hold",
+            recommendation_status="HOLD",
+            recommendation_confidence="medium",
+            # From portfolio constructor
+            num_modules=4,
+            top_allocation_pct=Decimal("30.0"),
+            diversification_ratio=Decimal("0.75"),
+            # User targets
+            target_annual_return_pct=Decimal("12.0"),
+            max_acceptable_drawdown_pct=Decimal("25.0"),
+            # T4.1: Capacity fade validation results
+            capacity_fade_feasible=True,
+            estimated_alpha_at_scale=Decimal("10.0"),
+            capacity_fade_assessment="Moderate sustainability",
             current_capital=Decimal("100000"),
             target_capital=Decimal("250000"),
         )
@@ -288,24 +417,40 @@ class TestDeploymentPipeline:
             profile_id="profile_no_capital_001",
             input_id="input_no_capital_001",
             strategy_name="No Capital Data Strategy",
+            # From backtest results
+            feasibility_ratio=Decimal("1.0"),
             annual_return_pct=Decimal("10.0"),
             max_drawdown_pct=Decimal("20.0"),
             sharpe_ratio=Decimal("1.5"),
             win_rate_pct=Decimal("55.0"),
-            feasibility_ratio=Decimal("1.0"),
+            # From validation engine
             validation_passed=True,
             validation_failures=[],
+            validation_warnings=[],
+            # From strategy recommender
             recommendation_score=Decimal("70"),
-            recommendation_status="buy",
+            recommendation_status="BUY",
+            recommendation_confidence="high",
+            # From portfolio constructor
+            num_modules=4,
+            top_allocation_pct=Decimal("30.0"),
+            diversification_ratio=Decimal("0.75"),
+            # User targets
+            target_annual_return_pct=Decimal("12.0"),
+            max_acceptable_drawdown_pct=Decimal("25.0"),
+            # T4.1: Capacity fade validation results - MISSING
+            capacity_fade_feasible=None,
+            estimated_alpha_at_scale=None,
+            capacity_fade_assessment=None,
             current_capital=None,  # Missing capital data
             target_capital=None,
         )
 
         decision = await orchestrator.make_decision(no_capital_input)
 
-        # Should handle gracefully with default capacity fade score
+        # Should handle gracefully with no capacity fade score (triggers weight redistribution)
         assert decision.success is True
-        assert decision.capacity_fade_score == Decimal("50")  # Default
+        assert decision.capacity_fade_score is None  # Missing data
 
 
 class TestCapacityFadeIntegration:

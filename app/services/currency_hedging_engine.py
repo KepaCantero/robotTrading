@@ -89,7 +89,12 @@ class CurrencyHedgingEngine:
 
         for position in portfolio.positions:
             # Skip base currency and hedge positions
-            if position.currency == base_currency or position.hedging.is_hedge:
+            # Safely check if position is a hedge
+            is_hedge = False
+            if hasattr(position, 'hedging') and position.hedging is not None:
+                is_hedge = position.hedging.is_hedge
+
+            if position.currency == base_currency or is_hedge:
                 continue
 
             # Calculate position value in base currency

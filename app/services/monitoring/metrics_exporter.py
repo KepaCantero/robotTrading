@@ -111,7 +111,8 @@ class MetricsExporter:
             ) as resp:
                 if resp.status in (200, 201, 204):
                     logger.info(
-                        f"✅ Pushed metrics to PushGateway " f"(job={job_name}, instance={instance})"
+                        f"✅ Pushed metrics to PushGateway "
+                        f"(job={job_name}, instance={instance})"
                     )
                     self.export_history.append(
                         {
@@ -323,7 +324,12 @@ def get_metrics_exporter(
     prometheus_url: Optional[str] = None,
     pushgateway_url: Optional[str] = None,
 ) -> MetricsExporter:
-    """Get or create singleton MetricsExporter."""
+    """
+    Get or create singleton MetricsExporter.
+
+    If the exporter doesn't exist, creates one with the specified URLs.
+    If it exists but different URLs are provided, recreates it with new URLs.
+    """
     global _exporter
     if _exporter is None:
         _exporter = MetricsExporter(
@@ -331,5 +337,17 @@ def get_metrics_exporter(
             pushgateway_url=pushgateway_url,
         )
         logger.info("✅ MetricsExporter singleton initialized")
+    elif prometheus_url is not None or pushgateway_url is not None:
+        # If URLs are explicitly provided and differ from current, recreate
+        current_prom = _exporter.prometheus_url
+        current_push = _exporter.pushgateway_url
+        new_prom = prometheus_url or "http://localhost:9090"
+        new_push = pushgateway_url or "http://localhost:9091"
+        if current_prom != new_prom or current_push != new_push:
+            _exporter = MetricsExporter(
+                prometheus_url=prometheus_url,
+                pushgateway_url=pushgateway_url,
+            )
+            logger.info("✅ MetricsExporter singleton recreated with new URLs")
 
     return _exporter

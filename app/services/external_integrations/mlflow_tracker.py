@@ -146,7 +146,7 @@ class MLflowTracker:
         Returns:
             Experiment
         """
-        exp_id = f"exp_{len(self.experiments)}_{datetime.now().timestamp()}"
+        exp_id = f"exp_{len(self.experiments)}"
 
         # Try to create via MLflow API if connected
         if self.connected and self.session:
@@ -196,7 +196,7 @@ class MLflowTracker:
             logger.error(f"❌ Experiment not found: {experiment_id}")
             return {}
 
-        run_id = f"run_{len(self.experiments[experiment_id].runs)}_{datetime.now().timestamp()}"
+        run_id = f"run_{len(self.experiments[experiment_id].runs)}"
 
         # Try to start run via MLflow if connected
         if self.connected and self.session:
@@ -348,7 +348,7 @@ class MLflowTracker:
         Returns:
             MLModel
         """
-        model_id = f"model_{len(self.models)}_{datetime.now().timestamp()}"
+        model_id = f"model_{len(self.models)}"
 
         # Try to register via MLflow if connected
         if self.connected and self.session:
@@ -460,7 +460,7 @@ class MLflowTracker:
         """Log artifact (model file, plot, etc.)."""
         logger.info(f"✅ Logged artifact: {artifact_path} ({artifact_type})")
 
-    async def get_tracking_status(self) -> Dict:
+    def get_tracking_status(self) -> Dict:
         """Get tracking status including MLflow connection."""
         return {
             "experiments": len(self.experiments),

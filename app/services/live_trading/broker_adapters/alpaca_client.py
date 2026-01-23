@@ -144,24 +144,22 @@ class AlpacaClient:
         limit_price: Optional[Decimal] = None,
         stop_price: Optional[Decimal] = None,
         time_in_force: str = "day",
-    ) -> Dict[str, Any]:
+        trail_percent: Optional[float] = None,
+    ) -> str:
         """Submit an order to Alpaca.
 
         Args:
             symbol: Stock symbol (e.g., 'AAPL')
             qty: Order quantity
             side: Order side ('buy' or 'sell')
-            order_type: Order type ('market', 'limit', 'stop', 'stop_limit')
+            order_type: Order type ('market', 'limit', 'stop', 'stop_limit', 'trailing_stop')
             limit_price: Price for limit orders
             stop_price: Price for stop orders
             time_in_force: Order duration ('day', 'gtc', 'opg', 'cls')
+            trail_percent: Trail percent for trailing stop orders
 
         Returns:
-            dict: Order response including:
-                - id: Order ID
-                - status: Order status
-                - filled_qty: Filled quantity
-                - filled_avg_price: Average fill price
+            str: Order ID
 
         Raises:
             AlpacaClientError: If order submission fails
@@ -187,23 +185,14 @@ class AlpacaClient:
             if stop_price is not None and order_type.lower() in ("stop", "stop_limit"):
                 order_params["stop_price"] = float(stop_price)
 
+            # Add trail_percent for trailing stop orders
+            if trail_percent is not None and order_type.lower() == "trailing_stop":
+                order_params["trail_percent"] = trail_percent
+
             # Submit order
             order = self.api.submit_order(**order_params)
 
-            return {
-                "id": order.id,
-                "symbol": order.symbol,
-                "qty": float(order.qty),
-                "side": order.side,
-                "type": order.order_type,
-                "status": order.status,
-                "filled_qty": float(order.filled_qty) if order.filled_qty else 0,
-                "filled_avg_price": (
-                    float(order.filled_avg_price) if order.filled_avg_price else None
-                ),
-                "created_at": order.created_at.isoformat() if order.created_at else None,
-                "updated_at": order.updated_at.isoformat() if order.updated_at else None,
-            }
+            return order.id
 
         except Exception as e:
             logger.error(f"❌ Order submission failed: {str(e)}")

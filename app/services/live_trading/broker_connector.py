@@ -204,14 +204,15 @@ class BrokerConnector:
         """
         return await self.adapter.get_account_info()
 
-    async def get_positions(self) -> List[BrokerPosition]:
+    async def get_positions(self) -> Dict[str, BrokerPosition]:
         """
         Get all open positions from broker.
 
         Returns:
-            List of BrokerPosition objects
+            Dict of symbol → BrokerPosition
         """
-        return await self.adapter.get_positions()
+        positions_list = await self.adapter.get_positions()
+        return {pos.symbol: pos for pos in positions_list}
 
     async def get_position(self, symbol: str) -> Optional[BrokerPosition]:
         """
@@ -233,7 +234,7 @@ class BrokerConnector:
         order_type: OrderType = OrderType.MARKET,
         price: Optional[Decimal] = None,
         stop_price: Optional[Decimal] = None,
-    ) -> str:
+    ) -> Optional[BrokerOrder]:
         """
         Place order with broker.
 
@@ -246,9 +247,9 @@ class BrokerConnector:
             stop_price: Stop price (for stop orders)
 
         Returns:
-            Order ID if successful
+            BrokerOrder object if successful, None otherwise
         """
-        return await self.adapter.place_order(
+        order_id = await self.adapter.place_order(
             symbol=symbol,
             side=side,
             quantity=quantity,
@@ -256,6 +257,10 @@ class BrokerConnector:
             price=price,
             stop_price=stop_price,
         )
+        # Return the full order object from adapter's orders dict
+        if order_id:
+            return self.adapter.orders.get(order_id)
+        return None
 
     async def cancel_order(self, order_id: str) -> bool:
         """

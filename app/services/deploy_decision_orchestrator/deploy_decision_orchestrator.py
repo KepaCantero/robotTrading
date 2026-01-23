@@ -299,10 +299,13 @@ class DeployDecisionOrchestrator:
             (capacity_fade_score, capacity_fade_feasible, estimated_alpha)
         """
         try:
-            # If capital data not provided, skip validation (backward compatibility)
+            # If capital data not provided, return None for capacity_fade_score
+            # This triggers weight redistribution in _calculate_overall_score()
             if deployment_input.current_capital is None or deployment_input.target_capital is None:
-                logger.warning("⚠️ Capacity fade validation skipped: missing capital data")
-                return Decimal("50"), None, None
+                logger.warning(
+                    "⚠️ Capacity fade validation skipped: missing capital data, redistributing weights"
+                )
+                return None, None, None
 
             # Build request for T4.1 validator
             fade_request = CapacityFadeRequest(
@@ -369,32 +372,48 @@ class DeployDecisionOrchestrator:
         validation: Decimal,
         recommendation: Decimal,
         risk: Decimal,
-        capacity_fade: Decimal = Decimal("50"),
+        capacity_fade: Optional[Decimal] = None,
     ) -> Decimal:
         """
         Calculate weighted overall score.
 
         T4.1 Integration: Capacity fade is CRITICAL gate (40% weight).
 
-        Weights (T4.1 Critical Integration):
+        Weights when capacity fade data is available (T4.1 Critical Integration):
         - Capacity Fade: 40% (CRITICAL - Prevents unsustainable scaling)
         - Feasibility: 25% (Return feasibility)
         - Validation: 15% (Technical validation)
         - Risk: 12% (Risk metrics)
         - Recommendation: 8% (Strategy quality)
 
+        Weights when capacity fade data is NOT available (backward compatibility):
+        - Feasibility: 42% (25 + 40 redistributed)
+        - Validation: 25% (15 + 40 redistributed)
+        - Risk: 20% (12 + 40 redistributed)
+        - Recommendation: 13% (8 + 40 redistributed)
+
         Rationale:
         - Capacity fade is hardest gate: strategies must sustain alpha at €250k+
         - Without capacity fade validation, strategy will fail at scale
         - Other metrics secondary to capacity viability
         """
-        weighted_score = (
-            capacity_fade * Decimal("0.40")  # CRITICAL: 40%
-            + feasibility * Decimal("0.25")
-            + validation * Decimal("0.15")
-            + risk * Decimal("0.12")
-            + recommendation * Decimal("0.08")
-        )
+        if capacity_fade is not None:
+            # Full T4.1 integration with capacity fade
+            weighted_score = (
+                capacity_fade * Decimal("0.40")  # CRITICAL: 40%
+                + feasibility * Decimal("0.25")
+                + validation * Decimal("0.15")
+                + risk * Decimal("0.12")
+                + recommendation * Decimal("0.08")
+            )
+        else:
+            # Backward compatibility: redistribute capacity fade weight
+            weighted_score = (
+                feasibility * Decimal("0.42")
+                + validation * Decimal("0.25")
+                + risk * Decimal("0.20")
+                + recommendation * Decimal("0.13")
+            )
 
         return weighted_score
 
@@ -507,9 +526,7 @@ class DeployDecisionOrchestrator:
         if recommendation_score >= Decimal("80"):
             recommendation_text = f"✅ Strong recommendation score ({recommendation_score:.0f}/100). Strategy shows high potential."
         elif recommendation_score >= Decimal("65"):
-            recommendation_text = (
-                f"👍 Good recommendation score ({recommendation_score:.0f}/100). Strategy is viable."
-            )
+            recommendation_text = f"👍 Good recommendation score ({recommendation_score:.0f}/100). Strategy is viable."
         elif recommendation_score >= Decimal("50"):
             recommendation_text = f"➖ Neutral recommendation score ({recommendation_score:.0f}/100). Marginal viability."
         else:
@@ -593,7 +610,7 @@ class DeployDecisionOrchestrator:
             improvement_areas.append("Increase diversification to reduce concentration risk")
         if input_data.capacity_fade_feasible is False:
             improvement_areas.append("Optimize strategy to sustain alpha at higher capital levels")
-        elif capacity_fade_score < Decimal("75"):
+        elif capacity_fade_score is not None and capacity_fade_score < Decimal("75"):
             improvement_areas.append(
                 "Consider liquidity-aware position sizing to maintain alpha at scale"
             )

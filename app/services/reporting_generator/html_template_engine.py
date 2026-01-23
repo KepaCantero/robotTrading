@@ -554,14 +554,14 @@ class HTMLTemplateEngine:
     }}
 
     body {{
-      font-family: {branding.font_family};
+      font-family: {font_family};
       line-height: 1.6;
       color: #333;
       background-color: #f5f5f5;
     }}
 
     header.report-header {{
-      background: linear-gradient(135deg, {branding.primary_color} 0%, {branding.secondary_color} 100%);
+      background: linear-gradient(135deg, {primary_color} 0%, {secondary_color} 100%);
       color: white;
       padding: 40px;
       text-align: center;
@@ -587,9 +587,9 @@ class HTMLTemplateEngine:
     }}
 
     section.report-section h2 {{
-      color: {branding.primary_color};
+      color: {primary_color};
       margin-bottom: 20px;
-      border-bottom: 2px solid {branding.accent_color};
+      border-bottom: 2px solid {accent_color};
       padding-bottom: 10px;
     }}
 
@@ -602,7 +602,7 @@ class HTMLTemplateEngine:
 
     .metric-card {{
       background: #f9f9f9;
-      border-left: 4px solid {branding.primary_color};
+      border-left: 4px solid {primary_color};
       padding: 15px;
       border-radius: 4px;
     }}
@@ -616,7 +616,7 @@ class HTMLTemplateEngine:
     .metric-value {{
       font-size: 1.5em;
       font-weight: bold;
-      color: {branding.primary_color};
+      color: {primary_color};
     }}
 
     table.data-table {{
@@ -626,7 +626,7 @@ class HTMLTemplateEngine:
     }}
 
     table.data-table th {{
-      background-color: {branding.primary_color};
+      background-color: {primary_color};
       color: white;
       padding: 12px;
       text-align: left;
@@ -668,7 +668,13 @@ class HTMLTemplateEngine:
       }}
     }}
     """
-        return css
+        # Format the CSS with branding values
+        return css.format(
+            font_family=branding.font_family,
+            primary_color=branding.primary_color,
+            secondary_color=branding.secondary_color,
+            accent_color=branding.accent_color,
+        )
 
     def _escape_html(self, text: str) -> str:
         """Escape HTML special characters."""

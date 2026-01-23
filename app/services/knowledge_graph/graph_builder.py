@@ -477,7 +477,11 @@ def get_knowledge_graph_builder(
     user: str = None,
     password: str = None,
 ) -> KnowledgeGraphBuilder:
-    """Get or create singleton knowledge graph builder."""
+    """Get or create singleton knowledge graph builder.
+
+    Note: Parameters are only used on first initialization.
+    Subsequent calls ignore parameters and return the existing instance.
+    """
     global _graph_builder
     if _graph_builder is None:
         _graph_builder = KnowledgeGraphBuilder(graph_uri, user, password)

@@ -54,10 +54,13 @@ def get_strategy_logger() -> StrategyLogger:
 
 def get_execution_engine() -> ExecutionEngine:
     """Obtener instancia del motor de ejecución."""
-    # global _execution_engine  # F824 removed
+    global _execution_engine
+
     if _execution_engine is None:
-        get_strategy_registry()
-        get_strategy_logger()
+        registry = get_strategy_registry()
+        logger = get_strategy_logger()
+        _execution_engine = ExecutionEngine(registry, logger)
+        logger.info("ExecutionEngine singleton initialized")
 
     return _execution_engine
 

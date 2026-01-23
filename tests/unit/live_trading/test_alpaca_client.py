@@ -6,7 +6,9 @@ Uses mocked alpaca-trade-api responses.
 """
 
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, Mock
+import sys
+import importlib
 
 import pytest
 
@@ -31,10 +33,17 @@ class TestAlpacaClientAuthentication:
     @pytest.mark.asyncio
     async def test_authenticate_success(self, alpaca_client, mock_rest_api):
         """Test successful authentication with Alpaca."""
-        with patch(
-            "app.services.live_trading.broker_adapters.alpaca_client.REST",
-            return_value=mock_rest_api,
-        ):
+        # Create a mock REST class
+        mock_rest_class = Mock(return_value=mock_rest_api)
+
+        # Create a mock module
+        mock_alpaca_module = Mock()
+        mock_alpaca_module.REST = mock_rest_class
+
+        # Add the mock module to sys.modules before importing
+        sys.modules['alpaca_trade_api'] = mock_alpaca_module
+
+        try:
             # Mock successful get_account call to verify connection
             mock_rest_api.get_account.return_value = MagicMock(
                 account_number="12345",
@@ -54,20 +63,39 @@ class TestAlpacaClientAuthentication:
 
             assert result is True
             assert alpaca_client.api is not None
+        finally:
+            # Clean up the mock module
+            if 'alpaca_trade_api' in sys.modules:
+                del sys.modules['alpaca_trade_api']
 
     @pytest.mark.asyncio
     async def test_authenticate_failure(self, alpaca_client):
         """Test authentication failure with invalid credentials."""
-        with patch(
-            "app.services.live_trading.broker_adapters.alpaca_client.REST",
-            side_effect=Exception("Invalid credentials"),
-        ):
+
+        # Create a mock REST class that raises an error
+        def mock_rest_init_error(*args, **kwargs):
+            raise Exception("Invalid credentials")
+
+        mock_rest_class = Mock(side_effect=mock_rest_init_error)
+
+        # Create a mock module
+        mock_alpaca_module = Mock()
+        mock_alpaca_module.REST = mock_rest_class
+
+        # Add the mock module to sys.modules before importing
+        sys.modules['alpaca_trade_api'] = mock_alpaca_module
+
+        try:
             with pytest.raises(AlpacaClientError):
                 await alpaca_client.authenticate(
                     api_key="invalid_key",
                     api_secret="invalid_secret",
                     base_url="https://paper-api.alpaca.markets",
                 )
+        finally:
+            # Clean up the mock module
+            if 'alpaca_trade_api' in sys.modules:
+                del sys.modules['alpaca_trade_api']
 
     @pytest.mark.asyncio
     async def test_authenticate_missing_credentials(self, alpaca_client):
@@ -412,6 +440,8 @@ class TestAlpacaClientConnectionManagement:
     @pytest.mark.asyncio
     async def test_start_stream(self, alpaca_client):
         """Test starting WebSocket stream."""
+        # Set authenticated to bypass the auth check
+        alpaca_client.is_authenticated = True
         # This is a placeholder for WebSocket implementation
         # For now, just verify the method exists and can be called
         await alpaca_client.start_stream(["AAPL", "TSLA"])

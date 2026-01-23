@@ -18,69 +18,88 @@ class TestSettings:
 
     def test_default_values(self):
         """Test that default values are set correctly."""
-        settings = Settings()
+        # Clear environment variables to test actual defaults
+        # Note: We keep DEBUG=true to allow empty SECRET_KEY (validation requirement)
+        original_env = {}
+        env_keys_to_clear = ["SECRET_KEY", "DATABASE_URL"]
+        for key in env_keys_to_clear:
+            if key in os.environ:
+                original_env[key] = os.environ[key]
+                del os.environ[key]
 
-        # Application settings
-        assert settings.app_name == "AlgoTrading MVP"
-        assert settings.app_version == "1.0.0"
-        assert settings.app_description == "Algorithmic Trading System MVP"
-        assert settings.debug is True  # Changed because DEBUG=true is set in test_main.py
+        try:
+            # Set DEBUG to true to allow empty SECRET_KEY in development
+            os.environ["DEBUG"] = "true"
 
-        # API settings
-        assert settings.api_v1_prefix == "/api/v1"
-        # Changed to empty string (new default)
-        assert settings.secret_key == ""
-        assert settings.access_token_expire_minutes == 30
-        assert settings.refresh_token_expire_days == 7
+            # Create a fresh Settings instance
+            from app.core.config import Settings
 
-        # Database settings
-        assert (
-            settings.database_url
-            == "postgresql://algotrading:algotrading@localhost:5432/algotrading"
-        )
-        assert settings.database_echo is False
-        assert settings.database_pool_size == 10
-        assert settings.database_max_overflow == 20
+            settings = Settings()
 
-        # Redis settings
-        assert settings.redis_url == "redis://localhost:6379/0"
-        assert settings.redis_password is None
-        assert settings.redis_db == 0
-        assert settings.redis_max_connections == 10
+            # Application settings
+            assert settings.app_name == "AlgoTrading MVP"
+            assert settings.app_version == "1.0.0"
+            assert settings.app_description == "Algorithmic Trading System MVP"
+            assert settings.debug is True  # True because we set DEBUG=true above
 
-        # Celery settings
-        assert settings.celery_broker_url == "redis://localhost:6379/1"
-        assert settings.celery_result_backend == "redis://localhost:6379/2"
-        assert settings.celery_task_serializer == "json"
-        assert settings.celery_result_serializer == "json"
-        assert settings.celery_accept_content == ["json"]
+            # API settings
+            assert settings.api_v1_prefix == "/api/v1"
+            # Default is empty string for development
+            assert settings.secret_key == ""
+            assert settings.access_token_expire_minutes == 30
+            assert settings.refresh_token_expire_days == 7
 
-        # Trading settings
-        assert settings.default_currency == "USD"
-        assert settings.max_position_size == 10000.0
-        assert settings.risk_free_rate == 0.02
+            # Database settings
+            assert (
+                settings.database_url
+                == "postgresql://algotrading:algotrading@localhost:5432/algotrading"
+            )
+            assert settings.database_echo is False
+            assert settings.database_pool_size == 10
+            assert settings.database_max_overflow == 20
 
-        # Logging settings
-        assert settings.log_level == "INFO"
-        assert settings.log_format == "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        assert settings.log_file is None
+            # Redis settings
+            assert settings.redis_url == "redis://localhost:6379/0"
+            assert settings.redis_password is None
+            assert settings.redis_db == 0
+            assert settings.redis_max_connections == 10
 
-        # CORS settings
-        assert settings.cors_origins == ["*"]
-        assert settings.cors_allow_credentials is True
-        assert settings.cors_allow_methods == ["*"]
-        assert settings.cors_allow_headers == ["*"]
+            # Celery settings
+            assert settings.celery_broker_url == "redis://localhost:6379/1"
+            assert settings.celery_result_backend == "redis://localhost:6379/2"
+            assert settings.celery_task_serializer == "json"
+            assert settings.celery_result_serializer == "json"
+            assert settings.celery_accept_content == ["json"]
 
-        # Security settings
-        assert settings.password_min_length == 8
-        assert settings.password_require_uppercase is True
-        assert settings.password_require_lowercase is True
-        assert settings.password_require_numbers is True
-        assert settings.password_require_special is True
+            # Trading settings
+            assert settings.default_currency == "USD"
+            assert settings.max_position_size == 10000.0
+            assert settings.risk_free_rate == 0.02
 
-        # Rate limiting
-        assert settings.rate_limit_requests == 100
-        assert settings.rate_limit_window == 60
+            # Logging settings
+            assert settings.log_level == "INFO"
+            assert settings.log_format == "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            assert settings.log_file is None
+
+            # CORS settings
+            assert settings.cors_origins == ["*"]
+            assert settings.cors_allow_credentials is True
+            assert settings.cors_allow_methods == ["*"]
+            assert settings.cors_allow_headers == ["*"]
+
+            # Security settings
+            assert settings.password_min_length == 8
+            assert settings.password_require_uppercase is True
+            assert settings.password_require_lowercase is True
+            assert settings.password_require_numbers is True
+            assert settings.password_require_special is True
+
+            # Rate limiting
+            assert settings.rate_limit_requests == 100
+            assert settings.rate_limit_window == 60
+        finally:
+            # Restore environment variables
+            os.environ.update(original_env)
 
     def test_environment_variable_loading(self):
         """Test that environment variables are loaded correctly."""
@@ -177,17 +196,29 @@ class TestSettings:
 
     def test_database_url_methods(self):
         """Test database URL methods."""
-        settings = Settings()
+        # Clear DATABASE_URL environment variable to test default
+        original_db_url = os.environ.pop("DATABASE_URL", None)
 
-        # Sync URL
-        sync_url = settings.get_database_url_sync()
-        assert sync_url == "postgresql://algotrading:algotrading@localhost:5432/algotrading"
+        try:
+            # Create a fresh Settings instance without the global singleton
+            from app.core.config import Settings
 
-        # Async URL
-        async_url = settings.get_database_url_async()
-        assert (
-            async_url == "postgresql+asyncpg://algotrading:algotrading@localhost:5432/algotrading"
-        )
+            settings = Settings()
+
+            # Sync URL
+            sync_url = settings.get_database_url_sync()
+            assert sync_url == "postgresql://algotrading:algotrading@localhost:5432/algotrading"
+
+            # Async URL
+            async_url = settings.get_database_url_async()
+            assert (
+                async_url
+                == "postgresql+asyncpg://algotrading:algotrading@localhost:5432/algotrading"
+            )
+        finally:
+            # Restore DATABASE_URL if it was set
+            if original_db_url:
+                os.environ["DATABASE_URL"] = original_db_url
 
     def test_environment_detection(self):
         """Test environment detection methods."""
@@ -246,8 +277,24 @@ class TestConvenienceFunctions:
 
     def test_get_database_url(self):
         """Test get_database_url function."""
-        url = get_database_url()
-        assert url == "postgresql://algotrading:algotrading@localhost:5432/algotrading"
+        # Clear DATABASE_URL environment variable to test default
+        original_db_url = os.environ.pop("DATABASE_URL", None)
+
+        try:
+            # Reset the global settings singleton
+            import app.core.config
+
+            app.core.config._settings_instance = None
+            url = get_database_url()
+            assert url == "postgresql://algotrading:algotrading@localhost:5432/algotrading"
+        finally:
+            # Restore DATABASE_URL if it was set
+            if original_db_url:
+                os.environ["DATABASE_URL"] = original_db_url
+            # Reset singleton for other tests
+            import app.core.config
+
+            app.core.config._settings_instance = None
 
     def test_get_redis_url(self):
         """Test get_redis_url function."""
@@ -258,8 +305,24 @@ class TestConvenienceFunctions:
         """Test get_secret_key function."""
         from app.core.config import get_secret_key
 
-        key = get_secret_key()
-        assert key == ""  # Changed to empty string (new default)
+        # Clear SECRET_KEY environment variable to test default
+        original_secret_key = os.environ.pop("SECRET_KEY", None)
+
+        try:
+            # Reset the global settings singleton
+            import app.core.config
+
+            app.core.config._settings_instance = None
+            key = get_secret_key()
+            assert key == ""  # Default is empty string
+        finally:
+            # Restore SECRET_KEY if it was set
+            if original_secret_key:
+                os.environ["SECRET_KEY"] = original_secret_key
+            # Reset singleton for other tests
+            import app.core.config
+
+            app.core.config._settings_instance = None
 
     def test_is_debug_mode(self):
         """Test is_debug_mode function."""

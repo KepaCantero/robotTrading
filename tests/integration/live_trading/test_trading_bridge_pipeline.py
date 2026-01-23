@@ -8,7 +8,7 @@ Tests cover:
 - Error handling and recovery
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock
 
@@ -181,9 +181,9 @@ class TestAlertToTradePipeline:
             (AlertSeverity.CRITICAL, Decimal("200")),  # 100 * 2.0
         ]
 
-        for severity, expected_qty in severities:
+        for i, (severity, expected_qty) in enumerate(severities):
             alert = AlertEvent(
-                event_id="evt_001",
+                event_id=f"evt_{i:03d}",  # Use unique event_id for each severity
                 rule_id="rule_001",
                 severity=severity,
                 symbol="AAPL",
@@ -378,8 +378,8 @@ class TestAuditTrailIntegration:
         # Generate compliance report
         from datetime import timedelta
 
-        start_date = datetime.utcnow() - timedelta(hours=1)
-        end_date = datetime.utcnow() + timedelta(hours=1)
+        start_date = datetime.now(timezone.utc) - timedelta(hours=1)
+        end_date = datetime.now(timezone.utc) + timedelta(hours=1)
 
         report = audit_trail.generate_compliance_report(start_date, end_date)
 

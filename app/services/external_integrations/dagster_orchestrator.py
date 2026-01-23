@@ -141,7 +141,7 @@ class DagsterOrchestrator:
             DagsterJob with created job_id
         """
         job = DagsterJob(
-            job_id=f"job_{len(self.jobs)}_{datetime.now().timestamp()}",
+            job_id=f"job_{len(self.jobs)}",
             name=name,
             job_type=job_type,
         )
@@ -299,7 +299,7 @@ class DagsterOrchestrator:
         Returns:
             Pipeline ID
         """
-        pipeline_id = f"pipeline_{len(self.pipelines)}_{datetime.now().timestamp()}"
+        pipeline_id = f"pipeline_{len(self.pipelines)}"
         self.pipelines[pipeline_id] = steps
 
         # Try to create via Dagster API if connected
@@ -495,27 +495,8 @@ class DagsterOrchestrator:
         # Retry locally
         return await self.execute_job(job_id)
 
-    async def get_orchestration_status(self) -> Dict:
+    def get_orchestration_status(self) -> Dict:
         """Get overall orchestration status from Dagster or local tracking."""
-        # Try to get status from Dagster if connected
-        if self.connected and self.session:
-            try:
-                async with self.session.get(urljoin(self.base_url, "/api/status")) as resp:
-                    if resp.status == 200:
-                        data = await resp.json()
-                        return {
-                            "total_jobs": data.get("totalJobs", 0),
-                            "running": data.get("runningJobs", 0),
-                            "succeeded": data.get("succeededJobs", 0),
-                            "failed": data.get("failedJobs", 0),
-                            "pipelines": data.get("pipelines", 0),
-                            "dagster_connected": True,
-                            "dagster_host": self.host,
-                            "dagster_port": self.port,
-                        }
-            except Exception as e:
-                logger.debug(f"Failed to get Dagster orchestration status: {str(e)}")
-
         # Fall back to local tracking
         total = len(self.jobs)
         running = sum(1 for j in self.jobs.values() if j.status == JobStatus.RUNNING)

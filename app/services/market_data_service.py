@@ -51,7 +51,9 @@ class MarketDataService:
 
             loader = MarketUniverseLoader()
             # Get top 20 equities as default symbols
-            default_symbols = loader.SP500_FALLBACK[:20]  # Use fallback for immediate initialization
+            default_symbols = loader.SP500_FALLBACK[
+                :20
+            ]  # Use fallback for immediate initialization
         except Exception:
             default_symbols = ["AAPL", "MSFT", "GOOGL", "TSLA", "AMZN"]
 

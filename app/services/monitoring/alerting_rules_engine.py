@@ -457,6 +457,15 @@ class AlertingRulesEngine:
         if self.session:
             await self.session.close()
 
+    def reset(self) -> None:
+        """Reset engine state - useful for testing."""
+        self.rules.clear()
+        self.alerts.clear()
+        self.active_alerts.clear()
+        self.metric_history.clear()
+        self._initialize_default_rules()
+        logger.info("✅ AlertingRulesEngine reset to initial state")
+
 
 # Singleton
 _engine: Optional[AlertingRulesEngine] = None
@@ -469,4 +478,12 @@ def get_alerting_engine() -> AlertingRulesEngine:
         _engine = AlertingRulesEngine()
         logger.info("✅ AlertingRulesEngine singleton initialized")
 
+    return _engine
+
+
+def reset_alerting_engine() -> AlertingRulesEngine:
+    """Reset the singleton engine to fresh state - useful for testing."""
+    global _engine
+    _engine = AlertingRulesEngine()
+    logger.info("✅ AlertingRulesEngine singleton reset")
     return _engine

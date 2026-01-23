@@ -7,16 +7,95 @@ Tests cover:
 - Compliance report generation
 - Risk level tracking
 - Statistics collection
+
+NOTE: These tests use autouse fixture to clean up the audit trail database
+between test runs. They should NOT be run in parallel with other tests that
+use the TradingAuditTrail.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+from pathlib import Path
+import tempfile
+import shutil
+
+import pytest
 
 from app.services.live_trading.trading_audit_trail import (
     AuditEventType,
+    AuditPersistence,
     ComplianceReport,
     TradingAuditTrail,
 )
+
+pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
+
+
+class MockAuditPersistence:
+    """Mock persistence that doesn't persist to disk."""
+
+    def __init__(self, db_path=None):
+        self.events = []
+
+    def save_event(self, event):
+        pass
+
+    def load_events(self, limit=None):
+        return []
+
+    def get_event(self, event_id):
+        return None
+
+    def close(self):
+        pass
+
+
+@pytest.fixture(autouse=True)
+def clean_audit_persistence():
+    """Clean audit persistence database between tests."""
+    # Import module to access singleton variables
+    import app.services.live_trading.trading_audit_trail as audit_module
+
+    # Close any existing database connections before deleting files
+    if audit_module._audit_persistence is not None:
+        try:
+            audit_module._audit_persistence.close()
+        except Exception:
+            pass  # Ignore errors during cleanup
+
+    # Clean up any existing database files (including WAL files)
+    db_dir = Path("data")
+    db_dir.mkdir(exist_ok=True)  # Ensure directory exists
+
+    # Remove all audit_trail database files
+    for db_file in db_dir.glob("audit_trail.db*"):
+        try:
+            db_file.unlink()
+        except FileNotFoundError:
+            pass
+
+    # Reset singleton instances to force fresh initialization
+    audit_module._audit_persistence = None
+    audit_module._audit_trail_instance = None
+
+    yield
+
+    # Clean up after test
+    if audit_module._audit_persistence is not None:
+        try:
+            audit_module._audit_persistence.close()
+        except Exception:
+            pass
+
+    for db_file in db_dir.glob("audit_trail.db*"):
+        try:
+            db_file.unlink()
+        except FileNotFoundError:
+            pass
+
+    # Reset singletons again after test
+    audit_module._audit_persistence = None
+    audit_module._audit_trail_instance = None
 
 
 class TestAuditEventLogging:
@@ -53,14 +132,14 @@ class TestAuditEventLogging:
     def test_event_timestamp(self):
         """Test that events have timestamps."""
         trail = TradingAuditTrail()
-        before = datetime.utcnow()
+        before = datetime.now(timezone.utc)
 
         event = trail.log_event(
             event_type=AuditEventType.ALERT_RECEIVED,
             alert_id="evt_001",
         )
 
-        after = datetime.utcnow()
+        after = datetime.now(timezone.utc)
         assert before <= event.timestamp <= after
 
     def test_event_immutability(self):
@@ -212,8 +291,8 @@ class TestComplianceReporting:
         """Test generating compliance report."""
         trail = TradingAuditTrail()
 
-        start_date = datetime.utcnow() - timedelta(hours=1)
-        end_date = datetime.utcnow() + timedelta(hours=1)
+        start_date = datetime.now(timezone.utc) - timedelta(hours=1)
+        end_date = datetime.now(timezone.utc) + timedelta(hours=1)
 
         # Log events within period
         trail.log_event(
@@ -241,8 +320,8 @@ class TestComplianceReporting:
         """Test compliance report with failed risk checks."""
         trail = TradingAuditTrail()
 
-        start_date = datetime.utcnow() - timedelta(hours=1)
-        end_date = datetime.utcnow() + timedelta(hours=1)
+        start_date = datetime.now(timezone.utc) - timedelta(hours=1)
+        end_date = datetime.now(timezone.utc) + timedelta(hours=1)
 
         trail.log_event(
             event_type=AuditEventType.ALERT_RECEIVED,
@@ -264,8 +343,8 @@ class TestComplianceReporting:
         """Test compliance report with non-compliant events."""
         trail = TradingAuditTrail()
 
-        start_date = datetime.utcnow() - timedelta(hours=1)
-        end_date = datetime.utcnow() + timedelta(hours=1)
+        start_date = datetime.now(timezone.utc) - timedelta(hours=1)
+        end_date = datetime.now(timezone.utc) + timedelta(hours=1)
 
         trail.log_event(
             event_type=AuditEventType.ORDER_PLACED,
@@ -287,8 +366,8 @@ class TestComplianceReporting:
         """Test compliance report with critical alert tracking."""
         trail = TradingAuditTrail()
 
-        start_date = datetime.utcnow() - timedelta(hours=1)
-        end_date = datetime.utcnow() + timedelta(hours=1)
+        start_date = datetime.now(timezone.utc) - timedelta(hours=1)
+        end_date = datetime.now(timezone.utc) + timedelta(hours=1)
 
         trail.log_event(
             event_type=AuditEventType.ALERT_RECEIVED,
@@ -317,7 +396,7 @@ class TestComplianceReporting:
         )
 
         # Simulate past timestamp
-        past_event.timestamp = datetime.utcnow() - timedelta(hours=2)
+        past_event.timestamp = datetime.now(timezone.utc) - timedelta(hours=2)
 
         # Log event in range
         trail.log_event(
@@ -331,10 +410,10 @@ class TestComplianceReporting:
             alert_id="evt_future",
         )
         future_event = trail.events[-1]
-        future_event.timestamp = datetime.utcnow() + timedelta(hours=2)
+        future_event.timestamp = datetime.now(timezone.utc) + timedelta(hours=2)
 
-        start_date = datetime.utcnow() - timedelta(hours=1)
-        end_date = datetime.utcnow() + timedelta(hours=1)
+        start_date = datetime.now(timezone.utc) - timedelta(hours=1)
+        end_date = datetime.now(timezone.utc) + timedelta(hours=1)
 
         report = trail.generate_compliance_report(start_date, end_date)
         # Should only include event in range
@@ -423,8 +502,8 @@ class TestEventSerialization:
         """Test serializing compliance report to dictionary."""
         report = ComplianceReport(
             report_id="report_001",
-            start_date=datetime.utcnow(),
-            end_date=datetime.utcnow(),
+            start_date=datetime.now(timezone.utc),
+            end_date=datetime.now(timezone.utc),
             total_alerts=10,
             total_trades=5,
             total_executions=4,

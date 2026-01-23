@@ -275,7 +275,7 @@ class AdvancedClusteringAnalyzer:
         n_components: int = 2,
         perplexity: int = 30,
         n_iter: int = 1000,
-    ) -> Dict:
+    ) -> Optional[Dict]:
         """
         Perform t-SNE dimensionality reduction for visualization.
 
@@ -283,10 +283,10 @@ class AdvancedClusteringAnalyzer:
             data: 2D array of features
             n_components: Number of dimensions (2 or 3)
             perplexity: Perplexity parameter
-            n_iter: Number of iterations
+            n_iter: Number of iterations (named max_iter in newer sklearn)
 
         Returns:
-            Dictionary with t-SNE results
+            Dictionary with t-SNE results or None if error
         """
         try:
             if not data or len(data) < 2:
@@ -311,22 +311,42 @@ class AdvancedClusteringAnalyzer:
                 logger.warning(f"Adjusted perplexity to {perplexity}")
 
             # Perform t-SNE
-            tsne = TSNE(
-                n_components=n_components,
-                perplexity=perplexity,
-                n_iter=n_iter,
-                random_state=self.random_state,
-                verbose=0,
-            )
+            # Use 'max_iter' parameter name for compatibility with newer sklearn versions
+            # but also accept 'n_iter' for backwards compatibility
+            try:
+                tsne = TSNE(
+                    n_components=n_components,
+                    perplexity=perplexity,
+                    max_iter=n_iter,
+                    random_state=self.random_state,
+                    verbose=0,
+                )
+            except TypeError:
+                # Fall back to older sklearn API
+                tsne = TSNE(
+                    n_components=n_components,
+                    perplexity=perplexity,
+                    n_iter=n_iter,
+                    random_state=self.random_state,
+                    verbose=0,
+                )
+
             X_tsne = tsne.fit_transform(X_scaled)
 
-            return {
+            # Get KL divergence - handle both kl_divergence_ (newer) and accessing from result
+            kl_div = 0.0
+            if hasattr(tsne, 'kl_divergence_'):
+                kl_div = float(tsne.kl_divergence_)
+
+            result = {
                 'n_components': n_components,
                 'perplexity': perplexity,
                 'n_iterations': n_iter,
+                'max_iter': n_iter,  # Also provide max_iter for newer sklearn
                 'transformed_data': X_tsne.tolist(),
-                'kl_divergence': float(tsne.kl_divergence_),
+                'kl_divergence': kl_div,
             }
+            return result
 
         except Exception as e:
             logger.error(f"Error in t-SNE analysis: {e}")

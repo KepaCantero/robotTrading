@@ -871,7 +871,7 @@ class TransferLearningManager:
 
         # Seleccionar por mejor métrica en metadata
         best_model = None
-        best_score = -float('in')
+        best_score = -float('inf')
 
         for model_entry in models:
             metadata = model_entry.get('metadata', {})

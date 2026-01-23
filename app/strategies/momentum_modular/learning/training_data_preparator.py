@@ -1,15 +1,17 @@
 """
-            from app.strategies.momentum_modular.learning.feature_extractor import FeatureExtractor
 TrainingDataPreparator - Prepara datos de entrenamiento completos para learning engines.
 """
 
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
+
+from app.backtesting.models import Trade, TradeStatus
+from app.models.market_data import Quote
 
 logger = logging.getLogger(__name__)
 
@@ -24,19 +26,11 @@ except ImportError:
         PANDAS_TA_AVAILABLE = True
     except ImportError:
         PANDAS_TA_AVAILABLE = False
+        ta = None
         logger.warning("pandas-ta-classic o pandas-ta no disponible. Funcionalidad limitada.")
-
-from typing import TYPE_CHECKING  # noqa: E402
-
-from app.backtesting.models import Trade, TradeStatus  # noqa: E402
-from app.models.market_data import Quote  # noqa: E402
-
-# from app.models.market_data import Quote  # F811 duplicate
 
 if TYPE_CHECKING:
     from app.strategies.momentum_modular.learning.feature_extractor import FeatureExtractor
-
-logger = logging.getLogger(__name__)
 
 
 class TrainingDataPreparator:
@@ -53,6 +47,8 @@ class TrainingDataPreparator:
         """
         # Lazy import de FeatureExtractor solo cuando se necesite
         if feature_extractor is None:
+            from app.strategies.momentum_modular.learning.feature_extractor import FeatureExtractor
+
             self.feature_extractor = FeatureExtractor()
         else:
             self.feature_extractor = feature_extractor
@@ -375,9 +371,7 @@ class TrainingDataPreparator:
                     'price': (
                         float(quote.bid)
                         if hasattr(quote, 'bid')
-                        else float(quote.close)
-                        if hasattr(quote, 'close')
-                        else 0.0
+                        else float(quote.close) if hasattr(quote, 'close') else 0.0
                     ),
                     'volume': float(getattr(quote, 'volume', 0)),
                     'timestamp': quote.timestamp if hasattr(quote, 'timestamp') else df.index[i],
@@ -398,9 +392,7 @@ class TrainingDataPreparator:
             price = (
                 float(quote.bid)
                 if hasattr(quote, 'bid')
-                else float(quote.close)
-                if hasattr(quote, 'close')
-                else 0.0
+                else float(quote.close) if hasattr(quote, 'close') else 0.0
             )
             volume = float(getattr(quote, 'volume', 0))
 
