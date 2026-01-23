@@ -17,9 +17,9 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
+from itertools import islice
 from typing import Deque, Dict, List, Optional, Set, Tuple
 from uuid import uuid4
-from itertools import islice
 
 from app.services.alerting_system import AlertEvent, AlertManager
 

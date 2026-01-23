@@ -5,10 +5,9 @@ Tests authentication, order management, account info, positions, and error handl
 Uses mocked alpaca-trade-api responses.
 """
 
-from decimal import Decimal
-from unittest.mock import MagicMock, patch, Mock
 import sys
-import importlib
+from decimal import Decimal
+from unittest.mock import MagicMock, Mock
 
 import pytest
 

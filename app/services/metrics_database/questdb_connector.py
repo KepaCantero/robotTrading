@@ -28,7 +28,6 @@ logger = logging.getLogger(__name__)
 class _InMemoryPool:
     """Sentinel class to represent in-memory storage pool."""
 
-    pass
 
 
 class QuestDBConnector:
