@@ -131,9 +131,9 @@ class ComprehensiveBacktestRunner:
         self.config_path = config_path  # Guardar para auditoría
         self.results: List[Dict[str, Any]] = []
         # Store complete BacktestResult objects for quantstats/pyfolio analysis
-        self.backtest_results_objects: List[Tuple[str, BacktestResult]] = (
-            []
-        )  # (test_name, BacktestResult)
+        self.backtest_results_objects: List[
+            Tuple[str, BacktestResult]
+        ] = []  # (test_name, BacktestResult)
         self.output_dir = Path(self.config['reporting']['output_directory'])
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -4084,21 +4084,21 @@ class ComprehensiveBacktestRunner:
                         future = executor.submit(
                             lambda: asyncio.run(analyzer.run_parallel_analysis(max_workers=4))
                         )
-                        results = future.result(timeout=300)  # 5 min timeout
+                        future.result(timeout=300)  # 5 min timeout
                 else:
-                    results = loop.run_until_complete(
-                        analyzer.run_parallel_analysis(max_workers=4)
-                    )  # noqa: F841
+                    loop.run_until_complete(analyzer.run_parallel_analysis(max_workers=4))
             except RuntimeError:
                 # No hay loop, crear uno nuevo
-                _results = asyncio.run(analyzer.run_parallel_analysis(max_workers=4))  # noqa: F841
+                asyncio.run(analyzer.run_parallel_analysis(max_workers=4))
 
             # Exportar reporte
             analyzer.export_report(format="json")
 
             logger.info("✅ Análisis meta completado")
         except ImportError:
-            logger.warning("⚠️ BacktestMetaAnalyzer no disponible. Instala dependencias opcionales.")
+            logger.warning(
+                "⚠️ BacktestMetaAnalyzer no disponible. Instala dependencias opcionales."
+            )
         except Exception as e:
             logger.error(f"❌ Error en análisis meta: {e}", exc_info=True)
 

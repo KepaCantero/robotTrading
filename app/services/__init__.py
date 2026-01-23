@@ -17,6 +17,10 @@ from .signal_evaluation_engine import SignalEvaluationEngine
 from .signal_execution_engine import SignalExecutionEngine
 from .signal_scorer import SignalScorerService
 
+# Asset & Market Universe
+from .asset_identification import AssetIdentificationService, get_asset_identification_service
+from .market_universe_loader import MarketUniverseLoader, get_market_universe_loader
+
 # Servicios principales
 __all__ = [
     "PortfolioService",
@@ -33,4 +37,9 @@ __all__ = [
     "PortfolioRiskManager",
     "RiskLevel",
     "RiskViolation",
+    # Asset & Market Universe
+    "AssetIdentificationService",
+    "get_asset_identification_service",
+    "MarketUniverseLoader",
+    "get_market_universe_loader",
 ]
