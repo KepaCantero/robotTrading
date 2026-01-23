@@ -45,13 +45,23 @@ class MarketDataService:
 
     def _initialize_default_feeds(self):
         """Initialize default data feed configurations."""
+        # Get symbols from MarketUniverseLoader (lazy import to avoid circular dependency)
+        try:
+            from app.services.market_universe_loader import MarketUniverseLoader
+
+            loader = MarketUniverseLoader()
+            # Get top 20 equities as default symbols
+            default_symbols = loader.SP500_FALLBACK[:20]  # Use fallback for immediate initialization
+        except Exception:
+            default_symbols = ["AAPL", "MSFT", "GOOGL", "TSLA", "AMZN"]
+
         # Mock feed for development
         mock_config = DataFeedConfig(
             name="Mock Data Feed",
             feed_type=DataFeedType.MOCK,
             base_url="mock://localhost",
             rate_limit=1000,
-            supported_symbols=["AAPL", "MSFT", "GOOGL", "TSLA", "AMZN"],
+            supported_symbols=default_symbols[:5],
             supported_frequencies=[DataFrequency.REAL_TIME, DataFrequency.DAILY],
             max_history_days=365,
             timeout_seconds=5,
@@ -67,16 +77,7 @@ class MarketDataService:
             feed_type=DataFeedType.YAHOO_FINANCE,
             base_url="https://query1.finance.yahoo.com",
             rate_limit=100,
-            supported_symbols=[
-                "AAPL",
-                "MSFT",
-                "GOOGL",
-                "TSLA",
-                "AMZN",
-                "NVDA",
-                "META",
-                "NFLX",
-            ],
+            supported_symbols=default_symbols[:8],
             supported_frequencies=[
                 DataFrequency.REAL_TIME,
                 DataFrequency.DAILY,

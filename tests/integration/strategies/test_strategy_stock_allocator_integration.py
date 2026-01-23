@@ -1,4 +1,4 @@
-from app.services.data_loader import load_all_csv_data
+from tests.integration.data.test_data_loader import load_all_csv_data
 
 # !/usr/bin/env python3
 """

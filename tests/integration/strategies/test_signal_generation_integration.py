@@ -1,4 +1,4 @@
-from app.models.allocation import StockAllocationSettings
+from app.core.centralized_config import StockAllocationSettings
 
 """
     from app.core.centralized_config import StockAllocationSettings

@@ -1435,7 +1435,9 @@ def main():
                                     else (
                                         return_imp
                                         if metric == 'return_pct'
-                                        else winrate_imp if metric == 'win_rate' else dd_imp
+                                        else winrate_imp
+                                        if metric == 'win_rate'
+                                        else dd_imp
                                     )
                                 )
 
@@ -2266,13 +2268,13 @@ def main():
                     config['backtests']['multi_strategy']['strategies'] = params.get(
                         'strategies', ["momentum", "mean_reversion", "pairs_trading"]
                     )
-                    config['backtests']['multi_strategy']['enable_dynamic_reallocation'] = (
-                        params.get('enable_dynamic_reallocation', True)
-                    )
+                    config['backtests']['multi_strategy'][
+                        'enable_dynamic_reallocation'
+                    ] = params.get('enable_dynamic_reallocation', True)
                     if params.get('enable_dynamic_reallocation', True):
-                        config['backtests']['multi_strategy']['reallocation_frequency_days'] = (
-                            params.get('reallocation_frequency', 30)
-                        )
+                        config['backtests']['multi_strategy'][
+                            'reallocation_frequency_days'
+                        ] = params.get('reallocation_frequency', 30)
 
                 # Enable/disable specific backtests
                 for test_name in [
@@ -2381,9 +2383,7 @@ def main():
                                     ComprehensiveBacktestRunner,
                                 )
 
-                                logger.info(
-                                    "✅ ComprehensiveBacktestRunner importado correctamente"
-                                )
+                                logger.info("✅ ComprehensiveBacktestRunner importado correctamente")
                             except Exception as import_error:
                                 logger.error(f"Error durante import: {import_error}", exc_info=True)
                                 raise

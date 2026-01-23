@@ -71,286 +71,104 @@ class AssetIdentificationService:
             return []
 
     async def _get_liquid_equities(self) -> List[Asset]:
-        """Get liquid equity assets."""
-        equities = [
-            Asset(
-                symbol="AAPL",
-                name="Apple Inc.",
-                asset_class=AssetClass.EQUITY,
-                exchange=Exchange.NASDAQ,
-                avg_volume=Decimal("50000000"),
-                avg_spread=Decimal("0.01"),
-                market_cap=Decimal("3000000000000"),
-            ),
-            Asset(
-                symbol="MSFT",
-                name="Microsoft Corporation",
-                asset_class=AssetClass.EQUITY,
-                exchange=Exchange.NASDAQ,
-                avg_volume=Decimal("30000000"),
-                avg_spread=Decimal("0.01"),
-                market_cap=Decimal("2800000000000"),
-            ),
-            Asset(
-                symbol="GOOGL",
-                name="Alphabet Inc. Class A",
-                asset_class=AssetClass.EQUITY,
-                exchange=Exchange.NASDAQ,
-                avg_volume=Decimal("25000000"),
-                avg_spread=Decimal("0.01"),
-                market_cap=Decimal("1800000000000"),
-            ),
-            Asset(
-                symbol="AMZN",
-                name="Amazon.com Inc.",
-                asset_class=AssetClass.EQUITY,
-                exchange=Exchange.NASDAQ,
-                avg_volume=Decimal("20000000"),
-                avg_spread=Decimal("0.01"),
-                market_cap=Decimal("1500000000000"),
-            ),
-            Asset(
-                symbol="TSLA",
-                name="Tesla Inc.",
-                asset_class=AssetClass.EQUITY,
-                exchange=Exchange.NASDAQ,
-                avg_volume=Decimal("40000000"),
-                avg_spread=Decimal("0.01"),
-                market_cap=Decimal("800000000000"),
-            ),
-            Asset(
-                symbol="NVDA",
-                name="NVIDIA Corporation",
-                asset_class=AssetClass.EQUITY,
-                exchange=Exchange.NASDAQ,
-                avg_volume=Decimal("35000000"),
-                avg_spread=Decimal("0.01"),
-                market_cap=Decimal("1200000000000"),
-            ),
-            Asset(
-                symbol="META",
-                name="Meta Platforms Inc.",
-                asset_class=AssetClass.EQUITY,
-                exchange=Exchange.NASDAQ,
-                avg_volume=Decimal("20000000"),
-                avg_spread=Decimal("0.01"),
-                market_cap=Decimal("700000000000"),
-            ),
-            Asset(
-                symbol="BRK.B",
-                name="Berkshire Hathaway Inc. Class B",
-                asset_class=AssetClass.EQUITY,
-                exchange=Exchange.NYSE,
-                avg_volume=Decimal("15000000"),
-                avg_spread=Decimal("0.01"),
-                market_cap=Decimal("800000000000"),
-            ),
-            Asset(
-                symbol="JPM",
-                name="JPMorgan Chase & Co.",
-                asset_class=AssetClass.EQUITY,
-                exchange=Exchange.NYSE,
-                avg_volume=Decimal("12000000"),
-                avg_spread=Decimal("0.01"),
-                market_cap=Decimal("450000000000"),
-            ),
-            Asset(
-                symbol="JNJ",
-                name="Johnson & Johnson",
-                asset_class=AssetClass.EQUITY,
-                exchange=Exchange.NYSE,
-                avg_volume=Decimal("8000000"),
-                avg_spread=Decimal("0.01"),
-                market_cap=Decimal("400000000000"),
-            ),
-            Asset(
-                symbol="V",
-                name="Visa Inc.",
-                asset_class=AssetClass.EQUITY,
-                exchange=Exchange.NYSE,
-                avg_volume=Decimal("6000000"),
-                avg_spread=Decimal("0.01"),
-                market_cap=Decimal("500000000000"),
-            ),
-            Asset(
-                symbol="PG",
-                name="Procter & Gamble Co.",
-                asset_class=AssetClass.EQUITY,
-                exchange=Exchange.NYSE,
-                avg_volume=Decimal("5000000"),
-                avg_spread=Decimal("0.01"),
-                market_cap=Decimal("350000000000"),
-            ),
-            Asset(
-                symbol="UNH",
-                name="UnitedHealth Group Inc.",
-                asset_class=AssetClass.EQUITY,
-                exchange=Exchange.NYSE,
-                avg_volume=Decimal("4000000"),
-                avg_spread=Decimal("0.01"),
-                market_cap=Decimal("500000000000"),
-            ),
-            Asset(
-                symbol="HD",
-                name="Home Depot Inc.",
-                asset_class=AssetClass.EQUITY,
-                exchange=Exchange.NYSE,
-                avg_volume=Decimal("3000000"),
-                avg_spread=Decimal("0.01"),
-                market_cap=Decimal("350000000000"),
-            ),
-            Asset(
-                symbol="MA",
-                name="Mastercard Inc.",
-                asset_class=AssetClass.EQUITY,
-                exchange=Exchange.NYSE,
-                avg_volume=Decimal("2500000"),
-                avg_spread=Decimal("0.01"),
-                market_cap=Decimal("350000000000"),
-            ),
-            Asset(
-                symbol="DIS",
-                name="Walt Disney Co.",
-                asset_class=AssetClass.EQUITY,
-                exchange=Exchange.NYSE,
-                avg_volume=Decimal("8000000"),
-                avg_spread=Decimal("0.01"),
-                market_cap=Decimal("200000000000"),
-            ),
-            Asset(
-                symbol="ADBE",
-                name="Adobe Inc.",
-                asset_class=AssetClass.EQUITY,
-                exchange=Exchange.NASDAQ,
-                avg_volume=Decimal("2000000"),
-                avg_spread=Decimal("0.01"),
-                market_cap=Decimal("250000000000"),
-            ),
-            Asset(
-                symbol="CRM",
-                name="Salesforce Inc.",
-                asset_class=AssetClass.EQUITY,
-                exchange=Exchange.NYSE,
-                avg_volume=Decimal("3000000"),
-                avg_spread=Decimal("0.01"),
-                market_cap=Decimal("200000000000"),
-            ),
-            Asset(
-                symbol="NFLX",
-                name="Netflix Inc.",
-                asset_class=AssetClass.EQUITY,
-                exchange=Exchange.NASDAQ,
-                avg_volume=Decimal("2000000"),
-                avg_spread=Decimal("0.01"),
-                market_cap=Decimal("150000000000"),
-            ),
-            Asset(
-                symbol="PYPL",
-                name="PayPal Holdings Inc.",
-                asset_class=AssetClass.EQUITY,
-                exchange=Exchange.NASDAQ,
-                avg_volume=Decimal("5000000"),
-                avg_spread=Decimal("0.01"),
-                market_cap=Decimal("100000000000"),
-            ),
-        ]
-        return equities
+        """Get liquid equity assets from MarketUniverseLoader (S&P 500)."""
+        try:
+            # Import here to avoid circular dependency
+            from app.services.market_universe_loader import get_market_universe_loader
+
+            loader = get_market_universe_loader()
+
+            # Fetch S&P 500 universe
+            tickers = await loader.get_sp500_universe()
+
+            # Download recent data for metrics
+            data = await loader.download_universe_data(tickers[:50], period="3mo", interval="1d")
+
+            # Convert to Asset objects
+            equities = []
+            for ticker, df in data.items():
+                if df is None or len(df) < 20:
+                    continue
+
+                try:
+                    avg_volume = Decimal(str(int(df['volume'].mean())))
+                    avg_price = Decimal(str(df['close'].mean()))
+
+                    asset = Asset(
+                        symbol=ticker,
+                        name=ticker,  # yfinance would need separate call for name
+                        asset_class=AssetClass.EQUITY,
+                        exchange=Exchange.NASDAQ,  # Simplified
+                        avg_volume=avg_volume,
+                        avg_spread=Decimal("0.01"),
+                        market_cap=Decimal(str(avg_price * 1000000000)),  # Approximation
+                    )
+                    equities.append(asset)
+
+                except Exception as e:
+                    logger.debug(f"Error creating asset for {ticker}: {e}")
+                    continue
+
+            # If we got assets from API, return them
+            if equities:
+                logger.info(f"✅ Loaded {len(equities)} equities from MarketUniverseLoader")
+                return equities
+
+        except Exception as e:
+            logger.warning(f"MarketUniverseLoader failed, using fallback: {e}")
+
+        # Fallback to hardcoded list if API fails
+        return await self._get_fallback_equities()
 
     async def _get_liquid_cryptos(self) -> List[Asset]:
-        """Get liquid cryptocurrency assets."""
-        cryptos = [
-            Asset(
-                symbol="BTCUSDT",
-                name="Bitcoin",
-                asset_class=AssetClass.CRYPTO,
-                exchange=Exchange.BINANCE,
-                avg_volume=Decimal("50000000000"),
-                avg_spread=Decimal("0.0001"),
-                market_cap=Decimal("1000000000000"),
-            ),
-            Asset(
-                symbol="ETHUSDT",
-                name="Ethereum",
-                asset_class=AssetClass.CRYPTO,
-                exchange=Exchange.BINANCE,
-                avg_volume=Decimal("20000000000"),
-                avg_spread=Decimal("0.0001"),
-                market_cap=Decimal("300000000000"),
-            ),
-            Asset(
-                symbol="BNBUSDT",
-                name="BNB",
-                asset_class=AssetClass.CRYPTO,
-                exchange=Exchange.BINANCE,
-                avg_volume=Decimal("1000000000"),
-                avg_spread=Decimal("0.0001"),
-                market_cap=Decimal("50000000000"),
-            ),
-            Asset(
-                symbol="ADAUSDT",
-                name="Cardano",
-                asset_class=AssetClass.CRYPTO,
-                exchange=Exchange.BINANCE,
-                avg_volume=Decimal("2000000000"),
-                avg_spread=Decimal("0.0001"),
-                market_cap=Decimal("20000000000"),
-            ),
-            Asset(
-                symbol="SOLUSDT",
-                name="Solana",
-                asset_class=AssetClass.CRYPTO,
-                exchange=Exchange.BINANCE,
-                avg_volume=Decimal("1500000000"),
-                avg_spread=Decimal("0.0001"),
-                market_cap=Decimal("15000000000"),
-            ),
-            Asset(
-                symbol="XRPUSDT",
-                name="XRP",
-                asset_class=AssetClass.CRYPTO,
-                exchange=Exchange.BINANCE,
-                avg_volume=Decimal("3000000000"),
-                avg_spread=Decimal("0.0001"),
-                market_cap=Decimal("25000000000"),
-            ),
-            Asset(
-                symbol="DOTUSDT",
-                name="Polkadot",
-                asset_class=AssetClass.CRYPTO,
-                exchange=Exchange.BINANCE,
-                avg_volume=Decimal("500000000"),
-                avg_spread=Decimal("0.0001"),
-                market_cap=Decimal("10000000000"),
-            ),
-            Asset(
-                symbol="AVAXUSDT",
-                name="Avalanche",
-                asset_class=AssetClass.CRYPTO,
-                exchange=Exchange.BINANCE,
-                avg_volume=Decimal("800000000"),
-                avg_spread=Decimal("0.0001"),
-                market_cap=Decimal("8000000000"),
-            ),
-            Asset(
-                symbol="MATICUSDT",
-                name="Polygon",
-                asset_class=AssetClass.CRYPTO,
-                exchange=Exchange.BINANCE,
-                avg_volume=Decimal("600000000"),
-                avg_spread=Decimal("0.0001"),
-                market_cap=Decimal("5000000000"),
-            ),
-            Asset(
-                symbol="LINKUSDT",
-                name="Chainlink",
-                asset_class=AssetClass.CRYPTO,
-                exchange=Exchange.BINANCE,
-                avg_volume=Decimal("400000000"),
-                avg_spread=Decimal("0.0001"),
-                market_cap=Decimal("4000000000"),
-            ),
-        ]
-        return cryptos
+        """Get liquid cryptocurrency assets from MarketUniverseLoader."""
+        try:
+            # Import here to avoid circular dependency
+            from app.services.market_universe_loader import get_market_universe_loader
+
+            loader = get_market_universe_loader()
+
+            # Fetch crypto universe
+            tickers = await loader.get_crypto_universe(top_n=20)
+
+            # Convert yfinance format (BTC-USD) to binance format (BTCUSDT)
+            binance_tickers = [t.replace("-USD", "USDT") for t in tickers]
+
+            # Download recent data
+            data = await loader.download_universe_data(tickers[:10], period="3mo", interval="1d")
+
+            # Convert to Asset objects
+            cryptos = []
+            for i, (ticker, df) in enumerate(data.items()):
+                if df is None or len(df) < 20:
+                    continue
+
+                try:
+                    avg_volume = Decimal(str(int(df['volume'].mean())))
+
+                    asset = Asset(
+                        symbol=binance_tickers[i] if i < len(binance_tickers) else ticker.replace("-USD", "USDT"),
+                        name=ticker.replace("-USD", ""),  # Simplified
+                        asset_class=AssetClass.CRYPTO,
+                        exchange=Exchange.BINANCE,
+                        avg_volume=avg_volume,
+                        avg_spread=Decimal("0.0001"),
+                        market_cap=None,
+                    )
+                    cryptos.append(asset)
+
+                except Exception as e:
+                    logger.debug(f"Error creating crypto asset for {ticker}: {e}")
+                    continue
+
+            if cryptos:
+                logger.info(f"✅ Loaded {len(cryptos)} cryptos from MarketUniverseLoader")
+                return cryptos
+
+        except Exception as e:
+            logger.warning(f"MarketUniverseLoader crypto failed, using fallback: {e}")
+
+        return await self._get_fallback_cryptos()
 
     async def _get_liquid_forex(self) -> List[Asset]:
         """Get liquid forex pairs."""
@@ -667,6 +485,153 @@ class AssetIdentificationService:
         except Exception as e:
             logger.error(f"Error getting universe summary for {asset_class}: {e}")
             return {}
+
+    # ============ FALLBACK METHODS (if MarketUniverseLoader fails) ============
+
+    async def _get_fallback_equities(self) -> List[Asset]:
+        """Fallback hardcoded equities (used if MarketUniverseLoader fails)."""
+        return [
+            Asset(
+                symbol="AAPL",
+                name="Apple Inc.",
+                asset_class=AssetClass.EQUITY,
+                exchange=Exchange.NASDAQ,
+                avg_volume=Decimal("50000000"),
+                avg_spread=Decimal("0.01"),
+                market_cap=Decimal("3000000000000"),
+            ),
+            Asset(
+                symbol="MSFT",
+                name="Microsoft",
+                asset_class=AssetClass.EQUITY,
+                exchange=Exchange.NASDAQ,
+                avg_volume=Decimal("30000000"),
+                avg_spread=Decimal("0.01"),
+                market_cap=Decimal("2800000000000"),
+            ),
+            Asset(
+                symbol="GOOGL",
+                name="Alphabet",
+                asset_class=AssetClass.EQUITY,
+                exchange=Exchange.NASDAQ,
+                avg_volume=Decimal("25000000"),
+                avg_spread=Decimal("0.01"),
+                market_cap=Decimal("1800000000000"),
+            ),
+            Asset(
+                symbol="AMZN",
+                name="Amazon",
+                asset_class=AssetClass.EQUITY,
+                exchange=Exchange.NASDAQ,
+                avg_volume=Decimal("20000000"),
+                avg_spread=Decimal("0.01"),
+                market_cap=Decimal("1500000000000"),
+            ),
+            Asset(
+                symbol="TSLA",
+                name="Tesla",
+                asset_class=AssetClass.EQUITY,
+                exchange=Exchange.NASDAQ,
+                avg_volume=Decimal("40000000"),
+                avg_spread=Decimal("0.01"),
+                market_cap=Decimal("800000000000"),
+            ),
+            Asset(
+                symbol="NVDA",
+                name="NVIDIA",
+                asset_class=AssetClass.EQUITY,
+                exchange=Exchange.NASDAQ,
+                avg_volume=Decimal("35000000"),
+                avg_spread=Decimal("0.01"),
+                market_cap=Decimal("1200000000000"),
+            ),
+            Asset(
+                symbol="META",
+                name="Meta",
+                asset_class=AssetClass.EQUITY,
+                exchange=Exchange.NASDAQ,
+                avg_volume=Decimal("20000000"),
+                avg_spread=Decimal("0.01"),
+                market_cap=Decimal("700000000000"),
+            ),
+            Asset(
+                symbol="BRK.B",
+                name="Berkshire",
+                asset_class=AssetClass.EQUITY,
+                exchange=Exchange.NYSE,
+                avg_volume=Decimal("15000000"),
+                avg_spread=Decimal("0.01"),
+                market_cap=Decimal("800000000000"),
+            ),
+            Asset(
+                symbol="JPM",
+                name="JPMorgan",
+                asset_class=AssetClass.EQUITY,
+                exchange=Exchange.NYSE,
+                avg_volume=Decimal("12000000"),
+                avg_spread=Decimal("0.01"),
+                market_cap=Decimal("450000000000"),
+            ),
+            Asset(
+                symbol="JNJ",
+                name="J&J",
+                asset_class=AssetClass.EQUITY,
+                exchange=Exchange.NYSE,
+                avg_volume=Decimal("8000000"),
+                avg_spread=Decimal("0.01"),
+                market_cap=Decimal("400000000000"),
+            ),
+        ]
+
+    async def _get_fallback_cryptos(self) -> List[Asset]:
+        """Fallback hardcoded cryptos (used if MarketUniverseLoader fails)."""
+        return [
+            Asset(
+                symbol="BTCUSDT",
+                name="Bitcoin",
+                asset_class=AssetClass.CRYPTO,
+                exchange=Exchange.BINANCE,
+                avg_volume=Decimal("50000000000"),
+                avg_spread=Decimal("0.0001"),
+                market_cap=Decimal("1000000000000"),
+            ),
+            Asset(
+                symbol="ETHUSDT",
+                name="Ethereum",
+                asset_class=AssetClass.CRYPTO,
+                exchange=Exchange.BINANCE,
+                avg_volume=Decimal("20000000000"),
+                avg_spread=Decimal("0.0001"),
+                market_cap=Decimal("300000000000"),
+            ),
+            Asset(
+                symbol="BNBUSDT",
+                name="BNB",
+                asset_class=AssetClass.CRYPTO,
+                exchange=Exchange.BINANCE,
+                avg_volume=Decimal("1000000000"),
+                avg_spread=Decimal("0.0001"),
+                market_cap=Decimal("50000000000"),
+            ),
+            Asset(
+                symbol="SOLUSDT",
+                name="Solana",
+                asset_class=AssetClass.CRYPTO,
+                exchange=Exchange.BINANCE,
+                avg_volume=Decimal("1500000000"),
+                avg_spread=Decimal("0.0001"),
+                market_cap=Decimal("15000000000"),
+            ),
+            Asset(
+                symbol="XRPUSDT",
+                name="XRP",
+                asset_class=AssetClass.CRYPTO,
+                exchange=Exchange.BINANCE,
+                avg_volume=Decimal("3000000000"),
+                avg_spread=Decimal("0.0001"),
+                market_cap=Decimal("25000000000"),
+            ),
+        ]
 
 
 # Global service instance

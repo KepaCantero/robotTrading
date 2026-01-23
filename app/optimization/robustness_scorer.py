@@ -478,7 +478,9 @@ class RobustnessScorer:
             status_icon = (
                 "✓"
                 if result.production_readiness == ProductionReadiness.PASS
-                else "⚠" if result.production_readiness == ProductionReadiness.WARN else "✗"
+                else "⚠"
+                if result.production_readiness == ProductionReadiness.WARN
+                else "✗"
             )
 
             print(
