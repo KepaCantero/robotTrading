@@ -245,8 +245,7 @@ class MockIBKRClient:
 
             if order.side == OrderSide.BUY:
                 return order.price >= current_price * Decimal("0.95")  # Within 5%
-            else:
-                return order.price <= current_price * Decimal("1.05")  # Within 5%
+            return order.price <= current_price * Decimal("1.05")  # Within 5%
 
         return False
 
@@ -257,10 +256,9 @@ class MockIBKRClient:
                 required_balance = order.quantity * order.price
                 available_balance = self.balances.get("USD", Decimal("100000"))
                 return available_balance >= required_balance
-            else:
-                # For sell orders, check if we have the asset
-                available_quantity = self.balances.get(order.symbol, Decimal("0"))
-                return available_quantity >= order.quantity
+            # For sell orders, check if we have the asset
+            available_quantity = self.balances.get(order.symbol, Decimal("0"))
+            return available_quantity >= order.quantity
         except Exception:
             return False
 
@@ -526,15 +524,14 @@ class MockBinanceClient:
             quote_asset = "USDT" if "USDT" in order.symbol else "USD"
             available_balance = self.balances.get(quote_asset, Decimal("0"))
             return available_balance >= required_balance
-        else:
-            # For SELL orders, we need base currency (e.g., BTC from BTCUSDT)
-            base_asset = (
-                order.symbol.split("USDT")[0]
-                if "USDT" in order.symbol
-                else order.symbol.split("USD")[0]
-            )
-            available_balance = self.balances.get(base_asset, Decimal("0"))
-            return available_balance >= order.quantity
+        # For SELL orders, we need base currency (e.g., BTC from BTCUSDT)
+        base_asset = (
+            order.symbol.split("USDT")[0]
+            if "USDT" in order.symbol
+            else order.symbol.split("USD")[0]
+        )
+        available_balance = self.balances.get(base_asset, Decimal("0"))
+        return available_balance >= order.quantity
 
     def _check_balance_for_order(self, order: Order) -> bool:
         """Check if there's sufficient balance for the order."""
@@ -545,16 +542,14 @@ class MockBinanceClient:
                 quote_asset = "USDT" if "USDT" in order.symbol else "USD"
                 available_balance = self.balances.get(quote_asset, Decimal("0"))
                 return available_balance >= required_balance
-            else:
-                # For SELL orders, we need base currency (e.g., BTC from
-                # BTCUSDT)
-                base_asset = (
-                    order.symbol.split("USDT")[0]
-                    if "USDT" in order.symbol
-                    else order.symbol.split("USD")[0]
-                )
-                available_balance = self.balances.get(base_asset, Decimal("0"))
-                return available_balance >= order.quantity
+            # For SELL orders, we need base currency (e.g., BTC from BTCUSDT)
+            base_asset = (
+                order.symbol.split("USDT")[0]
+                if "USDT" in order.symbol
+                else order.symbol.split("USD")[0]
+            )
+            available_balance = self.balances.get(base_asset, Decimal("0"))
+            return available_balance >= order.quantity
         except Exception:
             return False
 
