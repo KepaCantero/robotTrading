@@ -15,6 +15,8 @@ from typing import List, Optional
 
 import pandas as pd
 
+from app.models.market_data import Quote
+
 # Try multiple Yahoo Finance libraries as fallbacks
 # Note: yfinance uses Python 3.10+ union syntax (X | Y), which causes TypeError in Python 3.9
 # We use lazy import to avoid this issue at module load time
@@ -45,8 +47,6 @@ try:
     HAS_YAHOO_FIN = True
 except ImportError:
     HAS_YAHOO_FIN = False
-
-from app.models.market_data import Quote
 
 logger = logging.getLogger(__name__)
 

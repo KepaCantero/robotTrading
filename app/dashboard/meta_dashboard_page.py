@@ -65,6 +65,7 @@ if STREAMLIT_AVAILABLE:
                             # Si ya hay loop, crear tarea
                             try:
                                 import nest_asyncio
+
                                 nest_asyncio.apply()
                             except ImportError:
                                 st.warning(

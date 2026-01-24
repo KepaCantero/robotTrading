@@ -385,8 +385,7 @@ class TransformerEngine(BaseLearningEngine):
                 raise ImportError("PyTorch requerido")
 
             # Import Dataset and DataLoader from torch.utils.data
-            from torch.utils.data import DataLoader as _DataLoader
-            from torch.utils.data import Dataset as _Dataset
+            from torch.utils.data import DataLoader as _DataLoader, Dataset as _Dataset
 
             # Definir TransformerDataset lazy dentro de este contexto
             class TransformerDataset(_Dataset):
@@ -477,8 +476,7 @@ class TransformerEngine(BaseLearningEngine):
                 )
                 if len(val_sequences) > 0:
                     # Import Dataset and DataLoader again for this context
-                    from torch.utils.data import DataLoader as _DataLoader
-                    from torch.utils.data import Dataset as _Dataset
+                    from torch.utils.data import DataLoader as _DataLoader, Dataset as _Dataset
 
                     class TransformerDatasetVal(_Dataset):
                         """Dataset para sequences de tiempo para Transformer."""
@@ -637,8 +635,7 @@ class TransformerEngine(BaseLearningEngine):
                 return {'error': 'no_data'}
 
             # Import Dataset and DataLoader for this context
-            from torch.utils.data import DataLoader as _DataLoader
-            from torch.utils.data import Dataset as _Dataset
+            from torch.utils.data import DataLoader as _DataLoader, Dataset as _Dataset
 
             # Definir TransformerDatasetEval aquí también
             class TransformerDatasetEval(_Dataset):

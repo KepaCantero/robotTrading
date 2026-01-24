@@ -202,8 +202,8 @@ class MomentumAutoOptimizer:
                     continue
 
                 # Simple backtest on validation window
-                from app.backtesting.models import BacktestConfig
                 from app.backtesting.engine import SimpleBacktester
+                from app.backtesting.models import BacktestConfig
 
                 # Generate signals
                 signals = []

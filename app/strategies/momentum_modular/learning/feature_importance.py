@@ -518,14 +518,14 @@ class AttentionWeightsAnalyzer:
             if attention_weights is None:
                 return {
                     'error': 'Could not extract attention weights from model',
-                    'attention_weights': None
+                    'attention_weights': None,
                 }
 
             # Ensure attention_weights is subscriptable (is an array)
             if not hasattr(attention_weights, '__getitem__'):
                 return {
                     'error': 'attention_weights is not subscriptable',
-                    'attention_weights': attention_weights
+                    'attention_weights': attention_weights,
                 }
 
             # pylint: disable=unsubscriptable-object
