@@ -168,10 +168,10 @@ class ComprehensiveBacktestRunner:
                 self.audit_trail = meta['audit_trail']
                 self.learning_storage = meta['storage']
                 self.audit_hash = meta['audit_hash']
-                hash_display = self.audit_hash[:16] if self.audit_hash else 'N/A'  # pylint: disable=unsubscriptable-object
-                logger.info(
-                    f"✅ Meta-analyzer integrado (Hash: {hash_display}...)"
-                )
+                hash_display = (
+                    self.audit_hash[:16] if self.audit_hash else 'N/A'
+                )  # pylint: disable=unsubscriptable-object
+                logger.info(f"✅ Meta-analyzer integrado (Hash: {hash_display}...)")
 
                 # Guardar hash y configuración en log inicial
                 if self.audit_trail:
@@ -4171,10 +4171,10 @@ class ComprehensiveBacktestRunner:
                     result_path=result_path,
                 )
 
-                hash_display = self.audit_hash[:16] if self.audit_hash else ''  # pylint: disable=unsubscriptable-object
-                logger.debug(
-                    f"✅ Auditoría guardada para {test_type}: {hash_display}..."
-                )
+                hash_display = (
+                    self.audit_hash[:16] if self.audit_hash else ''
+                )  # pylint: disable=unsubscriptable-object
+                logger.debug(f"✅ Auditoría guardada para {test_type}: {hash_display}...")
 
             # Guardar pesos de learning engine (para aprendizaje incremental)
             if self.learning_storage and strategy:

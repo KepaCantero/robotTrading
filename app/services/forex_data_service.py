@@ -106,7 +106,9 @@ class ForexDataFetcher:
 
         # Try to fetch from API (not implemented - would call OANDA/FXCM)
         try:
-            correlations = self._fetch_correlations_from_api(base_currency)  # pylint: disable=assignment-from-no-return
+            correlations = self._fetch_correlations_from_api(
+                base_currency
+            )  # pylint: disable=assignment-from-no-return
             # Function may raise NotImplementedError or return None
             if correlations is not None:
                 self.correlation_cache = (correlations, datetime.utcnow())

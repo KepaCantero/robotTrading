@@ -34,6 +34,8 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 import numpy as np
 import pandas as pd
 
+from app.models.assets import Asset, AssetClass, Exchange
+
 # Defer yfinance import to avoid compatibility issues
 YFINANCE_AVAILABLE = False
 _yf = None
@@ -45,8 +47,6 @@ try:
 except ImportError:
     TQDM_AVAILABLE = False
     tqdm = None  # type: ignore
-
-from app.models.assets import Asset, AssetClass, Exchange
 
 logger = logging.getLogger(__name__)
 
@@ -1137,7 +1137,7 @@ class MarketUniverseLoader:
             try:
                 # Calculate metrics
                 avg_volume = Decimal(str(int(df['volume'].mean())))
-                avg_price = Decimal(
+                Decimal(
                     str(df['close'].mean())
                 )  # noqa: F841 - used for market_cap approx
                 market_cap = None  # yfinance doesn't always provide this

@@ -1,5 +1,3 @@
-import json
-
 """
 T18.1: QuestDB Connector - Async client for time-series metrics storage
 
@@ -7,6 +5,7 @@ Provides high-performance async interface to QuestDB for storing and querying me
 Handles connection pooling, bulk operations, and error handling.
 """
 
+import json
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -27,7 +26,6 @@ logger = logging.getLogger(__name__)
 # Sentinel object for in-memory "connection pool"
 class _InMemoryPool:
     """Sentinel class to represent in-memory storage pool."""
-
 
 
 class QuestDBConnector:

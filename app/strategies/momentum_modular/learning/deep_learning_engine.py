@@ -233,8 +233,7 @@ class DeepLearningEngine(BaseLearningEngine):
             pass
 
         # Import Dataset and DataLoader from torch.utils.data
-        from torch.utils.data import DataLoader as _DataLoader
-        from torch.utils.data import Dataset as _Dataset
+        from torch.utils.data import DataLoader as _DataLoader, Dataset as _Dataset
 
         # Definir TimeSeriesDataset lazy dentro de este contexto (después de configurar threading)
         class TimeSeriesDataset(_Dataset):
@@ -869,8 +868,7 @@ class DeepLearningEngine(BaseLearningEngine):
             raise ImportError("PyTorch requerido")
 
         # Import Dataset and DataLoader from torch.utils.data
-        from torch.utils.data import DataLoader as _DataLoader
-        from torch.utils.data import Dataset as _Dataset
+        from torch.utils.data import DataLoader as _DataLoader, Dataset as _Dataset
 
         # Definir TimeSeriesDataset lazy
         class TimeSeriesDatasetEval(_Dataset):

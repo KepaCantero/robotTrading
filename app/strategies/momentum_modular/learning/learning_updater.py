@@ -182,9 +182,11 @@ class LearningEngineUpdater:
         if self._transfer_learning_enabled:
             try:
                 # TransferLearningManager expects config dict, not registry_path
-                tl_config = {"registry_path": self._transfer_learning_config.get(
-                    "registry_path", "models/registry"
-                )}
+                tl_config = {
+                    "registry_path": self._transfer_learning_config.get(
+                        "registry_path", "models/registry"
+                    )
+                }
                 self._transfer_manager = TransferLearningManager(config=tl_config)
                 self._transfer_history: List[Dict[str, Any]] = []
                 self._last_transfer_operation: Optional[Dict[str, Any]] = None
@@ -910,9 +912,17 @@ class LearningEngineUpdater:
 
             if analysis_result and not hasattr(analysis_result, 'get'):
                 # Convert ComprehensiveImportanceReport to dict if needed
-                analysis_result = analysis_result.to_dict() if hasattr(analysis_result, 'to_dict') else analysis_result
+                analysis_result = (
+                    analysis_result.to_dict()
+                    if hasattr(analysis_result, 'to_dict')
+                    else analysis_result
+                )
 
-            if analysis_result and isinstance(analysis_result, dict) and "error" not in analysis_result:
+            if (
+                analysis_result
+                and isinstance(analysis_result, dict)
+                and "error" not in analysis_result
+            ):
                 # Store analysis result
                 self._last_feature_analysis = {
                     "timestamp": current_date,

@@ -288,6 +288,7 @@ class HyperparameterOptimizer:
             provider = YahooFinanceFeed(config)
             # Run async method in sync context
             import asyncio
+
             try:
                 loop = asyncio.get_event_loop()
             except RuntimeError:
@@ -307,13 +308,15 @@ class HyperparameterOptimizer:
 
             df_data = []
             for hist in historical_data:
-                df_data.append({
-                    'open': float(hist.open),
-                    'high': float(hist.high),
-                    'low': float(hist.low),
-                    'close': float(hist.close),
-                    'volume': float(hist.volume),
-                })
+                df_data.append(
+                    {
+                        'open': float(hist.open),
+                        'high': float(hist.high),
+                        'low': float(hist.low),
+                        'close': float(hist.close),
+                        'volume': float(hist.volume),
+                    }
+                )
             df = pd.DataFrame(df_data)
             df.index = [hist.timestamp for hist in historical_data]
 
