@@ -6,31 +6,107 @@ streamlit>=1.28.0,<2.0.0
 plotly>=5.17.0,<6.0.0
 kaleido>=0.2.1,<1.0.0  # For static image export from plotly
 
-# Testing
+# ===========================================
+# ✅ OBLIGATORIAS (Core) - 8 herramientas
+# ===========================================
+
+# 1. Black - Formateador de Código
+black>=23.9.0,<24.0.0
+
+# 2. Isort - Organizador de Imports
+isort>=5.12.0,<6.0.0
+
+# 3. Autoflake - Limpiador de Código
+autoflake>=2.2.0,<3.0.0
+
+# 4. Ruff - Linter Ultra-Rápido (reemplaza Flake8 + plugins)
+ruff>=0.1.0,<1.0.0
+
+# 5. Flake8 - Linter Clásico
+flake8>=7.0.0,<8.0.0
+# Plugins útiles de Flake8
+flake8-bugbear>=24.1.0,<25.0.0  # Detecta bugs comunes
+flake8-comprehensions>=3.14.0,<4.0.0  # Mejora comprensiones
+flake8-simplify>=0.21.0,<1.0.0  # Simplifica código
+
+# 6. Pylint - Análisis Profundo
+pylint>=3.0.0,<4.0.0
+
+# 7. Mypy - Type Checker
+mypy>=1.6.0,<2.0.0
+
+# 8. Bandit - Security Scanner
+bandit>=1.7.0,<2.0.0
+
+# ===========================================
+# 🔶 RECOMENDADAS (Profesional) - 10 herramientas
+# ===========================================
+
+# 9. Radon - Complejidad Ciclomática
+radon>=6.0.0,<7.0.0
+
+# 10. Vulture - Código Muerto
+vulture>=2.11,<3.0.0
+
+# 11. Pydocstyle - Docstrings
+pydocstyle>=6.3.0,<7.0.0
+
+# 12. Interrogate - Cobertura de Documentación
+interrogate>=1.5.0,<2.0.0
+
+# 13. Safety - Vulnerabilidades en Dependencias
+safety>=3.0.0,<4.0.0
+
+# 14. Pip-audit - Auditoría de Dependencias
+pip-audit>=2.6.0,<3.0.0
+
+# 15. Pytest - Framework de Testing
 pytest>=7.4.0,<9.0.0
 pytest-asyncio>=0.21.0,<2.0.0
 pytest-cov>=4.1.0,<5.0.0
 pytest-mock>=3.11.0,<4.0.0
 pytest-timeout>=2.1.0,<3.0.0
-httpx>=0.25.0,<0.28.0  # For FastAPI testing (<0.28 for starlette compatibility)
+pytest-xdist>=3.5.0,<4.0.0  # Ejecución paralela
+pytest-benchmark>=4.0.0,<5.0.0  # Benchmarks
 
-# Code Quality
-black>=23.9.0,<24.0.0
-ruff>=0.1.0,<1.0.0
-isort>=5.12.0,<6.0.0
-mypy>=1.6.0,<2.0.0
-pylint>=3.0.0,<4.0.0
+# 16. Coverage.py - Cobertura de Tests
+coverage>=7.3.0,<8.0.0
 
-# Development Tools
-ipython>=8.17.0,<9.0.0
-ipdb>=0.13.0,<1.0.0
+# 17. Pre-commit - Git Hooks
 pre-commit>=3.5.0,<4.0.0
 
-# Documentation
+# 18. Semgrep - Pattern Matching Avanzado
+semgrep>=1.45.0,<2.0.0
+
+# ===========================================
+# 🔷 OPCIONALES (Avanzado)
+# ===========================================
+
+# Hypothesis - Property-based Testing
+hypothesis>=6.92.0,<7.0.0
+
+# Prospector - Wrapper multiple tools
+prospector>=1.10.3,<2.0.0
+
+# ===========================================
+# TESTING - Para FastAPI
+# ===========================================
+httpx>=0.25.0,<0.28.0  # For FastAPI testing (<0.28 for starlette compatibility)
+
+# ===========================================
+# DEVELOPMENT TOOLS
+# ===========================================
+ipython>=8.17.0,<9.0.0
+ipdb>=0.13.0,<1.0.0
+
+# ===========================================
+# DOCUMENTATION
+# ===========================================
 sphinx>=7.2.0,<8.0.0
 sphinx-rtd-theme>=1.3.0,<2.0.0
 
-# Type Stubs
+# ===========================================
+# TYPE STUBS
+# ===========================================
 types-pyyaml>=6.0.0,<7.0.0
 types-requests>=2.31.0,<3.0.0
-
