@@ -248,7 +248,7 @@ class TestMarketUniverseOrchestratorUnit:
             )
         )
 
-        result = await orchestrator.get_sp500_for_allocation(
+        await orchestrator.get_sp500_for_allocation(
             total_capital=100000,
             top_n=50,
         )
@@ -276,7 +276,7 @@ class TestMarketUniverseOrchestratorUnit:
             )
         )
 
-        result = await orchestrator.get_ibex35_for_allocation(
+        await orchestrator.get_ibex35_for_allocation(
             total_capital=100000,
             top_n=35,
         )
@@ -304,7 +304,7 @@ class TestMarketUniverseOrchestratorUnit:
             )
         )
 
-        result = await orchestrator.get_crypto_for_allocation(
+        await orchestrator.get_crypto_for_allocation(
             total_capital=100000,
             top_n=20,
         )
@@ -332,7 +332,7 @@ class TestMarketUniverseOrchestratorUnit:
             )
         )
 
-        result = await orchestrator.get_mixed_universe_for_allocation(
+        await orchestrator.get_mixed_universe_for_allocation(
             total_capital=100000,
             sp500_top=50,
             crypto_top=10,

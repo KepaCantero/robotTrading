@@ -419,7 +419,6 @@ class TestMarketUniverseLoaderCaching:
 
         # First download
         data1 = await loader.download_universe_data(tickers, period="1wk")
-        cache_key = f"data_{'_'.join(sorted(tickers[:10]))}_1wk_1d"
 
         # Second download should use cache
         data2 = await loader.download_universe_data(tickers, period="1wk")

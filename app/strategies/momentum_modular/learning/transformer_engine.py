@@ -272,7 +272,6 @@ class TransformerEngine(BaseLearningEngine):
 
                 # CRÍTICO: Asegurar threading antes de crear modelo
                 # Access torch through the global variable set by _ensure_pytorch_imported
-                global torch
                 if torch is None:
                     raise ImportError("PyTorch no disponible")
 
