@@ -526,7 +526,9 @@ class DeployDecisionOrchestrator:
         if recommendation_score >= Decimal("80"):
             recommendation_text = f"✅ Strong recommendation score ({recommendation_score:.0f}/100). Strategy shows high potential."
         elif recommendation_score >= Decimal("65"):
-            recommendation_text = f"👍 Good recommendation score ({recommendation_score:.0f}/100). Strategy is viable."
+            recommendation_text = (
+                f"👍 Good recommendation score ({recommendation_score:.0f}/100). Strategy is viable."
+            )
         elif recommendation_score >= Decimal("50"):
             recommendation_text = f"➖ Neutral recommendation score ({recommendation_score:.0f}/100). Marginal viability."
         else:
