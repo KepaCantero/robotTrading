@@ -155,6 +155,8 @@ class TestTransferLearningIntegration:
             return_value=(MagicMock(), {"loss": 0.05, "accuracy": 0.98})
         )
         manager.create_pretrained_model = MagicMock(return_value="model_123")
+        manager.registry = MagicMock()
+        manager.registry.list_models = MagicMock(return_value={"bull": ["model_1"], "bear": ["model_2"]})
         manager.list_models = MagicMock(return_value={"bull": ["model_1"], "bear": ["model_2"]})
         return manager
 
@@ -228,6 +230,8 @@ class TestPublicAPIMethods:
     def mock_transfer_manager(self):
         """Crear mock transfer learning manager."""
         manager = MagicMock()
+        manager.registry = MagicMock()
+        manager.registry.list_models = MagicMock(return_value={"bull": ["model_1"], "bear": ["model_2"]})
         manager.list_models = MagicMock(return_value={"bull": ["model_1"], "bear": ["model_2"]})
         return manager
 
@@ -272,7 +276,7 @@ class TestPublicAPIMethods:
 
             assert "status" in models
             assert "models" in models
-            mock_transfer_manager.list_models.assert_called()
+            mock_transfer_manager.registry.list_models.assert_called_with(regime=None)
 
     def test_get_available_models_filtered_by_regime(
         self, mock_learning_engine, mock_transfer_manager
@@ -286,7 +290,7 @@ class TestPublicAPIMethods:
 
             models = updater.get_available_pretrained_models(regime="bull")  # noqa: F841
 
-            mock_transfer_manager.list_models.assert_called_with(regime="bull")
+            mock_transfer_manager.registry.list_models.assert_called_with(regime="bull")
 
     def test_get_last_transfer_operation_none(self, mock_learning_engine, mock_transfer_manager):
         """Test obtener última operación cuando no hay."""

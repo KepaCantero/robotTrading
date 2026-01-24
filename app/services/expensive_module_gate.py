@@ -402,6 +402,8 @@ class ExpensiveModuleGate:
             "recommendation": (
                 "COST_ACCEPTABLE"
                 if cost_ratio < Decimal("0.50")
-                else "COST_HIGH" if cost_ratio < Decimal("1.0") else "COST_CRITICAL"
+                else "COST_HIGH"
+                if cost_ratio < Decimal("1.0")
+                else "COST_CRITICAL"
             ),
         }
