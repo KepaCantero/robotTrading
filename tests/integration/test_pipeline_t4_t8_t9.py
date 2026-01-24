@@ -22,10 +22,7 @@ import pytest
 from app.backtesting.models import BacktestResult
 from app.models.portfolio import Portfolio, Position
 from app.services.capacity_fade_validation import CapacityFadeRequest, CapacityFadeValidator
-from app.services.portfolio_constructor.models import (
-    AllocationWeight,
-    PortfolioAllocation,
-)
+from app.services.portfolio_constructor.models import AllocationWeight, PortfolioAllocation
 from app.services.reporting_generator import (
     get_delivery_manager,
     get_html_template_engine,

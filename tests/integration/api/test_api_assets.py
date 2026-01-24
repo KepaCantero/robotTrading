@@ -33,9 +33,9 @@ def override_get_asset_identification_service():
     return AsyncMock()
 
 
-app.dependency_overrides[get_asset_identification_service] = (
-    override_get_asset_identification_service
-)
+app.dependency_overrides[
+    get_asset_identification_service
+] = override_get_asset_identification_service
 
 app.include_router(router)
 

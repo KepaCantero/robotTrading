@@ -346,7 +346,9 @@ class ModuleParametrizer:
             parameter_set.total_modules_enabled > 0
             and len(parameter_set.high_priority_modules) == 0
         ):
-            warnings.append("⚠️  No high-priority modules enabled - may affect strategy consistency")
+            warnings.append(
+                "⚠️  No high-priority modules enabled - may affect strategy consistency"
+            )
 
         # Check estimated cost
         if parameter_set.total_estimated_cost_usd > Decimal("1000"):
