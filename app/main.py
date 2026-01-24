@@ -26,15 +26,13 @@ from app.api.trading_error_handler import router as trading_error_handler_router
 from app.core.config import get_settings
 from app.core.database import close_database, init_database
 
-"""
-AlgoTrading MVP - Main FastAPI Application
-
-Main entry point for the AlgoTrading MVP system.
-Implements health checks, CORS configuration, and basic error handling.
-
-Author: AlgoTrading MVP Team
-Version: 1.0.0
-"""
+# AlgoTrading MVP - Main FastAPI Application
+#
+# Main entry point for the AlgoTrading MVP system.
+# Implements health checks, CORS configuration, and basic error handling.
+#
+# Author: AlgoTrading MVP Team
+# Version: 1.0.0
 
 # ============================================================================
 # SOLUCIÓN DEFINITIVA: Configurar variables de entorno ANTES de cualquier import
@@ -68,7 +66,7 @@ logger = logging.getLogger(__name__)
 
 def get_app_settings():
     """Get application settings with lazy loading."""
-    global settings
+    global settings  # pylint: disable=global-statement
     if settings is None:
         settings = get_settings()
         # Update logging configuration
@@ -77,7 +75,7 @@ def get_app_settings():
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(fastapi_app: FastAPI):
     """Application lifespan manager for startup and shutdown events."""
     # Get settings
     app_settings = get_app_settings()

@@ -115,10 +115,9 @@ class DatabaseManager:
         """Convert synchronous database URL to asynchronous."""
         if sync_url.startswith("postgresql://"):
             return sync_url.replace("postgresql://", "postgresql+asyncpg://", 1)
-        elif sync_url.startswith("postgresql+psycopg2://"):
+        if sync_url.startswith("postgresql+psycopg2://"):
             return sync_url.replace("postgresql+psycopg2://", "postgresql+asyncpg://", 1)
-        else:
-            return sync_url
+        return sync_url
 
     def _add_connection_listeners(self) -> None:
         """Add database connection event listeners."""

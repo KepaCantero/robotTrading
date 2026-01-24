@@ -3,6 +3,10 @@ Repository Pattern Implementation for Database Access
 TASK-6: Configuración de base de datos
 """
 
+# pylint: disable=inconsistent-return-statements
+# The raise_database_error function always raises an exception, so pylint
+# incorrectly reports inconsistent return statements. This is intentional.
+
 import uuid
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -52,7 +56,7 @@ class BaseRepository(Generic[T]):
                 self.model_class.__tablename__,
             )
 
-    def get_by_id(self, id: uuid.UUID) -> Optional[T]:
+    def get_by_id(self, id: uuid.UUID) -> Optional[T]:  # pylint: disable=redefined-builtin
         """Get record by ID."""
         try:
             return self.session.query(self.model_class).filter(self.model_class.id == id).first()

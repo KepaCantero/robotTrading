@@ -118,8 +118,10 @@ class ForexDataFetcher:
             logger.debug("API correlation fetching not implemented, using defaults")
         except Exception as e:
             logger.warning(f"Failed to fetch correlations from API: {e}, using defaults")
-            self.correlation_cache = (self.DEFAULT_CORRELATIONS.copy(), datetime.utcnow())
-            return self.DEFAULT_CORRELATIONS.copy()
+
+        # Return default correlations as fallback
+        self.correlation_cache = (self.DEFAULT_CORRELATIONS.copy(), datetime.utcnow())
+        return self.DEFAULT_CORRELATIONS.copy()
 
     def get_current_rates(self, pairs: List[str]) -> Dict[str, Decimal]:
         """
