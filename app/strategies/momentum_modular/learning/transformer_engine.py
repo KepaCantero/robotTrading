@@ -214,7 +214,10 @@ class TransformerEngine(BaseLearningEngine):
         labels = np.array(labels) if labels else None
 
         # Reshape para Transformer: (batch, seq_len, features)
-        sequences = sequences.reshape(sequences.shape[0], sequences.shape[1], 1)
+        if sequences.ndim == 2:
+            sequences = sequences.reshape((sequences.shape[0], sequences.shape[1], 1))
+        elif sequences.ndim == 1:
+            sequences = sequences.reshape((sequences.shape[0], 1, 1))
 
         return sequences, labels
 
@@ -268,6 +271,11 @@ class TransformerEngine(BaseLearningEngine):
                     raise ImportError("PyTorch requerido")
 
                 # CRÍTICO: Asegurar threading antes de crear modelo
+                # Access torch through the global variable set by _ensure_pytorch_imported
+                global torch
+                if torch is None:
+                    raise ImportError("PyTorch no disponible")
+
                 try:
                     torch.set_num_threads(1)
                 except RuntimeError:
@@ -376,8 +384,12 @@ class TransformerEngine(BaseLearningEngine):
             if not _ensure_pytorch_imported():
                 raise ImportError("PyTorch requerido")
 
+            # Import Dataset and DataLoader from torch.utils.data
+            from torch.utils.data import DataLoader as _DataLoader
+            from torch.utils.data import Dataset as _Dataset
+
             # Definir TransformerDataset lazy dentro de este contexto
-            class TransformerDataset(Dataset):
+            class TransformerDataset(_Dataset):
                 """Dataset para sequences de tiempo para Transformer."""
 
                 def __init__(self, sequences, labels):
@@ -392,11 +404,12 @@ class TransformerEngine(BaseLearningEngine):
                     import numpy as np
 
                     sequences_np = np.array(sequences, dtype=np.float32)
+                    labels_np = None
                     if labels is not None:
                         labels_np = np.array(labels, dtype=np.float32)
                     with torch.no_grad():
                         self.sequences = torch.from_numpy(sequences_np).clone()
-                        if labels is not None:
+                        if labels_np is not None:
                             self.labels = torch.from_numpy(labels_np).clone()
                         else:
                             self.labels = None
@@ -412,13 +425,11 @@ class TransformerEngine(BaseLearningEngine):
             # Preparar datasets
             train_dataset = TransformerDataset(sequences, labels)
             # CRÍTICO: Asegurar threading ANTES de crear DataLoader
-            import torch
-
             torch.set_num_threads(1)
             torch.set_num_interop_threads(1)
 
             # CRÍTICO: num_workers=0 para evitar bloqueos de threading
-            train_loader = DataLoader(
+            train_loader = _DataLoader(
                 train_dataset,
                 batch_size=self.batch_size,
                 shuffle=True,
@@ -465,15 +476,46 @@ class TransformerEngine(BaseLearningEngine):
                     validation_data.get('data', validation_data), sequence_length=30
                 )
                 if len(val_sequences) > 0:
-                    val_dataset = TransformerDataset(val_sequences, val_labels)
-                    # CRÍTICO: Asegurar threading antes de crear DataLoader
-                    import torch
+                    # Import Dataset and DataLoader again for this context
+                    from torch.utils.data import DataLoader as _DataLoader
+                    from torch.utils.data import Dataset as _Dataset
 
+                    class TransformerDatasetVal(_Dataset):
+                        """Dataset para sequences de tiempo para Transformer."""
+
+                        def __init__(self, sequences, labels):
+                            try:
+                                torch.set_num_threads(1)
+                            except RuntimeError:
+                                pass
+                            import numpy as np
+
+                            sequences_np = np.array(sequences, dtype=np.float32)
+                            labels_np = None
+                            if labels is not None:
+                                labels_np = np.array(labels, dtype=np.float32)
+                            with torch.no_grad():
+                                self.sequences = torch.from_numpy(sequences_np).clone()
+                                if labels_np is not None:
+                                    self.labels = torch.from_numpy(labels_np).clone()
+                                else:
+                                    self.labels = None
+
+                        def __len__(self):
+                            return len(self.sequences)
+
+                        def __getitem__(self, idx):
+                            if self.labels is not None:
+                                return self.sequences[idx], self.labels[idx]
+                            return self.sequences[idx]
+
+                    val_dataset = TransformerDatasetVal(val_sequences, val_labels)
+                    # CRÍTICO: Asegurar threading antes de crear DataLoader
                     torch.set_num_threads(1)
                     torch.set_num_interop_threads(1)
 
                     # CRÍTICO: num_workers=0 para evitar bloqueos de threading
-                    val_loader = DataLoader(
+                    val_loader = _DataLoader(
                         val_dataset,
                         batch_size=self.batch_size,
                         shuffle=False,
@@ -548,12 +590,13 @@ class TransformerEngine(BaseLearningEngine):
                 return {'prediction': 0.0, 'confidence': 0.0}
 
             # Reshape: (1, seq_len, features)
-            if len(sequence.shape) == 1:
-                sequence = sequence.reshape(1, sequence.shape[0], 1)
-            elif len(sequence.shape) == 2:
-                sequence = sequence.reshape(1, sequence.shape[0], sequence.shape[1])
+            if sequence.ndim == 1:
+                sequence = sequence.reshape((1, sequence.shape[0], 1))
+            elif sequence.ndim == 2:
+                sequence = sequence.reshape((1, sequence.shape[0], sequence.shape[1]))
             else:
-                sequence = sequence.reshape(1, *sequence.shape)
+                # Already in correct shape, just add batch dimension
+                sequence = sequence.reshape((1,) + sequence.shape)
 
             # Predecir
             self.model.eval()
@@ -593,8 +636,12 @@ class TransformerEngine(BaseLearningEngine):
             if len(sequences) == 0:
                 return {'error': 'no_data'}
 
-            # Definir TransformerDataset aquí también
-            class TransformerDataset(Dataset):
+            # Import Dataset and DataLoader for this context
+            from torch.utils.data import DataLoader as _DataLoader
+            from torch.utils.data import Dataset as _Dataset
+
+            # Definir TransformerDatasetEval aquí también
+            class TransformerDatasetEval(_Dataset):
                 """Dataset para sequences de tiempo para Transformer."""
 
                 def __init__(self, sequences, labels):
@@ -605,13 +652,15 @@ class TransformerEngine(BaseLearningEngine):
                     import numpy as np
 
                     sequences_np = np.array(sequences, dtype=np.float32)
+                    labels_np = None
                     if labels is not None:
                         labels_np = np.array(labels, dtype=np.float32)
                     with torch.no_grad():
                         self.sequences = torch.from_numpy(sequences_np).clone()
-                        self.labels = (
-                            torch.from_numpy(labels_np).clone() if labels is not None else None
-                        )
+                        if labels_np is not None:
+                            self.labels = torch.from_numpy(labels_np).clone()
+                        else:
+                            self.labels = None
 
                 def __len__(self):
                     return len(self.sequences)
@@ -621,15 +670,13 @@ class TransformerEngine(BaseLearningEngine):
                         return self.sequences[idx], self.labels[idx]
                     return self.sequences[idx]
 
-            test_dataset = TransformerDataset(sequences, labels)
+            test_dataset = TransformerDatasetEval(sequences, labels)
             # CRÍTICO: Asegurar threading antes de crear DataLoader
-            import torch
-
             torch.set_num_threads(1)
             torch.set_num_interop_threads(1)
 
             # CRÍTICO: num_workers=0 para evitar bloqueos de threading
-            test_loader = DataLoader(
+            test_loader = _DataLoader(
                 test_dataset,
                 batch_size=self.batch_size,
                 shuffle=False,

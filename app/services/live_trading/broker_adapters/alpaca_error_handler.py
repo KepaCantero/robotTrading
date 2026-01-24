@@ -364,7 +364,7 @@ class ErrorRecoveryManager:
         self.circuit_breaker.record_failure()
 
         if not self.circuit_breaker.is_available():
-            if self.on_circuit_open:
+            if self.on_circuit_open is not None:
                 self.on_circuit_open()
             return ErrorRecoveryStrategy.FAIL
 
@@ -376,11 +376,11 @@ class ErrorRecoveryManager:
         )
 
         if strategy == ErrorRecoveryStrategy.ALERT:
-            if self.on_manual_intervention:
+            if self.on_manual_intervention is not None:
                 self.on_manual_intervention(str(error))
 
         if strategy == ErrorRecoveryStrategy.SYNC:
-            if self.on_sync_needed:
+            if self.on_sync_needed is not None:
                 self.on_sync_needed()
 
         return strategy

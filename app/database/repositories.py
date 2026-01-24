@@ -382,7 +382,7 @@ class TradeRepository(BaseRepository[Trade]):
         try:
             result = (
                 self.session.query(
-                    func.count(Trade.id).label("total_trades"),
+                    func.count(Trade.id).label("total_trades"),  # pylint: disable=not-callable
                     func.sum(Trade.commission).label("total_commission"),
                     func.sum(Trade.slippage).label("total_slippage"),
                     func.sum(Trade.total_cost).label("total_cost"),

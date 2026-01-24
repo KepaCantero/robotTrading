@@ -193,9 +193,7 @@ class GridSearchOptimizer:
         # Create validator
         wf_config = self.preset_config.get("grid_search", {}).get("walk_forward", {})
         validator = WalkForwardValidator(  # type: ignore
-            train_years=wf_config.get("train_years", 4),
-            validation_years=wf_config.get("validation_years", 1),
-            step_years=wf_config.get("step_years", 1),
+            config=wf_config,
         )
 
         # Create windows

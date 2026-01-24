@@ -578,12 +578,12 @@ class PaperTradingService:
             portfolio_id = list(self.portfolios.keys())[0] if self.portfolios else None
             if portfolio_id is None:
                 # Create a default portfolio for testing
-                portfolio_id = uuid4()
-                await self.create_portfolio(
-                    portfolio_id=portfolio_id,
-                    initial_capital=Decimal("100000"),
-                    currency="USD",
+                # create_portfolio takes name, not portfolio_id/initial_capital/currency
+                portfolio = await self.create_portfolio(
+                    name="Default Portfolio",
+                    initial_cash=Decimal("100000"),
                 )
+                portfolio_id = portfolio.id
 
             # Execute the trade using the existing execute_trade method
             trade = await self.execute_trade(

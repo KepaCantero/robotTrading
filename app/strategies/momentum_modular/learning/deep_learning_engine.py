@@ -232,8 +232,12 @@ class DeepLearningEngine(BaseLearningEngine):
         except RuntimeError:
             pass
 
+        # Import Dataset and DataLoader from torch.utils.data
+        from torch.utils.data import DataLoader as _DataLoader
+        from torch.utils.data import Dataset as _Dataset
+
         # Definir TimeSeriesDataset lazy dentro de este contexto (después de configurar threading)
-        class TimeSeriesDataset(Dataset):
+        class TimeSeriesDataset(_Dataset):
             """Dataset para series de tiempo."""
 
             def __init__(self, sequences, labels):
@@ -250,12 +254,13 @@ class DeepLearningEngine(BaseLearningEngine):
                 import numpy as np
 
                 sequences_np = np.array(sequences, dtype=np.float32)
+                labels_np = None
                 if labels is not None:
                     labels_np = np.array(labels, dtype=np.float32)
                 # Crear tensores sin threading - usar no_grad para máxima seguridad
                 with torch.no_grad():
                     self.sequences = torch.from_numpy(sequences_np).clone()
-                    if labels is not None:
+                    if labels_np is not None:
                         self.labels = torch.from_numpy(labels_np).clone()
                     else:
                         self.labels = None
@@ -271,7 +276,7 @@ class DeepLearningEngine(BaseLearningEngine):
         # Preparar datasets
         train_dataset = TimeSeriesDataset(sequences, labels)
         # CRÍTICO: num_workers=0 para evitar bloqueos de threading
-        train_loader = DataLoader(
+        train_loader = _DataLoader(
             train_dataset,
             batch_size=self.batch_size,
             shuffle=True,
@@ -286,8 +291,8 @@ class DeepLearningEngine(BaseLearningEngine):
             val_labels = validation_data['labels']
             val_sequences, val_labels, _ = self._normalize_data(val_sequences, val_labels)
 
-            # Definir TimeSeriesDataset aquí también (mismo contexto)
-            class TimeSeriesDataset(Dataset):
+            # Use same TimeSeriesDataset class, import again for clarity
+            class TimeSeriesDatasetVal(_Dataset):
                 """Dataset para series de tiempo."""
 
                 def __init__(self, sequences, labels):
@@ -298,13 +303,15 @@ class DeepLearningEngine(BaseLearningEngine):
                     import numpy as np
 
                     sequences_np = np.array(sequences, dtype=np.float32)
+                    labels_np = None
                     if labels is not None:
                         labels_np = np.array(labels, dtype=np.float32)
                     with torch.no_grad():
                         self.sequences = torch.from_numpy(sequences_np).clone()
-                        self.labels = (
-                            torch.from_numpy(labels_np).clone() if labels is not None else None
-                        )
+                        if labels_np is not None:
+                            self.labels = torch.from_numpy(labels_np).clone()
+                        else:
+                            self.labels = None
 
                 def __len__(self):
                     return len(self.sequences)
@@ -314,9 +321,9 @@ class DeepLearningEngine(BaseLearningEngine):
                         return self.sequences[idx], self.labels[idx]
                     return self.sequences[idx]
 
-            val_dataset = TimeSeriesDataset(val_sequences, val_labels)
+            val_dataset = TimeSeriesDatasetVal(val_sequences, val_labels)
             # CRÍTICO: num_workers=0 para evitar bloqueos de threading
-            val_loader = DataLoader(
+            val_loader = _DataLoader(
                 val_dataset,
                 batch_size=self.batch_size,
                 num_workers=0,  # Sin workers para evitar mutex.cc
@@ -861,8 +868,12 @@ class DeepLearningEngine(BaseLearningEngine):
         if not _ensure_pytorch_imported():
             raise ImportError("PyTorch requerido")
 
+        # Import Dataset and DataLoader from torch.utils.data
+        from torch.utils.data import DataLoader as _DataLoader
+        from torch.utils.data import Dataset as _Dataset
+
         # Definir TimeSeriesDataset lazy
-        class TimeSeriesDataset(Dataset):
+        class TimeSeriesDatasetEval(_Dataset):
             """Dataset para series de tiempo."""
 
             def __init__(self, sequences, labels):
@@ -873,13 +884,15 @@ class DeepLearningEngine(BaseLearningEngine):
                 import numpy as np
 
                 sequences_np = np.array(sequences, dtype=np.float32)
+                labels_np = None
                 if labels is not None:
                     labels_np = np.array(labels, dtype=np.float32)
                 with torch.no_grad():
                     self.sequences = torch.from_numpy(sequences_np).clone()
-                    self.labels = (
-                        torch.from_numpy(labels_np).clone() if labels is not None else None
-                    )
+                    if labels_np is not None:
+                        self.labels = torch.from_numpy(labels_np).clone()
+                    else:
+                        self.labels = None
 
             def __len__(self):
                 return len(self.sequences)
@@ -889,9 +902,9 @@ class DeepLearningEngine(BaseLearningEngine):
                     return self.sequences[idx], self.labels[idx]
                 return self.sequences[idx]
 
-        dataset = TimeSeriesDataset(sequences, labels)
+        dataset = TimeSeriesDatasetEval(sequences, labels)
         # CRÍTICO: num_workers=0 para evitar bloqueos de threading
-        loader = DataLoader(
+        loader = _DataLoader(
             dataset,
             batch_size=self.batch_size,
             num_workers=0,  # Sin workers para evitar mutex.cc

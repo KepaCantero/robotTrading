@@ -181,11 +181,11 @@ class LearningEngineUpdater:
 
         if self._transfer_learning_enabled:
             try:
-                self._transfer_manager = TransferLearningManager(
-                    registry_path=self._transfer_learning_config.get(
-                        "registry_path", "models/registry"
-                    )
-                )
+                # TransferLearningManager expects config dict, not registry_path
+                tl_config = {"registry_path": self._transfer_learning_config.get(
+                    "registry_path", "models/registry"
+                )}
+                self._transfer_manager = TransferLearningManager(config=tl_config)
                 self._transfer_history: List[Dict[str, Any]] = []
                 self._last_transfer_operation: Optional[Dict[str, Any]] = None
                 logger.info("Transfer Learning enabled for LearningEngineUpdater")
@@ -492,8 +492,9 @@ class LearningEngineUpdater:
             engine_type = self._get_engine_type()
 
             # Find best pre-trained model for this regime
+            # Note: find_best_model doesn't accept metric parameter, it searches by best f1_score internally
             best_model_id = self._transfer_manager.find_best_model(
-                regime=regime, model_type=engine_type, metric="f1_score"
+                regime=regime, model_type=engine_type
             )
 
             if not best_model_id:
@@ -525,10 +526,17 @@ class LearningEngineUpdater:
                 return None
 
             # Fine-tune the pre-trained model
+            # load_and_finetune expects model_id and training_data dict
+            training_data_dict = {
+                "sequences": features if len(features.shape) == 3 else None,
+                "labels": targets,
+                "features": features if len(features.shape) == 2 else None,
+            }
+            # Remove None values
+            training_data_dict = {k: v for k, v in training_data_dict.items() if v is not None}
             fine_tuned_model, tl_metrics = self._transfer_manager.load_and_finetune(
-                base_model_id=best_model_id,
-                X_train=features,
-                y_train=targets,
+                model_id=best_model_id,
+                training_data=training_data_dict,
             )
 
             # Replace learning engine model with fine-tuned version
@@ -626,7 +634,10 @@ class LearningEngineUpdater:
                 self._retrain_trigger.record_retrain()
                 # Reset overfitting detector after retrain
                 if self._overfitting_detector:
-                    self._overfitting_detector.reset()
+                    # OverfittingDetector doesn't have a reset method, clear histories manually
+                    self._overfitting_detector.train_metrics_history.clear()
+                    self._overfitting_detector.val_metrics_history.clear()
+                    self._overfitting_detector.epoch_history.clear()
 
             # Limpiar historial antiguo (mantener solo último 30 días)
             self._clean_old_history(current_date)
@@ -887,17 +898,21 @@ class LearningEngineUpdater:
 
             # Run comprehensive feature analysis
             logger.debug("📊 Analizando importancia de features (6 métodos)...")
+            # ComprehensiveFeatureAnalyzer.analyze() expects X, y, feature_names, not features/targets/model_type
             analysis_result = self._feature_analyzer.analyze(
                 model=(
                     self.learning_engine.model if hasattr(self.learning_engine, "model") else None
                 ),
-                features=features,
-                targets=targets,
+                X=features,
+                y=targets,
                 feature_names=training_data.get("feature_names"),
-                model_type=self._get_engine_type(),
             )
 
-            if analysis_result and "error" not in analysis_result:
+            if analysis_result and not hasattr(analysis_result, 'get'):
+                # Convert ComprehensiveImportanceReport to dict if needed
+                analysis_result = analysis_result.to_dict() if hasattr(analysis_result, 'to_dict') else analysis_result
+
+            if analysis_result and isinstance(analysis_result, dict) and "error" not in analysis_result:
                 # Store analysis result
                 self._last_feature_analysis = {
                     "timestamp": current_date,
@@ -908,7 +923,7 @@ class LearningEngineUpdater:
                 self._feature_importance_history.append(self._last_feature_analysis)
 
                 # Log top/low importance features
-                if "top_features" in analysis_result:
+                if isinstance(analysis_result, dict) and "top_features" in analysis_result:
                     top_features = analysis_result.get("top_features", {})
                     if top_features:
                         logger.info(
@@ -917,14 +932,14 @@ class LearningEngineUpdater:
                         )
 
                 # Check for critical warnings
-                if "warnings" in analysis_result:
+                if isinstance(analysis_result, dict) and "warnings" in analysis_result:
                     warnings = analysis_result.get("warnings", [])
                     if warnings:
                         for warning in warnings:
                             logger.warning(f"⚠️ Feature Importance Warning: {warning}")
 
                 # Recommendations
-                if "recommendations" in analysis_result:
+                if isinstance(analysis_result, dict) and "recommendations" in analysis_result:
                     recommendations = analysis_result.get("recommendations", [])
                     if recommendations:
                         logger.info(
@@ -1111,16 +1126,17 @@ class LearningEngineUpdater:
             return {"status": "transfer_learning_disabled", "models": {}}
 
         try:
-            models = self._transfer_manager.list_models(regime=regime)
+            # list_models is a method of ModelRegistry, not TransferLearningManager
+            models = self._transfer_manager.registry.list_models(regime=regime)
             return {
                 "status": "ok",
                 "models": models,
                 "filter_regime": regime,
-                "total_models": sum(len(v) for v in models.values()) if models else 0,
+                "total_models": len(models) if models else 0,
             }
         except Exception as e:
             logger.debug(f"Error listing pre-trained models: {e}")
-            return {"status": "error", "error": str(e), "models": {}}
+            return {"status": "error", "error": str(e), "models": []}
 
     def get_transfer_learning_status(self) -> Dict[str, Any]:
         """

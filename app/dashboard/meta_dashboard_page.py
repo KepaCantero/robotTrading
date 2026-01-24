@@ -63,9 +63,14 @@ if STREAMLIT_AVAILABLE:
                         loop = asyncio.get_event_loop()
                         if loop.is_running():
                             # Si ya hay loop, crear tarea
-                            import nest_asyncio
-
-                            nest_asyncio.apply()
+                            try:
+                                import nest_asyncio
+                                nest_asyncio.apply()
+                            except ImportError:
+                                st.warning(
+                                    "⚠️ nest_asyncio no está instalado. "
+                                    "Ejecutando sin anidación de eventos."
+                                )
                             results = loop.run_until_complete(dashboard.load_and_analyze())
                         else:
                             results = loop.run_until_complete(dashboard.load_and_analyze())

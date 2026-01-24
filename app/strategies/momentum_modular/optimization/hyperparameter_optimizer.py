@@ -276,15 +276,46 @@ class HyperparameterOptimizer:
             strategy = ModularMomentumStrategy(strategy_config)
 
             # Cargar datos históricos
-            from app.data.feeds import get_market_data_provider
+            from app.data.feeds import YahooFinanceFeed
+            from app.models.market_data import DataFeedConfig, DataFeedType
 
-            provider = get_market_data_provider()
-            df = provider.fetch_historical_data(
-                symbol=self.symbol,
-                start_date=self.start_date,
-                end_date=self.end_date,
-                interval="1d",
+            config = DataFeedConfig(
+                feed_type=DataFeedType.YAHOO_FINANCE,
+                api_key="",
+                rate_limit=5,
+                timeout_seconds=30,
             )
+            provider = YahooFinanceFeed(config)
+            # Run async method in sync context
+            import asyncio
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+
+            historical_data = loop.run_until_complete(
+                provider.get_historical_data(
+                    symbol=self.symbol,
+                    start_date=self.start_date,
+                    end_date=self.end_date,
+                )
+            )
+
+            # Convert HistoricalData objects to DataFrame
+            import pandas as pd
+
+            df_data = []
+            for hist in historical_data:
+                df_data.append({
+                    'open': float(hist.open),
+                    'high': float(hist.high),
+                    'low': float(hist.low),
+                    'close': float(hist.close),
+                    'volume': float(hist.volume),
+                })
+            df = pd.DataFrame(df_data)
+            df.index = [hist.timestamp for hist in historical_data]
 
             if df is None or len(df) == 0:
                 logger.warning(f"No se pudieron cargar datos para {self.symbol}")

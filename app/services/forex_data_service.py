@@ -106,10 +106,15 @@ class ForexDataFetcher:
 
         # Try to fetch from API (not implemented - would call OANDA/FXCM)
         try:
-            correlations = self._fetch_correlations_from_api(base_currency)
-            self.correlation_cache = (correlations, datetime.utcnow())
-            logger.info(f"Fetched {len(correlations)} correlations from API")
-            return correlations.copy()
+            correlations = self._fetch_correlations_from_api(base_currency)  # pylint: disable=assignment-from-no-return
+            # Function may raise NotImplementedError or return None
+            if correlations is not None:
+                self.correlation_cache = (correlations, datetime.utcnow())
+                logger.info(f"Fetched {len(correlations)} correlations from API")
+                return correlations.copy()
+        except NotImplementedError:
+            # Expected when API is not implemented
+            logger.debug("API correlation fetching not implemented, using defaults")
         except Exception as e:
             logger.warning(f"Failed to fetch correlations from API: {e}, using defaults")
             self.correlation_cache = (self.DEFAULT_CORRELATIONS.copy(), datetime.utcnow())
@@ -138,10 +143,13 @@ class ForexDataFetcher:
 
             # Try to fetch from API
             try:
-                rate = self._fetch_rate_from_api(pair)
+                rate = self._fetch_rate_from_api(pair)  # pylint: disable=assignment-from-no-return
                 if rate:
                     self.rate_cache[pair] = (rate, datetime.utcnow())
                     rates[pair] = rate
+            except NotImplementedError:
+                # Expected when API is not implemented
+                logger.debug(f"API rate fetching not implemented for {pair}")
             except Exception as e:
                 logger.warning(f"Failed to fetch rate for {pair}: {e}, using fallback")
                 # Use fallback rate (1.0 for most pairs)
