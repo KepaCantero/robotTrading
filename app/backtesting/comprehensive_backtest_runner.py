@@ -131,9 +131,9 @@ class ComprehensiveBacktestRunner:
         self.config_path = config_path  # Guardar para auditoría
         self.results: List[Dict[str, Any]] = []
         # Store complete BacktestResult objects for quantstats/pyfolio analysis
-        self.backtest_results_objects: List[Tuple[str, BacktestResult]] = (
-            []
-        )  # (test_name, BacktestResult)
+        self.backtest_results_objects: List[
+            Tuple[str, BacktestResult]
+        ] = []  # (test_name, BacktestResult)
         self.output_dir = Path(self.config['reporting']['output_directory'])
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -4096,7 +4096,9 @@ class ComprehensiveBacktestRunner:
 
             logger.info("✅ Análisis meta completado")
         except ImportError:
-            logger.warning("⚠️ BacktestMetaAnalyzer no disponible. Instala dependencias opcionales.")
+            logger.warning(
+                "⚠️ BacktestMetaAnalyzer no disponible. Instala dependencias opcionales."
+            )
         except Exception as e:
             logger.error(f"❌ Error en análisis meta: {e}", exc_info=True)
 

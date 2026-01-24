@@ -111,8 +111,7 @@ class MetricsExporter:
             ) as resp:
                 if resp.status in (200, 201, 204):
                     logger.info(
-                        f"✅ Pushed metrics to PushGateway "
-                        f"(job={job_name}, instance={instance})"
+                        f"✅ Pushed metrics to PushGateway " f"(job={job_name}, instance={instance})"
                     )
                     self.export_history.append(
                         {
