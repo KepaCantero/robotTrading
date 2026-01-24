@@ -371,7 +371,7 @@ ensure_tool "safety"
 ensure_tool "pip-audit"
 
 subsection "Safety - Escanea dependencias por CVEs conocidos"
-run_check "Safety" safety check || true
+run_check "Safety" safety scan || true
 
 subsection "Pip-audit - Auditoría de dependencias (PyPI Advisory Database)"
 run_check "Pip-audit" pip-audit || true
