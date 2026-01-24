@@ -225,9 +225,7 @@ class TradingBridgeOrchestrator:
                 )
 
                 if not signal:
-                    logger.warning(
-                        f"⚠️ No trade signal generated for alert: {alert_event.event_id}"
-                    )
+                    logger.warning(f"⚠️ No trade signal generated for alert: {alert_event.event_id}")
                     return None
 
                 # Validate risk gates

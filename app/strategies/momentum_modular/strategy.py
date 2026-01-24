@@ -207,7 +207,9 @@ class ModularMomentumStrategy(BaseStrategy):
             error_msg = str(e).lower()
             if 'mutex' in error_msg or 'lock' in error_msg or 'blocking' in error_msg:
                 logger.error(f"❌ Bloqueo de mutex al inicializar {engine_type}: {e}")
-                logger.error("💡 El learning engine se intentará inicializar más tarde o se omitirá")
+                logger.error(
+                    "💡 El learning engine se intentará inicializar más tarde o se omitirá"
+                )
                 self.learning_engine = None
             else:
                 raise

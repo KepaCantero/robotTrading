@@ -82,15 +82,15 @@ class UnifiedNormalizer:
         if self.corporate_actions_handler.actions_db.get(normalized_symbol):
             # Aplicar ajustes a precios
             for price_field in ['open', 'high', 'low', 'close']:
-                prices_dict[
-                    price_field
-                ] = self.corporate_actions_handler.apply_adjustments_to_prices(
-                    normalized_symbol,
-                    [
-                        Decimal(str(p)) if not isinstance(p, Decimal) else p
-                        for p in prices_dict[price_field]
-                    ],
-                    timestamps,
+                prices_dict[price_field] = (
+                    self.corporate_actions_handler.apply_adjustments_to_prices(
+                        normalized_symbol,
+                        [
+                            Decimal(str(p)) if not isinstance(p, Decimal) else p
+                            for p in prices_dict[price_field]
+                        ],
+                        timestamps,
+                    )
                 )
 
         # Construir datos normalizados
