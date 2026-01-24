@@ -816,7 +816,7 @@ class TestPipelineT4T8T9:
             "Market": [float(r) * 0.8 for r in returns],
             "Size": np.random.normal(0, 0.1, n).tolist(),
         }
-        factor_analysis = pyfolio.analyze_factor_exposure(
+        pyfolio.analyze_factor_exposure(
             returns=returns,
             factor_data=factor_data,
         )

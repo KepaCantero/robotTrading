@@ -1137,9 +1137,7 @@ class MarketUniverseLoader:
             try:
                 # Calculate metrics
                 avg_volume = Decimal(str(int(df['volume'].mean())))
-                Decimal(
-                    str(df['close'].mean())
-                )  # noqa: F841 - used for market_cap approx
+                Decimal(str(df['close'].mean()))  # noqa: F841 - used for market_cap approx
                 market_cap = None  # yfinance doesn't always provide this
 
                 # Determine exchange/asset class
