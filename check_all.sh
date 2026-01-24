@@ -43,6 +43,19 @@
 
 set -euo pipefail
 
+# Detectar y usar virtual environment
+VENV_DIR=".venv"
+if [ -d "$VENV_DIR" ]; then
+    source "$VENV_DIR/bin/activate"
+    PYTHON_CMD="$VENV_DIR/bin/python"
+    PIP_CMD="$VENV_DIR/bin/pip"
+    echo -e "${GREEN}✓ Virtual environment activado: $VENV_DIR${NC}"
+else
+    PYTHON_CMD="python3"
+    PIP_CMD="pip3"
+    echo -e "${YELLOW}⚠ No se encontró virtual environment, usando sistema${NC}"
+fi
+
 APP_DIRS="app/ tests/"
 
 # Colores
@@ -160,13 +173,63 @@ run_fix() {
 }
 
 command_exists() {
-    command -v "$1" &> /dev/null
+    if [ -n "$PYTHON_CMD" ]; then
+        # Para herramientas de Python, verificar si están instaladas
+        case "$1" in
+            black|isort|autoflake|ruff|flake8|pylint|mypy|bandit|pytest|coverage|radon|vulture|pydocstyle|interrogate|safety|pip-audit|semgrep|pre-commit|hypothesis|prospector|perflint|lint-imports|jscpd)
+                "$PYTHON_CMD" -c "import $1" 2>/dev/null && return 0
+                return 1
+                ;;
+            *)
+                command -v "$1" &> /dev/null
+                return $?
+                ;;
+        esac
+    else
+        command -v "$1" &> /dev/null
+        return $?
+    fi
+}
+
+install_tool() {
+    local tool="$1"
+    local package="${2:-$tool}"
+
+    echo -e "${YELLOW}📦 Instalando $tool...${NC}"
+    if [ -n "$PIP_CMD" ]; then
+        "$PIP_CMD" install "$package" -q
+    else
+        pip install "$package" -q
+    fi
+
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}✓ $tool instalado${NC}"
+        return 0
+    else
+        echo -e "${RED}✗ Error al instalar $tool${NC}"
+        return 1
+    fi
+}
+
+ensure_tool() {
+    local tool="$1"
+    local package="${2:-$tool}"
+
+    if ! command_exists "$tool"; then
+        install_tool "$tool" "$package"
+    fi
 }
 
 # ============================================
 # SECCIÓN 1: FORMATEO Y ORDEN (FIX AUTOMÁTICO)
 # ============================================
 section "✅ OBLIGATORIAS - FORMATEO Y ORDEN"
+
+subsection "Verificando/instalando herramientas de formateo..."
+ensure_tool "black"
+ensure_tool "isort"
+ensure_tool "autoflake"
+ensure_tool "ruff"
 
 subsection "Black - Formateador de código (PEP8)"
 run_fix "Black" black $APP_DIRS
@@ -191,6 +254,12 @@ fi
 # ============================================
 section "✅ OBLIGATORIAS - LINTING"
 
+subsection "Verificando/instalando herramientas de linting..."
+ensure_tool "flake8"
+ensure_tool "flake8-bugbear" "flake8_bugbear"
+ensure_tool "flake8-comprehensions" "flake8_comprehensions"
+ensure_tool "flake8-simplify" "flake8_simplify"
+
 subsection "Flake8 - Linter clásico (PEP8, errores lógicos, complejidad)"
 run_check "Flake8" flake8 $APP_DIRS --max-line-length=100 --statistics
 
@@ -202,6 +271,9 @@ run_check "Ruff" ruff check $APP_DIRS
 # ============================================
 section "✅ OBLIGATORIAS - ANÁLISIS PROFUNDO"
 
+subsection "Verificando/instalando herramientas de análisis profundo..."
+ensure_tool "pylint"
+
 subsection "Pylint - Análisis estático exhaustivo"
 run_check "Pylint" pylint $APP_DIRS --recursive=y
 
@@ -210,6 +282,9 @@ run_check "Pylint" pylint $APP_DIRS --recursive=y
 # ============================================
 section "✅ OBLIGATORIAS - TYPE CHECKING"
 
+subsection "Verificando/instalando herramientas de type checking..."
+ensure_tool "mypy"
+
 subsection "Mypy - Type checker"
 run_check "Mypy" mypy $APP_DIRS
 
@@ -217,6 +292,9 @@ run_check "Mypy" mypy $APP_DIRS
 # SECCIÓN 5: SEGURIDAD (CORE)
 # ============================================
 section "✅ OBLIGATORIAS - SEGURIDAD"
+
+subsection "Verificando/instalando herramientas de seguridad..."
+ensure_tool "bandit"
 
 subsection "Bandit - Security scanner (SQL injection, hardcoded passwords, weak crypto)"
 run_check "Bandit" bandit -r $APP_DIRS -ll
@@ -230,6 +308,10 @@ fi
 # SECCIÓN 6: TESTING (RECOMENDADO)
 # ============================================
 section "🔶 RECOMENDADAS - TESTING"
+
+subsection "Verificando/instalando herramientas de testing..."
+ensure_tool "pytest"
+ensure_tool "pytest-cov"
 
 subsection "Pytest - Framework de testing"
 run_check "Pytest" pytest tests/ -v --tb=short -x
@@ -249,62 +331,61 @@ fi
 # ============================================
 section "🔶 RECOMENDADAS - CALIDAD DE CÓDIGO"
 
+subsection "Verificando/instalando herramientas de calidad de código..."
+ensure_tool "radon"
+ensure_tool "vulture"
+
 subsection "Radon - Complejidad ciclomática (CC < 10 recomendado)"
-if command_exists radon; then
-    run_check "Radon CC" radon cc $APP_DIRS -a --total-average || true
-    echo -e "${CYAN}CC > 10 requiere refactorización${NC}"
-fi
+run_check "Radon CC" radon cc $APP_DIRS -a --total-average || true
+echo -e "${CYAN}CC > 10 requiere refactorización${NC}"
 
 subsection "Radon MI - Maintainability Index (MI > 65 recomendado)"
-if command_exists radon; then
-    run_check "Radon MI" radon mi $APP_DIRS --show || true
-    echo -e "${CYAN}MI < 20 es crítico, MI > 65 es aceptable${NC}"
-fi
+run_check "Radon MI" radon mi $APP_DIRS --show || true
+echo -e "${CYAN}MI < 20 es crítico, MI > 65 es aceptable${NC}"
 
 subsection "Vulture - Código muerto (detecta código no usado)"
-if command_exists vulture; then
-    run_check "Vulture" vulture $APP_DIRS --min-confidence 80 || true
-fi
+run_check "Vulture" vulture $APP_DIRS --min-confidence 80 || true
 
 # ============================================
 # SECCIÓN 8: DOCUMENTACIÓN (RECOMENDADO)
 # ============================================
 section "🔶 RECOMENDADAS - DOCUMENTACIÓN"
 
+subsection "Verificando/instalando herramientas de documentación..."
+ensure_tool "pydocstyle"
+ensure_tool "interrogate"
+
 subsection "Pydocstyle - Valida formato de docstrings (convención Google)"
-if command_exists pydocstyle; then
-    run_check "Pydocstyle" pydocstyle $APP_DIRS --convention=google || true
-fi
+run_check "Pydocstyle" pydocstyle $APP_DIRS --convention=google || true
 
 subsection "Interrogate - Cobertura de documentación (>70% recomendado)"
-if command_exists interrogate; then
-    run_check "Interrogate" interrogate $APP_DIRS -v --fail-under=70 || true
-fi
+run_check "Interrogate" interrogate $APP_DIRS -v --fail-under=70 || true
 
 # ============================================
 # SECCIÓN 9: SEGURIDAD DE DEPENDENCIAS (RECOMENDADO)
 # ============================================
 section "🔶 RECOMENDADAS - SEGURIDAD DE DEPENDENCIAS"
 
+subsection "Verificando/instalando herramientas de seguridad de dependencias..."
+ensure_tool "safety"
+ensure_tool "pip-audit"
+
 subsection "Safety - Escanea dependencias por CVEs conocidos"
-if command_exists safety; then
-    run_check "Safety" safety check || true
-fi
+run_check "Safety" safety check || true
 
 subsection "Pip-audit - Auditoría de dependencias (PyPI Advisory Database)"
-if command_exists pip-audit; then
-    run_check "Pip-audit" pip-audit || true
-fi
+run_check "Pip-audit" pip-audit || true
 
 # ============================================
 # SECCIÓN 10: PATTERN MATCHING AVANZADO (RECOMENDADO)
 # ============================================
 section "🔶 RECOMENDADAS - PATTERN MATCHING"
 
+subsection "Verificando/instalando herramientas de pattern matching..."
+ensure_tool "semgrep"
+
 subsection "Semgrep - Detecta anti-patterns, bugs, security issues"
-if command_exists semgrep; then
-    run_check "Semgrep" semgrep --config=auto $APP_DIRS || true
-fi
+run_check "Semgrep" semgrep --config=auto $APP_DIRS || true
 
 # ============================================
 # SECCIÓN 11: HERRAMIENTAS OPCIONALES (AVANZADO)
