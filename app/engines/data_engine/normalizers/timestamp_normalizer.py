@@ -67,10 +67,10 @@ class TimestampNormalizer:
                     dt = tz.localize(dt)
                 elif self.assume_local_if_naive:
                     # Asumir timezone local (no recomendado para producción)
-                    dt = pytz.UTC.localize(dt)
+                    dt = dt.replace(tzinfo=pytz.UTC)
                 else:
                     # Asumir UTC por defecto
-                    dt = pytz.UTC.localize(dt)
+                    dt = dt.replace(tzinfo=pytz.UTC)
 
             # Convertir a UTC
             if dt.tzinfo != pytz.UTC:

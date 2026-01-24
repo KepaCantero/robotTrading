@@ -344,8 +344,8 @@ class QuestDBConnector:
                             metric_type=MetricType(row['metric_type']),
                             symbol=row['symbol'] if row['symbol'] else None,
                             value=Decimal(str(row['value'])),
-                            metadata=(
-                                json.loads(row['''metadata''']) if row['''metadata'''] else None
+                            tags=(
+                                json.loads(row['metadata']) if row.get('metadata') else {}
                             ),  # nosec B307 - trusted DB source
                         )
                         for row in rows

@@ -184,9 +184,7 @@ class MomentumAutoOptimizer:
             # Run walk-forward validation
             wf_config = self.auto_opt_config.get("recalibration", {}).get("walk_forward", {})
             validator = WalkForwardValidator(  # type: ignore
-                train_years=wf_config.get("train_years", 2),
-                validation_years=wf_config.get("validation_years", 0.5),
-                step_years=wf_config.get("step_years", 0.5),
+                config=wf_config,
             )
 
             windows = validator.create_windows(start_date, end_date)
@@ -205,7 +203,7 @@ class MomentumAutoOptimizer:
 
                 # Simple backtest on validation window
                 from app.backtesting.models import BacktestConfig
-                from app.backtesting.simple_backtester import SimpleBacktester
+                from app.backtesting.engine import SimpleBacktester
 
                 # Generate signals
                 signals = []

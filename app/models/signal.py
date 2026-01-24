@@ -833,7 +833,8 @@ class SignalPriorityQueue:
     def score_signal(self, signal: Signal) -> Signal:
         """Score a signal and return it with updated priority score."""
         try:
-            # Create mock market data for scoring
+            # Create mock market data for scoring - use dataclass not Pydantic model
+            # MarketData dataclass doesn't have open_price, high_price, low_price, close_price
             market_data = MarketData(
                 symbol=signal.symbol,
                 price=signal.price,
@@ -842,10 +843,6 @@ class SignalPriorityQueue:
                 bid=signal.price - Decimal("0.01"),
                 ask=signal.price + Decimal("0.01"),
                 spread=Decimal("0.02"),
-                open_price=signal.price,
-                high_price=signal.price * Decimal("1.01"),
-                low_price=signal.price * Decimal("0.99"),
-                close_price=signal.price,
             )
 
             # Calculate confidence and liquidity scores

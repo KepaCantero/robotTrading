@@ -274,9 +274,8 @@ class SHAPAnalyzer:
                 base_value = explainer.expected_value
             elif isinstance(explainer, shap.KernelExplainer):
                 # KernelExplainer para modelos generales (más lento)
-                shap_values = explainer.shap_values(
-                    X[: min(self.sample_size, len(X))], nsamples=self.max_evals
-                )
+                # Note: Newer SHAP versions don't accept nsamples in shap_values()
+                shap_values = explainer.shap_values(X[: min(self.sample_size, len(X))])
                 base_value = (
                     explainer.expected_value if hasattr(explainer, 'expected_value') else 0.0
                 )
@@ -425,7 +424,8 @@ class SHAPAnalyzer:
             if isinstance(explainer, shap.TreeExplainer):
                 shap_values = explainer.shap_values(instance)
             else:
-                shap_values = explainer.shap_values(instance, nsamples=self.max_evals)
+                # Note: Newer SHAP versions don't accept nsamples in shap_values()
+                shap_values = explainer.shap_values(instance)
 
             # Si es lista (multi-class), usar la clase positiva
             if isinstance(shap_values, list):
@@ -509,13 +509,27 @@ class AttentionWeightsAnalyzer:
             else:
                 sequence_tensor = sequence
 
-            # Obtener attention weights
+            # Obtener attention weights - returns None or np.ndarray
+            # pylint: disable=assignment-from-none
+            # This is a placeholder implementation that will be extended
             attention_weights = self._get_attention_from_model(model, sequence_tensor, layer_idx)
 
+            # Check if attention_weights is None before proceeding
             if attention_weights is None:
-                return {'error': 'Could not extract attention weights from model'}
+                return {
+                    'error': 'Could not extract attention weights from model',
+                    'attention_weights': None
+                }
 
-            # Agregar attention weights
+            # Ensure attention_weights is subscriptable (is an array)
+            if not hasattr(attention_weights, '__getitem__'):
+                return {
+                    'error': 'attention_weights is not subscriptable',
+                    'attention_weights': attention_weights
+                }
+
+            # pylint: disable=unsubscriptable-object
+            # We've verified attention_weights has __getitem__ above
             if self.aggregation_method == "mean":
                 aggregated = np.mean(attention_weights, axis=(0, 1))  # Promediar heads y layers
             elif self.aggregation_method == "max":
@@ -562,7 +576,7 @@ class AttentionWeightsAnalyzer:
             layer_idx: Índice de capa específica
 
         Returns:
-            Attention weights como numpy array
+            Attention weights como numpy array, or None if not available
         """
         try:
             import torch
@@ -593,7 +607,8 @@ class AttentionWeightsAnalyzer:
             # Por ahora, retornar None y usar método alternativo
             # En producción, esto requeriría modificar el modelo para retornar attention
 
-            return None  # Placeholder - requiere implementación específica del modelo
+            # Placeholder implementation - requires model-specific implementation
+            return None
 
         except Exception as e:
             logger.warning(f"No se pudieron extraer attention weights: {e}")
