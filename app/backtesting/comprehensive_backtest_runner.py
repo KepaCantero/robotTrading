@@ -773,14 +773,16 @@ class ComprehensiveBacktestRunner:
 
             # ModularMomentumStrategy lee filtros desde config['modules'][nombre_filtro]
             # NO desde presets.custom.filters
+            # BALANCED APPROACH: MAJORITY mode (5/6+ filters) instead of ALL (6/6)
+            # This prevents 0 signals while maintaining higher quality than original 4/6
             return {
                 'type': 'modular_momentum',
                 'preset': 'custom',  # Preset personalizado
                 'modules': filters_config,  # Filtros al nivel que la estrategia espera
                 'presets': {
                     'custom': {
-                        'combination_mode': 'ALL',  # ALL filters must agree to generate signal
-                        'min_confidence': 0.8,  # Increased from 0.6 to reduce false signals
+                        'combination_mode': 'MAJORITY',  # 5/6+ filters must agree (balanced)
+                        'min_confidence': 0.7,  # 70% confidence threshold
                         'learning_mode': 'supervised'
                     }
                 }
