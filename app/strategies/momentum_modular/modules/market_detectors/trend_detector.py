@@ -26,15 +26,21 @@ class TrendDetector(BaseMarketDetector):
     NOTA: Todas las implementaciones están vectorizadas con numpy.
     """
 
-    def __init__(self, config: Dict):
+    def __init__(self, config: Dict = None, tier: str = None, use_yaml: bool = True):
         """Inicializar detector de tendencias."""
-        super().__init__("trend_detector", config)
+        super().__init__("trend_detector", config, tier, use_yaml)
 
-        trend_config = config.get("trend_detection", {})
-        self.method = trend_config.get("method", "ema_cross")
-        self.ema_fast_period = trend_config.get("ema_fast_period", 12)
-        self.ema_slow_period = trend_config.get("ema_slow_period", 26)
-        self.min_trend_strength = trend_config.get("min_trend_strength", 0.6)
+        # Get settings from YAML or config
+        trend_config = self.config.get("trend_detection", {})
+        ema_periods = self.config.get("ema_periods", {})
+        thresholds = self.config.get("thresholds", {})
+
+        self.method = trend_config.get("method", ema_periods.get("method", "ema_cross"))
+        self.ema_fast_period = ema_periods.get("fast_ema", trend_config.get("ema_fast_period", 12))
+        self.ema_slow_period = ema_periods.get("slow_ema", trend_config.get("ema_slow_period", 26))
+        self.min_trend_strength = thresholds.get(
+            "min_trend_strength", trend_config.get("min_trend_strength", 0.6)
+        )
 
     def detect(self, price_history: Union[List[float], np.ndarray], **kwargs) -> Dict:
         """

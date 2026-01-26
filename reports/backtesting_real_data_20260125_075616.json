@@ -1,0 +1,165 @@
+{
+  "metadata": {
+    "timestamp": "2026-01-25T07:56:16.462599",
+    "report_type": "backtesting_with_real_data",
+    "data_source": "Alpha Vantage API"
+  },
+  "input": {
+    "capital": 100000.0,
+    "objective": "maximizar_capital",
+    "risk": "medio",
+    "horizon_months": 12,
+    "target_monthly": 2000.0
+  },
+  "data_config": {
+    "symbols_count": 3,
+    "symbols": [
+      "AAPL",
+      "MSFT",
+      "GOOGL"
+    ],
+    "date_range": {
+      "start_date": "2025-01-25T07:56:15.771559",
+      "end_date": "2026-01-25T07:56:15.771565"
+    },
+    "cache_used": true,
+    "top_n_sp500": 3
+  },
+  "config": {
+    "enable_rl_signals": true,
+    "enable_tax_optimization": true,
+    "enable_backtest_validation": true,
+    "enable_risk_gates": true,
+    "auto_execute_trades": false,
+    "use_ibkr": false
+  },
+  "profile": {
+    "profile_id": "PROF-20260125065615"
+  },
+  "universe_statistics": {
+    "total_symbols": 3,
+    "total_data_points": 567,
+    "avg_data_points_per_symbol": 189.0,
+    "date_range": {
+      "start": "2025-01-27T00:00:00",
+      "end": "2025-10-24T00:00:00",
+      "days": 270
+    }
+  },
+  "allocation": {
+    "total_positions": 3,
+    "residual_capital": 0.0,
+    "total_capital": 100000.0,
+    "positions": [
+      {
+        "symbol": "AAPL",
+        "capital_eur": 50000.0,
+        "weight": 0.5,
+        "strategy": "momentum"
+      },
+      {
+        "symbol": "MSFT",
+        "capital_eur": 25000.0,
+        "weight": 0.25,
+        "strategy": "mean_reversion"
+      },
+      {
+        "symbol": "GOOGL",
+        "capital_eur": 25000.0,
+        "weight": 0.25,
+        "strategy": "mean_reversion"
+      }
+    ]
+  },
+  "signals": {
+    "total_signals": 3,
+    "buy_signals": 3,
+    "sell_signals": 0,
+    "hold_signals": 0,
+    "buy_pct": 1.0,
+    "sell_pct": 0.0,
+    "hold_pct": 0.0,
+    "rl_signals_count": 0,
+    "momentum_signals_count": 3,
+    "mean_reversion_signals_count": 3,
+    "avg_confidence": 0.3968459851218564
+  },
+  "stages": {
+    "profile_generation": {
+      "success": true,
+      "duration_ms": 31.247,
+      "message": "Stage profile_generation completed successfully",
+      "errors": [],
+      "warnings": []
+    },
+    "capital_allocation": {
+      "success": true,
+      "duration_ms": 108.691,
+      "message": "Stage capital_allocation completed successfully",
+      "errors": [],
+      "warnings": []
+    },
+    "signal_generation": {
+      "success": true,
+      "duration_ms": 0.333,
+      "message": "Stage signal_generation completed successfully",
+      "errors": [],
+      "warnings": []
+    },
+    "tax_optimization": {
+      "success": true,
+      "duration_ms": 7.677,
+      "message": "Stage tax_optimization completed successfully",
+      "errors": [],
+      "warnings": []
+    },
+    "risk_validation": {
+      "success": true,
+      "duration_ms": 498.213,
+      "message": "Stage risk_validation completed successfully",
+      "errors": [],
+      "warnings": []
+    },
+    "backtest_validation": {
+      "success": true,
+      "duration_ms": 5.267,
+      "message": "Stage backtest_validation completed successfully",
+      "errors": [],
+      "warnings": []
+    },
+    "trade_execution": {
+      "success": true,
+      "duration_ms": 0.9319999999999999,
+      "message": "Stage trade_execution completed successfully",
+      "errors": [],
+      "warnings": []
+    }
+  },
+  "execution": {
+    "executed": false,
+    "dry_run": true,
+    "orders_submitted": 0,
+    "orders_filled": 0,
+    "orders_failed": 0,
+    "fill_rate": 0,
+    "total_value_eur": 0.0
+  },
+  "risk": {
+    "passed": false,
+    "risk_level": "HIGH",
+    "violation_count": 1,
+    "warning_count": 0,
+    "key_metrics": {}
+  },
+  "summary": {
+    "success": true,
+    "execution_time_seconds": 0.652861,
+    "started_at": "2026-01-25T06:56:15.807927",
+    "completed_at": "2026-01-25T06:56:16.460772",
+    "total_stages": 7,
+    "successful_stages": 7,
+    "failed_stages": 0,
+    "errors": [],
+    "warnings": []
+  }
+}

@@ -347,7 +347,7 @@ def extract_strategy_config(result_row: pd.Series) -> Dict[str, Any]:
             import ast
 
             config['parameters'] = ast.literal_eval(result_row['parameters'])
-        except BaseException:
+        except Exception:
             pass
 
     # Extract threshold information if available
@@ -359,8 +359,8 @@ def extract_strategy_config(result_row: pd.Series) -> Dict[str, Any]:
                 import ast
 
                 config['thresholds'] = ast.literal_eval(result_row['thresholds'])
-            except BaseException:
-                pass
+            except Exception:
+
 
     return config
 
@@ -1291,14 +1291,14 @@ def main():
                                 import ast
 
                                 before = ast.literal_eval(before) if before.startswith('{') else {}
-                            except BaseException:
+                            except Exception:
                                 before = {}
                         if isinstance(after, str) and after != 'nan' and after:
                             try:
                                 import ast
 
                                 after = ast.literal_eval(after) if after.startswith('{') else {}
-                            except BaseException:
+                            except Exception:
                                 after = {}
                         if isinstance(improvement, str) and improvement != 'nan' and improvement:
                             try:
@@ -1309,7 +1309,7 @@ def main():
                                     if improvement.startswith('{')
                                     else {}
                                 )
-                            except BaseException:
+                            except Exception:
                                 improvement = {}
 
                         if (
@@ -1577,7 +1577,7 @@ def main():
                                             if before_training.startswith('{')
                                             else None
                                         )
-                                    except BaseException:
+                                    except Exception:
                                         before_training = None
                                 if isinstance(after_training, str):
                                     try:
@@ -1588,7 +1588,7 @@ def main():
                                             if after_training.startswith('{')
                                             else None
                                         )
-                                    except BaseException:
+                                    except Exception:
                                         after_training = None
                                 if isinstance(improvement, str):
                                     try:
@@ -1599,7 +1599,7 @@ def main():
                                             if improvement.startswith('{')
                                             else None
                                         )
-                                    except BaseException:
+                                    except Exception:
                                         improvement = None
 
                                 tags_list = [t.strip() for t in config_tags.split(',') if t.strip()]
@@ -2509,7 +2509,7 @@ def main():
                     # Clean up temp config
                     try:
                         temp_config_path.unlink()
-                    except BaseException:
+                    except Exception:
                         pass
 
                     # Reset execute flag after successful execution

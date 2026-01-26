@@ -32,7 +32,7 @@ try:
     import xgboost as xgb
 
     XGBOOST_AVAILABLE = True
-except (ImportError, Exception) as e:
+except Exception as e:
     XGBOOST_AVAILABLE = False
     logger.warning(f"XGBoost no disponible ({type(e).__name__}). Usando sklearn como alternativa.")
 
@@ -40,7 +40,7 @@ try:
     import lightgbm as lgb
 
     LIGHTGBM_AVAILABLE = True
-except (ImportError, Exception) as e:
+except Exception as e:
     LIGHTGBM_AVAILABLE = False
     logger.warning(f"LightGBM no disponible ({type(e).__name__}). No será usado.")
 
@@ -48,7 +48,7 @@ try:
     import catboost as cb
 
     CATBOOST_AVAILABLE = True
-except (ImportError, Exception) as e:
+except Exception as e:
     CATBOOST_AVAILABLE = False
     logger.warning(f"CatBoost no disponible ({type(e).__name__}). No será usado.")
 

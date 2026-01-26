@@ -16,6 +16,8 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, Optional
 
+from app.core.reconnection_manager import ReconnectionConfig, ReconnectionManager
+
 logger = logging.getLogger(__name__)
 
 
@@ -119,6 +121,7 @@ class BrokerConnector:
     Handles authentication, order placement, position tracking, etc.
 
     Uses adapter pattern - delegates to broker-specific adapters.
+    Includes reconnection manager for handling connection failures.
     """
 
     def __init__(self, broker_type: BrokerType = BrokerType.PAPER):
@@ -139,6 +142,9 @@ class BrokerConnector:
             from .broker_adapters.paper_adapter import PaperAdapter
 
             self.adapter: Any = PaperAdapter()
+
+        # Initialize reconnection manager
+        self.reconnection_manager = self._create_reconnection_manager()
 
         logger.info(f"✅ BrokerConnector initialized for {broker_type.value}")
 
@@ -163,6 +169,44 @@ class BrokerConnector:
         """Check connection status."""
         return self.adapter.is_connected
 
+    def _create_reconnection_manager(self) -> ReconnectionManager:
+        """Create reconnection manager with broker-specific configuration."""
+
+        def on_attempt(attempt: int) -> None:
+            """Callback when connection attempt is made."""
+            logger.info(f"Broker connection attempt {attempt + 1}")
+
+        def on_success(attempt: int) -> None:
+            """Callback when connection succeeds."""
+            logger.info(f"Broker reconnected after {attempt + 1} attempts")
+
+        def on_failure() -> None:
+            """Callback when all connection attempts fail."""
+            logger.error("All broker reconnection attempts failed")
+
+        def alert_callback(attempts: int) -> None:
+            """Callback when alert threshold is reached."""
+            logger.warning(f"Alert: {attempts} failed broker connection attempts")
+
+        config = ReconnectionConfig(
+            max_attempts=10,
+            base_delay_seconds=1.0,
+            max_delay_seconds=60.0,
+            exponential_base=2.0,
+            jitter=True,
+            jitter_factor=0.1,
+            on_attempt=on_attempt,
+            on_success=on_success,
+            on_failure=on_failure,
+            alert_after_attempts=3,
+            alert_callback=alert_callback,
+        )
+
+        return ReconnectionManager(
+            service_name=f"BrokerConnector_{self.broker_type.value}",
+            config=config,
+        )
+
     async def connect(
         self,
         api_key: Optional[str] = None,
@@ -171,7 +215,7 @@ class BrokerConnector:
         **kwargs,
     ) -> bool:
         """
-        Connect to broker API.
+        Connect to broker API with exponential backoff retry.
 
         Args:
             api_key: API key for authentication
@@ -182,9 +226,59 @@ class BrokerConnector:
         Returns:
             True if connection successful
         """
-        return await self.adapter.connect(
-            api_key=api_key, api_secret=api_secret, account_id=account_id, **kwargs
-        )
+        async def _connect() -> bool:
+            """Internal connection function."""
+            return await self.adapter.connect(
+                api_key=api_key,
+                api_secret=api_secret,
+                account_id=account_id,
+                **kwargs
+            )
+
+        # Use reconnection manager for non-paper trading
+        if self.broker_type != BrokerType.PAPER:
+            result = await self.reconnection_manager.connect_with_backoff(_connect)
+            return result is not False
+
+        # Direct connection for paper trading
+        return await _connect()
+
+    async def connect_with_retry(
+        self,
+        api_key: Optional[str] = None,
+        api_secret: Optional[str] = None,
+        account_id: Optional[str] = None,
+        **kwargs,
+    ) -> bool:
+        """
+        Connect to broker API with forced retry using reconnection manager.
+
+        This method always uses the reconnection manager regardless of broker type.
+
+        Args:
+            api_key: API key for authentication
+            api_secret: API secret for authentication
+            account_id: Account ID to connect to
+            **kwargs: Broker-specific parameters
+
+        Returns:
+            True if connection successful
+        """
+        async def _connect() -> bool:
+            """Internal connection function."""
+            return await self.adapter.connect(
+                api_key=api_key,
+                api_secret=api_secret,
+                account_id=account_id,
+                **kwargs
+            )
+
+        result = await self.reconnection_manager.connect_with_backoff(_connect)
+        return result is not False
+
+    def get_connection_stats(self) -> Dict[str, Any]:
+        """Get reconnection statistics."""
+        return self.reconnection_manager.get_stats()
 
     async def disconnect(self) -> bool:
         """

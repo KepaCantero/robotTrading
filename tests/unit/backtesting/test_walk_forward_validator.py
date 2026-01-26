@@ -30,6 +30,7 @@ from app.backtesting.walk_forward_validator import (
     get_default_config,
     load_validation_config,
 )
+from app.core.decimal_utils import round_price
 from app.models.market_data import Quote
 
 # ============================================================================
@@ -120,6 +121,7 @@ def sample_quotes():
     quotes = []
     base_price = 100.0
     start_date = datetime(2020, 1, 1)
+    symbol = "TEST"
 
     for i in range(500):  # ~2 years of data
         price = base_price * (1 + np.random.normal(0, 0.02))
@@ -127,16 +129,16 @@ def sample_quotes():
 
         quotes.append(
             Quote(
-                symbol="TEST",
+                symbol=symbol,
                 timestamp=start_date + timedelta(days=i),
-                bid=Decimal(str(round(price * 0.999, 2))),
-                ask=Decimal(str(round(price * 1.001, 2))),
-                last=Decimal(str(round(price, 2))),
+                bid=Decimal(str(round_price(price * 0.999, "equity", symbol))),
+                ask=Decimal(str(round_price(price * 1.001, "equity", symbol))),
+                last=Decimal(str(round_price(price, "equity", symbol))),
                 volume=Decimal("1000000"),
-                open=Decimal(str(round(price * 0.99, 2))),
-                high=Decimal(str(round(price * 1.02, 2))),
-                low=Decimal(str(round(price * 0.98, 2))),
-                close=Decimal(str(round(price, 2))),
+                open=Decimal(str(round_price(price * 0.99, "equity", symbol))),
+                high=Decimal(str(round_price(price * 1.02, "equity", symbol))),
+                low=Decimal(str(round_price(price * 0.98, "equity", symbol))),
+                close=Decimal(str(round_price(price, "equity", symbol))),
             )
         )
 

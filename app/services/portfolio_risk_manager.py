@@ -5,6 +5,7 @@ Este módulo implementa el gestor de riesgos del portafolio, separando la lógic
 de gestión de riesgo de los servicios de portafolio.
 """
 
+import asyncio
 import logging
 from datetime import datetime
 from decimal import Decimal
@@ -54,8 +55,13 @@ class PortfolioRiskManager:
     - Proporcionar alertas
     """
 
-    def __init__(self):
-        """Inicializar gestor de riesgos."""
+    def __init__(self, correlation_analyzer=None):
+        """
+        Inicializar gestor de riesgos.
+
+        Args:
+            correlation_analyzer: Optional CorrelationAnalyzer instance for real correlation
+        """
         self.config = get_config().trading
 
         # Límites de riesgo
@@ -84,6 +90,12 @@ class PortfolioRiskManager:
         self.current_risk_level = RiskLevel.LOW
         self.last_risk_assessment = datetime.utcnow()
 
+        # Real-time correlation analyzer (Phase 2.4)
+        self.correlation_analyzer = correlation_analyzer
+        self._correlation_cache: Optional[Any] = None
+        self._correlation_cache_time: Optional[datetime] = None
+        self._correlation_cache_ttl = 3600  # 1 hour cache
+
     def assess_portfolio_risk(
         self, portfolio: Portfolio, new_position: Optional[Position] = None
     ) -> Dict[str, Any]:
@@ -99,8 +111,18 @@ class PortfolioRiskManager:
         """
         self.risk_checks_performed += 1
 
-        # Calcular métricas de riesgo
-        risk_metrics = self._calculate_risk_metrics(portfolio, new_position)
+        # Try to use async correlation if available and not in async context
+        try:
+            loop = asyncio.get_running_loop()
+            # We're in an async context, use synchronous fallback
+            risk_metrics = self._calculate_risk_metrics(portfolio, new_position)
+        except RuntimeError:
+            # No event loop running, safe to use asyncio.run
+            try:
+                risk_metrics = asyncio.run(self._calculate_risk_metrics_async(portfolio, new_position))
+            except RuntimeError:
+                # Fallback to sync if async fails
+                risk_metrics = self._calculate_risk_metrics(portfolio, new_position)
 
         # Detectar violaciones
         violations = self._detect_risk_violations(risk_metrics)
@@ -133,17 +155,53 @@ class PortfolioRiskManager:
         logger.debug(f"Portfolio risk assessment: {risk_assessment}")
         return risk_assessment
 
-    def _calculate_risk_metrics(
+    async def _calculate_risk_metrics_async(
         self, portfolio: Portfolio, new_position: Optional[Position]
     ) -> Dict[str, Any]:
-        """Calcular métricas de riesgo."""
+        """Calcular métricas de riesgo (async version for correlation)."""
         # Calcular exposición total
         total_exposure = self._calculate_total_exposure(portfolio, new_position)
 
         # Calcular exposición por sector
         sector_exposures = self._calculate_sector_exposures(portfolio, new_position)
 
-        # Calcular correlaciones
+        # Calcular correlaciones (async - uses real correlation matrix)
+        correlations = await self._calculate_correlations_async(portfolio, new_position)
+
+        # Calcular pérdidas diarias
+        daily_loss = self._calculate_daily_loss(portfolio)
+
+        # Calcular drawdown
+        drawdown = self._calculate_drawdown(portfolio)
+
+        # Calcular volatilidad del portafolio
+        portfolio_volatility = self._calculate_portfolio_volatility(portfolio)
+
+        # Calcular exposición de moneda extranjera [TASK-5.5]
+        currency_exposures = self._calculate_currency_exposure(portfolio, new_position)
+
+        return {
+            "total_exposure": total_exposure,
+            "sector_exposures": sector_exposures,
+            "correlations": correlations,
+            "daily_loss": daily_loss,
+            "drawdown": drawdown,
+            "portfolio_volatility": portfolio_volatility,
+            "currency_exposures": currency_exposures,
+            "position_count": len(portfolio.positions) + (1 if new_position else 0),
+        }
+
+    def _calculate_risk_metrics(
+        self, portfolio: Portfolio, new_position: Optional[Position]
+    ) -> Dict[str, Any]:
+        """Calcular métricas de riesgo (synchronous fallback)."""
+        # Calcular exposición total
+        total_exposure = self._calculate_total_exposure(portfolio, new_position)
+
+        # Calcular exposición por sector
+        sector_exposures = self._calculate_sector_exposures(portfolio, new_position)
+
+        # Calcular correlaciones (synchronous fallback)
         correlations = self._calculate_correlations(portfolio, new_position)
 
         # Calcular pérdidas diarias
@@ -337,11 +395,110 @@ class PortfolioRiskManager:
 
         return sector_exposures
 
+    async def _calculate_correlations_async(
+        self, portfolio: Portfolio, new_position: Optional[Position]
+    ) -> Dict[str, float]:
+        """
+        Calcular correlaciones entre posiciones usando real-time correlation matrix.
+
+        Phase 2.4: Uses CorrelationAnalyzer for real correlation from historical prices.
+        Falls back to simulated correlation if analyzer not available or data unavailable.
+        """
+        correlations = {}
+
+        positions = list(portfolio.positions)
+        if new_position:
+            positions.append(new_position)
+
+        if not positions:
+            return correlations
+
+        # Try to use real-time correlation analyzer
+        if self.correlation_analyzer:
+            try:
+                # Check if we have a valid cache
+                cache_valid = (
+                    self._correlation_cache is not None
+                    and self._correlation_cache_time is not None
+                    and (datetime.utcnow() - self._correlation_cache_time).total_seconds()
+                    < self._correlation_cache_ttl
+                )
+
+                if not cache_valid:
+                    # Get list of symbols
+                    symbols = [pos.symbol for pos in positions]
+
+                    # Calculate correlation matrix
+                    correlation_matrix = await self.correlation_analyzer.calculate_correlation_matrix(
+                        symbols
+                    )
+
+                    # Update cache
+                    self._correlation_cache = correlation_matrix
+                    self._correlation_cache_time = datetime.utcnow()
+
+                # Extract pairwise correlations from cached matrix
+                if self._correlation_cache is not None:
+                    for i, pos1 in enumerate(positions):
+                        for j, pos2 in enumerate(positions[i + 1 :], i + 1):
+                            pair = f"{pos1.symbol}-{pos2.symbol}"
+                            try:
+                                # Get correlation from matrix
+                                correlation = float(
+                                    self._correlation_cache.loc[pos1.symbol, pos2.symbol]
+                                )
+                                correlations[pair] = correlation
+                            except (KeyError, ValueError):
+                                # Fallback to simulated correlation if not found
+                                correlations[pair] = self._get_fallback_correlation(
+                                    pos1, pos2
+                                )
+
+                    logger.debug(f"Calculated {len(correlations)} real correlations")
+                    return correlations
+
+            except Exception as e:
+                logger.warning(f"Error using correlation analyzer: {e}, falling back")
+
+        # Fallback to simulated correlation
+        for i, pos1 in enumerate(positions):
+            for j, pos2 in enumerate(positions[i + 1 :], i + 1):
+                pair = f"{pos1.symbol}-{pos2.symbol}"
+                correlations[pair] = self._get_fallback_correlation(pos1, pos2)
+
+        return correlations
+
+    def _get_fallback_correlation(self, pos1: Position, pos2: Position) -> float:
+        """
+        Get fallback correlation based on sector.
+
+        Args:
+            pos1: First position
+            pos2: Second position
+
+        Returns:
+            Simulated correlation value
+        """
+        sector1 = getattr(pos1, "sector", "")
+        sector2 = getattr(pos2, "sector", "")
+
+        # Same sector: higher correlation
+        if sector1 and sector2 and sector1 == sector2:
+            return 0.5
+
+        # Same market (US): moderate correlation
+        market1 = getattr(pos1, "market", "US")
+        market2 = getattr(pos2, "market", "US")
+        if market1 == market2:
+            return 0.3
+
+        # Different: low correlation
+        return 0.1
+
     def _calculate_correlations(
         self, portfolio: Portfolio, new_position: Optional[Position]
     ) -> Dict[str, float]:
-        """Calcular correlaciones entre posiciones."""
-        # Implementación simplificada
+        """Calcular correlaciones entre posiciones (synchronous fallback)."""
         correlations = {}
 
         positions = list(portfolio.positions)
@@ -352,11 +509,8 @@ class PortfolioRiskManager:
         for i, pos1 in enumerate(positions):
             for j, pos2 in enumerate(positions[i + 1 :], i + 1):
                 pair = f"{pos1.symbol}-{pos2.symbol}"
-                # Correlación simulada basada en sector
-                correlation = (
-                    0.3 if getattr(pos1, "sector", "") == getattr(pos2, "sector", "") else 0.1
-                )
-                correlations[pair] = correlation
+                # Use fallback correlation
+                correlations[pair] = self._get_fallback_correlation(pos1, pos2)
 
         return correlations
 

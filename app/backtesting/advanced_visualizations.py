@@ -195,9 +195,7 @@ class AdvancedVisualizer:
                 numeric_data = numeric_data.iloc[:, :max_cols]
 
             # Determine color column
-            if color_col is None:
-                color_col = numeric_data.columns[0]
-            elif color_col not in data.columns:
+            if (color_col is None) or (color_col not in data.columns):
                 color_col = numeric_data.columns[0]
 
             # Normalize data for better visualization
@@ -209,10 +207,10 @@ class AdvancedVisualizer:
             fig = go.Figure(
                 data=go.Parcoords(
                     dimensions=[
-                        dict(label=col, values=normalized_data[col])
+                        {"label": col, "values": normalized_data[col]}
                         for col in normalized_data.columns
                     ],
-                    line=dict(color=data[color_col], colorscale="Viridis", showscale=True),
+                    line={"color": data[color_col], "colorscale": "Viridis", "showscale": True},
                 )
             )
 
@@ -274,17 +272,17 @@ class AdvancedVisualizer:
                         y=data[y_col],
                         z=data[z_col],
                         mode="markers",
-                        marker=dict(
-                            size=(
+                        marker={
+                            "size": (
                                 4
                                 if size_col is None
                                 else (data[size_col] / data[size_col].max() * 10)
                             ),
-                            color=data[color_col],
-                            colorscale="Viridis",
-                            showscale=True,
-                            colorbar=dict(title=color_col),
-                        ),
+                            "color": data[color_col],
+                            "colorscale": "Viridis",
+                            "showscale": True,
+                            "colorbar": {"title": color_col},
+                        },
                         text=data.index,
                         hovertemplate=f"<b>{x_col}:</b> %{{x}}<br>"
                         + f"<b>{y_col}:</b> %{{y}}<br>"
@@ -299,13 +297,13 @@ class AdvancedVisualizer:
                         y=data[y_col],
                         z=data[z_col],
                         mode="markers",
-                        marker=dict(size=4),
+                        marker={"size": 4},
                     )
                 )
 
             fig.update_layout(
                 title=f"3D Scatter: {x_col} vs {y_col} vs {z_col}",
-                scene=dict(xaxis_title=x_col, yaxis_title=y_col, zaxis_title=z_col),
+                scene={"xaxis_title": x_col, "yaxis_title": y_col, "zaxis_title": z_col},
                 height=700,
                 width=1000,
             )
@@ -574,7 +572,7 @@ class AdvancedVisualizer:
                 fontsize=10,
                 verticalalignment="top",
                 fontfamily="monospace",
-                bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5),
+                bbox={"boxstyle": "round", "facecolor": "wheat", "alpha": 0.5},
             )
 
             plt.tight_layout()

@@ -282,6 +282,7 @@ class CentralizedConfig(BaseSettings):
         "env_file": ".env",
         "env_file_encoding": "utf-8",
         "case_sensitive": False,
+        "extra": "ignore",  # Ignore extra fields from .env not defined in model
     }
 
     def __init__(self, **kwargs):

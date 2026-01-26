@@ -386,6 +386,7 @@ class NewsSentimentSource(BaseDataSource):
     Fuente de datos de sentimiento de noticias.
 
     Analiza noticias financieras para extraer sentimiento.
+    Soporta múltiples proveedores: NewsAPI, Alpha Vantage, Marketaux.
     """
 
     def __init__(self, config: Dict[str, Any]):
@@ -395,7 +396,7 @@ class NewsSentimentSource(BaseDataSource):
         Args:
             config: Configuración con:
                 - api_key: News API key (opcional, puede usar múltiples servicios)
-                - provider: Proveedor (newsapi, alpha_vantage, etc.)
+                - provider: Proveedor (newsapi, alpha_vantage, marketaux)
         """
         super().__init__(config)
         self.api_key = config.get('api_key')
@@ -408,6 +409,7 @@ class NewsSentimentSource(BaseDataSource):
         url_map = {
             'newsapi': 'https://newsapi.org/v2',
             'alpha_vantage': 'https://www.alphavantage.co/query',
+            'marketaux': 'https://api.marketaux.com/v1',
         }
         return url_map.get(self.provider, url_map['newsapi'])
 
@@ -467,6 +469,8 @@ class NewsSentimentSource(BaseDataSource):
                 return await self._get_newsapi_sentiment(symbol, max_articles)
             elif self.provider == 'alpha_vantage':
                 return await self._get_alphavantage_news_sentiment(symbol)
+            elif self.provider == 'marketaux':
+                return await self._get_marketaux_sentiment(symbol, max_articles)
             else:
                 logger.warning(f"Provider {self.provider} no implementado completamente")
                 return {'sentiment_score': 0.0, 'total_articles': 0, 'sample_articles': []}
@@ -593,3 +597,148 @@ class NewsSentimentSource(BaseDataSource):
         except Exception as e:
             logger.error(f"Error en Alpha Vantage News: {e}")
             return {'sentiment_score': 0.0, 'total_articles': 0}
+
+    async def _get_marketaux_sentiment(self, symbol: str, max_articles: int = 50) -> Dict[str, Any]:
+        """
+        Obtener sentimiento usando Marketaux API.
+
+        Marketaux proporciona:
+        - News con sentiment score (-1 a +1) pre-calculado
+        - Entity identification con match scores
+        - Soporte para equity, cryptocurrency, forex, indices
+        - Multi-idioma (incluyendo español para España)
+        - Filtros por país, industria, entity type
+
+        Args:
+            symbol: Símbolo del ticker (ej: AAPL, BTCUSD, EURUSD)
+            max_articles: Número máximo de artículos
+
+        Returns:
+            Dict con:
+                - sentiment_score: float (-1 a 1)
+                - positive_count: int
+                - negative_count: int
+                - neutral_count: int
+                - total_articles: int
+                - sample_articles: List[str]
+                - entities: List[Dict] con entity details
+        """
+        if not self.api_key:
+            logger.warning("Marketaux API key no configurada")
+            return {'sentiment_score': 0.0, 'total_articles': 0, 'sample_articles': []}
+
+        try:
+            url = f"{self.base_url}/news/all"
+            params = {
+                'api_token': self.api_key,
+                'symbols': symbol,
+                'filter_entities': 'true',  # Solo entidades relevantes
+                'must_have_entities': 'true',  # Artículos con entidades identificadas
+                'language': 'en,es',  # Inglés y Español
+                'limit': min(max_articles, 100),
+                'sort': 'published_at',
+            }
+
+            async with self.session.get(url, params=params) as response:
+                if response.status != 200:
+                    logger.error(f"Marketaux API error: {response.status}")
+                    return {'sentiment_score': 0.0, 'total_articles': 0, 'sample_articles': []}
+
+                data = await response.json()
+
+                # Manejar errores de API
+                if 'error' in data:
+                    logger.error(f"Marketaux error: {data['error']}")
+                    return {'sentiment_score': 0.0, 'total_articles': 0, 'sample_articles': []}
+
+                articles = data.get('data', [])
+                meta = data.get('meta', {})
+
+                if not articles:
+                    logger.debug(f"No articles found for {symbol}")
+                    return {
+                        'sentiment_score': 0.0,
+                        'total_articles': 0,
+                        'found': meta.get('found', 0),
+                        'sample_articles': [],
+                    }
+
+                # Marketaux YA proporciona sentiment scores pre-calculados
+                # No necesitamos calcularlos nosotros
+                sentiment_scores = []
+                sample_articles = []
+                all_entities = []
+
+                positive_count = 0
+                negative_count = 0
+                neutral_count = 0
+
+                for article in articles:
+                    title = article.get('title', '')
+                    article.get('snippet', '')
+                    published_at = article.get('published_at', '')
+                    source = article.get('source', '')
+
+                    sample_articles.append(f"{title} ({source})")
+
+                    # Extraer entities y sus sentiment scores
+                    entities = article.get('entities', [])
+
+                    for entity in entities:
+                        entity_symbol = entity.get('symbol', '')
+                        entity_name = entity.get('name', '')
+                        sentiment_score = entity.get('sentiment_score', 0.0)
+                        match_score = entity.get('match_score', 0.0)
+
+                        # Solo considerar la entidad que buscamos
+                        if entity_symbol == symbol:
+                            # Ponderar por match score (relevancia)
+                            weighted_sentiment = sentiment_score * (min(match_score, 100) / 100)
+                            sentiment_scores.append(weighted_sentiment)
+
+                            all_entities.append(
+                                {
+                                    'symbol': entity_symbol,
+                                    'name': entity_name,
+                                    'sentiment': sentiment_score,
+                                    'match_score': match_score,
+                                    'published_at': published_at,
+                                }
+                            )
+
+                            # Contar positivos/negativos/neutrales
+                            if sentiment_score > 0.1:
+                                positive_count += 1
+                            elif sentiment_score < -0.1:
+                                negative_count += 1
+                            else:
+                                neutral_count += 1
+
+                # Calcular sentimiento promedio ponderado
+                if sentiment_scores:
+                    avg_sentiment = sum(sentiment_scores) / len(sentiment_scores)
+                else:
+                    avg_sentiment = 0.0
+
+                result = {
+                    'sentiment_score': float(avg_sentiment),
+                    'positive_count': positive_count,
+                    'negative_count': negative_count,
+                    'neutral_count': neutral_count,
+                    'total_articles': len(articles),
+                    'total_entities': len(all_entities),
+                    'sample_articles': sample_articles[:5],  # Máximo 5 samples
+                    'entities': all_entities[:10],  # Máximo 10 entities
+                    'found_total': meta.get('found', 0),
+                }
+
+                logger.info(
+                    f"Marketaux sentiment for {symbol}: {avg_sentiment:.3f} "
+                    f"({len(articles)} articles, {len(all_entities)} entities)"
+                )
+
+                return result
+
+        except Exception as e:
+            logger.error(f"Error en Marketaux API para {symbol}: {e}")
+            return {'sentiment_score': 0.0, 'total_articles': 0, 'sample_articles': []}

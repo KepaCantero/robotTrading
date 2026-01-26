@@ -30,7 +30,7 @@ try:
 
     STABLE_BASELINES3_AVAILABLE = True
     logger.debug("stable-baselines3 disponible")
-except (ImportError, Exception):
+except Exception:
     STABLE_BASELINES3_AVAILABLE = False
     # Silenciar completamente - es esperado que puede no estar disponible o bloquear
     logger.debug("stable-baselines3 no disponible o bloqueado")

@@ -20,16 +20,19 @@ class EMAFilter(BaseFilter):
     - Distancia mínima entre EMAs
     """
 
-    def __init__(self, config: Dict, preset: str = "balanced"):
+    def __init__(
+        self, config: Dict = None, preset: str = "balanced", tier: str = None, use_yaml: bool = True
+    ):
         """Inicializar filtro EMA."""
-        super().__init__("ema_filter", config, preset)
+        super().__init__("ema_filter", config, preset, tier, use_yaml)
 
-        params = config.get("parameters", {})
-        self.fast_period = params.get("fast_period", 12)
-        self.slow_period = params.get("slow_period", 26)
-        self.confirmation_method = params.get("trend_confirmation", {}).get("method", "price_above")
+        # Get settings from YAML or config
+        periods = self.config.get("periods", self.config)
+        self.fast_period = periods.get("fast_ema", 12)
+        self.slow_period = periods.get("slow_ema", 26)
+        self.confirmation_method = self.config.get("confirmation", {}).get("price_above_ema", True)
 
-        # Thresholds del preset
+        # Thresholds del preset (usar thresholds cargados desde YAML)
         self.min_distance_pct = self.thresholds.get("min_distance_pct", 0.005)
         self.require_crossover = self.thresholds.get("require_crossover", False)
 

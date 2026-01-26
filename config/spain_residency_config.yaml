@@ -1,0 +1,335 @@
+# Spain/EU Residency Configuration
+# Configuración específica para residentes fiscales en España
+# Consideraciones fiscales, regulatorias y de mercado para inversores españoles
+
+# ============================================
+# RESIDENCIA FISCAL
+# ============================================
+tax_residency:
+  country_code: "ES"  # ISO 3166-1 alpha-2
+  country_name: "Spain"
+  region: "European Union"
+
+# ============================================
+# TASAS FISCALES ESPAÑA (2025)
+# ============================================
+tax_rates:
+  # Impuesto sobre la Renta de Personas Físicas (IRPF)
+  capital_gains:
+    short_term:  # < 1 año
+      rate: 0.19  # 19% para ahorro < 6.000€
+      rate_bracket_2: 0.21  # 21% para 6.000€ - 50.000€
+      rate_bracket_3: 0.23  # 23% para 50.000€ - 200.000€
+      rate_bracket_4: 0.27  # 27% para 200.000€ - 300.000€
+      rate_bracket_5: 0.28  # 28% para > 300.000€
+    long_term:  # ≥ 1 año
+      rate: 0.19  # 19% flat rate (mismo que short-term)
+      note: "España no distingue entre LT y ST para ganancias de capital"
+
+  # Dividendos y rentas de capital
+  dividends:
+    rate: 0.19  # 19% standard
+    withholding_spain: 0.19  # Retención española
+    withholding_eu: 0.00  # 0% retención UE (directiva UE)
+    withholding_us: 0.30  # 30% retención US (sin tratado)
+    withholding_with_treaty: 0.15  # 15% con tratado bilateral
+
+  # Otros ingresos
+  interest:
+    rate: 0.19  # 19%
+
+# ============================================
+# CONSIDERACIONES ESPECIALES ESPAÑA
+# ============================================
+spain_specific:
+  # No Wash Sale Rule
+  wash_sale_rule:
+    applies: false
+    note: "España NO tiene wash sale rule como EE.UU."
+
+  # Compensation for losses
+  loss_compensation:
+    applies: true
+    note: "Pérdidas se compensan con ganancias del mismo año"
+    carry_forward: true  # Se pueden arrastrar 4 años
+
+  # Tax-free savings
+  tax_free_accounts:
+    - name: "SIRA (Plan de Ahorro a Largo Plazo)"
+      max_annual: 1500  # €1,500/año
+      tax_benefit: "Deducción en la base imponible"
+    - name: "Fondos de Inversión"
+      note: "Transparencia fiscal - no tributan hasta redimir"
+
+# ============================================
+# CONSIDERACIONES EUROPEAS
+# ============================================
+eu_specific:
+  # Directiva UE sobre fiscalidad de ahorros
+  eu_savings_directive:
+    applies: true
+    withholding_eu_zero: true  # 0% entre países UE
+    information_sharing: true  # Intercambio automático de información
+
+  # MiFID II (Markets in Financial Instruments Directive)
+  mifid_compliance:
+    applies: true
+    investor_classification: "retail"  # retail, professional
+    best_execution: true
+    suitability_assessment: true
+
+  # GDPR (Protección de datos)
+  gdpr_compliance:
+    applies: true
+    data_localization: "UE data centers preferred"
+
+# ============================================
+# MERCADOS PREFERIDOS ESPAÑA
+# ============================================
+preferred_markets:
+  # Mercado Continuo Español
+  spain:
+    primary_exchange: "BME (Bolsas y Mercados Españoles)"
+    main_indices:
+      - "IBEX 35"  # Top 35 empresas españolas
+      - "IGBM"  # General Index
+    trading_hours:
+      open: "09:00 CET"
+      close: "17:30 CET"
+      lunch_break: false  # No hay lunch break en España
+
+  # Mercados europeos prioritarios
+  europe:
+    priority_exchanges:
+      - "Euronext"  # Francia, Holanda, Bélgica, Portugal
+      - "Xetra"  # Alemania
+      - "SIX"  # Suiza
+      - "LSE"  # Londres
+
+  # Mercados globales
+  global:
+    us_access: true
+    currency_hedging_required: true  # EUR/USD hedging recomendado
+
+# ============================================
+# ASIGNACIÓN DE ACTIVOS OPTIMIZADA ESPAÑA
+# ============================================
+optimized_allocation:
+  default:  # Perfil medio
+    europe_stocks: 0.40  # 40% en acciones europeas (sin withholding tax)
+    spain_stocks: 0.15  # 15% en acciones españolas (dividendos conocidos)
+    us_stocks: 0.25  # 25% en US (con currency hedging)
+    dividend_stocks: 0.10  # 10% en dividend growth
+    forex: 0.05  # 5% en forex (incluye EUR/USD hedging)
+    crypto: 0.05  # 5% en crypto (alto riesgo)
+
+  conservative:  # Perfil conservador
+    europe_stocks: 0.35
+    spain_dividends: 0.25  # Más dividendos españoles
+    us_stocks: 0.15
+    bonds: 0.15  # Bonos europeos
+    forex: 0.05
+    crypto: 0.00  # Sin crypto
+
+  aggressive:  # Perfil agresivo
+    europe_growth: 0.25
+    us_tech: 0.30
+    crypto: 0.20  # Más crypto
+    forex: 0.10
+    emerging_markets: 0.10
+    dividends: 0.05
+
+# ============================================
+# CURRENCY HEDGING (EUR)
+# ============================================
+currency_hedging:
+  base_currency: "EUR"
+  hedge_pairs:
+    - "EURUSD"  # Principal - hedging obligatorio para exposición US > 20%
+    - "EURGBP"  # Reino Unido
+    - "EURCHF"  # Suiza
+  hedge_threshold: 0.20  # Hedging si exposición > 20%
+  hedge_instruments:
+    - "FX Forwards"
+    - "FX Futures"
+    - "Currency ETFs"
+
+# ============================================
+# DIVIDENDOS OPTIMIZADOS ESPAÑA
+# ============================================
+dividend_stocks:
+  # "Cherries" españolas (alto dividendo + estabilidad)
+  spain_blue_chips:
+    - symbol: "SAN.MC"
+      name: "Banco Santander"
+      dividend_yield: 0.07  # ~7%
+      frequency: "quarterly"
+      payout_ratio: 0.50
+
+    - symbol: "TEF.MC"
+      name: "Telefónica"
+      dividend_yield: 0.08  # ~8%
+      frequency: "semi-annual"
+      payout_ratio: 0.60
+
+    - symbol: "IBE.MC"
+      name: "Iberdrola"
+      dividend_yield: 0.05  # ~5%
+      frequency: "semi-annual"
+      payout_ratio: 0.65
+
+    - symbol: "REP.MC"
+      name: "Repsol"
+      dividend_yield: 0.06  # ~6%
+      frequency: "quarterly"
+      payout_ratio: 0.45
+
+  # Aristócratas de dividendos europeos
+  european_dividend_aristocrats:
+    - symbol: "NESN.SW"  # Nestlé
+      dividend_yield: 0.03
+      streak_years: 30
+
+    - symbol: "MC.PA"  # LVMH
+      dividend_yield: 0.02
+      growth_rate: 0.10  # 10% CAGR
+
+# ============================================
+# REGULACIÓN ESPAÑA
+# ============================================
+regulation:
+  # CNMV (Comisión Nacional del Mercado de Valores)
+  authority: "CNMV"
+  registration_required: true
+  reporting_requirements:
+    - "Declaración de la renta anual"
+    - "Modelo 721 (extranjeros)"
+    - "Patrimonio y ganancias patrimoniales"
+
+  # Protección al inversor
+  investor_protection:
+    fgik_fogain: 100000  # €100k garantía por inversor (FOGAIN)
+    compensation_scheme: true
+
+# ============================================
+# API KEYS
+# ============================================
+api_keys:
+  # Marketaux News API
+  marketaux:
+    api_token: "oOezKYZrAuhgkxXMxvdq2Qd2pMPnaL8ITE7OHKaT"
+    base_url: "https://api.marketaux.com/v1"
+    features:
+      - "News sentiment"
+      - "Entity identification"
+      - "Multi-language support (EN/ES)"
+      - "Crypto, Forex, Equity coverage"
+
+  # Otros servicios
+  fallback:
+    alpha_vantage: "Usar como backup si Marketaux falla"
+    yahoo_finance: "Datos históricos backup"
+
+# ============================================
+# DAY TRADING CONSIDERACIONES ESPAÑA
+# ============================================
+day_trading:
+  # Pattern Day Trader - NO APLICA en España
+  pattern_day_trader:
+    applies: false
+    note: "No hay PDT rule en Europa"
+
+  # Comisiones y fees
+  commissions:
+    spain_brokers:
+      - "Degiro"  # Muy competitivo para acciones europeas
+      - "Interactive Brokers"  # Mejor para multi-market
+      - "Revolut"  # Simple, fees moderados
+    typical_fee_per_trade: 1.0  # ~€1 por trade (Degiro)
+
+  # Tax implications
+  tax_implications:
+    frequency: "Las ganancias se tributananualmente"
+    loss_offsetting: "Compensación ilimitada con ganancias"
+    social_security: "No aplica para trading individual"
+
+# ============================================
+# SECTORES PREFERIDOS ESPAÑA
+# ============================================
+preferred_sectors:
+  # Sectores defensivos (buenos para mercado bajista)
+  defensive:
+    - "Utilities"  # Iberdrola, Endesa
+    - "Telecom"  # Telefónica, Orange
+    - "Consumer Staples"  # Nestlé, Danone
+    - "Healthcare"  /* Novartis, Roche
+
+  # Sectores cíclicos (buenos para mercado alcista)
+  cyclical:
+    - "Banking"  # Santander, BBVA
+    - "Real Estate"  # Merlin, Colonial
+    - "Energy"  # Repsol, Cepsa
+
+  # Sectores crecimiento
+  growth:
+    - "Technology"  // Indra, Amadeus
+    - "Renewables"  // Iberdrola, Acciona
+
+# ============================================
+# NEWS SOURCES ESPAÑA
+# ============================================
+news_sources:
+  spanish_financial_media:
+    - name: "Cinco Días"
+      url: "cincodias.elpais.com"
+      language: "es"
+
+    - name: "Expansión"
+      url: "expansion.com"
+      language: "es"
+
+    - name: "El Economista"
+      url: "eleconomista.es"
+      language: "es"
+
+    - name: "Bolsamania"
+      url: "bolsamania.com"
+      language: "es"
+
+  # European financial media
+  european_media:
+    - name: "Financial Times"
+      url: "ft.com"
+      language: "en"
+
+    - name: "Handelsblatt"
+      url: "handelsblatt.com"
+      language: "de"
+
+# ============================================
+# CALENDARIO FISCAL ESPAÑA
+# ============================================
+tax_calendar:
+  quarterly_estimated_payments:
+    - "20 abril"
+    - "20 julio"
+    - "20 octubre"
+    - "20 diciembre"
+
+  annual_tax_return:
+    deadline: "30 junio"  # Declaración renta ( año anterior)
+
+  wealth_tax:
+    applies: true
+    threshold: 700000  # €700k (varía por CCAA)
+    rate: "0.2% - 3.5% (depende de CCAA)"
+
+# ============================================
+# WARNINGS Y DISCLOSURES
+# ============================================
+warnings:
+  trading_risk: "El trading conlleva riesgo de pérdida capital"
+  tax_responsibility: "Cada inversor es responsable de sus obligaciones fiscales"
+  professional_advice: "Consultar con asesor fiscal para situación específica"
+  currency_risk: "La inversión en USD/GBP conlleva riesgo de divisa para residentes EUR"
+  crypto_risk: "Las criptomonedas son alto riesgo - solo apto para inversores experimentados"

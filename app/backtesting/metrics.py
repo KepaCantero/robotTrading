@@ -98,6 +98,11 @@ class MetricsCalculator:
 
         # P&L metrics
         total_pnl = sum((t.pnl or Decimal("0")) for t in closed_trades)
+
+        # Validate initial_capital before division
+        if initial_capital <= 0:
+            raise ValueError(f"initial_capital must be positive, got {initial_capital}")
+
         total_pnl_percentage = (total_pnl / initial_capital) * Decimal("100")
 
         gross_profit = (
@@ -224,6 +229,11 @@ class MetricsCalculator:
         """Return empty metrics for no trades scenario."""
         total_days = (end_date - start_date).days
         total_pnl = final_capital - initial_capital
+
+        # Validate initial_capital before division
+        if initial_capital <= 0:
+            raise ValueError(f"initial_capital must be positive, got {initial_capital}")
+
         total_pnl_percentage = (total_pnl / initial_capital) * Decimal("100")
 
         return PerformanceMetrics(
@@ -475,23 +485,37 @@ class MetricsCalculator:
         Calculate Compound Annual Growth Rate.
 
         Args:
-            initial_capital: Starting capital
-            final_capital: Ending capital
+            initial_capital: Starting capital (must be > 0)
+            final_capital: Ending capital (must be > 0)
             start_date: Start date
-            end_date: End date
+            end_date: End date (must be after start_date)
 
         Returns:
             CAGR as percentage
-        """
-        years = (end_date - start_date).days / 365.25
 
-        if years <= 0 or initial_capital <= 0:
-            return Decimal("0")
+        Raises:
+            ValueError: If validation fails
+        """
+        # Validate inputs
+        if initial_capital <= 0:
+            raise ValueError(f"initial_capital must be positive, got {initial_capital}")
 
         if final_capital <= 0:
-            return Decimal("-100")
+            raise ValueError(f"final_capital must be positive, got {final_capital}")
 
-        cagr = ((final_capital / initial_capital) ** (1 / years) - 1) * Decimal("100")
+        if start_date >= end_date:
+            raise ValueError(f"start_date ({start_date}) must be before end_date ({end_date})")
+
+        years = (end_date - start_date).days / 365.25
+
+        if years <= 0:
+            raise ValueError(f"Time period must be positive, got {years:.4f} years")
+
+        # Convert to float for exponentiation, then back to Decimal
+        ratio = float(final_capital) / float(initial_capital)
+        exponent = 1.0 / years
+        cagr_float = (ratio ** exponent - 1) * 100.0
+        cagr = Decimal(str(round(cagr_float, 4)))
         return cagr
 
 

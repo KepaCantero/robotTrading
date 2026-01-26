@@ -40,6 +40,102 @@ class RiskTolerance(str, Enum):
     ALTO = "alto"
 
 
+class TaxResidence(BaseModel):
+    """
+    Tax residence configuration for the investor.
+
+    Critical for:
+    - Tax rate calculation
+    - Withholding tax optimization
+    - Country-specific regulations
+    - Currency hedging decisions
+    """
+
+    model_config = ConfigDict(
+        strict=True,
+        validate_assignment=True,
+        extra="forbid",
+    )
+
+    # Country identification
+    country_code: str = Field(
+        ...,
+        min_length=2,
+        max_length=2,
+        description="ISO 3166-1 alpha-2 country code (ES, US, UK, etc.)",
+    )
+    country_name: Optional[str] = Field(default=None, description="Full country name")
+
+    # Tax rates (can be overridden with custom values)
+    capital_gains_rate_short: Decimal = Field(
+        default=Decimal("0.19"),
+        ge=Decimal("0"),
+        le=Decimal("1"),
+        description="Short-term capital gains tax rate",
+    )
+    capital_gains_rate_long: Decimal = Field(
+        default=Decimal("0.19"),
+        ge=Decimal("0"),
+        le=Decimal("1"),
+        description="Long-term capital gains tax rate",
+    )
+    dividend_tax_rate: Decimal = Field(
+        default=Decimal("0.19"),
+        ge=Decimal("0"),
+        le=Decimal("1"),
+        description="Dividend tax rate",
+    )
+    withholding_tax_domestic: Decimal = Field(
+        default=Decimal("0.19"),
+        ge=Decimal("0"),
+        le=Decimal("1"),
+        description="Domestic withholding tax rate",
+    )
+    withholding_tax_eu: Decimal = Field(
+        default=Decimal("0.00"),
+        ge=Decimal("0"),
+        le=Decimal("1"),
+        description="EU withholding tax rate (0% for EU residents)",
+    )
+    withholding_tax_us: Decimal = Field(
+        default=Decimal("0.30"),
+        ge=Decimal("0"),
+        le=Decimal("1"),
+        description="US withholding tax rate (30% without treaty)",
+    )
+
+    # Country-specific rules
+    applies_wash_sale_rule: bool = Field(
+        default=False,
+        description="Whether wash sale rule applies (US only)",
+    )
+    allows_loss_carryforward: bool = Field(
+        default=True,
+        description="Whether losses can be carried forward",
+    )
+    loss_carryforward_years: Optional[int] = Field(
+        default=4,
+        ge=0,
+        description="Number of years losses can be carried forward",
+    )
+
+    # Currency
+    base_currency: str = Field(
+        default="EUR",
+        description="Base currency for the investor (EUR, USD, GBP)",
+    )
+
+    # Regulatory
+    requires_currency_hedging: bool = Field(
+        default=False,
+        description="Whether currency hedging is recommended",
+    )
+    regulatory_authority: Optional[str] = Field(
+        default=None,
+        description="Main regulatory authority (CNMV, SEC, FCA, etc.)",
+    )
+
+
 class InputProfile(BaseModel):
     """
     Parsed and validated user input for parametrization framework.
@@ -85,6 +181,12 @@ class InputProfile(BaseModel):
     # Optional Parameters
     constraints: Optional[Dict] = Field(
         default=None, description="Optional constraints (sector limits, etc.)"
+    )
+
+    # Tax Residence (CRITICAL for multi-market trading)
+    tax_residence: Optional[TaxResidence] = Field(
+        default=None,
+        description="Tax residence configuration (country, rates, currency)",
     )
 
     # Metadata
@@ -180,6 +282,7 @@ class InputProfile(BaseModel):
             "constraints": self.constraints,
             "capital_flag": self.capital_flag,
             "is_large_account": self.is_large_account,
+            "tax_residence": self.tax_residence.model_dump() if self.tax_residence else None,
         }
 
 

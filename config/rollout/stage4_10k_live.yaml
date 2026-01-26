@@ -1,0 +1,92 @@
+# Stage 4: $10,000 Live Trading Configuration
+# Approaching production-level deployment
+
+trading:
+  mode: live
+  capital: 10000  # Further scaling
+  max_positions: 8  # More positions allowed
+  risk_per_trade: 0.05  # 5% max per position = $500 max loss
+  stop_loss: 0.05  # 5% stop loss
+  daily_loss_limit: 0.05  # Stop trading if daily loss > 5%
+
+# Enable all validated strategies
+strategies:
+  - name: momentum
+    enabled: true
+    allocations:
+      - symbol: "AAPL"
+        weight: 0.125
+      - symbol: "MSFT"
+        weight: 0.125
+      - symbol: "GOOGL"
+        weight: 0.125
+
+  - name: mean_reversion
+    enabled: true
+    allocations:
+      - symbol: "TSLA"
+        weight: 0.125
+      - symbol: "NVDA"
+        weight: 0.125
+
+  - name: etf_momentum
+    enabled: true
+    allocations:
+      - symbol: "SPY"
+        weight: 0.25
+      - symbol: "QQQ"
+        weight: 0.125
+
+# Trade US stocks + ETFs + selected EU stocks
+markets:
+  - region: US
+    enabled: true
+    asset_classes:
+      - stocks
+      - etfs
+
+  - region: EU
+    enabled: true
+    asset_classes:
+      - stocks
+    symbols:
+      - "ASML"
+      - "SAP"
+
+# Risk management - tighter controls
+risk_management:
+  max_drawdown: 0.12  # 12% max drawdown
+  position_size_method: fixed_percentage
+  rebalance_frequency: daily
+
+# FIFO database for tax compliance
+fifo:
+  enabled: true
+  database_path: data/fifo.db
+
+# Monitoring
+monitoring:
+  log_level: INFO
+  alert_on:
+    - system_errors
+    - position_discrepancies
+    - fifo_errors
+    - daily_loss_limit
+    - drawdown_exceeded
+    - stop_loss_failed
+    - weekly_performance
+    - benchmark_comparison
+
+# Spain tax compliance
+tax:
+  spain_resident: true
+  modelo_721:
+    enabled: true
+    reporting_currency: EUR
+
+# Benchmark comparison
+benchmarks:
+  - symbol: "SPY"
+    name: "S&P 500"
+  - symbol: "IBEX"
+    name: "IBEX 35"

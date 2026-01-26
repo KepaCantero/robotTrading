@@ -15,17 +15,20 @@ class StochRSIFilter(BaseFilter):
     Filtro Stochastic RSI para detectar condiciones de sobrecompra/sobreventa más precisas.
     """
 
-    def __init__(self, config: Dict, preset: str = "balanced"):
+    def __init__(
+        self, config: Dict = None, preset: str = "balanced", tier: str = None, use_yaml: bool = True
+    ):
         """Inicializar filtro Stochastic RSI."""
-        super().__init__("stoch_rsi_filter", config, preset)
+        super().__init__("stoch_rsi_filter", config, preset, tier, use_yaml)
 
-        params = config.get("parameters", {})
-        self.rsi_period = params.get("rsi_period", 14)
-        self.stoch_period = params.get("stoch_period", 14)
-        self.k_period = params.get("k_period", 3)
-        self.d_period = params.get("d_period", 3)
+        # Get settings from YAML or config
+        settings = self.config.get("settings", self.config)
+        self.rsi_period = settings.get("stoch_rsi_period", settings.get("rsi_period", 14))
+        self.stoch_period = settings.get("k_period", 14)
+        self.k_period = settings.get("smooth_k", settings.get("k_period", 3))
+        self.d_period = settings.get("d_period", 3)
 
-        # Thresholds del preset
+        # Thresholds del preset (usar thresholds cargados desde YAML)
         self.buy_min = self.thresholds.get("buy_min", 15)
         self.buy_max = self.thresholds.get("buy_max", 85)
         self.sell_min = self.thresholds.get("sell_min", 15)

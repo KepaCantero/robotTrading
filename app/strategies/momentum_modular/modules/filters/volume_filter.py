@@ -17,15 +17,18 @@ class VolumeFilter(BaseFilter):
     Compara volumen actual vs promedio histórico.
     """
 
-    def __init__(self, config: Dict, preset: str = "balanced"):
+    def __init__(
+        self, config: Dict = None, preset: str = "balanced", tier: str = None, use_yaml: bool = True
+    ):
         """Inicializar filtro de volumen."""
-        super().__init__("volume_filter", config, preset)
+        super().__init__("volume_filter", config, preset, tier, use_yaml)
 
-        params = config.get("parameters", {})
-        self.lookback_period = params.get("lookback_period", 20)
-        self.method = params.get("method", "ratio")
+        # Get settings from YAML or config
+        settings = self.config.get("settings", self.config)
+        self.lookback_period = settings.get("lookback_period", 20)
+        self.method = settings.get("method", "ratio")
 
-        # Thresholds del preset
+        # Thresholds del preset (usar thresholds cargados desde YAML)
         self.min_volume_ratio = self.thresholds.get("min_volume_ratio", 1.1)
 
     def _apply_filter_logic(self, indicators: Dict, market_context: Dict, signal_type: str) -> Dict:

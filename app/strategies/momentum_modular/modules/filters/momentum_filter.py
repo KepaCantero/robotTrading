@@ -17,15 +17,18 @@ class MomentumFilter(BaseFilter):
     Evalúa si hay suficiente momentum positivo (para compra) o negativo (para venta).
     """
 
-    def __init__(self, config: Dict, preset: str = "balanced"):
+    def __init__(
+        self, config: Dict = None, preset: str = "balanced", tier: str = None, use_yaml: bool = True
+    ):
         """Inicializar filtro de momentum."""
-        super().__init__("momentum_filter", config, preset)
+        super().__init__("momentum_filter", config, preset, tier, use_yaml)
 
-        params = config.get("parameters", {})
-        self.period = params.get("period", 12)
-        self.method = params.get("method", "roc")
+        # Get settings from YAML or config
+        settings = self.config.get("settings", self.config)
+        self.period = settings.get("period", 12)
+        self.method = settings.get("method", "roc")
 
-        # Thresholds del preset
+        # Thresholds del preset (usar thresholds cargados desde YAML)
         self.min_positive_momentum = self.thresholds.get("min_positive_momentum", 0.015)
         self.min_negative_momentum = self.thresholds.get("min_negative_momentum", -0.015)
 

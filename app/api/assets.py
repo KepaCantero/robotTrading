@@ -18,6 +18,8 @@ from app.services.asset_identification import (
 
 router = APIRouter(prefix="/assets", tags=["assets"])
 
+_DEFAULT_BACKGROUND_TASKS = BackgroundTasks()
+
 
 @router.get("/", response_model=Dict[str, Any])
 async def get_assets_overview(
@@ -235,7 +237,7 @@ async def filter_assets(
 
 @router.post("/refresh-liquidity", response_model=Dict[str, Any])
 async def refresh_liquidity_data(
-    background_tasks: BackgroundTasks = BackgroundTasks(),
+    background_tasks: BackgroundTasks = _DEFAULT_BACKGROUND_TASKS,
     service: AssetIdentificationService = Depends(get_asset_identification_service),
 ):
     """Refresh liquidity data for all assets."""
@@ -278,7 +280,7 @@ async def get_asset_universe(
 async def identify_liquid_assets(
     asset_class: AssetClass,
     limit: int = Query(20, ge=1, le=100, description="Number of assets to identify"),
-    background_tasks: BackgroundTasks = BackgroundTasks(),
+    background_tasks: BackgroundTasks = _DEFAULT_BACKGROUND_TASKS,
     service: AssetIdentificationService = Depends(get_asset_identification_service),
 ):
     """Identify and rank liquid assets for a specific asset class."""

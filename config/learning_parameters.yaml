@@ -1,0 +1,227 @@
+# Learning Parameters Configuration
+# Centralized configuration for ML/DL learning engines
+#
+# This file contains parameters for:
+# - Supervised Learning Engine
+# - Reinforcement Learning Engine
+# - Threshold optimization parameters
+
+# ============================================================================
+# SUPERVISED LEARNING ENGINE
+# ============================================================================
+supervised_learning:
+  # Model training parameters
+  training:
+    test_size: 0.2            # Train/test split ratio
+    random_state: 42           # Random seed for reproducibility
+    cv_folds: 5               # Cross-validation folds
+    min_samples: 100           # Minimum samples required for training
+
+  # Model parameters
+  models:
+    random_forest:
+      n_estimators: 100        # Number of trees
+      max_depth: 10            # Maximum tree depth
+      min_samples_split: 10    # Minimum samples to split
+      min_samples_leaf: 5      # Minimum samples per leaf
+
+    xgboost:
+      n_estimators: 100
+      max_depth: 6
+      learning_rate: 0.1
+      subsample: 0.8
+
+    lightgbm:
+      n_estimators: 100
+      max_depth: 6
+      learning_rate: 0.1
+      num_leaves: 31
+
+  # Feature engineering
+  features:
+    lookback_periods: [5, 10, 20, 50]  # Lookback periods for features
+    use_technical_indicators: true
+    use_market_regime: true
+    use_volatility: true
+
+# ============================================================================
+# THRESHOLD OPTIMIZATION PARAMETERS
+# ============================================================================
+threshold_optimization:
+  # RSI threshold optimization ranges
+  rsi:
+    buy_min:
+      min: 30
+      max: 50
+      step: 2
+
+    buy_max:
+      min: 60
+      max: 80
+      step: 2
+
+    sell_min:
+      min: 50
+      max: 70
+      step: 2
+
+    sell_max:
+      min: 70
+      max: 90
+      step: 2
+
+  # Momentum threshold optimization ranges
+  momentum:
+    threshold:
+      min: 0.01
+      max: 0.03
+      step: 0.005
+
+  # EMA distance threshold optimization ranges
+  ema_distance:
+    min: 0.002
+    max: 0.01
+    step: 0.001
+
+  # Volume ratio threshold optimization ranges
+  volume_ratio:
+    min: 1.0
+    max: 1.5
+    step: 0.1
+
+  # Optimization method
+  optimization:
+    method: "grid_search"      # Method: grid_search, random_search, bayesian
+    cv_folds: 5               # Cross-validation folds
+    scoring: "sharpe"         # Optimization metric: sharpe, sortino, return
+    n_iter: 50               # Number of iterations for random/bayesian search
+
+# ============================================================================
+# REINFORCEMENT LEARNING ENGINE
+# ============================================================================
+reinforcement_learning:
+  # Environment parameters
+  environment:
+    initial_balance: 100000   # Initial portfolio value
+    commission: 0.001        # Commission per trade (0.1%)
+    slippage: 0.0005         # Slippage per trade (0.05%)
+
+  # Trading parameters
+  trading:
+    max_position_size: 0.2   # Maximum position size (20% of portfolio)
+    max_positions: 5         # Maximum concurrent positions
+    action_space: "discrete" # Action space: discrete, continuous
+
+  # RL algorithm parameters
+  algorithm:
+    type: "PPO"              # Algorithm: PPO, A2C, DQN, SAC
+    learning_rate: 0.0003    # Learning rate
+    n_steps: 2048            # Steps per update
+    batch_size: 64           # Batch size for training
+    gamma: 0.99              # Discount factor
+    gae_lambda: 0.95         # GAE parameter
+    clip_range: 0.2         # PPO clipping parameter
+
+  # Network architecture
+  network:
+    hidden_layers: [64, 64]  # Hidden layer sizes
+    activation: "tanh"       # Activation function
+
+  # Training parameters
+  training:
+    total_timesteps: 100000  # Total training timesteps
+    eval_freq: 5000         # Evaluation frequency
+    eval_episodes: 10       # Episodes per evaluation
+
+# ============================================================================
+# MODEL VALIDATION PARAMETERS
+# ============================================================================
+model_validation:
+  # Validation metrics
+  metrics:
+    - sharpe_ratio
+    - sortino_ratio
+    - max_drawdown
+    - win_rate
+    - profit_factor
+
+  # Validation thresholds
+  thresholds:
+    min_sharpe: 0.5         # Minimum Sharpe ratio for model acceptance
+    max_drawdown: 0.2       # Maximum drawdown allowed
+    min_win_rate: 0.45      # Minimum win rate required
+    min_trades: 20          # Minimum number of trades for validation
+
+  # Walk-forward validation
+  walk_forward:
+    enabled: true
+    train_years: 2          # Training period in years
+    test_years: 0.5         # Test period in years
+    step_years: 0.5         # Step size for walk-forward
+
+# ============================================================================
+# TRANSFER LEARNING PARAMETERS
+# ============================================================================
+transfer_learning:
+  # Source models for transfer learning
+  source_models:
+    momentum_trained: "models/momentum_rf.pkl"
+    mean_reversion_trained: "models/mean_reversion_xgb.pkl"
+
+  # Transfer learning parameters
+  parameters:
+    retrain_layers: 1        # Number of layers to retrain
+    freezing_strategy: "partial"  # Strategy: none, partial, full
+    fine_tune_lr: 0.0001   # Learning rate for fine-tuning
+    fine_tune_epochs: 10    # Epochs for fine-tuning
+
+# ============================================================================
+# MODEL SELECTION PARAMETERS
+# ============================================================================
+model_selection:
+  # Model selection criteria
+  criteria:
+    primary_metric: "sharpe_ratio"
+    secondary_metrics: ["sortino_ratio", "max_drawdown"]
+
+  # Ensemble parameters
+  ensemble:
+    method: "weighted_voting"  # Method: voting, stacking, weighted_voting
+    n_models: 3              # Number of models in ensemble
+    weights: "equal"         # Weight allocation: equal, optimized, custom
+
+# ============================================================================
+# CAPITAL TIER OVERRIDES
+# ============================================================================
+tiers:
+  micro:
+    supervised_learning:
+      training:
+        min_samples: 50      # Lower minimum for micro
+
+    threshold_optimization:
+      optimization:
+        n_iter: 25           # Fewer iterations for micro
+
+  small:
+    supervised_learning:
+      training:
+        min_samples: 75
+
+  medium:
+    # Use default values
+    pass
+
+  large:
+    supervised_learning:
+      training:
+        min_samples: 200     # Higher minimum for large
+
+    reinforcement_learning:
+      environment:
+        initial_balance: 250000   # Higher initial balance
+        max_position_size: 0.25
+        max_positions: 8
+
+      training:
+        total_timesteps: 200000   # More training for large accounts

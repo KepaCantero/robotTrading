@@ -1,0 +1,118 @@
+# Stage 5: $25,000 Live Trading Configuration
+# Near-production deployment with significant capital
+
+trading:
+  mode: live
+  capital: 25000  # Significant capital deployment
+  max_positions: 15  # Diversified portfolio
+  risk_per_trade: 0.05  # 5% max per position = $1,250 max loss
+  stop_loss: 0.05  # 5% stop loss
+  daily_loss_limit: 0.03  # Stop trading if daily loss > 3%
+
+# Enable all strategies including FX hedging
+strategies:
+  - name: momentum
+    enabled: true
+    allocations:
+      - symbol: "AAPL"
+        weight: 0.08
+      - symbol: "MSFT"
+        weight: 0.08
+      - symbol: "GOOGL"
+        weight: 0.08
+      - symbol: "AMZN"
+        weight: 0.08
+
+  - name: mean_reversion
+    enabled: true
+    allocations:
+      - symbol: "TSLA"
+        weight: 0.08
+      - symbol: "NVDA"
+        weight: 0.08
+      - symbol: "META"
+        weight: 0.08
+
+  - name: etf_momentum
+    enabled: true
+    allocations:
+      - symbol: "SPY"
+        weight: 0.15
+      - symbol: "QQQ"
+        weight: 0.10
+
+  - name: fx_hedging
+    enabled: true
+    allocations:
+      - currency_pair: "EUR/USD"
+        weight: 0.11
+
+# Trade all supported markets
+markets:
+  - region: US
+    enabled: true
+    asset_classes:
+      - stocks
+      - etfs
+
+  - region: EU
+    enabled: true
+    asset_classes:
+      - stocks
+      - etfs
+    symbols:
+      - "ASML"
+      - "SAP"
+      - "NESN"
+      - "ROCH"
+
+# Risk management - production standards
+risk_management:
+  max_drawdown: 0.10  # 10% max drawdown
+  position_size_method: fixed_percentage
+  rebalance_frequency: daily
+  volatility_target: 0.15  # 15% annualized volatility target
+
+# FIFO database for tax compliance
+fifo:
+  enabled: true
+  database_path: data/fifo.db
+
+# Monitoring
+monitoring:
+  log_level: INFO
+  alert_on:
+    - system_errors
+    - position_discrepancies
+    - fifo_errors
+    - daily_loss_limit
+    - drawdown_exceeded
+    - stop_loss_failed
+    - weekly_performance
+    - benchmark_comparison
+    - tax_compliance
+
+# Spain tax compliance with optimization
+tax:
+  spain_resident: true
+  modelo_721:
+    enabled: true
+    reporting_currency: EUR
+    optimization:
+      - tax_loss_harvesting
+      - long_term_preference
+
+# Benchmark comparison
+benchmarks:
+  - symbol: "SPY"
+    name: "S&P 500"
+  - symbol: "IBEX"
+    name: "IBEX 35"
+  - symbol: "EFA"
+    name: "MSCI EAFE"
+
+# Advanced features
+advanced:
+  trailing_stop: true
+  profit_taking: true
+  volatility_scaling: true

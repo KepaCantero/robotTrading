@@ -60,3 +60,36 @@ check_all_output.log
 simple_check.log
 DASHBOARD_SUMMARY.md
 
+# ============================================================================
+# Phase 4.2: Production Config Management - Sensitive Files
+# ============================================================================
+
+# Environment files (production secrets)
+.env.prod
+.env.staging
+.env.local
+.env.production
+
+# Secrets configuration (NEVER commit this)
+config/secrets.yaml
+
+# Production backups
+backups/*.db
+backups/*.tar.gz
+backups/pre-deploy-*
+backups/post-rollback-*
+
+# Production logs
+logs/production.log
+logs/staging.log
+
+# SSL certificates and keys
+*.key
+*.pem
+*.crt
+*.cer
+
+# Encrypted data
+*.encrypted
+*.gpg
+

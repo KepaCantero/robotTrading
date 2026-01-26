@@ -8,7 +8,7 @@ market data feeds from various providers.
 import asyncio
 import logging
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
@@ -382,97 +382,92 @@ class YahooFinanceFeed(DataFeedInterface):
         return False
 
 
-class MockDataFeed(DataFeedInterface):
-    """Mock data feed for testing and development."""
+class PolygonFeed(DataFeedInterface):
+    """Polygon.io (massive.com) market data feed implementation for real-time data."""
 
     def __init__(self, config: DataFeedConfig):
         super().__init__(config)
-        self._mock_data = self._generate_mock_data()
-
-    def _generate_mock_data(self) -> Dict[str, Any]:
-        """Generate mock market data."""
-        return {
-            "AAPL": {
-                "quote": {
-                    "bid": Decimal("150.00"),
-                    "ask": Decimal("150.01"),
-                    "last": Decimal("150.00"),
-                    "open": Decimal("149.50"),
-                    "high": Decimal("150.50"),
-                    "low": Decimal("149.00"),
-                    "close": Decimal("150.00"),
-                    "volume": Decimal("1000000"),
-                    "change": Decimal("0.50"),
-                    "change_percent": Decimal("0.33"),
-                },
-                "historical": [],
-            },
-            "MSFT": {
-                "quote": {
-                    "bid": Decimal("300.00"),
-                    "ask": Decimal("300.01"),
-                    "last": Decimal("300.00"),
-                    "open": Decimal("299.50"),
-                    "high": Decimal("300.50"),
-                    "low": Decimal("299.00"),
-                    "close": Decimal("300.00"),
-                    "volume": Decimal("800000"),
-                    "change": Decimal("0.50"),
-                    "change_percent": Decimal("0.17"),
-                },
-                "historical": [],
-            },
-            "CUSTOM": {
-                "quote": {
-                    "bid": Decimal("100.00"),
-                    "ask": Decimal("100.01"),
-                    "last": Decimal("100.00"),
-                    "open": Decimal("99.50"),
-                    "high": Decimal("100.50"),
-                    "low": Decimal("99.00"),
-                    "close": Decimal("100.00"),
-                    "volume": Decimal("500000"),
-                    "change": Decimal("0.50"),
-                    "change_percent": Decimal("0.50"),
-                },
-                "historical": [],
-            },
-        }
+        self.base_url = "https://api.massive.com"
 
     async def connect(self) -> bool:
-        """Mock connection."""
-        logger.info("Connected to Mock Data Feed")
-        return True
+        """Connect to Massive.com (Polygon.io) API."""
+        try:
+            self.session = aiohttp.ClientSession()
+            logger.info("Connected to Massive.com (Polygon.io) API")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to connect to Massive.com: {e}")
+            return False
 
     async def disconnect(self) -> bool:
-        """Mock disconnection."""
-        logger.info("Disconnected from Mock Data Feed")
+        """Disconnect from Massive.com API."""
+        if self.session:
+            await self.session.close()
+            self.session = None
+            logger.info("Disconnected from Massive.com (Polygon.io) API")
         return True
 
     async def get_quote(self, symbol: str) -> Optional[Quote]:
-        """Get mock quote."""
-        if symbol not in self._mock_data:
-            logger.warning(f"No mock data for {symbol}")
+        """Get real-time quote from Massive.com (Polygon.io)."""
+        if not self.config.api_key:
+            logger.error("Massive.com API key not configured")
             return None
 
-        quote_data = self._mock_data[symbol]["quote"]
+        # Massive.com snapshot endpoint
+        url = f"{self.base_url}/v2/snapshot/locale/us/markets/stocks/tickers/{symbol}"
+        params = {"apiKey": self.config.api_key}
 
-        return Quote(  # type: ignore
-            symbol=symbol,
-            bid=quote_data["bid"],
-            ask=quote_data["ask"],
-            last=quote_data["last"],
-            open=quote_data["open"],
-            high=quote_data["high"],
-            low=quote_data["low"],
-            close=quote_data["close"],
-            volume=quote_data["volume"],
-            spread=quote_data["ask"] - quote_data["bid"],
-            change=quote_data["change"],
-            change_percent=quote_data["change_percent"],
-            feed_type=DataFeedType.MOCK,
-            metadata={"mock": True},
-        )
+        try:
+            data = await self._make_request(url, params)
+
+            if data.get("status") != "OK" or not data.get("snapshot"):
+                logger.warning(f"No quote data for {symbol}")
+                return None
+
+            snapshot = data["snapshot"]
+
+            # Extract quote data from snapshot
+            day_data = snapshot.get("day", {})
+            quote_data = snapshot.get("lastQuote", {})
+            prev_day = snapshot.get("prevDay", {})
+
+            close = Decimal(str(day_data.get("c", 0)))
+            high = Decimal(str(day_data.get("h", 0)))
+            low = Decimal(str(day_data.get("l", 0)))
+            open_price = Decimal(str(day_data.get("o", 0)))
+            volume = Decimal(str(day_data.get("v", 0)))
+
+            # Get bid/ask from last quote
+            bid = Decimal(str(quote_data.get("p", 0))) if quote_data else close
+            ask = Decimal(str(quote_data.get("P", 0))) if quote_data else close
+
+            # Calculate change
+            prev_close = Decimal(str(prev_day.get("c", 0))) if prev_day else close
+            change = close - prev_close
+            change_percent = (change / prev_close * 100) if prev_close > 0 else Decimal("0")
+
+            # Spread calculation
+            calculated_spread = ask - bid if bid > 0 and ask > 0 else Decimal("0.01")
+
+            return Quote(  # type: ignore
+                symbol=symbol,
+                bid=bid if bid > 0 else close,
+                ask=ask if ask > 0 else close,
+                last=close,
+                open=open_price if open_price > 0 else close,
+                high=high if high > 0 else close,
+                low=low if low > 0 else close,
+                close=close,
+                volume=volume,
+                spread=calculated_spread if calculated_spread > 0 else Decimal("0.01"),
+                change=change,
+                change_percent=change_percent,
+                feed_type=DataFeedType.POLYGON,
+                metadata={"raw_data": snapshot},
+            )
+        except Exception as e:
+            logger.error(f"Failed to get quote for {symbol}: {e}")
+            return None
 
     async def get_historical_data(
         self,
@@ -481,53 +476,91 @@ class MockDataFeed(DataFeedInterface):
         end_date: datetime,
         frequency: DataFrequency = DataFrequency.DAILY,
     ) -> List[HistoricalData]:
-        """Get mock historical data."""
-        if symbol not in self._mock_data:
-            logger.warning(f"No mock data for {symbol}")
+        """Get historical data from Massive.com (Polygon.io)."""
+        if not self.config.api_key:
+            logger.error("Massive.com API key not configured")
             return []
 
-        # Generate mock historical data
-        historical_data = []
-        current_date = start_date
-        base_price = Decimal("150.00")
+        # Map frequency to Massive timespan
+        timespan_map = {
+            DataFrequency.DAILY: "day",
+            DataFrequency.HOURLY: "hour",
+            DataFrequency.FIVE_MINUTES: "minute",
+            DataFrequency.FIFTEEN_MINUTES: "minute",
+        }
 
-        while current_date <= end_date:
-            # Generate realistic price movement
-            price_change = Decimal(str(0.01 * (hash(str(current_date)) % 20 - 10)))  # ±10%
-            price = base_price * (Decimal("1") + price_change)
+        # Map frequency to Massive multiplier
+        multiplier_map = {
+            DataFrequency.DAILY: 1,
+            DataFrequency.HOURLY: 1,
+            DataFrequency.FIVE_MINUTES: 5,
+            DataFrequency.FIFTEEN_MINUTES: 15,
+        }
 
-            historical_data.append(
-                HistoricalData(  # type: ignore
-                    symbol=symbol,
-                    timestamp=current_date,
-                    open=price,
-                    high=price * Decimal("1.02"),
-                    low=price * Decimal("0.98"),
-                    close=price,
-                    volume=Decimal("1000000"),
-                    feed_type=DataFeedType.MOCK,
-                    frequency=frequency,
-                    metadata={"mock": True},
-                )
-            )
+        timespan = timespan_map.get(frequency, "day")
+        multiplier = multiplier_map.get(frequency, 1)
 
-            current_date += timedelta(days=1)
+        # Convert dates to timestamps (milliseconds)
+        start_timestamp = int(start_date.timestamp() * 1000)
+        end_timestamp = int(end_date.timestamp() * 1000)
 
-        return historical_data
+        url = f"{self.base_url}/v2/aggs/ticker/{symbol}/range/{multiplier}/{timespan}/{start_timestamp}/{end_timestamp}"
+        params = {"apiKey": self.config.api_key, "adjusted": "true"}
+
+        try:
+            data = await self._make_request(url, params)
+
+            if not data.get("results"):
+                logger.warning(f"No historical data for {symbol}")
+                return []
+
+            historical_data = []
+
+            for result in data["results"]:
+                timestamp = datetime.fromtimestamp(result["t"] / 1000)
+
+                if start_date <= timestamp <= end_date:
+                    historical_data.append(
+                        HistoricalData(  # type: ignore
+                            symbol=symbol,
+                            timestamp=timestamp,
+                            open=Decimal(str(result.get("o", 0))),
+                            high=Decimal(str(result.get("h", 0))),
+                            low=Decimal(str(result.get("l", 0))),
+                            close=Decimal(str(result.get("c", 0))),
+                            volume=Decimal(str(result.get("v", 0))),
+                            feed_type=DataFeedType.POLYGON,
+                            frequency=frequency,
+                            metadata={"raw_data": result},
+                        )
+                    )
+
+            return historical_data
+        except Exception as e:
+            logger.error(f"Failed to get historical data for {symbol}: {e}")
+            return []
 
     async def subscribe_to_symbols(self, symbols: List[str]) -> bool:
-        """Mock subscription."""
-        logger.info(f"Mock subscribed to symbols: {symbols}")
-        return True
+        """Massive.com supports real-time subscriptions via WebSocket (not implemented here)."""
+        logger.warning("Massive.com WebSocket subscriptions not implemented in HTTP mode")
+        return False
 
 
 def create_data_feed(config: DataFeedConfig) -> DataFeedInterface:
-    """Factory function to create data feed instances."""
+    """
+    Factory function to create data feed instances.
+
+    NOTE: Mock data has been removed - only real data sources are supported.
+    For backtesting, use Yahoo Finance (free) or configure Polygon/AlphaVantage API keys.
+    """
     if config.feed_type == DataFeedType.ALPHA_VANTAGE:
         return AlphaVantageFeed(config)
     elif config.feed_type == DataFeedType.YAHOO_FINANCE:
         return YahooFinanceFeed(config)
-    elif config.feed_type == DataFeedType.MOCK:
-        return MockDataFeed(config)
+    elif config.feed_type == DataFeedType.POLYGON:
+        return PolygonFeed(config)
     else:
-        raise ValueError(f"Unsupported feed type: {config.feed_type}")
+        raise ValueError(
+            f"Unsupported feed type: {config.feed_type}. "
+            f"Please use YAHOO_FINANCE (free) or configure API keys for POLYGON/ALPHA_VANTAGE."
+        )

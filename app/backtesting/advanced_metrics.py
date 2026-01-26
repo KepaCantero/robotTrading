@@ -45,23 +45,31 @@ class AdvancedMetricsCalculator:
         - Penalizes large drawdowns
 
         Args:
-            cagr: Compound Annual Growth Rate
-            max_drawdown: Maximum drawdown (negative value)
+            cagr: Compound Annual Growth Rate (must not be None)
+            max_drawdown: Maximum drawdown (negative value, must not be zero)
 
         Returns:
             Calmar Ratio or None if calculation not possible
+
+        Raises:
+            ValueError: If max_drawdown is zero or None
         """
         try:
-            if max_drawdown == 0 or max_drawdown is None:
-                return None
+            if max_drawdown is None:
+                raise ValueError("max_drawdown cannot be None")
+            if cagr is None:
+                raise ValueError("cagr cannot be None")
 
             abs_drawdown = abs(float(max_drawdown))
             if abs_drawdown == 0:
-                return None
+                raise ValueError("max_drawdown cannot be zero (no drawdown to calculate ratio)")
 
             calmar = float(cagr) / abs_drawdown
             return Decimal(str(round(calmar, 4)))
 
+        except ValueError:
+            # Re-raise ValueError with context
+            raise
         except Exception as e:
             logger.error(f"Error calculating Calmar ratio: {e}")
             return None
@@ -98,9 +106,13 @@ class AdvancedMetricsCalculator:
             avg_gain = np.mean(excess_above)
             avg_loss = np.mean(excess_below)
 
-            # Avoid division by zero
+            # Avoid division by zero - no losses means infinite ratio
             if avg_loss == 0:
-                return Decimal("999") if avg_gain > 0 else Decimal("1")
+                if avg_gain > 0:
+                    # Infinite ratio (all gains, no losses) - return large number
+                    return Decimal("999999")
+                # No gains, no losses - ratio is 1:1
+                return Decimal("1")
 
             omega = avg_gain / avg_loss
             return Decimal(str(round(omega, 4)))
@@ -421,6 +433,93 @@ class AdvancedMetricsCalculator:
 
         except Exception as e:
             logger.error(f"Error calculating Modified Sortino: {e}")
+            return None
+
+    def calculate_tail_ratio(self, returns: List[Decimal]) -> Optional[Decimal]:
+        """
+        Calculate Tail Ratio (Req #6 - Advanced Metrics).
+
+        Measures the ratio of extreme gains to extreme losses.
+        Formula: Percentile_95(gains) / |Percentile_5(losses)|
+        - Values > 1.0 indicate better upside than downside tail behavior
+        - Higher values indicate asymmetric returns favoring gains
+
+        Args:
+            returns: List of returns
+
+        Returns:
+            Tail Ratio or None if calculation not possible
+        """
+        try:
+            if not returns or len(returns) < 20:
+                return None
+
+            returns_array = np.array([float(r) for r in returns])
+
+            # Calculate 95th percentile (extreme gains)
+            percentile_95 = np.percentile(returns_array, 95)
+
+            # Calculate 5th percentile (extreme losses)
+            percentile_5 = np.percentile(returns_array, 5)
+
+            # Tail ratio: ratio of extreme gains to extreme losses
+            if percentile_5 >= 0:
+                # No extreme losses, all returns are positive
+                return Decimal("999")
+            if percentile_5 == 0:
+                return None
+
+            tail_ratio = percentile_95 / abs(percentile_5)
+
+            return Decimal(str(round(tail_ratio, 4)))
+
+        except Exception as e:
+            logger.error(f"Error calculating Tail Ratio: {e}")
+            return None
+
+    def calculate_sqn(
+        self, returns: List[Decimal], number_of_trades: Optional[int] = None
+    ) -> Optional[Decimal]:
+        """
+        Calculate System Quality Number (SQN) (Req #6 - Advanced Metrics).
+
+        Van Tharp's metric for system quality.
+        Formula: (Mean / StdDev) * sqrt(N)
+        where N is number of trades (or returns)
+        - SQN > 2.0: Excellent system
+        - SQN 1.5 - 2.0: Good system
+        - SQN 1.0 - 1.5: Acceptable system
+        - SQN < 1.0: Poor system
+
+        Args:
+            returns: List of returns
+            number_of_trades: Optional override for number of trades
+
+        Returns:
+            System Quality Number or None if calculation not possible
+        """
+        try:
+            if not returns or len(returns) < 2:
+                return None
+
+            returns_array = np.array([float(r) for r in returns])
+
+            mean_return = np.mean(returns_array)
+            std_return = np.std(returns_array)
+
+            if std_return == 0:
+                return None
+
+            # Use provided trade count or number of returns
+            n = number_of_trades if number_of_trades else len(returns)
+
+            # SQN = (Mean / StdDev) * sqrt(N)
+            sqn = (mean_return / std_return) * np.sqrt(n)
+
+            return Decimal(str(round(sqn, 4)))
+
+        except Exception as e:
+            logger.error(f"Error calculating SQN: {e}")
             return None
 
     def calculate_all_advanced_metrics(

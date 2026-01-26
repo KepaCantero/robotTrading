@@ -17,7 +17,8 @@ Implementa arquitectura profesional, verificable y auditable con:
 
 import logging
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Tuple
+from decimal import Decimal
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -26,6 +27,7 @@ from scipy import stats
 from scipy.optimize import minimize
 
 from app.core.centralized_config import StockAllocationSettings
+from app.core.decimal_utils import to_decimal, validate_price, validate_quantity, safe_decimal_divide
 from app.services.momentum_analysis import TechnicalIndicatorCalculator
 
 logger = logging.getLogger(__name__)
@@ -98,14 +100,35 @@ class StrategyStockAllocator:
     - Full validation and auditability
     """
 
-    def __init__(self, config: Optional[StockAllocationSettings] = None):
+    def __init__(
+        self,
+        config: Optional[StockAllocationSettings] = None,
+        tier: Optional[str] = None,
+        use_yaml: bool = True,
+    ):
         """
         Initialize allocator with configuration.
 
         Args:
-            config: Stock allocation configuration. If None, uses default settings.
+            config: Stock allocation configuration. If None and use_yaml=True, loads from YAML.
+            tier: Capital tier ("micro", "small", "medium", "large") for tier-specific overrides.
+            use_yaml: If True, loads configuration from YAML file when config is None.
         """
-        self.config = config or StockAllocationSettings()
+        if config is None and use_yaml:
+            try:
+                config = StockAllocationSettings.from_yaml(tier=tier)
+                source = f"YAML (tier={tier or 'default'})"
+            except Exception as e:
+                logger.warning(f"Failed to load config from YAML: {e}. Using defaults.")
+                config = StockAllocationSettings()
+                source = "default (Pydantic)"
+        elif config is None:
+            config = StockAllocationSettings()
+            source = "default (Pydantic)"
+        else:
+            source = "provided"
+
+        self.config = config
         self.indicator_calculator = TechnicalIndicatorCalculator()
 
         # Internal state
@@ -114,7 +137,12 @@ class StrategyStockAllocator:
         self.pair_metrics: List[PairMetrics] = []
         self.decision_logs: List[str] = []
 
-        logger.info(f"StrategyStockAllocator initialized with config: {self.config}")
+        logger.info(
+            f"StrategyStockAllocator initialized with config from {source}: "
+            f"LOOKBACK_MAX_DAYS={config.LOOKBACK_MAX_DAYS}, "
+            f"MIN_LIQUIDITY_USD=${config.MIN_LIQUIDITY_USD:,.0f}, "
+            f"MAX_STRATEGY_EXPOSURE={config.MAX_STRATEGY_EXPOSURE:.0%}"
+        )
 
     def filter_stocks(self, historical_data: Dict[str, pd.DataFrame]) -> Dict[str, pd.DataFrame]:
         """
@@ -738,9 +766,9 @@ class StrategyStockAllocator:
             if self.config.DYNAMIC_WINDOW_ENABLED and len(prices) >= self.config.SLOPE_WINDOW_MIN:
                 window_min = self.config.SLOPE_WINDOW_MIN
                 window_max = min(self.config.SLOPE_WINDOW_MAX, len(prices))
-                best_slope_mse = float('in')
+                best_slope_mse = float('inf')
                 best_slope_pct = 0.0
-                best_roc_mse = float('in')
+                best_roc_mse = float('inf')
                 best_roc = roc
 
                 # Try different windows (step by 5 days for efficiency)

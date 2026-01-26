@@ -317,6 +317,9 @@ class StockAllocationSettings(BaseSettings):
 
     Centralizes all parameters for the Strategy Stock Allocator module.
     Each parameter is validated, documented, and versioned.
+
+    Parameters are loaded from config/strategy_stock_allocator.yaml
+    with fallback to hardcoded defaults if YAML is not available.
     """
 
     # Data validation parameters
@@ -324,12 +327,12 @@ class StockAllocationSettings(BaseSettings):
         default=126,
         ge=60,
         le=1000,
-        description="Maximum lookback period in days - RELAXED: 126 days (~6 months) instead of 252 to allow more stocks to pass (minimum 60, maximum 1000)",
+        description="Maximum lookback period in days - loaded from YAML",
     )
     MIN_LIQUIDITY_USD: float = Field(
         default=500_000.0,
         ge=50_000.0,
-        description="Minimum daily liquidity in USD - RELAXED: 500k (was 1M) to allow more stocks. Actual filter uses 5% of this = $25k minimum (minimum 50k)",
+        description="Minimum daily liquidity in USD - loaded from YAML",
     )
 
     # Stationarity and cointegration tests
@@ -503,6 +506,115 @@ class StockAllocationSettings(BaseSettings):
         if not 0 <= v <= 1:
             raise ValueError("Exposure limits must be between 0 and 1")
         return v
+
+    @classmethod
+    def from_yaml(cls, tier: Optional[str] = None) -> "StockAllocationSettings":
+        """
+        Create StockAllocationSettings from YAML configuration.
+
+        Args:
+            tier: Capital tier ("micro", "small", "medium", "large") for tier-specific overrides
+
+        Returns:
+            StockAllocationSettings with parameters loaded from YAML
+
+        Examples:
+            >>> settings = StockAllocationSettings.from_yaml()
+            >>> settings = StockAllocationSettings.from_yaml(tier="micro")
+        """
+        from app.core.config_loader import load_strategy_stock_allocator_config
+
+        config = load_strategy_stock_allocator_config(tier)
+
+        # Extract parameters from YAML and create instance
+        kwargs = {}
+
+        # Data validation
+        if "data_validation" in config:
+            dv = config["data_validation"]
+            kwargs["LOOKBACK_MAX_DAYS"] = dv.get("lookback_max_days", 126)
+            kwargs["MIN_LIQUIDITY_USD"] = dv.get("min_liquidity_usd", 500_000)
+
+        # Statistical tests
+        if "statistical_tests" in config:
+            st = config["statistical_tests"]
+            if "adf" in st:
+                kwargs["ADF_P_VALUE_THRESHOLD"] = st["adf"].get("p_value_threshold", 0.01)
+                kwargs["ADF_P_VALUE_THRESHOLD_MEAN_REVERSION"] = st["adf"].get(
+                    "p_value_mean_reversion", 0.05
+                )
+            if "kpss" in st:
+                kwargs["KPSS_P_VALUE_THRESHOLD"] = st["kpss"].get("p_value_threshold", 0.05)
+            if "hurst" in st:
+                kwargs["HURST_MOMENTUM_THRESHOLD"] = st["hurst"].get("momentum_threshold", 0.52)
+                kwargs["HURST_MEAN_REVERSION_THRESHOLD"] = st["hurst"].get(
+                    "mean_reversion_threshold", 0.45
+                )
+
+        # Mean reversion
+        if "mean_reversion" in config:
+            mr = config["mean_reversion"]
+            kwargs["MAX_HALF_LIFE_DAYS"] = mr.get("max_half_life_days", 120)
+            kwargs["MIN_HALF_LIFE_DAYS"] = mr.get("min_half_life_days", 1)
+
+        # Exposure
+        if "exposure" in config:
+            exp = config["exposure"]
+            kwargs["MAX_STRATEGY_EXPOSURE"] = exp.get("max_strategy_exposure", 0.50)
+            kwargs["MAX_PAIR_EXPOSURE"] = exp.get("max_pair_exposure", 0.15)
+            kwargs["MAX_ASSETS_PER_PAIR"] = exp.get("max_assets_per_pair", 2)
+
+        # Scoring weights
+        if "scoring_weights" in config:
+            sw = config["scoring_weights"]
+            if "momentum" in sw:
+                # Convert "tau_inverse" to "1/tau" for compatibility
+                momentum = sw["momentum"].copy()
+                if "tau_inverse" in momentum:
+                    momentum["1/tau"] = momentum.pop("tau_inverse")
+                kwargs["MOMENTUM_WEIGHTS"] = momentum
+            if "mean_reversion" in sw:
+                mr_sw = sw["mean_reversion"].copy()
+                if "tau_inverse" in mr_sw:
+                    mr_sw["1/tau"] = mr_sw.pop("tau_inverse")
+                kwargs["MEAN_REVERSION_WEIGHTS"] = mr_sw
+            if "pairs_trading" in sw:
+                pt = sw["pairs_trading"].copy()
+                if "tau_inverse" in pt:
+                    pt["1/tau"] = pt.pop("tau_inverse")
+                kwargs["PAIRS_TRADING_WEIGHTS"] = pt
+
+        # Risk metrics
+        if "risk_metrics" in config:
+            kwargs["MIN_SORTINO_RATIO"] = config["risk_metrics"].get("min_sortino_ratio", 0.5)
+
+        # Optimization
+        if "optimization" in config:
+            opt = config["optimization"]
+            kwargs["ERC_OPTIMIZATION_TOLERANCE"] = opt.get("tolerance", 1e-6)
+            kwargs["ERC_MAX_ITERATIONS"] = opt.get("max_iterations", 1000)
+
+        # GARCH
+        if "garch" in config:
+            kwargs["GARCH_FORECAST_HORIZON"] = config["garch"].get("forecast_horizon", 1)
+            kwargs["DYNAMIC_WINDOW_ENABLED"] = config["garch"].get("dynamic_window_enabled", True)
+            kwargs["SLOPE_WINDOW_MIN"] = config["garch"].get("slope_window_min", 30)
+            kwargs["SLOPE_WINDOW_MAX"] = config["garch"].get("slope_window_max", 90)
+
+        # Additional
+        if "additional" in config:
+            kwargs["MIN_COINTEGRATION_LOOKBACK_DAYS"] = config["additional"].get(
+                "min_cointegration_lookback_days", 250
+            )
+
+        # Logging
+        if "logging" in config:
+            log = config["logging"]
+            kwargs["LOG_ALL_DECISIONS"] = log.get("log_all_decisions", True)
+            kwargs["LOG_FILTER_REJECTIONS"] = log.get("log_filter_rejections", True)
+
+        # Create instance with loaded parameters
+        return cls(**kwargs)
 
     model_config = {"env_prefix": "STOCK_ALLOCATION_", "case_sensitive": False}
 
@@ -794,6 +906,7 @@ class CentralizedConfig(BaseSettings):
         "env_file": ".env",
         "env_file_encoding": "utf-8",
         "case_sensitive": False,
+        "extra": "ignore",  # Ignore extra fields from .env not defined in model
     }
 
     def __init__(self, **kwargs):
