@@ -4,7 +4,7 @@ BaseFilter - Clase abstracta base para todos los filtros modulares.
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Dict
+from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -19,28 +19,62 @@ class BaseFilter(ABC):
     - Adaptar sus thresholds según el preset (conservative/balanced/aggressive)
     """
 
-    def __init__(self, name: str, config: Dict, preset: str = "balanced"):
+    def __init__(
+        self,
+        name: str,
+        config: Optional[Dict] = None,
+        preset: str = "balanced",
+        tier: Optional[str] = None,
+        use_yaml: bool = True,
+    ):
         """
         Inicializar filtro.
 
         Args:
             name: Nombre del filtro
-            config: Configuración del filtro desde YAML
+            config: Configuración del filtro desde YAML (opcional, se carga desde YAML si no se proporciona)
             preset: Preset activo ('conservative' | 'balanced' | 'aggressive')
+            tier: Capital tier para aplicar overrides ('micro', 'small', 'medium', 'large')
+            use_yaml: Si True, carga configuración desde archivos YAML cuando config es None
         """
         self.name = name
-        self.config = config
         self.preset = preset
-        self.enabled = config.get("enabled", True)
-        self.priority = config.get("priority", "medium")  # 'high' | 'medium' | 'low'
+        self.tier = tier
+
+        # Cargar configuración desde YAML si no se proporciona
+        if config is None and use_yaml:
+            try:
+                from app.core.config_loader import get_filter_config
+
+                config = get_filter_config(name, tier=tier, preset=preset)
+                logger.debug(
+                    f"Loaded {name} config from YAML (tier={tier or 'default'}, preset={preset})"
+                )
+            except Exception as e:
+                logger.warning(f"Failed to load {name} config from YAML: {e}, using empty config")
+                config = {}
+
+        self.config = config if config is not None else {}
+        self.enabled = self.config.get("enabled", True)
+        self.priority = self.config.get("priority", "medium")  # 'high' | 'medium' | 'low'
 
         # Contextos donde el filtro está activo
-        self.active_in_contexts = config.get("active_in_contexts", ["ALL"])
-        self.inactive_in_contexts = config.get("inactive_in_contexts", [])
+        self.active_in_contexts = self.config.get("active_in_contexts", ["ALL"])
+        self.inactive_in_contexts = self.config.get("inactive_in_contexts", [])
 
         # Obtener thresholds según preset
-        thresholds_config = config.get("thresholds", {})
-        self.thresholds = thresholds_config.get(preset, thresholds_config.get("balanced", {}))
+        thresholds_config = self.config.get("thresholds", {})
+        preset_thresholds = self.config.get("preset_thresholds")
+
+        # Usar preset_thresholds si está disponible (cargado desde YAML)
+        if preset_thresholds:
+            self.thresholds = preset_thresholds
+        elif isinstance(thresholds_config, dict) and "balanced" in thresholds_config:
+            # thresholds_config es un dict de presets
+            self.thresholds = thresholds_config.get(preset, thresholds_config.get("balanced", {}))
+        else:
+            # thresholds_config son valores directos (no es un dict de presets)
+            self.thresholds = thresholds_config if thresholds_config else {}
 
     def _is_active_in_context(self, market_context: Dict) -> bool:
         """

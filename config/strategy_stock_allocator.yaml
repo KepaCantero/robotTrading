@@ -1,0 +1,205 @@
+# Strategy Stock Allocator - Centralized Configuration
+# Replaces hardcoded parameters in StockAllocationSettings
+#
+# This file centralizes all parameters for the Strategy Stock Allocator module.
+# Parameters are organized by category and include validation constraints.
+
+# ============================================================================
+# DATA VALIDATION PARAMETERS
+# ============================================================================
+data_validation:
+  # Maximum lookback period in days (~6 months)
+  # Relaxed from 252 days to allow more stocks to pass filter
+  lookback_max_days: 126
+
+  # Minimum daily liquidity in USD
+  # Relaxed from 1M to 500k to allow more stocks
+  # Actual filter uses liquidity_filter_pct of this value
+  min_liquidity_usd: 500000
+
+  # Percentage of MIN_LIQUIDITY_USD to use as actual filter
+  # 2% of 500k = $10k minimum daily liquidity
+  liquidity_filter_pct: 0.02
+
+# ============================================================================
+# STATISTICAL TEST THRESHOLDS
+# ============================================================================
+statistical_tests:
+  adf:
+    # ADF test p-value threshold for cointegration (pairs trading)
+    # STRICT: 0.01 to avoid spurious relationships
+    p_value_threshold: 0.01
+
+    # ADF test p-value threshold for mean reversion stationarity
+    # More relaxed: 0.05 for mean reversion strategies
+    p_value_mean_reversion: 0.05
+
+  kpss:
+    # KPSS test p-value threshold for stationarity
+    p_value_threshold: 0.05
+
+  hurst:
+    # Hurst exponent threshold for momentum
+    # H > 0.52 indicates trending behavior (momentum)
+    momentum_threshold: 0.52
+
+    # Hurst exponent threshold for mean reversion
+    # H < 0.45 indicates mean-reverting behavior
+    mean_reversion_threshold: 0.45
+
+# ============================================================================
+# MEAN REVERSION PARAMETERS
+# ============================================================================
+mean_reversion:
+  # Maximum half-life in days for mean reversion
+  # Relaxed from 30 days to 120 days to activate more trades
+  max_half_life_days: 120
+
+  # Minimum half-life in days
+  # Too fast (< 1 day) = noise, not signal
+  min_half_life_days: 1
+
+# ============================================================================
+# EXPOSURE LIMITS
+# ============================================================================
+exposure:
+  # Maximum exposure per strategy (10%-80%)
+  # 50% of capital can be allocated to a single strategy
+  max_strategy_exposure: 0.50
+
+  # Maximum exposure per pair (5%-30%)
+  # 15% of capital for a single trading pair
+  max_pair_exposure: 0.15
+
+  # Maximum number of assets per pair
+  # Typically 2 for pair trading (long/short)
+  max_assets_per_pair: 2
+
+# ============================================================================
+# SCORING WEIGHTS (WEIGHTED SCORING MODEL - WCM)
+# ============================================================================
+scoring_weights:
+  momentum:
+    # Weight for long-term trend (H_long)
+    H_long: 0.40
+    # Weight for risk-adjusted return (Sortino ratio)
+    Sortino: 0.35
+    # Weight for mean reversion speed (1/tau)
+    tau_inverse: 0.05
+    # Weight for trading capacity (liquidity)
+    Liquidity: 0.20
+
+  mean_reversion:
+    # Low weight for long-term trend in MR strategies
+    H_long: 0.05
+    # Weight for risk-adjusted return
+    Sortino: 0.10
+    # High weight for mean reversion speed
+    tau_inverse: 0.45
+    # High weight for liquidity (MR needs liquid markets)
+    Liquidity: 0.40
+
+  pairs_trading:
+    # Long-term trend not applicable for pairs
+    H_long: 0.00
+    # Sortino not used for pairs
+    Sortino: 0.00
+    # High weight for cointegration strength (1/tau)
+    tau_inverse: 0.60
+    # High weight for liquidity
+    Liquidity: 0.40
+
+# ============================================================================
+# OPTIMIZATION PARAMETERS
+# ============================================================================
+optimization:
+  # Optimization method: "erc" (Equal Risk Contribution)
+  method: "erc"
+
+  # Tolerance for ERC optimization convergence
+  tolerance: 0.000001
+
+  # Maximum iterations for ERC optimization
+  max_iterations: 1000
+
+# ============================================================================
+# GARCH FORECAST PARAMETERS
+# ============================================================================
+garch:
+  # Forecast horizon for GARCH volatility model
+  forecast_horizon: 1
+
+  # Enable dynamic window sizing
+  dynamic_window_enabled: true
+
+  # Slope window range for dynamic sizing
+  slope_window_min: 30
+  slope_window_max: 90
+
+# ============================================================================
+# MINIMUM SORTINO RATIO
+# ============================================================================
+risk_metrics:
+  # Minimum Sortino ratio for strategy acceptance
+  # Filters out strategies with poor risk-adjusted returns
+  min_sortino_ratio: 0.5
+
+# ============================================================================
+# CAPITAL TIER OVERRIDES
+# ============================================================================
+# These settings allow different parameters for different capital tiers.
+# Tier definitions:
+# - micro: < €15k
+# - small: €15k - €50k
+# - medium: €50k - €250k
+# - large: >= €250k
+#
+# NOTE: Tier overrides must maintain the nested structure of the base config.
+# For example, to override max_strategy_exposure, use:
+#   tiers:
+#     micro:
+#       exposure:
+#         max_strategy_exposure: 0.30
+# =============================================================================
+tiers:
+  micro:
+    # More conservative exposure limits for micro accounts
+    exposure:
+      max_strategy_exposure: 0.30
+      max_pair_exposure: 0.10
+    # Lower liquidity threshold for micro accounts
+    data_validation:
+      min_liquidity_usd: 100000
+
+  small:
+    # Moderate exposure for small accounts
+    exposure:
+      max_strategy_exposure: 0.40
+      max_pair_exposure: 0.12
+
+  medium:
+    # Use default values for medium accounts
+    # (no overrides needed)
+
+  large:
+    # More aggressive exposure for large accounts
+    exposure:
+      max_strategy_exposure: 0.60
+      max_pair_exposure: 0.20
+
+# ============================================================================
+# LOGGING CONFIGURATION
+# ============================================================================
+logging:
+  # Log all allocation decisions
+  log_all_decisions: true
+
+  # Log filter rejections with details
+  log_filter_rejections: true
+
+# ============================================================================
+# ADDITIONAL CONFIGURATION
+# ============================================================================
+additional:
+  # Minimum cointegration lookback period (days)
+  min_cointegration_lookback_days: 250

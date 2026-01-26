@@ -8,9 +8,12 @@ caching, and real-time data subscriptions.
 import asyncio
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from decimal import Decimal
+from typing import Any, Dict, List, Optional, Union
 from uuid import UUID
 
+from app.core.decimal_utils import to_decimal, validate_price, validate_quantity
+from app.core.timezone_utils import utc_now
 from app.data.feeds import DataFeedInterface, create_data_feed
 from app.models.market_data import (
     DataFeedConfig,
@@ -57,23 +60,7 @@ class MarketDataService:
         except Exception:
             default_symbols = ["AAPL", "MSFT", "GOOGL", "TSLA", "AMZN"]
 
-        # Mock feed for development
-        mock_config = DataFeedConfig(
-            name="Mock Data Feed",
-            feed_type=DataFeedType.MOCK,
-            base_url="mock://localhost",
-            rate_limit=1000,
-            supported_symbols=default_symbols[:5],
-            supported_frequencies=[DataFrequency.REAL_TIME, DataFrequency.DAILY],
-            max_history_days=365,
-            timeout_seconds=5,
-            retry_attempts=3,
-            retry_delay=1.0,
-            is_active=True,
-        )
-        self.feed_configs[mock_config.id] = mock_config
-
-        # Yahoo Finance feed
+        # Yahoo Finance feed (PRIMARY - free, real data)
         yahoo_config = DataFeedConfig(
             name="Yahoo Finance",
             feed_type=DataFeedType.YAHOO_FINANCE,
@@ -313,7 +300,7 @@ class MarketDataService:
                 if "feed_type" in quote_data and isinstance(quote_data["feed_type"], str):
                     from app.models.market_data import DataFeedType
 
-                    quote_data["feed_type"] = DataFeedType(quote_data["feed_type"])
+                    quote_data["feed_type"] = DataFeedType.YAHOO_FINANCE
                 if "status" in quote_data and isinstance(quote_data["status"], str):
                     from app.models.market_data import MarketDataStatus
 
@@ -354,7 +341,7 @@ class MarketDataService:
                 data_type="historical",
                 data=[item.model_dump() for item in data],  # Convert to list of dicts
                 ttl_seconds=self.default_cache_ttl * 60,  # Longer TTL for historical data
-                feed_type=data[0].feed_type if data else DataFeedType.MOCK,
+                feed_type=data[0].feed_type if data else DataFeedType.YAHOO_FINANCE,
             )
 
             # Cleanup old cache entries if needed

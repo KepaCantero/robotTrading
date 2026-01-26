@@ -124,36 +124,27 @@ class AwesomeQuantIntegrator:
             return {}
 
         try:
-            metrics = {}
-
-            # Basic stats
-            metrics["return_pct"] = float(qs_module.stats.total_return(returns))
-            metrics["cagr"] = float(qs_module.stats.cagr(returns))
-            metrics["sharpe"] = float(qs_module.stats.sharpe(returns))
-            metrics["sortino"] = float(qs_module.stats.sortino(returns))
-            metrics["calmar"] = float(qs_module.stats.calmar(returns))
-
-            # Drawdown metrics
-            metrics["max_drawdown"] = float(qs_module.stats.max_drawdown(returns))
-            metrics["avg_drawdown"] = float(qs_module.stats.avg_drawdown(returns))
-            metrics["underwater"] = float(qs_module.stats.underwater(returns).min())
-
-            # Volatility and risk
-            metrics["volatility"] = float(qs_module.stats.volatility(returns))
-            metrics["var_95"] = float(qs_module.stats.value_at_risk(returns, 0.95))
-            metrics["cvar_95"] = float(qs_module.stats.conditional_value_at_risk(returns, 0.95))
-
-            # Win metrics
-            metrics["win_rate"] = float(qs_module.stats.win_rate(returns))
-            metrics["best_day"] = float(qs_module.stats.best(returns))
-            metrics["worst_day"] = float(qs_module.stats.worst(returns))
-            metrics["avg_win"] = float(qs_module.stats.avg_win(returns))
-            metrics["avg_loss"] = float(qs_module.stats.avg_loss(returns))
-
-            # Other metrics
-            metrics["profit_factor"] = float(qs_module.stats.profit_factor(returns))
-            metrics["payoff_ratio"] = float(qs_module.stats.payoff_ratio(returns))
-            metrics["recovery_factor"] = float(qs_module.stats.recovery_factor(returns))
+            metrics = {
+                "return_pct": float(qs_module.stats.total_return(returns)),
+                "cagr": float(qs_module.stats.cagr(returns)),
+                "sharpe": float(qs_module.stats.sharpe(returns)),
+                "sortino": float(qs_module.stats.sortino(returns)),
+                "calmar": float(qs_module.stats.calmar(returns)),
+                "max_drawdown": float(qs_module.stats.max_drawdown(returns)),
+                "avg_drawdown": float(qs_module.stats.avg_drawdown(returns)),
+                "underwater": float(qs_module.stats.underwater(returns).min()),
+                "volatility": float(qs_module.stats.volatility(returns)),
+                "var_95": float(qs_module.stats.value_at_risk(returns, 0.95)),
+                "cvar_95": float(qs_module.stats.conditional_value_at_risk(returns, 0.95)),
+                "win_rate": float(qs_module.stats.win_rate(returns)),
+                "best_day": float(qs_module.stats.best(returns)),
+                "worst_day": float(qs_module.stats.worst(returns)),
+                "avg_win": float(qs_module.stats.avg_win(returns)),
+                "avg_loss": float(qs_module.stats.avg_loss(returns)),
+                "profit_factor": float(qs_module.stats.profit_factor(returns)),
+                "payoff_ratio": float(qs_module.stats.payoff_ratio(returns)),
+                "recovery_factor": float(qs_module.stats.recovery_factor(returns)),
+            }
 
             # Benchmark comparison (if provided)
             if benchmark_returns is not None:
@@ -193,34 +184,23 @@ class AwesomeQuantIntegrator:
             return {}
 
         try:
-            metrics = {}
-
-            # Return metrics
-            metrics["total_return"] = float(ep_module.total_return(returns))
-            metrics["annual_return"] = float(ep_module.annual_return(returns))
-            metrics["cumulative_returns"] = float(ep_module.cum_returns(returns).iloc[-1])
-
-            # Risk metrics
-            metrics["volatility"] = float(ep_module.annual_volatility(returns))
-            metrics["downside_volatility"] = float(ep_module.downside_volatility(returns))
-            metrics["max_drawdown"] = float(ep_module.max_drawdown(returns))
-
-            # Risk-adjusted metrics
-            metrics["sharpe_ratio"] = float(ep_module.sharpe_ratio(returns))
-            metrics["sortino_ratio"] = float(ep_module.sortino_ratio(returns))
-            metrics["calmar_ratio"] = float(ep_module.calmar_ratio(returns))
-            metrics["omega_ratio"] = float(ep_module.omega_ratio(returns))
-
-            # Win metrics
-            metrics["win_rate"] = float(
-                (returns > 0).sum() / len(returns) if len(returns) > 0 else 0
-            )
-
-            # Tail metrics
-            metrics["var_95"] = float(np.percentile(returns, 5))
-            metrics["cvar_95"] = float(returns[returns <= np.percentile(returns, 5)].mean())
-            metrics["skewness"] = float(ep_module.skewness(returns))
-            metrics["kurtosis"] = float(ep_module.kurtosis(returns))
+            metrics = {
+                "total_return": float(ep_module.total_return(returns)),
+                "annual_return": float(ep_module.annual_return(returns)),
+                "cumulative_returns": float(ep_module.cum_returns(returns).iloc[-1]),
+                "volatility": float(ep_module.annual_volatility(returns)),
+                "downside_volatility": float(ep_module.downside_volatility(returns)),
+                "max_drawdown": float(ep_module.max_drawdown(returns)),
+                "sharpe_ratio": float(ep_module.sharpe_ratio(returns)),
+                "sortino_ratio": float(ep_module.sortino_ratio(returns)),
+                "calmar_ratio": float(ep_module.calmar_ratio(returns)),
+                "omega_ratio": float(ep_module.omega_ratio(returns)),
+                "win_rate": float((returns > 0).sum() / len(returns) if len(returns) > 0 else 0),
+                "var_95": float(np.percentile(returns.astype(float), 5)),
+                "cvar_95": float(returns[returns <= np.percentile(returns.astype(float), 5)].astype(float).mean()),
+                "skewness": float(ep_module.skewness(returns)),
+                "kurtosis": float(ep_module.kurtosis(returns)),
+            }
 
             # Drawdown analysis
             drawdowns = ep_module.drawdown(returns)
@@ -307,8 +287,8 @@ class AwesomeQuantIntegrator:
             # Risk metrics
             metrics["skewness"] = float(returns.skew())
             metrics["kurtosis"] = float(returns.kurtosis())
-            metrics["var_95"] = float(np.percentile(returns, 5))
-            metrics["cvar_95"] = float(returns[returns <= np.percentile(returns, 5)].mean())
+            metrics["var_95"] = float(np.percentile(returns.astype(float), 5))
+            metrics["cvar_95"] = float(returns[returns <= np.percentile(returns.astype(float), 5)].astype(float).mean())
 
             logger.info(f"Calculated {len(metrics)} pyfolio metrics")
             return metrics

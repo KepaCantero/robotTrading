@@ -1,0 +1,68 @@
+# Stage 3: $5,000 Live Trading Configuration
+# Scaling up with validated system
+
+trading:
+  mode: live
+  capital: 5000  # Scaled up after successful $1K stage
+  max_positions: 5  # Increase position count
+  risk_per_trade: 0.05  # 5% max per position = $250 max loss
+  stop_loss: 0.05  # 5% stop loss
+  daily_loss_limit: 0.08  # Stop trading if daily loss > 8%
+
+# Enable both strategies
+strategies:
+  - name: momentum
+    enabled: true
+    allocations:
+      - symbol: "AAPL"
+        weight: 0.2
+      - symbol: "MSFT"
+        weight: 0.2
+      - symbol: "GOOGL"
+        weight: 0.2
+
+  - name: mean_reversion
+    enabled: true
+    allocations:
+      - symbol: "TSLA"
+        weight: 0.2
+      - symbol: "NVDA"
+        weight: 0.2
+
+# Trade US stocks + ETFs
+markets:
+  - region: US
+    enabled: true
+    asset_classes:
+      - stocks
+      - etfs
+
+# Risk management - moderate expectations
+risk_management:
+  max_drawdown: 0.15  # 15% max drawdown
+  position_size_method: fixed_percentage
+  rebalance_frequency: daily
+
+# FIFO database for tax compliance
+fifo:
+  enabled: true
+  database_path: data/fifo.db
+
+# Monitoring
+monitoring:
+  log_level: INFO
+  alert_on:
+    - system_errors
+    - position_discrepancies
+    - fifo_errors
+    - daily_loss_limit
+    - drawdown_exceeded
+    - stop_loss_failed
+    - weekly_performance
+
+# Spain tax compliance
+tax:
+  spain_resident: true
+  modelo_721:
+    enabled: true
+    reporting_currency: EUR

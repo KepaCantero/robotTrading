@@ -1,0 +1,52 @@
+# Stage 1: Paper Trading Configuration
+# This configuration is for the initial paper trading phase
+# No real money at risk - system validation only
+
+trading:
+  mode: paper
+  capital: 100000  # Virtual capital for testing
+  max_positions: 10
+  risk_per_trade: 0.05  # 5% max per position
+  stop_loss: 0.05  # 5% stop loss
+  daily_loss_limit: 1.0  # No limit in paper trading
+
+# Only enable momentum strategy for paper trading
+strategies:
+  - name: momentum
+    enabled: true
+    allocations:
+      - symbol: "AAPL"
+        weight: 0.1
+      - symbol: "MSFT"
+        weight: 0.1
+      - symbol: "GOOGL"
+        weight: 0.1
+
+  - name: mean_reversion
+    enabled: true
+    allocations:
+      - symbol: "TSLA"
+        weight: 0.1
+      - symbol: "NVDA"
+        weight: 0.1
+
+# Markets to trade in paper trading
+markets:
+  - region: US
+    enabled: true
+    asset_classes:
+      - stocks
+
+# Risk management
+risk_management:
+  max_drawdown: 1.0  # No limit in paper trading
+  position_size_method: fixed_percentage
+  rebalance_frequency: daily
+
+# Monitoring
+monitoring:
+  log_level: DEBUG
+  alert_on:
+    - system_errors
+    - position_discrepancies
+    - fifo_errors

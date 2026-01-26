@@ -56,12 +56,16 @@ websockets>=10.0,<13.0  # Required for WebSocket streaming in DataEngine
 # Broker APIs
 alpaca-trade-api>=2.0.0,<3.0.0  # Alpaca broker API client (legacy, consider migrating to alpaca-py)
 alpaca-py>=0.1.0  # Modern Alpaca SDK with better Python 3.13 support
+ib-insync>=0.5.0  # Interactive Brokers API client (async)
 
 # Redis (for caching if used)
 redis>=5.0.0,<6.0.0
 
 # Logging & Monitoring
 python-json-logger>=2.0.0,<3.0.0
+psutil>=5.9.0,<6.0.0  # System and process monitoring for health checks
+ntplib>=0.4.0  # NTP time synchronization for TimeSyncMonitor (Phase 2.7)
+tenacity>=8.2.0,<9.0.0  # Retry library for error handling (Phase 2)
 
 # CORS & Security
 python-multipart>=0.0.6,<1.0.0

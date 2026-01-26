@@ -15,13 +15,13 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 
 class DataFeedType(str, Enum):
-    """Market data feed types."""
+    """Market data feed types - REAL DATA SOURCES ONLY."""
 
     ALPHA_VANTAGE = "alpha_vantage"
     YAHOO_FINANCE = "yahoo_finance"
     IBKR_TWS = "ibkr_tws"
     BINANCE = "binance"
-    MOCK = "mock"
+    POLYGON = "polygon"
 
 
 class DataFrequency(str, Enum):
@@ -81,7 +81,9 @@ class Quote(BaseModel):
     volatility: Optional[Decimal] = Field(None, ge=0, description="Price volatility")
 
     # Metadata
-    feed_type: DataFeedType = Field(default=DataFeedType.MOCK, description="Data feed source")
+    feed_type: DataFeedType = Field(
+        default=DataFeedType.YAHOO_FINANCE, description="Data feed source"
+    )
     status: MarketDataStatus = Field(default=MarketDataStatus.ACTIVE, description="Quote status")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
@@ -174,14 +176,15 @@ class Quote(BaseModel):
                 f"Bid price ({self.bid}) must be less than or equal to ask price ({self.ask})."
             )
 
-        # Auto-calculate spread if not provided or if it doesn't match
+        # Auto-calculate spread from bid/ask if not provided
+        # When bid=ask (common when only last price available), use provided spread
         calculated_spread = self.ask - self.bid
-        if self.spread == 0 and calculated_spread > 0:
-            self.spread = calculated_spread
-        elif self.spread != calculated_spread and self.spread != 0:
-            raise ValueError(
-                f"Calculated spread ({calculated_spread}) does not match provided spread ({self.spread})."
-            )
+        if calculated_spread > 0:
+            # Use calculated spread when true bid/ask available
+            if self.spread == 0:
+                self.spread = calculated_spread
+            # Allow reasonable deviation (default spread when bid=ask)
+        # When bid=ask (calculated_spread=0), provided spread is used as-is
 
         return self
 

@@ -1,0 +1,61 @@
+# Stage 2: $1,000 Live Trading Configuration
+# First stage with real money - minimal risk
+
+trading:
+  mode: live
+  capital: 1000  # Real money - amount you can afford to lose
+  max_positions: 3  # Limited positions for safety
+  risk_per_trade: 0.05  # 5% max per position = $50 max loss
+  stop_loss: 0.05  # 5% stop loss
+  daily_loss_limit: 0.10  # Stop trading if daily loss > 10%
+
+# Only enable momentum strategy for initial live trading
+strategies:
+  - name: momentum
+    enabled: true
+    allocations:
+      - symbol: "AAPL"
+        weight: 0.33
+      - symbol: "MSFT"
+        weight: 0.33
+      - symbol: "GOOGL"
+        weight: 0.34
+
+  - name: mean_reversion
+    enabled: false  # Disable for initial live trading
+
+# Only trade US stocks in stage 2
+markets:
+  - region: US
+    enabled: true
+    asset_classes:
+      - stocks
+
+# Risk management - conservative for initial live trading
+risk_management:
+  max_drawdown: 0.20  # 20% max drawdown acceptable
+  position_size_method: fixed_percentage
+  rebalance_frequency: daily
+
+# FIFO database must be enabled for tax compliance
+fifo:
+  enabled: true
+  database_path: data/fifo.db
+
+# Monitoring - extensive for safety
+monitoring:
+  log_level: INFO
+  alert_on:
+    - system_errors
+    - position_discrepancies
+    - fifo_errors
+    - daily_loss_limit
+    - drawdown_exceeded
+    - stop_loss_failed
+
+# Spain tax compliance
+tax:
+  spain_resident: true
+  modelo_721:
+    enabled: true
+    reporting_currency: EUR

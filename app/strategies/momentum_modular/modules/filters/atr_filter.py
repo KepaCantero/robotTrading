@@ -17,23 +17,28 @@ class ATRFilter(BaseFilter):
     Puede usar ATR absoluto, relativo (% del precio) o percentil.
     """
 
-    def __init__(self, config: Dict, preset: str = "balanced"):
+    def __init__(
+        self, config: Dict = None, preset: str = "balanced", tier: str = None, use_yaml: bool = True
+    ):
         """Inicializar filtro ATR."""
-        super().__init__("atr_filter", config, preset)
+        super().__init__("atr_filter", config, preset, tier, use_yaml)
 
-        params = config.get("parameters", {})
-        self.period = params.get("period", 14)
-        self.method = params.get("method", "relative_percentile")
-        self.use_relative_atr = params.get("use_relative_atr", True)
+        # Get settings from YAML or config
+        settings = self.config.get("settings", self.config)
+        self.period = settings.get("period", 14)
+        self.method = settings.get("method", "relative_percentile")
+        self.use_relative_atr = settings.get("use_relative_atr", True)
 
-        # Thresholds adaptativos según volatilidad
-        volatility_thresholds = self.config.get("thresholds", {})
-        self.high_vol_thresholds = volatility_thresholds.get("high_vol", {})
-        self.normal_vol_thresholds = volatility_thresholds.get("normal_vol", {})
-        self.low_vol_thresholds = volatility_thresholds.get("low_vol", {})
+        # Thresholds adaptativos según volatilidad (desde YAML)
+        volatility_thresholds = self.config.get("regimes", {})
+        self.high_vol_thresholds = volatility_thresholds.get("high", {})
+        self.normal_vol_thresholds = volatility_thresholds.get("medium", {})
+        self.low_vol_thresholds = volatility_thresholds.get("low", {})
 
-        # Thresholds del preset como fallback
-        self.min_atr_percentile = self.thresholds.get("min_atr_percentile", 60)
+        # Thresholds del preset (usar thresholds cargados desde YAML)
+        self.min_atr_percentile = self.thresholds.get(
+            "min_percentile", self.thresholds.get("min_atr_percentile", 60)
+        )
         self.min_relative_atr = self.thresholds.get("min_relative_atr", 0.006)
 
     def _get_thresholds_for_volatility(self, market_context: Dict) -> Dict:

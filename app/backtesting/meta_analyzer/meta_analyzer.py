@@ -11,6 +11,7 @@ Permite:
 import asyncio
 import json
 import logging
+import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
@@ -63,6 +64,8 @@ class BacktestMetaAnalyzer:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.enable_visualizations = enable_visualizations and MATPLOTLIB_AVAILABLE
 
+        # Thread-safe state management with RLock
+        self._lock = threading.RLock()
         self.results: List[Dict[str, Any]] = []
         self.df_results: Optional[pd.DataFrame] = None
         self.analysis_results: Dict[str, Any] = {}
@@ -104,15 +107,18 @@ class BacktestMetaAnalyzer:
         # Cargar CSVs
         csv_results = await self._load_csv_files_async(csv_files)
 
-        self.results = json_results + csv_results
+        # Thread-safe update of shared state
+        with self._lock:
+            self.results = json_results + csv_results
 
-        # Crear DataFrame para análisis
-        if self.results:
-            self.df_results = pd.DataFrame(self.results)
-            logger.info(f"✅ Cargados {len(self.results)} resultados")
-            logger.info(f"   Columnas: {list(self.df_results.columns)}")
-        else:
-            logger.warning("⚠️ No se encontraron resultados válidos")
+            # Crear DataFrame para análisis
+            if self.results:
+                self.df_results = pd.DataFrame(self.results)
+                logger.info(f"✅ Cargados {len(self.results)} resultados")
+                logger.info(f"   Columnas: {list(self.df_results.columns)}")
+            else:
+                self.df_results = None
+                logger.warning("⚠️ No se encontraron resultados válidos")
 
         return len(self.results)
 
@@ -173,9 +179,14 @@ class BacktestMetaAnalyzer:
         Returns:
             Dict con métricas agregadas y análisis
         """
-        if self.df_results is None or self.df_results.empty:
-            logger.warning("No hay resultados cargados para analizar")
-            return {}
+        # Thread-safe read of shared state
+        with self._lock:
+            if self.df_results is None or self.df_results.empty:
+                logger.warning("No hay resultados cargados para analizar")
+                return {}
+
+            # Make a copy to avoid holding lock during computation
+            df_copy = self.df_results.copy()
 
         logger.info("📊 Analizando rendimiento...")
 
@@ -194,7 +205,7 @@ class BacktestMetaAnalyzer:
         ]
 
         # Filtrar métricas disponibles
-        available_metrics = [m for m in metrics if m in self.df_results.columns]
+        available_metrics = [m for m in metrics if m in df_copy.columns]
 
         analysis = {
             'summary_stats': {},
@@ -207,7 +218,7 @@ class BacktestMetaAnalyzer:
 
         # Estadísticas resumidas
         for metric in available_metrics:
-            col = self.df_results[metric]
+            col = df_copy[metric]
             analysis['summary_stats'][metric] = {
                 'mean': float(col.mean()) if pd.notna(col.mean()) else None,
                 'median': float(col.median()) if pd.notna(col.median()) else None,
@@ -221,41 +232,44 @@ class BacktestMetaAnalyzer:
         # Análisis por categoría
         category_columns = ['test_type', 'strategy_name', 'learning_engine']
         for cat_col in category_columns:
-            if cat_col in self.df_results.columns:
+            if cat_col in df_copy.columns:
                 analysis['performance_by_category'][cat_col] = self._analyze_by_category(
-                    cat_col, available_metrics
+                    df_copy, cat_col, available_metrics
                 )
 
         # Correlaciones
         if len(available_metrics) > 1:
-            numeric_df = self.df_results[available_metrics].select_dtypes(include=[np.number])
+            numeric_df = df_copy[available_metrics].select_dtypes(include=[np.number])
             if not numeric_df.empty:
                 analysis['correlations'] = numeric_df.corr().to_dict()
 
         # Mejores y peores
-        if 'sharpe_ratio' in self.df_results.columns:
-            best_sharpe = self.df_results.nlargest(10, 'sharpe_ratio')
-            worst_sharpe = self.df_results.nsmallest(10, 'sharpe_ratio')
+        if 'sharpe_ratio' in df_copy.columns:
+            best_sharpe = df_copy.nlargest(10, 'sharpe_ratio')
+            worst_sharpe = df_copy.nsmallest(10, 'sharpe_ratio')
             analysis['best_performers']['by_sharpe'] = best_sharpe.to_dict('records')
             analysis['worst_performers']['by_sharpe'] = worst_sharpe.to_dict('records')
 
-        if 'total_pnl' in self.df_results.columns:
-            best_pnl = self.df_results.nlargest(10, 'total_pnl')
-            worst_pnl = self.df_results.nsmallest(10, 'total_pnl')
+        if 'total_pnl' in df_copy.columns:
+            best_pnl = df_copy.nlargest(10, 'total_pnl')
+            worst_pnl = df_copy.nsmallest(10, 'total_pnl')
             analysis['best_performers']['by_pnl'] = best_pnl.to_dict('records')
             analysis['worst_performers']['by_pnl'] = worst_pnl.to_dict('records')
 
-        self.analysis_results = analysis
+        # Thread-safe update of shared state
+        with self._lock:
+            self.analysis_results = analysis
+
         logger.info("✅ Análisis de rendimiento completado")
 
         return analysis
 
-    def _analyze_by_category(self, category_col: str, metrics: List[str]) -> Dict[str, Any]:
-        """Analizar métricas por categoría."""
+    def _analyze_by_category(self, df: pd.DataFrame, category_col: str, metrics: List[str]) -> Dict[str, Any]:
+        """Analizar métricas por categoría (thread-safe with df copy)."""
         category_analysis = {}
 
-        for category in self.df_results[category_col].dropna().unique():
-            category_data = self.df_results[self.df_results[category_col] == category]
+        for category in df[category_col].dropna().unique():
+            category_data = df[df[category_col] == category]
             category_analysis[category] = {}
 
             for metric in metrics:
@@ -286,9 +300,14 @@ class BacktestMetaAnalyzer:
             logger.warning("scikit-learn no disponible. Clustering deshabilitado.")
             return {}
 
-        if self.df_results is None or self.df_results.empty:
-            logger.warning("No hay resultados para clusterizar")
-            return {}
+        # Thread-safe read of shared state
+        with self._lock:
+            if self.df_results is None or self.df_results.empty:
+                logger.warning("No hay resultados para clusterizar")
+                return {}
+
+            # Make a copy to avoid holding lock during computation
+            df_copy = self.df_results.copy()
 
         logger.info(f"🔍 Detectando {n_clusters} clusters...")
 
@@ -304,14 +323,14 @@ class BacktestMetaAnalyzer:
             ]
 
         # Filtrar features disponibles
-        available_features = [f for f in features if f in self.df_results.columns]
+        available_features = [f for f in features if f in df_copy.columns]
 
         if len(available_features) < 2:
             logger.warning(f"No hay suficientes features para clustering: {available_features}")
             return {}
 
         # Preparar datos
-        X = self.df_results[available_features].select_dtypes(include=[np.number])
+        X = df_copy[available_features].select_dtypes(include=[np.number])
         X = X.dropna()
 
         if len(X) < n_clusters:
@@ -346,8 +365,9 @@ class BacktestMetaAnalyzer:
                 'indices': cluster_data.index.tolist(),
             }
 
-        # Agregar información al DataFrame principal
-        self.df_results['cluster'] = pd.Series(clusters, index=X.index)
+        # Thread-safe update of shared state
+        with self._lock:
+            self.df_results['cluster'] = pd.Series(clusters, index=X.index)
 
         result = {
             'n_clusters': n_clusters,
@@ -374,9 +394,14 @@ class BacktestMetaAnalyzer:
         Returns:
             Lista de combinaciones ordenadas por score
         """
-        if self.df_results is None or self.df_results.empty:
-            logger.warning("No hay resultados para sugerir combinaciones")
-            return []
+        # Thread-safe read of shared state
+        with self._lock:
+            if self.df_results is None or self.df_results.empty:
+                logger.warning("No hay resultados para sugerir combinaciones")
+                return []
+
+            # Make a copy to avoid holding lock during computation
+            df_copy = self.df_results.copy()
 
         logger.info(f"💡 Sugiriendo {top_n} combinaciones óptimas...")
 
@@ -391,22 +416,22 @@ class BacktestMetaAnalyzer:
 
         # Calcular score compuesto
         scores = []
-        available_criteria = {k: v for k, v in criteria.items() if k in self.df_results.columns}
+        available_criteria = {k: v for k, v in criteria.items() if k in df_copy.columns}
 
-        for idx, row in self.df_results.iterrows():
+        for idx, row in df_copy.iterrows():
             score = 0.0
             for metric, weight in available_criteria.items():
                 value = row[metric]
                 if pd.notna(value):
                     # Normalizar por max si weight > 0, por min si weight < 0
                     if weight > 0:
-                        max_val = self.df_results[metric].max()
+                        max_val = df_copy[metric].max()
                         if max_val > 0:
                             normalized = float(value) / float(max_val)
                         else:
                             normalized = 0.0
                     else:
-                        min_val = self.df_results[metric].min()
+                        min_val = df_copy[metric].min()
                         if min_val < 0:
                             normalized = float(value) / abs(float(min_val))
                         else:
@@ -437,9 +462,14 @@ class BacktestMetaAnalyzer:
         Returns:
             Ruta del archivo generado
         """
-        if not self.analysis_results:
-            logger.warning("No hay análisis para exportar. Ejecuta analyze_performance() primero.")
-            return ""
+        # Thread-safe read of shared state
+        with self._lock:
+            if not self.analysis_results:
+                logger.warning("No hay análisis para exportar. Ejecuta analyze_performance() primero.")
+                return ""
+
+            analysis_copy = self.analysis_results.copy()
+            df_copy = self.df_results.copy() if self.df_results is not None else None
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
@@ -451,9 +481,9 @@ class BacktestMetaAnalyzer:
 
         if format == "json":
             with open(output_path, 'w') as f:
-                json.dump(self.analysis_results, f, indent=2, default=str)
-        elif format == "csv" and self.df_results is not None:
-            self.df_results.to_csv(output_path, index=False)
+                json.dump(analysis_copy, f, indent=2, default=str)
+        elif format == "csv" and df_copy is not None:
+            df_copy.to_csv(output_path, index=False)
         else:
             logger.error(f"Formato no soportado: {format}")
             return ""
@@ -467,9 +497,14 @@ class BacktestMetaAnalyzer:
         return str(output_path)
 
     def _generate_visualizations(self) -> None:
-        """Generar visualizaciones de análisis."""
-        if not MATPLOTLIB_AVAILABLE or self.df_results is None:
-            return
+        """Generar visualizaciones de análisis (thread-safe)."""
+        # Thread-safe read of shared state
+        with self._lock:
+            if not MATPLOTLIB_AVAILABLE or self.df_results is None:
+                return
+
+            # Make a copy to avoid holding lock during plotting
+            df_copy = self.df_results.copy()
 
         logger.info("📊 Generando visualizaciones...")
 
@@ -479,9 +514,9 @@ class BacktestMetaAnalyzer:
             sns.set_palette("husl")
 
             # 1. Distribución de Sharpe Ratio
-            if 'sharpe_ratio' in self.df_results.columns:
+            if 'sharpe_ratio' in df_copy.columns:
                 fig, ax = plt.subplots(figsize=(10, 6))
-                self.df_results['sharpe_ratio'].hist(bins=30, ax=ax)
+                df_copy['sharpe_ratio'].hist(bins=30, ax=ax)
                 ax.set_title('Distribución de Sharpe Ratio')
                 ax.set_xlabel('Sharpe Ratio')
                 ax.set_ylabel('Frecuencia')
@@ -491,13 +526,13 @@ class BacktestMetaAnalyzer:
                 plt.close()
 
             # 2. Scatter: Sharpe vs PnL
-            if 'sharpe_ratio' in self.df_results.columns and 'total_pnl' in self.df_results.columns:
+            if 'sharpe_ratio' in df_copy.columns and 'total_pnl' in df_copy.columns:
                 fig, ax = plt.subplots(figsize=(10, 6))
                 scatter = ax.scatter(
-                    self.df_results['total_pnl'],
-                    self.df_results['sharpe_ratio'],
+                    df_copy['total_pnl'],
+                    df_copy['sharpe_ratio'],
                     alpha=0.6,
-                    c=self.df_results.get('cluster', 0),
+                    c=df_copy.get('cluster', 0),
                     cmap='viridis',
                 )
                 ax.set_xlabel('Total PnL')
@@ -508,11 +543,9 @@ class BacktestMetaAnalyzer:
                 plt.close()
 
             # 3. Heatmap de correlaciones
-            if len(self.df_results.select_dtypes(include=[np.number]).columns) > 1:
-                numeric_cols = self.df_results.select_dtypes(include=[np.number]).columns[
-                    :10
-                ]  # Top 10
-                corr = self.df_results[numeric_cols].corr()
+            if len(df_copy.select_dtypes(include=[np.number]).columns) > 1:
+                numeric_cols = df_copy.select_dtypes(include=[np.number]).columns[:10]  # Top 10
+                corr = df_copy[numeric_cols].corr()
                 fig, ax = plt.subplots(figsize=(10, 8))
                 sns.heatmap(corr, annot=True, fmt='.2', cmap='coolwarm', center=0, ax=ax)
                 ax.set_title('Matriz de Correlaciones')

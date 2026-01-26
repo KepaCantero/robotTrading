@@ -156,7 +156,9 @@ class TestTransferLearningIntegration:
         )
         manager.create_pretrained_model = MagicMock(return_value="model_123")
         manager.registry = MagicMock()
-        manager.registry.list_models = MagicMock(return_value={"bull": ["model_1"], "bear": ["model_2"]})
+        manager.registry.list_models = MagicMock(
+            return_value={"bull": ["model_1"], "bear": ["model_2"]}
+        )
         manager.list_models = MagicMock(return_value={"bull": ["model_1"], "bear": ["model_2"]})
         return manager
 
@@ -231,7 +233,9 @@ class TestPublicAPIMethods:
         """Crear mock transfer learning manager."""
         manager = MagicMock()
         manager.registry = MagicMock()
-        manager.registry.list_models = MagicMock(return_value={"bull": ["model_1"], "bear": ["model_2"]})
+        manager.registry.list_models = MagicMock(
+            return_value={"bull": ["model_1"], "bear": ["model_2"]}
+        )
         manager.list_models = MagicMock(return_value={"bull": ["model_1"], "bear": ["model_2"]})
         return manager
 

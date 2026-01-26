@@ -29,6 +29,9 @@ class Settings(BaseSettings):
 
     # API Settings
     api_v1_prefix: str = Field(default="/api/v1", description="API v1 prefix")
+    api_host: str = Field(default="0.0.0.0", description="API server host")
+    api_port: int = Field(default=8000, description="API server port")
+    api_reload: bool = Field(default=False, description="Enable auto-reload for development")
     secret_key: str = Field(
         default="",
         description="Secret key for JWT tokens and encryption (REQUIRED in production)",
@@ -39,6 +42,10 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = Field(
         default=7, description="Refresh token expiration time in days"
     )
+
+    # Dashboard Settings
+    dashboard_host: str = Field(default="localhost", description="Dashboard server host")
+    dashboard_port: int = Field(default=8501, description="Dashboard server port")
 
     # Database Settings
     database_url: str = Field(
@@ -95,6 +102,9 @@ class Settings(BaseSettings):
     alpha_vantage_api_key: Optional[str] = Field(
         default=None, description="Alpha Vantage API key for market data"
     )
+    polygon_api_key: Optional[str] = Field(
+        default=None, description="Polygon.io API key for real-time market data"
+    )
 
     # Trading Settings
     default_currency: str = Field(default="USD", description="Default trading currency")
@@ -103,6 +113,14 @@ class Settings(BaseSettings):
     )
     risk_free_rate: float = Field(
         default=0.02, description="Risk-free rate for calculations (2% annual)"
+    )
+
+    # Paper Trading Settings
+    paper_trading_initial_capital: float = Field(
+        default=100000.0, description="Initial capital for paper trading"
+    )
+    paper_trading_commission_per_trade: float = Field(
+        default=1.0, description="Commission per trade in paper trading"
     )
 
     # Logging Settings

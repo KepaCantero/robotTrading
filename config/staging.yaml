@@ -1,0 +1,108 @@
+# Staging Configuration
+# Pre-production environment for testing
+
+environment: "staging"
+debug: false
+log_level: "INFO"
+
+database:
+  path: "data/staging.db"
+  backup_enabled: true
+  backup_interval_seconds: 600
+  backup_dir: "backups/staging"
+  retention_hours: 48
+
+brokers:
+  primary:
+    name: "paper"
+    enabled: true
+    rate_limit_per_second: 100
+
+  fallback:
+    name: "alpaca"
+    enabled: true
+    rate_limit_per_minute: 200
+
+position_monitor:
+  enabled: true
+  check_interval_seconds: 1.0
+  execute_stops_automatically: true
+  stop_loss_default_pct: 0.05
+  take_profit_default_pct: 0.10
+
+risk:
+  max_var_daily_pct: 0.03  # 3% daily VaR limit
+  max_position_size_pct: 0.25  # 25% max per position
+  max_leverage: 2.0
+  use_real_correlation: true
+
+monitoring:
+  memory_limit_mb: 3072
+  auto_restart: true
+  health_check_interval: 60
+  memory_action: "alert_only"
+
+time_sync:
+  enabled: true
+  check_interval_seconds: 60
+  drift_threshold_seconds: 1.0
+  max_retries: 3
+
+task_queue:
+  enabled: true
+  max_concurrent_workers: 5
+  task_timeout_seconds: 300
+
+news:
+  marketaux_api_key: "${MARKETAUX_API_KEY}"
+  webhook_url: "${NEWS_WEBHOOK_URL}"
+  poll_interval_seconds: 300
+
+circuit_breaker:
+  enabled: true
+  level_1_threshold: -0.07
+  level_2_threshold: -0.13
+  level_3_threshold: -0.20
+  check_interval_seconds: 30
+
+scheduling:
+  crypto_enabled: true
+  forex_enabled: true
+  stocks_us_enabled: true
+
+tax:
+  residence_country: "ES"
+  fifo_enabled: true
+  modelo_721_enabled: true
+  progressive_rates:
+    bracket_1: 0.19
+    bracket_2: 0.21
+    bracket_3: 0.23
+
+compliance:
+  country: "ES"
+  enforce_pdt: false
+  enforce_wash_sale: false
+
+memory_protection:
+  max_positions: 10000
+  max_processed_ids: 50000
+  max_sentiment_cache: 10000
+
+rate_limiting:
+  ibkr:
+    requests_per_second: 50
+    burst_capacity: 100
+  alpaca:
+    requests_per_second: 3.33
+    burst_capacity: 20
+
+alerts:
+  enabled: true
+  email_to: "${ALERT_EMAIL}"
+  webhook_url: "${ALERT_WEBHOOK_URL}"
+  thresholds:
+    memory_warning_mb: 2560
+    memory_critical_mb: 3072
+    var_warning_pct: 0.8
+    drift_warning_seconds: 1.0

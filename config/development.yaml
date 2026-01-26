@@ -1,0 +1,33 @@
+# Development Configuration
+environment: "development"
+debug: true
+log_level: "DEBUG"
+
+database:
+  path: "data/development.db"
+  backup_enabled: false
+
+brokers:
+  primary:
+    name: "paper"
+    enabled: true
+
+position_monitor:
+  enabled: true
+  execute_stops_automatically: false
+
+risk:
+  max_var_daily_pct: 0.05
+  max_position_size_pct: 0.50
+
+monitoring:
+  memory_limit_mb: 2048
+  auto_restart: false
+
+tax:
+  residence_country: "ES"
+  fifo_enabled: true
+  modelo_721_enabled: true
+
+compliance:
+  country: "ES"

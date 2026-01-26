@@ -14,6 +14,7 @@ from fastapi.responses import JSONResponse
 from app.api.assets import router as assets_router
 from app.api.capa2_endpoints import router as capa2_router
 from app.api.cost_analysis import router as cost_analysis_router
+from app.api.health import router as health_router
 from app.api.live_trading import router as live_trading_router
 from app.api.market_data import router as market_data_router
 from app.api.momentum import router as momentum_router
@@ -130,6 +131,7 @@ app.add_middleware(
 )
 
 # Include API routers
+app.include_router(health_router)
 app.include_router(capa2_router)
 app.include_router(portfolio_router)
 app.include_router(signals_router)
@@ -165,18 +167,8 @@ async def root() -> Dict[str, Any]:
         "debug": app_settings.debug,
         "docs": "/docs",
         "health": "/health",
+        "health_detailed": "/health?detailed=true",
     }
-
-
-@app.get("/health", tags=["Health"])
-async def health_check() -> Dict[str, str]:
-    """
-    Health check endpoint for monitoring and load balancers.
-
-    Returns:
-        Dict with status information
-    """
-    return {"status": "ok"}
 
 
 @app.get("/health/detailed", tags=["Health"])

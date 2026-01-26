@@ -1,0 +1,187 @@
+# Stage 6: Production Configuration
+# Full production deployment with complete automation
+
+trading:
+  mode: live
+  capital: null  # Use full available capital
+  max_positions: 20  # Fully diversified
+  risk_per_trade: 0.05  # 5% max per position
+  stop_loss: 0.05  # 5% stop loss
+  daily_loss_limit: 0.02  # Stop trading if daily loss > 2%
+
+# Enable all strategies
+strategies:
+  - name: momentum
+    enabled: true
+    allocations:
+      - symbol: "AAPL"
+        weight: 0.06
+      - symbol: "MSFT"
+        weight: 0.06
+      - symbol: "GOOGL"
+        weight: 0.06
+      - symbol: "AMZN"
+        weight: 0.06
+      - symbol: "META"
+        weight: 0.06
+
+  - name: mean_reversion
+    enabled: true
+    allocations:
+      - symbol: "TSLA"
+        weight: 0.06
+      - symbol: "NVDA"
+        weight: 0.06
+      - symbol: "AMD"
+        weight: 0.06
+      - symbol: "NFLX"
+        weight: 0.06
+
+  - name: etf_momentum
+    enabled: true
+    allocations:
+      - symbol: "SPY"
+        weight: 0.12
+      - symbol: "QQQ"
+        weight: 0.08
+      - symbol: "IWM"
+        weight: 0.06
+
+  - name: fx_hedging
+    enabled: true
+    allocations:
+      - currency_pair: "EUR/USD"
+        weight: 0.08
+
+  - name: arbitrage
+    enabled: true
+    allocations:
+      - type: "statistical_arb"
+        weight: 0.10
+
+# Trade all supported markets
+markets:
+  - region: US
+    enabled: true
+    asset_classes:
+      - stocks
+      - etfs
+      - options
+
+  - region: EU
+    enabled: true
+    asset_classes:
+      - stocks
+      - etfs
+    symbols:
+      - "ASML"
+      - "SAP"
+      - "NESN"
+      - "ROCH"
+      - "SAN"
+
+  - region: ASIA
+    enabled: true
+    asset_classes:
+      - stocks
+      - etfs
+    symbols:
+      - "TCEHY"  # Tencent
+      - "BABA"   # Alibaba
+
+# Risk management - production standards
+risk_management:
+  max_drawdown: 0.10  # 10% max drawdown
+  position_size_method: optimal_f  # Kelly criterion with safety
+  rebalance_frequency: daily
+  volatility_target: 0.15  # 15% annualized volatility target
+  correlation_limit: 0.7  # Max correlation between positions
+
+# FIFO database for tax compliance
+fifo:
+  enabled: true
+  database_path: data/fifo.db
+  backup_enabled: true
+  backup_frequency: daily
+
+# Monitoring - comprehensive
+monitoring:
+  log_level: INFO
+  alert_on:
+    - system_errors
+    - position_discrepancies
+    - fifo_errors
+    - daily_loss_limit
+    - drawdown_exceeded
+    - stop_loss_failed
+    - weekly_performance
+    - benchmark_comparison
+    - tax_compliance
+    - system_health
+    - api_rate_limits
+
+  # 24/7 monitoring
+  uptime_monitoring: true
+  performance_tracking: true
+  anomaly_detection: true
+
+# Spain tax compliance with full optimization
+tax:
+  spain_resident: true
+  modelo_721:
+    enabled: true
+    reporting_currency: EUR
+    optimization:
+      - tax_loss_harvesting
+      - long_term_preference
+      - dividend_optimization
+      - wash_sale_avoidance
+
+    # Automated reporting
+    automated_reports:
+      - frequency: monthly
+        format: pdf
+        email_to: tax@example.com
+
+# Benchmark comparison
+benchmarks:
+  - symbol: "SPY"
+    name: "S&P 500"
+    weight: 0.6
+  - symbol: "IBEX"
+    name: "IBEX 35"
+    weight: 0.2
+  - symbol: "EFA"
+    name: "MSCI EAFE"
+    weight: 0.2
+
+# Advanced features - fully enabled
+advanced:
+  trailing_stop: true
+  profit_taking: true
+  volatility_scaling: true
+  correlation_filtering: true
+  regime_detection: true
+  adaptive_sizing: true
+
+# Disaster recovery
+disaster_recovery:
+  automatic_restart: true
+  position_reconciliation: true
+  emergency_close: true
+  backup_server: true
+  failover_enabled: true
+
+# System requirements
+system:
+  high_availability: true
+  redundant_internet: true
+  ups_enabled: true
+  monitoring: 24_7
+  alert_channels:
+    - type: email
+      address: alerts@example.com
+    - type: sms
+      phone: "+1234567890"
+    - type: slack
+      webhook: "https://hooks.slack.com/services/..."

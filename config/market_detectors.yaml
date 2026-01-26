@@ -1,0 +1,167 @@
+# Market Detectors Configuration
+# Centralized configuration for market detection modules
+#
+# This file contains parameters for:
+# - Trend Detector
+# - Volatility Detector
+# - Market Analyzer
+
+# ============================================================================
+# TREND DETECTOR PARAMETERS
+# ============================================================================
+trend_detector:
+  # EMA periods for trend detection
+  ema_periods:
+    fast_ema: 12              # Fast EMA period for short-term trend
+    slow_ema: 26              # Slow EMA period for long-term trend
+
+  # Trend strength thresholds
+  thresholds:
+    min_trend_strength: 0.6    # Minimum trend strength (0-1 scale)
+
+    # Trend classification thresholds
+    strong_trend: 0.8          # Strong trend threshold
+    weak_trend: 0.4            # Weak trend threshold
+    no_trend: 0.2             # No trend / sideways threshold
+
+  # Trend confirmation requirements
+  confirmation:
+    require_crossover: true    # Require EMA crossover for trend
+    min_bars: 3               # Minimum bars for trend confirmation
+
+    # Price vs EMA relationship
+    require_price_above_ema: true  # For bullish trends
+    require_volume_confirm: false   # Volume confirmation optional
+
+# ============================================================================
+# VOLATILITY DETECTOR PARAMETERS
+# ============================================================================
+volatility_detector:
+  # ATR percentile calculation
+  percentile:
+    window: 30                # Window size for ATR percentile calculation
+    high_threshold: 75         # High volatility threshold (percentile)
+    low_threshold: 25          # Low volatility threshold (percentile)
+
+  # Standard deviation volatility detection
+  std_dev:
+    window: 20                # Window size for std dev calculation
+    high_threshold: 0.02      # High volatility threshold (2%)
+    low_threshold: 0.005      # Low volatility threshold (0.5%)
+
+  # Volatility regime classification
+  regimes:
+    high:
+      min_std_dev: 0.02        # Minimum std dev for high volatility
+      min_atr_percentile: 70  # Minimum ATR percentile
+
+    medium:
+      min_std_dev: 0.008       # Minimum std dev for medium volatility
+      min_atr_percentile: 40  # Minimum ATR percentile
+      max_std_dev: 0.02        # Maximum std dev for medium
+      max_atr_percentile: 70   # Maximum ATR percentile
+
+    low:
+      max_std_dev: 0.008       # Maximum std dev for low volatility
+      max_atr_percentile: 30   # Maximum ATR percentile
+
+  # GARCH volatility parameters (if using GARCH model)
+  garch:
+    enabled: false            # Enable GARCH-based volatility forecasting
+    p: 1                     # GARCH AR order
+    q: 1                     # GARCH MA order
+    forecast_horizon: 1      # Days to forecast ahead
+
+# ============================================================================
+# MARKET ANALYZER PARAMETERS
+# ============================================================================
+market_analyzer:
+  # History lengths for market analysis
+  history_lengths:
+    price_history: 200        # Max bars of price history to keep
+    atr_history: 100          # Max bars of ATR history to keep
+    volume_history: 100       # Max bars of volume history to keep
+    momentum_history: 50     # Max bars of momentum history to keep
+
+  # Market state detection
+  market_state:
+    # Number of bars to analyze for market state
+    analysis_window: 50
+
+    # Trend confirmation bars
+    trend_confirmation_bars: 3
+
+    # Volatility averaging period
+    volatility_avg_period: 20
+
+  # Signal combination weights
+  signal_weights:
+    trend: 0.4               # Weight for trend signals
+    momentum: 0.3           # Weight for momentum signals
+    volatility: 0.2          # Weight for volatility signals
+    volume: 0.1              # Weight for volume signals
+
+# ============================================================================
+# MARKET REGIME DETECTION
+# ============================================================================
+market_regime:
+  # Regime detection parameters
+  detection:
+    method: "hmm"            # Detection method: hmm, threshold, markov
+    lookback_days: 60         # Lookback period for regime detection
+
+    # Transition probabilities
+    min_regime_duration: 10   # Minimum bars for regime to persist
+
+  # Regime types and characteristics
+  regimes:
+    bullish_trending:
+      expected_return: 0.001  # Expected daily return
+      expected_volatility: 0.015
+      momentum_bias: 0.7      # Bias towards momentum strategies
+
+    bearish_trending:
+      expected_return: -0.0008
+      expected_volatility: 0.02
+      momentum_bias: -0.3     # Negative momentum bias
+
+    sideways:
+      expected_return: 0.0001
+      expected_volatility: 0.01
+      momentum_bias: 0.0      # No momentum bias
+
+    high_volatility:
+      expected_return: 0.0
+      expected_volatility: 0.03
+      mean_reversion_bias: 0.6  # Bias towards mean reversion
+
+# ============================================================================
+# CAPITAL TIER OVERRIDES
+# ============================================================================
+tiers:
+  micro:
+    trend_detector:
+      thresholds:
+        min_trend_strength: 0.7   # Higher threshold for micro accounts
+
+    volatility_detector:
+      percentile:
+        high_threshold: 80       # More conservative volatility detection
+
+  small:
+    trend_detector:
+      thresholds:
+        min_trend_strength: 0.65
+
+  medium:
+    # Use default values
+    pass
+
+  large:
+    trend_detector:
+      thresholds:
+        min_trend_strength: 0.5    # Lower threshold for large accounts
+
+    volatility_detector:
+      percentile:
+        high_threshold: 70        # More aggressive volatility handling

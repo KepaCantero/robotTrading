@@ -17,16 +17,26 @@ class RSIFilter(BaseFilter):
     Evalúa condiciones de sobrecompra/sobreventa según el régimen detectado.
     """
 
-    def __init__(self, config: Dict, preset: str = "balanced"):
-        """Inicializar simfiltro RSI."""
-        super().__init__("rsi_filter", config, preset)
+    def __init__(
+        self, config: Dict = None, preset: str = "balanced", tier: str = None, use_yaml: bool = True
+    ):
+        """Inicializar filtro RSI."""
+        super().__init__("rsi_filter", config, preset, tier, use_yaml)
 
-        params = config.get("parameters", {})
-        self.period = params.get("period", 14)
-        self.adaptive = params.get("adaptive", True)
+        # Get settings from YAML or config
+        settings = self.config.get("settings", self.config)
+        self.period = settings.get("period", 14)
+        self.adaptive = settings.get("adaptive", True)
 
-        # Thresholds adaptativos por contexto
-        self.adaptive_thresholds = config.get("adaptive_thresholds", {})
+        # Thresholds adaptativos por contexto (desde YAML)
+        self.adaptive_thresholds = self.config.get("adaptive_thresholds", {})
+        if not self.adaptive_thresholds:
+            # Fallback a defaults si no están en YAML
+            self.adaptive_thresholds = {
+                "balanced": {"buy_min": 30, "buy_max": 70, "sell_min": 50, "sell_max": 80},
+                "volatile": {"buy_min": 25, "buy_max": 75, "sell_min": 45, "sell_max": 85},
+                "trending": {"buy_min": 40, "buy_max": 65, "sell_min": 55, "sell_max": 75},
+            }
 
     def _get_thresholds_for_context(self, market_context: Dict) -> Dict:
         """Obtener thresholds según el contexto de mercado."""

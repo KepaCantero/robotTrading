@@ -1,0 +1,187 @@
+# Strategy Defaults Configuration
+# Centralized configuration for main trading strategies
+#
+# This file contains parameters for:
+# - Momentum Strategy
+# - Mean Reversion Strategy
+# - Pairs Trading Strategy
+
+# ============================================================================
+# MOMENTUM STRATEGY
+# ============================================================================
+momentum_strategy:
+  # Technical indicator periods
+  periods:
+    rsi_period: 14            # RSI calculation period
+    ema_period: 20            # EMA calculation period
+    lookback_period: 5        # Lookback for signal generation
+
+  # Signal cooldown
+  cooldown:
+    bars: 5                   # Number of bars to wait after signal
+
+  # History lengths
+  history_lengths:
+    price_history: 200        # Max bars of price history
+
+  # Position sizing
+  position_sizing:
+    base_size: 0.10           # Base position size (10% of capital)
+    max_size: 0.25            # Maximum position size (25% of capital)
+
+  # Stop loss and take profit
+  risk_management:
+    stop_loss_pct: 0.025      # Stop loss percentage (2.5%)
+    take_profit_pct: 0.08     # Take profit percentage (8%)
+
+# ============================================================================
+# MEAN REVERSION STRATEGY
+# ============================================================================
+mean_reversion_strategy:
+  # Z-score thresholds
+  thresholds:
+    min_z_score: 1.5          # Minimum Z-score for signal
+    max_z_score: 2.5          # Maximum Z-score for signal
+    exit_z_score: 0.5         # Exit position when Z-score returns to this
+
+  # Half-life parameters
+  half_life:
+    min_days: 1               # Minimum half-life (too fast = noise)
+    max_days: 120             # Maximum half-life for valid signals
+
+  # Lookback period
+  lookback_period: 20         # Period for Z-score calculation
+
+  # Position sizing
+  position_sizing:
+    base_size: 0.07           # Base position size (7% of capital)
+    max_size: 0.15            # Maximum position size (15% of capital)
+
+  # Stop loss and take profit
+  risk_management:
+    stop_loss_pct: 0.015      # Stop loss percentage (1.5%)
+    take_profit_pct: 0.10     # Take profit percentage (10%)
+
+# ============================================================================
+# PAIRS TRADING STRATEGY
+# ============================================================================
+pairs_trading_strategy:
+  # Default trading pairs (fallback if none provided)
+  default_pairs:
+    - ["AAPL", "MSFT"]
+    - ["GOOGL", "META"]
+
+  # Cointegration parameters
+  cointegration:
+    lookback_days: 250        # Lookback for cointegration test
+    p_value_threshold: 0.05    # P-value threshold for cointegration
+    recalc_interval_days: 30  # Interval to recalculate cointegration
+
+  # Spread parameters
+  spread:
+    max_std_deviation: 3.0     # Maximum standard deviations for entry
+    exit_std_deviation: 0.5    # Exit when spread returns to this
+    z_score_entry: 2.0         # Z-score for entry
+    z_score_exit: 0.5          # Z-score for exit
+
+  # Hedge ratio
+  hedge_ratio:
+    default: 1.0              # Default hedge ratio (1:1)
+    method: "ols"              # Method: ols, kalman, rolling
+    recalc_bars: 100          # Recalculate hedge ratio every N bars
+
+  # Position sizing
+  position_sizing:
+    base_size: 0.10           # Base position size per leg (10% each)
+    max_size: 0.20            # Maximum total position size (20% for both legs)
+
+  # Stop loss and take profit
+  risk_management:
+    stop_loss_pct: 0.03       # Stop loss percentage (3%)
+    take_profit_pct: 0.06     # Take profit percentage (6%)
+
+# ============================================================================
+# STRATEGY ENABLEMENT BY CAPITAL TIER
+# ============================================================================
+# Defines which strategies are enabled for each capital tier
+strategy_tiers:
+  micro:
+    enabled:
+      - momentum_strategy
+    disabled:
+      - pairs_trading_strategy    # Requires more capital
+      - mean_reversion_strategy  # May require more liquidity
+
+  small:
+    enabled:
+      - momentum_strategy
+      - mean_reversion_strategy
+    disabled:
+      - pairs_trading_strategy    # Typically disabled for small
+
+  medium:
+    enabled:
+      - momentum_strategy
+      - mean_reversion_strategy
+      - pairs_trading_strategy
+    disabled: []
+
+  large:
+    enabled:
+      - momentum_strategy
+      - mean_reversion_strategy
+      - pairs_trading_strategy
+    disabled: []
+
+# ============================================================================
+# CAPITAL TIER OVERRIDES
+# ============================================================================
+# Tier-specific adjustments for strategy parameters
+tiers:
+  micro:
+    momentum_strategy:
+      position_sizing:
+        base_size: 0.08         # Smaller positions
+        max_size: 0.15
+
+    risk_management:
+      stop_loss_pct: 0.035     # Tighter stops
+      take_profit_pct: 0.06    # Smaller targets
+
+    mean_reversion_strategy:
+      thresholds:
+        min_z_score: 2.0       # More conservative
+
+  small:
+    momentum_strategy:
+      position_sizing:
+        base_size: 0.09
+        max_size: 0.18
+
+    risk_management:
+      stop_loss_pct: 0.030
+      take_profit_pct: 0.07
+
+  medium:
+    # Use default values
+    pass
+
+  large:
+    momentum_strategy:
+      position_sizing:
+        base_size: 0.12        # Larger positions
+        max_size: 0.25
+
+    risk_management:
+      stop_loss_pct: 0.020     # Wider stops
+      take_profit_pct: 0.10    # Larger targets
+
+    mean_reversion_strategy:
+      thresholds:
+        min_z_score: 1.0       # More aggressive
+        max_z_score: 3.0       # Wider range
+
+    pairs_trading_strategy:
+      position_sizing:
+        base_size: 0.12
+        max_size: 0.25

@@ -19,15 +19,24 @@ class VolatilityDetector(BaseMarketDetector):
     - std_dev: Desviación estándar de retornos
     """
 
-    def __init__(self, config: Dict):
+    def __init__(self, config: Dict = None, tier: str = None, use_yaml: bool = True):
         """Inicializar detector de volatilidad."""
-        super().__init__("volatility_detector", config)
+        super().__init__("volatility_detector", config, tier, use_yaml)
 
-        vol_config = config.get("volatility_detection", {})
-        self.method = vol_config.get("method", "atr_percentile")
-        self.percentile_window = vol_config.get("percentile_window", 30)
-        self.high_vol_threshold = vol_config.get("high_vol_threshold", 75)
-        self.low_vol_threshold = vol_config.get("low_vol_threshold", 25)
+        # Get settings from YAML or config
+        percentile_config = self.config.get("percentile", {})
+        std_dev_config = self.config.get("std_dev", {})
+
+        # Try to get method from config, default to atr_percentile
+        self.method = self.config.get("method", "atr_percentile")
+        self.percentile_window = percentile_config.get("window", 30)
+        self.high_vol_threshold = percentile_config.get("high_threshold", 75)
+        self.low_vol_threshold = percentile_config.get("low_threshold", 25)
+
+        # Store std_dev thresholds for fallback
+        self.std_dev_high_threshold = std_dev_config.get("high_threshold", 0.02)
+        self.std_dev_low_threshold = std_dev_config.get("low_threshold", 0.005)
+        self.std_dev_window = std_dev_config.get("window", 20)
 
     def detect(self, price_history: List[float], **kwargs) -> Dict:
         """
@@ -100,7 +109,7 @@ class VolatilityDetector(BaseMarketDetector):
 
     def _detect_std_dev(self, price_history: List[float]) -> Dict:
         """Detectar volatilidad usando desviación estándar de retornos."""
-        if len(price_history) < 30:
+        if len(price_history) < self.std_dev_window:
             return {'regime': 'normal', 'percentile': 50, 'confidence': 0.5, 'method': 'std_dev'}
 
         # Calcular retornos
@@ -118,10 +127,9 @@ class VolatilityDetector(BaseMarketDetector):
         std_dev = np.std(returns)
 
         # Calcular percentil basado en ventana histórica
-        # Para simplificar, usar umbrales absolutos
-        # En producción, calcular percentil real
-        high_threshold = 0.02  # 2% std dev
-        low_threshold = 0.005  # 0.5% std dev
+        # Usar thresholds desde config YAML
+        high_threshold = self.std_dev_high_threshold
+        low_threshold = self.std_dev_low_threshold
 
         if std_dev >= high_threshold:
             regime = 'high'

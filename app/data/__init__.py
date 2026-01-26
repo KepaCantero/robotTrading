@@ -3,12 +3,14 @@ Market Data Module
 
 This module provides market data integration capabilities including
 real-time quotes, historical data, and data feed management.
+
+NOTE: Mock data has been removed - only real data sources are supported.
 """
 
 from app.data.feeds import (
     AlphaVantageFeed,
     DataFeedInterface,
-    MockDataFeed,
+    PolygonFeed,
     YahooFinanceFeed,
     create_data_feed,
 )
@@ -37,6 +39,6 @@ __all__ = [
     "DataFeedInterface",
     "AlphaVantageFeed",
     "YahooFinanceFeed",
-    "MockDataFeed",
+    "PolygonFeed",
     "create_data_feed",
 ]

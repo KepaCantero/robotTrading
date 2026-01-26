@@ -1,0 +1,126 @@
+# Production Configuration for AlgoTrading System
+# This configuration is optimized for live trading with real money
+
+environment: "production"
+debug: false
+log_level: "INFO"
+
+# Database configuration
+database:
+  path: "/var/lib/algotrading/production.db"
+  backup_enabled: true
+  backup_interval_seconds: 300
+  backup_dir: "/var/backups/algotrading"
+  retention_hours: 24
+
+# Broker configuration
+brokers:
+  primary:
+    name: "ibkr"
+    enabled: true
+    rate_limit_per_second: 50
+
+  fallback:
+    name: "alpaca"
+    enabled: true
+    rate_limit_per_minute: 200
+
+# Position monitoring
+position_monitor:
+  enabled: true
+  check_interval_seconds: 1.0
+  execute_stops_automatically: true
+  stop_loss_default_pct: 0.05
+  take_profit_default_pct: 0.10
+
+# Risk management
+risk:
+  max_var_daily_pct: 0.02  # 2% daily VaR limit
+  max_position_size_pct: 0.20  # 20% max per position
+  max_leverage: 2.0
+  use_real_correlation: true
+
+# Monitoring
+monitoring:
+  memory_limit_mb: 4096
+  auto_restart: true
+  health_check_interval: 60
+
+  # Memory monitor action
+  memory_action: "alert_only"  # Options: restart, alert_only, garbage_collect
+
+# Time sync
+time_sync:
+  enabled: true
+  check_interval_seconds: 60
+  drift_threshold_seconds: 1.0
+  max_retries: 3
+
+# Task queue
+task_queue:
+  enabled: true
+  max_concurrent_workers: 5
+  task_timeout_seconds: 300
+
+# News processing
+news:
+  marketaux_api_key: "${MARKETAUX_API_KEY}"
+  webhook_url: "${NEWS_WEBHOOK_URL}"
+  poll_interval_seconds: 300
+
+# Circuit breaker
+circuit_breaker:
+  enabled: true
+  level_1_threshold: -0.07  # -7%
+  level_2_threshold: -0.13  # -13%
+  level_3_threshold: -0.20  # -20%
+  check_interval_seconds: 30
+
+# Scheduler
+scheduling:
+  crypto_enabled: true
+  forex_enabled: true
+  stocks_us_enabled: true
+
+# Tax compliance (Spain)
+tax:
+  residence_country: "ES"
+  fifo_enabled: true
+  modelo_721_enabled: true
+  progressive_rates:
+    bracket_1: 0.19  # <= 33,007.99
+    bracket_2: 0.21  # 33,008 - 53,407.99
+    bracket_3: 0.23  # > 53,408
+
+# Compliance
+compliance:
+  country: "ES"
+  enforce_pdt: false  # Spain doesn't have PDT rule
+  enforce_wash_sale: false  # Spain doesn't have wash sale rule
+
+# Memory limits for caches
+memory_protection:
+  max_positions: 10000
+  max_processed_ids: 50000
+  max_sentiment_cache: 10000
+
+# Rate limiting
+rate_limiting:
+  ibkr:
+    requests_per_second: 50
+    burst_capacity: 100
+  alpaca:
+    requests_per_second: 3.33
+    burst_capacity: 20
+
+# Alerts
+alerts:
+  enabled: true
+  email_to: "${ALERT_EMAIL}"
+  webhook_url: "${ALERT_WEBHOOK_URL}"
+
+  thresholds:
+    memory_warning_mb: 3072
+    memory_critical_mb: 4096
+    var_warning_pct: 0.8
+    drift_warning_seconds: 1.0

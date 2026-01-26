@@ -1,0 +1,130 @@
+{
+  "timestamp": "2026-01-24T19:40:35.450797",
+  "input": {
+    "capital": 75000.0,
+    "objective": "crecimiento_equilibrado",
+    "risk": "medio",
+    "horizon_months": 24,
+    "target_monthly": 1500.0,
+    "top_n": 100
+  },
+  "config": {
+    "enable_rl_signals": true,
+    "enable_tax_optimization": true,
+    "enable_backtest_validation": true,
+    "enable_risk_gates": true,
+    "auto_execute_trades": false,
+    "use_ibkr": false
+  },
+  "profile": {
+    "profile_id": "PROF-20260124184034"
+  },
+  "allocation": {
+    "total_positions": 0,
+    "residual_capital": 0.0,
+    "positions": []
+  },
+  "signals": {
+    "total_signals": 0,
+    "buy_signals": 0,
+    "sell_signals": 0,
+    "hold_signals": 0,
+    "buy_pct": 0,
+    "sell_pct": 0,
+    "hold_pct": 0,
+    "rl_signals_count": 0,
+    "momentum_signals_count": 0,
+    "mean_reversion_signals_count": 0,
+    "avg_confidence": 0
+  },
+  "stages": {
+    "profile_generation": {
+      "success": true,
+      "duration_ms": 24.532999999999998,
+      "message": "Stage profile_generation completed successfully",
+      "errors": [],
+      "warnings": []
+    },
+    "universe_selection": {
+      "success": true,
+      "duration_ms": 236.037,
+      "message": "Stage universe_selection completed successfully",
+      "errors": [],
+      "warnings": []
+    },
+    "capital_allocation": {
+      "success": true,
+      "duration_ms": 8.09,
+      "message": "Stage capital_allocation completed successfully",
+      "errors": [],
+      "warnings": []
+    },
+    "signal_generation": {
+      "success": true,
+      "duration_ms": 0.11699999999999999,
+      "message": "Stage signal_generation completed successfully",
+      "errors": [],
+      "warnings": []
+    },
+    "tax_optimization": {
+      "success": true,
+      "duration_ms": 4.23,
+      "message": "Stage tax_optimization completed successfully",
+      "errors": [],
+      "warnings": []
+    },
+    "risk_validation": {
+      "success": true,
+      "duration_ms": 403.07300000000004,
+      "message": "Stage risk_validation completed successfully",
+      "errors": [],
+      "warnings": []
+    },
+    "backtest_validation": {
+      "success": true,
+      "duration_ms": 3.278,
+      "message": "Stage backtest_validation completed successfully",
+      "errors": [],
+      "warnings": []
+    },
+    "trade_execution": {
+      "success": true,
+      "duration_ms": 0.357,
+      "message": "Stage trade_execution completed successfully",
+      "errors": [],
+      "warnings": []
+    }
+  },
+  "execution": {
+    "executed": true,
+    "dry_run": true,
+    "orders_submitted": 0,
+    "orders_filled": 0,
+    "orders_failed": 0,
+    "fill_rate": 0,
+    "total_value_eur": 0.0
+  },
+  "risk": {
+    "passed": true,
+    "risk_level": "LOW",
+    "violation_count": 0,
+    "warning_count": 0,
+    "key_metrics": {
+      "concentration": 0.0,
+      "leverage": 1.0,
+      "daily_loss_pct": 0.0,
+      "drawdown_pct": 0.0
+    }
+  },
+  "summary": {
+    "success": true,
+    "execution_time_seconds": 0.680325,
+    "started_at": "2026-01-24T18:40:34.769098",
+    "completed_at": "2026-01-24T18:40:35.449407",
+    "total_stages": 8,
+    "successful_stages": 8,
+    "failed_stages": 0,
+    "errors": [],
+    "warnings": []
+  }
+}
