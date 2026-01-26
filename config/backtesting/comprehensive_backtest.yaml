@@ -29,7 +29,7 @@ backtest:
   max_position_size: 0.10     # Maximum 10% of capital per position
 
   # Trading Costs
-  commission_per_trade: 10.0  # $10 per trade (fixed commission)
+  commission_per_trade: 0.0   # $0 per trade (standard since 2019 - most brokers offer $0 commissions)
   slippage: 0.1               # 0.1% slippage per trade
 
   # Other Parameters

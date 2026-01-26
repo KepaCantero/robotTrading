@@ -660,6 +660,11 @@ class SimpleBacktester:
         # Get price using helper function
         current_price = get_price(market_data)
 
+        # CRITICAL FIX #2: Trade pre-filtering based on commission ratio
+        # Skip trades that cannot be profitable due to commission costs
+        if not self._validate_trade_profitability(signal, current_price):
+            return
+
         # Calculate position size based on signal confidence and available
         # capital
         position_size = self._calculate_position_size(signal, current_price)
@@ -965,6 +970,110 @@ class SimpleBacktester:
                 metadata=signal.metadata if signal.metadata else {},
             )
 
+    def _validate_trade_profitability(self, signal: Signal, price: Decimal) -> bool:
+        """
+        Validate if a trade can be profitable after commission costs.
+
+        This implements the critical fix to prevent trades where commission costs
+        exceed expected profit.
+
+        Args:
+            signal: Trading signal
+            price: Current price
+
+        Returns:
+            True if trade is profitable, False otherwise
+        """
+        strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
+
+        # Get commission (fixed or percentage-based)
+        commission_pct = self._get_strategy_commission(signal, strategy_name)
+
+        if commission_pct is not None:
+            # Percentage-based commission - skip validation (will be calculated on trade value)
+            return True
+
+        # Fixed commission
+        commission = self.config.commission_per_trade
+
+        # If commission is $0, always allow trade
+        if commission <= 0:
+            return True
+
+        # Calculate expected profit from take profit
+        take_profit_pct = self.config.take_profit_percentage
+        if take_profit_pct is None:
+            # No take profit configured, allow trade
+            return True
+
+        # Calculate maximum position value
+        max_position_value = self.capital * self.config.max_position_size
+
+        # CRITICAL FIX #3: Position sizing validation
+        # Check if commission ratio is acceptable
+        round_trip_commission = commission * 2  # Buy + sell
+
+        # Check if commission ratio exceeds 1% of position value
+        commission_ratio = round_trip_commission / max_position_value if max_position_value > 0 else Decimal("1")
+
+        if commission_ratio > Decimal("0.01"):
+            # Commission is too high relative to position size
+            # Calculate minimum position size needed
+            min_position_value_needed = round_trip_commission / Decimal("0.01")
+
+            if min_position_value_needed > self.capital:
+                # Even with full capital, commission ratio would be too high
+                logger.warning(
+                    f"❌ TRADE REJECTED {signal.symbol} (strategy={strategy_name}): "
+                    f"Commission ratio {commission_ratio:.2%} exceeds 1%. "
+                    f"Round-trip commission: ${round_trip_commission:.2f}, "
+                    f"Max position: ${max_position_value:.2f}. "
+                    f"Minimum position needed: ${min_position_value_needed:.2f} (exceeds capital: ${self.capital:.2f})"
+                )
+
+                # Log to diagnostic logger if available
+                if self.diagnostic_logger:
+                    self.diagnostic_logger.log_signal_rejected(
+                        strategy_name,
+                        signal.symbol,
+                        "commission_ratio_exceeded",
+                        f"Commission ratio {commission_ratio:.2%} > 1%. Round-trip: ${round_trip_commission:.2f}",
+                        signal.metadata if hasattr(signal, 'metadata') else {},
+                    )
+                return False
+
+        # Calculate expected profit at take profit
+        expected_profit = max_position_value * (take_profit_pct / Decimal("100"))
+
+        # Validate: expected profit must be GREATER THAN 5x round-trip commission
+        min_required_profit = round_trip_commission * 5
+
+        if expected_profit <= min_required_profit:
+            logger.warning(
+                f"❌ TRADE REJECTED {signal.symbol} (strategy={strategy_name}): "
+                f"Expected profit ${expected_profit:.2f} (take profit {take_profit_pct:.1f}% of ${max_position_value:.2f}) "
+                f"is less than 5x round-trip commission ${min_required_profit:.2f} "
+                f"(commission: ${commission:.2f} x 2 = ${round_trip_commission:.2f})"
+            )
+
+            # Log to diagnostic logger if available
+            if self.diagnostic_logger:
+                self.diagnostic_logger.log_signal_rejected(
+                    strategy_name,
+                    signal.symbol,
+                    "profitability_check_failed",
+                    f"Expected profit ${expected_profit:.2f} < 5x commission ${min_required_profit:.2f}",
+                    signal.metadata if hasattr(signal, 'metadata') else {},
+                )
+            return False
+
+        logger.debug(
+            f"✅ Trade profitability check PASSED for {signal.symbol}: "
+            f"Expected profit ${expected_profit:.2f} >= 5x commission ${min_required_profit:.2f}, "
+            f"Commission ratio: {commission_ratio:.2%}"
+        )
+        return True
+
     def _calculate_position_size(self, signal: Signal, price: Decimal) -> Decimal:
         """Calculate position size based on signal and risk management."""
         # Base position size on signal confidence and max position size
@@ -975,6 +1084,32 @@ class SimpleBacktester:
         max_position_value = self.capital * self.config.max_position_size
 
         position_value = max_position_value * confidence_factor
+
+        # CRITICAL FIX #3: Adjust position size if commission ratio is too high
+        # Get commission (fixed or percentage-based)
+        strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
+        commission_pct = self._get_strategy_commission(signal, strategy_name)
+
+        if commission_pct is None:
+            # Fixed commission - check if we need to adjust position size
+            commission = self.config.commission_per_trade
+            if commission > 0:
+                round_trip_commission = commission * 2
+                current_commission_ratio = round_trip_commission / position_value if position_value > 0 else Decimal("1")
+
+                # If commission ratio exceeds 1%, increase position size
+                if current_commission_ratio > Decimal("0.01"):
+                    # Calculate minimum position value to keep commission ratio at 1%
+                    min_position_value = round_trip_commission / Decimal("0.01")
+
+                    # Cap at max_position_value
+                    position_value = max(position_value, min_position_value)
+                    position_value = min(position_value, max_position_value)
+
+                    logger.info(
+                        f"🔧 Adjusted position value for {signal.symbol} from ${max_position_value * confidence_factor:.2f} "
+                        f"to ${position_value:.2f} to maintain commission ratio <= 1%"
+                    )
 
         # FIX: Ensure minimum position value to avoid rounding to zero
         min_position_value = self.capital * Decimal("0.01")  # At least 1% of capital
@@ -1408,20 +1543,42 @@ class SimpleBacktester:
         )
 
     def _calculate_sharpe_ratio(self) -> Optional[Decimal]:
-        """Calculate Sharpe ratio (simplified implementation)."""
-        if len(self.equity_curve) < 2:
+        """
+        Calculate Sharpe ratio from realized trade P&L, not from equity curve.
+        
+        BUG FIX: Previous implementation calculated Sharpe from equity curve which
+        includes unrealized P&L from open positions. This led to positive Sharpe
+        ratios even when final PnL was negative (e.g., Sharpe=0.88 with -$99,576 losses).
+        
+        The correct approach is to calculate returns from closed trade P&L,
+        which reflects the actual realized performance of the strategy.
+        
+        Formula: Sharpe = (Rp - Rf) / σp
+        - Rp: Portfolio return (annualized, from realized trades)
+        - Rf: Risk-free rate
+        - σp: Standard deviation of portfolio returns (annualized)
+        """
+        if not self.trades or len(self.trades) < 2:
             return None
 
-        # Calculate daily returns
+        # Calculate returns from closed trades (realized P&L only)
+        # This is the CORRECT way - use actual trade results, not unrealized gains
         returns = []
-        for i in range(1, len(self.equity_curve)):
-            prev_equity = self.equity_curve[i - 1][1]
-            curr_equity = self.equity_curve[i][1]
-            if prev_equity > 0:
-                daily_return = (curr_equity - prev_equity) / prev_equity
-                returns.append(daily_return)
-
-        if not returns:
+        current_capital = self.config.initial_capital
+        
+        # Sort trades by exit time to calculate sequential returns
+        closed_trades = [t for t in self.trades if t.pnl is not None and t.exit_time is not None]
+        closed_trades.sort(key=lambda t: t.exit_time)
+        
+        for trade in closed_trades:
+            if trade.pnl and current_capital > 0:
+                # Calculate return as percentage of current capital
+                trade_return = trade.pnl / current_capital
+                returns.append(trade_return)
+                # Update capital after this trade
+                current_capital += trade.pnl
+        
+        if not returns or len(returns) < 2:
             return None
 
         # Calculate mean and standard deviation
@@ -1429,14 +1586,20 @@ class SimpleBacktester:
         variance = sum((r - mean_return) ** 2 for r in returns) / len(returns)
         std_dev = Decimal(str(math.sqrt(float(variance))))
 
-        # Annualize returns
-        annual_mean = mean_return * Decimal("365.25")
-        annual_std = std_dev * Decimal(str(math.sqrt(365.25)))
+        if std_dev == 0:
+            return None
+
+        # Annualize returns (assuming ~252 trading days per year)
+        # Using 252 instead of 365.25 for trading days
+        annual_mean = mean_return * Decimal("252")
+        annual_std = std_dev * Decimal(str(math.sqrt(252)))
 
         # Calculate Sharpe ratio
         excess_return = annual_mean - self.config.risk_free_rate
+        
         if annual_std > 0:
-            return excess_return / annual_std
+            sharpe = excess_return / annual_std
+            return sharpe
 
         return None
 
