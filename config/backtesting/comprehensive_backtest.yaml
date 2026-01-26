@@ -20,6 +20,23 @@ input:
   initial_capital: 100000.0 # Capital inicial en USD
 
 # ============================================
+# CONFIGURACIÓN DE BACKTEST
+# ============================================
+backtest:
+  # Risk Management (CRITICAL for preventing excessive drawdown)
+  stop_loss: 5.0              # Stop loss at 5% loss per position
+  take_profit: 10.0           # Take profit at 10% gain per position
+  max_position_size: 0.10     # Maximum 10% of capital per position
+
+  # Trading Costs
+  commission_per_trade: 10.0  # $10 per trade (fixed commission)
+  slippage: 0.1               # 0.1% slippage per trade
+
+  # Other Parameters
+  risk_free_rate: 0.02        # 2% annual risk-free rate
+  strategy_name: "momentum_modular"
+
+# ============================================
 # MÓDULOS Y FILTROS
 # ============================================
 modules:
@@ -44,26 +61,30 @@ modules:
           min: 10
           max: 20
           default: 14
+        # Standard RSI: BUY when RSI <= buy_threshold (oversold)
         buy_threshold:
-          min: 40
-          max: 60
-          default: 50
+          min: 20
+          max: 30
+          default: 30
+        # Standard RSI: SELL when RSI >= sell_threshold (overbought)
         sell_threshold:
-          min: 40
-          max: 70
+          min: 65
+          max: 75
           default: 70
 
     stoch_rsi_filter:
       enabled: true
       parameters:
-        min_threshold:
-          min: 10
-          max: 30
-          default: 15
-        max_threshold:
-          min: 70
-          max: 90
-          default: 85
+        # Standard StochRSI: BUY when K <= oversold_threshold
+        oversold_threshold:
+          min: 15
+          max: 25
+          default: 20
+        # Standard StochRSI: SELL when K >= overbought_threshold
+        overbought_threshold:
+          min: 75
+          max: 85
+          default: 80
 
     momentum_filter:
       enabled: true
@@ -240,6 +261,8 @@ backtests:
     parameters_to_optimize:
       - "rsi_filter.buy_threshold"
       - "rsi_filter.sell_threshold"
+      - "stoch_rsi_filter.oversold_threshold"
+      - "stoch_rsi_filter.overbought_threshold"
       - "momentum_filter.threshold"
       - "volume_filter.threshold"
 

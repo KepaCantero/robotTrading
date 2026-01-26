@@ -86,6 +86,9 @@ modules:
         require_crossover: false
 
   # RSI FILTER - Filtro de momentum relativo
+  # Standard RSI Strategy:
+  # - BUY when RSI <= buy_threshold (oversold condition, typically <= 30)
+  # - SELL when RSI >= sell_threshold (overbought condition, typically >= 70)
   rsi_filter:
     enabled: true
     priority: "high"
@@ -100,33 +103,28 @@ modules:
     parameters:
       period: 14
 
-    # Thresholds adaptativos según contexto
+    # FIXED: Thresholds adaptativos según contexto - NOW USING SINGLE THRESHOLDS
     adaptive_thresholds:
       trend_up:
-        buy_min: 45
-        buy_max: 70 # No comprar si ya está sobrecomprado
-        sell_min: 55
-        sell_max: 80
+        buy_threshold: 45   # In uptrend, wait for deeper pullback
+        sell_threshold: 70  # Sell when clearly overbought
 
       trend_down:
-        buy_min: 30
-        buy_max: 50
-        sell_min: 40
-        sell_max: 65
+        buy_threshold: 30   # In downtrend, buy earlier dips
+        sell_threshold: 50  # Take profits earlier in downtrend
 
       range:
-        buy_min: 30
-        buy_max: 50
-        sell_min: 50
-        sell_max: 70
+        buy_threshold: 30   # Standard oversold
+        sell_threshold: 70  # Standard overbought
 
       high_vol:
-        buy_min: 35 # Más permisivo en alta volatilidad
-        buy_max: 65
-        sell_min: 45
-        sell_max: 75
+        buy_threshold: 35   # More permissive in high volatility
+        sell_threshold: 65  # Take profits earlier
 
   # STOCHASTIC RSI FILTER
+  # Standard StochRSI Strategy:
+  # - BUY when StochRSI K <= oversold_threshold (typically <= 20)
+  # - SELL when StochRSI K >= overbought_threshold (typically >= 80)
   stoch_rsi_filter:
     enabled: true
     priority: "medium"
@@ -143,22 +141,17 @@ modules:
       k_period: 3
       d_period: 3
 
+    # FIXED: Now using single thresholds for oversold/overbought
     thresholds:
       conservative:
-        buy_min: 20
-        buy_max: 80
-        sell_min: 20
-        sell_max: 80
+        oversold_threshold: 25     # More conservative - wait for deeper oversold
+        overbought_threshold: 75   # Take profits earlier
       balanced:
-        buy_min: 15
-        buy_max: 85
-        sell_min: 15
-        sell_max: 85
+        oversold_threshold: 20     # Standard oversold
+        overbought_threshold: 80   # Standard overbought
       aggressive:
-        buy_min: 10
-        buy_max: 90
-        sell_min: 10
-        sell_max: 90
+        oversold_threshold: 15     # More aggressive - buy earlier
+        overbought_threshold: 85   # Let profits run longer
 
   # MOMENTUM FILTER (ROC - Rate of Change)
   momentum_filter:
@@ -305,7 +298,7 @@ signal_frequency:
 
 # ADAPTIVE LEARNING (Reservado para futura IA)
 adaptive_learning:
-  enabled: true  # ✅ HABILITADO para validar funcionamiento
+  enabled: true  # HABILITADO para validar funcionamiento
 
   # Cuando se habilite, estos módulos aprenderán de resultados
   modules_for_adaptation:

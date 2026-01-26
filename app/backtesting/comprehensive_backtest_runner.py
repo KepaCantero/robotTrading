@@ -779,8 +779,8 @@ class ComprehensiveBacktestRunner:
                 'modules': filters_config,  # Filtros al nivel que la estrategia espera
                 'presets': {
                     'custom': {
-                        'combination_mode': 'MAJORITY',
-                        'min_confidence': 0.6,
+                        'combination_mode': 'ALL',  # ALL filters must agree to generate signal
+                        'min_confidence': 0.8,  # Increased from 0.6 to reduce false signals
                         'learning_mode': 'supervised'
                     }
                 }

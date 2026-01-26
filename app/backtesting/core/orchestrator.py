@@ -22,13 +22,18 @@ class BacktestDefaults:
 
     This class provides a single source of truth for default values
     used across the backtesting system.
+
+    NOTE: These defaults are used ONLY when configuration is not provided.
+    Always use proper YAML configuration with risk management parameters.
     """
 
-    COMMISSION = Decimal("1.0")
-    SLIPPAGE = Decimal("0.001")  # 0.1%
+    COMMISSION = Decimal("10.0")  # $10 per trade (realistic)
+    SLIPPAGE = Decimal("0.1")  # 0.1% slippage
     INITIAL_CAPITAL = Decimal("100000")
-    MAX_POSITION_SIZE = Decimal("0.20")  # 20% of capital
+    MAX_POSITION_SIZE = Decimal("0.10")  # 10% of capital (conservative)
     RISK_FREE_RATE = Decimal("0.02")  # 2% annual
+    STOP_LOSS_PERCENTAGE = Decimal("5.0")  # 5% stop loss
+    TAKE_PROFIT_PERCENTAGE = Decimal("10.0")  # 10% take profit
 
     # Default metric thresholds
     SHARPE_RATIO_EXCELLENT = 2.0

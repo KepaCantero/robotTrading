@@ -12,31 +12,39 @@
 # ============================================================================
 # RSI FILTER PARAMETERS
 # ============================================================================
+# Standard RSI Strategy:
+# - BUY when RSI <= buy_threshold (oversold condition, typically <= 30)
+# - SELL when RSI >= sell_threshold (overbought condition, typically >= 70)
+# - 30 <= RSI <= 70: Neutral zone (no clear signal)
 rsi_filter:
   # Default thresholds for RSI-based signals
   thresholds:
-    buy_min: 30           # RSI below this = oversold = buy signal
-    buy_max: 70           # RSI above this = overbought = avoid buy
-    sell_min: 50          # RSI below this = not overbought = avoid sell
-    sell_max: 80          # RSI above this = overbought = sell signal
+    buy_threshold: 30       # RSI at or below this = oversold = buy signal
+    sell_threshold: 70      # RSI at or above this = overbought = sell signal
 
   # Adaptive thresholds based on market regime
   adaptive_thresholds:
     balanced:
-      buy_min: 30
-      buy_max: 70
-      sell_min: 50
-      sell_max: 80
+      buy_threshold: 30
+      sell_threshold: 70
     volatile:
-      buy_min: 25         # More aggressive in volatile markets
-      buy_max: 75
-      sell_min: 45
-      sell_max: 85
+      buy_threshold: 25         # More aggressive in volatile markets
+      sell_threshold: 75
     trending:
-      buy_min: 40         # More conservative in trending markets
-      buy_max: 65
-      sell_min: 55
-      sell_max: 75
+      buy_threshold: 40         # More conservative in trending markets
+      sell_threshold: 65
+    trend_up:
+      buy_threshold: 45         # In uptrend, wait for deeper pullback
+      sell_threshold: 70
+    trend_down:
+      buy_threshold: 30         # In downtrend, buy earlier dips
+      sell_threshold: 50
+    range:
+      buy_threshold: 30
+      sell_threshold: 70
+    high_vol:
+      buy_threshold: 35
+      sell_threshold: 65
 
 # ============================================================================
 # MOMENTUM FILTER PARAMETERS
@@ -85,13 +93,14 @@ volume_filter:
 # ============================================================================
 # STOCHASTIC RSI FILTER PARAMETERS
 # ============================================================================
+# Standard StochRSI Strategy:
+# - BUY when StochRSI K <= oversold_threshold (typically <= 20)
+# - SELL when StochRSI K >= overbought_threshold (typically >= 80)
 stoch_rsi_filter:
   # Stochastic RSI thresholds
   thresholds:
-    buy_min: 15         # Stoch RSI below this = oversold = buy
-    buy_max: 85         # Stoch RSI above this = overbought = avoid buy
-    sell_min: 15        # Stoch RSI below this = not overbought = avoid sell
-    sell_max: 85        # Stoch RSI above this = overbought = sell
+    oversold_threshold: 20       # StochRSI at or below this = oversold = buy
+    overbought_threshold: 80     # StochRSI at or above this = overbought = sell
 
   # Stochastic RSI settings
   settings:
@@ -140,16 +149,16 @@ macd_filter:
 # CAPITAL TIER OVERRIDES
 # ============================================================================
 # Tier-specific adjustments for filter sensitivity
-# - micro: < €15k - More conservative
-# - small: €15k - €50k - Slightly conservative
-# - medium: €50k - €250k - Balanced
-# - large: >= €250k - More aggressive
+# - micro: < $15k - More conservative
+# - small: $15k - $50k - Slightly conservative
+# - medium: $50k - $250k - Balanced
+# - large: >= $250k - More aggressive
 tiers:
   micro:
     rsi_filter:
       thresholds:
-        buy_min: 35       # More conservative buy threshold
-        sell_max: 75      # More conservative sell threshold
+        buy_threshold: 35       # More conservative buy threshold
+        sell_threshold: 65      # More conservative sell threshold
     momentum_filter:
       thresholds:
         min_positive_momentum: 0.02   # Higher threshold
@@ -161,8 +170,8 @@ tiers:
   small:
     rsi_filter:
       thresholds:
-        buy_min: 32
-        sell_max: 78
+        buy_threshold: 32
+        sell_threshold: 68
     momentum_filter:
       thresholds:
         min_positive_momentum: 0.017
@@ -178,8 +187,8 @@ tiers:
   large:
     rsi_filter:
       thresholds:
-        buy_min: 25       # More aggressive buy threshold
-        sell_max: 85      # More aggressive sell threshold
+        buy_threshold: 25       # More aggressive buy threshold
+        sell_threshold: 75      # More aggressive sell threshold
     momentum_filter:
       thresholds:
         min_positive_momentum: 0.01    # Lower threshold
