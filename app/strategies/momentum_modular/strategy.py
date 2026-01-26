@@ -212,6 +212,95 @@ class ModularMomentumStrategy(BaseStrategy):
             else:
                 raise
 
+    def _is_market_regime_safe(self, market_context: Dict[str, Any]) -> bool:
+        """
+        Check if the current market regime is safe for trading.
+
+        This is a CRITICAL filter that prevents trading during adverse market conditions:
+        - Bear market crashes (DOWN trend + HIGH volatility)
+        - Dead markets (sideways/range + LOW volatility)
+        - Only allows trading in favorable conditions
+
+        Args:
+            market_context: Market analysis context from market_analyzer
+
+        Returns:
+            True if trading is allowed, False if market regime is bad
+        """
+        market_type = market_context.get('type', 'unknown')
+        trend_strength = market_context.get('trend_strength', 0.0)
+        volatility_regime = market_context.get('volatility_regime', 'normal')
+        volatility_percentile = market_context.get('volatility_percentile', 50)
+
+        # BAD REGIME CONDITIONS (return False - NO trading)
+
+        # 1. Bear market crash: trend DOWN with high strength
+        if market_type == 'trend_down' and trend_strength > 0.6:
+            logger.warning(
+                f"🚨 BEAR MARKET CRASH DETECTED: "
+                f"type={market_type}, strength={trend_strength:.2f} > 0.6 - "
+                f"STOPPING TRADING to prevent losses"
+            )
+            return False
+
+        # 2. Dead/sideways market with low volatility (no opportunity)
+        if market_type in ['range', 'sideways'] and volatility_regime == 'low':
+            logger.debug(
+                f"💀 DEAD MARKET: "
+                f"type={market_type}, volatility={volatility_regime} - "
+                f"NO trading (insufficient volatility for profits)"
+            )
+            return False
+
+        # 3. HIGH volatility regime (crash/crisis conditions)
+        # If volatility is above 75th percentile, market is in crisis
+        if volatility_percentile > 75:
+            logger.warning(
+                f"🔥 EXTREME VOLATILITY CRISIS: "
+                f"volatility_percentile={volatility_percentile} > 75 - "
+                f"STOPPING TRADING to prevent crash losses"
+            )
+            return False
+
+        # GOOD REGIME CONDITIONS (return True - ALLOW trading)
+
+        # 1. Bull market: trend UP is always good
+        if market_type == 'trend_up':
+            logger.debug(
+                f"✅ BULL MARKET: "
+                f"type={market_type}, strength={trend_strength:.2f} - "
+                f"Trading ALLOWED"
+            )
+            return True
+
+        # 2. Normal volatility (40-70 percentile) with any trend except strong down
+        if 40 <= volatility_percentile <= 70:
+            if market_type != 'trend_down' or trend_strength <= 0.5:
+                logger.debug(
+                    f"✅ NORMAL VOLATILITY: "
+                    f"percentile={volatility_percentile}, type={market_type} - "
+                    f"Trading ALLOWED"
+                )
+                return True
+
+        # 3. No trend / range with normal volatility (acceptable)
+        if market_type in ['range', 'no_trend'] and volatility_regime == 'normal':
+            logger.debug(
+                f"✅ RANGE MARKET (NORMAL VOL): "
+                f"type={market_type}, volatility={volatility_regime} - "
+                f"Trading ALLOWED (cautious)"
+            )
+            return True
+
+        # DEFAULT: Conservative - don't trade if uncertain
+        logger.debug(
+            f"⚠️ UNCERTAIN MARKET REGIME: "
+            f"type={market_type}, strength={trend_strength:.2f}, "
+            f"volatility={volatility_regime} (percentile={volatility_percentile}) - "
+            f"DEFAULTING to NO TRADING (conservative)"
+        )
+        return False
+
     def generate_signals(self, market_data: Quote) -> List[Signal]:
         """
         Genera señales usando módulos y learning engines.
@@ -249,6 +338,16 @@ class ModularMomentumStrategy(BaseStrategy):
             price_list = list(self.price_history)
             atr_list = list(self.atr_history) if self.atr_history else []
             market_context = self.market_analyzer.analyze(market_data, price_list, atr_list)
+
+            # 4. CRITICAL: Market Regime Filter - Prevent trading during bad conditions
+            if not self._is_market_regime_safe(market_context):
+                logger.debug(
+                    f"🚫 Market regime filter: NO trading allowed. "
+                    f"type={market_context.get('type')}, "
+                    f"strength={market_context.get('trend_strength', 0):.2f}, "
+                    f"volatility={market_context.get('volatility_regime', 'unknown')}"
+                )
+                return []
 
             # 4. Evaluar todos los filtros
             filter_results = self._evaluate_filters(indicators, market_context)
