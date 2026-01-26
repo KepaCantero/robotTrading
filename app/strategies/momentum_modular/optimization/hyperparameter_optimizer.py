@@ -81,8 +81,11 @@ class HyperparameterOptimizer:
             "ema_fast_period": [10, 12, 14, 16],
             "ema_slow_period": [24, 26, 28, 30],
             "rsi_period": [12, 14, 16],
-            "rsi_buy_min": [40, 45, 50],
-            "rsi_buy_max": [65, 70, 75],
+            # FIXED: Now using single buy_threshold and sell_threshold (standard RSI)
+            "rsi_buy_threshold": [25, 30, 35, 40],  # BUY when RSI <= threshold (oversold)
+            "rsi_sell_threshold": [65, 70, 75, 80],  # SELL when RSI >= threshold (overbought)
+            "stoch_rsi_oversold": [15, 20, 25],  # StochRSI oversold threshold
+            "stoch_rsi_overbought": [75, 80, 85],  # StochRSI overbought threshold
             "momentum_threshold": [0.01, 0.015, 0.02, 0.025],
             "volume_threshold": [1.05, 1.1, 1.15, 1.2],
             "atr_percentile_threshold": [55, 60, 65, 70],
@@ -181,7 +184,7 @@ class HyperparameterOptimizer:
             'preset': self.parameter_space['preset'],
             'enable_learning': self.parameter_space['enable_learning'],
             'learning_engine_type': self.parameter_space['learning_engine_type'],
-            'rsi_buy_min': self.parameter_space['rsi_buy_min'],
+            'rsi_buy_threshold': self.parameter_space['rsi_buy_threshold'],
             'momentum_threshold': self.parameter_space['momentum_threshold'],
             'volume_threshold': self.parameter_space['volume_threshold'],
         }
@@ -196,6 +199,7 @@ class HyperparameterOptimizer:
             config['ema_fast_period'] = random.choice(self.parameter_space['ema_fast_period'])
             config['ema_slow_period'] = random.choice(self.parameter_space['ema_slow_period'])
             config['rsi_period'] = random.choice(self.parameter_space['rsi_period'])
+            config['rsi_sell_threshold'] = random.choice(self.parameter_space['rsi_sell_threshold'])
             config['atr_percentile_threshold'] = random.choice(
                 self.parameter_space['atr_percentile_threshold']
             )
@@ -230,8 +234,10 @@ class HyperparameterOptimizer:
                 'ema_fast_period': random.choice(self.parameter_space['ema_fast_period']),
                 'ema_slow_period': random.choice(self.parameter_space['ema_slow_period']),
                 'rsi_period': random.choice(self.parameter_space['rsi_period']),
-                'rsi_buy_min': random.choice(self.parameter_space['rsi_buy_min']),
-                'rsi_buy_max': random.choice(self.parameter_space['rsi_buy_max']),
+                'rsi_buy_threshold': random.choice(self.parameter_space['rsi_buy_threshold']),
+                'rsi_sell_threshold': random.choice(self.parameter_space['rsi_sell_threshold']),
+                'stoch_rsi_oversold': random.choice(self.parameter_space.get('stoch_rsi_oversold', [20])),
+                'stoch_rsi_overbought': random.choice(self.parameter_space.get('stoch_rsi_overbought', [80])),
                 'momentum_threshold': random.choice(self.parameter_space['momentum_threshold']),
                 'volume_threshold': random.choice(self.parameter_space['volume_threshold']),
                 'atr_percentile_threshold': random.choice(
@@ -414,19 +420,28 @@ class HyperparameterOptimizer:
             ema_params['fast_period'] = config.get('ema_fast_period', 12)
             ema_params['slow_period'] = config.get('ema_slow_period', 26)
 
-        # RSI Filter
+        # RSI Filter - FIXED: Now using buy_threshold and sell_threshold
         if 'rsi_filter' in strategy_config['modules']:
             rsi_params = strategy_config['modules']['rsi_filter'].get('parameters', {})
             rsi_params['period'] = config.get('rsi_period', 14)
+            # Update adaptive thresholds with new single-value format
             thresholds = strategy_config['modules']['rsi_filter'].get('adaptive_thresholds', {})
-            if 'trend_up' in thresholds:
-                thresholds['trend_up']['buy_min'] = config.get('rsi_buy_min', 45)
-                thresholds['trend_up']['buy_max'] = config.get('rsi_buy_max', 70)
+            for context in thresholds:
+                thresholds[context]['buy_threshold'] = config.get('rsi_buy_threshold', 30)
+                thresholds[context]['sell_threshold'] = config.get('rsi_sell_threshold', 70)
+
+        # StochRSI Filter - FIXED: Now using oversold_threshold and overbought_threshold
+        if 'stoch_rsi_filter' in strategy_config['modules']:
+            thresholds = strategy_config['modules']['stoch_rsi_filter'].get('thresholds', {})
+            for preset in ['conservative', 'balanced', 'aggressive']:
+                if preset in thresholds:
+                    thresholds[preset]['oversold_threshold'] = config.get('stoch_rsi_oversold', 20)
+                    thresholds[preset]['overbought_threshold'] = config.get('stoch_rsi_overbought', 80)
 
         # Momentum Filter
         if 'momentum_filter' in strategy_config['modules']:
             mom_params = strategy_config['modules']['momentum_filter'].get(
-                'max_positive_momentum', {}
+                'thresholds', {}
             )
             for preset in ['conservative', 'balanced', 'aggressive']:
                 if preset in mom_params:
@@ -496,7 +511,8 @@ class HyperparameterOptimizer:
             parts.append(f"engine={config.get('learning_engine_type')}")
         parts.extend(
             [
-                f"rsi_min={config.get('rsi_buy_min')}",
+                f"rsi_buy={config.get('rsi_buy_threshold')}",
+                f"rsi_sell={config.get('rsi_sell_threshold')}",
                 f"momentum={config.get('momentum_threshold')}",
                 f"volume={config.get('volume_threshold')}",
             ]

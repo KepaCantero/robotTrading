@@ -97,6 +97,9 @@ class SimpleBacktester:
         self.reallocation_engine = reallocation_engine
         if reallocation_engine:
             logger.info(f"✅ Dynamic Capital Reallocation Engine linked for {strategy_name}")
+        
+        # CRITICAL FIX: Track last known price for each symbol for accurate equity curve calculation
+        self.last_known_prices: Dict[str, Decimal] = {}  # symbol -> last seen price
 
     def run_backtest(
         self,
@@ -156,6 +159,11 @@ class SimpleBacktester:
         strategy_stats = {}  # strategy_name -> {matched, skipped, symbol_mismatch, time_mismatch}
 
         for md in market_data:
+            # CRITICAL FIX: Track the current price for this symbol BEFORE updating equity curve
+            # This ensures we have the most recent price for accurate unrealized P&L calculation
+            current_md_price = get_price(md)
+            self.last_known_prices[md.symbol] = current_md_price
+            
             # Update equity curve
             self._update_equity_curve(md.timestamp)
 
@@ -357,6 +365,7 @@ class SimpleBacktester:
         self.equity_curve.clear()
         self.max_drawdown = Decimal("0")
         self.peak_equity = self.config.initial_capital
+        self.last_known_prices.clear()  # CRITICAL FIX: Reset price tracking
 
     def _create_portfolio_from_state(self, current_price_func=None):
         """
@@ -379,13 +388,28 @@ class SimpleBacktester:
             # Get current price (use market price if available)
             if current_price_func:
                 market_price = current_price_func(symbol)
+            elif symbol in self.last_known_prices:
+                # CRITICAL FIX: Use tracked price instead of placeholder
+                market_price = self.last_known_prices[symbol]
             else:
-                # Try to get price from most recent trade for this symbol
-                market_price = Decimal("100")  # Default fallback
+                # Fallback: try to get price from most recent trade for this symbol
+                market_price = None
                 for trade in reversed(self.trades):
                     if trade.symbol == symbol:
                         market_price = trade.entry_price
                         break
+                if not market_price:
+                    logger.warning(
+                        f"⚠️ No price available for {symbol} in portfolio creation, using entry price from first trade"
+                    )
+                    # Last resort fallback
+                    for trade in self.trades:
+                        if trade.symbol == symbol and trade.side == "buy":
+                            market_price = trade.entry_price
+                            break
+                if not market_price:
+                    market_price = Decimal("0")  # Should not happen, but safe default
+                    logger.error(f"❌ CRITICAL: Cannot determine price for {symbol} in portfolio")
 
             # Get average entry price from open trades
             avg_price = market_price  # Default to market price
@@ -439,7 +463,9 @@ class SimpleBacktester:
                 current_price = get_price(market_data)
                 portfolio = self._create_portfolio_from_state(
                     current_price_func=lambda s: (
-                        current_price if s == signal.symbol else Decimal("100")
+                        current_price if s == signal.symbol else (
+                            self.last_known_prices.get(s, current_price)  # Use tracked price
+                        )
                     )
                 )
 
@@ -526,15 +552,24 @@ class SimpleBacktester:
             # Build exposure maps from current positions
             for symbol, quantity in self.positions.items():
                 if quantity > 0:
-                    # Get current price for this symbol (use signal price if same symbol, otherwise estimate)
-                    pos_price = current_price if symbol == signal.symbol else Decimal("100")
-
-                    # Try to get actual price from recent trades
-                    for trade in reversed(self.trades):
-                        if trade.symbol == symbol:
-                            if trade.status == TradeStatus.OPEN:
-                                pos_price = trade.entry_price
-                            break
+                    # CRITICAL FIX: Get current price for this symbol from tracked prices
+                    if symbol == signal.symbol:
+                        pos_price = current_price
+                    elif symbol in self.last_known_prices:
+                        pos_price = self.last_known_prices[symbol]
+                    else:
+                        # Fallback: try to get actual price from recent trades
+                        pos_price = None
+                        for trade in reversed(self.trades):
+                            if trade.symbol == symbol:
+                                if trade.status == TradeStatus.OPEN:
+                                    pos_price = trade.entry_price
+                                else:
+                                    pos_price = trade.entry_price
+                                break
+                        if not pos_price:
+                            logger.warning(f"⚠️ No price available for {symbol} in risk envelope check")
+                            pos_price = current_price  # Best available fallback
 
                     position_value = quantity * pos_price
                     current_portfolio_exposure[symbol] = position_value
@@ -544,8 +579,8 @@ class SimpleBacktester:
             if signal.signal_type == SignalType.BUY:
                 # Estimate trade value from position size
                 portfolio = self._create_portfolio_from_state(
-                    current_price_func=lambda s: (
-                        current_price if s == signal.symbol else Decimal("100")
+                    current_price_func=lambda s: current_price if s == signal.symbol else (
+                        self.last_known_prices.get(s, current_price)  # Use tracked price
                     )
                 )
                 position_size = (
@@ -1248,12 +1283,31 @@ class SimpleBacktester:
         # Calculate current portfolio value
         portfolio_value = self.capital
 
-        # Add unrealized P&L from open positions
+        # CRITICAL FIX: Add unrealized P&L from open positions using actual tracked prices
         for symbol, quantity in self.positions.items():
             if quantity > 0:
-                # For simplicity, we'll use the last known price
-                # In a real implementation, you'd need to track current prices
-                portfolio_value += quantity * Decimal("100")  # Placeholder price
+                # Use the last known price for this symbol
+                if symbol in self.last_known_prices:
+                    current_price = self.last_known_prices[symbol]
+                    portfolio_value += quantity * current_price
+                else:
+                    # Fallback: try to get price from most recent trade
+                    logger.warning(
+                        f"⚠️ No tracked price for {symbol}, using last trade price for equity curve"
+                    )
+                    last_trade_price = None
+                    for trade in reversed(self.trades):
+                        if trade.symbol == symbol and trade.side == "buy":
+                            last_trade_price = trade.entry_price
+                            break
+                    if last_trade_price:
+                        portfolio_value += quantity * last_trade_price
+                    else:
+                        # Last resort - this should rarely happen
+                        logger.error(
+                            f"❌ CRITICAL: No price available for {symbol} in equity curve calculation. "
+                            f"This position's value cannot be calculated accurately."
+                        )
 
         self.equity_curve.append((timestamp, portfolio_value))
 

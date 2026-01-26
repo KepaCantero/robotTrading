@@ -46,28 +46,32 @@ supervised_learning:
 
 # ============================================================================
 # THRESHOLD OPTIMIZATION PARAMETERS
+# FIXED: Now using single buy_threshold and sell_threshold for RSI
 # ============================================================================
 threshold_optimization:
   # RSI threshold optimization ranges
+  # Standard RSI: BUY when RSI <= buy_threshold, SELL when RSI >= sell_threshold
   rsi:
-    buy_min:
-      min: 30
-      max: 50
+    buy_threshold:
+      min: 20      # More aggressive: buy earlier
+      max: 35      # More conservative: wait for deeper pullback
       step: 2
 
-    buy_max:
-      min: 60
-      max: 80
+    sell_threshold:
+      min: 65      # More conservative: take profits earlier
+      max: 80      # More aggressive: let profits run longer
       step: 2
 
-    sell_min:
-      min: 50
-      max: 70
+  # StochRSI threshold optimization ranges
+  stoch_rsi:
+    oversold_threshold:
+      min: 10      # Very aggressive
+      max: 25      # More conservative
       step: 2
 
-    sell_max:
-      min: 70
-      max: 90
+    overbought_threshold:
+      min: 75      # More conservative
+      max: 90      # Very aggressive
       step: 2
 
   # Momentum threshold optimization ranges
