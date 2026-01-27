@@ -1,0 +1,284 @@
+# Capital Tier Configuration
+# Centralized configuration for capital tier thresholds and tier-specific parameters.
+#
+# This file defines all capital tier boundaries (micro, small, medium, large)
+# and their associated trading limits, permissions, and configurations.
+
+# ============================================================================
+# CAPITAL TIER DEFINITIONS
+# ============================================================================
+tiers:
+  micro:
+    # Capital range
+    min_capital: 0
+    max_capital: 15000
+    display_name: "Micro Account (<€15k)"
+    description: "Entry-level accounts with limited capital"
+
+    # Position sizing limits
+    max_position_percent: 0.10      # 10% maximum per position
+    default_position_percent: 0.05  # 5% default position size
+
+    # Risk limits
+    max_risk_per_trade: 0.01        # 1% maximum risk per trade
+    max_total_exposure: 0.60        # 60% maximum total exposure
+
+    # Strategy permissions
+    enabled_strategies:
+      - momentum_strategy
+
+    disabled_strategies:
+      - pairs_trading_strategy       # Requires more capital
+      - mean_reversion_strategy      # May require more liquidity
+
+    # Maximum leverage
+    max_leverage: 1.0                # No leverage for micro accounts
+
+    # Maximum positions
+    max_positions: 3                 # Maximum 3 concurrent positions
+
+    # Fees and costs
+    min_profitability_trade: 0.005   # 0.5% minimum profit per trade
+    commission_sensitivity: high     # Highly sensitive to commissions
+
+  small:
+    # Capital range
+    min_capital: 15000
+    max_capital: 50000
+    display_name: "Small Account (€15k-€50k)"
+    description: "Growing accounts with moderate capital"
+
+    # Position sizing limits
+    max_position_percent: 0.15      # 15% maximum per position
+    default_position_percent: 0.08  # 8% default position size
+
+    # Risk limits
+    max_risk_per_trade: 0.015       # 1.5% maximum risk per trade
+    max_total_exposure: 0.70        # 70% maximum total exposure
+
+    # Strategy permissions
+    enabled_strategies:
+      - momentum_strategy
+      - mean_reversion_strategy
+
+    disabled_strategies:
+      - pairs_trading_strategy       # Typically disabled for small
+
+    # Maximum leverage
+    max_leverage: 1.2                # 1.2x maximum leverage
+
+    # Maximum positions
+    max_positions: 5                 # Maximum 5 concurrent positions
+
+    # Fees and costs
+    min_profitability_trade: 0.003   # 0.3% minimum profit per trade
+    commission_sensitivity: medium   # Medium sensitivity to commissions
+
+  medium:
+    # Capital range
+    min_capital: 50000
+    max_capital: 250000
+    display_name: "Medium Account (€50k-€250k)"
+    description: "Established accounts with significant capital"
+
+    # Position sizing limits
+    max_position_percent: 0.20      # 20% maximum per position
+    default_position_percent: 0.10  # 10% default position size
+
+    # Risk limits
+    max_risk_per_trade: 0.02        # 2% maximum risk per trade
+    max_total_exposure: 0.80        # 80% maximum total exposure
+
+    # Strategy permissions
+    enabled_strategies:
+      - momentum_strategy
+      - mean_reversion_strategy
+      - pairs_trading_strategy
+
+    disabled_strategies: []
+
+    # Maximum leverage
+    max_leverage: 1.5                # 1.5x maximum leverage
+
+    # Maximum positions
+    max_positions: 10                # Maximum 10 concurrent positions
+
+    # Fees and costs
+    min_profitability_trade: 0.002   # 0.2% minimum profit per trade
+    commission_sensitivity: low      # Low sensitivity to commissions
+
+  large:
+    # Capital range
+    min_capital: 250000
+    max_capital: 1000000
+    display_name: "Large Account (€250k-€1M)"
+    description: "Large accounts with substantial capital"
+
+    # Position sizing limits
+    max_position_percent: 0.25      # 25% maximum per position
+    default_position_percent: 0.12  # 12% default position size
+
+    # Risk limits
+    max_risk_per_trade: 0.025       # 2.5% maximum risk per trade
+    max_total_exposure: 0.85        # 85% maximum total exposure
+
+    # Strategy permissions
+    enabled_strategies:
+      - momentum_strategy
+      - mean_reversion_strategy
+      - pairs_trading_strategy
+
+    disabled_strategies: []
+
+    # Maximum leverage
+    max_leverage: 2.0                # 2.0x maximum leverage
+
+    # Maximum positions
+    max_positions: 20                # Maximum 20 concurrent positions
+
+    # Fees and costs
+    min_profitability_trade: 0.001   # 0.1% minimum profit per trade
+    commission_sensitivity: very_low # Very low sensitivity to commissions
+
+  institutional:
+    # Capital range
+    min_capital: 1000000
+    max_capital: null                # No upper limit
+    display_name: "Institutional Account (€1M+)"
+    description: "Institutional-level accounts"
+
+    # Position sizing limits
+    max_position_percent: 0.30      # 30% maximum per position
+    default_position_percent: 0.15  # 15% default position size
+
+    # Risk limits
+    max_risk_per_trade: 0.03        # 3% maximum risk per trade
+    max_total_exposure: 0.90        # 90% maximum total exposure
+
+    # Strategy permissions
+    enabled_strategies:
+      - momentum_strategy
+      - mean_reversion_strategy
+      - pairs_trading_strategy
+      - arbitrage_strategy           # Institutional only
+
+    disabled_strategies: []
+
+    # Maximum leverage
+    max_leverage: 3.0                # 3.0x maximum leverage
+
+    # Maximum positions
+    max_positions: 50                # Maximum 50 concurrent positions
+
+    # Fees and costs
+    min_profitability_trade: 0.0005  # 0.05% minimum profit per trade
+    commission_sensitivity: minimal  # Minimal sensitivity to commissions
+
+# ============================================================================
+# TIER THRESHOLDS (Quick Reference)
+# ============================================================================
+thresholds:
+  micro_small: 15000         # Boundary between micro and small
+  small_medium: 50000        # Boundary between small and medium
+  medium_large: 250000       # Boundary between medium and large
+  large_institutional: 1000000  # Boundary between large and institutional
+
+# ============================================================================
+# TIER-SPECIFIC MODULE PERMISSIONS
+# ============================================================================
+module_permissions:
+  # Machine Learning modules
+  ml_ensemble:
+    min_capital: 250000      # €250k minimum for ML ensemble
+    min_tier: "large"
+
+  transformer_learning:
+    min_capital: 250000      # €250k minimum for transformer models
+    min_tier: "large"
+
+  reinforcement_learning:
+    min_capital: 250000      # €250k minimum for RL
+    min_tier: "large"
+
+  deep_learning_engine:
+    min_capital: 50000       # €50k minimum for deep learning
+    min_tier: "medium"
+
+  # Advanced strategies
+  arbitrage:
+    min_capital: 1000000     # €1M minimum for arbitrage
+    min_tier: "institutional"
+
+  # Analytics features
+  advanced_analytics:
+    min_capital: 50000       # €50k minimum
+    min_tier: "medium"
+
+  real_time_monitoring:
+    min_capital: 15000       # €15k minimum
+    min_tier: "small"
+
+# ============================================================================
+# TIER-SPECIFIC COMMISSION RATES
+# ============================================================================
+commission_rates:
+  micro:
+    per_trade: 0.001         # 0.1% per trade (higher for small accounts)
+    min_commission: 1.0      # €1 minimum commission
+
+  small:
+    per_trade: 0.0008        # 0.08% per trade
+    min_commission: 0.50     # €0.50 minimum commission
+
+  medium:
+    per_trade: 0.0005        # 0.05% per trade
+    min_commission: 0.10     # €0.10 minimum commission
+
+  large:
+    per_trade: 0.0002        # 0.02% per trade
+    min_commission: 0.05     # €0.05 minimum commission
+
+  institutional:
+    per_trade: 0.0001        # 0.01% per trade
+    min_commission: 0.01     # €0.01 minimum commission
+
+# ============================================================================
+# LEARNING VIABILITY THRESHOLDS
+# ============================================================================
+learning_viability:
+  # Minimum capital for profitable learning (factoring in compute costs)
+  min_capital_for_learning: 25000    # €25k minimum for learning to be viable
+  min_capital_for_deep_learning: 50000  # €50k minimum for deep learning
+  min_capital_for_rl: 250000          # €250k minimum for RL
+
+  # Cost-to-alpha ratios
+  max_learning_cost_ratio: 0.30       # Learning cost must be < 30% of expected alpha
+
+  # Retraining thresholds
+  min_trades_for_retrain: 30          # Minimum 30 trades before retraining
+  default_retrain_frequency_days: 14  # Retrain every 14 days
+
+# ============================================================================
+# VALIDATION THRESHOLDS BY TIER
+# ============================================================================
+validation:
+  # Minimum capital for expensive modules
+  expensive_modules_min_capital: 50000  # €50k minimum
+
+  # Module-specific capital requirements
+  modules:
+    learning_systems:
+      min_capital: 25000
+      recommended_capital: 50000
+
+    advanced_strategies:
+      min_capital: 50000
+      recommended_capital: 100000
+
+    portfolio_optimization:
+      min_capital: 100000
+      recommended_capital: 250000
+
+    institutional_features:
+      min_capital: 1000000
+      recommended_capital: 5000000

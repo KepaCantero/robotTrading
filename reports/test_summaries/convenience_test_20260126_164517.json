@@ -1,0 +1,66 @@
+{
+  "metadata": {
+    "test_name": "convenience_test",
+    "test_description": "No description provided",
+    "test_file": "unknown.py",
+    "test_type": "integration",
+    "test_id": "test_20260126_164517",
+    "author": null,
+    "tags": [],
+    "created_at": "2026-01-26T16:45:17.647656"
+  },
+  "input_data": {
+    "symbols": [
+      "AAPL",
+      "MSFT"
+    ],
+    "date_range": [
+      "2023-01-01T00:00:00",
+      "2023-06-30T00:00:00"
+    ],
+    "data_points": 252,
+    "market_regime": "unknown",
+    "data_source": "backtest",
+    "price_range": null,
+    "volume_stats": null,
+    "volatility": null,
+    "notes": []
+  },
+  "config": {
+    "initial_capital": "50000",
+    "commission": "1.0",
+    "slippage": "0.1",
+    "strategy": "unknown",
+    "strategy_params": {},
+    "risk_management": null,
+    "additional_params": {}
+  },
+  "output": {
+    "final_capital": "55000",
+    "total_pnl": "5000",
+    "total_pnl_percentage": null,
+    "sharpe_ratio": null,
+    "sortino_ratio": null,
+    "max_drawdown": null,
+    "max_drawdown_percentage": null,
+    "win_rate": null,
+    "total_trades": 25,
+    "winning_trades": 0,
+    "losing_trades": 0,
+    "calmar_ratio": null,
+    "omega_ratio": null,
+    "profit_factor": null,
+    "expectancy": null,
+    "additional_metrics": {}
+  },
+  "validation_criteria": [],
+  "passed": true,
+  "pass_reason": "Simple test passed",
+  "warnings": [],
+  "anomalies": [],
+  "start_time": "2026-01-26T16:45:17.647659",
+  "end_time": "2026-01-26T16:45:17.647684",
+  "duration_seconds": 2.5e-05,
+  "notes": [],
+  "attachments": []
+}

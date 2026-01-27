@@ -13,6 +13,7 @@ No stop-loss execution in production.
 """
 
 import asyncio
+import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -322,6 +323,9 @@ class PositionMonitor:
         self.config = config or PositionMonitorConfig()
         self.on_stop_triggered = on_stop_triggered
 
+        # Unique monitor ID for state persistence
+        self.monitor_id = f"monitor_{id(self)}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
+
         # State
         self.is_running = False
         self._monitor_task: Optional[asyncio.Task] = None
@@ -534,11 +538,41 @@ class PositionMonitor:
             logger.error(f"Error loading positions from broker: {e}")
 
     async def _load_state_from_db(self) -> None:
-        """Load persisted state from database."""
-        # TODO: Implement database persistence
-        # This should load all monitored positions from database
-        # for recovery after process restart
-        pass
+        """
+        Load persisted state from database for recovery.
+
+        CRITICAL: This enables position recovery after restart.
+        """
+        try:
+            from app.database import get_sync_db
+
+            with get_sync_db() as session:
+                from app.database.models import PositionState
+
+                # Query the position_state table
+                state_record = session.query(PositionState).filter(
+                    PositionState.monitor_id == self.monitor_id,
+                    PositionState.is_active == True
+                ).first()
+
+                if state_record:
+                    # Deserialize positions
+                    state_data = json.loads(state_record.positions_json)
+
+                    # Restore positions
+                    for pos_data in state_data.get('positions', []):
+                        position = MonitoredPosition.from_dict(pos_data)
+                        self._positions[position.position_id] = position
+
+                    logger.info(
+                        f"Loaded {len(self._positions)} positions from database "
+                        f"for monitor {self.monitor_id}"
+                    )
+                else:
+                    logger.info(f"No existing state found in database for monitor {self.monitor_id}")
+
+        except Exception as e:
+            logger.error(f"Failed to load state from database: {e}", exc_info=True)
 
     async def _monitor_loop(self) -> None:
         """Main monitoring loop - checks positions every second."""
@@ -772,11 +806,49 @@ class PositionMonitor:
                 logger.error(f"Error in state sync loop: {e}")
 
     async def _sync_state(self) -> None:
-        """Sync current state to database for recovery."""
-        # TODO: Implement database persistence
-        # This should save all monitored positions to database
-        # for recovery after process restart
-        pass
+        """
+        Sync current state to database for recovery.
+
+        CRITICAL: This enables position recovery after restart.
+        """
+        try:
+            from app.database import get_sync_db
+
+            with get_sync_db() as session:
+                from app.database.models import PositionState
+
+                # Serialize current positions
+                positions_list = [pos.to_dict() for pos in self._positions.values()]
+                state_json = json.dumps({
+                    'positions': positions_list,
+                    'timestamp': datetime.now(timezone.utc).isoformat()
+                }, default=str)
+
+                # Check if state exists
+                existing = session.query(PositionState).filter(
+                    PositionState.monitor_id == self.monitor_id
+                ).first()
+
+                if existing:
+                    # Update existing
+                    existing.positions_json = state_json
+                    existing.last_sync = datetime.now(timezone.utc)
+                    existing.version += 1
+                else:
+                    # Create new
+                    new_state = PositionState(
+                        monitor_id=self.monitor_id,
+                        positions_json=state_json,
+                        last_sync=datetime.now(timezone.utc),
+                        is_active=True
+                    )
+                    session.add(new_state)
+
+                session.commit()
+                logger.debug(f"State synced to database for monitor {self.monitor_id}")
+
+        except Exception as e:
+            logger.error(f"Failed to sync state to database: {e}", exc_info=True)
 
     def get_monitored_positions(self) -> List[MonitoredPosition]:
         """Get list of all monitored positions."""

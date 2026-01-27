@@ -1,0 +1,1062 @@
+================================================================================
+ALGO TRADING SYSTEM - PRIORITIZED RECOMMENDATIONS
+Generated: 2026-01-27
+Repository: algoTrading (commit 3b98ed70)
+================================================================================
+
+EXECUTIVE SUMMARY
+================================================================================
+Overall System Grade: D+
+Production Ready: NO - CRITICAL ISSUES MUST BE ADDRESSED
+Estimated Time to Production-Ready: 6-8 weeks
+
+This system has SECURITY CRITICAL vulnerabilities and FINANCIAL RISK factors
+that MUST be resolved before any production deployment.
+
+================================================================================
+PHASE 0: IMMEDIATE ACTION (DO TODAY - CRITICAL)
+================================================================================
+Timeline: 1 day
+Risk: SYSTEM COMPROMISE, FINANCIAL LOSS, REGULATORY VIOLATIONS
+
+[CRIT-001] REVOKE ALL EXPOSED API KEYS IMMEDIATELY
+----------------------------------------------------
+AFFECTED SYSTEMS:
+  - Alpaca Trading API
+  - Polygon Market Data API
+  - Alpha Vantage API
+  - Marketaux API
+  - Interactive Brokers (account number exposed)
+
+EXPOSED CREDENTIALS:
+  - ALPACA_API_KEY=PKRRDAOZNIAJTSOULKQMCW7T2W
+  - ALPACA_API_SECRET=5ATfph9QD9J6WMxFv7shkTGD9x85mJ47MGJawm6DdAMu
+  - POLYGON_API_KEY=OO6RZA0ez1619ezh0TE6_DxNxdyVslqd
+  - ALPHA_VANTAGE_API_KEY=OO6RZA0ez1619ezh0TE6_DxNxdyVslqd
+  - MARKETAUX_API_KEY=oOezKYZrAuhgkxXMxvdq2Qd2pMPnaL8ITE7OHKaT
+  - IB_ACCOUNT=DU9811225
+
+ACTIONS:
+  1. Login to each provider's dashboard immediately
+  2. Revoke/delete all exposed API keys
+  3. Generate new API keys with strong randomness
+  4. Document new keys in SECURE location (password manager)
+  5. DO NOT commit new keys to git
+
+VERIFICATION:
+  [] Alpaca keys revoked
+  [] Polygon keys revoked
+  [] Alpha Vantage keys revoked
+  [] Marketaux keys revoked
+  [] IB account secured
+
+[CRIT-001] REMOVE .ENV FROM GIT HISTORY
+----------------------------------------------------
+COMMANDS:
+  git filter-branch --force --index-filter \
+    'git rm --cached --ignore-unmatch .env' \
+    --prune-empty --tag-name-filter cat -- --all
+
+  # Force push to all remotes
+  git push origin --force --all
+
+ACTIONS:
+  1. Backup repository before running filter-branch
+  2. Run filter-branch command above
+  3. Force push to all remotes
+  4. Notify all team members to re-clone repository
+
+VERIFICATION:
+  [] .env removed from git history
+  [] All remotes updated
+  [] Team notified to re-clone
+
+[CRIT-002] FIX INSECURE DESERIALIZATION (3 FILES)
+----------------------------------------------------
+AFFECTED FILES:
+  - /app/core/messaging.py:136,159
+  - /app/strategies/momentum_modular/learning/deep_learning_engine.py:658,661
+  - /app/engines/data_engine/cache/distributed_cache.py:175,189
+
+CURRENT CODE (DANGEROUS):
+  data = pickle.loads(message['data'])
+
+REPLACEMENT CODE (SAFE):
+  import json
+  import hmac
+  import hashlib
+
+  def verify_and_load(signed_data, secret_key):
+      """Verify HMAC signature and load JSON data"""
+      try:
+          data_str, signature = signed_data.split('|')
+          expected_sig = hmac.new(
+              secret_key.encode(),
+              data_str.encode(),
+              hashlib.sha256
+          ).hexdigest()
+          
+          if not hmac.compare_digest(signature, expected_sig):
+              raise ValueError("Invalid signature - data may be tampered")
+          
+          return json.loads(data_str)
+      except (ValueError, json.JSONDecodeError) as e:
+          logger.error(f"Failed to load data: {e}")
+          raise
+
+ACTIONS:
+  1. Replace all pickle.loads() with JSON + HMAC
+  2. Update all message producers to sign messages
+  3. Test thoroughly with invalid signatures
+  4. Document the new protocol
+
+VERIFICATION:
+  [] All pickle.loads() replaced
+  [] Message signing implemented
+  [] Invalid signature rejection tested
+  [] Documentation updated
+
+[CRIT-004] ADD POSITION SIZE VALIDATION
+----------------------------------------------------
+AFFECTED: All strategy files and trade execution paths
+
+IMPLEMENT THIS VALIDATION FUNCTION:
+  from decimal import Decimal
+
+  def validate_position_size(
+      capital: Decimal,
+      position_size: Decimal,
+      max_position_percent: Decimal = Decimal("0.25")
+  ) -> bool:
+      """
+      Validate position size doesn't exceed capital or maximum position.
+      
+      Args:
+          capital: Available capital
+          position_size: Requested position size
+          max_position_percent: Maximum position as percentage of capital
+      
+      Returns:
+          True if valid
+      
+      Raises:
+          ValueError: If position size exceeds limits
+      """
+      max_position = capital * max_position_percent
+      
+      if position_size > capital:
+          raise ValueError(
+              f"Position size ${position_size:.2f} exceeds "
+              f"available capital ${capital:.2f}"
+          )
+      
+      if position_size > max_position:
+          raise ValueError(
+              f"Position size ${position_size:.2f} exceeds "
+              f"maximum ${max_position:.2f} ({max_position_percent*100}% of capital)"
+          )
+      
+      return True
+
+INTEGRATION POINTS:
+  - All strategy generate_signals() methods
+  - All order submission paths
+  - Backtesting engine
+  - Paper trading
+  - Live trading
+
+VERIFICATION:
+  [] validate_position_size() created
+  [] Integrated into all strategies
+  [] Integrated into order submission
+  [] Unit tests added
+  [] Integration tests added
+
+================================================================================
+PHASE 1: URGENT (THIS WEEK)
+================================================================================
+Timeline: 5-7 days
+Risk: FINANCIAL LOSS, SYSTEM INSTABILITY
+
+[CRIT-003] IMPLEMENT STOP-LOSS TESTS
+----------------------------------------------------
+CURRENT STATUS: ZERO TESTS for apply_stop_loss()
+
+REQUIRED TESTS:
+  1. Test stop-loss triggers at correct percentage
+  2. Test stop-loss doesn't trigger prematurely
+  3. Test stop-loss with gap down openings
+  4. Test stop-loss with high volatility
+  5. Test trailing stop-loss
+  6. Test stop-loss with partial positions
+  7. Test stop-loss error handling
+  8. Test stop-loss with insufficient liquidity
+
+TARGET COVERAGE: >95% for stop-loss logic
+
+ACTIONS:
+  1. Create test_stop_loss.py with comprehensive test suite
+  2. Test all stop-loss variants (fixed, trailing, ATR-based)
+  3. Test error conditions and edge cases
+  4. Run tests in CI/CD pipeline
+
+VERIFICATION:
+  [] Test file created with 20+ tests
+  [] All edge cases covered
+  [] Coverage >95%
+  [] CI/CD integration complete
+  [] All tests passing
+
+[HIGH-001] FIX BARE EXCEPT IN IB_ADAPTER
+----------------------------------------------------
+FILE: /app/services/live_trading/broker_adapters/ib_adapter.py:663
+
+CURRENT CODE (DANGEROUS):
+  def __del__(self):
+      try:
+          if hasattr(self, 'ib') and self.ib.isConnected():
+              self.ib.disconnect()
+      except:
+          pass  # Swallows ALL errors!
+
+REPLACEMENT CODE:
+  def __del__(self):
+      """Cleanup on deletion."""
+      try:
+          if hasattr(self, 'ib') and self.ib.isConnected():
+              self.ib.disconnect()
+      except ConnectionError as e:
+          logger.warning(f"Connection error during IB cleanup: {e}")
+      except Exception as e:
+          logger.error(f"Unexpected error during IB cleanup: {e}")
+
+VERIFICATION:
+  [] Bare except replaced
+  [] Specific exceptions caught
+  [] Proper logging added
+  [] Tested with various error scenarios
+
+[CRIT-005] ADD SECRET_KEY VALIDATION
+----------------------------------------------------
+FILE: /app/core/config.py:35-37
+
+IMPLEMENT THIS VALIDATOR:
+  from pydantic import Field, field_validator
+
+  class Settings(BaseSettings):
+      secret_key: str = Field(
+          ...,
+          description="Secret key for JWT tokens and encryption (REQUIRED)"
+      )
+      
+      @field_validator('secret_key')
+      @classmethod
+      def validate_secret_key(cls, v: str) -> str:
+          """Validate SECRET_KEY is strong enough."""
+          # Check for empty
+          if not v:
+              raise ValueError(
+                  "SECRET_KEY is required. "
+                  "Generate with: openssl rand -hex 32"
+              )
+          
+          # Check for placeholder
+          if v in [
+              'your_secret_key_change_this_in_production',
+              'changeme',
+              'secret',
+              ''
+          ]:
+              raise ValueError(
+                  "SECRET_KEY must be changed from default placeholder. "
+                  "Generate with: openssl rand -hex 32"
+              )
+          
+          # Check minimum length
+          if len(v) < 32:
+              raise ValueError(
+                  f"SECRET_KEY must be at least 32 characters (current: {len(v)})"
+              )
+          
+          # Check for sufficient entropy (base64/hex)
+          if len(v) < 64 and v.isalnum():
+              raise ValueError(
+                  "SECRET_KEY appears weak. Use: openssl rand -hex 32"
+              )
+          
+          return v
+
+PRODUCTION STARTUP CHECK:
+  if not settings.debug:
+      settings.validate_secret_key(settings.secret_key)
+
+VERIFICATION:
+  [] Validator implemented
+  [] Production startup check added
+  [] Tested with weak keys (rejected)
+  [] Tested with strong keys (accepted)
+  [] Documentation updated
+
+[HIGH-005] IMPLEMENT DATABASE PERSISTENCE FOR POSITION MONITORING
+----------------------------------------------------
+FILES: /app/services/position_monitor/position_monitor.py
+
+MISSING METHODS:
+  1. _load_state_from_db() - Load monitored positions from database
+  2. _sync_state() - Save monitored positions to database
+
+IMPLEMENTATION STEPS:
+  1. Design database schema for monitored positions
+  2. Create migration script
+  3. Implement _load_state_from_db():
+     - Query positions from database
+     - Restore monitoring state
+     - Handle stale/invalid positions
+  4. Implement _sync_state():
+     - Save current monitoring state
+     - Update existing records
+     - Create new records
+     - Archive old records
+  5. Add error handling and retry logic
+  6. Add tests for persistence
+
+VERIFICATION:
+  [] Database schema designed
+  [] Migration created and run
+  [] _load_state_from_db() implemented
+  [] _sync_state() implemented
+  [] Tests added and passing
+  [] Recovery tested (kill process, restart, verify state restored)
+
+[HIGH-006] IMPLEMENT CORPORATE ACTIONS PERSISTENCE
+----------------------------------------------------
+FILE: /app/services/corporate_actions/handler.py:819
+
+IMPLEMENTATION:
+  1. After processing corporate action, persist position adjustments
+  2. Create audit trail of all changes
+  3. Handle rollback on error
+  4. Add tests for various corporate action types
+
+VERIFICATION:
+  [] Persistence implemented
+  [] Audit trail created
+  [] Rollback logic tested
+  [] All corporate action types tested
+
+[MEDIUM-001] SANITIZE DATABASE CONNECTION STRINGS IN LOGS
+----------------------------------------------------
+FILE: /app/core/database.py:98-100
+
+CURRENT CODE:
+  logger.info(f"Database engine created: {settings.database_url}")
+
+REPLACEMENT CODE:
+  # Sanitize connection string before logging
+  url_part = settings.database_url.split("@")[1] if "@" in settings.database_url else "localhost"
+  logger.info(f"Database engine created (host={url_part}, pool_size={settings.database_pool_size})")
+
+VERIFICATION:
+  [] Connection string sanitized
+  [] No credentials in logs
+  [] Tested with various connection string formats
+
+================================================================================
+PHASE 2: HIGH PRIORITY (THIS MONTH)
+================================================================================
+Timeline: 3-4 weeks
+Risk: MAINTAINABILITY, TESTING GAPS
+
+[HIGH-002] REFACTOR PROFILE_BATCH_BACKTESTER (GOD OBJECT)
+----------------------------------------------------
+FILE: /app/backtesting/profile_batch_backtester.py
+CURRENT SIZE: 2887 lines, 39 methods
+
+REFACTORING PLAN:
+  
+  NEW STRUCTURE:
+    ProfileBatchBacktester (orchestrator only - ~300 lines)
+    ├── ProfileGenerator (~200 lines)
+    ├── BaselineBacktestExecutor (~300 lines)
+    ├── OptimizationPipeline
+    │   ├── BayesianOptimizer (~400 lines)
+    │   ├── WalkForwardValidator (~500 lines)
+    │   └── MonteCarloSimulator (~300 lines)
+    ├── OutOfSampleValidator (~400 lines)
+    ├── ResultAggregator (~300 lines)
+    └── ReportGenerator (~500 lines)
+
+  STEPS:
+    1. Create new file structure in app/backtesting/pipelines/
+    2. Extract ProfileGenerator class
+    3. Extract BaselineBacktestExecutor class
+    4. Extract optimization pipeline classes
+    5. Create orchestrator that coordinates all classes
+    6. Update all imports and tests
+    7. Verify functionality is preserved
+
+  ESTIMATED EFFORT: 5 days
+
+VERIFICATION:
+  [] All classes extracted
+  [] Orchestrator implemented
+  [] Tests updated and passing
+  [] Functionality preserved
+  [] Code review completed
+
+[HIGH-003] REFACTOR DRIFT_DETECTOR (GOD OBJECT)
+----------------------------------------------------
+FILE: /app/strategies/momentum_modular/learning/drift_detector.py
+CURRENT SIZE: 2198 lines, 18 methods
+
+REFACTORING PLAN:
+  
+  NEW STRUCTURE:
+    DriftDetectorRegistry (facade)
+    ├── StatisticalDetectors (ABC)
+    │   ├── KSTestDetector
+    │   ├── PSIDetector
+    │   ├── ADWINDetector
+    │   └── MMDDetector
+    ├── OverfittingDetector
+    ├── LearningCurveAnalyzer
+    └── RetrainingTrigger
+
+  STEPS:
+    1. Create detector base class (ABC)
+    2. Extract each detector into separate class
+    3. Implement registry pattern
+    4. Update configuration to support multiple detectors
+    5. Add tests for each detector
+    6. Update documentation
+
+  ESTIMATED EFFORT: 3 days
+
+VERIFICATION:
+  [] All detectors extracted
+  [] Registry pattern implemented
+  [] Configuration updated
+  [] Tests added for each detector
+  [] Documentation updated
+
+[HIGH-007] EXTRACT MAGIC NUMBERS TO CONFIG (157+ INSTANCES)
+----------------------------------------------------
+AFFECTED AREAS:
+  1. RSI Thresholds (30, 35, 40, 45, 55, 60, 70)
+  2. Risk Parameters (stop loss %, take profit %, leverage)
+  3. Capital Tiers (15000, 50000, 250000)
+  4. Time Periods (rolling windows, lookback periods)
+  5. Position Sizing (percentages, limits)
+
+CREATE THESE CONFIG FILES:
+  
+  config/strategy/thresholds.yaml:
+    rsi:
+      extreme_low: 30
+      extreme_high: 70
+      buy_signal: 45
+      sell_signal: 55
+    momentum:
+      entry_threshold: 40
+      exit_threshold: 70
+  
+  config/risk_management/parameters.yaml:
+    stop_loss:
+      default_percent: 5
+      max_percent: 10
+    take_profit:
+      default_percent: 10
+      min_percent: 5
+    leverage:
+      max_multiplier: 2.0
+      tiers:
+        micro: 0
+        small: 0.5
+        medium: 1.5
+        large: 2.5
+  
+  config/trading/capital_tiers.yaml:
+    tiers:
+      micro:
+        min: 0
+        max: 14999
+      small:
+        min: 15000
+        max: 49999
+      medium:
+        min: 50000
+        max: 249999
+      large:
+        min: 250000
+        max: infinity
+  
+  config/technical_indicators/periods.yaml:
+    atr:
+      period: 14
+    sma:
+      short: 20
+      long: 50
+    lookback:
+      default: 252
+
+  ESTIMATED EFFORT: 2 days
+
+VERIFICATION:
+  [] All config files created
+  [] All magic numbers replaced with config lookups
+  [] Config validation implemented
+  [] Documentation updated
+  [] Tests updated
+
+[HIGH-009] IMPLEMENT IBacktestRunner INTERFACE
+----------------------------------------------------
+AFFECTED: Multiple backtest implementations
+
+CREATE INTERFACE:
+  from abc import ABC, abstractmethod
+  from app.models.backtest import BacktestConfig, BacktestResult
+
+  class IBacktestRunner(ABC):
+      """Interface for backtest runners."""
+      
+      @abstractmethod
+      def run_backtest(self, config: BacktestConfig) -> BacktestResult:
+          """Run a backtest with the given configuration."""
+          pass
+      
+      @abstractmethod
+      def validate_config(self, config: BacktestConfig) -> bool:
+          """Validate backtest configuration."""
+          pass
+      
+      @abstractmethod
+      def get_results(self, backtest_id: str) -> BacktestResult:
+          """Retrieve backtest results by ID."""
+          pass
+      
+      @abstractmethod
+      def cancel_backtest(self, backtest_id: str) -> bool:
+          """Cancel a running backtest."""
+          pass
+
+UPDATE IMPLEMENTATIONS:
+  - BacktestEngine implements IBacktestRunner
+  - ComprehensiveBacktestRunner implements IBacktestRunner
+  - ProfileBatchBacktester implements IBacktestRunner
+
+VERIFICATION:
+  [] Interface created
+  [] All implementations updated
+  [] Tests updated to use interface
+  [] Mock created for testing
+
+[HIGH-010] IMPLEMENT IDataSource INTERFACE
+----------------------------------------------------
+AFFECTED: All data source implementations
+
+CREATE INTERFACE:
+  from abc import ABC, abstractmethod
+  from datetime import datetime
+  from app.models.market_data import Quote, OHLCV
+
+  class IDataSource(ABC):
+      """Interface for market data sources."""
+      
+      @abstractmethod
+      async def fetch_quote(self, symbol: str) -> Quote:
+          """Fetch current quote for symbol."""
+          pass
+      
+      @abstractmethod
+      async def fetch_historical(
+          self,
+          symbol: str,
+          start: datetime,
+          end: datetime
+      ) -> OHLCV:
+          """Fetch historical OHLCV data."""
+          pass
+      
+      @abstractmethod
+      async def fetch_symbols(self) -> list[str]:
+          """Fetch list of available symbols."""
+          pass
+      
+      @abstractmethod
+      def is_available(self) -> bool:
+          """Check if data source is available."""
+          pass
+
+UPDATE IMPLEMENTATIONS:
+  - OHLCV sources implement IDataSource
+  - Sentiment sources implement IDataSource
+  - All other data sources implement IDataSource
+
+VERIFICATION:
+  [] Interface created
+  [] All implementations updated
+  [] Tests updated to use interface
+  [] Mock created for testing
+
+[HIGH-004] ADD POSITION SIZING TESTS
+----------------------------------------------------
+CURRENT COVERAGE: 25%
+TARGET COVERAGE: 90%
+
+REQUIRED TESTS:
+  1. Fixed dollar amount position sizing
+  2. Percentage-based position sizing
+  3. Kelly criterion position sizing
+  4. Risk parity position sizing
+  5. Volatility-adjusted position sizing
+  6. Maximum position size limits
+  7. Minimum position size limits
+  8. Capital constraints
+  9. Sector allocation limits
+  10. Edge cases (zero capital, negative values, etc.)
+
+VERIFICATION:
+  [] Test file created with 25+ tests
+  [] All position sizing methods covered
+  [] Edge cases tested
+  [] Coverage >90%
+  [] All tests passing
+
+[MEDIUM-004] IMPROVE ERROR HANDLING
+----------------------------------------------------
+AFFECTED: 248 files with generic exception handling
+
+IMPLEMENT SPECIFIC EXCEPTION TYPES:
+  # Broker exceptions
+  class BrokerConnectivityError(Exception): pass
+  class InsufficientFundsError(Exception): pass
+  class MarketClosedError(Exception): pass
+  class OrderRejectedError(Exception): pass
+  
+  # Data exceptions
+  class DataValidationError(Exception): pass
+  class DataNotFoundError(Exception): pass
+  class DataSourceUnavailableError(Exception): pass
+  
+  # Strategy exceptions
+  class StrategyConfigurationError(Exception): pass
+  class SignalGenerationError(Exception): pass
+  
+  # Risk management exceptions
+  class RiskLimitExceededError(Exception): pass
+  class PositionSizeInvalidError(Exception): pass
+
+IMPLEMENT PROPER ERROR HANDLING PATTERN:
+  try:
+      result = execute_trade(order)
+  except BrokerConnectivityError as e:
+      logger.error(f"Broker connection failed: {e}")
+      retry_with_backoff()
+  except InsufficientFundsError as e:
+      logger.critical(f"Insufficient funds: {e}")
+      alert_user()
+      raise
+  except Exception as e:
+      logger.exception(f"Unexpected error: {e}")
+      rollback_transaction()
+      raise
+  finally:
+      cleanup_resources()
+
+VERIFICATION:
+  [] Custom exception types created
+  [] Error handling pattern documented
+  [] Critical paths updated
+  [] Tests added
+
+[MEDIUM-005] ADD FINALLY BLOCKS FOR CLEANUP
+----------------------------------------------------
+AFFECTED: Database operations, file handles, network connections
+
+IMPLEMENT PROPER CLEANUP:
+  # Database operations
+  async with session:
+      try:
+          session.add(position)
+          await session.commit()
+          return position.position_id
+      except Exception as e:
+          await session.rollback()
+          logger.error(f"Failed to save position: {e}")
+          raise
+      finally:
+          await session.close()
+  
+  # File operations
+  try:
+      with open(file_path, 'w') as f:
+          f.write(data)
+  except IOError as e:
+      logger.error(f"Failed to write file: {e}")
+      raise
+  finally:
+      if 'f' in locals():
+          f.close()
+
+VERIFICATION:
+  [] All database operations have cleanup
+  [] All file operations have cleanup
+  [] All network operations have cleanup
+  [] Tests verify cleanup happens
+
+================================================================================
+PHASE 3: MEDIUM PRIORITY (THIS QUARTER)
+================================================================================
+Timeline: 8-12 weeks
+Risk: MAINTAINABILITY, SCALABILITY
+
+[MEDIUM-008] ADD TYPE HINTS
+----------------------------------------------------
+CURRENT COVERAGE: ~0%
+TARGET COVERAGE: 70%
+
+PRIORITIES:
+  1. All public functions and methods
+  2. All trading-related functions
+  3. All risk management functions
+  4. All data processing functions
+  5. Strategy interfaces
+
+EXAMPLE:
+  # Before:
+  def calculate_position_size(capital, risk_per_trade):
+      return capital * risk_per_trade
+  
+  # After:
+  from decimal import Decimal
+  
+  def calculate_position_size(
+      capital: Decimal,
+      risk_per_trade: Decimal
+  ) -> Decimal:
+      """Calculate position size based on capital and risk."""
+      return capital * risk_per_trade
+
+IMPLEMENT MYPY:
+  1. Add mypy to pyproject.toml
+  2. Run: mypy app/ --strict
+  3. Fix all type errors
+  4. Add to CI/CD pipeline
+
+VERIFICATION:
+  [] All public functions have type hints
+  [] mypy passes with --strict
+  [] CI/CD integration complete
+  [] Coverage >70%
+
+[MEDIUM-006] REDUCE COUPLING - DEPENDENCY INVERSION
+----------------------------------------------------
+CURRENT: Services layer imports from 47 modules
+
+IMPLEMENTATION:
+  1. Create application layer for orchestration
+  2. Implement Dependency Inversion Principle
+  3. Use dependency injection
+  4. Create facades for complex interactions
+
+VERIFICATION:
+  [] Services coupling <20 modules
+  [] API coupling <15 modules
+  [] Dependency injection implemented
+  [] Architecture documented
+
+[NEW] IMPLEMENT ALEMBIC MIGRATIONS
+----------------------------------------------------
+CURRENT STATUS: No migration system
+
+IMPLEMENTATION:
+  1. Install Alembic: pip install alembic
+  2. Initialize: alembic init migrations
+  3. Configure: migrations/env.py
+  4. Generate initial migration: alembic revision --autogenerate -m "Initial"
+  5. Create migration for current schema
+  6. Document migration process
+
+VERIFICATION:
+  [] Alembic initialized
+  [] Initial migration created
+  [] Migration tested on fresh database
+  [] Migration rollback tested
+  [] Documentation complete
+
+[NEW] IMPLEMENT CIRCUIT BREAKER PATTERN
+----------------------------------------------------
+AFFECTED: Broker API calls, external dependencies
+
+IMPLEMENTATION:
+  from enum import Enum
+  from datetime import datetime, timedelta
+
+  class CircuitState(Enum):
+      CLOSED = "closed"      # Normal operation
+      OPEN = "open"          # Failing, reject requests
+      HALF_OPEN = "half_open"  # Testing if recovered
+
+  class CircuitBreaker:
+      def __init__(self, failure_threshold=5, timeout=60):
+          self.failure_threshold = failure_threshold
+          self.timeout = timeout
+          self.failures = 0
+          self.last_failure_time = None
+          self.state = CircuitState.CLOSED
+      
+      def call(self, func):
+          """Execute function with circuit breaker protection."""
+          if self.state == CircuitState.OPEN:
+              if self._should_attempt_reset():
+                  self.state = CircuitState.HALF_OPEN
+              else:
+                  raise CircuitBreakerOpenError()
+          
+          try:
+              result = func()
+              self._on_success()
+              return result
+          except Exception as e:
+              self._on_failure()
+              raise
+
+VERIFICATION:
+  [] CircuitBreaker class implemented
+  [] Applied to all broker API calls
+  [] Applied to all external dependencies
+  [] Tests for all states
+  [] Documentation complete
+
+[NEW] IMPLEMENT SECRETS MANAGEMENT
+----------------------------------------------------
+CURRENT STATUS: Secrets in environment variables
+
+IMPLEMENTATION OPTIONS:
+  1. AWS Secrets Manager
+  2. HashiCorp Vault
+  3. Azure Key Vault
+  4. Google Secret Manager
+
+RECOMMENDED: AWS Secrets Manager (if using AWS)
+
+IMPLEMENTATION:
+  import boto3
+  import json
+
+  class SecretsManager:
+      def __init__(self):
+          self.client = boto3.client('secretsmanager')
+          self.cache = {}
+      
+      def get_secret(self, secret_name):
+          """Get secret from AWS Secrets Manager."""
+          if secret_name in self.cache:
+              return self.cache[secret_name]
+          
+          response = self.client.get_secret_value(SecretId=secret_name)
+          secret = json.loads(response['SecretString'])
+          self.cache[secret_name] = secret
+          return secret
+
+VERIFICATION:
+  [] SecretsManager implemented
+  [] All secrets migrated
+  .env file cleaned
+  [] Rotation policy implemented
+  [] Documentation complete
+
+[MEDIUM-003] REFACTOR DUPLICATE VALIDATION LOGIC
+----------------------------------------------------
+AFFECTED: 12+ files with duplicate validation
+
+CREATE VALIDATION SERVICE:
+  class OrderValidator:
+      @staticmethod
+      def validate_quantity(quantity: Decimal) -> bool:
+          if quantity <= 0:
+              raise ValueError(f"Invalid quantity: {quantity}")
+          return True
+      
+      @staticmethod
+      def validate_price(price: Decimal) -> bool:
+          if price <= 0:
+              raise ValueError(f"Invalid price: {price}")
+          return True
+      
+      @staticmethod
+      def validate_order(order: Order) -> bool:
+          OrderValidator.validate_quantity(order.quantity)
+          OrderValidator.validate_price(order.price)
+          return True
+
+  class PositionValidator:
+      @staticmethod
+      def validate_position_size(
+          capital: Decimal,
+          position_size: Decimal
+      ) -> bool:
+          max_position = capital * Decimal("0.25")
+          if position_size > max_position:
+              raise ValueError(
+                  f"Position size {position_size} "
+                  f"exceeds maximum {max_position}"
+              )
+          return True
+
+UPDATE ALL USAGES:
+  - Replace duplicate validation with OrderValidator.validate_order()
+  - Replace duplicate position checks with PositionValidator
+
+VERIFICATION:
+  [] OrderValidator created
+  [] PositionValidator created
+  [] All usages updated
+  [] Tests updated
+  [] Duplicate code removed
+
+================================================================================
+PHASE 4: LOW PRIORITY (ONGOING)
+================================================================================
+Timeline: Ongoing
+Risk: MAINTENANCE BURDEN
+
+[LOW-001] CONSOLIDATE ML FRAMEWORKS
+----------------------------------------------------
+CURRENT: Both PyTorch AND TensorFlow included
+
+DECISION FRAMEWORK:
+  1. Assess current usage of each framework
+  2. Evaluate team expertise
+  3. Consider performance requirements
+  4. Make decision: PyTorch or TensorFlow
+
+REMOVAL PLAN:
+  1. Identify all uses of chosen framework
+  2. Migrate any code using other framework
+  3. Remove from requirements.txt
+  4. Update documentation
+
+[LOW-002] STANDARDIZE NAMING CONVENTIONS
+----------------------------------------------------
+CURRENT: Mixed conventions (snake_case, kebab-case, CamelCase)
+
+STANDARD: snake_case for Python files and variables
+
+REFACTORING:
+  1. Audit all file names
+  2. Rename files to snake_case
+  3. Update all imports
+  4. Update documentation
+
+[LOW-003] COMPLETE API DOCUMENTATION
+----------------------------------------------------
+CURRENT: Only basic endpoints documented
+
+REQUIRED:
+  1. Document all API endpoints
+  2. Add request/response examples
+  3. Document authentication
+  4. Document error responses
+  5. Add OpenAPI/Swagger specification
+
+[LOW-004] IMPLEMENT ALERTING SYSTEM
+----------------------------------------------------
+CURRENT: No built-in alerting
+
+IMPLEMENTATION:
+  1. Define alert thresholds
+  2. Implement alert manager
+  3. Integrate with PagerDuty/Slack
+  4. Create alert dashboard
+  5. Document alert procedures
+
+[LOW-005] ADD PERFORMANCE TESTS
+----------------------------------------------------
+CURRENT: No load or performance tests
+
+REQUIRED TESTS:
+  1. Backtesting performance (1000+ trades)
+  2. Order throughput (orders/second)
+  3. Data processing latency
+  4. Memory usage under load
+  5. Database query performance
+
+================================================================================
+PRODUCTION READINESS CHECKLIST
+================================================================================
+
+Before deploying to production, verify:
+
+SECURITY:
+[ ] All exposed API keys revoked
+[ ] No secrets in code or git history
+[ ] .env.example exists (with dummy values)
+[ ] Secrets in AWS Secrets Manager / Vault
+[ ] Insecure deserialization fixed
+[ ] SECRET_KEY validation implemented
+[ ] Database connection strings sanitized in logs
+
+MONEY SAFETY:
+[ ] Position size validation in all paths
+[ ] Stop-loss always defined
+[ ] Stop-loss tests passing (>95% coverage)
+[ ] Max drawdown protection active
+[ ] Commission calculated correctly
+[ ] Slippage modeled correctly
+[ ] Corporate actions persisted
+
+CODE QUALITY:
+[ ] No empty functions in critical paths
+[ ] Magic numbers extracted to config (<20 remaining)
+[ ] Test coverage >80% overall
+[ ] No God Objects >500 lines
+[ ] Type hints >70% coverage
+[ ] Code review completed
+
+INTEGRATION:
+[ ] Alembic migrations implemented
+[ ] Circuit breakers in place
+[ ] Config centralized and validated
+[ ] Alerting system active
+[ ] Monitoring setup (Prometheus + Grafana)
+[ ] Health checks operational
+
+TESTING:
+[ ] Unit tests passing
+[ ] Integration tests passing
+[ ] Stop-loss tests passing
+[ ] Position sizing tests passing
+[ ] Performance tests passing
+[ ] Security tests passing
+
+DOCUMENTATION:
+[ ] README complete and up-to-date
+[ ] API documentation generated
+[ ] Architecture diagrams created
+[ ] Deployment guide written
+[ ] Runbooks created
+
+================================================================================
+ESTIMATED EFFORT SUMMARY
+================================================================================
+
+Phase 0 (IMMEDIATE): 1 day
+Phase 1 (URGENT): 5-7 days
+Phase 2 (HIGH PRIORITY): 3-4 weeks
+Phase 3 (MEDIUM PRIORITY): 8-12 weeks
+Phase 4 (LOW PRIORITY): Ongoing
+
+TOTAL TO PRODUCTION-READY: 6-8 weeks
+
+================================================================================
+NEXT AUDIT RECOMMENDED
+================================================================================
+
+Date: 2026-02-24 (4 weeks from now)
+Focus: Verification of critical fixes
+Scope: Security, financial safety, testing
+
+================================================================================
+END OF RECOMMENDATIONS
+================================================================================

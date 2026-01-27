@@ -20,6 +20,7 @@ Changes:
 - Replaced manual signals with real SMA crossover strategy
 - Added exact mathematical verification
 - Added 5+ robust edge case tests
+- Added test summary reporting
 """
 
 from datetime import datetime, timedelta
@@ -29,6 +30,7 @@ import numpy as np
 import pytest
 
 from app.backtesting.engine import SimpleBacktester
+from app.backtesting.test_summary import TestSummaryReporter
 from app.core.decimal_utils import round_price
 from app.backtesting.models import (
     BacktestConfig,
@@ -314,8 +316,38 @@ class TestSimpleBacktester:
         OLD TEST: Used synthetic linear data
         NEW TEST: Uses GBM data with realistic parameters
         """
+        # Initialize summary reporter
+        reporter = TestSummaryReporter(
+            test_name="test_backtester_with_realistic_data",
+            test_description="Basic backtest with GBM data and SMA crossover strategy",
+            test_file="test_backtest_basic.py",
+            test_type="integration",
+        )
+
         backtester = SimpleBacktester(default_config)
         result = backtester.run_backtest(realistic_quotes, realistic_signals)
+
+        # Add input data to summary
+        reporter.add_input_data(
+            symbols=["AAPL"],
+            date_range=(realistic_quotes[0].timestamp, realistic_quotes[-1].timestamp),
+            data_points=len(realistic_quotes),
+            market_regime="bullish" if float(realistic_quotes[-1].close) > float(realistic_quotes[0].close) else "bearish",
+            data_source="GBM simulation (drift=5%, vol=20%)",
+            price_range=(
+                min(q.close for q in realistic_quotes),
+                max(q.close for q in realistic_quotes),
+            ),
+        )
+
+        # Add configuration to summary
+        reporter.add_config(
+            initial_capital=default_config.initial_capital,
+            commission=default_config.commission_per_trade,
+            slippage=default_config.slippage_percentage,
+            strategy="SMA Crossover (20/50)",
+            strategy_params={"fast_period": 20, "slow_period": 50, "min_slope": 0.001},
+        )
 
         # Verify result structure
         assert isinstance(result, BacktestResult)
@@ -336,6 +368,39 @@ class TestSimpleBacktester:
             assert trade.side in ["buy", "sell"]
             assert trade.quantity > 0
             assert trade.entry_price > 0
+
+        # Add results to summary
+        total_pnl = result.final_capital - default_config.initial_capital
+        total_pnl_pct = (total_pnl / default_config.initial_capital) * Decimal("100")
+
+        reporter.add_results(
+            final_capital=result.final_capital,
+            total_pnl=total_pnl,
+            total_pnl_percentage=total_pnl_pct,
+            sharpe_ratio=result.performance.sharpe_ratio if result.performance else None,
+            max_drawdown=result.performance.max_drawdown if result.performance else None,
+            win_rate=result.performance.win_rate if result.performance else None,
+            total_trades=result.performance.total_trades if result.performance else 0,
+            winning_trades=result.performance.winning_trades if result.performance else 0,
+            losing_trades=result.performance.losing_trades if result.performance else 0,
+        )
+
+        # Add validation criteria
+        reporter.add_validation_criteria(
+            criteria_name="Final capital in range",
+            expected_value="50000-150000",
+            actual_value=str(result.final_capital),
+            passed=Decimal("50000") <= result.final_capital <= Decimal("150000"),
+            reason=f"Final capital ${result.final_capital:,.2f} is within realistic range",
+        )
+
+        # Mark as passed and save
+        reporter.mark_passed("All assertions passed, backtest executed successfully")
+        try:
+            reporter.save_reports()
+        except Exception as e:
+            # Don't fail test if reporting fails
+            print(f"Warning: Failed to save test summary: {e}")
 
     def test_empty_market_data_raises_error(self, default_config):
         """Test that empty market data raises an error."""

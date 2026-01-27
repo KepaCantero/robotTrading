@@ -6,10 +6,23 @@ Position Sizing Engine with ATR-Based Dynamic Stop Loss.
 
 TASK-IND-2: Implements dynamic stop loss based on ATR (Average True Range).
 Uses ATR * 2 as default multiplier for adaptive stop loss that adjusts to volatility.
+
+Configuration:
+This module now uses centralized configuration from config/risk_management.yaml:
+- ATR multipliers (1.0, 2.0, 3.0) are loaded from config
+- Position sizing percentages are loaded from config
+- Risk per trade percentages are loaded from config
 """
 
 from decimal import Decimal  # noqa: E402
 from typing import Optional  # noqa: E402
+
+# Import centralized configuration
+try:
+    from app.core.config.strategy_config_loader import get_strategy_config
+    HAS_CONFIG_LOADER = True
+except ImportError:
+    HAS_CONFIG_LOADER = False
 
 
 class PositionSizingEngine:
@@ -17,17 +30,23 @@ class PositionSizingEngine:
     TASK-IND-2, IND-4: Calculates dynamic stop loss and position sizing based on ATR.
 
     Stop Loss Formula: stop_loss_distance = ATR * multiplier
-    Default multiplier: 2.0 (2x ATR)
+    Default multiplier: 2.0 (2x ATR) - loaded from config
     Position Sizing: risk_per_trade = 2% capital / (ATR * 2)
     """
 
-    def __init__(self, atr_multiplier: float = 2.0):
+    def __init__(self, atr_multiplier: Optional[float] = None):
         """
         Initialize calculator.
 
         Args:
-            atr_multiplier: Multiplier for ATR (default 2.0 = 2x ATR)
+            atr_multiplier: Multiplier for ATR (default loaded from config, typically 2.0)
         """
+        if atr_multiplier is None and HAS_CONFIG_LOADER:
+            strategy_config = get_strategy_config()
+            atr_multiplier = strategy_config.get_atr_multiplier('default_stop')
+        elif atr_multiplier is None:
+            atr_multiplier = 2.0
+
         self.atr_multiplier = Decimal(str(atr_multiplier))
 
     def calculate_stop_loss_price(
@@ -81,8 +100,8 @@ class PositionSizingEngine:
     def calculate_position_size_from_atr(
         self,
         capital: Decimal,
-        risk_per_trade_pct: float,
-        entry_price: Decimal,
+        risk_per_trade_pct: Optional[float] = None,
+        entry_price: Decimal = None,
         atr: Optional[float] = None,
     ) -> Optional[Decimal]:
         """
@@ -93,7 +112,7 @@ class PositionSizingEngine:
 
         Args:
             capital: Total capital available
-            risk_per_trade_pct: Risk per trade as percentage (default 2%)
+            risk_per_trade_pct: Risk per trade as percentage (loaded from config if None)
             entry_price: Entry price for the position
             atr: Average True Range
 
@@ -102,6 +121,15 @@ class PositionSizingEngine:
         """
         if not capital or capital <= 0 or not entry_price or entry_price <= 0:
             return None
+
+        # Load default risk per trade from config if not provided
+        if risk_per_trade_pct is None:
+            if HAS_CONFIG_LOADER:
+                strategy_config = get_strategy_config()
+                risk_config = strategy_config.get_risk_config()
+                risk_per_trade_pct = float(risk_config.get('risk_per_trade', {}).get('default', 0.02))
+            else:
+                risk_per_trade_pct = 0.02  # Default 2% risk per trade
 
         # Calculate risk amount in dollars
         risk_amount = capital * Decimal(str(risk_per_trade_pct)) / Decimal("100")

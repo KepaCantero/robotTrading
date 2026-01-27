@@ -1,0 +1,51 @@
+================================================================================
+TEST SUMMARY REPORT: CONVENIENCE_TEST
+================================================================================
+
+## METADATA
+----------------------------------------
+Test Name:        convenience_test
+Description:      No description provided
+Test File:        unknown.py
+Test Type:        integration
+Test ID:          test_20260126_164517
+Created:          2026-01-26 16:45:17
+
+## TEST STATUS
+----------------------------------------
+✓ Status:          PASSED
+Reason:           Simple test passed
+Duration:         0.00 seconds
+
+## INPUT DATA
+----------------------------------------
+Symbols:          AAPL, MSFT
+Date Range:       2023-01-01 to 2023-06-30
+Data Points:      252
+Market Regime:    unknown
+Data Source:      backtest
+
+## CONFIGURATION
+----------------------------------------
+Initial Capital:  $50,000.00
+Commission:       $1.00 per trade
+Slippage:         10.00%
+Strategy:         unknown
+
+## OUTPUT METRICS
+----------------------------------------
+
+### Financial Performance
+Final Capital:     $55,000.00
+Total P&L:        $5,000.00
+
+### Risk Metrics
+
+### Trade Statistics
+Total Trades:      25
+Winning Trades:    0
+Losing Trades:     0
+
+================================================================================
+End of Report - Generated 2026-01-26 16:45:17
+================================================================================

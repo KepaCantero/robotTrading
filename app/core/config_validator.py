@@ -6,6 +6,7 @@ This module provides validation for YAML configuration files and environment
 variables to ensure production readiness.
 """
 
+import datetime
 import logging
 import os
 import re
@@ -17,6 +18,157 @@ import yaml
 from pydantic import BaseModel, Field, field_validator, ValidationError
 
 logger = logging.getLogger(__name__)
+
+
+# ============================================================================
+# PROFILE OPTIMIZATION CONFIG VALIDATION
+# ============================================================================
+
+
+class ProfileOptimizationConfigValidator(BaseModel):
+    """
+    Validator for profile_optimization.yaml configuration.
+
+    Validates parameter ranges, model configurations, and optimization settings.
+    """
+
+    # Common parameters
+    common_random_state: int = Field(default=42)
+    common_test_size: float = Field(default=0.2)
+    common_cv_folds: int = Field(default=5)
+
+    # Threading
+    threading_max_workers: Optional[int] = Field(default=None)
+    threading_worker_multiplier: float = Field(default=0.75)
+    threading_batch_size: int = Field(default=32)
+
+    # Validation thresholds
+    validation_min_sharpe: float = Field(default=0.5)
+    validation_max_drawdown: float = Field(default=0.2)
+    validation_min_win_rate: float = Field(default=0.45)
+
+    @field_validator("common_test_size")
+    @classmethod
+    def validate_test_size(cls, v: float) -> float:
+        if not 0 < v < 1:
+            raise ValueError("test_size must be between 0 and 1")
+        return v
+
+    @field_validator("common_cv_folds")
+    @classmethod
+    def validate_cv_folds(cls, v: int) -> int:
+        if v < 2:
+            raise ValueError("cv_folds must be at least 2")
+        if v > 20:
+            raise ValueError("cv_folds should not exceed 20")
+        return v
+
+    @field_validator("threading_worker_multiplier")
+    @classmethod
+    def validate_worker_multiplier(cls, v: float) -> float:
+        if not 0 < v <= 1:
+            raise ValueError("worker_multiplier must be between 0 and 1")
+        return v
+
+    @field_validator("validation_min_sharpe", "validation_min_win_rate")
+    @classmethod
+    def validate_positive_thresholds(cls, v: float) -> float:
+        if v < 0:
+            raise ValueError("Threshold values must be non-negative")
+        return v
+
+    @field_validator("validation_max_drawdown")
+    @classmethod
+    def validate_drawdown(cls, v: float) -> float:
+        if v < 0 or v > 1:
+            raise ValueError("max_drawdown must be between 0 and 1")
+        return v
+
+
+class BatchBacktestConfigValidator(BaseModel):
+    """
+    Validator for profile_batch_backtest.yaml configuration.
+
+    Validates workflow settings, database config, and profile generation.
+    """
+
+    # Database
+    database_url: str = Field(description="Database connection URL")
+
+    # Output
+    output_dir: str = Field(default="results/profile_batch_backtesting")
+
+    # Profile generation
+    capital_tiers: Dict[str, int] = Field(default_factory=dict)
+    investment_horizons: Dict[str, int] = Field(default_factory=dict)
+
+    # Backtest
+    symbols: List[str] = Field(default_factory=list)
+    backtest_start_date: str = Field(description="Backtest start date (YYYY-MM-DD)")
+    backtest_end_date: str = Field(description="Backtest end date (YYYY-MM-DD)")
+
+    # Optimization
+    optimization_n_trials: int = Field(default=100)
+    optimization_n_jobs: int = Field(default=4)
+
+    # Validation
+    validation_min_sharpe: float = Field(default=0.5)
+    validation_max_drawdown: float = Field(default=0.2)
+
+    # Parallelization
+    parallelization_max_profiles: int = Field(default=20)
+
+    @field_validator("database_url")
+    @classmethod
+    def validate_database_url(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("database_url cannot be empty")
+        if not any(v.startswith(prefix) for prefix in ["sqlite://", "postgresql://", "mysql://"]):
+            raise ValueError("database_url must use a supported protocol (sqlite, postgresql, mysql)")
+        return v
+
+    @field_validator("capital_tiers", "investment_horizons")
+    @classmethod
+    def validate_non_empty_dict(cls, v: Dict[str, Any]) -> Dict[str, Any]:
+        if not v:
+            raise ValueError("Must define at least one capital tier or investment horizon")
+        return v
+
+    @field_validator("symbols")
+    @classmethod
+    def validate_symbols(cls, v: List[str]) -> List[str]:
+        if not v:
+            raise ValueError("symbols list cannot be empty")
+        if len(v) > 100:
+            raise ValueError("symbols list should not exceed 100 symbols")
+        return v
+
+    @field_validator("backtest_start_date", "backtest_end_date")
+    @classmethod
+    def validate_date_format(cls, v: str) -> str:
+        try:
+            datetime.datetime.strptime(v, "%Y-%m-%d")
+        except ValueError:
+            raise ValueError("Date must be in YYYY-MM-DD format")
+        return v
+
+    @field_validator("optimization_n_trials")
+    @classmethod
+    def validate_n_trials(cls, v: int) -> int:
+        if v < 1:
+            raise ValueError("n_trials must be at least 1")
+        if v > 10000:
+            raise ValueError("n_trials should not exceed 10000")
+        return v
+
+    @field_validator("parallelization_max_profiles")
+    @classmethod
+    def validate_max_profiles(cls, v: int) -> int:
+        if v < 1:
+            raise ValueError("max_profiles must be at least 1")
+        if v > 100:
+            raise ValueError("max_profiles should not exceed 100")
+        return v
 
 
 class ValidationErrorDetail(BaseModel):
@@ -513,6 +665,303 @@ class ConfigValidator:
 
         return env_vars
 
+    # ========================================================================
+    # PROFILE OPTIMIZATION CONFIG VALIDATION
+    # ========================================================================
+
+    def validate_profile_optimization_config(
+        self, config_path: Optional[Path] = None
+    ) -> ValidationResult:
+        """
+        Validate profile_optimization.yaml configuration.
+
+        Args:
+            config_path: Path to profile_optimization.yaml.
+                        Defaults to config/backtesting/profile_optimization.yaml
+
+        Returns:
+            ValidationResult with details
+        """
+        self.result = ValidationResult(is_valid=True)
+
+        config_path = config_path or self.config_dir / "backtesting" / "profile_optimization.yaml"
+
+        if not config_path.exists():
+            self.result.add_error("file", f"Configuration file not found: {config_path}")
+            return self.result
+
+        # Validate YAML syntax
+        if not self.validate_yaml_syntax(config_path):
+            return self.result
+
+        # Load configuration
+        try:
+            with open(config_path, "r") as f:
+                config = yaml.safe_load(f)
+        except Exception as e:
+            self.result.add_error("load", f"Failed to load configuration: {e}")
+            return self.result
+
+        # Validate required sections
+        required_sections = ["common", "threading", "validation"]
+        for section in required_sections:
+            if section not in config:
+                self.result.add_error("sections", f"Missing required section: {section}")
+
+        # Validate common parameters
+        if "common" in config:
+            try:
+                common = config["common"]
+                ProfileOptimizationConfigValidator(
+                    common_random_state=common.get("random_state", 42),
+                    common_test_size=common.get("test_size", 0.2),
+                    common_cv_folds=common.get("cv_folds", 5),
+                )
+            except ValidationError as e:
+                for error in e.errors():
+                    field = ".".join(str(x) for x in error["loc"])
+                    self.result.add_error(f"common.{field}", error["msg"])
+
+        # Validate threading parameters
+        if "threading" in config:
+            try:
+                threading = config["threading"]
+                ProfileOptimizationConfigValidator(
+                    threading_max_workers=threading.get("max_workers"),
+                    threading_worker_multiplier=threading.get("worker_multiplier", 0.75),
+                    threading_batch_size=threading.get("batch_size", 32),
+                )
+            except ValidationError as e:
+                for error in e.errors():
+                    field = ".".join(str(x) for x in error["loc"])
+                    self.result.add_error(f"threading.{field}", error["msg"])
+
+        # Validate validation thresholds
+        if "validation" in config:
+            validation = config["validation"]
+            if "thresholds" in validation:
+                try:
+                    thresholds = validation["thresholds"]
+                    ProfileOptimizationConfigValidator(
+                        validation_min_sharpe=thresholds.get("min_sharpe", 0.5),
+                        validation_max_drawdown=thresholds.get("max_drawdown", 0.2),
+                        validation_min_win_rate=thresholds.get("min_win_rate", 0.45),
+                    )
+                except ValidationError as e:
+                    for error in e.errors():
+                        field = ".".join(str(x) for x in error["loc"])
+                        self.result.add_error(f"validation.thresholds.{field}", error["msg"])
+
+        # Validate threshold optimization ranges
+        if "threshold_optimization" in config:
+            self._validate_threshold_ranges(config["threshold_optimization"])
+
+        # Validate profile and tier overrides
+        if "profiles" in config:
+            self._validate_profile_overrides(config["profiles"])
+
+        if "tiers" in config:
+            self._validate_tier_overrides(config["tiers"])
+
+        return self.result
+
+    def _validate_threshold_ranges(
+        self, threshold_config: Dict[str, Any]
+    ) -> None:
+        """Validate threshold optimization ranges."""
+        for indicator, params in threshold_config.items():
+            if indicator == "optimization":
+                continue
+
+            if isinstance(params, dict):
+                for param_name, param_range in params.items():
+                    if isinstance(param_range, dict):
+                        min_val = param_range.get("min")
+                        max_val = param_range.get("max")
+
+                        if min_val is not None and max_val is not None:
+                            if min_val >= max_val:
+                                self.result.add_error(
+                                    f"threshold_optimization.{indicator}.{param_name}",
+                                    f"min ({min_val}) must be less than max ({max_val})",
+                                )
+
+    def _validate_profile_overrides(self, profiles: Dict[str, Any]) -> None:
+        """Validate profile-specific overrides."""
+        valid_profiles = [
+            "conservative", "balanced", "aggressive",
+            "income", "growth", "dividendos"
+        ]
+
+        for profile_name in profiles:
+            if profile_name not in valid_profiles:
+                self.result.add_warning(
+                    "profiles",
+                    f"Unknown profile: {profile_name}. Valid profiles: {valid_profiles}",
+                )
+
+    def _validate_tier_overrides(self, tiers: Dict[str, Any]) -> None:
+        """Validate tier-specific overrides."""
+        valid_tiers = ["micro", "small", "medium", "large"]
+
+        for tier_name in tiers:
+            if tier_name not in valid_tiers:
+                self.result.add_warning(
+                    "tiers",
+                    f"Unknown tier: {tier_name}. Valid tiers: {valid_tiers}",
+                )
+
+    # ========================================================================
+    # BATCH BACKTEST CONFIG VALIDATION
+    # ========================================================================
+
+    def validate_batch_backtest_config(
+        self, config_path: Optional[Path] = None
+    ) -> ValidationResult:
+        """
+        Validate profile_batch_backtest.yaml configuration.
+
+        Args:
+            config_path: Path to profile_batch_backtest.yaml.
+                        Defaults to config/profile_batch_backtest.yaml
+
+        Returns:
+            ValidationResult with details
+        """
+        self.result = ValidationResult(is_valid=True)
+
+        config_path = config_path or self.config_dir / "profile_batch_backtest.yaml"
+
+        if not config_path.exists():
+            self.result.add_error("file", f"Configuration file not found: {config_path}")
+            return self.result
+
+        # Validate YAML syntax
+        if not self.validate_yaml_syntax(config_path):
+            return self.result
+
+        # Load configuration
+        try:
+            with open(config_path, "r") as f:
+                config = yaml.safe_load(f)
+        except Exception as e:
+            self.result.add_error("load", f"Failed to load configuration: {e}")
+            return self.result
+
+        # Validate required sections
+        required_sections = ["database", "symbols", "backtest_period"]
+        for section in required_sections:
+            if section not in config:
+                self.result.add_error("sections", f"Missing required section: {section}")
+
+        # Validate database configuration
+        if "database" in config:
+            database = config["database"]
+            try:
+                BatchBacktestConfigValidator(
+                    database_url=database.get("url", ""),
+                    symbols=config.get("symbols", []),
+                    backtest_start_date=config.get("backtest_period", {}).get("start_date", ""),
+                    backtest_end_date=config.get("backtest_period", {}).get("end_date", ""),
+                    capital_tiers=config.get("capital_tiers", {}),
+                    investment_horizons=config.get("investment_horizons", {}),
+                )
+            except ValidationError as e:
+                for error in e.errors():
+                    field = ".".join(str(x) for x in error["loc"])
+                    self.result.add_error(f"{field}", error["msg"])
+
+        # Validate symbols
+        if "symbols" not in config:
+            self.result.add_error("symbols", "symbols section is required")
+
+        # Validate backtest period
+        if "backtest_period" not in config:
+            self.result.add_error("backtest_period", "backtest_period section is required")
+        else:
+            period = config["backtest_period"]
+            if "start_date" not in period:
+                self.result.add_error("backtest_period.start_date", "start_date is required")
+            if "end_date" not in period:
+                self.result.add_error("backtest_period.end_date", "end_date is required")
+
+        # Validate capital tiers
+        if "capital_tiers" not in config:
+            self.result.add_error("capital_tiers", "capital_tiers section is required")
+
+        # Validate investment horizons
+        if "investment_horizons" not in config:
+            self.result.add_error("investment_horizons", "investment_horizons section is required")
+
+        # Validate optimization settings
+        if "optimization" in config:
+            opt = config["optimization"]
+            try:
+                BatchBacktestConfigValidator(
+                    database_url=config.get("database", {}).get("url", ""),
+                    symbols=config.get("symbols", []),
+                    backtest_start_date=config.get("backtest_period", {}).get("start_date", ""),
+                    backtest_end_date=config.get("backtest_period", {}).get("end_date", ""),
+                    capital_tiers=config.get("capital_tiers", {}),
+                    investment_horizons=config.get("investment_horizons", {}),
+                    optimization_n_trials=opt.get("n_trials", 100),
+                    optimization_n_jobs=opt.get("n_jobs", 4),
+                )
+            except ValidationError as e:
+                for error in e.errors():
+                    field = ".".join(str(x) for x in error["loc"])
+                    # Only add optimization-related errors
+                    if "optimization" in str(field):
+                        self.result.add_error(f"{field}", error["msg"])
+
+        # Validate parallelization
+        if "parallelization" in config:
+            parallel = config["parallelization"]
+            try:
+                BatchBacktestConfigValidator(
+                    database_url=config.get("database", {}).get("url", ""),
+                    symbols=config.get("symbols", []),
+                    backtest_start_date=config.get("backtest_period", {}).get("start_date", ""),
+                    backtest_end_date=config.get("backtest_period", {}).get("end_date", ""),
+                    capital_tiers=config.get("capital_tiers", {}),
+                    investment_horizons=config.get("investment_horizons", {}),
+                    parallelization_max_profiles=parallel.get("max_profiles", 20),
+                )
+            except ValidationError as e:
+                for error in e.errors():
+                    field = ".".join(str(x) for x in error["loc"])
+                    # Only add parallelization-related errors
+                    if "parallelization" in str(field):
+                        self.result.add_error(f"{field}", error["msg"])
+
+        # Check for cross-config references
+        self._validate_cross_config_references(config)
+
+        return self.result
+
+    def _validate_cross_config_references(self, batch_config: Dict[str, Any]) -> None:
+        """
+        Validate that references to profile_optimization.yaml are valid.
+
+        Checks for:
+        - Module enable flags that reference non-existent modules
+        - Validation methods that reference undefined parameters
+        """
+        # Check enabled modules against known modules
+        if "modules" in batch_config:
+            modules = batch_config["modules"]
+            known_filters = [
+                "momentum", "ema", "rsi", "volume", "atr", "stoch_rsi"
+            ]
+
+            if "filters" in modules:
+                for filter_name in modules["filters"]:
+                    if filter_name not in known_filters:
+                        self.result.add_warning(
+                            "modules.filters",
+                            f"Unknown filter: {filter_name}. Known filters: {known_filters}",
+                        )
+
 
 def main():
     """Command-line interface for configuration validation."""
@@ -534,8 +983,23 @@ def main():
     parser.add_argument(
         "--environment",
         choices=["production", "staging", "development"],
-        default="production",
-        help="Environment to validate",
+        default=None,
+        help="Environment to validate (use --batch-config or --profile-optimization for backtesting configs)",
+    )
+    parser.add_argument(
+        "--batch-config",
+        action="store_true",
+        help="Validate profile_batch_backtest.yaml configuration",
+    )
+    parser.add_argument(
+        "--profile-optimization",
+        action="store_true",
+        help="Validate profile_optimization.yaml configuration",
+    )
+    parser.add_argument(
+        "--all-backtesting",
+        action="store_true",
+        help="Validate all backtesting configs (profile_batch_backtest.yaml and profile_optimization.yaml)",
     )
 
     args = parser.parse_args()
@@ -548,15 +1012,49 @@ def main():
 
     validator = ConfigValidator(config_dir=args.config_dir)
 
-    if args.environment == "production":
-        result = validator.validate_production_config(env_file=args.env_file)
+    # Route to appropriate validation
+    if args.batch_config:
+        result = validator.validate_batch_backtest_config()
+        result.print_summary()
+        sys.exit(0 if result.is_valid else 1)
+
+    elif args.profile_optimization:
+        result = validator.validate_profile_optimization_config()
+        result.print_summary()
+        sys.exit(0 if result.is_valid else 1)
+
+    elif args.all_backtesting:
+        logger.info("Validating all backtesting configurations...")
+        batch_result = validator.validate_batch_backtest_config()
+        profile_result = validator.validate_profile_optimization_config()
+
+        logger.info("\n=== Batch Backtest Config ===")
+        batch_result.print_summary()
+
+        logger.info("\n=== Profile Optimization Config ===")
+        profile_result.print_summary()
+
+        overall_valid = batch_result.is_valid and profile_result.is_valid
+        if overall_valid:
+            logger.info("\nAll backtesting configurations are valid!")
+        else:
+            logger.error("\nSome backtesting configurations have errors")
+
+        sys.exit(0 if overall_valid else 1)
+
+    elif args.environment:
+        if args.environment == "production":
+            result = validator.validate_production_config(env_file=args.env_file)
+        else:
+            logger.error(f"Validation for {args.environment} not implemented")
+            sys.exit(1)
+
+        result.print_summary()
+        sys.exit(0 if result.is_valid else 1)
+
     else:
-        logger.error(f"Validation for {args.environment} not implemented")
+        parser.print_help()
         sys.exit(1)
-
-    result.print_summary()
-
-    sys.exit(0 if result.is_valid else 1)
 
 
 if __name__ == "__main__":

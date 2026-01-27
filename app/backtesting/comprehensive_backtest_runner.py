@@ -54,6 +54,16 @@ from app.backtesting.multi_strategy_engine import MultiStrategyBacktester
 # Data loading
 from app.backtesting.data_loader import DataLoader
 
+# Data splitting and multiple testing correction
+from app.backtesting.data_split import (
+    MultipleTestingCorrector,
+    TrainValTestSplitter,
+    validate_out_of_sample_performance,
+)
+
+# Survivorship bias adjustment
+from app.backtesting.universe_manager import UniverseManager
+
 # Portfolio management
 from app.services.portfolio_config_manager import get_portfolio_config_manager
 
@@ -385,12 +395,16 @@ class ComprehensiveBacktestRunner:
         strategy_config = self._create_strategy_config()
         strategy = ModularMomentumStrategy(strategy_config)
 
-        # Usar BacktestDefaults (Fase 3)
+        # Use loaded YAML config (not hardcoded defaults)
         initial_capital = Decimal(str(self.raw_config['input']['initial_capital']))
         backtest_config = BacktestConfig(
             initial_capital=initial_capital,
-            commission_per_trade=BacktestDefaults.COMMISSION,
-            slippage_percentage=BacktestDefaults.SLIPPAGE,
+            commission_per_trade=self.backtest_config.commission_per_trade,
+            slippage_percentage=self.backtest_config.slippage_percentage,
+            max_position_size=self.backtest_config.max_position_size,
+            stop_loss_percentage=self.backtest_config.stop_loss_percentage,
+            take_profit_percentage=self.backtest_config.take_profit_percentage,
+            risk_free_rate=self.backtest_config.risk_free_rate,
         )
 
         strategy_name = self._get_strategy_name(strategy)
@@ -498,8 +512,12 @@ class ComprehensiveBacktestRunner:
             initial_capital = Decimal(str(self.raw_config['input']['initial_capital']))
             backtest_config = BacktestConfig(
                 initial_capital=initial_capital,
-                commission_per_trade=BacktestDefaults.COMMISSION,
-                slippage_percentage=BacktestDefaults.SLIPPAGE,
+                commission_per_trade=self.backtest_config.commission_per_trade,
+                slippage_percentage=self.backtest_config.slippage_percentage,
+                max_position_size=self.backtest_config.max_position_size,
+                stop_loss_percentage=self.backtest_config.stop_loss_percentage,
+                take_profit_percentage=self.backtest_config.take_profit_percentage,
+                risk_free_rate=self.backtest_config.risk_free_rate,
             )
 
             strategy_name = self._get_strategy_name(strategy)
@@ -736,14 +754,584 @@ class ComprehensiveBacktestRunner:
         return []
 
     def run_multi_strategy_backtest(self) -> List[Dict[str, Any]]:
-        """Ejecutar backtest multi-strategy (placeholder)."""
-        logger.info("Multi-strategy backtest not yet implemented in Phase 3")
-        return []
+        """
+        Ejecutar backtest multi-strategy con asignación de capital.
+
+        Integración con:
+        - ProfileStrategyMapper para mapeo de perfil a estrategias
+        - MultiStrategyBacktester para ejecución concurrente
+        - MultiStrategyAllocationManager para distribución de capital
+
+        Returns:
+            Lista de resultados con métricas por estrategia y combinadas
+        """
+        logger.info("Running multi-strategy backtest...")
+
+        try:
+            # Paso 1: Crear InputProfile desde la configuración
+            profile = self._create_input_profile_from_config()
+
+            # Paso 2: Crear ProfileStrategyMapper
+            from app.services.profile_driven_trading.profile_strategy_mapper import (
+                ProfileStrategyMapper,
+            )
+
+            mapper = ProfileStrategyMapper()
+
+            # Paso 3: Obtener mapeo de estrategia
+            strategy_mapping = mapper.create_strategy_mapping(profile)
+
+            logger.info(
+                f"Profile mapped to {len(strategy_mapping.enabled_strategies)} strategies: "
+                f"{', '.join(strategy_mapping.enabled_strategies)}"
+            )
+
+            # Paso 4: Obtener asignación de capital
+            allocation_manager = mapper.get_capital_allocation(profile)
+            capital_allocations = allocation_manager.allocate_capital()
+
+            logger.info("Capital allocation:")
+            for strategy_name, capital in capital_allocations.items():
+                weight = float(capital / profile.capital_initial)
+                logger.info(f"  {strategy_name}: ${capital:,.2f} ({weight:.1%})")
+
+            # Paso 5: Crear instancias de estrategia
+            strategies = {}
+            for strategy_name in strategy_mapping.enabled_strategies:
+                try:
+                    strategy_config = self._create_strategy_config_for_type(
+                        strategy_name, strategy_mapping
+                    )
+                    strategy = StrategyFactory.create_strategy(strategy_config)
+                    strategies[strategy_name] = strategy
+                    logger.info(f"Created strategy instance: {strategy_name}")
+                except Exception as e:
+                    logger.error(f"Failed to create strategy {strategy_name}: {e}")
+                    continue
+
+            if not strategies:
+                logger.error("No strategies could be created")
+                return []
+
+            # Paso 6: Crear MultiStrategyBacktester
+            config_params = {
+                "commission": self.backtest_config.commission_per_trade,
+                "slippage": self.backtest_config.slippage_percentage,
+                "stop_loss": self.backtest_config.stop_loss_percentage,
+                "take_profit": self.backtest_config.take_profit_percentage,
+                "max_position_size": self.backtest_config.max_position_size,
+            }
+
+            multi_strategy_backtester = MultiStrategyBacktester(
+                allocation_manager=allocation_manager,
+                strategies=strategies,
+                config_params=config_params,
+                enable_diagnostics=self.raw_config.get("diagnostics", {}).get(
+                    "enabled", False
+                ),
+                enable_dynamic_reallocation=self.raw_config.get(
+                    "dynamic_reallocation", {}
+                ).get("enabled", True),
+            )
+
+            # Paso 7: Ejecutar backtest multi-strategy
+            start_date = datetime.strptime(
+                self.raw_config["input"]["start_date"], "%Y-%m-%d"
+            )
+            end_date = datetime.strptime(self.raw_config["input"]["end_date"], "%Y-%m-%d")
+
+            logger.info(
+                f"Running multi-strategy backtest from {start_date.date()} to {end_date.date()}"
+            )
+
+            consolidated_results = multi_strategy_backtester.run_multi_strategy_backtest(
+                quotes=self.quotes, start_date=start_date, end_date=end_date
+            )
+
+            # Paso 8: Convertir resultados al formato esperado
+            results = self._format_multi_strategy_results(
+                consolidated_results=consolidated_results,
+                strategy_mapping=strategy_mapping,
+                profile=profile,
+            )
+
+            # Paso 9: Guardar resultados
+            for result in results:
+                self.memory_manager.add_result(result)
+
+            logger.info(
+                f"Multi-strategy backtest completed: {len(results)} results generated"
+            )
+
+            return results
+
+        except Exception as e:
+            logger.error(f"Error in multi-strategy backtest: {e}", exc_info=True)
+            return []
+
+    def _create_input_profile_from_config(self):
+        """
+        Crear InputProfile desde la configuración de backtest.
+
+        Returns:
+            InputProfile con parámetros del config
+        """
+        from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
+
+        # Extraer parámetros del config
+        initial_capital = Decimal(str(self.raw_config["input"]["initial_capital"]))
+
+        # Obtener objetivo y riesgo del config o usar defaults
+        objective_str = self.raw_config.get("profile", {}).get(
+            "objective", "balanced_growth"
+        )
+        risk_str = self.raw_config.get("profile", {}).get("risk_tolerance", "medio")
+
+        # Mapear a enums
+        objective = ObjectivoInversion(objective_str)
+        risk = RiskTolerance(risk_str)
+
+        # Obtener horizonte de inversión (default 24 meses)
+        investment_horizon = self.raw_config.get("profile", {}).get(
+            "investment_horizon", 24
+        )
+
+        profile = InputProfile(
+            capital_initial=initial_capital,
+            objetivo_inversion=objective,
+            risk_tolerance=risk,
+            investment_horizon=investment_horizon,
+        )
+
+        logger.info(
+            f"Created InputProfile: capital={initial_capital}, "
+            f"objective={objective.value}, risk={risk.value}"
+        )
+
+        return profile
+
+    def _create_strategy_config_for_type(
+        self, strategy_name: str, strategy_mapping
+    ) -> Dict[str, Any]:
+        """
+        Crear configuración para un tipo de estrategia específico.
+
+        Args:
+            strategy_name: Nombre de la estrategia
+            strategy_mapping: Mapeo de estrategia desde ProfileStrategyMapper
+
+        Returns:
+            Configuración de estrategia
+        """
+        # Configuración base
+        base_config = {
+            "type": strategy_name,
+            "symbols": self.raw_config["input"]["symbols"],
+            "parameters": {
+                "risk_profile": strategy_mapping.risk_profile,
+                "leverage": strategy_mapping.leverage,
+                "max_position_size": strategy_mapping.max_position_size,
+                "max_sector_allocation": strategy_mapping.max_sector_allocation,
+            },
+            "thresholds": {
+                "buy_threshold": 0.7,
+                "sell_threshold": 0.3,
+                "stop_loss": -0.05,
+                "take_profit": 0.10,
+            },
+        }
+
+        # Ajustar según tipo de estrategia
+        if strategy_name == "momentum_modular":
+            # Configuración específica para momentum modular
+            base_config.update(
+                {
+                    "preset": "custom",
+                    "modules": self._get_filter_config(),
+                    "presets": {
+                        "custom": {
+                            "combination_mode": "MAJORITY",
+                            "min_confidence": 0.7,
+                        }
+                    },
+                }
+            )
+        elif strategy_name == "mean_reversion_modular":
+            # Configuración para mean reversion
+            base_config["parameters"].update(
+                {
+                    "lookback_period": 20,
+                    "entry_threshold": 2.0,
+                    "exit_threshold": 0.5,
+                }
+            )
+        elif strategy_name == "dividend_screener":
+            # Configuración para dividendos
+            base_config["parameters"].update(
+                {
+                    "min_dividend_yield": 0.03,
+                    "max_payout_ratio": 0.8,
+                    "min_growth_rate": 0.05,
+                }
+            )
+
+        return base_config
+
+    def _get_filter_config(self) -> Dict[str, Any]:
+        """
+        Obtener configuración de filtros desde el config YAML.
+
+        Returns:
+            Diccionario con configuración de filtros
+        """
+        filters_config = {}
+
+        if "modules" in self.raw_config and "filters" in self.raw_config["modules"]:
+            filters = self.raw_config["modules"]["filters"]
+
+            for filter_name, filter_config in filters.items():
+                if filter_config.get("enabled", False):
+                    filter_params = {}
+                    for param_name, param_config in filter_config.get(
+                        "parameters", {}
+                    ).items():
+                        if "default" in param_config:
+                            filter_params[param_name] = param_config["default"]
+
+                    filters_config[filter_name] = {
+                        "enabled": True,
+                        **filter_params
+                    }
+
+        return filters_config
+
+    def _format_multi_strategy_results(
+        self,
+        consolidated_results: Dict,
+        strategy_mapping,
+        profile,
+    ) -> List[Dict[str, Any]]:
+        """
+        Formatear resultados del multi-strategy backtest.
+
+        Args:
+            consolidated_results: Resultados consolidados desde MultiStrategyBacktester
+            strategy_mapping: Mapeo de estrategia desde ProfileStrategyMapper
+            profile: InputProfile utilizado
+
+        Returns:
+            Lista de diccionarios con resultados formateados
+        """
+        results = []
+
+        # Extraer resultados por estrategia
+        per_strategy = consolidated_results.get("per_strategy", {})
+        combined = consolidated_results.get("combined", {})
+        allocation_info = consolidated_results.get("allocation", {})
+
+        # Crear resultado individual por cada estrategia
+        for strategy_name, strategy_metrics in per_strategy.items():
+            result_dict = {
+                "test_type": f"multi_strategy_{strategy_name}",
+                "test_name": f"Multi-Strategy - {strategy_name}",
+                "strategy_name": strategy_name,
+                "modules_active": [strategy_name],
+                "learning_engine": None,
+                "thresholds": self._extract_thresholds({}),
+                # Métricas de la estrategia
+                "total_pnl": (
+                    strategy_metrics["final_capital"] - strategy_metrics["initial_capital"]
+                ),
+                "return_pct": strategy_metrics["total_return"],
+                "win_rate": strategy_metrics.get("win_rate", 0.0),
+                "sharpe_ratio": strategy_metrics.get("sharpe_ratio", 0.0),
+                "max_drawdown": strategy_metrics.get("max_drawdown", 0.0),
+                "total_trades": strategy_metrics.get("total_trades", 0),
+                "avg_trade_pnl": (
+                    (
+                        strategy_metrics["final_capital"]
+                        - strategy_metrics["initial_capital"]
+                    )
+                    / strategy_metrics.get("total_trades", 1)
+                ),
+                "final_capital": strategy_metrics["final_capital"],
+                # Información de asignación
+                "allocated_capital": strategy_metrics["initial_capital"],
+                "capital_weight": allocation_info.get(strategy_name, {}).get(
+                    "weight", 0.0
+                ),
+                # Perfil
+                "profile_objective": profile.objetivo_inversion.value,
+                "profile_risk": profile.risk_tolerance.value,
+                "profile_capital_tier": strategy_mapping.capital_tier,
+            }
+
+            results.append(result_dict)
+
+        # Crear resultado combinado
+        if combined:
+            combined_result = {
+                "test_type": "multi_strategy_combined",
+                "test_name": "Multi-Strategy - Combined Portfolio",
+                "strategy_name": "combined",
+                "modules_active": strategy_mapping.enabled_strategies,
+                "learning_engine": None,
+                "thresholds": self._extract_thresholds({}),
+                # Métricas combinadas
+                "total_pnl": (
+                    combined["total_final_capital"] - combined["total_initial_capital"]
+                ),
+                "return_pct": combined["total_return"],
+                "win_rate": 0.0,  # No aplicable a portafolio combinado
+                "sharpe_ratio": combined.get("weighted_sharpe", 0.0),
+                "max_drawdown": combined.get("weighted_max_dd", 0.0),
+                "total_trades": combined.get("total_trades", 0),
+                "avg_trade_pnl": (
+                    (
+                        combined["total_final_capital"]
+                        - combined["total_initial_capital"]
+                    )
+                    / combined.get("total_trades", 1)
+                ),
+                "final_capital": combined["total_final_capital"],
+                # Información de portafolio
+                "total_initial_capital": combined["total_initial_capital"],
+                "num_strategies": len(per_strategy),
+                # Ensemble config
+                "ensemble_mode": strategy_mapping.ensemble_mode,
+                "ensemble_min_strategies": strategy_mapping.ensemble_min_strategies,
+                "ensemble_confidence": strategy_mapping.ensemble_confidence_threshold,
+                # Perfil
+                "profile_objective": profile.objetivo_inversion.value,
+                "profile_risk": profile.risk_tolerance.value,
+                "profile_capital_tier": strategy_mapping.capital_tier,
+            }
+
+            results.append(combined_result)
+
+        return results
 
     def run_regime_test_backtest(self) -> List[Dict[str, Any]]:
         """Ejecutar backtest de régimen de mercado (placeholder)."""
         logger.info("Regime test backtest not yet implemented in Phase 3")
         return []
+
+    def optimize_with_validation(
+        self,
+        param_grid: List[Dict[str, Any]],
+        strategy_class: Any = ModularMomentumStrategy,
+    ) -> Dict[str, Any]:
+        """
+        Optimize strategy parameters with proper train/val/test split and multiple testing correction.
+
+        This method implements robust parameter optimization to prevent overfitting:
+        1. Split data into train/validation/test sets
+        2. Optimize parameters on training data
+        3. Select best parameters based on validation performance
+        4. Apply Bonferroni correction for multiple testing
+        5. Validate final performance on held-out test set
+
+        Args:
+            param_grid: List of parameter combinations to test
+            strategy_class: Strategy class to optimize (default: ModularMomentumStrategy)
+
+        Returns:
+            Dictionary with optimization results including:
+            - best_params: Best parameter combination
+            - train_sharpe: Sharpe ratio on training set
+            - val_sharpe: Sharpe ratio on validation set
+            - test_sharpe: Sharpe ratio on test set
+            - adjusted_confidence: Confidence level after Bonferroni correction
+            - oos_valid: Whether out-of-sample validation passed
+            - all_results: All parameter combinations tested
+        """
+        logger.info(f"Starting parameter optimization with validation ({len(param_grid)} parameter sets)")
+
+        # Initialize data splitter
+        splitter = TrainValTestSplitter(
+            train_ratio=0.6,
+            val_ratio=0.2,
+            test_ratio=0.2,
+        )
+
+        # Split data
+        train_quotes, val_quotes, test_quotes = splitter.split_data(
+            quotes=self.quotes,
+            start_date=datetime.strptime(self.raw_config['input']['start_date'], "%Y-%m-%d"),
+            end_date=datetime.strptime(self.raw_config['input']['end_date'], "%Y-%m-%d"),
+        )
+
+        logger.info(
+            f"Data split complete: train={len(train_quotes)}, "
+            f"val={len(val_quotes)}, test={len(test_quotes)}"
+        )
+
+        # Initialize multiple testing corrector
+        corrector = MultipleTestingCorrector(num_tests=len(param_grid), base_confidence=0.95)
+        adjusted_confidence = corrector.bonferroni_correction()
+
+        logger.info(
+            f"Multiple testing correction applied: {0.95:.4f} -> {adjusted_confidence:.4f} "
+            f"({len(param_grid)} tests)"
+        )
+
+        # Test each parameter combination
+        results = []
+        for i, params in enumerate(param_grid):
+            if i % 10 == 0:
+                logger.info(f"Testing parameter set {i+1}/{len(param_grid)}...")
+
+            # Create strategy with parameters
+            try:
+                strategy_config = self._create_strategy_config()
+                strategy_config.update(params)
+                strategy = strategy_class(strategy_config)
+
+                # Backtest on training data
+                train_result = self._backtest_with_quotes(
+                    quotes=train_quotes,
+                    strategy=strategy,
+                )
+
+                # Backtest on validation data
+                val_result = self._backtest_with_quotes(
+                    quotes=val_quotes,
+                    strategy=strategy,
+                )
+
+                # Store results
+                results.append({
+                    'params': params,
+                    'train_sharpe': train_result.get('sharpe_ratio', 0.0),
+                    'val_sharpe': val_result.get('sharpe_ratio', 0.0),
+                    'train_result': train_result,
+                    'val_result': val_result,
+                })
+
+            except Exception as e:
+                logger.warning(f"Parameter set {i+1} failed: {e}")
+                continue
+
+        # Select best params based on validation performance
+        if not results:
+            logger.error("No parameter combinations completed successfully")
+            return {
+                'success': False,
+                'error': 'All parameter combinations failed'
+            }
+
+        best_result = max(results, key=lambda x: x['val_sharpe'])
+
+        logger.info(
+            f"Best parameters selected: train_sharpe={best_result['train_sharpe']:.3f}, "
+            f"val_sharpe={best_result['val_sharpe']:.3f}"
+        )
+
+        # Test on held-out test set
+        strategy_config = self._create_strategy_config()
+        strategy_config.update(best_result['params'])
+        strategy = strategy_class(strategy_config)
+
+        test_result = self._backtest_with_quotes(
+            quotes=test_quotes,
+            strategy=strategy,
+        )
+
+        test_sharpe = test_result.get('sharpe_ratio', 0.0)
+
+        # Validate OOS performance
+        oos_ok = validate_out_of_sample_performance(
+            train_sharpe=best_result['train_sharpe'],
+            val_sharpe=best_result['val_sharpe'],
+            test_sharpe=test_sharpe,
+            degradation_tolerance=0.5,
+        )
+
+        optimization_result = {
+            'success': True,
+            'best_params': best_result['params'],
+            'train_sharpe': best_result['train_sharpe'],
+            'val_sharpe': best_result['val_sharpe'],
+            'test_sharpe': test_sharpe,
+            'adjusted_confidence': adjusted_confidence,
+            'oos_valid': oos_ok,
+            'num_tests': len(param_grid),
+            'all_results': results,
+        }
+
+        # Log summary
+        logger.info("=" * 80)
+        logger.info("OPTIMIZATION WITH VALIDATION COMPLETE")
+        logger.info("=" * 80)
+        logger.info(f"Best parameters: {best_result['params']}")
+        logger.info(f"Performance:")
+        logger.info(f"  Train Sharpe: {best_result['train_sharpe']:.3f}")
+        logger.info(f"  Val Sharpe:   {best_result['val_sharpe']:.3f}")
+        logger.info(f"  Test Sharpe:  {test_sharpe:.3f}")
+        logger.info(f"Adjusted confidence (Bonferroni): {adjusted_confidence:.4f}")
+        logger.info(f"OOS validation: {'PASSED' if oos_ok else 'FAILED'}")
+        logger.info("=" * 80)
+
+        return optimization_result
+
+    def _backtest_with_quotes(
+        self,
+        quotes: List,
+        strategy: Any,
+    ) -> Dict[str, Any]:
+        """
+        Execute backtest with specific quotes and strategy.
+
+        Args:
+            quotes: Market data to backtest
+            strategy: Strategy instance
+
+        Returns:
+            Dictionary with backtest results
+        """
+        initial_capital = Decimal(str(self.raw_config['input']['initial_capital']))
+        backtest_config = BacktestConfig(
+            initial_capital=initial_capital,
+            commission_per_trade=self.backtest_config.commission_per_trade,
+            slippage_percentage=self.backtest_config.slippage_percentage,
+            max_position_size=self.backtest_config.max_position_size,
+            stop_loss_percentage=self.backtest_config.stop_loss_percentage,
+            take_profit_percentage=self.backtest_config.take_profit_percentage,
+            risk_free_rate=self.backtest_config.risk_free_rate,
+        )
+
+        strategy_name = self._get_strategy_name(strategy)
+        executor = SimpleBacktestExecutor(backtest_config)
+        result = executor.execute(
+            quotes,
+            strategy,
+            strategy_name=strategy_name
+        )
+
+        consistent_metrics = self._calculate_consistent_metrics(result, initial_capital)
+
+        return {
+            'total_pnl': consistent_metrics['total_pnl'],
+            'return_pct': consistent_metrics['return_pct'],
+            'win_rate': float(result.performance.win_rate) if result.performance else 0.0,
+            'sharpe_ratio': (
+                float(result.performance.sharpe_ratio)
+                if result.performance and result.performance.sharpe_ratio
+                else 0.0
+            ),
+            'max_drawdown': (
+                float(result.performance.max_drawdown_percentage)
+                if result.performance
+                else 0.0
+            ),
+            'total_trades': result.performance.total_trades if result.performance else 0,
+            'final_capital': consistent_metrics['final_capital'],
+            'expectancy': (
+                float(result.performance.expectancy)
+                if result.performance and result.performance.expectancy
+                else None
+            ),
+        }
 
     # Métodos helper
     def _create_strategy_config(self) -> Dict[str, Any]:

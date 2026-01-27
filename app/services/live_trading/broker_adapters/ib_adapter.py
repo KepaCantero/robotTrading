@@ -35,6 +35,7 @@ import asyncio
 import logging
 import os
 from datetime import datetime, timedelta
+from decimal import Decimal
 from typing import Any, Callable, Dict, List, Optional
 
 from ib_insync import IB, LimitOrder, MarketOrder, StopOrder, util
@@ -42,6 +43,7 @@ from ib_insync.contract import Contract as IBContract
 from ib_insync.ticker import Ticker
 
 from app.core.reconnection_manager import ReconnectionConfig, ReconnectionManager
+from app.core.trading_validators import TradingValidator
 
 
 # from app.models.position import Position  # TODO: Position model not implemented yet
@@ -123,6 +125,9 @@ class IBConnection:
 
         # Initialize reconnection manager for 24/7 operation
         self.reconnection_manager = self._create_reconnection_manager()
+
+        # CRITICAL: Initialize trading validator for safety checks
+        self.validator = TradingValidator()
 
         logger.info(
             f"IB Connection initialized: {self.host}:{self.port} (Client ID: {self.client_id})"
@@ -441,6 +446,47 @@ class IBConnection:
             if quantity <= 0:
                 return {'error': f'Invalid quantity: {quantity}'}
 
+            # CRITICAL: Validate BEFORE executing
+            # Get available capital (estimate from account if possible)
+            try:
+                account_summary = await self.get_account_summary()
+                available_capital = Decimal(str(account_summary.get('NetLiquidation', {}).get('value', 100000)))
+            except Exception:
+                # Fallback to default if account summary unavailable
+                available_capital = Decimal("100000")
+                logger.warning("Could not fetch account capital, using default for validation")
+
+            # Calculate position value
+            market_data_for_price = await self.get_market_data(symbol, **contract_kwargs)
+            estimated_price = Decimal(str(market_data_for_price.get('last', market_data_for_price.get('bid', 100))))
+            position_value = Decimal(str(quantity)) * estimated_price
+
+            # Validate position size
+            try:
+                self.validator.validate_position_size(
+                    capital=available_capital,
+                    position_size=position_value,
+                    max_position_percent=Decimal("0.25")
+                )
+            except ValueError as e:
+                logger.error(f"Position size validation failed: {e}")
+                return {'error': str(e)}
+
+            # Validate stop-loss if provided
+            if stop_price:
+                try:
+                    self.validator.validate_stop_loss(
+                        entry_price=estimated_price,
+                        stop_loss=Decimal(str(stop_price)),
+                        side='long' if side == 'BUY' else 'short'
+                    )
+                except ValueError as e:
+                    logger.error(f"Stop-loss validation failed: {e}")
+                    return {'error': str(e)}
+            else:
+                # Log warning but don't fail (some strategies may not use SL)
+                logger.warning(f"Order for {symbol} placed without stop-loss - ensure risk is managed elsewhere")
+
             # Get market data for validation
             market_data = await self.get_market_data(symbol, **contract_kwargs)
             if not market_data:
@@ -656,12 +702,22 @@ class IBConnection:
                 logger.error(f"Error unsubscribing from market data for {symbol}: {e}")
 
     def __del__(self):
-        """Cleanup on deletion."""
+        """
+        Clean up IB connection on deletion.
+
+        This method is called when the object is garbage collected.
+        It attempts to disconnect from IB if still connected.
+        """
         try:
             if hasattr(self, 'ib') and self.ib.isConnected():
                 self.ib.disconnect()
-        except:
-            pass
+        except ConnectionError as e:
+            # Connection errors during cleanup are expected in some cases
+            logger.warning(f"Connection error during IB adapter cleanup: {e}")
+        except Exception as e:
+            # Log any other unexpected errors during cleanup
+            logger.error(f"Unexpected error during IB adapter cleanup: {e}", exc_info=True)
+
 
     def get_connection_stats(self) -> Dict[str, Any]:
         """Get reconnection statistics."""

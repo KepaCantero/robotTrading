@@ -77,3 +77,6 @@ pyfolio-reloaded>=0.9.5,<1.0.0  # Portfolio and risk analytics with tearsheets
 
 aiosqlite>=0.19.0
 greenlet>=3.0.0
+
+# Secure Serialization (for replacing pickle)
+msgpack>=1.0.0

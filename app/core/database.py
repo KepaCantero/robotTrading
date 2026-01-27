@@ -6,7 +6,7 @@ with asyncpg driver, including session management and connection pooling.
 """
 
 import logging
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager
 from typing import AsyncGenerator, Optional
 
 from sqlalchemy import MetaData
@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 from sqlalchemy.pool import NullPool, QueuePool
 
 from .config import get_settings
@@ -68,22 +68,36 @@ def get_database_engine() -> AsyncEngine:
         settings = get_settings()
 
         try:
-            # Create async engine with connection pooling
-            _engine = create_async_engine(
-                settings.get_database_url_async(),
-                echo=settings.database_echo,
-                poolclass=QueuePool if settings.is_production() else NullPool,
-                pool_size=settings.database_pool_size,
-                max_overflow=settings.database_max_overflow,
-                pool_pre_ping=True,  # Verify connections before use
-                pool_recycle=3600,  # Recycle connections every hour
-                future=True,  # Use SQLAlchemy 2.0 style
-            )
+            db_url = settings.get_database_url_async()
 
-            url_part = (
-                settings.database_url.split("@")[1] if "@" in settings.database_url else "localhost"
-            )
-            logger.info(f"Database engine created successfully. URL: {url_part}")
+            # Check if using SQLite (doesn't support connection pooling)
+            is_sqlite = "sqlite" in db_url.lower()
+
+            if is_sqlite:
+                # SQLite: No pooling parameters supported
+                _engine = create_async_engine(
+                    db_url,
+                    echo=settings.database_echo,
+                    future=True,  # Use SQLAlchemy 2.0 style
+                )
+                logger.info("Database engine created (SQLite, no pooling)")
+            else:
+                # PostgreSQL: Use connection pooling
+                _engine = create_async_engine(
+                    db_url,
+                    echo=settings.database_echo,
+                    poolclass=QueuePool if settings.is_production() else NullPool,
+                    pool_size=settings.database_pool_size,
+                    max_overflow=settings.database_max_overflow,
+                    pool_pre_ping=True,  # Verify connections before use
+                    pool_recycle=3600,  # Recycle connections every hour
+                    future=True,  # Use SQLAlchemy 2.0 style
+                )
+                # Sanitize connection string - only log host, not credentials
+                url_part = (
+                    settings.database_url.split("@")[1] if "@" in settings.database_url else "localhost"
+                )
+                logger.info(f"Database engine created (host={url_part}, pool_size={settings.database_pool_size})")
 
         except Exception as e:
             logger.error(f"Failed to create database engine: {e}")
@@ -338,6 +352,36 @@ async def execute_scalar(query: str, params: Optional[dict] = None) -> any:
             raise
 
 
+@contextmanager
+def get_sync_db() -> Session:
+    """
+    Get a synchronous database session.
+
+    Use this for non-async operations like PositionMonitor persistence.
+
+    Yields:
+        Session: SQLAlchemy synchronous session
+
+    Example:
+        ```python
+        with get_sync_db() as session:
+            result = session.execute(query)
+            session.commit()
+        ```
+    """
+    engine = get_database_engine()
+    SessionLocal = sessionmaker(bind=engine)
+    session = SessionLocal()
+    try:
+        yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
 # Export commonly used items
 __all__ = [
     "Base",
@@ -346,6 +390,7 @@ __all__ = [
     "get_session_factory",
     "get_db_session",
     "get_db_transaction",
+    "get_sync_db",
     "init_database",
     "close_database",
     "check_database_connection",

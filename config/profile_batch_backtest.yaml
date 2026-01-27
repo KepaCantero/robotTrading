@@ -1,0 +1,395 @@
+# Profile Batch Backtesting Configuration
+# ============================================================================
+# WORKFLOW CONFIGURATION for ProfileBatchBacktester
+# ============================================================================
+#
+# This file orchestrates batch testing workflow including:
+# - Database connectivity for storing results
+# - Output directories and report formats
+# - Symbol universe and backtest period
+# - Profile generation (capital tiers, investment horizons, risk levels)
+# - Parallel execution settings
+# - Logging configuration
+#
+# COMPLEMENTARY CONFIGURATION:
+# - Strategy/optimization parameters: config/backtesting/profile_optimization.yaml
+# - Module filter parameters: config/backtesting/profile_optimization.yaml
+# - Validation thresholds: config/backtesting/profile_optimization.yaml
+#
+# PRECEDENCE:
+# - This config defines workflow orchestration
+# - profile_optimization.yaml defines parameter values and search spaces
+# - When in doubt, workflow settings here take precedence for batch execution
+#
+# USAGE EXAMPLES:
+#   # Run all 180 profile combinations
+#   python run_profile_batch_backtester.py --all
+#
+#   # Run specific tier and risk level
+#   python run_profile_batch_backtester.py --tier medio --risk alto
+#
+#   # Generate reports from database
+#   python scripts/init_profile_batch_db.py --report
+#
+# ============================================================================
+
+# ============================================================================
+# Database Configuration
+# ============================================================================
+database:
+  url: "sqlite:///results/profile_batch_results.db"
+  # Alternative: PostgreSQL for production
+  # url: "postgresql://user:password@localhost:5432/algo_trading"
+
+# ============================================================================
+# Output Configuration
+# ============================================================================
+# Base directory for all batch backtesting outputs
+# Subdirectories will be created for each profile/tier combination
+output_dir: "results/profile_batch_backtesting"
+
+# ============================================================================
+# Capital Tiers (for generating profiles)
+# ============================================================================
+capital_tiers:
+  bajo: 50000      # €50k
+  medio: 150000    # €150k
+  alto: 500000     # €500k
+
+# ============================================================================
+# Investment Horizons (months)
+# ============================================================================
+# This configuration controls the investment horizon dimension in profile generation.
+# Each horizon value represents the investment period in months.
+#
+# Supported formats:
+#   1. Dict format (recommended for readability):
+#      investment_horizons:
+#        short: 12
+#        medium: 24
+#        long: 36
+#        very_long: 60
+#
+#   2. List format (simple):
+#      investment_horizons: [12, 24, 36, 60]
+#
+# Validation rules:
+#   - All values must be positive integers (months)
+#   - Typical range: 1-360 months (1 month to 30 years)
+#   - Invalid values (negative, zero, non-numeric) are filtered out
+#   - If all values are invalid or section is missing, defaults to [12, 24, 36, 60]
+#
+# Impact on profile generation:
+#   Total profiles = objectives × risk_levels × capital_tiers × horizons
+#   With default values: 5 × 3 × 3 × 4 = 180 profiles
+#   With custom horizons: 5 × 3 × 3 × N = 45N profiles
+#   (e.g., 6 horizons = 270 profiles, 2 horizons = 90 profiles)
+investment_horizons:
+  short: 12    # 1 year
+  medium: 24   # 2 years
+  long: 36     # 3 years
+  very_long: 60  # 5 years
+
+# ============================================================================
+# Backtest Period
+# ============================================================================
+backtest_period:
+  start_date: "2020-01-01"
+  end_date: "2023-12-31"
+
+# ============================================================================
+# Symbols Universe
+# ============================================================================
+symbols:
+  # Tech
+  - AAPL
+  - MSFT
+  - GOOGL
+  - AMZN
+  - TSLA
+  # Finance
+  - JPM
+  - BAC
+  - WFC
+  # Healthcare
+  - JNJ
+  - PFE
+  # Consumer
+  - KO
+  - PG
+
+# ============================================================================
+# Risk Parameters (by risk tolerance)
+# ============================================================================
+risk_parameters:
+  bajo:
+    max_position_pct: 0.05        # 5% max position
+    stop_loss_pct: 0.02           # 2% stop loss
+    take_profit_pct: 0.08         # 8% take profit
+    max_drawdown_pct: 0.15        # 15% max drawdown
+
+  medio:
+    max_position_pct: 0.10        # 10% max position
+    stop_loss_pct: 0.03           # 3% stop loss
+    take_profit_pct: 0.12         # 12% take profit
+    max_drawdown_pct: 0.25        # 25% max drawdown
+
+  alto:
+    max_position_pct: 0.20        # 20% max position
+    stop_loss_pct: 0.05           # 5% stop loss
+    take_profit_pct: 0.20         # 20% take profit
+    max_drawdown_pct: 0.35        # 35% max drawdown
+
+# ============================================================================
+# Objective Parameters (by investment objective)
+# ============================================================================
+objective_parameters:
+  maximizar_capital:
+    primary_metric: "sharpe_ratio"
+    min_sharpe: 1.2
+    min_return: 0.15
+    combination_mode: "MAJORITY"
+    min_confidence: 0.7
+
+  maximizar_dividendos:
+    primary_metric: "total_return"
+    min_sharpe: 0.8
+    min_return: 0.10
+    combination_mode: "CONSENSUS"
+    min_confidence: 0.8
+    dividend_focus: true
+
+  capital_preservation:
+    primary_metric: "max_drawdown"
+    min_sharpe: 0.5
+    min_return: 0.05
+    combination_mode: "CONSENSUS"
+    min_confidence: 0.9
+    max_drawdown_limit: 0.10
+
+  balanced_growth:
+    primary_metric: "sharpe_ratio"
+    min_sharpe: 1.0
+    min_return: 0.12
+    combination_mode: "MAJORITY"
+    min_confidence: 0.7
+
+  income_generation:
+    primary_metric: "total_return"
+    min_sharpe: 0.7
+    min_return: 0.10
+    combination_mode: "MAJORITY"
+    min_confidence: 0.6
+    dividend_focus: true
+
+# ============================================================================
+# Optimization Settings
+# ============================================================================
+# NOTE: Detailed parameter search spaces are defined in:
+#   config/backtesting/profile_optimization.yaml
+#   See: threshold_optimization section for indicator ranges
+#
+# This section controls the Optuna optimization process for batch execution.
+optimization:
+  # Optuna trial configuration
+  n_trials: 100                    # Number of Optuna trials per profile
+  timeout: null                    # No timeout (uses n_trials instead)
+  sampler: "TPESampler"            # Tree-structured Parzen Estimator
+  pruner: "MedianPruner"           # Median pruning for early stopping
+  n_jobs: 4                        # Parallel trials per profile
+
+  # Optimization workflow control
+  enable_baseline: true            # Run baseline with default parameters
+  enable_optimization: true        # Run optimization trials
+  compare_baseline_vs_opt: true    # Generate comparison reports
+
+  # Parameter search spaces are loaded from profile_optimization.yaml:
+  # - threshold_optimization.rsi.* (buy/sell thresholds)
+  # - threshold_optimization.stoch_rsi.* (oversold/overbought)
+  # - threshold_optimization.momentum.* (threshold ranges)
+  # - threshold_optimization.atr.* (percentile thresholds)
+  # - threshold_optimization.volume_ratio.* (volume ranges)
+  # - threshold_optimization.ema_distance.* (distance thresholds)
+
+# ============================================================================
+# Validation Settings
+# ============================================================================
+# NOTE: Detailed validation parameters are defined in:
+#   config/backtesting/profile_optimization.yaml
+#   See: validation section for walk-forward, Monte Carlo, OOS settings
+#
+# This section controls which validation methods to enable for batch testing.
+validation:
+  # Enable/disable validation methods
+  walk_forward:
+    enabled: true
+    # Parameters from profile_optimization.yaml:
+    # validation.walk_forward.train_years, test_years, step_years
+
+  monte_carlo:
+    enabled: true
+    # Parameters from profile_optimization.yaml:
+    # validation.monte_carlo.n_simulations, confidence_level, block_size
+
+  out_of_sample:
+    enabled: true
+    # Parameters from profile_optimization.yaml:
+    # validation.out_of_sample.oos_ratio, rolling_window
+
+  # Performance thresholds for validation
+  # These are minimum requirements for a strategy to pass validation
+  thresholds:
+    min_sharpe: 0.5
+    max_drawdown: 0.2
+    min_win_rate: 0.45
+    min_trades: 20
+    min_profit_factor: 1.5
+
+# ============================================================================
+# Acceptance Criteria
+# ============================================================================
+acceptance_criteria:
+  # Minimum metrics for paper trading approval
+  min_sharpe: 1.0
+  min_return: 0.10         # 10% annual return
+  max_drawdown: -0.25      # -25% max drawdown
+  min_win_rate: 0.45       # 45% win rate
+
+  # Improvement thresholds (percentage values)
+  significance_threshold: 5        # 5% improvement for statistical significance
+  strong_significance_threshold: 10  # 10% improvement for strong significance
+  degradation_threshold: -5        # -5% improvement indicates degradation
+
+  # Confidence levels for recommendations (0-1 scale)
+  confidence_high: 0.8             # High confidence threshold
+  confidence_medium: 0.7           # Medium confidence threshold
+  confidence_low: 0.5              # Low confidence threshold
+
+  # Revision multiplier for marginal performance
+  revision_multiplier: 0.8         # Multiplier for min_sharpe to determine "REVISION" status
+
+  # Legacy improvement thresholds (kept for backward compatibility)
+  min_sharpe_improvement: 0.05  # 5% improvement
+  min_return_improvement: 0.05  # 5% improvement
+
+# ============================================================================
+# Modules Configuration
+# ============================================================================
+# NOTE: Module parameters and optimization ranges are defined in:
+#   config/backtesting/profile_optimization.yaml
+#   See: threshold_optimization section for parameter ranges
+#
+# This section controls which modules are enabled for batch testing.
+# All enabled modules will be optimized using their parameter search spaces.
+modules:
+  filters:
+    # Technical indicator filters
+    momentum:
+      enabled: true
+      # Parameters from profile_optimization.yaml:
+      # threshold_optimization.momentum.threshold
+
+    ema:
+      enabled: true
+      # Parameters from profile_optimization.yaml:
+      # threshold_optimization.ema_distance.*
+
+    rsi:
+      enabled: true
+      # Parameters from profile_optimization.yaml:
+      # threshold_optimization.rsi.buy_threshold, sell_threshold
+
+    volume:
+      enabled: true
+      # Parameters from profile_optimization.yaml:
+      # threshold_optimization.volume_ratio.*
+
+    atr:
+      enabled: true
+      # Parameters from profile_optimization.yaml:
+      # threshold_optimization.atr.*
+
+    stoch_rsi:
+      enabled: true
+      # Parameters from profile_optimization.yaml:
+      # threshold_optimization.stoch_rsi.*
+
+  # Market regime detectors
+  market_detectors:
+    trend:
+      enabled: true
+
+    volatility:
+      enabled: true
+
+# ============================================================================
+# Reporting Configuration
+# ============================================================================
+reporting:
+  output_directory: "results/profile_batch_backtesting"
+  output_formats:
+    - json
+    - csv
+    - excel
+
+  # Include detailed reports
+  include_professional_report: true
+  include_test_summary: true
+
+  # Report sections
+  sections:
+    - executive_summary
+    - performance_metrics
+    - risk_analysis
+    - trades_analysis
+    - robustness_analysis
+    - comparison_baseline_vs_optimized
+
+# ============================================================================
+# Parallel Execution
+# ============================================================================
+# NOTE: Threading parameters for individual backtests are defined in:
+#   config/backtesting/profile_optimization.yaml
+#   See: threading section (max_workers, batch_size, timeouts)
+#
+# This section controls parallelization at the batch/profile level.
+parallelization:
+  enabled: true
+  max_profiles: 20              # Max parallel profiles to run simultaneously
+  worker_memory_limit: "2GB"    # Memory limit per profile worker
+
+  # Threading for individual backtests comes from profile_optimization.yaml:
+  # - threading.max_workers (workers per backtest)
+  # - threading.worker_multiplier (CPU multiplier)
+  # - threading.batch_size (batch processing size)
+
+# ============================================================================
+# Logging
+# ============================================================================
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/profile_batch_backtesting.log"
+
+# ============================================================================
+# CONFIGURATION VALIDATION
+# ============================================================================
+# This config is validated on startup using:
+#   app/core/config_validator.py -> validate_batch_config()
+#
+# Required keys:
+#   - database.url
+#   - output_dir
+#   - capital_tiers (at least one)
+#   - investment_horizons (at least one)
+#   - symbols (non-empty list)
+#   - backtest_period.start_date, end_date
+#
+# Cross-config validation:
+#   - References to profile_optimization.yaml are verified
+#   - Parameter ranges are checked for consistency
+#   - No conflicting keys between workflow and parameter configs
+#
+# To validate this config:
+#   python -m app.core.config_validator --batch-config
+# ============================================================================

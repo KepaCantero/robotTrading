@@ -1,0 +1,58 @@
+================================================================================
+TEST SUMMARY REPORT: INTEGRATION_DEMO
+================================================================================
+
+## METADATA
+----------------------------------------
+Test Name:        integration_demo
+Description:      Integration demo with real backtest
+Test File:        integration_demo.py
+Test Type:        integration
+Test ID:          test_20260126_164537
+Created:          2026-01-26 16:45:37
+
+## TEST STATUS
+----------------------------------------
+✓ Status:          PASSED
+Reason:           Integration demo completed with 6 trades
+Duration:         0.00 seconds
+
+## INPUT DATA
+----------------------------------------
+Symbols:          TEST
+Date Range:       2023-01-01 to 2023-04-10
+Data Points:      100
+Market Regime:    uptrend
+Data Source:      Synthetic linear trend
+
+## CONFIGURATION
+----------------------------------------
+Initial Capital:  $10,000.00
+Commission:       $1.00 per trade
+Slippage:         10.00%
+Strategy:         Test strategy
+
+## OUTPUT METRICS
+----------------------------------------
+
+### Financial Performance
+Final Capital:     $9,817.11
+Total P&L:        $-182.89
+Total Return:      -1.83%
+
+### Risk Metrics
+
+### Trade Statistics
+Total Trades:      6
+Winning Trades:    0
+Losing Trades:     0
+
+## VALIDATION CRITERIA
+----------------------------------------
+✓ Trades executed: PASSED
+   Expected: > 0
+   Actual:   6
+
+================================================================================
+End of Report - Generated 2026-01-26 16:45:37
+================================================================================

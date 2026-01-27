@@ -19,6 +19,8 @@ from app.backtesting.models import (
     Trade,
     TradeStatus,
 )
+from app.backtesting.liquidity_validator import LiquidityValidator
+from app.core.trading_validators import TradingValidator
 from app.models.portfolio import AssetClass, Portfolio, Position
 from app.models.signal import Signal, SignalType
 from app.services.dynamic_capital_reallocation import DynamicCapitalReallocationEngine
@@ -93,11 +95,25 @@ class SimpleBacktester:
         else:
             self.risk_validator = None
 
+        # Initialize Trading Validator for position size and stop-loss validation
+        self.trading_validator = TradingValidator()
+        logger.info(f"✅ Trading Validator initialized for {strategy_name}")
+
+        # Initialize Liquidity Validator for realistic order execution
+        # CRITICAL: Addresses audit recommendation #1 - liquidity validation
+        self.liquidity_validator = LiquidityValidator(
+            enable_partial_fills=True,  # Allow partial fills for large orders
+            max_order_pct_of_volume=Decimal("0.10"),  # Reject orders >10% of daily volume
+            warning_order_pct_of_volume=Decimal("0.05"),  # Warn for orders >5% of daily volume
+            partial_fill_pct=Decimal("0.05"),  # Fill up to 5% of volume for partial fills
+        )
+        logger.info(f"✅ Liquidity Validator initialized for {strategy_name} (HIGH PRIORITY #1)")
+
         # Initialize Dynamic Capital Reallocation Engine (optional, for performance tracking)
         self.reallocation_engine = reallocation_engine
         if reallocation_engine:
             logger.info(f"✅ Dynamic Capital Reallocation Engine linked for {strategy_name}")
-        
+
         # CRITICAL FIX: Track last known price for each symbol for accurate equity curve calculation
         self.last_known_prices: Dict[str, Decimal] = {}  # symbol -> last seen price
 
@@ -679,13 +695,82 @@ class SimpleBacktester:
             )
             return
 
-        # Check if we have enough capital
-        total_cost = position_size * current_price
+        # CRITICAL: Validate position size using TradingValidator
+        try:
+            position_value = position_size * current_price
+            self.trading_validator.validate_position_size(
+                capital=self.capital,
+                position_size=position_value,
+                max_position_percent=self.config.max_position_size,
+            )
+        except ValueError as e:
+            logger.warning(
+                f"❌ BUY {signal.symbol} (strategy={strategy_name}): Position size validation failed: {e}"
+            )
+            return
+
+        # CRITICAL: Validate stop-loss is set for this trade
+        try:
+            stop_loss_price = current_price * (Decimal("1") - self.config.stop_loss_percentage / Decimal("100"))
+            self.trading_validator.validate_stop_loss(
+                entry_price=current_price,
+                stop_loss=stop_loss_price,
+                side="long",
+            )
+        except ValueError as e:
+            logger.warning(
+                f"❌ BUY {signal.symbol} (strategy={strategy_name}): Stop-loss validation failed: {e}"
+            )
+            return
+
+        # CRITICAL: HIGH PRIORITY #1 - Validate liquidity before executing order
+        # This prevents execution of orders that cannot be realistically filled
+        fill_result = self.liquidity_validator.simulate_fill(
+            order_quantity=position_size,
+            current_bar=market_data,
+            order_side="buy",
+            symbol=signal.symbol
+        )
+
+        if fill_result.fill_status == "REJECTED":
+            logger.warning(
+                f"❌ BUY {signal.symbol} (strategy={strategy_name}): "
+                f"Liquidity validation FAILED - {fill_result.rejection_reason}"
+            )
+            if self.diagnostic_logger:
+                self.diagnostic_logger.log_signal_rejected(
+                    strategy_name,
+                    signal.symbol,
+                    "liquidity_validation",
+                    fill_result.rejection_reason,
+                    signal.metadata if hasattr(signal, 'metadata') else {},
+                )
+            return
+
+        if fill_result.fill_status == "PARTIAL":
+            # Adjust position size to filled quantity
+            logger.warning(
+                f"⚠️ BUY {signal.symbol} (strategy={strategy_name}): "
+                f"Partial fill - requested {position_size:.0f}, filled {fill_result.filled_quantity:.0f} shares"
+            )
+            position_size = fill_result.filled_quantity
+
+        # Use liquidity-aware execution price (includes market impact)
+        execution_price = fill_result.fill_price
+
+        # Log market impact if significant
+        if fill_result.market_impact and fill_result.market_impact > Decimal("0.005"):
+            logger.info(
+                f"📊 BUY {signal.symbol}: Market impact = {fill_result.market_impact:.2%}"
+            )
+
+        # Check if we have enough capital (using liquidity-aware execution price)
+        total_cost = position_size * execution_price
         if total_cost > self.capital:
             logger.info(
                 f"🔧 BUY {signal.symbol} (strategy={strategy_name}): total_cost ({total_cost}) > capital ({self.capital}), adjusting position_size"
             )
-            position_size = self.capital / current_price
+            position_size = self.capital / execution_price
 
         if position_size <= 0:
             logger.warning(
@@ -693,13 +778,10 @@ class SimpleBacktester:
             )
             return
 
-        # NEW: Apply strategy-specific slippage and commission
+        # Apply commission (liquidity-aware price already includes market impact)
         # Priority: signal metadata > strategy config > global config
         strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
-        slippage_pct = self._get_strategy_slippage(signal, strategy_name)
         commission_pct = self._get_strategy_commission(signal, strategy_name)
-
-        execution_price = self._apply_slippage(current_price, True, slippage_pct=slippage_pct)
 
         # Calculate costs: commission can be percentage or fixed amount
         trade_value = position_size * execution_price
@@ -710,23 +792,24 @@ class SimpleBacktester:
             # Fixed commission amount
             commission = self.config.commission_per_trade
 
+        # Slippage is already included in execution_price from liquidity validator
         slippage_cost = abs(position_size * (execution_price - current_price))
-        total_cost = position_size * execution_price + commission + slippage_cost
+        total_cost = position_size * execution_price + commission
 
         logger.info(
             f"💰 BUY {signal.symbol} (strategy={strategy_name}): "
-            f"execution_price={execution_price:.4f} (slippage={slippage_pct if slippage_pct else self.config.slippage_percentage:.2f}%), "
+            f"execution_price=${execution_price:.4f} (includes market impact), "
             f"commission=${commission:.2f} ({commission_pct if commission_pct else 'fixed'}), "
             f"slippage_cost=${slippage_cost:.2f}, total_cost=${total_cost:.2f}, capital=${self.capital:.2f}"
         )
 
         if total_cost > self.capital:
             logger.warning(
-                f"❌ BUY {signal.symbol} (strategy={strategy_name}): total_cost ({total_cost}) > capital ({self.capital}) after slippage, skipping"
+                f"❌ BUY {signal.symbol} (strategy={strategy_name}): total_cost ({total_cost}) > capital ({self.capital}), skipping"
             )
             return
 
-        logger.info(f"✅ EXECUTING BUY: {signal.symbol} qty={position_size} price={execution_price}")
+        logger.info(f"✅ EXECUTING BUY: {signal.symbol} qty={position_size} price=${execution_price:.4f}")
 
         # Build reason from signal metadata
         reason = self._build_trade_reason(signal, market_data)
@@ -818,17 +901,55 @@ class SimpleBacktester:
             )
             return
 
-        logger.info(
-            f"✅ EXECUTING SELL: {signal.symbol} (strategy={strategy_name}) qty={sell_quantity} price={current_price}"
+        # CRITICAL: HIGH PRIORITY #1 - Validate liquidity before executing sell order
+        # This prevents execution of orders that cannot be realistically filled
+        fill_result = self.liquidity_validator.simulate_fill(
+            order_quantity=sell_quantity,
+            current_bar=market_data,
+            order_side="sell",
+            symbol=signal.symbol
         )
 
-        # NEW: Apply strategy-specific slippage and commission
+        if fill_result.fill_status == "REJECTED":
+            logger.warning(
+                f"❌ SELL {signal.symbol} (strategy={strategy_name}): "
+                f"Liquidity validation FAILED - {fill_result.rejection_reason}"
+            )
+            if self.diagnostic_logger:
+                self.diagnostic_logger.log_signal_rejected(
+                    strategy_name,
+                    signal.symbol,
+                    "liquidity_validation",
+                    fill_result.rejection_reason,
+                    signal.metadata if hasattr(signal, 'metadata') else {},
+                )
+            return
+
+        if fill_result.fill_status == "PARTIAL":
+            # Adjust sell quantity to filled quantity
+            logger.warning(
+                f"⚠️ SELL {signal.symbol} (strategy={strategy_name}): "
+                f"Partial fill - requested {sell_quantity:.0f}, filled {fill_result.filled_quantity:.0f} shares"
+            )
+            sell_quantity = fill_result.filled_quantity
+
+        # Use liquidity-aware execution price (includes market impact)
+        execution_price = fill_result.fill_price
+
+        # Log market impact if significant
+        if fill_result.market_impact and fill_result.market_impact > Decimal("0.005"):
+            logger.info(
+                f"📊 SELL {signal.symbol}: Market impact = {fill_result.market_impact:.2%}"
+            )
+
+        logger.info(
+            f"✅ EXECUTING SELL: {signal.symbol} (strategy={strategy_name}) qty={sell_quantity} price=${execution_price:.4f}"
+        )
+
+        # Apply commission (liquidity-aware price already includes market impact)
         # Priority: signal metadata > strategy config > global config
         strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
-        slippage_pct = self._get_strategy_slippage(signal, strategy_name)
         commission_pct = self._get_strategy_commission(signal, strategy_name)
-
-        execution_price = self._apply_slippage(current_price, False, slippage_pct=slippage_pct)
 
         # Calculate proceeds: commission can be percentage or fixed amount
         trade_value = sell_quantity * execution_price
@@ -839,12 +960,13 @@ class SimpleBacktester:
             # Fixed commission amount
             commission = self.config.commission_per_trade
 
+        # Slippage is already included in execution_price from liquidity validator
         slippage_cost = abs(sell_quantity * (execution_price - current_price))
-        proceeds = sell_quantity * execution_price - commission - slippage_cost
+        proceeds = sell_quantity * execution_price - commission
 
         logger.info(
             f"💰 SELL {signal.symbol} (strategy={strategy_name}): "
-            f"execution_price={execution_price:.4f} (slippage={slippage_pct if slippage_pct else self.config.slippage_percentage:.2f}%), "
+            f"execution_price=${execution_price:.4f} (includes market impact), "
             f"commission=${commission:.2f} ({commission_pct if commission_pct else 'fixed'}), "
             f"slippage_cost=${slippage_cost:.2f}, proceeds=${proceeds:.2f}, "
             f"current_position={current_position:.6f}, capital=${self.capital:.2f}"
@@ -1544,40 +1666,47 @@ class SimpleBacktester:
 
     def _calculate_sharpe_ratio(self) -> Optional[Decimal]:
         """
-        Calculate Sharpe ratio from realized trade P&L, not from equity curve.
-        
-        BUG FIX: Previous implementation calculated Sharpe from equity curve which
-        includes unrealized P&L from open positions. This led to positive Sharpe
-        ratios even when final PnL was negative (e.g., Sharpe=0.88 with -$99,576 losses).
-        
-        The correct approach is to calculate returns from closed trade P&L,
-        which reflects the actual realized performance of the strategy.
-        
+        Calculate Sharpe ratio from realized trade P&L using proper time-series returns.
+
+        CRITICAL BUG FIX: The previous implementation calculated returns relative to
+        cumulative capital, which is INCORRECT for time-series analysis. This led to
+        distorted Sharpe ratios because returns were normalized against changing capital.
+
+        The CORRECT implementation:
+        1. Build equity curve from closed trades
+        2. Calculate period-over-period returns from equity curve
+        3. These returns compound properly (r1, r2, r3...)
+        4. Annualize and calculate Sharpe from the return series
+
         Formula: Sharpe = (Rp - Rf) / σp
-        - Rp: Portfolio return (annualized, from realized trades)
+        - Rp: Portfolio return (annualized)
         - Rf: Risk-free rate
         - σp: Standard deviation of portfolio returns (annualized)
         """
         if not self.trades or len(self.trades) < 2:
             return None
 
-        # Calculate returns from closed trades (realized P&L only)
-        # This is the CORRECT way - use actual trade results, not unrealized gains
-        returns = []
-        current_capital = self.config.initial_capital
-        
-        # Sort trades by exit time to calculate sequential returns
+        # Calculate returns from closed trades
         closed_trades = [t for t in self.trades if t.pnl is not None and t.exit_time is not None]
         closed_trades.sort(key=lambda t: t.exit_time)
-        
+
+        if len(closed_trades) < 2:
+            return None
+
+        # Build equity curve from trades (CORRECT approach)
+        current_capital = self.config.initial_capital
+        equity_values = [self.config.initial_capital]
+
         for trade in closed_trades:
-            if trade.pnl and current_capital > 0:
-                # Calculate return as percentage of current capital
-                trade_return = trade.pnl / current_capital
-                returns.append(trade_return)
-                # Update capital after this trade
-                current_capital += trade.pnl
-        
+            current_capital += trade.pnl
+            equity_values.append(current_capital)
+
+        # Calculate returns from equity curve (time-series returns)
+        returns = []
+        for i in range(1, len(equity_values)):
+            ret = (equity_values[i] - equity_values[i-1]) / equity_values[i-1]
+            returns.append(ret)
+
         if not returns or len(returns) < 2:
             return None
 
@@ -1589,19 +1718,14 @@ class SimpleBacktester:
         if std_dev == 0:
             return None
 
-        # Annualize returns (assuming ~252 trading days per year)
-        # Using 252 instead of 365.25 for trading days
+        # Annualize (252 trading days)
         annual_mean = mean_return * Decimal("252")
         annual_std = std_dev * Decimal(str(math.sqrt(252)))
 
-        # Calculate Sharpe ratio
         excess_return = annual_mean - self.config.risk_free_rate
-        
-        if annual_std > 0:
-            sharpe = excess_return / annual_std
-            return sharpe
+        sharpe = excess_return / annual_std if annual_std > 0 else None
 
-        return None
+        return sharpe
 
     def _create_empty_metrics(self) -> PerformanceMetrics:
         """Create empty performance metrics."""

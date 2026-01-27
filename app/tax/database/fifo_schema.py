@@ -29,7 +29,7 @@ from typing import Dict, List, Optional
 from uuid import UUID, uuid4
 
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import JSONBB, UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -134,12 +134,15 @@ class Account(Base):
     )
     closed_at: Optional[datetime] = sa.Column(sa.TIMESTAMP(timezone=True), nullable=True)
 
-    # JSON for extra fields
+    # JSONB for extra fields
     meta_data: Dict = sa.Column(JSONB, default=dict)
 
     # Relationships
     transactions = sa.orm.relationship(
-        "Transaction", back_populates="account", cascade="all, delete-orphan"
+        "Transaction",
+        back_populates="account",
+        cascade="all, delete-orphan",
+        foreign_keys="[Transaction.account_id]"
     )
     lots = sa.orm.relationship("Lot", back_populates="account", cascade="all, delete-orphan")
     balances = sa.orm.relationship(
@@ -172,7 +175,11 @@ class Transaction(Base):
 
     # Account
     account_id: UUID = sa.Column(UUID(as_uuid=True), sa.ForeignKey('accounts.id'), nullable=False)
-    account = sa.orm.relationship("Account", back_populates="transactions")
+    account = sa.orm.relationship(
+        "Account",
+        back_populates="transactions",
+        foreign_keys=[account_id]
+    )
 
     # Asset
     asset_type: AssetType = sa.Column(sa.Enum(AssetType), nullable=False)
@@ -397,7 +404,7 @@ class TaxReport(Base):
     report_type: str = sa.Column(sa.String(20), nullable=False)  # "modelo_720", "modelo_721"
     tax_year: int = sa.Column(sa.Integer, nullable=False)
 
-    # Report data (JSON for flexibility)
+    # Report data (JSONB for flexibility)
     report_data: Dict = sa.Column(JSONB, nullable=False)
 
     # Summary fields (for easy querying)

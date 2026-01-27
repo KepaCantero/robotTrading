@@ -37,6 +37,13 @@ from .models import (
     TradingResult,
 )
 from .orchestrator import ProfileDrivenTradingOrchestrator
+from .profile_strategy_mapper import (
+    ProfileStrategyMapper,
+    StrategyMapping,
+    create_profile_mapper,
+    get_capital_tier,
+    map_profile_to_strategies,
+)
 from .signal_integrator import SignalIntegrator, SignalSet
 from .workflow_manager import PipelineResult, WorkflowManager
 
@@ -55,6 +62,12 @@ __all__ = [
     "StageResult",
     "RiskValidationResult",
     "ExecutionResult",
+    # Profile strategy mapping
+    "ProfileStrategyMapper",
+    "StrategyMapping",
+    "create_profile_mapper",
+    "get_capital_tier",
+    "map_profile_to_strategies",
 ]
 
 __version__ = "1.0.0"

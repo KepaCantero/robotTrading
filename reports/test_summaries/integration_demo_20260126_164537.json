@@ -1,0 +1,74 @@
+{
+  "metadata": {
+    "test_name": "integration_demo",
+    "test_description": "Integration demo with real backtest",
+    "test_file": "integration_demo.py",
+    "test_type": "integration",
+    "test_id": "test_20260126_164537",
+    "author": null,
+    "tags": [],
+    "created_at": "2026-01-26T16:45:37.507413"
+  },
+  "input_data": {
+    "symbols": [
+      "TEST"
+    ],
+    "date_range": [
+      "2023-01-01T00:00:00",
+      "2023-04-10T00:00:00"
+    ],
+    "data_points": 100,
+    "market_regime": "uptrend",
+    "data_source": "Synthetic linear trend",
+    "price_range": null,
+    "volume_stats": null,
+    "volatility": null,
+    "notes": []
+  },
+  "config": {
+    "initial_capital": "10000",
+    "commission": "1.0",
+    "slippage": "0.1",
+    "strategy": "Test strategy",
+    "strategy_params": {},
+    "risk_management": null,
+    "additional_params": {}
+  },
+  "output": {
+    "final_capital": "9817.1140617496",
+    "total_pnl": "-182.8859382504",
+    "total_pnl_percentage": "-1.82885938250400",
+    "sharpe_ratio": null,
+    "sortino_ratio": null,
+    "max_drawdown": null,
+    "max_drawdown_percentage": null,
+    "win_rate": null,
+    "total_trades": 6,
+    "winning_trades": 0,
+    "losing_trades": 0,
+    "calmar_ratio": null,
+    "omega_ratio": null,
+    "profit_factor": null,
+    "expectancy": null,
+    "additional_metrics": {}
+  },
+  "validation_criteria": [
+    {
+      "criteria_name": "Trades executed",
+      "expected_value": "> 0",
+      "actual_value": "6",
+      "passed": true,
+      "tolerance": null,
+      "reason": null
+    }
+  ],
+  "passed": true,
+  "pass_reason": "Integration demo completed with 6 trades",
+  "warnings": [],
+  "anomalies": [],
+  "start_time": "2026-01-26T16:45:37.507416",
+  "end_time": "2026-01-26T16:45:37.507461",
+  "duration_seconds": 4.5e-05,
+  "notes": [],
+  "attachments": []
+}

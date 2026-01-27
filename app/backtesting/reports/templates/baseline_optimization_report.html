@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baseline vs Optimization Comparison Report</title>
+
+    <!-- Plotly.js for interactive charts -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+    <!-- Chart.js for additional visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --light-bg: #ecf0f1;
+            --border-color: #bdc3c7;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f7fa;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header Styles */
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+
+        .header .meta {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        /* Recommendation Banner */
+        .recommendation-banner {
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .recommendation-banner.use-optimized {
+            background-color: #d4edda;
+            color: #155724;
+            border: 2px solid #28a745;
+        }
+
+        .recommendation-banner.consider-optimized {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffc107;
+        }
+
+        .recommendation-banner.use-baseline {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 2px solid #dc3545;
+        }
+
+        /* Section Styles */
+        .section {
+            background: white;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .section h2 {
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--accent-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .section h3 {
+            color: var(--secondary-color);
+            margin-top: 20px;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        /* Comparison Table Styles */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .comparison-table th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .comparison-table tr:hover {
+            background-color: #e9ecef;
+        }
+
+        .comparison-table .metric-name {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .comparison-table .baseline-value {
+            color: var(--secondary-color);
+        }
+
+        .comparison-table .optimized-value {
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .comparison-table .improvement {
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .comparison-table .improvement.positive {
+            color: var(--success-color);
+        }
+
+        .comparison-table .improvement.negative {
+            color: var(--danger-color);
+        }
+
+        .comparison-table .improvement.neutral {
+            color: var(--secondary-color);
+        }
+
+        /* Metric Cards */
+        .metric-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .metric-card.success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .metric-card.warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .metric-card .label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .metric-card .value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .metric-card .improvement {
+            font-size: 0.85em;
+            opacity: 0.9;
+        }
+
+        /* Chart Containers */
+        .chart-container {
+            margin: 30px 0;
+            padding: 20px;
+            background: var(--light-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .chart-container .chart-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .dual-chart {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        /* Parameter Comparison */
+        .parameter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .parameter-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .parameter-item.changed {
+            border-left-color: var(--success-color);
+            background: #e8f5e9;
+        }
+
+        .parameter-item .param-name {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        .parameter-item .param-values {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+        }
+
+        .parameter-item .param-values .before {
+            color: var(--secondary-color);
+        }
+
+        .parameter-item .param-values .after {
+            color: var(--success-color);
+            font-weight: 600;
+        }
+
+        /* Statistical Significance */
+        .significance-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .significance-badge.significant {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .significance-badge.not-significant {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Implementation Guide */
+        .implementation-guide {
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .implementation-guide ol {
+            margin-left: 20px;
+            margin-top: 15px;
+        }
+
+        .implementation-guide li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        .implementation-guide code {
+            background: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--secondary-color);
+            font-size: 0.9em;
+            margin-top: 40px;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background-color: white;
+            }
+
+            .section {
+                page-break-inside: avoid;
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+
+            .chart-container {
+                page-break-inside: avoid;
+            }
+
+            .recommendation-banner {
+                page-break-after: avoid;
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .metric-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .dual-chart {
+                grid-template-columns: 1fr;
+            }
+
+            .comparison-table {
+                font-size: 0.85em;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📊 Baseline vs Optimization Comparison Report</h1>
+            <div class="subtitle">{{ strategy_name }}</div>
+            <div class="meta">
+                <p><strong>Profile:</strong> {{ profile_name }} (€{{ initial_capital }})</p>
+                <p><strong>Period:</strong> {{ period_start }} to {{ period_end }}</p>
+                <p><strong>Generated:</strong> {{ timestamp }}</p>
+            </div>
+        </div>
+
+        <!-- Recommendation Banner -->
+        <div class="recommendation-banner {{ recommendation_class }}">
+            {{ recommendation_icon }} {{ recommendation_text }}
+            <div style="font-size: 0.7em; margin-top: 10px; font-weight: normal;">
+                {{ recommendation_rationale }}
+            </div>
+        </div>
+
+        <!-- Executive Summary -->
+        <div class="section">
+            <h2>🎯 Executive Summary</h2>
+
+            <div class="metric-cards">
+                <div class="metric-card {{ sharpe_card_class }}">
+                    <div class="label">Sharpe Ratio Improvement</div>
+                    <div class="value">{{ sharpe_improvement }}%</div>
+                    <div class="improvement">
+                        {{ baseline_sharpe }} → {{ optimized_sharpe }}
+                    </div>
+                </div>
+
+                <div class="metric-card {{ return_card_class }}">
+                    <div class="label">Total Return Improvement</div>
+                    <div class="value">{{ return_improvement }}%</div>
+                    <div class="improvement">
+                        {{ baseline_return }}% → {{ optimized_return }}%
+                    </div>
+                </div>
+
+                <div class="metric-card {{ dd_card_class }}">
+                    <div class="label">Max Drawdown Change</div>
+                    <div class="value">{{ dd_change }}%</div>
+                    <div class="improvement">
+                        {{ baseline_dd }}% → {{ optimized_dd }}%
+                    </div>
+                </div>
+
+                <div class="metric-card {{ winrate_card_class }}">
+                    <div class="label">Win Rate Improvement</div>
+                    <div class="value">{{ winrate_improvement }}%</div>
+                    <div class="improvement">
+                        {{ baseline_winrate }}% → {{ optimized_winrate }}%
+                    </div>
+                </div>
+            </div>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Baseline</th>
+                        <th>Optimized</th>
+                        <th>Improvement</th>
+                        <th>Significance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for metric in key_metrics %}
+                    <tr>
+                        <td class="metric-name">{{ metric.name }}</td>
+                        <td class="baseline-value">{{ metric.baseline }}</td>
+                        <td class="optimized-value">{{ metric.optimized }}</td>
+                        <td class="improvement {{ metric.improvement_class }}">
+                            {{ metric.improvement }}
+                        </td>
+                        <td>
+                            {% if metric.significant %}
+                            <span class="significance-badge significant">✓ Significant</span>
+                            {% else %}
+                            <span class="significance-badge not-significant">✗ Not Significant</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Parameter Analysis -->
+        <div class="section">
+            <h2>⚙️ Parameter Analysis</h2>
+            <p>Changes in strategy parameters and their estimated impact on performance.</p>
+
+            <div class="parameter-grid">
+                {% for param in parameters %}
+                <div class="parameter-item {% if param.changed %}changed{% endif %}">
+                    <div class="param-name">{{ param.name }}</div>
+                    <div class="param-values">
+                        <span class="before">Before: {{ param.before }}</span>
+                        <span class="after">After: {{ param.after }}</span>
+                    </div>
+                    {% if param.impact %}
+                    <div style="font-size: 0.85em; margin-top: 8px; color: #666;">
+                        Impact: {{ param.impact }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Equity Curves -->
+        <div class="section">
+            <h2>📈 Equity Curves Comparison</h2>
+            <p>Side-by-side comparison of baseline vs optimized equity performance.</p>
+
+            <div class="dual-chart">
+                <div class="chart-container">
+                    <div class="chart-title">Baseline Equity Curve</div>
+                    <div id="baseline-equity-chart"></div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Optimized Equity Curve</div>
+                    <div id="optimized-equity-chart"></div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title">Dual Equity Curves (Overlay)</div>
+                <div id="dual-equity-chart" style="height: 500px;"></div>
+            </div>
+        </div>
+
+        <!-- Drawdown Comparison -->
+        <div class="section">
+            <h2>📉 Drawdown Analysis</h2>
+            <p>Comparison of underwater drawdown periods between baseline and optimized strategies.</p>
+
+            <div class="chart-container">
+                <div class="chart-title">Underwater Drawdown Comparison</div>
+                <div id="drawdown-chart" style="height: 400px;"></div>
+            </div>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Drawdown Metric</th>
+                        <th>Baseline</th>
+                        <th>Optimized</th>
+                        <th>Improvement</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dd_metric in drawdown_metrics %}
+                    <tr>
+                        <td class="metric-name">{{ dd_metric.name }}</td>
+                        <td class="baseline-value">{{ dd_metric.baseline }}</td>
+                        <td class="optimized-value">{{ dd_metric.optimized }}</td>
+                        <td class="improvement {{ dd_metric.improvement_class }}">
+                            {{ dd_metric.improvement }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Risk Metrics Comparison -->
+        <div class="section">
+            <h2>⚠️ Risk Metrics Comparison</h2>
+            <p>Detailed comparison of risk-adjusted performance metrics.</p>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Risk Metric</th>
+                        <th>Baseline</th>
+                        <th>Optimized</th>
+                        <th>Improvement</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for risk_metric in risk_metrics %}
+                    <tr>
+                        <td class="metric-name">{{ risk_metric.name }}</td>
+                        <td class="baseline-value">{{ risk_metric.baseline }}</td>
+                        <td class="optimized-value">{{ risk_metric.optimized }}</td>
+                        <td class="improvement {{ risk_metric.improvement_class }}">
+                            {{ risk_metric.improvement }}
+                        </td>
+                        <td>{{ risk_metric.status }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="chart-container">
+                <div class="chart-title">Risk-Adjusted Returns Radar Chart</div>
+                <div id="risk-radar-chart" style="height: 450px;"></div>
+            </div>
+        </div>
+
+        <!-- Out-of-Sample Performance -->
+        {% if has_walk_forward %}
+        <div class="section">
+            <h2>🔬 Out-of-Sample Validation</h2>
+            <p>Walk-forward validation results showing robustness of optimized parameters.</p>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Validation Metric</th>
+                        <th>In-Sample (IS)</th>
+                        <th>Out-of-Sample (OOS)</th>
+                        <th>IS/OOS Ratio</th>
+                        <th>Assessment</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for wf_metric in walk_forward_metrics %}
+                    <tr>
+                        <td class="metric-name">{{ wf_metric.name }}</td>
+                        <td class="baseline-value">{{ wf_metric.is_value }}</td>
+                        <td class="optimized-value">{{ wf_metric.oos_value }}</td>
+                        <td class="improvement {{ wf_metric.ratio_class }}">
+                            {{ wf_metric.is_oos_ratio }}
+                        </td>
+                        <td>{{ wf_metric.assessment }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="chart-container">
+                <div class="chart-title">Walk-Forward Window Performance</div>
+                <div id="walkforward-chart" style="height: 400px;"></div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Parameter Sensitivity -->
+        {% if has_sensitivity %}
+        <div class="section">
+            <h2>🔍 Parameter Sensitivity Analysis</h2>
+            <p>Heatmap showing parameter sensitivity and optimal ranges.</p>
+
+            <div class="chart-container">
+                <div class="chart-title">Parameter Sensitivity Heatmap</div>
+                <div id="sensitivity-heatmap" style="height: 500px;"></div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Implementation Guide -->
+        <div class="section">
+            <h2>🚀 Implementation Guide</h2>
+
+            <div class="implementation-guide">
+                <h3>Steps to Deploy {{ implementation_decision }}</h3>
+                <ol>
+                    {% for step in implementation_steps %}
+                    <li>{{ step }}</li>
+                    {% endfor %}
+                </ol>
+
+                <h3 style="margin-top: 20px;">Recommended Configuration</h3>
+                <pre style="background: white; padding: 15px; border-radius: 5px; overflow-x: auto;"><code>{{ recommended_config }}</code></pre>
+
+                <h3 style="margin-top: 20px;">Monitoring Checklist</h3>
+                <ul style="margin-left: 20px;">
+                    {% for check in monitoring_checks %}
+                    <li>{{ check }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Report Generated:</strong> {{ timestamp }}</p>
+            <p><strong>System:</strong> Algorithmic Trading Backtesting Platform v2.0</p>
+            <p><strong>Disclaimer:</strong> Past performance does not guarantee future results. Always paper trade first.</p>
+        </div>
+    </div>
+
+    <!-- JavaScript for Charts -->
+    <script>
+        // Plotly charts data
+        // Use tojson filter for safe JSON encoding (prevents XSS)
+        const chartData = {{ chart_data | tojson }};
+
+        // Baseline Equity Chart
+        if (chartData.baseline_equity) {
+            Plotly.newPlot('baseline-equity-chart', chartData.baseline_equity.data, chartData.baseline_equity.layout, {responsive: true});
+        }
+
+        // Optimized Equity Chart
+        if (chartData.optimized_equity) {
+            Plotly.newPlot('optimized-equity-chart', chartData.optimized_equity.data, chartData.optimized_equity.layout, {responsive: true});
+        }
+
+        // Dual Equity Chart
+        if (chartData.dual_equity) {
+            Plotly.newPlot('dual-equity-chart', chartData.dual_equity.data, chartData.dual_equity.layout, {responsive: true});
+        }
+
+        // Drawdown Chart
+        if (chartData.drawdown) {
+            Plotly.newPlot('drawdown-chart', chartData.drawdown.data, chartData.drawdown.layout, {responsive: true});
+        }
+
+        // Risk Radar Chart
+        if (chartData.risk_radar) {
+            Plotly.newPlot('risk-radar-chart', chartData.risk_radar.data, chartData.risk_radar.layout, {responsive: true});
+        }
+
+        // Walk-Forward Chart
+        {% if has_walk_forward %}
+        if (chartData.walkforward) {
+            Plotly.newPlot('walkforward-chart', chartData.walkforward.data, chartData.walkforward.layout, {responsive: true});
+        }
+        {% endif %}
+
+        // Sensitivity Heatmap
+        {% if has_sensitivity %}
+        if (chartData.sensitivity) {
+            Plotly.newPlot('sensitivity-heatmap', chartData.sensitivity.data, chartData.sensitivity.layout, {responsive: true});
+        }
+        {% endif %}
+
+        // Add export functionality
+        function exportToPDF() {
+            window.print();
+        }
+
+        function exportToHTML() {
+            const htmlContent = document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], {type: 'text/html'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'baseline_optimization_report.html';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Add export buttons to header
+        const headerDiv = document.querySelector('.header');
+        const exportButtons = document.createElement('div');
+        exportButtons.style.marginTop = '20px';
+        exportButtons.innerHTML = `
+            <button onclick="exportToPDF()" style="padding: 10px 20px; margin-right: 10px; background: white; color: var(--primary-color); border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">📄 Export to PDF</button>
+            <button onclick="exportToHTML()" style="padding: 10px 20px; background: white; color: var(--primary-color); border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">💾 Save HTML</button>
+        `;
+        headerDiv.appendChild(exportButtons);
+    </script>
+</body>
+</html>

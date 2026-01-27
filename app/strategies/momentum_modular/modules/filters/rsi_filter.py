@@ -10,12 +10,25 @@ CORRECTED LOGIC:
 - BUY signal: previous_rsi <= buy_threshold AND current_rsi > buy_threshold (crossover above)
 - SELL signal: previous_rsi >= sell_threshold AND current_rsi < sell_threshold (crossover below)
 - FALLBACK (no history): use stricter threshold (buy_threshold - 2) to be more conservative
+
+Configuration:
+This filter now uses centralized configuration from config/indicators.yaml:
+- RSI thresholds (30, 70, 45, 55) are loaded from config
+- Adaptive thresholds for market regimes are loaded from config
+- Period settings are loaded from config
 """
 
 import logging
 from typing import Dict, Optional
 
 from ..base_filter import BaseFilter
+
+# Import centralized configuration
+try:
+    from app.core.config.strategy_config_loader import get_strategy_config
+    HAS_CONFIG_LOADER = True
+except ImportError:
+    HAS_CONFIG_LOADER = False
 
 logger = logging.getLogger(__name__)
 
@@ -45,9 +58,21 @@ class RSIFilter(BaseFilter):
         """Inicializar filtro RSI."""
         super().__init__("rsi_filter", config, preset, tier, use_yaml)
 
+        # Load centralized configuration if available
+        if HAS_CONFIG_LOADER:
+            strategy_config = get_strategy_config()
+            self.period = strategy_config.get_rsi_period()
+            default_extreme_low = strategy_config.get_rsi_threshold('extreme_low')
+            default_extreme_high = strategy_config.get_rsi_threshold('extreme_high')
+        else:
+            # Fallback to hardcoded values
+            self.period = 14
+            default_extreme_low = 30
+            default_extreme_high = 70
+
         # Get settings from YAML or config
         settings = self.config.get("settings", self.config)
-        self.period = settings.get("period", 14)
+        self.period = settings.get("period", self.period)
         self.adaptive = settings.get("adaptive", True)
         self.use_crossover = settings.get(
             "use_crossover", True
@@ -56,9 +81,47 @@ class RSIFilter(BaseFilter):
             "fallback_offset", 2
         )  # Stricter threshold when no history
 
-        # Thresholds adaptativos por contexto (desde YAML)
+        # Thresholds adaptativos por contexto (desde YAML or centralized config)
         # Using NEW correct format: buy_threshold and sell_threshold (single values)
         self.adaptive_thresholds = self.config.get("adaptive_thresholds", {})
+
+        if not self.adaptive_thresholds and HAS_CONFIG_LOADER:
+            # Load from centralized config
+            self.adaptive_thresholds = {
+                "balanced": {
+                    "buy_threshold": default_extreme_low,
+                    "sell_threshold": default_extreme_high
+                },
+                "volatile": {
+                    "buy_threshold": strategy_config.get_rsi_adaptive_threshold('volatile', 'buy_threshold'),
+                    "sell_threshold": strategy_config.get_rsi_adaptive_threshold('volatile', 'sell_threshold')
+                },
+                "trending": {
+                    "buy_threshold": strategy_config.get_rsi_adaptive_threshold('trending', 'buy_threshold'),
+                    "sell_threshold": strategy_config.get_rsi_adaptive_threshold('trending', 'sell_threshold')
+                },
+                "trend_up": {
+                    "buy_threshold": strategy_config.get_rsi_adaptive_threshold('trend_up', 'buy_threshold'),
+                    "sell_threshold": strategy_config.get_rsi_adaptive_threshold('trend_up', 'sell_threshold')
+                },
+                "trend_down": {
+                    "buy_threshold": strategy_config.get_rsi_adaptive_threshold('trend_down', 'buy_threshold'),
+                    "sell_threshold": strategy_config.get_rsi_adaptive_threshold('trend_down', 'sell_threshold')
+                },
+                "range": {
+                    "buy_threshold": default_extreme_low,
+                    "sell_threshold": default_extreme_high
+                },
+                "high_vol": {
+                    "buy_threshold": strategy_config.get_rsi_adaptive_threshold('high_volatility', 'buy_threshold'),
+                    "sell_threshold": strategy_config.get_rsi_adaptive_threshold('high_volatility', 'sell_threshold')
+                },
+                "unknown": {
+                    "buy_threshold": default_extreme_low,
+                    "sell_threshold": default_extreme_high
+                },
+            }
+
         if not self.adaptive_thresholds:
             # Fallback a defaults si no están en YAML - CORRECTED LOGIC with crossover
             self.adaptive_thresholds = {

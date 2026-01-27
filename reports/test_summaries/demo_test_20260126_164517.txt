@@ -1,0 +1,59 @@
+================================================================================
+TEST SUMMARY REPORT: DEMO_TEST
+================================================================================
+
+## METADATA
+----------------------------------------
+Test Name:        demo_test
+Description:      Demo test for summary reporting
+Test File:        demo.py
+Test Type:        unit
+Test ID:          test_20260126_164517
+Created:          2026-01-26 16:45:17
+
+## TEST STATUS
+----------------------------------------
+✓ Status:          PASSED
+Reason:           Demo test passed
+Duration:         0.00 seconds
+
+## INPUT DATA
+----------------------------------------
+Symbols:          AAPL
+Date Range:       2023-01-01 to 2023-12-31
+Data Points:      252
+Market Regime:    bullish
+Data Source:      GBM simulation
+
+## CONFIGURATION
+----------------------------------------
+Initial Capital:  $100,000.00
+Commission:       $1.00 per trade
+Slippage:         10.00%
+Strategy:         SMA Crossover
+
+## OUTPUT METRICS
+----------------------------------------
+
+### Financial Performance
+Final Capital:     $110,000.00
+Total P&L:        $10,000.00
+
+### Risk Metrics
+Sharpe Ratio:      1.50
+
+### Trade Statistics
+Total Trades:      50
+Winning Trades:    0
+Losing Trades:     0
+Win Rate:          60.0%
+
+## VALIDATION CRITERIA
+----------------------------------------
+✓ Positive PnL: PASSED
+   Expected: > 0
+   Actual:   10000
+
+================================================================================
+End of Report - Generated 2026-01-26 16:45:17
+================================================================================

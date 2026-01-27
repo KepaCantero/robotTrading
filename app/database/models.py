@@ -405,3 +405,43 @@ class SystemLog(Base):
             name="ck_system_logs_level",
         ),
     )
+
+
+class PositionState(Base):
+    """
+    Persistent storage for position monitoring state.
+
+    CRITICAL: Enables position recovery after system restart.
+
+    Attributes:
+        id: Primary key
+        monitor_id: Unique identifier for the position monitor
+        positions_json: Serialized JSON of all monitored positions
+        last_sync: Timestamp of last state sync
+        is_active: Whether this state is active
+        version: Version number for conflict resolution
+        created_at: Record creation timestamp
+        updated_at: Record last update timestamp
+    """
+
+    __tablename__ = "position_states"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    monitor_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    positions_json: Mapped[str] = mapped_column(Text, nullable=False)
+    last_sync: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+
+    def __repr__(self):
+        return f"<PositionState(monitor_id={self.monitor_id}, version={self.version})>"
+
+    __table_args__ = (
+        Index("idx_position_states_monitor_id", "monitor_id"),
+        Index("idx_position_states_last_sync", "last_sync"),
+        Index("idx_position_states_is_active", "is_active"),
+    )
