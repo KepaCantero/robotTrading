@@ -1,0 +1,267 @@
+# Risk Management Configuration
+# Centralized configuration for position sizing, stop loss, take profit,
+# and all risk-related parameters.
+#
+# This file consolidates all risk management magic numbers found throughout
+# the codebase into a single, authoritative configuration.
+
+# ============================================================================
+# POSITION SIZING
+# ============================================================================
+position_sizing:
+  # Default position sizes as percentage of capital
+  default:
+    percent: 0.10            # 10% of capital (default position size)
+    max_percent: 0.25        # 25% of capital (maximum single position)
+    min_percent: 0.01        # 1% of capital (minimum position size)
+
+  # Conservative position sizing (for micro/small accounts)
+  conservative:
+    percent: 0.05            # 5% of capital
+    max_percent: 0.15        # 15% of capital
+    min_percent: 0.01        # 1% of capital
+
+  # Aggressive position sizing (for large accounts)
+  aggressive:
+    percent: 0.15            # 15% of capital
+    max_percent: 0.30        # 30% of capital
+    min_percent: 0.02        # 2% of capital
+
+  # Position sizing by capital tier
+  by_tier:
+    micro:
+      max_percent: 0.10      # 10% max for micro accounts
+      default_percent: 0.05  # 5% default
+    small:
+      max_percent: 0.15      # 15% max for small accounts
+      default_percent: 0.08  # 8% default
+    medium:
+      max_percent: 0.20      # 20% max for medium accounts
+      default_percent: 0.10  # 10% default
+    large:
+      max_percent: 0.25      # 25% max for large accounts
+      default_percent: 0.12  # 12% default
+
+# ============================================================================
+# STOP LOSS SETTINGS
+# ============================================================================
+stop_loss:
+  # Default stop loss percentages
+  default:
+    percent: 0.05            # 5% stop loss (default)
+    max_percent: 0.25        # 25% stop loss (maximum allowed)
+    min_percent: 0.01        # 1% stop loss (minimum allowed)
+
+  # Strategy-specific stop losses
+  by_strategy:
+    momentum:
+      tight: 0.025           # 2.5% tight stop for momentum
+      default: 0.05          # 5% default stop
+      wide: 0.08             # 8% wide stop
+
+    mean_reversion:
+      tight: 0.015           # 1.5% tight stop for mean reversion
+      default: 0.03          # 3% default stop
+      wide: 0.05             # 5% wide stop
+
+    pairs_trading:
+      tight: 0.02            # 2% tight stop for pairs
+      default: 0.03          # 3% default stop
+      wide: 0.05             # 5% wide stop
+
+  # ATR-based stop loss multipliers
+  atr_multipliers:
+    tight: 1.0               # 1x ATR for tight stop
+    default: 2.0             # 2x ATR for default stop
+    wide: 3.0                # 3x ATR for wide stop
+
+  # Stop loss by market volatility
+  by_volatility:
+    low:
+      percent: 0.03          # 3% stop in low volatility
+    medium:
+      percent: 0.05          # 5% stop in medium volatility
+    high:
+      percent: 0.08          # 8% stop in high volatility
+
+# ============================================================================
+# TAKE PROFIT SETTINGS
+# ============================================================================
+take_profit:
+  # Default take profit percentages
+  default:
+    percent: 0.10            # 10% take profit (default)
+    max_percent: 1.00        # 100% take profit (maximum allowed)
+    min_percent: 0.02        # 2% take profit (minimum allowed)
+
+  # Strategy-specific take profits
+  by_strategy:
+    momentum:
+      conservative: 0.06     # 6% conservative target
+      default: 0.08          # 8% default target
+      aggressive: 0.15       # 15% aggressive target
+
+    mean_reversion:
+      conservative: 0.05     # 5% conservative target
+      default: 0.10          # 10% default target
+      aggressive: 0.12       # 12% aggressive target
+
+    pairs_trading:
+      conservative: 0.04     # 4% conservative target
+      default: 0.06          # 6% default target
+      aggressive: 0.10       # 10% aggressive target
+
+# ============================================================================
+# RISK/REWARD RATIO
+# ============================================================================
+risk_reward:
+  # Minimum risk/reward ratios
+  min_ratio: 2.0            # 2:1 minimum risk/reward
+  target_ratio: 3.0         # 3:1 target risk/reward
+  ideal_ratio: 4.0          # 4:1 ideal risk/reward
+
+  # By strategy
+  by_strategy:
+    momentum:
+      min_ratio: 2.5         # 2.5:1 for momentum
+    mean_reversion:
+      min_ratio: 2.0         # 2:1 for mean reversion
+    pairs_trading:
+      min_ratio: 1.5         # 1.5:1 for pairs (lower due to hedged nature)
+
+# ============================================================================
+# LEVERAGE SETTINGS
+# ============================================================================
+leverage:
+  # Maximum leverage by capital tier
+  max_leverage:
+    micro: 1.0               # No leverage for micro accounts
+    small: 1.2               # 1.2x max for small accounts
+    medium: 1.5              # 1.5x max for medium accounts
+    large: 2.0               # 2.0x max for large accounts
+
+  # Default leverage
+  default_leverage: 1.0      # 1.0x default (no leverage)
+
+# ============================================================================
+# PORTFOLIO RISK LIMITS
+# ============================================================================
+portfolio_limits:
+  # Maximum portfolio exposure
+  max_total_exposure: 0.80   # 80% maximum total exposure
+  max_sector_exposure: 0.30  # 30% maximum per sector
+  max_country_exposure: 0.50 # 50% maximum per country
+
+  # Correlation limits
+  max_correlation: 0.70      # 0.70 maximum correlation between positions
+
+  # Concentration limits
+  max_single_position: 0.25  # 25% maximum in single position
+  min_diversification: 3     # Minimum 3 different positions
+
+# ============================================================================
+# DRAWDOWN LIMITS
+# ============================================================================
+drawdown:
+  # Maximum drawdown thresholds
+  max_daily_drawdown: 0.05   # 5% maximum daily drawdown
+  max_weekly_drawdown: 0.10  # 10% maximum weekly drawdown
+  max_monthly_drawdown: 0.15 # 15% maximum monthly drawdown
+  max_total_drawdown: 0.25   # 25% maximum total drawdown
+
+  # Circuit breaker thresholds
+  circuit_breaker:
+    daily: 0.03              # 3% daily loss triggers circuit breaker
+    total: 0.10              # 10% total loss triggers circuit breaker
+
+# ============================================================================
+# POSITION LIMITS
+# ============================================================================
+position_limits:
+  # Maximum number of positions
+  max_positions:
+    micro: 3                 # Max 3 positions for micro accounts
+    small: 5                 # Max 5 positions for small accounts
+    medium: 10               # Max 10 positions for medium accounts
+    large: 20                # Max 20 positions for large accounts
+
+  # Maximum concurrent trades
+  max_concurrent_trades: 5   # Maximum concurrent open trades
+
+# ============================================================================
+# RISK PER TRADE
+# ============================================================================
+risk_per_trade:
+  # Maximum risk per trade as % of capital
+  default: 0.02              # 2% risk per trade (default)
+  conservative: 0.01         # 1% risk per trade (conservative)
+  aggressive: 0.03           # 3% risk per trade (aggressive)
+
+  # By tier
+  by_tier:
+    micro: 0.01              # 1% max risk for micro
+    small: 0.015             # 1.5% max risk for small
+    medium: 0.02             # 2% max risk for medium
+    large: 0.025             # 2.5% max risk for large
+
+# ============================================================================
+# CONSECUTIVE LOSS LIMITS
+# ============================================================================
+consecutive_losses:
+  # Maximum consecutive losses before trading pause
+  max_consecutive_losses: 5  # Maximum 5 consecutive losses
+
+  # Actions after consecutive losses
+  actions:
+    reduce_size: 3           # Reduce position size after 3 losses
+    pause_trading: 5         # Pause trading after 5 losses
+    review_required: 7       # Manual review required after 7 losses
+
+# ============================================================================
+# VOLATILITY ADJUSTMENTS
+# ============================================================================
+volatility_adjustment:
+  # Position size adjustment factors
+  low_volatility_factor: 1.2    # Increase size by 20% in low vol
+  medium_volatility_factor: 1.0 # Normal size in medium vol
+  high_volatility_factor: 0.7   # Reduce size by 30% in high vol
+
+  # Volatility thresholds (using ATR)
+  atr_thresholds:
+    low: 0.01                # ATR < 1% of price = low vol
+    high: 0.03               # ATR > 3% of price = high vol
+    extreme: 0.05            # ATR > 5% of price = extreme vol
+
+# ============================================================================
+# TRAILING STOP SETTINGS
+# ============================================================================
+trailing_stop:
+  # Trailing stop distance
+  distance_pct: 0.02         # 2% trailing stop distance (default)
+
+  # Trailing stop activation (profit must reach this before trailing activates)
+  activation_pct: 0.01       # 1% profit before trailing activates
+
+  # By strategy
+  by_strategy:
+    momentum:
+      distance_pct: 0.03     # 3% trailing for momentum
+      activation_pct: 0.02   # 2% activation
+    mean_reversion:
+      distance_pct: 0.015    # 1.5% trailing for mean reversion
+      activation_pct: 0.01   # 1% activation
+
+# ============================================================================
+# HEDGING PARAMETERS
+# ============================================================================
+hedging:
+  # Currency hedging
+  currency:
+    min_exposure: 50000      # €50k minimum exposure to trigger hedging
+    max_single_currency: 0.25  # 25% max per currency
+    hedge_ratio: 0.5         # 50% hedge ratio (partial hedging)
+
+  # Pair hedging
+  pairs:
+    hedge_ratio: 1.0         # 100% hedge ratio for pairs trading
+    max_spread_std: 3.0      # Maximum 3 standard deviations for entry

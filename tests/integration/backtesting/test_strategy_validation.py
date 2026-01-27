@@ -7,6 +7,7 @@ Transformed from trivial assertions to real validation:
 - GBM-based realistic market data
 - Statistical ratio validation
 - Real backtest execution
+- Test summary reporting
 
 Score improvement: 2/10 -> 8/10
 """
@@ -18,6 +19,7 @@ from typing import List, Tuple
 
 import numpy as np
 
+from app.backtesting.test_summary import TestSummaryReporter
 from app.core.decimal_utils import round_price
 from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
@@ -37,7 +39,24 @@ class TestDatasetIntegrity(unittest.TestCase):
 
     def test_no_gaps_in_timestamps(self):
         """Verify no gaps in timestamps with realistic data."""
+        # Initialize summary reporter
+        reporter = TestSummaryReporter(
+            test_name="test_no_gaps_in_timestamps",
+            test_description="Verify no gaps in timestamps with realistic GBM data",
+            test_file="test_strategy_validation.py",
+            test_type="unit",
+        )
+
         quotes = self.generate_realistic_quotes("AAPL", days=500, seed=42)
+
+        # Add input data to summary
+        reporter.add_input_data(
+            symbols=["AAPL"],
+            date_range=(quotes[0].timestamp, quotes[-1].timestamp),
+            data_points=len(quotes),
+            market_regime="neutral",
+            data_source="GBM simulation (drift=5%, vol=20%)",
+        )
 
         # Verify no gaps > 2 days
         gaps = []
@@ -46,18 +65,68 @@ class TestDatasetIntegrity(unittest.TestCase):
             if time_diff > 2:
                 gaps.append((i, time_diff))
 
+        # Add validation criteria
+        reporter.add_validation_criteria(
+            criteria_name="No gaps > 2 days",
+            expected_value=0,
+            actual_value=len(gaps),
+            passed=len(gaps) == 0,
+            reason=f"Found {len(gaps)} gaps > 2 days" if gaps else "No gaps found",
+        )
+
+        # Add configuration
+        reporter.add_config(
+            initial_capital=Decimal("100000"),
+            commission=Decimal("0"),
+            slippage=Decimal("0"),
+            strategy="N/A (data validation test)",
+        )
+
+        # Add placeholder results (no actual backtest)
+        reporter.add_results(
+            final_capital=Decimal("0"),
+            total_pnl=Decimal("0"),
+            total_trades=0,
+        )
+
         self.assertEqual(
             len(gaps),
             0,
             f"Found {len(gaps)} gaps > 2 days in {len(quotes)} quotes"
         )
 
+        # Mark as passed and save
+        reporter.mark_passed("No timestamp gaps detected")
+        try:
+            reporter.save_reports()
+        except Exception as e:
+            print(f"Warning: Failed to save test summary: {e}")
+
     def test_no_duplicate_timestamps(self):
         """Verify no duplicate timestamps."""
+        # Initialize summary reporter
+        reporter = TestSummaryReporter(
+            test_name="test_no_duplicate_timestamps",
+            test_description="Verify no duplicate timestamps in GBM data",
+            test_file="test_strategy_validation.py",
+            test_type="unit",
+        )
+
         quotes = self.generate_realistic_quotes("AAPL", days=500, seed=42)
 
         timestamps = [q.timestamp for q in quotes]
         unique_timestamps = set(timestamps)
+
+        duplicate_count = len(timestamps) - len(unique_timestamps)
+
+        # Add validation criteria
+        reporter.add_validation_criteria(
+            criteria_name="No duplicate timestamps",
+            expected_value=0,
+            actual_value=duplicate_count,
+            passed=duplicate_count == 0,
+            reason=f"Found {duplicate_count} duplicates" if duplicate_count > 0 else "No duplicates",
+        )
 
         self.assertEqual(
             len(timestamps),
@@ -65,8 +134,23 @@ class TestDatasetIntegrity(unittest.TestCase):
             f"Duplicates: {len(timestamps)} total, {len(unique_timestamps)} unique"
         )
 
+        # Mark as passed and save
+        reporter.mark_passed("No duplicate timestamps found")
+        try:
+            reporter.save_reports()
+        except Exception as e:
+            print(f"Warning: Failed to save test summary: {e}")
+
     def test_ohlcv_normalized(self):
         """Verify OHLCV values are normalized with realistic data."""
+        # Initialize summary reporter
+        reporter = TestSummaryReporter(
+            test_name="test_ohlcv_normalized",
+            test_description="Verify OHLCV values are properly normalized",
+            test_file="test_strategy_validation.py",
+            test_type="unit",
+        )
+
         quotes = self.generate_realistic_quotes("AAPL", days=500, seed=42)
 
         violations = []
@@ -91,11 +175,51 @@ class TestDatasetIntegrity(unittest.TestCase):
             if quote.bid > quote.ask:
                 violations.append(f"Quote {i}: Bid > Ask")
 
+        # Add validation criteria
+        reporter.add_validation_criteria(
+            criteria_name="OHLCV normalization",
+            expected_value=0,
+            actual_value=len(violations),
+            passed=len(violations) == 0,
+            reason=f"Found {len(violations)} violations" if violations else "All OHLCV values normalized",
+        )
+
         self.assertEqual(len(violations), 0, f"OHLCV violations: {violations}")
+
+        # Mark as passed and save
+        reporter.mark_passed("All OHLCV values properly normalized")
+        try:
+            reporter.save_reports()
+        except Exception as e:
+            print(f"Warning: Failed to save test summary: {e}")
 
     def test_no_nan_or_anomalous_values(self):
         """Verify no NaN or anomalous values."""
+        # Initialize summary reporter
+        reporter = TestSummaryReporter(
+            test_name="test_no_nan_or_anomalous_values",
+            test_description="Verify no NaN or anomalous values in data",
+            test_file="test_strategy_validation.py",
+            test_type="unit",
+        )
+
         quotes = self.generate_realistic_quotes("AAPL", days=500, seed=42)
+
+        anomalous_count = 0
+        for quote in quotes:
+            for field in ['open', 'high', 'low', 'close', 'last', 'volume', 'bid', 'ask']:
+                value = getattr(quote, field)
+                if value is None or not isinstance(value, Decimal) or value <= 0:
+                    anomalous_count += 1
+
+        # Add validation criteria
+        reporter.add_validation_criteria(
+            criteria_name="No anomalous values",
+            expected_value=0,
+            actual_value=anomalous_count,
+            passed=anomalous_count == 0,
+            reason=f"Found {anomalous_count} anomalous values" if anomalous_count > 0 else "All values valid",
+        )
 
         for quote in quotes:
             for field in ['open', 'high', 'low', 'close', 'last', 'volume', 'bid', 'ask']:
@@ -104,49 +228,108 @@ class TestDatasetIntegrity(unittest.TestCase):
                 self.assertIsInstance(value, Decimal, f"{field} not Decimal")
                 self.assertGreater(value, 0, f"{field} <= 0")
 
+        # Mark as passed and save
+        reporter.mark_passed("No NaN or anomalous values detected")
+        try:
+            reporter.save_reports()
+        except Exception as e:
+            print(f"Warning: Failed to save test summary: {e}")
+
     def test_price_distribution_realistic(self):
         """Verify price distribution follows realistic patterns."""
+        # Initialize summary reporter
+        reporter = TestSummaryReporter(
+            test_name="test_price_distribution_realistic",
+            test_description="Verify price distribution follows realistic patterns",
+            test_file="test_strategy_validation.py",
+            test_type="unit",
+        )
+
         quotes = self.generate_realistic_quotes("AAPL", days=500, seed=42)
 
         prices = [float(q.close) for q in quotes]
 
         # Prices should have variation (not constant)
         price_std = np.std(prices)
-        self.assertGreater(price_std, 1.0, "Price std should be > 1.0")
+        has_variation = price_std > 1.0
 
         # Prices should be positive
-        self.assertTrue(all(p > 0 for p in prices), "All prices should be positive")
+        all_positive = all(p > 0 for p in prices)
 
         # Price range should be reasonable (not too wide for GBM)
         price_range = max(prices) - min(prices)
         price_mean = np.mean(prices)
         range_ratio = price_range / price_mean
 
+        range_ok = 0.1 < range_ratio < 2.0
+
+        # Add validation criteria
+        reporter.add_validation_criteria(
+            criteria_name="Price variation",
+            expected_value="> 1.0",
+            actual_value=f"{price_std:.2f}",
+            passed=has_variation,
+            reason=f"Price std {price_std:.2f} indicates realistic variation",
+        )
+
+        self.assertGreater(price_std, 1.0, "Price std should be > 1.0")
+        self.assertTrue(all_positive, "All prices should be positive")
+
         # Range should be between 10% and 200% of mean price for 500 days
         self.assertGreater(range_ratio, 0.1, "Price range should be > 10% of mean")
         self.assertLess(range_ratio, 2.0, "Price range should be < 200% of mean")
 
+        # Mark as passed and save
+        reporter.mark_passed("Price distribution follows realistic patterns")
+        try:
+            reporter.save_reports()
+        except Exception as e:
+            print(f"Warning: Failed to save test summary: {e}")
+
     def test_volume_distribution_realistic(self):
         """Verify volume distribution follows lognormal pattern."""
+        # Initialize summary reporter
+        reporter = TestSummaryReporter(
+            test_name="test_volume_distribution_realistic",
+            test_description="Verify volume distribution follows lognormal pattern",
+            test_file="test_strategy_validation.py",
+            test_type="unit",
+        )
+
         quotes = self.generate_realistic_quotes("AAPL", days=500, seed=42)
 
         volumes = [float(q.volume) for q in quotes]
 
         # Volumes should have variation
         volume_std = np.std(volumes)
-        self.assertGreater(volume_std, 10000, "Volume std should be > 10,000")
-
-        # Volumes should be positive
-        self.assertTrue(all(v > 0 for v in volumes), "All volumes should be positive")
 
         # Check log-normal distribution characteristics
         log_volumes = np.log(volumes)
-        log_mean = np.mean(log_volumes)
         log_std = np.std(log_volumes)
 
         # Log volumes should have reasonable std (0.2-0.5 for lognormal)
+        log_std_ok = 0.1 < log_std < 1.0
+
+        # Add validation criteria
+        reporter.add_validation_criteria(
+            criteria_name="Log volume std",
+            expected_value="0.1-1.0",
+            actual_value=f"{log_std:.2f}",
+            passed=log_std_ok,
+            reason=f"Log volume std {log_std:.2f} indicates lognormal distribution",
+        )
+
+        self.assertGreater(volume_std, 10000, "Volume std should be > 10,000")
+        self.assertTrue(all(v > 0 for v in volumes), "All volumes should be positive")
         self.assertGreater(log_std, 0.1, "Log volume std should be > 0.1")
         self.assertLess(log_std, 1.0, "Log volume std should be < 1.0")
+
+        # Mark as passed and save
+        reporter.mark_passed("Volume distribution follows lognormal pattern")
+        try:
+            reporter.save_reports()
+        except Exception as e:
+            print(f"Warning: Failed to save test summary: {e}")
 
     def generate_realistic_quotes(
         self,

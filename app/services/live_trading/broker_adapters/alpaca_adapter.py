@@ -31,6 +31,7 @@ from .alpaca_error_handler import (
     ErrorRecoveryStrategy,
     RetryConfig,
 )
+from app.core.trading_validators import TradingValidator
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +51,9 @@ class AlpacaAdapter:
         self.error_manager = ErrorRecoveryManager()
         self.error_classifier = AlpacaErrorClassifier()
         self.retry_config = RetryConfig(max_attempts=3, base_delay=1.0)
+
+        # CRITICAL: Initialize trading validator for safety checks
+        self.validator = TradingValidator()
 
         # Recovery callbacks
         self.on_circuit_break: Optional[Callable[[], None]] = None
@@ -163,6 +167,46 @@ class AlpacaAdapter:
         """
         if not self.is_connected:
             raise Exception("Not connected to Alpaca")
+
+        # CRITICAL: Validate BEFORE executing
+        # Get available capital
+        account = await self.get_account_info()
+        if account:
+            available_capital = account.cash_available
+        else:
+            available_capital = Decimal("100000")  # Fallback default
+            logger.warning("Could not fetch account capital, using default for validation")
+
+        # Calculate position value
+        position_value = quantity * (price or Decimal("0"))
+
+        # Validate position size
+        try:
+            self.validator.validate_position_size(
+                capital=available_capital,
+                position_size=position_value,
+                max_position_percent=Decimal("0.25")
+            )
+        except ValueError as e:
+            logger.error(f"Position size validation failed: {e}")
+            raise ValueError(f"Position size validation failed: {e}")
+
+        # Validate stop-loss if provided
+        if stop_price:
+            # For stop orders, validate the stop price
+            try:
+                estimated_price = price or Decimal("100")  # Fallback for market orders
+                self.validator.validate_stop_loss(
+                    entry_price=estimated_price,
+                    stop_loss=stop_price,
+                    side='long' if side == OrderSide.BUY else 'short'
+                )
+            except ValueError as e:
+                logger.error(f"Stop-loss validation failed: {e}")
+                raise ValueError(f"Stop-loss validation failed: {e}")
+        else:
+            # Log warning but don't fail (some strategies may not use SL)
+            logger.warning(f"Order for {symbol} placed without stop-loss - ensure risk is managed elsewhere")
 
         try:
             # Map side to Alpaca format

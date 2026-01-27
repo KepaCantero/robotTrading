@@ -43,17 +43,30 @@ class DatabaseManager:
     def initialize_sync_engine(self) -> None:
         """Initialize synchronous database engine."""
         try:
-            # Create sync engine with connection pooling
-            self.sync_engine = create_engine(
-                self.config.database.connection_string,
-                poolclass=QueuePool,
-                pool_size=self.config.database.db_pool_size,
-                max_overflow=self.config.database.db_max_overflow,
-                pool_timeout=self.config.database.db_pool_timeout,
-                pool_pre_ping=True,  # Verify connections before use
-                echo=self.config.debug,  # Log SQL queries in debug mode
-                echo_pool=self.config.debug,  # Log pool events in debug mode
-            )
+            conn_string = self.config.database.connection_string
+            is_sqlite = "sqlite" in conn_string.lower()
+
+            if is_sqlite:
+                # SQLite: No pooling parameters supported
+                self.sync_engine = create_engine(
+                    conn_string,
+                    echo=self.config.debug,
+                    connect_args={"check_same_thread": False},
+                )
+                logger.info("Synchronous database engine initialized (SQLite, no pooling)")
+            else:
+                # PostgreSQL: Use connection pooling
+                self.sync_engine = create_engine(
+                    conn_string,
+                    poolclass=QueuePool,
+                    pool_size=self.config.database.db_pool_size,
+                    max_overflow=self.config.database.db_max_overflow,
+                    pool_timeout=self.config.database.db_pool_timeout,
+                    pool_pre_ping=True,  # Verify connections before use
+                    echo=self.config.debug,  # Log SQL queries in debug mode
+                    echo_pool=self.config.debug,  # Log pool events in debug mode
+                )
+                logger.info(f"Synchronous database engine initialized (PostgreSQL, pool_size={self.config.database.db_pool_size})")
 
             # Create session factory
             self.session_factory = sessionmaker(
@@ -65,8 +78,6 @@ class DatabaseManager:
 
             # Add connection event listeners
             self._add_connection_listeners()
-
-            logger.info("Synchronous database engine initialized successfully")
 
         except Exception as e:
             raise_database_error(
@@ -81,18 +92,28 @@ class DatabaseManager:
             async_connection_string = self._convert_to_async_url(
                 self.config.database.connection_string
             )
+            is_sqlite = "sqlite" in async_connection_string.lower()
 
-            # Create async engine with connection pooling
-            self.async_engine = create_async_engine(
-                async_connection_string,
-                poolclass=QueuePool,
-                pool_size=self.config.database.db_pool_size,
-                max_overflow=self.config.database.db_max_overflow,
-                pool_timeout=self.config.database.db_pool_timeout,
-                pool_pre_ping=True,
-                echo=self.config.debug,
-                echo_pool=self.config.debug,
-            )
+            if is_sqlite:
+                # SQLite: No pooling parameters supported
+                self.async_engine = create_async_engine(
+                    async_connection_string,
+                    echo=self.config.debug,
+                )
+                logger.info("Asynchronous database engine initialized (SQLite, no pooling)")
+            else:
+                # PostgreSQL: Use connection pooling
+                self.async_engine = create_async_engine(
+                    async_connection_string,
+                    poolclass=QueuePool,
+                    pool_size=self.config.database.db_pool_size,
+                    max_overflow=self.config.database.db_max_overflow,
+                    pool_timeout=self.config.database.db_pool_timeout,
+                    pool_pre_ping=True,
+                    echo=self.config.debug,
+                    echo_pool=self.config.debug,
+                )
+                logger.info(f"Asynchronous database engine initialized (PostgreSQL, pool_size={self.config.database.db_pool_size})")
 
             # Create async session factory
             self.async_session_factory = async_sessionmaker(
@@ -102,8 +123,6 @@ class DatabaseManager:
                 autoflush=False,
                 expire_on_commit=False,
             )
-
-            logger.info("Asynchronous database engine initialized successfully")
 
         except Exception as e:
             raise_database_error(

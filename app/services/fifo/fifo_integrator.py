@@ -139,9 +139,11 @@ class FIFOIntegrator:
                 settings = get_settings()
 
                 # Create default account for stocks if not exists
+                # Use getattr to safely get the setting with a default value
+                default_exchange = getattr(settings, "fifo_default_exchange", "alpaca")
                 default_account = await self._get_or_create_account(
                     session=session,
-                    exchange_name=settings.get("FIFO_DEFAULT_EXCHANGE", "alpaca"),
+                    exchange_name=default_exchange,
                     exchange_type=ExchangeType.BROKER,
                     currency="USD",
                 )

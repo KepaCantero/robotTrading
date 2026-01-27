@@ -7,11 +7,12 @@ Proporciona:
 - Fallback a cache en memoria si Redis no está disponible
 """
 
-import json
 import logging
-import pickle
+import os
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
+
+from app.core.secure_serialization import sign_and_dump, verify_and_load
 
 # Redis (opcional)
 try:
@@ -36,6 +37,7 @@ except ImportError:
     sessionmaker = None
 
 logger = logging.getLogger(__name__)
+
 
 # Base para modelos SQLAlchemy
 if POSTGRESQL_AVAILABLE:
@@ -172,7 +174,10 @@ class DistributedCache:
             try:
                 cached_data = await self.redis_client.get(key)
                 if cached_data:
-                    return pickle.loads(cached_data)  # nosec B301 - internal cache
+                    # SECURE: Use JSON+HMAC verification instead of pickle
+                    return verify_and_load(cached_data)
+            except ValueError as e:
+                logger.warning(f"Security error getting from Redis: {e}")
             except Exception as e:
                 logger.warning(f"Error obteniendo de Redis: {e}")
 
@@ -186,7 +191,10 @@ class DistributedCache:
                 )
 
                 if entry:
-                    return pickle.loads(entry.data)  # nosec B301 - internal cache
+                    # SECURE: Use JSON+HMAC verification instead of pickle
+                    return verify_and_load(entry.data)
+            except ValueError as e:
+                logger.warning(f"Security error getting from PostgreSQL: {e}")
             except Exception as e:
                 logger.warning(f"Error obteniendo de PostgreSQL: {e}")
 
@@ -222,7 +230,8 @@ class DistributedCache:
         """
         ttl = ttl or self.default_ttl
         expires_at = datetime.utcnow() + timedelta(seconds=ttl)
-        serialized_data = pickle.dumps(value)
+        # SECURE: Use JSON+HMAC instead of pickle
+        serialized_data = sign_and_dump(value)
 
         success = True
 

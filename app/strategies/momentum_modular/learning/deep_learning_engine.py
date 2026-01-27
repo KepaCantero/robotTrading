@@ -30,8 +30,10 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import numpy as np  # noqa: E402
 
 from .base_learning_engine import BaseLearningEngine  # noqa: E402
+from app.core.secure_serialization import sign_and_dump, verify_and_load  # noqa: E402
 
 logger = logging.getLogger(__name__)
+
 
 # NO importar PyTorch aquí - será importado lazy cuando se necesite
 # Esto previene que PyTorch inicialice threading antes de configurar variables de entorno
@@ -627,7 +629,6 @@ class DeepLearningEngine(BaseLearningEngine):
             Métricas de entrenamiento
         """
         import multiprocessing as mp
-        import pickle
 
         logger.info("🔄 Entrenando en proceso hijo aislado para evitar deadlocks...")
 
@@ -655,12 +656,9 @@ class DeepLearningEngine(BaseLearningEngine):
                 engine = DeepLearningEngine(config_dict, defer_pytorch_init=False)
 
                 # Deserializar datos
-                training_data = pickle.loads(
-                    training_data_bytes
-                )  # nosec B301 - trusted internal data
-                validation_data = pickle.loads(
-                    validation_data_bytes
-                )  # nosec B301 - trusted internal data if validation_data_bytes else None
+                # SECURE: Use JSON+HMAC verification instead of pickle
+                training_data = verify_and_load(training_data_bytes)
+                validation_data = verify_and_load(validation_data_bytes) if validation_data_bytes else None
 
                 # Entrenar
                 metrics = engine.train(training_data, validation_data, use_subprocess=False)
@@ -685,8 +683,9 @@ class DeepLearningEngine(BaseLearningEngine):
                 )
 
         # Serializar datos para pasar al proceso hijo
-        training_data_bytes = pickle.dumps(training_data)
-        validation_data_bytes = pickle.dumps(validation_data) if validation_data else None
+        # SECURE: Use JSON+HMAC instead of pickle
+        training_data_bytes = sign_and_dump(training_data)
+        validation_data_bytes = sign_and_dump(validation_data) if validation_data else None
 
         # Serializar configuración
         config_dict = {

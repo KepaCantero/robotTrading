@@ -5,10 +5,12 @@ Optimized for single-instance deployment with memory constraints.
 """
 
 import logging
-import pickle
+import os
 import time
 from threading import Thread
 from typing import Any, Callable, Dict, Optional
+
+from .secure_serialization import sign_and_dump, verify_and_load
 
 try:
     import redis
@@ -25,6 +27,10 @@ except ImportError:
     HAS_ZMQ = False
 
 logger = logging.getLogger(__name__)
+
+
+# Re-export functions for backward compatibility
+__all__ = ['sign_and_dump', 'verify_and_load', 'MessageBus', 'get_message_bus']
 
 
 class MessageBus:
@@ -88,12 +94,14 @@ class MessageBus:
         try:
             if self.use_zmq and channel in ['market-ticks', 'signals']:
                 # Use ZeroMQ for high-frequency channels
-                data = pickle.dumps({'channel': channel, 'data': message})
+                # SECURE: Use JSON+HMAC instead of pickle
+                data = sign_and_dump({'channel': channel, 'data': message})
                 self.zmq_socket.send(data, zmq.NOBLOCK)
                 return True
             elif self.redis_client:
                 # Use Redis for most channels
-                data = pickle.dumps(message)
+                # SECURE: Use JSON+HMAC instead of pickle
+                data = sign_and_dump(message)
                 self.redis_client.publish(channel, data)
                 return True
             else:
@@ -133,8 +141,11 @@ class MessageBus:
                 for message in pubsub.listen():
                     if message['type'] == 'message':
                         try:
-                            data = pickle.loads(message['data'])  # nosec B301 - internal messaging
+                            # SECURE: Use JSON+HMAC verification instead of pickle
+                            data = verify_and_load(message['data'])
                             callback(data)
+                        except ValueError as e:
+                            logger.error(f"Security error processing Redis message: {e}")
                         except Exception as e:
                             logger.error(f"Error processing Redis message: {e}")
             except Exception as e:
@@ -156,11 +167,14 @@ class MessageBus:
                 while True:
                     try:
                         data = socket.recv(zmq.NOBLOCK)
-                        msg = pickle.loads(data)  # nosec B301 - internal messaging
+                        # SECURE: Use JSON+HMAC verification instead of pickle
+                        msg = verify_and_load(data)
                         if msg.get('channel') == channel:
                             callback(msg.get('data', {}))
                     except zmq.Again:
                         time.sleep(0.001)  # 1ms sleep to avoid CPU spinning
+                    except ValueError as e:
+                        logger.error(f"Security error processing ZMQ message: {e}")
                     except Exception as e:
                         logger.error(f"Error processing ZMQ message: {e}")
             except Exception as e:

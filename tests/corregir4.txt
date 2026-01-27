@@ -1,0 +1,137 @@
+
+  Phase 1: CRÍTICO (Semanas 1-2)
+  ┌────────────────────────────────────┬────────────┬───────┬───────────────────────────────────┐
+  │              Archivo               │ Severidad  │ Mock% │        Issues Principales         │
+  ├────────────────────────────────────┼────────────┼───────┼───────────────────────────────────┤
+  │ test_circuit_breaker_manager_v2.py │ 🔴 CRÍTICA │ 85%   │ Todo mockeado, datos estáticos    │
+  ├────────────────────────────────────┼────────────┼───────┼───────────────────────────────────┤
+  │ test_position_monitor.py           │ 🔴 CRÍTICA │ 70%   │ AsyncMock, sin edge cases         │
+  ├────────────────────────────────────┼────────────┼───────┼───────────────────────────────────┤
+  │ test_production_dashboard.py       │ 🔴 CRÍTICA │ 90%   │ Todo mockeado, sin WebSocket real │
+  └────────────────────────────────────┴────────────┴───────┴───────────────────────────────────┘
+  Phase 2: ALTA PRIORIDAD (Semanas 3-4)
+  ┌──────────────────────────────────────┬───────────┬───────┬─────────────────────────────────┐
+  │               Archivo                │ Severidad │ Mock% │       Issues Principales        │
+  ├──────────────────────────────────────┼───────────┼───────┼─────────────────────────────────┤
+  │ test_arbitrage_engine.py             │ 🔴 ALTA   │ 40%   │ Datos perfectos (oscilación)    │
+  ├──────────────────────────────────────┼───────────┼───────┼─────────────────────────────────┤
+  │ test_trend_following_engine.py       │ 🔴 ALTA   │ 30%   │ Tendencia lineal artificial     │
+  ├──────────────────────────────────────┼───────────┼───────┼─────────────────────────────────┤
+  │ test_breakout_engine.py              │ 🔴 ALTA   │ 30%   │ Rango perfecto, datos falsos    │
+  ├──────────────────────────────────────┼───────────┼───────┼─────────────────────────────────┤
+  │ test_ensemble.py                     │ 🔴 ALTA   │ 60%   │ MockStrategy, señales perfectas │
+  ├──────────────────────────────────────┼───────────┼───────┼─────────────────────────────────┤
+  │ test_position_monitor_integration.py │ 🔴 ALTA   │ 80%   │ MockBroker custom               │
+  └──────────────────────────────────────┴───────────┴───────┴─────────────────────────────────┘
+  Phase 3: PRIORIDAD MEDIA (Semanas 5-6)
+  ┌──────────────────────────────┬───────────┬───────┬───────────────────────────────────────┐
+  │           Archivo            │ Severidad │ Mock% │          Issues Principales           │
+  ├──────────────────────────────┼───────────┼───────┼───────────────────────────────────────┤
+  │ test_portfolio.py            │ 🟡 MEDIA  │ 50%   │ Paper trading OK, necesita edge cases │
+  ├──────────────────────────────┼───────────┼───────┼───────────────────────────────────────┤
+  │ test_portfolio_analytics.py  │ 🟡 MEDIA  │ 20%   │ Assertions débiles                    │
+  ├──────────────────────────────┼───────────┼───────┼───────────────────────────────────────┤
+  │ test_strategy_engines.py     │ 🟡 MEDIA  │ 30%   │ CSV real pero asserts triviales       │
+  ├──────────────────────────────┼───────────┼───────┼───────────────────────────────────────┤
+  │ test_reconnection_manager.py │ 🟡 MEDIA  │ 50%   │ AsyncMock, sin conexión real          │
+  └──────────────────────────────┴───────────┴───────┴───────────────────────────────────────┘
+  📋 Patrones de Corrección a Aplicar
+
+  1. Eliminar Mock Hell
+  # ❌ ANTES (Malo)
+  @patch('app.services.circuit_breaker_manager_v2.SimpleBacktester')
+  def test_circuit_breaker(mock_backtester):
+      mock_backtester.return_value.run_backtest.return_value = fake_result
+
+  # ✅ DESPUÉS (Bueno)
+  def test_circuit_breaker_real():
+      # Usar datos reales o GBM
+      quotes = generate_realistic_quotes(days=252, drift=0.0005, volatility=0.02)
+      signals = simple_sma_strategy(quotes, fast=20, slow=50)
+
+      breaker = CircuitBreakerManagerV2()  # SIN MOCKS
+      result = breaker.monitor_market(quotes, signals)
+
+      # Assertions específicas
+      assert result.triggered_count >= 0
+      if result.triggered_count > 0:
+          assert result.max_decline <= Decimal("0.20")  # 20% max decline
+
+  2. Datos Realistas (GBM)
+  # ❌ ANTES (Malo)
+  for i in range(252):
+      price = 100 + i * 0.1  # Tendencia lineal
+      volume = 50000000  # Constante
+
+  # ✅ DESPUÉS (Bueno)
+  def generate_realistic_quotes(days=252, drift=0.0005, volatility=0.02):
+      quotes = []
+      price = 100.0
+
+      for i in range(days):
+          # Geometric Brownian Motion
+          ret = np.random.normal(drift, volatility)
+          price = price * (1 + ret)
+
+          # Volumen correlacionado con volatilidad
+          vol_mult = 1 + abs(ret) * 10
+          volume = 50_000_000 * vol_mult * np.random.lognormal(0, 0.3)
+
+          # Spread realista
+          spread_bps = 5 + abs(ret) * 100
+
+          quotes.append(Quote(
+              symbol="AAPL",
+              close=Decimal(str(round(price, 2))),
+              volume=Decimal(str(int(volume))),
+              bid=Decimal(str(round(price * (1 - spread_bps/20000), 2))),
+              ask=Decimal(str(round(price * (1 + spread_bps/20000), 2))),
+          ))
+
+      return quotes
+
+  3. Assertions Específicas
+  # ❌ ANTES (Malo)
+  assert 0 <= result.commission_impact_ratio <= 1  # Trivial
+  assert isinstance(report, CapitalScaleAnalysisReport)  # Type check
+
+  # ✅ DESPUÉS (Bueno)
+  expected_commission = Decimal("1.0") * 10  # $1 * 10 trades
+  expected_gross = Decimal("2000") + Decimal("500")  # profit + abs(loss)
+  expected_impact = expected_commission / expected_gross
+
+  assert result.total_commissions == expected_commission
+  assert abs(result.commission_impact_ratio - expected_impact) < Decimal("0.0001")
+
+  4. Edge Cases Críticos
+  # ❌ ANTES (Malo)
+  # No hay tests de edge cases
+
+  # ✅ DESPUÉS (Bueno)
+  def test_edge_cases_comprehensive():
+      # División por cero
+      with pytest.raises(ZeroDivisionError):
+          calculate_profit_factor(profit=100, loss=0)
+
+      # Datos vacíos
+      result = analyzer.analyze(trades=[])
+      assert result.total_trades == 0
+      assert result.total_pnl == Decimal("0")
+
+      # Pérdida del 100%
+      result = analyzer.analyze(trades=all_losers)
+      assert result.total_return <= Decimal("-0.99")
+
+      # Gaps en datos
+      quotes_with_gap = create_quotes_with_gap(days=100, gap_at=50)
+      result = analyzer.analyze(quotes_with_gap)
+      assert result.gaps_detected == 1
+
+  🚀 ¿Quieres que empiece a implementar las correcciones?
+
+  Puedo comenzar con Phase 1 (los tests más críticos) o puedes decirme qué prefieres:
+
+  1. Empezar con Phase 1 - Corregir los 3 tests más críticos
+  2. Ver un ejemplo completo - Mostrar antes/después de un archivo completo
+  3. Revisar el plan - Ajustar prioridades o fases
+  4. Otro enfoque - Dime qué prefieres

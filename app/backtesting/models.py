@@ -126,6 +126,10 @@ class PerformanceMetrics(BaseModel):
     avg_loss: Decimal = Field(..., le=0, description="Average losing trade")
     largest_win: Decimal = Field(..., ge=0, description="Largest winning trade")
     largest_loss: Decimal = Field(..., le=0, description="Largest losing trade")
+    expectancy: Optional[Decimal] = Field(
+        None,
+        description="Expectancy: Expected value per trade (positive=profitable, negative=unprofitable)"
+    )
 
     # Time metrics
     total_days: int = Field(..., ge=0, description="Total trading days")

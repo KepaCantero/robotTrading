@@ -5,10 +5,14 @@ This module provides centralized configuration management using Pydantic BaseSet
 to load environment variables from .env files and provide type-safe configuration.
 """
 
+import logging
 from typing import List, Optional
 
-from pydantic import ConfigDict, Field, field_validator
+import os
+from pydantic import ConfigDict, Field, field_validator, ValidationInfo
 from pydantic_settings import BaseSettings
+
+logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
@@ -173,23 +177,44 @@ class Settings(BaseSettings):
 
     @field_validator("secret_key")
     @classmethod
-    def validate_secret_key(cls, v, info):
-        """Validate secret key is provided in production."""
-        # Check if we're in production mode
-        debug_mode = info.data.get("debug", False) if info.data else False
+    def validate_secret_key(cls, v: str, info: ValidationInfo) -> str:
+        """
+        Validate SECRET_KEY is strong in ALL environments.
 
-        # In production mode, require a valid secret key
-        if not debug_mode and (not v or v == ""):
+        Security requirements:
+        - At least 32 characters long (ALWAYS enforced)
+        - Not a common weak default value
+        - Weak keys only allowed with explicit ALLOW_WEAK_SECRET_KEY=true override
+        """
+        # Always require minimum length, even in debug mode
+        if not v or len(v) < 32:
             raise ValueError(
-                "SECRET_KEY is required in production. "
-                "Set SECRET_KEY environment variable or enable DEBUG mode."
+                "SECRET_KEY must be at least 32 characters. "
+                f"Current length: {len(v) if v else 0}. "
+                "Generate one: python -c 'import secrets; print(secrets.token_urlsafe(32))'"
             )
 
-        # In production mode, require minimum length
-        if not debug_mode and v and len(v) < 32:
-            raise ValueError(
-                "SECRET_KEY must be at least 32 characters long for security. "
-                f"Current length: {len(v)}"
+        # Check for known weak keys
+        weak_keys = [
+            'your_secret_key_change_this_in_production',
+            'dev', 'test', 'secret', 'changeme', 'password',
+            '0123456789abcdef0123456789abcdef',  # Common hex pattern
+            'secret', 'SECRET', 'key', 'KEY',
+            'change-this-secret-key-in-production-min-32-chars',
+            '12345678901234567890123456789012',
+        ]
+
+        if v and v.lower() in [k.lower() for k in weak_keys]:
+            # Only allow weak keys with explicit override
+            allow_weak = os.getenv('ALLOW_WEAK_SECRET_KEY', '').lower() == 'true'
+            if not allow_weak:
+                raise ValueError(
+                    f"Weak SECRET_KEY detected ('{v[:10]}...'). "
+                    "This is a security risk. To use this key anyway, set "
+                    "ALLOW_WEAK_SECRET_KEY=true environment variable."
+                )
+            logger.warning(
+                "⚠️ Using weak SECRET_KEY - this should NEVER be done in production!"
             )
 
         return v
@@ -234,6 +259,8 @@ class Settings(BaseSettings):
         """Get asynchronous database URL."""
         if self.database_url.startswith("postgresql://"):
             return self.database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        if self.database_url.startswith("sqlite://"):
+            return self.database_url.replace("sqlite://", "sqlite+aiosqlite://", 1)
         return self.database_url
 
     def is_production(self) -> bool:

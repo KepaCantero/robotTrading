@@ -10,7 +10,7 @@ Calculates comprehensive performance metrics including:
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import numpy as np
 
@@ -159,6 +159,11 @@ class MetricsCalculator:
         total_days = (end_date - start_date).days
         avg_trade_duration = self._calculate_avg_trade_duration(closed_trades)
 
+        # Calculate expectancy (expected value per trade)
+        expectancy = None
+        if winning_trades or losing_trades:
+            expectancy = calculate_expectancy(winning_trades, losing_trades)
+
         # Calculate advanced metrics (PHASE 4 MODULE 7)
         advanced_metrics = {}
         try:
@@ -204,6 +209,7 @@ class MetricsCalculator:
             avg_loss=avg_loss,
             largest_win=largest_win,
             largest_loss=largest_loss,
+            expectancy=expectancy,
             total_days=total_days,
             avg_trade_duration=avg_trade_duration,
             # Advanced metrics
@@ -541,3 +547,128 @@ def calculate_profit_factor(winning_trades: List[Trade], losing_trades: List[Tra
         return Decimal("999")  # Perfect scenario
 
     return gross_profit / gross_loss
+
+
+def calculate_expectancy(
+    winning_trades: List[Trade],
+    losing_trades: List[Trade],
+) -> Decimal:
+    """
+    Calculate expectancy (expected value per trade).
+
+    Expectancy is the average amount you can expect to win or lose per trade.
+    It's a critical metric for determining if a strategy is profitable in the long run.
+
+    Formula:
+        Expectancy = (Win Rate × Avg Win) - (Loss Rate × Avg Loss)
+
+    Interpretation:
+    - Positive expectancy: Strategy makes money on average per trade
+    - Negative expectancy: Strategy loses money on average per trade
+    - Zero expectancy: Break-even strategy (before costs)
+
+    Example:
+        Win Rate: 40%, Avg Win: $500, Avg Loss: $300
+        Expectancy = (0.4 × $500) - (0.6 × $300)
+                   = $200 - $180
+                   = $20 per trade
+
+    Args:
+        winning_trades: List of winning trades (PnL > 0)
+        losing_trades: List of losing trades (PnL <= 0)
+
+    Returns:
+        Expectancy value (positive = profitable, negative = unprofitable)
+
+    Raises:
+        ValueError: If both trade lists are empty
+    """
+    total_trades = len(winning_trades) + len(losing_trades)
+
+    if total_trades == 0:
+        return Decimal("0")
+
+    # Calculate win rate
+    win_rate = Decimal(str(len(winning_trades) / total_trades))
+    loss_rate = Decimal("1") - win_rate
+
+    # Calculate average win
+    avg_win = Decimal("0")
+    if winning_trades:
+        total_win_pnl = sum((t.pnl or Decimal("0")) for t in winning_trades)
+        avg_win = total_win_pnl / Decimal(str(len(winning_trades)))
+
+    # Calculate average loss (absolute value)
+    avg_loss = Decimal("0")
+    if losing_trades:
+        total_loss_pnl = sum((t.pnl or Decimal("0")) for t in losing_trades)
+        avg_loss = abs(total_loss_pnl / Decimal(str(len(losing_trades))))
+
+    # Calculate expectancy
+    expectancy = (win_rate * avg_win) - (loss_rate * avg_loss)
+
+    logger.debug(
+        f"Expectancy: ${expectancy:.2f} per trade "
+        f"(Win Rate: {win_rate:.1%}, Avg Win: ${avg_win:.2f}, "
+        f"Avg Loss: ${avg_loss:.2f})"
+    )
+
+    return expectancy
+
+
+def calculate_expectancy_with_confidence(
+    winning_trades: List[Trade],
+    losing_trades: List[Trade],
+    confidence_level: float = 0.95,
+) -> Dict[str, Decimal]:
+    """
+    Calculate expectancy with confidence intervals.
+
+    Uses statistical methods to estimate the range of likely expectancy values.
+
+    Args:
+        winning_trades: List of winning trades
+        losing_trades: List of losing trades
+        confidence_level: Confidence level for interval (default: 0.95)
+
+    Returns:
+        Dictionary with expectancy, lower_bound, upper_bound, and std_error
+    """
+    import numpy as np
+    from scipy import stats
+
+    # Calculate individual trade P&Ls
+    all_pnls = []
+    for t in winning_trades:
+        if t.pnl:
+            all_pnls.append(float(t.pnl))
+    for t in losing_trades:
+        if t.pnl:
+            all_pnls.append(float(t.pnl))
+
+    if not all_pnls:
+        return {
+            "expectancy": Decimal("0"),
+            "lower_bound": Decimal("0"),
+            "upper_bound": Decimal("0"),
+            "std_error": Decimal("0"),
+        }
+
+    # Calculate mean and standard error
+    mean_pnl = np.mean(all_pnls)
+    std_pnl = np.std(all_pnls, ddof=1)
+    std_error = std_pnl / np.sqrt(len(all_pnls))
+
+    # Calculate confidence interval
+    t_score = stats.t.ppf((1 + confidence_level) / 2, df=len(all_pnls) - 1)
+    margin_of_error = t_score * std_error
+
+    lower_bound = mean_pnl - margin_of_error
+    upper_bound = mean_pnl + margin_of_error
+
+    return {
+        "expectancy": Decimal(str(mean_pnl)),
+        "lower_bound": Decimal(str(lower_bound)),
+        "upper_bound": Decimal(str(upper_bound)),
+        "std_error": Decimal(str(std_error)),
+    }

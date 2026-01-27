@@ -19,6 +19,7 @@ Tests for multi-scale capital analysis including:
 - Commission impact ratio calculation
 - Alpha degradation analysis
 - Scalability score calculation
+- Test summary reporting
 """
 
 from datetime import datetime, timedelta
@@ -33,6 +34,7 @@ from app.backtesting.capital_scale_analyzer import (
     CapitalScaleAnalysisReport,
     CapitalScaleAnalyzer,
 )
+from app.backtesting.test_summary import TestSummaryReporter
 from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics
 from app.core.decimal_utils import round_price
 from app.models.market_data import Quote
@@ -308,6 +310,14 @@ class TestFullPipelineNoMocks:
         - Exact commission impact calculations
         - Scalability verification (larger capital = lower commission %)
         """
+        # Initialize summary reporter
+        reporter = TestSummaryReporter(
+            test_name="test_full_pipeline_without_mocks",
+            test_description="Full pipeline capital scaling test with GBM data and SMA crossover",
+            test_file="test_capital_scaling.py",
+            test_type="integration",
+        )
+
         # Verify realistic data was generated
         assert len(realistic_quotes) == 252, "Should generate 252 trading days"
         assert all(q.symbol == "AAPL" for q in realistic_quotes), "All quotes should be AAPL"
@@ -325,6 +335,25 @@ class TestFullPipelineNoMocks:
             assert sig.symbol == "AAPL", "Signal symbol should match quotes"
             assert sig.metadata is not None, "Signals should have metadata"
             assert "strategy" in sig.metadata, "Signals should have strategy name"
+
+        # Add input data to summary
+        reporter.add_input_data(
+            symbols=["AAPL"],
+            date_range=(realistic_quotes[0].timestamp, realistic_quotes[-1].timestamp),
+            data_points=len(realistic_quotes),
+            market_regime="neutral",
+            data_source="GBM simulation (drift=5%, vol=20%)",
+            price_range=(min(prices), max(prices)),
+        )
+
+        # Add configuration to summary
+        reporter.add_config(
+            initial_capital=test_config.initial_capital,
+            commission=test_config.commission_per_trade,
+            slippage=test_config.slippage_percentage,
+            strategy="SMA Crossover",
+            strategy_params={"fast_period": 10, "slow_period": 20},
+        )
 
         # Execute REAL capital scale analysis (NO MOCKS)
         analyzer = CapitalScaleAnalyzer(
@@ -370,6 +399,12 @@ class TestFullPipelineNoMocks:
                         assert impact_1k >= impact_100k, \
                             f"€1K commission impact ({impact_1k:.2%}) should be >= €100K ({impact_100k:.2%})"
 
+                        # Add to summary
+                        reporter.add_note(
+                            f"Commission impact scaling verified: "
+                            f"€1K ({impact_1k:.2%}) >= €100K ({impact_100k:.2%})"
+                        )
+
                 # Verify alpha degradation is reasonable (0-100%)
                 assert 0.0 <= float(report.alpha_degradation) <= 1.0, \
                     f"Alpha degradation should be 0-100%, got {report.alpha_degradation:.2%}"
@@ -377,15 +412,68 @@ class TestFullPipelineNoMocks:
                 # Verify scalability score is in valid range
                 assert Decimal("0") <= report.scalability_score <= Decimal("100"), \
                     f"Scalability score should be 0-100, got {report.scalability_score}"
+
+                # Add results to summary (use the 10K level as representative)
+                if Decimal("10000") in results_by_capital:
+                    result_10k = results_by_capital[Decimal("10000")]
+                    reporter.add_results(
+                        final_capital=result_10k.final_capital,
+                        total_pnl=result_10k.total_return,
+                        total_trades=result_10k.total_trades,
+                        sharpe_ratio=result_10k.sharpe_ratio,
+                        win_rate=result_10k.win_rate,
+                        max_drawdown=result_10k.max_drawdown_pct,
+                    )
+
+                # Add validation criteria
+                reporter.add_validation_criteria(
+                    criteria_name="Alpha degradation in range",
+                    expected_value="0.0-1.0",
+                    actual_value=str(float(report.alpha_degradation)),
+                    passed=0.0 <= float(report.alpha_degradation) <= 1.0,
+                    reason=f"Alpha degradation {report.alpha_degradation:.2%} is within valid range",
+                )
+
+                reporter.add_validation_criteria(
+                    criteria_name="Scalability score in range",
+                    expected_value="0-100",
+                    actual_value=str(report.scalability_score),
+                    passed=Decimal("0") <= report.scalability_score <= Decimal("100"),
+                    reason=f"Scalability score {report.scalability_score} is valid",
+                )
+
+                # Mark as passed and save
+                reporter.mark_passed("Capital scaling analysis completed successfully")
+                try:
+                    reporter.save_reports()
+                except Exception as e:
+                    print(f"Warning: Failed to save test summary: {e}")
+
             else:
                 # Known signature mismatch issue - verify graceful handling
                 assert report.passed is False, "Should fail when no results"
                 assert len(report.warnings) > 0, "Should have warnings about failure"
 
+                # Mark as passed with warnings (this is expected behavior for known issue)
+                reporter.mark_passed("Known signature mismatch handled gracefully")
+                reporter.add_warning("Known signature mismatch issue in CapitalScaleAnalyzer")
+                try:
+                    reporter.save_reports()
+                except Exception as e:
+                    print(f"Warning: Failed to save test summary: {e}")
+
         except TypeError as e:
             # Known issue: run_backtest signature mismatch in CapitalScaleAnalyzer
             # This is acceptable - we're testing that the system handles errors gracefully
             assert "run_backtest" in str(e), f"Expected run_backtest error, got: {e}"
+
+            # Mark as passed (known issue handled correctly)
+            reporter.mark_passed("Known signature mismatch detected and handled")
+            reporter.add_warning(f"Known signature mismatch: {e}")
+            try:
+                reporter.save_reports()
+            except Exception as ex:
+                print(f"Warning: Failed to save test summary: {ex}")
 
 
 # ============================================================================

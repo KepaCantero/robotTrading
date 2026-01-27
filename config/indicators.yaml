@@ -1,0 +1,214 @@
+# Technical Indicators Configuration
+# Centralized configuration for all technical indicator thresholds and periods
+#
+# This file contains RSI, Moving Average, ATR, and other indicator parameters
+# that were previously hardcoded throughout the codebase.
+
+# ============================================================================
+# RSI (Relative Strength Index) SETTINGS
+# ============================================================================
+rsi:
+  # Calculation periods
+  period:
+    default: 14              # Standard RSI period
+    short: 9                 # Short-term RSI
+    long: 21                 # Long-term RSI
+
+  # Thresholds for signal generation
+  thresholds:
+    # Extreme levels (traditional overbought/oversold)
+    extreme_low: 30          # Oversold threshold (buy signal zone)
+    extreme_high: 70         # Overbought threshold (sell signal zone)
+
+    # Signal thresholds (crossover confirmation)
+    buy_signal: 45           # Buy signal threshold (oversold reversal confirmation)
+    sell_signal: 55          # Sell signal threshold (overbought reversal confirmation)
+
+    # Range trading thresholds
+    range_low: 40            # Lower bound of neutral zone
+    range_high: 60           # Upper bound of neutral zone
+
+  # Adaptive thresholds for different market regimes
+  adaptive:
+    balanced:
+      buy_threshold: 30
+      sell_threshold: 70
+    volatile:
+      buy_threshold: 25      # More extreme in volatile markets
+      sell_threshold: 75
+    trending:
+      buy_threshold: 40      # Wider bands in trending markets
+      sell_threshold: 65
+    trend_up:
+      buy_threshold: 45      # Higher buy threshold in uptrend
+      sell_threshold: 70
+    trend_down:
+      buy_threshold: 30
+      sell_threshold: 50      # Lower sell threshold in downtrend
+    range_bound:
+      buy_threshold: 30
+      sell_threshold: 70
+    high_volatility:
+      buy_threshold: 35
+      sell_threshold: 65
+
+# ============================================================================
+# STOCHASTIC RSI SETTINGS
+# ============================================================================
+stoch_rsi:
+  period:
+    rsi_period: 14           # RSI period for Stoch RSI
+    stoch_period: 14         # Stochastic period
+    smooth_k: 3              # %K smoothing
+    smooth_d: 3              # %D smoothing
+
+  thresholds:
+    oversold: 20             # Oversold threshold
+    overbought: 80           # Overbought threshold
+    buy_signal: 25           # Buy signal threshold
+    sell_signal: 75          # Sell signal threshold
+
+# ============================================================================
+# MOVING AVERAGES SETTINGS
+# ============================================================================
+moving_averages:
+  # Period lengths
+  periods:
+    very_short: 5            # 5-day MA
+    short: 10                # 10-day MA
+    medium: 20               # 20-day MA
+    long: 50                 # 50-day MA
+    very_long: 200           # 200-day MA
+
+  # EMA (Exponential Moving Average) periods
+  ema:
+    fast: 12                 # Fast EMA (for MACD)
+    slow: 26                 # Slow EMA (for MACD)
+    signal: 9                # Signal line EMA (for MACD)
+
+  # Crossover thresholds
+  crossovers:
+    min_separation_pct: 0.5  # Minimum % separation between MAs for valid signal
+    confirmation_periods: 3  # Number of periods to confirm crossover
+
+# ============================================================================
+# ATR (Average True Range) SETTINGS
+# ============================================================================
+atr:
+  period:
+    default: 14              # Standard ATR period
+    short: 7                 # Short-term ATR
+    long: 21                 # Long-term ATR
+
+  # Multipliers for stop loss and position sizing
+  multipliers:
+    tight_stop: 1.0          # Tight stop loss (1x ATR)
+    default_stop: 2.0        # Default stop loss (2x ATR)
+    wide_stop: 3.0           # Wide stop loss (3x ATR)
+
+  # ATR volatility filtering
+  volatility:
+    low_threshold: 0.01      # Low ATR (< 1% of price)
+    high_threshold: 0.03     # High ATR (> 3% of price)
+    extreme_threshold: 0.05  # Extreme ATR (> 5% of price)
+
+# ============================================================================
+# MACD (Moving Average Convergence Divergence) SETTINGS
+# ============================================================================
+macd:
+  periods:
+    fast: 12                 # Fast EMA period
+    slow: 26                 # Slow EMA period
+    signal: 9                # Signal line period
+
+  thresholds:
+    histogram_positive: 0    # Positive histogram threshold
+    histogram_negative: 0    # Negative histogram threshold
+    crossover_strength: 0.0005  # Minimum crossover strength
+
+# ============================================================================
+# BOLLINGER BANDS SETTINGS
+# ============================================================================
+bollinger_bands:
+  period: 20                 # MA period for BB calculation
+  std_dev:
+    default: 2.0             # Default standard deviation
+    tight: 1.5               # Tight bands (1.5 std dev)
+    wide: 2.5                # Wide bands (2.5 std dev)
+
+  # Bandwidth thresholds
+  bandwidth:
+    squeeze: 0.02            # Squeeze threshold (low volatility)
+    expansion: 0.04          # Expansion threshold (high volatility)
+
+# ============================================================================
+# VOLUME INDICATORS
+# ============================================================================
+volume:
+  # Volume thresholds for signal confirmation
+  thresholds:
+    min_volume_ratio: 1.2    # Minimum volume ratio vs average
+    high_volume_ratio: 1.5   # High volume ratio
+    extreme_volume_ratio: 2.0  # Extreme volume ratio
+
+  # Volume moving average periods
+  ma_periods:
+    short: 5                 # 5-day volume MA
+    medium: 20               # 20-day volume MA
+    long: 50                 # 50-day volume MA
+
+# ============================================================================
+# Z-SCORE SETTINGS (Mean Reversion)
+# ============================================================================
+z_score:
+  # Entry and exit thresholds
+  thresholds:
+    entry_min: 1.5           # Minimum Z-score for entry
+    entry_default: 2.0       # Default Z-score for entry
+    entry_max: 2.5           # Maximum Z-score for entry
+    exit: 0.5                # Z-score for exit position
+
+  # Lookback periods for Z-score calculation
+  lookback:
+    short: 10                # Short lookback
+    default: 20              # Default lookback
+    long: 50                 # Long lookback
+
+# ============================================================================
+# MOMENTUM INDICATORS
+# ============================================================================
+momentum:
+  # ROC (Rate of Change) periods
+  roc_periods:
+    short: 5                 # 5-period ROC
+    medium: 10               # 10-period ROC
+    long: 20                 # 20-period ROC
+
+  # Momentum thresholds
+  thresholds:
+    strong_momentum: 2.0     # Strong momentum threshold
+    weak_momentum: 0.5       # Weak momentum threshold
+
+# ============================================================================
+# TIME PERIODS FOR CALCULATIONS
+# ============================================================================
+time_periods:
+  # Trading days
+  trading_days_per_year: 252
+  trading_days_per_month: 21
+  trading_days_per_week: 5
+
+  # Historical lookback periods
+  lookback:
+    minimal: 30              # 30 days (minimal data)
+    short: 60                # 60 days (short-term)
+    medium: 126              # 126 days (6 months)
+    long: 252                # 252 days (1 year)
+    very_long: 504           # 504 days (2 years)
+
+  # Resampling periods
+  resample:
+    hourly: "1H"
+    daily: "1D"
+    weekly: "1W"
+    monthly: "1M"
