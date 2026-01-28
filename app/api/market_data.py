@@ -6,12 +6,14 @@ including quotes, historical data, and feed configuration.
 """
 
 from __future__ import annotations
+
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from pydantic import BaseModel, Field
+from requests.exceptions import ConnectionError, HTTPError, RequestException
 
 from app.models.market_data import (
     DataFeedConfig,
@@ -21,8 +23,6 @@ from app.models.market_data import (
     Quote,
 )
 from app.services.market_data_service import MarketDataService, get_market_data_service
-import requests
-from requests.exceptions import ConnectionError, HTTPError, RequestException
 
 router = APIRouter(prefix="/market-data", tags=["market-data"])
 

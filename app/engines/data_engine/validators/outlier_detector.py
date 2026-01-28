@@ -16,13 +16,8 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 # Importaciones opcionales
-try:
-    from sklearn.ensemble import IsolationForest
-
-    SKLEARN_AVAILABLE = True
-except ImportError:
-    SKLEARN_AVAILABLE = False
-    logger.warning("sklearn no disponible. Isolation Forest no funcionará.")
+# REQUIRED: sklearn is REQUIRED - NO FALLBACKS
+from sklearn.ensemble import IsolationForest
 
 
 class OutlierDetector:
@@ -142,9 +137,7 @@ class OutlierDetector:
         self, values_array: np.ndarray, original_values: List[Any]
     ) -> Dict[str, Any]:
         """Detección usando Isolation Forest."""
-        if not SKLEARN_AVAILABLE:
-            logger.warning("sklearn no disponible, usando Z-score como fallback")
-            return self._detect_zscore(values_array, original_values)
+        # sklearn is REQUIRED - no fallback check needed
 
         try:
             # Reshape para sklearn

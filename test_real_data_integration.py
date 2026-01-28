@@ -18,6 +18,8 @@ import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
+import pytest
+
 # Add project to path
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -31,6 +33,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.asyncio
 async def test_api_connection():
     """Test Alpha Vantage API connection."""
     logger.info("=" * 60)
@@ -48,6 +51,7 @@ async def test_api_connection():
         return False
 
 
+@pytest.mark.asyncio
 async def test_fetch_single_symbol():
     """Test fetching a single symbol."""
     logger.info("")
@@ -81,6 +85,7 @@ async def test_fetch_single_symbol():
         return False
 
 
+@pytest.mark.asyncio
 async def test_cache_mechanism():
     """Test caching mechanism."""
     logger.info("")
@@ -127,6 +132,7 @@ async def test_cache_mechanism():
         return False
 
 
+@pytest.mark.asyncio
 async def test_fetch_multiple_symbols():
     """Test fetching multiple symbols."""
     logger.info("")
@@ -162,6 +168,7 @@ async def test_fetch_multiple_symbols():
         return False
 
 
+@pytest.mark.asyncio
 async def test_sp500_fetch():
     """Test fetching top N S&P 500 stocks."""
     logger.info("")

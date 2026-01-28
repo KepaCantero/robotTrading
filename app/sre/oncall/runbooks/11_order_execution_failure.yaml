@@ -1,0 +1,115 @@
+---
+name: "Order Execution Failure"
+severity: "high"
+trigger: "order_failure_rate > 2% OR critical_order_failed"
+category: "trading"
+tags: ["order", "execution", "trading", "broker"]
+estimated_duration_minutes: 15
+last_updated: "2026-01-28"
+version: "1.0"
+
+description: |
+  Respond to order execution failures. Failed orders can result in
+  missed opportunities, incorrect positions, and strategy breakdown.
+
+prerequisites:
+  - Order management system access
+  - Broker API access
+  - Execution logs
+  - Position management access
+
+steps:
+  - title: "Verify Order Failure"
+    description: "Confirm order execution failed"
+    commands:
+      - "Check order status in OMS"
+      - "Review execution failure logs"
+      - "Identify affected orders"
+      - "Determine failure reason"
+      - "Check if failure is isolated or widespread"
+    expected_outcome: "Order failure confirmed"
+
+  - title: "Assess Impact"
+    description: "Determine impact of failures"
+    commands:
+      - "Check if failed orders were critical"
+      - "Assess impact on strategy positions"
+      - "Check if any positions are incorrect"
+      - "Review financial impact"
+      - "Check for cascading failures"
+    expected_outcome: "Impact assessed"
+
+  - title: "Identify Failure Cause"
+    description: "Determine why orders failed"
+    commands:
+      - "Review broker API responses"
+      - "Check for validation errors"
+      - "Review execution engine logs"
+      - "Check for timeout errors"
+      - "Review account/balance issues"
+    expected_outcome: "Failure cause identified"
+
+  - title: "Implement Immediate Fix"
+    description: "Address common failure causes"
+    commands:
+      - "Fix order validation errors if found"
+      - "Adjust timeout values if timing out"
+      - "Retry failed orders if appropriate"
+      - "Switch to backup broker if needed"
+      - "Halt trading if systemic issue"
+    expected_outcome: "Immediate issue addressed"
+
+  - title: "Retry or Cancel Failed Orders"
+    description: "Handle failed orders appropriately"
+    commands:
+      - "Assess if orders should be retried"
+      - "Retry orders if still valid"
+      - "Cancel orders if no longer relevant"
+      - "Update strategy state accordingly"
+      - "Document order outcomes"
+    expected_outcome: "Failed orders handled"
+
+  - title: "Verify System Stability"
+    description: "Ensure execution system is stable"
+    commands:
+      - "Test new order submission"
+      - "Monitor execution success rate"
+      - "Check for new failures"
+      - "Review execution metrics"
+    expected_outcome: "System confirmed stable"
+
+  - title: "Document Incident"
+    description: "Record failure incident"
+    commands:
+      - "Log order failure incident"
+      - "Document failure causes"
+      - "Record impact and resolution"
+      - "Create preventive measures"
+    expected_outcome: "Incident documented"
+
+post_actions:
+  - "Review order validation logic"
+  - "Improve error handling"
+  - "Add retry logic where appropriate"
+  - "Improve monitoring and alerting"
+
+related_runbooks:
+  - "broker_api_failure.yaml"
+  - "trading_halt.yaml"
+  - "position_sync_issue.yaml"
+
+metrics_to_track:
+  - "order_success_rate"
+  - "order_failure_count"
+  - "order_retry_count"
+  - "execution_latency_p99"
+
+success_criteria:
+  - "Order execution stabilized"
+  - "Failed orders handled"
+  - "Root cause identified"
+  - "Incident documented"
+
+escalation_path: "trading_ops"
+owner: "trading-ops"
+review_frequency: "monthly"

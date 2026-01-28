@@ -103,7 +103,13 @@ class MetricsCollector:
                         metrics_collected += len(metrics)
                         logger.debug(f"Collected {len(metrics)} metrics from {source_name}")
 
-                except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
+                except (
+                    IntegrityError,
+                    OperationalError,
+                    DatabaseError,
+                    DataError,
+                    ProgrammingError,
+                ) as e:
                     error_msg = f"Error collecting from {source_name}: {e}"
                     logger.error(error_msg)
                     errors.append(error_msg)
@@ -117,7 +123,13 @@ class MetricsCollector:
                     self._pending_metrics.clear()
                     logger.debug(f"Stored {stored_count} metrics to QuestDB")
 
-                except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
+                except (
+                    IntegrityError,
+                    OperationalError,
+                    DatabaseError,
+                    DataError,
+                    ProgrammingError,
+                ) as e:
                     error_msg = f"Error storing metrics: {e}"
                     logger.error(error_msg)
                     errors.append(error_msg)

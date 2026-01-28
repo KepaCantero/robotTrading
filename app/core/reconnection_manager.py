@@ -8,7 +8,7 @@ import asyncio
 import logging
 import random
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any, Callable, Dict, Optional
 
 from app.core.timezone_utils import utc_now
@@ -99,9 +99,7 @@ class ReconnectionManager:
             Delay in seconds
         """
         # Calculate exponential backoff
-        delay = self.config.base_delay_seconds * (
-            self.config.exponential_base ** attempt
-        )
+        delay = self.config.base_delay_seconds * (self.config.exponential_base**attempt)
 
         # Cap at max delay
         delay = min(delay, self.config.max_delay_seconds)
@@ -142,10 +140,7 @@ class ReconnectionManager:
                 )
 
                 # Try to connect
-                result = await asyncio.wait_for(
-                    connect_func(),
-                    timeout=30.0
-                )
+                result = await asyncio.wait_for(connect_func(), timeout=30.0)
 
                 # Success!
                 self.stats.successful_connections += 1
@@ -161,10 +156,12 @@ class ReconnectionManager:
                 return result
 
             except asyncio.TimeoutError:
+                logger.warning(f"{self.service_name}: Connection timeout on attempt {attempt + 1}")
+            except (ConnectionError, OSError) as e:
                 logger.warning(
-                    f"{self.service_name}: Connection timeout on attempt {attempt + 1}"
+                    f"{self.service_name}: Connection failed on attempt {attempt + 1}: {e}"
                 )
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except Exception as e:
                 logger.warning(
                     f"{self.service_name}: Connection failed on attempt {attempt + 1}: {e}"
                 )
@@ -173,17 +170,13 @@ class ReconnectionManager:
             if attempt + 1 >= self.config.alert_after_attempts:
                 if self.config.alert_callback:
                     self.config.alert_callback(attempt + 1)
-                logger.error(
-                    f"{self.service_name}: Failed {attempt + 1} connection attempts"
-                )
+                logger.error(f"{self.service_name}: Failed {attempt + 1} connection attempts")
 
             # Don't wait after last attempt
             if attempt < self.config.max_attempts - 1:
                 # Calculate backoff and wait
                 wait_time = self.calculate_backoff(attempt)
-                logger.info(
-                    f"{self.service_name}: Waiting {wait_time:.2f}s before retry"
-                )
+                logger.info(f"{self.service_name}: Waiting {wait_time:.2f}s before retry")
                 await asyncio.sleep(wait_time)
 
         # All attempts failed
@@ -254,11 +247,11 @@ class ReconnectionManager:
             "success_rate": self.stats.success_rate,
             "last_connection_time": (
                 self.stats.last_connection_time.isoformat()
-                if self.stats.last_connection_time else None
+                if self.stats.last_connection_time
+                else None
             ),
             "last_failure_time": (
-                self.stats.last_failure_time.isoformat()
-                if self.stats.last_failure_time else None
+                self.stats.last_failure_time.isoformat() if self.stats.last_failure_time else None
             ),
             "current_backoff_seconds": self.stats.current_backoff_seconds,
         }

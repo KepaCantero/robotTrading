@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
+from requests.exceptions import HTTPError, RequestException
 
 from app.exceptions.trading_exceptions import ErrorCategory
 from app.services.trading_error_handler import (

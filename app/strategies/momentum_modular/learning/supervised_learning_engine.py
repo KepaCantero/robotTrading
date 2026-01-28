@@ -1,5 +1,8 @@
 """
 SupervisedLearningEngine - Aprende a predecir probabilidad de éxito de trades.
+
+Implements López de Prado's sample weights by uniqueness to account for
+overlapping samples in financial ML training (Chapter 4, "Advances in Financial Machine Learning").
 """
 
 import logging
@@ -12,54 +15,29 @@ from .base_learning_engine import BaseLearningEngine
 
 logger = logging.getLogger(__name__)
 
-# Importaciones opcionales para diferentes algoritmos
-try:
-    from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
-    from sklearn.metrics import (
-        accuracy_score,
-        f1_score,
-        precision_score,
-        recall_score,
-        roc_auc_score,
-    )
+# REQUIRED: CatBoost is REQUIRED - NO FALLBACKS
+import catboost as cb
 
-    SKLEARN_AVAILABLE = True
-except ImportError:
-    SKLEARN_AVAILABLE = False
-    logger.warning("scikit-learn no disponible. Funcionalidad limitada.")
+# REQUIRED: LightGBM is REQUIRED - NO FALLBACKS
+import lightgbm as lgb
 
-try:
-    import xgboost as xgb
+# REQUIRED: PyTorch is REQUIRED for neural networks - NO FALLBACKS
+import torch
+import torch.nn as nn
 
-    XGBOOST_AVAILABLE = True
-except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-    XGBOOST_AVAILABLE = False
-    logger.warning(f"XGBoost no disponible ({type(e).__name__}). Usando sklearn como alternativa.")
+# REQUIRED: XGBoost is REQUIRED - NO FALLBACKS
+import xgboost as xgb
 
-try:
-    import lightgbm as lgb
-
-    LIGHTGBM_AVAILABLE = True
-except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-    LIGHTGBM_AVAILABLE = False
-    logger.warning(f"LightGBM no disponible ({type(e).__name__}). No será usado.")
-
-try:
-    import catboost as cb
-
-    CATBOOST_AVAILABLE = True
-except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
-    CATBOOST_AVAILABLE = False
-    logger.warning(f"CatBoost no disponible ({type(e).__name__}). No será usado.")
-
-try:
-    import torch
-    import torch.nn as nn
-
-    PYTORCH_AVAILABLE = True
-except ImportError:
-    PYTORCH_AVAILABLE = False
-    logger.warning("PyTorch no disponible. Neural networks no disponibles.")
+# REQUIRED: scikit-learn is REQUIRED - NO FALLBACKS
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
+from sklearn.metrics import (
+    accuracy_score,
+    f1_score,
+    precision_score,
+    recall_score,
+    roc_auc_score,
+)
+from sklearn.model_selection import train_test_split
 
 
 class SupervisedLearningEngine(BaseLearningEngine):
@@ -102,11 +80,18 @@ class SupervisedLearningEngine(BaseLearningEngine):
             },
         )
 
+        # López de Prado sample weights (Chapter 4)
+        self.sample_weights_ = None  # Stores sample weights from uniqueness calculation
+
     def train(
         self, training_data: Dict[str, Any], validation_data: Optional[Dict[str, Any]] = None
     ) -> Dict[str, float]:
         """
         Entrenar modelo supervisado.
+
+        Implements López de Prado's methodologies (Chapter 4):
+        1. Purged K-Fold Cross-Validation to prevent look-ahead bias
+        2. Sample weights by uniqueness to account for overlapping samples
 
         Args:
             training_data: {
@@ -119,24 +104,7 @@ class SupervisedLearningEngine(BaseLearningEngine):
         Returns:
             Métricas de entrenamiento
         """
-        # Verificar disponibilidad dinámicamente para asegurar que sklearn está disponible
-        # Esto maneja casos donde SKLEARN_AVAILABLE puede ser incorrecto o sklearn se importó después
-        try:
-            # Verificar que sklearn está realmente disponible
-            pass
-
-            # Verificar que las clases específicas están disponibles
-            from sklearn.ensemble import (  # noqa: F401
-                GradientBoostingClassifier,
-                RandomForestClassifier,
-            )
-            from sklearn.model_selection import train_test_split  # noqa: F401
-        except ImportError as e:
-            raise ImportError(
-                "scikit-learn es requerido para SupervisedLearningEngine. "
-                "Instala con: pip install scikit-learn>=1.3.0\n"
-                f"Error al verificar: {e}"
-            )
+        # scikit-learn es REQUIRED - ya importado al inicio del módulo
 
         # Preparar datos
         X_train = training_data['features']
@@ -168,14 +136,144 @@ class SupervisedLearningEngine(BaseLearningEngine):
                 'total_samples': len(y_train),
             }
 
-        # Split de validación si no se proporciona
+        # Calculate López de Prado sample weights by uniqueness (Chapter 4)
+        train_weights = None
+        train_idx = None  # Track train indices after split
+
+        if training_data.get('metadata'):
+            metadata = training_data['metadata']
+            # Check if we have the required components for sample weight calculation
+            if all(k in metadata for k in ['events', 'labels', 'prices']):
+                try:
+                    from app.backtesting.labeling.triple_barrier import (
+                        calculate_sample_weights_uniqueness,
+                    )
+
+                    # Calculate sample weights based on uniqueness
+                    self.sample_weights_ = calculate_sample_weights_uniqueness(
+                        events=metadata['events'],
+                        labels=metadata['labels'],
+                        price_series=metadata['prices'],
+                    )
+
+                    logger.info(
+                        f"López de Prado sample weights calculated: "
+                        f"mean={self.sample_weights_.mean():.4f}, "
+                        f"min={self.sample_weights_.min():.4f}, "
+                        f"max={self.sample_weights_.max():.4f}, "
+                        f"std={self.sample_weights_.std():.4f}"
+                    )
+
+                    # We'll apply weights after the train/val split
+                except Exception as e:
+                    logger.warning(f"Failed to calculate López de Prado sample weights: {e}")
+                    self.sample_weights_ = None
+
+        # Split de validación usando Purged K-Fold CV (López de Prado Chapter 4)
         if validation_data is None:
-            # Solo usar stratify si hay más de una clase (evita error con una sola clase)
-            unique_classes = len(np.unique(y_train))
-            stratify_param = y_train if unique_classes > 1 else None
-            X_train, X_val, y_train, y_val = train_test_split(
-                X_train, y_train, test_size=0.2, random_state=42, stratify=stratify_param
-            )
+            # Use purged K-Fold to prevent look-ahead bias
+            try:
+                from app.backtesting.validation.cross_validation import PurgedKFold
+
+                # Get events for embargo calculation if available
+                events = None
+                if training_data.get('metadata') and 'events' in training_data['metadata']:
+                    events = training_data['metadata']['events']
+
+                # Create purged CV splitter
+                purged_cv = PurgedKFold(
+                    n_splits=5,
+                    embargo_pct=0.01,  # 1% embargo after test set
+                    purge_pct=0.05,  # 5% purge before test set
+                )
+
+                # Get first split for train/validation
+                splits = list(
+                    purged_cv.split(
+                        training_data['features'], training_data['labels'], events=events
+                    )
+                )
+
+                if len(splits) > 0:
+                    train_idx, val_idx = splits[0]
+
+                    # Extract train and validation sets
+                    if isinstance(training_data['features'], pd.DataFrame):
+                        X_train = training_data['features'].iloc[train_idx].values
+                        X_val = training_data['features'].iloc[val_idx].values
+                        y_train = training_data['labels'].iloc[train_idx].values
+                        y_val = training_data['labels'].iloc[val_idx].values
+                    else:
+                        X_train = training_data['features'][train_idx]
+                        X_val = training_data['features'][val_idx]
+                        y_train = training_data['labels'][train_idx]
+                        y_val = training_data['labels'][val_idx]
+
+                    logger.info(
+                        f"Using Purged K-Fold CV (López de Prado Chapter 4): "
+                        f"train={len(X_train)}, val={len(X_val)}"
+                    )
+
+                    # Apply sample weights to training set (after purged split)
+                    if self.sample_weights_ is not None:
+                        if isinstance(self.sample_weights_, pd.Series):
+                            train_weights = self.sample_weights_.iloc[train_idx].values
+                        else:
+                            train_weights = self.sample_weights_[train_idx]
+
+                        logger.info(
+                            f"Applied López de Prado sample weights to purged training set: "
+                            f"{len(train_weights)} samples"
+                        )
+                    else:
+                        train_weights = None
+                else:
+                    # Fallback to standard split if purged CV fails
+                    raise ValueError("Purged CV generated no valid splits")
+
+            except Exception as e:
+                logger.warning(f"Purged CV failed, falling back to standard split: {e}")
+                # Fallback to standard train_test_split
+                unique_classes = len(np.unique(y_train))
+                stratify_param = y_train if unique_classes > 1 else None
+
+                if isinstance(training_data['features'], pd.DataFrame):
+                    training_data['features'].index
+                    X_train_df, X_val_df, y_train_series, y_val_series = train_test_split(
+                        training_data['features'],
+                        training_data['labels'],
+                        test_size=0.2,
+                        random_state=42,
+                        stratify=stratify_param,
+                    )
+                    train_idx = X_train_df.index
+                    X_train = X_train_df.values
+                    X_val = X_val_df.values
+                    y_train = y_train_series.values
+                    y_val = y_val_series.values
+                else:
+                    X_train, X_val, y_train, y_val = train_test_split(
+                        X_train, y_train, test_size=0.2, random_state=42, stratify=stratify_param
+                    )
+                    train_idx = np.arange(len(X_train))
+
+                # Apply sample weights to training set only (after split)
+                if self.sample_weights_ is not None and train_idx is not None:
+                    if hasattr(train_idx, '__iter__') and not isinstance(train_idx, slice):
+                        if isinstance(self.sample_weights_, pd.Series):
+                            train_weights = (
+                                self.sample_weights_.loc[train_idx].values
+                                if all(idx in self.sample_weights_.index for idx in train_idx)
+                                else self.sample_weights_.iloc[: len(train_idx)].values
+                            )
+                        else:
+                            train_weights = self.sample_weights_[: len(train_idx)]
+                    else:
+                        train_weights = self.sample_weights_[: len(X_train)]
+
+                    logger.info(
+                        f"Applied sample weights to training set: {len(train_weights)} samples"
+                    )
         else:
             X_val = validation_data['features']
             y_val = validation_data['labels']
@@ -184,25 +282,50 @@ class SupervisedLearningEngine(BaseLearningEngine):
             if isinstance(y_val, pd.Series):
                 y_val = y_val.values
 
+            # Use all training data weights when validation is provided separately
+            if self.sample_weights_ is not None:
+                train_weights = (
+                    self.sample_weights_.values
+                    if isinstance(self.sample_weights_, pd.Series)
+                    else self.sample_weights_
+                )
+                # Ensure weights match training data size
+                if len(train_weights) != len(X_train):
+                    logger.warning(
+                        f"Sample weights length ({len(train_weights)}) doesn't match "
+                        f"training data length ({len(X_train)}). Truncating weights."
+                    )
+                    train_weights = train_weights[: len(X_train)]
+
         # Entrenar modelo según algoritmo seleccionado
+        # Todos los algoritmos son REQUIRED - no fallbacks
         if self.algorithm == "random_forest":
-            self.model = self._train_random_forest(X_train, y_train)
-        elif self.algorithm == "xgboost" and XGBOOST_AVAILABLE:
-            self.model = self._train_xgboost(X_train, y_train)
-        elif self.algorithm == "lightgbm" and LIGHTGBM_AVAILABLE:
-            self.model = self._train_lightgbm(X_train, y_train, X_val, y_val)
-        elif self.algorithm == "catboost" and CATBOOST_AVAILABLE:
-            self.model = self._train_catboost(X_train, y_train, X_val, y_val)
+            self.model = self._train_random_forest(X_train, y_train, train_weights)
+        elif self.algorithm == "xgboost":
+            self.model = self._train_xgboost(X_train, y_train, train_weights)
+        elif self.algorithm == "lightgbm":
+            self.model = self._train_lightgbm(X_train, y_train, X_val, y_val, train_weights)
+        elif self.algorithm == "catboost":
+            self.model = self._train_catboost(X_train, y_train, X_val, y_val, train_weights)
         elif self.algorithm == "gradient_boosting":
-            self.model = self._train_gradient_boosting(X_train, y_train)
-        elif self.algorithm == "neural_net" and PYTORCH_AVAILABLE:
-            self.model = self._train_neural_net(X_train, y_train, X_val, y_val)
+            self.model = self._train_gradient_boosting(X_train, y_train, train_weights)
+        elif self.algorithm == "neural_net":
+            self.model = self._train_neural_net(X_train, y_train, X_val, y_val, train_weights)
         else:
-            logger.warning(f"Algoritmo {self.algorithm} no disponible, usando RandomForest")
-            self.model = self._train_random_forest(X_train, y_train)
+            raise ValueError(
+                f"Algoritmo {self.algorithm} no soportado. "
+                "Opciones: random_forest, xgboost, lightgbm, catboost, gradient_boosting, neural_net"
+            )
 
         # Evaluar en validación
         metrics = self._evaluate_model(X_val, y_val)
+
+        # Log sample weight statistics in metrics
+        if train_weights is not None:
+            metrics['sample_weights_mean'] = float(np.mean(train_weights))
+            metrics['sample_weights_std'] = float(np.std(train_weights))
+            metrics['sample_weights_min'] = float(np.min(train_weights))
+            metrics['sample_weights_max'] = float(np.max(train_weights))
 
         # Optimizar thresholds si está habilitado
         if self.optimize_thresholds and training_data.get('metadata'):
@@ -212,8 +335,8 @@ class SupervisedLearningEngine(BaseLearningEngine):
         self.is_trained = True
         return metrics
 
-    def _train_random_forest(self, X_train, y_train):
-        """Entrenar RandomForest."""
+    def _train_random_forest(self, X_train, y_train, sample_weights=None):
+        """Entrenar RandomForest con sample weights de López de Prado."""
         n_estimators = self.model_params.get("n_estimators", 100)
         max_depth = self.model_params.get("max_depth", 10)
         min_samples_split = self.model_params.get("min_samples_split", 5)
@@ -225,11 +348,14 @@ class SupervisedLearningEngine(BaseLearningEngine):
             random_state=42,
             n_jobs=-1,
         )
-        model.fit(X_train, y_train)
+        if sample_weights is not None:
+            model.fit(X_train, y_train, sample_weight=sample_weights)
+        else:
+            model.fit(X_train, y_train)
         return model
 
-    def _train_xgboost(self, X_train, y_train):
-        """Entrenar XGBoost."""
+    def _train_xgboost(self, X_train, y_train, sample_weights=None):
+        """Entrenar XGBoost con sample weights de López de Prado."""
         params = {
             'n_estimators': self.model_params.get("n_estimators", 100),
             'max_depth': self.model_params.get("max_depth", 6),
@@ -240,11 +366,14 @@ class SupervisedLearningEngine(BaseLearningEngine):
         }
 
         model = xgb.XGBClassifier(**params)
-        model.fit(X_train, y_train)
+        if sample_weights is not None:
+            model.fit(X_train, y_train, sample_weight=sample_weights)
+        else:
+            model.fit(X_train, y_train)
         return model
 
-    def _train_lightgbm(self, X_train, y_train, X_val, y_val):
-        """Entrenar LightGBM con early stopping."""
+    def _train_lightgbm(self, X_train, y_train, X_val, y_val, sample_weights=None):
+        """Entrenar LightGBM con early stopping y sample weights de López de Prado."""
         params = {
             'objective': 'binary',
             'metric': 'binary_logloss',
@@ -293,8 +422,8 @@ class SupervisedLearningEngine(BaseLearningEngine):
 
         return LightGBMWrapper(model)
 
-    def _train_catboost(self, X_train, y_train, X_val, y_val):
-        """Entrenar CatBoost con early stopping."""
+    def _train_catboost(self, X_train, y_train, X_val, y_val, sample_weights=None):
+        """Entrenar CatBoost con early stopping y sample weights de López de Prado."""
         params = {
             'iterations': self.model_params.get("n_estimators", 100),
             'depth': self.model_params.get("max_depth", 6),
@@ -309,19 +438,29 @@ class SupervisedLearningEngine(BaseLearningEngine):
         # CatBoost acepta early stopping automáticamente
         model = cb.CatBoostClassifier(**params)
 
-        # Entrenar con early stopping
-        model.fit(
-            X_train,
-            y_train,
-            eval_set=(X_val, y_val),
-            early_stopping_rounds=self.model_params.get("early_stopping_rounds", 10),
-            verbose=False,
-        )
+        # Entrenar con early stopping y sample weights
+        if sample_weights is not None:
+            model.fit(
+                X_train,
+                y_train,
+                eval_set=(X_val, y_val),
+                early_stopping_rounds=self.model_params.get("early_stopping_rounds", 10),
+                verbose=False,
+                sample_weight=sample_weights,
+            )
+        else:
+            model.fit(
+                X_train,
+                y_train,
+                eval_set=(X_val, y_val),
+                early_stopping_rounds=self.model_params.get("early_stopping_rounds", 10),
+                verbose=False,
+            )
 
         return model
 
-    def _train_gradient_boosting(self, X_train, y_train):
-        """Entrenar GradientBoosting."""
+    def _train_gradient_boosting(self, X_train, y_train, sample_weights=None):
+        """Entrenar GradientBoosting con sample weights de López de Prado."""
         params = {
             'n_estimators': self.model_params.get("n_estimators", 100),
             'max_depth': self.model_params.get("max_depth", 5),
@@ -330,13 +469,15 @@ class SupervisedLearningEngine(BaseLearningEngine):
         }
 
         model = GradientBoostingClassifier(**params)
-        model.fit(X_train, y_train)
+        if sample_weights is not None:
+            model.fit(X_train, y_train, sample_weight=sample_weights)
+        else:
+            model.fit(X_train, y_train)
         return model
 
-    def _train_neural_net(self, X_train, y_train, X_val, y_val):
-        """Entrenar red neuronal con PyTorch."""
-        if not PYTORCH_AVAILABLE:
-            raise ImportError("PyTorch requerido para neural networks")
+    def _train_neural_net(self, X_train, y_train, X_val, y_val, sample_weights=None):
+        """Entrenar red neuronal con PyTorch y sample weights de López de Prado."""
+        # PyTorch es REQUIRED - ya importado al inicio del módulo
 
         input_size = X_train.shape[1]
         hidden_sizes = self.model_params.get("hidden_sizes", [64, 32])
@@ -352,7 +493,25 @@ class SupervisedLearningEngine(BaseLearningEngine):
         layers.append(nn.Sigmoid())
 
         model = nn.Sequential(*layers)
-        criterion = nn.BCELoss()
+
+        # Use weighted loss if sample weights are provided
+        if sample_weights is not None:
+            # Convert sample weights to tensor
+            weights_t = torch.FloatTensor(sample_weights).unsqueeze(1)
+
+            class WeightedBCELoss(nn.Module):
+                def __init__(self):
+                    super().__init__()
+                    self.bce = nn.BCELoss(reduction='none')
+
+                def forward(self, pred, target, weights):
+                    loss = self.bce(pred, target)
+                    return (loss * weights).mean()
+
+            criterion = WeightedBCELoss()
+        else:
+            criterion = nn.BCELoss()
+
         optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
         # Convertir a tensores
@@ -365,7 +524,11 @@ class SupervisedLearningEngine(BaseLearningEngine):
         for epoch in range(epochs):
             # Forward pass
             outputs = model(X_train_t)
-            loss = criterion(outputs, y_train_t)
+
+            if sample_weights is not None:
+                loss = criterion(outputs, y_train_t, weights_t)
+            else:
+                loss = criterion(outputs, y_train_t)
 
             # Backward pass
             optimizer.zero_grad()
@@ -375,7 +538,11 @@ class SupervisedLearningEngine(BaseLearningEngine):
             if (epoch + 1) % 10 == 0:
                 with torch.no_grad():
                     val_outputs = model(X_val_t)
-                    val_loss = criterion(val_outputs, y_val_t)
+                    val_loss = (
+                        criterion(val_outputs, y_val_t, weights_t)
+                        if sample_weights is not None
+                        else criterion(val_outputs, y_val_t)
+                    )
                     logger.debug(
                         f"Epoch {epoch+1}/{epochs}, Loss: {loss.item():.4f}, Val Loss: {val_loss.item():.4f}"
                     )
@@ -384,7 +551,8 @@ class SupervisedLearningEngine(BaseLearningEngine):
 
     def _evaluate_model(self, X, y):
         """Evaluar modelo y retornar métricas."""
-        if PYTORCH_AVAILABLE and isinstance(self.model, nn.Module):
+        # PyTorch es REQUIRED - ya importado al inicio del módulo
+        if isinstance(self.model, nn.Module):
             # Evaluación para PyTorch
             with torch.no_grad():
                 X_t = torch.FloatTensor(X)
@@ -429,6 +597,31 @@ class SupervisedLearningEngine(BaseLearningEngine):
             except (ValueError, IndexError) as e:
                 # Si falla (por ejemplo, solo una clase en y), simplemente no calcular AUC
                 logger.debug(f"No se pudo calcular AUC: {e}")
+
+        # Add MCC for imbalanced binary classification (López de Prado Chapter 3)
+        try:
+            from app.backtesting.metrics import calculate_matthews_corrcoef
+
+            metrics['mcc'] = float(calculate_matthews_corrcoef(y, y_pred))
+
+            # Use MCC for model selection - warn if below threshold
+            # MCC ranges from -1 to +1, where:
+            # - +1: Perfect prediction
+            # - 0: Random prediction
+            # - -1: Total disagreement
+            if metrics['mcc'] < 0.3:
+                logger.warning(
+                    f"Model MCC {metrics['mcc']:.3f} below threshold 0.3. "
+                    "Model may not be reliable for imbalanced data."
+                )
+            elif metrics['mcc'] >= 0.5:
+                logger.info(
+                    f"Model MCC {metrics['mcc']:.3f} indicates good performance "
+                    "on imbalanced data."
+                )
+        except Exception as e:
+            logger.warning(f"Failed to calculate MCC: {e}")
+            metrics['mcc'] = None
 
         return metrics
 
@@ -490,7 +683,8 @@ class SupervisedLearningEngine(BaseLearningEngine):
         # Extraer features del dict
         feature_vector = self._extract_features(features)
 
-        if PYTORCH_AVAILABLE and isinstance(self.model, nn.Module):
+        # PyTorch es REQUIRED - ya importado al inicio del módulo
+        if isinstance(self.model, nn.Module):
             # Predicción con PyTorch
             with torch.no_grad():
                 X_t = torch.FloatTensor([feature_vector])

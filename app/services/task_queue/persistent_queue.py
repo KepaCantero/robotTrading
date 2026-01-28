@@ -10,7 +10,7 @@ import json
 import logging
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone, timedelta, date
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
@@ -50,7 +50,7 @@ def exponential_backoff(attempt: int, base_delay: float = 1.0, max_delay: float 
     Returns:
         Delay in seconds with exponential backoff
     """
-    delay = base_delay * (2 ** attempt)
+    delay = base_delay * (2**attempt)
     return min(delay, max_delay)
 
 
@@ -94,8 +94,8 @@ def deserialize_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
             try:
                 # Check if string looks like a number first
                 if value.replace(".", "", 1).replace("-", "", 1).isdigit() or (
-                    value.startswith("-") and
-                    value[1:].replace(".", "", 1).replace("+", "").isdigit()
+                    value.startswith("-")
+                    and value[1:].replace(".", "", 1).replace("+", "").isdigit()
                 ):
                     result[key] = Decimal(str(value))
                     continue
@@ -239,8 +239,7 @@ class PersistentTaskQueue:
     async def initialize(self) -> None:
         """Initialize database schema."""
         async with aiosqlite.connect(self.db_path) as db:
-            await db.execute(
-                """
+            await db.execute("""
                 CREATE TABLE IF NOT EXISTS tasks (
                     task_id TEXT PRIMARY KEY,
                     name TEXT NOT NULL,
@@ -257,18 +256,13 @@ class PersistentTaskQueue:
                     error TEXT,
                     next_retry_at TEXT
                 )
-            """
-            )
+            """)
             # Create indexes for common queries
             await db.execute(
                 "CREATE INDEX IF NOT EXISTS idx_status_priority ON tasks(status, priority DESC)"
             )
-            await db.execute(
-                "CREATE INDEX IF NOT EXISTS idx_next_retry ON tasks(next_retry_at)"
-            )
-            await db.execute(
-                "CREATE INDEX IF NOT EXISTS idx_expires_at ON tasks(expires_at)"
-            )
+            await db.execute("CREATE INDEX IF NOT EXISTS idx_next_retry ON tasks(next_retry_at)")
+            await db.execute("CREATE INDEX IF NOT EXISTS idx_expires_at ON tasks(expires_at)")
             await db.commit()
 
     async def enqueue(self, task: Task) -> str:
@@ -311,7 +305,9 @@ class PersistentTaskQueue:
                 )
                 await db.commit()
 
-        self.logger.info(f"Task {task.task_id} ({task.name}) enqueued with priority {task.priority.name}")
+        self.logger.info(
+            f"Task {task.task_id} ({task.name}) enqueued with priority {task.priority.name}"
+        )
         return task.task_id
 
     async def dequeue(self) -> Optional[Task]:
@@ -541,9 +537,7 @@ class PersistentTaskQueue:
 
         while self._running:
             # Clean up completed tasks first
-            done_tasks = [
-                tid for tid, t in self._processing_tasks.items() if t.done()
-            ]
+            done_tasks = [tid for tid, t in self._processing_tasks.items() if t.done()]
             for tid in done_tasks:
                 del self._processing_tasks[tid]
 
@@ -783,13 +777,11 @@ class PersistentTaskQueue:
         """
         async with aiosqlite.connect(self.db_path) as db:
             # Get count by status
-            cursor = await db.execute(
-                """
+            cursor = await db.execute("""
                 SELECT status, COUNT(*) as count
                 FROM tasks
                 GROUP BY status
-            """
-            )
+            """)
             rows = await cursor.fetchall()
 
             status_counts = {status.value: 0 for status in TaskStatus}

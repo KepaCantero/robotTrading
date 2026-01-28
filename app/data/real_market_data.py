@@ -25,6 +25,7 @@ from typing import Dict, List, Optional
 
 import aiohttp
 import pandas as pd
+from requests.exceptions import HTTPError, RequestException
 
 logger = logging.getLogger(__name__)
 

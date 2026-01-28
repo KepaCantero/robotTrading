@@ -129,8 +129,7 @@ class Account(Base):
     # Metadata
     is_active: bool = sa.Column(sa.Boolean, default=True)
     created_at: datetime = sa.Column(
-        sa.TIMESTAMP(timezone=True),
-        default=lambda: datetime.now(timezone.utc)
+        sa.TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
     closed_at: Optional[datetime] = sa.Column(sa.TIMESTAMP(timezone=True), nullable=True)
 
@@ -142,7 +141,7 @@ class Account(Base):
         "Transaction",
         back_populates="account",
         cascade="all, delete-orphan",
-        foreign_keys="[Transaction.account_id]"
+        foreign_keys="[Transaction.account_id]",
     )
     lots = sa.orm.relationship("Lot", back_populates="account", cascade="all, delete-orphan")
     balances = sa.orm.relationship(
@@ -176,9 +175,7 @@ class Transaction(Base):
     # Account
     account_id: UUID = sa.Column(UUID(as_uuid=True), sa.ForeignKey('accounts.id'), nullable=False)
     account = sa.orm.relationship(
-        "Account",
-        back_populates="transactions",
-        foreign_keys=[account_id]
+        "Account", back_populates="transactions", foreign_keys=[account_id]
     )
 
     # Asset
@@ -207,8 +204,7 @@ class Transaction(Base):
     # Timestamps - TIMEZONE AWARE
     occurred_at: datetime = sa.Column(sa.TIMESTAMP(timezone=True), nullable=False, index=True)
     recorded_at: datetime = sa.Column(
-        sa.TIMESTAMP(timezone=True),
-        default=lambda: datetime.now(timezone.utc)
+        sa.TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
 
     # Settlement (for stocks/forex)
@@ -241,13 +237,12 @@ class Transaction(Base):
 
     # Audit fields
     created_at: datetime = sa.Column(
-        sa.TIMESTAMP(timezone=True),
-        default=lambda: datetime.now(timezone.utc)
+        sa.TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
     updated_at: datetime = sa.Column(
         sa.TIMESTAMP(timezone=True),
         default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc)
+        onupdate=lambda: datetime.now(timezone.utc),
     )
     is_verified: bool = sa.Column(sa.Boolean, default=False)  # Verified against exchange API
 
@@ -420,8 +415,7 @@ class TaxReport(Base):
     # Dates
     report_date: datetime = sa.Column(sa.TIMESTAMP(timezone=True), nullable=False)  # As of date
     generated_at: datetime = sa.Column(
-        sa.TIMESTAMP(timezone=True),
-        default=lambda: datetime.now(timezone.utc)
+        sa.TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
     filed_at: Optional[datetime] = sa.Column(sa.TIMESTAMP(timezone=True), nullable=True)
 
@@ -653,7 +647,7 @@ class Modelo721Generator:
             .filter(
                 Account.user_id == user_id,
                 Account.asset_type == AssetType.CRYPTO,
-                Account.is_active == True,
+                Account.is_active,
             )
             .all()
         )

@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class StochRSIFilter(BaseFilter):
     """
     Filtro Stochastic RSI para detectar condiciones de sobrecompra/sobreventa más precisas.
-    
+
     Standard StochRSI interpretation:
     - StochRSI < 20: Oversold (potential buy signal)
     - StochRSI > 80: Overbought (potential sell signal)
@@ -76,7 +76,11 @@ class StochRSIFilter(BaseFilter):
                 crossover_bonus = 0.1 if stoch_rsi_d and stoch_rsi_k > stoch_rsi_d else 0.0
 
                 # Calculate confidence: lower StochRSI = higher confidence (more oversold)
-                confidence = 1.0 - ((stoch_rsi_k / self.oversold_threshold) * 0.4) if self.oversold_threshold > 0 else 0.6
+                confidence = (
+                    1.0 - ((stoch_rsi_k / self.oversold_threshold) * 0.4)
+                    if self.oversold_threshold > 0
+                    else 0.6
+                )
 
                 return {
                     'passed': True,
@@ -94,7 +98,10 @@ class StochRSIFilter(BaseFilter):
                     'passed': False,
                     'confidence': 0.0,
                     'reason': f'StochRSI K {stoch_rsi_k:.2f} > {self.oversold_threshold} (not oversold enough)',
-                    'metadata': {'stoch_rsi_k': stoch_rsi_k, 'oversold_threshold': self.oversold_threshold},
+                    'metadata': {
+                        'stoch_rsi_k': stoch_rsi_k,
+                        'oversold_threshold': self.oversold_threshold,
+                    },
                 }
 
         elif signal_type == "SELL":
@@ -104,7 +111,11 @@ class StochRSIFilter(BaseFilter):
                 crossover_bonus = 0.1 if stoch_rsi_d and stoch_rsi_k < stoch_rsi_d else 0.0
 
                 # Calculate confidence: higher StochRSI = higher confidence (more overbought)
-                distance_from_threshold = (stoch_rsi_k - self.overbought_threshold) / (100 - self.overbought_threshold) if self.overbought_threshold < 100 else 0
+                distance_from_threshold = (
+                    (stoch_rsi_k - self.overbought_threshold) / (100 - self.overbought_threshold)
+                    if self.overbought_threshold < 100
+                    else 0
+                )
                 confidence = 0.5 + (distance_from_threshold * 0.4)
 
                 return {
@@ -123,7 +134,10 @@ class StochRSIFilter(BaseFilter):
                     'passed': False,
                     'confidence': 0.0,
                     'reason': f'StochRSI K {stoch_rsi_k:.2f} < {self.overbought_threshold} (not overbought enough)',
-                    'metadata': {'stoch_rsi_k': stoch_rsi_k, 'overbought_threshold': self.overbought_threshold},
+                    'metadata': {
+                        'stoch_rsi_k': stoch_rsi_k,
+                        'overbought_threshold': self.overbought_threshold,
+                    },
                 }
 
         return {'passed': False, 'confidence': 0.0, 'reason': 'Unknown signal type', 'metadata': {}}

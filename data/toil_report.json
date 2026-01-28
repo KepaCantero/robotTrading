@@ -1,0 +1,17 @@
+{
+  "service_name": "algo_trading_system",
+  "period_days": 30,
+  "entries": [],
+  "metrics": {
+    "total_minutes": 0,
+    "toil_minutes": 0,
+    "engineering_minutes": 0,
+    "toil_percentage": 0,
+    "engineering_percentage": 0,
+    "automated_minutes": 0,
+    "automation_coverage": 0
+  },
+  "top_sources": [],
+  "automation_opportunities": [],
+  "exported_at": "2026-01-28T17:55:47.979440"
+}

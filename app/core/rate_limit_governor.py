@@ -32,7 +32,6 @@ class RateLimitError(Exception):
     """Excepción cuando se excede el rate limit"""
 
 
-
 class RateLimitStrategy(str, Enum):
     """Estrategia de rate limiting"""
 

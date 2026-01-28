@@ -1,0 +1,161 @@
+---
+name: "Market Data Quality Issue"
+severity: "high"
+trigger: "data_quality_score < 0.8 OR data_gaps_detected"
+category: "data"
+tags: ["market-data", "data-quality", "broker-api"]
+estimated_duration_minutes: 20
+last_updated: "2026-01-28"
+version: "1.0"
+
+description: |
+  Respond to market data quality issues. Bad data can lead to incorrect
+  trading decisions, poor strategy performance, and significant losses.
+
+prerequisites:
+  - Market data dashboard access
+  - Broker API access
+  - Data validation tools
+  - Multiple data source access
+
+steps:
+  - title: "Verify Data Quality Issue"
+    description: "Confirm there is a data quality problem"
+    commands:
+      - "Check data quality dashboard"
+      - "Identify affected symbols"
+      - "Determine data issue type (missing, stale, incorrect)"
+      - "Check time range of affected data"
+    expected_outcome: "Data quality issue confirmed and characterized"
+
+  - title: "Assess Trading Impact"
+    description: "Determine if trading should be halted"
+    commands:
+      - "Check if affected symbols are currently traded"
+      - "Assess strategy dependency on affected data"
+      - "Check if any positions rely on bad data"
+      - "Review recent trades using affected data"
+    expected_outcome: "Impact assessed"
+    decision_point:
+      condition: "critical_symbols_affected OR positions_at_risk"
+      true_branch: "Halt trading for affected symbols"
+      false_branch: "Continue monitoring"
+
+  - title: "Halt Trading if Required"
+    description: "Stop trading for affected symbols"
+    commands:
+      - "Disable trading for affected symbols"
+      - "Cancel pending orders for affected symbols"
+      - "Notify trading team of halt"
+      - "Update status dashboards"
+    expected_outcome: "Trading halted for affected symbols"
+
+  - title: "Identify Root Cause"
+    description: "Determine source of data quality issue"
+    commands:
+      - "Check primary data source status"
+      - "Check backup data source status"
+      - "Review data pipeline logs"
+      - "Check for network issues"
+      - "Verify data provider API status"
+    expected_outcome: "Root cause identified"
+
+  - title: "Check Data Pipeline"
+    description: "Verify data collection and processing"
+    commands:
+      - "Review data collector logs"
+      - "Check data validation steps"
+      - "Review data storage layer"
+      - "Check for data corruption"
+    expected_outcome: "Pipeline status understood"
+
+  - title: "Switch to Backup Data Source"
+    description: "If primary source is failing, use backup"
+    commands:
+      - "Verify backup data source is healthy"
+      - "Cross-check backup data quality"
+      - "Switch data source configuration"
+      - "Monitor backup data quality"
+    expected_outcome: "Switched to backup data source"
+
+  - title: "Request Data Republish"
+    description: "If data was missing, request republish"
+    commands:
+      - "Identify missing data time ranges"
+      - "Request data republish from provider"
+      - "Backfill missing data if possible"
+      - "Verify republished data quality"
+    expected_outcome: "Missing data recovered"
+
+  - title: "Implement Workaround"
+    description: "Apply temporary fix if permanent fix not available"
+    commands:
+      - "Implement data interpolation if appropriate"
+      - "Use last known good data for short periods"
+      - "Mark bad data points for exclusion"
+      - "Adjust strategy parameters if needed"
+    expected_outcome: "Workaround in place"
+
+  - title: "Monitor Data Quality Recovery"
+    description: "Verify data quality returns to normal"
+    commands:
+      - "Monitor data quality metrics continuously"
+      - "Check for new data quality issues"
+      - "Verify data freshness"
+      - "Validate data accuracy"
+    expected_outcome: "Data quality restored"
+
+  - title: "Resume Trading When Safe"
+    description: "Carefully resume trading with good data"
+    commands:
+      - "Verify data quality is acceptable"
+      - "Run strategies in simulation mode first"
+      - "Gradually resume live trading"
+      - "Monitor closely for 1 hour"
+    expected_outcome: "Trading resumed with good data"
+
+  - title: "Document Incident"
+    description: "Record all aspects of the incident"
+    commands:
+      - "Log data quality incident"
+      - "Document root cause"
+      - "Record impact and duration"
+      - "Document resolution steps"
+      - "Create follow-up tasks"
+    expected_outcome: "Incident fully documented"
+
+post_actions:
+  - "Review data validation procedures"
+  - "Update data quality thresholds"
+  - "Consider additional data sources"
+  - "Improve monitoring and alerting"
+  - "Review SLAs with data providers"
+
+rollback_actions:
+  - title: "Revert Data Source Switch"
+    description: "If backup source has issues"
+    commands:
+      - "Revert to primary data source"
+      - "Halt trading if quality still poor"
+      - "Investigate further"
+
+related_runbooks:
+  - "broker_api_failure.yaml"
+  - "trading_halt.yaml"
+  - "data_pipeline_failure.yaml"
+
+metrics_to_track:
+  - "data_quality_score"
+  - "data_freshness_seconds"
+  - "data_gaps_count"
+  - "data_errors_count"
+
+success_criteria:
+  - "Data quality restored to acceptable levels"
+  - "Trading safely resumed"
+  - "Root cause identified"
+  - "Incident documented"
+
+escalation_path: "data_operations"
+owner: "data-team"
+review_frequency: "monthly"

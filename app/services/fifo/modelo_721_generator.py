@@ -34,7 +34,6 @@ from uuid import UUID
 
 from sqlalchemy import extract, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.core.database import get_db_transaction
 from app.tax.database.fifo_schema import (
@@ -249,14 +248,12 @@ class Modelo721Generator:
             self.logger.error(f"Error generating Modelo 721 report: {e}", exc_info=True)
             raise
 
-    async def _get_crypto_accounts(
-        self, session: AsyncSession, user_id: UUID
-    ) -> List[Account]:
+    async def _get_crypto_accounts(self, session: AsyncSession, user_id: UUID) -> List[Account]:
         """Get all crypto accounts for user."""
         stmt = select(Account).where(
             Account.user_id == user_id,
             Account.asset_type == AssetType.CRYPTO,
-            Account.is_active == True,
+            Account.is_active,
         )
         result = await session.execute(stmt)
         return list(result.scalars().all())
@@ -411,9 +408,7 @@ class Modelo721Generator:
             if lot.transactions:
                 for tx in lot.transactions:
                     if tx.tx_type == TransactionType.SELL:
-                        gains_by_symbol[symbol]["total_proceeds"] += tx.total_value or Decimal(
-                            "0"
-                        )
+                        gains_by_symbol[symbol]["total_proceeds"] += tx.total_value or Decimal("0")
                         break
 
             gains_by_symbol[symbol]["total_cost_basis"] += lot.cost_basis_open
@@ -587,7 +582,14 @@ class Modelo721Generator:
             # Holdings section
             writer.writerow(["=== BALANCES A 31 DE DICIEMBRE ==="])
             writer.writerow(
-                ["Symbol", "Quantity", "Balance EUR", "Exchange Rate EUR", "Exchanges", "Captured At"]
+                [
+                    "Symbol",
+                    "Quantity",
+                    "Balance EUR",
+                    "Exchange Rate EUR",
+                    "Exchanges",
+                    "Captured At",
+                ]
             )
 
             for balance in report.dec31_balances:
@@ -707,10 +709,14 @@ class Modelo721Generator:
         """
         try:
             async with get_db_transaction() as session:
-                stmt = select(TaxReport).where(
-                    TaxReport.user_id == user_id,
-                    TaxReport.report_type == "modelo_721",
-                ).order_by(TaxReport.tax_year.desc())
+                stmt = (
+                    select(TaxReport)
+                    .where(
+                        TaxReport.user_id == user_id,
+                        TaxReport.report_type == "modelo_721",
+                    )
+                    .order_by(TaxReport.tax_year.desc())
+                )
 
                 result = await session.execute(stmt)
                 return list(result.scalars().all())

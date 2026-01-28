@@ -11,6 +11,21 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+# ============================================================================
+# CRITICAL: Enforce Numba availability BEFORE any other imports
+# This ensures 100% Numba acceleration for all performance-critical code
+# ============================================================================
+try:
+    from app.core.numba_enforcer import enforce_numba_available
+
+    enforce_numba_available()  # Will raise RuntimeError if Numba not available
+except RuntimeError as e:
+    # Log the error and exit immediately
+    print(str(e), file=sys.stderr)
+    sys.exit(1)
+
+import asyncio
+
 from app.api.assets import router as assets_router
 from app.api.capa2_endpoints import router as capa2_router
 from app.api.cost_analysis import router as cost_analysis_router
@@ -149,8 +164,9 @@ app.include_router(
     tags=["Trading Error Handler"],
 )
 
+# SRE Error Budget System (Rule 20)
 
-@app.get("/", tags=["Root"])
+
 async def root() -> Dict[str, Any]:
     """
     Root endpoint providing basic application information.

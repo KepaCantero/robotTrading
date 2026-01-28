@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from app.core.decimal_utils import to_decimal
 
@@ -310,7 +310,9 @@ class StopExecutor:
                 )
             else:
                 # Broker returned error
-                error_msg = order_result.get("error", "Unknown error") if order_result else "No response"
+                error_msg = (
+                    order_result.get("error", "Unknown error") if order_result else "No response"
+                )
                 return StopExecutionResult(
                     success=False,
                     stop_type=stop_type,

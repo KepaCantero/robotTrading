@@ -5,6 +5,7 @@ MLflow for tracking model training, metrics, and versioning.
 Upgraded to use real MLflow server for production-grade experiment tracking.
 """
 
+import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -13,6 +14,7 @@ from typing import Dict, List, Optional
 from urllib.parse import urljoin
 
 import aiohttp
+from requests.exceptions import HTTPError, RequestException
 
 logger = logging.getLogger(__name__)
 

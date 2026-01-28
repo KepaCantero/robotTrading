@@ -5,8 +5,14 @@ Validates orders against risk limits before execution:
 - Position size limits
 - Leverage limits
 - Maximum drawdown limits
-- Daily loss limits
+- Daily loss limits (Chan #15: 5% daily loss circuit breaker)
 - Concentration limits
+
+
+
+References:
+    - Chan #15: Circuit breaker 5% daily loss limit
+    - Hull #65: Kill switches and circuit breakers
 
 Uses centralized configuration from app.core.centralized_config.
 """
@@ -118,12 +124,14 @@ class RiskGates:
         # Additional risk parameters from config
         self.stop_loss_pct = Decimal(str(thresholds.stop_loss_pct))  # From config: 0.05
         self.max_risk_per_trade = Decimal(str(thresholds.max_risk_per_trade))  # From config: 0.02
-        self.circuit_breaker_daily_loss = Decimal(
+        self.circuit_breaker_daily_loss = Decimal(  # Chan #15: 5% daily loss circuit breaker
             str(thresholds.circuit_breaker_daily_loss)
         )  # 0.03
         self.circuit_breaker_drawdown = Decimal(str(thresholds.circuit_breaker_drawdown))  # 0.10
 
         # Tracking
+        # Chan #15: 5% Daily Loss Circuit Breaker
+        self.start_of_day_capital = Decimal("0")  # Track starting capital for daily loss calculations
         self.daily_pnl = Decimal("0")
         self.max_intraday_value = Decimal("0")
         self.current_drawdown = Decimal("0")
@@ -260,11 +268,60 @@ class RiskGates:
         logger.warning("Circuit breaker RESET - trading resumed")
 
     def update_daily_pnl(self, pnl_change: Decimal) -> None:
-        """Update daily P&L tracking."""
+        """
+        Update daily P&L tracking.
+        
+        Note: This method only tracks P&L. Use check_daily_loss_limit()
+        to actually trigger the circuit breaker when needed (Chan #15).
+        """
         self.daily_pnl += pnl_change
-        # Check if we should activate circuit breaker
-        if self.daily_pnl < -abs(self.circuit_breaker_daily_loss):
-            self._activate_circuit_breaker(f"daily_loss={self.daily_pnl}")
+
+
+    def check_daily_loss_limit(self) -> bool:
+        """
+        Detener trading si pérdida diaria > 5%.
+
+        Referencias:
+            - Chan #15: Circuit breaker 5% daily
+            - Hull #65: Kill switches
+
+        Returns:
+            bool: True si trading puede continuar, False si debe detenerse
+        """
+        # First check if circuit breaker is already active
+        if self.circuit_breaker_active:
+            return False
+        
+        # Calculate daily P&L percentage
+        if self.start_of_day_capital <= 0:
+            logger.warning("Start of day capital not set, cannot check daily loss limit")
+            return True
+
+        daily_pnl = self.daily_pnl
+        daily_loss_pct = daily_pnl / self.start_of_day_capital
+
+        if daily_loss_pct <= -0.05:  # -5% threshold per Chan #15
+            logger.critical(
+                f"🛑 CIRCUIT BREAKER (Chan #15): Daily loss {daily_loss_pct:.1%} > 5% threshold"
+            )
+            self._activate_circuit_breaker(f"daily_loss_{daily_loss_pct:.1%}")
+            self.halt_trading()
+            return False
+
+        return True
+
+    def halt_trading(self) -> None:
+        """Halt all trading activity (Hull #65: Kill switch)."""
+        self._activate_circuit_breaker("halt_trading_called")
+        logger.critical("TRADING HALTED: halt_trading() was called")
+
+    def set_start_of_day_capital(self, capital: Decimal) -> None:
+        """Set the starting capital for daily loss tracking (Chan #15)."""
+        self.start_of_day_capital = capital
+        self.daily_pnl = Decimal("0")
+        self.max_intraday_value = capital
+        logger.info(f"Start of day capital set to ${capital:,.2f}")
+
 
     async def check_daily_loss(self, daily_loss: Decimal) -> Tuple[bool, str]:
         """

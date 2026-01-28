@@ -13,33 +13,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import aiofiles
+
 # SECURITY: Using joblib and msgpack instead of pickle for secure serialization
 # joblib is safer for sklearn models, msgpack for generic Python objects
-try:
-    import joblib
-    JOBLIB_AVAILABLE = True
-except ImportError:
-    JOBLIB_AVAILABLE = False
-
-try:
-    import msgpack
-    MSGPACK_AVAILABLE = True
-except ImportError:
-    MSGPACK_AVAILABLE = False
-
-try:
-    import aiofiles
-
-    AIOFILES_AVAILABLE = True
-except ImportError:
-    AIOFILES_AVAILABLE = False
-
-try:
-    import torch
-
-    TORCH_AVAILABLE = True
-except ImportError:
-    TORCH_AVAILABLE = False
+# ALL REQUIRED - no fallbacks
+import joblib
+import msgpack
+import torch  # REQUIRED - PyTorch for model persistence
 
 logger = logging.getLogger(__name__)
 
@@ -116,8 +97,6 @@ class LearningEngineStorage:
         # Guardar según formato
         try:
             if format == 'pt' or format == 'pth':
-                if not TORCH_AVAILABLE:
-                    raise ImportError("PyTorch no disponible para guardar .pt")
                 torch.save(
                     {
                         'weights': weights,
@@ -129,8 +108,6 @@ class LearningEngineStorage:
                     file_path,
                 )
             elif format == 'joblib':
-                if not JOBLIB_AVAILABLE:
-                    raise ImportError("joblib no disponible para guardar .joblib")
                 joblib.dump(
                     {
                         'weights': weights,
@@ -142,8 +119,6 @@ class LearningEngineStorage:
                     file_path,
                 )
             elif format == 'msgpack':
-                if not MSGPACK_AVAILABLE:
-                    raise ImportError("msgpack no disponible para guardar .msgpack")
                 self._save_msgpack(
                     file_path,
                     {
@@ -215,8 +190,6 @@ class LearningEngineStorage:
 
         # Serializar según formato
         if format == 'pt' or format == 'pth':
-            if not TORCH_AVAILABLE:
-                raise ImportError("PyTorch no disponible")
             data = {
                 'weights': weights,
                 'metadata': metadata or {},
@@ -227,8 +200,6 @@ class LearningEngineStorage:
             # Guardar de forma bloqueante (PyTorch no tiene async API)
             torch.save(data, file_path)
         elif format == 'joblib':
-            if not JOBLIB_AVAILABLE:
-                raise ImportError("joblib no disponible")
             # Serializar primero
             import io
 
@@ -245,17 +216,10 @@ class LearningEngineStorage:
             )
             buffer.seek(0)
 
-            # Escribir de forma asíncrona
-            if AIOFILES_AVAILABLE:
-                async with aiofiles.open(file_path, 'wb') as f:
-                    await f.write(buffer.read())
-            else:
-                # Fallback síncrono
-                with open(file_path, 'wb') as f:
-                    f.write(buffer.read())
+            # Escribir de forma asíncrona (REQUIRED - aiofiles must be available)
+            async with aiofiles.open(file_path, 'wb') as f:
+                await f.write(buffer.read())
         elif format == 'msgpack':
-            if not MSGPACK_AVAILABLE:
-                raise ImportError("msgpack no disponible")
             data = {
                 'weights': weights,
                 'metadata': metadata or {},
@@ -264,14 +228,9 @@ class LearningEngineStorage:
                 'timestamp': timestamp,
             }
             packed = msgpack.packb(data, default=str)
-            # Escribir de forma asíncrona
-            if AIOFILES_AVAILABLE:
-                async with aiofiles.open(file_path, 'wb') as f:
-                    await f.write(packed)
-            else:
-                # Fallback síncrono
-                with open(file_path, 'wb') as f:
-                    f.write(packed)
+            # Escribir de forma asíncrona (REQUIRED - aiofiles must be available)
+            async with aiofiles.open(file_path, 'wb') as f:
+                await f.write(packed)
         else:
             raise ValueError(f"Formato no soportado: {format}")
 
@@ -334,16 +293,10 @@ class LearningEngineStorage:
         # Cargar según extensión
         try:
             if file_path.suffix in ['.pt', '.pth']:
-                if not TORCH_AVAILABLE:
-                    raise ImportError("PyTorch no disponible para cargar .pt")
                 data = torch.load(file_path, map_location='cpu')  # nosec B614 - torch is safe
             elif file_path.suffix == '.joblib':
-                if not JOBLIB_AVAILABLE:
-                    raise ImportError("joblib no disponible para cargar .joblib")
                 data = joblib.load(file_path)
             elif file_path.suffix == '.msgpack':
-                if not MSGPACK_AVAILABLE:
-                    raise ImportError("msgpack no disponible para cargar .msgpack")
                 data = self._load_msgpack(file_path)
             elif file_path.suffix == '.pkl':
                 # SECURITY: Migrate old .pkl files to secure format
@@ -458,19 +411,11 @@ class LearningEngineStorage:
         return deleted
 
     def _detect_format(self, weights: Any) -> str:
-        """Detectar formato óptimo y seguro según tipo de pesos."""
-        if TORCH_AVAILABLE and isinstance(weights, (torch.nn.Module, torch.Tensor)):
+        """Detectar formato óptimo y seguro según tipo de pesos (REQUIRED)."""
+        if isinstance(weights, (torch.nn.Module, torch.Tensor)):
             return 'pt'
-        elif JOBLIB_AVAILABLE:
-            return 'joblib'  # Seguro para sklearn y numpy
-        elif MSGPACK_AVAILABLE:
-            return 'msgpack'  # Seguro para objetos Python genéricos
         else:
-            # Fallback - no hay formato seguro disponible
-            raise ImportError(
-                "No hay formato de serialización seguro disponible. "
-                "Instale joblib o msgpack."
-            )
+            return 'joblib'  # Seguro para sklearn y numpy (REQUIRED - joblib must be available)
 
     def _save_msgpack(self, path: Path, data: Dict[str, Any]) -> None:
         """Guardar datos usando msgpack."""
@@ -565,7 +510,6 @@ class LearningEngineStorage:
 
     def _save_metadata(self, metadata_path: Path, metadata: Dict[str, Any]) -> None:
         """Guardar metadatos en JSON separado."""
-        import json
 
         try:
             with open(metadata_path, 'w') as f:

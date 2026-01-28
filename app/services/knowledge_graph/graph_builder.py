@@ -3,10 +3,15 @@ FASE 6.3: Knowledge Graph Builder - Neo4j integration
 
 Builds and manages knowledge graphs for trading strategy relationships,
 market correlations, and trading pattern discovery.
+
+Rule 28 Compliant: Uses environment variables for credentials.
 """
 
 import logging
+import os
 from typing import Any, Dict, List, Optional
+
+from requests.exceptions import HTTPError, RequestException
 
 logger = logging.getLogger(__name__)
 
@@ -20,17 +25,35 @@ class KnowledgeGraphBuilder:
 
         Args:
             graph_uri: Neo4j URI (e.g., 'bolt://localhost:7687')
+                      Reads from NEO4J_URI environment variable if not provided
             user: Neo4j username
+                  Reads from NEO4J_USER environment variable if not provided
             password: Neo4j password
+                     Reads from NEO4J_PASSWORD environment variable if not provided
+
+        Rule 28 Compliance:
+            - Never hardcode credentials in code
+            - Use environment variables: NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD
+            - Set these in .env file for development
         """
-        self.graph_uri = graph_uri or "bolt://localhost:7687"
-        self.user = user or "neo4j"
-        self.password = password or "password"
+        self.graph_uri = graph_uri or os.getenv("NEO4J_URI", "bolt://localhost:7687")
+        self.user = user or os.getenv("NEO4J_USER", "neo4j")
+
+        # Rule 28: Password must come from environment variable
+        if not password:
+            password = os.getenv("NEO4J_PASSWORD")
+            if not password:
+                logger.warning(
+                    "NEO4J_PASSWORD not set. Knowledge graph features will be limited. "
+                    "Set NEO4J_PASSWORD environment variable for full functionality."
+                )
+
+        self.password = password
         self.driver = None
         self.connected = False
         self.nodes_created = 0
         self.relationships_created = 0
-        logger.info("✅ KnowledgeGraphBuilder initialized")
+        logger.info("✅ KnowledgeGraphBuilder initialized (Rule 28 compliant)")
 
     async def connect(self) -> bool:
         """Connect to Neo4j database."""

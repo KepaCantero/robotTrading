@@ -169,20 +169,16 @@ class BrokerError(Exception):
     """Error base del broker"""
 
 
-
 class RateLimitError(BrokerError):
     """Error por exceder rate limit"""
-
 
 
 class ConnectionError(BrokerError):
     """Error de conexión"""
 
 
-
 class OrderRejectedError(BrokerError):
     """Orden rechazada por el broker"""
-
 
 
 class IBroker(ABC):

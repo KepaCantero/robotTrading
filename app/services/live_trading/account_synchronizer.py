@@ -10,6 +10,7 @@ Synchronizes local portfolio state with broker account:
 MEMORY: Uses deque with maxlen to prevent unbounded memory growth.
 """
 
+import asyncio
 import logging
 from collections import deque
 from dataclasses import dataclass

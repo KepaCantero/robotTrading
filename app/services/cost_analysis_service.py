@@ -6,6 +6,7 @@ transaction costs, slippage analysis, infrastructure costs, and profitability va
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
@@ -259,8 +260,237 @@ class CostAnalysisService:
             return self._create_empty_analysis_result(strategy_name)
 
     def validate_profitability(self, analysis_result: CostAnalysisResult) -> bool:
-        """Validate that strategy is profitable after all costs."""
+        """
+        Validate that strategy is profitable after all costs.
+
+        This implements Ernest Chan's commission impact ratio validation
+        from "Algorithmic Trading" (Chapter 3).
+
+        The commission impact ratio (CIR) measures the percentage of
+        gross profits consumed by transaction costs. Chan recommends
+        CIR < 30% for viable strategies.
+        """
         return analysis_result.is_profitable and not analysis_result.exceeds_cost_threshold
+
+    def validate_commission_impact_ratio(
+        self,
+        analysis_result: CostAnalysisResult,
+        max_cir_threshold: Optional[Decimal] = None,
+    ) -> Tuple[bool, List[str]]:
+        """
+        Validate commission impact ratio (CIR) per Ernest Chan's methodology.
+
+        CIR = Total Costs / Gross Profit
+
+        Chan's guidelines (Algorithmic Trading, Chapter 3):
+        - CIR < 10%: Excellent (costs minimal impact)
+        - CIR 10-20%: Good (acceptable for most strategies)
+        - CIR 20-30%: Acceptable (marginal, consider optimization)
+        - CIR > 30%: Poor (strategy likely not viable after costs)
+
+        Args:
+            analysis_result: Cost analysis result to validate
+            max_cir_threshold: Maximum acceptable CIR (default: 30%)
+
+        Returns:
+            Tuple of (is_valid, list of recommendations)
+        """
+        threshold = max_cir_threshold or self.max_cost_impact_ratio
+        cir = analysis_result.cost_impact_ratio
+
+        recommendations = []
+        is_valid = cir <= threshold
+
+        # Generate recommendations based on CIR level
+        if cir < 10:
+            recommendations.append(
+                f"Excellent: CIR is {cir:.1f}% (< 10%). Costs have minimal impact."
+            )
+        elif cir < 20:
+            recommendations.append(f"Good: CIR is {cir:.1f}% (10-20%). Acceptable cost impact.")
+        elif cir < 30:
+            recommendations.append(
+                f"Acceptable: CIR is {cir:.1f}% (20-30%). Consider optimizing execution."
+            )
+            recommendations.extend(
+                [
+                    "Consider reducing trade frequency to lower commission costs.",
+                    "Evaluate using limit orders to reduce slippage.",
+                    "Review broker commission rates for potential discounts.",
+                ]
+            )
+        else:
+            recommendations.append(
+                f"Poor: CIR is {cir:.1f}% (> 30%). Strategy likely not viable after costs."
+            )
+            recommendations.extend(
+                [
+                    "CRITICAL: Transaction costs are consuming too much profit.",
+                    "Consider increasing holding periods to reduce turnover.",
+                    "Negotiate lower commission rates with broker.",
+                    "Focus on higher-probability trades to improve win rate.",
+                    "Evaluate if strategy can be profitable with realistic costs.",
+                ]
+            )
+
+        # Analyze cost components
+        if analysis_result.total_trades > 0:
+            avg_cost_per_trade = analysis_result.total_costs / analysis_result.total_trades
+            avg_commission = (
+                analysis_result.total_commission / analysis_result.total_trades
+                if analysis_result.total_trades > 0
+                else Decimal("0")
+            )
+            avg_slippage = (
+                analysis_result.total_slippage / analysis_result.total_trades
+                if analysis_result.total_trades > 0
+                else Decimal("0")
+            )
+
+            recommendations.append(
+                f"Average cost per trade: ${avg_cost_per_trade:.2f} "
+                f"(commission: ${avg_commission:.2f}, slippage: ${avg_slippage:.2f})"
+            )
+
+            # Check if slippage is excessive
+            if avg_slippage > avg_commission * Decimal("2"):
+                recommendations.append(
+                    "WARNING: Slippage costs are 2x+ higher than commissions. "
+                    "Consider using limit orders or trading during high-liquidity periods."
+                )
+
+        return is_valid, recommendations
+
+    def calculate_minimum_profit_edge(
+        self,
+        commission_rate: Decimal,
+        slippage_rate: Decimal,
+        holding_period_days: int = 5,
+    ) -> Decimal:
+        """
+        Calculate minimum profit edge required to overcome costs (Ernest Chan).
+
+        This implements Chan's formula for minimum required profit:
+        Minimum Edge = (Commission + Slippage) * Turnover Rate
+
+        Args:
+            commission_rate: Commission rate as decimal (e.g., 0.005 = 0.5%)
+            slippage_rate: Slippage rate as decimal (e.g., 0.001 = 0.1%)
+            holding_period_days: Average holding period in days
+
+        Returns:
+            Minimum required profit edge as percentage
+        """
+        # Total cost per round trip
+        total_cost_per_trade = commission_rate + slippage_rate
+
+        # Annualized turnover rate (assuming 252 trading days)
+        annual_turnover = Decimal("252") / Decimal(str(holding_period_days))
+
+        # Minimum annual profit edge required
+        min_edge = total_cost_per_trade * annual_turnover
+
+        logger.info(
+            f"Minimum profit edge: {min_edge:.2%} "
+            f"(commission: {commission_rate:.2%}, "
+            f"slippage: {slippage_rate:.2%}, "
+            f"holding period: {holding_period_days} days)"
+        )
+
+        return min_edge
+
+    def optimize_for_costs(
+        self,
+        analysis_result: CostAnalysisResult,
+        target_cir: Decimal = Decimal("0.20"),
+    ) -> Dict[str, Any]:
+        """
+        Generate cost optimization recommendations to achieve target CIR.
+
+        Implements Ernest Chan's cost optimization strategies.
+
+        Args:
+            analysis_result: Current cost analysis result
+            target_cir: Target commission impact ratio (default 20%)
+
+        Returns:
+            Dictionary with optimization recommendations
+        """
+        current_cir = analysis_result.cost_impact_ratio
+
+        if current_cir <= target_cir:
+            return {
+                "status": "optimal",
+                "message": f"Current CIR ({current_cir:.1f}%) meets target ({target_cir:.1f}%)",
+                "recommendations": [],
+            }
+
+        # Calculate required reduction
+        required_reduction = (current_cir - target_cir) / current_cir
+
+        recommendations = []
+
+        # Analyze cost components and suggest optimizations
+        if analysis_result.total_trades > 0:
+            avg_commission = (
+                analysis_result.total_commission / analysis_result.total_trades
+                if analysis_result.total_trades > 0
+                else Decimal("0")
+            )
+            avg_slippage = (
+                analysis_result.total_slippage / analysis_result.total_trades
+                if analysis_result.total_trades > 0
+                else Decimal("0")
+            )
+
+            # Commission reduction strategies
+            if avg_commission > Decimal("5"):
+                recommendations.append(
+                    {
+                        "type": "commission",
+                        "action": "negotiate_rates",
+                        "potential_saving": "10-30%",
+                        "description": "Negotiate volume-based discounts with broker",
+                    }
+                )
+
+            # Slippage reduction strategies
+            if avg_slippage > avg_commission:
+                recommendations.append(
+                    {
+                        "type": "slippage",
+                        "action": "use_limit_orders",
+                        "potential_saving": "20-50%",
+                        "description": "Use limit orders instead of market orders",
+                    }
+                )
+                recommendations.append(
+                    {
+                        "type": "slippage",
+                        "action": "trade_high_liquidity",
+                        "potential_saving": "10-30%",
+                        "description": "Trade during high-volume periods",
+                    }
+                )
+
+            # Trade frequency reduction
+            recommendations.append(
+                {
+                    "type": "frequency",
+                    "action": "reduce_turnover",
+                    "potential_saving": f"{required_reduction * 100:.0f}%",
+                    "description": f"Reduce trade frequency by {required_reduction * 100:.0f}% "
+                    f"to achieve target CIR",
+                }
+            )
+
+        return {
+            "status": "needs_optimization",
+            "current_cir": float(current_cir),
+            "target_cir": float(target_cir),
+            "required_reduction": float(required_reduction),
+            "recommendations": recommendations,
+        }
 
     def _determine_asset_class(self, symbol: str) -> str:
         """Determine asset class from symbol."""

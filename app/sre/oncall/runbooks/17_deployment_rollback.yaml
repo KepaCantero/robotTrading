@@ -1,0 +1,98 @@
+---
+name: "Deployment Rollback"
+severity: "high"
+trigger: "deployment_issues_detected OR rollback_requested"
+category: "deployment"
+tags: ["deployment", "rollback", "release"]
+estimated_duration_minutes: 10
+last_updated: "2026-01-28"
+version: "1.0"
+
+description: |
+  Execute deployment rollback when issues are detected after deployment.
+  Quick rollback minimizes impact of bad deployments.
+
+prerequisites:
+  - Deployment system access
+  - Rollback procedures
+  - Version control access
+
+steps:
+  - title: "Verify Rollback Need"
+    description: "Confirm rollback is appropriate"
+    commands:
+      - "Review deployment issues"
+      - "Assess impact severity"
+      - "Check if rollback will fix issues"
+      - "Consider alternative fixes"
+    expected_outcome: "Rollback decision made"
+
+  - title: "Execute Rollback"
+    description: "Rollback to previous version"
+    commands:
+      - "Identify previous stable version"
+      - "Execute rollback procedure"
+      - "Verify rollback completed"
+      - "Check service health"
+    expected_outcome: "Rollback executed"
+
+  - title: "Verify Recovery"
+    description: "Confirm system recovered"
+    commands:
+      - "Check all services healthy"
+      - "Monitor metrics for 10 minutes"
+      - "Verify no errors"
+      - "Check trading operations normal"
+    expected_outcome: "System confirmed recovered"
+
+  - title: "Communicate Rollback"
+    description: "Notify stakeholders"
+    commands:
+      - "Notify team of rollback"
+      - "Update deployment status"
+      - "Document rollback reason"
+      - "Communicate with users if affected"
+    expected_outcome: "Stakeholders notified"
+
+  - title: "Investigate Deployment Issues"
+    description: "Understand what went wrong"
+    commands:
+      - "Review deployment logs"
+      - "Analyze errors"
+      - "Check configuration changes"
+      - "Review code changes"
+    expected_outcome: "Issues understood"
+
+  - title: "Document Incident"
+    description: "Complete incident documentation"
+    commands:
+      - "Log rollback incident"
+      - "Document root cause"
+      - "Record impact and duration"
+      - "Create preventive measures"
+      - "Update deployment procedures"
+    expected_outcome: "Incident documented"
+
+post_actions:
+  - "Review deployment procedures"
+  - "Improve testing"
+  - "Consider canary deployments"
+  - "Update rollback documentation"
+
+related_runbooks:
+  - "service_degraded.yaml"
+  - "high_error_rate.yaml"
+
+metrics_to_track:
+  - "rollback_count"
+  - "deployment_success_rate"
+  - "mean_time_to_recovery"
+
+success_criteria:
+  - "System restored to stable state"
+  - "Issues resolved"
+  - "Incident documented"
+
+escalation_path: "platform"
+owner: "platform-team"
+review_frequency: "as_needed"

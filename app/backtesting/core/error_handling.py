@@ -5,6 +5,7 @@ This module provides robust error handling with automatic retries for
 transient failures, especially those related to threading/locking issues
 in machine learning libraries.
 """
+
 from __future__ import annotations
 
 import logging
@@ -32,6 +33,7 @@ class MutexError(Exception):
     - TensorFlow session locking
     - OpenBLAS/MKL threading conflicts
     """
+
     pass
 
 
@@ -44,6 +46,7 @@ class TrainingError(Exception):
     - Model convergence issues
     - Resource exhaustion
     """
+
     pass
 
 
@@ -51,6 +54,7 @@ class SubprocessTimeoutError(TrainingError):
     """
     Error raised when subprocess training times out.
     """
+
     pass
 
 
@@ -184,10 +188,7 @@ def _train_in_subprocess(
         ...     timeout=600  # 10 minutes
         ... )
     """
-    logger.info(
-        f"🔄 Training {engine_type} in isolated subprocess "
-        f"(timeout: {timeout}s)"
-    )
+    logger.info(f"🔄 Training {engine_type} in isolated subprocess " f"(timeout: {timeout}s)")
 
     # Use multiprocessing for safe subprocess spawning
     # 'spawn' context creates fresh Python process
@@ -238,9 +239,7 @@ def _train_in_subprocess(
             if p.is_alive():
                 p.kill()
                 p.join()
-            raise SubprocessTimeoutError(
-                f"Training timeout after {timeout}s"
-            )
+            raise SubprocessTimeoutError(f"Training timeout after {timeout}s")
 
         # Get result from queue
         if not result_queue.empty():
@@ -300,10 +299,7 @@ def safe_execute(
         return func(*args, **kwargs)
     except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
         if log_errors:
-            logger.error(
-                f"Error in {func.__name__}: {e}",
-                exc_info=True
-            )
+            logger.error(f"Error in {func.__name__}: {e}", exc_info=True)
         return default_return
 
 
@@ -325,6 +321,7 @@ def log_and_suppress(
         ... def calculate_risk(data):
         ...     return complex_risk_calculation(data)
     """
+
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             try:
@@ -332,5 +329,7 @@ def log_and_suppress(
             except exception_types as e:
                 logger.warning(f"{message}: {e}")
                 return default_return
+
         return wrapper
+
     return decorator

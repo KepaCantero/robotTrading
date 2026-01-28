@@ -21,7 +21,7 @@ Date: 2026-01-25
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
@@ -35,7 +35,6 @@ from app.tax.database.fifo_schema import (
     Account,
     AssetType,
     ExchangeType,
-    FIFOCalculation,
     FIFOProcessor,
     Lot,
     LotStatus,
@@ -180,7 +179,7 @@ class FIFOIntegrator:
             Account.user_id == self.user_id,
             Account.exchange_name == exchange_name,
             Account.currency == currency,
-            Account.is_active == True,
+            Account.is_active,
         )
         result = await session.execute(stmt)
         account = result.scalars().first()
@@ -410,11 +409,15 @@ class FIFOIntegrator:
         """
         try:
             async with get_db_transaction() as session:
-                stmt = select(Lot).where(
-                    Lot.symbol == symbol.upper(),
-                    Lot.status == LotStatus.OPEN,
-                    Lot.quantity_remaining > 0,
-                ).order_by(Lot.opened_at)
+                stmt = (
+                    select(Lot)
+                    .where(
+                        Lot.symbol == symbol.upper(),
+                        Lot.status == LotStatus.OPEN,
+                        Lot.quantity_remaining > 0,
+                    )
+                    .order_by(Lot.opened_at)
+                )
 
                 result = await session.execute(stmt)
                 lots = result.scalars().all()

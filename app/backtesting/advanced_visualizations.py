@@ -15,32 +15,42 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
-import networkx as nx
 import numpy as np
 import pandas as pd
 
-logger = logging.getLogger(__name__)
+# Optional dependencies with graceful fallbacks
+try:
+    import networkx as nx
 
-# Optional imports - matplotlib
+    HAS_NETWORKX = True
+except ImportError:
+    HAS_NETWORKX = False
+    nx = None
+
 try:
     import matplotlib.pyplot as plt
     import seaborn as sns
     from matplotlib.dates import DateFormatter
 
-    MATPLOTLIB_AVAILABLE = True
-except ImportError:
-    MATPLOTLIB_AVAILABLE = False
-    logger.warning("matplotlib not available. Static visualizations disabled.")
+    HAS_MATPLOTLIB = True
+except (ImportError, Exception):
+    # Matplotlib may fail due to numpy version incompatibility
+    HAS_MATPLOTLIB = False
+    plt = None
+    sns = None
+    DateFormatter = None
 
-# Optional imports - plotly
 try:
     import plotly.graph_objects as go
     from plotly.subplots import make_subplots
 
-    PLOTLY_AVAILABLE = True
+    HAS_PLOTLY = True
 except ImportError:
-    PLOTLY_AVAILABLE = False
-    logger.warning("plotly not available. Interactive visualizations disabled.")
+    HAS_PLOTLY = False
+    go = None
+    make_subplots = None
+
+logger = logging.getLogger(__name__)
 
 
 class AdvancedVisualizer:
@@ -62,11 +72,12 @@ class AdvancedVisualizer:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.dpi = dpi
 
-        # Configure matplotlib style if available
-        if MATPLOTLIB_AVAILABLE:
+        # Configure matplotlib style (only if available)
+        if HAS_MATPLOTLIB and plt is not None:
             try:
                 plt.style.use("seaborn-v0_8-darkgrid")
-                sns.set_palette("husl")
+                if sns is not None:
+                    sns.set_palette("husl")
             except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
                 logger.warning(f"Could not set matplotlib style: {e}")
 
@@ -93,8 +104,12 @@ class AdvancedVisualizer:
         Returns:
             Figure object or None if plotting fails
         """
-        if not MATPLOTLIB_AVAILABLE:
-            logger.warning("matplotlib not available. Skipping correlation network plot.")
+        # Check if required dependencies are available
+        if not HAS_MATPLOTLIB or plt is None:
+            logger.warning("matplotlib not available, skipping correlation network plot")
+            return None
+        if not HAS_NETWORKX or nx is None:
+            logger.warning("networkx not available, skipping correlation network plot")
             return None
 
         try:
@@ -159,7 +174,6 @@ class AdvancedVisualizer:
 
         except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.error(f"Error plotting correlation network: {e}", exc_info=True)
-            return None
 
     def plot_parallel_coordinates(
         self,
@@ -180,15 +194,15 @@ class AdvancedVisualizer:
         Returns:
             Path to saved HTML file or None
         """
-        if not PLOTLY_AVAILABLE:
-            logger.warning("plotly not available. Skipping parallel coordinates plot.")
+        # Check if required dependencies are available
+        if not HAS_PLOTLY or go is None:
+            logger.warning("plotly not available, skipping parallel coordinates plot")
             return None
 
         try:
             numeric_data = data.select_dtypes(include=[np.number]).copy()
             if numeric_data.empty:
                 logger.warning("No numeric columns for parallel coordinates")
-                return None
 
             # Limit columns
             if len(numeric_data.columns) > max_cols:
@@ -225,7 +239,6 @@ class AdvancedVisualizer:
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error plotting parallel coordinates: {e}", exc_info=True)
-            return None
 
     def plot_3d_scatter(
         self,
@@ -252,15 +265,15 @@ class AdvancedVisualizer:
         Returns:
             Path to saved HTML file or None
         """
-        if not PLOTLY_AVAILABLE:
-            logger.warning("plotly not available. Skipping 3D scatter plot.")
+        # Check if required dependencies are available
+        if not HAS_PLOTLY or go is None:
+            logger.warning("plotly not available, skipping 3d scatter plot")
             return None
 
         try:
             # Validate columns
             if x_col not in data.columns or y_col not in data.columns or z_col not in data.columns:
                 logger.warning(f"Missing required columns: {x_col}, {y_col}, {z_col}")
-                return None
 
             # Create 3D scatter
             fig = go.Figure()
@@ -317,7 +330,6 @@ class AdvancedVisualizer:
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error plotting 3D scatter: {e}", exc_info=True)
-            return None
 
     def plot_underwater_drawdown(
         self,
@@ -338,8 +350,9 @@ class AdvancedVisualizer:
         Returns:
             Figure object or None
         """
-        if not MATPLOTLIB_AVAILABLE:
-            logger.warning("matplotlib not available. Skipping underwater drawdown plot.")
+        # Check if required dependencies are available
+        if not HAS_MATPLOTLIB or plt is None:
+            logger.warning("matplotlib not available, skipping underwater drawdown plot")
             return None
 
         try:
@@ -385,7 +398,6 @@ class AdvancedVisualizer:
 
         except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.error(f"Error plotting underwater drawdown: {e}", exc_info=True)
-            return None
 
     def plot_rolling_metrics(
         self,
@@ -406,8 +418,9 @@ class AdvancedVisualizer:
         Returns:
             Figure object or None
         """
-        if not MATPLOTLIB_AVAILABLE:
-            logger.warning("matplotlib not available. Skipping rolling metrics plot.")
+        # Check if required dependencies are available
+        if not HAS_MATPLOTLIB or plt is None:
+            logger.warning("matplotlib not available, skipping rolling metrics plot")
             return None
 
         try:
@@ -415,7 +428,6 @@ class AdvancedVisualizer:
             returns = equity_curve.pct_change().dropna()
             if len(returns) < window:
                 logger.warning(f"Not enough data for {window}-day rolling window")
-                return None
 
             # Calculate rolling metrics
             rolling_mean = returns.rolling(window).mean() * 252 * 100  # Annualized %
@@ -469,7 +481,6 @@ class AdvancedVisualizer:
 
         except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.error(f"Error plotting rolling metrics: {e}", exc_info=True)
-            return None
 
     def plot_regime_performance(
         self,
@@ -492,14 +503,14 @@ class AdvancedVisualizer:
         Returns:
             Figure object or None
         """
-        if not MATPLOTLIB_AVAILABLE:
-            logger.warning("matplotlib not available. Skipping regime performance plot.")
+        # Check if required dependencies are available
+        if not HAS_MATPLOTLIB or plt is None:
+            logger.warning("matplotlib not available, skipping regime performance plot")
             return None
 
         try:
             if len(returns) != len(regime_labels):
                 logger.warning("returns and regime_labels must have same length")
-                return None
 
             # Default regime names
             if regime_names is None:
@@ -587,7 +598,6 @@ class AdvancedVisualizer:
 
         except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.error(f"Error plotting regime performance: {e}", exc_info=True)
-            return None
 
     def plot_seasonality_heatmap(
         self,
@@ -606,15 +616,15 @@ class AdvancedVisualizer:
         Returns:
             Figure object or None
         """
-        if not MATPLOTLIB_AVAILABLE:
-            logger.warning("matplotlib not available. Skipping seasonality heatmap plot.")
+        # Check if required dependencies are available
+        if not HAS_MATPLOTLIB or plt is None:
+            logger.warning("matplotlib not available, skipping seasonality heatmap plot")
             return None
 
         try:
             # Ensure datetime index
             if not isinstance(returns.index, pd.DatetimeIndex):
                 logger.warning("returns index must be DatetimeIndex")
-                return None
 
             # Group by year and month
             monthly_returns = returns.resample("ME").sum()  # Month-end returns
@@ -674,7 +684,6 @@ class AdvancedVisualizer:
 
         except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.error(f"Error plotting seasonality heatmap: {e}", exc_info=True)
-            return None
 
     def generate_interactive_dashboard(
         self,
@@ -693,8 +702,9 @@ class AdvancedVisualizer:
         Returns:
             Path to saved HTML file or None
         """
-        if not PLOTLY_AVAILABLE:
-            logger.warning("plotly not available. Skipping dashboard generation.")
+        # Check if required dependencies are available
+        if not HAS_PLOTLY or go is None:
+            logger.warning("plotly not available, skipping interactive dashboard")
             return None
 
         try:
@@ -737,4 +747,10 @@ class AdvancedVisualizer:
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error generating dashboard: {e}", exc_info=True)
-            return None
+
+
+# Export availability constants for tests
+MATPLOTLIB_AVAILABLE = HAS_MATPLOTLIB
+PLOTLY_AVAILABLE = HAS_PLOTLY
+NETWORKX_AVAILABLE = HAS_NETWORKX
+__all__ = ['AdvancedVisualizer', 'MATPLOTLIB_AVAILABLE', 'PLOTLY_AVAILABLE', 'NETWORKX_AVAILABLE']

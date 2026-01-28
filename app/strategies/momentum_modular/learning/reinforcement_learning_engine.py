@@ -11,39 +11,17 @@ from .base_learning_engine import BaseLearningEngine
 
 logger = logging.getLogger(__name__)
 
-# Importaciones opcionales para RL
-# Hacer imports no bloqueantes para evitar deadlocks con threading
-STABLE_BASELINES3_AVAILABLE = False
-GYM_AVAILABLE = False
+# REQUIRED: stable-baselines3 is REQUIRED - NO FALLBACKS
+import os
 
-# Intentar importar stable_baselines3 - puede bloquear, así que hacerlo opcional
-# Si bloquea, simplemente no estará disponible
-try:
-    # Desactivar threading warnings de TensorFlow si está disponible
-    import os
+os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', '2')
+os.environ.setdefault('OMP_NUM_THREADS', '1')  # Reducir threads para evitar bloqueos
 
-    os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', '2')
-    os.environ.setdefault('OMP_NUM_THREADS', '1')  # Reducir threads para evitar bloqueos
-
-    from stable_baselines3 import A2C, DDPG, DQN, PPO, SAC, TD3
-    from stable_baselines3.common.callbacks import BaseCallback
-
-    STABLE_BASELINES3_AVAILABLE = True
-    logger.debug("stable-baselines3 disponible")
-except (FileNotFoundError, ValueError, KeyError, TypeError):
-    STABLE_BASELINES3_AVAILABLE = False
-    # Silenciar completamente - es esperado que puede no estar disponible o bloquear
-    logger.debug("stable-baselines3 no disponible o bloqueado")
-
-# Importar gym de forma simple
-try:
-    import gym
-    import gym.spaces
-
-    GYM_AVAILABLE = True
-except ImportError:
-    GYM_AVAILABLE = False
-    logger.debug("gym no disponible. Funcionalidad RL limitada.")
+# REQUIRED: gym is REQUIRED - NO FALLBACKS
+import gym
+import gym.spaces
+from stable_baselines3 import A2C, DDPG, DQN, PPO, SAC, TD3
+from stable_baselines3.common.callbacks import BaseCallback
 
 
 class TradingEnv:
@@ -331,11 +309,7 @@ class ReinforcementLearningEngine(BaseLearningEngine):
         """Inicializar motor de RL."""
         super().__init__("reinforcement_learning", config)
 
-        if not STABLE_BASELINES3_AVAILABLE:
-            raise ImportError(
-                "stable-baselines3 es requerido para ReinforcementLearningEngine. "
-                "Instala con: pip install stable-baselines3>=2.0.0 gym>=0.26.0"
-            )
+        # stable-baselines3 y gym son REQUIRED - ya importados al inicio del módulo
 
         self.algorithm = config.get("algorithm", "ppo")  # ppo, a2c, ddpg, dqn, td3, sac
         self.env_config = config.get("env_config", {})
@@ -358,8 +332,7 @@ class ReinforcementLearningEngine(BaseLearningEngine):
                 'initial_capital': float
             }
         """
-        if not STABLE_BASELINES3_AVAILABLE:
-            raise ImportError("stable-baselines3 es requerido")
+        # stable-baselines3 es REQUIRED - ya importado al inicio del módulo
 
         # Crear entorno
         env_config = self.env_config.copy()

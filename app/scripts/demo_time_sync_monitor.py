@@ -13,14 +13,12 @@ This script demonstrates the TimeSyncMonitor functionality including:
 
 import asyncio
 import logging
-from datetime import datetime, timezone
 
 from app.services.monitoring.time_sync_monitor import (
     TimeSyncConfig,
     TimeSyncMonitor,
     get_time_sync_monitor,
 )
-
 
 # Configure logging
 logging.basicConfig(
@@ -33,9 +31,9 @@ logger = logging.getLogger(__name__)
 
 async def demo_basic_monitoring():
     """Demonstrate basic monitoring functionality."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("DEMO: Basic Time Sync Monitoring")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     # Get monitor instance
     monitor = get_time_sync_monitor()
@@ -62,9 +60,9 @@ async def demo_basic_monitoring():
 
 async def demo_monitoring_with_callbacks():
     """Demonstrate monitoring with callbacks."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("DEMO: Monitoring with Callbacks")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     # Create callbacks
     drift_detected_count = [0]
@@ -105,9 +103,9 @@ async def demo_monitoring_with_callbacks():
 
 async def demo_order_validation():
     """Demonstrate order validation."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("DEMO: Order Validation")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     monitor = get_time_sync_monitor()
 
@@ -134,9 +132,9 @@ async def demo_order_validation():
 
 async def demo_metrics_collection():
     """Demonstrate metrics collection."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("DEMO: Metrics Collection")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     monitor = get_time_sync_monitor()
 
@@ -149,7 +147,7 @@ async def demo_metrics_collection():
     # Get status
     status = monitor.get_status()
 
-    print(f"\nMetrics:")
+    print("\nMetrics:")
     print(f"  Total Checks: {status.checks_total}")
     print(f"  Failed Checks: {status.checks_failed}")
     print(f"  Current Drift: {status.drift_seconds:.3f}s")
@@ -160,9 +158,9 @@ async def demo_metrics_collection():
 
 async def demo_clock_sync():
     """Demonstrate clock synchronization (if available)."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("DEMO: Clock Synchronization")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     monitor = get_time_sync_monitor()
 
@@ -187,9 +185,9 @@ async def demo_clock_sync():
 
 async def main():
     """Run all demos."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Time Sync Monitor Demo - Phase 2.7")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Run demos
@@ -199,9 +197,9 @@ async def main():
         await demo_monitoring_with_callbacks()
         await demo_clock_sync()
 
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("Demo completed successfully!")
-        print("="*60 + "\n")
+        print("=" * 60 + "\n")
 
     except KeyboardInterrupt:
         print("\nDemo interrupted by user")

@@ -35,9 +35,7 @@ try:
     if numpy_version.startswith("2."):
         # NumPy 2.x has compatibility issues with stable_baselines3
         # Mark RL engine as unavailable WITHOUT importing it
-        logger.info(
-            f"NumPy {numpy_version} detected - RL engine disabled due to compatibility issues"
-        )
+        logger.debug("NumPy 2.x detected, RL engine disabled")
         _RL_ENGINE_AVAILABLE = False
 except ImportError:
     logger.debug("NumPy not available, RL engine disabled")
@@ -908,15 +906,17 @@ class ProfileDrivenTradingOrchestrator:
             request = BacktestOrchestrationRequest(
                 profile_id=profile.profile_id if profile else "test",
                 initial_capital=profile.initial_capital if profile else Decimal("100000"),
-                target_monthly_return_eur=profile.min_monthly_return_eur
-                if profile
-                else Decimal("2000"),
+                target_monthly_return_eur=(
+                    profile.min_monthly_return_eur if profile else Decimal("2000")
+                ),
                 strategy_name="momentum",
                 start_date=start_date,
                 end_date=end_date,
-                symbols=list(allocation.get("allocations", {}).keys())
-                if allocation
-                else ["AAPL", "MSFT"],
+                symbols=(
+                    list(allocation.get("allocations", {}).keys())
+                    if allocation
+                    else ["AAPL", "MSFT"]
+                ),
             )
 
             # Run backtest

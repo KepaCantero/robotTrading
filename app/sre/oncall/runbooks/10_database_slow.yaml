@@ -1,0 +1,167 @@
+---
+name: "Database Slow Performance"
+severity: "medium"
+trigger: "database_latency_p99 > 500ms OR slow_query_detected"
+category: "infrastructure"
+tags: ["database", "performance", "sql", "infrastructure"]
+estimated_duration_minutes: 20
+last_updated: "2026-01-28"
+version: "1.0"
+
+description: |
+  Respond to database performance issues. Slow queries can cascade
+  through the system causing API delays, trading issues, and
+  poor user experience.
+
+prerequisites:
+  - Database access
+  - Slow query log access
+  - Database monitoring tools
+  - Query analysis tools
+
+steps:
+  - title: "Verify Database Performance Issue"
+    description: "Confirm database is slow"
+    commands:
+      - "Check database latency metrics"
+      - "Review slow query log"
+      - "Identify which queries are slow"
+      - "Check if issue is widespread or specific"
+      - "Review connection pool status"
+    expected_outcome: "Database slowness confirmed"
+
+  - title: "Assess Impact"
+    description: "Determine impact on operations"
+    commands:
+      - "Check if trading operations affected"
+      - "Review API latency impact"
+      - "Check for failed queries"
+      - "Assess user impact"
+    expected_outcome: "Impact assessed"
+    decision_point:
+      condition: "critical_operations_affected"
+      true_branch: "Implement immediate mitigation"
+      false_branch: "Proceed with investigation"
+
+  - title: "Check Database Resources"
+    description: "Verify database has adequate resources"
+    commands:
+      - "Check CPU usage"
+      - "Check memory usage"
+      - "Check disk I/O"
+      - "Check network bandwidth"
+      - "Review connection count"
+    expected_outcome: "Resource status known"
+
+  - title: "Analyze Slow Queries"
+    description: "Identify problematic queries"
+    commands:
+      - "Pull top 10 slow queries"
+      - "Analyze query execution plans"
+      - "Check for missing indexes"
+      - "Look for full table scans"
+      - "Review query complexity"
+    expected_outcome: "Problematic queries identified"
+
+  - title: "Check Lock Contention"
+    description: "Look for locking issues"
+    commands:
+      - "Check for table locks"
+      - "Review row lock contention"
+      - "Check for long-running transactions"
+      - "Review deadlock logs"
+    expected_outcome: "Lock status understood"
+
+  - title: "Review Connection Pool"
+    description: "Check database connection management"
+    commands:
+      - "Review connection pool usage"
+      - "Check for connection exhaustion"
+      - "Review connection timeout settings"
+      - "Check for connection leaks"
+    expected_outcome: "Connection pool status known"
+
+  - title: "Implement Immediate Mitigation"
+    description: "Apply quick fixes to improve performance"
+    commands:
+      - "Kill long-running queries if safe"
+      - "Add missing indexes for critical queries"
+      - "Reduce connection pool size if overwhelmed"
+      - "Implement query caching if appropriate"
+      - "Scale database resources if possible"
+    expected_outcome: "Performance improved"
+
+  - title: "Optimize Slow Queries"
+    description: "Improve query performance"
+    commands:
+      - "Rewrite inefficient queries"
+      - "Add appropriate indexes"
+      - "Consider denormalization if helpful"
+      - "Implement query result caching"
+      - "Partition large tables if appropriate"
+    expected_outcome: "Queries optimized"
+
+  - title: "Scale Resources if Needed"
+    description: "Increase database capacity"
+    commands:
+      - "Increase database instance size"
+      - "Add read replicas for read-heavy workloads"
+      - "Implement connection pooling"
+      - "Consider sharding for very large datasets"
+    expected_outcome: "Database scaled"
+
+  - title: "Monitor Recovery"
+    description: "Verify performance returns to normal"
+    commands:
+      - "Monitor database latency metrics"
+      - "Review slow query log"
+      - "Check connection pool health"
+      - "Monitor for 30 minutes"
+    expected_outcome: "Performance normalized"
+
+  - title: "Document Incident"
+    description: "Record all aspects of incident"
+    commands:
+      - "Log performance incident"
+      - "Document root cause"
+      - "Record optimization steps"
+      - "Document scaling changes"
+      - "Create follow-up tasks"
+    expected_outcome: "Incident documented"
+
+post_actions:
+  - "Review database indexing strategy"
+  - "Implement regular query performance reviews"
+  - "Set up better performance monitoring"
+  - "Consider read replicas for scaling"
+  - "Update runbook with lessons learned"
+
+rollback_actions:
+  - title: "Revert Query Changes"
+    description: "If optimization caused issues"
+    commands:
+      - "Review recent query changes"
+      - "Revert to previous query patterns"
+      - "Monitor for stability"
+
+related_runbooks:
+  - "api_latency_spike.yaml"
+  - "database_connection_failure.yaml"
+  - "high_cpu_usage.yaml"
+
+metrics_to_track:
+  - "database_latency_p50"
+  - "database_latency_p95"
+  - "database_latency_p99"
+  - "slow_query_count"
+  - "connection_pool_usage"
+
+success_criteria:
+  - "Database latency normalized"
+  - "Slow queries eliminated or optimized"
+  - "Impact resolved"
+  - "Incident documented"
+
+escalation_path: "infrastructure"
+owner: "platform-team"
+review_frequency: "monthly"

@@ -14,6 +14,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Callable, Dict, List, Optional
 
+from app.core.trading_validators import TradingValidator
 from app.services.live_trading.broker_connector import (
     BrokerAccount,
     BrokerOrder,
@@ -31,7 +32,6 @@ from .alpaca_error_handler import (
     ErrorRecoveryStrategy,
     RetryConfig,
 )
-from app.core.trading_validators import TradingValidator
 
 logger = logging.getLogger(__name__)
 
@@ -183,7 +183,7 @@ class AlpacaAdapter:
             # For market orders, just validate quantity is positive
             if quantity <= 0:
                 raise ValueError(f"Quantity must be positive for market orders, got {quantity}")
-            logger.debug(f"Skipping position size validation for MARKET order (price unknown)")
+            logger.debug("Skipping position size validation for MARKET order (price unknown)")
         else:
             # For limit/stop orders, we can calculate position value
             if price is None:
@@ -195,7 +195,7 @@ class AlpacaAdapter:
                 self.validator.validate_position_size(
                     capital=available_capital,
                     position_size=position_value,
-                    max_position_percent=Decimal("0.25")
+                    max_position_percent=Decimal("0.25"),
                 )
             except ValueError as e:
                 logger.error(f"Position size validation failed: {e}")
@@ -209,14 +209,16 @@ class AlpacaAdapter:
                 self.validator.validate_stop_loss(
                     entry_price=estimated_price,
                     stop_loss=stop_price,
-                    side='long' if side == OrderSide.BUY else 'short'
+                    side='long' if side == OrderSide.BUY else 'short',
                 )
             except ValueError as e:
                 logger.error(f"Stop-loss validation failed: {e}")
                 raise ValueError(f"Stop-loss validation failed: {e}")
         else:
             # Log warning but don't fail (some strategies may not use SL)
-            logger.warning(f"Order for {symbol} placed without stop-loss - ensure risk is managed elsewhere")
+            logger.warning(
+                f"Order for {symbol} placed without stop-loss - ensure risk is managed elsewhere"
+            )
 
         try:
             # Map side to Alpaca format

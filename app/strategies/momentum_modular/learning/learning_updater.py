@@ -656,7 +656,6 @@ class LearningEngineUpdater:
 
             return True
 
-        except ImportError as e:
             # Dependencias faltantes - no es crítico, solo registramos y continuamos
             logger.debug(
                 f"⚠️ Reentrenamiento omitido: dependencias faltantes ({e}). "
@@ -753,48 +752,38 @@ class LearningEngineUpdater:
                 # Verificar scikit-learn
                 import sklearn  # noqa: F401
                 from sklearn.ensemble import RandomForestClassifier  # noqa: F401
-
-                return True
             elif engine_type == "deep":
-                # Verificar PyTorch o TensorFlow
-                try:
-                    import torch  # noqa: F401
-
-                    return True
-                except ImportError:
-                    try:
-                        import tensorflow as tf  # noqa: F401
-
-                        return True
-                    except ImportError:
-                        return False
+                # Verificar tensorflow/pytorch
+                import tensorflow  # noqa: F401
             elif engine_type == "reinforcement":
-                # Verificar stable-baselines3 y gym
-                try:
-                    import gym  # noqa: F401
-                    from stable_baselines3 import PPO  # noqa: F401
-
-                    return True
-                except ImportError:
-                    return False
-            return True  # Si no sabemos, intentamos
-        except (ValueError, TypeError, KeyError, AttributeError):
-            # Cualquier error al verificar significa que no puede entrenar
+                # Verificar gym/stable-baselines
+                import gym  # noqa: F401
+        except ImportError:
             return False
 
-    def _is_training_data_empty(self, training_data: Dict[str, Any]) -> bool:
-        """Verificar si los datos de entrenamiento están vacíos."""
-        if "features" in training_data:
-            df = training_data["features"]
-            return df is None or (hasattr(df, 'empty') and df.empty) or len(df) == 0
-        elif "sequences" in training_data:
+        return True
+
+    def _is_training_data_empty(self, training_data: dict) -> bool:
+        """
+        Verificar si los datos de entrenamiento están vacíos.
+
+        Args:
+            training_data: Diccionario con datos de entrenamiento
+
+        Returns:
+            True si los datos están vacíos, False en caso contrario
+        """
+        if not training_data:
+            return True
+
+        if "sequences" in training_data:
             arr = training_data["sequences"]
             return arr is None or len(arr) == 0
         elif "market_sequences" in training_data:
             lst = training_data["market_sequences"]
             return lst is None or len(lst) == 0
 
-        return True
+        return False
 
     def _convert_trade_history_to_trades(self) -> List:
         """

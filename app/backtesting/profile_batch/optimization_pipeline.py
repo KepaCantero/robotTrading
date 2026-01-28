@@ -24,9 +24,9 @@ from app.core.models.input_profile import InputProfile
 
 from .bayesian_optimizer import BayesianOptimizer
 from .optimization_validators import (
-    WalkForwardValidator,
     MonteCarloSimulator,
     OutOfSampleValidator,
+    WalkForwardValidator,
 )
 
 logger = logging.getLogger(__name__)
@@ -83,7 +83,7 @@ class OptimizationPipeline:
         optimization_config: Dict[str, Any],
         validation_config: Dict[str, Any],
         acceptance_criteria: Dict[str, Any],
-        profile_config_loader: ProfileConfigLoader | None = None
+        profile_config_loader: ProfileConfigLoader | None = None,
     ):
         """
         Initialize optimization pipeline.
@@ -117,7 +117,7 @@ class OptimizationPipeline:
         profile: InputProfile,
         config: Dict[str, Any],
         baseline_metrics: Dict[str, Any],
-        multi_strategy: bool = False
+        multi_strategy: bool = False,
     ) -> OptimizedStrategy:
         """
         Run complete optimization pipeline.
@@ -151,19 +151,13 @@ class OptimizationPipeline:
         optimized_metrics = optuna_results["best_metrics"]
 
         # Stage 2: Walk-forward validation
-        walk_forward_results = self.walk_forward_validator.validate(
-            profile, config, best_params
-        )
+        walk_forward_results = self.walk_forward_validator.validate(profile, config, best_params)
 
         # Stage 3: Monte Carlo
-        monte_carlo_results = self.monte_carlo_simulator.simulate(
-            profile, config, best_params
-        )
+        monte_carlo_results = self.monte_carlo_simulator.simulate(profile, config, best_params)
 
         # Stage 4: Out-of-sample
-        oos_results = self.out_of_sample_validator.validate(
-            profile, config, best_params
-        )
+        oos_results = self.out_of_sample_validator.validate(profile, config, best_params)
 
         # Generate comparison
         comparison = self._generate_comparison(
@@ -171,11 +165,13 @@ class OptimizationPipeline:
         )
 
         # Determine readiness
-        ready = all([
-            walk_forward_results.get("passed", False),
-            monte_carlo_results.get("passed", False),
-            oos_results.get("passed", False),
-        ])
+        ready = all(
+            [
+                walk_forward_results.get("passed", False),
+                monte_carlo_results.get("passed", False),
+                oos_results.get("passed", False),
+            ]
+        )
 
         recommendation = self._generate_recommendation(comparison, ready)
 
@@ -198,7 +194,9 @@ class OptimizationPipeline:
     ) -> BaselineOptimizationComparison:
         """Generate baseline vs optimization comparison."""
         significance_threshold = self.acceptance_criteria.get("significance_threshold", 5)
-        strong_significance_threshold = self.acceptance_criteria.get("strong_significance_threshold", 10)
+        strong_significance_threshold = self.acceptance_criteria.get(
+            "strong_significance_threshold", 10
+        )
         degradation_threshold = self.acceptance_criteria.get("degradation_threshold", -5)
 
         # Calculate improvements
@@ -211,9 +209,7 @@ class OptimizationPipeline:
         dd_imp = self._pct_improvement(
             abs(baseline.get("max_drawdown", 0)), abs(optimized.get("max_drawdown", 0))
         )
-        wr_imp = self._pct_improvement(
-            baseline.get("win_rate", 0), optimized.get("win_rate", 0)
-        )
+        wr_imp = self._pct_improvement(baseline.get("win_rate", 0), optimized.get("win_rate", 0))
 
         sharpe_sig = sharpe_imp > significance_threshold
         return_sig = return_imp > significance_threshold
@@ -276,7 +272,9 @@ class OptimizationPipeline:
             return 0.0
         return ((optimized - baseline) / abs(baseline)) * 100
 
-    def _generate_recommendation(self, comparison: BaselineOptimizationComparison, ready: bool) -> str:
+    def _generate_recommendation(
+        self, comparison: BaselineOptimizationComparison, ready: bool
+    ) -> str:
         """Generate final recommendation."""
         if not ready:
             return "NOT READY - Validation failed"

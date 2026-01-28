@@ -5,19 +5,15 @@ This module provides plotting functions to visualize the effects of fractional
 differentiation on time series data, including memory preservation and stationarity.
 """
 
-from typing import List, Optional, Tuple
 import warnings
+from typing import List, Optional, Tuple
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import seaborn as sns
-from scipy import stats
 
-from .fractional_differentiation import (
-    FractionalDifferentiation,
-    apply_frac_diff_to_dataframe
-)
+from .fractional_differentiation import FractionalDifferentiation
 
 warnings.filterwarnings('ignore')
 
@@ -31,7 +27,7 @@ def plot_frac_diff_comparison(
     series: pd.Series,
     d_values: List[float] = None,
     figsize: Tuple[int, int] = (14, 10),
-    title: str = "Fractional Differentiation Comparison"
+    title: str = "Fractional Differentiation Comparison",
 ) -> plt.Figure:
     """
     Plot series at different differentiation levels.
@@ -65,7 +61,7 @@ def plot_frac_diff_comparison(
 
         if d == 0.0:
             diff_series = series
-            label = f'Original (d=0.0)'
+            label = 'Original (d=0.0)'
         else:
             diff_series = fd.fractional_diff(series, d=d)
             label = f'Fractionally Differentiated (d={d:.1f})'
@@ -83,12 +79,13 @@ def plot_frac_diff_comparison(
             std_val = clean_series.std()
             ax.axhline(mean_val, color='red', linestyle='--', linewidth=1, alpha=0.5)
             ax.text(
-                0.02, 0.95,
+                0.02,
+                0.95,
                 f'μ={mean_val:.4f}, σ={std_val:.4f}',
                 transform=ax.transAxes,
                 fontsize=8,
                 verticalalignment='top',
-                bbox=dict(boxstyle='round', facecolor='white', alpha=0.8)
+                bbox=dict(boxstyle='round', facecolor='white', alpha=0.8),
             )
 
     axes[-1].set_xlabel('Time', fontsize=10)
@@ -99,9 +96,7 @@ def plot_frac_diff_comparison(
 
 
 def plot_weights(
-    d: float = 0.5,
-    threshold: float = 1e-5,
-    figsize: Tuple[int, int] = (12, 6)
+    d: float = 0.5, threshold: float = 1e-5, figsize: Tuple[int, int] = (12, 6)
 ) -> plt.Figure:
     """
     Plot fractional differentiation weights.
@@ -133,14 +128,11 @@ def plot_weights(
 
     # Plot log absolute weights
     axes[1].semilogy(
-        range(len(weights)),
-        np.abs(weights),
-        marker='o',
-        markersize=3,
-        linewidth=1.5,
-        alpha=0.7
+        range(len(weights)), np.abs(weights), marker='o', markersize=3, linewidth=1.5, alpha=0.7
     )
-    axes[1].axhline(threshold, color='red', linestyle='--', linewidth=1.5, label=f'Threshold={threshold}')
+    axes[1].axhline(
+        threshold, color='red', linestyle='--', linewidth=1.5, label=f'Threshold={threshold}'
+    )
     axes[1].set_title(f'Weight Decay (d={d})', fontweight='bold')
     axes[1].set_xlabel('Lag', fontsize=10)
     axes[1].set_ylabel('|Weight| (log scale)', fontsize=10)
@@ -155,7 +147,7 @@ def plot_memory_preservation(
     series: pd.Series,
     d_values: List[float] = None,
     max_lag: int = 20,
-    figsize: Tuple[int, int] = (12, 8)
+    figsize: Tuple[int, int] = (12, 8),
 ) -> plt.Figure:
     """
     Plot autocorrelation function to visualize memory preservation.
@@ -193,8 +185,10 @@ def plot_memory_preservation(
             continue
 
         # Calculate ACF
-        acf_values = [clean_series.autocorr(lag=lag) if lag < len(clean_series) else 0
-                      for lag in range(max_lag + 1)]
+        acf_values = [
+            clean_series.autocorr(lag=lag) if lag < len(clean_series) else 0
+            for lag in range(max_lag + 1)
+        ]
 
         # Plot ACF
         axes[0].plot(
@@ -204,7 +198,7 @@ def plot_memory_preservation(
             markersize=4,
             linewidth=2,
             alpha=0.7,
-            label=f'd={d:.1f}'
+            label=f'd={d:.1f}',
         )
 
     axes[0].axhline(0, color='black', linestyle='-', linewidth=0.5)
@@ -214,14 +208,10 @@ def plot_memory_preservation(
         linestyle='--',
         linewidth=1,
         alpha=0.5,
-        label='95% CI'
+        label='95% CI',
     )
     axes[0].axhline(
-        -1.96 / np.sqrt(len(series.dropna())),
-        color='red',
-        linestyle='--',
-        linewidth=1,
-        alpha=0.5
+        -1.96 / np.sqrt(len(series.dropna())), color='red', linestyle='--', linewidth=1, alpha=0.5
     )
     axes[0].set_title('Autocorrelation Function', fontweight='bold')
     axes[0].set_xlabel('Lag', fontsize=10)
@@ -259,7 +249,7 @@ def plot_stationarity_test(
     series: pd.Series,
     d_range: Tuple[float, float] = (0.0, 1.0),
     n_points: int = 21,
-    figsize: Tuple[int, int] = (12, 6)
+    figsize: Tuple[int, int] = (12, 6),
 ) -> plt.Figure:
     """
     Plot ADF test p-values across different d values.
@@ -298,7 +288,8 @@ def plot_stationarity_test(
             continue
 
         try:
-            from statsmodels.tsa.stattools import adfuller
+            from app.core.statsmodels_fallback import adfuller
+
             adf_result = adfuller(clean_series, maxlag=1)
             p_values.append(adf_result[1])
             adf_stats.append(adf_result[0])
@@ -315,7 +306,7 @@ def plot_stationarity_test(
         color='red',
         linestyle='--',
         linewidth=2,
-        label=f'Significance level (α={fd.adfuller_alpha})'
+        label=f'Significance level (α={fd.adfuller_alpha})',
     )
     axes[0].fill_between(
         d_values,
@@ -324,7 +315,7 @@ def plot_stationarity_test(
         where=[p < fd.adfuller_alpha for p in p_values],
         alpha=0.3,
         color='green',
-        label='Stationary region'
+        label='Stationary region',
     )
     axes[0].set_title('ADF Test P-Value vs Differentiation Order', fontweight='bold')
     axes[0].set_xlabel('Differentiation Order (d)', fontsize=10)
@@ -346,10 +337,7 @@ def plot_stationarity_test(
 
 
 def plot_optimal_d_search(
-    series: pd.Series,
-    min_d: float = 0.0,
-    max_d: float = 1.0,
-    figsize: Tuple[int, int] = (14, 8)
+    series: pd.Series, min_d: float = 0.0, max_d: float = 1.0, figsize: Tuple[int, int] = (14, 8)
 ) -> plt.Figure:
     """
     Visualize the optimal d search process.
@@ -370,10 +358,7 @@ def plot_optimal_d_search(
     """
     fd = FractionalDifferentiation()
     optimal_d, p_value, metadata = fd.find_optimal_d(
-        series,
-        min_d=min_d,
-        max_d=max_d,
-        method='grid'
+        series, min_d=min_d, max_d=max_d, method='grid'
     )
 
     fig = plt.figure(figsize=figsize)
@@ -390,7 +375,9 @@ def plot_optimal_d_search(
     ax2 = fig.add_subplot(gs[1, :])
     diff_series = fd.fractional_diff(series, d=optimal_d)
     ax2.plot(diff_series.index, diff_series.values, linewidth=1, alpha=0.8, color='green')
-    ax2.set_title(f'Fractionally Differentiated (d={optimal_d:.3f}, p={p_value:.4f})', fontweight='bold')
+    ax2.set_title(
+        f'Fractionally Differentiated (d={optimal_d:.3f}, p={p_value:.4f})', fontweight='bold'
+    )
     ax2.set_ylabel('Value', fontsize=9)
     ax2.grid(True, alpha=0.3)
 
@@ -398,11 +385,15 @@ def plot_optimal_d_search(
     ax3 = fig.add_subplot(gs[2, 0])
     d_values = [entry['d'] for entry in metadata['test_history']]
     p_values = [entry['p_value'] for entry in metadata['test_history']]
-    is_stationary = [entry['stationary'] for entry in metadata['test_history']]
+    [entry['stationary'] for entry in metadata['test_history']]
 
     ax3.plot(d_values, p_values, linewidth=2, marker='o', markersize=5)
-    ax3.axhline(fd.adfuller_alpha, color='red', linestyle='--', linewidth=2, label=f'α={fd.adfuller_alpha}')
-    ax3.scatter([optimal_d], [p_value], color='green', s=200, zorder=5, label=f'Optimal d={optimal_d:.3f}')
+    ax3.axhline(
+        fd.adfuller_alpha, color='red', linestyle='--', linewidth=2, label=f'α={fd.adfuller_alpha}'
+    )
+    ax3.scatter(
+        [optimal_d], [p_value], color='green', s=200, zorder=5, label=f'Optimal d={optimal_d:.3f}'
+    )
     ax3.set_title('Stationarity Search', fontweight='bold')
     ax3.set_xlabel('d', fontsize=9)
     ax3.set_ylabel('P-Value', fontsize=9)
@@ -425,7 +416,9 @@ def plot_optimal_d_search(
         memory_ratios.append(memory_metrics['memory_preservation_ratio'])
 
     ax4.plot(d_tested, memory_ratios, linewidth=2, marker='o', markersize=5, color='orange')
-    ax4.axvline(optimal_d, color='green', linestyle='--', linewidth=2, label=f'Optimal d={optimal_d:.3f}')
+    ax4.axvline(
+        optimal_d, color='green', linestyle='--', linewidth=2, label=f'Optimal d={optimal_d:.3f}'
+    )
     ax4.set_title('Memory Preservation', fontweight='bold')
     ax4.set_xlabel('d', fontsize=9)
     ax4.set_ylabel('Memory Ratio', fontsize=9)
@@ -442,7 +435,7 @@ def plot_multi_feature_analysis(
     df: pd.DataFrame,
     features: List[str] = None,
     d: float = 0.5,
-    figsize: Tuple[int, int] = (14, 10)
+    figsize: Tuple[int, int] = (14, 10),
 ) -> plt.Figure:
     """
     Analyze fractional differentiation across multiple features.
@@ -490,7 +483,9 @@ def plot_multi_feature_analysis(
 
         # Fractionally differenced series
         diff_series = fd.fractional_diff(series, d=d)
-        axes[idx, 1].plot(diff_series.index, diff_series.values, linewidth=1, alpha=0.8, color='green')
+        axes[idx, 1].plot(
+            diff_series.index, diff_series.values, linewidth=1, alpha=0.8, color='green'
+        )
         axes[idx, 1].set_title(f'{feature} - Fractionally Diff (d={d})', fontweight='bold')
         axes[idx, 1].set_ylabel('Value', fontsize=9)
         axes[idx, 1].grid(True, alpha=0.3)
@@ -500,9 +495,7 @@ def plot_multi_feature_analysis(
 
 
 def create_summary_report(
-    series: pd.Series,
-    d_values: List[float] = None,
-    save_path: Optional[str] = None
+    series: pd.Series, d_values: List[float] = None, save_path: Optional[str] = None
 ) -> plt.Figure:
     """
     Create a comprehensive summary report for fractional differentiation analysis.
@@ -567,7 +560,9 @@ def create_summary_report(
 
     colors = ['green' if s else 'red' for s in comparison['is_stationary']]
     ax4.bar(comparison['d'], comparison['p_value'], width=0.08, color=colors, alpha=0.7)
-    ax4.axhline(fd.adfuller_alpha, color='red', linestyle='--', linewidth=2, label=f'α={fd.adfuller_alpha}')
+    ax4.axhline(
+        fd.adfuller_alpha, color='red', linestyle='--', linewidth=2, label=f'α={fd.adfuller_alpha}'
+    )
     ax4.set_title('Stationarity Test Results', fontweight='bold', fontsize=11)
     ax4.set_xlabel('d', fontsize=10)
     ax4.set_ylabel('P-Value', fontsize=10)
@@ -582,7 +577,7 @@ def create_summary_report(
         linewidth=2,
         marker='o',
         markersize=6,
-        color='orange'
+        color='orange',
     )
     ax5.fill_between(comparison['d'], comparison['memory_preservation'], alpha=0.3)
     ax5.set_title('Memory Preservation', fontweight='bold', fontsize=11)
@@ -598,20 +593,22 @@ def create_summary_report(
     # Create summary table
     summary_data = []
     for _, row in comparison.iterrows():
-        summary_data.append([
-            f"d={row['d']:.1f}",
-            f"{row['p_value']:.4f}",
-            "Yes" if row['is_stationary'] else "No",
-            f"{row['memory_preservation']:.3f}",
-            f"{row['memory_loss_pct']:.1f}%"
-        ])
+        summary_data.append(
+            [
+                f"d={row['d']:.1f}",
+                f"{row['p_value']:.4f}",
+                "Yes" if row['is_stationary'] else "No",
+                f"{row['memory_preservation']:.3f}",
+                f"{row['memory_loss_pct']:.1f}%",
+            ]
+        )
 
     table = ax6.table(
         cellText=summary_data,
         colLabels=['d', 'P-Value', 'Stationary', 'Memory Ratio', 'Memory Loss'],
         cellLoc='center',
         loc='center',
-        colWidths=[0.15, 0.2, 0.15, 0.25, 0.25]
+        colWidths=[0.15, 0.2, 0.15, 0.25, 0.25],
     )
     table.auto_set_font_size(False)
     table.set_fontsize(10)
@@ -625,10 +622,7 @@ def create_summary_report(
     ax6.set_title('Summary Statistics', fontweight='bold', fontsize=11, y=0.9)
 
     fig.suptitle(
-        'Fractional Differentiation Analysis Report',
-        fontsize=16,
-        fontweight='bold',
-        y=0.995
+        'Fractional Differentiation Analysis Report', fontsize=16, fontweight='bold', y=0.995
     )
 
     if save_path:

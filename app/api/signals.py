@@ -6,6 +6,7 @@ FastAPI endpoints for signal scoring, evaluation, and management.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import datetime
 from decimal import Decimal

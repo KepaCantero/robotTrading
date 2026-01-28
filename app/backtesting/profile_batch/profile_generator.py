@@ -155,9 +155,7 @@ class ProfileGenerator:
 
                         profiles.append(profile)
 
-        expected_count = (
-            len(objectives) * len(risk_tolerances) * len(capital_tiers) * len(horizons)
-        )
+        expected_count = len(objectives) * len(risk_tolerances) * len(capital_tiers) * len(horizons)
         logger.info(
             f"Generated {len(profiles)} profile combinations "
             f"({len(objectives)} objectives × {len(risk_tolerances)} risks × "
@@ -179,16 +177,10 @@ class ProfileGenerator:
             return map_profile_tier_to_config(profile.capital_flag, target_format="spanish")
         except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.warning(f"Tier mapper failed for {profile.capital_flag}: {e}")
-            tier_map = {
-                "small": "bajo",
-                "medium": "medio",
-                "large": "alto"
-            }
+            tier_map = {"small": "bajo", "medium": "medio", "large": "alto"}
             return tier_map.get(profile.capital_flag, "medio")
 
-    def create_profile_config(
-        self, profile: InputProfile, output_dir: Path
-    ) -> Dict[str, Any]:
+    def create_profile_config(self, profile: InputProfile, output_dir: Path) -> Dict[str, Any]:
         """
         Create backtest configuration for a profile.
 
@@ -218,16 +210,23 @@ class ProfileGenerator:
                 config = {
                     "input": {
                         "initial_capital": float(profile.capital_initial),
-                        "start_date": self.config.get("backtest_period", {}).get("start_date", "2020-01-01"),
-                        "end_date": self.config.get("backtest_period", {}).get("end_date", "2023-12-31"),
-                        "symbols": self.config.get("symbols", ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]),
+                        "start_date": self.config.get("backtest_period", {}).get(
+                            "start_date", "2020-01-01"
+                        ),
+                        "end_date": self.config.get("backtest_period", {}).get(
+                            "end_date", "2023-12-31"
+                        ),
+                        "symbols": self.config.get(
+                            "symbols", ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]
+                        ),
                     },
                     "modules": {
                         "enabled_strategies": enabled_strategies,
                         **self.config.get("modules", {}),
                     },
                     "risk_management": {
-                        "max_position_size": profile.capital_initial * Decimal(str(risk_params.get("max_position_size", 0.20))),
+                        "max_position_size": profile.capital_initial
+                        * Decimal(str(risk_params.get("max_position_size", 0.20))),
                         "max_sector_allocation": risk_params.get("max_sector_allocation", 0.30),
                         "leverage": risk_params.get("leverage", 1.0),
                         "risk_profile": risk_params.get("risk_profile", 4),
@@ -268,7 +267,9 @@ class ProfileGenerator:
         config = {
             "input": {
                 "initial_capital": float(profile.capital_initial),
-                "start_date": self.config.get("backtest_period", {}).get("start_date", "2020-01-01"),
+                "start_date": self.config.get("backtest_period", {}).get(
+                    "start_date", "2020-01-01"
+                ),
                 "end_date": self.config.get("backtest_period", {}).get("end_date", "2023-12-31"),
                 "symbols": self.config.get("symbols", ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]),
             },

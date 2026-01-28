@@ -1,0 +1,170 @@
+---
+name: "Service Restarted Unexpectedly"
+severity: "high"
+trigger: "service_restart_detected OR crash_detected"
+category: "infrastructure"
+tags: ["service", "crash", "infrastructure", "reliability"]
+estimated_duration_minutes: 20
+last_updated: "2026-01-28"
+version: "1.0"
+
+description: |
+  Respond to unexpected service restarts. Unplanned restarts can
+  indicate crashes, OOM kills, or other infrastructure issues.
+  Quick investigation is needed to prevent recurrence.
+
+prerequisites:
+  - Service logs access
+  - Infrastructure monitoring
+  - Container orchestration access (Kubernetes, etc.)
+  - Crash dump analysis tools
+
+steps:
+  - title: "Verify Service Restart"
+    description: "Confirm service restarted unexpectedly"
+    commands:
+      - "Check service status dashboard"
+      - "Review restart alerts"
+      - "Identify which services restarted"
+      - "Check restart time and frequency"
+      - "Determine if restart was graceful or crash"
+    expected_outcome: "Service restart confirmed and characterized"
+
+  - title: "Assess Service Impact"
+    description: "Determine impact on operations"
+    commands:
+      - "Check if service is currently running"
+      - "Assess if trading operations affected"
+      - "Check for data loss or corruption"
+      - "Review if any positions at risk"
+      - "Check for interrupted trades"
+    expected_outcome: "Impact assessed"
+    decision_point:
+      condition: "critical_service_down OR trading_affected"
+      true_branch: "Escalate immediately, focus on recovery"
+      false_branch: "Investigate root cause"
+
+  - title: "Ensure Service Recovery"
+    description: "Make sure service is running and stable"
+    commands:
+      - "Verify service started successfully"
+      - "Check service health endpoints"
+      - "Monitor service metrics for 5 minutes"
+      - "Verify all dependencies connected"
+      - "Check for any startup errors"
+    expected_outcome: "Service confirmed running"
+
+  - title: "Review Service Logs"
+    description: "Analyze logs for restart cause"
+    commands:
+      - "Pull logs from before restart"
+      - "Check for OOM (Out of Memory) errors"
+      - "Look for segmentation faults"
+      - "Check for panic or exception logs"
+      - "Review application error logs"
+    expected_outcome: "Logs reviewed and potential causes identified"
+
+  - title: "Check System Resources"
+    description: "Verify if resource constraints caused restart"
+    commands:
+      - "Check memory usage before restart"
+      - "Check CPU usage patterns"
+      - "Review disk space and I/O"
+      - "Check for file descriptor limits"
+      - "Review container limits if applicable"
+    expected_outcome: "Resource status understood"
+
+  - title: "Analyze Crash Dump (if available)"
+    description: "Examine crash dump for root cause"
+    commands:
+      - "Locate crash dump file"
+      - "Analyze stack trace"
+      - "Identify crashing thread/function"
+      - "Review memory state if OOM"
+      - "Check for signal received (SIGKILL, etc.)"
+    expected_outcome: "Crash cause understood"
+
+  - title: "Determine Root Cause"
+    description: "Identify why service restarted"
+    commands:
+      - "Correlate findings from logs, resources, and dumps"
+      - "Identify most likely cause"
+      - "Check if similar incidents occurred before"
+      - "Review recent code or config changes"
+    expected_outcome: "Root cause identified"
+
+  - title: "Implement Immediate Fix"
+    description: "Apply fix to prevent immediate recurrence"
+    commands:
+      - "Increase resource limits if OOM"
+      - "Fix obvious bugs if crash identified"
+      - "Revert recent changes if suspicious"
+      - "Add temporary monitoring"
+      - "Restart service with fix"
+    expected_outcome: "Fix implemented"
+
+  - title: "Monitor for Stability"
+    description: "Ensure service stays stable"
+    commands:
+      - "Monitor service for 1 hour"
+      - "Check for memory leaks"
+      - "Verify no performance degradation"
+      - "Review error rates"
+      - "Ensure no more restarts"
+    expected_outcome: "Service confirmed stable"
+
+  - title: "Document Incident"
+    description: "Complete incident documentation"
+    commands:
+      - "Log restart incident"
+      - "Document root cause analysis"
+      - "Record impact and duration"
+      - "Document fix and monitoring"
+      - "Create follow-up tasks for permanent fix"
+    expected_outcome: "Incident fully documented"
+
+  - title: "Create Follow-up Actions"
+    description: "Plan permanent prevention measures"
+    commands:
+      - "Code fix if bug identified"
+      - "Infrastructure improvements"
+      - "Better monitoring and alerting"
+      - "Load testing if resource issue"
+      - "Update runbook with lessons learned"
+    expected_outcome: "Prevention plan created"
+
+post_actions:
+  - "Review service reliability"
+  - "Improve resource monitoring"
+  - "Consider graceful shutdown improvements"
+  - "Review crash recovery procedures"
+  - "Add automated crash analysis"
+
+rollback_actions:
+  - title: "Revert Changes"
+    description: "If recent changes caused issue"
+    commands:
+      - "Identify suspicious changes"
+      - "Revert to previous version"
+      - "Monitor for stability"
+
+related_runbooks:
+  - "oom_detected.yaml"
+  - "service_crash.yaml"
+  - "high_memory_usage.yaml"
+
+metrics_to_track:
+  - "service_restart_count"
+  - "service_uptime"
+  - "memory_usage_percentage"
+  - "crash_rate"
+
+success_criteria:
+  - "Service stable with no restarts"
+  - "Root cause identified"
+  - "Fix implemented"
+  - "Prevention measures planned"
+
+escalation_path: "infrastructure"
+owner: "platform-team"
+review_frequency: "as_needed"

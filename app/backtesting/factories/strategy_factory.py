@@ -108,10 +108,10 @@ class StrategyFactory:
         # Default thresholds if not specified
         if not thresholds:
             thresholds = {
-                'buy_threshold': 0.7,      # Buy when signal > 70%
-                'sell_threshold': 0.3,     # Sell when signal < 30%
-                'stop_loss': -0.05,        # -5% stop loss
-                'take_profit': 0.10,       # +10% take profit
+                'buy_threshold': 0.7,  # Buy when signal > 70%
+                'sell_threshold': 0.3,  # Sell when signal < 30%
+                'stop_loss': -0.05,  # -5% stop loss
+                'take_profit': 0.10,  # +10% take profit
             }
 
         return thresholds

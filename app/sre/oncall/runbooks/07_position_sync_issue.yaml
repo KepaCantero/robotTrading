@@ -1,0 +1,166 @@
+---
+name: "Position Sync Issue"
+severity: "high"
+trigger: "position_mismatch_detected OR sync_failure"
+category: "trading"
+tags: ["position", "sync", "broker", "reconciliation"]
+estimated_duration_minutes: 25
+last_updated: "2026-01-28"
+version: "1.0"
+
+description: |
+  Respond to position synchronization issues. When local position
+  records don't match broker records, immediate action is needed
+  to prevent trading on incorrect position data.
+
+prerequisites:
+  - Broker API access
+  - Position reconciliation tools
+  - Database access
+  - Understanding of position tracking
+
+steps:
+  - title: "Verify Position Mismatch"
+    description: "Confirm there is a position discrepancy"
+    commands:
+      - "Run position reconciliation report"
+      - "Identify affected symbols/accounts"
+      - "Calculate discrepancy size"
+      - "Determine mismatch type (quantity, price, etc.)"
+    expected_outcome: "Position mismatch confirmed and quantified"
+
+  - title: "Assess Trading Risk"
+    description: "Determine risk level of the mismatch"
+    commands:
+      - "Check if positions are currently being traded"
+      - "Calculate potential exposure from mismatch"
+      - "Assess if any strategies are affected"
+      - "Check for any open orders on affected symbols"
+    expected_outcome: "Risk level assessed"
+    decision_point:
+      condition: "high_risk_mismatch OR actively_trading_affected_symbols"
+      true_branch: "Halt trading immediately"
+      false_branch: "Proceed with investigation"
+
+  - title: "Halt Trading if High Risk"
+    description: "Stop trading to prevent further issues"
+    commands:
+      - "Disable trading for affected symbols"
+      - "Cancel pending orders if appropriate"
+      - "Notify trading team"
+      - "Update status dashboard"
+    expected_outcome: "Trading halted for affected symbols"
+
+  - title: "Identify Mismatch Source"
+    description: "Determine why positions are out of sync"
+    commands:
+      - "Check recent trade execution logs"
+      - "Review position update logs"
+      - "Check for failed updates"
+      - "Review broker API response logs"
+      - "Check for network issues during updates"
+    expected_outcome: "Root cause identified"
+
+  - title: "Determine Correct Position"
+    description: "Establish which position record is correct"
+    commands:
+      - "Query broker for current positions"
+      - "Check broker trade history"
+      - "Review local trade execution records"
+      - "Cross-check with multiple sources"
+      - "Calculate expected position from trades"
+    expected_outcome: "Correct position determined"
+
+  - title: "Correct Local Records"
+    description: "Update local position records to match broker"
+    commands:
+      - "Update local position database"
+      - "Recalculate portfolio metrics"
+      - "Update strategy state if needed"
+      - "Verify all corrections applied"
+    expected_outcome: "Local records corrected"
+
+  - title: "Verify Correction"
+    description: "Ensure positions are now in sync"
+    commands:
+      - "Run reconciliation again"
+      - "Verify all symbols match"
+      - "Check portfolio calculations"
+      - "Confirm no new mismatches"
+    expected_outcome: "Positions fully synced"
+
+  - title: "Resume Trading When Safe"
+    description: "Carefully resume trading if halted"
+    commands:
+      - "Verify sync stability for 15 minutes"
+      - "Run test trades if appropriate"
+      - "Gradually resume trading"
+      - "Monitor first few trades closely"
+    expected_outcome: "Trading resumed safely"
+
+  - title: "Investigate Root Cause"
+    description: "Deep dive into why sync failed"
+    commands:
+      - "Review sync failure logs"
+      - "Check for API errors during sync"
+      - "Review sync code for bugs"
+      - "Check for race conditions"
+      - "Review database transaction logs"
+    expected_outcome: "Root cause understood"
+
+  - title: "Implement Preventive Measures"
+    description: "Add safeguards to prevent recurrence"
+    commands:
+      - "Improve sync error handling"
+      - "Add sync verification checks"
+      - "Implement automatic retry logic"
+      - "Add sync failure alerts"
+      - "Consider code fixes if bug found"
+    expected_outcome: "Preventive measures implemented"
+
+  - title: "Document Incident"
+    description: "Complete incident documentation"
+    commands:
+      - "Log all mismatch details"
+      - "Document impact and risk"
+      - "Record resolution steps"
+      - "Document preventive measures"
+      - "Create follow-up tasks"
+    expected_outcome: "Incident fully documented"
+
+post_actions:
+  - "Review position sync reliability"
+  - "Consider adding additional sync checks"
+  - "Improve monitoring and alerting"
+  - "Review sync frequency and strategy"
+  - "Update runbook with lessons learned"
+
+rollback_actions:
+  - title: "Revert Position Correction"
+    description: "If correction was wrong"
+    commands:
+      - "Halt trading immediately"
+      - "Re-verify correct position"
+      - "Re-correct positions"
+      - "Investigate why correction was wrong"
+
+related_runbooks:
+  - "broker_api_failure.yaml"
+  - "trade_execution_failure.yaml"
+  - "data_reconciliation.yaml"
+
+metrics_to_track:
+  - "position_sync_status"
+  - "position_mismatch_count"
+  - "sync_latency_seconds"
+  - "sync_failure_rate"
+
+success_criteria:
+  - "Positions fully synced with broker"
+  - "Root cause identified"
+  - "Preventive measures implemented"
+  - "Incident documented"
+
+escalation_path: "trading_ops"
+owner: "trading-ops"
+review_frequency: "monthly"

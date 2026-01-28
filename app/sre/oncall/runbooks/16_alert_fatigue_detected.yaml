@@ -1,0 +1,119 @@
+---
+name: "Alert Fatigue Detected"
+severity: "low"
+trigger: "alert_volume_high OR low_alert_acknowledgement_rate"
+category: "monitoring"
+tags: ["alerts", "monitoring", "sre-practices"]
+estimated_duration_minutes: 30
+last_updated: "2026-01-28"
+version: "1.0"
+
+description: |
+  Address alert fatigue. High alert volumes can cause important
+  alerts to be missed and increase on-call stress.
+
+prerequisites:
+  - Alert system access
+  - Monitoring dashboard access
+  - Alert configuration access
+
+steps:
+  - title: "Verify Alert Fatigue"
+    description: "Confirm alert fatigue is occurring"
+    commands:
+      - "Review alert volume metrics"
+      - "Check alert acknowledgment rate"
+      - "Review alert response times"
+      - "Survey on-call team"
+    expected_outcome: "Alert fatigue confirmed"
+
+  - title: "Analyze Alert Patterns"
+    description: "Understand alert characteristics"
+    commands:
+      - "Identify top firing alerts"
+      - "Check for alert storms"
+      - "Review alert severity distribution"
+      - "Analyze alert timing patterns"
+      - "Check for repetitive alerts"
+    expected_outcome: "Alert patterns understood"
+
+  - title: "Identify Noisy Alerts"
+    description: "Find alerts causing most fatigue"
+    commands:
+      - "List most frequent alerts"
+      - "Check alert signal-to-noise ratio"
+      - "Review alert thresholds"
+      - "Identify false positive sources"
+    expected_outcome: "Problematic alerts identified"
+
+  - title: "Adjust Alert Thresholds"
+    description: "Tune alert sensitivity"
+    commands:
+      - "Review and adjust low-value alerts"
+      - "Increase thresholds for noisy alerts"
+      - "Add alert cooldown periods"
+      - "Implement alert aggregation"
+      - "Use smarter alert conditions"
+    expected_outcome: "Alert thresholds optimized"
+
+  - title: "Improve Alert Quality"
+    description: "Enhance alert usefulness"
+    commands:
+      - "Add context to alerts"
+      - "Include runbook links in alerts"
+      - "Improve alert messages"
+      - "Add actionable information"
+      - "Implement alert correlation"
+    expected_outcome: "Alert quality improved"
+
+  - title: "Implement Alert Suppression"
+    description: "Suppress non-actionable alerts"
+    commands:
+      - "Suppress known issues"
+      - "Implement maintenance windows"
+      - "Use alert dependencies"
+      - "Suppress during planned maintenance"
+    expected_outcome: "Noise reduced"
+
+  - title: "Review On-call Rotation"
+    description: "Ensure rotation is sustainable"
+    commands:
+      - "Review on-call burden"
+      - "Check rotation fairness"
+      - "Assess team capacity"
+      - "Consider rotation adjustments"
+    expected_outcome: "Rotation reviewed"
+
+  - title: "Document Changes"
+    description: "Record alert improvements"
+    commands:
+      - "Document alert changes"
+      - "Communicate changes to team"
+      - "Update runbooks"
+      - "Track alert metrics"
+    expected_outcome: "Changes documented"
+
+post_actions:
+  - "Monitor alert metrics for 2 weeks"
+  - "Solicit team feedback"
+  - "Continue alert tuning"
+  - "Share lessons with other teams"
+
+related_runbooks:
+  - "monitoring_failure.yaml"
+  - "oncall_burnout.yaml"
+
+metrics_to_track:
+  - "alert_volume_per_day"
+  - "alert_acknowledgement_rate"
+  - "false_positive_rate"
+  - "mean_time_to_acknowledge"
+
+success_criteria:
+  - "Alert volume reduced"
+  - "Alert quality improved"
+  - "Team feedback positive"
+
+escalation_path: "sre"
+owner: "sre-team"
+review_frequency: "monthly"

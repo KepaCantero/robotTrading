@@ -10,10 +10,8 @@ Comprehensive validation system including:
 
 import json
 import logging
-import random
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from decimal import Decimal
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -22,7 +20,7 @@ import yaml
 
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig
-from app.backtesting.realistic_data_generator import RealisticDataGenerator, MarketRegime
+from app.backtesting.realistic_data_generator import MarketRegime, RealisticDataGenerator
 from app.models.market_data import Quote
 
 logger = logging.getLogger(__name__)
@@ -284,9 +282,7 @@ class SyntheticDataGenerator:
         Returns:
             List of Quote objects with realistic OHLCV data
         """
-        logger.info(
-            f"Generating {n_days} days of realistic data (replacing simplistic GBM)"
-        )
+        logger.info(f"Generating {n_days} days of realistic data (replacing simplistic GBM)")
 
         # Use realistic generator with regime switching
         return self.realistic_generator.generate_realistic_quotes(
@@ -323,8 +319,7 @@ class SyntheticDataGenerator:
             List of Quote objects
         """
         logger.info(
-            f"Generating {n_days} days of realistic sideways data "
-            f"(replacing simplistic OU)"
+            f"Generating {n_days} days of realistic sideways data " f"(replacing simplistic OU)"
         )
 
         return self.realistic_generator.generate_realistic_quotes(
@@ -442,10 +437,7 @@ class SyntheticDataGenerator:
         Returns:
             List of Quote objects with high volatility
         """
-        logger.info(
-            f"Generating {n_days} days of high volatility scenario "
-            f"(volatile regime)"
-        )
+        logger.info(f"Generating {n_days} days of high volatility scenario " f"(volatile regime)")
 
         return self.realistic_generator.generate_realistic_quotes(
             symbol=symbol,
@@ -474,10 +466,7 @@ class SyntheticDataGenerator:
         Returns:
             List of Quote objects with uptrend
         """
-        logger.info(
-            f"Generating {n_days} days of trending scenario "
-            f"(bull regime)"
-        )
+        logger.info(f"Generating {n_days} days of trending scenario " f"(bull regime)")
 
         return self.realistic_generator.generate_realistic_quotes(
             symbol=symbol,
@@ -539,8 +528,7 @@ class SyntheticDataGenerator:
         This method simply wraps the realistic generator.
         """
         logger.warning(
-            "_prices_to_quotes is deprecated. "
-            "Using realistic data generator instead."
+            "_prices_to_quotes is deprecated. " "Using realistic data generator instead."
         )
 
         # Use realistic generator for proper OHLC
@@ -785,9 +773,9 @@ class WalkForwardValidator:
         # IS/OOS Analysis (Req #2)
         is_oos_analysis = {
             "avg_is_return": sum(is_returns) / len(is_returns) if is_returns else 0.0,
-            "avg_is_sharpe": sum(is_sharpe_ratios) / len(is_sharpe_ratios)
-            if is_sharpe_ratios
-            else 0.0,
+            "avg_is_sharpe": (
+                sum(is_sharpe_ratios) / len(is_sharpe_ratios) if is_sharpe_ratios else 0.0
+            ),
             "avg_is_drawdown": sum(is_drawdowns) / len(is_drawdowns) if is_drawdowns else 0.0,
         }
 

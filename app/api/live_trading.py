@@ -12,11 +12,13 @@ Endpoints:
 """
 
 from __future__ import annotations
+
 import logging
 from datetime import datetime, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from requests.exceptions import ConnectionError, HTTPError, RequestException
 
 from app.services.live_trading.account_synchronizer import (
     AccountSynchronizer,
@@ -34,8 +36,6 @@ from app.services.live_trading.trading_bridge_orchestrator import (
     TradingBridgeOrchestrator,
     get_trading_bridge_orchestrator,
 )
-import requests
-from requests.exceptions import ConnectionError, HTTPError, RequestException
 
 logger = logging.getLogger(__name__)
 

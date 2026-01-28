@@ -6,6 +6,7 @@ permitiendo hot-swapping y gestión dinámica de estrategias.
 """
 
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal

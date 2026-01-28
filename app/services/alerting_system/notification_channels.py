@@ -106,19 +106,10 @@ class EmailChannel(NotificationChannel):
             logger.debug(f"Email channel disabled: {target.endpoint}")
             return False
 
-        try:
-            from email.mime.multipart import MIMEMultipart
-            from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+        from email.mime.text import MIMEText
 
-            import aiosmtplib
-        except ImportError:
-            logger.warning("aiosmtplib not installed. Run: pip install aiosmtplib")
-            # Fallback: log the notification
-            logger.info(
-                f"[EMAIL SIMULATION] To: {target.endpoint}, "
-                f"Subject: {payload.rule_name}, Message: {payload.message}"
-            )
-            return True
+        import aiosmtplib
 
         try:
             # Extract SMTP configuration from target headers

@@ -12,16 +12,16 @@ Key features:
 - Multi-currency P&L tracking
 """
 
+import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
-from app.core.decimal_utils import to_decimal, safe_decimal_divide, calculate_percentage
+from app.core.decimal_utils import calculate_percentage, safe_decimal_divide, to_decimal
 from app.core.timezone_utils import utc_now
 from app.models.portfolio import Portfolio, Position
-
 
 logger = logging.getLogger(__name__)
 
@@ -119,8 +119,7 @@ class ForexExposureReport:
             "overall_hedge_ratio": str(self.overall_hedge_ratio),
             "fx_pnl_eur": str(self.fx_pnl_eur),
             "by_currency": {
-                currency: exposure.to_dict()
-                for currency, exposure in self.by_currency.items()
+                currency: exposure.to_dict() for currency, exposure in self.by_currency.items()
             },
             "hedging_recommendations": self.hedging_recommendations,
             "risk_level": self.risk_level,
@@ -160,10 +159,10 @@ class ForexRiskTracker:
 
     # Risk level thresholds for unhedged exposure
     RISK_THRESHOLDS = {
-        "low": Decimal("0.05"),      # < 5% of portfolio
-        "medium": Decimal("0.10"),   # 5-10% of portfolio
-        "high": Decimal("0.20"),     # 10-20% of portfolio
-        "critical": Decimal("0.20"), # > 20% of portfolio
+        "low": Decimal("0.05"),  # < 5% of portfolio
+        "medium": Decimal("0.10"),  # 5-10% of portfolio
+        "high": Decimal("0.20"),  # 10-20% of portfolio
+        "critical": Decimal("0.20"),  # > 20% of portfolio
     }
 
     def __init__(
@@ -247,7 +246,9 @@ class ForexRiskTracker:
         Returns:
             Dict mapping currency to exposure info
         """
-        logger.debug(f"Calculating FX exposure for portfolio with {len(portfolio.positions)} positions")
+        logger.debug(
+            f"Calculating FX exposure for portfolio with {len(portfolio.positions)} positions"
+        )
 
         # Get current FX rates
         await self._update_fx_rates()
@@ -298,7 +299,9 @@ class ForexRiskTracker:
             net_exposure_eur = exposure_eur - hedge_eur
             hedge_ratio = safe_decimal_divide(hedge_eur, exposure_eur, Decimal("0"))
             unrealized_pnl_eur = data["unrealized_pnl_eur"]
-            unrealized_pnl_pct = calculate_percentage(unrealized_pnl_eur, exposure_eur) or Decimal("0")
+            unrealized_pnl_pct = calculate_percentage(unrealized_pnl_eur, exposure_eur) or Decimal(
+                "0"
+            )
 
             result[currency] = CurrencyExposure(
                 currency=currency,
@@ -382,7 +385,9 @@ class ForexRiskTracker:
                     "recommended_tenor_months": 3,
                     "forward_rate": str(forward_rate) if forward_rate else None,
                     "estimated_cost_eur": str(cost_eur) if cost_eur else None,
-                    "cost_bps": str(calculate_percentage(cost_eur, net_exposure)) if cost_eur else None,
+                    "cost_bps": (
+                        str(calculate_percentage(cost_eur, net_exposure)) if cost_eur else None
+                    ),
                     "reason": (
                         f"Unhedged {direction} exposure of {net_exposure:,.2f} {self.base_currency} "
                         f"to {currency}. Current hedge ratio: {exposure.hedge_ratio:.1%}"

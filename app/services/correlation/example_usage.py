@@ -8,10 +8,10 @@ to calculate real correlation from historical prices.
 import asyncio
 from decimal import Decimal
 
+from app.models.portfolio import AssetClass, Portfolio, Position
 from app.services.correlation.analyzer import CorrelationAnalyzer, CorrelationConfig
-from app.services.portfolio_risk_manager import PortfolioRiskManager
 from app.services.market_data_service import MarketDataService
-from app.models.portfolio import Portfolio, Position, AssetClass
+from app.services.portfolio_risk_manager import PortfolioRiskManager
 
 
 async def example_basic_usage():
@@ -121,8 +121,7 @@ def example_with_portfolio_risk_manager():
 
     # Check for correlation violations
     correlation_violations = [
-        v for v in risk_assessment['violations']
-        if v['type'] == 'correlation'
+        v for v in risk_assessment['violations'] if v['type'] == 'correlation'
     ]
 
     if correlation_violations:

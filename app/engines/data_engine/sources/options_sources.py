@@ -5,19 +5,14 @@ Fuentes soportadas:
 - Volatility surfaces (Polygon, IBKR, etc.)
 """
 
+import asyncio
 import logging
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-try:
-    import aiohttp
-
-    AIOHTTP_AVAILABLE = True
-except ImportError:
-    AIOHTTP_AVAILABLE = False
-    logger = logging.getLogger(__name__)
-    logger.warning("aiohttp no disponible. Fuentes de opciones no funcionarán.")
+# REQUIRED: No fallbacks - aiohttp is required for async HTTP requests
+import aiohttp  # noqa: F401
 
 from .base_source import BaseDataSource
 
@@ -63,19 +58,14 @@ class OptionsVolatilitySource(BaseDataSource):
                 self.is_connected = False
                 return False
 
-            if not AIOHTTP_AVAILABLE:
-                logger.error("aiohttp no disponible. OptionsSource no puede conectarse.")
-                self.last_error = "aiohttp no disponible"
-                return False
-
             self.session = aiohttp.ClientSession()
             self.is_connected = True
             logger.info(f"Conectado a Options Volatility Source ({self.provider})")
             return True
-        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        except (ConnectionError, TimeoutError) as e:
             logger.error(f"Error conectando a Options Source: {e}")
             self.last_error = str(e)
-            return False
+            raise
 
     async def disconnect(self) -> bool:
         """Desconectar de fuente de opciones."""

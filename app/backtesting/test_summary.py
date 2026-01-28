@@ -64,7 +64,6 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import BaseModel, Field
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -97,7 +96,9 @@ class InputDataSummary(BaseModel):
     data_points: int = Field(..., ge=0, description="Number of data points")
     market_regime: str = Field(..., description="Market regime description")
     data_source: str = Field(..., description="Data source description")
-    price_range: Optional[Tuple[Decimal, Decimal]] = Field(None, description="Price range (min, max)")
+    price_range: Optional[Tuple[Decimal, Decimal]] = Field(
+        None, description="Price range (min, max)"
+    )
     volume_stats: Optional[Dict[str, Decimal]] = Field(None, description="Volume statistics")
     volatility: Optional[Decimal] = Field(None, description="Volatility measure")
     notes: List[str] = Field(default_factory=list, description="Additional notes about data")
@@ -111,8 +112,12 @@ class TestConfig(BaseModel):
     slippage: Decimal = Field(..., ge=0, description="Slippage percentage")
     strategy: str = Field(..., description="Strategy name")
     strategy_params: Dict[str, Any] = Field(default_factory=dict, description="Strategy parameters")
-    risk_management: Optional[Dict[str, Decimal]] = Field(None, description="Risk management settings")
-    additional_params: Dict[str, Any] = Field(default_factory=dict, description="Additional parameters")
+    risk_management: Optional[Dict[str, Decimal]] = Field(
+        None, description="Risk management settings"
+    )
+    additional_params: Dict[str, Any] = Field(
+        default_factory=dict, description="Additional parameters"
+    )
 
 
 class OutputMetrics(BaseModel):
@@ -193,7 +198,9 @@ class TestSummaryReport(BaseModel):
 
     # Additional information
     notes: List[str] = Field(default_factory=list, description="Additional notes")
-    attachments: List[str] = Field(default_factory=list, description="Paths to attachments (charts, etc)")
+    attachments: List[str] = Field(
+        default_factory=list, description="Paths to attachments (charts, etc)"
+    )
 
 
 # ============================================================================
@@ -542,45 +549,57 @@ class TestSummaryReporter:
         ]
 
         # Metadata section
-        lines.extend([
-            "## METADATA",
-            "-" * 40,
-            f"Test Name:        {report.metadata.test_name}",
-            f"Description:      {report.metadata.test_description}",
-            f"Test File:        {report.metadata.test_file}",
-            f"Test Type:        {report.metadata.test_type}",
-            f"Test ID:          {report.metadata.test_id}",
-            f"Created:          {report.metadata.created_at.strftime('%Y-%m-%d %H:%M:%S')}",
-            "",
-        ])
+        lines.extend(
+            [
+                "## METADATA",
+                "-" * 40,
+                f"Test Name:        {report.metadata.test_name}",
+                f"Description:      {report.metadata.test_description}",
+                f"Test File:        {report.metadata.test_file}",
+                f"Test Type:        {report.metadata.test_type}",
+                f"Test ID:          {report.metadata.test_id}",
+                f"Created:          {report.metadata.created_at.strftime('%Y-%m-%d %H:%M:%S')}",
+                "",
+            ]
+        )
 
         # Status section
         status_icon = "✓" if report.passed else "✗"
         status_text = "PASSED" if report.passed else "FAILED"
-        lines.extend([
-            "## TEST STATUS",
-            "-" * 40,
-            f"{status_icon} Status:          {status_text}",
-            f"Reason:           {report.pass_reason or 'N/A'}",
-            f"Duration:         {report.duration_seconds:.2f} seconds" if report.duration_seconds else "Duration:         N/A",
-            "",
-        ])
+        lines.extend(
+            [
+                "## TEST STATUS",
+                "-" * 40,
+                f"{status_icon} Status:          {status_text}",
+                f"Reason:           {report.pass_reason or 'N/A'}",
+                (
+                    f"Duration:         {report.duration_seconds:.2f} seconds"
+                    if report.duration_seconds
+                    else "Duration:         N/A"
+                ),
+                "",
+            ]
+        )
 
         # Input data section
-        lines.extend([
-            "## INPUT DATA",
-            "-" * 40,
-            f"Symbols:          {', '.join(report.input_data.symbols)}",
-            f"Date Range:       {report.input_data.date_range[0].strftime('%Y-%m-%d')} to "
-            f"{report.input_data.date_range[1].strftime('%Y-%m-%d')}",
-            f"Data Points:      {report.input_data.data_points:,}",
-            f"Market Regime:    {report.input_data.market_regime}",
-            f"Data Source:      {report.input_data.data_source}",
-        ])
+        lines.extend(
+            [
+                "## INPUT DATA",
+                "-" * 40,
+                f"Symbols:          {', '.join(report.input_data.symbols)}",
+                f"Date Range:       {report.input_data.date_range[0].strftime('%Y-%m-%d')} to "
+                f"{report.input_data.date_range[1].strftime('%Y-%m-%d')}",
+                f"Data Points:      {report.input_data.data_points:,}",
+                f"Market Regime:    {report.input_data.market_regime}",
+                f"Data Source:      {report.input_data.data_source}",
+            ]
+        )
 
         if report.input_data.price_range:
-            lines.append(f"Price Range:      ${report.input_data.price_range[0]:.2f} - "
-                        f"${report.input_data.price_range[1]:.2f}")
+            lines.append(
+                f"Price Range:      ${report.input_data.price_range[0]:.2f} - "
+                f"${report.input_data.price_range[1]:.2f}"
+            )
 
         if report.input_data.volatility is not None:
             lines.append(f"Volatility:       {report.input_data.volatility:.2%}")
@@ -591,14 +610,16 @@ class TestSummaryReporter:
         lines.append("")
 
         # Configuration section
-        lines.extend([
-            "## CONFIGURATION",
-            "-" * 40,
-            f"Initial Capital:  ${report.config.initial_capital:,.2f}",
-            f"Commission:       ${report.config.commission:.2f} per trade",
-            f"Slippage:         {report.config.slippage:.2%}",
-            f"Strategy:         {report.config.strategy}",
-        ])
+        lines.extend(
+            [
+                "## CONFIGURATION",
+                "-" * 40,
+                f"Initial Capital:  ${report.config.initial_capital:,.2f}",
+                f"Commission:       ${report.config.commission:.2f} per trade",
+                f"Slippage:         {report.config.slippage:.2%}",
+                f"Strategy:         {report.config.strategy}",
+            ]
+        )
 
         if report.config.strategy_params:
             lines.append("Strategy Parameters:")
@@ -613,22 +634,26 @@ class TestSummaryReporter:
         lines.append("")
 
         # Output metrics section
-        lines.extend([
-            "## OUTPUT METRICS",
-            "-" * 40,
-            "",
-            "### Financial Performance",
-            f"Final Capital:     ${report.output.final_capital:,.2f}",
-            f"Total P&L:        ${report.output.total_pnl:,.2f}",
-        ])
+        lines.extend(
+            [
+                "## OUTPUT METRICS",
+                "-" * 40,
+                "",
+                "### Financial Performance",
+                f"Final Capital:     ${report.output.final_capital:,.2f}",
+                f"Total P&L:        ${report.output.total_pnl:,.2f}",
+            ]
+        )
 
         if report.output.total_pnl_percentage is not None:
             lines.append(f"Total Return:      {report.output.total_pnl_percentage:.2f}%")
 
-        lines.extend([
-            "",
-            "### Risk Metrics",
-        ])
+        lines.extend(
+            [
+                "",
+                "### Risk Metrics",
+            ]
+        )
 
         if report.output.sharpe_ratio is not None:
             lines.append(f"Sharpe Ratio:      {report.output.sharpe_ratio:.2f}")
@@ -639,13 +664,15 @@ class TestSummaryReporter:
         if report.output.max_drawdown_percentage is not None:
             lines.append(f"Max Drawdown %:    {report.output.max_drawdown_percentage:.2f}%")
 
-        lines.extend([
-            "",
-            "### Trade Statistics",
-            f"Total Trades:      {report.output.total_trades:,}",
-            f"Winning Trades:    {report.output.winning_trades:,}",
-            f"Losing Trades:     {report.output.losing_trades:,}",
-        ])
+        lines.extend(
+            [
+                "",
+                "### Trade Statistics",
+                f"Total Trades:      {report.output.total_trades:,}",
+                f"Winning Trades:    {report.output.winning_trades:,}",
+                f"Losing Trades:     {report.output.losing_trades:,}",
+            ]
+        )
 
         if report.output.win_rate is not None:
             lines.append(f"Win Rate:          {report.output.win_rate:.1f}%")
@@ -660,20 +687,24 @@ class TestSummaryReporter:
 
         has_advanced = any(v is not None for _, v in advanced_metrics)
         if has_advanced:
-            lines.extend([
-                "",
-                "### Advanced Metrics",
-            ])
+            lines.extend(
+                [
+                    "",
+                    "### Advanced Metrics",
+                ]
+            )
             for name, value in advanced_metrics:
                 if value is not None:
                     lines.append(f"{name}:       {value:.2f}")
 
         # Additional metrics
         if report.output.additional_metrics:
-            lines.extend([
-                "",
-                "### Additional Metrics",
-            ])
+            lines.extend(
+                [
+                    "",
+                    "### Additional Metrics",
+                ]
+            )
             for key, value in report.output.additional_metrics.items():
                 lines.append(f"{key}:       {value}")
 
@@ -681,19 +712,23 @@ class TestSummaryReporter:
 
         # Validation criteria section
         if report.validation_criteria:
-            lines.extend([
-                "## VALIDATION CRITERIA",
-                "-" * 40,
-            ])
+            lines.extend(
+                [
+                    "## VALIDATION CRITERIA",
+                    "-" * 40,
+                ]
+            )
 
             for criteria in report.validation_criteria:
                 status_icon = "✓" if criteria.passed else "✗"
                 status_text = "PASSED" if criteria.passed else "FAILED"
-                lines.extend([
-                    f"{status_icon} {criteria.criteria_name}: {status_text}",
-                    f"   Expected: {criteria.expected_value}",
-                    f"   Actual:   {criteria.actual_value}",
-                ])
+                lines.extend(
+                    [
+                        f"{status_icon} {criteria.criteria_name}: {status_text}",
+                        f"   Expected: {criteria.expected_value}",
+                        f"   Actual:   {criteria.actual_value}",
+                    ]
+                )
 
                 if criteria.tolerance is not None:
                     lines.append(f"   Tolerance: ±{criteria.tolerance}")
@@ -705,50 +740,60 @@ class TestSummaryReporter:
 
         # Warnings section
         if report.warnings:
-            lines.extend([
-                "## WARNINGS",
-                "-" * 40,
-            ])
+            lines.extend(
+                [
+                    "## WARNINGS",
+                    "-" * 40,
+                ]
+            )
             for warning in report.warnings:
                 lines.append(f"⚠ {warning}")
             lines.append("")
 
         # Anomalies section
         if report.anomalies:
-            lines.extend([
-                "## ANOMALIES",
-                "-" * 40,
-            ])
+            lines.extend(
+                [
+                    "## ANOMALIES",
+                    "-" * 40,
+                ]
+            )
             for anomaly in report.anomalies:
                 lines.append(f"⚠ {anomaly}")
             lines.append("")
 
         # Additional notes
         if report.notes:
-            lines.extend([
-                "## ADDITIONAL NOTES",
-                "-" * 40,
-            ])
+            lines.extend(
+                [
+                    "## ADDITIONAL NOTES",
+                    "-" * 40,
+                ]
+            )
             for note in report.notes:
                 lines.append(f"• {note}")
             lines.append("")
 
         # Attachments
         if report.attachments:
-            lines.extend([
-                "## ATTACHMENTS",
-                "-" * 40,
-            ])
+            lines.extend(
+                [
+                    "## ATTACHMENTS",
+                    "-" * 40,
+                ]
+            )
             for attachment in report.attachments:
                 lines.append(f"📎 {attachment}")
             lines.append("")
 
         # Footer
-        lines.extend([
-            "=" * 80,
-            f"End of Report - Generated {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-            "=" * 80,
-        ])
+        lines.extend(
+            [
+                "=" * 80,
+                f"End of Report - Generated {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+                "=" * 80,
+            ]
+        )
 
         return "\n".join(lines)
 

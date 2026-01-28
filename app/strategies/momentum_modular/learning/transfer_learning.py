@@ -11,50 +11,54 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 import numpy as np
 
-# SECURITY: Using joblib and msgpack instead of pickle for secure serialization
-# joblib is safer for sklearn models, msgpack for generic Python objects
+if TYPE_CHECKING:
+    import torch.nn as nn
+
+logger = logging.getLogger(__name__)
+
+# ============================================================================
+# Optional Dependencies
+# ============================================================================
+try:
+    import torch
+
+    PYTORCH_AVAILABLE = True
+except (ImportError, ModuleNotFoundError):
+    torch = None  # type: ignore
+    PYTORCH_AVAILABLE = False
+
 try:
     import joblib
+
     JOBLIB_AVAILABLE = True
-except ImportError:
+except (ImportError, ModuleNotFoundError):
+    joblib = None  # type: ignore
     JOBLIB_AVAILABLE = False
 
 try:
     import msgpack
+
     MSGPACK_AVAILABLE = True
-except ImportError:
+except (ImportError, ModuleNotFoundError):
+    msgpack = None  # type: ignore
     MSGPACK_AVAILABLE = False
-
-logger = logging.getLogger(__name__)
-
-# Importaciones opcionales para PyTorch (neural networks)
-try:
-    import torch
-    import torch.nn as nn
-    import torch.optim as optim
-
-    PYTORCH_AVAILABLE = True
-except ImportError:
-    PYTORCH_AVAILABLE = False
-    logger.warning("PyTorch no disponible. Fine-tuning de neural networks limitado.")
 
 
 class ModelRegistry:
     """
-    Registry para gestionar pre-trained models.
+    Registro de modelos pre-entrenados para transfer learning.
 
-    Organiza modelos por:
-    - Regimen de mercado (bull, bear, sideways, high_volatility, low_volatility)
-    - Tipo de modelo (supervised, deep, transformer)
-    - Algoritmo (xgboost, lstm, transformer, etc.)
-    - Versión y tags
+    Almacena metadatos y paths de modelos entrenados en diferentes regímenes.
     """
 
-    def __init__(self, registry_path: str = "models/registry"):
+    def __init__(
+        self,
+        registry_path: str = "models/registry",
+    ):
         """
         Inicializar registry.
 
@@ -332,7 +336,9 @@ class ModelRegistry:
             if model_format == 'pt' or model_path_obj.suffix == '.pt':
                 if not PYTORCH_AVAILABLE:
                     raise ImportError("PyTorch no disponible para cargar .pt")
-                model = torch.load(model_path_obj, map_location='cpu')  # nosec B614 - torch handles this
+                model = torch.load(
+                    model_path_obj, map_location='cpu'
+                )  # nosec B614 - torch handles this
             elif model_format == 'joblib' or model_path_obj.suffix == '.joblib':
                 if not JOBLIB_AVAILABLE:
                     raise ImportError("joblib no disponible para cargar .joblib")
@@ -372,6 +378,7 @@ class ModelRegistry:
         if '_module' in data and '_class' in data and 'data' in data:
             # Import the class
             import importlib
+
             module = importlib.import_module(data['_module'])
             cls = getattr(module, data['_class'])
             obj = cls.__new__(cls)
@@ -498,10 +505,10 @@ class FineTuner:
 
     def _fine_tune_pytorch(
         self,
-        model: nn.Module,
+        model: "nn.Module",
         training_data: Dict[str, Any],
         validation_data: Optional[Dict[str, Any]] = None,
-    ) -> Tuple[nn.Module, Dict[str, float]]:
+    ) -> Tuple["nn.Module", Dict[str, float]]:
         """
         Fine-tune modelo PyTorch.
 
@@ -588,7 +595,7 @@ class FineTuner:
             logger.error(f"Error en fine-tuning PyTorch: {e}", exc_info=True)
             return model, {}
 
-    def _clone_pytorch_model(self, model: nn.Module) -> nn.Module:
+    def _clone_pytorch_model(self, model: "nn.Module") -> "nn.Module":
         """Clonar modelo PyTorch."""
         # Usar copy.deepcopy para clonar modelo completo
         import copy
@@ -603,7 +610,7 @@ class FineTuner:
             # Fallback: retornar el modelo original (no es ideal pero funciona)
             return model
 
-    def _freeze_layers(self, model: nn.Module) -> None:
+    def _freeze_layers(self, model: "nn.Module") -> None:
         """Freeze early layers del modelo."""
         if self.freeze_n_layers > 0:
             layers = list(model.children())
@@ -739,11 +746,11 @@ class KnowledgeDistiller:
 
     def _distill_pytorch(
         self,
-        teacher: nn.Module,
-        student: nn.Module,
+        teacher: "nn.Module",
+        student: "nn.Module",
         training_data: Dict[str, Any],
         validation_data: Optional[Dict[str, Any]] = None,
-    ) -> Tuple[nn.Module, Dict[str, float]]:
+    ) -> Tuple["nn.Module", Dict[str, float]]:
         """
         Distillation para modelos PyTorch.
 

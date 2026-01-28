@@ -20,39 +20,16 @@ Version: 1.0.0
 
 import logging
 from typing import Optional, Tuple
+
+import numba
 import numpy as np
-from decimal import Decimal
 
-# Try to import numba with graceful degradation
-try:
-    from numba import jit, njit, prange
-    import numba
+# Import numba - REQUIRED for performance (10-100x speedup)
+from numba import jit
 
-    NUMBA_AVAILABLE = True
-    NUMBA_VERSION = numba.__version__
-    logging.info(f"✅ Numba {NUMBA_VERSION} available - JIT compilation enabled")
-except ImportError:
-    # Fallback decorators if numba is not available
-    NUMBA_AVAILABLE = False
-    NUMBA_VERSION = None
-
-    def jit(nopython=True, cache=True, parallel=False):
-        """Fallback decorator that returns the function as-is."""
-        def decorator(func):
-            return func
-        return decorator
-
-    def njit(func=None, **kwargs):
-        """Fallback decorator for njit."""
-        if func is None:
-            return lambda f: f
-        return func
-
-    def prange(iterable):
-        """Fallback for prange - just use regular range."""
-        return range(iterable)
-
-    logging.warning("⚠️ Numba not available - using pure Python (install with: pip install numba)")
+NUMBA_AVAILABLE = True
+NUMBA_VERSION = numba.__version__
+logging.info(f"✅ Numba {NUMBA_VERSION} available - JIT compilation enabled")
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +37,7 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 # RSI (Relative Strength Index) - Numba Optimized
 # ============================================================================
+
 
 @jit(nopython=True, cache=True)
 def calculate_rsi_numba(prices: np.ndarray, period: int = 14) -> float:
@@ -187,6 +165,7 @@ def calculate_rsi_array_numba(prices: np.ndarray, period: int = 14) -> np.ndarra
 # EMA (Exponential Moving Average) - Numba Optimized
 # ============================================================================
 
+
 @jit(nopython=True, cache=True)
 def calculate_ema_numba(prices: np.ndarray, period: int) -> np.ndarray:
     """
@@ -266,12 +245,10 @@ def calculate_ema_single_numba(prices: np.ndarray, period: int) -> float:
 # MACD (Moving Average Convergence Divergence) - Numba Optimized
 # ============================================================================
 
+
 @jit(nopython=True, cache=True)
 def calculate_macd_numba(
-    prices: np.ndarray,
-    fast_period: int = 12,
-    slow_period: int = 26,
-    signal_period: int = 9
+    prices: np.ndarray, fast_period: int = 12, slow_period: int = 26, signal_period: int = 9
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Calculate MACD using Numba JIT compilation.
@@ -328,7 +305,9 @@ def calculate_macd_numba(
         # Calculate signal line EMA
         for i in range(signal_start, n):
             if not np.isnan(macd_line[i]):
-                signal_line[i] = signal_alpha * macd_line[i] + (1.0 - signal_alpha) * signal_line[i - 1]
+                signal_line[i] = (
+                    signal_alpha * macd_line[i] + (1.0 - signal_alpha) * signal_line[i - 1]
+                )
 
     # Calculate histogram
     histogram = np.full(n, np.nan)
@@ -343,12 +322,10 @@ def calculate_macd_numba(
 # ATR (Average True Range) - Numba Optimized
 # ============================================================================
 
+
 @jit(nopython=True, cache=True)
 def calculate_atr_numba(
-    high: np.ndarray,
-    low: np.ndarray,
-    close: np.ndarray,
-    period: int = 14
+    high: np.ndarray, low: np.ndarray, close: np.ndarray, period: int = 14
 ) -> np.ndarray:
     """
     Calculate ATR using Numba JIT compilation.
@@ -397,10 +374,7 @@ def calculate_atr_numba(
 
 @jit(nopython=True, cache=True)
 def calculate_atr_single_numba(
-    high: np.ndarray,
-    low: np.ndarray,
-    close: np.ndarray,
-    period: int = 14
+    high: np.ndarray, low: np.ndarray, close: np.ndarray, period: int = 14
 ) -> float:
     """
     Calculate single ATR value (last value) using Numba JIT.
@@ -425,6 +399,7 @@ def calculate_atr_single_numba(
 # ============================================================================
 # Rolling Statistics - Numba Optimized
 # ============================================================================
+
 
 @jit(nopython=True, cache=True)
 def rolling_mean_numba(values: np.ndarray, window: int) -> np.ndarray:
@@ -568,11 +543,10 @@ def rolling_max_numba(values: np.ndarray, window: int) -> np.ndarray:
 # Bollinger Bands - Numba Optimized
 # ============================================================================
 
+
 @jit(nopython=True, cache=True)
 def calculate_bollinger_bands_numba(
-    prices: np.ndarray,
-    period: int = 20,
-    num_std: float = 2.0
+    prices: np.ndarray, period: int = 20, num_std: float = 2.0
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Calculate Bollinger Bands using Numba JIT compilation.
@@ -607,13 +581,10 @@ def calculate_bollinger_bands_numba(
 # Stochastic Oscillator - Numba Optimized
 # ============================================================================
 
+
 @jit(nopython=True, cache=True)
 def calculate_stochastic_numba(
-    high: np.ndarray,
-    low: np.ndarray,
-    close: np.ndarray,
-    k_period: int = 14,
-    d_period: int = 3
+    high: np.ndarray, low: np.ndarray, close: np.ndarray, k_period: int = 14, d_period: int = 3
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Calculate Stochastic Oscillator using Numba JIT compilation.
@@ -675,6 +646,7 @@ def calculate_stochastic_numba(
 # ============================================================================
 # Advanced Statistical Metrics - Numba Optimized
 # ============================================================================
+
 
 @jit(nopython=True, cache=True)
 def calculate_skewness_numba(returns: np.ndarray) -> float:
@@ -853,6 +825,7 @@ def calculate_cvar_numba(returns: np.ndarray, confidence_level: float = 0.95) ->
 # Utility Functions - Array Differences
 # ============================================================================
 
+
 @jit(nopython=True, cache=True)
 def array_differences_numba(values: np.ndarray) -> np.ndarray:
     """
@@ -938,11 +911,9 @@ def drawdown_series_numba(equity_curve: np.ndarray) -> np.ndarray:
 # Transition Matrix for Regime Analysis - Numba Optimized
 # ============================================================================
 
+
 @jit(nopython=True, cache=True)
-def calculate_transition_matrix_numba(
-    regime_labels: np.ndarray,
-    n_regimes: int
-) -> np.ndarray:
+def calculate_transition_matrix_numba(regime_labels: np.ndarray, n_regimes: int) -> np.ndarray:
     """
     Calculate regime transition matrix using Numba JIT compilation.
 
@@ -985,11 +956,10 @@ def calculate_transition_matrix_numba(
 # Benchmark Values Generation - Numba Optimized
 # ============================================================================
 
+
 @jit(nopython=True, cache=True)
 def generate_benchmark_curve_numba(
-    initial_value: float,
-    benchmark_return: float,
-    n_periods: int
+    initial_value: float, benchmark_return: float, n_periods: int
 ) -> np.ndarray:
     """
     Generate synthetic benchmark curve using Numba JIT compilation.
@@ -1017,6 +987,7 @@ def generate_benchmark_curve_numba(
 # ============================================================================
 # Wrapper Functions for Python Integration
 # ============================================================================
+
 
 def calculate_rsi(prices: list, period: int = 14) -> Optional[float]:
     """
@@ -1065,10 +1036,7 @@ def calculate_ema(prices: list, period: int) -> Optional[float]:
 
 
 def calculate_macd(
-    prices: list,
-    fast_period: int = 12,
-    slow_period: int = 26,
-    signal_period: int = 9
+    prices: list, fast_period: int = 12, slow_period: int = 26, signal_period: int = 9
 ) -> Tuple[Optional[float], Optional[float], Optional[float]]:
     """
     Wrapper for MACD calculation that handles Python lists.
@@ -1097,12 +1065,7 @@ def calculate_macd(
     return macd_val, signal_val, hist_val
 
 
-def calculate_atr(
-    high: list,
-    low: list,
-    close: list,
-    period: int = 14
-) -> Optional[float]:
+def calculate_atr(high: list, low: list, close: list, period: int = 14) -> Optional[float]:
     """
     Wrapper for ATR calculation that handles Python lists.
 
@@ -1131,9 +1094,7 @@ def calculate_atr(
 
 
 def calculate_bollinger_bands(
-    prices: list,
-    period: int = 20,
-    num_std: float = 2.0
+    prices: list, period: int = 20, num_std: float = 2.0
 ) -> Tuple[Optional[float], Optional[float], Optional[float]]:
     """
     Wrapper for Bollinger Bands calculation that handles Python lists.
@@ -1160,11 +1121,7 @@ def calculate_bollinger_bands(
 
 
 def calculate_stochastic(
-    high: list,
-    low: list,
-    close: list,
-    k_period: int = 14,
-    d_period: int = 3
+    high: list, low: list, close: list, k_period: int = 14, d_period: int = 3
 ) -> Tuple[Optional[float], Optional[float]]:
     """
     Wrapper for Stochastic calculation that handles Python lists.
@@ -1290,6 +1247,7 @@ def calculate_cvar(returns: list, confidence_level: float = 0.95) -> Optional[fl
 # Performance Information
 # ============================================================================
 
+
 def get_numba_info() -> dict:
     """
     Get information about Numba availability and performance.
@@ -1314,32 +1272,34 @@ def get_numba_info() -> dict:
             "drawdown_analysis": "25-80x",
             "transition_matrix": "30-100x",
         },
-        "functions_optimized": len([
-            calculate_rsi_numba,
-            calculate_ema_numba,
-            calculate_macd_numba,
-            calculate_atr_numba,
-            rolling_mean_numba,
-            rolling_std_numba,
-            calculate_bollinger_bands_numba,
-            calculate_stochastic_numba,
-            calculate_skewness_numba,
-            calculate_kurtosis_numba,
-            calculate_var_numba,
-            calculate_cvar_numba,
-            array_differences_numba,
-            cumulative_returns_numba,
-            drawdown_series_numba,
-            calculate_transition_matrix_numba,
-            generate_benchmark_curve_numba,
-        ]),
+        "functions_optimized": len(
+            [
+                calculate_rsi_numba,
+                calculate_ema_numba,
+                calculate_macd_numba,
+                calculate_atr_numba,
+                rolling_mean_numba,
+                rolling_std_numba,
+                calculate_bollinger_bands_numba,
+                calculate_stochastic_numba,
+                calculate_skewness_numba,
+                calculate_kurtosis_numba,
+                calculate_var_numba,
+                calculate_cvar_numba,
+                array_differences_numba,
+                cumulative_returns_numba,
+                drawdown_series_numba,
+                calculate_transition_matrix_numba,
+                generate_benchmark_curve_numba,
+            ]
+        ),
     }
 
 
 # Log Numba status on import
 if NUMBA_AVAILABLE:
-    logger.info(f"✅ Numba accelerators loaded successfully - JIT compilation enabled")
-    logger.info(f"   Expected speedups: 10-100x for numerical computations")
+    logger.info("✅ Numba accelerators loaded successfully - JIT compilation enabled")
+    logger.info("   Expected speedups: 10-100x for numerical computations")
 else:
-    logger.warning(f"⚠️ Numba not available - using pure Python fallback")
-    logger.warning(f"   Install with: pip install numba")
+    logger.warning("⚠️ Numba not available - using pure Python fallback")
+    logger.warning("   Install with: pip install numba")

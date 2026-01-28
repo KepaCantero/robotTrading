@@ -6,15 +6,15 @@ technical indicators, and momentum strategy management.
 """
 
 from __future__ import annotations
+
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from requests.exceptions import ConnectionError, HTTPError, RequestException
 
 from app.models.momentum import MomentumFilter, MomentumStrategy, MomentumType, Timeframe
 from app.services.momentum_analysis import MomentumAnalysisService, get_momentum_analysis_service
-import requests
-from requests.exceptions import ConnectionError, HTTPError, RequestException
 
 router = APIRouter(prefix="/momentum", tags=["momentum"])
 

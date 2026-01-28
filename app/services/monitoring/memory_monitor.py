@@ -13,15 +13,15 @@ import asyncio
 import gc
 import logging
 import os
-import psutil
 import sys
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
 
-from app.core.timezone_utils import utc_now
+import psutil
 
+from app.core.timezone_utils import utc_now
 
 logger = logging.getLogger(__name__)
 
@@ -160,9 +160,7 @@ class MemoryMonitor:
                     )
 
                     if self.config.alert_callback:
-                        self.config.alert_callback(
-                            f"Memory usage high: {memory_mb:.2f}MB"
-                        )
+                        self.config.alert_callback(f"Memory usage high: {memory_mb:.2f}MB")
 
                 await asyncio.sleep(self.config.check_interval_seconds)
 
@@ -190,9 +188,7 @@ class MemoryMonitor:
                 "rss_mb": round(memory_info.rss / (1024 * 1024), 2),
                 "vms_mb": round(memory_info.vms / (1024 * 1024), 2),
                 "percent": round(memory_percent, 2),
-                "available_mb": round(
-                    psutil.virtual_memory().available / (1024 * 1024), 2
-                ),
+                "available_mb": round(psutil.virtual_memory().available / (1024 * 1024), 2),
                 "gc_objects": len(gc.get_objects()),
                 "limit_mb": self.config.memory_limit_mb,
                 "warning_mb": self.config.warning_threshold_mb,
@@ -310,9 +306,7 @@ class MemoryMonitor:
             "is_monitoring": self._is_monitoring,
             "current_memory": current_snapshot.to_dict(),
             "restart_count": self._restart_count,
-            "last_restart": (
-                self._last_restart.isoformat() if self._last_restart else None
-            ),
+            "last_restart": (self._last_restart.isoformat() if self._last_restart else None),
             "config": {
                 "limit_mb": self.config.memory_limit_mb,
                 "warning_mb": self.config.warning_threshold_mb,

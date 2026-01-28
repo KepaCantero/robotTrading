@@ -6,12 +6,21 @@ and parameter optimization to prevent overfitting in trading strategies.
 """
 
 from __future__ import annotations
+
+import asyncio
 import logging
 from datetime import date, datetime
 from typing import List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import (
+    DatabaseError,
+    DataError,
+    IntegrityError,
+    OperationalError,
+    ProgrammingError,
+)
 
 logger = logging.getLogger(__name__)
 

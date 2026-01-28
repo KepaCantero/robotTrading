@@ -13,61 +13,34 @@ from typing import Any, Dict, Optional
 import numpy as np
 import pandas as pd
 
-logger = logging.getLogger(__name__)
-
-# Optional library imports with graceful fallback
-# Note: quantstats and empyrical import yfinance which uses Python 3.10+ union syntax
-# We use lazy import to avoid this issue at module load time
-_qs = None
-_ep = None
-QUANTSTATS_AVAILABLE = False
-EMPYRICAL_AVAILABLE = False
-PYFOLIO_AVAILABLE = False
-
-
-def _ensure_quantstats():
-    """Lazy import quantstats to avoid Python version compatibility issues."""
-    global _qs, QUANTSTATS_AVAILABLE
-    if _qs is None:
-        try:
-            import quantstats as qs_module
-
-            _qs = qs_module
-            QUANTSTATS_AVAILABLE = True
-            logger.info("quantstats library available")
-        except (ImportError, TypeError) as e:
-            # TypeError occurs on Python 3.9 due to yfinance dependency
-            QUANTSTATS_AVAILABLE = False
-            _qs = None
-            logger.debug(f"quantstats not available: {e}")
-    return _qs
-
-
-def _ensure_empyrical():
-    """Lazy import empyrical to avoid Python version compatibility issues."""
-    global _ep, EMPYRICAL_AVAILABLE
-    if _ep is None:
-        try:
-            import empyrical as ep_module
-
-            _ep = ep_module
-            EMPYRICAL_AVAILABLE = True
-            logger.info("empyrical library available")
-        except (ImportError, TypeError) as e:
-            # TypeError occurs on Python 3.9 due to yfinance dependency
-            EMPYRICAL_AVAILABLE = False
-            _ep = None
-            logger.debug(f"empyrical not available: {e}")
-    return _ep
-
-
+# Try to import quantstats with fallback
 try:
-    pass
+    import quantstats
+
+    QUANTSTATS_AVAILABLE = True
+except ImportError:
+    quantstats = None
+    QUANTSTATS_AVAILABLE = False
+
+# Try to import empyrical with fallback
+try:
+    import empyrical
+
+    EMPYRICAL_AVAILABLE = True
+except ImportError:
+    empyrical = None
+    EMPYRICAL_AVAILABLE = False
+
+# Try to import pyfolio with fallback
+try:
+    import pyfolio
 
     PYFOLIO_AVAILABLE = True
-    logger.info("pyfolio library available")
 except ImportError:
-    logger.debug("pyfolio not available - some features will be disabled")
+    pyfolio = None
+    PYFOLIO_AVAILABLE = False
+
+logger = logging.getLogger(__name__)
 
 
 class AwesomeQuantIntegrator:
@@ -97,8 +70,8 @@ class AwesomeQuantIntegrator:
             logger.info(f"AWESOME-QUANT libraries available: {', '.join(available)}")
         else:
             logger.warning(
-                "No AWESOME-QUANT libraries available. Install quantstats, "
-                "empyrical-reloaded, or pyfolio-reloaded for advanced metrics."
+                "No AWESOME-QUANT libraries available. "
+                "Install with: pip install quantstats empyrical-reloaded pyfolio-reloaded"
             )
 
     # =========================================================================
@@ -118,40 +91,39 @@ class AwesomeQuantIntegrator:
         Returns:
             Dictionary of quantstats-derived metrics
         """
-        qs_module = _ensure_quantstats()
-        if qs_module is None:
-            logger.warning("quantstats not available")
-            return {}
+        if not QUANTSTATS_AVAILABLE:
+            logger.warning("quantstats not available - using fallback implementation")
+            return self._calculate_fallback_metrics(returns, benchmark_returns)
 
         try:
             metrics = {
-                "return_pct": float(qs_module.stats.total_return(returns)),
-                "cagr": float(qs_module.stats.cagr(returns)),
-                "sharpe": float(qs_module.stats.sharpe(returns)),
-                "sortino": float(qs_module.stats.sortino(returns)),
-                "calmar": float(qs_module.stats.calmar(returns)),
-                "max_drawdown": float(qs_module.stats.max_drawdown(returns)),
-                "avg_drawdown": float(qs_module.stats.avg_drawdown(returns)),
-                "underwater": float(qs_module.stats.underwater(returns).min()),
-                "volatility": float(qs_module.stats.volatility(returns)),
-                "var_95": float(qs_module.stats.value_at_risk(returns, 0.95)),
-                "cvar_95": float(qs_module.stats.conditional_value_at_risk(returns, 0.95)),
-                "win_rate": float(qs_module.stats.win_rate(returns)),
-                "best_day": float(qs_module.stats.best(returns)),
-                "worst_day": float(qs_module.stats.worst(returns)),
-                "avg_win": float(qs_module.stats.avg_win(returns)),
-                "avg_loss": float(qs_module.stats.avg_loss(returns)),
-                "profit_factor": float(qs_module.stats.profit_factor(returns)),
-                "payoff_ratio": float(qs_module.stats.payoff_ratio(returns)),
-                "recovery_factor": float(qs_module.stats.recovery_factor(returns)),
+                "return_pct": float(quantstats.stats.total_return(returns)),
+                "cagr": float(quantstats.stats.cagr(returns)),
+                "sharpe": float(quantstats.stats.sharpe(returns)),
+                "sortino": float(quantstats.stats.sortino(returns)),
+                "calmar": float(quantstats.stats.calmar(returns)),
+                "max_drawdown": float(quantstats.stats.max_drawdown(returns)),
+                "avg_drawdown": float(quantstats.stats.avg_drawdown(returns)),
+                "underwater": float(quantstats.stats.underwater(returns).min()),
+                "volatility": float(quantstats.stats.volatility(returns)),
+                "var_95": float(quantstats.stats.value_at_risk(returns, 0.95)),
+                "cvar_95": float(quantstats.stats.conditional_value_at_risk(returns, 0.95)),
+                "win_rate": float(quantstats.stats.win_rate(returns)),
+                "best_day": float(quantstats.stats.best(returns)),
+                "worst_day": float(quantstats.stats.worst(returns)),
+                "avg_win": float(quantstats.stats.avg_win(returns)),
+                "avg_loss": float(quantstats.stats.avg_loss(returns)),
+                "profit_factor": float(quantstats.stats.profit_factor(returns)),
+                "payoff_ratio": float(quantstats.stats.payoff_ratio(returns)),
+                "recovery_factor": float(quantstats.stats.recovery_factor(returns)),
             }
 
             # Benchmark comparison (if provided)
             if benchmark_returns is not None:
-                metrics["beta"] = float(qs_module.stats.beta(returns, benchmark_returns))
-                metrics["alpha"] = float(qs_module.stats.alpha(returns, benchmark_returns))
+                metrics["beta"] = float(quantstats.stats.beta(returns, benchmark_returns))
+                metrics["alpha"] = float(quantstats.stats.alpha(returns, benchmark_returns))
                 metrics["correlation"] = float(
-                    qs_module.stats.correlation(returns, benchmark_returns)
+                    quantstats.stats.correlation(returns, benchmark_returns)
                 )
 
             logger.info(f"Calculated {len(metrics)} quantstats metrics")
@@ -178,42 +150,43 @@ class AwesomeQuantIntegrator:
         Returns:
             Dictionary of empyrical-derived metrics
         """
-        ep_module = _ensure_empyrical()
-        if ep_module is None:
-            logger.warning("empyrical not available")
-            return {}
+        if not EMPYRICAL_AVAILABLE:
+            logger.warning("empyrical not available - using fallback implementation")
+            return self._calculate_fallback_metrics(returns, benchmark_returns)
 
         try:
             metrics = {
-                "total_return": float(ep_module.total_return(returns)),
-                "annual_return": float(ep_module.annual_return(returns)),
-                "cumulative_returns": float(ep_module.cum_returns(returns).iloc[-1]),
-                "volatility": float(ep_module.annual_volatility(returns)),
-                "downside_volatility": float(ep_module.downside_volatility(returns)),
-                "max_drawdown": float(ep_module.max_drawdown(returns)),
-                "sharpe_ratio": float(ep_module.sharpe_ratio(returns)),
-                "sortino_ratio": float(ep_module.sortino_ratio(returns)),
-                "calmar_ratio": float(ep_module.calmar_ratio(returns)),
-                "omega_ratio": float(ep_module.omega_ratio(returns)),
+                "total_return": float(empyrical.total_return(returns)),
+                "annual_return": float(empyrical.annual_return(returns)),
+                "cumulative_returns": float(empyrical.cum_returns(returns).iloc[-1]),
+                "volatility": float(empyrical.annual_volatility(returns)),
+                "downside_volatility": float(empyrical.downside_volatility(returns)),
+                "max_drawdown": float(empyrical.max_drawdown(returns)),
+                "sharpe_ratio": float(empyrical.sharpe_ratio(returns)),
+                "sortino_ratio": float(empyrical.sortino_ratio(returns)),
+                "calmar_ratio": float(empyrical.calmar_ratio(returns)),
+                "omega_ratio": float(empyrical.omega_ratio(returns)),
                 "win_rate": float((returns > 0).sum() / len(returns) if len(returns) > 0 else 0),
                 "var_95": float(np.percentile(returns.astype(float), 5)),
-                "cvar_95": float(returns[returns <= np.percentile(returns.astype(float), 5)].astype(float).mean()),
-                "skewness": float(ep_module.skewness(returns)),
-                "kurtosis": float(ep_module.kurtosis(returns)),
+                "cvar_95": float(
+                    returns[returns <= np.percentile(returns.astype(float), 5)].astype(float).mean()
+                ),
+                "skewness": float(empyrical.skewness(returns)),
+                "kurtosis": float(empyrical.kurtosis(returns)),
             }
 
             # Drawdown analysis
-            drawdowns = ep_module.drawdown(returns)
+            drawdowns = empyrical.drawdown(returns)
             metrics["avg_drawdown"] = float(drawdowns[drawdowns < 0].mean())
 
             # Benchmark metrics (if provided)
             if benchmark_returns is not None and len(benchmark_returns) == len(returns):
-                metrics["alpha"] = float(ep_module.alpha(returns, benchmark_returns))
-                metrics["beta"] = float(ep_module.beta(returns, benchmark_returns))
+                metrics["alpha"] = float(empyrical.alpha(returns, benchmark_returns))
+                metrics["beta"] = float(empyrical.beta(returns, benchmark_returns))
                 excess_returns = returns - benchmark_returns
                 metrics["information_ratio"] = float(
-                    ep_module.annual_return(excess_returns)
-                    / ep_module.annual_volatility(excess_returns)
+                    empyrical.annual_return(excess_returns)
+                    / empyrical.annual_volatility(excess_returns)
                 )
 
             logger.info(f"Calculated {len(metrics)} empyrical metrics")
@@ -244,9 +217,7 @@ class AwesomeQuantIntegrator:
         Returns:
             Dictionary of pyfolio-derived metrics
         """
-        if not PYFOLIO_AVAILABLE:
-            logger.warning("pyfolio not available")
-            return {}
+        # pyfolio is REQUIRED
 
         try:
             metrics = {}
@@ -288,7 +259,9 @@ class AwesomeQuantIntegrator:
             metrics["skewness"] = float(returns.skew())
             metrics["kurtosis"] = float(returns.kurtosis())
             metrics["var_95"] = float(np.percentile(returns.astype(float), 5))
-            metrics["cvar_95"] = float(returns[returns <= np.percentile(returns.astype(float), 5)].astype(float).mean())
+            metrics["cvar_95"] = float(
+                returns[returns <= np.percentile(returns.astype(float), 5)].astype(float).mean()
+            )
 
             logger.info(f"Calculated {len(metrics)} pyfolio metrics")
             return metrics
@@ -352,20 +325,17 @@ class AwesomeQuantIntegrator:
         """
         unified = {}
 
-        # Try to get metrics from each library in priority order
-        if QUANTSTATS_AVAILABLE:
-            unified.update(self.calculate_quantstats_metrics(returns, benchmark_returns))
-        if EMPYRICAL_AVAILABLE:
-            empyrical_metrics = self.calculate_empyrical_metrics(returns, benchmark_returns)
-            # Only add metrics not already present
-            for k, v in empyrical_metrics.items():
-                if k not in unified:
-                    unified[k] = v
-        if PYFOLIO_AVAILABLE:
-            pyfolio_metrics = self.calculate_pyfolio_metrics(returns)
-            for k, v in pyfolio_metrics.items():
-                if k not in unified:
-                    unified[k] = v
+        # Get metrics from each library in priority order (all REQUIRED)
+        unified.update(self.calculate_quantstats_metrics(returns, benchmark_returns))
+        empyrical_metrics = self.calculate_empyrical_metrics(returns, benchmark_returns)
+        # Only add metrics not already present
+        for k, v in empyrical_metrics.items():
+            if k not in unified:
+                unified[k] = v
+        pyfolio_metrics = self.calculate_pyfolio_metrics(returns)
+        for k, v in pyfolio_metrics.items():
+            if k not in unified:
+                unified[k] = v
 
         logger.info(f"Generated unified metrics with {len(unified)} total items")
         return unified
@@ -378,7 +348,7 @@ class AwesomeQuantIntegrator:
             library: Library name ("quantstats", "empyrical", or "pyfolio")
 
         Returns:
-            True if library is available, False otherwise
+            True if library is available
         """
         if library == "quantstats":
             return QUANTSTATS_AVAILABLE
@@ -398,3 +368,155 @@ class AwesomeQuantIntegrator:
         if PYFOLIO_AVAILABLE:
             available.append("pyfolio")
         return available
+
+    def _calculate_fallback_metrics(
+        self, returns: pd.Series, benchmark_returns: Optional[pd.Series] = None
+    ) -> Dict[str, float]:
+        """
+        Calculate financial metrics using fallback numpy/scipy implementations.
+
+        This provides basic financial metrics when AWESOME-QUANT libraries are not available.
+
+        Args:
+            returns: Series of returns
+            benchmark_returns: Optional benchmark returns for comparison
+
+        Returns:
+            Dictionary of financial metrics
+        """
+        try:
+            metrics = {}
+
+            # Basic return metrics
+            metrics["total_return"] = float((1 + returns).prod() - 1)
+            metrics["annual_return"] = float(returns.mean() * 252)
+            metrics["cumulative_returns"] = float((1 + returns).cumprod().iloc[-1] - 1)
+
+            # Volatility metrics
+            metrics["volatility"] = float(returns.std() * np.sqrt(252))
+
+            # Downside volatility
+            negative_returns = returns[returns < 0]
+            if len(negative_returns) > 0:
+                metrics["downside_volatility"] = float(negative_returns.std() * np.sqrt(252))
+            else:
+                metrics["downside_volatility"] = 0.0
+
+            # Drawdown metrics
+            cumulative = (1 + returns).cumprod()
+            running_max = cumulative.expanding().max()
+            drawdown = (cumulative - running_max) / running_max
+            metrics["max_drawdown"] = float(drawdown.min())
+            metrics["avg_drawdown"] = (
+                float(drawdown[drawdown < 0].mean()) if (drawdown < 0).any() else 0.0
+            )
+
+            # Sharpe and Sortino ratios
+            excess_returns = returns - (self.risk_free_rate / 252)
+            annual_excess_return = excess_returns.mean() * 252
+            annual_volatility = returns.std() * np.sqrt(252)
+
+            if annual_volatility > 0:
+                metrics["sharpe_ratio"] = float(annual_excess_return / annual_volatility)
+            else:
+                metrics["sharpe_ratio"] = 0.0
+
+            # Sortino ratio (using downside deviation)
+            if len(negative_returns) > 0:
+                downside_std = negative_returns.std() * np.sqrt(252)
+                if downside_std > 0:
+                    metrics["sortino_ratio"] = float(annual_excess_return / downside_std)
+                else:
+                    metrics["sortino_ratio"] = 0.0
+            else:
+                metrics["sortino_ratio"] = 0.0
+
+            # Calmar ratio (CAGR / Max Drawdown)
+            cagr = metrics["annual_return"]
+            max_dd = abs(metrics["max_drawdown"])
+            if max_dd > 0:
+                metrics["calmar_ratio"] = float(cagr / max_dd)
+            else:
+                metrics["calmar_ratio"] = 0.0
+
+            # Omega ratio (simplified version)
+            threshold = self.risk_free_rate / 252
+            gains = returns[returns > threshold] - threshold
+            losses = threshold - returns[returns <= threshold]
+            if losses.sum() > 0:
+                metrics["omega_ratio"] = float(gains.sum() / losses.sum())
+            else:
+                metrics["omega_ratio"] = float('inf') if gains.sum() > 0 else 0.0
+
+            # Win rate
+            metrics["win_rate"] = (
+                float((returns > 0).sum() / len(returns)) if len(returns) > 0 else 0.0
+            )
+
+            # Value at Risk metrics
+            metrics["var_95"] = float(np.percentile(returns.astype(float), 5))
+            metrics["cvar_95"] = float(
+                returns[returns <= np.percentile(returns.astype(float), 5)].astype(float).mean()
+            )
+
+            # Skewness and Kurtosis
+            metrics["skewness"] = float(returns.skew())
+            metrics["kurtosis"] = float(returns.kurtosis())
+
+            # Additional metrics
+            if len(returns) > 0:
+                metrics["best_day"] = float(returns.max())
+                metrics["worst_day"] = float(returns.min())
+
+                positive_returns = returns[returns > 0]
+                negative_returns = returns[returns < 0]
+
+                metrics["avg_win"] = (
+                    float(positive_returns.mean()) if len(positive_returns) > 0 else 0.0
+                )
+                metrics["avg_loss"] = (
+                    float(negative_returns.mean()) if len(negative_returns) > 0 else 0.0
+                )
+
+                # Profit factor
+                gross_profit = positive_returns.sum() if len(positive_returns) > 0 else 0.0
+                gross_loss = abs(negative_returns.sum()) if len(negative_returns) > 0 else 1.0
+                metrics["profit_factor"] = (
+                    float(gross_profit / gross_loss) if gross_loss > 0 else 0.0
+                )
+
+                metrics["return_pct"] = metrics["total_return"]
+
+            # Benchmark comparison (if provided)
+            if benchmark_returns is not None and len(benchmark_returns) == len(returns):
+                # Alpha and Beta (simplified calculation)
+                covariance = np.cov(returns.astype(float), benchmark_returns.astype(float))[0, 1]
+                benchmark_variance = np.var(benchmark_returns.astype(float))
+
+                if benchmark_variance > 0:
+                    metrics["beta"] = float(covariance / benchmark_variance)
+                    # Alpha = Annual Return - (Beta * Benchmark Annual Return + Risk Free)
+                    benchmark_annual_return = benchmark_returns.mean() * 252
+                    metrics["alpha"] = float(
+                        metrics["annual_return"]
+                        - (metrics["beta"] * benchmark_annual_return + self.risk_free_rate)
+                    )
+                else:
+                    metrics["beta"] = 1.0
+                    metrics["alpha"] = metrics["annual_return"] - self.risk_free_rate
+
+                # Information ratio
+                excess_returns = returns - benchmark_returns
+                if excess_returns.std() > 0:
+                    metrics["information_ratio"] = float(
+                        (excess_returns.mean() * 252) / (excess_returns.std() * np.sqrt(252))
+                    )
+                else:
+                    metrics["information_ratio"] = 0.0
+
+            logger.info(f"Calculated {len(metrics)} fallback metrics")
+            return metrics
+
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
+            logger.error(f"Error calculating fallback metrics: {e}", exc_info=True)
+            return {}

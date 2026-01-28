@@ -104,9 +104,15 @@ class PessimisticExecutionEngine:
             enable_next_day_execution: If True, execute at next bar open (default: from config)
         """
         self.execution_type = execution_type
-        self.base_slippage_bps = base_slippage_bps if base_slippage_bps is not None else EXEC_CONSTANTS.BASE_SLIPPAGE_BPS
+        self.base_slippage_bps = (
+            base_slippage_bps if base_slippage_bps is not None else EXEC_CONSTANTS.BASE_SLIPPAGE_BPS
+        )
         self.cost_calculator = cost_calculator or CostCalculator()
-        self.enable_next_day_execution = enable_next_day_execution if enable_next_day_execution is not None else EXEC_CONSTANTS.ENABLE_NEXT_DAY_EXECUTION
+        self.enable_next_day_execution = (
+            enable_next_day_execution
+            if enable_next_day_execution is not None
+            else EXEC_CONSTANTS.ENABLE_NEXT_DAY_EXECUTION
+        )
 
         self._open_positions: List[Position] = []
 
@@ -313,7 +319,7 @@ class PessimisticExecutionEngine:
             Dictionary with comparison metrics
         """
         # Run optimistic simulation (using config slippage for optimistic)
-        optimistic_engine = PessimisticExecutionEngine(
+        PessimisticExecutionEngine(
             execution_type=ExecutionType.OPTIMISTIC,
             base_slippage_bps=EXEC_CONSTANTS.OPTIMISTIC_SLIPPAGE_BPS,
         )

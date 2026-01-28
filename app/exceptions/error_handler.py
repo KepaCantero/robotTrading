@@ -10,6 +10,7 @@ from typing import Any, Dict, Optional
 from fastapi import HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import DatabaseError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.exceptions.trading_exceptions import (

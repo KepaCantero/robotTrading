@@ -5,10 +5,12 @@ This module provides REST API endpoints for managing assets,
 identifying liquid assets, and retrieving asset rankings.
 """
 
+import asyncio
 from datetime import datetime
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from requests.exceptions import HTTPError, RequestException
 
 from app.models.assets import AssetClass, AssetFilter, Exchange
 from app.services.asset_identification import (

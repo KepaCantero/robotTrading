@@ -7,12 +7,11 @@ Now includes Purged K-Fold with Embargo cross-validation as described in:
 "Advances in Financial Machine Learning" by Marcos López de Prado
 """
 
-from typing import List, Tuple, Optional, Union
-from datetime import datetime
 import logging
+from datetime import datetime
+from typing import List, Optional, Tuple
 
 import numpy as np
-import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +80,7 @@ class TrainValTestSplitter:
         self,
         market_data: List,
         start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None
+        end_date: Optional[datetime] = None,
     ) -> Tuple[List, List, List]:
         """
         Split market data into train/validation/test sets.
@@ -268,7 +267,9 @@ class TrainValTestSplitter:
         for train_idx, test_idx in splits:
             # Further split training data into train/validation
             n_train = len(train_idx)
-            val_start_idx = int(n_train * (1 - self.config.val_pct / (self.config.train_pct + self.config.val_pct)))
+            val_start_idx = int(
+                n_train * (1 - self.config.val_pct / (self.config.train_pct + self.config.val_pct))
+            )
 
             train_indices = train_idx[:val_start_idx]
             val_indices = train_idx[val_start_idx:]
@@ -392,18 +393,14 @@ class MultipleTestingCorrector:
 
         num_significant = sum(significant)
         logger.info(
-            f"Holm-Bonferroni: {num_significant}/{len(p_values)} tests significant "
-            f"at 5% level"
+            f"Holm-Bonferroni: {num_significant}/{len(p_values)} tests significant " f"at 5% level"
         )
 
         return significant
 
 
 def validate_out_of_sample_performance(
-    train_sharpe: float,
-    val_sharpe: float,
-    test_sharpe: float,
-    min_performance_ratio: float = 0.7
+    train_sharpe: float, val_sharpe: float, test_sharpe: float, min_performance_ratio: float = 0.7
 ) -> bool:
     """
     Validate that out-of-sample performance is acceptable.

@@ -29,6 +29,7 @@ Usage:
 The CSV can then be imported into tax software for final filing.
 """
 
+import asyncio
 import csv
 import logging
 from dataclasses import dataclass
@@ -39,6 +40,7 @@ from typing import Dict, List, Optional
 
 import aiohttp
 import aiosqlite
+from requests.exceptions import HTTPError, RequestException
 
 logger = logging.getLogger(__name__)
 

@@ -324,13 +324,19 @@ class CollectorSource:
 
 @dataclass
 class QuestDBConfig:
-    """QuestDB connection and configuration."""
+    """
+    QuestDB connection and configuration.
+
+    Rule 28 Compliant: No hardcoded passwords.
+    All credentials read from environment variables.
+    """
 
     host: str = "localhost"
     port: int = 5432
     database: str = "qdb"
     user: str = "admin"
-    password: str = "quest"
+    # Rule 28: No default password - must come from environment
+    password: str = ""
     pool_size: int = 10
     pool_timeout: float = 10.0
     max_retries: int = 3
@@ -338,9 +344,35 @@ class QuestDBConfig:
     batch_size: int = 1000
     retention_days: int = 90
 
+    def __post_init__(self):
+        """Validate configuration after initialization."""
+        import os
+
+        # Rule 28: Read password from environment if not provided
+        if not self.password:
+            self.password = os.getenv("QUESTDB_PASSWORD", "")
+        if not self.password:
+            import warnings
+
+            warnings.warn(
+                "QUESTDB_PASSWORD not set. QuestDB features may not work correctly.",
+                UserWarning,
+                stacklevel=2,
+            )
+
     @property
     def connection_string(self) -> str:
-        """Generate PostgreSQL connection string for QuestDB."""
+        """
+        Generate PostgreSQL connection string for QuestDB.
+
+        Rule 28 Compliant: Builds string dynamically from environment variables.
+        Never hardcodes credentials in connection strings.
+        """
+        if not self.password:
+            raise ValueError(
+                "QUESTDB_PASSWORD environment variable not set. "
+                "Cannot build secure connection string."
+            )
         return (
             f"postgresql://{self.user}:{self.password}@" f"{self.host}:{self.port}/{self.database}"
         )

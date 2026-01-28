@@ -6,6 +6,8 @@ and parameter optimization to prevent overfitting in trading strategies.
 """
 
 from __future__ import annotations
+
+import asyncio
 import random
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta

@@ -27,7 +27,6 @@ from typing import Deque, Dict, List, Optional
 
 from app.core.timezone_utils import utc_now
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -202,9 +201,7 @@ class OrderPatternAnalyzer:
             patterns.append("momentum_ignition")
 
         if patterns:
-            logger.warning(
-                f"Suspicious order patterns detected for {symbol}: {patterns}"
-            )
+            logger.warning(f"Suspicious order patterns detected for {symbol}: {patterns}")
 
         return patterns
 
@@ -245,9 +242,7 @@ class OrderPatternAnalyzer:
             self._orders_by_symbol[symbol] = deque(maxlen=self.lookback_orders)
         self._orders_by_symbol[symbol].append(order)
 
-        logger.debug(
-            f"Recorded order: {order_id} - {side} {quantity} {symbol} @ {price}"
-        )
+        logger.debug(f"Recorded order: {order_id} - {side} {quantity} {symbol} @ {price}")
 
     def record_cancellation(self, order_id: str) -> None:
         """
@@ -389,8 +384,7 @@ class OrderPatternAnalyzer:
 
         # Look for high cancellation rate on large orders
         large_orders = [
-            o for o in symbol_orders
-            if o.quantity > Decimal("100")  # Arbitrary threshold
+            o for o in symbol_orders if o.quantity > Decimal("100")  # Arbitrary threshold
         ]
 
         if not large_orders:
@@ -398,10 +392,7 @@ class OrderPatternAnalyzer:
 
         cancelled_large = sum(1 for o in large_orders if o.cancelled)
 
-        return (
-            len(large_orders) > 5 and
-            cancelled_large / len(large_orders) > 0.7
-        )
+        return len(large_orders) > 5 and cancelled_large / len(large_orders) > 0.7
 
     def _detect_excessive_cancellation(self, symbol: str) -> bool:
         """
@@ -441,10 +432,7 @@ class OrderPatternAnalyzer:
         # US market closes at 4:00 PM Eastern (21:00 UTC)
         if current_time.hour == 20 and current_time.minute >= 30:
             # Look for orders in last 5 minutes
-            recent_orders = [
-                o for o in self._orders
-                if (now - o.timestamp).total_seconds() < 300
-            ]
+            recent_orders = [o for o in self._orders if (now - o.timestamp).total_seconds() < 300]
             return len(recent_orders) > 5
 
         return False
@@ -495,14 +483,11 @@ class OrderPatternAnalyzer:
         side_changes = 0
 
         for i in range(1, len(recent)):
-            if recent[i].side != recent[i-1].side:
+            if recent[i].side != recent[i - 1].side:
                 side_changes += 1
 
         # High side changes with rapid ordering
-        return (
-            side_changes >= 5 and
-            self._detect_rapid_ordering(symbol)
-        )
+        return side_changes >= 5 and self._detect_rapid_ordering(symbol)
 
     def reset(self) -> None:
         """Reset all tracking (for testing)."""

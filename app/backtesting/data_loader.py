@@ -17,38 +17,70 @@ import pandas as pd
 
 from app.models.market_data import Quote
 
-# Try multiple Yahoo Finance libraries as fallbacks
-# Note: yfinance uses Python 3.10+ union syntax (X | Y), which causes TypeError in Python 3.9
-# We use lazy import to avoid this issue at module load time
-_yf = None
-HAS_YFINANCE = False
+logger = logging.getLogger(__name__)
 
+# REQUIRED: Yahoo Finance libraries (no fallbacks)
+import yfinance as yf  # noqa: F401
 
-def _ensure_yfinance():
-    """Lazy import yfinance to avoid Python version compatibility issues."""
-    global _yf, HAS_YFINANCE
-    if _yf is None:
-        try:
-            import yfinance as yf_module
-
-            _yf = yf_module
-            HAS_YFINANCE = True
-        except (ImportError, TypeError) as e:
-            # TypeError occurs on Python 3.9 due to union syntax in yfinance
-            HAS_YFINANCE = False
-            _yf = None
-            logger.debug(f"yfinance not available: {e}")
-    return _yf
-
-
+# Fallback pattern for yahoo_fin
 try:
     from yahoo_fin.stock_info import get_data as yahoo_fin_get_data
 
-    HAS_YAHOO_FIN = True
+    logger.debug("Using yahoo_fin for data loading")
 except ImportError:
-    HAS_YAHOO_FIN = False
+    logger.warning("yahoo_fin not available, using yfinance as fallback")
 
-logger = logging.getLogger(__name__)
+    # Create a wrapper that adapts yfinance to match yahoo_fin interface
+    def yahoo_fin_get_data(
+        ticker: str,
+        start_date: str = None,
+        end_date: str = None,
+        index_as_date: bool = True,
+        interval: str = "1d",
+    ):
+        """
+        Fallback function using yfinance when yahoo_fin is not available.
+
+        Adapts yfinance API to match yahoo_fin's get_data interface.
+
+        Args:
+            ticker: Stock symbol
+            start_date: Start date in mm/dd/yyyy format (yahoo_fin style)
+            end_date: End date in mm/dd/yyyy format (yahoo_fin style)
+            index_as_date: Whether to use date as index (ignored in yfinance)
+            interval: Time interval (1d, 1wk, 1mo, etc.)
+
+        Returns:
+            DataFrame with same structure as yahoo_fin output
+        """
+        try:
+            # Convert yahoo_fin date format (mm/dd/yyyy) to datetime
+            from datetime import datetime as dt
+
+            start_dt = dt.strptime(start_date, "%m/%d/%Y") if start_date else None
+            end_dt = dt.strptime(end_date, "%m/%d/%Y") if end_date else None
+
+            # Map yahoo_fin intervals to yfinance intervals
+            interval_map = {
+                "1d": "1d",
+                "1wk": "1wk",
+                "1mo": "1mo",
+            }
+            yf_interval = interval_map.get(interval, "1d")
+
+            # Fetch data using yfinance
+            ticker_obj = yf.Ticker(ticker)
+            hist = ticker_obj.history(start=start_dt, end=end_dt, interval=yf_interval)
+
+            # Normalize column names to lowercase to match yahoo_fin
+            hist.columns = hist.columns.str.lower()
+
+            return hist
+
+        except Exception as e:
+            logger.error(f"yfinance fallback failed for {ticker}: {e}")
+            # Return empty DataFrame on failure
+            return pd.DataFrame()
 
 
 class DataLoader:
@@ -97,8 +129,8 @@ class DataLoader:
         file_path = self.base_path / f"{symbol}.csv"
 
         if not file_path.exists():
-            logger.warning(f"CSV file not found: {file_path}. Trying yfinance...")
-            return self._load_from_yfinance(symbol, start_date, end_date)
+            logger.error(f"CSV file not found: {file_path}")
+            raise FileNotFoundError(f"CSV file not found: {file_path}")
 
         try:
             # Read CSV and handle both 'date' and 'timestamp' column names
@@ -154,8 +186,7 @@ class DataLoader:
 
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error loading CSV for {symbol}: {e}")
-            logger.warning("Falling back to yfinance...")
-            return self._load_from_yfinance(symbol, start_date, end_date)
+            raise
 
     def _load_from_yfinance(
         self,
@@ -165,12 +196,15 @@ class DataLoader:
         timeframe: str = "1d",
     ) -> List[Quote]:
         """
-        Load data from Yahoo Finance using multiple methods as fallbacks.
+        Load data from Yahoo Finance using multiple methods (REQUIRED).
 
         Tries:
         1. Yahoo Finance v8 API directly (most reliable)
         2. yfinance (secondary)
-        3. yahoo_fin (fallback)
+        3. yahoo_fin (tertiary)
+
+        Raises:
+            RuntimeError: If all methods fail
         """
         # Try Yahoo Finance v8 API directly first (most reliable)
         quotes = self._load_from_yahoo_v8_api(symbol, start_date, end_date, timeframe)
@@ -179,45 +213,42 @@ class DataLoader:
             return quotes
 
         # Try yfinance second
-        yf_module = _ensure_yfinance()
-        if yf_module is not None:
-            try:
-                ticker = yf_module.Ticker(symbol)
-                interval = "1d" if timeframe == "1d" else "1h"
-                hist = ticker.history(start=start_date, end=end_date, interval=interval)
+        try:
+            ticker = yf.Ticker(symbol)
+            interval = "1d" if timeframe == "1d" else "1h"
+            hist = ticker.history(start=start_date, end=end_date, interval=interval)
 
-                if not hist.empty:
-                    quotes = self._convert_yfinance_to_quotes(hist, symbol)
-                    logger.info(f"Loaded {len(quotes)} quotes from yfinance for {symbol}")
-                    return quotes
-            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-                logger.debug(f"yfinance failed for {symbol}: {e}, trying yahoo_fin...")
+            if not hist.empty:
+                quotes = self._convert_yfinance_to_quotes(hist, symbol)
+                logger.info(f"Loaded {len(quotes)} quotes from yfinance for {symbol}")
+                return quotes
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
+            logger.debug(f"yfinance failed for {symbol}: {e}, trying yahoo_fin...")
 
-        # Fallback to yahoo_fin
-        if HAS_YAHOO_FIN:
-            try:
-                # yahoo_fin uses mm/dd/yyyy format
-                start_str = start_date.strftime("%m/%d/%Y")
-                end_str = end_date.strftime("%m/%d/%Y")
-                interval = "1d" if timeframe == "1d" else "1wk"
+        # Use yahoo_fin as last resort
+        try:
+            # yahoo_fin uses mm/dd/yyyy format
+            start_str = start_date.strftime("%m/%d/%Y")
+            end_str = end_date.strftime("%m/%d/%Y")
+            interval = "1d" if timeframe == "1d" else "1wk"
 
-                df = yahoo_fin_get_data(
-                    symbol,
-                    start_date=start_str,
-                    end_date=end_str,
-                    index_as_date=True,
-                    interval=interval,
-                )
+            df = yahoo_fin_get_data(
+                symbol,
+                start_date=start_str,
+                end_date=end_str,
+                index_as_date=True,
+                interval=interval,
+            )
 
-                if df is not None and not df.empty:
-                    quotes = self._convert_dataframe_to_quotes(df, symbol)
-                    logger.info(f"Loaded {len(quotes)} quotes from yahoo_fin for {symbol}")
-                    return quotes
-            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-                logger.debug(f"yahoo_fin failed for {symbol}: {e}")
+            if df is not None and not df.empty:
+                quotes = self._convert_dataframe_to_quotes(df, symbol)
+                logger.info(f"Loaded {len(quotes)} quotes from yahoo_fin for {symbol}")
+                return quotes
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
+            logger.debug(f"yahoo_fin failed for {symbol}: {e}")
 
-        logger.warning(f"No data available from Yahoo Finance for {symbol}")
-        return []
+        # All methods failed - raise error instead of returning empty list
+        raise RuntimeError(f"No data available from Yahoo Finance for {symbol}")
 
     def _load_from_yahoo_v8_api(
         self,
@@ -394,38 +425,42 @@ class DataLoader:
 
         # Convert index to timestamps
         timestamps = df.index.to_series().apply(
-            lambda x: x if isinstance(x, datetime) else (
-                x.to_pydatetime() if isinstance(x, pd.Timestamp) else pd.to_datetime(x).to_pydatetime()
+            lambda x: (
+                x
+                if isinstance(x, datetime)
+                else (
+                    x.to_pydatetime()
+                    if isinstance(x, pd.Timestamp)
+                    else pd.to_datetime(x).to_pydatetime()
+                )
             )
         )
 
         # Get close prices with fallbacks
         closes = df.apply(
             lambda row: Decimal(str(row.get("close", row.get("Close", row.get("last", 100))))),
-            axis=1
+            axis=1,
         )
 
         # Vectorized volume capping
         volumes = df.apply(
-            lambda row: min(
-                Decimal(str(row.get("volume", row.get("Volume", 0)))),
-                max_volume
-            ) if row.get("volume", row.get("Volume", 0)) > 0 else Decimal("0"),
-            axis=1
+            lambda row: (
+                min(Decimal(str(row.get("volume", row.get("Volume", 0)))), max_volume)
+                if row.get("volume", row.get("Volume", 0)) > 0
+                else Decimal("0")
+            ),
+            axis=1,
         )
 
         # Get high/low/open with fallbacks to close
         highs = df.apply(
-            lambda row: Decimal(str(row.get("high", row.get("High", closes.iloc[name])))),
-            axis=1
+            lambda row: Decimal(str(row.get("high", row.get("High", closes.iloc[name])))), axis=1
         )
         lows = df.apply(
-            lambda row: Decimal(str(row.get("low", row.get("Low", closes.iloc[name])))),
-            axis=1
+            lambda row: Decimal(str(row.get("low", row.get("Low", closes.iloc[name])))), axis=1
         )
         opens = df.apply(
-            lambda row: Decimal(str(row.get("open", row.get("Open", closes.iloc[name])))),
-            axis=1
+            lambda row: Decimal(str(row.get("open", row.get("Open", closes.iloc[name])))), axis=1
         )
 
         # Create quotes list using list comprehension (much faster than iterrows)

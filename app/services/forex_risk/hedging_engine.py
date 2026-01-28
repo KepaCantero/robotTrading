@@ -23,7 +23,6 @@ from typing import Any, Dict, List, Optional
 
 from app.core.decimal_utils import calculate_percentage
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -40,8 +39,8 @@ class HedgeInstrumentType(str, Enum):
 class HedgeDirection(str, Enum):
     """Hedge direction."""
 
-    LONG = "long"   # Hedge against foreign currency depreciation
-    SHORT = "short" # Hedge against foreign currency appreciation
+    LONG = "long"  # Hedge against foreign currency depreciation
+    SHORT = "short"  # Hedge against foreign currency appreciation
 
 
 @dataclass
@@ -268,8 +267,8 @@ class HedgingEngine:
 
     # Relative volatilities (for minimum variance hedge ratio)
     DEFAULT_VOLATILITIES = {
-        "EUR": Decimal("0.08"),   # EUR volatility
-        "USD": Decimal("0.10"),   # USD volatility
+        "EUR": Decimal("0.08"),  # EUR volatility
+        "USD": Decimal("0.10"),  # USD volatility
         "GBP": Decimal("0.12"),
         "JPY": Decimal("0.11"),
         "CHF": Decimal("0.09"),
@@ -392,9 +391,7 @@ class HedgingEngine:
         Returns:
             Hedge recommendation
         """
-        logger.info(
-            f"Generating hedge recommendation for {exposure_eur} EUR {currency} exposure"
-        )
+        logger.info(f"Generating hedge recommendation for {exposure_eur} EUR {currency} exposure")
 
         # Calculate optimal hedge ratio
         optimal_ratio = await self.calculate_optimal_hedge_ratio(
@@ -490,8 +487,8 @@ class HedgingEngine:
 
         # Effectiveness = variance reduction
         # Simplified: use squared returns as proxy for variance
-        var_unhedged = unhedged_return ** 2
-        var_hedged = hedged_return ** 2
+        var_unhedged = unhedged_return**2
+        var_hedged = hedged_return**2
 
         if var_unhedged == 0:
             return Decimal("1")  # Perfect hedge (no variance to reduce)
@@ -527,8 +524,8 @@ class HedgingEngine:
             Hedge effectiveness metrics
         """
         # Calculate variance reduction
-        var_unhedged = portfolio_return_eur ** 2
-        var_hedged = combined_return_eur ** 2
+        var_unhedged = portfolio_return_eur**2
+        var_hedged = combined_return_eur**2
 
         if var_unhedged > 0:
             variance_reduction = (var_unhedged - var_hedged) / var_unhedged
@@ -617,10 +614,7 @@ class HedgingEngine:
             )
 
         # Filter by tenor
-        valid_instruments = [
-            instr for instr in instruments
-            if tenor_months in instr.tenor_options
-        ]
+        valid_instruments = [instr for instr in instruments if tenor_months in instr.tenor_options]
 
         if not valid_instruments:
             valid_instruments = instruments
@@ -629,7 +623,9 @@ class HedgingEngine:
         def score(instr: HedgeInstrument) -> Decimal:
             # Factors: liquidity (40%), spread (40%), exchange traded (20%)
             liquidity_score = Decimal(str(instr.liquidity / 100)) * Decimal("0.4")
-            spread_score = (Decimal("100") - instr.typical_spread_bps) / Decimal("100") * Decimal("0.4")
+            spread_score = (
+                (Decimal("100") - instr.typical_spread_bps) / Decimal("100") * Decimal("0.4")
+            )
             exchange_bonus = Decimal("0.2") if instr.is_exchange_traded else Decimal("0")
             return liquidity_score + spread_score + exchange_bonus
 

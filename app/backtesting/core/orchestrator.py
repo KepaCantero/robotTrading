@@ -186,22 +186,27 @@ class OrchestrationResult:
         if successful and isinstance(successful[0], BacktestResult):
             total_returns = [float(r.total_return) for r in successful]
             sharpe_ratios = [
-                float(r.performance.sharpe_ratio) for r in successful
+                float(r.performance.sharpe_ratio)
+                for r in successful
                 if r.performance and r.performance.sharpe_ratio
             ]
 
             if total_returns:
-                summary.update({
-                    'avg_return': sum(total_returns) / len(total_returns),
-                    'best_return': max(total_returns),
-                    'worst_return': min(total_returns),
-                })
+                summary.update(
+                    {
+                        'avg_return': sum(total_returns) / len(total_returns),
+                        'best_return': max(total_returns),
+                        'worst_return': min(total_returns),
+                    }
+                )
 
             if sharpe_ratios:
-                summary.update({
-                    'avg_sharpe': sum(sharpe_ratios) / len(sharpe_ratios),
-                    'best_sharpe': max(sharpe_ratios),
-                })
+                summary.update(
+                    {
+                        'avg_sharpe': sum(sharpe_ratios) / len(sharpe_ratios),
+                        'best_sharpe': max(sharpe_ratios),
+                    }
+                )
 
         return summary
 
@@ -256,10 +261,7 @@ class OrchestrationResult:
         filtered = self.results
 
         for key, value in criteria.items():
-            filtered = [
-                r for r in filtered
-                if isinstance(r, dict) and r.get(key) == value
-            ]
+            filtered = [r for r in filtered if isinstance(r, dict) and r.get(key) == value]
 
         return filtered
 
@@ -277,7 +279,7 @@ class BacktestOrchestrator:
         self,
         config: BacktestConfig,
         executor: Optional['BacktestExecutor'] = None,
-        max_results: int = 1000
+        max_results: int = 1000,
     ):
         """
         Initialize orchestrator.
@@ -292,12 +294,7 @@ class BacktestOrchestrator:
         self.results = BoundedResults(maxlen=max_results)
         self._execution_count = 0
 
-    def run_all(
-        self,
-        quotes: List[Any],
-        strategies: List[Any],
-        **kwargs
-    ) -> OrchestrationResult:
+    def run_all(self, quotes: List[Any], strategies: List[Any], **kwargs) -> OrchestrationResult:
         """
         Run all backtests with given quotes and strategies.
 
@@ -321,15 +318,11 @@ class BacktestOrchestrator:
 
         return OrchestrationResult(results=all_results, config=self.config)
 
-    def _run_single(
-        self,
-        quotes: List[Any],
-        strategy: Any,
-        **kwargs
-    ) -> BacktestResult:
+    def _run_single(self, quotes: List[Any], strategy: Any, **kwargs) -> BacktestResult:
         """Run single backtest."""
         if self.executor is None:
             from app.backtesting.core.executor import BacktestExecutorFactory
+
             self.executor = BacktestExecutorFactory.create(self.config)
 
         self._execution_count += 1
@@ -349,11 +342,11 @@ class BacktestOrchestrator:
             'win_rate': float(result.performance.win_rate) if result.performance else 0.0,
             'sharpe_ratio': (
                 float(result.performance.sharpe_ratio)
-                if result.performance and result.performance.sharpe_ratio else 0.0
+                if result.performance and result.performance.sharpe_ratio
+                else 0.0
             ),
             'max_drawdown': (
-                float(result.performance.max_drawdown_percentage)
-                if result.performance else 0.0
+                float(result.performance.max_drawdown_percentage) if result.performance else 0.0
             ),
         }
 

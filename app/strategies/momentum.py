@@ -9,6 +9,7 @@ para identificar oportunidades de trading basadas en tendencias de precio.
 """
 
 from __future__ import annotations
+
 import logging
 from collections import deque
 from decimal import Decimal

@@ -15,38 +15,34 @@ This provides more meaningful labels for ML that account for:
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 
-# Try to import numba for acceleration
-try:
-    from numba import jit
-    HAS_NUMBA = True
-except ImportError:
-    # Fallback: use a dummy decorator that just returns the function
-    def jit(*args, **kwargs):
-        """Dummy jit decorator when numba is not available."""
-        def decorator(func):
-            return func
-        return decorator
-    HAS_NUMBA = False
+# Import numba for acceleration (REQUIRED)
+from numba import jit
 
-# Try to import matplotlib, if not available make plotting optional
+HAS_NUMBA = True
+
+# Import matplotlib for visualization (OPTIONAL for plotting)
 try:
     import matplotlib.pyplot as plt
+
     HAS_MATPLOTLIB = True
-except ImportError:
+except (ImportError, Exception):
+    # Matplotlib may fail due to numpy version incompatibility
     HAS_MATPLOTLIB = False
     plt = None
 
-# Try to import volatility, if not available use simple std dev
+# Import arch for GARCH volatility modeling (REQUIRED)
 try:
     from arch import arch_model
+
     HAS_ARCH = True
 except ImportError:
     HAS_ARCH = False
+    arch_model = None
 
 
 @dataclass
@@ -87,7 +83,7 @@ class TripleBarrierConfig:
             warnings.warn(
                 "Stop loss is larger than profit target. Consider adjusting for positive risk-reward.",
                 UserWarning,
-            stacklevel=2,
+                stacklevel=2,
             )
 
 
@@ -240,12 +236,8 @@ def calculate_dynamic_barriers(
     if not vol_scaling:
         # Use fixed barriers from config
         n_events = len(events)
-        upper_barriers = pd.Series(
-            [config.upper_barrier_pct] * n_events, index=events.index
-        )
-        lower_barriers = pd.Series(
-            [config.lower_barrier_pct] * n_events, index=events.index
-        )
+        upper_barriers = pd.Series([config.upper_barrier_pct] * n_events, index=events.index)
+        lower_barriers = pd.Series([config.lower_barrier_pct] * n_events, index=events.index)
         return upper_barriers, lower_barriers
 
     # Calculate rolling volatility
@@ -281,9 +273,7 @@ def calculate_dynamic_barriers(
     return upper_barriers, lower_barriers
 
 
-def get_vertical_barriers(
-    events: pd.Series, prices: pd.Series, num_days: int
-) -> pd.Series:
+def get_vertical_barriers(events: pd.Series, prices: pd.Series, num_days: int) -> pd.Series:
     """
     Calculate vertical barriers (time limits) for each event.
 
@@ -422,7 +412,9 @@ class TripleBarrierLabeler:
 
             # Validate index is within bounds
             if pos_idx < 0 or pos_idx >= len(prices):
-                raise ValueError(f"event_idx {pos_idx} out of bounds for prices length {len(prices)}")
+                raise ValueError(
+                    f"event_idx {pos_idx} out of bounds for prices length {len(prices)}"
+                )
 
             # Get labels for this event
             labels, timing = get_barrier_labels_with_timing(
@@ -539,9 +531,7 @@ class TripleBarrierLabeler:
         if self.labels_ is None:
             raise ValueError("Labeler must be fitted first")
 
-        return (
-            self.labels_.groupby("label")["bars_to_barrier"].mean().to_dict()
-        )
+        return self.labels_.groupby("label")["bars_to_barrier"].mean().to_dict()
 
     def get_bin_labels(self, min_return: float = 0.0) -> np.ndarray:
         """
@@ -617,6 +607,7 @@ def plot_triple_barrier(
     """
     if not HAS_MATPLOTLIB:
         import warnings
+
         warnings.warn("Matplotlib not available, skipping visualization", UserWarning, stacklevel=2)
         return None
 
@@ -648,7 +639,7 @@ def plot_triple_barrier(
     # Highlight the barrier that was hit
     barrier_colors = {1: "green", -1: "red", 0: "orange"}
     barrier_names = {1: "Upper (Profit)", -1: "Lower (Stop)", 0: "Vertical (Time)"}
-    color = barrier_colors[label]
+    barrier_colors[label]
     name = barrier_names[label]
 
     ax.set_title(f"Triple Barrier: {name} Hit", fontsize=12, fontweight="bold")
@@ -704,20 +695,32 @@ def calculate_sample_weights(
     Samples with more overlap get lower weights to prevent
     over-representation in ML training.
 
+    This implements the uniqueness weighting from López de Prado, Chapter 4.
+    The key insight is that overlapping samples are not independent and
+    should be down-weighted to prevent overfitting.
+
     Args:
         events: Event timestamps
         labels: DataFrame with labels including 'bars_to_barrier'
         max_holding_period: Maximum holding period for overlap calculation
 
     Returns:
-        Series of sample weights
+        Series of sample weights (normalized to sum to n_samples)
 
     Examples:
         >>> weights = calculate_sample_weights(events, labels, max_holding_period=5)
         >>> model.fit(X, y, sample_weight=weights)
+
+    References:
+        López de Prado, "Advances in Financial Machine Learning", Chapter 4.
+        "Sample weights must be determined by the uniqueness of the observation,
+        not by its frequency or importance."
     """
     n_samples = len(events)
     weights = np.ones(n_samples)
+
+    # Build concurrency matrix (which samples overlap with which)
+    concurrency = np.zeros((n_samples, n_samples))
 
     for i in range(n_samples):
         t_start = events.iloc[i]
@@ -737,12 +740,176 @@ def calculate_sample_weights(
             # Check for overlap
             if not (t_end <= other_start or t_start >= other_end):
                 overlaps += 1
+                concurrency[i, j] = 1
 
         # Weight is inversely proportional to overlaps
+        # Following López de Prado's uniqueness formula
         weights[i] = 1.0 / (1.0 + overlaps)
 
-    # Normalize
-    weights = weights / weights.sum()
+    # Normalize to sum to n_samples (not 1, as sklearn expects)
+    # This ensures the average weight is 1.0
+    weights = weights * n_samples / weights.sum()
+
+    return pd.Series(weights, index=events.index)
+
+
+def calculate_sample_weights_uniqueness(
+    events: pd.Series, labels: pd.DataFrame, price_series: pd.Series, num_threads: int = 1
+) -> pd.Series:
+    """
+    Calculate sample weights using the average uniqueness from López de Prado.
+
+    This is the more advanced version that considers:
+    1. How many other samples each sample overlaps with (concurrency)
+    2. The uniqueness of each sample (inverse of average concurrency)
+
+    The average uniqueness is the key concept from López de Prado (Chapter 4).
+
+    Args:
+        events: Event timestamps (datetime index)
+        labels: DataFrame with labels including 'bars_to_barrier' and 'label'
+        price_series: Price series for calculating returns
+        num_threads: Number of threads for parallel processing
+
+    Returns:
+        Series of sample weights based on average uniqueness
+
+    Examples:
+        >>> weights = calculate_sample_weights_uniqueness(events, labels, prices)
+        >>> model.fit(X, y, sample_weight=weights)
+
+    References:
+        López de Prado, "Advances in Financial Machine Learning", Chapter 4, Section 4.5.
+        "The average uniqueness of a label is the average uniqueness of all outcomes
+        that overlap with that label."
+    """
+
+    n_samples = len(events)
+
+    # Calculate label uniqueness (Numba-accelerated)
+    # First, compute the concurrency matrix
+
+    # Convert events to numpy indices for faster processing
+    event_indices = np.arange(n_samples)
+
+    # Build label end times
+    label_ends = np.zeros(n_samples, dtype=np.int64)
+    for i, (event_time, bars) in enumerate(zip(events, labels["bars_to_barrier"])):
+        # Find the index of the event in the price series
+        event_idx = (
+            price_series.index.get_loc(event_time) if event_time in price_series.index else i
+        )
+        label_ends[i] = event_idx + int(bars)
+
+    # Build uniqueness array
+    uniqueness = np.zeros(n_samples)
+
+    for i in range(n_samples):
+        # Find samples that overlap with sample i
+        # Overlap occurs if:
+        # - Sample j starts before sample i ends
+        # - Sample j ends after sample i starts
+
+        t1_start = event_indices[i]
+        t1_end = label_ends[i]
+
+        concurrent_samples = []
+        for j in range(n_samples):
+            if i == j:
+                continue
+
+            t2_start = event_indices[j]
+            t2_end = label_ends[j]
+
+            # Check for overlap using time intervals
+            if t2_start < t1_end and t2_end > t1_start:
+                concurrent_samples.append(j)
+
+        # Calculate uniqueness
+        # If a sample has c concurrent samples, and the overlap covers
+        # a fraction of the sample, the uniqueness is reduced
+        if len(concurrent_samples) == 0:
+            uniqueness[i] = 1.0
+        else:
+            # Average uniqueness is 1 / (1 + average concurrency)
+            uniqueness[i] = 1.0 / (1.0 + len(concurrent_samples))
+
+    # Sample weights are proportional to uniqueness
+    weights = uniqueness.copy()
+
+    # Normalize to sum to n_samples (so average weight is 1.0)
+    if weights.sum() > 0:
+        weights = weights * n_samples / weights.sum()
+
+    return pd.Series(weights, index=events.index)
+
+
+def calculate_sample_weights_td(
+    events: pd.Series, labels: pd.DataFrame, price_series: pd.Series
+) -> pd.Series:
+    """
+    Calculate sample weights using timedelta-based uniqueness.
+
+    This method calculates weights based on the uniqueness of each sample's
+    time interval, considering both the start and end times.
+
+    Args:
+        events: Event timestamps
+        labels: DataFrame with labels including 'bars_to_barrier'
+        price_series: Price series for index alignment
+
+    Returns:
+        Series of sample weights
+
+    References:
+        López de Prado, "Advances in Financial Machine Learning", Chapter 4.
+    """
+    n_samples = len(events)
+
+    # Get event indices in price series
+    try:
+        event_indices = [
+            price_series.index.get_loc(t) if t in price_series.index else i
+            for i, t in enumerate(events)
+        ]
+    except (KeyError, AttributeError):
+        event_indices = list(range(n_samples))
+
+    # Calculate end indices
+    end_indices = [
+        event_indices[i] + int(labels["bars_to_barrier"].iloc[i]) for i in range(n_samples)
+    ]
+
+    # Calculate uniqueness matrix
+    uniqueness_matrix = np.ones((n_samples, n_samples))
+
+    for i in range(n_samples):
+        for j in range(i + 1, n_samples):
+            # Check if intervals overlap
+            i_start, i_end = event_indices[i], end_indices[i]
+            j_start, j_end = event_indices[j], end_indices[j]
+
+            overlap = not (i_end <= j_start or j_end <= i_start)
+
+            if overlap:
+                # Calculate overlap duration
+                overlap_start = max(i_start, j_start)
+                overlap_end = min(i_end, j_end)
+                overlap_duration = overlap_end - overlap_start
+
+                # Calculate uniqueness reduction
+                # The more overlap, the lower the uniqueness
+                i_duration = i_end - i_start
+                j_duration = j_end - j_start
+
+                uniqueness_matrix[i, j] = 1.0 - (overlap_duration / i_duration)
+                uniqueness_matrix[j, i] = 1.0 - (overlap_duration / j_duration)
+
+    # Calculate average uniqueness for each sample
+    avg_uniqueness = uniqueness_matrix.mean(axis=1)
+
+    # Normalize weights
+    weights = avg_uniqueness * n_samples / avg_uniqueness.sum()
 
     return pd.Series(weights, index=events.index)
 

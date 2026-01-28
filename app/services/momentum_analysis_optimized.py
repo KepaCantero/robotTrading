@@ -14,62 +14,37 @@ PERFORMANCE OPTIMIZATIONS:
 """
 
 import logging
-from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 
-# Import Numba accelerators for 10-100x speedup
-try:
-    from app.core.numba_accelerators import (
-        calculate_rsi,
-        calculate_ema,
-        calculate_macd,
-        calculate_atr,
-        calculate_bollinger_bands,
-        calculate_stochastic,
-        calculate_skewness,
-        calculate_kurtosis,
-        calculate_var,
-        calculate_cvar,
-        get_numba_info,
-    )
-
-    NUMBA_ENABLED = True
-    numba_info = get_numba_info()
-    logging.info(f"✅ Numba accelerators enabled: {numba_info['functions_optimized']} functions optimized")
-except ImportError:
-    NUMBA_ENABLED = False
-    logging.warning("⚠️ Numba accelerators not available - using fallback methods")
-
-# Fallback to pandas-ta-classic if available
-try:
-    import pandas_ta_classic as ta
-    PANDAS_TA_AVAILABLE = True
-except ImportError:
-    PANDAS_TA_AVAILABLE = False
-    if not NUMBA_ENABLED:
-        raise ImportError(
-            "Either pandas-ta-classic or Numba is required for technical indicators. "
-            "Install with: pip install pandas-ta-classic numba"
-        )
-
-from app.core.centralized_config import get_config
-from app.models.momentum import (
-    MomentumAnalysis,
-    MomentumFilter,
-    MomentumSignal,
-    MomentumStrategy,
-    MomentumType,
-    TechnicalIndicators,
-    Timeframe,
+# Import Numba accelerators for 10-100x speedup (REQUIRED)
+from app.core.numba_accelerators import (
+    calculate_atr,
+    calculate_bollinger_bands,
+    calculate_cvar,
+    calculate_ema,
+    calculate_kurtosis,
+    calculate_macd,
+    calculate_rsi,
+    calculate_skewness,
+    calculate_stochastic,
+    calculate_var,
+    get_numba_info,
 )
-from app.services.asset_identification import (
-    AssetIdentificationService,
-    get_asset_identification_service,
+
+NUMBA_ENABLED = True
+numba_info = get_numba_info()
+logging.info(
+    f"✅ Numba accelerators enabled: {numba_info['functions_optimized']} functions optimized"
 )
+
+# REQUIRED: pandas-ta-classic as secondary option
+import pandas_ta_classic as ta
+
+PANDAS_TA_AVAILABLE = True
+
 
 logger = logging.getLogger(__name__)
 
@@ -288,9 +263,7 @@ class TechnicalIndicatorCalculatorOptimized:
 
     @staticmethod
     def calculate_bollinger_bands(
-        prices: List[float],
-        period: int = 20,
-        num_std: float = 2.0
+        prices: List[float], period: int = 20, num_std: float = 2.0
     ) -> Tuple[Optional[float], Optional[float], Optional[float]]:
         """
         Calculate Bollinger Bands using Numba JIT compilation.
@@ -343,7 +316,9 @@ class TechnicalIndicatorCalculatorOptimized:
             middle_val = float(bb_df[middle_col].iloc[-1])
             lower_val = float(bb_df[lower_col].iloc[-1])
 
-            logger.debug(f"Bollinger Bands({period}, {num_std}): U={upper_val:.2f}, M={middle_val:.2f}, L={lower_val:.2f}")
+            logger.debug(
+                f"Bollinger Bands({period}, {num_std}): U={upper_val:.2f}, M={middle_val:.2f}, L={lower_val:.2f}"
+            )
 
             return round(upper_val, 2), round(middle_val, 2), round(lower_val, 2)
 
@@ -357,7 +332,7 @@ class TechnicalIndicatorCalculatorOptimized:
         lows: List[float],
         closes: List[float],
         k_period: int = 14,
-        d_period: int = 3
+        d_period: int = 3,
     ) -> Tuple[Optional[float], Optional[float]]:
         """
         Calculate Stochastic Oscillator using Numba JIT compilation.
@@ -433,6 +408,7 @@ class TechnicalIndicatorCalculatorOptimized:
 
         # Fallback to scipy
         from scipy import stats
+
         skewness_value = stats.skew(returns)
         return float(skewness_value)
 
@@ -455,6 +431,7 @@ class TechnicalIndicatorCalculatorOptimized:
 
         # Fallback to scipy
         from scipy import stats
+
         kurtosis_value = stats.kurtosis(returns)
         return float(kurtosis_value)
 
@@ -505,7 +482,3 @@ TechnicalIndicatorCalculator = TechnicalIndicatorCalculatorOptimized
 
 # Re-export the rest of the momentum analysis service
 # (This would normally import from the original momentum_analysis.py)
-from app.services.momentum_analysis import (
-    MomentumAnalysisService,
-    get_momentum_analysis_service,
-)

@@ -17,6 +17,7 @@ from decimal import Decimal
 from typing import Any, Callable, Dict, List, Optional
 
 import websockets
+from requests.exceptions import HTTPError
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +93,6 @@ class AlpacaClient:
 
             return True
 
-        except ImportError:
             logger.error("alpaca-trade-api not installed. Run: pip install alpaca-trade-api")
             raise AlpacaClientError("alpaca-trade-api library not available")
         except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:

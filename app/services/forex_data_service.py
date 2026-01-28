@@ -10,9 +10,10 @@ import asyncio
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
-from app.core.decimal_utils import to_decimal, validate_price
+from requests.exceptions import HTTPError, RequestException
+
 from app.core.reconnection_manager import ReconnectionConfig, ReconnectionManager
 from app.core.timezone_utils import utc_now
 
@@ -101,7 +102,9 @@ class ForexDataFetcher:
 
         def alert_callback(attempts: int) -> None:
             """Callback when alert threshold is reached."""
-            logger.warning(f"Alert: {attempts} failed forex API connection attempts - using fallback data")
+            logger.warning(
+                f"Alert: {attempts} failed forex API connection attempts - using fallback data"
+            )
 
         config = ReconnectionConfig(
             max_attempts=10,
@@ -153,12 +156,15 @@ class ForexDataFetcher:
 
         # Try to fetch from API with reconnection manager (not implemented - would call OANDA/FXCM)
         try:
+
             async def _fetch_correlations() -> Optional[Dict[str, Decimal]]:
                 """Internal fetch function."""
                 # pylint: disable=assignment-from-no-return
                 return self._fetch_correlations_from_api(base_currency)
 
-            correlations = asyncio.run(self.reconnection_manager.connect_with_backoff(_fetch_correlations))
+            correlations = asyncio.run(
+                self.reconnection_manager.connect_with_backoff(_fetch_correlations)
+            )
             # Function may raise NotImplementedError or return None
             if correlations is not None:
                 self.correlation_cache = (correlations, utc_now())
@@ -197,9 +203,12 @@ class ForexDataFetcher:
 
             # Try to fetch from API with reconnection manager
             try:
+
                 async def _fetch_rate() -> Optional[Decimal]:
                     """Internal fetch function."""
-                    return self._fetch_rate_from_api(pair)  # pylint: disable=assignment-from-no-return
+                    return self._fetch_rate_from_api(
+                        pair
+                    )  # pylint: disable=assignment-from-no-return
 
                 rate = asyncio.run(self.reconnection_manager.connect_with_backoff(_fetch_rate))
                 if rate:

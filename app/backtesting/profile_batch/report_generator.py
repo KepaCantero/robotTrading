@@ -46,9 +46,7 @@ class ReportGenerator:
         self.output_dir = output_dir
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-    def generate_comparison_report(
-        self, results: Dict[str, Any]
-    ) -> str:
+    def generate_comparison_report(self, results: Dict[str, Any]) -> str:
         """
         Generate HTML comparison report.
 
@@ -73,7 +71,8 @@ class ReportGenerator:
         )
         optimization_rec_pct = (
             sum(1 for r in results_list if "optimized" in r.recommendation.lower())
-            / len(results_list) * 100
+            / len(results_list)
+            * 100
             if results_list
             else 0
         )
@@ -108,7 +107,9 @@ class ReportGenerator:
         )
 
         # Save to file
-        output_path = self.output_dir / f"comparison_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+        output_path = (
+            self.output_dir / f"comparison_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+        )
         with open(output_path, "w") as f:
             f.write(html)
 
@@ -136,19 +137,23 @@ class ReportGenerator:
                         ].optimization_results.get("sharpe_ratio", 0):
                             grouped[key] = r
 
-                best_by_objective.append({
-                    "objective": objective.value,
-                    "results": [
-                        {
-                            "risk_tolerance": k[0],
-                            "capital_tier": k[1],
-                            "optimized_sharpe": v.optimization_results.get("sharpe_ratio"),
-                            "optimized_return": v.optimization_results.get("return_pct"),
-                            "sharpe_improvement": v.improvement_metrics.get("sharpe_improvement"),
-                        }
-                        for k, v in grouped.items()
-                    ],
-                })
+                best_by_objective.append(
+                    {
+                        "objective": objective.value,
+                        "results": [
+                            {
+                                "risk_tolerance": k[0],
+                                "capital_tier": k[1],
+                                "optimized_sharpe": v.optimization_results.get("sharpe_ratio"),
+                                "optimized_return": v.optimization_results.get("return_pct"),
+                                "sharpe_improvement": v.improvement_metrics.get(
+                                    "sharpe_improvement"
+                                ),
+                            }
+                            for k, v in grouped.items()
+                        ],
+                    }
+                )
 
         return best_by_objective
 
@@ -165,7 +170,9 @@ class ReportGenerator:
         summary = {
             "timestamp": datetime.now().isoformat(),
             "total_profiles": len(results),
-            "ready_for_paper_trading": sum(1 for r in results.values() if r.ready_for_paper_trading),
+            "ready_for_paper_trading": sum(
+                1 for r in results.values() if r.ready_for_paper_trading
+            ),
             "rejected": sum(1 for r in results.values() if not r.ready_for_paper_trading),
             "average_improvements": {
                 "sharpe": np.mean(
@@ -183,15 +190,15 @@ class ReportGenerator:
             "fallback_metrics": fallback_metrics,
         }
 
-        summary_path = self.output_dir / f"batch_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        summary_path = (
+            self.output_dir / f"batch_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        )
         with open(summary_path, "w") as f:
             json.dump(summary, f, indent=2, default=str)
 
         logger.info(f"Batch summary saved: {summary_path}")
 
-    def export_results(
-        self, results: Dict[str, Any], format: str = "json"
-    ) -> Path:
+    def export_results(self, results: Dict[str, Any], format: str = "json") -> Path:
         """
         Export results to file.
 
@@ -277,8 +284,7 @@ class ReportGenerator:
             # Detailed sheets by objective
             for objective in ObjectivoInversion:
                 obj_results = [
-                    r for r in results.values()
-                    if r.profile.objetivo_inversion == objective
+                    r for r in results.values() if r.profile.objetivo_inversion == objective
                 ]
                 if obj_results:
                     obj_rows = [self._result_to_dict(r) for r in obj_results]

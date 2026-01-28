@@ -1,0 +1,115 @@
+---
+name: "SSL Certificate Expiring"
+severity: "medium"
+trigger: "ssl_cert_expiring_days < 30"
+category: "infrastructure"
+tags: ["ssl", "certificate", "security", "infrastructure"]
+estimated_duration_minutes: 10
+last_updated: "2026-01-28"
+version: "1.0"
+
+description: |
+  Respond to SSL certificate expiration warnings. Expired certificates
+  will cause service failures and security warnings.
+
+prerequisites:
+  - Certificate management access
+  - SSL certificate authority access
+  - Service restart access
+
+steps:
+  - title: "Verify Certificate Expiration"
+    description: "Confirm certificate is expiring soon"
+    commands:
+      - "Check certificate expiration date"
+      - "Identify affected services/domains"
+      - "Verify certificate validity"
+      - "Check impact scope"
+    expected_outcome: "Certificate expiration confirmed"
+
+  - title: "Assess Risk Level"
+    description: "Determine urgency based on time to expiry"
+    commands: []
+    decision_point:
+      condition: "days_until_expiry < 7"
+      true_branch: "Critical - renew immediately"
+      false_branch: "Standard renewal process"
+
+  - title: "Initiate Certificate Renewal"
+    description: "Start certificate renewal process"
+    commands:
+      - "Generate new CSR if needed"
+      - "Submit certificate request"
+      - "Validate domain ownership"
+      - "Complete any verification steps"
+    expected_outcome: "Certificate renewal initiated"
+
+  - title: "Obtain New Certificate"
+    description: "Get renewed certificate from CA"
+    commands:
+      - "Download new certificate"
+      - "Verify certificate chain"
+      - "Validate certificate details"
+      - "Check certificate validity period"
+    expected_outcome: "New certificate obtained"
+
+  - title: "Deploy New Certificate"
+    description: "Install renewed certificate"
+    commands:
+      - "Backup current certificate"
+      - "Install new certificate"
+      - "Update certificate chain"
+      - "Verify certificate installation"
+      - "Restart affected services"
+    expected_outcome: "Certificate deployed"
+
+  - title: "Verify Certificate Functionality"
+    description: "Confirm certificate is working"
+    commands:
+      - "Test HTTPS access"
+      - "Check for certificate warnings"
+      - "Verify certificate chain"
+      - "Test all affected services"
+    expected_outcome: "Certificate verified working"
+
+  - title: "Update Monitoring"
+    description: "Ensure future expirations are caught"
+    commands:
+      - "Update certificate expiry monitoring"
+      - "Set renewal reminders earlier"
+      - "Document certificate details"
+      - "Update certificate inventory"
+    expected_outcome: "Monitoring updated"
+
+  - title: "Document Renewal"
+    description: "Record certificate renewal"
+    commands:
+      - "Log certificate renewal"
+      - "Update certificate records"
+      - "Document new expiry date"
+      - "Set next renewal reminder"
+    expected_outcome: "Renewal documented"
+
+post_actions:
+  - "Review certificate management practices"
+  - "Implement automatic renewal where possible"
+  - "Update certificate inventory"
+  - "Improve expiry monitoring"
+
+related_runbooks:
+  - "service_degraded.yaml"
+  - "security_incident.yaml"
+
+metrics_to_track:
+  - "ssl_certificate_days_until_expiry"
+  - "ssl_certificate_renewal_count"
+
+success_criteria:
+  - "Certificate renewed and deployed"
+  - "All services working correctly"
+  - "Monitoring updated"
+  - "Documentation complete"
+
+escalation_path: "infrastructure"
+owner: "platform-team"
+review_frequency: "monthly"

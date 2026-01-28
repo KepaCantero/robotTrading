@@ -236,8 +236,12 @@ class HyperparameterOptimizer:
                 'rsi_period': random.choice(self.parameter_space['rsi_period']),
                 'rsi_buy_threshold': random.choice(self.parameter_space['rsi_buy_threshold']),
                 'rsi_sell_threshold': random.choice(self.parameter_space['rsi_sell_threshold']),
-                'stoch_rsi_oversold': random.choice(self.parameter_space.get('stoch_rsi_oversold', [20])),
-                'stoch_rsi_overbought': random.choice(self.parameter_space.get('stoch_rsi_overbought', [80])),
+                'stoch_rsi_oversold': random.choice(
+                    self.parameter_space.get('stoch_rsi_oversold', [20])
+                ),
+                'stoch_rsi_overbought': random.choice(
+                    self.parameter_space.get('stoch_rsi_overbought', [80])
+                ),
                 'momentum_threshold': random.choice(self.parameter_space['momentum_threshold']),
                 'volume_threshold': random.choice(self.parameter_space['volume_threshold']),
                 'atr_percentile_threshold': random.choice(
@@ -438,13 +442,13 @@ class HyperparameterOptimizer:
             for preset in ['conservative', 'balanced', 'aggressive']:
                 if preset in thresholds:
                     thresholds[preset]['oversold_threshold'] = config.get('stoch_rsi_oversold', 20)
-                    thresholds[preset]['overbought_threshold'] = config.get('stoch_rsi_overbought', 80)
+                    thresholds[preset]['overbought_threshold'] = config.get(
+                        'stoch_rsi_overbought', 80
+                    )
 
         # Momentum Filter
         if 'momentum_filter' in strategy_config['modules']:
-            mom_params = strategy_config['modules']['momentum_filter'].get(
-                'thresholds', {}
-            )
+            mom_params = strategy_config['modules']['momentum_filter'].get('thresholds', {})
             for preset in ['conservative', 'balanced', 'aggressive']:
                 if preset in mom_params:
                     mom_params[preset]['min_positive_momentum'] = config.get(

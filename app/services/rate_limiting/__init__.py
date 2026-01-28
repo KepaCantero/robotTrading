@@ -39,12 +39,13 @@ Usage:
 """
 
 from app.services.rate_limiting.token_bucket import (
+    BROKER_RATE_LIMITS,
     BrokerType,
     RateLimit,
     RateLimitManager,
+    RequestPriority,
     TokenBucketRateLimiter,
     TokenBucketState,
-    BROKER_RATE_LIMITS,
 )
 
 __all__ = [
@@ -54,6 +55,7 @@ __all__ = [
     "RateLimitManager",
     "TokenBucketRateLimiter",
     "TokenBucketState",
+    "RequestPriority",
     # Constants
     "BROKER_RATE_LIMITS",
 ]

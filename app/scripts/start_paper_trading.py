@@ -142,7 +142,9 @@ async def start_market_data_service() -> MarketDataService:
     for symbol in symbols:
         await service.subscribe_symbol(symbol)
 
-    logger.info(f"✅ Market data service started with {len(symbols)} symbols using {data_feed_name}")
+    logger.info(
+        f"✅ Market data service started with {len(symbols)} symbols using {data_feed_name}"
+    )
 
     return service
 

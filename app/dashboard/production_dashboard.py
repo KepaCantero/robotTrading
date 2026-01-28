@@ -12,14 +12,20 @@ This module provides a comprehensive production dashboard with:
 """
 
 import asyncio
-import json
 import logging
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
+from sqlalchemy.exc import (
+    DatabaseError,
+    DataError,
+    IntegrityError,
+    OperationalError,
+    ProgrammingError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -180,9 +186,7 @@ class ProductionDashboard:
             buying_power = await self._get_buying_power()
 
             # Calculate daily P&L percentage
-            daily_pnl_pct = (
-                (daily_pnl / total_value * 100) if total_value > 0 else Decimal("0")
-            )
+            daily_pnl_pct = (daily_pnl / total_value * 100) if total_value > 0 else Decimal("0")
 
             # System health
             cpu_percent = await self._get_cpu_percent()
@@ -293,7 +297,7 @@ class ProductionDashboard:
                 alert_manager = self.alerting_orchestrator.alert_manager
                 if alert_manager:
                     # Get recent alerts
-                    cutoff_time = datetime.now(timezone.utc) - timedelta(hours=hours)
+                    datetime.now(timezone.utc) - timedelta(hours=hours)
                     alerts = alert_manager.get_recent_alerts(older_than_hours=hours)
 
                     for alert in alerts:
@@ -417,6 +421,7 @@ class ProductionDashboard:
         """Get CPU usage percent."""
         try:
             import psutil
+
             return psutil.cpu_percent(interval=0.1)
         except (asyncio.TimeoutError, ConnectionError, OSError):
             return 0.0
@@ -424,8 +429,10 @@ class ProductionDashboard:
     async def _get_memory_mb(self) -> float:
         """Get memory usage in MB."""
         try:
-            import psutil
             import os
+
+            import psutil
+
             process = psutil.Process(os.getpid())
             return process.memory_info().rss / (1024 * 1024)
         except (asyncio.TimeoutError, ConnectionError, OSError):
@@ -434,8 +441,10 @@ class ProductionDashboard:
     async def _get_memory_percent(self) -> float:
         """Get memory usage percent."""
         try:
-            import psutil
             import os
+
+            import psutil
+
             process = psutil.Process(os.getpid())
             return process.memory_percent()
         except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError):
@@ -496,9 +505,8 @@ class ProductionDashboard:
             if self.alerting_orchestrator:
                 stats = self.alerting_orchestrator.get_statistics()
                 # Calculate active alerts (triggered - resolved)
-                return (
-                    stats.get("total_alerts_triggered", 0)
-                    - stats.get("total_alerts_resolved", 0)
+                return stats.get("total_alerts_triggered", 0) - stats.get(
+                    "total_alerts_resolved", 0
                 )
         except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.warning(f"Error getting active alerts: {e}")

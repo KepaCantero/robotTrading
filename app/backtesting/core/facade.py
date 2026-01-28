@@ -7,7 +7,6 @@ hiding complexity and providing a clean API for running backtests.
 
 import logging
 from datetime import datetime
-from decimal import Decimal
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -16,10 +15,7 @@ import pandas as pd
 from app.backtesting.core.config_loader import BacktestConfigLoader
 from app.backtesting.core.executor import BacktestExecutorFactory
 from app.backtesting.core.orchestrator import (
-    BacktestDefaults,
-    BacktestOrchestrator,
     BoundedResults,
-    OrchestrationResult,
 )
 
 logger = logging.getLogger(__name__)
@@ -58,9 +54,7 @@ class BacktestRunnerFacade:
         logger.info(f"BacktestRunnerFacade initialized with config: {config_path}")
 
     async def load_data(
-        self,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None
+        self, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None
     ) -> None:
         """
         Load market data for backtesting.
@@ -84,9 +78,7 @@ class BacktestRunnerFacade:
         logger.info(f"Loaded {len(self.quotes)} quotes for backtesting")
 
     async def _load_portfolio_market_data(
-        self,
-        start_date: datetime,
-        end_date: datetime
+        self, start_date: datetime, end_date: datetime
     ) -> List[Any]:
         """Load market data for portfolio symbols."""
         from app.services.portfolio_builder import PortfolioBuilder
@@ -94,20 +86,14 @@ class BacktestRunnerFacade:
 
         portfolio_config = get_portfolio_config_manager()
         portfolio_builder = PortfolioBuilder(
-            portfolio_config=portfolio_config,
-            data_loader=self.data_loader
+            portfolio_config=portfolio_config, data_loader=self.data_loader
         )
 
         return await portfolio_builder.build_portfolio_quotes(
-            start_date=start_date,
-            end_date=end_date
+            start_date=start_date, end_date=end_date
         )
 
-    def run_baseline(
-        self,
-        strategy: Any,
-        strategy_name: Optional[str] = None
-    ) -> Dict[str, Any]:
+    def run_baseline(self, strategy: Any, strategy_name: Optional[str] = None) -> Dict[str, Any]:
         """
         Run baseline backtest.
 
@@ -124,11 +110,7 @@ class BacktestRunnerFacade:
         logger.info(f"Running baseline backtest: {strategy_name}")
 
         executor = BacktestExecutorFactory.create(self.backtest_config)
-        result = executor.execute(
-            self.quotes,
-            strategy,
-            strategy_name=strategy_name
-        )
+        result = executor.execute(self.quotes, strategy, strategy_name=strategy_name)
 
         result_dict = self._result_to_dict(result, 'baseline', strategy_name)
         self.results.add(result_dict)
@@ -142,11 +124,7 @@ class BacktestRunnerFacade:
         return result_dict
 
     def run_strategy_test(
-        self,
-        strategy: Any,
-        test_name: str,
-        test_type: str = 'custom',
-        **metadata
+        self, strategy: Any, test_name: str, test_type: str = 'custom', **metadata
     ) -> Dict[str, Any]:
         """
         Run custom strategy backtest.
@@ -163,11 +141,7 @@ class BacktestRunnerFacade:
         logger.info(f"Running {test_type} backtest: {test_name}")
 
         executor = BacktestExecutorFactory.create(self.backtest_config)
-        result = executor.execute(
-            self.quotes,
-            strategy,
-            strategy_name=test_name
-        )
+        result = executor.execute(self.quotes, strategy, strategy_name=test_name)
 
         result_dict = self._result_to_dict(result, test_type, test_name)
         result_dict.update(metadata)
@@ -181,7 +155,7 @@ class BacktestRunnerFacade:
         self,
         strategy_factory: Any,
         parameters: Dict[str, List[Any]],
-        test_name_prefix: str = 'param_sweep'
+        test_name_prefix: str = 'param_sweep',
     ) -> List[Dict[str, Any]]:
         """
         Run parameter sweep across multiple parameter combinations.
@@ -212,10 +186,7 @@ class BacktestRunnerFacade:
             test_name = f"{test_name_prefix}_{param_str}"
 
             result_dict = self.run_strategy_test(
-                strategy,
-                test_name,
-                test_type='parameter_sweep',
-                parameters=params
+                strategy, test_name, test_type='parameter_sweep', parameters=params
             )
             results.append(result_dict)
 
@@ -266,16 +237,12 @@ class BacktestRunnerFacade:
         if 'json' in output_formats:
             json_path = self.output_dir / f"backtest_results_{timestamp}.json"
             import json
+
             with open(json_path, 'w') as f:
                 json.dump(self.results.get_all(), f, indent=2, default=str)
             logger.info(f"Results saved to JSON: {json_path}")
 
-    def _result_to_dict(
-        self,
-        result: Any,
-        test_type: str,
-        test_name: str
-    ) -> Dict[str, Any]:
+    def _result_to_dict(self, result: Any, test_type: str, test_name: str) -> Dict[str, Any]:
         """Convert BacktestResult to dictionary."""
         from app.backtesting.models import BacktestResult
 
@@ -294,26 +261,31 @@ class BacktestRunnerFacade:
             'test_name': test_name,
             'strategy_name': result.strategy_name,
             'total_pnl': final_capital - initial_capital,
-            'return_pct': ((final_capital - initial_capital) / initial_capital * 100)
-            if initial_capital > 0 else 0.0,
+            'return_pct': (
+                ((final_capital - initial_capital) / initial_capital * 100)
+                if initial_capital > 0
+                else 0.0
+            ),
             'final_capital': final_capital,
             'total_trades': result.performance.total_trades if result.performance else 0,
             'win_rate': float(result.performance.win_rate) if result.performance else 0.0,
             'sharpe_ratio': (
                 float(result.performance.sharpe_ratio)
-                if result.performance and result.performance.sharpe_ratio else 0.0
+                if result.performance and result.performance.sharpe_ratio
+                else 0.0
             ),
             'sortino_ratio': (
                 float(result.performance.sortino_ratio)
-                if result.performance and result.performance.sortino_ratio else 0.0
+                if result.performance and result.performance.sortino_ratio
+                else 0.0
             ),
             'max_drawdown': (
-                float(result.performance.max_drawdown_percentage)
-                if result.performance else 0.0
+                float(result.performance.max_drawdown_percentage) if result.performance else 0.0
             ),
             'avg_trade_pnl': (
                 (final_capital - initial_capital) / result.performance.total_trades
-                if result.performance and result.performance.total_trades > 0 else 0.0
+                if result.performance and result.performance.total_trades > 0
+                else 0.0
             ),
         }
 

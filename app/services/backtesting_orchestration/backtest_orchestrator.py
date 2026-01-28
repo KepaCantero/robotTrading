@@ -284,7 +284,6 @@ class BacktestOrchestrator:
                 if os.path.exists(temp_config_path):
                     os.unlink(temp_config_path)
 
-        except ImportError:
             logger.debug("ComprehensiveBacktestRunner not available, using simulation")
         except Exception as e:
             logger.warning(f"⚠️ Backtest integration error: {e}, using simulation")

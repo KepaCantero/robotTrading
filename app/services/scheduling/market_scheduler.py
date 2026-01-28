@@ -25,7 +25,6 @@ import pytz
 
 from app.core.timezone_utils import utc_now
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -276,10 +275,7 @@ class MarketScheduler:
             enabled=enabled,
         )
         self.tasks[task_id] = task
-        logger.info(
-            f"Scheduled task: {name} ({task_id}) for "
-            f"{[m.value for m in market_types]}"
-        )
+        logger.info(f"Scheduled task: {name} ({task_id}) for " f"{[m.value for m in market_types]}")
 
     def unschedule_task(self, task_id: str) -> bool:
         """
@@ -369,9 +365,7 @@ class MarketScheduler:
 
                 # Get tasks for this market
                 tasks = [
-                    t
-                    for t in self.tasks.values()
-                    if market_type in t.market_types and t.enabled
+                    t for t in self.tasks.values() if market_type in t.market_types and t.enabled
                 ]
 
                 # Determine if we should run tasks
@@ -549,9 +543,7 @@ class MarketScheduler:
         if schedule:
             if holiday_date not in schedule.holidays:
                 schedule.holidays.append(holiday_date)
-                logger.info(
-                    f"Added holiday {holiday_date} for {market_type.value}"
-                )
+                logger.info(f"Added holiday {holiday_date} for {market_type.value}")
 
     def remove_holiday(self, market_type: MarketType, holiday_date: date) -> bool:
         """
@@ -574,9 +566,7 @@ class MarketScheduler:
         schedule = self.schedules.get(market_type)
         if schedule and holiday_date in schedule.holidays:
             schedule.holidays.remove(holiday_date)
-            logger.info(
-                f"Removed holiday {holiday_date} for {market_type.value}"
-            )
+            logger.info(f"Removed holiday {holiday_date} for {market_type.value}")
             return True
         return False
 
@@ -662,9 +652,7 @@ class MarketScheduler:
             logger.error(f"Error running task {task_id}: {e}", exc_info=True)
             return False
 
-    def get_market_schedule(
-        self, market_type: MarketType
-    ) -> Optional[MarketSchedule]:
+    def get_market_schedule(self, market_type: MarketType) -> Optional[MarketSchedule]:
         """
         Get the schedule for a market type.
 

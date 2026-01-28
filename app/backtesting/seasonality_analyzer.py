@@ -18,6 +18,19 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 
+# Import statsmodels with fallback
+try:
+    from statsmodels.tsa.seasonal import seasonal_decompose as sm_seasonal_decompose
+
+    STATSMODELS_AVAILABLE = True
+
+    def seasonal_decompose(*args, **kwargs):
+        return sm_seasonal_decompose(*args, **kwargs)
+
+except ImportError:
+
+    STATSMODELS_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 
 
@@ -311,8 +324,18 @@ class SeasonalityAnalyzer:
                     'periods_analyzed': len(monthly),
                 }
             except ImportError:
-                logger.warning("statsmodels not available, skipping decomposition")
-                return None
+                # Use fallback implementation
+                from app.core.statsmodels_fallback import seasonal_decompose as fallback_decompose
+
+                decomposition = fallback_decompose(monthly, model=method, period=12)
+
+                return {
+                    'method': f'{method}_fallback',
+                    'trend': [float(x) for x in decomposition.trend.dropna()],
+                    'seasonal': [float(x) for x in decomposition.seasonal.dropna()],
+                    'residual': [float(x) for x in decomposition.resid.dropna()],
+                    'periods_analyzed': len(monthly),
+                }
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Error decomposing returns: {e}")

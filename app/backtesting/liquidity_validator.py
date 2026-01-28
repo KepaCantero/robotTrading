@@ -11,10 +11,10 @@ This module addresses HIGH PRIORITY #1 from the audit report:
 - Market impact calculation
 """
 
+import logging
+from dataclasses import dataclass
 from decimal import Decimal
 from typing import Optional, Tuple
-from dataclasses import dataclass
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class FillResult:
     """Result of an order fill attempt."""
+
     requested_quantity: Decimal
     filled_quantity: Decimal
     fill_price: Decimal
@@ -96,11 +97,7 @@ class LiquidityValidator:
         )
 
     def validate_order(
-        self,
-        order_quantity: Decimal,
-        symbol: str,
-        current_bar,
-        order_side: str = "buy"
+        self, order_quantity: Decimal, symbol: str, current_bar, order_side: str = "buy"
     ) -> Tuple[bool, str]:
         """
         Validate if order can be filled based on available liquidity.
@@ -147,11 +144,7 @@ class LiquidityValidator:
         return True, "OK"
 
     def simulate_fill(
-        self,
-        order_quantity: Decimal,
-        current_bar,
-        order_side: str = "buy",
-        symbol: str = "UNKNOWN"
+        self, order_quantity: Decimal, current_bar, order_side: str = "buy", symbol: str = "UNKNOWN"
     ) -> FillResult:
         """
         Simulate realistic order fill with partial fills if necessary.
@@ -171,12 +164,7 @@ class LiquidityValidator:
             FillResult with fill details including execution price and status
         """
         # First validate the order
-        is_valid, reason = self.validate_order(
-            order_quantity,
-            symbol,
-            current_bar,
-            order_side
-        )
+        is_valid, reason = self.validate_order(order_quantity, symbol, current_bar, order_side)
 
         if not is_valid:
             # Order rejected - no fill
@@ -186,7 +174,7 @@ class LiquidityValidator:
                 fill_price=Decimal("0"),
                 fill_status="REJECTED",
                 rejection_reason=reason,
-                market_impact=Decimal("0")
+                market_impact=Decimal("0"),
             )
 
         daily_volume = Decimal(str(current_bar.volume))
@@ -210,7 +198,7 @@ class LiquidityValidator:
                 fill_price=fill_price,
                 fill_status="FILLED",
                 avg_fill_price=fill_price,
-                market_impact=market_impact
+                market_impact=market_impact,
             )
         else:
             # Partial fill scenario - order too large for immediate execution
@@ -222,7 +210,9 @@ class LiquidityValidator:
                 else:
                     fill_price = self._calculate_sell_fill_price(current_bar, filled_quantity)
 
-                market_impact = self.calculate_market_impact(filled_quantity, current_bar, order_side)
+                market_impact = self.calculate_market_impact(
+                    filled_quantity, current_bar, order_side
+                )
 
                 fill_pct = filled_quantity / order_quantity
 
@@ -238,7 +228,7 @@ class LiquidityValidator:
                     fill_price=fill_price,
                     fill_status="PARTIAL",
                     avg_fill_price=fill_price,
-                    market_impact=market_impact
+                    market_impact=market_impact,
                 )
             else:
                 # Partial fills disabled - reject the order
@@ -252,14 +242,10 @@ class LiquidityValidator:
                         f"and partial fills are disabled. "
                         f"Maximum fillable: {max_fillable:.0f} shares ({self.PARTIAL_FILL_PCT:.1%})."
                     ),
-                    market_impact=Decimal("0")
+                    market_impact=Decimal("0"),
                 )
 
-    def _calculate_buy_fill_price(
-        self,
-        current_bar,
-        quantity: Optional[Decimal] = None
-    ) -> Decimal:
+    def _calculate_buy_fill_price(self, current_bar, quantity: Optional[Decimal] = None) -> Decimal:
         """
         Calculate realistic buy fill price with slippage and market impact.
 
@@ -295,7 +281,7 @@ class LiquidityValidator:
                 # Market impact increases with square of order size
                 # Small orders have minimal impact, large orders have significant impact
                 volume_ratio = quantity / daily_volume
-                impact_factor = volume_ratio ** 2
+                impact_factor = volume_ratio**2
                 additional_slippage = impact_factor * Decimal("0.1")  # Scale factor
 
                 # Cap additional slippage
@@ -308,9 +294,7 @@ class LiquidityValidator:
         return execution_price
 
     def _calculate_sell_fill_price(
-        self,
-        current_bar,
-        quantity: Optional[Decimal] = None
+        self, current_bar, quantity: Optional[Decimal] = None
     ) -> Decimal:
         """
         Calculate realistic sell fill price with slippage and market impact.
@@ -346,7 +330,7 @@ class LiquidityValidator:
             if daily_volume > 0:
                 # Market impact increases with square of order size
                 volume_ratio = quantity / daily_volume
-                impact_factor = volume_ratio ** 2
+                impact_factor = volume_ratio**2
                 additional_slippage = impact_factor * Decimal("0.1")
 
                 # Cap additional slippage
@@ -359,10 +343,7 @@ class LiquidityValidator:
         return execution_price
 
     def calculate_market_impact(
-        self,
-        order_quantity: Decimal,
-        current_bar,
-        order_side: str = "buy"
+        self, order_quantity: Decimal, current_bar, order_side: str = "buy"
     ) -> Decimal:
         """
         Calculate estimated market impact of an order.
@@ -402,11 +383,7 @@ class LiquidityValidator:
 
         return market_impact
 
-    def get_liquidity_metrics(
-        self,
-        current_bar,
-        order_quantity: Optional[Decimal] = None
-    ) -> dict:
+    def get_liquidity_metrics(self, current_bar, order_quantity: Optional[Decimal] = None) -> dict:
         """
         Get liquidity metrics for current market conditions.
 

@@ -19,7 +19,6 @@ from typing import Any, Callable, Dict, List, Optional, Set
 
 from app.core.timezone_utils import utc_now
 
-
 logger = logging.getLogger(__name__)
 
 

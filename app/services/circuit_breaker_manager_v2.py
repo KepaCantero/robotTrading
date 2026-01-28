@@ -18,8 +18,10 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Set
 
-from app.core.timezone_utils import utc_now
+from requests.exceptions import HTTPError
+
 from app.core.decimal_utils import to_decimal
+from app.core.timezone_utils import utc_now
 
 logger = logging.getLogger(__name__)
 
@@ -296,9 +298,7 @@ class CircuitBreakerManager:
         """Check for market-wide circuit breakers."""
         try:
             # Get market index data (use SPY as proxy)
-            index_data = await self.data_service.get_quote(
-                self.config.market_index_symbol
-            )
+            index_data = await self.data_service.get_quote(self.config.market_index_symbol)
 
             if not index_data:
                 logger.warning(f"Could not fetch data for {self.config.market_index_symbol}")
@@ -358,10 +358,7 @@ class CircuitBreakerManager:
                     change_pct = to_decimal(getattr(quote, 'change_percent', 0))
 
                     if is_halted:
-                        await self._on_symbol_halted(
-                            symbol,
-                            "Trading halt detected"
-                        )
+                        await self._on_symbol_halted(symbol, "Trading halt detected")
 
                     # Update state
                     self._market_states[symbol] = MarketState(
@@ -390,9 +387,7 @@ class CircuitBreakerManager:
             vix = to_decimal(getattr(vix_data, 'last_price', 0))
 
             if vix >= self.config.VIX_EXTREME:
-                await self.pause_all_trading(
-                    f"VIX at panic level: {vix}"
-                )
+                await self.pause_all_trading(f"VIX at panic level: {vix}")
                 logger.critical(f"VIX EXTREME: {vix}")
             elif vix >= self.config.VIX_HIGH:
                 logger.warning(f"VIX HIGH: {vix}")
@@ -408,8 +403,7 @@ class CircuitBreakerManager:
     ) -> None:
         """Handle circuit breaker trigger."""
         logger.critical(
-            f"CIRCUIT BREAKER {level.value} TRIGGERED: "
-            f"{symbol} down {abs(change_pct):.1%}"
+            f"CIRCUIT BREAKER {level.value} TRIGGERED: " f"{symbol} down {abs(change_pct):.1%}"
         )
 
         # Pause all trading
@@ -436,9 +430,7 @@ class CircuitBreakerManager:
 
         # Start halt check loop
         if self.config.auto_resume_on_halt_lift:
-            self._halt_check_task = asyncio.create_task(
-                self._halt_check_loop(symbol)
-            )
+            self._halt_check_task = asyncio.create_task(self._halt_check_loop(symbol))
 
     async def _on_symbol_halted(self, symbol: str, reason: str) -> None:
         """Handle single symbol halt."""

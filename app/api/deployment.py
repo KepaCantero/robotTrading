@@ -6,11 +6,13 @@ and accessing deployment status information.
 """
 
 from __future__ import annotations
+
 import logging
 from datetime import datetime
 from typing import Dict
 
 from fastapi import APIRouter, HTTPException, Query
+from requests.exceptions import HTTPError, RequestException
 
 from app.models.deployment import DeploymentInput
 from app.services.deploy_decision_orchestrator import get_deploy_orchestrator

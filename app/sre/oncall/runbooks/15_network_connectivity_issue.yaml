@@ -1,0 +1,120 @@
+---
+name: "Network Connectivity Issue"
+severity: "high"
+trigger: "network_latency_high OR packet_loss_detected OR connection_failure"
+category: "infrastructure"
+tags: ["network", "connectivity", "infrastructure"]
+estimated_duration_minutes: 25
+last_updated: "2026-01-28"
+version: "1.0"
+
+description: |
+  Respond to network connectivity issues. Network problems can
+  prevent trading, data access, and system communication.
+
+prerequisites:
+  - Network monitoring tools
+  - Network diagnostic access
+  - Infrastructure access
+
+steps:
+  - title: "Verify Network Issue"
+    description: "Confirm network connectivity problem"
+    commands:
+      - "Check network monitoring dashboards"
+      - "Test connectivity to external services"
+      - "Identify affected services"
+      - "Determine scope of issue"
+    expected_outcome: "Network issue confirmed"
+
+  - title: "Assess Impact"
+    description: "Determine impact on operations"
+    commands:
+      - "Check if trading affected"
+      - "Check if data feeds affected"
+      - "Review service-to-service communication"
+      - "Assess user impact"
+    expected_outcome: "Impact assessed"
+    decision_point:
+      condition: "critical_services_affected"
+      true_branch: "Implement workaround"
+      false_branch: "Continue investigation"
+
+  - title: "Identify Network Scope"
+    description: "Determine extent of network issue"
+    commands:
+      - "Check if internal or external"
+      - "Test connectivity to multiple endpoints"
+      - "Check if specific to one provider"
+      - "Review network path traces"
+    expected_outcome: "Issue scope understood"
+
+  - title: "Implement Workaround"
+    description: "Maintain operations during outage"
+    commands:
+      - "Switch to backup network if available"
+      - "Route through alternative paths"
+      - "Use cached data if appropriate"
+      - "Halt non-critical operations"
+    expected_outcome: "Workaround in place"
+
+  - title: "Diagnose Root Cause"
+    description: "Identify network problem source"
+    commands:
+      - "Check network equipment status"
+      - "Review network logs"
+      - "Check with network provider"
+      - "Run network diagnostics"
+      - "Review recent network changes"
+    expected_outcome: "Root cause identified"
+
+  - title: "Coordinate Resolution"
+    description: "Work on fixing network issue"
+    commands:
+      - "Work with network provider if external"
+      - "Fix internal network issues"
+      - "Replace failed equipment"
+      - "Update routing if needed"
+    expected_outcome: "Network issue resolved"
+
+  - title: "Verify Recovery"
+    description: "Confirm network is healthy"
+    commands:
+      - "Test all critical connectivity"
+      - "Monitor for 15 minutes"
+      - "Verify no packet loss"
+      - "Check latency normal"
+    expected_outcome: "Network confirmed healthy"
+
+  - title: "Document Incident"
+    description: "Record network incident"
+    commands:
+      - "Log network incident"
+      - "Document impact and duration"
+      - "Record resolution steps"
+      - "Create preventive measures"
+    expected_outcome: "Incident documented"
+
+post_actions:
+  - "Review network redundancy"
+  - "Improve network monitoring"
+  - "Consider backup connections"
+  - "Update runbook with lessons learned"
+
+related_runbooks:
+  - "broker_api_failure.yaml"
+  - "data_api_failure.yaml"
+
+metrics_to_track:
+  - "network_latency_ms"
+  - "packet_loss_percentage"
+  - "connection_failure_count"
+
+success_criteria:
+  - "Network connectivity restored"
+  - "All services operational"
+  - "Incident documented"
+
+escalation_path: "infrastructure"
+owner: "platform-team"
+review_frequency: "quarterly"

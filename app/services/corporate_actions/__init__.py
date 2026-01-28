@@ -18,8 +18,8 @@ Date: 2026-01-25
 
 from app.services.corporate_actions.handler import (
     CorporateAction,
-    CorporateActionType,
     CorporateActionsHandler,
+    CorporateActionType,
 )
 
 __all__ = [

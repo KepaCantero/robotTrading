@@ -27,6 +27,43 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
+# ============================================================================
+# Optional Dependencies
+# ============================================================================
+try:
+    import shap
+
+    SHAP_AVAILABLE = True
+except (ImportError, ModuleNotFoundError, OSError):
+    shap = None  # type: ignore
+    SHAP_AVAILABLE = False
+
+try:
+    from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+    from sklearn.feature_selection import (
+        RFE,
+        SelectFromModel,
+        SelectKBest,
+        mutual_info_classif,
+        mutual_info_regression,
+    )
+    from sklearn.inspection import permutation_importance
+    from sklearn.metrics import f_classif, f_regression
+
+    SKLEARN_FEATURE_SELECTION_AVAILABLE = True
+except (ImportError, ModuleNotFoundError, OSError):
+    SelectKBest = None  # type: ignore
+    SelectFromModel = None  # type: ignore
+    RFE = None  # type: ignore
+    mutual_info_classif = None  # type: ignore
+    mutual_info_regression = None  # type: ignore
+    permutation_importance = None  # type: ignore
+    f_classif = None  # type: ignore
+    f_regression = None  # type: ignore
+    RandomForestClassifier = None  # type: ignore
+    RandomForestRegressor = None  # type: ignore
+    SKLEARN_FEATURE_SELECTION_AVAILABLE = False
+
 
 # ============================================================================
 # Configuration Loading
@@ -191,28 +228,13 @@ class ComprehensiveImportanceReport:
         }
 
 
-# Importaciones opcionales para SHAP
-try:
-    import shap
-
-    SHAP_AVAILABLE = True
-except ImportError:
-    SHAP_AVAILABLE = False
-    logger.warning("shap no disponible. SHAP values no funcionarán.")
-
-try:
-    from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-    from sklearn.feature_selection import RFE, SelectFromModel, SelectKBest, f_classif, f_regression
-
-    SKLEARN_FEATURE_SELECTION_AVAILABLE = True
-except ImportError:
-    SKLEARN_FEATURE_SELECTION_AVAILABLE = False
-    logger.warning("sklearn feature selection no disponible.")
-
-
 class SHAPAnalyzer:
     """
-    Analizador SHAP para explicar predicciones de modelos.
+    Analizador de importancia de características usando SHAP.
+
+    Importaciones opcionales para SHAP:
+        import shap
+        from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
     Soporta:
     - Tree-based models (XGBoost, LightGBM, CatBoost, RandomForest)
@@ -960,12 +982,6 @@ class PermutationImportanceAnalyzer:
         Returns:
             Dictionary with importance results
         """
-        try:
-            from sklearn.inspection import permutation_importance
-        except ImportError:
-            logger.warning("sklearn.inspection not available")
-            return self._fallback_permutation_importance(model, X, y, feature_names)
-
         try:
             # Subsample if dataset is too large (with isolated random state)
             if len(X) > self.max_samples:

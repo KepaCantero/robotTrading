@@ -15,13 +15,10 @@ from typing import Any, Dict, List, Optional, Sequence
 
 import numpy as np
 
-try:
-    import scipy.stats  # noqa: F401
+# Import scipy for cointegration tests (REQUIRED)
+import scipy.stats  # noqa: F401
 
-    SCIPY_AVAILABLE = True
-except ImportError:
-    SCIPY_AVAILABLE = False
-    logging.warning("scipy not available, cointegration tests will be limited")
+SCIPY_AVAILABLE = True
 
 from app.core.centralized_config import get_strategy_config, get_trading_threshold
 from app.models.market_data import Quote
@@ -295,25 +292,12 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
             # Calcular spread y hacer ADF test
             spread = np.array(prices1) - np.array(prices2)
 
-            # Simple ADF test usando statsmodels si está disponible
-            try:
-                from statsmodels.tsa.stattools import adfuller
+            # Simple ADF test usando statsmodels con fallback
+            from app.core.statsmodels_fallback import adfuller
 
-                adf_result = adfuller(spread)
-                p_value = adf_result[1]
-
-                # Score de cointegración: más bajo p-value = más cointegrado
-                cointegration_score = 1.0 - p_value if p_value <= 1.0 else 0.0
-                return float(cointegration_score)
-            except ImportError:
-                # Fallback: usar varianza del spread como proxy
-                spread_var = np.var(np.diff(spread))
-                if spread_var > 0:
-                    # Menor varianza = mayor cointegración
-                    return float(1.0 / (1.0 + spread_var))
-                return None
-        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-            logger.warning(f"Error calculando cointegración: {e}")
+            result = adfuller(spread)
+            return result[0]  # Return test statistic
+        except (ValueError, ImportError, AttributeError):
             return None
 
     def _generate_signals_impl(self, market_data: Quote) -> List[Signal]:

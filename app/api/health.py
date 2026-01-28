@@ -10,11 +10,17 @@ import asyncio
 import logging
 import os
 from datetime import datetime
-from decimal import Decimal
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel
+from sqlalchemy.exc import (
+    DatabaseError,
+    DataError,
+    IntegrityError,
+    OperationalError,
+    ProgrammingError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +72,7 @@ class HealthChecker:
             if not os.path.exists(self._db_path):
                 return {
                     "status": "unhealthy",
-                    "message": f"Database file not found: {self._db_path}"
+                    "message": f"Database file not found: {self._db_path}",
                 }
 
             # Check file size (should be > 0)
@@ -86,7 +92,7 @@ class HealthChecker:
             return {
                 "status": "healthy",
                 "message": f"Database OK ({len(tables)} tables)",
-                "file_size_mb": round(file_size / (1024 * 1024), 2)
+                "file_size_mb": round(file_size / (1024 * 1024), 2),
             }
 
         except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
@@ -104,21 +110,15 @@ class HealthChecker:
 
         try:
             # Try to get account info with timeout
-            account = await asyncio.wait_for(
-                self._broker.get_account_info(),
-                timeout=5.0
-            )
+            account = await asyncio.wait_for(self._broker.get_account_info(), timeout=5.0)
 
             if account:
                 return {
                     "status": "healthy",
-                    "message": f"Broker connected: {type(self._broker).__name__}"
+                    "message": f"Broker connected: {type(self._broker).__name__}",
                 }
             else:
-                return {
-                    "status": "degraded",
-                    "message": "Broker returned no account info"
-                }
+                return {"status": "degraded", "message": "Broker returned no account info"}
 
         except asyncio.TimeoutError:
             return {"status": "unhealthy", "message": "Broker connection timeout"}
@@ -156,9 +156,9 @@ class HealthChecker:
                 "status": status,
                 "memory_mb": round(memory_mb, 2),
                 "memory_percent": round(memory_percent, 2),
-                "available_mb": round(psutil.virtual_memory().available / (1024 * 1024), 2)
+                "available_mb": round(psutil.virtual_memory().available / (1024 * 1024), 2),
             }
-        except ImportError:
+
             return {"status": "degraded", "message": "psutil not installed"}
         except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             return {"status": "degraded", "message": f"Memory check error: {str(e)}"}
@@ -171,32 +171,17 @@ class HealthChecker:
             Dict with position count and status
         """
         if not self._broker:
-            return {
-                "status": "degraded",
-                "message": "Broker not configured",
-                "count": 0
-            }
+            return {"status": "degraded", "message": "Broker not configured", "count": 0}
 
         try:
-            positions = await asyncio.wait_for(
-                self._broker.get_positions(),
-                timeout=5.0
-            )
+            positions = await asyncio.wait_for(self._broker.get_positions(), timeout=5.0)
 
             count: int = len(positions) if positions else 0
 
-            return {
-                "status": "healthy",
-                "count": count,
-                "message": f"{count} open positions"
-            }
+            return {"status": "healthy", "count": count, "message": f"{count} open positions"}
 
         except (asyncio.TimeoutError, ConnectionError, OSError) as e:
-            return {
-                "status": "degraded",
-                "message": f"Position check error: {str(e)}",
-                "count": 0
-            }
+            return {"status": "degraded", "message": f"Position check error: {str(e)}", "count": 0}
 
     async def run_all_checks(self) -> Dict[str, Any]:
         """
@@ -225,11 +210,7 @@ class HealthChecker:
         # Calculate uptime
         uptime: float = (datetime.now() - self.start_time).total_seconds()
 
-        return {
-            "status": overall_status,
-            "checks": checks,
-            "uptime_seconds": uptime
-        }
+        return {"status": overall_status, "checks": checks, "uptime_seconds": uptime}
 
 
 # Global health checker instance
@@ -273,10 +254,9 @@ async def health_check() -> HealthCheckResponse:
     result["timestamp"] = datetime.now().isoformat()
 
     # Return appropriate HTTP status
-    status_code = 200
     if result["status"] == "unhealthy":
-        status_code = 503
+        pass
     elif result["status"] == "degraded":
-        status_code = 200  # Still return 200 for degraded
+        pass  # Still return 200 for degraded
 
     return HealthCheckResponse(**result)

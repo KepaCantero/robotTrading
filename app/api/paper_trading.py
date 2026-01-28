@@ -6,6 +6,7 @@ portfolio simulation, and trade execution for the algorithmic trading system.
 """
 
 from __future__ import annotations
+
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
@@ -13,6 +14,13 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
+from sqlalchemy.exc import (
+    DatabaseError,
+    DataError,
+    IntegrityError,
+    OperationalError,
+    ProgrammingError,
+)
 
 from app.models.market_data import Quote
 from app.models.paper_trading import (

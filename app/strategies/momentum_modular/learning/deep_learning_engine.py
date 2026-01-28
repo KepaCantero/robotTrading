@@ -29,74 +29,27 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 # Ahora importar numpy y pandas DESPUÉS de configurar variables
 import numpy as np  # noqa: E402
 
-from .base_learning_engine import BaseLearningEngine  # noqa: E402
 from app.core.secure_serialization import sign_and_dump, verify_and_load  # noqa: E402
+
+from .base_learning_engine import BaseLearningEngine  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
 
-# NO importar PyTorch aquí - será importado lazy cuando se necesite
-# Esto previene que PyTorch inicialice threading antes de configurar variables de entorno
-PYTORCH_AVAILABLE = False
-torch = None
-nn = None
-optim = None
-Dataset = None
-DataLoader = None
+# REQUIRED: PyTorch must be available - NO FALLBACKS
+import torch
+import torch.nn as nn
+import torch.optim as optim
 
-
-def _ensure_pytorch_imported():
-    """Importar PyTorch de forma lazy con configuración de threading."""
-    global torch, nn, optim, Dataset, DataLoader, PYTORCH_AVAILABLE
-
-    if PYTORCH_AVAILABLE:
-        return True
-
-    try:
-        # Asegurar variables de entorno ANTES de importar
-        os.environ['OMP_NUM_THREADS'] = '1'
-        os.environ['MKL_NUM_THREADS'] = '1'
-        os.environ['NUMEXPR_MAX_THREADS'] = '1'
-        os.environ['OPENBLAS_NUM_THREADS'] = '1'
-        os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
-        os.environ['CUDA_VISIBLE_DEVICES'] = ''
-
-        import torch
-
-        # Configurar ANTES de cualquier otra operación
-        torch.set_num_threads(1)
-        try:
-            torch.set_num_interop_threads(1)
-        except RuntimeError:
-            pass  # Ignorar si ya está configurado
-
-        torch.backends.cudnn.enabled = False
-        torch.backends.cudnn.benchmark = False
-
-        import torch.nn as nn
-        import torch.optim as optim
-        from torch.utils.data import DataLoader, Dataset
-
-        PYTORCH_AVAILABLE = True
-        logger.debug("PyTorch importado con configuración single-threaded")
-        return True
-    except ImportError:
-        PYTORCH_AVAILABLE = False
-        logger.warning("PyTorch no disponible. DeepLearningEngine requiere PyTorch.")
-        return False
-    except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
-        PYTORCH_AVAILABLE = False
-        logger.warning(f"Error inicializando PyTorch: {e}")
-        return False
-
-
+# Configure threading BEFORE any PyTorch operations
+torch.set_num_threads(1)
 try:
-    pass
+    torch.set_num_interop_threads(1)
+except RuntimeError:
+    pass  # Already configured
 
-    TENSORFLOW_AVAILABLE = True
-except ImportError:
-    TENSORFLOW_AVAILABLE = False
-    logger.warning("TensorFlow no disponible. DeepLearningEngine requiere PyTorch o TensorFlow.")
+torch.backends.cudnn.enabled = False
+torch.backends.cudnn.benchmark = False
 
 
 # NO definir clases aquí - se crearán lazy cuando se necesiten después de configurar threading
@@ -126,9 +79,10 @@ class DeepLearningEngine(BaseLearningEngine):
         """
         super().__init__("deep_learning", config)
 
-        # Si defer_pytorch_init=True, no importar PyTorch ahora (se hará en subprocess)
+        # CRÍTICO: PyTorch es REQUIRED - no fallbacks
+        # Si defer_pytorch_init=True, solo configurar valores pero no deshabilitar
         if defer_pytorch_init:
-            self.enabled = True  # Marcarlo como habilitado pero no inicializar PyTorch
+            self.enabled = True
             logger.debug(
                 "DeepLearningEngine creado con defer_pytorch_init=True (PyTorch se inicializará en subprocess)"
             )
@@ -149,17 +103,6 @@ class DeepLearningEngine(BaseLearningEngine):
             self.scaler = None
             self.model = None
             return
-
-        # CRÍTICO: Importar PyTorch lazy ANTES de verificar disponibilidad
-        if not _ensure_pytorch_imported():
-            if not TENSORFLOW_AVAILABLE:
-                # En lugar de lanzar error, deshabilitar el engine
-                logger.warning(
-                    "PyTorch o TensorFlow no disponibles. DeepLearningEngine será deshabilitado. "
-                    "Instala con: pip install torch>=2.0.0 o pip install tensorflow>=2.13.0"
-                )
-                self.enabled = False
-                return
 
         # Si llegamos aquí, NO usamos defer_pytorch_init, así que inicializar normalmente
         self.architecture = config.get(
@@ -208,10 +151,8 @@ class DeepLearningEngine(BaseLearningEngine):
         if use_subprocess:
             return self._train_in_subprocess(training_data, validation_data)
 
-        # Asegurar que PyTorch está disponible
-        if not _ensure_pytorch_imported():
-            if not TENSORFLOW_AVAILABLE:
-                raise ImportError("PyTorch o TensorFlow requeridos")
+        # PyTorch es REQUIRED - ya importado al inicio del módulo
+        # No hay fallbacks
 
         sequences = training_data['sequences']
         labels = training_data['labels']
@@ -223,9 +164,8 @@ class DeepLearningEngine(BaseLearningEngine):
         input_size = sequences.shape[2]
         output_size = 1 if labels.ndim == 1 else labels.shape[1]
 
-        # CRÍTICO: Asegurar que PyTorch está importado PRIMERO
-        if not _ensure_pytorch_imported():
-            raise ImportError("PyTorch requerido para entrenar modelos Deep Learning")
+        # PyTorch es REQUIRED - ya importado al inicio del módulo
+        # Configurar threading ANTES de crear datasets
 
         # Asegurar threading ANTES de crear datasets
         torch.set_num_threads(1)
@@ -658,7 +598,9 @@ class DeepLearningEngine(BaseLearningEngine):
                 # Deserializar datos
                 # SECURE: Use JSON+HMAC verification instead of pickle
                 training_data = verify_and_load(training_data_bytes)
-                validation_data = verify_and_load(validation_data_bytes) if validation_data_bytes else None
+                validation_data = (
+                    verify_and_load(validation_data_bytes) if validation_data_bytes else None
+                )
 
                 # Entrenar
                 metrics = engine.train(training_data, validation_data, use_subprocess=False)
@@ -813,9 +755,7 @@ class DeepLearningEngine(BaseLearningEngine):
             sequence_norm, _, _ = self._normalize_data(sequence.reshape(1, *sequence.shape), None)
             sequence = sequence_norm[0]
 
-        # Asegurar PyTorch importado
-        if not _ensure_pytorch_imported():
-            return {'predicted_direction': 0.5, 'predicted_price_change': 0.0, 'confidence': 0.0}
+        # PyTorch es REQUIRED - ya importado al inicio del módulo
 
         # Predecir
         self.model.eval()
@@ -862,9 +802,7 @@ class DeepLearningEngine(BaseLearningEngine):
 
         sequences, labels, _ = self._normalize_data(sequences, labels)
 
-        # Asegurar PyTorch importado
-        if not _ensure_pytorch_imported():
-            raise ImportError("PyTorch requerido")
+        # PyTorch es REQUIRED - ya importado al inicio del módulo
 
         # Import Dataset and DataLoader from torch.utils.data
         from torch.utils.data import DataLoader as _DataLoader, Dataset as _Dataset

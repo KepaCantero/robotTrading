@@ -16,12 +16,10 @@ import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from decimal import Decimal
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-import pandas as pd
 from jinja2 import Template
 
 from app.core.models.input_profile import InputProfile
@@ -199,12 +197,20 @@ class BaselineOptimizationReporter:
             baseline_winrate=f"{baseline_metrics['win_rate']:.1f}",
             optimized_winrate=f"{optimized_metrics['win_rate']:.1f}",
             # Metric cards styling
-            sharpe_card_class=self._get_card_class(comparison["sharpe_improvement"], higher_better=True),
-            return_card_class=self._get_card_class(comparison["return_improvement"], higher_better=True),
+            sharpe_card_class=self._get_card_class(
+                comparison["sharpe_improvement"], higher_better=True
+            ),
+            return_card_class=self._get_card_class(
+                comparison["return_improvement"], higher_better=True
+            ),
             dd_card_class=self._get_card_class(comparison["dd_change"], higher_better=False),
-            winrate_card_class=self._get_card_class(comparison["winrate_improvement"], higher_better=True),
+            winrate_card_class=self._get_card_class(
+                comparison["winrate_improvement"], higher_better=True
+            ),
             # Key metrics table
-            key_metrics=self._prepare_key_metrics_table(baseline_metrics, optimized_metrics, significance_tests),
+            key_metrics=self._prepare_key_metrics_table(
+                baseline_metrics, optimized_metrics, significance_tests
+            ),
             # Parameters
             parameters=parameter_changes,
             # Drawdown metrics
@@ -213,7 +219,11 @@ class BaselineOptimizationReporter:
             risk_metrics=self._prepare_risk_metrics_table(baseline_metrics, optimized_metrics),
             # Walk-forward
             has_walk_forward=walk_forward_results is not None,
-            walk_forward_metrics=self._prepare_walk_forward_metrics(walk_forward_results) if walk_forward_results else [],
+            walk_forward_metrics=(
+                self._prepare_walk_forward_metrics(walk_forward_results)
+                if walk_forward_results
+                else []
+            ),
             # Sensitivity
             has_sensitivity=sensitivity_results is not None,
             # Implementation
@@ -362,9 +372,7 @@ class BaselineOptimizationReporter:
             return np.array([])
 
         # Convert to returns
-        values = [
-            point[1] if isinstance(point, tuple) else point for point in equity_curve
-        ]
+        values = [point[1] if isinstance(point, tuple) else point for point in equity_curve]
         values = np.array(values)
 
         returns = np.diff(values) / values[:-1]
@@ -423,7 +431,9 @@ class BaselineOptimizationReporter:
 
             if baseline_val != optimized_val:
                 # Determine impact
-                impact = self._estimate_parameter_impact(key, baseline_val, optimized_val, comparison)
+                impact = self._estimate_parameter_impact(
+                    key, baseline_val, optimized_val, comparison
+                )
 
                 changes.append(
                     ParameterChange(
@@ -603,9 +613,7 @@ class BaselineOptimizationReporter:
 
         return chart_data
 
-    def _create_equity_chart(
-        self, equity_curve: List, name: str, color: str
-    ) -> Dict[str, Any]:
+    def _create_equity_chart(self, equity_curve: List, name: str, color: str) -> Dict[str, Any]:
         """Create equity chart for single strategy."""
         if not equity_curve:
             return {"data": [], "layout": {}}
@@ -655,12 +663,8 @@ class BaselineOptimizationReporter:
 
         # Normalize to same starting value
         if baseline_values and optimized_values:
-            baseline_norm = [
-                v / baseline_values[0] * 100000 for v in baseline_values
-            ]
-            optimized_norm = [
-                v / optimized_values[0] * 100000 for v in optimized_values
-            ]
+            baseline_norm = [v / baseline_values[0] * 100000 for v in baseline_values]
+            optimized_norm = [v / optimized_values[0] * 100000 for v in optimized_values]
         else:
             baseline_norm = baseline_values
             optimized_norm = optimized_values
@@ -691,9 +695,7 @@ class BaselineOptimizationReporter:
             },
         }
 
-    def _create_drawdown_chart(
-        self, baseline_curve: List, optimized_curve: List
-    ) -> Dict[str, Any]:
+    def _create_drawdown_chart(self, baseline_curve: List, optimized_curve: List) -> Dict[str, Any]:
         """Create underwater drawdown comparison chart."""
         if not baseline_curve or not optimized_curve:
             return {"data": [], "layout": {}}
@@ -959,9 +961,7 @@ class BaselineOptimizationReporter:
 
         return table_data
 
-    def _prepare_walk_forward_metrics(
-        self, walk_forward_results: Dict
-    ) -> List[Dict[str, Any]]:
+    def _prepare_walk_forward_metrics(self, walk_forward_results: Dict) -> List[Dict[str, Any]]:
         """Prepare walk-forward validation metrics table."""
         if not walk_forward_results:
             return []

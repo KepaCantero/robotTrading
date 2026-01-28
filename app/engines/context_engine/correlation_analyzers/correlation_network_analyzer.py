@@ -7,18 +7,11 @@ Usa teoría de grafos para analizar correlaciones entre activos.
 import logging
 from typing import Any, Dict, List
 
+# REQUIRED: networkx is REQUIRED - NO FALLBACKS
+import networkx as nx
 import numpy as np
 
 logger = logging.getLogger(__name__)
-
-# NetworkX es opcional
-try:
-    import networkx as nx
-
-    NETWORKX_AVAILABLE = True
-except ImportError:
-    NETWORKX_AVAILABLE = False
-    logger.warning("networkx no disponible. Network analysis limitado.")
 
 
 class CorrelationNetworkAnalyzer:
@@ -39,9 +32,6 @@ class CorrelationNetworkAnalyzer:
         Returns:
             Dict con métricas de red
         """
-        if not NETWORKX_AVAILABLE:
-            return {'centrality': {}, 'clusters': [], 'note': 'networkx no disponible'}
-
         try:
             # Crear grafo
             G = nx.Graph()

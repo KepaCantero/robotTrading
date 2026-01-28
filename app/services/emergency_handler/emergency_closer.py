@@ -17,6 +17,8 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
 
+from requests.exceptions import HTTPError
+
 from app.core.timezone_utils import utc_now
 
 logger = logging.getLogger(__name__)
@@ -137,18 +139,18 @@ class EmergencyCloser:
         logger.critical("CONNECTION LOST - initiating emergency close of all positions")
 
         # Send alert
-        await self._send_alert(
-            "EMERGENCY: Broker connection lost. Closing all positions."
-        )
+        await self._send_alert("EMERGENCY: Broker connection lost. Closing all positions.")
 
         result = await self.close_all_positions(EmergencyTrigger.CONNECTION_LOST)
 
         # Log to audit trail
-        self._audit_log.append({
-            "timestamp": utc_now().isoformat(),
-            "trigger": EmergencyTrigger.CONNECTION_LOST.value,
-            "result": result.to_dict(),
-        })
+        self._audit_log.append(
+            {
+                "timestamp": utc_now().isoformat(),
+                "trigger": EmergencyTrigger.CONNECTION_LOST.value,
+                "result": result.to_dict(),
+            }
+        )
 
         return result
 
@@ -165,18 +167,18 @@ class EmergencyCloser:
         logger.critical("SYSTEM SHUTDOWN - initiating emergency close of all positions")
 
         # Send alert
-        await self._send_alert(
-            "EMERGENCY: System shutting down. Closing all positions."
-        )
+        await self._send_alert("EMERGENCY: System shutting down. Closing all positions.")
 
         result = await self.close_all_positions(EmergencyTrigger.SYSTEM_SHUTDOWN)
 
         # Log to audit trail
-        self._audit_log.append({
-            "timestamp": utc_now().isoformat(),
-            "trigger": EmergencyTrigger.SYSTEM_SHUTDOWN.value,
-            "result": result.to_dict(),
-        })
+        self._audit_log.append(
+            {
+                "timestamp": utc_now().isoformat(),
+                "trigger": EmergencyTrigger.SYSTEM_SHUTDOWN.value,
+                "result": result.to_dict(),
+            }
+        )
 
         return result
 
@@ -216,12 +218,14 @@ class EmergencyCloser:
         result = await self.close_all_positions(EmergencyTrigger.CRITICAL_ERROR)
 
         # Log to audit trail
-        self._audit_log.append({
-            "timestamp": utc_now().isoformat(),
-            "trigger": EmergencyTrigger.CRITICAL_ERROR.value,
-            "error": str(error),
-            "result": result.to_dict(),
-        })
+        self._audit_log.append(
+            {
+                "timestamp": utc_now().isoformat(),
+                "trigger": EmergencyTrigger.CRITICAL_ERROR.value,
+                "error": str(error),
+                "result": result.to_dict(),
+            }
+        )
 
         return result
 
@@ -281,12 +285,14 @@ class EmergencyCloser:
         result = await self.close_all_positions(EmergencyTrigger.MANUAL_TRIGGER)
 
         # Log to audit trail
-        self._audit_log.append({
-            "timestamp": utc_now().isoformat(),
-            "trigger": EmergencyTrigger.MANUAL_TRIGGER.value,
-            "reason": reason,
-            "result": result.to_dict(),
-        })
+        self._audit_log.append(
+            {
+                "timestamp": utc_now().isoformat(),
+                "trigger": EmergencyTrigger.MANUAL_TRIGGER.value,
+                "reason": reason,
+                "result": result.to_dict(),
+            }
+        )
 
         return result
 
@@ -439,7 +445,7 @@ class EmergencyCloser:
                     quantity=quantity,
                     order_type="MARKET",
                 ),
-                timeout=30.0
+                timeout=30.0,
             )
 
             if order:

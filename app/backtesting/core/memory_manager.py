@@ -10,6 +10,7 @@ FIXES (Phase 4):
 - Automatic monitoring in add methods
 - Weak references for BacktestResult objects
 """
+
 from __future__ import annotations
 
 import gc
@@ -17,7 +18,7 @@ import logging
 import threading
 import weakref
 from collections import deque
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Tuple
 
 import psutil
 
@@ -28,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 class MemoryPressureError(Exception):
     """Raised when memory pressure exceeds threshold."""
+
     pass
 
 
@@ -73,7 +75,9 @@ class AggressiveMemoryManager:
         self._results: deque[Dict[str, Any]] = deque(maxlen=max_results)
         # Use weak references for BacktestResult to prevent circular references
         self._backtest_refs: Dict[str, weakref.ref] = {}
-        self._backtest_objects: deque[Tuple[str, BacktestResult]] = deque(maxlen=max_backtest_objects)
+        self._backtest_objects: deque[Tuple[str, BacktestResult]] = deque(
+            maxlen=max_backtest_objects
+        )
 
         # Thread-safe lock for cleanup operations
         self._lock = threading.RLock()
@@ -97,9 +101,7 @@ class AggressiveMemoryManager:
             if self.auto_monitor:
                 self._auto_check_memory()
 
-    def add_backtest_object(
-        self, key: str, obj: BacktestResult
-    ) -> None:
+    def add_backtest_object(self, key: str, obj: BacktestResult) -> None:
         """
         Add a heavy BacktestResult object with strict control.
 
@@ -281,9 +283,7 @@ class AggressiveMemoryManager:
             memory_mb = process.memory_info().rss / 1024 / 1024
 
             if memory_mb > self.memory_threshold:
-                logger.warning(
-                    f"⚠️ Memory pressure: {memory_mb:.0f}MB > {self.memory_threshold}MB"
-                )
+                logger.warning(f"⚠️ Memory pressure: {memory_mb:.0f}MB > {self.memory_threshold}MB")
                 self._emergency_cleanup()
                 return True
 

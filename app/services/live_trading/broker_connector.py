@@ -226,13 +226,11 @@ class BrokerConnector:
         Returns:
             True if connection successful
         """
+
         async def _connect() -> bool:
             """Internal connection function."""
             return await self.adapter.connect(
-                api_key=api_key,
-                api_secret=api_secret,
-                account_id=account_id,
-                **kwargs
+                api_key=api_key, api_secret=api_secret, account_id=account_id, **kwargs
             )
 
         # Use reconnection manager for non-paper trading
@@ -264,13 +262,11 @@ class BrokerConnector:
         Returns:
             True if connection successful
         """
+
         async def _connect() -> bool:
             """Internal connection function."""
             return await self.adapter.connect(
-                api_key=api_key,
-                api_secret=api_secret,
-                account_id=account_id,
-                **kwargs
+                api_key=api_key, api_secret=api_secret, account_id=account_id, **kwargs
             )
 
         result = await self.reconnection_manager.connect_with_backoff(_connect)

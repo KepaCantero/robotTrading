@@ -140,11 +140,11 @@ class StrategyFactory:
             from .pairs_trading import PairsTradingStrategy
 
             # Registrar estrategias legacy
-            self.register_strategy("momentum", MomentumStrategy)
             self.register_strategy("mean_reversion", MeanReversionStrategy)
+            self.register_strategy("momentum", MomentumStrategy)
             self.register_strategy("pairs_trading", PairsTradingStrategy)
 
-            logger.info("Registered default strategies: momentum, mean_reversion, pairs_trading")
+            logger.info("Registered default strategies: mean_reversion, momentum, pairs_trading")
 
         except ImportError as e:
             logger.warning(f"Could not import default strategies: {e}")
@@ -197,6 +197,18 @@ class StrategyFactory:
         except ImportError as e:
             logger.warning(f"Could not import ensemble strategies: {e}")
             logger.info("Ensemble strategies will be registered when their modules are available")
+
+        # Register Crypto Momentum Strategy
+        try:
+            from .crypto_momentum.crypto_momentum_strategy import CryptoMomentumStrategy
+
+            self.register_strategy("crypto_momentum", CryptoMomentumStrategy)
+
+            logger.info("Registered crypto momentum strategy: crypto_momentum")
+
+        except ImportError as e:
+            logger.warning(f"Could not import crypto momentum strategy: {e}")
+            logger.info("Crypto momentum strategy will be registered when its module is available")
 
     def create_ensemble(
         self,

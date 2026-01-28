@@ -33,61 +33,20 @@ from .base_learning_engine import BaseLearningEngine  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
-# NO importar PyTorch aquí - será importado lazy cuando se necesite
-# Esto previene que PyTorch inicialice threading antes de configurar variables de entorno
-PYTORCH_AVAILABLE = False
-torch = None
-nn = None
-optim = None
-Dataset = None
-DataLoader = None
+# REQUIRED: PyTorch is REQUIRED - NO FALLBACKS
+import torch
+import torch.nn as nn
+import torch.optim as optim
 
+# Configure threading BEFORE any PyTorch operations
+torch.set_num_threads(1)
+try:
+    torch.set_num_interop_threads(1)
+except RuntimeError:
+    pass  # Already configured
 
-def _ensure_pytorch_imported():
-    """Importar PyTorch de forma lazy con configuración de threading."""
-    global torch, nn, optim, Dataset, DataLoader, PYTORCH_AVAILABLE
-
-    if PYTORCH_AVAILABLE:
-        return True
-
-    try:
-        # Asegurar variables de entorno ANTES de importar
-        os.environ['OMP_NUM_THREADS'] = '1'
-        os.environ['MKL_NUM_THREADS'] = '1'
-        os.environ['NUMEXPR_MAX_THREADS'] = '1'
-        os.environ['OPENBLAS_NUM_THREADS'] = '1'  # noqa: E114
-        os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
-        os.environ['CUDA_VISIBLE_DEVICES'] = ''
-        os.environ['MKL_SERVICE_FORCE_INTEL'] = '1'
-        os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
-
-        import torch
-
-        # Configurar ANTES de cualquier otra operación
-        torch.set_num_threads(1)
-        try:
-            torch.set_num_interop_threads(1)
-        except RuntimeError:
-            pass  # Ignorar si ya está configurado
-
-        torch.backends.cudnn.enabled = False
-        torch.backends.cudnn.benchmark = False
-
-        import torch.nn as nn
-        import torch.optim as optim
-        from torch.utils.data import DataLoader, Dataset
-
-        PYTORCH_AVAILABLE = True
-        logger.debug("PyTorch importado con configuración single-threaded")
-        return True
-    except ImportError:
-        PYTORCH_AVAILABLE = False
-        logger.warning("PyTorch no disponible. TransformerEngine requiere PyTorch.")
-        return False
-    except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
-        PYTORCH_AVAILABLE = False
-        logger.warning(f"Error inicializando PyTorch: {e}")
-        return False
+torch.backends.cudnn.enabled = False
+torch.backends.cudnn.benchmark = False
 
 
 # NO definir TransformerModel o TransformerDataset aquí - se crearán lazy cuando se necesiten
@@ -133,11 +92,7 @@ class TransformerEngine(BaseLearningEngine):
             self.scaler = None
             return
 
-        # CRÍTICO: Importar PyTorch lazy ANTES de verificar disponibilidad
-        if not _ensure_pytorch_imported():
-            logger.error("TransformerEngine requiere PyTorch. No disponible.")
-            self.enabled = False
-            return
+        # PyTorch es REQUIRED - ya importado al inicio del módulo
 
         # Parámetros del modelo desde config
         params = config.get("parameters", {})
@@ -234,12 +189,11 @@ class TransformerEngine(BaseLearningEngine):
         Returns:
             Dict con métricas de entrenamiento
         """
-        if not PYTORCH_AVAILABLE:
-            raise ImportError("PyTorch required for TransformerEngine")
-
         if not self.enabled:
             logger.warning("TransformerEngine deshabilitado")
             return {}
+
+        # PyTorch es REQUIRED - ya importado al inicio del módulo
 
         try:
             # Preparar datos
@@ -266,14 +220,9 @@ class TransformerEngine(BaseLearningEngine):
 
             # Inicializar modelo si no existe
             if self.model is None:
-                # Asegurar que PyTorch está importado
-                if not _ensure_pytorch_imported():
-                    raise ImportError("PyTorch requerido")
+                # PyTorch es REQUIRED - ya importado al inicio del módulo
 
                 # CRÍTICO: Asegurar threading antes de crear modelo
-                # Access torch through the global variable set by _ensure_pytorch_imported
-                if torch is None:
-                    raise ImportError("PyTorch no disponible")
 
                 try:
                     torch.set_num_threads(1)

@@ -13,9 +13,10 @@ import asyncio
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
-from app.core.decimal_utils import to_decimal, validate_price
+from requests.exceptions import HTTPError, RequestException
+
 from app.core.reconnection_manager import ReconnectionConfig, ReconnectionManager
 from app.core.timezone_utils import utc_now
 
@@ -158,7 +159,9 @@ class CryptoDataFetcher:
 
         def alert_callback(attempts: int) -> None:
             """Callback when alert threshold is reached."""
-            logger.warning(f"Alert: {attempts} failed crypto API connection attempts - using fallback data")
+            logger.warning(
+                f"Alert: {attempts} failed crypto API connection attempts - using fallback data"
+            )
 
         config = ReconnectionConfig(
             max_attempts=10,
@@ -223,6 +226,7 @@ class CryptoDataFetcher:
 
             # Try to fetch from API with reconnection manager
             try:
+
                 async def _fetch_price() -> Optional[Decimal]:
                     """Internal fetch function."""
                     return self._fetch_price_from_api(pair)
@@ -268,6 +272,7 @@ class CryptoDataFetcher:
 
         # Try to fetch from API with reconnection manager
         try:
+
             async def _fetch_ohlcv() -> Optional[List[Dict]]:
                 """Internal fetch function."""
                 return self._fetch_ohlcv_from_api(pair, interval, limit)

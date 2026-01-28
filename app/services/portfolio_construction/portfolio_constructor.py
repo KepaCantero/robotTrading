@@ -4,6 +4,7 @@ T7.1: PortfolioConstructor - Optimize portfolio allocation
 Constructs optimal portfolios using mean-variance optimization and equal-weighting strategies.
 """
 
+import asyncio
 import logging
 from dataclasses import dataclass
 from enum import Enum

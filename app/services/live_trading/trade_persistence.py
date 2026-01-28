@@ -23,6 +23,13 @@ from sqlalchemy import (
     desc,
     select,
 )
+from sqlalchemy.exc import (
+    DatabaseError,
+    DataError,
+    IntegrityError,
+    OperationalError,
+    ProgrammingError,
+)
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base, get_session_factory

@@ -26,14 +26,13 @@ from typing import Any, Dict, List, Optional
 import yaml
 from pydantic import BaseModel, Field, field_validator
 
-from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 from app.core.centralized_config import get_config
-from app.core.tier_mapper import TierMapper, get_tier, normalize_tier
+from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
+from app.core.tier_mapper import TierMapper
 from app.services.multi_strategy_allocation import (
     MultiStrategyAllocationManager,
     StrategyCapitalAllocation,
 )
-from app.strategies.momentum_modular.learning.base_learning_engine import BaseLearningEngine
 
 logger = logging.getLogger(__name__)
 
@@ -41,9 +40,9 @@ logger = logging.getLogger(__name__)
 # Capital tier definitions (must match config/investment_profiles.yaml)
 # The thresholds represent the upper bound of each tier (exclusive)
 CAPITAL_TIER_THRESHOLDS = {
-    "small": Decimal("15000"),    # micro: < €15k
-    "medium": Decimal("50000"),   # small: €15k - €50k
-    "large": Decimal("250000"),   # medium: €50k - €250k
+    "small": Decimal("15000"),  # micro: < €15k
+    "medium": Decimal("50000"),  # small: €15k - €50k
+    "large": Decimal("250000"),  # medium: €50k - €250k
 }  # large: >= €250k
 
 
@@ -81,7 +80,9 @@ def get_capital_tier(capital: Decimal) -> str:
         return TierMapper.get_tier_from_capital(capital)
     except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
         # Fallback to manual calculation if tier mapper fails
-        logger.warning(f"TierMapper.get_tier_from_capital failed for {capital}: {e}, using fallback")
+        logger.warning(
+            f"TierMapper.get_tier_from_capital failed for {capital}: {e}, using fallback"
+        )
         if capital < CAPITAL_TIER_THRESHOLDS["small"]:
             return "micro"
         elif capital < CAPITAL_TIER_THRESHOLDS["medium"]:
@@ -105,63 +106,38 @@ class StrategyMapping(BaseModel):
     risk_tolerance: RiskTolerance
 
     # Strategy configuration
-    enabled_strategies: List[str] = Field(
-        description="List of enabled strategy modules"
-    )
+    enabled_strategies: List[str] = Field(description="List of enabled strategy modules")
     strategy_weights: Dict[str, float] = Field(
-        default_factory=dict,
-        description="Weight allocation for each strategy"
+        default_factory=dict, description="Weight allocation for each strategy"
     )
 
     # Risk parameters
-    risk_profile: int = Field(
-        ge=1, le=6,
-        description="Risk profile level (1-6)"
-    )
-    leverage: float = Field(
-        ge=0, le=3,
-        description="Leverage multiplier"
-    )
-    max_position_size: float = Field(
-        ge=0, le=0.5,
-        description="Maximum position size per trade"
-    )
-    max_sector_allocation: float = Field(
-        ge=0, le=0.5,
-        description="Maximum allocation per sector"
-    )
+    risk_profile: int = Field(ge=1, le=6, description="Risk profile level (1-6)")
+    leverage: float = Field(ge=0, le=3, description="Leverage multiplier")
+    max_position_size: float = Field(ge=0, le=0.5, description="Maximum position size per trade")
+    max_sector_allocation: float = Field(ge=0, le=0.5, description="Maximum allocation per sector")
 
     # Trading configuration
-    order_splitting_strategy: str = Field(
-        description="Order execution strategy"
-    )
-    commission_negotiation: bool = Field(
-        description="Whether commission negotiation is enabled"
-    )
+    order_splitting_strategy: str = Field(description="Order execution strategy")
+    commission_negotiation: bool = Field(description="Whether commission negotiation is enabled")
 
     # Learning configuration
     enabled_learning_engines: List[str] = Field(
-        default_factory=list,
-        description="List of enabled learning engine types"
+        default_factory=list, description="List of enabled learning engine types"
     )
 
     # Ensemble configuration
-    ensemble_mode: str = Field(
-        description="Ensemble voting mode"
-    )
+    ensemble_mode: str = Field(description="Ensemble voting mode")
     ensemble_min_strategies: int = Field(
-        ge=1, le=10,
-        description="Minimum strategies required for signal"
+        ge=1, le=10, description="Minimum strategies required for signal"
     )
     ensemble_confidence_threshold: float = Field(
-        ge=0, le=1,
-        description="Minimum confidence for ensemble signal"
+        ge=0, le=1, description="Minimum confidence for ensemble signal"
     )
 
     # Capital allocation
     capital_allocation: Optional[Dict[str, Decimal]] = Field(
-        default=None,
-        description="Capital allocated to each strategy"
+        default=None, description="Capital allocated to each strategy"
     )
 
     @field_validator("strategy_weights")
@@ -269,9 +245,11 @@ class ProfileStrategyMapper:
         capital_tier = get_capital_tier(profile.capital_initial)
 
         # Get objective key (handle enum)
-        objective_key = profile.objetivo_inversion.value if isinstance(
-            profile.objetivo_inversion, ObjectivoInversion
-        ) else profile.objetivo_inversion
+        objective_key = (
+            profile.objetivo_inversion.value
+            if isinstance(profile.objetivo_inversion, ObjectivoInversion)
+            else profile.objetivo_inversion
+        )
 
         logger.info(
             f"Mapping profile: objective={objective_key}, "
@@ -329,11 +307,7 @@ class ProfileStrategyMapper:
 
         return strategy_config
 
-    def _get_profile_config(
-        self,
-        objective: str,
-        capital_tier: str
-    ) -> Optional[Dict[str, Any]]:
+    def _get_profile_config(self, objective: str, capital_tier: str) -> Optional[Dict[str, Any]]:
         """
         Get profile configuration from investment_profiles.yaml.
 
@@ -351,9 +325,7 @@ class ProfileStrategyMapper:
             # Try defaults
             defaults = self.investment_profiles.get("defaults", {})
             if defaults:
-                logger.warning(
-                    f"Objective '{objective}' not found, using defaults"
-                )
+                logger.warning(f"Objective '{objective}' not found, using defaults")
                 return defaults
             return None
 
@@ -378,10 +350,7 @@ class ProfileStrategyMapper:
 
         return tier_config
 
-    def get_capital_allocation(
-        self,
-        profile: InputProfile
-    ) -> MultiStrategyAllocationManager:
+    def get_capital_allocation(self, profile: InputProfile) -> MultiStrategyAllocationManager:
         """
         Get capital allocation for strategies based on profile.
 
@@ -411,9 +380,7 @@ class ProfileStrategyMapper:
 
         # Define strategy weights based on profile
         strategy_weights = self._calculate_strategy_weights(
-            enabled_strategies,
-            profile_config,
-            profile.risk_tolerance
+            enabled_strategies, profile_config, profile.risk_tolerance
         )
 
         # Create strategy allocations
@@ -446,10 +413,7 @@ class ProfileStrategyMapper:
         return manager
 
     def _calculate_strategy_weights(
-        self,
-        strategies: List[str],
-        profile_config: Dict[str, Any],
-        risk_tolerance: RiskTolerance
+        self, strategies: List[str], profile_config: Dict[str, Any], risk_tolerance: RiskTolerance
     ) -> Dict[str, float]:
         """
         Calculate strategy weights based on profile and risk tolerance.
@@ -488,7 +452,7 @@ class ProfileStrategyMapper:
                 "mean_reversion_modular": 0.7,
                 "dividend_screener": 0.5,
                 "pairs_trading_modular": 1.0,
-            }
+            },
         }
 
         # Calculate adjusted weights
@@ -504,17 +468,11 @@ class ProfileStrategyMapper:
         if total > 0:
             # Use Decimal normalization to ensure weights sum exactly to 1.0
             total_decimal = Decimal(str(total))
-            weights = {
-                k: float(Decimal(str(v)) / total_decimal)
-                for k, v in weights.items()
-            }
+            weights = {k: float(Decimal(str(v)) / total_decimal) for k, v in weights.items()}
 
         return weights
 
-    def get_learning_engines(
-        self,
-        profile: InputProfile
-    ) -> List[str]:
+    def get_learning_engines(self, profile: InputProfile) -> List[str]:
         """
         Get list of enabled learning engines for the profile.
 
@@ -539,7 +497,7 @@ class ProfileStrategyMapper:
         # ML ensemble only available for large capital
         if "ml_ensemble" in enabled_modules and capital_tier == "large":
             # Get tier-specific learning config
-            tier_config = self.learning_params.get("tiers", {}).get(capital_tier, {})
+            self.learning_params.get("tiers", {}).get(capital_tier, {})
 
             # Supervised learning
             supervised_config = self.learning_params.get("supervised_learning", {})
@@ -556,9 +514,7 @@ class ProfileStrategyMapper:
             if capital_tier == "large":
                 learning_engines.append("deep")
 
-        logger.info(
-            f"Learning engines for {capital_tier} tier: {learning_engines}"
-        )
+        logger.info(f"Learning engines for {capital_tier} tier: {learning_engines}")
 
         return learning_engines
 
@@ -599,7 +555,7 @@ class ProfileStrategyMapper:
                 "min_confidence": 0.40,
                 "require_majority": False,
                 "conflict_resolution": "strongest",
-            }
+            },
         }
 
         # Get base ensemble config
@@ -634,10 +590,7 @@ class ProfileStrategyMapper:
 
         return ensemble_config
 
-    def create_strategy_mapping(
-        self,
-        profile: InputProfile
-    ) -> StrategyMapping:
+    def create_strategy_mapping(self, profile: InputProfile) -> StrategyMapping:
         """
         Create complete StrategyMapping from InputProfile.
 
@@ -662,13 +615,10 @@ class ProfileStrategyMapper:
 
         # Calculate strategy weights
         profile_config = self._get_profile_config(
-            profile.objetivo_inversion.value,
-            get_capital_tier(profile.capital_initial)
+            profile.objetivo_inversion.value, get_capital_tier(profile.capital_initial)
         )
         strategy_weights = self._calculate_strategy_weights(
-            strategy_config["enabled_strategies"],
-            profile_config,
-            profile.risk_tolerance
+            strategy_config["enabled_strategies"], profile_config, profile.risk_tolerance
         )
 
         # Get ensemble configuration
@@ -703,11 +653,7 @@ class ProfileStrategyMapper:
 
         return mapping
 
-    def get_learning_parameters(
-        self,
-        profile: InputProfile,
-        engine_type: str
-    ) -> Dict[str, Any]:
+    def get_learning_parameters(self, profile: InputProfile, engine_type: str) -> Dict[str, Any]:
         """
         Get learning parameters for a specific engine type.
 
@@ -739,11 +685,7 @@ class ProfileStrategyMapper:
 
         return base_params
 
-    def _deep_merge(
-        self,
-        base: Dict[str, Any],
-        override: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _deep_merge(self, base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
         """
         Deep merge two dictionaries.
 
@@ -764,6 +706,7 @@ class ProfileStrategyMapper:
 
 
 # Convenience functions
+
 
 def create_profile_mapper(
     investment_profiles_path: str = "config/investment_profiles.yaml",

@@ -10,7 +10,7 @@ All values are configurable and documented for easy maintenance.
 
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 
 @dataclass
@@ -18,13 +18,15 @@ class CapitalScaleConstants:
     """Constants for capital scale analyzer."""
 
     # Default capital levels for multi-scale analysis
-    DEFAULT_CAPITAL_LEVELS: List[Decimal] = field(default_factory=lambda: [
-        Decimal("1000"),   # Micro
-        Decimal("5000"),   # Small
-        Decimal("10000"),  # Medium
-        Decimal("50000"),  # Pro
-        Decimal("100000"), # Fund
-    ])
+    DEFAULT_CAPITAL_LEVELS: List[Decimal] = field(
+        default_factory=lambda: [
+            Decimal("1000"),  # Micro
+            Decimal("5000"),  # Small
+            Decimal("10000"),  # Medium
+            Decimal("50000"),  # Pro
+            Decimal("100000"),  # Fund
+        ]
+    )
 
     # ADV (Average Daily Volume) limit settings
     ADV_LIMIT_PCT_DEFAULT: Decimal = Decimal("0.02")  # 2% ADV rule
@@ -33,49 +35,61 @@ class CapitalScaleConstants:
     # Commission impact thresholds (as decimals, e.g., 0.15 = 15%)
     COMMISSION_IMPACT_WARNING_THRESHOLD: Decimal = Decimal("0.15")  # 15% - trigger warning
     COMMISSION_IMPACT_CRITICAL_THRESHOLD: Decimal = Decimal("0.20")  # 20% - reject strategy
-    COMMISSION_IMPACT_OPTIMAL_THRESHOLD: Decimal = Decimal("0.15")  # 15% - for optimal capital selection
+    COMMISSION_IMPACT_OPTIMAL_THRESHOLD: Decimal = Decimal(
+        "0.15"
+    )  # 15% - for optimal capital selection
 
     # Alpha degradation threshold (as decimal, e.g., 0.50 = 50%)
     ALPHA_DEGRADATION_THRESHOLD: Decimal = Decimal("0.50")  # 50% degradation max acceptable
 
     # Commission models by capital level (€ per trade or %)
     # Each model has: type, cost/rate, description
-    COMMISSION_MODELS: Dict[Decimal, Dict[str, Any]] = field(default_factory=lambda: {
-        Decimal("1000"): {
-            "type": "fixed",
-            "cost": Decimal("5.0"),  # €5 per trade (high impact on €1K)
-            "description": "Micro account - high fixed fees",
-        },
-        Decimal("5000"): {
-            "type": "fixed",
-            "cost": Decimal("3.0"),  # €3 per trade
-            "description": "Small account - reduced fixed fees",
-        },
-        Decimal("10000"): {
-            "type": "hybrid",
-            "min_cost": Decimal("1.0"),
-            "rate": Decimal("0.001"),  # 0.1% with €1 minimum
-            "description": "Medium account - hybrid structure",
-        },
-        Decimal("50000"): {
-            "type": "tiered",
-            "brackets": [
-                {"volume_max": 50000, "rate": Decimal("0.001"), "min": Decimal("0.50")},
-                {"volume_max": 500000, "rate": Decimal("0.0002"), "min": Decimal("0.10")},
-                {"volume_max": float("inf"), "rate": Decimal("0.00001"), "min": Decimal("0.01")},
-            ],
-            "description": "Pro account - tiered pricing",
-        },
-        Decimal("100000"): {
-            "type": "tiered",
-            "brackets": [
-                {"volume_max": 100000, "rate": Decimal("0.0005"), "min": Decimal("0.50")},
-                {"volume_max": 500000, "rate": Decimal("0.00005"), "min": Decimal("0.05")},
-                {"volume_max": float("inf"), "rate": Decimal("0.000002"), "min": Decimal("0.01")},
-            ],
-            "description": "Fund account - institutional pricing",
-        },
-    })
+    COMMISSION_MODELS: Dict[Decimal, Dict[str, Any]] = field(
+        default_factory=lambda: {
+            Decimal("1000"): {
+                "type": "fixed",
+                "cost": Decimal("5.0"),  # €5 per trade (high impact on €1K)
+                "description": "Micro account - high fixed fees",
+            },
+            Decimal("5000"): {
+                "type": "fixed",
+                "cost": Decimal("3.0"),  # €3 per trade
+                "description": "Small account - reduced fixed fees",
+            },
+            Decimal("10000"): {
+                "type": "hybrid",
+                "min_cost": Decimal("1.0"),
+                "rate": Decimal("0.001"),  # 0.1% with €1 minimum
+                "description": "Medium account - hybrid structure",
+            },
+            Decimal("50000"): {
+                "type": "tiered",
+                "brackets": [
+                    {"volume_max": 50000, "rate": Decimal("0.001"), "min": Decimal("0.50")},
+                    {"volume_max": 500000, "rate": Decimal("0.0002"), "min": Decimal("0.10")},
+                    {
+                        "volume_max": float("inf"),
+                        "rate": Decimal("0.00001"),
+                        "min": Decimal("0.01"),
+                    },
+                ],
+                "description": "Pro account - tiered pricing",
+            },
+            Decimal("100000"): {
+                "type": "tiered",
+                "brackets": [
+                    {"volume_max": 100000, "rate": Decimal("0.0005"), "min": Decimal("0.50")},
+                    {"volume_max": 500000, "rate": Decimal("0.00005"), "min": Decimal("0.05")},
+                    {
+                        "volume_max": float("inf"),
+                        "rate": Decimal("0.000002"),
+                        "min": Decimal("0.01"),
+                    },
+                ],
+                "description": "Fund account - institutional pricing",
+            },
+        }
+    )
 
     # Scalability score weights (0-100 points total)
     SCALABILITY_ALPHA_DEGRADATION_MAX_POINTS: Decimal = Decimal("40")  # Alpha degradation score

@@ -5,7 +5,7 @@ TrainingDataPreparator - Prepara datos de entrenamiento completos para learning 
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -13,34 +13,36 @@ import pandas as pd
 from app.backtesting.models import Trade, TradeStatus
 from app.models.market_data import Quote
 
-logger = logging.getLogger(__name__)
-
+# Optional pandas-ta import
 try:
-    import pandas_ta_classic as ta
+    import pandas_ta as ta
 
     PANDAS_TA_AVAILABLE = True
 except ImportError:
     try:
-        import pandas_ta as ta
+        import pandas_ta_classic as ta
 
         PANDAS_TA_AVAILABLE = True
     except ImportError:
         PANDAS_TA_AVAILABLE = False
         ta = None
-        logger.warning("pandas-ta-classic o pandas-ta no disponible. Funcionalidad limitada.")
 
-if TYPE_CHECKING:
-    from app.strategies.momentum_modular.learning.feature_extractor import FeatureExtractor
+logger = logging.getLogger(__name__)
 
 
 class TrainingDataPreparator:
     """
-    Prepara datos de entrenamiento completos para todos los tipos de learning engines.
+    Prepara datos de entrenamiento completos para learning engines.
+
+    Esta clase prepara datos de entrenamiento para diferentes tipos de aprendizaje:
+    - Supervised Learning: features y labels para clasificación
+    - Deep Learning: secuencias para LSTM/GRU/Transformers
+    - Reinforcement Learning: secuencias de mercado para RL
     """
 
-    def __init__(self, feature_extractor: Optional['FeatureExtractor'] = None):
+    def __init__(self, feature_extractor=None):
         """
-        Inicializar preparador de datos.
+        Inicializar TrainingDataPreparator.
 
         Args:
             feature_extractor: FeatureExtractor instance (crea uno nuevo si None)
@@ -371,9 +373,7 @@ class TrainingDataPreparator:
                     'price': (
                         float(quote.bid)
                         if hasattr(quote, 'bid')
-                        else float(quote.close)
-                        if hasattr(quote, 'close')
-                        else 0.0
+                        else float(quote.close) if hasattr(quote, 'close') else 0.0
                     ),
                     'volume': float(getattr(quote, 'volume', 0)),
                     'timestamp': quote.timestamp if hasattr(quote, 'timestamp') else df.index[i],
@@ -394,9 +394,7 @@ class TrainingDataPreparator:
             price = (
                 float(quote.bid)
                 if hasattr(quote, 'bid')
-                else float(quote.close)
-                if hasattr(quote, 'close')
-                else 0.0
+                else float(quote.close) if hasattr(quote, 'close') else 0.0
             )
             volume = float(getattr(quote, 'volume', 0))
 

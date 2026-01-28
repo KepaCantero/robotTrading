@@ -50,9 +50,7 @@ class ProfileConfigLoader:
             profile: Risk profile to apply (conservative, balanced, aggressive, etc.)
             tier: Capital tier to apply (micro, small, medium, large)
         """
-        self.config_path = config_path or Path(
-            "config/backtesting/profile_optimization.yaml"
-        )
+        self.config_path = config_path or Path("config/backtesting/profile_optimization.yaml")
         self.profile = profile
         self.tier = tier
 
@@ -78,9 +76,7 @@ class ProfileConfigLoader:
             if self.profile in self._config["profiles"]:
                 profile_override = self._config["profiles"][self.profile]
                 if profile_override != "pass":
-                    self._config = self._apply_overrides(
-                        self._config, profile_override
-                    )
+                    self._config = self._apply_overrides(self._config, profile_override)
                     logger.debug(f"Applied profile override: {self.profile}")
             else:
                 logger.warning(f"Profile '{self.profile}' not found in configuration")
@@ -90,16 +86,12 @@ class ProfileConfigLoader:
             if self.tier in self._config["tiers"]:
                 tier_override = self._config["tiers"][self.tier]
                 if tier_override != "pass":
-                    self._config = self._apply_overrides(
-                        self._config, tier_override
-                    )
+                    self._config = self._apply_overrides(self._config, tier_override)
                     logger.debug(f"Applied tier override: {self.tier}")
             else:
                 logger.warning(f"Tier '{self.tier}' not found in configuration")
 
-    def _apply_overrides(
-        self, base: Dict[str, Any], overrides: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _apply_overrides(self, base: Dict[str, Any], overrides: Dict[str, Any]) -> Dict[str, Any]:
         """
         Recursively apply overrides to base configuration.
 
@@ -113,11 +105,7 @@ class ProfileConfigLoader:
         result = base.copy()
 
         for key, value in overrides.items():
-            if (
-                key in result
-                and isinstance(result[key], dict)
-                and isinstance(value, dict)
-            ):
+            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
                 # Recursively merge nested dictionaries
                 result[key] = self._apply_overrides(result[key], value)
             else:
@@ -379,15 +367,11 @@ class ProfileConfigLoader:
         max_val = param_config.get(max_key)
 
         if min_val is not None and value < min_val:
-            logger.warning(
-                f"Value {value} below minimum {min_val} for {key_path}"
-            )
+            logger.warning(f"Value {value} below minimum {min_val} for {key_path}")
             return False
 
         if max_val is not None and value > max_val:
-            logger.warning(
-                f"Value {value} above maximum {max_val} for {key_path}"
-            )
+            logger.warning(f"Value {value} above maximum {max_val} for {key_path}")
             return False
 
         return True
@@ -456,9 +440,7 @@ def get_profile_config_loader(
     return _loaders[cache_key]
 
 
-def get_common_params(
-    profile: Optional[str] = None, tier: Optional[str] = None
-) -> Dict[str, Any]:
+def get_common_params(profile: Optional[str] = None, tier: Optional[str] = None) -> Dict[str, Any]:
     """
     Get common parameters as a dictionary.
 

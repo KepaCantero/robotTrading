@@ -6,12 +6,14 @@ generen rentabilidad neta positiva después de todos los costos operativos.
 """
 
 from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
+from requests.exceptions import HTTPError, RequestException
 
 from app.core.centralized_config import get_config
 from app.models.profitability_validation import (

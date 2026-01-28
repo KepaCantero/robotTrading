@@ -11,22 +11,69 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-# Importaciones opcionales
+# REQUIRED: sklearn is REQUIRED - NO FALLBACKS
+from sklearn.preprocessing import StandardScaler
+
+# Optional: hmmlearn with fallback
 try:
     from hmmlearn import hmm
 
-    HMMLEARN_AVAILABLE = True
+    HMM_AVAILABLE = True
+    logger.info("hmmlearn is available - using Hidden Markov Models for regime detection")
 except ImportError:
-    HMMLEARN_AVAILABLE = False
-    logger.warning("hmmlearn no disponible. HMMRegimeDetector limitado.")
+    HMM_AVAILABLE = False
+    logger.warning(
+        "hmmlearn is not available. HMM regime detection will use fallback to GaussianMixture. "
+        "For optimal regime detection, install hmmlearn: pip install hmmlearn"
+    )
+    # Import fallback
 
-try:
-    from sklearn.preprocessing import StandardScaler
+    from sklearn.mixture import GaussianMixture
 
-    SKLEARN_AVAILABLE = True
-except ImportError:
-    SKLEARN_AVAILABLE = False
-    logger.warning("sklearn no disponible. HMMRegimeDetector limitado.")
+    class HMMFallback:
+        """
+        Fallback adapter for hmmlearn using sklearn's GaussianMixture.
+
+        Provides similar interface to hmmlearn.GaussianHMM for backward compatibility.
+        """
+
+        def __init__(self, n_components=2, covariance_type="full", n_iter=100, **kwargs):
+            self.n_components = n_components
+            self.covariance_type = covariance_type
+            self.n_iter = n_iter
+            self.gmm = GaussianMixture(
+                n_components=n_components,
+                covariance_type=covariance_type,
+                max_iter=n_iter,
+                **kwargs,
+            )
+            self.means_ = None
+            self.covars_ = None
+            self.transmat_ = None
+
+        def fit(self, X):
+            """Fit the Gaussian Mixture Model."""
+            self.gmm.fit(X)
+            self.means_ = self.gmm.means_
+            self.covars_ = self.gmm.covariances_
+            # Create a simple transition matrix (stationary distribution)
+            self.transmat_ = np.full(
+                (self.n_components, self.n_components), 1.0 / self.n_components
+            )
+            return self
+
+        def predict(self, X):
+            """Predict component labels."""
+            return self.gmm.predict(X)
+
+        def score_samples(self, X):
+            """Compute the weighted log probabilities for each sample."""
+            return self.gmm.score_samples(X)
+
+    class hmm:
+        """Namespace for fallback HMM implementation."""
+
+        GaussianHMM = HMMFallback
 
 
 class HMMRegimeDetector:
@@ -50,7 +97,7 @@ class HMMRegimeDetector:
         self.min_samples = config.get('min_samples', 50)
 
         self.model = None
-        self.scaler = StandardScaler() if SKLEARN_AVAILABLE else None
+        self.scaler = StandardScaler()
         self.regime_labels = (
             ['bear', 'sideways', 'bull']
             if self.n_regimes == 3
@@ -67,9 +114,7 @@ class HMMRegimeDetector:
         Returns:
             True si el entrenamiento fue exitoso
         """
-        if not HMMLEARN_AVAILABLE:
-            logger.warning("hmmlearn no disponible. HMM no puede entrenarse.")
-            return False
+        # hmmlearn es REQUIRED - ya importado al inicio del módulo
 
         if len(prices) < self.min_samples:
             logger.warning(

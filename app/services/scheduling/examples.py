@@ -8,15 +8,12 @@ algorithmic trading operations.
 
 import asyncio
 import logging
-from datetime import date, time
+from datetime import date
 
 from app.services.scheduling import (
     MarketScheduler,
     MarketType,
-    MarketStatus,
-    MARKET_SCHEDULES,
 )
-
 
 # Configure logging
 logging.basicConfig(
@@ -30,6 +27,7 @@ logger = logging.getLogger(__name__)
 # EXAMPLE 1: Basic 24/7 Crypto Monitoring
 # ============================================================================
 
+
 async def example_1_crypto_monitoring():
     """
     Example 1: Basic 24/7 crypto monitoring.
@@ -37,9 +35,9 @@ async def example_1_crypto_monitoring():
     Crypto markets run 24/7, so monitoring tasks should run continuously.
     """
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("EXAMPLE 1: 24/7 Crypto Monitoring")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
     scheduler = MarketScheduler(check_interval_24_7=5.0)
 
@@ -80,6 +78,7 @@ async def example_1_crypto_monitoring():
 # EXAMPLE 2: Multi-Market Strategy
 # ============================================================================
 
+
 async def example_2_multi_market_strategy():
     """
     Example 2: Multi-market strategy trading both crypto and stocks.
@@ -87,9 +86,9 @@ async def example_2_multi_market_strategy():
     Demonstrates how to schedule different tasks for different markets.
     """
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("EXAMPLE 2: Multi-Market Strategy")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
     scheduler = MarketScheduler(
         check_interval_24_7=5.0,
@@ -149,6 +148,7 @@ async def example_2_multi_market_strategy():
 # EXAMPLE 3: Maintenance Tasks (Run Even When Closed)
 # ============================================================================
 
+
 async def example_3_maintenance_tasks():
     """
     Example 3: Maintenance tasks that run regardless of market status.
@@ -156,9 +156,9 @@ async def example_3_maintenance_tasks():
     Useful for data synchronization, health checks, etc.
     """
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("EXAMPLE 3: Maintenance Tasks")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
     scheduler = MarketScheduler(
         check_interval_scheduled=5.0,
@@ -205,6 +205,7 @@ async def example_3_maintenance_tasks():
 # EXAMPLE 4: Dynamic Task Management
 # ============================================================================
 
+
 async def example_4_dynamic_task_management():
     """
     Example 4: Dynamic task management (enable/disable/add/remove).
@@ -212,9 +213,9 @@ async def example_4_dynamic_task_management():
     Demonstrates how to manage tasks while the scheduler is running.
     """
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("EXAMPLE 4: Dynamic Task Management")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
     scheduler = MarketScheduler(check_interval_24_7=3.0)
 
@@ -268,6 +269,7 @@ async def example_4_dynamic_task_management():
 # EXAMPLE 5: Market Status Monitoring
 # ============================================================================
 
+
 async def example_5_market_status_monitoring():
     """
     Example 5: Monitor market status for different markets.
@@ -275,9 +277,9 @@ async def example_5_market_status_monitoring():
     Demonstrates how to check if markets are open, closed, on holiday, etc.
     """
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("EXAMPLE 5: Market Status Monitoring")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
     scheduler = MarketScheduler()
 
@@ -302,7 +304,7 @@ async def example_5_market_status_monitoring():
             print(f"  Hours: {schedule.open_time} - {schedule.close_time}")
             print(f"  Timezone: {schedule.timezone_str}")
         else:
-            print(f"  Hours: 24/7")
+            print("  Hours: 24/7")
 
         if schedule.holidays:
             print(f"  Holidays: {len(schedule.holidays)} configured")
@@ -314,6 +316,7 @@ async def example_5_market_status_monitoring():
 # EXAMPLE 6: Holiday Management
 # ============================================================================
 
+
 async def example_6_holiday_management():
     """
     Example 6: Managing market holidays.
@@ -321,9 +324,9 @@ async def example_6_holiday_management():
     Demonstrates how to add and remove holidays for markets.
     """
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("EXAMPLE 6: Holiday Management")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
     scheduler = MarketScheduler()
 
@@ -358,6 +361,7 @@ async def example_6_holiday_management():
 # EXAMPLE 7: Task Information and Metrics
 # ============================================================================
 
+
 async def example_7_task_metrics():
     """
     Example 7: Tracking task execution metrics.
@@ -365,9 +369,9 @@ async def example_7_task_metrics():
     Demonstrates how to monitor task performance and execution counts.
     """
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("EXAMPLE 7: Task Execution Metrics")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
     scheduler = MarketScheduler(check_interval_24_7=2.0)
 
@@ -413,6 +417,7 @@ async def example_7_task_metrics():
 # EXAMPLE 8: Waiting for Market Open
 # ============================================================================
 
+
 async def example_8_wait_for_market_open():
     """
     Example 8: Waiting for market to open.
@@ -420,9 +425,9 @@ async def example_8_wait_for_market_open():
     Demonstrates how to wait until a market opens before executing logic.
     """
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("EXAMPLE 8: Waiting for Market Open")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
     scheduler = MarketScheduler()
 
@@ -444,12 +449,13 @@ async def example_8_wait_for_market_open():
 # MAIN DEMO
 # ============================================================================
 
+
 async def main():
     """Run all examples."""
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("MARKET SCHEDULER USAGE EXAMPLES")
-    print("="*70)
+    print("=" * 70)
 
     # Run examples
     await example_1_crypto_monitoring()
@@ -461,9 +467,9 @@ async def main():
     await example_7_task_metrics()
     await example_8_wait_for_market_open()
 
-    print("="*70)
+    print("=" * 70)
     print("ALL EXAMPLES COMPLETED")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
 
 if __name__ == "__main__":

@@ -136,11 +136,7 @@ class MomentumAutoOptimizer:
         bounds = self.auto_opt_config.get("optimization_bounds", {})
 
         # Use Optuna for optimization (simpler than full grid search)
-        try:
-            import optuna
-        except ImportError:
-            logger.error("Optuna not installed, falling back to default parameters")
-            return current_params or {}
+        import optuna
 
         # Create study
         study = optuna.create_study(direction="maximize")

@@ -10,7 +10,78 @@ from decimal import Decimal
 from enum import Enum
 from typing import List, Optional, Tuple
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+# Try to import pydantic with fallback to dataclasses
+try:
+    from pydantic import BaseModel, Field, field_validator, model_validator
+
+    PYDANTIC_AVAILABLE = True
+except ImportError:
+    PYDANTIC_AVAILABLE = False
+    # Fallback to standard library dataclasses
+    from dataclasses import dataclass
+
+    # Create pydantic-like API using dataclasses
+    class Field:
+        """Fallback Field descriptor for dataclasses."""
+
+        def __init__(self, default=None, default_factory=None, **kwargs):
+            self.default = default
+            self.default_factory = default_factory
+            self.kwargs = kwargs
+
+        def __get__(self, obj, objtype=None):
+            if obj is None:
+                return self
+            if self.default_factory is not None:
+                if self.default_factory == list:
+                    return []
+                elif self.default_factory == dict:
+                    return {}
+                return self.default_factory()
+            return self.default
+
+    def field_validator(*args):
+        """Fallback field validator decorator (no-op in dataclasses)."""
+
+        def decorator(func):
+            return func
+
+        return decorator
+
+    def model_validator(*args, **kwargs):
+        """Fallback model validator decorator (no-op in dataclasses)."""
+
+        def decorator(func):
+            return func
+
+        return decorator
+
+    # Create a base class that mimics pydantic's BaseModel
+    class BaseModel:
+        """Fallback base class using dataclasses."""
+
+        def __init_subclass__(cls, **kwargs):
+            # Add dataclass decorator automatically
+            dataclass(cls)
+
+        def model_dump(self):
+            """Convert to dictionary (pydantic compatibility)."""
+            result = {}
+            for key in self.__dataclass_fields__:
+                value = getattr(self, key)
+                if isinstance(value, Decimal):
+                    result[key] = float(value)
+                elif isinstance(value, datetime):
+                    result[key] = value.isoformat()
+                elif isinstance(value, list):
+                    result[key] = [v.model_dump() if hasattr(v, 'model_dump') else v for v in value]
+                else:
+                    result[key] = value
+            return result
+
+        def dict(self):
+            """Legacy method (pydantic compatibility)."""
+            return self.model_dump()
 
 
 class TradeStatus(str, Enum):
@@ -128,7 +199,7 @@ class PerformanceMetrics(BaseModel):
     largest_loss: Decimal = Field(..., le=0, description="Largest losing trade")
     expectancy: Optional[Decimal] = Field(
         None,
-        description="Expectancy: Expected value per trade (positive=profitable, negative=unprofitable)"
+        description="Expectancy: Expected value per trade (positive=profitable, negative=unprofitable)",
     )
 
     # Time metrics

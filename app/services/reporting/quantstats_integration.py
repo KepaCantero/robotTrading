@@ -12,22 +12,21 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-# Try to import QuantStats, fall back gracefully if not available
+# Check if QuantStats is available
 try:
-    pass
+    import quantstats
 
     QUANTSTATS_AVAILABLE = True
 except ImportError:
     QUANTSTATS_AVAILABLE = False
-    logger.warning("⚠️ QuantStats not available - using fallback metrics")
+    logger.warning("QuantStats not available, advanced metrics will be limited")
 
 
 class QuantStatsIntegration:
     """
-    Integrates QuantStats library for comprehensive performance analytics.
+    Integration with QuantStats for advanced performance metrics.
 
-    Calculates:
-    - Calmar ratio
+    Provides comprehensive analytics including:
     - Omega ratio
     - Information ratio
     - Max consecutive wins/losses
@@ -38,7 +37,7 @@ class QuantStatsIntegration:
     def __init__(self):
         """Initialize QuantStats integration."""
         self.available = QUANTSTATS_AVAILABLE
-        logger.info(f"✅ QuantStatsIntegration initialized (available: {self.available})")
+        logger.info(f"QuantStatsIntegration initialized (available: {self.available})")
 
     def calculate_advanced_metrics(
         self,
@@ -47,7 +46,7 @@ class QuantStatsIntegration:
         periods_per_year: int = 252,
     ) -> Dict[str, float]:
         """
-        Calculate advanced performance metrics using QuantStats.
+        Calculate advanced performance metrics using QuantStats (REQUIRED).
 
         Args:
             returns: Series of returns (daily or periodic)
@@ -56,18 +55,21 @@ class QuantStatsIntegration:
 
         Returns:
             Dict with advanced metrics
+
+        Raises:
+            ValueError: If returns is invalid or too short
         """
         if not isinstance(returns, pd.Series):
             try:
                 returns = pd.Series(returns)
             except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.error(f"Cannot convert returns to Series: {e}")
-                return {}
+                raise ValueError(f"Cannot convert returns to Series: {e}")
+
+        if len(returns) < 2:
+            raise ValueError("Returns series must have at least 2 data points")
 
         metrics = {}
-
-        if not self.available or len(returns) < 2:
-            return self._fallback_metrics(returns, periods_per_year)
 
         try:
             # Calculate using QuantStats
@@ -158,64 +160,11 @@ class QuantStatsIntegration:
                         active_returns.mean() * periods_per_year / tracking_error
                     )
 
-            logger.info(f"✅ Calculated {len(metrics)} advanced metrics using QuantStats")
+            logger.info(f"Calculated {len(metrics)} advanced metrics using QuantStats")
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.warning(f"Error calculating QuantStats metrics: {e}, using fallback")
-            return self._fallback_metrics(returns, periods_per_year)
-
-        return metrics
-
-    def _fallback_metrics(
-        self,
-        returns: pd.Series,
-        periods_per_year: int = 252,
-    ) -> Dict[str, float]:
-        """
-        Calculate basic metrics when QuantStats not available.
-
-        Args:
-            returns: Series of returns
-            periods_per_year: Trading periods per year
-
-        Returns:
-            Dict with basic metrics
-        """
-        metrics = {}
-
-        if len(returns) < 2:
-            return metrics
-
-        try:
-            # Total return
-            metrics["total_return"] = float((1 + returns).prod() - 1)
-
-            # Annual return
-            years = len(returns) / periods_per_year
-            if years > 0:
-                metrics["annual_return"] = (1 + metrics["total_return"]) ** (1 / years) - 1
-
-            # Volatility
-            metrics["volatility"] = float(returns.std() * np.sqrt(periods_per_year))
-
-            # Sharpe Ratio
-            if metrics["volatility"] > 0:
-                metrics["sharpe_ratio"] = float(metrics["annual_return"] / metrics["volatility"])
-
-            # Max Drawdown
-            cumulative = (1 + returns).cumprod()
-            running_max = cumulative.expanding().max()
-            drawdown = (cumulative - running_max) / running_max
-            metrics["max_drawdown"] = float(drawdown.min())
-
-            # Win rate
-            winning = len(returns[returns > 0])
-            metrics["win_rate"] = float(winning / len(returns)) if len(returns) > 0 else 0
-
-            logger.info(f"✅ Calculated {len(metrics)} fallback metrics")
-
-        except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"Error calculating fallback metrics: {e}")
+            logger.error(f"Error calculating QuantStats metrics: {e}")
+            raise
 
         return metrics
 
@@ -225,7 +174,7 @@ class QuantStatsIntegration:
         benchmark_returns: Optional[pd.Series] = None,
     ) -> Dict:
         """
-        Get comprehensive metrics summary.
+        Get comprehensive metrics summary (REQUIRED).
 
         Args:
             returns: Returns series
@@ -238,7 +187,7 @@ class QuantStatsIntegration:
 
         summary = {
             "metrics": metrics,
-            "source": "QuantStats" if self.available else "Fallback",
+            "source": "QuantStats",
             "count": len(metrics),
             "is_available": self.available,
         }

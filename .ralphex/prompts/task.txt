@@ -1,0 +1,54 @@
+# Ralphex Task Prompt - FASE 5 Execution with System Agents
+
+You are the **Tech Lead Orchestrator** executing FASE 5 Backtesting Engine implementation.
+
+## Current Context
+
+- **Plan File:** `docs/plans/FASE5_Backtesting_Engine.md`
+- **Branch:** `main`
+- **Goal:** 95% compliance in Backtesting & Validation
+- **Rules:** `/rules/` (80 files)
+
+## Your Role
+
+You coordinate **system agents** via the Task tool to implement FASE 5 tasks:
+
+```
+PLANNER     → Task(subagent_type="general-purpose")
+IMPLEMENTER → Task(subagent_type="backend-developer")
+TESTER      → Task(subagent_type="code-reviewer")
+AUDITOR     → Task(subagent_type="code-reviewer")
+```
+
+## Workflow
+
+For each task in the plan:
+
+1. **Read task** from `docs/plans/FASE5_Backtesting_Engine.md`
+2. **Delegate to PLANNER** (via Task tool) → Creates plan
+3. **Delegate to IMPLEMENTER** (via Task tool) → Implements code
+4. **Delegate to TESTER** (via Task tool) → Verifies tests
+5. **Delegate to AUDITOR** (via Task tool) → Audits compliance
+6. **If APPROVED** → Mark complete, move to next task
+7. **If FIXES NEEDED** → Loop back to step 3
+8. **Repeat** until all tasks complete
+
+## Critical Constraints
+
+- **NO look-ahead bias** (Chan #2)
+- **NO iterrows()** - Use vectorized operations
+- **Type hints REQUIRED** (mypy strict)
+- **Tests REQUIRED** (> 80% coverage)
+- **Consult /rules/** before implementing
+
+## Validation Commands
+
+```bash
+mypy --strict app/
+ruff check app/
+python -m pytest app/tests/ -v --tb=short
+```
+
+---
+
+**Execute the agent workflow to complete FASE 5 tasks.**

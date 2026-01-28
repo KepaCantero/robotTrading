@@ -113,13 +113,15 @@ class PortfolioRiskManager:
 
         # Try to use async correlation if available and not in async context
         try:
-            loop = asyncio.get_running_loop()
+            asyncio.get_running_loop()
             # We're in an async context, use synchronous fallback
             risk_metrics = self._calculate_risk_metrics(portfolio, new_position)
         except RuntimeError:
             # No event loop running, safe to use asyncio.run
             try:
-                risk_metrics = asyncio.run(self._calculate_risk_metrics_async(portfolio, new_position))
+                risk_metrics = asyncio.run(
+                    self._calculate_risk_metrics_async(portfolio, new_position)
+                )
             except RuntimeError:
                 # Fallback to sync if async fails
                 risk_metrics = self._calculate_risk_metrics(portfolio, new_position)
@@ -429,8 +431,8 @@ class PortfolioRiskManager:
                     symbols = [pos.symbol for pos in positions]
 
                     # Calculate correlation matrix
-                    correlation_matrix = await self.correlation_analyzer.calculate_correlation_matrix(
-                        symbols
+                    correlation_matrix = (
+                        await self.correlation_analyzer.calculate_correlation_matrix(symbols)
                     )
 
                     # Update cache
@@ -450,9 +452,7 @@ class PortfolioRiskManager:
                                 correlations[pair] = correlation
                             except (KeyError, ValueError):
                                 # Fallback to simulated correlation if not found
-                                correlations[pair] = self._get_fallback_correlation(
-                                    pos1, pos2
-                                )
+                                correlations[pair] = self._get_fallback_correlation(pos1, pos2)
 
                     logger.debug(f"Calculated {len(correlations)} real correlations")
                     return correlations

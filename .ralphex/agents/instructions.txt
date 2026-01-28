@@ -1,0 +1,191 @@
+# Ralphex Agent Instructions - FASE 5 Execution
+
+This file defines how the Tech Lead Orchestrator uses system agents.
+
+## Agent Mapping
+
+| Phase | System Agent | Purpose |
+|-------|-------------|---------|
+| PLANNER | `general-purpose` or `Explore` | Analyze task, read /rules/, create plan |
+| IMPLEMENTER | `backend-developer` | Implement Python code |
+| TESTER | `code-reviewer` | Review/create tests |
+| AUDITOR | `code-reviewer` | Audit against /rules/ |
+
+## Task Prompt Templates
+
+### PLANNER Prompt
+
+```python
+Task(
+    subagent_type="general-purpose",
+    prompt=f"""
+## PLANNER Task for FASE 5
+
+**Task:** {task_name}
+**Description:** {task_description}
+
+You are planning implementation for a quantitative trading system.
+
+1. **Read /rules/ files:**
+   - /rules/trading/01-ernest-chan-algorithmic-trading.md (Chan rules)
+   - /rules/trading/13-john-hull-risk-management.md (Risk management)
+   - /rules/python/ (Python QA standards)
+
+2. **Search existing code:**
+   Use Grep to search for existing implementations related to this task.
+
+3. **Read relevant files** to understand established patterns.
+
+4. **Create implementation plan:**
+   - What already exists?
+   - What needs to be created/modified?
+   - What are the /rules/ requirements?
+   - Step-by-step implementation guide
+
+Output: Structured implementation plan.
+""",
+    description=f"Plan: {task_name}"
+)
+```
+
+### IMPLEMENTER Prompt
+
+```python
+Task(
+    subagent_type="backend-developer",
+    prompt=f"""
+## IMPLEMENTER Task for FASE 5
+
+**Plan from PLANNER:**
+{plan}
+
+**Requirements from /rules/:**
+- Chan #8: Sharpe ratio >= 1.0
+- Chan #10: Max drawdown < 25%
+- Type hints REQUIRED (mypy strict)
+- Google style docstrings REQUIRED
+- SOLID principles REQUIRED
+- No iterrows() - use vectorization
+
+Implement the code following:
+1. Project's layered architecture (domain/application/infrastructure)
+2. Existing code patterns
+3. Full type hints
+4. Google style docstrings with /rules/ references
+
+After implementation:
+- Run: mypy --strict
+- Run: ruff check
+- Report files created/modified
+""",
+    description=f"Implement: {task_name}"
+)
+```
+
+### TESTER Prompt
+
+```python
+Task(
+    subagent_type="code-reviewer",
+    prompt=f"""
+## TESTER Task for FASE 5
+
+**Implementation:**
+{implementation}
+
+**Task:** Verify/Create tests for the implementation.
+
+1. Check if tests exist for the implemented code
+2. Verify test coverage > 80%
+3. Check edge cases are tested
+4. Check error conditions are tested
+5. Run pytest and report results
+
+If tests are missing or insufficient:
+- Create comprehensive pytest tests
+- Use fixtures for shared test data
+- Include boundary condition tests
+- Include error handling tests
+
+Output: Test results with coverage %.
+""",
+    description=f"Test: {task_name}"
+)
+```
+
+### AUDITOR Prompt
+
+```python
+Task(
+    subagent_type="code-reviewer",
+    prompt=f"""
+## AUDITOR Task for FASE 5
+
+**Implementation:**
+{implementation}
+
+**Tests:**
+{tests}
+
+**Task:** Audit implementation against /rules/ compliance.
+
+**Trading Rules to Verify:**
+- Chan #2: No look-ahead bias
+- Chan #8: Sharpe >= 1.0 threshold
+- Chan #10: Max DD < 25% threshold
+- Chan #15: Circuit breaker 5% daily
+- Hull #56-65: Risk management standards
+
+**Python QA Standards to Verify:**
+- Type hints present (mypy strict)
+- Google style docstrings
+- SOLID principles followed
+- No hardcoded values
+- Proper error handling
+
+**Decision Format:**
+Output one of:
+- APPROVED: All critical requirements met
+- FIXES_REQUIRED: Specific issues that must be fixed
+- PARTIAL: Some requirements met, gaps noted
+
+Provide detailed findings for each decision.
+""",
+    description=f"Audit: {task_name}"
+)
+```
+
+## Loop Logic
+
+```python
+# Pseudo-code for the orchestrator loop
+def execute_task(task_name, task_description):
+    # Step 1: PLANNER
+    plan = Task("general-purpose", planner_prompt)
+
+    iteration = 0
+    while iteration < 5:
+        iteration += 1
+
+        # Step 2: IMPLEMENTER
+        impl = Task("backend-developer", implementer_prompt)
+
+        # Step 3: TESTER
+        tests = Task("code-reviewer", tester_prompt)
+
+        # Step 4: AUDITOR
+        audit = Task("code-reviewer", auditor_prompt)
+
+        if "APPROVED" in audit:
+            return mark_complete(task_name)
+        elif "FIXES_REQUIRED" in audit:
+            # Update plan with findings and continue loop
+            plan += f"\nFixes needed: {audit.findings}"
+            continue
+        else:
+            return mark_partial(task_name)
+```
+
+---
+
+The Tech Lead Orchestrator uses these templates to coordinate system agents.

@@ -6,6 +6,8 @@ performance metrics, risk analysis, and portfolio management features.
 """
 
 from __future__ import annotations
+
+import asyncio
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional

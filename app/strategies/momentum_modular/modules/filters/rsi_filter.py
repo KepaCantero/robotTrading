@@ -23,11 +23,13 @@ from typing import Dict, Optional
 
 from ..base_filter import BaseFilter
 
-# Import centralized configuration
+# Try to import strategy config loader
 try:
     from app.core.config.strategy_config_loader import get_strategy_config
+
     HAS_CONFIG_LOADER = True
 except ImportError:
+    get_strategy_config = None  # type: ignore
     HAS_CONFIG_LOADER = False
 
 logger = logging.getLogger(__name__)
@@ -35,18 +37,17 @@ logger = logging.getLogger(__name__)
 
 class RSIFilter(BaseFilter):
     """
-    Filtro RSI con thresholds adaptativos según contexto de mercado.
+    Filtro de momentum usando Relative Strength Index (RSI).
 
-    Evalúa condiciones de sobrecompra/sobreventa según el régimen detectado
-    usando CONFIRMACIÓN de cruce (crossover) en lugar de thresholds simples.
+    Estrategia RSI Estándar (CORREGIDA):
+    - BUY cuando RSI cruza POR ENCIMA de buy_threshold (confirmación de reversión desde sobreventa, típicamente > 30)
+    - SELL cuando RSI cruza POR DEBAJO de sell_threshold (confirmación de reversión desde sobrecompra, típicamente < 70)
 
-    CORRECTED RSI interpretation with crossover confirmation:
-    - BUY when RSI crosses ABOVE buy_threshold (confirms oversold reversal)
-    - SELL when RSI crosses BELOW sell_threshold (confirms overbought reversal)
-    - 30 <= RSI <= 70: Neutral zone (no clear signal)
-    - FALLBACK: If no previous RSI available, use stricter threshold for safety
-
-    This prevents buying at the exact bottom (falling knife) and selling at the exact top.
+    LÓGICA CORREGIDA:
+    - Rastrea valor RSI previo
+    - Señal BUY: previous_rsi <= buy_threshold AND current_rsi > buy_threshold (cruce hacia arriba)
+    - Señal SELL: previous_rsi >= sell_threshold AND current_rsi < sell_threshold (cruce hacia abajo)
+    - FALLBACK (sin historial): usa umbral más estricto (buy_threshold - 2) para ser más conservador
     """
 
     # Class-level storage for tracking RSI history per symbol
@@ -90,35 +91,55 @@ class RSIFilter(BaseFilter):
             self.adaptive_thresholds = {
                 "balanced": {
                     "buy_threshold": default_extreme_low,
-                    "sell_threshold": default_extreme_high
+                    "sell_threshold": default_extreme_high,
                 },
                 "volatile": {
-                    "buy_threshold": strategy_config.get_rsi_adaptive_threshold('volatile', 'buy_threshold'),
-                    "sell_threshold": strategy_config.get_rsi_adaptive_threshold('volatile', 'sell_threshold')
+                    "buy_threshold": strategy_config.get_rsi_adaptive_threshold(
+                        'volatile', 'buy_threshold'
+                    ),
+                    "sell_threshold": strategy_config.get_rsi_adaptive_threshold(
+                        'volatile', 'sell_threshold'
+                    ),
                 },
                 "trending": {
-                    "buy_threshold": strategy_config.get_rsi_adaptive_threshold('trending', 'buy_threshold'),
-                    "sell_threshold": strategy_config.get_rsi_adaptive_threshold('trending', 'sell_threshold')
+                    "buy_threshold": strategy_config.get_rsi_adaptive_threshold(
+                        'trending', 'buy_threshold'
+                    ),
+                    "sell_threshold": strategy_config.get_rsi_adaptive_threshold(
+                        'trending', 'sell_threshold'
+                    ),
                 },
                 "trend_up": {
-                    "buy_threshold": strategy_config.get_rsi_adaptive_threshold('trend_up', 'buy_threshold'),
-                    "sell_threshold": strategy_config.get_rsi_adaptive_threshold('trend_up', 'sell_threshold')
+                    "buy_threshold": strategy_config.get_rsi_adaptive_threshold(
+                        'trend_up', 'buy_threshold'
+                    ),
+                    "sell_threshold": strategy_config.get_rsi_adaptive_threshold(
+                        'trend_up', 'sell_threshold'
+                    ),
                 },
                 "trend_down": {
-                    "buy_threshold": strategy_config.get_rsi_adaptive_threshold('trend_down', 'buy_threshold'),
-                    "sell_threshold": strategy_config.get_rsi_adaptive_threshold('trend_down', 'sell_threshold')
+                    "buy_threshold": strategy_config.get_rsi_adaptive_threshold(
+                        'trend_down', 'buy_threshold'
+                    ),
+                    "sell_threshold": strategy_config.get_rsi_adaptive_threshold(
+                        'trend_down', 'sell_threshold'
+                    ),
                 },
                 "range": {
                     "buy_threshold": default_extreme_low,
-                    "sell_threshold": default_extreme_high
+                    "sell_threshold": default_extreme_high,
                 },
                 "high_vol": {
-                    "buy_threshold": strategy_config.get_rsi_adaptive_threshold('high_volatility', 'buy_threshold'),
-                    "sell_threshold": strategy_config.get_rsi_adaptive_threshold('high_volatility', 'sell_threshold')
+                    "buy_threshold": strategy_config.get_rsi_adaptive_threshold(
+                        'high_volatility', 'buy_threshold'
+                    ),
+                    "sell_threshold": strategy_config.get_rsi_adaptive_threshold(
+                        'high_volatility', 'sell_threshold'
+                    ),
                 },
                 "unknown": {
                     "buy_threshold": default_extreme_low,
-                    "sell_threshold": default_extreme_high
+                    "sell_threshold": default_extreme_high,
                 },
             }
 

@@ -1,0 +1,114 @@
+---
+name: "High Memory Usage Detected"
+severity: "high"
+trigger: "memory_usage > 85%"
+category: "infrastructure"
+tags: ["memory", "infrastructure", "oom", "resources"]
+estimated_duration_minutes: 15
+last_updated: "2026-01-28"
+version: "1.0"
+
+description: |
+  Respond to high memory usage. High memory can lead to OOM kills,
+  service crashes, and performance degradation.
+
+prerequisites:
+  - System monitoring access
+  - Service management access
+  - Memory profiling tools
+
+steps:
+  - title: "Verify Memory Usage"
+    description: "Confirm high memory usage"
+    commands:
+      - "Check memory metrics dashboard"
+      - "Identify which services are using memory"
+      - "Check if memory is growing or stable"
+      - "Review OOM indicators"
+    expected_outcome: "Memory usage confirmed"
+
+  - title: "Assess Risk Level"
+    description: "Determine urgency of situation"
+    commands:
+      - "Check if OOM imminent"
+      - "Review memory growth rate"
+      - "Assess service impact"
+      - "Check if swap is being used"
+    expected_outcome: "Risk level assessed"
+    decision_point:
+      condition: "memory_usage > 95% OR oom_imminent"
+      true_branch: "Immediate action required"
+      false_branch: "Monitor and investigate"
+
+  - title: "Identify Memory Consumer"
+    description: "Find what's using memory"
+    commands:
+      - "Check per-process memory usage"
+      - "Identify top memory-consuming processes"
+      - "Check for memory leaks in logs"
+      - "Review application memory profiles"
+    expected_outcome: "Memory consumer identified"
+
+  - title: "Implement Immediate Mitigation"
+    description: "Free memory quickly if needed"
+    commands:
+      - "Restart affected service if safe"
+      - "Scale up resources if possible"
+      - "Kill non-critical processes"
+      - "Clear caches if appropriate"
+      - "Reduce service load"
+    expected_outcome: "Memory freed"
+
+  - title: "Investigate Root Cause"
+    description: "Determine why memory is high"
+    commands:
+      - "Check for memory leaks"
+      - "Review recent code changes"
+      - "Analyze memory dumps if available"
+      - "Check for configuration issues"
+      - "Review memory allocation patterns"
+    expected_outcome: "Root cause identified"
+
+  - title: "Implement Permanent Fix"
+    description: "Address underlying issue"
+    commands:
+      - "Fix memory leaks if found"
+      - "Optimize memory usage"
+      - "Adjust resource limits"
+      - "Implement better memory management"
+      - "Add memory monitoring alerts"
+    expected_outcome: "Fix implemented"
+
+  - title: "Monitor Recovery"
+    description: "Ensure memory stays stable"
+    commands:
+      - "Monitor memory usage"
+      - "Check for continued growth"
+      - "Verify no OOM kills"
+      - "Monitor for 1 hour"
+    expected_outcome: "Memory stable"
+
+post_actions:
+  - "Review memory usage patterns"
+  - "Improve memory monitoring"
+  - "Consider resource scaling"
+  - "Update runbook with lessons learned"
+
+related_runbooks:
+  - "oom_detected.yaml"
+  - "service_restarted_unexpectedly.yaml"
+
+metrics_to_track:
+  - "memory_usage_percentage"
+  - "memory_usage_mb"
+  - "oom_kill_count"
+  - "swap_usage_percentage"
+
+success_criteria:
+  - "Memory usage normalized"
+  - "Root cause addressed"
+  - "No risk of OOM"
+
+escalation_path: "infrastructure"
+owner: "platform-team"
+review_frequency: "monthly"

@@ -1,0 +1,159 @@
+---
+name: "Circuit Breaker Triggered"
+severity: "critical"
+trigger: "circuit_breaker_status == active"
+category: "risk"
+tags: ["circuit-breaker", "trading-halt", "emergency"]
+estimated_duration_minutes: 20
+last_updated: "2026-01-28"
+version: "1.0"
+
+description: |
+  Respond to circuit breaker activation. Circuit breakers automatically halt
+  trading when drawdown exceeds predefined thresholds (1%, 5%, 10%, 15%).
+  This runbook guides you through assessing the situation and recovery.
+
+prerequisites:
+  - Risk dashboard access
+  - Circuit breaker admin access
+  - Trading halt authority
+
+steps:
+  - title: "Confirm Circuit Breaker Status"
+    description: "Verify circuit breaker is active and identify which level"
+    commands:
+      - "Check risk dashboard for circuit breaker status"
+      - "Identify which threshold was triggered"
+      - "Note timestamp of trigger"
+      - "Review trigger conditions"
+    expected_outcome: "Circuit breaker details confirmed"
+
+  - title: "Verify Automatic Trading Halt"
+    description: "Ensure trading has been halted"
+    commands:
+      - "Check execution engine status"
+      - "Verify no new orders are being placed"
+      - "Cancel any pending orders"
+      - "Confirm position is frozen"
+    expected_outcome: "Trading confirmed halted"
+
+  - title: "Assess Trigger Cause"
+    description: "Determine what caused the circuit breaker to trigger"
+    commands:
+      - "Review drawdown chart and trend"
+      - "Check recent large losses"
+      - "Identify specific positions contributing"
+      - "Review market events at trigger time"
+      - "Check for any system anomalies"
+    expected_outcome: "Root cause of trigger identified"
+
+  - title: "Calculate Current Drawdown"
+    description: "Get precise current drawdown figure"
+    commands:
+      - "Pull current portfolio value"
+      - "Calculate drawdown from peak"
+      - "Compare to circuit breaker threshold"
+      - "Determine how far past threshold we are"
+    expected_outcome: "Exact drawdown percentage known"
+
+  - title: "Review Risk Metrics"
+    description: "Comprehensive risk metrics review"
+    commands:
+      - "Check VaR (Value at Risk)"
+      - "Review beta-adjusted exposure"
+      - "Check correlation risk"
+      - "Review leverage ratio"
+      - "Assess liquidity risk"
+    expected_outcome: "Full risk picture understood"
+
+  - title: "Determine Recovery Strategy"
+    description: "Based on assessment, plan recovery approach"
+    commands: []
+    decision_point:
+      condition: "drawdown <= 10% AND stable_for_30min"
+      true_branch: "Consider careful restart with reduced limits"
+      false_branch: "Maintain halt, investigate deeper"
+
+  - title: "Document Trigger Event"
+    description: "Create detailed incident record"
+    commands:
+      - "Log circuit breaker trigger in incident system"
+      - "Record all relevant metrics at trigger time"
+      - "Document market conditions"
+      - "Save state of all systems"
+    expected_outcome: "Incident fully documented"
+
+  - title: "Communicate Incident"
+    description: "Notify appropriate personnel"
+    commands:
+      - "Page on-call if not already engaged"
+      - "Notify risk management team"
+      - "Update status dashboard"
+      - "Prepare stakeholder communication"
+    expected_outcome: "All stakeholders notified"
+
+  - title: "Plan Recovery Actions"
+    description: "Develop recovery plan before taking action"
+    commands:
+      - "Define conditions for restart"
+      - "Plan position adjustments if needed"
+      - "Set monitoring thresholds for restart"
+      - "Define rollback criteria"
+    expected_outcome: "Recovery plan documented"
+
+  - title: "Execute Recovery (When Safe)"
+    description: "Carefully restart trading when conditions allow"
+    commands:
+      - "Verify preconditions for restart met"
+      - "Gradually reduce circuit breaker level"
+      - "Restart with reduced position sizes"
+      - "Monitor closely for 1 hour"
+      - "Gradually return to normal limits"
+    expected_outcome: "Trading resumed safely"
+
+  - title: "Post-Recovery Monitoring"
+    description: "Extended monitoring after recovery"
+    commands:
+      - "Increased monitoring for 24 hours"
+      - "Check drawdown stabilizes"
+      - "Verify no new triggers occur"
+      - "Review system logs for anomalies"
+    expected_outcome: "System stable post-recovery"
+
+post_actions:
+  - "Conduct post-incident review"
+  - "Update circuit breaker thresholds if appropriate"
+  - "Review and improve risk models"
+  - "Update this runbook with lessons learned"
+  - "Train team on any new procedures"
+
+rollback_actions:
+  - title: "Re-activate Circuit Breaker"
+    description: "If recovery fails, rehalt immediately"
+    commands:
+      - "Immediately activate circuit breaker"
+      - "Halt all trading"
+      - "Review what went wrong"
+      - "Assess if external help needed"
+
+related_runbooks:
+  - "high_drawdown_alert.yaml"
+  - "trading_halt.yaml"
+  - "position_limit_violation.yaml"
+
+metrics_to_track:
+  - "circuit_breaker_status"
+  - "circuit_breaker_level"
+  - "drawdown_percentage"
+  - "trading_status"
+
+success_criteria:
+  - "Root cause identified"
+  - "Recovery executed safely"
+  - "No re-triggers within 24 hours"
+  - "Incident documented"
+  - "Stakeholders informed"
+
+escalation_path: "trading_critical"
+owner: "risk-team"
+review_frequency: "quarterly"

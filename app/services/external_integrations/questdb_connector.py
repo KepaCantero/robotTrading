@@ -5,6 +5,7 @@ QuestDB is a high-performance time-series database for storing market data,
 trades, and performance metrics. Uses ILP (Influx Line Protocol) for high-throughput writes.
 """
 
+import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime

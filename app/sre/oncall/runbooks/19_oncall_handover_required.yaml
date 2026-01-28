@@ -1,0 +1,123 @@
+---
+name: "On-Call Handover Required"
+severity: "low"
+trigger: "scheduled_handover OR emergency_handover"
+category: "oncall"
+tags: ["handover", "oncall", "procedures"]
+estimated_duration_minutes: 30
+last_updated: "2026-01-28"
+version: "1.0"
+
+description: |
+  Execute on-call handover procedures. Proper handover ensures
+  continuity of knowledge and effective incident response.
+
+prerequisites:
+  - Handoff checklist access
+  - System status access
+  - Incident tracking access
+
+steps:
+  - title: "Prepare for Handover"
+    description: "Get ready for handover process"
+    commands:
+      - "Review current on-call status"
+      - "Check active incidents"
+      - "Review recent alerts"
+      - "Prepare handover notes"
+    expected_outcome: "Handover preparation complete"
+
+  - title: "Review System Status"
+    description: "Assess current system state"
+    commands:
+      - "Check overall system health"
+      - "Review service status"
+      - "Check for any degradations"
+      - "Review current trading status"
+    expected_outcome: "System status understood"
+
+  - title: "Document Active Incidents"
+    description: "Record all ongoing incidents"
+    commands:
+      - "List all active incidents"
+      - "Document incident status"
+      - "Record next actions"
+      - "Identify pending escalations"
+    expected_outcome: "Incidents documented"
+
+  - title: "Review Outstanding Tasks"
+    description: "Identify incomplete work"
+    commands:
+      - "List pending tasks"
+      - "Note task priorities"
+      - "Document task blockers"
+      - "Identify urgent items"
+    expected_outcome: "Tasks documented"
+
+  - title: "Share Context and Knowledge"
+    description: "Transfer important context"
+    commands:
+      - "Share recent learnings"
+      - "Document known issues"
+      - "Share relevant contacts"
+      - "Transfer important context"
+    expected_outcome: "Context transferred"
+
+  - title: "Review Monitoring and Alerts"
+    description: "Ensure monitoring is understood"
+    commands:
+      - "Review alert configuration"
+      - "Check monitoring dashboards"
+      - "Review recent alert patterns"
+      - "Share alert handling tips"
+    expected_outcome: "Monitoring reviewed"
+
+  - title: "Update Documentation"
+    description: "Ensure docs are current"
+    commands:
+      - "Update runbooks if needed"
+      - "Document any procedures"
+      - "Update contact information"
+      - "Review recent changes"
+    expected_outcome: "Documentation updated"
+
+  - title: "Complete Handover Checklist"
+    description: "Go through all checklist items"
+    commands:
+      - "Complete handoff checklist"
+      - "Verify all items covered"
+      - "Sign off on handover"
+      - "Record handover completion"
+    expected_outcome: "Checklist complete"
+
+  - title: "Confirm Handover Complete"
+    description: "Finalize handover process"
+    commands:
+      - "Get acknowledgment from incoming on-call"
+      - "Update on-call calendar"
+      - "Send handover notification"
+      - "Close handover session"
+    expected_outcome: "Handover complete"
+
+post_actions:
+  - "Incoming on-call monitors for 1 hour"
+  - "Check in after first incident"
+  - "Provide support if needed"
+
+related_runbooks:
+  - "oncall_burnout.yaml"
+  - "incident_management.yaml"
+
+metrics_to_track:
+  - "handover_duration_minutes"
+  - "handover_quality_score"
+  - "handover_completion_rate"
+
+success_criteria:
+  - "All critical information transferred"
+  - "Incoming on-call confident"
+  - "Handover documented"
+
+escalation_path: "oncall"
+owner: "sre-team"
+review_frequency: "weekly"

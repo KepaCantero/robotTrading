@@ -44,10 +44,7 @@ class BaselineBacktestExecutor:
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
     def run_baseline(
-        self,
-        profile: InputProfile,
-        config: Dict[str, Any],
-        multi_strategy: bool = False
+        self, profile: InputProfile, config: Dict[str, Any], multi_strategy: bool = False
     ) -> Dict[str, Any]:
         """
         Run baseline backtest with default parameters.
@@ -94,7 +91,7 @@ class BaselineBacktestExecutor:
 
         baseline_results = self._safe_extract_first_result(
             baseline_results_list,
-            context=f"baseline backtest for {profile.objetivo_inversion.value}"
+            context=f"baseline backtest for {profile.objetivo_inversion.value}",
         )
 
         # Add combined field for consistency
@@ -110,9 +107,7 @@ class BaselineBacktestExecutor:
         multi_strategy_results = runner.run_multi_strategy_backtest()
 
         # Aggregate results across strategies
-        baseline_results = self.aggregate_multi_strategy_results(
-            multi_strategy_results, profile
-        )
+        baseline_results = self.aggregate_multi_strategy_results(multi_strategy_results, profile)
 
         # Extract per-strategy results for reporting
         per_strategy = {}
@@ -170,7 +165,9 @@ class BaselineBacktestExecutor:
                 per_strategy_results[strategy_name] = result
 
         if combined_result:
-            logger.info(f"Using pre-calculated combined result with {len(per_strategy_results)} strategies")
+            logger.info(
+                f"Using pre-calculated combined result with {len(per_strategy_results)} strategies"
+            )
             return combined_result
 
         if not per_strategy_results:
@@ -206,7 +203,9 @@ class BaselineBacktestExecutor:
 
         # Calculate combined metrics
         total_pnl = total_final_capital - total_initial_capital
-        combined_return = (total_pnl / total_initial_capital * 100) if total_initial_capital > 0 else 0.0
+        combined_return = (
+            (total_pnl / total_initial_capital * 100) if total_initial_capital > 0 else 0.0
+        )
 
         # Normalize weighted metrics
         if total_weight > 0:
@@ -268,8 +267,7 @@ class BaselineBacktestExecutor:
 
         if not isinstance(results[0], dict):
             logger.error(
-                f"First result is not a dict for {context}, "
-                f"got type {type(results[0])}"
+                f"First result is not a dict for {context}, " f"got type {type(results[0])}"
             )
             return self._get_empty_metrics()
 
