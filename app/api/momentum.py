@@ -5,6 +5,7 @@ This module provides REST API endpoints for momentum analysis,
 technical indicators, and momentum strategy management.
 """
 
+from __future__ import annotations
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -12,6 +13,8 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 
 from app.models.momentum import MomentumFilter, MomentumStrategy, MomentumType, Timeframe
 from app.services.momentum_analysis import MomentumAnalysisService, get_momentum_analysis_service
+import requests
+from requests.exceptions import ConnectionError, HTTPError, RequestException
 
 router = APIRouter(prefix="/momentum", tags=["momentum"])
 
@@ -43,7 +46,7 @@ async def get_momentum_overview(
             "timestamp": datetime.utcnow(),
         }
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error getting momentum overview: {str(e)}")
 
 
@@ -130,7 +133,7 @@ async def analyze_asset_momentum_post(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(
             status_code=500, detail=f"Error analyzing momentum for {symbol}: {str(e)}"
         )
@@ -196,7 +199,7 @@ async def analyze_asset_momentum(
             "timestamp": datetime.utcnow(),
         }
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(
             status_code=500, detail=f"Error analyzing momentum for {symbol}: {str(e)}"
         )
@@ -210,7 +213,7 @@ async def get_momentum_signals_for_symbol(
     """Get momentum signals for a specific asset."""
     try:
         signals = await service.get_momentum_signals_for_symbol(symbol.upper())
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(
             status_code=500,
             detail=f"Error getting momentum signals for {symbol}: {str(e)}",
@@ -320,7 +323,7 @@ async def get_momentum_signals(
             "timestamp": datetime.utcnow(),
         }
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error getting momentum signals: {str(e)}")
 
 
@@ -341,7 +344,7 @@ async def get_top_momentum_signals(
             "timestamp": datetime.utcnow(),
         }
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error getting top momentum signals: {str(e)}")
 
 
@@ -456,7 +459,7 @@ async def create_momentum_strategy(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error creating momentum strategy: {str(e)}")
 
 
@@ -500,7 +503,7 @@ async def get_momentum_strategy(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error getting momentum strategy: {str(e)}")
 
 
@@ -569,7 +572,7 @@ async def update_momentum_strategy(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error updating momentum strategy: {str(e)}")
 
 
@@ -601,7 +604,7 @@ async def delete_momentum_strategy(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error deleting momentum strategy: {str(e)}")
 
 
@@ -645,7 +648,7 @@ async def get_momentum_strategies(
             "timestamp": datetime.utcnow(),
         }
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error getting momentum strategies: {str(e)}")
 
 
@@ -693,7 +696,7 @@ async def get_strategy_signals(
             "timestamp": datetime.utcnow(),
         }
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(
             status_code=500,
             detail=f"Error getting signals for strategy {strategy_name}: {str(e)}",
@@ -728,7 +731,7 @@ async def analyze_multiple_assets(
                         "volatility_level": analysis.volatility_level,
                     }
                 )
-            except Exception as e:
+            except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
                 errors.append({"symbol": symbol, "error": str(e)})
 
         return {
@@ -742,7 +745,7 @@ async def analyze_multiple_assets(
             "timestamp": datetime.utcnow(),
         }
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error analyzing multiple assets: {str(e)}")
 
 
@@ -755,7 +758,7 @@ async def get_technical_indicators(
     """Get technical indicators for a specific asset."""
     try:
         analysis = await service.analyze_asset_momentum(symbol.upper(), timeframe)
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(
             status_code=500,
             detail=f"Error getting technical indicators for {symbol}: {str(e)}",
@@ -803,7 +806,7 @@ async def momentum_health_check():
             "timestamp": datetime.utcnow(),
         }
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Momentum health check failed: {str(e)}")
 
 
@@ -864,7 +867,7 @@ async def get_momentum_stats(
             "timestamp": datetime.utcnow(),
         }
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error getting momentum stats: {str(e)}")
 
 
@@ -929,7 +932,7 @@ async def get_momentum_analyses(
             "timestamp": datetime.utcnow(),
         }
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error getting momentum analyses: {str(e)}")
 
 
@@ -993,7 +996,7 @@ async def get_momentum_analysis(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error getting momentum analysis: {str(e)}")
 
 
@@ -1023,5 +1026,5 @@ async def delete_momentum_analysis(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error deleting momentum analysis: {str(e)}")

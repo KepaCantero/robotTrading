@@ -191,14 +191,14 @@ class TimeSyncMonitor:
                     if self.config.on_critical_drift:
                         try:
                             self.config.on_critical_drift(drift)
-                        except Exception as e:
+                        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                             logger.error(f"Error in critical drift callback: {e}")
 
                 await asyncio.sleep(self.config.check_interval_seconds)
 
             except asyncio.CancelledError:
                 break
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.error(f"Error in time sync monitor loop: {e}", exc_info=True)
                 await asyncio.sleep(self.config.check_interval_seconds)
 
@@ -257,12 +257,12 @@ class TimeSyncMonitor:
                     if self.config.on_drift_detected:
                         try:
                             self.config.on_drift_detected(drift)
-                        except Exception as e:
+                        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                             logger.error(f"Error in drift detected callback: {e}")
 
                 return drift
 
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.debug(f"NTP error for {server}: {e}")
                 continue
 
@@ -276,7 +276,7 @@ class TimeSyncMonitor:
         if self.config.on_sync_error:
             try:
                 self.config.on_sync_error(error)
-            except Exception as e:
+            except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.error(f"Error in sync error callback: {e}")
 
         return 0.0
@@ -366,7 +366,7 @@ class TimeSyncMonitor:
         except FileNotFoundError:
             logger.warning("ntpdate command not found - cannot auto-sync clock")
             return False
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error syncing clock: {e}")
             return False
 
@@ -424,7 +424,7 @@ def reset_time_sync_monitor() -> None:
                     loop.create_task(_monitor.stop())
                 else:
                     loop.run_until_complete(_monitor.stop())
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.warning(f"Error stopping monitor during reset: {e}")
     _monitor = None
     logger.info("TimeSyncMonitor singleton reset")

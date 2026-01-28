@@ -82,7 +82,7 @@ class TALibWrapper:
             self.connected = True
             logger.info("✅ Connected to TA-Lib")
             return True
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"❌ Failed to connect to TA-Lib: {str(e)}")
             self.connected = False
             return False
@@ -355,7 +355,7 @@ class TALibWrapper:
             logger.info(f"✅ Calculated indicators for {len(symbols)} symbols")
             return indicators
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"❌ Indicator calculation failed: {str(e)}")
             return {}
 

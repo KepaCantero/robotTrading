@@ -57,7 +57,7 @@ if __name__ == "__main__":
                 logger.info(f"   Return: {best['return_pct']:.2f}%")
                 logger.info(f"   Win Rate: {best['win_rate']:.2f}%")
         
-    except Exception as e:
+    except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
         logger.error(f"❌ Error ejecutando backtest: {e}", exc_info=True)
         sys.exit(1)
 

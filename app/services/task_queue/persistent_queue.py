@@ -599,7 +599,7 @@ class PersistentTaskQueue:
         except asyncio.CancelledError:
             self.logger.warning(f"Task {task.task_id} was cancelled")
             await self.cancel_task(task.task_id)
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             self.logger.error(f"Task {task.task_id} failed: {e}", exc_info=True)
             await self.fail_task(task.task_id, str(e))
 

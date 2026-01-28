@@ -250,7 +250,7 @@ class SensitivityAnalyzer:
                     f"  Variation {variation_pct:+.1%}: {performance_metric}={perf_value:.4f}"
                 )
 
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.error(f"Error testing variation {variation_pct} for {param_name}: {e}")
                 continue
 
@@ -425,7 +425,7 @@ class SensitivityAnalyzer:
                 metrics = self.backtest_function(test_params)
                 perf_value = metrics.get(performance_metric, 0.0)
                 results.append(perf_value)
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 logger.debug(f"Error in Monte Carlo iteration: {e}")
                 continue
 

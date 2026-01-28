@@ -40,7 +40,7 @@ class AlphalsensAnalyzer:
             self.connected = True
             logger.info("✅ Connected to Alphalens")
             return True
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"❌ Failed to connect to Alphalens: {str(e)}")
             self.connected = False
             return False
@@ -88,7 +88,7 @@ class AlphalsensAnalyzer:
             logger.info("✅ Analyzed factor performance")
             return analysis
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Factor analysis failed: {str(e)}")
             return {}
 
@@ -133,7 +133,7 @@ class AlphalsensAnalyzer:
             logger.info(f"✅ Analyzed {len(factors)} factors together")
             return results
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Group analysis failed: {str(e)}")
             return {}
 
@@ -176,7 +176,7 @@ class AlphalsensAnalyzer:
             logger.info("✅ Calculated information coefficient")
             return ic_stats
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ IC calculation failed: {str(e)}")
             return {}
 
@@ -220,7 +220,7 @@ class AlphalsensAnalyzer:
             logger.info("✅ Analyzed long/short portfolio")
             return analysis
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"❌ Long/short analysis failed: {str(e)}")
             return {}
 
@@ -259,7 +259,7 @@ class AlphalsensAnalyzer:
             logger.info("✅ Decomposed factor performance")
             return decomposition
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"❌ Performance decomposition failed: {str(e)}")
             return {}
 
@@ -308,7 +308,7 @@ class AlphalsensAnalyzer:
             logger.info("✅ Generated factor analysis report")
             return report
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Report generation failed: {str(e)}")
             return {}
 

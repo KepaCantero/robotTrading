@@ -5,6 +5,7 @@ Builds a diversified portfolio based on portfolio configuration with multiple sy
 from different sectors, allocated according to strategy percentages.
 """
 
+import asyncio
 import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Set
@@ -42,7 +43,7 @@ class PortfolioBuilder:
         self.portfolio_config = portfolio_config or get_portfolio_config_manager()
         self.data_loader = data_loader or DataLoader()
 
-    def build_portfolio_quotes(
+    async def build_portfolio_quotes(
         self,
         start_date: datetime,
         end_date: datetime,
@@ -74,8 +75,6 @@ class PortfolioBuilder:
         loaded_symbols = []
         failed_symbols = []
 
-        import time
-
         for i, symbol in enumerate(sorted(all_symbols)):
             try:
                 # Try CSV first (faster, no rate limits)
@@ -87,7 +86,7 @@ class PortfolioBuilder:
                 if not quotes:
                     # Add delay to avoid rate limiting (except for first request)
                     if i > 0:
-                        time.sleep(0.5)  # 500ms delay between requests
+                        await asyncio.sleep(0.5)  # 500ms delay between requests
 
                     quotes = self.data_loader.load_market_data(
                         symbol, start_date, end_date, source="yfinance"
@@ -101,7 +100,7 @@ class PortfolioBuilder:
                     failed_symbols.append(symbol)
                     logger.warning(f"No data available for {symbol}")
 
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 error_msg = str(e).lower()
                 if "rate limit" in error_msg or "too many requests" in error_msg:
                     logger.warning(
@@ -110,7 +109,7 @@ class PortfolioBuilder:
                     )
                     failed_symbols.append(symbol)
                     # Add longer delay if rate limited
-                    time.sleep(2.0)
+                    await asyncio.sleep(2.0)
                 else:
                     failed_symbols.append(symbol)
                     logger.error(f"Error loading {symbol}: {e}")

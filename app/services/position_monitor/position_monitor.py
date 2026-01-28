@@ -534,7 +534,7 @@ class PositionMonitor:
 
             logger.info(f"Loaded {len(positions)} positions from broker")
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
             logger.error(f"Error loading positions from broker: {e}")
 
     async def _load_state_from_db(self) -> None:
@@ -571,7 +571,7 @@ class PositionMonitor:
                 else:
                     logger.info(f"No existing state found in database for monitor {self.monitor_id}")
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Failed to load state from database: {e}", exc_info=True)
 
     async def _monitor_loop(self) -> None:
@@ -584,7 +584,7 @@ class PositionMonitor:
 
             except asyncio.CancelledError:
                 break
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.error(f"Error in monitor loop: {e}")
                 if self.config.auto_restart:
                     logger.info("Auto-restarting monitor loop in 5 seconds...")
@@ -667,7 +667,7 @@ class PositionMonitor:
 
             except asyncio.TimeoutError:
                 logger.warning(f"Timeout fetching price for {symbol}")
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 logger.error(f"Error fetching price for {symbol}: {e}")
 
         return prices
@@ -730,7 +730,7 @@ class PositionMonitor:
         if self.on_stop_triggered:
             try:
                 self.on_stop_triggered(position)
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 logger.error(f"Error in stop triggered callback: {e}")
 
     async def _on_take_profit_triggered(self, position: MonitoredPosition) -> None:
@@ -791,7 +791,7 @@ class PositionMonitor:
         if self.on_stop_triggered:
             try:
                 self.on_stop_triggered(position)
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.error(f"Error in take profit callback: {e}")
 
     async def _state_sync_loop(self) -> None:
@@ -802,7 +802,7 @@ class PositionMonitor:
                 await self._sync_state()
             except asyncio.CancelledError:
                 break
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.error(f"Error in state sync loop: {e}")
 
     async def _sync_state(self) -> None:
@@ -847,7 +847,7 @@ class PositionMonitor:
                 session.commit()
                 logger.debug(f"State synced to database for monitor {self.monitor_id}")
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Failed to sync state to database: {e}", exc_info=True)
 
     def get_monitored_positions(self) -> List[MonitoredPosition]:

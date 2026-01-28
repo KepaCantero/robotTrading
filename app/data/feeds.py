@@ -92,7 +92,7 @@ class DataFeedInterface(ABC):
                             status=response.status,
                             message=f"HTTP {response.status}",
                         )
-            except Exception as e:
+            except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
                 self.config.error_count += 1
                 logger.error(f"Request failed for {url}: {e}")
                 raise
@@ -111,7 +111,7 @@ class AlphaVantageFeed(DataFeedInterface):
             self.session = aiohttp.ClientSession()
             logger.info("Connected to Alpha Vantage API")
             return True
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"Failed to connect to Alpha Vantage: {e}")
             return False
 
@@ -160,7 +160,7 @@ class AlphaVantageFeed(DataFeedInterface):
                 feed_type=DataFeedType.ALPHA_VANTAGE,
                 metadata={"raw_data": quote_data},
             )
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Failed to get quote for {symbol}: {e}")
             return None
 
@@ -225,7 +225,7 @@ class AlphaVantageFeed(DataFeedInterface):
                     )
 
             return sorted(historical_data, key=lambda x: x.timestamp)
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"Failed to get historical data for {symbol}: {e}")
             return []
 
@@ -248,7 +248,7 @@ class YahooFinanceFeed(DataFeedInterface):
             self.session = aiohttp.ClientSession()
             logger.info("Connected to Yahoo Finance API")
             return True
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"Failed to connect to Yahoo Finance: {e}")
             return False
 
@@ -305,7 +305,7 @@ class YahooFinanceFeed(DataFeedInterface):
                 feed_type=DataFeedType.YAHOO_FINANCE,
                 metadata={"raw_data": result},
             )
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Failed to get quote for {symbol}: {e}")
             return None
 
@@ -372,7 +372,7 @@ class YahooFinanceFeed(DataFeedInterface):
                     )
 
             return historical_data
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"Failed to get historical data for {symbol}: {e}")
             return []
 
@@ -395,7 +395,7 @@ class PolygonFeed(DataFeedInterface):
             self.session = aiohttp.ClientSession()
             logger.info("Connected to Massive.com (Polygon.io) API")
             return True
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"Failed to connect to Massive.com: {e}")
             return False
 
@@ -465,7 +465,7 @@ class PolygonFeed(DataFeedInterface):
                 feed_type=DataFeedType.POLYGON,
                 metadata={"raw_data": snapshot},
             )
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Failed to get quote for {symbol}: {e}")
             return None
 
@@ -536,7 +536,7 @@ class PolygonFeed(DataFeedInterface):
                     )
 
             return historical_data
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"Failed to get historical data for {symbol}: {e}")
             return []
 

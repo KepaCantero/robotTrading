@@ -63,7 +63,7 @@ class MetricsExporter:
                     logger.info("✅ Connected to Prometheus")
                     return True
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.warning(f"⚠️ Failed to connect to Prometheus: {str(e)}")
 
         return False
@@ -75,7 +75,7 @@ class MetricsExporter:
                 await self.session.close()
             logger.info("✅ Disconnected from export services")
             return True
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"❌ Disconnect failed: {str(e)}")
             return False
 
@@ -127,7 +127,7 @@ class MetricsExporter:
                     logger.error(f"❌ PushGateway push failed: HTTP {resp.status}")
                     return False
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"❌ Failed to push metrics: {str(e)}")
             return False
 
@@ -163,7 +163,7 @@ class MetricsExporter:
                     logger.error(f"❌ Prometheus query failed: HTTP {resp.status}")
                     return None
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"❌ Query failed: {str(e)}")
             return None
 
@@ -209,7 +209,7 @@ class MetricsExporter:
                     logger.error(f"❌ Prometheus range query failed: HTTP {resp.status}")
                     return None
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"❌ Range query failed: {str(e)}")
             return None
 
@@ -295,7 +295,7 @@ class MetricsExporter:
                 timeout=aiohttp.ClientTimeout(total=5),
             ) as resp:
                 health["prometheus"] = resp.status == 200
-        except Exception:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException):
             health["prometheus"] = False
 
         # Check PushGateway
@@ -305,7 +305,7 @@ class MetricsExporter:
                 timeout=aiohttp.ClientTimeout(total=5),
             ) as resp:
                 health["pushgateway"] = resp.status == 200
-        except Exception:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException):
             health["pushgateway"] = False
 
         logger.info(

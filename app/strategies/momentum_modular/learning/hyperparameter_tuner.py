@@ -157,7 +157,7 @@ class ResourceAwareTuner:
             return False
         try:
             return torch.cuda.is_available()
-        except Exception:
+        except (FileNotFoundError, ValueError, KeyError, TypeError):
             return False
 
     def should_continue(self) -> bool:
@@ -312,7 +312,7 @@ class HyperparameterTuner:
 
                 return score
 
-            except Exception as e:
+            except (RuntimeError, ValueError, TypeError, KeyError) as e:
                 logger.error(f"Error en trial {trial.number}: {e}")
                 raise optuna.TrialPruned()
 
@@ -412,7 +412,7 @@ class HyperparameterTuner:
                 fig = vis.plot_param_importances(self.study)
                 if output_path:
                     fig.write_html(f"{output_path}_param_importances.html")
-            except Exception:
+            except (FileNotFoundError, ValueError, KeyError, TypeError):
                 logger.warning("No se pudo generar param importances (pocos trials completados)")
 
             logger.info(f"Visualizaciones generadas en {output_path}")
@@ -421,7 +421,7 @@ class HyperparameterTuner:
             logger.warning(
                 "optuna.visualization no disponible. Instalar 'plotly' para visualizaciones"
             )
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Error generando visualizaciones: {e}")
 
 
@@ -491,7 +491,7 @@ class LearningEngineTuner:
 
             return score
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Error entrenando en trial {trial.number}: {e}")
             raise optuna.TrialPruned()
 

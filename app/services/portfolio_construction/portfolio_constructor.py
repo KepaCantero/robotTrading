@@ -96,7 +96,7 @@ class PortfolioConstructor:
                 self.logger.warning(f"⚠️  Unknown method {method}, using equal weight")
                 return await self._equal_weight_allocation(assets)
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             self.logger.error(f"❌ Error constructing portfolio: {e}")
             # Return equal-weight fallback on error
             return await self._equal_weight_allocation(assets)

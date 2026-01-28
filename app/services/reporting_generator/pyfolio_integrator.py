@@ -323,7 +323,7 @@ class PyFolioIntegrator:
 
             return tearsheet
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Tearsheet generation failed: {e}")
             raise
 
@@ -446,7 +446,7 @@ class PyFolioIntegrator:
 
             return analysis
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Factor exposure analysis failed: {e}")
             raise
 
@@ -527,7 +527,7 @@ class PyFolioIntegrator:
                 diversification_ratio=diversification_ratio,
             )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Position concentration calculation failed: {e}")
             raise
 
@@ -636,7 +636,7 @@ class PyFolioIntegrator:
 
             return analysis
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Capacity fade analysis failed: {e}")
             raise
 
@@ -668,7 +668,7 @@ class PyFolioIntegrator:
 
             return monthly_dict
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.warning(f"Monthly return calculation failed: {e}")
             return {}
 

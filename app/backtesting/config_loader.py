@@ -40,7 +40,7 @@ class ConfigLoader:
                 loaded = yaml.safe_load(f)
                 self.config = loaded or {}
                 logger.info(f"Loaded configuration from {self.config_path}")
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Error loading config file: {e}. Using defaults.", exc_info=True)
             self.config = self._get_default_config()
 

@@ -187,7 +187,7 @@ class MetricsCalculator:
                 logger.debug(f"Advanced metrics calculated: {list(advanced_metrics.keys())}")
             else:
                 logger.debug("Insufficient data for advanced metrics calculation")
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Error calculating advanced metrics: {e}")
 
         return PerformanceMetrics(
@@ -343,7 +343,7 @@ class MetricsCalculator:
                     if np.isnan(sharpe) or np.isinf(sharpe):
                         return Decimal("0")
                     return Decimal(str(sharpe))
-                except Exception as e:
+                except (ValueError, TypeError, KeyError, AttributeError) as e:
                     logger.debug(f"Error usando empyrical para Sharpe, usando cálculo manual: {e}")
 
             # Fallback to manual calculation
@@ -365,7 +365,7 @@ class MetricsCalculator:
             sharpe = (annual_return - annual_risk_free) / annual_std if annual_std > 0 else 0.0
             return Decimal(str(sharpe))
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculating Sharpe ratio: {e}")
             return None
 
@@ -390,7 +390,7 @@ class MetricsCalculator:
                     if np.isnan(sortino) or np.isinf(sortino):
                         return Decimal("0")
                     return Decimal(str(sortino))
-                except Exception as e:
+                except (ValueError, TypeError, KeyError, AttributeError) as e:
                     logger.debug(f"Error usando empyrical para Sortino, usando cálculo manual: {e}")
 
             # Fallback to manual calculation
@@ -428,7 +428,7 @@ class MetricsCalculator:
             )
             return Decimal(str(sortino))
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculating Sortino ratio: {e}")
             return None
 
@@ -463,7 +463,7 @@ class MetricsCalculator:
 
             return Decimal(str(risk_reward))
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculating risk/reward ratio: {e}")
             return None
 

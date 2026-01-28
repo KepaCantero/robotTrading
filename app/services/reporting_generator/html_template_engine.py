@@ -212,7 +212,7 @@ class HTMLTemplateEngine:
 
             return report
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Report rendering failed: {e}")
             raise
 
@@ -259,7 +259,7 @@ class HTMLTemplateEngine:
             html += "</header>\n"
             return html
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.warning(f"Header rendering failed: {e}")
             return ""
 
@@ -279,7 +279,7 @@ class HTMLTemplateEngine:
             html += "</nav>\n"
             return html
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.warning(f"TOC rendering failed: {e}")
             return ""
 
@@ -315,7 +315,7 @@ class HTMLTemplateEngine:
             html += "</section>\n"
             return html
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.warning(f"Summary rendering failed: {e}")
             return ""
 
@@ -344,7 +344,7 @@ class HTMLTemplateEngine:
             html += "</section>\n"
             return html
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.warning(f"Section rendering failed: {e}")
             return ""
 
@@ -380,7 +380,7 @@ class HTMLTemplateEngine:
             html += "  </div>\n"
             return html
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.warning(f"Metrics section rendering failed: {e}")
             return ""
 
@@ -402,7 +402,7 @@ class HTMLTemplateEngine:
             html += "  </div>\n"
             return html
 
-        except Exception as e:
+        except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.warning(f"Charts section rendering failed: {e}")
             return ""
 
@@ -447,7 +447,7 @@ class HTMLTemplateEngine:
             html += "  </div>\n"
             return html
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.warning(f"Tables section rendering failed: {e}")
             return ""
 
@@ -469,7 +469,7 @@ class HTMLTemplateEngine:
             html += "  </div>\n"
             return html
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.warning(f"Text section rendering failed: {e}")
             return ""
 
@@ -497,7 +497,7 @@ class HTMLTemplateEngine:
             html += "</section>\n"
             return html
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.warning(f"Disclaimers rendering failed: {e}")
             return ""
 
@@ -517,7 +517,7 @@ class HTMLTemplateEngine:
             html += "</footer>\n"
             return html
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.warning(f"Footer rendering failed: {e}")
             return ""
 

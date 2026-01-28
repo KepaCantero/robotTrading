@@ -112,7 +112,7 @@ class RiskAttributor(BaseRiskAttributor):
             attribution['timestamp'] = datetime.utcnow().isoformat()
 
             return attribution
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             self.logger.error(f"Error atribuyendo riesgo: {e}", exc_info=True)
             return {'error': str(e)}
 
@@ -291,7 +291,7 @@ class RiskAttributor(BaseRiskAttributor):
                 'total_risk': float(total_factor_risk),
                 'method': 'fama_french_simplified',
             }
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.warning(f"Error en factor attribution: {e}")
             return {'attributions': {}, 'total_risk': 0.0, 'error': str(e)}
 

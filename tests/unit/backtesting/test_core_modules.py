@@ -192,13 +192,22 @@ class TestBacktestExecutor:
         )
 
         # Test simple executor
-        executor = BacktestExecutorFactory.create(config, parallel=False)
+        executor = BacktestExecutorFactory.create(config, executor_type='simple')
         assert isinstance(executor, SimpleBacktestExecutor)
 
         # Test parallel executor
         from app.backtesting.core.executor import ParallelBacktestExecutor
-        executor = BacktestExecutorFactory.create(config, parallel=True)
+        executor = BacktestExecutorFactory.create(config, executor_type='parallel')
         assert isinstance(executor, ParallelBacktestExecutor)
+
+        # Test process pool executor
+        from app.backtesting.core.executor import ProcessPoolBacktestExecutor
+        executor = BacktestExecutorFactory.create(config, executor_type='process', max_workers=4)
+        assert isinstance(executor, ProcessPoolBacktestExecutor)
+
+        # Test invalid executor type
+        with pytest.raises(ValueError, match="Unknown executor type"):
+            BacktestExecutorFactory.create(config, executor_type='invalid_type')
 
 
 class TestOrchestrationResult:

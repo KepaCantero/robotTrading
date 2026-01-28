@@ -4,13 +4,15 @@ Portfolio API Endpoints
 FastAPI endpoints for portfolio management and monitoring.
 """
 
+from __future__ import annotations
+
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from app.models.portfolio import AssetUniverse, MarketRegimeData, Position
+from app.models.portfolio import AssetUniverse, MarketRegimeData, Portfolio, Position
 from app.providers.paper_trading import PaperTradingPortfolioProvider
 from app.services.portfolio_service import PortfolioService
 
@@ -21,7 +23,12 @@ _portfolio_service: Optional[PortfolioService] = None
 
 
 def get_portfolio_service() -> PortfolioService:
-    """Get portfolio service instance."""
+    """
+    Get portfolio service instance.
+
+    Returns:
+        PortfolioService: Singleton instance of the portfolio service
+    """
     global _portfolio_service
     if _portfolio_service is None:
         provider = PaperTradingPortfolioProvider()
@@ -51,8 +58,19 @@ class TradeResponse(BaseModel):
 @router.get("/", response_model=Dict[str, Any])
 async def get_portfolio_summary(
     service: PortfolioService = Depends(get_portfolio_service),
-):
-    """Get portfolio summary with circuit breaker status."""
+) -> Dict[str, Any]:
+    """
+    Get portfolio summary with circuit breaker status.
+
+    Args:
+        service: Portfolio service dependency
+
+    Returns:
+        Dict with portfolio summary and circuit breaker status
+
+    Raises:
+        HTTPException: If portfolio unavailable or retrieval fails
+    """
     try:
         portfolio = await service.get_portfolio()
         if portfolio is None:
@@ -63,13 +81,26 @@ async def get_portfolio_summary(
         return summary
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         raise HTTPException(status_code=500, detail=f"Error getting portfolio: {str(e)}")
 
 
 @router.get("/positions", response_model=List[Position])
-async def get_positions(service: PortfolioService = Depends(get_portfolio_service)):
-    """Get all positions in the portfolio."""
+async def get_positions(
+    service: PortfolioService = Depends(get_portfolio_service),
+) -> List[Position]:
+    """
+    Get all positions in the portfolio.
+
+    Args:
+        service: Portfolio service dependency
+
+    Returns:
+        List of all positions in the portfolio
+
+    Raises:
+        HTTPException: If portfolio unavailable or retrieval fails
+    """
     try:
         portfolio = await service.get_portfolio()
         if portfolio is None:
@@ -79,13 +110,28 @@ async def get_positions(service: PortfolioService = Depends(get_portfolio_servic
         return portfolio.positions
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         raise HTTPException(status_code=500, detail=f"Error getting positions: {str(e)}")
 
 
 @router.get("/positions/{symbol}", response_model=Position)
-async def get_position(symbol: str, service: PortfolioService = Depends(get_portfolio_service)):
-    """Get specific position by symbol."""
+async def get_position(
+    symbol: str,
+    service: PortfolioService = Depends(get_portfolio_service),
+) -> Position:
+    """
+    Get specific position by symbol.
+
+    Args:
+        symbol: Trading symbol to look up
+        service: Portfolio service dependency
+
+    Returns:
+        Position for the specified symbol
+
+    Raises:
+        HTTPException: If position not found or retrieval fails
+    """
     try:
         position = await service.get_position(symbol.upper())
         if position is None:
@@ -93,27 +139,51 @@ async def get_position(symbol: str, service: PortfolioService = Depends(get_port
         return position
     except HTTPException:
         raise
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error getting position: {str(e)}")
 
 
 @router.get("/asset-universe", response_model=List[AssetUniverse])
 async def get_asset_universe(
     service: PortfolioService = Depends(get_portfolio_service),
-):
-    """Get supported asset universe."""
+) -> List[AssetUniverse]:
+    """
+    Get supported asset universe.
+
+    Args:
+        service: Portfolio service dependency
+
+    Returns:
+        List of supported asset universes
+
+    Raises:
+        HTTPException: If retrieval fails
+    """
     try:
         universe = await service.get_asset_universe()
         return universe
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error getting asset universe: {str(e)}")
 
 
 @router.get("/market-regime/{symbol}", response_model=MarketRegimeData)
 async def get_market_regime(
-    symbol: str, service: PortfolioService = Depends(get_portfolio_service)
-):
-    """Get market regime data for a symbol."""
+    symbol: str,
+    service: PortfolioService = Depends(get_portfolio_service),
+) -> MarketRegimeData:
+    """
+    Get market regime data for a symbol.
+
+    Args:
+        symbol: Trading symbol to get regime data for
+        service: Portfolio service dependency
+
+    Returns:
+        Market regime data for the symbol
+
+    Raises:
+        HTTPException: If regime data unavailable or retrieval fails
+    """
     try:
         regime_data = await service.get_market_regime(symbol.upper())
         if regime_data is None:
@@ -123,7 +193,7 @@ async def get_market_regime(
         return regime_data
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
         raise HTTPException(status_code=500, detail=f"Error getting market regime: {str(e)}")
 
 
@@ -131,13 +201,31 @@ async def get_market_regime(
 async def simulate_trade(
     trade_request: TradeRequest,
     service: PortfolioService = Depends(get_portfolio_service),
-):
-    """Simulate a trade execution."""
+) -> TradeResponse:
+    """
+    Simulate a trade execution.
+
+    Args:
+        trade_request: Trade simulation request
+        service: Portfolio service dependency
+
+    Returns:
+        TradeResponse with simulation result
+
+    Raises:
+        HTTPException: If simulation fails
+    """
     try:
         quantity = Decimal(str(trade_request.quantity))
-        price = Decimal(str(trade_request.price)) if trade_request.price is not None else None
+        price = (
+            Decimal(str(trade_request.price))
+            if trade_request.price is not None
+            else None
+        )
 
-        success = await service.simulate_trade(trade_request.symbol.upper(), quantity, price)
+        success = await service.simulate_trade(
+            trade_request.symbol.upper(), quantity, price
+        )
 
         if success:
             return TradeResponse(
@@ -156,18 +244,29 @@ async def simulate_trade(
                 price=trade_request.price,
             )
 
-    except Exception as e:
+    except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
         raise HTTPException(status_code=500, detail=f"Error simulating trade: {str(e)}")
 
 
 @router.get("/circuit-breakers", response_model=Dict[str, Dict[str, Any]])
 async def get_circuit_breaker_status(
     service: PortfolioService = Depends(get_portfolio_service),
-):
-    """Get circuit breaker status."""
+) -> Dict[str, Dict[str, Any]]:
+    """
+    Get circuit breaker status.
+
+    Args:
+        service: Portfolio service dependency
+
+    Returns:
+        Dict with circuit breaker status for all breakers
+
+    Raises:
+        HTTPException: If retrieval fails
+    """
     try:
         return service.get_circuit_breaker_status()
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         raise HTTPException(
             status_code=500, detail=f"Error getting circuit breaker status: {str(e)}"
         )
@@ -175,25 +274,48 @@ async def get_circuit_breaker_status(
 
 @router.post("/circuit-breakers/{name}/reset")
 async def reset_circuit_breaker(
-    name: str, service: PortfolioService = Depends(get_portfolio_service)
-):
-    """Reset a circuit breaker."""
+    name: str,
+    service: PortfolioService = Depends(get_portfolio_service),
+) -> Dict[str, str]:
+    """
+    Reset a circuit breaker.
+
+    Args:
+        name: Circuit breaker name to reset
+        service: Portfolio service dependency
+
+    Returns:
+        Dict with operation result
+
+    Raises:
+        HTTPException: If reset fails
+    """
     try:
         service.reset_circuit_breaker(name)
         return {"message": f"Circuit breaker {name} reset successfully"}
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error resetting circuit breaker: {str(e)}")
 
 
 @router.get("/health")
 async def portfolio_health_check(
     service: PortfolioService = Depends(get_portfolio_service),
-):
-    """Health check for portfolio service."""
+) -> Dict[str, Any]:
+    """
+    Health check for portfolio service.
+
+    Args:
+        service: Portfolio service dependency
+
+    Returns:
+        Dict with health status and service information
+    """
     try:
         # Check if any circuit breakers are open
         status = service.get_circuit_breaker_status()
-        open_breakers = [name for name, info in status.items() if info["state"] == "open"]
+        open_breakers = [
+            name for name, info in status.items() if info["state"] == "open"
+        ]
 
         if open_breakers:
             return {
@@ -214,5 +336,5 @@ async def portfolio_health_check(
             "positions_count": len(portfolio.positions),
         }
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         return {"status": "unhealthy", "message": f"Portfolio service error: {str(e)}"}

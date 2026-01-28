@@ -107,7 +107,7 @@ class SignalScorerService:
             logger.info(f"Signal evaluated for {symbol}: {evaluation_result['combined_score']:.2f}")
             return signal
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error evaluating signal for {symbol}: {e}")
             return None
 
@@ -133,7 +133,7 @@ class SignalScorerService:
             logger.debug(f"Position size calculated for {signal.symbol}: {position_size}")
             return position_size
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Error calculating position size for {signal.symbol}: {e}")
             return Decimal("0")
 
@@ -180,7 +180,7 @@ class SignalScorerService:
 
             return success
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Error executing signal for {signal.symbol}: {e}")
             return False
 

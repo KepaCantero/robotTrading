@@ -44,7 +44,7 @@ class StrategyLogger:
                 with open(self.log_path, "r", encoding="utf-8") as f:
                     self.logs = json.load(f)
                 logger.info(f"Loaded {len(self.logs)} existing logs from {self.log_path}")
-            except Exception as e:
+            except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
                 logger.warning(f"Could not load existing logs: {e}")
                 self.logs = []
         else:
@@ -56,7 +56,7 @@ class StrategyLogger:
         try:
             with open(self.log_path, "w", encoding="utf-8") as f:
                 json.dump(self.logs, f, indent=2, default=str)
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.error(f"Failed to save logs: {e}")
 
     def _create_log_entry(
@@ -338,7 +338,7 @@ class StrategyLogger:
             with open(export_file, "w", encoding="utf-8") as f:
                 json.dump(self.logs, f, indent=2, default=str)
             logger.info(f"Exported {len(self.logs)} logs to {export_path}")
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.error(f"Failed to export logs: {e}")
             raise
 

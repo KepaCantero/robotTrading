@@ -207,7 +207,7 @@ class MultiStrategyOptimizerV2:
 
             return result
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Backtest failed: {e}")
             return {}
 

@@ -23,7 +23,7 @@ def check_file_contains(filepath, pattern, description):
         else:
             print(f"✗ {description} - NOT FOUND")
             return False
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         print(f"✗ {description} - ERROR: {e}")
         return False
 
@@ -38,7 +38,7 @@ def check_file_not_contains(filepath, pattern, description):
         else:
             print(f"✗ {description} - FOUND (should not be present)")
             return False
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         print(f"✗ {description} - ERROR: {e}")
         return False
 
@@ -148,21 +148,21 @@ def main():
         from app.database.models import PositionState
         print(f"✓ PositionState model imports successfully")
         print(f"  - Table name: {PositionState.__tablename__}")
-    except Exception as e:
+    except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
         print(f"✗ Failed to import PositionState: {e}")
         all_passed = False
 
     try:
         from app.services.position_monitor.position_monitor import PositionMonitor
         print(f"✓ PositionMonitor imports successfully")
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         print(f"✗ Failed to import PositionMonitor: {e}")
         all_passed = False
 
     try:
         from app.core.database import get_database_engine
         print(f"✓ Database module imports successfully")
-    except Exception as e:
+    except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
         print(f"✗ Failed to import database module: {e}")
         all_passed = False
 

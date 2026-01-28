@@ -112,7 +112,7 @@ class QuestDBConnector:
             logger.info(f"✅ Connected to QuestDB ({self.host}:{self.ilp_port})")
             return True
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"❌ QuestDB connection failed: {str(e)}")
             self.connected = False
             if self.session:
@@ -130,7 +130,7 @@ class QuestDBConnector:
             self.connected = False
             logger.info("✅ Disconnected from QuestDB")
             return True
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"❌ Disconnect failed: {str(e)}")
             return False
 
@@ -172,7 +172,7 @@ class QuestDBConnector:
             logger.debug(f"✅ Buffered OHLCV: {data.symbol}")
             return True
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Insert OHLCV failed: {str(e)}")
             return False
 
@@ -233,7 +233,7 @@ class QuestDBConnector:
             logger.debug(f"✅ Buffered trade: {trade.trade_id}")
             return True
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"❌ Insert trade failed: {str(e)}")
             return False
 
@@ -257,7 +257,7 @@ class QuestDBConnector:
                     logger.error(f"❌ Flush failed: HTTP {resp.status}")
                     return False
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"❌ Buffer flush failed: {str(e)}")
             return False
 
@@ -292,7 +292,7 @@ class QuestDBConnector:
             logger.info(f"✅ Query returned {len(results)} OHLCV records for {symbol}")
             return results
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"❌ OHLCV query failed: {str(e)}")
             return []
 
@@ -317,7 +317,7 @@ class QuestDBConnector:
             logger.info(f"✅ Query returned {len(results)} trade records")
             return results
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"❌ Trade query failed: {str(e)}")
             return []
 
@@ -338,7 +338,7 @@ class QuestDBConnector:
             logger.debug(f"✅ Latest price for {symbol}: {price}")
             return price
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"❌ Failed to get latest price: {str(e)}")
             return None
 
@@ -364,7 +364,7 @@ class QuestDBConnector:
             logger.info(f"✅ Statistics for {symbol}: {stats['count']} records")
             return stats
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"❌ Failed to get statistics: {str(e)}")
             return {}
 

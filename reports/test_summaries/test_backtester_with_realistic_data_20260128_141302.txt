@@ -1,0 +1,67 @@
+================================================================================
+TEST SUMMARY REPORT: TEST_BACKTESTER_WITH_REALISTIC_DATA
+================================================================================
+
+## METADATA
+----------------------------------------
+Test Name:        test_backtester_with_realistic_data
+Description:      Basic backtest with GBM data and SMA crossover strategy
+Test File:        test_backtest_basic.py
+Test Type:        integration
+Test ID:          test_20260128_141302
+Created:          2026-01-28 14:13:02
+
+## TEST STATUS
+----------------------------------------
+✓ Status:          PASSED
+Reason:           All assertions passed, backtest executed successfully
+Duration:         0.00 seconds
+
+## INPUT DATA
+----------------------------------------
+Symbols:          AAPL
+Date Range:       2023-01-01 to 2024-05-14
+Data Points:      500
+Market Regime:    bullish
+Data Source:      GBM simulation (drift=5%, vol=20%)
+Price Range:      $85.39 - $128.15
+
+## CONFIGURATION
+----------------------------------------
+Initial Capital:  $100,000.00
+Commission:       $1.00 per trade
+Slippage:         10.00%
+Strategy:         SMA Crossover (20/50)
+Strategy Parameters:
+  fast_period: 20
+  slow_period: 50
+  min_slope: 0.001
+
+## OUTPUT METRICS
+----------------------------------------
+
+### Financial Performance
+Final Capital:     $100,608.55
+Total P&L:        $608.55
+Total Return:      0.61%
+
+### Risk Metrics
+Sharpe Ratio:      10.42
+Max Drawdown:      $-1,498.17
+
+### Trade Statistics
+Total Trades:      5
+Winning Trades:    4
+Losing Trades:     1
+Win Rate:          80.0%
+
+## VALIDATION CRITERIA
+----------------------------------------
+✓ Final capital in range: PASSED
+   Expected: 50000-150000
+   Actual:   100608.5477508073638982691129
+   Reason: Final capital $100,608.55 is within realistic range
+
+================================================================================
+End of Report - Generated 2026-01-28 14:13:02
+================================================================================

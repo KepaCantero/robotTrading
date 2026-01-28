@@ -137,7 +137,7 @@ class ReportingGenerator:
             )
             return result
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"❌ Error generating report: {e}")
             return PerformanceReport(
                 success=False,

@@ -201,10 +201,11 @@ class TestStopLossCritical:
         Without SL: 50% loss = $50,000 loss
         With SL: 5% loss = $5,000 loss
         """
+        # Store initial total capital before any trades
+        initial_total_capital = backtester.capital
+
         # Execute buy
         backtester._execute_buy_signal(buy_signal, entry_quote)
-
-        initial_capital = backtester.capital
 
         # Simulate catastrophic 50% drop to $50
         quote_crash = Quote(
@@ -227,8 +228,9 @@ class TestStopLossCritical:
         final_capital = backtester.capital
 
         # Loss should be ~5% (stop-loss), not 50%
-        loss_amount = initial_capital - final_capital
-        loss_pct = (loss_amount / initial_capital) * 100
+        # Calculate loss relative to initial total capital
+        loss_amount = initial_total_capital - final_capital
+        loss_pct = (loss_amount / initial_total_capital) * 100
 
         assert loss_pct < Decimal("10"), \
             f"Loss {loss_pct:.2f}% exceeds 10% - stop-loss failed to prevent catastrophic loss!"
@@ -309,17 +311,23 @@ class TestStopLossCritical:
         # Execute buy at $100
         backtester._execute_buy_signal(buy_signal, entry_quote)
 
-        # Simulate price rising exactly to $110 (10% - at take-profit threshold)
+        # Get the actual entry price (includes slippage)
+        actual_entry_price = backtester.trades[-1].entry_price
+        # Calculate expected take-profit price (10% above actual entry)
+        expected_tp_price = actual_entry_price * (Decimal("1") + Decimal("10") / Decimal("100"))
+
+        # Simulate price rising exactly to the take-profit threshold
+        # Use the calculated threshold to account for slippage
         quote_exact_tp = Quote(
             symbol="AAPL",
             timestamp=past_time(hours_ago=1),
-            bid=Decimal("109.5"),
-            ask=Decimal("110.5"),
-            last=Decimal("110"),
-            open=Decimal("110"),
-            high=Decimal("110"),
-            low=Decimal("110"),
-            close=Decimal("110"),
+            bid=expected_tp_price - Decimal("0.5"),
+            ask=expected_tp_price + Decimal("0.5"),
+            last=expected_tp_price,
+            open=expected_tp_price,
+            high=expected_tp_price,  # Exactly at TP threshold
+            low=expected_tp_price,
+            close=expected_tp_price,
             volume=Decimal("1000000"),
             spread=Decimal("1.0")
         )
@@ -489,10 +497,11 @@ class TestStopLossCritical:
 
     def test_stop_loss_with_commission_and_slippage(self, backtester, buy_signal, entry_quote):
         """Test that stop-loss accounts for commission and slippage."""
+        # Store initial total capital before any trades
+        initial_total_capital = backtester.capital
+
         # Execute buy
         backtester._execute_buy_signal(buy_signal, entry_quote)
-
-        initial_capital_after_buy = backtester.capital
 
         # Trigger stop-loss
         quote_decline = Quote(
@@ -514,7 +523,7 @@ class TestStopLossCritical:
         final_capital = backtester.capital
 
         # Capital should decrease (loss + commission + slippage)
-        assert final_capital < initial_capital_after_buy, \
+        assert final_capital < initial_total_capital, \
             "Capital should decrease after stop-loss (loss + costs)"
 
         # Verify position closed
@@ -628,17 +637,24 @@ class TestStopLossEdgeCases:
 
         backtester._execute_buy_signal(signal, entry_quote)
 
-        # Price drops to $97.01 (one tick above $97)
+        # Get actual entry price (includes slippage)
+        actual_entry_price = backtester.trades[-1].entry_price
+        # Calculate actual stop-loss price
+        actual_sl_price = actual_entry_price * (Decimal("1") - Decimal("3") / Decimal("100"))
+
+        # Price drops to one tick ABOVE the stop-loss threshold
+        # Use the actual stop-loss price to account for slippage
+        one_tick_above = actual_sl_price + Decimal("0.01")
         quote_above = Quote(
             symbol="AAPL",
             timestamp=past_time(hours_ago=1),
-            bid=Decimal("96.51"),
-            ask=Decimal("97.51"),
-            last=Decimal("97.01"),
-            open=Decimal("97.5"),
-            high=Decimal("97.5"),
-            low=Decimal("97.01"),
-            close=Decimal("97.01"),
+            bid=one_tick_above - Decimal("0.5"),
+            ask=one_tick_above + Decimal("0.5"),
+            last=one_tick_above,
+            open=one_tick_above + Decimal("0.5"),
+            high=one_tick_above + Decimal("0.5"),
+            low=one_tick_above,  # One tick above SL
+            close=one_tick_above,
             volume=Decimal("1000000"),
             spread=Decimal("1.0")
         )

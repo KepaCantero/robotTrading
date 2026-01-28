@@ -119,6 +119,6 @@ class VolatilityRegimeDetector:
                 'historical_std': float(np.std(self.historical_volatility)),
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error detectando régimen de volatilidad: {e}")
             return {'regime': 'unknown', 'volatility': 0.0, 'percentile': 50, 'confidence': 0.0}

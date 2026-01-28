@@ -196,7 +196,7 @@ class Modelo721Exporter:
                 logger.info(f"Found {len(transactions)} transactions for {year}")
                 return transactions
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error fetching transactions for {year}: {e}")
             raise
 
@@ -284,7 +284,7 @@ class Modelo721Exporter:
                 logger.info(f"Generated Dec 31 balance snapshot: {len(balances)} assets")
                 return balances
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error generating Dec 31 balance: {e}")
             raise
 
@@ -340,7 +340,7 @@ class Modelo721Exporter:
             rate = await self._fetch_boe_rate(from_currency, date)
             self.exchange_rate_cache[cache_key] = rate
             return rate
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.warning(f"BOE API failed: {e}")
 
         # Try ECB API (European Central Bank)
@@ -348,7 +348,7 @@ class Modelo721Exporter:
             rate = await self._fetch_ecb_rate(from_currency, date)
             self.exchange_rate_cache[cache_key] = rate
             return rate
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.warning(f"ECB API failed: {e}")
 
         # Fallback to market rate (not ideal but better than nothing)

@@ -72,7 +72,7 @@ class BacktestRunner:
                     logger.info(f"✅ Completed backtest for {strategy_name}")
                 else:
                     logger.warning(f"⚠️ No results for {strategy_name}")
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 logger.error(f"❌ Error in backtest for {strategy_name}: {e}")
         
         # Generate summary
@@ -123,7 +123,7 @@ class BacktestRunner:
         for quote in quotes:
             try:
                 signals.extend(strategy.generate_signals(quote))
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 logger.debug(f"Signal error: {e}")
         
         if not signals:
@@ -241,7 +241,7 @@ class BacktestRunner:
                 cwd=project_root
             )
             return result.stdout.strip()[:12]
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError):
             return "unknown"
     
     def generate_strategy_report(self, strategy_name: str, result: BacktestResult, metrics: Dict[str, Any], report_path: Path):

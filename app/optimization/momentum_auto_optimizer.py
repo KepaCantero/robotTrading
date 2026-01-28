@@ -66,7 +66,7 @@ class MomentumAutoOptimizer:
         try:
             with open(self.optimization_history_path, 'r') as f:
                 return json.load(f)
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.error(f"Error loading history: {e}")
             return []
 
@@ -75,7 +75,7 @@ class MomentumAutoOptimizer:
         try:
             with open(self.optimization_history_path, 'w') as f:
                 json.dump(self.history, f, indent=2, default=str)
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.error(f"Error saving history: {e}")
 
     def should_recalibrate(self) -> bool:

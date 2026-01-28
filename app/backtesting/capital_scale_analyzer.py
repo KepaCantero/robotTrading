@@ -315,7 +315,7 @@ class CapitalScaleAnalyzer:
                         f"strategy may not be viable at this level"
                     )
 
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 logger.error(f"Error simulating capital level {capital_level}: {e}")
                 warnings.append(f"€{capital_level:,.0f}: Simulation failed - {str(e)}")
 

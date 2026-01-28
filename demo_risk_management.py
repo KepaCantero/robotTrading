@@ -165,7 +165,7 @@ def main():
         loader = BacktestConfigLoader(config_path)
         config = loader.get_backtest_config()
         print("✅ Configuration loaded successfully")
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         print(f"❌ ERROR loading configuration: {e}")
         return 1
 

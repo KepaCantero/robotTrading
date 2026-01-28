@@ -324,7 +324,7 @@ class ReinforcementLearningLearner(BaseMetaLearner):
 
             return weights
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"Error en RL learner: {e}", exc_info=True)
             # Fallback
             learner = HistoricalPerformanceLearner(self.config)
@@ -398,7 +398,7 @@ class ReinforcementLearningLearner(BaseMetaLearner):
             # Decay exploration rate
             self.exploration_rate *= self.exploration_decay
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             self.logger.error(f"Error actualizando RL learner: {e}", exc_info=True)
 
 
@@ -459,7 +459,7 @@ class EnsembleMetaLearner(BaseMetaLearner):
                 weights = learner.learn_weights(strategy_performance, market_context)
                 all_weights.append(weights)
                 learner_names.append(type(learner).__name__)
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 self.logger.warning(f"Learner {type(learner).__name__} falló: {e}")
 
         if not all_weights:
@@ -507,5 +507,5 @@ class EnsembleMetaLearner(BaseMetaLearner):
         for learner in self.learners:
             try:
                 learner.update(strategy_performance, portfolio_return, market_context)
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 self.logger.warning(f"Error actualizando learner {type(learner).__name__}: {e}")

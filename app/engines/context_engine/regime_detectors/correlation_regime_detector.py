@@ -64,7 +64,7 @@ class CorrelationRegimeDetector:
             self.pca.fit(returns_matrix)
             explained_variance = np.sum(self.pca.explained_variance_ratio_)
             return float(explained_variance)
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError):
             return 0.0
 
     def detect(
@@ -155,7 +155,7 @@ class CorrelationRegimeDetector:
                 'baseline_comparison': baseline_comparison,
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error detectando régimen de correlación: {e}")
             return {
                 'regime': 'unknown',

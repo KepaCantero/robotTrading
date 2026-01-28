@@ -208,7 +208,7 @@ class AggressiveMemoryManager:
                     elif attr_value is not obj:
                         # Set to None to break references
                         setattr(obj, attr_name, None)
-        except Exception as e:
+        except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.debug(f"Error during deep cleanup: {e}")
 
     def _perform_cleanup(self) -> None:

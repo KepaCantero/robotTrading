@@ -60,7 +60,7 @@ class QuantStatsIntegration:
         if not isinstance(returns, pd.Series):
             try:
                 returns = pd.Series(returns)
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.error(f"Cannot convert returns to Series: {e}")
                 return {}
 
@@ -160,7 +160,7 @@ class QuantStatsIntegration:
 
             logger.info(f"✅ Calculated {len(metrics)} advanced metrics using QuantStats")
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.warning(f"Error calculating QuantStats metrics: {e}, using fallback")
             return self._fallback_metrics(returns, periods_per_year)
 
@@ -214,7 +214,7 @@ class QuantStatsIntegration:
 
             logger.info(f"✅ Calculated {len(metrics)} fallback metrics")
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculating fallback metrics: {e}")
 
         return metrics

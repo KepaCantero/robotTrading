@@ -127,7 +127,7 @@ class InsightGenerator:
             logger.info(f"Generated {len(self.insights)} statistical insights")
             return self.insights
 
-        except Exception as e:
+        except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.error(f"Error generating statistical insights: {e}", exc_info=True)
             return self.insights
 
@@ -258,7 +258,7 @@ class InsightGenerator:
             logger.info(f"Generated {len(self.warnings)} risk warnings")
             return self.warnings
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Error generating risk warnings: {e}", exc_info=True)
             return self.warnings
 
@@ -382,7 +382,7 @@ class InsightGenerator:
             logger.info(f"Generated {len(self.recommendations)} recommendations")
             return self.recommendations
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Error generating recommendations: {e}", exc_info=True)
             return self.recommendations
 
@@ -517,7 +517,7 @@ class InsightGenerator:
             logger.info("Markdown report formatted successfully")
             return report
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error formatting markdown report: {e}", exc_info=True)
             return f"# Error Generating Report\n\n{str(e)}"
 

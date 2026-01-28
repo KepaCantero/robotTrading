@@ -254,7 +254,7 @@ def main():
     except AssertionError as e:
         logger.error(f"❌ VALIDATION FAILED: {e}")
         return 1
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         logger.error(f"❌ UNEXPECTED ERROR: {e}")
         import traceback
         traceback.print_exc()

@@ -39,7 +39,7 @@ class SHAPExplainer:
             self.connected = True
             logger.info("✅ Connected to SHAP explainer")
             return True
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"❌ Failed to initialize SHAP: {str(e)}")
             self.connected = False
             return False
@@ -94,7 +94,7 @@ class SHAPExplainer:
             logger.info(f"✅ SHAP explanation generated for {prediction_id}")
             return explanation
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ SHAP explanation failed: {str(e)}")
             return {}
 
@@ -132,7 +132,7 @@ class SHAPExplainer:
             logger.info(f"✅ Explained {len(explanations)} predictions with SHAP")
             return explanations
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Batch SHAP explanation failed: {str(e)}")
             return []
 
@@ -174,7 +174,7 @@ class LIMEExplainer:
             self.connected = True
             logger.info("✅ Connected to LIME explainer")
             return True
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"❌ Failed to initialize LIME: {str(e)}")
             self.connected = False
             return False
@@ -237,7 +237,7 @@ class LIMEExplainer:
             logger.info(f"✅ LIME explanation generated for {prediction_id}")
             return explanation
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ LIME explanation failed: {str(e)}")
             return {}
 
@@ -299,7 +299,7 @@ class FeatureImportanceCalculator:
             logger.info(f"✅ Calculated permutation importance for {len(feature_names)} features")
             return importance_dict
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Permutation importance calculation failed: {str(e)}")
             return {}
 
@@ -330,7 +330,7 @@ class FeatureImportanceCalculator:
             logger.info(f"✅ Calculated tree-based importance for {len(feature_names)} features")
             return importance_dict
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Tree importance calculation failed: {str(e)}")
             return {}
 
@@ -365,7 +365,7 @@ class FeatureImportanceCalculator:
             logger.info(f"✅ Calculated importance using {len(results)} methods")
             return results
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ All importance calculation failed: {str(e)}")
             return {}
 

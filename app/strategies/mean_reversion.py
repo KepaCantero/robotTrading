@@ -8,6 +8,7 @@ para identificar cuando un activo se desvía significativamente de su media
 y espera que regrese a ella.
 """
 
+from __future__ import annotations
 import logging
 from decimal import Decimal
 from typing import Any, Dict, List
@@ -204,7 +205,7 @@ class MeanReversionStrategy(BaseStrategy):
                     f"Z-score={z_score:.4f}, price={current_price:.2f}, volatility={volatility:.4f}"
                 )
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(
                 f"MEAN_REVERSION Error generating signals for {market_data.symbol}: {e}",
                 exc_info=True,
@@ -299,7 +300,7 @@ class MeanReversionStrategy(BaseStrategy):
             )
             return True
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(
                 f"❌ MEAN_REVERSION risk_check ERROR for {signal.symbol}: {e}", exc_info=True
             )

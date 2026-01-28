@@ -113,7 +113,7 @@ class SignalExecutionEngine:
 
             return success, execution_details
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.executions_failed += 1
             execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
 
@@ -200,7 +200,7 @@ class SignalExecutionEngine:
 
             return result
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error executing order for {order.symbol}: {e}")
             return {
                 "success": False,

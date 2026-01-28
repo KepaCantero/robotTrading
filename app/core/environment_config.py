@@ -314,7 +314,7 @@ class CentralizedConfig(BaseSettings):
                     "Database password is required in production", "db_password"
                 )
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             if isinstance(e, ConfigurationError):
                 raise
             else:

@@ -171,7 +171,7 @@ class PortfolioConstructor:
                 )
             return allocation
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"❌ Error constructing portfolio: {e}")
             return PortfolioAllocation(
                 success=False,
@@ -316,7 +316,7 @@ class PortfolioConstructor:
                 optimization_notes="Efficient frontier with Sharpe ratio maximization and risk profile adjustment",
             )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Efficient frontier optimization failed: {e}")
             return PortfolioAllocation(
                 success=False,
@@ -424,7 +424,7 @@ class PortfolioConstructor:
                 optimization_notes="Risk-parity allocation: weights inversely proportional to volatility",
             )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Risk-parity portfolio construction failed: {e}")
             return PortfolioAllocation(
                 success=False,
@@ -518,7 +518,7 @@ class PortfolioConstructor:
                 optimization_notes="Simple equal-weight baseline allocation",
             )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Equal-weight portfolio construction failed: {e}")
             return PortfolioAllocation(
                 success=False,

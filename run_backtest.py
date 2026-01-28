@@ -79,7 +79,7 @@ try:
             new_signals = strategy.generate_signals(quote)
             if new_signals:
                 signals.extend(new_signals)
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.debug(f"Signal error: {e}")
 
     print(f"✅ Generated {len(signals)} total signals")
@@ -125,7 +125,7 @@ except ImportError as e:
     print("   Make sure you have installed all dependencies:")
     print("   pip install pandas numpy yfinance matplotlib scipy rich")
     exit(1)
-except Exception as e:
+except (ValueError, TypeError, KeyError, AttributeError) as e:
     print(f"❌ Error: {e}")
     logger.exception("Backtest failed")
     exit(1)

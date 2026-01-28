@@ -156,7 +156,7 @@ class StopExecutor:
 
                 return result
 
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 logger.error(
                     f"STOP LOSS ERROR (attempt {attempt + 1}/{retry_attempts + 1}): "
                     f"{position.symbol} - {str(e)}"
@@ -234,7 +234,7 @@ class StopExecutor:
 
                 return result
 
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 logger.error(
                     f"TAKE PROFIT ERROR (attempt {attempt + 1}/{retry_attempts + 1}): "
                     f"{position.symbol} - {str(e)}"
@@ -331,7 +331,7 @@ class StopExecutor:
                 error_message=f"Order execution timeout after {self.order_timeout}s",
             )
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             return StopExecutionResult(
                 success=False,
                 stop_type=stop_type,
@@ -385,7 +385,7 @@ class StopExecutor:
 
             return result
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             return StopExecutionResult(
                 success=False,
                 stop_type=stop_type,

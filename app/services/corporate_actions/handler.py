@@ -232,7 +232,7 @@ class CorporateActionsHandler:
                     f"avg_price {old_avg_price} -> {new_avg_price}"
                 )
 
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 logger.error(f"Error adjusting position for stock split: {e}")
                 continue
 
@@ -416,7 +416,7 @@ class CorporateActionsHandler:
                     f"{old_quantity} -> {new_quantity} shares"
                 )
 
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 logger.error(f"Error converting position for merger: {e}")
                 continue
 
@@ -507,7 +507,7 @@ class CorporateActionsHandler:
                             }
                         )
                         logger.critical(f"Closed position {position_id} due to delisting")
-                    except Exception as e:
+                    except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                         logger.warning(f"Could not close position {position_id}: {e}")
                         closed.append(
                             {
@@ -529,7 +529,7 @@ class CorporateActionsHandler:
 
                 self._stats["positions_closed"] += 1
 
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 logger.error(f"Error processing position {position_id} for delisting: {e}")
                 closed.append(
                     {
@@ -640,7 +640,7 @@ class CorporateActionsHandler:
                     f"Created spin-off position: {spinoff_quantity} shares of {spinoff_symbol}"
                 )
 
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 logger.error(f"Error creating spin-off position: {e}")
                 continue
 
@@ -719,7 +719,7 @@ class CorporateActionsHandler:
 
                 logger.info(f"Updated position {position_id}: {old_symbol} -> {new_symbol}")
 
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 logger.error(f"Error updating position for symbol change: {e}")
                 continue
 
@@ -771,7 +771,7 @@ class CorporateActionsHandler:
             else:
                 logger.warning(f"Broker does not support position queries")
                 return []
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error getting positions for {symbol}: {e}")
             return []
 
@@ -841,7 +841,7 @@ class CorporateActionsHandler:
                 logger.debug(
                     f"Adjusting baseline for {position_id} by dividend amount {amount}"
                 )
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Error adjusting dividend baseline: {e}")
 
     def _get_position_symbol(self, position: Any) -> str:

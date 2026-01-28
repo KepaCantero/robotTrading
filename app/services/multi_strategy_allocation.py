@@ -186,6 +186,21 @@ class MultiStrategyAllocationManager:
             allocations[name] = allocated
             logger.debug(f"{name}: allocated ${allocated:,.2f} ({allocation.current_weight:.1%})")
 
+        # Normalize allocations to ensure total exactly matches total capital
+        # This handles floating-point precision issues
+        total_allocated = sum(allocations.values())
+        if total_allocated != self.total_capital:
+            difference = self.total_capital - total_allocated
+            if abs(difference) > Decimal("0"):
+                # Add the difference to the largest allocation to minimize relative impact
+                if allocations:
+                    largest_strategy = max(allocations.keys(), key=lambda k: allocations[k])
+                    allocations[largest_strategy] += difference
+                    logger.debug(
+                        f"Adjusted {largest_strategy} by ${difference:,.2f} "
+                        f"to match total capital"
+                    )
+
         return allocations
 
     def get_allocation_for_strategy(self, strategy_name: str) -> Decimal:

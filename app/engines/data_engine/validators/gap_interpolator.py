@@ -128,7 +128,7 @@ class GapInterpolator:
             # Spline interpolation (requiere scipy)
             try:
                 return df[field].interpolate(method='polynomial', order=3, limit_direction='both')
-            except Exception:
+            except (RuntimeError, ValueError, TypeError, KeyError):
                 logger.warning("Spline interpolation falló, usando linear")
                 return df[field].interpolate(method='linear', limit_direction='both')
         else:

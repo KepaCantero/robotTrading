@@ -84,7 +84,7 @@ def _ensure_pytorch_imported():
         PYTORCH_AVAILABLE = False
         logger.warning("PyTorch no disponible. DeepLearningEngine requiere PyTorch.")
         return False
-    except Exception as e:
+    except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
         PYTORCH_AVAILABLE = False
         logger.warning(f"Error inicializando PyTorch: {e}")
         return False
@@ -529,7 +529,7 @@ class DeepLearningEngine(BaseLearningEngine):
                     raise ValueError(
                         f"Arquitectura {self.architecture} no soportada. Opciones: lstm, gru, attention_lstm, transformer"
                     )
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             error_msg = str(e).lower()
             if 'mutex' in error_msg or 'lock' in error_msg:
                 logger.error(
@@ -677,7 +677,7 @@ class DeepLearningEngine(BaseLearningEngine):
 
                 # Retornar métricas y ruta del modelo
                 result_queue.put({'success': True, 'metrics': metrics, 'model_path': model_path})
-            except Exception as e:
+            except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
                 result_queue.put(
                     {'success': False, 'error': str(e), 'error_type': type(e).__name__}
                 )
@@ -742,7 +742,7 @@ class DeepLearningEngine(BaseLearningEngine):
                         import os
 
                         os.unlink(model_path)
-                    except Exception:  # noqa: E722
+                    except (RuntimeError, ValueError, TypeError, KeyError):  # noqa: E722
                         pass
 
                     self.is_trained = True
@@ -752,7 +752,7 @@ class DeepLearningEngine(BaseLearningEngine):
             else:
                 raise RuntimeError("No se recibió resultado del proceso hijo")
 
-        except Exception as e:
+        except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.error(f"❌ Error entrenando en subprocess: {e}")
             # Fallback a entrenamiento normal
             logger.info("🔄 Intentando entrenamiento normal como fallback...")

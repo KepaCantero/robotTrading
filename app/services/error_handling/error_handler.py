@@ -237,7 +237,7 @@ class ErrorHandler:
                     context = fallback_context or {}
                     try:
                         return await strategy.execute(context)
-                    except Exception as fallback_error:
+                    except (asyncio.TimeoutError, ConnectionError, OSError) as fallback_error:
                         self.logger.error(f"❌ Fallback strategy failed: {fallback_error}")
                         raise
 
@@ -270,7 +270,7 @@ class ErrorHandler:
         for attempt in range(max_retries + 1):
             try:
                 return await async_fn(*args, **kwargs)
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 last_exception = e
                 if attempt < max_retries:
                     self.logger.warning(
@@ -356,7 +356,7 @@ def service_error_handler(fallback_context: Optional[Dict[str, Any]] = None):
                 logger.error(f"❌ Service error in {func.__name__}: {e}")
                 # Re-raise to allow caller to handle
                 raise
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.error(f"❌ Unexpected error in {func.__name__}: {e}")
                 raise ServiceException(
                     service_name=func.__module__, message=str(e), error_code="UNKNOWN_ERROR"

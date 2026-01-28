@@ -171,7 +171,7 @@ class AlertSystem(BaseAlertSystem):
 
             return filtered_alerts
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"Error verificando umbrales: {e}", exc_info=True)
             return []
 
@@ -380,7 +380,7 @@ class AlertSystem(BaseAlertSystem):
         if self.enable_email and EMAIL_AVAILABLE:
             try:
                 self._send_email_alerts(alerts)
-            except Exception as e:
+            except (RuntimeError, ValueError, TypeError, KeyError) as e:
                 self.logger.error(f"Error enviando alertas por email: {e}")
                 success = False
 
@@ -388,7 +388,7 @@ class AlertSystem(BaseAlertSystem):
         if self.enable_slack:
             try:
                 self._send_slack_alerts(alerts)
-            except Exception as e:
+            except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 self.logger.error(f"Error enviando alertas por Slack: {e}")
                 success = False
 
@@ -439,7 +439,7 @@ class AlertSystem(BaseAlertSystem):
             server.quit()
 
             self.logger.info(f"Alertas enviadas por email a {len(recipient_emails)} destinatarios")
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             self.logger.error(f"Error enviando email: {e}", exc_info=True)
 
     def _send_slack_alerts(self, alerts: List[Dict[str, Any]]) -> None:
@@ -468,7 +468,7 @@ class AlertSystem(BaseAlertSystem):
             self.logger.info("Alertas enviadas por Slack")
         except ImportError:
             self.logger.warning("requests no disponible para Slack")
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             self.logger.error(f"Error enviando Slack: {e}", exc_info=True)
 
     def get_status(self) -> Dict[str, Any]:

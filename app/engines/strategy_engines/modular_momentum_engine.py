@@ -157,7 +157,7 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
                 )
 
                 self._feature_extractor = FeatureExtractor()
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 logger.warning(f"No se pudo inicializar FeatureExtractor: {e}")
                 return {}
 
@@ -192,7 +192,7 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
                 metadata=metadata,
             )
             return features
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.warning(f"Error extrayendo features: {e}")
             # Fallback: features básicos
             return {
@@ -315,7 +315,7 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
 
             signals.append(signal)
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(
                 f"Error generando señal en ModularMomentumStrategyEngine: {e}", exc_info=True
             )
@@ -363,7 +363,7 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
                         'in_range': False,  # ContextEngine no proporciona esto directamente
                     }
                     return market_context
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 logger.warning(
                     f"Error usando ContextEngine, usando MarketAnalyzer como fallback: {e}"
                 )
@@ -471,7 +471,7 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
                 # Resultado general (usar BUY para simplificar)
                 filter_results[filter_instance.name] = result_buy
 
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.error(f"Error evaluando filtro {filter_instance.name}: {e}")
                 filter_results[filter_instance.name] = {
                     'passed': False,

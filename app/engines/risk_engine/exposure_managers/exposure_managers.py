@@ -127,7 +127,7 @@ class ExposureManager(BaseExposureManager):
                 ),
                 'timestamp': datetime.utcnow().isoformat(),
             }
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             self.logger.error(f"Error analizando exposición: {e}", exc_info=True)
             return {'error': str(e)}
 

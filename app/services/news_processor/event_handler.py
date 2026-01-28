@@ -184,7 +184,7 @@ class NewsEventHandler:
                     self._subscriptions.add(symbol)
                     logger.info(f"Tracking news for {symbol} (polling mode)")
 
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.error(f"Failed to subscribe to {symbol}: {e}")
 
     async def unsubscribe_from_news(self, symbol: str) -> None:
@@ -196,7 +196,7 @@ class NewsEventHandler:
             self._subscriptions.discard(symbol)
             logger.info(f"Unsubscribed from news for {symbol}")
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Failed to unsubscribe from {symbol}: {e}")
 
     async def on_news_event(self, event: NewsEvent) -> None:
@@ -293,7 +293,7 @@ class NewsEventHandler:
         if self.on_trade_trigger:
             try:
                 self.on_trade_trigger(event.symbol, sentiment.sentiment_score)
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 logger.error(f"Error in trade trigger callback: {e}")
 
     async def _polling_loop(self) -> None:
@@ -309,7 +309,7 @@ class NewsEventHandler:
 
             except asyncio.CancelledError:
                 break
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.error(f"Error in polling loop: {e}")
                 await asyncio.sleep(60.0)
 
@@ -342,7 +342,7 @@ class NewsEventHandler:
 
                 await self.on_news_event(event)
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.debug(f"Error polling news for {symbol}: {e}")
 
     def _classify_event(self, article: Dict[str, Any]) -> NewsEventType:

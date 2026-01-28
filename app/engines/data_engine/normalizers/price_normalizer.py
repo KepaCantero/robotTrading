@@ -70,7 +70,7 @@ class PriceNormalizer:
 
             return normalized_price
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error normalizando precio {price}: {e}")
             return Decimal(str(price))
 

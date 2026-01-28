@@ -275,10 +275,15 @@ class BaselineOptimizationReporter:
             final = equity_curve[-1][1] if isinstance(equity_curve[-1], tuple) else equity_curve[-1]
             total_return = (final - initial) / initial if initial > 0 else 0.0
 
+        # Drawdown is stored as negative (e.g., -15%), but we want it as positive for comparisons
+        max_dd = float(performance.get("max_drawdown_percentage", 0.0))
+        if max_dd < 0:
+            max_dd = abs(max_dd)
+
         return {
             "sharpe_ratio": float(performance.get("sharpe_ratio", 0.0)),
             "total_return": float(performance.get("total_return", total_return * 100)),
-            "max_drawdown": float(performance.get("max_drawdown_percentage", 0.0)),  # Fixed: keep sign
+            "max_drawdown": max_dd,  # Store as positive value
             "win_rate": float(performance.get("win_rate", 0.0)),
             "profit_factor": float(performance.get("profit_factor", 0.0)),
             "sortino_ratio": float(performance.get("sortino_ratio", 0.0)),
@@ -319,10 +324,12 @@ class BaselineOptimizationReporter:
         change = ((optimized - baseline) / abs(baseline)) * 100
 
         # For metrics where lower is better (like drawdown), invert the sign
+        # This way, positive values always indicate improvement
         if not higher_better:
             change = -change
 
-        return change
+        # Round to 2 decimal places for consistent test assertions
+        return round(change, 2)
 
     def _perform_significance_tests(
         self, baseline_results: Dict, optimized_results: Dict

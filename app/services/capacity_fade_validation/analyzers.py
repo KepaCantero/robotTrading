@@ -76,7 +76,7 @@ class HistoricalCapacityAnalyzer:
             logger.info(f"✅ Capacity impact analyzed: {backtest_to_target_ratio:.2f}x scaling")
             return analysis
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"❌ Capacity impact analysis failed: {str(e)}")
             return {"error": str(e)}
 
@@ -142,7 +142,7 @@ class LiquidityHeadroom:
             logger.info(f"{status} Liquidity headroom: {percent_of_volume:.1f}% of volume")
             return report
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Headroom calculation failed: {str(e)}")
             raise
 
@@ -241,7 +241,7 @@ class AlphaDecayEstimator:
             )
             return result
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Alpha decay estimation failed: {str(e)}")
             return {"error": str(e)}
 
@@ -272,6 +272,6 @@ class AlphaDecayEstimator:
             )
             return required_alpha
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Required alpha calculation failed: {str(e)}")
             return Decimal("0")

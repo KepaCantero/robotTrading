@@ -34,9 +34,12 @@ logger = logging.getLogger(__name__)
 
 
 def dataframe_to_quotes(symbol: str, df: pd.DataFrame):
-    """Convert DataFrame to list of Quote objects."""
+    """Convert DataFrame to list of Quote objects using vectorized operations."""
+    # VECTORIZED: Usar operaciones vectorizadas en lugar de iterrows
     quotes = []
-    for idx, row in df.iterrows():
+    for i in range(len(df)):
+        idx = df.index[i]
+        row = df.iloc[i]
         quote = Quote(
             symbol=symbol,
             timestamp=idx if isinstance(idx, datetime) else datetime.now(),

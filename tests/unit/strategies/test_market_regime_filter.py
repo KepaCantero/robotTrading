@@ -406,6 +406,13 @@ class TestMarketRegimeFilterLogging:
         }
         return ModularMomentumStrategy(config)
 
+    @pytest.fixture(autouse=True)
+    def reset_rate_limited_logger(self):
+        """Reset the rate-limited logger counters before each logging test."""
+        from app.strategies.momentum_modular.strategy import _rate_limited_logger
+        # Reset counters to ensure logs appear in tests
+        _rate_limited_logger.counters.clear()
+
     def test_bear_market_logs_warning(self, strategy, caplog):
         """Test that bear market logs a warning."""
         import logging

@@ -2,11 +2,17 @@
 Train/Validation/Test Split for Backtesting
 
 Prevents overfitting and data snooping by properly splitting time-series data.
+
+Now includes Purged K-Fold with Embargo cross-validation as described in:
+"Advances in Financial Machine Learning" by Marcos López de Prado
 """
 
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Union
 from datetime import datetime
 import logging
+
+import numpy as np
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +25,12 @@ class DataSplit:
         train_pct: float = 0.70,
         val_pct: float = 0.15,
         test_pct: float = 0.15,
-        min_train_days: int = 252  # 1 year of trading data
+        min_train_days: int = 252,  # 1 year of trading data
+        # Purged K-Fold settings
+        use_purged_kfold: bool = False,
+        n_splits: int = 5,
+        purge_pct: float = 0.05,
+        embargo_pct: float = 0.02,
     ):
         """
         Initialize data split configuration.
@@ -29,6 +40,10 @@ class DataSplit:
             val_pct: Percentage for validation (default 15%)
             test_pct: Percentage for testing (default 15%)
             min_train_days: Minimum days for training set
+            use_purged_kfold: Use Purged K-Fold cross-validation (López de Prado)
+            n_splits: Number of folds for Purged K-Fold
+            purge_pct: Percentage to purge before test set (default 5%)
+            embargo_pct: Percentage to embargo after test set (default 2%)
         """
         if abs(train_pct + val_pct + test_pct - 1.0) > 0.01:
             raise ValueError("Split percentages must sum to 1.0")
@@ -37,6 +52,12 @@ class DataSplit:
         self.val_pct = val_pct
         self.test_pct = test_pct
         self.min_train_days = min_train_days
+
+        # Purged K-Fold settings
+        self.use_purged_kfold = use_purged_kfold
+        self.n_splits = n_splits
+        self.purge_pct = purge_pct
+        self.embargo_pct = embargo_pct
 
 
 class TrainValTestSplitter:
@@ -163,6 +184,107 @@ class TrainValTestSplitter:
 
         logger.info(f"Created {len(splits)} walk-forward windows")
         return splits
+
+    def purged_kfold_split(
+        self,
+        market_data: List,
+    ) -> List[Tuple[List, List]]:
+        """
+        Create purged K-Fold splits for cross-validation.
+
+        This implements López de Prado's method to prevent look-ahead bias
+        in financial ML backtesting.
+
+        Args:
+            market_data: List of market data bars
+
+        Returns:
+            List of (train_data, test_data) tuples with purged splits
+        """
+        from app.backtesting.validation.purged_kfold import PurgedKFold
+
+        # Convert market data to array for indexing
+        sorted_data = sorted(market_data, key=lambda x: x.timestamp)
+        n_samples = len(sorted_data)
+
+        # Create PurgedKFold splitter
+        purged_cv = PurgedKFold(
+            n_splits=self.config.n_splits,
+            purge_pct=self.config.purge_pct,
+            embargo_pct=self.config.embargo_pct,
+            min_train_samples=self.config.min_train_days,
+            min_test_samples=20,
+        )
+
+        # Generate splits
+        splits = purged_cv.split(np.arange(n_samples))
+
+        # Convert indices back to market data
+        purged_splits = []
+        for train_idx, test_idx in splits:
+            train_data = [sorted_data[i] for i in train_idx]
+            test_data = [sorted_data[i] for i in test_idx]
+            purged_splits.append((train_data, test_data))
+
+        logger.info(
+            f"Created {len(purged_splits)} purged K-Fold splits "
+            f"(purge={self.config.purge_pct:.1%}, embargo={self.config.embargo_pct:.1%})"
+        )
+
+        return purged_splits
+
+    def purged_kfold_split_with_validation(
+        self,
+        market_data: List,
+    ) -> List[Tuple[List, List, List]]:
+        """
+        Create purged K-Fold splits with train/validation/test sets.
+
+        This extends purged K-Fold to include a validation set by
+        splitting the training set further.
+
+        Args:
+            market_data: List of market data bars
+
+        Returns:
+            List of (train_data, val_data, test_data) tuples
+        """
+        from app.backtesting.validation.purged_kfold import PurgedKFold
+
+        sorted_data = sorted(market_data, key=lambda x: x.timestamp)
+        n_samples = len(sorted_data)
+
+        purged_cv = PurgedKFold(
+            n_splits=self.config.n_splits,
+            purge_pct=self.config.purge_pct,
+            embargo_pct=self.config.embargo_pct,
+            min_train_samples=self.config.min_train_days,
+            min_test_samples=20,
+        )
+
+        splits = purged_cv.split(np.arange(n_samples))
+
+        purged_splits = []
+        for train_idx, test_idx in splits:
+            # Further split training data into train/validation
+            n_train = len(train_idx)
+            val_start_idx = int(n_train * (1 - self.config.val_pct / (self.config.train_pct + self.config.val_pct)))
+
+            train_indices = train_idx[:val_start_idx]
+            val_indices = train_idx[val_start_idx:]
+
+            train_data = [sorted_data[i] for i in train_indices]
+            val_data = [sorted_data[i] for i in val_indices]
+            test_data = [sorted_data[i] for i in test_idx]
+
+            purged_splits.append((train_data, val_data, test_data))
+
+        logger.info(
+            f"Created {len(purged_splits)} purged K-Fold splits with validation "
+            f"(purge={self.config.purge_pct:.1%}, embargo={self.config.embargo_pct:.1%})"
+        )
+
+        return purged_splits
 
 
 class MultipleTestingCorrector:

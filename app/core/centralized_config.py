@@ -932,7 +932,7 @@ class CentralizedConfig(BaseSettings):
 
                     strategy_config = StrategyConfig(**strategy_data)
                     self.strategies[strategy_name] = strategy_config
-                except Exception as e:
+                except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                     logger.warning(f"Could not load strategy config from {strategy_file}: {e}")
 
     def get_strategy_config(self, strategy_name: str) -> Optional[StrategyConfig]:
@@ -970,7 +970,7 @@ class CentralizedConfig(BaseSettings):
                 strategy_config.model_validate(strategy_config.model_dump())
 
             return True
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
             return False
 
     def get_config_summary(self) -> Dict[str, Any]:

@@ -8,6 +8,7 @@ This module provides an interactive dashboard for:
 - Analyzing decision-making processes
 """
 
+import asyncio
 import json
 import logging
 import sys
@@ -67,7 +68,7 @@ try:
         st.sidebar.success(
             f"📊 {comprehensive_stats['total_tests']} comprehensive backtest(s) disponibles"
         )
-except Exception as e:
+except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
     logger.debug(f"No se pudieron cargar comprehensive results: {e}")
 
 # Initialize session state
@@ -324,7 +325,8 @@ if results_dir.exists():
                             )
                             if trade_log_file.exists():
                                 df = pd.read_csv(trade_log_file)
-                                for _, row in df.iterrows():
+                                # VECTORIZED: Usar to_dict('records') en lugar de iterrows
+                                for row in df.to_dict('records'):
                                     trades.append(
                                         Trade(
                                             timestamp=datetime.fromisoformat(str(row['timestamp'])),
@@ -358,10 +360,10 @@ if results_dir.exists():
 
                             session_state.backtest_results[key] = result
 
-                        except Exception as e:
+                        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                             logger.warning(f"Failed to convert metrics to BacktestResult: {e}")
 
-                except Exception as e:
+                except (ValueError, TypeError, KeyError, AttributeError) as e:
                     logger.warning(f"Failed to load {json_file}: {e}")
 
 # Main content area
@@ -445,11 +447,11 @@ if execute_button:
                 )
 
                 try:
-                    portfolio_quotes = portfolio_builder.build_portfolio_quotes(
+                    portfolio_quotes = asyncio.run(portfolio_builder.build_portfolio_quotes(
                         start_date=datetime.combine(start_date, datetime.min.time()),
                         end_date=datetime.combine(end_date, datetime.max.time()),
                         max_symbols_per_strategy=max_symbols,  # Configurable limit
-                    )
+                    ))
                 except ValueError as e:
                     st.error(f"❌ {str(e)}")
                     st.info(
@@ -592,7 +594,7 @@ if execute_button:
             for quote in quotes:
                 try:
                     signals.extend(strategy.generate_signals(quote))
-                except Exception as e:
+                except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                     logger.debug(f"Signal error: {e}")
 
             if not signals:
@@ -657,7 +659,7 @@ if execute_button:
                         end_date=datetime.combine(end_date, datetime.max.time()),
                         project_root=project_root,
                     )
-                except Exception as save_error:
+                except (ValueError, TypeError, KeyError, AttributeError, IndexError) as save_error:
                     logger.warning(f"Failed to save report for {current_module}: {save_error}")
 
             # Show summary
@@ -725,11 +727,11 @@ if execute_button:
                             mime="text/markdown",
                         )
 
-            except Exception as summary_error:
+            except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as summary_error:
                 logger.warning(f"Failed to generate backend test summary: {summary_error}")
                 st.warning("⚠️ Could not generate comprehensive summary report")
 
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             st.error(f"❌ Error: {e}")
             logger.exception("Backtest failed")
 
@@ -1244,7 +1246,7 @@ if session_state.backtest_results:
                                 return 'background-color: #fff3cd; color: #856404'
                             else:
                                 return 'background-color: #f8d7da; color: #721c24'
-                    except Exception:  # noqa: E722
+                    except (ValueError, TypeError, KeyError, AttributeError):  # noqa: E722
                         pass
                 return ''
 

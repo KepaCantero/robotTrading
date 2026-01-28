@@ -235,7 +235,7 @@ class CircuitBreakerManager:
             for order in open_orders:
                 await self.broker.cancel_order(order.order_id)
                 logger.info(f"Cancelled order {order.order_id} due to trading pause")
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
             logger.error(f"Error cancelling orders: {e}")
 
     async def resume_all_trading(self, reason: str = "Halt lifted") -> None:
@@ -288,7 +288,7 @@ class CircuitBreakerManager:
 
             except asyncio.CancelledError:
                 break
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.error(f"Error in monitor loop: {e}")
                 await asyncio.sleep(self.config.check_interval_seconds)
 
@@ -336,7 +336,7 @@ class CircuitBreakerManager:
                     change_pct,
                 )
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error checking market-wide halt: {e}")
 
     async def _check_symbol_halts(self) -> None:
@@ -372,10 +372,10 @@ class CircuitBreakerManager:
                         last_update=utc_now(),
                     )
 
-                except Exception as e:
+                except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                     logger.error(f"Error checking halt for {symbol}: {e}")
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error getting positions for halt check: {e}")
 
     async def _check_vix_level(self) -> None:
@@ -397,7 +397,7 @@ class CircuitBreakerManager:
             elif vix >= self.config.VIX_HIGH:
                 logger.warning(f"VIX HIGH: {vix}")
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.debug(f"Could not check VIX level: {e}")
 
     async def _on_circuit_breaker_triggered(
@@ -431,7 +431,7 @@ class CircuitBreakerManager:
         if self.on_halt:
             try:
                 self.on_halt(event)
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.error(f"Error in halt callback: {e}")
 
         # Start halt check loop
@@ -460,7 +460,7 @@ class CircuitBreakerManager:
         if self.on_halt:
             try:
                 self.on_halt(event)
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.error(f"Error in halt callback: {e}")
 
     async def _halt_check_loop(self, symbol: str) -> None:
@@ -479,14 +479,14 @@ class CircuitBreakerManager:
                     if self.on_resume:
                         try:
                             self.on_resume(symbol)
-                        except Exception as e:
+                        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                             logger.error(f"Error in resume callback: {e}")
 
                     break
 
             except asyncio.CancelledError:
                 break
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.error(f"Error in halt check loop: {e}")
 
     def get_market_state(self, symbol: str) -> Optional[MarketState]:

@@ -218,7 +218,7 @@ class RobustnessTester:
                 drawdowns.append(dd)
                 results.append(value)
 
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.warning(f"Backtest failed for {parameter_name}={value}: {e}")
                 returns.append(0.0)
                 sharpes.append(0.0)
@@ -311,7 +311,7 @@ class RobustnessTester:
                     grid_data["return"].append(total_return)
                     grid_data["sharpe"].append(sharpe)
 
-                except Exception as e:
+                except (ValueError, TypeError, KeyError, AttributeError) as e:
                     logger.warning(
                         f"Stability map failed for {param1_name}={p1}, {param2_name}={p2}: {e}"
                     )
@@ -433,7 +433,7 @@ class RobustnessTester:
                 sharpes.append(sharpe)
                 drawdowns.append(dd)
 
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 logger.warning(f"Start date sensitivity failed for {start_date}: {e}")
 
         # Calculate sensitivity metrics

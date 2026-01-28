@@ -236,7 +236,7 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
                         )
                     else:
                         features["hedge_ratio"] = 1.0
-                except Exception:
+                except (ValueError, TypeError, KeyError, AttributeError):
                     features["hedge_ratio"] = 1.0
             else:
                 features["hedge_ratio"] = 1.0
@@ -312,7 +312,7 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
                     # Menor varianza = mayor cointegración
                     return float(1.0 / (1.0 + spread_var))
                 return None
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.warning(f"Error calculando cointegración: {e}")
             return None
 
@@ -417,7 +417,7 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
                     )
                     signals.append(signal)
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error generando señal en PairsTradingStrategyEngine: {e}", exc_info=True)
 
         return signals

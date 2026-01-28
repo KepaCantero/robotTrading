@@ -20,6 +20,7 @@ from typing import Any, Dict, List, Optional
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+import pytest_asyncio
 import aiosqlite
 
 from app.core.shadow_mode import (
@@ -38,19 +39,19 @@ from app.sre.state_machine.wal_persistence import OrderLog, OrderState
 UTC = timezone.utc
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def temp_db_path(tmp_path: Path) -> str:
     """Create temporary database for testing."""
     return str(tmp_path / "test_shadow_wal.db")
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def temp_wal_path(tmp_path: Path) -> str:
     """Create temporary WAL path for testing."""
     return str(tmp_path / "test_shadow_wal.log")
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def wal_manager(temp_db_path: str, temp_wal_path: str):
     """Create WAL manager for testing."""
     from app.sre.state_machine.wal_persistence import OrderStateMachine

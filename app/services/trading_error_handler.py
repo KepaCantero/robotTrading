@@ -237,7 +237,7 @@ class TradingErrorHandler:
                     action, error, context, operation_id, metadata, rules
                 )
                 results[action.value] = result
-            except Exception as action_error:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as action_error:
                 self.logger.error(f"Failed to execute action {action.value}: {action_error}")
                 results[action.value] = {"success": False, "error": str(action_error)}
 
@@ -308,7 +308,7 @@ class TradingErrorHandler:
 
                 return result
 
-            except Exception as error:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as error:
                 last_error = error
 
                 # Handle the error

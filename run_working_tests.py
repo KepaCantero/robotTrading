@@ -41,7 +41,7 @@ def run_working_tests():
 
         return result.returncode == 0
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         print(f"❌ Error ejecutando tests: {e}")
         return False
 

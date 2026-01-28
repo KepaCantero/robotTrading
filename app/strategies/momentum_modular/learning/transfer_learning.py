@@ -9,12 +9,25 @@ Incluye:
 
 import json
 import logging
-import pickle
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
+
+# SECURITY: Using joblib and msgpack instead of pickle for secure serialization
+# joblib is safer for sklearn models, msgpack for generic Python objects
+try:
+    import joblib
+    JOBLIB_AVAILABLE = True
+except ImportError:
+    JOBLIB_AVAILABLE = False
+
+try:
+    import msgpack
+    MSGPACK_AVAILABLE = True
+except ImportError:
+    MSGPACK_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +76,7 @@ class ModelRegistry:
             try:
                 with open(self.registry_file, 'r') as f:
                     return json.load(f)
-            except Exception as e:
+            except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
                 logger.warning(f"Error cargando registry: {e}")
                 return {}
         return {}
@@ -73,7 +86,7 @@ class ModelRegistry:
         try:
             with open(self.registry_file, 'w') as f:
                 json.dump(self.registry, f, indent=2, default=str)
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.error(f"Error guardando registry: {e}", exc_info=True)
             # No raise - registry sigue funcionando en memoria aunque no se guarde
 
@@ -88,7 +101,7 @@ class ModelRegistry:
         tags: Optional[List[str]] = None,
     ) -> bool:
         """
-        Registrar un modelo pre-entrenado.
+        Registrar un modelo pre-entrenado usando serialización segura.
 
         Args:
             model: Modelo entrenado
@@ -103,23 +116,44 @@ class ModelRegistry:
             True si se registró correctamente
         """
         try:
-            # Intentar guardar modelo (puede fallar si no es serializable)
-            model_path = self.models_dir / f"{model_id}.pkl"
+            # SECURITY: Use joblib for sklearn models, torch.save for PyTorch
+            # Avoid pickle for security reasons
+            model_path = None
             model_saved = False
+            model_format = None
+
             try:
-                # Asegurar que el directorio existe
                 self.models_dir.mkdir(parents=True, exist_ok=True)
-                with open(model_path, 'wb') as f:
-                    pickle.dump(model, f)
-                model_saved = True
-            except (pickle.PicklingError, TypeError) as e:
+
+                # Detect model type and use appropriate serialization
+                if PYTORCH_AVAILABLE and 'torch.nn' in str(type(model)):
+                    # PyTorch model - use torch.save (secure for PyTorch objects)
+                    model_path = self.models_dir / f"{model_id}.pt"
+                    torch.save(model, model_path)
+                    model_saved = True
+                    model_format = 'pt'
+                elif JOBLIB_AVAILABLE:
+                    # sklearn or other models - use joblib (secure)
+                    model_path = self.models_dir / f"{model_id}.joblib"
+                    joblib.dump(model, model_path)
+                    model_saved = True
+                    model_format = 'joblib'
+                elif MSGPACK_AVAILABLE:
+                    # Generic Python objects - use msgpack with custom encoding
+                    model_path = self.models_dir / f"{model_id}.msgpack"
+                    self._save_model_msgpack(model, model_path)
+                    model_saved = True
+                    model_format = 'msgpack'
+                else:
+                    logger.warning(
+                        f"No secure serialization available for model {model_id}. "
+                        "Saving metadata only."
+                    )
+
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.warning(
                     f"No se pudo serializar modelo {model_id}: {e}. Guardando solo metadata."
                 )
-                # No es crítico si no se puede serializar - algunos modelos pueden ser solo metadata
-                model_path = None
-            except Exception as e:
-                logger.warning(f"Error guardando modelo {model_id}: {e}. Guardando solo metadata.")
                 model_path = None
 
             # Registrar en registry
@@ -129,6 +163,7 @@ class ModelRegistry:
                 'model_type': model_type,
                 'algorithm': algorithm,
                 'model_path': str(model_path) if model_path else None,
+                'model_format': model_format,
                 'registered_at': datetime.now().isoformat(),
                 'metadata': metadata or {},
                 'tags': tags or [],
@@ -152,15 +187,48 @@ class ModelRegistry:
             # Guardar registry (puede fallar pero no es crítico)
             try:
                 self._save_registry()
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.warning(f"Error guardando registry (no crítico): {e}")
 
             logger.info(f"Modelo {model_id} registrado para régimen {regime}")
             return True
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error registrando modelo: {e}", exc_info=True)
             return False
+
+    def _save_model_msgpack(self, model: Any, path: Path) -> None:
+        """
+        Save model using msgpack for generic Python objects.
+
+        Args:
+            model: Model to save
+            path: Path to save to
+        """
+        import io
+
+        # Convert model to bytes using msgpack
+        # For numpy arrays, msgpack-numpy is recommended, but we'll use a simple approach
+        buffer = io.BytesIO()
+
+        # Try to convert to dict if possible
+        if hasattr(model, '__dict__'):
+            # Model has __dict__, convert to dict
+            model_dict = {
+                '_module': model.__class__.__module__,
+                '_class': model.__class__.__name__,
+                'data': model.__dict__,
+            }
+            packed = msgpack.packb(model_dict)
+        else:
+            # Fallback to string representation (not ideal but safe)
+            packed = msgpack.packb({'_repr': repr(model)})
+
+        buffer.write(packed)
+        buffer.seek(0)
+
+        with open(path, 'wb') as f:
+            f.write(buffer.read())
 
     def get_model(self, model_id: str) -> Optional[Dict[str, Any]]:
         """
@@ -230,7 +298,7 @@ class ModelRegistry:
 
     def load_model(self, model_id: str) -> Optional[Any]:
         """
-        Cargar modelo desde registry.
+        Cargar modelo desde registry usando serialización segura.
 
         Args:
             model_id: ID del modelo
@@ -257,12 +325,106 @@ class ModelRegistry:
             return None
 
         try:
-            with open(model_path, 'rb') as f:
-                model = pickle.load(f)  # nosec B301 - trusted model data
+            model_format = entry.get('model_format', '')
+            model_path_obj = Path(model_path)
+
+            # SECURITY: Use appropriate loader based on format
+            if model_format == 'pt' or model_path_obj.suffix == '.pt':
+                if not PYTORCH_AVAILABLE:
+                    raise ImportError("PyTorch no disponible para cargar .pt")
+                model = torch.load(model_path_obj, map_location='cpu')  # nosec B614 - torch handles this
+            elif model_format == 'joblib' or model_path_obj.suffix == '.joblib':
+                if not JOBLIB_AVAILABLE:
+                    raise ImportError("joblib no disponible para cargar .joblib")
+                model = joblib.load(model_path_obj)
+            elif model_format == 'msgpack' or model_path_obj.suffix == '.msgpack':
+                if not MSGPACK_AVAILABLE:
+                    raise ImportError("msgpack no disponible para cargar .msgpack")
+                model = self._load_model_msgpack(model_path_obj)
+            elif model_path_obj.suffix == '.pkl':
+                # SECURITY: Migrate old .pkl files to secure format
+                logger.warning(f"Found old .pkl file for {model_id}, migrating...")
+                model = self._migrate_pkl_model(model_path_obj, entry)
+            else:
+                logger.error(f"Unsupported model format: {model_format}")
+                return None
+
             logger.info(f"Modelo {model_id} cargado desde {model_path}")
             return model
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.error(f"Error cargando modelo {model_id}: {e}", exc_info=True)
+            return None
+
+    def _load_model_msgpack(self, path: Path) -> Any:
+        """
+        Load model using msgpack.
+
+        Args:
+            path: Path to load from
+
+        Returns:
+            Loaded model
+        """
+        with open(path, 'rb') as f:
+            data = msgpack.unpackb(f.read(), raw=False)
+
+        # Reconstruct object if it was saved with __dict__
+        if '_module' in data and '_class' in data and 'data' in data:
+            # Import the class
+            import importlib
+            module = importlib.import_module(data['_module'])
+            cls = getattr(module, data['_class'])
+            obj = cls.__new__(cls)
+            obj.__dict__.update(data['data'])
+            return obj
+        elif '_repr' in data:
+            # Fallback - return the representation as string
+            return data['_repr']
+        else:
+            return data
+
+    def _migrate_pkl_model(self, pkl_path: Path, entry: Dict[str, Any]) -> Any:
+        """
+        Migrate old .pkl model to secure format (one-time migration).
+
+        Args:
+            pkl_path: Path to old .pkl file
+            entry: Registry entry for the model
+
+        Returns:
+            Loaded model
+        """
+        try:
+            # SECURITY: One-time migration from pickle to secure format
+            # This is only for migrating existing trusted model files
+            import pickle  # noqa: S403 - Only for migration
+
+            with open(pkl_path, 'rb') as f:
+                model = pickle.load(f)  # noqa: S301 - Trusted migration only
+
+            # Re-save in secure format
+            model_id = entry['model_id']
+            if JOBLIB_AVAILABLE:
+                # Try joblib first
+                joblib_path = pkl_path.with_suffix('.joblib')
+                joblib.dump(model, joblib_path)
+
+                # Update registry
+                entry['model_path'] = str(joblib_path)
+                entry['model_format'] = 'joblib'
+                self._save_registry()
+
+                # Remove old .pkl
+                pkl_path.unlink()
+
+                logger.info(f"Migrated {model_id} from .pkl to .joblib")
+            else:
+                logger.warning(f"Cannot migrate {model_id}: joblib not available")
+
+            return model
+
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
+            logger.error(f"Error migrating model from .pkl: {e}")
             return None
 
 
@@ -422,7 +584,7 @@ class FineTuner:
 
             return fine_tuned_model, metrics
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error en fine-tuning PyTorch: {e}", exc_info=True)
             return model, {}
 
@@ -434,7 +596,7 @@ class FineTuner:
         try:
             cloned = copy.deepcopy(model)
             return cloned
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.warning(
                 f"No se pudo clonar modelo con deepcopy: {e}. Usando estado del modelo original."
             )
@@ -500,7 +662,7 @@ class FineTuner:
 
             return model, metrics
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Error en fine-tuning tree-based: {e}", exc_info=True)
             return model, {}
 
@@ -561,7 +723,7 @@ class KnowledgeDistiller:
                 logger.warning(f"Distillation no soportada entre {teacher_type} y {student_type}")
                 return student_model, {}
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error en distillation: {e}", exc_info=True)
             return student_model, {}
 
@@ -681,7 +843,7 @@ class KnowledgeDistiller:
 
             return student, metrics
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error en distillation PyTorch: {e}", exc_info=True)
             return student, {}
 
@@ -749,7 +911,7 @@ class KnowledgeDistiller:
 
             return student, metrics
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error en distillation tree-based: {e}", exc_info=True)
             return student, {}
 

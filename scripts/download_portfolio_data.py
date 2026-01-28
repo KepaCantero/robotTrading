@@ -148,7 +148,7 @@ def download_symbol_v8_api(
                 time.sleep(wait_time)
                 continue
             return False
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             print(f"❌ Error: {e}")
             if attempt < max_retries - 1:
                 time.sleep(delay)
@@ -196,7 +196,7 @@ def main():
             if not symbols:
                 print("❌ No symbols found in portfolio.yaml")
                 sys.exit(1)
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             print(f"❌ Error loading portfolio config: {e}")
             sys.exit(1)
     

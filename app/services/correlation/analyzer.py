@@ -194,7 +194,7 @@ class CorrelationAnalyzer:
 
             logger.debug("Correlation cache updated successfully")
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Failed to update correlation cache: {e}")
 
     async def get_correlation(self, symbol1: str, symbol2: str) -> float:
@@ -242,7 +242,7 @@ class CorrelationAnalyzer:
 
             return correlation
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.warning(f"Failed to calculate correlation: {e}, using fallback")
 
             # Use fallback if calculation failed
@@ -383,7 +383,7 @@ class CorrelationAnalyzer:
                 else:
                     logger.warning(f"No historical data for {symbol}")
 
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 logger.error(f"Error fetching historical data for {symbol}: {e}")
 
         logger.info(f"Fetched historical prices for {len(prices_dict)}/{len(symbols)} symbols")
@@ -521,7 +521,7 @@ class CorrelationAnalyzer:
                 logger.info("Correlation update loop cancelled")
                 break
 
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.error(f"Error in correlation update loop: {e}")
                 # Wait before retrying
                 await asyncio.sleep(60)

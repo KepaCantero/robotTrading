@@ -219,7 +219,7 @@ class BrokerFailoverManager:
                 logger.warning(f"Broker {broker_config.name} timed out")
                 await self._mark_broker_unhealthy(broker_config.name, "Timeout")
                 continue
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.warning(f"Broker {broker_config.name} failed: {e}")
                 await self._mark_broker_unhealthy(broker_config.name, str(e))
                 continue
@@ -251,7 +251,7 @@ class BrokerFailoverManager:
                 logger.debug(
                     f"Synced {len(positions)} positions from {broker_config.name}"
                 )
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.error(f"Failed to sync positions from {broker_config.name}: {e}")
                 positions_by_broker[broker_config.name] = {}
 
@@ -270,7 +270,7 @@ class BrokerFailoverManager:
                 account = await self._active_broker.broker.get_account_info()
                 if account:
                     return account
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.warning(
                     f"Failed to get account info from {self._active_broker.name}: {e}"
                 )
@@ -287,7 +287,7 @@ class BrokerFailoverManager:
                 if account:
                     logger.info(f"Got account info from backup broker {broker_config.name}")
                     return account
-            except Exception:
+            except (ConnectionError, TimeoutError, HTTPError, ValueError):
                 continue
 
         return None
@@ -348,7 +348,7 @@ class BrokerFailoverManager:
 
             except asyncio.CancelledError:
                 break
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.error(f"Error in health check loop: {e}")
                 await asyncio.sleep(self.health_check_interval)
 
@@ -363,7 +363,7 @@ class BrokerFailoverManager:
 
             return account is not None
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.debug(f"Health check failed for {broker.name}: {e}")
             return False
 
@@ -403,7 +403,7 @@ class BrokerFailoverManager:
                 if self.on_failover:
                     try:
                         self.on_failover(old_broker.name, broker.name)
-                    except Exception as e:
+                    except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
                         logger.error(f"Error in failover callback: {e}")
 
                 return
@@ -504,7 +504,7 @@ class BrokerFailoverManager:
         if self.on_failover and old_broker:
             try:
                 self.on_failover(old_broker.name, target_broker.name)
-            except Exception as e:
+            except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
                 logger.error(f"Error in failover callback: {e}")
 
         return True

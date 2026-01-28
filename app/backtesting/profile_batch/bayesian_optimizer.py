@@ -97,7 +97,7 @@ class BayesianOptimizer:
                 if multi_strategy and "combined" in metrics:
                     return metrics["combined"].get("sharpe_ratio", -1.0)
                 return metrics.get("sharpe_ratio", -1.0)
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 logger.warning(f"Trial failed: {e}")
                 return -1.0
 
@@ -141,7 +141,7 @@ class BayesianOptimizer:
 
                 logger.debug("Loaded parameter ranges from ProfileConfigLoader")
                 return rsi_buy_min, rsi_buy_max, vol_min, vol_max
-            except Exception as e:
+            except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"Failed to load parameter ranges: {e}")
 
         logger.info("Using default parameter ranges")
@@ -177,7 +177,7 @@ class BayesianOptimizer:
                 results = runner.run_baseline_backtest()
                 return results[0] if results else self._get_empty_metrics()
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Backtest with params failed: {e}")
             return self._get_empty_metrics()
 

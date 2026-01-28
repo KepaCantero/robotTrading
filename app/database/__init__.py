@@ -79,7 +79,7 @@ class DatabaseManager:
             # Add connection event listeners
             self._add_connection_listeners()
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             raise_database_error(
                 f"Failed to initialize sync database engine: {str(e)}",
                 "engine_initialization",
@@ -124,7 +124,7 @@ class DatabaseManager:
                 expire_on_commit=False,
             )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             raise_database_error(
                 f"Failed to initialize async database engine: {str(e)}",
                 "async_engine_initialization",
@@ -170,7 +170,7 @@ class DatabaseManager:
             Base.metadata.create_all(bind=self.sync_engine)
             logger.info("Database tables created successfully")
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             raise_database_error(f"Failed to create database tables: {str(e)}", "create_tables")
 
     def drop_tables(self) -> None:
@@ -182,7 +182,7 @@ class DatabaseManager:
             Base.metadata.drop_all(bind=self.sync_engine)
             logger.info("Database tables dropped successfully")
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             raise_database_error(f"Failed to drop database tables: {str(e)}", "drop_tables")
 
     def get_sync_session(self) -> Session:
@@ -211,7 +211,7 @@ class DatabaseManager:
                 # async context
                 logger.info("Asynchronous database engine marked for disposal")
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Error closing database connections: {e}")
 
 
@@ -253,7 +253,7 @@ def initialize_database() -> None:
 
         logger.info("Database initialization completed successfully")
 
-    except Exception as e:
+    except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
         logger.error(f"Database initialization failed: {e}")
         raise
 
@@ -268,7 +268,7 @@ def initialize_database_async() -> None:
 
         logger.info("Async database initialization completed successfully")
 
-    except Exception as e:
+    except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
         logger.error(f"Async database initialization failed: {e}")
         raise
 
@@ -284,7 +284,7 @@ def check_database_health() -> bool:
             return True
         finally:
             session.close()
-    except Exception as e:
+    except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
         logger.error(f"Database health check failed: {e}")
         return False
 
@@ -299,7 +299,7 @@ async def check_database_health_async() -> bool:
             return True
         finally:
             await session.close()
-    except Exception as e:
+    except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
         logger.error(f"Async database health check failed: {e}")
         return False
 

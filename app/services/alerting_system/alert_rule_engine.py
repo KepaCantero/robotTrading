@@ -117,7 +117,7 @@ class AlertRuleEngine:
                 self._record_evaluation(rule.rule_id, context, triggered, None)
                 return False, None
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error evaluating rule {rule.rule_id}: {e}")
             self._record_evaluation(rule.rule_id, context, False, None, str(e))
             return False, None
@@ -139,7 +139,7 @@ class AlertRuleEngine:
                 triggered, event = self.evaluate_rule(rule, context)
                 if triggered and event:
                     events.append(event)
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.error(f"Error evaluating rule {rule_id} in batch: {e}")
 
         return events

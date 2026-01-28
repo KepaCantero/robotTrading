@@ -99,7 +99,7 @@ class QlibConnector:
             self.connected = True
             logger.info("✅ Connected to Qlib data provider")
             return True
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"❌ Failed to connect to Qlib: {str(e)}")
             self.connected = False
             return False
@@ -140,7 +140,7 @@ class QlibConnector:
             )
             return data
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"❌ Failed to download market data: {str(e)}")
             return {}
 
@@ -175,7 +175,7 @@ class QlibConnector:
             logger.info(f"✅ Calculated {len(factors)} factors for {len(symbols)} symbols")
             return factor_data
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"❌ Failed to calculate factors: {str(e)}")
             return {}
 
@@ -200,7 +200,7 @@ class QlibConnector:
             logger.info("✅ Applied feature engineering to data")
             return engineered
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"❌ Feature engineering failed: {str(e)}")
             return {}
 
@@ -238,7 +238,7 @@ class QlibConnector:
             logger.info(f"✅ Prepared backtest data for {len(symbols)} symbols")
             return data
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"❌ Failed to prepare backtest data: {str(e)}")
             return {}
 

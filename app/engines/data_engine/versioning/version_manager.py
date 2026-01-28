@@ -45,7 +45,7 @@ class DataVersionManager:
             try:
                 with open(history_file, 'r') as f:
                     self.version_history = json.load(f)
-            except Exception as e:
+            except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
                 logger.warning(f"Error cargando version history: {e}")
 
     def _save_version_history(self) -> None:
@@ -54,7 +54,7 @@ class DataVersionManager:
         try:
             with open(history_file, 'w') as f:
                 json.dump(self.version_history, f, indent=2, default=str)
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.error(f"Error guardando version history: {e}")
 
     def create_version(
@@ -96,7 +96,7 @@ class DataVersionManager:
                 # Otros tipos - guardar como string
                 with open(data_file, 'w') as f:
                     f.write(str(data))
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.error(f"Error guardando datos de versión: {e}")
             raise
 
@@ -169,7 +169,7 @@ class DataVersionManager:
                 'dataset_id': dataset_id,
             }
 
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.error(f"Error cargando versión {version_id}: {e}")
             return None
 
@@ -262,6 +262,6 @@ class DataVersionManager:
             logger.info(f"Versión eliminada: {version_id}")
             return True
 
-        except Exception as e:
+        except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.error(f"Error eliminando versión {version_id}: {e}")
             return False

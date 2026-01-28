@@ -122,7 +122,7 @@ class RegimeAnalyzer:
 
             return self.regime_labels
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Error detecting regimes: {e}", exc_info=True)
             return pd.Series([0] * len(returns), index=returns.index)
 
@@ -274,7 +274,7 @@ class RegimeAnalyzer:
             logger.info("Regime transition analysis completed")
             return analysis
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error in regime transition analysis: {e}", exc_info=True)
             return {}
 
@@ -362,7 +362,7 @@ class RegimeAnalyzer:
             logger.info(f"Out-of-sample robustness testing completed ({test_periods} periods)")
             return robustness_results
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error in robustness testing: {e}", exc_info=True)
             return {}
 

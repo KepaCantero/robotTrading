@@ -106,7 +106,7 @@ class RiskScalingOrchestrator:
                     f"Volatility spike detected for {symbol}: ATR {current_atr:.4f}",
                     {"current_atr": str(current_atr), "avg_atr": str(avg_atr)},
                 )
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculating volatility scale: {e}")
             volatility_scale = Decimal("1.0")
 
@@ -125,7 +125,7 @@ class RiskScalingOrchestrator:
                     f"Sharpe ratio below threshold: {sharpe_ratio:.2f}",
                     {"sharpe_ratio": str(sharpe_ratio)},
                 )
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculating Sharpe scale: {e}")
             sharpe_scale = Decimal("0.8")
             sharpe_ratio = Decimal("0")
@@ -154,7 +154,7 @@ class RiskScalingOrchestrator:
             else:
                 consecutive_losses = 0
                 loss_scale = Decimal("1.0")
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculating loss scale: {e}")
             loss_scale = Decimal("1.0")
             consecutive_losses = 0
@@ -188,7 +188,7 @@ class RiskScalingOrchestrator:
             else:
                 drawdown_scale = Decimal("1.0")
                 current_dd = Decimal("0")
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculating drawdown scale: {e}")
             drawdown_scale = Decimal("1.0")
             current_dd = Decimal("0")

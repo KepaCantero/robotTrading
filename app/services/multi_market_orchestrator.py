@@ -306,7 +306,7 @@ class MultiMarketOrchestrator:
             logger.info(f"Marketaux sentiment for {symbol}: {sentiment_score:.3f}")
             return result
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error getting Marketaux sentiment for {symbol}: {e}")
             return {"sentiment_score": 0.0, "total_articles": 0}
 
@@ -432,7 +432,7 @@ class MultiMarketOrchestrator:
 
                 signals.append(signal)
 
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 logger.error(f"Error generating signal for {symbol}: {e}")
                 continue
 
@@ -466,7 +466,7 @@ class MultiMarketOrchestrator:
                 )
                 results["executed"] += 1
 
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 logger.error(f"Failed to execute trade for {signal.symbol}: {e}")
                 results["failed"] += 1
 

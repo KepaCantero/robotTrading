@@ -378,7 +378,7 @@ class TokenBucketRateLimiter:
                 if await self.acquire(tokens, priority=priority, timeout=30.0):
                     return True
 
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 if attempt < max_retries - 1:
                     # Exponential backoff with jitter
                     backoff = initial_backoff * (2 ** attempt)
@@ -398,7 +398,7 @@ class TokenBucketRateLimiter:
                     if self.on_limit_exceeded:
                         try:
                             self.on_limit_exceeded()
-                        except Exception as callback_error:
+                        except (ConnectionError, TimeoutError, HTTPError, ValueError) as callback_error:
                             logger.error(f"Error in limit exceeded callback: {callback_error}")
 
                     await asyncio.sleep(wait_time)

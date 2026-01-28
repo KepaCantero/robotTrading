@@ -1,0 +1,29 @@
+[
+  {
+    "test_type": "baseline",
+    "test_name": "Baseline - All Modules Active",
+    "modules_active": [
+      "ema_filter",
+      "rsi_filter",
+      "stoch_rsi_filter",
+      "momentum_filter",
+      "volume_filter",
+      "atr_filter"
+    ],
+    "learning_engine": null,
+    "thresholds": {
+      "buy_threshold": 0.7,
+      "sell_threshold": 0.3,
+      "stop_loss": -0.05,
+      "take_profit": 0.1
+    },
+    "total_pnl": 15951.835935493524,
+    "return_pct": 15.951835935493525,
+    "win_rate": 48.126801152737755,
+    "sharpe_ratio": 0.042474040749728416,
+    "max_drawdown": -11.31860567994857,
+    "total_trades": 3470,
+    "avg_trade_pnl": 4.597070874781996,
+    "final_capital": 115951.83593549352
+  }
+]

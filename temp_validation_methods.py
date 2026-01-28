@@ -68,7 +68,7 @@
             profile_optimization_path = Path("config/backtesting/profile_optimization.yaml")
             if not profile_optimization_path.exists():
                 issues[str(profile_optimization_path)] = f"Profile optimization config not found: {profile_optimization_path}"
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             issues["ProfileConfigLoader.config"] = f"Cannot verify ProfileConfigLoader config: {e}"
 
         # Check database parent directory
@@ -129,7 +129,7 @@
                     issues[f"{method_name}({param})"] = f"Expected dict, got {type(config)}"
                 else:
                     logger.debug(f"[PROFILE CONFIG LOADER] {method_name}({param}): OK")
-            except Exception as e:
+            except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 issues[f"{method_name}({param})"] = str(e)
 
         if issues:
@@ -178,7 +178,7 @@
                     issues["map_profile_to_strategies"] = f"Missing keys: {missing_keys}"
                 else:
                     logger.debug("[PROFILE STRATEGY MAPPER] map_profile_to_strategies: OK")
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 issues["map_profile_to_strategies"] = str(e)
 
             # Test create_strategy_mapping
@@ -192,10 +192,10 @@
                     issues["create_strategy_mapping"] = f"Missing attributes: {missing_attrs}"
                 else:
                     logger.debug("[PROFILE STRATEGY MAPPER] create_strategy_mapping: OK")
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 issues["create_strategy_mapping"] = str(e)
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             issues["test_profile"] = f"Cannot create test profile: {e}"
 
         if issues:
@@ -258,7 +258,7 @@
                 mc_config = self.profile_config_loader.get_monte_carlo_config()
                 if not isinstance(mc_config, dict):
                     issues["profile_config_loader.monte_carlo"] = f"Expected dict, got {type(mc_config)}"
-            except Exception as e:
+            except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 issues["profile_config_loader.access"] = str(e)
 
         if issues:
@@ -316,12 +316,12 @@
                         issues[f"tier_mapper.{from_tier}_to_{target_format}"] = (
                             f"Expected '{expected}', got '{result}'"
                         )
-                except Exception as e:
+                except (ValueError, TypeError, KeyError, AttributeError) as e:
                     issues[f"tier_mapper.{from_tier}_to_{target_format}"] = str(e)
 
         except ImportError:
             issues["tier_mapper.import"] = "Cannot import tier_mapper"
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             issues["tier_mapper.test"] = str(e)
 
         # Test _get_capital_tier_key method
@@ -348,10 +348,10 @@
                         issues[f"_get_capital_tier_key.{capital}"] = (
                             f"Expected '{expected_tier}', got '{result}'"
                         )
-                except Exception as e:
+                except (ValueError, TypeError, KeyError, AttributeError) as e:
                     issues[f"_get_capital_tier_key.{capital}"] = str(e)
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             issues["_get_capital_tier_key.test"] = str(e)
 
         if issues:

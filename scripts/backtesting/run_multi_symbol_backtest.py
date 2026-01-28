@@ -242,7 +242,8 @@ def run_backtest_for_symbol(symbol: str) -> Dict[str, Any]:
             logger.info(f"💾 Saved {symbol} results to {csv_path}")
 
             # Extraer top resultados
-            for idx, row in results_df.head(5).iterrows():
+            # VECTORIZED: Usar to_dict('records') en lugar de iterrows
+            for row in results_df.head(5).to_dict('records'):
                 test_result = {
                     'symbol': symbol,
                     'sector': sector,
@@ -261,7 +262,7 @@ def run_backtest_for_symbol(symbol: str) -> Dict[str, Any]:
 
         return result
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         logger.error(f"❌ Error running backtest for {symbol}: {e}", exc_info=True)
         return {
             'symbol': symbol,
@@ -347,7 +348,8 @@ def create_aggregated_report(all_results: List[Dict[str, Any]]) -> None:
         print("\n🏆 TOP 15 BY SHARPE RATIO:")
         print("-"*80)
         top_15 = df.nlargest(15, 'sharpe_ratio')
-        for idx, row in top_15.iterrows():
+        # VECTORIZED: Usar to_dict('records') en lugar de iterrows
+        for row in top_15.to_dict('records'):
             print(f"  {row['symbol']:6} ({row['sector']:20}): Sharpe {row['sharpe_ratio']:6.2f} | Return {row['return_pct']:6.1f}% | PnL ${row['total_pnl']:9,.2f}")
 
         # Comparación de estrategias

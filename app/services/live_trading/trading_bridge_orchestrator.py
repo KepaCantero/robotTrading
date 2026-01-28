@@ -260,7 +260,7 @@ class TradingBridgeOrchestrator:
                     logger.error("❌ Trade execution failed")
                     return None
 
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 self.status = BridgeStatus.ERROR
                 logger.error(f"❌ Error processing alert: {str(e)}")
                 if hasattr(alert_event, 'event_id'):
@@ -361,7 +361,7 @@ class TradingBridgeOrchestrator:
 
             return execution
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"❌ Error executing trade: {str(e)}")
             return None
 
@@ -396,7 +396,7 @@ class TradingBridgeOrchestrator:
                 checks += 1
                 await asyncio.sleep(check_interval)
 
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.error(f"❌ Error monitoring order: {str(e)}")
                 break
 

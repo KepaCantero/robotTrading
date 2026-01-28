@@ -38,10 +38,10 @@ import logging
 import statistics
 from collections import deque
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import aiosqlite
 
@@ -71,7 +71,7 @@ class PriceValidation:
 
     def __post_init__(self):
         if self.timestamp is None:
-            self.timestamp = datetime.now(UTC)
+            self.timestamp = datetime.now(timezone.utc)
 
 
 class DataSanityLayer:
@@ -141,7 +141,7 @@ class DataSanityLayer:
         Returns:
             PriceValidation with result and reasoning
         """
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # Check 1: Logical sanity (zero, negative, etc.)
         if not self._logical_sanity_check(price):
@@ -289,7 +289,7 @@ class DataSanityLayer:
                 )
 
                 # Get recent prices
-                cutoff = (datetime.now(UTC) - timedelta(minutes=minutes)).isoformat()
+                cutoff = (datetime.now(timezone.utc) - timedelta(minutes=minutes)).isoformat()
                 cursor = await db.execute(
                     """
                     SELECT price
@@ -313,7 +313,7 @@ class DataSanityLayer:
 
                 return prices
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error getting recent prices from cache: {e}")
             return []
 
@@ -358,7 +358,7 @@ class DataSanityLayer:
                 )
                 return False
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error confirming with secondary source: {e}")
             return False
 
@@ -387,7 +387,7 @@ class DataSanityLayer:
                 await db.commit()
 
                 # Prune old data
-                cutoff = (datetime.now(UTC) - timedelta(days=1)).isoformat()
+                cutoff = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
                 await db.execute(
                     """
                     DELETE FROM price_cache WHERE timestamp < ?
@@ -396,7 +396,7 @@ class DataSanityLayer:
                 )
                 await db.commit()
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Error writing to price cache: {e}")
 
 
@@ -482,7 +482,7 @@ class SafeStopLossExecutor:
             logger.info(f"Stop-loss executed successfully: {symbol}")
             return True
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Stop-loss execution failed: {e}")
             return False
 
@@ -491,6 +491,6 @@ class SafeStopLossExecutor:
         try:
             price = await self.broker.get_current_price(symbol)
             return Decimal(str(price))
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error getting current price for {symbol}: {e}")
             raise

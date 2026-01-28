@@ -121,7 +121,7 @@ class ConfigurationRepository:
             else:
                 self.logger.warning(f"⚠️  Configuration {config_id} not found")
                 return None
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             self.logger.error(f"❌ Error loading configuration: {e}")
             raise ValueError(f"Failed to load configuration: {e}") from e
 
@@ -133,7 +133,7 @@ class ConfigurationRepository:
             ]
             self.logger.info(f"📂 Loaded {len(results)} configurations of type {config_type}")
             return results
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             self.logger.error(f"❌ Error loading configurations: {e}")
             raise ValueError(f"Failed to load configurations: {e}") from e
 
@@ -151,7 +151,7 @@ class ConfigurationRepository:
             else:
                 self.logger.warning(f"⚠️  Configuration {config_id} not found for deletion")
                 return False
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             self.logger.error(f"❌ Error deleting configuration: {e}")
             raise ValueError(f"Failed to delete configuration: {e}") from e
 
@@ -186,7 +186,7 @@ class ConfigurationRepository:
             self.logger.info(f"💾 Saved {config_type} with ID {config_id}")
             return config_id
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             self.logger.error(f"❌ Error saving configuration: {e}")
             raise ValueError(f"Failed to save configuration: {e}") from e
 

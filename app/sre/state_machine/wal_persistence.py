@@ -23,7 +23,7 @@ import asyncio
 import json
 import logging
 from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
 from pathlib import Path
@@ -192,7 +192,7 @@ class OrderStateMachine:
                 logger.info(f"WAL: Order {log.order_id} state -> {log.state.value}")
                 return True
 
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.critical(f"WAL write failed for order {log.order_id}: {e}")
                 raise
 
@@ -343,7 +343,7 @@ class WALOrderManager:
         log = OrderLog(
             order_id=order_id,
             state=OrderState.SUBMITTING,
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             symbol=symbol,
             side=side,
             quantity=quantity,
@@ -365,7 +365,7 @@ class WALOrderManager:
             # STEP 3: Save ACK state
             log.state = OrderState.ACK_RECEIVED
             log.broker_order_id = result.get('order_id')
-            log.timestamp = datetime.now(UTC)
+            log.timestamp = datetime.now(timezone.utc)
             await self.state_machine.write_state(log)
 
             # STEP 4: Save final state
@@ -377,7 +377,7 @@ class WALOrderManager:
                 log.state = OrderState.REJECTED
                 log.error = result.get('error')
 
-            log.timestamp = datetime.now(UTC)
+            log.timestamp = datetime.now(timezone.utc)
             await self.state_machine.write_state(log)
 
             logger.info(f"Order {order_id} completed with state {log.state.value}")
@@ -388,11 +388,11 @@ class WALOrderManager:
                 'result': result,
             }
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
             # CRITICAL: Log failure state
             log.state = OrderState.FAILED
             log.error = str(e)
-            log.timestamp = datetime.now(UTC)
+            log.timestamp = datetime.now(timezone.utc)
             await self.state_machine.write_state(log)
 
             logger.error(f"Order {order_id} failed: {e}")
@@ -434,7 +434,7 @@ class WALOrderManager:
                         f"ORPHANED POSITION DETECTED: {log.symbol} " f"{log.side} {log.quantity}"
                     )
 
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 logger.error(f"Failed to check order {log.order_id}: {e}")
 
         return orphaned

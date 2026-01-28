@@ -84,7 +84,7 @@ def _ensure_pytorch_imported():
         PYTORCH_AVAILABLE = False
         logger.warning("PyTorch no disponible. TransformerEngine requiere PyTorch.")
         return False
-    except Exception as e:
+    except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
         PYTORCH_AVAILABLE = False
         logger.warning(f"Error inicializando PyTorch: {e}")
         return False
@@ -367,7 +367,7 @@ class TransformerEngine(BaseLearningEngine):
                         )
                         # Mover a device sin threading
                         self.model = self.model.to(self.device, non_blocking=False)
-                except Exception as e:
+                except (ValueError, TypeError, KeyError, AttributeError) as e:
                     error_msg = str(e).lower()
                     if 'mutex' in error_msg or 'lock' in error_msg:
                         logger.error(
@@ -554,7 +554,7 @@ class TransformerEngine(BaseLearningEngine):
 
             return metrics
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error entrenando TransformerEngine: {e}", exc_info=True)
             return {'error': str(e), 'loss': float('inf')}
 
@@ -608,7 +608,7 @@ class TransformerEngine(BaseLearningEngine):
                 'ready': True,
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error en predicción Transformer: {e}", exc_info=True)
             return {'prediction': 0.0, 'confidence': 0.0, 'error': str(e)}
 
@@ -712,6 +712,6 @@ class TransformerEngine(BaseLearningEngine):
 
             return {'loss': avg_loss, 'mae': float(mae), 'rmse': float(rmse)}
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error evaluando TransformerEngine: {e}", exc_info=True)
             return {'error': str(e)}

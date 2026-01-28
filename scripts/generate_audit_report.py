@@ -31,7 +31,7 @@ def get_git_commit_hash() -> str:
             check=True,
         )
         return result.stdout.strip()
-    except Exception:
+    except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError):
         return "unknown"
 
 
@@ -45,7 +45,7 @@ def get_git_branch() -> str:
             check=True,
         )
         return result.stdout.strip()
-    except Exception:
+    except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError):
         return "unknown"
 
 
@@ -57,7 +57,7 @@ def hash_file(file_path: Path) -> str:
             for byte_block in iter(lambda: f.read(4096), b""):
                 sha256_hash.update(byte_block)
         return sha256_hash.hexdigest()
-    except Exception as e:
+    except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
         return f"ERROR: {e}"
 
 
@@ -123,7 +123,7 @@ def generate_audit_report(
     try:
         with open(project_root / "requirements.txt", "r") as f:
             requirements = f.read()
-    except Exception:
+    except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError):
         requirements = "NOT_FOUND"
     
     audit_report = {

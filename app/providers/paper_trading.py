@@ -276,5 +276,5 @@ class PaperTradingPortfolioProvider:
             self.positions = {pos.symbol: pos for pos in portfolio.positions}
 
             return True
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
             return False

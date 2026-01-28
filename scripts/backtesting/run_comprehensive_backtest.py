@@ -68,7 +68,7 @@ try:
     from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestRunner
     logger.info("✅ ComprehensiveBacktestRunner importado correctamente")
     print("✅ Módulos importados correctamente", flush=True)
-except Exception as e:
+except (ValueError, TypeError, KeyError, AttributeError) as e:
     logger.error(f"❌ Error importando ComprehensiveBacktestRunner: {e}", exc_info=True)
     print(f"❌ Error en import: {e}", flush=True)
     raise
@@ -157,7 +157,8 @@ Ejemplos:
             print(f"\nTop 5 por Sharpe Ratio:")
             print("-" * 80)
             top_5 = results_df.head(5)
-            for idx, row in top_5.iterrows():
+            # VECTORIZED: Usar to_dict('records') en lugar de iterrows
+            for row in top_5.to_dict('records'):
                 print(f"\n{row.get('test_name', 'Unknown')}:")
                 print(f"  Sharpe Ratio: {row.get('sharpe_ratio', 0):.2f}")
                 print(f"  Total PnL: ${row.get('total_pnl', 0):,.2f}")
@@ -170,7 +171,7 @@ Ejemplos:
         print("\n" + "=" * 80)
         logger.info("✅ Pipeline completado exitosamente!")
         
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"❌ Error ejecutando backtests: {e}", exc_info=True)
         raise
 

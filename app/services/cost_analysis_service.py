@@ -5,6 +5,7 @@ This module provides comprehensive cost analysis functionality including
 transaction costs, slippage analysis, infrastructure costs, and profitability validation.
 """
 
+from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
@@ -159,7 +160,7 @@ class CostAnalysisService:
                 timestamp=trade.entry_time,
             )
 
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
             # Return zero costs if calculation fails
             return CostBreakdown(
                 trade_id=trade.trade_id,
@@ -254,7 +255,7 @@ class CostAnalysisService:
                 recommendations=recommendations,
             )
 
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
             return self._create_empty_analysis_result(strategy_name)
 
     def validate_profitability(self, analysis_result: CostAnalysisResult) -> bool:
@@ -304,7 +305,7 @@ class CostAnalysisService:
 
             return slippage_amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
-        except Exception:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError):
             # Fallback to base slippage rate
             base_slippage = self.slippage_rates.get(asset_class, self.slippage_rates["equity"])
             trade_value = trade.quantity * trade.entry_price
@@ -333,7 +334,7 @@ class CostAnalysisService:
             trade_value = trade.quantity * trade.entry_price
             return (trade_value * impact_rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
             return Decimal("0")
 
     def _calculate_borrowing_cost(self, trade: Trade) -> Decimal:
@@ -357,7 +358,7 @@ class CostAnalysisService:
 
             return Decimal("0")
 
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError):
             return Decimal("0")
 
     def _generate_recommendations(

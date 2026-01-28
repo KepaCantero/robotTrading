@@ -29,7 +29,7 @@ from typing import Dict, List, Optional
 from uuid import UUID, uuid4
 
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import JSONBB, UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.hybrid import hybrid_property
 

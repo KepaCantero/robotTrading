@@ -132,7 +132,7 @@ try:
                     print(f"✅ Quote {i}: Generated {sig.signal_type} signal at {sig.timestamp}, "
                           f"confidence={sig.confidence:.2f}%")
                     
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.debug(f"Quote {i}: Error - {e}")
     
     # Resumen
@@ -159,7 +159,7 @@ try:
     
     print("✅ Diagnosis completed!")
 
-except Exception as e:
+except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
     print(f"❌ Error: {e}")
     logger.exception("Diagnosis failed")
     exit(1)

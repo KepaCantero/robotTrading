@@ -32,7 +32,7 @@ try:
     import xgboost as xgb
 
     XGBOOST_AVAILABLE = True
-except Exception as e:
+except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
     XGBOOST_AVAILABLE = False
     logger.warning(f"XGBoost no disponible ({type(e).__name__}). Usando sklearn como alternativa.")
 
@@ -40,7 +40,7 @@ try:
     import lightgbm as lgb
 
     LIGHTGBM_AVAILABLE = True
-except Exception as e:
+except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
     LIGHTGBM_AVAILABLE = False
     logger.warning(f"LightGBM no disponible ({type(e).__name__}). No será usado.")
 
@@ -48,7 +48,7 @@ try:
     import catboost as cb
 
     CATBOOST_AVAILABLE = True
-except Exception as e:
+except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
     CATBOOST_AVAILABLE = False
     logger.warning(f"CatBoost no disponible ({type(e).__name__}). No será usado.")
 
@@ -540,7 +540,7 @@ class SupervisedLearningEngine(BaseLearningEngine):
                             importance[feature_names[i]] = float(imp)
                         else:
                             importance[f'feature_{i}'] = float(imp)
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.debug(f"No se pudo obtener feature importance: {e}")
 
         return {

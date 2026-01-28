@@ -245,7 +245,7 @@ class Modelo721Generator:
 
                 return report
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             self.logger.error(f"Error generating Modelo 721 report: {e}", exc_info=True)
             raise
 
@@ -487,7 +487,7 @@ class Modelo721Generator:
             self.logger.info(f"Modelo 721 CSV exported to {output_file}")
             return str(output_file)
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             self.logger.error(f"Error exporting CSV: {e}", exc_info=True)
             raise
 
@@ -689,7 +689,7 @@ class Modelo721Generator:
                 self.logger.info(f"Modelo 721 report saved to database: {tax_report.id}")
                 return tax_report.id
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             self.logger.error(f"Error saving report to database: {e}", exc_info=True)
             raise RuntimeError(f"Failed to save report: {e}")
 
@@ -715,7 +715,7 @@ class Modelo721Generator:
                 result = await session.execute(stmt)
                 return list(result.scalars().all())
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             self.logger.error(f"Error getting previous reports: {e}")
             return []
 

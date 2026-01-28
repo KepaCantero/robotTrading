@@ -116,7 +116,7 @@ class PortfolioEngine(BasePortfolioEngine):
             self.logger.info("PortfolioEngine inicializado")
             self._initialized = True
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             self.logger.error(f"Error inicializando PortfolioEngine: {e}", exc_info=True)
             self._initialized = False
 
@@ -152,7 +152,7 @@ class PortfolioEngine(BasePortfolioEngine):
             else:
                 self.logger.warning(f"Tipo de datos no soportado: {type(portfolio_data)}")
                 return None
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             self.logger.error(f"Error procesando portfolio: {e}", exc_info=True)
             return None
 
@@ -175,7 +175,7 @@ class PortfolioEngine(BasePortfolioEngine):
                 self.current_portfolio = portfolio
                 self.successful_operations += 1
             return portfolio
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             self.logger.error(f"Error obteniendo portfolio: {e}", exc_info=True)
             self.failed_operations += 1
             return None
@@ -280,7 +280,7 @@ class PortfolioEngine(BasePortfolioEngine):
                     'successful_operations': self.portfolio_service.successful_operations,
                     'failed_operations': self.portfolio_service.failed_operations,
                 }
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
                 pass
 
         return status

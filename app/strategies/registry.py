@@ -49,7 +49,7 @@ class StrategyRegistry:
             logger.info(f"Loaded strategy: {name}")
             return strategy
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Failed to load strategy '{name}': {str(e)}")
             raise ValueError(f"Failed to load strategy '{name}': {str(e)}")
 
@@ -219,7 +219,7 @@ class StrategyRegistry:
             logger.info(f"Reloaded strategy: {name}")
             return strategy
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Failed to reload strategy '{name}': {str(e)}")
             raise ValueError(f"Failed to reload strategy '{name}': {str(e)}")
 

@@ -158,7 +158,7 @@ class HyperparameterOptimizer:
                         f"Win Rate: {result.get('win_rate', 0):.1f}%"
                     )
 
-            except Exception as e:
+            except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.error(f"❌ Error en iteración {i+1}: {e}", exc_info=True)
                 continue
 
@@ -331,17 +331,19 @@ class HyperparameterOptimizer:
                 return None
 
             # Convertir a Quotes
+            # VECTORIZED: Usar operaciones vectorizadas en lugar de iterrows
             quotes = []
-            for idx, row in df.iterrows():
+            for i in range(len(df)):
+                idx = df.index[i]
                 quote = Quote(
                     symbol=self.symbol,
                     timestamp=idx if isinstance(idx, datetime) else pd.to_datetime(idx),
-                    bid=Decimal(str(row['close'])),
-                    ask=Decimal(str(row['close'])),
-                    volume=int(row.get('volume', 0)),
-                    close=Decimal(str(row['close'])),
-                    high=Decimal(str(row.get('high', row['close']))),
-                    low=Decimal(str(row.get('low', row['close']))),
+                    bid=Decimal(str(df['close'].iloc[i])),
+                    ask=Decimal(str(df['close'].iloc[i])),
+                    volume=int(df.get('volume', pd.Series([0] * len(df))).iloc[i]),
+                    close=Decimal(str(df['close'].iloc[i])),
+                    high=Decimal(str(df.get('high', df['close']).iloc[i])),
+                    low=Decimal(str(df.get('low', df['close']).iloc[i])),
                 )
                 quotes.append(quote)
 
@@ -384,7 +386,7 @@ class HyperparameterOptimizer:
                 ),
             }
 
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.error(f"Error ejecutando backtest: {e}", exc_info=True)
             return None
 

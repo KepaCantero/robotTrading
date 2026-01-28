@@ -167,7 +167,7 @@ class WebSocketStreamingManager:
         except WebSocketDisconnect:
             logger.info(f"Cliente {client_id} desconectado")
             await self.disconnect(client_id)
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"Error en conexión {client_id}: {e}")
             await self.disconnect(client_id)
 
@@ -201,7 +201,7 @@ class WebSocketStreamingManager:
 
         except json.JSONDecodeError:
             logger.warning(f"Mensaje JSON inválido de {client_id}")
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Error procesando mensaje de {client_id}: {e}")
 
     async def subscribe(self, client_id: str, symbols: List[str]) -> bool:
@@ -295,7 +295,7 @@ class WebSocketStreamingManager:
         # Cerrar WebSocket
         try:
             await connection['websocket'].close()
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.warning(f"Error cerrando WebSocket de {client_id}: {e}")
 
         del self.active_connections[client_id]
@@ -391,7 +391,7 @@ class WebSocketStreamingManager:
             websocket = self.active_connections[client_id]['websocket']
             await websocket.send_json(message)
             return True
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.warning(f"Error enviando mensaje a {client_id}: {e}")
             return False
 
@@ -409,7 +409,7 @@ class WebSocketStreamingManager:
 
             except asyncio.CancelledError:
                 break
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.error(f"Error en heartbeat loop: {e}")
 
     def get_status(self) -> Dict[str, Any]:

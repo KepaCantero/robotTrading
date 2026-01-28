@@ -27,9 +27,20 @@ def alpaca_adapter():
     # Mock the client to avoid real API calls
     # Use MagicMock for sync methods, AsyncMock for async methods
     mock_client = MagicMock()
+
+    # Default mock account data
+    mock_account_data = {
+        "account_number": "PA123456",
+        "cash": 100000.00,
+        "portfolio_value": 150000.00,
+        "buying_power": 200000.00,
+        "equity": 150000.00,
+        "multiplier": 1.0,
+    }
+
     # Set up async methods as AsyncMock
     mock_client.authenticate = AsyncMock(return_value=True)
-    mock_client.get_account = AsyncMock(return_value={})
+    mock_client.get_account = AsyncMock(return_value=mock_account_data)
     mock_client.submit_order = AsyncMock(return_value=MagicMock(id="test_order"))
     mock_client.cancel_order = AsyncMock(return_value=True)
     mock_client.get_order = AsyncMock(return_value={})

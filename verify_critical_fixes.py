@@ -44,7 +44,7 @@ def test_secret_key_validation():
         s = Settings()
         print("  ✓ PASS: Valid 32-char key accepted")
         tests_passed += 1
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         print(f"  ✗ FAIL: {e}")
         tests_failed += 1
 
@@ -71,7 +71,7 @@ def test_secret_key_validation():
         s = Settings()
         print("  ✓ PASS: Weak key accepted with explicit override")
         tests_passed += 1
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         print(f"  ✗ FAIL: {e}")
         tests_failed += 1
 

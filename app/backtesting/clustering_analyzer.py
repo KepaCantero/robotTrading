@@ -88,7 +88,7 @@ class AdvancedClusteringAnalyzer:
                 'cluster_sizes': self._get_cluster_sizes(labels),
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error in hierarchical clustering: {e}")
             return None
 
@@ -148,7 +148,7 @@ class AdvancedClusteringAnalyzer:
                 'cluster_sizes': self._get_cluster_sizes(labels),
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error in DBSCAN clustering: {e}")
             return None
 
@@ -206,7 +206,7 @@ class AdvancedClusteringAnalyzer:
                 'mean': pca.mean_.tolist(),
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error in PCA analysis: {e}")
             return None
 
@@ -265,7 +265,7 @@ class AdvancedClusteringAnalyzer:
                 'transformed_data': S.tolist(),
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error in ICA analysis: {e}")
             return None
 
@@ -348,7 +348,7 @@ class AdvancedClusteringAnalyzer:
             }
             return result
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error in t-SNE analysis: {e}")
             return None
 
@@ -402,7 +402,7 @@ class AdvancedClusteringAnalyzer:
                 'interpretation': self._interpret_silhouette(overall_score),
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error in silhouette analysis: {e}")
             return None
 
@@ -457,7 +457,7 @@ class AdvancedClusteringAnalyzer:
                         if score > best_score:
                             best_score = score
                             best_k = k
-                    except Exception as e:
+                    except (ValueError, TypeError, KeyError, AttributeError) as e:
                         logger.warning(f"Error for k={k}: {e}")
                         continue
 
@@ -470,7 +470,7 @@ class AdvancedClusteringAnalyzer:
                         kmeans = KMeans(n_clusters=k, random_state=self.random_state, n_init=10)
                         kmeans.fit(X_scaled)
                         scores[k] = float(kmeans.inertia_)
-                    except Exception as e:
+                    except (ValueError, TypeError, KeyError, AttributeError) as e:
                         logger.warning(f"Error for k={k}: {e}")
                         continue
 
@@ -492,7 +492,7 @@ class AdvancedClusteringAnalyzer:
                 'k_range': [min_k, max_k],
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error finding optimal clusters: {e}")
             return None
 

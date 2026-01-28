@@ -5,6 +5,7 @@ This module provides FastAPI endpoints for paper trading management,
 portfolio simulation, and trade execution for the algorithmic trading system.
 """
 
+from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
@@ -130,7 +131,7 @@ async def create_portfolio(
             initial_cash=request.initial_cash,
         )
         return PortfolioResponse(portfolio=portfolio)
-    except Exception as e:
+    except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -171,7 +172,7 @@ async def create_session(
             config_id=request.config_id,
         )
         return SessionResponse(session=session)
-    except Exception as e:
+    except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -195,7 +196,7 @@ async def close_session(
     try:
         session = await service.close_session(session_id)
         return SessionResponse(session=session)
-    except Exception as e:
+    except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -239,7 +240,7 @@ async def execute_trade(
             signal_id=request.signal_id,
         )
         return TradeResponse(trade=trade)
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -310,7 +311,7 @@ async def update_market_prices(
         await service.update_market_prices(request.quotes)
         updated_symbols = list(request.quotes.keys())
         return MarketUpdateResponse(updated_symbols=updated_symbols, count=len(updated_symbols))
-    except Exception as e:
+    except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 

@@ -70,7 +70,7 @@ def load_transfer_learning_config(config_path: Optional[str] = None) -> Dict[str
                 config = yaml.safe_load(f)
                 logger.debug(f"Loaded transfer learning config from {config_path}")
                 return config or {}
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.warning(f"Error loading transfer learning config from {config_path}: {e}")
 
     # Return default configuration if file not found or error loading
@@ -191,7 +191,7 @@ class LearningEngineUpdater:
                 self._transfer_history: List[Dict[str, Any]] = []
                 self._last_transfer_operation: Optional[Dict[str, Any]] = None
                 logger.info("Transfer Learning enabled for LearningEngineUpdater")
-            except Exception as e:
+            except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"Failed to initialize Transfer Learning: {e}, disabling TL")
                 self._transfer_learning_enabled = False
                 self._transfer_manager = None
@@ -281,7 +281,7 @@ class LearningEngineUpdater:
 
             return report
 
-        except Exception as e:
+        except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.warning(f"Error checking drift: {e}")
             return None
 
@@ -308,7 +308,7 @@ class LearningEngineUpdater:
                 f"{reference_features.shape[1]} features"
             )
 
-        except Exception as e:
+        except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.warning(f"Error setting reference data: {e}")
 
     def record_training_metrics(
@@ -350,7 +350,7 @@ class LearningEngineUpdater:
 
             return result
 
-        except Exception as e:
+        except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.warning(f"Error recording training metrics: {e}")
             return None
 
@@ -463,7 +463,7 @@ class LearningEngineUpdater:
             )
             return regime
 
-        except Exception as e:
+        except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.debug(f"Error detecting market regime: {e}, defaulting to 'normal'")
             return "normal"
 
@@ -557,7 +557,7 @@ class LearningEngineUpdater:
             logger.info(f"✅ Transfer Learning fine-tuning completed with metrics: {tl_metrics}")
             return tl_metrics
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.debug(
                 f"Transfer learning failed (non-critical): {type(e).__name__}: {e}, falling back to normal training"
             )
@@ -663,7 +663,7 @@ class LearningEngineUpdater:
                 "El backtest continúa sin reentrenamiento."
             )
             return False
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             # Cualquier otro error - no es crítico, registramos y continuamos
             logger.warning(
                 f"⚠️ Error en reentrenamiento (no crítico): {type(e).__name__}: {e}. "
@@ -778,7 +778,7 @@ class LearningEngineUpdater:
                 except ImportError:
                     return False
             return True  # Si no sabemos, intentamos
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError):
             # Cualquier error al verificar significa que no puede entrenar
             return False
 
@@ -813,7 +813,7 @@ class LearningEngineUpdater:
             if pnl is not None and not isinstance(pnl, (int, float, Decimal)):
                 try:
                     pnl = Decimal(str(pnl))
-                except Exception:
+                except (ValueError, TypeError, KeyError, AttributeError):
                     pnl = Decimal("0")
             elif pnl is None:
                 pnl = Decimal("0")
@@ -967,7 +967,7 @@ class LearningEngineUpdater:
                     f"{analysis_result.get('error', 'Unknown error') if analysis_result else 'No result'}"
                 )
 
-        except Exception as e:
+        except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.debug(
                 f"⚠️ Error en feature importance analysis (no crítico): {type(e).__name__}: {e}"
             )
@@ -1040,7 +1040,7 @@ class LearningEngineUpdater:
 
             logger.info(f"Registered new model {model_id} for {regime} market")
 
-        except Exception as e:
+        except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.debug(f"Failed to register model (non-critical): {type(e).__name__}: {e}")
             # Model registration is non-critical, continue regardless
 
@@ -1144,7 +1144,7 @@ class LearningEngineUpdater:
                 "filter_regime": regime,
                 "total_models": len(models) if models else 0,
             }
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.debug(f"Error listing pre-trained models: {e}")
             return {"status": "error", "error": str(e), "models": []}
 

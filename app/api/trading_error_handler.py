@@ -105,7 +105,7 @@ async def handle_error_endpoint(request: ErrorHandlingRequest):
 
         return ErrorHandlingResponse(**result)
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"Error in handle_error_endpoint: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -125,7 +125,7 @@ async def get_error_statistics_endpoint():
         stats = get_error_statistics()
         return ErrorStatistics(**stats)
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"Error in get_error_statistics_endpoint: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -173,7 +173,7 @@ async def get_circuit_breaker_status_endpoint():
 
         return statuses
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"Error in get_circuit_breaker_status_endpoint: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -197,7 +197,7 @@ async def reset_circuit_breaker_endpoint(request: CircuitBreakerResetRequest):
             "timestamp": datetime.now().isoformat(),
         }
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"Error in reset_circuit_breaker_endpoint: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -223,7 +223,7 @@ async def get_error_contexts_endpoint():
 
         return {"contexts": contexts, "count": len(contexts)}
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"Error in get_error_contexts_endpoint: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -249,7 +249,7 @@ async def get_error_actions_endpoint():
 
         return {"actions": actions, "count": len(actions)}
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"Error in get_error_actions_endpoint: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -273,7 +273,7 @@ async def get_error_rules_endpoint(context: ErrorContext):
             "timestamp": datetime.now().isoformat(),
         }
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"Error in get_error_rules_endpoint: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -312,7 +312,7 @@ async def health_check_endpoint():
             "timestamp": datetime.now().isoformat(),
         }
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Error in health_check_endpoint: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

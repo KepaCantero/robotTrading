@@ -121,7 +121,7 @@ class RiskScalingApplication:
 
             return result
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Error applying risk scaling: {e}")
             raise
 

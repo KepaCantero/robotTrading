@@ -57,7 +57,7 @@ def download_symbol(symbol: str, start_date: datetime, end_date: datetime, outpu
         # Parse JSON response
         try:
             data = response.json()
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             print(f"❌ Invalid JSON: {e}")
             return False
         
@@ -116,7 +116,7 @@ def download_symbol(symbol: str, start_date: datetime, end_date: datetime, outpu
         
         return True
         
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         print(f"❌ Error: {e}")
         return False
 

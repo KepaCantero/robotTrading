@@ -64,7 +64,7 @@ def calculate_half_life(residuals: pd.Series) -> float:
         
         half_life = np.log(2) / theta
         return float(half_life)
-    except Exception:
+    except (ValueError, TypeError, KeyError, AttributeError):
         return None
 
 
@@ -124,7 +124,7 @@ def evaluate_pair(symbol1: str, symbol2: str, historical_data: dict) -> dict:
             "rejected": rejected,
             "reason": reason
         }
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         return {"rejected": True, "reason": f"Error: {str(e)}"}
 
 

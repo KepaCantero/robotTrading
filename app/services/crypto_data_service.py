@@ -234,7 +234,7 @@ class CryptoDataFetcher:
                     continue
             except NotImplementedError:
                 logger.debug(f"API price fetching not implemented for {pair}, using fallback")
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 logger.warning(f"Failed to fetch price for {pair}: {e}, using fallback")
 
             # Use fallback price when API fails
@@ -278,7 +278,7 @@ class CryptoDataFetcher:
                 return ohlcv
         except NotImplementedError:
             logger.debug(f"API OHLCV fetching not implemented for {pair}")
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.warning(f"Failed to fetch OHLCV for {pair}: {e}")
 
         return None

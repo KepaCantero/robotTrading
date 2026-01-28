@@ -125,7 +125,8 @@ class SymbolMapping:
         if not self.broker_name:
             raise ValidationError("broker_name cannot be empty")
 
-        # Normalize symbols to uppercase
+        # Normalize symbols (if not already normalized)
+        # Note: This is a safety net, normalization should happen before creating SymbolMapping
         self.internal_symbol = self.internal_symbol.upper().strip()
         self.broker_symbol = self.broker_symbol.upper().strip()
         self.broker_name = self.broker_name.lower().strip()
@@ -202,6 +203,15 @@ class BrokerMappingTables:
         "EURGBP": "EUR_GBP",
         "EURJPY": "EUR_JPY",
         "GBPJPY": "GBP_JPY",
+        # Base currencies (for single currency mapping)
+        "EUR": "EUR_USD",
+        "GBP": "GBP_USD",
+        "USD": "USD_JPY",  # Default to USDJPY for USD
+        "CHF": "USD_CHF",
+        "AUD": "AUD_USD",
+        "CAD": "USD_CAD",
+        "NZD": "NZD_USD",
+        "JPY": "USD_JPY",
         # Crypto on OANDA
         "BTC": "BTC_USD",
         "ETH": "ETH_USD",
@@ -373,8 +383,9 @@ class SymbolValidator:
         if not symbol:
             raise ValidationError("Symbol cannot be empty")
 
-        symbol = symbol.strip().upper()
+        symbol = symbol.strip()
 
+        # Check format - must already be uppercase (no normalization here)
         if not re.match(r'^[A-Z]{2,10}$', symbol):
             raise ValidationError(
                 f"Invalid internal symbol format: {symbol}. "
@@ -401,43 +412,45 @@ class SymbolValidator:
         if not symbol:
             raise ValidationError("Broker symbol cannot be empty")
 
-        symbol = symbol.strip().upper()
+        symbol = symbol.strip()
         broker_name = broker_name.lower()
 
-        # Broker-specific validation
+        # Broker-specific validation (normalize to uppercase for pattern matching)
+        symbol_upper = symbol.upper()
+
         if broker_name == 'binance':
-            if not (re.match(cls.PATTERNS['binance_crypto'], symbol) or
-                    re.match(cls.PATTERNS['binance_forex'], symbol)):
+            if not (re.match(cls.PATTERNS['binance_crypto'], symbol_upper) or
+                    re.match(cls.PATTERNS['binance_forex'], symbol_upper)):
                 raise ValidationError(
                     f"Invalid Binance symbol format: {symbol}. "
                     "Expected format: BTCUSDT or EURUSDT"
                 )
 
         elif broker_name == 'oanda':
-            if not (re.match(cls.PATTERNS['oanda_forex'], symbol) or
-                    re.match(cls.PATTERNS['oanda_crypto'], symbol)):
+            if not (re.match(cls.PATTERNS['oanda_forex'], symbol_upper) or
+                    re.match(cls.PATTERNS['oanda_crypto'], symbol_upper)):
                 raise ValidationError(
                     f"Invalid OANDA symbol format: {symbol}. "
                     "Expected format: EUR_USD or BTC_USD"
                 )
 
         elif broker_name == 'ibkr':
-            if not (re.match(cls.PATTERNS['ibkr_stock'], symbol) or
-                    re.match(cls.PATTERNS['ibkr_crypto'], symbol)):
+            if not (re.match(cls.PATTERNS['ibkr_stock'], symbol_upper) or
+                    re.match(cls.PATTERNS['ibkr_crypto'], symbol_upper)):
                 raise ValidationError(
                     f"Invalid IBKR symbol format: {symbol}. "
                     "Expected format: AAPL or IBKR:BTC"
                 )
 
         elif broker_name == 'kraken':
-            if not re.match(cls.PATTERNS['kraken_crypto'], symbol):
+            if not re.match(cls.PATTERNS['kraken_crypto'], symbol_upper):
                 raise ValidationError(
                     f"Invalid Kraken symbol format: {symbol}. "
                     "Expected format: XXBTZUSD"
                 )
 
         elif broker_name == 'coinbase':
-            if not re.match(cls.PATTERNS['coinbase_crypto'], symbol):
+            if not re.match(cls.PATTERNS['coinbase_crypto'], symbol_upper):
                 raise ValidationError(
                     f"Invalid Coinbase symbol format: {symbol}. "
                     "Expected format: BTC-USD"
@@ -455,7 +468,7 @@ class SymbolValidator:
             broker_name: Name of the broker
 
         Returns:
-            Internal symbol
+            Internal symbol (uppercase)
 
         Raises:
             ValidationError: If extraction fails
@@ -465,14 +478,21 @@ class SymbolValidator:
 
         try:
             if broker_name == 'binance':
-                # Remove USDT suffix
+                # Remove USDT suffix (USDT = 4 characters)
                 if broker_symbol.endswith('USDT'):
-                    return broker_symbol[:-5]
+                    return broker_symbol[:-4]
+                # If no USDT suffix, try to extract base from other patterns
+                return broker_symbol
 
             elif broker_name == 'oanda':
-                # Remove _USD suffix
+                # Remove _USD suffix (for crypto) or extract base from forex pair
                 if '_USD' in broker_symbol:
                     return broker_symbol.split('_')[0]
+                # Handle forex pairs like EUR_USD -> EURUSD is not a valid internal symbol
+                # Extract the base currency
+                if '_' in broker_symbol:
+                    return broker_symbol.split('_')[0]
+                return broker_symbol
 
             elif broker_name == 'ibkr':
                 # Remove IBKR: prefix
@@ -487,17 +507,20 @@ class SymbolValidator:
                     symbol = symbol[1:]
                 if symbol.endswith('ZUSD'):
                     symbol = symbol[:-4]
+                # Convert XBT to BTC (Kraken uses XBT for Bitcoin)
+                if symbol == 'XBT':
+                    symbol = 'BTC'
                 return symbol
 
             elif broker_name == 'coinbase':
-                # Remove -USD suffix
+                # Remove -USD suffix (-USD = 4 characters)
                 if broker_symbol.endswith('-USD'):
                     return broker_symbol[:-4]
 
             # Default: return as-is
             return broker_symbol
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
             raise ValidationError(
                 f"Failed to extract internal symbol from {broker_symbol}: {e}"
             )
@@ -599,10 +622,12 @@ class SymbolMapper:
             'BTC_USD'
         """
         try:
-            # Validate inputs
+            # Normalize inputs first
+            internal_symbol = internal_symbol.strip().upper()
+            broker_name = broker_name.strip().lower()
+
+            # Validate inputs after normalization
             SymbolValidator.validate_internal_symbol(internal_symbol)
-            internal_symbol = internal_symbol.upper()
-            broker_name = broker_name.lower()
 
             # Check cache first
             cache_key = (internal_symbol, broker_name)
@@ -639,7 +664,7 @@ class SymbolMapper:
             )
             return broker_symbol
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
             logger.error(
                 f"Error mapping {internal_symbol} to {broker_name}: {e}",
                 exc_info=True
@@ -679,9 +704,15 @@ class SymbolMapper:
             'BTC'
         """
         try:
-            # Validate inputs
+            # Normalize inputs first
             broker_symbol = broker_symbol.strip().upper()
-            broker_name = broker_name.lower()
+            broker_name = broker_name.strip().lower()
+
+            # Check for empty broker symbol after normalization
+            if not broker_symbol:
+                raise UnknownSymbolError(
+                    f"Cannot map empty broker symbol from {broker_name}"
+                )
 
             # Check reverse cache
             cache_key = (broker_symbol, broker_name)
@@ -717,7 +748,10 @@ class SymbolMapper:
             )
             return internal_symbol
 
-        except Exception as e:
+        except UnknownSymbolError:
+            # Re-raise UnknownSymbolError as-is
+            raise
+        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
             logger.error(
                 f"Error mapping {broker_symbol} from {broker_name}: {e}",
                 exc_info=True
@@ -766,13 +800,14 @@ class SymbolMapper:
             ... )
         """
         try:
-            # Validate inputs
+            # Normalize inputs first
+            internal_symbol = internal_symbol.strip().upper()
+            broker_symbol = broker_symbol.strip().upper()
+            broker_name = broker_name.strip().lower()
+
+            # Validate inputs after normalization
             SymbolValidator.validate_internal_symbol(internal_symbol)
             SymbolValidator.validate_broker_symbol(broker_symbol, broker_name)
-
-            internal_symbol = internal_symbol.upper()
-            broker_symbol = broker_symbol.upper()
-            broker_name = broker_name.lower()
 
             # Create mapping object
             mapping = SymbolMapping(
@@ -809,7 +844,10 @@ class SymbolMapper:
 
             return mapping
 
-        except Exception as e:
+        except (ValidationError, SymbolMappingError):
+            # Re-raise validation and mapping errors as-is
+            raise
+        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
             logger.error(
                 f"Error adding mapping {internal_symbol} -> {broker_symbol}: {e}",
                 exc_info=True
@@ -841,8 +879,11 @@ class SymbolMapper:
             }
         """
         try:
+            # Normalize input first
+            internal_symbol = internal_symbol.strip().upper()
+
+            # Validate after normalization
             SymbolValidator.validate_internal_symbol(internal_symbol)
-            internal_symbol = internal_symbol.upper()
 
             # Get from default tables
             broker_symbols = BrokerMappingTables.get_all_broker_symbols(internal_symbol)
@@ -857,7 +898,10 @@ class SymbolMapper:
             )
             return broker_symbols
 
-        except Exception as e:
+        except ValidationError:
+            # Re-raise validation errors
+            raise
+        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
             logger.error(
                 f"Error getting brokers for {internal_symbol}: {e}",
                 exc_info=True
@@ -894,6 +938,11 @@ class SymbolMapper:
             (False, "Invalid broker symbol format")
         """
         try:
+            # Normalize inputs first
+            internal_symbol = internal_symbol.strip().upper()
+            broker_symbol = broker_symbol.strip().upper()
+            broker_name = broker_name.strip().lower()
+
             # Validate internal symbol
             SymbolValidator.validate_internal_symbol(internal_symbol)
 
@@ -902,14 +951,14 @@ class SymbolMapper:
 
             # Check bidirectional mapping
             mapped_broker = self.map_internal_to_broker(internal_symbol, broker_name)
-            if mapped_broker != broker_symbol.upper():
+            if mapped_broker != broker_symbol:
                 return False, (
                     f"Forward mapping mismatch: {internal_symbol} -> {mapped_broker}, "
                     f"expected {broker_symbol}"
                 )
 
             mapped_internal = self.map_broker_to_internal(broker_symbol, broker_name)
-            if mapped_internal != internal_symbol.upper():
+            if mapped_internal != internal_symbol:
                 return False, (
                     f"Reverse mapping mismatch: {broker_symbol} -> {mapped_internal}, "
                     f"expected {internal_symbol}"
@@ -918,7 +967,7 @@ class SymbolMapper:
             logger.info(f"Mapping validated: {internal_symbol} <-> {broker_symbol} ({broker_name})")
             return True, None
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
             error_msg = f"Validation failed: {e}"
             logger.error(f"validate_mapping: {error_msg}")
             return False, error_msg

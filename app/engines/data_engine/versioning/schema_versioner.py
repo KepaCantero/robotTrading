@@ -46,7 +46,7 @@ class SchemaVersioner:
                     registry = json.load(f)
                     self.schemas = registry.get('schemas', {})
                     self.versions = registry.get('versions', {})
-            except Exception as e:
+            except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"Error cargando schema registry: {e}")
 
     def _save_registry(self) -> None:
@@ -59,7 +59,7 @@ class SchemaVersioner:
             }
             with open(self.schema_registry_path, 'w') as f:
                 json.dump(registry, f, indent=2)
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.error(f"Error guardando schema registry: {e}")
 
     def register_schema(

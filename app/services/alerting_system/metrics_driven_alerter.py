@@ -201,7 +201,7 @@ class MetricsDrivenAlerter:
 
                 self.evaluation_stats.rules_evaluated += 1
 
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 error_msg = f"Error evaluating rule {rule_id}: {str(e)}"
                 self.logger.error(error_msg)
                 results["errors"].append(error_msg)
@@ -364,7 +364,7 @@ class MetricsDrivenAlerter:
                     # Evaluate all rules
                     await self.evaluate_metric_rules(metric_queries)
 
-                except Exception as e:
+                except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                     self.logger.error(f"Error in evaluation loop: {str(e)}")
                     self.evaluation_stats.evaluation_errors += 1
 

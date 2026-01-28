@@ -111,7 +111,7 @@ def main():
     try:
         init_database(args.db_url, args.drop)
 
-    except Exception as e:
+    except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
         print(f"\n❌ Error: {e}", file=sys.stderr)
         sys.exit(1)
 

@@ -238,7 +238,7 @@ class CapacityFadeValidator:
 
             return response
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Capacity validation failed: {str(e)}")
             return CapacityFadeResponse(
                 success=False,

@@ -83,7 +83,7 @@ class ModuleParametrizer:
             modules_config = config.get("modules", {})
             logger.info(f"✅ Loaded parameters for {len(modules_config)} modules")
             return {"modules": modules_config}
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"❌ Error loading module templates: {e}")
             return {"modules": {}}
 
@@ -149,7 +149,7 @@ class ModuleParametrizer:
             )
             return result
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Error parametrizing modules: {e}")
             elapsed_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
             return ParameterizationResult(
@@ -259,7 +259,7 @@ class ModuleParametrizer:
 
             return config
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"❌ Error parametrizing module '{module_name}': {e}")
             return None
 

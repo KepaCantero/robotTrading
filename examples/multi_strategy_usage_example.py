@@ -128,7 +128,7 @@ def example_batch_multi_strategy():
 
             logger.info(f"  ✓ Completed: Sharpe={result.baseline_results.get('sharpe_ratio', 0):.2f}")
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"  ✗ Failed: {e}")
 
     # Summary statistics
@@ -299,7 +299,7 @@ def main():
         print("EXAMPLES COMPLETED")
         print("="*80 + "\n")
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"Error running examples: {e}", exc_info=True)
         return 1
 

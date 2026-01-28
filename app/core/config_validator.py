@@ -349,7 +349,7 @@ class ConfigValidator:
             self.result.add_error("yaml_syntax", f"Invalid YAML in {file_path.name}: {e}")
             self.result.is_valid = False
             return False
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             self.result.add_error("file_access", f"Cannot read {file_path.name}: {e}")
             self.result.is_valid = False
             return False
@@ -594,7 +594,7 @@ class ConfigValidator:
         try:
             with open(prod_config_path, "r") as f:
                 config = yaml.safe_load(f)
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             self.result.add_error("load", f"Failed to load configuration: {e}")
             return self.result
 
@@ -660,7 +660,7 @@ class ConfigValidator:
                     if line and not line.startswith("#") and "=" in line:
                         key, value = line.split("=", 1)
                         env_vars[key.strip()] = value.strip()
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.warning(f"Failed to load environment file {env_file}: {e}")
 
         return env_vars
@@ -698,7 +698,7 @@ class ConfigValidator:
         try:
             with open(config_path, "r") as f:
                 config = yaml.safe_load(f)
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             self.result.add_error("load", f"Failed to load configuration: {e}")
             return self.result
 
@@ -844,7 +844,7 @@ class ConfigValidator:
         try:
             with open(config_path, "r") as f:
                 config = yaml.safe_load(f)
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             self.result.add_error("load", f"Failed to load configuration: {e}")
             return self.result
 

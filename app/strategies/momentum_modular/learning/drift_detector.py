@@ -643,7 +643,7 @@ class ConceptDriftDetector:
             self.drift_history.append(result)
             return result
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.warning(f"Error in KS test: {e}")
             return DriftResult(
                 drift_detected=False,
@@ -698,7 +698,7 @@ class ConceptDriftDetector:
                 timestamp=timestamp or datetime.now(),
             )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.warning(f"Error in MMD: {e}")
             return DriftResult(
                 drift_detected=False,
@@ -1634,7 +1634,7 @@ class AdvancedOverfittingDetector:
         try:
             slope = np.polyfit(x, y, 1)[0]
             return float(slope)
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError):
             return 0.0
 
     def get_learning_curves(self) -> Dict[str, Any]:

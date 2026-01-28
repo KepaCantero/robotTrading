@@ -317,7 +317,7 @@ class ProfileDrivenTradingOrchestrator:
             ):
                 result.errors.extend(stage_result.errors)
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Fatal error in trading lifecycle: {e}", exc_info=True)
             result.errors.append(f"Fatal error: {str(e)}")
             result.success = False
@@ -521,7 +521,7 @@ class ProfileDrivenTradingOrchestrator:
 
                 return universe_data
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"   ❌ Error fetching real data: {e}")
             logger.warning("   Falling back to test universe")
             return self._create_test_universe()
@@ -661,7 +661,7 @@ class ProfileDrivenTradingOrchestrator:
                         rl_signals[symbol] = (action, confidence)
                 else:
                     logger.debug("   RL engine not available, skipping RL signals")
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 logger.warning(f"   RL signal generation failed: {e}")
 
         # Momentum signals
@@ -764,7 +764,7 @@ class ProfileDrivenTradingOrchestrator:
 
             return tax_optimized
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"   Tax optimization failed: {e}")
             return None
 
@@ -855,7 +855,7 @@ class ProfileDrivenTradingOrchestrator:
 
             return result
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"   Risk validation failed: {e}")
             return RiskValidationResult(
                 passed=False,
@@ -927,7 +927,7 @@ class ProfileDrivenTradingOrchestrator:
 
             return backtest_result
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"   Backtest validation failed: {e}")
             return None
 
@@ -1024,7 +1024,7 @@ class ProfileDrivenTradingOrchestrator:
 
             return execution_result
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"   Trade execution failed: {e}")
             return ExecutionResult(
                 executed=False,

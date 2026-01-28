@@ -71,7 +71,7 @@ class StrategyConfigLoader:
 
             return self.config
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Failed to load config from {self.config_path}: {str(e)}")
             raise
 
@@ -95,7 +95,7 @@ class StrategyConfigLoader:
 
             logger.info(f"Saved config to: {self.config_path}")
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Failed to save config to {self.config_path}: {str(e)}")
             raise
 

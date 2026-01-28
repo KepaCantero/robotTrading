@@ -167,7 +167,7 @@ class YahooFinanceV8Downloader:
                     time.sleep(wait_time)
                     continue
                 return False
-            except Exception as e:
+            except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
                 print(f"❌ Unexpected error: {e}")
                 if attempt < self.max_retries - 1:
                     time.sleep(self.delay)

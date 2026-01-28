@@ -5,6 +5,7 @@ This module provides FastAPI endpoints for market data management,
 including quotes, historical data, and feed configuration.
 """
 
+from __future__ import annotations
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 from uuid import UUID
@@ -20,6 +21,8 @@ from app.models.market_data import (
     Quote,
 )
 from app.services.market_data_service import MarketDataService, get_market_data_service
+import requests
+from requests.exceptions import ConnectionError, HTTPError, RequestException
 
 router = APIRouter(prefix="/market-data", tags=["market-data"])
 
@@ -126,7 +129,7 @@ async def get_quote(
                 error=f"No quote data available for {symbol}",
                 timestamp=datetime.utcnow(),
             )
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error getting quote for {symbol}: {str(e)}")
 
 
@@ -151,7 +154,7 @@ async def get_multiple_quotes(
             )
 
         return quotes
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error getting quotes: {str(e)}")
 
 
@@ -167,7 +170,7 @@ async def get_top_liquid_quotes(
         return [
             QuoteResponse(success=True, data=quote, timestamp=datetime.utcnow()) for quote in quotes
         ]
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error getting top liquid quotes: {str(e)}")
 
 
@@ -201,7 +204,7 @@ async def get_historical_data(
         )
     except HTTPException:
         raise
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(
             status_code=500,
             detail=f"Error getting historical data for {symbol}: {str(e)}",
@@ -234,7 +237,7 @@ async def create_feed_config(
         config.id = config_id
 
         return FeedConfigResponse(success=True, data=config, timestamp=datetime.utcnow())
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error creating feed configuration: {str(e)}")
 
 
@@ -249,7 +252,7 @@ async def list_feed_configs(
         return FeedConfigsResponse(
             success=True, data=configs, count=len(configs), timestamp=datetime.utcnow()
         )
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error listing feed configurations: {str(e)}")
 
 
@@ -270,7 +273,7 @@ async def get_feed_config(
             )
     except HTTPException:
         raise
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error getting feed configuration: {str(e)}")
 
 
@@ -289,7 +292,7 @@ async def connect_feed(
             raise HTTPException(status_code=500, detail=f"Failed to connect to feed {config_id}")
     except HTTPException:
         raise
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error connecting to feed: {str(e)}")
 
 
@@ -310,7 +313,7 @@ async def disconnect_feed(
             )
     except HTTPException:
         raise
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error disconnecting from feed: {str(e)}")
 
 
@@ -337,7 +340,7 @@ async def subscribe_to_symbols(
             )
     except HTTPException:
         raise
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error subscribing to symbols: {str(e)}")
 
 
@@ -350,7 +353,7 @@ async def get_service_status(
         status = await service.get_service_status()
 
         return ServiceStatusResponse(success=True, data=status, timestamp=datetime.utcnow())
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error getting service status: {str(e)}")
 
 
@@ -360,7 +363,7 @@ async def clear_cache(service: MarketDataService = Depends(get_market_data_servi
     try:
         await service.clear_cache()
         return {"success": True, "message": "Cache cleared successfully"}
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error clearing cache: {str(e)}")
 
 
@@ -372,5 +375,5 @@ async def get_cache_stats(
     try:
         stats = await service.get_cache_stats()
         return {"success": True, "data": stats}
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error getting cache stats: {str(e)}")

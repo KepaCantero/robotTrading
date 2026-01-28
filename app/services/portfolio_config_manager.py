@@ -114,7 +114,7 @@ class PortfolioConfigManager:
 
             logger.info(f"Loaded portfolio configuration from {self.config_path}")
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Failed to load portfolio config: {e}")
             raise
 

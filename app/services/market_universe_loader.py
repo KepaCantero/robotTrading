@@ -99,7 +99,7 @@ async def retry_with_backoff(
     for attempt in range(config.max_attempts):
         try:
             return await func()
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             last_exception = e
 
             if attempt == config.max_attempts - 1:
@@ -611,7 +611,7 @@ class MarketUniverseLoader:
                     logger.info(f"✅ Fetched {len(sp500_tickers)} S&P 500 constituents")
                     return sp500_tickers
 
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 if self._circuit_breaker:
                     self._circuit_breaker.record_failure()
                 logger.warning(f"yfinance S&P 500 fetch failed: {e}, using fallback")
@@ -654,7 +654,7 @@ class MarketUniverseLoader:
                     logger.info(f"✅ Fetched {len(nasdaq_tickers)} NASDAQ 100 constituents")
                     return nasdaq_tickers
 
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 if self._circuit_breaker:
                     self._circuit_breaker.record_failure()
                 logger.warning(f"yfinance NASDAQ 100 fetch failed: {e}, using fallback")
@@ -695,7 +695,7 @@ class MarketUniverseLoader:
                     logger.info(f"✅ Fetched {len(ibex_tickers)} IBEX 35 constituents")
                     return ibex_tickers
 
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 if self._circuit_breaker:
                     self._circuit_breaker.record_failure()
                 logger.warning(f"yfinance IBEX 35 fetch failed: {e}, using fallback")
@@ -730,7 +730,7 @@ class MarketUniverseLoader:
                     logger.info(f"✅ Fetched {len(dow_tickers)} DOW JONES constituents")
                     return dow_tickers
 
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 if self._circuit_breaker:
                     self._circuit_breaker.record_failure()
                 logger.warning(f"yfinance DOW JONES fetch failed: {e}")
@@ -971,7 +971,7 @@ class MarketUniverseLoader:
                     data.columns = [col.lower() for col in data.columns]
                     return (ticker, data)
 
-                except Exception as e:
+                except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                     logger.debug(f"Error downloading {ticker}: {e}")
                     return (ticker, None)
                 finally:
@@ -1008,7 +1008,7 @@ class MarketUniverseLoader:
                 tickers = [h['symbol'] for h in holdings['holdings'] if 'symbol' in h]
                 return tickers
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.debug(f"Error fetching constituents for {index_symbol}: {e}")
 
         return []
@@ -1067,7 +1067,7 @@ class MarketUniverseLoader:
                 # Passed all filters
                 filtered[ticker] = df
 
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 rejected.append((ticker, f"error_{str(e)}"))
                 continue
 
@@ -1170,7 +1170,7 @@ class MarketUniverseLoader:
 
                 assets.append(asset)
 
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.debug(f"Error creating asset for {ticker}: {e}")
                 continue
 
@@ -1197,7 +1197,7 @@ class MarketUniverseLoader:
 
             asset.liquidity_score = combined_score
 
-        except Exception:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError):
             asset.liquidity_score = 50.0  # Default
 
     def clear_cache(self):

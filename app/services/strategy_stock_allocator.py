@@ -118,7 +118,7 @@ class StrategyStockAllocator:
             try:
                 config = StockAllocationSettings.from_yaml(tier=tier)
                 source = f"YAML (tier={tier or 'default'})"
-            except Exception as e:
+            except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"Failed to load config from YAML: {e}. Using defaults.")
                 config = StockAllocationSettings()
                 source = "default (Pydantic)"
@@ -434,7 +434,7 @@ class StrategyStockAllocator:
                 logger.warning(f"Hurst out of bounds: {hurst:.4f}")
                 return None
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculating Hurst exponent: {e}", exc_info=True)
             return None
 
@@ -527,7 +527,7 @@ class StrategyStockAllocator:
                 kpss_statistic, kpss_pvalue = kpss_result[0], kpss_result[1]  # noqa: F841
                 result["kpss_pvalue"] = float(kpss_pvalue)
                 result["kpss_stationary"] = kpss_pvalue > self.config.KPSS_P_VALUE_THRESHOLD
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.debug(f"KPSS test failed: {e}, using ADF result only")
                 result["kpss_stationary"] = result["adf_stationary"]
 
@@ -545,7 +545,7 @@ class StrategyStockAllocator:
             logger.debug(f"Stationarity test: {result}")
             return result
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error in stationarity test: {e}", exc_info=True)
             return result
 
@@ -629,7 +629,7 @@ class StrategyStockAllocator:
                 logger.debug(f"Theta too small or negative ({theta:.6f}), not mean-reverting")
                 return None
 
-        except Exception as e:
+        except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.error(f"Error calculating half-life: {e}", exc_info=True)
             return None
 
@@ -676,7 +676,7 @@ class StrategyStockAllocator:
 
             return float(sortino) if sortino is not None and np.isfinite(sortino) else None
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculating Sortino ratio: {e}", exc_info=True)
             return None
 
@@ -713,7 +713,7 @@ class StrategyStockAllocator:
                     forecast_vol = np.sqrt(forecast.variance.values[-1, -1]) / 100
 
                     return float(forecast_vol * np.sqrt(252))  # Annualize
-                except Exception as e:
+                except (ValueError, TypeError, KeyError, AttributeError) as e:
                     logger.debug(f"GARCH fitting failed: {e}, using EWMA")
 
             # ALTERNATIVE: Use EWMA volatility (Exponentially Weighted Moving Average)
@@ -724,7 +724,7 @@ class StrategyStockAllocator:
 
             return float(ewma_vol * np.sqrt(252))  # Annualize
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculating GARCH volatility: {e}", exc_info=True)
             return None
 
@@ -812,7 +812,7 @@ class StrategyStockAllocator:
                                         if roc_error < best_roc_mse:
                                             best_roc_mse = roc_error
                                             best_roc = roc_window
-                        except Exception as e:
+                        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                             logger.debug(
                                 f"Error in dynamic window selection (window={window}): {e}"
                             )
@@ -898,7 +898,7 @@ class StrategyStockAllocator:
             logger.debug(f"Momentum score for {ticker}: {momentum_score:.4f}")
             return result
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error scoring momentum for {ticker}: {e}", exc_info=True)
             return {"score": 0.0}
 
@@ -1014,7 +1014,7 @@ class StrategyStockAllocator:
             )
             return result
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error scoring mean reversion for {ticker}: {e}", exc_info=True)
             return {"score": 0.0}
 
@@ -1135,7 +1135,7 @@ class StrategyStockAllocator:
                                 f"Pair {ticker1}-{ticker2}: Using raw z-score (GARCH/EWMA not available)"
                             )
 
-                except Exception as e:
+                except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                     logger.debug(f"Engle-Granger test failed for {ticker1}-{ticker2}: {e}")
                     return {
                         "score": 0.0,
@@ -1216,7 +1216,7 @@ class StrategyStockAllocator:
             logger.debug(f"Pairs trading score for {ticker1}-{ticker2}: {pairs_score:.4f}")
             return result
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error scoring pairs trading for {pair}: {e}", exc_info=True)
             return {"score": 0.0, "rejected": True}
 
@@ -1308,7 +1308,7 @@ class StrategyStockAllocator:
                         logger.info(
                             f"Using {len(configured_pairs_to_evaluate)} configured pairs from strategy config"
                         )
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.debug(f"Could not load configured pairs from strategy config: {e}")
 
         # If we have configured pairs, use only those. Otherwise, generate all possible pairs
@@ -1536,7 +1536,7 @@ class StrategyStockAllocator:
 
                 return allocations
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error in ERC allocation: {e}", exc_info=True)
             # Equal weights allocation (valid method on error)
             if len(tickers) == 0:
@@ -1637,7 +1637,7 @@ class StrategyStockAllocator:
 
             return is_valid, errors
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error validating allocation: {e}", exc_info=True)
             return False, [f"Validation error: {str(e)}"]
 

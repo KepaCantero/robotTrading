@@ -130,7 +130,7 @@ class DrawdownController(BaseDrawdownController):
                 'recovery_status': recovery_status,
                 'timestamp': datetime.utcnow().isoformat(),
             }
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             self.logger.error(f"Error evaluando drawdown: {e}", exc_info=True)
             return {'error': str(e)}
 

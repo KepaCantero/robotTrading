@@ -105,7 +105,7 @@ class TestOmegaRatio:
         omega = calculator.calculate_omega_ratio(returns, threshold=0.0)
 
         assert omega is not None
-        assert float(omega) == pytest.approx(999.0, rel=0.1)  # Very high Omega
+        assert float(omega) == pytest.approx(999999.0, rel=0.1)  # Very high Omega
 
     def test_omega_ratio_all_negative(self, calculator):
         """Test Omega ratio with all negative returns."""

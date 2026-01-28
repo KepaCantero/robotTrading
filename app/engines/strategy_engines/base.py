@@ -92,7 +92,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
             try:
                 self.data_engine = DataEngine(data_engine_config)
                 logger.info(f"{self.__class__.__name__}: DataEngine habilitado")
-            except Exception as e:
+            except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"No se pudo inicializar DataEngine: {e}")
 
         # ContextEngine integration (Módulo 2)
@@ -103,7 +103,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
             try:
                 self.context_engine = ContextEngine(context_engine_config)
                 logger.info(f"{self.__class__.__name__}: ContextEngine habilitado")
-            except Exception as e:
+            except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"No se pudo inicializar ContextEngine: {e}")
 
         # PortfolioEngine integration (Fase 3, Módulo 5)
@@ -115,7 +115,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
                 self.portfolio_engine = PortfolioEngine(portfolio_engine_config)
                 self.portfolio_engine.initialize()
                 logger.info(f"{self.__class__.__name__}: PortfolioEngine habilitado")
-            except Exception as e:
+            except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"No se pudo inicializar PortfolioEngine: {e}")
 
         # RiskEngine integration (Fase 3, Módulo 6)
@@ -127,7 +127,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
                 self.risk_engine = RiskEngine(risk_engine_config)
                 self.risk_engine.initialize()
                 logger.info(f"{self.__class__.__name__}: RiskEngine habilitado")
-            except Exception as e:
+            except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"No se pudo inicializar RiskEngine: {e}")
 
         # Feature extraction
@@ -219,7 +219,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
             self.metrics["learning_adjustments_applied"] += 1
 
             return prediction
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.warning(
                 f"{self.__class__.__name__}: Error obteniendo predicción de Learning Engine: {e}"
             )
@@ -284,7 +284,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         for callback in self.on_signal_generated_callbacks:
             try:
                 callback(signal, market_data)
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 logger.warning(f"{self.__class__.__name__}: Error en callback de señal: {e}")
 
     def _trigger_trade_callbacks(self, signal: Signal, execution_result: Any) -> None:
@@ -292,7 +292,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         for callback in self.on_trade_executed_callbacks:
             try:
                 callback(signal, execution_result)
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 logger.warning(f"{self.__class__.__name__}: Error en callback de trade: {e}")
 
     def _trigger_market_data_callbacks(self, market_data: Quote) -> None:
@@ -300,7 +300,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         for callback in self.on_market_data_callbacks:
             try:
                 callback(market_data)
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 logger.warning(f"{self.__class__.__name__}: Error en callback de market data: {e}")
 
     # ===== Métodos para composición (ensembles) =====
@@ -339,7 +339,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         try:
             self.metrics["context_analysis_calls"] += 1
             return self.context_engine.get_current_regime(prices, method='ensemble')
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error obteniendo contexto: {e}")
             return None
 
@@ -358,7 +358,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
 
         try:
             return self.context_engine.get_volatility_regime(prices)
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error obteniendo régimen de volatilidad: {e}")
             return None
 
@@ -409,7 +409,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
 
             return quotes
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error obteniendo datos de DataEngine: {e}")
             return []
 
@@ -556,25 +556,25 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         if self.data_engine:
             try:
                 status["data_engine_status"] = self.data_engine.get_status()
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
                 pass
 
         if self.context_engine:
             try:
                 status["context_engine_status"] = "available"
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
                 pass
 
         if self.portfolio_engine:
             try:
                 status["portfolio_engine_status"] = self.portfolio_engine.get_status()
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
                 pass
 
         if self.risk_engine:
             try:
                 status["risk_engine_status"] = self.risk_engine.get_status()
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
                 pass
 
         return status

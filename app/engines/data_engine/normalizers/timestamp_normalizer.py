@@ -78,7 +78,7 @@ class TimestampNormalizer:
 
             return dt
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error normalizando timestamp {timestamp}: {e}")
             # Fallback: retornar UTC now
             return datetime.now(pytz.UTC)
@@ -92,7 +92,7 @@ class TimestampNormalizer:
         # Formato ISO
         try:
             return datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError):
             pass
 
         # Formato común: YYYY-MM-DD HH:MM:SS
@@ -111,7 +111,7 @@ class TimestampNormalizer:
         for fmt in formats:
             try:
                 return datetime.strptime(timestamp_str, fmt)
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError):
                 continue
 
         raise ValueError(f"No se pudo parsear timestamp string: {timestamp_str}")

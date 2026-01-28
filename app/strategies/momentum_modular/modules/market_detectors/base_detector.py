@@ -45,7 +45,7 @@ class BaseMarketDetector(ABC):
 
                 config = get_detector_config(name, tier=tier)
                 logger.debug(f"Loaded {name} config from YAML (tier={tier or 'default'})")
-            except Exception as e:
+            except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"Failed to load {name} config from YAML: {e}, using empty config")
                 config = {}
 

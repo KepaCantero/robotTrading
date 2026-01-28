@@ -204,7 +204,7 @@ class TradePersistenceManager:
             self.session_factory = get_session_factory()
             self.logger.info("Trade persistence manager initialized")
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             self.logger.error(f"Error initializing persistence manager: {str(e)}")
             raise
 
@@ -246,7 +246,7 @@ class TradePersistenceManager:
                 self.logger.info(f"Saved order {order.order_id}")
                 return order.order_id
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             self.logger.error(f"Error saving order: {str(e)}")
             raise
 
@@ -279,7 +279,7 @@ class TradePersistenceManager:
                 self.logger.info(f"Saved trade {trade.trade_id}")
                 return trade.trade_id
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             self.logger.error(f"Error saving trade: {str(e)}")
             raise
 
@@ -308,7 +308,7 @@ class TradePersistenceManager:
                 await session.commit()
                 return position.position_id
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             self.logger.error(f"Error saving position: {str(e)}")
             raise
 
@@ -328,7 +328,7 @@ class TradePersistenceManager:
                 order = result.scalars().first()
                 return order.to_dict() if order else None
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             self.logger.error(f"Error retrieving order: {str(e)}")
             return None
 
@@ -352,7 +352,7 @@ class TradePersistenceManager:
                 trades = result.scalars().all()
                 return [trade.to_dict() for trade in trades]
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             self.logger.error(f"Error retrieving trades: {str(e)}")
             return []
 
@@ -384,7 +384,7 @@ class TradePersistenceManager:
                 trades = result.scalars().all()
                 return [trade.to_dict() for trade in trades]
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             self.logger.error(f"Error retrieving trades by date: {str(e)}")
             return []
 
@@ -410,7 +410,7 @@ class TradePersistenceManager:
                 positions = result.scalars().all()
                 return [pos.to_dict() for pos in positions]
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             self.logger.error(f"Error retrieving position history: {str(e)}")
             return []
 
@@ -430,7 +430,7 @@ class TradePersistenceManager:
                 stats = result.scalars().first()
                 return stats.to_dict() if stats else None
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             self.logger.error(f"Error retrieving statistics: {str(e)}")
             return None
 
@@ -463,7 +463,7 @@ class TradePersistenceManager:
                 await session.commit()
                 return True
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             self.logger.error(f"Error updating order status: {str(e)}")
             return False
 
@@ -485,7 +485,7 @@ class TradePersistenceManager:
                 result = await session.execute(stmt)
                 return len(result.scalars().all())
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             self.logger.error(f"Error counting trades: {str(e)}")
             return 0
 

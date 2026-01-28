@@ -229,7 +229,7 @@ class ComprehensiveBacktestLoader:
                     logger.debug(
                         f"Cargado: {json_file.name} ({len(file_results)} resultados, {len(results)} total)"
                     )
-            except Exception as e:
+            except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
                 logger.warning(f"Error cargando {json_file.name}: {e}", exc_info=True)
 
         # Contar learning engines con datos de entrenamiento
@@ -388,7 +388,7 @@ class ComprehensiveBacktestLoader:
                 'timestamp': datetime.fromtimestamp(latest_file.stat().st_mtime).isoformat(),
                 'data': meta_results,
             }
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.warning(f"Error cargando meta análisis {latest_file.name}: {e}")
             return None
 

@@ -141,7 +141,7 @@ class StressTester:
                     'scenario_name': scenario['name'],
                     'description': scenario.get('description', ''),
                 }
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 self.logger.error(f"Error ejecutando escenario {scenario_id}: {e}")
                 results[scenario_id] = {'error': str(e)}
 
@@ -183,7 +183,7 @@ class StressTester:
                 },
                 'n_scenarios': self.n_monte_carlo_scenarios,
             }
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"Error en Monte Carlo stress tests: {e}", exc_info=True)
             return {'error': str(e)}
 

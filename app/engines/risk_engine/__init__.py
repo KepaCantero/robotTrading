@@ -128,7 +128,7 @@ class RiskEngine(BaseRiskEngine):
         try:
             self.logger.info("RiskEngine inicializado")
             self._initialized = True
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             self.logger.error(f"Error inicializando RiskEngine: {e}", exc_info=True)
             self._initialized = False
 
@@ -174,7 +174,7 @@ class RiskEngine(BaseRiskEngine):
 
             return full_assessment
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             self.logger.error(f"Error evaluando riesgo: {e}", exc_info=True)
             return {'error': str(e), 'status': 'error'}
 
@@ -189,7 +189,7 @@ class RiskEngine(BaseRiskEngine):
                 if returns_history is not None:
                     var_result = self.var_calculator.calculate_var(returns_history)
                     assessment['var'] = var_result
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 self.logger.warning(f"Error calculando VaR: {e}")
 
         # Stress testing si está disponible
@@ -197,7 +197,7 @@ class RiskEngine(BaseRiskEngine):
             try:
                 stress_result = self.stress_tester.run_stress_tests(portfolio)
                 assessment['stress_tests'] = stress_result
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 self.logger.warning(f"Error en stress testing: {e}")
 
         # Exposición si está disponible
@@ -205,7 +205,7 @@ class RiskEngine(BaseRiskEngine):
             try:
                 exposure_result = self.exposure_manager.analyze_exposure(portfolio)
                 assessment['exposure'] = exposure_result
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 self.logger.warning(f"Error analizando exposición: {e}")
 
         # Drawdown control si está disponible
@@ -213,7 +213,7 @@ class RiskEngine(BaseRiskEngine):
             try:
                 drawdown_result = self.drawdown_controller.assess_drawdown(portfolio)
                 assessment['drawdown'] = drawdown_result
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 self.logger.warning(f"Error evaluando drawdown: {e}")
 
         # Correlaciones si está disponible
@@ -225,7 +225,7 @@ class RiskEngine(BaseRiskEngine):
                         portfolio, prices_history
                     )
                     assessment['correlations'] = correlation_result
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 self.logger.warning(f"Error analizando correlaciones: {e}")
 
         # Risk attribution si está disponible
@@ -233,7 +233,7 @@ class RiskEngine(BaseRiskEngine):
             try:
                 attribution_result = self.risk_attributor.attribute_risk(portfolio, **kwargs)
                 assessment['risk_attribution'] = attribution_result
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 self.logger.warning(f"Error en risk attribution: {e}")
 
         return assessment
@@ -249,7 +249,7 @@ class RiskEngine(BaseRiskEngine):
                 self.alerts_triggered += len(alerts)
                 self.alert_history.extend(alerts)
                 self.alert_system.send_alerts(alerts)
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             self.logger.warning(f"Error verificando alertas: {e}")
 
     def set_var_calculator(self, var_calculator: Any) -> None:

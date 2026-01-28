@@ -5,6 +5,7 @@ This module provides the core backtesting functionality including
 historical data simulation, trade execution, and performance metrics calculation.
 """
 
+from __future__ import annotations
 import logging
 import math
 from datetime import datetime
@@ -532,7 +533,7 @@ class SimpleBacktester:
                     logger.debug(
                         f"✅ PASSED risk_check: {signal.signal_type} {signal.symbol} (strategy={strategy_name})"
                     )
-            except Exception as e:
+            except (AttributeError, ValueError, TypeError, KeyError) as e:
                 logger.error(
                     f"❌ ERROR in risk_check for {signal.symbol} (strategy={strategy_name}): {e}",
                     exc_info=True,
@@ -709,19 +710,20 @@ class SimpleBacktester:
             )
             return
 
-        # CRITICAL: Validate stop-loss is set for this trade
-        try:
-            stop_loss_price = current_price * (Decimal("1") - self.config.stop_loss_percentage / Decimal("100"))
-            self.trading_validator.validate_stop_loss(
-                entry_price=current_price,
-                stop_loss=stop_loss_price,
-                side="long",
-            )
-        except ValueError as e:
-            logger.warning(
-                f"❌ BUY {signal.symbol} (strategy={strategy_name}): Stop-loss validation failed: {e}"
-            )
-            return
+        # CRITICAL: Validate stop-loss is set for this trade (if configured)
+        if self.config.stop_loss_percentage is not None:
+            try:
+                stop_loss_price = current_price * (Decimal("1") - self.config.stop_loss_percentage / Decimal("100"))
+                self.trading_validator.validate_stop_loss(
+                    entry_price=current_price,
+                    stop_loss=stop_loss_price,
+                    side="long",
+                )
+            except ValueError as e:
+                logger.warning(
+                    f"❌ BUY {signal.symbol} (strategy={strategy_name}): Stop-loss validation failed: {e}"
+                )
+                return
 
         # CRITICAL: HIGH PRIORITY #1 - Validate liquidity before executing order
         # This prevents execution of orders that cannot be realistically filled
@@ -1352,7 +1354,16 @@ class SimpleBacktester:
         return " ".join(reason_parts)
 
     def _check_exit_conditions(self, market_data: Any):
-        """Check for stop loss and take profit conditions."""
+        """
+        Check for stop loss and take profit conditions.
+
+        CRITICAL FIX: Now checks both close price AND intraday extremes (low/high).
+        This ensures stop-loss and take-profit trigger correctly even if the close
+        price doesn't reflect the intraday extremes.
+
+        PESSIMISTIC EXECUTION: When both SL and TP are hit in the same bar,
+        stop-loss takes priority (worst-case scenario for risk management).
+        """
         if market_data.symbol not in self.positions:
             return
 
@@ -1372,29 +1383,71 @@ class SimpleBacktester:
 
         # Use the most recent trade's entry price
         entry_price = recent_trades[-1].entry_price
-        current_price = get_price(market_data)
+
+        # Calculate stop loss and take profit prices
+        stop_loss_price = None
+        take_profit_price = None
+        stop_loss_triggered = False
+        take_profit_triggered = False
 
         # Check stop loss
         if self.config.stop_loss_percentage:
             stop_loss_price = entry_price * (
                 Decimal("1") - self.config.stop_loss_percentage / Decimal("100")
             )
-            if current_price <= stop_loss_price:
-                self._close_position(
-                    market_data.symbol, market_data.timestamp, "stop_loss", current_price
-                )
-                return
 
         # Check take profit
         if self.config.take_profit_percentage:
             take_profit_price = entry_price * (
                 Decimal("1") + self.config.take_profit_percentage / Decimal("100")
             )
-            if current_price >= take_profit_price:
-                self._close_position(
-                    market_data.symbol, market_data.timestamp, "take_profit", current_price
-                )
-                return
+
+        # Get close price
+        close_price = get_price(market_data)
+
+        # Check if stop loss was hit using low price (intraday low)
+        if stop_loss_price is not None:
+            if hasattr(market_data, 'low') and market_data.low is not None:
+                # Use intraday low for stop-loss check
+                if market_data.low <= stop_loss_price:
+                    stop_loss_triggered = True
+            elif close_price <= stop_loss_price:
+                # Fallback to close price if low not available
+                stop_loss_triggered = True
+
+        # Check if take profit was hit using high price (intraday high)
+        if take_profit_price is not None:
+            if hasattr(market_data, 'high') and market_data.high is not None:
+                # Use intraday high for take-profit check
+                if market_data.high >= take_profit_price:
+                    take_profit_triggered = True
+            elif close_price >= take_profit_price:
+                # Fallback to close price if high not available
+                take_profit_triggered = True
+
+        # PESSIMISTIC EXECUTION: If both triggered, prioritize stop-loss
+        if stop_loss_triggered and take_profit_triggered:
+            # Both hit - use stop-loss price for execution (pessimistic)
+            self._close_position(
+                market_data.symbol, market_data.timestamp, "stop_loss", stop_loss_price
+            )
+            return
+        elif stop_loss_triggered:
+            # Only stop-loss hit
+            # Use the stop-loss price if available from low, otherwise use close
+            exit_price = stop_loss_price if hasattr(market_data, 'low') and market_data.low is not None else close_price
+            self._close_position(
+                market_data.symbol, market_data.timestamp, "stop_loss", exit_price
+            )
+            return
+        elif take_profit_triggered:
+            # Only take-profit hit
+            # Use the take-profit price if available from high, otherwise use close
+            exit_price = take_profit_price if hasattr(market_data, 'high') and market_data.high is not None else close_price
+            self._close_position(
+                market_data.symbol, market_data.timestamp, "take_profit", exit_price
+            )
+            return
 
     def _close_position(
         self, symbol: str, timestamp: datetime, reason: str, current_price: Decimal = None

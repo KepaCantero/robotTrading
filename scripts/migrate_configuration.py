@@ -69,7 +69,7 @@ class MagicValueDetector:
                 # Fallback to regex analysis
                 magic_values.extend(self._analyze_regex(content, file_path, lines))
 
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             print(f"Error scanning {file_path}: {e}")
 
         return magic_values

@@ -173,7 +173,7 @@ class ExecutionPlan(BaseModel):
         try:
             self.model_validate(self.model_dump())
             return True, "Execution plan valid"
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             return False, str(e)
 
 

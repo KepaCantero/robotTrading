@@ -131,7 +131,7 @@ class QuestDBConnector:
                 logger.info("✅ Using in-memory metrics storage (install asyncpg for QuestDB)")
                 return True
 
-            except Exception as db_error:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as db_error:
                 logger.warning(f"QuestDB connection failed: {db_error} - using in-memory storage")
                 self._connection_pool = _InMemoryPool()
                 self._is_connected = True
@@ -139,7 +139,7 @@ class QuestDBConnector:
                 self._in_memory_storage: List[MetricPoint] = []
                 return True
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"❌ Failed to initialize metrics storage: {e}")
             return False
 
@@ -159,7 +159,7 @@ class QuestDBConnector:
                 self._is_connected = False
                 logger.info("✅ Disconnected from QuestDB")
             return True
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"❌ Failed to disconnect: {e}")
             return False
 
@@ -185,7 +185,7 @@ class QuestDBConnector:
                 await self._flush_metrics()
 
             return True
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Failed to insert metric: {e}")
             return False
 
@@ -220,7 +220,7 @@ class QuestDBConnector:
 
             return inserted_count
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Failed to insert batch: {e}")
             return inserted_count
 
@@ -282,7 +282,7 @@ class QuestDBConnector:
             self._retry_count = 0
             return len(metrics_to_flush)
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Failed to flush metrics: {e}")
             self._pending_metrics.extend(metrics_to_flush)
             return 0
@@ -371,7 +371,7 @@ class QuestDBConnector:
 
                 return results
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Failed to query metrics: {e}")
             return []
 
@@ -417,7 +417,7 @@ class QuestDBConnector:
             results: List[AggregatedMetrics] = []
             return results
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Failed to query aggregated metrics: {e}")
             return []
 
@@ -471,7 +471,7 @@ class QuestDBConnector:
                     return latest.value
                 return None
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Failed to get latest value: {e}")
             return None
 
@@ -507,7 +507,7 @@ class QuestDBConnector:
                 "count": 1000,
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Failed to get statistics: {e}")
             return None
 
@@ -537,7 +537,7 @@ class QuestDBConnector:
             logger.info(f"✅ Deleted {deleted_count} old metrics")
             return deleted_count
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Failed to delete old metrics: {e}")
             return 0
 
@@ -566,7 +566,7 @@ class QuestDBConnector:
 
             return stats
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Failed to get storage stats: {e}")
             return None
 
@@ -587,7 +587,7 @@ class QuestDBConnector:
             logger.debug("✅ QuestDB health check passed")
             return True
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Health check failed: {e}")
             self._is_connected = False
             return False

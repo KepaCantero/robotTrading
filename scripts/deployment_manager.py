@@ -62,7 +62,7 @@ class DeploymentManager:
             session.close()
             return deployment_data
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             print(f"Error creating deployment record: {e}")
             sys.exit(1)
 
@@ -95,7 +95,7 @@ class DeploymentManager:
 
             session.close()
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             print(f"Error updating deployment status: {e}")
             sys.exit(1)
 
@@ -205,7 +205,7 @@ class DeploymentManager:
 
             return True
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             print(f"Error running smoke tests: {e}")
             return False
 

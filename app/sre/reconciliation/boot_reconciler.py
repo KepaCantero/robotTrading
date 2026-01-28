@@ -185,7 +185,7 @@ class BootReconciler:
 
             return report
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.critical(f"RECONCILIATION FAILED: {e}")
             report['status'] = 'FAILED'
             report['error'] = str(e)
@@ -196,7 +196,7 @@ class BootReconciler:
         try:
             positions = await self.broker.get_all_open_positions()
             return positions
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Failed to fetch broker positions: {e}")
             raise
 
@@ -233,7 +233,7 @@ class BootReconciler:
                     }
                     for row in rows
                 ]
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
             logger.error(f"Failed to fetch local positions: {e}")
             raise
 
@@ -350,7 +350,7 @@ class BootReconciler:
                         f"Emergency stop-loss set for {pos['symbol']}: " f"stop at {stop_price}"
                     )
 
-                except Exception as e:
+                except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                     # If can't set stop-loss, LOG CRITICAL
                     logger.critical(
                         f"FAILED to set emergency stop-loss for {pos['symbol']}: {e}. "
@@ -369,7 +369,7 @@ class BootReconciler:
                 # Add to database
                 await self._add_orphaned_position_to_db(pos)
 
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.error(f"Error protecting orphaned position: {e}")
                 actions.append(
                     {
@@ -432,7 +432,7 @@ class BootReconciler:
                     f"{pos['side']} {pos['quantity']}"
                 )
 
-            except Exception as e:
+            except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
                 logger.error(f"Error resolving phantom position: {e}")
                 actions.append(
                     {
@@ -472,7 +472,7 @@ class BootReconciler:
 
                 logger.info(f"Added orphaned position to database: {pos['symbol']}")
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Failed to add orphaned position to DB: {e}")
 
     async def _sync_database_to_broker(self, broker_positions: List[Dict[str, Any]]):

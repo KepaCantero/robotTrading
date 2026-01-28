@@ -72,7 +72,7 @@ class OptionsVolatilitySource(BaseDataSource):
             self.is_connected = True
             logger.info(f"Conectado a Options Volatility Source ({self.provider})")
             return True
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"Error conectando a Options Source: {e}")
             self.last_error = str(e)
             return False
@@ -86,7 +86,7 @@ class OptionsVolatilitySource(BaseDataSource):
             self.is_connected = False
             logger.info("Desconectado de Options Source")
             return True
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error desconectando de Options Source: {e}")
             return False
 
@@ -120,7 +120,7 @@ class OptionsVolatilitySource(BaseDataSource):
                 logger.warning(f"Provider {self.provider} no implementado para option chains")
                 return []
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error obteniendo option chain para {symbol}: {e}")
             return []
 
@@ -171,7 +171,7 @@ class OptionsVolatilitySource(BaseDataSource):
 
                 return options
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error obteniendo option chain de Polygon: {e}")
             return []
 
@@ -254,6 +254,6 @@ class OptionsVolatilitySource(BaseDataSource):
                 'surface_data': surface_data,
             }
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error obteniendo volatility surface para {symbol}: {e}")
             return {'expiry_dates': [], 'strikes': [], 'implied_volatility': {}, 'surface_data': []}

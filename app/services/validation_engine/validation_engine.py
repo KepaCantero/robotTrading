@@ -171,7 +171,7 @@ class ValidationEngine:
 
             return result
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Error validating request: {e}")
             return ValidationResult(
                 success=False,
@@ -204,7 +204,7 @@ class ValidationEngine:
                 severity=result["severity"],
             )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Error validating capital viability: {e}")
             return CapitalViabilityAnalysis(
                 is_viable=False,
@@ -268,7 +268,7 @@ class ValidationEngine:
                 cost_benefit_ratio=analysis["cost_benefit_ratio"],
             )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Error validating learning viability: {e}")
             return LearningViabilityAnalysis(
                 learning_recommended=False,
@@ -317,7 +317,7 @@ class ValidationEngine:
 
             return module_viabilities
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Error validating module viability: {e}")
             return {}
 

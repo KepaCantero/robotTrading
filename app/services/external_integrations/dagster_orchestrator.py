@@ -103,7 +103,7 @@ class DagsterOrchestrator:
                     logger.info(f"✅ Connected to Dagster server ({self.host}:{self.port})")
                     return True
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.warning(f"⚠️ Dagster server unavailable ({self.host}:{self.port}): {str(e)}")
             self.connected = False
             if self.session:
@@ -119,7 +119,7 @@ class DagsterOrchestrator:
             self.connected = False
             logger.info("✅ Disconnected from Dagster server")
             return True
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"❌ Disconnect failed: {str(e)}")
             return False
 
@@ -166,7 +166,7 @@ class DagsterOrchestrator:
                         logger.warning(
                             f"⚠️ Dagster job creation failed (HTTP {resp.status}), using local tracking"
                         )
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.warning(f"⚠️ Failed to create Dagster job: {str(e)}, using local tracking")
 
         # Always store locally as backup
@@ -205,7 +205,7 @@ class DagsterOrchestrator:
                         logger.warning(
                             f"⚠️ Dagster execution failed (HTTP {resp.status}), using local tracking"
                         )
-            except Exception as e:
+            except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
                 logger.warning(f"⚠️ Failed to execute on Dagster: {str(e)}, using local tracking")
 
         # Always update local state
@@ -334,7 +334,7 @@ class DagsterOrchestrator:
                         logger.warning(
                             f"⚠️ Dagster pipeline creation failed (HTTP {resp.status}), using local tracking"
                         )
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.warning(
                     f"⚠️ Failed to create Dagster pipeline: {str(e)}, using local tracking"
                 )
@@ -371,7 +371,7 @@ class DagsterOrchestrator:
                         return True
                     else:
                         logger.warning(f"⚠️ Dagster pipeline execution failed (HTTP {resp.status})")
-            except Exception as e:
+            except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
                 logger.warning(f"⚠️ Failed to execute pipeline on Dagster: {str(e)}")
 
         # Local execution with dependency resolution
@@ -399,7 +399,7 @@ class DagsterOrchestrator:
                         status_str = data.get("status", "").lower()
                         if status_str in [s.value for s in JobStatus]:
                             return JobStatus(status_str)
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.debug(f"Failed to get Dagster job status: {str(e)}")
 
         # Fall back to local tracking
@@ -417,7 +417,7 @@ class DagsterOrchestrator:
                     if resp.status == 200:
                         data = await resp.json()
                         return data.get("result", {})
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.debug(f"Failed to get Dagster job result: {str(e)}")
 
         # Fall back to local tracking
@@ -457,7 +457,7 @@ class DagsterOrchestrator:
                             )
                             jobs.append(job)
                         return jobs
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.debug(f"Failed to list Dagster jobs: {str(e)}")
 
         # Fall back to local tracking
@@ -489,7 +489,7 @@ class DagsterOrchestrator:
                         logger.info(f"✅ Job retry initiated on Dagster: {job_id}")
                         job.run_count += 1
                         return True
-            except Exception as e:
+            except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
                 logger.warning(f"⚠️ Failed to retry on Dagster: {str(e)}")
 
         # Retry locally

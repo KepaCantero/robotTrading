@@ -61,7 +61,7 @@ def download_symbol(symbol: str, years: int = 10, output_dir: str = "data/histor
         print(f"✅ {symbol}: {len(df)} rows saved to {output_path}")
         return True
         
-    except Exception as e:
+    except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
         print(f"❌ Error downloading {symbol}: {e}")
         return False
 

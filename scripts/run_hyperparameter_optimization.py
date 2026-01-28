@@ -108,7 +108,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         logger.info("\n⚠️ Optimización interrumpida por el usuario")
         sys.exit(1)
-    except Exception as e:
+    except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
         logger.error(f"❌ Error en optimización: {e}", exc_info=True)
         sys.exit(1)
 

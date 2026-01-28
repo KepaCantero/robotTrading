@@ -405,7 +405,7 @@ def main():
         example_comprehensive()
         print()
         example_custom_template()
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"Error running examples: {e}", exc_info=True)
         return 1
 

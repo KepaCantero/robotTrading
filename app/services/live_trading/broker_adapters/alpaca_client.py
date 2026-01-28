@@ -95,7 +95,7 @@ class AlpacaClient:
         except ImportError:
             logger.error("alpaca-trade-api not installed. Run: pip install alpaca-trade-api")
             raise AlpacaClientError("alpaca-trade-api library not available")
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
             logger.error(f"❌ Alpaca authentication failed: {str(e)}")
             raise AlpacaClientError(f"Authentication failed: {str(e)}")
 
@@ -131,7 +131,7 @@ class AlpacaClient:
                 "timestamp": datetime.utcnow().isoformat(),
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Failed to get account: {str(e)}")
             raise AlpacaClientError(f"get_account failed: {str(e)}")
 
@@ -194,7 +194,7 @@ class AlpacaClient:
 
             return order.id
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
             logger.error(f"❌ Order submission failed: {str(e)}")
             raise AlpacaClientError(f"submit_order failed: {str(e)}")
 
@@ -218,7 +218,7 @@ class AlpacaClient:
             logger.info(f"✅ Order {order_id} cancelled")
             return True
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
             logger.error(f"❌ Order cancellation failed: {str(e)}")
             raise AlpacaClientError(f"cancel_order failed: {str(e)}")
 
@@ -255,7 +255,7 @@ class AlpacaClient:
                 "updated_at": order.updated_at.isoformat() if order.updated_at else None,
             }
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
             logger.error(f"❌ Failed to get order: {str(e)}")
             raise AlpacaClientError(f"get_order failed: {str(e)}")
 
@@ -293,7 +293,7 @@ class AlpacaClient:
                 for pos in positions
             ]
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Failed to get positions: {str(e)}")
             raise AlpacaClientError(f"get_positions failed: {str(e)}")
 
@@ -332,7 +332,7 @@ class AlpacaClient:
                 for order in orders
             ]
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"❌ Failed to get orders: {str(e)}")
             raise AlpacaClientError(f"get_orders failed: {str(e)}")
 
@@ -361,7 +361,7 @@ class AlpacaClient:
             self.stream_task = asyncio.create_task(self._run_stream())
             logger.info(f"✅ WebSocket stream started for symbols: {self.subscribed_symbols}")
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"❌ Failed to start stream: {str(e)}")
             self.is_streaming = False
             raise AlpacaClientError(f"Stream startup failed: {str(e)}")
@@ -380,7 +380,7 @@ class AlpacaClient:
                 await self._connect_and_stream()
                 reconnect_attempts = 0  # Reset on successful connection
 
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 if not self.is_streaming:
                     # Stream was intentionally stopped
                     break
@@ -442,7 +442,7 @@ class AlpacaClient:
 
         except asyncio.CancelledError:
             logger.info("Stream task cancelled")
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"❌ Stream error: {str(e)}")
             raise
         finally:
@@ -513,7 +513,7 @@ class AlpacaClient:
 
         except json.JSONDecodeError:
             logger.warning(f"Invalid JSON message: {message}")
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"❌ Error processing stream message: {str(e)}")
 
     def register_quote_handler(self, callback: Callable[[Dict[str, Any]], None]) -> None:
@@ -564,7 +564,7 @@ class AlpacaClient:
             if self.stream_socket:
                 try:
                     await self.stream_socket.close()
-                except Exception as e:
+                except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                     logger.warning(f"Error closing socket: {e}")
                 self.stream_socket = None
 
@@ -583,7 +583,7 @@ class AlpacaClient:
             self.subscribed_symbols = []
             logger.info("✅ Stream stopped successfully")
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"❌ Error stopping stream: {str(e)}")
 
     def __repr__(self) -> str:

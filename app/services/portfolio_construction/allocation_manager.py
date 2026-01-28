@@ -81,7 +81,7 @@ class AllocationManager:
             self.target_allocation = allocation
             logger.info(f"✅ Target allocation set: {len(allocation)} assets")
             return True
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Error setting target allocation: {e}")
             return False
 
@@ -121,7 +121,7 @@ class AllocationManager:
 
             logger.debug(f"✅ Current allocation updated: {len(allocation)} assets")
             return True
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"❌ Error setting current allocation: {e}")
             return False
 

@@ -202,7 +202,7 @@ class InputProfile(BaseModel):
         if isinstance(v, str):
             try:
                 v = Decimal(v)
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 raise ValueError(f"Invalid capital format: {e}")
         elif isinstance(v, (int, float)):
             v = Decimal(str(v))
@@ -353,7 +353,7 @@ class InputProcessor:
             self.error_count += 1
             logger.error(f"Input validation error: {e}")
             raise
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             self.error_count += 1
             logger.error(f"Unexpected error processing input: {e}")
             raise ValueError(f"Failed to process input: {e}")

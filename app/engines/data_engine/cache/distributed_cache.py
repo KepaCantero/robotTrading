@@ -108,7 +108,7 @@ class DistributedCache:
                     raise ValueError("redis_url debe estar en config cuando use_redis=True")
                 self.redis_client = redis.from_url(redis_url, decode_responses=False)
                 logger.info("Redis cache inicializado")
-            except Exception as e:
+            except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"No se pudo conectar a Redis: {e}. Usando cache en memoria.")
                 self.use_redis = False
 
@@ -137,7 +137,7 @@ class DistributedCache:
                     # Crear tablas si no existen
                     Base.metadata.create_all(self.postgres_engine)
                     logger.info("PostgreSQL cache inicializado")
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.warning(
                     f"No se pudo conectar a PostgreSQL: {e}. Usando cache en Redis/memoria."
                 )
@@ -178,7 +178,7 @@ class DistributedCache:
                     return verify_and_load(cached_data)
             except ValueError as e:
                 logger.warning(f"Security error getting from Redis: {e}")
-            except Exception as e:
+            except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
                 logger.warning(f"Error obteniendo de Redis: {e}")
 
         # Intentar PostgreSQL
@@ -195,7 +195,7 @@ class DistributedCache:
                     return verify_and_load(entry.data)
             except ValueError as e:
                 logger.warning(f"Security error getting from PostgreSQL: {e}")
-            except Exception as e:
+            except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
                 logger.warning(f"Error obteniendo de PostgreSQL: {e}")
 
         # Fallback a memoria
@@ -239,7 +239,7 @@ class DistributedCache:
         if self.use_redis and self.redis_client:
             try:
                 await self.redis_client.setex(key, ttl, serialized_data)
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.warning(f"Error guardando en Redis: {e}")
                 success = False
 
@@ -272,7 +272,7 @@ class DistributedCache:
                     self.postgres_session.add(entry)
 
                 self.postgres_session.commit()
-            except Exception as e:
+            except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
                 logger.warning(f"Error guardando en PostgreSQL: {e}")
                 if self.postgres_session:
                     self.postgres_session.rollback()
@@ -291,7 +291,7 @@ class DistributedCache:
         if self.use_redis and self.redis_client:
             try:
                 await self.redis_client.delete(key)
-            except Exception as e:
+            except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
                 logger.warning(f"Error eliminando de Redis: {e}")
                 success = False
 
@@ -300,7 +300,7 @@ class DistributedCache:
             try:
                 self.postgres_session.query(CacheEntry).filter_by(key=key).delete()
                 self.postgres_session.commit()
-            except Exception as e:
+            except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
                 logger.warning(f"Error eliminando de PostgreSQL: {e}")
                 if self.postgres_session:
                     self.postgres_session.rollback()
@@ -334,7 +334,7 @@ class DistributedCache:
                 for entry in expired:
                     self.postgres_session.delete(entry)
                 self.postgres_session.commit()
-            except Exception as e:
+            except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
                 logger.warning(f"Error limpiando PostgreSQL: {e}")
 
         # Memoria

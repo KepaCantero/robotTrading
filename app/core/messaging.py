@@ -4,6 +4,7 @@ Uses Redis for pub/sub and ZeroMQ as fallback for high-throughput scenarios.
 Optimized for single-instance deployment with memory constraints.
 """
 
+import asyncio
 import logging
 import os
 import time
@@ -66,7 +67,7 @@ class MessageBus:
                 )
                 self.redis_client.ping()
                 logger.info("✅ Redis connected for messaging")
-            except Exception as e:
+            except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
                 logger.warning(f"⚠️ Redis connection failed: {e}, falling back to in-memory")
                 self.redis_client = None
 
@@ -76,7 +77,7 @@ class MessageBus:
                 self.zmq_socket = self.zmq_context.socket(zmq.PUB)
                 self.zmq_socket.bind(f"tcp://*:{zmq_port}")
                 logger.info(f"✅ ZeroMQ PUB socket bound on port {zmq_port}")
-            except Exception as e:
+            except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
                 logger.warning(f"⚠️ ZeroMQ setup failed: {e}")
                 self.use_zmq = False
 
@@ -107,7 +108,7 @@ class MessageBus:
             else:
                 logger.warning(f"No messaging backend available for channel: {channel}")
                 return False
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"Failed to publish to {channel}: {e}")
             return False
 
@@ -146,9 +147,9 @@ class MessageBus:
                             callback(data)
                         except ValueError as e:
                             logger.error(f"Security error processing Redis message: {e}")
-                        except Exception as e:
+                        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
                             logger.error(f"Error processing Redis message: {e}")
-            except Exception as e:
+            except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
                 logger.error(f"Redis subscription error: {e}")
 
         thread = Thread(target=_run, daemon=True)
@@ -156,7 +157,12 @@ class MessageBus:
         return thread
 
     def _subscribe_zmq(self, channel: str, callback: Callable) -> Thread:
-        """Subscribe using ZeroMQ."""
+        """
+        Subscribe using ZeroMQ.
+
+        Note: This runs in a separate thread (not async context), so time.sleep()
+        is appropriate here. The thread-based design avoids blocking the main event loop.
+        """
 
         def _run():
             try:
@@ -173,11 +179,13 @@ class MessageBus:
                             callback(msg.get('data', {}))
                     except zmq.Again:
                         time.sleep(0.001)  # 1ms sleep to avoid CPU spinning
+                        # Note: time.sleep() is acceptable here because this runs
+                        # in a dedicated thread, not in an async event loop
                     except ValueError as e:
                         logger.error(f"Security error processing ZMQ message: {e}")
-                    except Exception as e:
+                    except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
                         logger.error(f"Error processing ZMQ message: {e}")
-            except Exception as e:
+            except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
                 logger.error(f"ZMQ subscription error: {e}")
 
         thread = Thread(target=_run, daemon=True)
