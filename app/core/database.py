@@ -10,6 +10,14 @@ from contextlib import asynccontextmanager, contextmanager
 from typing import AsyncGenerator, Optional
 
 from sqlalchemy import MetaData
+from sqlalchemy.exc import (
+    ArgumentError,
+    DatabaseError,
+    DisconnectionError,
+    IntegrityError,
+    OperationalError,
+    TimeoutError,
+)
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -99,9 +107,9 @@ def get_database_engine() -> AsyncEngine:
                 )
                 logger.info(f"Database engine created (host={url_part}, pool_size={settings.database_pool_size})")
 
-        except Exception as e:
+        except (ArgumentError, OperationalError, TimeoutError, ValueError) as e:
             logger.error(f"Failed to create database engine: {e}")
-            raise RuntimeError(f"Database engine creation failed: {e}")
+            raise RuntimeError(f"Database engine creation failed: {e}") from e
 
     return _engine
 
@@ -132,9 +140,9 @@ def get_session_factory() -> async_sessionmaker[AsyncSession]:
 
             logger.info("Session factory created successfully")
 
-        except Exception as e:
+        except (ArgumentError, OperationalError, ValueError) as e:
             logger.error(f"Failed to create session factory: {e}")
-            raise RuntimeError(f"Session factory creation failed: {e}")
+            raise RuntimeError(f"Session factory creation failed: {e}") from e
 
     return _session_factory
 
@@ -162,7 +170,7 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     async with session_factory() as session:
         try:
             yield session
-        except Exception as e:
+        except (DatabaseError, OperationalError, TimeoutError, DisconnectionError) as e:
             logger.error(f"Database session error: {e}")
             await session.rollback()
             raise
@@ -196,7 +204,7 @@ async def get_db_transaction() -> AsyncGenerator[AsyncSession, None]:
             yield session
             await session.commit()
             logger.debug("Database transaction committed successfully")
-        except Exception as e:
+        except (DatabaseError, OperationalError, IntegrityError, TimeoutError) as e:
             logger.error(f"Database transaction error: {e}")
             await session.rollback()
             raise
@@ -223,9 +231,9 @@ async def init_database() -> None:
 
         logger.info("Database initialized successfully")
 
-    except Exception as e:
+    except (DatabaseError, OperationalError, TimeoutError) as e:
         logger.error(f"Database initialization failed: {e}")
-        raise RuntimeError(f"Database initialization failed: {e}")
+        raise RuntimeError(f"Database initialization failed: {e}") from e
 
 
 async def close_database() -> None:
@@ -243,7 +251,7 @@ async def close_database() -> None:
 
         logger.info("Database connections closed successfully")
 
-    except Exception as e:
+    except (DatabaseError, OperationalError) as e:
         logger.error(f"Error closing database connections: {e}")
 
 
@@ -265,7 +273,7 @@ async def check_database_connection() -> bool:
         logger.debug("Database connection check successful")
         return True
 
-    except Exception as e:
+    except (OperationalError, DatabaseError, TimeoutError) as e:
         logger.error(f"Database connection check failed: {e}")
         return False
 
@@ -302,7 +310,7 @@ async def get_database_info() -> dict:
             "is_production": settings.is_production(),
         }
 
-    except Exception as e:
+    except (OperationalError, AttributeError, KeyError) as e:
         logger.error(f"Failed to get database info: {e}")
         return {"error": str(e)}
 
@@ -325,7 +333,7 @@ async def execute_query(query: str, params: Optional[dict] = None) -> list:
         try:
             result = await session.execute(query, params or {})
             return result.fetchall()
-        except Exception as e:
+        except (DatabaseError, OperationalError, IntegrityError) as e:
             logger.error(f"Query execution failed: {e}")
             raise
 
@@ -347,7 +355,7 @@ async def execute_scalar(query: str, params: Optional[dict] = None) -> any:
         try:
             result = await session.execute(query, params or {})
             return result.scalar()
-        except Exception as e:
+        except (DatabaseError, OperationalError, IntegrityError) as e:
             logger.error(f"Scalar query execution failed: {e}")
             raise
 
@@ -375,7 +383,7 @@ def get_sync_db() -> Session:
     try:
         yield session
         session.commit()
-    except Exception:
+    except (DatabaseError, OperationalError, IntegrityError):
         session.rollback()
         raise
     finally:

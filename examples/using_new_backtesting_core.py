@@ -5,6 +5,7 @@ This script demonstrates how to use the refactored backtesting system
 with the new core modules (config_loader, executor, orchestrator, facade).
 """
 
+import asyncio
 from pathlib import Path
 
 # Example 1: Using the Facade (simplest approach)
@@ -16,8 +17,8 @@ def example_using_facade():
     config_path = "config/backtesting/comprehensive_backtest.yaml"
     runner = create_backtest_runner(config_path)
 
-    # Load data
-    runner.load_data()
+    # Load data (now async)
+    asyncio.run(runner.load_data())
 
     # Create a simple strategy
     from app.strategies.momentum_modular.strategy import ModularMomentumStrategy
@@ -161,7 +162,7 @@ def example_parameter_sweep():
 
     # Create runner
     runner = create_backtest_runner("config/backtesting/comprehensive_backtest.yaml")
-    runner.load_data()
+    asyncio.run(runner.load_data())
 
     # Define parameter ranges
     parameters = {

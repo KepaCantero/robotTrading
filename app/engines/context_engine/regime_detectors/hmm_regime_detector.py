@@ -99,7 +99,7 @@ class HMMRegimeDetector:
             logger.info(f"HMM entrenado con {len(observations)} observaciones")
             return True
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error entrenando HMM: {e}")
             return False
 
@@ -171,7 +171,7 @@ class HMMRegimeDetector:
                 'state': int(current_state),
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error detectando régimen con HMM: {e}")
             return {
                 'regime': 'unknown',

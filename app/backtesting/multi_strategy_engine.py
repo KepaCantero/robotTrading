@@ -135,7 +135,7 @@ class MultiStrategyBacktester:
             logger.info(
                 f"✅ Allocation completed. Validation: {self.allocation_result.validation_passed}, Allocations: {len(self.allocation_result.allocations)}"
             )
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(
                 f"❌ StrategyStockAllocator.allocate() failed with error: {e}", exc_info=True
             )
@@ -244,7 +244,7 @@ class MultiStrategyBacktester:
                             )
 
                     signals.extend(candidate_signals)
-                except Exception as e:
+                except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                     errors_count += 1
                     logger.error(
                         f"{strategy_name} ERROR generating signals for {quote.symbol}: {e}",

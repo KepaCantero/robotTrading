@@ -373,7 +373,7 @@ class AlertingRulesEngine:
         if not self.session:
             try:
                 self.session = aiohttp.ClientSession()
-            except Exception as e:
+            except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
                 logger.error(f"❌ Failed to create session: {str(e)}")
                 return
 
@@ -395,7 +395,7 @@ class AlertingRulesEngine:
                 else:
                     logger.warning(f"⚠️ Webhook delivery failed (HTTP {resp.status}): {rule.name}")
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"❌ Webhook error: {str(e)}")
 
     def _create_alert(self, rule: AlertRule, value: float, condition_met: bool) -> Alert:

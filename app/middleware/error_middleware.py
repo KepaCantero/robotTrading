@@ -55,7 +55,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
 
             return response
 
-        except Exception as exc:
+        except (ValueError, TypeError, KeyError, AttributeError) as exc:
             # Calculate processing time
             process_time = time.time() - start_time
 

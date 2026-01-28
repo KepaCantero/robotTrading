@@ -71,7 +71,7 @@ class StrategyFactory:
             logger.info(f"Created strategy: {name} with config keys: {list(config.keys())}")
             return strategy
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Failed to create strategy '{name}': {str(e)}")
             raise ValueError(f"Failed to create strategy '{name}': {str(e)}")
 

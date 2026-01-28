@@ -13,7 +13,13 @@ from decimal import Decimal
 from typing import Any, Dict, Generic, List, Optional, TypeVar
 
 from sqlalchemy import and_, func
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import (
+    DatabaseError,
+    DataError,
+    IntegrityError,
+    OperationalError,
+    ProgrammingError,
+)
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import raise_database_error
@@ -60,7 +66,7 @@ class BaseRepository(Generic[T]):
         """Get record by ID."""
         try:
             return self.session.query(self.model_class).filter(self.model_class.id == id).first()
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get {self.model_class.__name__} by ID: {str(e)}",
                 "get_by_id",
@@ -76,7 +82,7 @@ class BaseRepository(Generic[T]):
             if limit:
                 query = query.limit(limit)
             return query.all()
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get all {self.model_class.__name__}: {str(e)}",
                 "get_all",
@@ -97,7 +103,7 @@ class BaseRepository(Generic[T]):
             self.session.commit()
             self.session.refresh(instance)
             return instance
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             self.session.rollback()
             raise_database_error(
                 f"Failed to update {self.model_class.__name__}: {str(e)}",
@@ -115,7 +121,7 @@ class BaseRepository(Generic[T]):
             self.session.delete(instance)
             self.session.commit()
             return True
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             self.session.rollback()
             raise_database_error(
                 f"Failed to delete {self.model_class.__name__}: {str(e)}",
@@ -127,7 +133,7 @@ class BaseRepository(Generic[T]):
         """Count total records."""
         try:
             return self.session.query(self.model_class).count()
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to count {self.model_class.__name__}: {str(e)}",
                 "count",
@@ -142,7 +148,7 @@ class UserRepository(BaseRepository[User]):
         """Get user by username."""
         try:
             return self.session.query(User).filter(User.username == username).first()
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get user by username: {str(e)}", "get_by_username", "users"
             )
@@ -151,14 +157,14 @@ class UserRepository(BaseRepository[User]):
         """Get user by email."""
         try:
             return self.session.query(User).filter(User.email == email).first()
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(f"Failed to get user by email: {str(e)}", "get_by_email", "users")
 
     def get_active_users(self) -> List[User]:
         """Get all active users."""
         try:
             return self.session.query(User).filter(User.is_active).all()
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get active users: {str(e)}", "get_active_users", "users"
             )
@@ -171,7 +177,7 @@ class PortfolioRepository(BaseRepository[Portfolio]):
         """Get portfolios by user ID."""
         try:
             return self.session.query(Portfolio).filter(Portfolio.user_id == user_id).all()
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get portfolios by user: {str(e)}",
                 "get_by_user",
@@ -186,7 +192,7 @@ class PortfolioRepository(BaseRepository[Portfolio]):
                 .filter(and_(Portfolio.user_id == user_id, Portfolio.is_active))
                 .all()
             )
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get active portfolios by user: {str(e)}",
                 "get_active_by_user",
@@ -201,7 +207,7 @@ class PortfolioRepository(BaseRepository[Portfolio]):
             )
             self.session.commit()
             return True
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             self.session.rollback()
             raise_database_error(
                 f"Failed to update portfolio total value: {str(e)}",
@@ -217,7 +223,7 @@ class AssetRepository(BaseRepository[Asset]):
         """Get asset by symbol."""
         try:
             return self.session.query(Asset).filter(Asset.symbol == symbol).first()
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get asset by symbol: {str(e)}", "get_by_symbol", "assets"
             )
@@ -226,7 +232,7 @@ class AssetRepository(BaseRepository[Asset]):
         """Get assets by asset class."""
         try:
             return self.session.query(Asset).filter(Asset.asset_class == asset_class).all()
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get assets by class: {str(e)}",
                 "get_by_asset_class",
@@ -237,7 +243,7 @@ class AssetRepository(BaseRepository[Asset]):
         """Get all active assets."""
         try:
             return self.session.query(Asset).filter(Asset.is_active).all()
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get active assets: {str(e)}", "get_active_assets", "assets"
             )
@@ -246,7 +252,7 @@ class AssetRepository(BaseRepository[Asset]):
         """Search assets by name pattern."""
         try:
             return self.session.query(Asset).filter(Asset.name.ilike(f"%{name_pattern}%")).all()
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to search assets by name: {str(e)}", "search_by_name", "assets"
             )
@@ -259,7 +265,7 @@ class PositionRepository(BaseRepository[Position]):
         """Get positions by portfolio ID."""
         try:
             return self.session.query(Position).filter(Position.portfolio_id == portfolio_id).all()
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get positions by portfolio: {str(e)}",
                 "get_by_portfolio",
@@ -281,7 +287,7 @@ class PositionRepository(BaseRepository[Position]):
                 )
                 .first()
             )
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get position by portfolio and asset: {str(e)}",
                 "get_by_portfolio_and_asset",
@@ -296,7 +302,7 @@ class PositionRepository(BaseRepository[Position]):
                 .filter(and_(Position.portfolio_id == portfolio_id, Position.quantity != 0))
                 .all()
             )
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get non-zero positions: {str(e)}",
                 "get_non_zero_positions",
@@ -315,7 +321,7 @@ class PositionRepository(BaseRepository[Position]):
 
             self.session.commit()
             return True
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             self.session.rollback()
             raise_database_error(
                 f"Failed to update position price: {str(e)}",
@@ -340,7 +346,7 @@ class TradeRepository(BaseRepository[Trade]):
                 query = query.limit(limit)
 
             return query.all()
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get trades by portfolio: {str(e)}",
                 "get_by_portfolio",
@@ -360,7 +366,7 @@ class TradeRepository(BaseRepository[Trade]):
                 query = query.limit(limit)
 
             return query.all()
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get trades by asset: {str(e)}", "get_by_asset", "trades"
             )
@@ -374,7 +380,7 @@ class TradeRepository(BaseRepository[Trade]):
                 .order_by(Trade.executed_at.desc())
                 .all()
             )
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get trades by date range: {str(e)}",
                 "get_by_date_range",
@@ -401,7 +407,7 @@ class TradeRepository(BaseRepository[Trade]):
                 "total_slippage": result.total_slippage or Decimal("0"),
                 "total_cost": result.total_cost or Decimal("0"),
             }
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get trade summary: {str(e)}", "get_trade_summary", "trades"
             )
@@ -427,7 +433,7 @@ class MarketDataRepository(BaseRepository[MarketData]):
                 .order_by(MarketData.timestamp.asc())
                 .all()
             )
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get market data by asset and date range: {str(e)}",
                 "get_by_asset_and_date_range",
@@ -443,7 +449,7 @@ class MarketDataRepository(BaseRepository[MarketData]):
                 .order_by(MarketData.timestamp.desc())
                 .first()
             )
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get latest price: {str(e)}",
                 "get_latest_price",
@@ -456,7 +462,7 @@ class MarketDataRepository(BaseRepository[MarketData]):
             self.session.bulk_insert_mappings(MarketData, market_data_list)
             self.session.commit()
             return True
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             self.session.rollback()
             raise_database_error(
                 f"Failed to bulk insert market data: {str(e)}",
@@ -481,7 +487,7 @@ class SignalRepository(BaseRepository[Signal]):
                 query = query.limit(limit)
 
             return query.all()
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get signals by strategy: {str(e)}",
                 "get_by_strategy",
@@ -501,7 +507,7 @@ class SignalRepository(BaseRepository[Signal]):
                 query = query.limit(limit)
 
             return query.all()
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get signals by asset: {str(e)}", "get_by_asset", "signals"
             )
@@ -516,7 +522,7 @@ class SignalRepository(BaseRepository[Signal]):
                 .order_by(Signal.created_at.desc())
                 .all()
             )
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get recent signals: {str(e)}",
                 "get_recent_signals",
@@ -536,7 +542,7 @@ class BacktestRepository(BaseRepository[Backtest]):
                 .order_by(Backtest.created_at.desc())
                 .all()
             )
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get backtests by portfolio: {str(e)}",
                 "get_by_portfolio",
@@ -552,7 +558,7 @@ class BacktestRepository(BaseRepository[Backtest]):
                 .order_by(Backtest.created_at.desc())
                 .all()
             )
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get backtests by strategy: {str(e)}",
                 "get_by_strategy",
@@ -568,7 +574,7 @@ class BacktestRepository(BaseRepository[Backtest]):
                 .order_by(Backtest.completed_at.desc())
                 .all()
             )
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get completed backtests: {str(e)}",
                 "get_completed_backtests",
@@ -588,7 +594,7 @@ class RiskMetricsRepository(BaseRepository[RiskMetrics]):
                 .order_by(RiskMetrics.calculation_date.desc())
                 .first()
             )
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get latest risk metrics: {str(e)}",
                 "get_latest_by_portfolio",
@@ -612,7 +618,7 @@ class RiskMetricsRepository(BaseRepository[RiskMetrics]):
                 .order_by(RiskMetrics.calculation_date.asc())
                 .all()
             )
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get risk metrics by date range: {str(e)}",
                 "get_by_date_range",
@@ -636,7 +642,7 @@ class SystemLogRepository(BaseRepository[SystemLog]):
                 query = query.limit(limit)
 
             return query.all()
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get logs by level: {str(e)}", "get_by_level", "system_logs"
             )
@@ -654,7 +660,7 @@ class SystemLogRepository(BaseRepository[SystemLog]):
                 query = query.limit(limit)
 
             return query.all()
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get logs by service: {str(e)}",
                 "get_by_service",
@@ -675,7 +681,7 @@ class SystemLogRepository(BaseRepository[SystemLog]):
                 query = query.limit(limit)
 
             return query.all()
-        except Exception as e:
+        except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
                 f"Failed to get recent logs: {str(e)}", "get_recent_logs", "system_logs"
             )

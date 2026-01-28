@@ -726,7 +726,7 @@ def main():
                 end_date=end_date,
                 max_symbols_per_strategy=5,
             )
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.warning(f"No se pudieron obtener quotes del portfolio builder: {e}")
             # Crear datos de ejemplo para auditoría
             logger.info("Generando datos de ejemplo para auditoría...")
@@ -787,7 +787,7 @@ def main():
         
         return report
         
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"Error durante auditoría: {e}", exc_info=True)
         raise
 

@@ -5,6 +5,7 @@ Este módulo proporciona endpoints REST para validar que las estrategias
 generen rentabilidad neta positiva después de todos los costos operativos.
 """
 
+from __future__ import annotations
 import logging
 from decimal import Decimal
 from typing import List
@@ -80,7 +81,7 @@ async def validate_strategy_profitability(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         logger.error(f"Error validating strategy profitability: {str(e)}")
         raise HTTPException(
             status_code=500,
@@ -126,7 +127,7 @@ async def validate_multiple_strategies(
             try:
                 result = profitability_service.validate_strategy_profitability(request)
                 results.append(result)
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.error(f"Error validating strategy {request.strategy_name}: {str(e)}")
                 # Continuar con otras estrategias en caso de error individual
                 continue
@@ -137,7 +138,7 @@ async def validate_multiple_strategies(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"Error in batch profitability validation: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Internal error during batch validation: {str(e)}"
@@ -187,7 +188,7 @@ async def compare_strategies(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         logger.error(f"Error comparing strategies: {str(e)}")
         raise HTTPException(
             status_code=500,
@@ -245,7 +246,7 @@ async def analyze_historical_performance(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         logger.error(f"Error analyzing historical performance: {str(e)}")
         raise HTTPException(
             status_code=500,
@@ -298,7 +299,7 @@ async def generate_validation_report(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Error generating validation report: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Internal error during report generation: {str(e)}"
@@ -336,7 +337,7 @@ async def get_default_validation_criteria() -> ValidationCriteria:
 
         return criteria
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"Error retrieving default criteria: {str(e)}")
         raise HTTPException(
             status_code=500,
@@ -366,7 +367,7 @@ async def health_check() -> JSONResponse:
             },
         )
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Health check failed: {str(e)}")
         return JSONResponse(
             status_code=503,
@@ -422,7 +423,7 @@ async def get_metrics_summary() -> JSONResponse:
 
         return JSONResponse(status_code=200, content=summary)
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Error retrieving metrics summary: {str(e)}")
         raise HTTPException(
             status_code=500,

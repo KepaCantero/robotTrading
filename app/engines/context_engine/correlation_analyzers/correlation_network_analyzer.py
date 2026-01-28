@@ -68,6 +68,6 @@ class CorrelationNetworkAnalyzer:
                 'num_edges': G.number_of_edges(),
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error analizando red: {e}")
             return {'centrality': {}, 'clusters': [], 'error': str(e)}

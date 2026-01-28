@@ -82,7 +82,7 @@ if STREAMLIT_AVAILABLE:
                     st.success("✅ Análisis completado")
                     st.rerun()
 
-                except Exception as e:
+                except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                     st.error(f"❌ Error: {e}")
                     logger.error(f"Error en análisis: {e}", exc_info=True)
 

@@ -124,7 +124,7 @@ class WalkForwardValidator:
                     "sharpe_decay": train_sharpe - test_sharpe if train_sharpe > 0 else 0,
                 })
 
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.error(f"Window {i} failed: {e}")
 
         if not window_results:
@@ -161,7 +161,7 @@ class WalkForwardValidator:
             runner = ComprehensiveBacktestRunner(str(temp_config_path))
             results = runner.run_baseline_backtest()
             return results[0] if results else self._get_empty_metrics()
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Backtest failed: {e}")
             return self._get_empty_metrics()
         finally:
@@ -243,7 +243,7 @@ class MonteCarloSimulator:
                     returns_series = np.random.normal(avg_return, volatility, total_trades)
                 else:
                     return {"passed": False, "error": "No trade data"}
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Failed to get backtest results: {e}")
             return {"passed": False, "error": str(e)}
 
@@ -287,7 +287,7 @@ class MonteCarloSimulator:
             runner = ComprehensiveBacktestRunner(str(temp_config_path))
             results = runner.run_baseline_backtest()
             return results[0] if results else self._get_empty_metrics()
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Backtest failed: {e}")
             return self._get_empty_metrics()
         finally:
@@ -392,7 +392,7 @@ class OutOfSampleValidator:
                 "oos_sharpe": float(oos_sharpe),
                 "sharpe_decay": float(sharpe_decay),
             }
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"OOS validation failed: {e}")
             return {"passed": False, "error": str(e)}
 
@@ -415,7 +415,7 @@ class OutOfSampleValidator:
             runner = ComprehensiveBacktestRunner(str(temp_config_path))
             results = runner.run_baseline_backtest()
             return results[0] if results else self._get_empty_metrics()
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Backtest failed: {e}")
             return self._get_empty_metrics()
         finally:

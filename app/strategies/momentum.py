@@ -8,6 +8,7 @@ Implementa una estrategia de momentum que utiliza indicadores técnicos
 para identificar oportunidades de trading basadas en tendencias de precio.
 """
 
+from __future__ import annotations
 import logging
 from collections import deque
 from decimal import Decimal
@@ -59,7 +60,7 @@ class MomentumStrategy(BaseStrategy):
                     self.config.update({k: v for k, v in params.items() if v is not None})
                     # Update config dict as well for downstream access
                     config.update({k: v for k, v in params.items() if v is not None})
-                except Exception:
+                except (FileNotFoundError, ValueError, KeyError, TypeError):
                     pass
 
             # Core thresholds - load from YAML, no defaults
@@ -371,7 +372,7 @@ class MomentumStrategy(BaseStrategy):
                     f"current_bar={self.current_bar_index}, cooldown_bars={self.cooldown_bars})"
                 )
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(
                 f"MOMENTUM Error generating signals for {market_data.symbol}: {e}", exc_info=True
             )
@@ -511,7 +512,7 @@ class MomentumStrategy(BaseStrategy):
             )
             return True
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"❌ MOMENTUM risk_check ERROR for {signal.symbol}: {e}", exc_info=True)
             return False
 

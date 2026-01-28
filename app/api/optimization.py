@@ -5,6 +5,7 @@ This module provides FastAPI endpoints for walk-forward analysis, out-of-sample 
 and parameter optimization to prevent overfitting in trading strategies.
 """
 
+from __future__ import annotations
 import logging
 from datetime import date, datetime
 from typing import List, Optional
@@ -81,7 +82,7 @@ async def optimize_parameters(
         raise HTTPException(status_code=400, detail=str(e))
     except RuntimeError as e:
         raise HTTPException(status_code=500, detail=str(e))
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 
@@ -114,7 +115,7 @@ async def perform_out_of_sample_test(
         raise HTTPException(status_code=400, detail=str(e))
     except RuntimeError as e:
         raise HTTPException(status_code=500, detail=str(e))
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 
@@ -137,7 +138,7 @@ async def get_optimization_artifacts(
         artifacts = await service.get_optimization_artifacts(strategy_name)
         return artifacts
 
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 
@@ -170,7 +171,7 @@ async def get_optimization_artifact(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 
@@ -191,7 +192,7 @@ async def get_optimization_summary(
         summary = await service.get_optimization_summary()
         return summary
 
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 
@@ -225,7 +226,7 @@ async def get_optimization_metrics(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 
@@ -295,7 +296,7 @@ async def validate_optimization_config(
 
     except ValueError as e:
         return JSONResponse(status_code=400, content={"message": str(e), "valid": False})
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         return JSONResponse(
             status_code=500,
             content={"message": f"Unexpected error: {str(e)}", "valid": False},
@@ -342,7 +343,7 @@ async def get_best_parameters(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 
@@ -378,7 +379,7 @@ async def delete_optimization_artifact(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 
@@ -411,6 +412,6 @@ async def _store_optimization_result(
         # This would typically store the result in a database
         # For now, it's already stored in the service
         pass
-    except Exception as e:
+    except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
         # Log error but don't raise exception in background task
         logger.error(f"Error storing optimization result: {str(e)}")

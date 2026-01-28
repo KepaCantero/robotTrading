@@ -38,7 +38,7 @@ class ParameterPresetManager:
             with open(self.config_path, 'r') as f:
                 self.config = yaml.safe_load(f)
             logger.info(f"Loaded parameter presets from {self.config_path}")
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.error(f"Error loading preset config: {e}")
 
     def get_preset(self, preset_name: str) -> Optional[Dict[str, Any]]:

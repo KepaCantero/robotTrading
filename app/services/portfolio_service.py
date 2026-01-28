@@ -5,6 +5,7 @@ Este módulo implementa el servicio de portafolio refactorizado,
 utilizando el gestor centralizado de circuit breakers y el gestor de riesgos.
 """
 
+from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
@@ -93,7 +94,7 @@ class PortfolioService:
 
             return portfolio
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             # Registrar error en circuit breaker
             self.circuit_breaker_manager.record_error(CircuitBreakerType.API_ERRORS.value, str(e))
             self.failed_operations += 1
@@ -118,7 +119,7 @@ class PortfolioService:
             self.operations_count += 1
             return position
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             self.circuit_breaker_manager.record_error(CircuitBreakerType.API_ERRORS.value, str(e))
             self.failed_operations += 1
 
@@ -160,7 +161,7 @@ class PortfolioService:
             self.operations_count += 1
             return success
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             self.failed_operations += 1
             logger.error(f"Error adding position {position.symbol}: {e}")
             return False
@@ -200,7 +201,7 @@ class PortfolioService:
             self.operations_count += 1
             return success
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             self.failed_operations += 1
             logger.error(f"Error updating position {position.symbol}: {e}")
             return False
@@ -219,7 +220,7 @@ class PortfolioService:
             self.operations_count += 1
             return success
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             self.failed_operations += 1
             logger.error(f"Error removing position {symbol}: {e}")
             return False
@@ -272,7 +273,7 @@ class PortfolioService:
             self.operations_count += 1
             return success
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             self.failed_operations += 1
             logger.error(f"Error simulating trade for {symbol}: {e}")
             return False
@@ -403,7 +404,7 @@ class PortfolioService:
             currency_exp = self.hedging_engine.calculate_currency_exposure(portfolio)
             logger.debug(f"Unhedged FX exposure: {currency_exp}")
             return currency_exp
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.warning(f"Failed to calculate currency exposure: {e}")
             return {}
 
@@ -439,7 +440,7 @@ class PortfolioService:
                 "recommendations": [r.model_dump() for r in recommendations],
                 "total_cost_bps": float(sum(r.estimated_cost_bps for r in recommendations)),
             }
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Failed to apply auto-hedging: {e}")
             return {
                 "success": False,

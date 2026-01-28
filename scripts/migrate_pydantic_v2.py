@@ -74,7 +74,7 @@ def migrate_pydantic_v2_file(file_path: Path) -> bool:
 
         return False
 
-    except Exception as e:
+    except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
         print(f"Error migrating {file_path}: {e}")
         return False
 
@@ -107,7 +107,7 @@ def migrate_all_pydantic_files():
                 else:
                     print(f"ℹ️  No changes needed: {file_path}")
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             print(f"❌ Error processing {file_path}: {e}")
 
     print(f"\n🎉 Migration complete! {len(migrated_files)} files migrated.")

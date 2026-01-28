@@ -128,7 +128,7 @@ class OrderPersistence:
             conn.rollback()
             logger.error(f"Database error: {e}")
             raise
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             conn.rollback()
             logger.error(f"Unexpected error: {e}")
             raise
@@ -292,7 +292,7 @@ class OrderPersistence:
 
                 return True
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Failed to save order: {e}")
             return False
 
@@ -316,7 +316,7 @@ class OrderPersistence:
                     return self._row_to_dict(row)
                 return None
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Failed to get order: {e}")
             return None
 
@@ -343,7 +343,7 @@ class OrderPersistence:
 
                 return [self._row_to_dict(row) for row in cursor.fetchall()]
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Failed to get pending orders: {e}")
             return []
 
@@ -373,7 +373,7 @@ class OrderPersistence:
 
                 return [self._row_to_dict(row) for row in cursor.fetchall()]
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Failed to get executed orders: {e}")
             return []
 
@@ -404,7 +404,7 @@ class OrderPersistence:
 
                 return [self._row_to_dict(row) for row in cursor.fetchall()]
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Failed to get order history: {e}")
             return []
 
@@ -427,7 +427,7 @@ class OrderPersistence:
                 )
                 return cursor.rowcount > 0
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Failed to mark order executed: {e}")
             return False
 
@@ -466,7 +466,7 @@ class OrderPersistence:
                 )
                 return True
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Failed to save execution: {e}")
             return False
 
@@ -498,7 +498,7 @@ class OrderPersistence:
 
                 return [self._execution_row_to_dict(row) for row in cursor.fetchall()]
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Failed to get executions: {e}")
             return []
 
@@ -537,7 +537,7 @@ class OrderPersistence:
                 )
                 return True
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Failed to save error: {e}")
             return False
 
@@ -567,7 +567,7 @@ class OrderPersistence:
 
                 return [self._error_row_to_dict(row) for row in cursor.fetchall()]
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Failed to get errors: {e}")
             return []
 
@@ -643,7 +643,7 @@ class OrderPersistence:
                 logger.info(f"Cleaned up {deleted} old orders")
                 return deleted
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Failed to cleanup old orders: {e}")
             return 0
 
@@ -674,7 +674,7 @@ class OrderPersistence:
                     'database_path': str(self.db_path),
                 }
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Failed to get stats: {e}")
             return {}
 

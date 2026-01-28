@@ -4,6 +4,8 @@ Signal Management API Endpoints
 FastAPI endpoints for signal scoring, evaluation, and management.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal
@@ -82,8 +84,20 @@ class SignalStatisticsResponse(BaseModel):
 async def evaluate_signal(
     request: SignalEvaluationRequest,
     service: SignalScorerService = Depends(get_signal_scorer_service),
-):
-    """Evaluate and score a trading signal."""
+) -> SignalResponse:
+    """
+    Evaluate and score a trading signal.
+
+    Args:
+        request: Signal evaluation request containing symbol, signal type, and market data
+        service: Signal scorer service dependency
+
+    Returns:
+        SignalResponse with evaluated signal or rejection message
+
+    Raises:
+        HTTPException: If signal type is invalid or evaluation fails
+    """
     try:
         # Convert request to MarketData
         market_data = MarketData(
@@ -122,15 +136,26 @@ async def evaluate_signal(
                 message=f"Signal for {request.symbol} does not meet minimum thresholds",
             )
 
-    except Exception as e:
+    except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
         raise HTTPException(status_code=500, detail=f"Error evaluating signal: {str(e)}")
 
 
 @router.get("/next", response_model=SignalResponse)
 async def get_next_actionable_signal(
     service: SignalScorerService = Depends(get_signal_scorer_service),
-):
-    """Get next actionable signal from priority queue."""
+) -> SignalResponse:
+    """
+    Get next actionable signal from priority queue.
+
+    Args:
+        service: Signal scorer service dependency
+
+    Returns:
+        SignalResponse with next actionable signal or empty response
+
+    Raises:
+        HTTPException: If retrieval fails
+    """
     try:
         signal = await service.get_next_actionable_signal()
 
@@ -145,7 +170,7 @@ async def get_next_actionable_signal(
                 success=False, signal=None, message="No actionable signals available"
             )
 
-    except Exception as e:
+    except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
         raise HTTPException(status_code=500, detail=f"Error getting next signal: {str(e)}")
 
 
@@ -154,8 +179,18 @@ async def execute_signal(
     signal_id: str,
     background_tasks: BackgroundTasks,
     service: SignalScorerService = Depends(get_signal_scorer_service),
-):
-    """Execute a trading signal."""
+) -> Dict[str, Any]:
+    """
+    Execute a trading signal.
+
+    Args:
+        signal_id: Signal identifier (used as symbol)
+        background_tasks: FastAPI background tasks
+        service: Signal scorer service dependency
+
+    Returns:
+        Dict with execution result
+    """
     try:
         # Get signals by symbol (using signal_id as symbol)
         signals = await service.get_signals_by_symbol(signal_id.upper())
@@ -184,7 +219,7 @@ async def execute_signal(
                 "signal": signal,
             }
 
-    except Exception as e:
+    except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
         logger.error(f"Error executing signal for {signal_id}: {e}")
         return {
             "success": False,
@@ -196,8 +231,19 @@ async def execute_signal(
 @router.get("/statistics", response_model=SignalStatisticsResponse)
 async def get_signal_statistics(
     service: SignalScorerService = Depends(get_signal_scorer_service),
-):
-    """Get signal processing statistics."""
+) -> SignalStatisticsResponse:
+    """
+    Get signal processing statistics.
+
+    Args:
+        service: Signal scorer service dependency
+
+    Returns:
+        SignalStatisticsResponse with current statistics
+
+    Raises:
+        HTTPException: If statistics retrieval fails
+    """
     try:
         stats = await service.get_signal_statistics()
 
@@ -215,20 +261,32 @@ async def get_signal_statistics(
             },
         )
 
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error getting statistics: {str(e)}")
 
 
 @router.get("/symbol/{symbol}", response_model=List[Signal])
 async def get_signals_by_symbol(
     symbol: str, service: SignalScorerService = Depends(get_signal_scorer_service)
-):
-    """Get all signals for a specific symbol."""
+) -> List[Signal]:
+    """
+    Get all signals for a specific symbol.
+
+    Args:
+        symbol: Trading symbol
+        service: Signal scorer service dependency
+
+    Returns:
+        List of signals for the symbol
+
+    Raises:
+        HTTPException: If retrieval fails
+    """
     try:
         signals = await service.get_signals_by_symbol(symbol.upper())
         return signals
 
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error getting signals for {symbol}: {str(e)}")
 
 
@@ -236,8 +294,20 @@ async def get_signals_by_symbol(
 async def clear_expired_signals(
     max_age_minutes: int = 60,
     service: SignalScorerService = Depends(get_signal_scorer_service),
-):
-    """Clear signals older than specified age."""
+) -> Dict[str, Any]:
+    """
+    Clear signals older than specified age.
+
+    Args:
+        max_age_minutes: Maximum age of signals to keep in minutes
+        service: Signal scorer service dependency
+
+    Returns:
+        Dict with operation result
+
+    Raises:
+        HTTPException: If operation fails
+    """
     try:
         await service.clear_expired_signals(max_age_minutes)
         return {
@@ -245,7 +315,7 @@ async def clear_expired_signals(
             "message": f"Cleared signals older than {max_age_minutes} minutes",
         }
 
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error clearing expired signals: {str(e)}")
 
 
@@ -254,8 +324,21 @@ async def update_thresholds(
     confidence_threshold: float,
     liquidity_threshold: float,
     service: SignalScorerService = Depends(get_signal_scorer_service),
-):
-    """Update minimum thresholds for signal evaluation."""
+) -> Dict[str, Any]:
+    """
+    Update minimum thresholds for signal evaluation.
+
+    Args:
+        confidence_threshold: Minimum confidence threshold (0-100)
+        liquidity_threshold: Minimum liquidity threshold (0-100)
+        service: Signal scorer service dependency
+
+    Returns:
+        Dict with update result
+
+    Raises:
+        HTTPException: If thresholds are invalid or update fails
+    """
     try:
         if not (0 <= confidence_threshold <= 100):
             raise HTTPException(
@@ -274,7 +357,7 @@ async def update_thresholds(
             "message": f"Updated thresholds: confidence={confidence_threshold}%, liquidity={liquidity_threshold}%",
         }
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         raise HTTPException(status_code=500, detail=f"Error updating thresholds: {str(e)}")
 
 
@@ -282,8 +365,20 @@ async def update_thresholds(
 async def update_position_size_limit(
     max_percent: float,
     service: SignalScorerService = Depends(get_signal_scorer_service),
-):
-    """Update maximum position size limit."""
+) -> Dict[str, Any]:
+    """
+    Update maximum position size limit.
+
+    Args:
+        max_percent: Maximum position size as percentage (0-100)
+        service: Signal scorer service dependency
+
+    Returns:
+        Dict with update result
+
+    Raises:
+        HTTPException: If limit is invalid or update fails
+    """
     try:
         if not (0 < max_percent <= 100):
             raise HTTPException(
@@ -297,15 +392,23 @@ async def update_position_size_limit(
             "message": f"Updated max position size: {max_percent}%",
         }
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         raise HTTPException(status_code=500, detail=f"Error updating position size limit: {str(e)}")
 
 
 @router.get("/health")
 async def signal_health_check(
     service: SignalScorerService = Depends(get_signal_scorer_service),
-):
-    """Health check for signal scorer service."""
+) -> Dict[str, Any]:
+    """
+    Health check for signal scorer service.
+
+    Args:
+        service: Signal scorer service dependency
+
+    Returns:
+        Dict with health status and statistics
+    """
     try:
         stats = await service.get_signal_statistics()
 
@@ -326,7 +429,7 @@ async def signal_health_check(
                 "message": "Signal scorer service not responding properly",
             }
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         return {
             "status": "unhealthy",
             "message": f"Signal scorer service error: {str(e)}",

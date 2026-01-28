@@ -95,7 +95,7 @@ class AccountSynchronizer:
             logger.info(f"✅ Account synced: ${self.local_cash:,.2f} cash available")
             return True
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"❌ Sync error: {str(e)}")
             return False
 
@@ -114,7 +114,7 @@ class AccountSynchronizer:
             logger.info(f"✅ Synced {len(positions)} positions")
             return True
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"❌ Position sync error: {str(e)}")
             return False
 
@@ -137,7 +137,7 @@ class AccountSynchronizer:
             else:
                 return False, "Partial sync failure"
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             return False, f"Sync error: {str(e)}"
 
     async def reconcile_balance(self) -> Reconciliation:

@@ -46,7 +46,7 @@ if str(project_root) not in sys.path:
 # Importar el resto de módulos con manejo de errores
 try:
     from app.dashboard.comprehensive_data_loader import ComprehensiveBacktestLoader
-except Exception:
+except (ValueError, TypeError, KeyError, AttributeError):
     ComprehensiveBacktestLoader = None
 
 # No cargar aquí para evitar bloqueos - se cargará dentro de main() cuando se necesite
@@ -55,26 +55,26 @@ ComprehensiveBacktestRunner = None
 # Importar librerías básicas
 try:
     import yaml
-except Exception:
+except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError):
     yaml = None
 
 try:
     import plotly.express as px
     import plotly.graph_objects as go
     from plotly.subplots import make_subplots
-except Exception:
+except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError):
     make_subplots = None
     go = None
     px = None
 
 try:
     import pandas as pd
-except Exception:
+except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError):
     pd = None
 
 try:
     from app.core.logging_config import setup_file_logging
-except Exception:
+except (FileNotFoundError, ValueError, KeyError, TypeError):
     setup_file_logging = None
 
 import logging  # noqa: E402
@@ -151,7 +151,7 @@ def load_thresholds(config_path: Optional[str] = None) -> Dict[str, Dict[str, fl
             config = yaml.safe_load(f)
         if 'thresholds' in config:
             return config['thresholds']
-    except Exception as e:
+    except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
         logger.warning(f"No se pudieron cargar thresholds: {e}")
 
     return default
@@ -347,7 +347,7 @@ def extract_strategy_config(result_row: pd.Series) -> Dict[str, Any]:
             import ast
 
             config['parameters'] = ast.literal_eval(result_row['parameters'])
-        except Exception:
+        except (FileNotFoundError, ValueError, KeyError, TypeError):
             pass
 
     # Extract threshold information if available
@@ -359,8 +359,8 @@ def extract_strategy_config(result_row: pd.Series) -> Dict[str, Any]:
                 import ast
 
                 config['thresholds'] = ast.literal_eval(result_row['thresholds'])
-            except Exception:
-
+            except (FileNotFoundError, ValueError, KeyError, TypeError):
+                pass  # Keep default thresholds
 
     return config
 
@@ -430,7 +430,7 @@ def main():
                 st.info(
                     "ℹ️ No backtest results yet. Configure tests in the sidebar and click EXECUTE."
                 )
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.debug(f"Could not load initial stats: {e}")
             # Don't show error to user, just continue
             st.info("ℹ️ Ready to execute tests. Configure in the sidebar.")
@@ -973,19 +973,17 @@ def main():
                         else pd.DataFrame()
                     )
                     if not learning_engine_results.empty:
-                        # Contar cuántos tienen datos completos
-                        complete_count = 0
-                        for idx, row in learning_engine_results.iterrows():
-                            before = row.get('before_training_metrics')
-                            after = row.get('after_training_metrics')
-                            if (isinstance(before, dict) and len(before) > 0) or (
-                                isinstance(before, str) and before not in ['nan', '', 'None', '{}']
-                            ):
-                                if (isinstance(after, dict) and len(after) > 0) or (
-                                    isinstance(after, str)
-                                    and after not in ['nan', '', 'None', '{}']
-                                ):
-                                    complete_count += 1
+                        # VECTORIZED: Contar datos completos usando operaciones vectorizadas en lugar de iterrows
+                        def has_valid_metrics(x):
+                            if isinstance(x, dict) and len(x) > 0:
+                                return True
+                            if isinstance(x, str) and x not in ['nan', '', 'None', '{}']:
+                                return True
+                            return False
+
+                        before_valid = learning_engine_results['before_training_metrics'].apply(has_valid_metrics)
+                        after_valid = learning_engine_results['after_training_metrics'].apply(has_valid_metrics)
+                        complete_count = ((before_valid) & (after_valid)).sum()
 
                         if complete_count > 0:
                             st.success(
@@ -1006,7 +1004,8 @@ def main():
                     if 'sharpe_ratio' in df_results.columns:
                         top_5 = df_results.nlargest(5, 'sharpe_ratio')
 
-                        for idx, row in top_5.iterrows():
+                        # VECTORIZED: Usar to_dict('records') en lugar de iterrows
+                        for idx, row in enumerate(top_5.to_dict('records')):
                             test_name_safe = (
                                 str(row.get('test_name', f'Test_{idx}'))
                                 .replace(' ', '_')
@@ -1091,7 +1090,7 @@ def main():
                     4. O carga resultados existentes desde la tab "📁 Load Results"
                     """
                     )
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 st.error(f"❌ Error cargando resultados: {e}")
                 st.exception(e)
                 logger.error(f"Error en dashboard: {e}", exc_info=True)
@@ -1153,7 +1152,8 @@ def main():
                     df_filtered = df_filtered.nlargest(limit_results, sort_by)
 
                 # Display results
-                for idx, row in df_filtered.iterrows():
+                # VECTORIZED: Usar to_dict('records') en lugar de iterrows
+                for idx, row in enumerate(df_filtered.to_dict('records')):
                     test_name_safe = (
                         str(row.get('test_name', f'Test_{idx}'))
                         .replace(' ', '_')
@@ -1246,23 +1246,28 @@ def main():
 
                     # Check if we have before/after data by checking if columns
                     # exist
-                    for idx, row in learning_engine_results.iterrows():
+                    # VECTORIZED: Usar apply en lugar de iterrows
+                    def check_valid_before_after(row):
                         before = row.get('before_training_metrics')
                         after = row.get('after_training_metrics')
-
-                        # Verificar que ambos existan y sean válidos
                         before_valid = (isinstance(before, dict) and len(before) > 0) or (
                             isinstance(before, str) and before not in ['nan', '', 'None', '{}']
                         )
                         after_valid = (isinstance(after, dict) and len(after) > 0) or (
                             isinstance(after, str) and after not in ['nan', '', 'None', '{}']
                         )
+                        return before_valid and after_valid
 
-                        if before_valid and after_valid:
-                            has_comparison = True
-                            comparison_count += 1
+                    valid_mask = learning_engine_results.apply(check_valid_before_after, axis=1)
+                    comparison_count = valid_mask.sum()
+                    has_comparison = comparison_count > 0
+
+                    if has_comparison:
+                        # Log learning engines with valid comparisons
+                        valid_indices = valid_mask[valid_mask].index
+                        for idx in valid_indices:
                             logger.debug(
-                                f"✅ Learning engine {row.get('learning_engine', 'unknown')} "
+                                f"✅ Learning engine {learning_engine_results.loc[idx, 'learning_engine']} "
                                 "tiene datos de comparación (antes y después)"
                             )
 
@@ -1275,7 +1280,8 @@ def main():
                         f"✅ Found {len(learning_engine_results)} learning engine results with training comparison"
                     )
 
-                    for idx, row in learning_engine_results.iterrows():
+                    # VECTORIZED: Usar to_dict('records') en lugar de iterrows
+                    for idx, row in enumerate(learning_engine_results.to_dict('records')):
                         test_name = row.get('test_name', f'Learning Engine {idx}')
                         learning_engine = row.get('learning_engine', 'unknown')
 
@@ -1291,14 +1297,14 @@ def main():
                                 import ast
 
                                 before = ast.literal_eval(before) if before.startswith('{') else {}
-                            except Exception:
+                            except (ValueError, TypeError, KeyError, AttributeError):
                                 before = {}
                         if isinstance(after, str) and after != 'nan' and after:
                             try:
                                 import ast
 
                                 after = ast.literal_eval(after) if after.startswith('{') else {}
-                            except Exception:
+                            except (ValueError, TypeError, KeyError, AttributeError):
                                 after = {}
                         if isinstance(improvement, str) and improvement != 'nan' and improvement:
                             try:
@@ -1309,7 +1315,7 @@ def main():
                                     if improvement.startswith('{')
                                     else {}
                                 )
-                            except Exception:
+                            except (RuntimeError, ValueError, TypeError, KeyError):
                                 improvement = {}
 
                         if (
@@ -1577,7 +1583,7 @@ def main():
                                             if before_training.startswith('{')
                                             else None
                                         )
-                                    except Exception:
+                                    except (ValueError, TypeError, KeyError, AttributeError):
                                         before_training = None
                                 if isinstance(after_training, str):
                                     try:
@@ -1588,7 +1594,7 @@ def main():
                                             if after_training.startswith('{')
                                             else None
                                         )
-                                    except Exception:
+                                    except (FileNotFoundError, ValueError, KeyError, TypeError):
                                         after_training = None
                                 if isinstance(improvement, str):
                                     try:
@@ -1599,7 +1605,7 @@ def main():
                                             if improvement.startswith('{')
                                             else None
                                         )
-                                    except Exception:
+                                    except (FileNotFoundError, ValueError, KeyError, TypeError):
                                         improvement = None
 
                                 tags_list = [t.strip() for t in config_tags.split(',') if t.strip()]
@@ -1627,7 +1633,7 @@ def main():
                                     f"✅ Configuration '{config_name}' saved successfully! (ID: {config_id})"
                                 )
                                 st.balloons()
-                            except Exception as e:
+                            except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                                 st.error(f"❌ Error saving configuration: {e}")
                                 logger.error(f"Error saving configuration: {e}", exc_info=True)
                     else:
@@ -1844,7 +1850,8 @@ def main():
                     # Evaluate each result
                     evaluation_results = []
 
-                    for idx, row in df.iterrows():
+                    # VECTORIZED: Usar to_dict('records') en lugar de iterrows
+                    for idx, row in enumerate(df.to_dict('records')):
                         # Extract metrics
                         metrics = {
                             'max_drawdown': row.get('max_drawdown', 0),
@@ -2130,7 +2137,7 @@ def main():
                         st.dataframe(df_results.head(10))
                     else:
                         st.warning("No results found in the specified directory.")
-                except Exception as e:
+                except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
                     st.error(f"Error loading results: {e}")
                     logger.error(f"Error loading results: {e}", exc_info=True)
 
@@ -2196,7 +2203,7 @@ def main():
                     logger.debug(
                         f"📋 Learning engines antes de actualizar: {config.get('learning_engines', {})}"
                     )
-                except Exception as e:
+                except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                     st.error(f"❌ Error cargando config: {e}")
                     logger.error(f"Error cargando config: {e}", exc_info=True)
                     raise
@@ -2384,7 +2391,7 @@ def main():
                                 )
 
                                 logger.info("✅ ComprehensiveBacktestRunner importado correctamente")
-                            except Exception as import_error:
+                            except (ValueError, TypeError, KeyError, AttributeError) as import_error:
                                 logger.error(f"Error durante import: {import_error}", exc_info=True)
                                 raise
                         st.success("✅ ComprehensiveBacktestRunner cargado correctamente")
@@ -2509,14 +2516,14 @@ def main():
                     # Clean up temp config
                     try:
                         temp_config_path.unlink()
-                    except Exception:
+                    except (FileNotFoundError, ValueError, KeyError, TypeError):
                         pass
 
                     # Reset execute flag after successful execution
                     st.session_state.execute_tests = False
                     logger.info("✅ Ejecución completada, flag reseteado")
 
-                except Exception as e:
+                except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                     progress_bar.progress(100)
                     status_text.text("❌ Error during execution")
                     st.error(f"❌ Error executing tests: {e}")
@@ -2546,13 +2553,13 @@ def main():
 
                     st.session_state.execute_tests = False
 
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 st.error(f"❌ Error preparing execution: {e}")
                 logger.error(f"Error preparing execution: {e}", exc_info=True)
                 st.exception(e)
                 st.session_state.execute_tests = False
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         # Catch-all para errores que bloqueen toda la renderización
         st.error("❌ Error crítico en el dashboard")
         st.exception(e)
@@ -2575,7 +2582,7 @@ def main():
 # tanto si se ejecuta como script como si Streamlit lo importa
 try:
     main()
-except Exception as e:
+except (RuntimeError, ValueError, TypeError, KeyError) as e:
     # Capturar cualquier error que pueda ocurrir durante la ejecución
     st.error(f"❌ Error crítico al ejecutar el dashboard: {e}")
     st.exception(e)

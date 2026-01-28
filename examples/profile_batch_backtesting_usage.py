@@ -119,7 +119,7 @@ def example_3_get_best_strategy():
     for profile in profiles:
         try:
             result = backtester.run_single_profile(profile)
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Profile failed: {e}")
 
     # Get best strategy
@@ -160,7 +160,7 @@ def example_4_comparison_report():
     for profile in profiles:
         try:
             backtester.run_single_profile(profile)
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Profile failed: {e}")
 
     # Generate HTML comparison report
@@ -306,7 +306,7 @@ def example_7_export_analysis():
     for profile in profiles:
         try:
             backtester.run_single_profile(profile)
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Profile failed: {e}")
 
     # Export in multiple formats
@@ -391,13 +391,13 @@ def main():
         for name, func in examples:
             try:
                 func()
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.error(f"{name} failed: {e}", exc_info=True)
     elif choice.isdigit() and 1 <= int(choice) <= len(examples):
         _, func = examples[int(choice) - 1]
         try:
             func()
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Example failed: {e}", exc_info=True)
     else:
         print("Invalid choice. Please run again and select 1-8 or 'all'.")

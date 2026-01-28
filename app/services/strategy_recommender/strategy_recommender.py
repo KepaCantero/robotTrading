@@ -146,7 +146,7 @@ class StrategyRecommender:
             )
             return recommendation
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Error generating recommendation: {e}")
             return StrategyRecommendation(
                 success=False,

@@ -53,7 +53,7 @@ class AssetIdentificationService:
             sorted_assets = sorted(liquid_assets, key=lambda x: x.liquidity_score, reverse=True)
             return sorted_assets[:limit]
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error identifying liquid assets for {asset_class}: {e}")
             return []
 
@@ -105,7 +105,7 @@ class AssetIdentificationService:
                     )
                     equities.append(asset)
 
-                except Exception as e:
+                except (ValueError, TypeError, KeyError, AttributeError) as e:
                     logger.debug(f"Error creating asset for {ticker}: {e}")
                     continue
 
@@ -114,7 +114,7 @@ class AssetIdentificationService:
                 logger.info(f"✅ Loaded {len(equities)} equities from MarketUniverseLoader")
                 return equities
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.warning(f"MarketUniverseLoader failed, using fallback: {e}")
 
         # Fallback to hardcoded list if API fails
@@ -161,7 +161,7 @@ class AssetIdentificationService:
                     )
                     cryptos.append(asset)
 
-                except Exception as e:
+                except (ValueError, TypeError, KeyError, AttributeError) as e:
                     logger.debug(f"Error creating crypto asset for {ticker}: {e}")
                     continue
 
@@ -169,7 +169,7 @@ class AssetIdentificationService:
                 logger.info(f"✅ Loaded {len(cryptos)} cryptos from MarketUniverseLoader")
                 return cryptos
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.warning(f"MarketUniverseLoader crypto failed, using fallback: {e}")
 
         return await self._get_fallback_cryptos()
@@ -351,7 +351,7 @@ class AssetIdentificationService:
 
             self.liquidity_metrics[asset.symbol] = metrics
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error calculating liquidity score for {asset.symbol}: {e}")
             asset.liquidity_score = 0.0
 
@@ -372,7 +372,7 @@ class AssetIdentificationService:
 
             return True
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error updating universe for {asset_class}: {e}")
             return False
 
@@ -398,7 +398,7 @@ class AssetIdentificationService:
                     spread_score=asset.spread_score,
                 )
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error updating rankings for {asset_class}: {e}")
 
     async def get_top_liquid_assets(self, asset_class: AssetClass, limit: int = 20) -> List[Asset]:
@@ -407,7 +407,7 @@ class AssetIdentificationService:
             universe = self.asset_universes[asset_class]
             return universe.get_top_liquid_assets(limit)
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error getting top liquid assets for {asset_class}: {e}")
             return []
 
@@ -416,7 +416,7 @@ class AssetIdentificationService:
         try:
             return self.rankings[asset_class]
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error getting rankings for {asset_class}: {e}")
             return AssetRanking(asset_class=asset_class)
 
@@ -434,7 +434,7 @@ class AssetIdentificationService:
 
             return filtered_assets
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error filtering assets for {asset_class}: {e}")
             return []
 
@@ -454,7 +454,7 @@ class AssetIdentificationService:
                         return asset
                 return None
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error getting asset {symbol}: {e}")
             return None
 
@@ -486,7 +486,7 @@ class AssetIdentificationService:
                 "ranking_count": len(ranking.rankings),
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error getting universe summary for {asset_class}: {e}")
             return {}
 

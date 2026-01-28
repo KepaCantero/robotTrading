@@ -96,7 +96,7 @@ class MLflowTracker:
                     logger.info(f"✅ Connected to MLflow server ({self.host}:{self.port})")
                     return True
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.warning(f"⚠️ MLflow server unavailable ({self.host}:{self.port}): {str(e)}")
             self.connected = False
             if self.session:
@@ -119,7 +119,7 @@ class MLflowTracker:
                     ) as resp:
                         if resp.status == 200:
                             logger.info(f"✅ Ended active run: {self.active_run_id}")
-                except Exception:
+                except (asyncio.TimeoutError, ConnectionError, OSError):
                     pass
 
             if self.session:
@@ -127,7 +127,7 @@ class MLflowTracker:
             self.connected = False
             logger.info("✅ Disconnected from MLflow server")
             return True
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"❌ Disconnect failed: {str(e)}")
             return False
 
@@ -167,7 +167,7 @@ class MLflowTracker:
                         logger.warning(
                             f"⚠️ MLflow experiment creation failed (HTTP {resp.status}), using local tracking"
                         )
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.warning(
                     f"⚠️ Failed to create MLflow experiment: {str(e)}, using local tracking"
                 )
@@ -218,7 +218,7 @@ class MLflowTracker:
                         logger.warning(
                             f"⚠️ MLflow run creation failed (HTTP {resp.status}), using local tracking"
                         )
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.warning(f"⚠️ Failed to start MLflow run: {str(e)}, using local tracking")
 
         # Always store locally as backup
@@ -256,7 +256,7 @@ class MLflowTracker:
                             logger.warning(
                                 f"⚠️ Failed to log param {key} to MLflow (HTTP {resp.status})"
                             )
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.warning(f"⚠️ Failed to log params to MLflow: {str(e)}")
 
         # Always log locally
@@ -291,7 +291,7 @@ class MLflowTracker:
                             logger.warning(
                                 f"⚠️ Failed to log metric {key} to MLflow (HTTP {resp.status})"
                             )
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.warning(f"⚠️ Failed to log metrics to MLflow: {str(e)}")
 
         # Always log locally
@@ -320,7 +320,7 @@ class MLflowTracker:
                         logger.info(f"✅ MLflow run ended: {status}")
                     else:
                         logger.warning(f"⚠️ Failed to end MLflow run (HTTP {resp.status})")
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.warning(f"⚠️ Failed to end MLflow run: {str(e)}")
 
         # Always update locally
@@ -371,7 +371,7 @@ class MLflowTracker:
                         logger.warning(
                             f"⚠️ MLflow model registration failed (HTTP {resp.status}), using local tracking"
                         )
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.warning(
                     f"⚠️ Failed to register model in MLflow: {str(e)}, using local tracking"
                 )
@@ -425,7 +425,7 @@ class MLflowTracker:
                         logger.info(f"✅ Promoted model to {stage} in MLflow: {model.name}")
                     else:
                         logger.warning(f"⚠️ MLflow model promotion failed (HTTP {resp.status})")
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.warning(f"⚠️ Failed to promote model in MLflow: {str(e)}")
 
         # Always update locally

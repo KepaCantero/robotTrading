@@ -61,7 +61,7 @@ def download_symbol(symbol: str, years: int = 10, output_dir: str = "data/histor
         time.sleep(delay)  # Delay between downloads
         return True
         
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         print(f"❌ Error: {e}")
         time.sleep(delay)
         return False

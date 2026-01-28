@@ -95,7 +95,7 @@ class FinRLIntegrator:
             self.connected = True
             logger.info("✅ Connected to FinRL environment")
             return True
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"❌ Failed to connect to FinRL: {str(e)}")
             self.connected = False
             return False
@@ -124,7 +124,7 @@ class FinRLIntegrator:
             logger.info(f"✅ Prepared RL environment for {len(symbols)} symbols")
             return True
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"❌ Failed to prepare environment: {str(e)}")
             return False
 
@@ -176,7 +176,7 @@ class FinRLIntegrator:
             )
             return results
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"❌ Model training failed: {str(e)}")
             return {}
 
@@ -215,7 +215,7 @@ class FinRLIntegrator:
             logger.info("✅ Backtested model on test data")
             return results
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"❌ Backtest failed: {str(e)}")
             return {}
 
@@ -252,7 +252,7 @@ class FinRLIntegrator:
             logger.info("✅ Generated trading signals from model")
             return signals
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"❌ Signal generation failed: {str(e)}")
             return {}
 
@@ -287,7 +287,7 @@ class FinRLIntegrator:
             logger.info("✅ Optimized portfolio using RL model")
             return optimization_result
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"❌ Portfolio optimization failed: {str(e)}")
             return {}
 

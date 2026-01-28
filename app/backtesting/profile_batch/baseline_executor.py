@@ -78,7 +78,7 @@ class BaselineBacktestExecutor:
             else:
                 return self._run_single_strategy_baseline(runner, profile)
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Baseline backtest failed: {e}", exc_info=True)
             return self._get_empty_metrics()
 

@@ -38,13 +38,13 @@ try:
     from app.dashboard.comprehensive_data_loader import ComprehensiveBacktestLoader
 
     loader_available = True
-except Exception as e:
+except (ValueError, TypeError, KeyError, AttributeError) as e:
     loader_available = False
     st.error(f"❌ Error cargando ComprehensiveBacktestLoader: {e}")
 
 try:
     import pandas as pd
-except Exception:
+except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError):
     pd = None
     st.error("❌ pandas no disponible")
 
@@ -52,7 +52,7 @@ try:
     import plotly.express as px
 
     plotly_available = True
-except Exception:
+except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError):
     plotly_available = False
 
 import logging  # noqa: E402
@@ -228,7 +228,7 @@ def load_results() -> Optional[pd.DataFrame]:
 
         # Normalizar nombres de columnas si es necesario
         return df
-    except Exception as e:
+    except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
         st.error(f"❌ Error cargando resultados: {e}")
         return None
 
@@ -242,9 +242,13 @@ def show_objectives_summary(df: pd.DataFrame):
         return
 
     # Evaluar cada test contra objetivos
+    # VECTORIZED: Usar operaciones vectorizadas en lugar de iterrows
     results_summary = []
 
-    for idx, row in df.iterrows():
+    # Convertir a lista de dicts (más rápido que iterrows para acceso aleatorio)
+    df_records = df.to_dict('records')
+
+    for idx, row in enumerate(df_records):
         test_name = row.get('test_name', f'Test {idx}')
         test_type = row.get('test_type', 'unknown')
 
@@ -253,7 +257,7 @@ def show_objectives_summary(df: pd.DataFrame):
         total_metrics = 0
 
         for metric_name in OBJECTIVES.keys():
-            value = get_metric_value(row, metric_name)
+            value = get_metric_value(pd.Series(row), metric_name)
             if value is not None:
                 passes, _ = evaluate_objective(metric_name, value)
                 metrics_status[metric_name] = {'value': value, 'passes': passes}
@@ -325,12 +329,15 @@ def show_best_strategies(df: pd.DataFrame):
 
     perfect_strategies = []
 
-    for idx, row in df.iterrows():
+    # VECTORIZED: Usar to_dict('records') en lugar de iterrows
+    df_records = df.to_dict('records')
+
+    for idx, row in enumerate(df_records):
         all_pass = True
         metrics_values = {}
 
         for metric_name in OBJECTIVES.keys():
-            value = get_metric_value(row, metric_name)
+            value = get_metric_value(pd.Series(row), metric_name)
             if value is not None:
                 passes, _ = evaluate_objective(metric_name, value)
                 metrics_values[metric_name] = value
@@ -381,20 +388,23 @@ def show_objective_comparison(df: pd.DataFrame):
             obj = OBJECTIVES[metric_name]
 
             # Obtener valores para este objetivo
-            data = []
-            for idx, row in df.iterrows():
+            # VECTORIZED: Usar list comprehension con enumerate en lugar de iterrows
+            def evaluate_row(row, idx):
                 value = get_metric_value(row, metric_name)
                 if value is not None:
-                    passes, status = evaluate_objective(metric_name, value)
-                    data.append(
-                        {
-                            'Test': row.get('test_name', f'Test {idx}'),
-                            'Tipo': row.get('test_type', 'unknown'),
-                            'Valor': value,
-                            'Cumple': '✅' if passes else '❌',
-                            'Status': passes,
-                        }
-                    )
+                    passes, _ = evaluate_objective(metric_name, value)
+                    return {
+                        'Test': row.get('test_name', f'Test {idx}'),
+                        'Tipo': row.get('test_type', 'unknown'),
+                        'Valor': value,
+                        'Cumple': '✅' if passes else '❌',
+                        'Status': passes,
+                    }
+                return None
+
+            # Convertir a lista de dicts para procesamiento más rápido
+            df_records = df.to_dict('records')
+            data = [evaluate_row(row, idx) for idx, row in enumerate(df_records)]
 
             if not data:
                 st.warning(f"⚠️ No hay datos para {metric_name}")
@@ -537,7 +547,7 @@ def main():
         with tab3:
             show_objective_comparison(df)
 
-    except Exception as e:
+    except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
         st.error(f"❌ Error en dashboard: {e}")
         logger.exception("Error en dashboard")
 

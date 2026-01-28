@@ -191,7 +191,7 @@ class AdvancedVisualizationGenerator:
             self.charts_generated += 1
             return chart
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Cumulative returns chart generation failed: {e}")
             raise
 
@@ -292,7 +292,7 @@ class AdvancedVisualizationGenerator:
             self.charts_generated += 1
             return chart
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Drawdown waterfall generation failed: {e}")
             raise
 
@@ -395,7 +395,7 @@ class AdvancedVisualizationGenerator:
             self.charts_generated += 1
             return chart
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Rolling metrics chart generation failed: {e}")
             raise
 
@@ -502,7 +502,7 @@ class AdvancedVisualizationGenerator:
             self.charts_generated += 1
             return chart
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Monthly returns heatmap generation failed: {e}")
             raise
 
@@ -579,7 +579,7 @@ class AdvancedVisualizationGenerator:
             self.charts_generated += 1
             return chart
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Factor exposures chart generation failed: {e}")
             raise
 

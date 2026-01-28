@@ -127,7 +127,7 @@ class HealthCheckManager:
                 # Service returned false/unhealthy
                 self._record_failure(service_name, "Health check returned False")
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             # Exception during health check
             self._record_failure(service_name, str(e))
 

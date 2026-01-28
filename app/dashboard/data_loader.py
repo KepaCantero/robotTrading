@@ -39,7 +39,7 @@ class DashboardDataLoader:
         try:
             with open(result_file, "r") as f:
                 return json.load(f)
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.error(f"Error loading backtest results: {e}")
             return None
 

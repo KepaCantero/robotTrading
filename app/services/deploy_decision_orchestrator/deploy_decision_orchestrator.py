@@ -188,7 +188,7 @@ class DeployDecisionOrchestrator:
             )
             return result
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Error making deployment decision: {e}")
             return DeploymentDecision(
                 success=False,
@@ -362,7 +362,7 @@ class DeployDecisionOrchestrator:
 
             return score, is_feasible, estimated_alpha
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ T4.1 Capacity Fade validation error: {str(e)}")
             return Decimal("20"), False, Decimal("0")
 

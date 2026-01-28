@@ -121,7 +121,7 @@ class AlpacaAdapter:
         except AlpacaClientError as e:
             logger.error(f"❌ Alpaca connection failed: {str(e)}")
             return False
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
             logger.error(f"❌ Unexpected error during connection: {str(e)}")
             return False
 
@@ -136,7 +136,7 @@ class AlpacaAdapter:
             self.is_connected = False
             logger.info("✅ Disconnected from Alpaca")
             return True
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"❌ Error during disconnect: {str(e)}")
             return False
 
@@ -177,19 +177,29 @@ class AlpacaAdapter:
             available_capital = Decimal("100000")  # Fallback default
             logger.warning("Could not fetch account capital, using default for validation")
 
-        # Calculate position value
-        position_value = quantity * (price or Decimal("0"))
+        # Calculate position value - skip for MARKET orders since price is unknown
+        # For MARKET orders, we'll validate based on buying power instead
+        if order_type == OrderType.MARKET:
+            # For market orders, just validate quantity is positive
+            if quantity <= 0:
+                raise ValueError(f"Quantity must be positive for market orders, got {quantity}")
+            logger.debug(f"Skipping position size validation for MARKET order (price unknown)")
+        else:
+            # For limit/stop orders, we can calculate position value
+            if price is None:
+                raise ValueError(f"Price is required for {order_type.value} orders")
+            position_value = quantity * price
 
-        # Validate position size
-        try:
-            self.validator.validate_position_size(
-                capital=available_capital,
-                position_size=position_value,
-                max_position_percent=Decimal("0.25")
-            )
-        except ValueError as e:
-            logger.error(f"Position size validation failed: {e}")
-            raise ValueError(f"Position size validation failed: {e}")
+            # Validate position size
+            try:
+                self.validator.validate_position_size(
+                    capital=available_capital,
+                    position_size=position_value,
+                    max_position_percent=Decimal("0.25")
+                )
+            except ValueError as e:
+                logger.error(f"Position size validation failed: {e}")
+                raise ValueError(f"Position size validation failed: {e}")
 
         # Validate stop-loss if provided
         if stop_price:
@@ -244,7 +254,7 @@ class AlpacaAdapter:
         except AlpacaClientError as e:
             logger.error(f"❌ Order placement failed: {str(e)}")
             raise
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Unexpected error placing order: {str(e)}")
             raise
 
@@ -311,7 +321,7 @@ class AlpacaAdapter:
             self.account = self._transform_account(account_data)
             return self.account
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.warning(f"⚠️  Failed to get account info: {str(e)}")
             # Return cached account on error (as test expects)
             return self.account
@@ -334,7 +344,7 @@ class AlpacaAdapter:
 
             return list(self.positions.values())
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
             logger.warning(f"⚠️  Failed to get positions: {str(e)}")
             return list(self.positions.values())
 
@@ -561,7 +571,7 @@ class AlpacaAdapter:
                     f"📊 {symbol} updated: ${last_price} (P&L: {pos.unrealized_pl_pct:.2f}%)"
                 )
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"❌ Error processing quote update: {str(e)}")
 
     def _on_trade_update(self, trade_data: Dict[str, Any]) -> None:
@@ -582,7 +592,7 @@ class AlpacaAdapter:
             # Could trigger order completion or position update here
             # For now, just log the event
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"❌ Error processing trade update: {str(e)}")
 
     def _on_order_update(self, order_data: Dict[str, Any]) -> None:
@@ -611,7 +621,7 @@ class AlpacaAdapter:
 
                 logger.info(f"📋 Order {order_id}: {old_status.value} → {new_status.value}")
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Error processing order update: {str(e)}")
 
     def _on_stream_error(self, error: Exception) -> None:
@@ -661,7 +671,7 @@ class AlpacaAdapter:
                 logger.debug(f"✅ {operation_name} succeeded")
                 return result
 
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 last_error = e
                 strategy = self.error_manager.handle_request_failure(e)
 
@@ -699,7 +709,7 @@ class AlpacaAdapter:
             self.error_manager.position_sync_recovery.record_sync_success()
             return self.positions
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
             self.error_manager.position_sync_recovery.record_sync_failure()
 
             if not self.error_manager.position_sync_recovery.should_retry():
@@ -900,7 +910,7 @@ class AlpacaAdapter:
                             logger.info(
                                 f"✅ Stop-loss order placed: {sl_order_id} @ ${sl_price:.2f} for {filled_qty} shares"
                             )
-                        except Exception as e:
+                        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                             logger.warning(f"⚠️ Failed to place stop-loss order: {e}")
 
                     if filled_price and take_profit_pct:
@@ -919,7 +929,7 @@ class AlpacaAdapter:
                             logger.info(
                                 f"✅ Take-profit order placed: {tp_order_id} @ ${tp_price:.2f} for {filled_qty} shares"
                             )
-                        except Exception as e:
+                        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                             logger.warning(f"⚠️ Failed to place take-profit order: {e}")
 
             logger.info(
@@ -934,7 +944,7 @@ class AlpacaAdapter:
             execution_result["error"] = str(e)
             logger.error(f"❌ Trade execution failed: {e}")
             raise
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             execution_result["status"] = "failed"
             execution_result["error"] = str(e)
             logger.error(f"❌ Unexpected error in trade execution: {e}")

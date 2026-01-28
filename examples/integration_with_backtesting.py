@@ -354,21 +354,21 @@ def main():
     try:
         example_from_backtest_results()
         print()
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"Error in backtest results example: {e}", exc_info=True)
 
     # Example 2: From JSON files (if they exist)
     try:
         example_from_json_files()
         print()
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"Error in JSON files example: {e}", exc_info=True)
 
     # Example 3: Batch comparison
     try:
         example_batch_comparison()
         print()
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"Error in batch comparison example: {e}", exc_info=True)
 
     logger.info("=" * 80)

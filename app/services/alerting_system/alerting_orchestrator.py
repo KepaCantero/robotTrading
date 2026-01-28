@@ -139,7 +139,7 @@ class AlertingOrchestrator:
                     f"Alerting orchestrator initialized with {len(self.registered_rules)} rules"
                 )
 
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 self.logger.error(f"Error during initialization: {str(e)}")
                 raise
 
@@ -173,7 +173,7 @@ class AlertingOrchestrator:
 
             self.logger.info(f"Registered {len(templates)} default alert rule templates")
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"Error registering default rules: {str(e)}")
             raise
 
@@ -201,7 +201,7 @@ class AlertingOrchestrator:
 
             self.logger.info(f"Registered custom rule: {rule.rule_id}")
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"Error registering custom rule: {str(e)}")
             raise
 
@@ -257,7 +257,7 @@ class AlertingOrchestrator:
                     f"Alerting orchestrator started with {evaluation_interval_seconds}s interval"
                 )
 
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 self.is_running = False
                 self.logger.error(f"Error starting alerting orchestrator: {str(e)}")
                 raise
@@ -278,7 +278,7 @@ class AlertingOrchestrator:
                 self.is_running = False
                 self.logger.info("Alerting orchestrator stopped")
 
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 self.logger.error(f"Error stopping alerting orchestrator: {str(e)}")
 
     async def _flush_pending_operations(self) -> None:
@@ -287,7 +287,7 @@ class AlertingOrchestrator:
             # Give time for any in-flight operations
             await asyncio.sleep(0.5)
             self.logger.info("Flushed pending operations")
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             self.logger.error(f"Error flushing pending operations: {str(e)}")
 
     async def trigger_alert_manual(self, alert_event: AlertEvent) -> None:
@@ -307,7 +307,7 @@ class AlertingOrchestrator:
 
             self.logger.info(f"Manually triggered alert: {alert_event.event_id}")
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             self.logger.error(f"Error triggering manual alert: {str(e)}")
 
     async def acknowledge_alert(self, alert_id: str) -> bool:
@@ -322,7 +322,7 @@ class AlertingOrchestrator:
         """
         try:
             return self.alert_manager.acknowledge_alert(alert_id)
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             self.logger.error(f"Error acknowledging alert: {str(e)}")
             return False
 
@@ -338,7 +338,7 @@ class AlertingOrchestrator:
         """
         try:
             return self.alert_manager.resolve_alert(alert_id)
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"Error resolving alert: {str(e)}")
             return False
 
@@ -373,7 +373,7 @@ class AlertingOrchestrator:
                 },
             )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"Error getting health status: {str(e)}")
             return AlertingHealth(
                 is_running=False,
@@ -409,7 +409,7 @@ class AlertingOrchestrator:
                 "alert_history_size": manager_stats.get("history_size", 0),
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"Error getting statistics: {str(e)}")
             return {}
 
@@ -441,5 +441,5 @@ class AlertingOrchestrator:
 
             self.logger.info("Statistics reset")
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"Error resetting statistics: {str(e)}")

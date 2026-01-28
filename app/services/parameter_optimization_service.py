@@ -5,6 +5,7 @@ This service implements walk-forward analysis, out-of-sample testing,
 and parameter optimization to prevent overfitting in trading strategies.
 """
 
+from __future__ import annotations
 import random
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
@@ -113,7 +114,7 @@ class ParameterOptimizationService:
 
             return result
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             self.optimization_summary.failed_optimizations += 1
             raise RuntimeError(f"Parameter optimization failed: {str(e)}")
 
@@ -542,7 +543,7 @@ class ParameterOptimizationService:
                 sortino_ratio=test_results["sortino_ratio"],
             )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             raise RuntimeError(f"Out-of-sample test failed: {str(e)}")
 
     async def _validate_out_of_sample_test(self, test_config: OutOfSampleTest) -> None:

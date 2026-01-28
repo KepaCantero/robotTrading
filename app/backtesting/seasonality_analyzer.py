@@ -100,7 +100,7 @@ class SeasonalityAnalyzer:
                 'overall_avg_return': float(np.mean(monthly_returns)),
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error analyzing monthly returns: {e}")
             return None
 
@@ -172,7 +172,7 @@ class SeasonalityAnalyzer:
                 'overall_avg_return': float(np.mean(quarterly_returns)),
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error analyzing quarterly returns: {e}")
             return None
 
@@ -208,7 +208,7 @@ class SeasonalityAnalyzer:
                 'all_months_ranked': sorted_months,
             }
 
-        except Exception as e:
+        except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.error(f"Error getting best/worst months: {e}")
             return None
 
@@ -262,7 +262,7 @@ class SeasonalityAnalyzer:
 
             return Decimal(str(round(strength, 4)))
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculating seasonality strength: {e}")
             return None
 
@@ -314,7 +314,7 @@ class SeasonalityAnalyzer:
                 logger.warning("statsmodels not available, skipping decomposition")
                 return None
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Error decomposing returns: {e}")
             return None
 
@@ -458,7 +458,7 @@ class SeasonalityAnalyzer:
 
             return "".join(report)
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Error generating seasonality report: {e}")
             return f"Error generating report: {str(e)}"
 

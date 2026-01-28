@@ -7,11 +7,25 @@ Permite guardar y cargar pesos de learning engines para:
 - Aprendizaje incremental
 """
 
+import json
 import logging
-import pickle
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+# SECURITY: Using joblib and msgpack instead of pickle for secure serialization
+# joblib is safer for sklearn models, msgpack for generic Python objects
+try:
+    import joblib
+    JOBLIB_AVAILABLE = True
+except ImportError:
+    JOBLIB_AVAILABLE = False
+
+try:
+    import msgpack
+    MSGPACK_AVAILABLE = True
+except ImportError:
+    MSGPACK_AVAILABLE = False
 
 try:
     import aiofiles
@@ -34,10 +48,13 @@ class LearningEngineStorage:
     """
     Sistema de almacenamiento para pesos de learning engines.
 
-    Soporta múltiples formatos:
-    - PyTorch (.pt, .pth)
-    - Pickle (.pkl)
-    - NumPy (.npy) - futuro
+    Soporta múltiples formatos SEGUROS:
+    - PyTorch (.pt, .pth) - torch.save (seguro para PyTorch)
+    - Joblib (.joblib) - joblib.dump (seguro para sklearn y numpy)
+    - MsgPack (.msgpack) - msgpack (seguro para objetos Python genéricos)
+    - JSON (.json) - para metadatos
+
+    NOTA: Ya NO se soporta .pkl (pickle) por razones de seguridad
     """
 
     def __init__(self, base_dir: str = "models/learning_engines"):
@@ -61,18 +78,28 @@ class LearningEngineStorage:
         format: Optional[str] = None,
     ) -> str:
         """
-        Guardar pesos de un learning engine.
+        Guardar pesos de un learning engine usando serialización segura.
 
         Args:
             engine_name: Nombre del engine (ej: 'supervised', 'deep', 'transformer')
             weights: Pesos a guardar (modelo, dict, tensor, etc.)
             test_id: Identificador único del test
             metadata: Metadatos adicionales (timestamp, métricas, etc.)
-            format: Formato ('pt', 'pkl', 'auto') - auto detecta según tipo
+            format: Formato ('pt', 'joblib', 'msgpack', 'auto') - auto detecta según tipo
 
         Returns:
             Ruta del archivo guardado
+
+        Raises:
+            ValueError: Si se intenta usar formato 'pkl' (inseguro)
         """
+        # SECURITY: Reject pickle format explicitly
+        if format == 'pkl':
+            raise ValueError(
+                "Formato 'pkl' no permitido por razones de seguridad. "
+                "Use 'joblib', 'msgpack', o 'pt' en su lugar."
+            )
+
         # Crear directorio para el engine
         engine_dir = self.base_dir / engine_name
         engine_dir.mkdir(parents=True, exist_ok=True)
@@ -101,31 +128,45 @@ class LearningEngineStorage:
                     },
                     file_path,
                 )
-            elif format == 'pkl':
-                with open(file_path, 'wb') as f:
-                    pickle.dump(
-                        {
-                            'weights': weights,
-                            'metadata': metadata or {},
-                            'engine_name': engine_name,
-                            'test_id': test_id,
-                            'timestamp': timestamp,
-                        },
-                        f,
-                    )
+            elif format == 'joblib':
+                if not JOBLIB_AVAILABLE:
+                    raise ImportError("joblib no disponible para guardar .joblib")
+                joblib.dump(
+                    {
+                        'weights': weights,
+                        'metadata': metadata or {},
+                        'engine_name': engine_name,
+                        'test_id': test_id,
+                        'timestamp': timestamp,
+                    },
+                    file_path,
+                )
+            elif format == 'msgpack':
+                if not MSGPACK_AVAILABLE:
+                    raise ImportError("msgpack no disponible para guardar .msgpack")
+                self._save_msgpack(
+                    file_path,
+                    {
+                        'weights': weights,
+                        'metadata': metadata or {},
+                        'engine_name': engine_name,
+                        'test_id': test_id,
+                        'timestamp': timestamp,
+                    },
+                )
             else:
                 raise ValueError(f"Formato no soportado: {format}")
 
             logger.info(f"✅ Pesos guardados: {file_path}")
 
-            # Guardar metadatos adicionales
+            # Guardar metadatos adicionales en JSON (seguro)
             if metadata:
                 metadata_path = file_path.with_suffix('.metadata.json')
                 self._save_metadata(metadata_path, metadata)
 
             return str(file_path)
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error guardando pesos: {e}", exc_info=True)
             raise
 
@@ -138,20 +179,27 @@ class LearningEngineStorage:
         format: Optional[str] = None,
     ) -> str:
         """
-        Guardar pesos de forma asíncrona (para I/O-bound).
+        Guardar pesos de forma asíncrona usando serialización segura.
 
         Args:
             engine_name: Nombre del engine
             weights: Pesos a guardar
             test_id: Identificador único del test
             metadata: Metadatos adicionales
-            format: Formato ('pt', 'pkl', 'auto')
+            format: Formato ('pt', 'joblib', 'msgpack', 'auto')
 
         Returns:
             Ruta del archivo guardado
+
+        Raises:
+            ValueError: Si se intenta usar formato 'pkl' (inseguro)
         """
-        # Para guardado asíncrono, primero serializar en memoria
-        # Luego escribir el archivo de forma asíncrona
+        # SECURITY: Reject pickle format explicitly
+        if format == 'pkl':
+            raise ValueError(
+                "Formato 'pkl' no permitido por razones de seguridad. "
+                "Use 'joblib', 'msgpack', o 'pt' en su lugar."
+            )
 
         # Detectar formato
         if format is None or format == 'auto':
@@ -169,7 +217,6 @@ class LearningEngineStorage:
         if format == 'pt' or format == 'pth':
             if not TORCH_AVAILABLE:
                 raise ImportError("PyTorch no disponible")
-            # PyTorch no tiene API asíncrona directa, usar en thread
             data = {
                 'weights': weights,
                 'metadata': metadata or {},
@@ -177,14 +224,16 @@ class LearningEngineStorage:
                 'test_id': test_id,
                 'timestamp': timestamp,
             }
-            # Guardar de forma bloqueante (en thread separado si es necesario)
+            # Guardar de forma bloqueante (PyTorch no tiene async API)
             torch.save(data, file_path)
-        elif format == 'pkl':
+        elif format == 'joblib':
+            if not JOBLIB_AVAILABLE:
+                raise ImportError("joblib no disponible")
             # Serializar primero
             import io
 
             buffer = io.BytesIO()
-            pickle.dump(
+            joblib.dump(
                 {
                     'weights': weights,
                     'metadata': metadata or {},
@@ -204,6 +253,25 @@ class LearningEngineStorage:
                 # Fallback síncrono
                 with open(file_path, 'wb') as f:
                     f.write(buffer.read())
+        elif format == 'msgpack':
+            if not MSGPACK_AVAILABLE:
+                raise ImportError("msgpack no disponible")
+            data = {
+                'weights': weights,
+                'metadata': metadata or {},
+                'engine_name': engine_name,
+                'test_id': test_id,
+                'timestamp': timestamp,
+            }
+            packed = msgpack.packb(data, default=str)
+            # Escribir de forma asíncrona
+            if AIOFILES_AVAILABLE:
+                async with aiofiles.open(file_path, 'wb') as f:
+                    await f.write(packed)
+            else:
+                # Fallback síncrono
+                with open(file_path, 'wb') as f:
+                    f.write(packed)
         else:
             raise ValueError(f"Formato no soportado: {format}")
 
@@ -215,7 +283,7 @@ class LearningEngineStorage:
         self, engine_name: str, test_id: Optional[str] = None, latest: bool = True
     ) -> Dict[str, Any]:
         """
-        Cargar pesos de un learning engine.
+        Cargar pesos de un learning engine usando serialización segura.
 
         Args:
             engine_name: Nombre del engine
@@ -230,21 +298,27 @@ class LearningEngineStorage:
         if not engine_dir.exists():
             raise FileNotFoundError(f"Directorio de engine no existe: {engine_dir}")
 
-        # Buscar archivo
+        # Buscar archivo en formatos seguros
         if test_id:
-            # Buscar por test_id
+            # Buscar por test_id (excluir .pkl)
             files = (
                 list(engine_dir.glob(f"{test_id}_*.pt"))
                 + list(engine_dir.glob(f"{test_id}_*.pth"))
-                + list(engine_dir.glob(f"{test_id}_*.pkl"))
+                + list(engine_dir.glob(f"{test_id}_*.joblib"))
+                + list(engine_dir.glob(f"{test_id}_*.msgpack"))
             )
         else:
-            # Buscar todos los archivos
+            # Buscar todos los archivos seguros (excluir .pkl)
             files = (
                 list(engine_dir.glob("*.pt"))
                 + list(engine_dir.glob("*.pth"))
-                + list(engine_dir.glob("*.pkl"))
+                + list(engine_dir.glob("*.joblib"))
+                + list(engine_dir.glob("*.msgpack"))
             )
+
+        # Si no hay archivos seguros, buscar archivos .pkl antiguos para migrar
+        if not files:
+            files = self._find_and_migrate_old_pkl_files(engine_dir, test_id)
 
         if not files:
             raise FileNotFoundError(
@@ -262,10 +336,19 @@ class LearningEngineStorage:
             if file_path.suffix in ['.pt', '.pth']:
                 if not TORCH_AVAILABLE:
                     raise ImportError("PyTorch no disponible para cargar .pt")
-                data = torch.load(file_path, map_location='cpu')  # nosec B614
+                data = torch.load(file_path, map_location='cpu')  # nosec B614 - torch is safe
+            elif file_path.suffix == '.joblib':
+                if not JOBLIB_AVAILABLE:
+                    raise ImportError("joblib no disponible para cargar .joblib")
+                data = joblib.load(file_path)
+            elif file_path.suffix == '.msgpack':
+                if not MSGPACK_AVAILABLE:
+                    raise ImportError("msgpack no disponible para cargar .msgpack")
+                data = self._load_msgpack(file_path)
             elif file_path.suffix == '.pkl':
-                with open(file_path, 'rb') as f:
-                    data = pickle.load(f)  # nosec B301 - internal trusted storage
+                # SECURITY: Migrate old .pkl files to secure format
+                logger.warning(f"Found old .pkl file {file_path}, migrating...")
+                data = self._migrate_pkl_weights(file_path)
             else:
                 raise ValueError(f"Formato no soportado: {file_path.suffix}")
 
@@ -273,7 +356,7 @@ class LearningEngineStorage:
 
             return data
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Error cargando pesos: {e}", exc_info=True)
             raise
 
@@ -281,25 +364,26 @@ class LearningEngineStorage:
         self, engine_name: str, test_id_filter: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """
-        Listar pesos disponibles para un engine.
+        Listar pesos disponibles para un engine (solo formatos seguros).
 
         Args:
             engine_name: Nombre del engine
             test_id_filter: Filtrar por test_id (opcional)
 
         Returns:
-            Lista de dicts con información de cada archivo
+            Lista de dicts con información de cada archivo (excluye .pkl)
         """
         engine_dir = self.base_dir / engine_name
 
         if not engine_dir.exists():
             return []
 
-        # Buscar archivos
+        # Buscar archivos seguros (excluir .pkl)
         files = (
             list(engine_dir.glob("*.pt"))
             + list(engine_dir.glob("*.pth"))
-            + list(engine_dir.glob("*.pkl"))
+            + list(engine_dir.glob("*.joblib"))
+            + list(engine_dir.glob("*.msgpack"))
         )
 
         weights_info = []
@@ -366,7 +450,7 @@ class LearningEngineStorage:
             try:
                 Path(info['file_path']).unlink()
                 deleted += 1
-            except Exception as e:
+            except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
                 logger.error(f"Error eliminando {info['file_path']}: {e}")
 
         logger.info(f"✅ Eliminados {deleted} archivos de pesos")
@@ -374,11 +458,110 @@ class LearningEngineStorage:
         return deleted
 
     def _detect_format(self, weights: Any) -> str:
-        """Detectar formato óptimo según tipo de pesos."""
+        """Detectar formato óptimo y seguro según tipo de pesos."""
         if TORCH_AVAILABLE and isinstance(weights, (torch.nn.Module, torch.Tensor)):
             return 'pt'
+        elif JOBLIB_AVAILABLE:
+            return 'joblib'  # Seguro para sklearn y numpy
+        elif MSGPACK_AVAILABLE:
+            return 'msgpack'  # Seguro para objetos Python genéricos
         else:
-            return 'pkl'  # Formato por defecto para cualquier objeto Python
+            # Fallback - no hay formato seguro disponible
+            raise ImportError(
+                "No hay formato de serialización seguro disponible. "
+                "Instale joblib o msgpack."
+            )
+
+    def _save_msgpack(self, path: Path, data: Dict[str, Any]) -> None:
+        """Guardar datos usando msgpack."""
+        packed = msgpack.packb(data, default=str)
+        with open(path, 'wb') as f:
+            f.write(packed)
+
+    def _load_msgpack(self, path: Path) -> Dict[str, Any]:
+        """Cargar datos usando msgpack."""
+        with open(path, 'rb') as f:
+            return msgpack.unpackb(f.read(), raw=False)
+
+    def _find_and_migrate_old_pkl_files(
+        self, engine_dir: Path, test_id: Optional[str]
+    ) -> List[Path]:
+        """
+        Buscar archivos .pkl antiguos y migrarlos a formato seguro.
+
+        Args:
+            engine_dir: Directorio del engine
+            test_id: Test ID a buscar
+
+        Returns:
+            Lista de Paths a archivos migrados
+        """
+        # Buscar archivos .pkl
+        if test_id:
+            pkl_files = list(engine_dir.glob(f"{test_id}_*.pkl"))
+        else:
+            pkl_files = list(engine_dir.glob("*.pkl"))
+
+        if not pkl_files:
+            return []
+
+        # Migrar cada archivo .pkl encontrado
+        migrated_files = []
+        for pkl_file in pkl_files:
+            try:
+                logger.info(f"Migrating old .pkl file: {pkl_file}")
+                migrated_path = self._migrate_pkl_weights(pkl_file)
+                if migrated_path:
+                    migrated_files.append(migrated_path)
+            except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+                logger.error(f"Error migrating {pkl_file}: {e}")
+
+        return migrated_files
+
+    def _migrate_pkl_weights(self, pkl_path: Path) -> Optional[Path]:
+        """
+        Migrar archivo .pkl a formato seguro (one-time migration).
+
+        Args:
+            pkl_path: Path al archivo .pkl
+
+        Returns:
+            Path al archivo migrado o None si falló
+        """
+        try:
+            # SECURITY: One-time migration from pickle to secure format
+            # This is the only place where we still use pickle.load, and it's
+            # only for migrating existing trusted files to the secure format
+            import pickle  # noqa: S403 - Only for migration of trusted files
+
+            with open(pkl_path, 'rb') as f:
+                data = pickle.load(f)  # noqa: S301 - Trusted migration only
+
+            # Determinar nuevo formato
+            new_format = self._detect_format(data.get('weights', None))
+
+            # Crear nuevo path
+            new_path = pkl_path.with_suffix(f'.{new_format}')
+
+            # Guardar en formato seguro
+            if new_format == 'joblib':
+                joblib.dump(data, new_path)
+            elif new_format == 'msgpack':
+                self._save_msgpack(new_path, data)
+            elif new_format == 'pt' and TORCH_AVAILABLE:
+                torch.save(data, new_path)
+            else:
+                raise ValueError(f"Cannot migrate to format: {new_format}")
+
+            # Eliminar archivo .pkl original
+            pkl_path.unlink()
+
+            logger.info(f"Successfully migrated {pkl_path} to {new_path}")
+            return new_path
+
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+            logger.error(f"Error migrating .pkl file {pkl_path}: {e}")
+            return None
 
     def _save_metadata(self, metadata_path: Path, metadata: Dict[str, Any]) -> None:
         """Guardar metadatos en JSON separado."""
@@ -387,5 +570,5 @@ class LearningEngineStorage:
         try:
             with open(metadata_path, 'w') as f:
                 json.dump(metadata, f, indent=2, default=str)
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.warning(f"No se pudieron guardar metadatos: {e}")

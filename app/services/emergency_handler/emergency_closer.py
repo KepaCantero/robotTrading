@@ -115,7 +115,7 @@ class EmergencyCloser:
             for sig in (signal.SIGTERM, signal.SIGINT):
                 signal.signal(sig, self._signal_handler)
             logger.info("Emergency shutdown signal handlers registered")
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.warning(f"Could not register signal handlers: {e}")
 
     def _signal_handler(self, signum, frame) -> None:
@@ -374,7 +374,7 @@ class EmergencyCloser:
                     else:
                         failed += 1
                         errors.append(result.get("error", "Unknown error"))
-                except Exception as e:
+                except (ValueError, TypeError, KeyError, AttributeError) as e:
                     failed += 1
                     errors.append(f"Error closing {position.symbol}: {str(e)}")
                     logger.error(f"Error closing position {position.symbol}: {e}")
@@ -410,7 +410,7 @@ class EmergencyCloser:
         try:
             positions = await self.broker.get_positions()
             return positions if positions else []
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
             logger.error(f"Error fetching positions: {e}")
             return []
 
@@ -459,7 +459,7 @@ class EmergencyCloser:
                 "success": False,
                 "error": f"Timeout closing {position.symbol}",
             }
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             return {
                 "success": False,
                 "error": f"Error closing {position.symbol}: {str(e)}",
@@ -489,7 +489,7 @@ class EmergencyCloser:
         if self.alert_callback:
             try:
                 self.alert_callback(message)
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.error(f"Error sending alert: {e}")
 
     def get_audit_log(self, limit: int = 100) -> List[Dict[str, Any]]:

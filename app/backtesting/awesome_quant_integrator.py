@@ -157,7 +157,7 @@ class AwesomeQuantIntegrator:
             logger.info(f"Calculated {len(metrics)} quantstats metrics")
             return metrics
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculating quantstats metrics: {e}", exc_info=True)
             return {}
 
@@ -219,7 +219,7 @@ class AwesomeQuantIntegrator:
             logger.info(f"Calculated {len(metrics)} empyrical metrics")
             return metrics
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Error calculating empyrical metrics: {e}", exc_info=True)
             return {}
 
@@ -293,7 +293,7 @@ class AwesomeQuantIntegrator:
             logger.info(f"Calculated {len(metrics)} pyfolio metrics")
             return metrics
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculating pyfolio metrics: {e}", exc_info=True)
             return {}
 

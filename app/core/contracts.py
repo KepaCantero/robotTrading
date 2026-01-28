@@ -221,7 +221,7 @@ def contract(
                                 f"Precondition failed: {precondition.__name__}",
                                 function_name,
                             )
-                    except Exception as e:
+                    except (ValueError, TypeError, KeyError, AttributeError) as e:
                         raise PreconditionError(f"Precondition error: {str(e)}", function_name)
 
             # Validate data contract if provided
@@ -265,7 +265,7 @@ def contract(
             # Execute function
             try:
                 result = func(*args, **kwargs)
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.error(f"Function {function_name} failed: {str(e)}")
                 raise
 
@@ -278,7 +278,7 @@ def contract(
                                 f"Postcondition failed: {postcondition.__name__}",
                                 function_name,
                             )
-                    except Exception as e:
+                    except (ValueError, TypeError, KeyError, AttributeError) as e:
                         raise PostconditionError(f"Postcondition error: {str(e)}", function_name)
 
             return result

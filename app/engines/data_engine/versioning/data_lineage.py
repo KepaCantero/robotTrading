@@ -44,7 +44,7 @@ class DataLineageTracker:
             try:
                 with open(self.lineage_db_path, 'r') as f:
                     self.lineage_records = json.load(f)
-            except Exception as e:
+            except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
                 logger.warning(f"Error cargando lineage DB: {e}")
 
     def _save_lineage_db(self) -> None:
@@ -52,7 +52,7 @@ class DataLineageTracker:
         try:
             with open(self.lineage_db_path, 'w') as f:
                 json.dump(self.lineage_records, f, indent=2, default=str)
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.error(f"Error guardando lineage DB: {e}")
 
     def record_data_source(

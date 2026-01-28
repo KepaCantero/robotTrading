@@ -125,7 +125,7 @@ class BaseStrategyEnsemble(BaseStrategyEngine):
             try:
                 strategy_features = strategy.extract_features(market_data, historical_data)
                 features[f"{name}_features"] = strategy_features
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 logger.warning(f"Error extracting features from {name}: {e}")
                 features[f"{name}_features"] = {}
 
@@ -165,7 +165,7 @@ class BaseStrategyEnsemble(BaseStrategyEngine):
             strategy = self.strategies[strategy_name]
             try:
                 return strategy.risk_check(signal, portfolio)
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
                 pass
 
         return True
@@ -252,7 +252,7 @@ class WeightedEnsemble(BaseStrategyEnsemble):
             try:
                 signals = strategy.generate_signals(market_data)
                 strategy_signals[name] = signals
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 logger.warning(f"Error generating signals from {name}: {e}")
                 strategy_signals[name] = []
 
@@ -473,7 +473,7 @@ class RegimeBasedSelector(BaseStrategyEnsemble):
                 try:
                     signals = self.strategies[name].generate_signals(market_data)
                     strategy_signals[name] = signals
-                except Exception as e:
+                except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                     logger.warning(f"Error generating signals from {name}: {e}")
 
         return self._combine_signals(strategy_signals, market_data)
@@ -647,7 +647,7 @@ class VotingEnsemble(BaseStrategyEnsemble):
             try:
                 signals = strategy.generate_signals(market_data)
                 strategy_signals[name] = signals
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 logger.warning(f"Error generating signals from {name}: {e}")
                 strategy_signals[name] = []
 

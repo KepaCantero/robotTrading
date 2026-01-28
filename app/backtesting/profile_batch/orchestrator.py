@@ -68,7 +68,7 @@ class ProfileBatchBacktester:
         try:
             self.profile_config_loader = ProfileConfigLoader()
             logger.info("ProfileConfigLoader initialized successfully")
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Failed to initialize ProfileConfigLoader: {e}")
             self.profile_config_loader = None
             self._fallback_count = 1
@@ -176,7 +176,7 @@ class ProfileBatchBacktester:
         try:
             if self.profile_generator.profile_mapper is not None:
                 strategy_mapping_obj = self.profile_generator.profile_mapper.create_strategy_mapping(profile)
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.debug(f"Could not create StrategyMapping: {e}")
 
         # Extract per-strategy results
@@ -261,7 +261,7 @@ class ProfileBatchBacktester:
                     profile_id = result.profile_id
                     results[profile_id] = result
                     logger.info(f"Completed {profile_id} ({len(results)}/{len(profiles)})")
-                except Exception as e:
+                except (ValueError, TypeError, KeyError, AttributeError) as e:
                     logger.error(f"Profile {profile} failed: {e}", exc_info=True)
 
         # Batch store all results sequentially
@@ -279,7 +279,7 @@ class ProfileBatchBacktester:
                 result = self.run_single_profile(profile)
                 results[result.profile_id] = result
                 logger.info(f"Completed {i}/{len(profiles)}: {result.profile_id}")
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 logger.error(f"Profile {profile} failed: {e}", exc_info=True)
 
         return results

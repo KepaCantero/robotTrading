@@ -411,7 +411,7 @@ def main():
                 "by_type": signals_by_type,
             },
         })
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         results.append({
             "name": "Test 1: Generación de Señales",
             "passed": False,
@@ -426,7 +426,7 @@ def main():
             "name": "Test 2: Cálculo de Tamaño de Posición",
             "passed": passed,
         })
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         results.append({
             "name": "Test 2: Cálculo de Tamaño de Posición",
             "passed": False,
@@ -441,7 +441,7 @@ def main():
             "name": "Test 3: Risk Check - Escenarios",
             "passed": passed,
         })
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         results.append({
             "name": "Test 3: Risk Check - Escenarios",
             "passed": False,
@@ -456,7 +456,7 @@ def main():
             "name": "Test 4: Cálculo de Exposición",
             "passed": passed,
         })
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         results.append({
             "name": "Test 4: Cálculo de Exposición",
             "passed": False,

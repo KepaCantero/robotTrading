@@ -482,7 +482,7 @@ class MultiTaskLearningEngine:
                 'final_weights': self.multi_objective_optimizer.get_objective_weights(),
             }
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Error entrenando multi-task model: {e}", exc_info=True)
             raise
 
@@ -513,7 +513,7 @@ class MultiTaskLearningEngine:
 
             return metrics
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error evaluando: {e}", exc_info=True)
             return {}
 
@@ -566,6 +566,6 @@ class MultiTaskLearningEngine:
 
                 return result
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error prediciendo: {e}", exc_info=True)
             return {'return': 0.0, 'sharpe': 0.0, 'drawdown': 0.0, 'confidence': 0.0}

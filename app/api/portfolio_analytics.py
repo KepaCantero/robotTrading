@@ -5,6 +5,7 @@ This module provides FastAPI endpoints for portfolio analytics including
 performance metrics, risk analysis, and portfolio management features.
 """
 
+from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
@@ -203,7 +204,7 @@ async def calculate_performance_metrics(
 
         return PerformanceMetricsResponse(success=True, data=metrics)
 
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         return PerformanceMetricsResponse(
             success=False, error=f"Failed to calculate performance metrics: {str(e)}"
         )
@@ -229,7 +230,7 @@ async def get_performance_metrics(
 
         return PerformanceMetricsResponse(success=True, data=metrics)
 
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         return PerformanceMetricsResponse(
             success=False, error=f"Failed to get performance metrics: {str(e)}"
         )
@@ -250,7 +251,7 @@ async def get_risk_metrics(
 
         return RiskMetricsResponse(success=True, data=metrics)
 
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         return RiskMetricsResponse(success=False, error=f"Failed to get risk metrics: {str(e)}")
 
 
@@ -269,7 +270,7 @@ async def get_portfolio_analytics(
 
         return PortfolioAnalyticsResponse(success=True, data=analytics)
 
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         return PortfolioAnalyticsResponse(
             success=False, error=f"Failed to get portfolio analytics: {str(e)}"
         )
@@ -290,7 +291,7 @@ async def get_portfolio_allocation(
 
         return PortfolioAllocationResponse(success=True, data=allocation)
 
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         return PortfolioAllocationResponse(
             success=False, error=f"Failed to get portfolio allocation: {str(e)}"
         )
@@ -334,7 +335,7 @@ async def get_rebalance_recommendation(
 
         return RebalanceResponse(success=True, data=rebalance)
 
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         return RebalanceResponse(
             success=False, error=f"Failed to get rebalance recommendation: {str(e)}"
         )
@@ -352,7 +353,7 @@ async def compare_portfolios(
 
         return PortfolioComparisonResponse(success=True, data=comparison)
 
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         return PortfolioComparisonResponse(
             success=False, error=f"Failed to compare portfolios: {str(e)}"
         )
@@ -394,7 +395,7 @@ async def get_analytics_summary(
 
         return AnalyticsSummaryResponse(success=True, data=summary)
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         return AnalyticsSummaryResponse(
             success=False, error=f"Failed to get analytics summary: {str(e)}"
         )

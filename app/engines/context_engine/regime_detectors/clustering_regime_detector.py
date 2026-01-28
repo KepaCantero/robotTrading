@@ -161,7 +161,7 @@ class ClusteringRegimeDetector:
             logger.info(f"Clustering entrenado con {len(X)} muestras")
             return True
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error entrenando clustering: {e}")
             return False
 
@@ -224,6 +224,6 @@ class ClusteringRegimeDetector:
 
             return {'regime': regime, 'cluster': int(cluster), 'confidence': float(confidence)}
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error detectando régimen con clustering: {e}")
             return {'regime': 'unknown', 'cluster': -1, 'confidence': 0.0}

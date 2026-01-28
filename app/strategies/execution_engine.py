@@ -5,6 +5,7 @@ Coordina la ejecución de estrategias activas, generación de señales,
 validación de riesgo y ejecución de órdenes.
 """
 
+from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
@@ -103,11 +104,11 @@ class ExecutionEngine:
                         )
                         logger.debug(f"Signal rejected by risk check: {signal.symbol}")
 
-                except Exception as e:
+                except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                     self.logger.log_strategy_error(active_strategy.name, str(e), "risk_check")
                     logger.error(f"Risk check error for signal {signal.symbol}: {e}")
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             self.logger.log_strategy_error(active_strategy.name, str(e), "generate_signals")
             logger.error(f"Error generating signals for strategy '{active_strategy.name}': {e}")
 
@@ -142,7 +143,7 @@ class ExecutionEngine:
             )
             return True
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             # Log de error de ejecución
             active_strategy = self.registry.get_active_strategy()
             strategy_name = active_strategy.name if active_strategy else "unknown"
@@ -235,7 +236,7 @@ class ExecutionEngine:
 
             return True
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Market data validation error: {e}")
             return False
 
@@ -265,7 +266,7 @@ class ExecutionEngine:
 
             return True
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Portfolio validation error: {e}")
             return False
 

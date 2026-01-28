@@ -5,6 +5,7 @@ This module provides FastAPI endpoints for cost analysis functionality
 including cost breakdown, profitability validation, and Cost Impact Ratio (CIR) analysis.
 """
 
+from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict
@@ -70,7 +71,7 @@ async def analyze_trade_costs(
             "timestamp": breakdown.timestamp.isoformat(),
         }
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         raise HTTPException(status_code=400, detail=f"Error analyzing trade costs: {str(e)}")
 
 
@@ -147,7 +148,7 @@ async def analyze_strategy_costs(
             ],
         }
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         raise HTTPException(status_code=400, detail=f"Error analyzing strategy costs: {str(e)}")
 
 
@@ -194,7 +195,7 @@ async def validate_profitability(
             "recommendations": result.recommendations,
         }
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         raise HTTPException(status_code=400, detail=f"Error validating profitability: {str(e)}")
 
 
@@ -270,7 +271,7 @@ async def update_cost_parameters(
             "updated_parameters": parameters,
         }
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         raise HTTPException(status_code=400, detail=f"Error updating cost parameters: {str(e)}")
 
 

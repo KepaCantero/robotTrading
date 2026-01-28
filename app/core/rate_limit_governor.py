@@ -296,7 +296,7 @@ class WebSocketFirstStrategy:
             # Task para procesar mensajes
             asyncio.create_task(self._process_messages())
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"WebSocket connection failed: {e}")
             self._is_connected = False
 
@@ -314,7 +314,7 @@ class WebSocketFirstStrategy:
                     logger.error(f"WebSocket error: {self._websocket.exception()}")
                     break
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"Error processing WebSocket messages: {e}")
         finally:
             self._is_connected = False
@@ -338,7 +338,7 @@ class WebSocketFirstStrategy:
                             await callback(symbol, price)
                         else:
                             callback(symbol, price)
-                    except Exception as e:
+                    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                         logger.error(f"Error in ticker callback: {e}")
 
     async def stop_websocket(self):

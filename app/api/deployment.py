@@ -5,6 +5,7 @@ Provides REST API for validating strategies, making deployment decisions,
 and accessing deployment status information.
 """
 
+from __future__ import annotations
 import logging
 from datetime import datetime
 from typing import Dict
@@ -66,7 +67,7 @@ async def validate_strategy(
             "timestamp": datetime.utcnow().isoformat(),
         }
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"❌ Error validating strategy: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Validation failed: {str(e)}")
 
@@ -103,7 +104,7 @@ async def get_deployment_decision(decision_id: str) -> Dict:
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"❌ Error retrieving decision: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Retrieval failed: {str(e)}")
 
@@ -147,7 +148,7 @@ async def list_deployment_decisions(
             ],
         }
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"❌ Error listing decisions: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Listing failed: {str(e)}")
 
@@ -195,7 +196,7 @@ async def health_check() -> Dict:
             },
         }
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"❌ Error checking health: {str(e)}")
         return {
             "status": "error",
@@ -240,6 +241,6 @@ async def deployment_status() -> Dict:
             },
         }
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"❌ Error getting status: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Status check failed: {str(e)}")

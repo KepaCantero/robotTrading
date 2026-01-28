@@ -90,7 +90,7 @@ async def lifespan(fastapi_app: FastAPI):
     try:
         await init_database()
         logger.info("Database and live trading tables initialized")
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         logger.warning(f"Database initialization failed: {e}")
 
     logger.info("Application startup complete")
@@ -104,7 +104,7 @@ async def lifespan(fastapi_app: FastAPI):
     try:
         await close_database()
         logger.info("Database connections closed")
-    except Exception as e:
+    except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
         logger.warning(f"Error closing database connections: {e}")
 
     logger.info("Application shutdown complete")

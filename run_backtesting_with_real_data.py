@@ -471,7 +471,7 @@ def run(
             fetcher = RealMarketDataFetcher()
             fetcher.clear_cache()
             logger.info("Cache cleared successfully")
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.warning(f"Failed to clear cache: {e}")
 
     # Map inputs to enums
@@ -637,7 +637,7 @@ def run(
             try:
                 # Get universe data from the result
                 generate_backtest_report(result, universe_data, report_path, input_params)
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 logger.error(f"Failed to generate report: {e}")
 
         # Exit with appropriate code
@@ -647,7 +647,7 @@ def run(
         logger.warning("")
         logger.warning("⚠️  Execution cancelled by user")
         sys.exit(130)
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error("")
         logger.error(f"❌ Fatal error: {e}", exc_info=True)
         sys.exit(1)
@@ -746,7 +746,7 @@ async def run_lifecycle_with_real_data(
         for stage_result in result.get_failed_stages() if hasattr(result, 'get_failed_stages') else []:
             result.errors.extend(stage_result.errors)
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"❌ Fatal error in trading lifecycle: {e}", exc_info=True)
         result.errors.append(f"Fatal error: {str(e)}")
         result.success = False
@@ -784,7 +784,7 @@ def cache_info():
         if 'newest_cache_days' in stats:
             logger.info(f"Newest Cache: {stats['newest_cache_days']:.1f} days old")
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Error getting cache info: {e}")
 
 
@@ -811,7 +811,7 @@ def clear_cache(symbol):
         else:
             logger.info("✅ Cleared all cache")
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Error clearing cache: {e}")
 
 

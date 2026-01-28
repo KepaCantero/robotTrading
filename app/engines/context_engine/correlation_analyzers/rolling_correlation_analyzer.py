@@ -65,7 +65,7 @@ class RollingCorrelationAnalyzer:
                 'correlation_trend': 'stable',
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculando correlación rolling: {e}")
             return {
                 'correlation_matrix': None,

@@ -317,7 +317,7 @@ class CollectorSource:
         """Execute collection."""
         try:
             return await self.collector_fn()
-        except Exception:
+        except (asyncio.TimeoutError, ConnectionError, OSError):
             # Log error but don't raise to allow other sources to continue
             return []
 

@@ -68,7 +68,7 @@ class OutlierDetector:
                 values_array = np.array([float(v) for v in values])
             else:
                 values_array = np.array(values)
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError):
             logger.error("Error convirtiendo valores a array")
             return {
                 'outliers': [],
@@ -168,7 +168,7 @@ class OutlierDetector:
                 'method_used': 'isolation_forest',
             }
 
-        except Exception as e:
+        except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.error(f"Error en Isolation Forest: {e}")
             return self._detect_zscore(values_array, original_values)
 

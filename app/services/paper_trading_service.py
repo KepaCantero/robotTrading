@@ -543,7 +543,7 @@ class PaperTradingService:
 
             return slippage_amount
 
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError):
             # Fallback al slippage fijo si hay error
             return trade.quantity * market_price * config.slippage_rate
 
@@ -603,7 +603,7 @@ class PaperTradingService:
                 "status": trade.status.value,
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             return {"success": False, "error": str(e), "status": "failed"}
 
 

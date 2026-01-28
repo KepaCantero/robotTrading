@@ -457,7 +457,7 @@ class PortfolioRiskManager:
                     logger.debug(f"Calculated {len(correlations)} real correlations")
                     return correlations
 
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.warning(f"Error using correlation analyzer: {e}, falling back")
 
         # Fallback to simulated correlation

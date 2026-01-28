@@ -259,7 +259,7 @@ class MockIBKRClient:
             # For sell orders, check if we have the asset
             available_quantity = self.balances.get(order.symbol, Decimal("0"))
             return available_quantity >= order.quantity
-        except Exception:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError):
             return False
 
     async def _execute_order(self, order: Order):
@@ -550,7 +550,7 @@ class MockBinanceClient:
             )
             available_balance = self.balances.get(base_asset, Decimal("0"))
             return available_balance >= order.quantity
-        except Exception:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError):
             return False
 
     async def _execute_order(self, order: Order):

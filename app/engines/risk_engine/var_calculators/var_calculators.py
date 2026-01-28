@@ -112,7 +112,7 @@ class HistoricalVaRCalculator(BaseVaRCalculator):
                 'method': 'historical',
                 'observations': len(returns),
             }
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"Error calculando VaR histórico: {e}", exc_info=True)
             return {'error': str(e)}
 
@@ -168,7 +168,7 @@ class ParametricVaRCalculator(BaseVaRCalculator):
                             f"Parametric VaR may UNDERESTIMATE risk by 15-30%."
                         )
                         logger.warning(f"VaR WARNING: {normality_warning}")
-                except Exception as e:
+                except (ValueError, TypeError, KeyError, AttributeError) as e:
                     logger.debug(f"Normality test failed: {e}")
 
             # Calcular media y desviación estándar
@@ -229,7 +229,7 @@ class ParametricVaRCalculator(BaseVaRCalculator):
                 'mean_return': float(mean_return),
                 'std_return': float(std_return),
             }
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"Error calculando VaR paramétrico: {e}", exc_info=True)
             return {'error': str(e)}
 
@@ -302,7 +302,7 @@ class MonteCarloVaRCalculator(BaseVaRCalculator):
                 'mean_return': float(mean_return),
                 'std_return': float(std_return),
             }
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"Error calculando VaR Monte Carlo: {e}", exc_info=True)
             return {'error': str(e)}
 
@@ -384,7 +384,7 @@ class GARCHVaRCalculator(BaseVaRCalculator):
         except ImportError:
             calculator = ParametricVaRCalculator(self.config)
             return calculator.calculate_var(returns, portfolio_value)
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             self.logger.error(f"Error calculando VaR GARCH: {e}", exc_info=True)
             calculator = ParametricVaRCalculator(self.config)
             return calculator.calculate_var(returns, portfolio_value)

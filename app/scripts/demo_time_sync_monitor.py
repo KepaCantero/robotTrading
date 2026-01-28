@@ -205,7 +205,7 @@ async def main():
 
     except KeyboardInterrupt:
         print("\nDemo interrupted by user")
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"Demo error: {e}", exc_info=True)
 
 

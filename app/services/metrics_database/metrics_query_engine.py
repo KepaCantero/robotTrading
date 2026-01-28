@@ -97,7 +97,7 @@ class MetricsQueryEngine:
 
             return results
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Failed to query metric range: {e}")
             return []
 
@@ -135,7 +135,7 @@ class MetricsQueryEngine:
 
             return None
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Failed to get latest metric: {e}")
             return None
 
@@ -174,7 +174,7 @@ class MetricsQueryEngine:
 
             return results
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Failed to query OHLC: {e}")
             return []
 
@@ -207,7 +207,7 @@ class MetricsQueryEngine:
 
             return stats
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Failed to get statistics: {e}")
             return None
 
@@ -260,7 +260,7 @@ class MetricsQueryEngine:
             change_pct = ((end_value - start_value) / start_value) * 100
             return change_pct
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Failed to calculate change: {e}")
             return None
 
@@ -297,7 +297,7 @@ class MetricsQueryEngine:
 
             return results
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Failed to query multiple metrics: {e}")
             return {}
 
@@ -392,6 +392,6 @@ class MetricsQueryEngine:
 
             return summary
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Failed to get metrics summary: {e}")
             return {}

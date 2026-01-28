@@ -50,7 +50,7 @@ class BaseFilter(ABC):
                 logger.debug(
                     f"Loaded {name} config from YAML (tier={tier or 'default'}, preset={preset})"
                 )
-            except Exception as e:
+            except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"Failed to load {name} config from YAML: {e}, using empty config")
                 config = {}
 
@@ -138,7 +138,7 @@ class BaseFilter(ABC):
             result['filter_name'] = self.name
             result['priority'] = self.priority
             return result
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Error in {self.name}.evaluate(): {e}", exc_info=True)
             # En caso de error, permitir la señal (fail-open)
             return {

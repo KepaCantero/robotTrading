@@ -167,7 +167,7 @@ class ForexDataFetcher:
         except NotImplementedError:
             # Expected when API is not implemented
             logger.debug("API correlation fetching not implemented, using defaults")
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.warning(f"Failed to fetch correlations from API: {e}, using defaults")
 
         # Return default correlations as fallback
@@ -209,7 +209,7 @@ class ForexDataFetcher:
             except NotImplementedError:
                 # Expected when API is not implemented
                 logger.debug(f"API rate fetching not implemented for {pair}, using fallback")
-            except Exception as e:
+            except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
                 logger.warning(f"Failed to fetch rate for {pair}: {e}, using fallback")
 
             # Use fallback rate (1.0 for most pairs) when API fails or not implemented

@@ -78,7 +78,7 @@ class TwitterSentimentSource(BaseDataSource):
             self.is_connected = True
             logger.info("Conectado a Twitter API")
             return True
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error conectando a Twitter: {e}")
             self.last_error = str(e)
             return False
@@ -93,7 +93,7 @@ class TwitterSentimentSource(BaseDataSource):
             self.is_connected = False
             logger.info("Desconectado de Twitter")
             return True
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"Error desconectando de Twitter: {e}")
             return False
 
@@ -184,7 +184,7 @@ class TwitterSentimentSource(BaseDataSource):
                         'total_tweets': len(tweets.data),
                         'sample_tweets': sample_tweets,
                     }
-                except Exception as e:
+                except (ValueError, TypeError, KeyError, AttributeError) as e:
                     logger.error(f"Error usando tweepy: {e}")
 
             # Fallback: usar API directa (requiere implementación más compleja)
@@ -192,7 +192,7 @@ class TwitterSentimentSource(BaseDataSource):
             logger.warning("Twitter sentiment usando API directa no implementado completamente")
             return {'sentiment_score': 0.0, 'total_tweets': 0, 'sample_tweets': []}
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error obteniendo sentimiento de Twitter para {symbol}: {e}")
             return {'sentiment_score': 0.0, 'total_tweets': 0, 'sample_tweets': []}
 
@@ -239,7 +239,7 @@ class RedditSentimentSource(BaseDataSource):
             self.is_connected = True
             logger.info("Conectado a Reddit API")
             return True
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error conectando a Reddit: {e}")
             self.last_error = str(e)
             return False
@@ -257,7 +257,7 @@ class RedditSentimentSource(BaseDataSource):
                     data = await response.json()
                     self._access_token = data.get('access_token')
                     logger.debug("Reddit access token obtenido")
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.warning(f"No se pudo obtener Reddit access token: {e}")
 
     async def disconnect(self) -> bool:
@@ -270,7 +270,7 @@ class RedditSentimentSource(BaseDataSource):
             self.is_connected = False
             logger.info("Desconectado de Reddit")
             return True
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Error desconectando de Reddit: {e}")
             return False
 
@@ -284,7 +284,7 @@ class RedditSentimentSource(BaseDataSource):
                 f"{self.base_url}/r/wallstreetbets/hot.json?limit=1"
             ) as response:
                 return response.status == 200
-        except Exception:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError):
             return False
 
     async def get_sentiment(
@@ -334,7 +334,7 @@ class RedditSentimentSource(BaseDataSource):
                                             'created_utc': post_data.get('created_utc', 0),
                                         }
                                     )
-                except Exception as e:
+                except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                     logger.warning(f"Error buscando en r/{subreddit}: {e}")
                     continue
 
@@ -376,7 +376,7 @@ class RedditSentimentSource(BaseDataSource):
                 'sample_posts': sample_posts,
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error obteniendo sentimiento de Reddit para {symbol}: {e}")
             return {'sentiment_score': 0.0, 'total_posts': 0, 'sample_posts': []}
 
@@ -425,7 +425,7 @@ class NewsSentimentSource(BaseDataSource):
             self.is_connected = True
             logger.info(f"Conectado a News API ({self.provider})")
             return True
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"Error conectando a News API: {e}")
             self.last_error = str(e)
             return False
@@ -439,7 +439,7 @@ class NewsSentimentSource(BaseDataSource):
             self.is_connected = False
             logger.info("Desconectado de News API")
             return True
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error desconectando de News API: {e}")
             return False
 
@@ -475,7 +475,7 @@ class NewsSentimentSource(BaseDataSource):
                 logger.warning(f"Provider {self.provider} no implementado completamente")
                 return {'sentiment_score': 0.0, 'total_articles': 0, 'sample_articles': []}
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error obteniendo sentimiento de noticias para {symbol}: {e}")
             return {'sentiment_score': 0.0, 'total_articles': 0, 'sample_articles': []}
 
@@ -543,7 +543,7 @@ class NewsSentimentSource(BaseDataSource):
                     'sample_articles': sample_articles,
                 }
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error en NewsAPI: {e}")
             return {'sentiment_score': 0.0, 'total_articles': 0}
 
@@ -594,7 +594,7 @@ class NewsSentimentSource(BaseDataSource):
                     'sample_articles': [item.get('title', '') for item in feed[:5]],
                 }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error en Alpha Vantage News: {e}")
             return {'sentiment_score': 0.0, 'total_articles': 0}
 
@@ -739,6 +739,6 @@ class NewsSentimentSource(BaseDataSource):
 
                 return result
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error en Marketaux API para {symbol}: {e}")
             return {'sentiment_score': 0.0, 'total_articles': 0, 'sample_articles': []}

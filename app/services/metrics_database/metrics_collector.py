@@ -103,7 +103,7 @@ class MetricsCollector:
                         metrics_collected += len(metrics)
                         logger.debug(f"Collected {len(metrics)} metrics from {source_name}")
 
-                except Exception as e:
+                except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
                     error_msg = f"Error collecting from {source_name}: {e}"
                     logger.error(error_msg)
                     errors.append(error_msg)
@@ -117,7 +117,7 @@ class MetricsCollector:
                     self._pending_metrics.clear()
                     logger.debug(f"Stored {stored_count} metrics to QuestDB")
 
-                except Exception as e:
+                except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
                     error_msg = f"Error storing metrics: {e}"
                     logger.error(error_msg)
                     errors.append(error_msg)
@@ -146,7 +146,7 @@ class MetricsCollector:
 
             return result
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Collection cycle failed: {e}")
             return MetricsCollectionResult(
                 success=False,
@@ -207,7 +207,7 @@ class MetricsCollector:
 
             except asyncio.CancelledError:
                 break
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.error(f"Unexpected error in collection loop: {e}")
                 await asyncio.sleep(self.collection_interval_seconds)
 
@@ -228,7 +228,7 @@ class MetricsCollector:
             logger.info(f"Flushed {count} metrics to QuestDB")
             return count
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error flushing metrics: {e}")
             return 0
 
@@ -295,6 +295,6 @@ class MetricsCollector:
 
             return db_healthy
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Health check failed: {e}")
             return False

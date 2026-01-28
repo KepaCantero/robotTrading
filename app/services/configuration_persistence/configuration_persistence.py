@@ -106,7 +106,7 @@ class ConfigurationPersistence:
 
             return config.config_id
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"❌ Error saving configuration: {e}")
             raise
 
@@ -144,7 +144,7 @@ class ConfigurationPersistence:
             logger.info(f"✅ Configuration loaded: {config_id}")
             return result
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"❌ Error loading configuration: {e}")
             return ConfigurationLoadResponse(
                 success=False,
@@ -200,7 +200,7 @@ class ConfigurationPersistence:
             )
             return result
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"❌ Error listing configurations: {e}")
             return ConfigurationListResponse(
                 success=False,
@@ -233,7 +233,7 @@ class ConfigurationPersistence:
             logger.info(f"✅ Configuration deactivated: {config_id}")
             return True
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"❌ Error deleting configuration: {e}")
             return False
 

@@ -71,7 +71,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 
             return response
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             # Calculate duration
             duration = (time.time() - start_time) * 1000
 

@@ -61,7 +61,7 @@ try:
         console_level=logging.INFO,
     )
     setup_module_loggers()
-except Exception as e:
+except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
     # Fallback a basicConfig si no se puede importar
     logging.basicConfig(
         level=logging.INFO,
@@ -76,7 +76,7 @@ logger.info("🚀 Iniciando Backtest Comparativo: Baseline + 4 Learning Engines.
 try:
     from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestRunner
     logger.info("✅ ComprehensiveBacktestRunner importado")
-except Exception as e:
+except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
     logger.error(f"❌ Error importando ComprehensiveBacktestRunner: {e}", exc_info=True)
     raise
 
@@ -112,7 +112,7 @@ def main():
                     baseline_result['learning_engine'] = None
                     all_results.append(baseline_result)
                     logger.info("✅ Baseline completado")
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 logger.error(f"❌ Error en Baseline: {e}")
         
         # ===== 2. EJECUTAR DEEP LEARNING SOLO =====
@@ -181,7 +181,7 @@ def main():
                     logger.info(f"✅ {engine_name.capitalize()} completado")
                 else:
                     logger.warning(f"⚠️ No se encontraron resultados para {engine_name} - puede no haberse ejecutado")
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.error(f"❌ Error ejecutando {engine_name}: {e}", exc_info=True)
         
         # Restaurar configuración original
@@ -303,7 +303,7 @@ def main():
         else:
             logger.warning("⚠️ No se encontraron resultados para comparar")
         
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"❌ Error ejecutando backtests: {e}", exc_info=True)
         raise
 

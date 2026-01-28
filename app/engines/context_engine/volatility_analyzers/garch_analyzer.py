@@ -90,7 +90,7 @@ class GARCHAnalyzer:
             logger.info("GARCH model entrenado exitosamente")
             return True
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error entrenando GARCH: {e}")
             return False
 
@@ -117,7 +117,7 @@ class GARCHAnalyzer:
                 'confidence': 0.8,  # Confianza alta para modelos GARCH bien ajustados
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error prediciendo volatilidad: {e}")
             return {'volatility': None, 'forecast': None, 'confidence': 0.0}
 
@@ -153,6 +153,6 @@ class GARCHAnalyzer:
                 'parameters': params.to_dict(),
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error detectando clustering: {e}")
             return {'clustering_detected': False, 'persistence': None, 'confidence': 0.0}

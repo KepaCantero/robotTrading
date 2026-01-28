@@ -201,13 +201,13 @@ class QuantStatsIntegrator:
         try:
             kurtosis_val = stats.kurtosis(returns_array)
             kurtosis = Decimal(str(kurtosis_val))
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError):
             kurtosis = Decimal("0")
 
         try:
             skewness_val = stats.skew(returns_array)
             skewness = Decimal(str(skewness_val))
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError):
             skewness = Decimal("0")
 
         metrics = AdvancedMetrics(

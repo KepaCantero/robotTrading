@@ -208,7 +208,7 @@ class ValidationEngine:
 
             return report
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"❌ Validation failed: {e}", exc_info=True)
             raise ValueError(f"Validation failed: {e}") from e
 
@@ -248,7 +248,7 @@ class ValidationEngine:
                     recommendation="Increase capital or select lower-tier strategy",
                 )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             self.logger.error(f"❌ Capital viability check failed: {e}")
             return GateResult(
                 gate_name="capital_viability",
@@ -300,7 +300,7 @@ class ValidationEngine:
                     recommendation="Reduce trade frequency or increase capital",
                 )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             self.logger.error(f"❌ Execution cost check failed: {e}")
             return GateResult(
                 gate_name="execution_costs",
@@ -342,7 +342,7 @@ class ValidationEngine:
                     recommendation="Consider simpler passive strategy",
                 )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             self.logger.error(f"❌ Opportunity cost check failed: {e}")
             return GateResult(
                 gate_name="opportunity_cost",
@@ -383,7 +383,7 @@ class ValidationEngine:
                     severity="info",
                 )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"❌ Learning capital check failed: {e}")
             return GateResult(
                 gate_name="learning_capital",
@@ -434,7 +434,7 @@ class ValidationEngine:
                     details={"module_count": len(enabled_modules)},
                 )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"❌ Module gating check failed: {e}")
             return GateResult(
                 gate_name="module_gating",
@@ -484,7 +484,7 @@ class ValidationEngine:
                 recommendation=metrics.confidence_level if severity == "warning" else None,
             )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"❌ Feasibility ratio check failed: {e}")
             return GateResult(
                 gate_name="feasibility_ratio",

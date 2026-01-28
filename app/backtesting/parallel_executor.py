@@ -86,7 +86,7 @@ class ParallelExecutor:
                         logger.warning(
                             f"⚠️ {task_name} falló (retornó None): {task.get('name', 'unknown')}"
                         )
-                except Exception as e:
+                except (RuntimeError, ValueError, TypeError, KeyError) as e:
                     failed_count += 1
                     task_name_str = task.get('name', 'unknown')
                     logger.error(f"❌ Error en {task_name} '{task_name_str}': {e}", exc_info=True)

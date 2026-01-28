@@ -60,7 +60,7 @@ def _run_backtest_process(
 
         # Put result in queue (BacktestResult should be pickleable)
         result_queue.put(('success', result))
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         result_queue.put(('error', str(e)))
 
 
@@ -283,7 +283,7 @@ class ParallelBacktestExecutor(BacktestExecutor):
             """Run single backtest."""
             try:
                 return self.execute(quotes, strategy, **kwargs)
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 logger.error(f"Error in parallel execution: {e}", exc_info=True)
                 return None
 

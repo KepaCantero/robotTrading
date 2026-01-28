@@ -316,7 +316,7 @@ class BacktestOrchestrator:
                 result = self._run_single(quotes, strategy, **kwargs)
                 all_results.append(result)
                 self.results.add(self._result_to_dict(result))
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 logger.error(f"Error executing backtest: {e}", exc_info=True)
 
         return OrchestrationResult(results=all_results, config=self.config)

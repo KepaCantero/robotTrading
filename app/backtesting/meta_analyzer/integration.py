@@ -123,5 +123,5 @@ async def save_backtest_audit_and_weights(
                     'result_summary': test_result,
                 },
             )
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.warning(f"No se pudieron guardar pesos: {e}")

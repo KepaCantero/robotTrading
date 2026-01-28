@@ -206,7 +206,7 @@ class VaRPositionLimiter:
                 warnings=warnings,
             )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error validating position with VaR: {e}", exc_info=True)
             return ValidationResult(
                 passed=False,
@@ -264,7 +264,7 @@ class VaRPositionLimiter:
                         corr_matrix = self.correlation_analyzer.get_cached_matrix()
                         if corr_matrix is not None:
                             correlation_type = "real"
-                except Exception as e:
+                except (ValueError, TypeError, KeyError, AttributeError) as e:
                     logger.debug(f"Could not get cached correlation matrix: {e}")
 
             # Calculate portfolio variance
@@ -292,7 +292,7 @@ class VaRPositionLimiter:
 
             return max(var, Decimal("0"))
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Error calculating portfolio VaR: {e}", exc_info=True)
             return Decimal("0")
 
@@ -374,7 +374,7 @@ class VaRPositionLimiter:
 
             return max(projected_var, Decimal("0"))
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculating VaR with position: {e}", exc_info=True)
             # Return current VaR as fallback
             return self.calculate_portfolio_var(confidence_level, lookback_days)
@@ -496,7 +496,7 @@ class VaRPositionLimiter:
                     total_value += abs(p.quantity * price)
 
             return total_value
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error getting portfolio value: {e}")
             return Decimal("0")
 
@@ -603,7 +603,7 @@ class VaRPositionLimiter:
 
             return max_quantity
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error calculating max position size: {e}", exc_info=True)
             return Decimal("0")
 

@@ -367,7 +367,7 @@ class ForexRiskTracker:
                         amount_eur=net_exposure,
                         months=3,
                     )
-                except Exception as e:
+                except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                     logger.warning(f"Could not calculate forward cost for {currency}: {e}")
                     forward_rate = None
                     cost_eur = None
@@ -554,7 +554,7 @@ class ForexRiskTracker:
                     rate = rates[pair_str]
                     self._fx_rates[pair] = (rate, utc_now())
                     return rate
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.warning(f"Failed to get FX rate from service: {e}")
 
         # Use fallback rates
@@ -590,7 +590,7 @@ class ForexRiskTracker:
                 self._fx_rates[pair_key] = (rate, utc_now())
 
             logger.debug(f"Updated {len(rates)} FX rates")
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.warning(f"Could not update FX rates: {e}")
 
     def _calculate_overall_hedge_ratio(

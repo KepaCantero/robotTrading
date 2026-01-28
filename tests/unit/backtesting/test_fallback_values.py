@@ -12,55 +12,57 @@ import pytest
 from pathlib import Path
 
 
+@pytest.fixture
+def config_path():
+    """Path to profile_optimization.yaml config file."""
+    return Path("config/backtesting/profile_optimization.yaml")
+
+
+@pytest.fixture
+def config_defaults(config_path):
+    """
+    Load default values from config file.
+
+    Returns dict with threshold defaults.
+    """
+    import yaml
+
+    with open(config_path) as f:
+        config = yaml.safe_load(f)
+
+    threshold_config = config.get("threshold_optimization", {})
+
+    return {
+        "rsi_buy": {
+            "min": threshold_config.get("rsi", {}).get("buy_threshold", {}).get("min", 20),
+            "max": threshold_config.get("rsi", {}).get("buy_threshold", {}).get("max", 35),
+            "default": threshold_config.get("rsi", {}).get("buy_threshold", {}).get("default", 30),
+        },
+        "rsi_sell": {
+            "min": threshold_config.get("rsi", {}).get("sell_threshold", {}).get("min", 65),
+            "max": threshold_config.get("rsi", {}).get("sell_threshold", {}).get("max", 80),
+            "default": threshold_config.get("rsi", {}).get("sell_threshold", {}).get("default", 70),
+        },
+        "volume_ratio": {
+            "min": threshold_config.get("volume_ratio", {}).get("min", 1.0),
+            "max": threshold_config.get("volume_ratio", {}).get("max", 1.5),
+            "default": threshold_config.get("volume_ratio", {}).get("default", 1.1),
+        },
+        "ema_distance": {
+            "min": threshold_config.get("ema_distance", {}).get("min", 0.002),
+            "max": threshold_config.get("ema_distance", {}).get("max", 0.01),
+            "default": threshold_config.get("ema_distance", {}).get("default", 0.005),
+        },
+        "momentum": {
+            "min": threshold_config.get("momentum", {}).get("threshold", {}).get("min", 0.01),
+            "max": threshold_config.get("momentum", {}).get("threshold", {}).get("max", 0.03),
+            "default": threshold_config.get("momentum", {}).get("threshold", {}).get("default", 0.015),
+        },
+    }
+
+
 class TestFallbackValuesMatchConfig:
     """Test that hardcoded fallback values match config file defaults."""
-
-    @pytest.fixture
-    def config_path(self):
-        """Path to profile_optimization.yaml config file."""
-        return Path("config/backtesting/profile_optimization.yaml")
-
-    @pytest.fixture
-    def config_defaults(self, config_path):
-        """
-        Load default values from config file.
-
-        Returns dict with threshold defaults.
-        """
-        import yaml
-
-        with open(config_path) as f:
-            config = yaml.safe_load(f)
-
-        threshold_config = config.get("threshold_optimization", {})
-
-        return {
-            "rsi_buy": {
-                "min": threshold_config.get("rsi", {}).get("buy_threshold", {}).get("min", 20),
-                "max": threshold_config.get("rsi", {}).get("buy_threshold", {}).get("max", 35),
-                "default": threshold_config.get("rsi", {}).get("buy_threshold", {}).get("default", 30),
-            },
-            "rsi_sell": {
-                "min": threshold_config.get("rsi", {}).get("sell_threshold", {}).get("min", 65),
-                "max": threshold_config.get("rsi", {}).get("sell_threshold", {}).get("max", 80),
-                "default": threshold_config.get("rsi", {}).get("sell_threshold", {}).get("default", 70),
-            },
-            "volume_ratio": {
-                "min": threshold_config.get("volume_ratio", {}).get("min", 1.0),
-                "max": threshold_config.get("volume_ratio", {}).get("max", 1.5),
-                "default": threshold_config.get("volume_ratio", {}).get("default", 1.1),
-            },
-            "ema_distance": {
-                "min": threshold_config.get("ema_distance", {}).get("min", 0.002),
-                "max": threshold_config.get("ema_distance", {}).get("max", 0.01),
-                "default": threshold_config.get("ema_distance", {}).get("default", 0.005),
-            },
-            "momentum": {
-                "min": threshold_config.get("momentum", {}).get("threshold", {}).get("min", 0.01),
-                "max": threshold_config.get("momentum", {}).get("threshold", {}).get("max", 0.03),
-                "default": threshold_config.get("momentum", {}).get("threshold", {}).get("default", 0.015),
-            },
-        }
 
     def test_rsi_buy_fallback_matches_config(self, config_defaults):
         """

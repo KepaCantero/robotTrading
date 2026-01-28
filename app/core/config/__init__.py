@@ -17,8 +17,11 @@ if config_py_path.exists():
     sys.modules["app.core.config_module"] = config_module
     spec.loader.exec_module(config_module)
 
-    # Export get_settings from config.py
+    # Export get_settings, Settings, and helper functions from config.py
     get_settings = config_module.get_settings
+    Settings = config_module.Settings
+    get_database_url = config_module.get_database_url
+    get_redis_url = config_module.get_redis_url
 
 from .profile_config_loader import (
     ProfileConfigLoader,
@@ -39,4 +42,7 @@ __all__ = [
     "get_rl_config",
     "clear_loader_cache",
     "get_settings",
+    "Settings",
+    "get_database_url",
+    "get_redis_url",
 ]

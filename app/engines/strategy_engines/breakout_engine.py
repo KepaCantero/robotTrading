@@ -73,7 +73,7 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
                 try:
                     self.config.update({k: v for k, v in params.items() if v is not None})
                     config.update({k: v for k, v in params.items() if v is not None})
-                except Exception:
+                except (ValueError, TypeError, KeyError, AttributeError):
                     pass
 
             # Core thresholds - load from YAML
@@ -361,7 +361,7 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
                 )
                 signals.append(signal)
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error generando señal en BreakoutStrategyEngine: {e}", exc_info=True)
 
         return signals
@@ -438,7 +438,7 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
         # Exposición máxima
         try:
             current_exposure = portfolio.get_total_exposure()
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
             # Fallback defensivo: si el método no existe o falla, no bloquear por exposición
             current_exposure = 0.0
 

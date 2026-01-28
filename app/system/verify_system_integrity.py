@@ -189,7 +189,7 @@ class SystemIntegrityValidator:
                 logger.info(
                     f"  ✅ DataEngine data retrieval: OK (test data: {len(test_prices)} points)"
                 )
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 result["checks"]["data_retrieval"] = {
                     "status": "error",
                     "message": f"Data retrieval failed: {str(e)}",
@@ -205,7 +205,7 @@ class SystemIntegrityValidator:
             else:
                 result["status"] = "ok"
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             result["status"] = "error"
             result["errors"].append(f"DataEngine validation exception: {str(e)}")
             logger.error(f"  ❌ DataEngine validation exception: {e}", exc_info=True)
@@ -281,7 +281,7 @@ class SystemIntegrityValidator:
                         "message": "Regime detection returned None (may need more data)",
                     }
                     logger.warning("  ⚠️  Regime detection: None (may need more training data)")
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 result["checks"]["regime_detection"] = {
                     "status": "error",
                     "message": f"Regime detection failed: {str(e)}",
@@ -322,7 +322,7 @@ class SystemIntegrityValidator:
                         "message": "Volatility regime returned None",
                     }
                     logger.warning("  ⚠️  Volatility regime: None")
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 result["checks"]["volatility_regime"] = {
                     "status": "error",
                     "message": f"Volatility regime detection failed: {str(e)}",
@@ -363,7 +363,7 @@ class SystemIntegrityValidator:
                         "message": "Correlation matrix returned None",
                     }
                     logger.warning("  ⚠️  Correlation matrix: None")
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 result["checks"]["correlation_matrix"] = {
                     "status": "error",
                     "message": f"Correlation matrix failed: {str(e)}",
@@ -379,7 +379,7 @@ class SystemIntegrityValidator:
             else:
                 result["status"] = "ok"
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             result["status"] = "error"
             result["errors"].append(f"ContextEngine validation exception: {str(e)}")
             logger.error(f"  ❌ ContextEngine validation exception: {e}", exc_info=True)
@@ -424,7 +424,7 @@ class SystemIntegrityValidator:
                 "ok" if result["checks"]["data_flow"]["status"] == "ok" else "warning"
             )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             result["status"] = "error"
             result["errors"].append(f"Integration validation exception: {str(e)}")
             logger.error(f"  ❌ Integration validation exception: {e}", exc_info=True)
@@ -472,7 +472,7 @@ class SystemIntegrityValidator:
                     "message": f"Log writing successful: {log_file.name}",
                 }
                 logger.info(f"  ✅ Log writing: OK ({log_file.name})")
-            except Exception as e:
+            except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
                 result["checks"]["log_writing"] = {
                     "status": "error",
                     "message": f"Log writing failed: {str(e)}",
@@ -520,7 +520,7 @@ class SystemIntegrityValidator:
             else:
                 result["status"] = "ok"
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             result["status"] = "error"
             result["errors"].append(f"Logs validation exception: {str(e)}")
             logger.error(f"  ❌ Logs validation exception: {e}", exc_info=True)
@@ -566,7 +566,7 @@ class SystemIntegrityValidator:
                     "message": f"JSON writing successful: {self.dashboard_state_file.name}",
                 }
                 logger.info(f"  ✅ JSON writing: OK ({self.dashboard_state_file.name})")
-            except Exception as e:
+            except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
                 result["checks"]["json_writing"] = {
                     "status": "error",
                     "message": f"JSON writing failed: {str(e)}",
@@ -606,7 +606,7 @@ class SystemIntegrityValidator:
             else:
                 result["status"] = "ok"
 
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             result["status"] = "error"
             result["errors"].append(f"Dashboard state validation exception: {str(e)}")
             logger.error(f"  ❌ Dashboard state validation exception: {e}", exc_info=True)
@@ -713,7 +713,7 @@ class SystemIntegrityValidator:
 
             logger.info(f"✅ Dashboard state written to {self.dashboard_state_file}")
 
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.error(f"❌ Failed to write dashboard state: {e}", exc_info=True)
 
 

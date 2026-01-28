@@ -75,7 +75,7 @@ class WebhookChannel(NotificationChannel):
         except asyncio.TimeoutError:
             logger.error(f"Webhook timeout: {target.endpoint}")
             return False
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Webhook error: {target.endpoint} - {e}")
             return False
 
@@ -226,7 +226,7 @@ This is an automated alert from the AlgoTrading system.
         except asyncio.TimeoutError:
             logger.error(f"Email timeout: {target.endpoint}")
             return False
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Email error: {target.endpoint} - {e}")
             return False
 
@@ -300,7 +300,7 @@ class SlackChannel(NotificationChannel):
                     logger.warning(f"Slack send failed (status: {response.status_code})")
                     return False
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"Slack error: {e}")
             return False
 
@@ -373,7 +373,7 @@ class DiscordChannel(NotificationChannel):
                     logger.warning(f"Discord send failed (status: {response.status_code})")
                     return False
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"Discord error: {e}")
             return False
 
@@ -446,7 +446,7 @@ class NotificationDispatcher:
                 if attempt < target.retry_count - 1:
                     await asyncio.sleep(2**attempt)  # Exponential backoff
 
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.error(f"Retry {attempt + 1} failed: {e}")
                 if attempt == target.retry_count - 1:
                     return False

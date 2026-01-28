@@ -287,7 +287,7 @@ class MultiStrategyOptimizer:
 
             return float(metric_value)
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Error in trial {trial.number}: {e}", exc_info=True)
             # Return worst possible value
             return -999.0 if self.optimization_direction == "maximize" else 999.0

@@ -90,7 +90,7 @@ class StructuralChangeDetector:
                 'confidence': 1.0 - float(p_value) if p_value is not None else 0.0,
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error en CUSUM test: {e}")
             return {
                 'change_detected': False,
@@ -176,7 +176,7 @@ class StructuralChangeDetector:
                 'confidence': 1.0 - float(p_value),
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error en Chow test: {e}")
             return {
                 'change_detected': False,

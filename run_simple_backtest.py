@@ -76,7 +76,7 @@ try:
     for quote in quotes:  # Procesar todas las quotes (la estrategia necesita suficiente histórico)
         try:
             signals.extend(strategy.generate_signals(quote))
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.debug(f"Signal error: {e}")
 
     print(f"✅ Generated {len(signals)} signals")
@@ -113,7 +113,7 @@ except ImportError as e:
     print("   Make sure you have installed all dependencies:")
     print("   pip install pandas numpy yfinance matplotlib scipy rich")
     exit(1)
-except Exception as e:
+except (ValueError, TypeError, KeyError, AttributeError) as e:
     print(f"❌ Error: {e}")
     logger.exception("Backtest failed")
     exit(1)

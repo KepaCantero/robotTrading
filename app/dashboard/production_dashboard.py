@@ -232,7 +232,7 @@ class ProductionDashboard:
 
             return metrics
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error getting dashboard metrics: {e}", exc_info=True)
             # Return cached metrics if available
             if self._metrics_cache:
@@ -271,7 +271,7 @@ class ProductionDashboard:
 
             return positions
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Error getting positions: {e}", exc_info=True)
             return []
 
@@ -310,7 +310,7 @@ class ProductionDashboard:
 
             return alert_history
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Error getting alert history: {e}", exc_info=True)
             return []
 
@@ -360,7 +360,7 @@ class ProductionDashboard:
 
             return historical_data
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error getting historical data: {e}", exc_info=True)
             return []
 
@@ -373,7 +373,7 @@ class ProductionDashboard:
                 portfolio = await self.portfolio_service.get_portfolio()
                 if portfolio:
                     return portfolio.total_value
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.warning(f"Error getting portfolio value: {e}")
         return Decimal("0")
 
@@ -384,7 +384,7 @@ class ProductionDashboard:
                 portfolio = await self.portfolio_service.get_portfolio()
                 if portfolio:
                     return portfolio.total_pnl
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.warning(f"Error getting daily P&L: {e}")
         return Decimal("0")
 
@@ -398,7 +398,7 @@ class ProductionDashboard:
                 portfolio = await self.portfolio_service.get_portfolio()
                 if portfolio:
                     return len(portfolio.positions)
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.warning(f"Error getting open position count: {e}")
         return 0
 
@@ -409,7 +409,7 @@ class ProductionDashboard:
                 portfolio = await self.portfolio_service.get_portfolio()
                 if portfolio:
                     return portfolio.cash
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.warning(f"Error getting buying power: {e}")
         return Decimal("0")
 
@@ -418,7 +418,7 @@ class ProductionDashboard:
         try:
             import psutil
             return psutil.cpu_percent(interval=0.1)
-        except Exception:
+        except (asyncio.TimeoutError, ConnectionError, OSError):
             return 0.0
 
     async def _get_memory_mb(self) -> float:
@@ -428,7 +428,7 @@ class ProductionDashboard:
             import os
             process = psutil.Process(os.getpid())
             return process.memory_info().rss / (1024 * 1024)
-        except Exception:
+        except (asyncio.TimeoutError, ConnectionError, OSError):
             return 0.0
 
     async def _get_memory_percent(self) -> float:
@@ -438,7 +438,7 @@ class ProductionDashboard:
             import os
             process = psutil.Process(os.getpid())
             return process.memory_percent()
-        except Exception:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError):
             return 0.0
 
     async def _get_uptime(self) -> float:
@@ -473,7 +473,7 @@ class ProductionDashboard:
                 # Get current VaR from risk manager
                 # For now, return a default value
                 return Decimal("2000")
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.warning(f"Error getting VaR: {e}")
         return Decimal("0")
 
@@ -500,7 +500,7 @@ class ProductionDashboard:
                     stats.get("total_alerts_triggered", 0)
                     - stats.get("total_alerts_resolved", 0)
                 )
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.warning(f"Error getting active alerts: {e}")
         return 0
 
@@ -510,7 +510,7 @@ class ProductionDashboard:
             if self.alerting_orchestrator:
                 stats = self.alerting_orchestrator.get_statistics()
                 return stats.get("total_alerts_triggered", 0)
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.warning(f"Error getting 24h alert count: {e}")
         return 0
 
@@ -538,7 +538,7 @@ class ProductionDashboard:
         except WebSocketDisconnect:
             self._websocket_connections.remove(websocket)
             logger.info("WebSocket disconnected")
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"WebSocket error: {e}", exc_info=True)
             if websocket in self._websocket_connections:
                 self._websocket_connections.remove(websocket)
@@ -554,7 +554,7 @@ class ProductionDashboard:
         for websocket in self._websocket_connections:
             try:
                 await websocket.send_json(data)
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.warning(f"Error broadcasting to websocket: {e}")
                 disconnected.append(websocket)
 
@@ -579,7 +579,7 @@ class ProductionDashboard:
         try:
             if self.alerting_orchestrator:
                 return await self.alerting_orchestrator.acknowledge_alert(alert_id)
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error acknowledging alert: {e}", exc_info=True)
         return False
 
@@ -596,7 +596,7 @@ class ProductionDashboard:
         try:
             if self.alerting_orchestrator:
                 return await self.alerting_orchestrator.resolve_alert(alert_id)
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error resolving alert: {e}", exc_info=True)
         return False
 

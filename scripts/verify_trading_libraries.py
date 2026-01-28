@@ -112,7 +112,7 @@ for lib_name, lib_info in libraries_to_check.items():
                     status['version'] = line.split(':', 1)[1].strip()
         else:
             status['error'] = f"No instalado según pip"
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         status['error'] = f"Error verificando instalación: {e}"
     
     # 2. Intentar importar
@@ -133,14 +133,14 @@ for lib_name, lib_info in libraries_to_check.items():
             test_result = lib_info['test_function']()
             status['test_passed'] = True
             print(f"   ✅ Test pasado: {test_result if not isinstance(test_result, pd.Series) else 'OK'}")
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             status['error'] = f"Error en test: {type(e).__name__}: {str(e)[:100]}"
             print(f"   ⚠️  Test falló: {e}")
         
     except ImportError as e:
         status['error'] = f"No se puede importar: {e}"
         print(f"   ❌ No se puede importar: {e}")
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         status['error'] = f"Error inesperado: {type(e).__name__}: {str(e)[:100]}"
         print(f"   ❌ Error: {e}")
     

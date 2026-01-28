@@ -131,7 +131,7 @@ class YAMLConfigUpdater:
             logger.info(f"✅ Successfully updated {filter_name} in {config_file}")
             return True
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Error updating {filter_name} thresholds: {e}", exc_info=True)
             return False
 
@@ -195,7 +195,7 @@ class YAMLConfigUpdater:
             logger.info(f"✅ Successfully updated {detector_name} in {config_file}")
             return True
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Error updating {detector_name}: {e}", exc_info=True)
             return False
 
@@ -259,7 +259,7 @@ class YAMLConfigUpdater:
             logger.info(f"✅ Successfully updated {strategy_name} in {config_file}")
             return True
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Error updating {strategy_name}: {e}", exc_info=True)
             return False
 
@@ -325,7 +325,7 @@ class YAMLConfigUpdater:
             logger.info(f"✅ Successfully updated {section} in {config_file}")
             return True
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error updating {section}: {e}", exc_info=True)
             return False
 
@@ -440,7 +440,7 @@ class YAMLConfigUpdater:
             yaml_str = yaml.safe_dump(config)
             yaml.safe_load(yaml_str)
             return True
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"YAML validation failed: {e}")
             return False
 
@@ -512,6 +512,6 @@ class YAMLConfigUpdater:
             shutil.copy2(backup_path, original_path)
             logger.info(f"Restored {original_name} from {backup_name}")
             return True
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Error restoring from backup: {e}")
             return False

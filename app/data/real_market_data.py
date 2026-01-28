@@ -151,7 +151,7 @@ class RealMarketDataFetcher:
             self.session = aiohttp.ClientSession()
             logger.info("Connected to Alpha Vantage API")
             return True
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"Failed to connect to Alpha Vantage: {e}")
             return False
 
@@ -236,7 +236,7 @@ class RealMarketDataFetcher:
         except asyncio.TimeoutError:
             logger.error(f"Timeout fetching data for {symbol}")
             return None
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"Error fetching data for {symbol}: {e}")
             return None
 
@@ -269,7 +269,7 @@ class RealMarketDataFetcher:
                 if (datetime.now() - cache_time).days < 1:
                     logger.debug(f"Loading {symbol} from JSON cache")
                     return self._parse_alpha_vantage_data(data, symbol)
-            except Exception as e:
+            except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
                 logger.debug(f"Failed to load JSON cache for {symbol}: {e}")
 
         # Try CSV cache (fallback for existing cached data)
@@ -284,7 +284,7 @@ class RealMarketDataFetcher:
                     logger.info(f"Loaded {symbol} from CSV cache ({len(df)} rows)")
                     # Don't check staleness for CSV files - they can be used for backtesting
                     return df.sort_index()
-            except Exception as e:
+            except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
                 logger.warning(f"Failed to load CSV cache for {symbol}: {e}")
 
         return None
@@ -303,7 +303,7 @@ class RealMarketDataFetcher:
             with open(cache_path, 'w') as f:
                 json.dump(data, f, indent=2)
             logger.debug(f"Cached data for {symbol}")
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.warning(f"Failed to cache data for {symbol}: {e}")
 
     def _parse_alpha_vantage_data(self, data: Dict, symbol: str) -> Optional[pd.DataFrame]:
@@ -351,7 +351,7 @@ class RealMarketDataFetcher:
 
             return df
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Failed to parse data for {symbol}: {e}")
             return None
 

@@ -187,7 +187,7 @@ def main():
             fig = vis.plot_param_importances(study)
             fig.write_html(str(output_dir / "param_importances.html"))
             logger.info(f"Parameter importance saved to: {output_dir / 'param_importances.html'}")
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.warning(f"Could not generate parameter importance plot: {e}")
         
     except ImportError:

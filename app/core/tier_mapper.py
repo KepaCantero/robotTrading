@@ -95,7 +95,7 @@ class TierMapper:
                         "loaded": Decimal("1"),  # Mark as loaded
                     }
                     logger.info(f"Tier thresholds loaded from config: {cls.THRESHOLDS}")
-            except Exception as e:
+            except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"Could not load tier thresholds from config: {e}")
 
     @classmethod
@@ -184,8 +184,12 @@ class TierMapper:
         if HAS_CONFIG_LOADER:
             try:
                 config = get_strategy_config()
-                return config.get_tier_from_capital(capital)
-            except Exception as e:
+                tier = config.get_tier_from_capital(capital)
+                # Map institutional to large for backward compatibility with 4-tier system
+                if tier == "institutional":
+                    return "large"
+                return tier
+            except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
                 logger.debug(f"Could not determine tier from config: {e}, using fallback")
 
         # Fallback to hardcoded thresholds

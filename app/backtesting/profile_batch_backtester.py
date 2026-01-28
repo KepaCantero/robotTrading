@@ -82,6 +82,7 @@ from app.services.profile_driven_trading.profile_strategy_mapper import (
     create_profile_mapper,
     StrategyMapping,
 )
+from sqlalchemy.exc import IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError
 
 logger = logging.getLogger(__name__)
 
@@ -285,7 +286,7 @@ class ProfileBatchBacktester:
         try:
             self.profile_config_loader = ProfileConfigLoader()
             logger.info("ProfileConfigLoader initialized successfully")
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Failed to initialize ProfileConfigLoader: {e}")
             logger.warning("Falling back to hardcoded defaults in profile_batch_backtest.yaml")
             self.profile_config_loader = None
@@ -327,7 +328,7 @@ class ProfileBatchBacktester:
         try:
             self.profile_mapper = create_profile_mapper()
             logger.info("ProfileStrategyMapper initialized successfully")
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.warning(f"Failed to initialize ProfileStrategyMapper: {e}")
             self.profile_mapper = None
             # Track fallback
@@ -624,7 +625,7 @@ class ProfileBatchBacktester:
         try:
             # Use the centralized tier mapper for consistency
             return map_profile_tier_to_config(profile.capital_flag, target_format="spanish")
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError) as e:
             # Fallback to manual mapping if tier mapper fails
             logger.warning(
                 f"Tier mapper failed for {profile.capital_flag}, using fallback: {e}"
@@ -696,7 +697,7 @@ class ProfileBatchBacktester:
         if self.profile_mapper is not None:
             try:
                 strategy_mapping_obj = self.profile_mapper.create_strategy_mapping(profile)
-            except Exception as e:
+            except (RuntimeError, ValueError, TypeError, KeyError) as e:
                 logger.debug(f"Could not create StrategyMapping: {e}")
 
         # Extract per-strategy results from multi-strategy execution
@@ -783,7 +784,7 @@ class ProfileBatchBacktester:
                     profile_id = result.profile_id
                     results[profile_id] = result
                     logger.info(f"Completed {profile_id} ({len(results)}/{len(profiles)})")
-                except Exception as e:
+                except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
                     logger.error(f"Profile {profile} failed: {e}", exc_info=True)
 
         # Batch store all results sequentially after parallel execution completes
@@ -849,7 +850,7 @@ class ProfileBatchBacktester:
                         session.add(db_result)
 
                     stored_count += 1
-                except Exception as e:
+                except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
                     failed_count += 1
                     logger.error(f"Failed to store result for {result.profile_id}: {e}")
                     # Continue with next result
@@ -857,7 +858,7 @@ class ProfileBatchBacktester:
             session.commit()
             logger.info(f"Batch store complete: {stored_count} stored, {failed_count} failed")
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             session.rollback()
             logger.error(f"Batch store failed: {e}", exc_info=True)
 
@@ -873,7 +874,7 @@ class ProfileBatchBacktester:
                 result = self.run_single_profile(profile)
                 results[result.profile_id] = result
                 logger.info(f"Completed {i}/{len(profiles)}: {result.profile_id}")
-            except Exception as e:
+            except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
                 logger.error(f"Profile {profile} failed: {e}", exc_info=True)
 
         return results
@@ -956,7 +957,7 @@ class ProfileBatchBacktester:
 
                 return config
 
-            except Exception as e:
+            except (FileNotFoundError, PermissionError, IOError, OSError) as e:
                 logger.warning(f"ProfileStrategyMapper failed for {profile.input_id}: {e}, falling back to manual config")
                 # Track fallback
                 self._increment_fallback_counter("profile_strategy_mapper")
@@ -1094,7 +1095,7 @@ class ProfileBatchBacktester:
 
             return baseline_results
 
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError) as e:
             logger.error(f"Baseline backtest failed: {e}", exc_info=True)
             return self._get_empty_metrics()
 
@@ -1238,7 +1239,7 @@ class ProfileBatchBacktester:
                 vol_max = vol_config.get("max", 1.5)
 
                 logger.debug("Loaded parameter ranges from ProfileConfigLoader")
-            except Exception as e:
+            except (RuntimeError, ValueError, TypeError, KeyError) as e:
                 logger.warning(f"Failed to load parameter ranges from ProfileConfigLoader: {e}")
                 logger.info("Falling back to default parameter ranges")
                 # Track fallback
@@ -1278,7 +1279,7 @@ class ProfileBatchBacktester:
                 if multi_strategy and "combined" in metrics:
                     return metrics["combined"].get("sharpe_ratio", -1.0)
                 return metrics.get("sharpe_ratio", -1.0)
-            except Exception as e:
+            except (FileNotFoundError, PermissionError, IOError, OSError) as e:
                 logger.warning(f"Trial failed: {e}")
                 return -1.0
 
@@ -1382,7 +1383,7 @@ class ProfileBatchBacktester:
                     context=f"backtest with params for {profile.objetivo_inversion.value}"
                 )
 
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError) as e:
             logger.error(f"Backtest with params failed: {e}", exc_info=True)
             return self._get_empty_metrics()
 
@@ -1473,7 +1474,7 @@ class ProfileBatchBacktester:
                     f"step_years={step_years}, n_windows={n_windows}, "
                     f"train_pct={train_pct:.2f}, min_test_periods={min_test_periods}"
                 )
-            except Exception as e:
+            except (RuntimeError, ValueError, TypeError, KeyError) as e:
                 logger.warning(f"Failed to load walk-forward config from ProfileConfigLoader: {e}")
                 # Fall back to workflow config
                 # Track fallback
@@ -1577,7 +1578,7 @@ class ProfileBatchBacktester:
                     f"Test Sharpe={test_sharpe:.2f}, Decay={train_sharpe - test_sharpe:.2f}"
                 )
 
-            except Exception as e:
+            except (RuntimeError, ValueError, TypeError, KeyError) as e:
                 logger.error(f"Window {i+1} failed: {e}")
                 continue
 
@@ -1658,7 +1659,7 @@ class ProfileBatchBacktester:
                 n_simulations = mc_config.get("n_simulations", 1000)
                 min_profitable_pct = mc_config.get("confidence_level", 0.95)
                 logger.debug("Loaded Monte Carlo config from ProfileConfigLoader")
-            except Exception as e:
+            except (RuntimeError, ValueError, TypeError, KeyError) as e:
                 logger.warning(f"Failed to load Monte Carlo config from ProfileConfigLoader: {e}")
                 # Track fallback
                 self._increment_fallback_counter("profile_config_loader")
@@ -1703,7 +1704,7 @@ class ProfileBatchBacktester:
                         "std_return": 0.0,
                         "error": "No trade data available"
                     }
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Failed to get backtest results for Monte Carlo: {e}")
             return {
                 "passed": False,
@@ -1789,7 +1790,7 @@ class ProfileBatchBacktester:
                 min_oos_sharpe = thresholds.get("min_sharpe", 0.5)
                 max_performance_decay = 0.3  # Default decay
                 logger.debug("Loaded OOS config from ProfileConfigLoader")
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.warning(f"Failed to load OOS config from ProfileConfigLoader: {e}")
                 # Track fallback
                 self._increment_fallback_counter("profile_config_loader")
@@ -1881,7 +1882,7 @@ class ProfileBatchBacktester:
                 "n_oos_days": (end_date - split_date).days,
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"OOS validation failed: {e}")
             return {
                 "passed": False,
@@ -1924,9 +1925,10 @@ class ProfileBatchBacktester:
         return_imp = self._pct_improvement(
             baseline.get("return_pct", 0), optimized.get("return_pct", 0)
         )
-        dd_imp = self._pct_improvement(
-            abs(baseline.get("max_drawdown", 0)), abs(optimized.get("max_drawdown", 0))
-        )
+        # For drawdown, lower absolute value is better, so invert the calculation
+        baseline_dd = abs(baseline.get("max_drawdown", 0))
+        optimized_dd = abs(optimized.get("max_drawdown", 0))
+        dd_imp = -self._pct_improvement(baseline_dd, optimized_dd)  # Invert because lower is better
         wr_imp = self._pct_improvement(
             baseline.get("win_rate", 0), optimized.get("win_rate", 0)
         )
@@ -1999,6 +2001,10 @@ class ProfileBatchBacktester:
         self, baseline: Dict[str, Any], optimized: Dict[str, Any]
     ) -> Dict[str, float]:
         """Calculate improvement metrics."""
+        # For drawdown, lower absolute value is better, so invert the calculation
+        baseline_dd = abs(baseline.get("max_drawdown", 0))
+        optimized_dd = abs(optimized.get("max_drawdown", 0))
+
         return {
             "sharpe_improvement": self._pct_improvement(
                 baseline.get("sharpe_ratio", 0), optimized.get("sharpe_ratio", 0)
@@ -2006,9 +2012,7 @@ class ProfileBatchBacktester:
             "return_improvement": self._pct_improvement(
                 baseline.get("return_pct", 0), optimized.get("return_pct", 0)
             ),
-            "max_dd_improvement": self._pct_improvement(
-                abs(baseline.get("max_drawdown", 0)), abs(optimized.get("max_drawdown", 0))
-            ),
+            "max_dd_improvement": -self._pct_improvement(baseline_dd, optimized_dd),  # Invert because lower is better
             "win_rate_improvement": self._pct_improvement(
                 baseline.get("win_rate", 0), optimized.get("win_rate", 0)
             ),
@@ -2182,7 +2186,7 @@ class ProfileBatchBacktester:
             session.commit()
             logger.debug(f"Stored result for {result.profile_id}")
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             session.rollback()
             logger.error(f"Failed to store result: {e}", exc_info=True)
 

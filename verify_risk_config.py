@@ -89,7 +89,7 @@ def main():
 
         return 0
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         print(f"\n❌ ERROR loading configuration: {e}")
         import traceback
         traceback.print_exc()

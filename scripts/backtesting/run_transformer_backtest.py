@@ -38,7 +38,7 @@ sys.path.insert(0, str(project_root))
 try:
     from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestRunner
     logger.info("✅ ComprehensiveBacktestRunner importado")
-except Exception as e:
+except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
     logger.error(f"❌ Error importando ComprehensiveBacktestRunner: {e}", exc_info=True)
     raise
 
@@ -130,7 +130,7 @@ def main():
         else:
             logger.warning("⚠️ No se encontraron resultados de Transformer")
         
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         logger.error(f"❌ Error ejecutando backtest: {e}", exc_info=True)
         raise
 

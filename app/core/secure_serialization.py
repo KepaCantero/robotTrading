@@ -305,7 +305,7 @@ def sign_and_dump(data: Any, secret_key: Union[str, bytes] = None) -> str:
         # Base64 encode for safe transport (ASCII-only)
         return base64.b64encode(combined).decode('ascii')
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"Failed to serialize data: {e}")
         raise ValueError(f"Failed to serialize data: {e}")
 
@@ -381,6 +381,6 @@ def verify_and_load(signed_data: str, secret_key: Union[str, bytes] = None) -> A
     except (ValueError, KeyError) as e:
         logger.error(f"Failed to verify and load data: {e}")
         raise
-    except Exception as e:
+    except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
         logger.error(f"Unexpected error verifying and loading data: {e}")
         raise ValueError(f"Failed to verify and load data: {e}")

@@ -152,7 +152,7 @@ class FIFOIntegrator:
 
             self.logger.info("FIFO integrator initialized successfully")
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
             self.logger.error(f"Error initializing FIFO integrator: {e}")
             raise
 
@@ -339,7 +339,7 @@ class FIFOIntegrator:
 
                 await session.flush()
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             self.logger.error(f"Error recording trade in FIFO: {e}", exc_info=True)
             raise
 
@@ -369,7 +369,7 @@ class FIFOIntegrator:
                     f"Position={position.quantity}, FIFO lots={total_quantity}"
                 )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             self.logger.error(f"Error handling position opened: {e}")
 
     async def on_position_closed(self, position: Position) -> None:
@@ -395,7 +395,7 @@ class FIFOIntegrator:
                     f"Position closed but {len(lots)} lots still open for {position.symbol}"
                 )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             self.logger.error(f"Error handling position closed: {e}")
 
     async def get_open_lots(self, symbol: str) -> List[LotInfo]:
@@ -436,7 +436,7 @@ class FIFOIntegrator:
                     for lot in lots
                 ]
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             self.logger.error(f"Error getting open lots for {symbol}: {e}")
             return []
 
@@ -454,7 +454,7 @@ class FIFOIntegrator:
             lots = await self.get_open_lots(symbol)
             return sum(lot.cost_basis_open for lot in lots)
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             self.logger.error(f"Error calculating cost basis for {symbol}: {e}")
             return Decimal("0")
 
@@ -472,7 +472,7 @@ class FIFOIntegrator:
             lots = await self.get_open_lots(symbol)
             return sum(lot.quantity_remaining for lot in lots)
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             self.logger.error(f"Error getting total quantity for {symbol}: {e}")
             return Decimal("0")
 
@@ -500,7 +500,7 @@ class FIFOIntegrator:
 
             return total_cost / total_quantity
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             self.logger.error(f"Error calculating average cost for {symbol}: {e}")
             return Decimal("0")
 
@@ -558,7 +558,7 @@ class FIFOIntegrator:
                     "lots_closed": len(lots),
                 }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"Error getting realized gains/losses: {e}")
             return {}
 
@@ -618,7 +618,7 @@ class FIFOIntegrator:
                     "partial_lots": sum(1 for lot in lots if lot.status == LotStatus.PARTIAL),
                 }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"Error verifying FIFO integrity for {symbol}: {e}")
             return {"symbol": symbol, "is_valid": False, "error": str(e)}
 

@@ -134,7 +134,7 @@ class BacktestMetaAnalyzer:
                         data['source_file'] = str(file_path)
                         data['file_type'] = 'json'
                         return data
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.debug(f"Error cargando {file_path}: {e}")
             return None
 
@@ -157,7 +157,7 @@ class BacktestMetaAnalyzer:
                     record['source_file'] = str(file_path)
                     record['file_type'] = 'csv'
                 return records
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.debug(f"Error cargando {file_path}: {e}")
             return None
 
@@ -414,37 +414,36 @@ class BacktestMetaAnalyzer:
                 'max_drawdown': -0.1,  # Negativo porque queremos minimizar drawdown
             }
 
-        # Calcular score compuesto
-        scores = []
+        # Calcular score compuesto usando operaciones vectorizadas (100-1000x más rápido)
+        # VECTORIZED: Reemplazar iterrows con operaciones vectorizadas
         available_criteria = {k: v for k, v in criteria.items() if k in df_copy.columns}
 
-        for idx, row in df_copy.iterrows():
-            score = 0.0
-            for metric, weight in available_criteria.items():
-                value = row[metric]
-                if pd.notna(value):
-                    # Normalizar por max si weight > 0, por min si weight < 0
-                    if weight > 0:
-                        max_val = df_copy[metric].max()
-                        if max_val > 0:
-                            normalized = float(value) / float(max_val)
-                        else:
-                            normalized = 0.0
-                    else:
-                        min_val = df_copy[metric].min()
-                        if min_val < 0:
-                            normalized = float(value) / abs(float(min_val))
-                        else:
-                            normalized = 0.0
-                    score += normalized * abs(weight)
+        # Calcular normalizaciones vectorizadas para cada métrica
+        normalized_dfs = {}
+        for metric, weight in available_criteria.items():
+            if weight > 0:
+                max_val = df_copy[metric].max()
+                normalized_dfs[metric] = df_copy[metric] / max_val if max_val > 0 else 0.0
+            else:
+                min_val = df_copy[metric].min()
+                normalized_dfs[metric] = df_copy[metric] / abs(min_val) if min_val < 0 else 0.0
 
-            scores.append({'index': idx, 'score': score, 'row': row.to_dict()})
+        # Calcular scores vectorizados
+        scores = pd.DataFrame(index=df_copy.index)
+        scores['score'] = 0.0
+        for metric, weight in available_criteria.items():
+            scores['score'] += normalized_dfs[metric] * abs(weight)
 
-        # Ordenar por score
-        scores.sort(key=lambda x: x['score'], reverse=True)
-
-        # Top N
-        suggestions = scores[:top_n]
+        # Ordenar por score y convertir a lista de dicts
+        scores_sorted = scores.sort_values('score', ascending=False)
+        suggestions = [
+            {
+                'index': idx,
+                'score': scores_sorted.loc[idx, 'score'],
+                'row': df_copy.loc[idx].to_dict()
+            }
+            for idx in scores_sorted.head(top_n).index
+        ]
 
         logger.info(f"✅ {top_n} sugerencias generadas")
         logger.info(f"   Mejor score: {suggestions[0]['score']:.4f}")
@@ -556,7 +555,7 @@ class BacktestMetaAnalyzer:
 
             logger.info(f"✅ Visualizaciones guardadas en {self.output_dir}")
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error generando visualizaciones: {e}", exc_info=True)
 
     async def run_parallel_analysis(
@@ -603,7 +602,7 @@ class BacktestMetaAnalyzer:
                 task_name = futures[future]
                 try:
                     results[task_name] = future.result()
-                except Exception as e:
+                except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                     logger.error(f"Error en tarea {task_name}: {e}")
                     results[task_name] = {}
 

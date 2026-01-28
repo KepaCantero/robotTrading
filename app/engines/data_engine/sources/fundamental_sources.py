@@ -65,7 +65,7 @@ class FinancialModelingPrepSource(BaseDataSource):
             self.is_connected = True
             logger.info("Conectado a Financial Modeling Prep API")
             return True
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"Error conectando a FMP: {e}")
             self.last_error = str(e)
             return False
@@ -79,7 +79,7 @@ class FinancialModelingPrepSource(BaseDataSource):
             self.is_connected = False
             logger.info("Desconectado de FMP")
             return True
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Error desconectando de FMP: {e}")
             return False
 
@@ -92,7 +92,7 @@ class FinancialModelingPrepSource(BaseDataSource):
             url = f"{self.base_url}/profile/AAPL"
             async with self.session.get(url, params={'apikey': self.api_key}) as response:
                 return response.status == 200
-        except Exception:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError):
             return False
 
     async def get_company_profile(self, symbol: str) -> Optional[Dict[str, Any]]:
@@ -119,7 +119,7 @@ class FinancialModelingPrepSource(BaseDataSource):
                     return data[0]
                 return data
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error obteniendo perfil de {symbol}: {e}")
             return None
 
@@ -146,7 +146,7 @@ class FinancialModelingPrepSource(BaseDataSource):
 
                 return await response.json()
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error obteniendo métricas de {symbol}: {e}")
             return []
 
@@ -176,7 +176,7 @@ class FinancialModelingPrepSource(BaseDataSource):
 
                 return await response.json()
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error obteniendo estados financieros de {symbol}: {e}")
             return []
 
@@ -222,7 +222,7 @@ class AlphaVantageFundamentalSource(BaseDataSource):
             self.is_connected = True
             logger.info("Conectado a Alpha Vantage Fundamental API")
             return True
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"Error conectando a Alpha Vantage: {e}")
             self.last_error = str(e)
             return False
@@ -236,7 +236,7 @@ class AlphaVantageFundamentalSource(BaseDataSource):
             self.is_connected = False
             logger.info("Desconectado de Alpha Vantage")
             return True
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error desconectando de Alpha Vantage: {e}")
             return False
 
@@ -249,7 +249,7 @@ class AlphaVantageFundamentalSource(BaseDataSource):
             params = {'function': 'OVERVIEW', 'symbol': 'AAPL', 'apikey': self.api_key}
             async with self.session.get(self.base_url, params=params) as response:
                 return response.status == 200
-        except Exception:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError):
             return False
 
     async def get_company_overview(self, symbol: str) -> Optional[Dict[str, Any]]:
@@ -283,7 +283,7 @@ class AlphaVantageFundamentalSource(BaseDataSource):
 
                 return data
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error obteniendo overview de {symbol}: {e}")
             return None
 
@@ -317,6 +317,6 @@ class AlphaVantageFundamentalSource(BaseDataSource):
 
                 return data
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error obteniendo earnings de {symbol}: {e}")
             return None

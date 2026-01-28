@@ -43,7 +43,7 @@ class KnowledgeGraphBuilder:
             logger.info("✅ Connected to Neo4j knowledge graph database")
             return True
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"❌ Failed to connect to Neo4j: {str(e)}")
             self.connected = False
             return False
@@ -80,7 +80,7 @@ class KnowledgeGraphBuilder:
             logger.info(f"✅ Created {count} asset nodes")
             return count
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"❌ Failed to create asset nodes: {str(e)}")
             return 0
 
@@ -115,7 +115,7 @@ class KnowledgeGraphBuilder:
             logger.info(f"✅ Created {count} strategy nodes")
             return count
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"❌ Failed to create strategy nodes: {str(e)}")
             return 0
 
@@ -151,7 +151,7 @@ class KnowledgeGraphBuilder:
             logger.info(f"✅ Created {count} correlation relationships")
             return count
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"❌ Failed to create correlation relationships: {str(e)}")
             return 0
 
@@ -187,7 +187,7 @@ class KnowledgeGraphBuilder:
             logger.info(f"✅ Created {count} strategy-asset relationships")
             return count
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"❌ Failed to create strategy-asset relationships: {str(e)}")
             return 0
 
@@ -227,7 +227,7 @@ class KnowledgeGraphBuilder:
             logger.info(f"✅ Created {count} performance nodes")
             return count
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"❌ Failed to create performance nodes: {str(e)}")
             return 0
 
@@ -271,7 +271,7 @@ class KnowledgeGraphBuilder:
             logger.info(f"✅ Found {len(similar_assets)} similar assets to {asset_symbol}")
             return similar_assets
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"❌ Failed to find similar assets: {str(e)}")
             return []
 
@@ -318,7 +318,7 @@ class KnowledgeGraphBuilder:
             logger.info(f"✅ Found {len(strategies)} strategies for {asset_symbol}")
             return strategies
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"❌ Failed to find strategies: {str(e)}")
             return []
 
@@ -365,7 +365,7 @@ class KnowledgeGraphBuilder:
             logger.info(f"✅ Found {len(correlated)} correlated assets")
             return correlated
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"❌ Failed to find correlated assets: {str(e)}")
             return []
 
@@ -400,7 +400,7 @@ class KnowledgeGraphBuilder:
             logger.info("✅ Retrieved strategy network statistics")
             return network_stats
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"❌ Failed to get network statistics: {str(e)}")
             return {}
 
@@ -442,7 +442,7 @@ class KnowledgeGraphBuilder:
             logger.info(f"✅ Generated {len(recommendations)} portfolio recommendations")
             return recommendations
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"❌ Failed to generate recommendations: {str(e)}")
             return []
 
@@ -464,7 +464,7 @@ class KnowledgeGraphBuilder:
                 pass
             self.connected = False
             logger.info("✅ Disconnected from Neo4j")
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"❌ Error disconnecting: {str(e)}")
 
 

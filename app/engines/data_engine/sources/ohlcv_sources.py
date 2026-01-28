@@ -66,11 +66,11 @@ class IBKRSource(BaseDataSource):
                 logger.warning("ib_insync no disponible. IBKR source no funcionará.")
                 self.last_error = "ib_insync no instalado"
                 return False
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.error(f"Error conectando a IBKR: {e}")
                 self.last_error = str(e)
                 return False
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error en conexión IBKR: {e}")
             self.last_error = str(e)
             return False
@@ -83,7 +83,7 @@ class IBKRSource(BaseDataSource):
                 self.is_connected = False
                 logger.info("Desconectado de IBKR")
             return True
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error desconectando de IBKR: {e}")
             return False
 
@@ -94,7 +94,7 @@ class IBKRSource(BaseDataSource):
         try:
             # Verificar que la conexión está activa
             return self._ib.isConnected() if hasattr(self, '_ib') else False
-        except Exception:
+        except (asyncio.TimeoutError, ConnectionError, OSError):
             return False
 
     async def get_ohlcv(
@@ -151,7 +151,7 @@ class IBKRSource(BaseDataSource):
         except ImportError:
             logger.error("ib_insync no disponible")
             return []
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error obteniendo OHLCV de IBKR para {symbol}: {e}")
             return []
 
@@ -194,7 +194,7 @@ class BinanceSource(BaseDataSource):
             self.is_connected = True
             logger.info(f"Conectado a Binance API (testnet={self.testnet})")
             return True
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"Error conectando a Binance: {e}")
             self.last_error = str(e)
             return False
@@ -208,7 +208,7 @@ class BinanceSource(BaseDataSource):
             self.is_connected = False
             logger.info("Desconectado de Binance")
             return True
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Error desconectando de Binance: {e}")
             return False
 
@@ -220,7 +220,7 @@ class BinanceSource(BaseDataSource):
             # Ping a la API
             async with self.session.get(f"{self.base_url}/api/v3/ping") as response:
                 return response.status == 200
-        except Exception:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError):
             return False
 
     async def get_ohlcv(
@@ -290,7 +290,7 @@ class BinanceSource(BaseDataSource):
 
             return ohlcv_data
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"Error obteniendo OHLCV de Binance para {symbol}: {e}")
             return []
 
@@ -332,7 +332,7 @@ class AlpacaSource(BaseDataSource):
             self.is_connected = True
             logger.info("Conectado a Alpaca API")
             return True
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"Error conectando a Alpaca: {e}")
             self.last_error = str(e)
             return False
@@ -346,7 +346,7 @@ class AlpacaSource(BaseDataSource):
             self.is_connected = False
             logger.info("Desconectado de Alpaca")
             return True
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Error desconectando de Alpaca: {e}")
             return False
 
@@ -358,7 +358,7 @@ class AlpacaSource(BaseDataSource):
             # Verificar cuenta
             async with self.session.get(f"{self.base_url}/v2/account") as response:
                 return response.status == 200
-        except Exception:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError):
             return False
 
     async def get_ohlcv(
@@ -414,7 +414,7 @@ class AlpacaSource(BaseDataSource):
 
                 return ohlcv_data
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error obteniendo OHLCV de Alpaca para {symbol}: {e}")
             return []
 
@@ -456,7 +456,7 @@ class PolygonSource(BaseDataSource):
             self.is_connected = True
             logger.info("Conectado a Polygon API")
             return True
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"Error conectando a Polygon: {e}")
             self.last_error = str(e)
             return False
@@ -470,7 +470,7 @@ class PolygonSource(BaseDataSource):
             self.is_connected = False
             logger.info("Desconectado de Polygon")
             return True
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Error desconectando de Polygon: {e}")
             return False
 
@@ -484,7 +484,7 @@ class PolygonSource(BaseDataSource):
                 f"{self.base_url}/v2/reference/status", params={'apiKey': self.api_key}
             ) as response:
                 return response.status == 200
-        except Exception:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError):
             return False
 
     async def get_ohlcv(
@@ -552,6 +552,6 @@ class PolygonSource(BaseDataSource):
 
                 return sorted(ohlcv_data, key=lambda x: x['timestamp'])
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error obteniendo OHLCV de Polygon para {symbol}: {e}")
             return []

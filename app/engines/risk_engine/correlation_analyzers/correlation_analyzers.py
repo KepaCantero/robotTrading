@@ -129,7 +129,7 @@ class CorrelationAnalyzer(BaseCorrelationAnalyzer):
                 'position_limits': position_limits,
                 'timestamp': datetime.utcnow().isoformat(),
             }
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             self.logger.error(f"Error analizando correlaciones: {e}", exc_info=True)
             return {'error': str(e)}
 

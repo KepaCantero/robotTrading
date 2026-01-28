@@ -89,7 +89,7 @@ def _score_pair_relaxed(pair: Tuple[str, str], data1: pd.DataFrame, data2: pd.Da
             "adf_pvalue": float(adf_pvalue),
             "rejected": False
         }
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.debug(f"Error scoring pair {ticker1}-{ticker2} (relaxed): {e}")
         return {"score": 0.0, "rejected": True, "reason": str(e)}
 
@@ -169,7 +169,7 @@ def find_best_pairs(
                 # We'll filter and rank them later
                 valid_pairs.append((symbol1, symbol2, score_result))
                 
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 logger.debug(f"Error evaluating pair {symbol1}-{symbol2}: {e}")
                 continue
     

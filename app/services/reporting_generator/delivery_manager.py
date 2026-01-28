@@ -187,7 +187,7 @@ class ReportDeliveryManager:
                 timestamp=start_time,
             )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"HTML export failed: {e}")
             return ExportResult(
                 success=False,
@@ -251,7 +251,7 @@ class ReportDeliveryManager:
                 timestamp=start_time,
             )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"PDF export failed: {e}")
             return ExportResult(
                 success=False,
@@ -315,7 +315,7 @@ class ReportDeliveryManager:
                 timestamp=start_time,
             )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Excel export failed: {e}")
             return ExportResult(
                 success=False,
@@ -381,7 +381,7 @@ class ReportDeliveryManager:
                 timestamp=start_time,
             )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Email delivery failed: {e}")
             return DeliveryResult(
                 success=False,
@@ -457,7 +457,7 @@ class ReportDeliveryManager:
                 timestamp=start_time,
             )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"S3 upload failed: {e}")
             return DeliveryResult(
                 success=False,

@@ -239,7 +239,7 @@ class IBConnection:
         try:
             await asyncio.sleep(self.RECONNECT_DELAY)
             return await self.connect()
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Reconnection error: {e}")
             return False
 
@@ -282,7 +282,7 @@ class IBConnection:
         except asyncio.TimeoutError:
             logger.error("❌ Connection timeout to IB")
             return False
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"❌ Error connecting to IB: {e}")
             self.connected = False
             return False
@@ -296,7 +296,7 @@ class IBConnection:
                 logger.warning(f"Account {self.account} not in accessible accounts: {accounts}")
             else:
                 logger.info(f"✅ Account {self.account} accessible")
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error verifying account access: {e}")
 
     async def disconnect(self) -> None:
@@ -312,7 +312,7 @@ class IBConnection:
                 await self.ib.disconnectAsync()
                 self.connected = False
                 logger.info("Disconnected from Interactive Brokers")
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error disconnecting from IB: {e}")
 
     def _get_contract(self, symbol: str, **kwargs) -> IBContract:
@@ -405,7 +405,7 @@ class IBConnection:
             )
             return market_data
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error getting market data for {symbol}: {e}")
             return {}
 
@@ -451,7 +451,7 @@ class IBConnection:
             try:
                 account_summary = await self.get_account_summary()
                 available_capital = Decimal(str(account_summary.get('NetLiquidation', {}).get('value', 100000)))
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError):
                 # Fallback to default if account summary unavailable
                 available_capital = Decimal("100000")
                 logger.warning("Could not fetch account capital, using default for validation")
@@ -545,7 +545,7 @@ class IBConnection:
                 'timestamp': datetime.now().isoformat(),
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error placing order: {e}")
             return {'error': str(e)}
 
@@ -566,7 +566,7 @@ class IBConnection:
             self.ib.cancelOrder(order_id)
             logger.info(f"Order {order_id} cancelled")
             return True
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error cancelling order {order_id}: {e}")
             return False
 
@@ -597,7 +597,7 @@ class IBConnection:
                     }
                 )
             return result
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error getting positions: {e}")
             return []
 
@@ -638,7 +638,7 @@ class IBConnection:
 
             return summary
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error getting account summary: {e}")
             return {}
 
@@ -683,7 +683,7 @@ class IBConnection:
 
             logger.info(f"Subscribed to market data for {symbol}")
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error subscribing to market data for {symbol}: {e}")
 
     async def unsubscribe_market_data(self, symbol: str) -> None:
@@ -698,7 +698,7 @@ class IBConnection:
                 self.ib.cancelMktData(self._subscribed_contracts[symbol])
                 del self._subscribed_contracts[symbol]
                 logger.info(f"Unsubscribed from market data for {symbol}")
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 logger.error(f"Error unsubscribing from market data for {symbol}: {e}")
 
     def __del__(self):
@@ -714,7 +714,7 @@ class IBConnection:
         except ConnectionError as e:
             # Connection errors during cleanup are expected in some cases
             logger.warning(f"Connection error during IB adapter cleanup: {e}")
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             # Log any other unexpected errors during cleanup
             logger.error(f"Unexpected error during IB adapter cleanup: {e}", exc_info=True)
 

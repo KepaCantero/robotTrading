@@ -79,7 +79,7 @@ def get_capital_tier(capital: Decimal) -> str:
     try:
         # Use the centralized tier mapper
         return TierMapper.get_tier_from_capital(capital)
-    except Exception as e:
+    except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
         # Fallback to manual calculation if tier mapper fails
         logger.warning(f"TierMapper.get_tier_from_capital failed for {capital}: {e}, using fallback")
         if capital < CAPITAL_TIER_THRESHOLDS["small"]:
@@ -242,7 +242,7 @@ class ProfileStrategyMapper:
                 data = yaml.safe_load(f) or {}
             logger.debug(f"Loaded configuration from {path}")
             return data
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.error(f"Error loading {path}: {e}")
             return {}
 
@@ -418,13 +418,16 @@ class ProfileStrategyMapper:
 
         # Create strategy allocations
         for strategy_name, weight in strategy_weights.items():
+            # Convert float weight to Decimal with full precision
+            weight_decimal = Decimal(str(weight))
+
             # Get risk-adjusted min/max weights
-            min_weight = max(Decimal("0.05"), Decimal(str(weight)) * Decimal("0.5"))
-            max_weight = min(Decimal("0.70"), Decimal(str(weight)) * Decimal("1.5"))
+            min_weight = max(Decimal("0.05"), weight_decimal * Decimal("0.5"))
+            max_weight = min(Decimal("0.70"), weight_decimal * Decimal("1.5"))
 
             allocation = StrategyCapitalAllocation(
                 strategy_name=strategy_name,
-                target_weight=Decimal(str(weight)),
+                target_weight=weight_decimal,
                 min_weight=min_weight,
                 max_weight=max_weight,
             )
@@ -459,12 +462,12 @@ class ProfileStrategyMapper:
         Returns:
             Dictionary mapping strategy names to weights
         """
-        # Base weights from strategy count
+        # Base weights from strategy count (use Decimal for precision)
         num_strategies = len(strategies)
         if num_strategies == 0:
             return {}
 
-        base_weight = 1.0 / num_strategies
+        base_weight = float(Decimal("1.0") / Decimal(str(num_strategies)))
 
         # Risk-adjusted weights
         risk_adjustments = {
@@ -496,10 +499,15 @@ class ProfileStrategyMapper:
             adjustment = adjustments.get(strategy, 1.0)
             weights[strategy] = base_weight * adjustment
 
-        # Normalize to sum to 1.0
+        # Normalize to sum to 1.0 (using Decimal for precision)
         total = sum(weights.values())
         if total > 0:
-            weights = {k: v / total for k, v in weights.items()}
+            # Use Decimal normalization to ensure weights sum exactly to 1.0
+            total_decimal = Decimal(str(total))
+            weights = {
+                k: float(Decimal(str(v)) / total_decimal)
+                for k, v in weights.items()
+            }
 
         return weights
 

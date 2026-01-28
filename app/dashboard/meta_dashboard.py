@@ -99,7 +99,7 @@ class MetaDashboard:
 
             if 'thresholds' in config:
                 return config['thresholds']
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.warning(f"No se pudieron cargar umbrales desde config: {e}")
 
         return default_thresholds
@@ -196,46 +196,47 @@ class MetaDashboard:
 
         alerts = []
 
-        for idx, row in self.df_results.iterrows():
-            test_name = row.get('test_type', 'unknown')
+        # VECTORIZED: Usar operaciones vectorizadas en lugar de iterrows
+        # Extraer columnas relevantes de forma vectorizada
+        test_names = self.df_results.get('test_type', pd.Series(['unknown'] * len(self.df_results)))
+        sharpes = self.df_results.get('sharpe_ratio', pd.Series([0] * len(self.df_results)))
+        drawdowns = self.df_results.get('max_drawdown', pd.Series([0] * len(self.df_results)))
+        winrates = self.df_results.get('win_rate', pd.Series([0] * len(self.df_results)))
 
-            # Verificar métricas críticas
-            sharpe = row.get('sharpe_ratio', 0)
-            drawdown = row.get('max_drawdown', 0)
-            winrate = row.get('win_rate', 0)
+        # Encontrar índices donde las condiciones se cumplen
+        bad_sharpe_mask = sharpes < self.thresholds['sharpe']['bad']
+        bad_drawdown_mask = abs(drawdowns) > self.thresholds['drawdown']['bad']
+        bad_winrate_mask = winrates < self.thresholds['winrate']['bad']
 
-            if sharpe < self.thresholds['sharpe']['bad']:
-                alerts.append(
-                    {
-                        'type': 'critical',
-                        'test': test_name,
-                        'metric': 'Sharpe Ratio',
-                        'value': sharpe,
-                        'message': f'Sharpe negativo: {sharpe:.2f}',
-                    }
-                )
+        # Generar alertas para Sharpe bajo
+        for idx in bad_sharpe_mask[bad_sharpe_mask].index:
+            alerts.append({
+                'type': 'critical',
+                'test': test_names.iloc[idx],
+                'metric': 'Sharpe Ratio',
+                'value': sharpes.iloc[idx],
+                'message': f'Sharpe negativo: {sharpes.iloc[idx]:.2f}',
+            })
 
-            if abs(drawdown) > self.thresholds['drawdown']['bad']:
-                alerts.append(
-                    {
-                        'type': 'critical',
-                        'test': test_name,
-                        'metric': 'Max Drawdown',
-                        'value': abs(drawdown),
-                        'message': f'Drawdown crítico: {abs(drawdown):.1f}%',
-                    }
-                )
+        # Generar alertas para Drawdown alto
+        for idx in bad_drawdown_mask[bad_drawdown_mask].index:
+            alerts.append({
+                'type': 'critical',
+                'test': test_names.iloc[idx],
+                'metric': 'Max Drawdown',
+                'value': abs(drawdowns.iloc[idx]),
+                'message': f'Drawdown crítico: {abs(drawdowns.iloc[idx]):.1f}%',
+            })
 
-            if winrate < self.thresholds['winrate']['bad']:
-                alerts.append(
-                    {
-                        'type': 'warning',
-                        'test': test_name,
-                        'metric': 'Win Rate',
-                        'value': winrate,
-                        'message': f'Win rate bajo: {winrate:.1%}',
-                    }
-                )
+        # Generar alertas para Win Rate bajo
+        for idx in bad_winrate_mask[bad_winrate_mask].index:
+            alerts.append({
+                'type': 'warning',
+                'test': test_names.iloc[idx],
+                'metric': 'Win Rate',
+                'value': winrates.iloc[idx],
+                'message': f'Win rate bajo: {winrates.iloc[idx]:.1%}',
+            })
 
         if alerts:
             for alert in alerts[:10]:  # Top 10 alertas
@@ -333,7 +334,8 @@ class MetaDashboard:
         html += "</tr>"
 
         # Rows
-        for _, row in df.iterrows():
+        # VECTORIZED: Usar to_dict('records') en lugar de iterrows
+        for row in df.to_dict('records'):
             html += "<tr>"
             for col in df.columns:
                 value = row[col]
@@ -389,7 +391,7 @@ class MetaDashboard:
                         st.image(str(corr_path))
                     else:
                         st.info("Generando heatmap de correlaciones...")
-                except Exception as e:
+                except (ValueError, TypeError, KeyError, AttributeError) as e:
                     logger.warning(f"Error mostrando heatmap: {e}")
 
         # Clusters
@@ -484,7 +486,7 @@ class MetaDashboard:
         try:
             score = silhouette_score(X, clusters)
             return float(score)
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError):
             return 0.0
 
     def _calculate_profit_consistency(self) -> float:

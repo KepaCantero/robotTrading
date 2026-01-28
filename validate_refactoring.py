@@ -26,7 +26,7 @@ def test_imports():
         )
         print("✓ All components imported successfully")
         return True
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         print(f"✗ Import failed: {e}")
         return False
 
@@ -43,7 +43,7 @@ def test_instantiation():
         backtester = ProfileBatchBacktester("config/profile_batch_backtest.yaml")
         print("✓ ProfileBatchBacktester instantiated")
         return True
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         print(f"✗ Instantiation failed: {e}")
         return False
 
@@ -65,7 +65,7 @@ def test_profile_generation():
 
         print(f"✓ Generated {len(profiles)} profiles (expected {expected_count})")
         return True
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         print(f"✗ Profile generation failed: {e}")
         return False
 
@@ -86,7 +86,7 @@ def test_backward_compatibility():
         print("✓ Original import still works")
         print(f"✓ Original implementation generates {len(old_profiles)} profiles")
         return True
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         print(f"✗ Backward compatibility check failed: {e}")
         return False
 
@@ -119,7 +119,7 @@ def test_api_compatibility():
 
         print("✓ All expected methods present")
         return True
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         print(f"✗ API compatibility check failed: {e}")
         return False
 
@@ -152,7 +152,7 @@ def test_component_independence():
         print("✓ ResultAggregator works independently")
 
         return True
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         print(f"✗ Component independence test failed: {e}")
         return False
 
@@ -209,7 +209,7 @@ def main():
         try:
             result = test_func()
             results.append((test_name, result))
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             print(f"\n✗ Test '{test_name}' raised exception: {e}")
             results.append((test_name, False))
 

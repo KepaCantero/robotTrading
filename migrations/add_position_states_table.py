@@ -46,7 +46,7 @@ def upgrade():
         logger.info("Migration completed successfully")
         return True
 
-    except Exception as e:
+    except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
         logger.error(f"Migration failed: {e}", exc_info=True)
         return False
 
@@ -68,7 +68,7 @@ def downgrade():
         logger.info("Rollback completed successfully")
         return True
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         logger.error(f"Rollback failed: {e}", exc_info=True)
         return False
 

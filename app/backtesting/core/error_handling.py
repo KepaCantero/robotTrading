@@ -67,7 +67,7 @@ def is_mutex_error(exception: Exception) -> bool:
     Example:
         >>> try:
         ...     model.train()
-        ... except Exception as e:
+        ... except (ValueError, TypeError, KeyError, AttributeError) as e:
         ...     if is_mutex_error(e):
         ...         logger.error("Mutex issue detected")
     """
@@ -151,7 +151,7 @@ def train_with_retry(
         strategy.learning_engine.train()
         return True
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         if is_mutex_error(e):
             # Convert to MutexError for tenacity retry
             raise MutexError(f"Mutex detected: {e}") from e
@@ -219,7 +219,7 @@ def _train_in_subprocess(
             else:
                 queue.put((False, 'Learning engine not available in subprocess'))
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Subprocess training error: {e}", exc_info=True)
             queue.put((False, str(e)))
 
@@ -258,7 +258,7 @@ def _train_in_subprocess(
     except SubprocessTimeoutError:
         # Re-raise timeout errors
         raise
-    except Exception as e:
+    except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
         logger.error(f"❌ Subprocess training exception: {e}")
         if p.is_alive():
             p.terminate()
@@ -298,7 +298,7 @@ def safe_execute(
     """
     try:
         return func(*args, **kwargs)
-    except Exception as e:
+    except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
         if log_errors:
             logger.error(
                 f"Error in {func.__name__}: {e}",

@@ -35,7 +35,7 @@ async def get_assets_overview(
 
         return {"success": True, "overview": overview, "timestamp": datetime.utcnow()}
 
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error getting assets overview: {str(e)}")
 
 
@@ -72,7 +72,7 @@ async def get_liquid_assets(
             "timestamp": datetime.utcnow(),
         }
 
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error getting liquid assets: {str(e)}")
 
 
@@ -94,7 +94,7 @@ async def get_asset_rankings_by_class(
             "timestamp": datetime.utcnow(),
         }
 
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error getting asset rankings: {str(e)}")
 
 
@@ -133,7 +133,7 @@ async def get_asset_details(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         raise HTTPException(status_code=500, detail=f"Error getting asset details: {str(e)}")
 
 
@@ -168,7 +168,7 @@ async def get_liquidity_metrics(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         raise HTTPException(status_code=500, detail=f"Error getting liquidity metrics: {str(e)}")
 
 
@@ -189,7 +189,7 @@ async def get_asset_rankings(
 
         return {"success": True, "rankings": rankings, "timestamp": datetime.utcnow()}
 
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error getting asset rankings: {str(e)}")
 
 
@@ -231,7 +231,7 @@ async def filter_assets(
             "timestamp": datetime.utcnow(),
         }
 
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error filtering assets: {str(e)}")
 
 
@@ -251,7 +251,7 @@ async def refresh_liquidity_data(
             "timestamp": datetime.utcnow(),
         }
 
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error refreshing liquidity data: {str(e)}")
 
 
@@ -272,7 +272,7 @@ async def get_asset_universe(
 
         return {"success": True, "universe": universe, "timestamp": datetime.utcnow()}
 
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error getting asset universe: {str(e)}")
 
 
@@ -312,7 +312,7 @@ async def identify_liquid_assets(
             "timestamp": datetime.utcnow(),
         }
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         raise HTTPException(status_code=500, detail=f"Error identifying liquid assets: {str(e)}")
 
 
@@ -356,7 +356,7 @@ async def filter_assets_by_class(
             "timestamp": datetime.utcnow(),
         }
 
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error filtering assets: {str(e)}")
 
 
@@ -375,7 +375,7 @@ async def get_universe_summary(
             "timestamp": datetime.utcnow(),
         }
 
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error getting universe summary: {str(e)}")
 
 
@@ -397,7 +397,7 @@ async def get_asset_classes():
             "timestamp": datetime.utcnow(),
         }
 
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error getting asset classes: {str(e)}")
 
 
@@ -419,7 +419,7 @@ async def get_exchanges():
             "timestamp": datetime.utcnow(),
         }
 
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error getting exchanges: {str(e)}")
 
 
@@ -434,7 +434,7 @@ async def health_check():
             "timestamp": datetime.utcnow(),
         }
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
 
 
@@ -479,5 +479,5 @@ async def get_asset_stats(
 
         return {"success": True, "stats": stats, "timestamp": datetime.utcnow()}
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error getting asset stats: {str(e)}")

@@ -49,7 +49,7 @@ async def get_dashboard_frontend():
             with open(frontend_path, "r") as f:
                 return f.read()
         raise HTTPException(status_code=404, detail="Dashboard frontend not found")
-    except Exception as e:
+    except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
         logger.error(f"Error loading dashboard frontend: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -64,7 +64,7 @@ async def get_health_status(dashboard: ProductionDashboard = Depends(get_dashboa
     """
     try:
         return dashboard.get_health_status()
-    except Exception as e:
+    except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
         logger.error(f"Error getting health status: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -79,7 +79,7 @@ async def get_dashboard_metrics(dashboard: ProductionDashboard = Depends(get_das
     """
     try:
         return await dashboard.get_metrics()
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         logger.error(f"Error getting dashboard metrics: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -94,7 +94,7 @@ async def get_positions(dashboard: ProductionDashboard = Depends(get_dashboard))
     """
     try:
         return await dashboard.get_positions()
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         logger.error(f"Error getting positions: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -115,7 +115,7 @@ async def get_alert_history(
     """
     try:
         return await dashboard.get_alert_history(hours=hours)
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         logger.error(f"Error getting alert history: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -141,7 +141,7 @@ async def get_historical_data(
         return await dashboard.get_historical_data(period=period)
     except HTTPException:
         raise
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         logger.error(f"Error getting historical data: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -167,7 +167,7 @@ async def acknowledge_alert(
         return {"success": True}
     except HTTPException:
         raise
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         logger.error(f"Error acknowledging alert: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -193,7 +193,7 @@ async def resolve_alert(
         return {"success": True}
     except HTTPException:
         raise
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         logger.error(f"Error resolving alert: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -215,11 +215,11 @@ async def websocket_endpoint(
         await dashboard.websocket_endpoint(websocket)
     except WebSocketDisconnect:
         logger.info("WebSocket disconnected normally")
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         logger.error(f"WebSocket error: {e}", exc_info=True)
         try:
             await websocket.close()
-        except Exception:
+        except (asyncio.TimeoutError, ConnectionError, OSError):
             pass
 
 
@@ -235,7 +235,7 @@ async def get_active_connections(
     """
     try:
         return {"active_connections": dashboard.get_connection_count()}
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Error getting connection count: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -259,7 +259,7 @@ async def get_dashboard_statistics(
             "current_metrics": metrics.model_dump(),
             "active_connections": dashboard.get_connection_count(),
         }
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"Error getting dashboard statistics: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -282,6 +282,6 @@ async def refresh_dashboard_data(
         await dashboard.broadcast_update({"type": "refresh", "timestamp": dashboard._last_update.isoformat()})
 
         return {"success": True}
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"Error refreshing dashboard data: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))

@@ -249,7 +249,7 @@ async def process_input(request: ProcessInputRequest):
             timestamp=datetime.now().isoformat(),
         )
 
-    except Exception as e:
+    except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
         logger.error(f"❌ Error processing input: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -284,7 +284,7 @@ async def generate_profile(request: GenerateProfileRequest):
             timestamp=datetime.now().isoformat(),
         )
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         logger.error(f"❌ Error generating profile: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -319,7 +319,7 @@ async def parametrize_modules(request: ParametrizeModulesRequest):
             timestamp=datetime.now().isoformat(),
         )
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         logger.error(f"❌ Error parametrizing modules: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -360,7 +360,7 @@ async def execute_backtest(request: ExecuteBacktestRequest, background_tasks: Ba
             job_id=job_id, status="pending", timestamp=datetime.now().isoformat()
         )
 
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         logger.error(f"❌ Error creating backtest job: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -392,7 +392,7 @@ async def _execute_backtest_background(job_id: str, parameter_set_id: str, profi
 
         logger.info(f"✅ Backtest completed: {job_id}")
 
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         _jobs[job_id]["status"] = "failed"
         _jobs[job_id]["error"] = str(e)
         logger.error(f"❌ Backtest failed: {job_id} - {e}")
@@ -422,7 +422,7 @@ async def backtest_status(job_id: str):
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"❌ Error checking backtest status: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -503,7 +503,7 @@ async def complete_workflow(request: CompleteWorkflowRequest, background_tasks: 
             timestamp=datetime.now().isoformat(),
         )
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         logger.error(f"❌ Error starting workflow: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -624,7 +624,7 @@ async def _execute_complete_workflow(workflow_id: str, request: CompleteWorkflow
 
         logger.info(f"✅ Workflow completed: {workflow_id}")
 
-    except Exception as e:
+    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         _jobs[workflow_id]["status"] = "failed"
         _jobs[workflow_id]["error"] = str(e)
         logger.error(f"❌ Workflow failed: {workflow_id} - {e}")
@@ -654,7 +654,7 @@ async def workflow_status(workflow_id: str):
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"❌ Error checking workflow status: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 

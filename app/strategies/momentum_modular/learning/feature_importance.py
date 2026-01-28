@@ -62,7 +62,7 @@ def load_feature_importance_config(
                 config = yaml.safe_load(f)
                 logger.info(f"Loaded feature importance config from {config_path}")
                 return config
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.warning(f"Error loading config from {config_path}: {e}")
 
     return get_default_feature_importance_config()
@@ -328,7 +328,7 @@ class SHAPAnalyzer:
                 'summary_stats': summary_stats,
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculando SHAP values: {e}", exc_info=True)
             return {'error': str(e), 'error_type': type(e).__name__}
 
@@ -365,7 +365,7 @@ class SHAPAnalyzer:
             try:
                 # Intentar DeepExplainer primero
                 return shap.DeepExplainer(model, background)
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError):
                 # Fallback a KernelExplainer
                 return shap.KernelExplainer(model.predict, background)
         else:
@@ -450,7 +450,7 @@ class SHAPAnalyzer:
                 'top_contributors': sorted_explanation[:5],
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error explicando predicción: {e}", exc_info=True)
             return {'error': str(e)}
 
@@ -560,7 +560,7 @@ class AttentionWeightsAnalyzer:
                 'aggregation_method': self.aggregation_method,
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Error extrayendo attention weights: {e}", exc_info=True)
             return {'error': str(e)}
 
@@ -610,7 +610,7 @@ class AttentionWeightsAnalyzer:
             # Placeholder implementation - requires model-specific implementation
             return None
 
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.warning(f"No se pudieron extraer attention weights: {e}")
             return None
 
@@ -733,7 +733,7 @@ class FeatureSelector:
                 'selector': selector,  # Para uso futuro
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error seleccionando features: {e}", exc_info=True)
             return {
                 'error': str(e),
@@ -871,7 +871,7 @@ class FeatureImportanceAnalyzer:
                 results['shap_analysis'] = shap_results
                 if 'feature_importance' in shap_results:
                     results['combined_importance']['shap'] = shap_results['feature_importance']
-            except Exception as e:
+            except (RuntimeError, ValueError, TypeError, KeyError) as e:
                 logger.warning(f"SHAP analysis failed: {e}")
 
         # Attention analysis (para transformers)
@@ -879,7 +879,7 @@ class FeatureImportanceAnalyzer:
             try:
                 attention_results = self.attention_analyzer.extract_attention_weights(model, X)
                 results['attention_analysis'] = attention_results
-            except Exception as e:
+            except (RuntimeError, ValueError, TypeError, KeyError) as e:
                 logger.warning(f"Attention analysis failed: {e}")
 
         # Feature selection
@@ -889,7 +889,7 @@ class FeatureImportanceAnalyzer:
                     X.reshape(len(X), -1) if X.ndim > 2 else X, y, feature_names, model
                 )
                 results['feature_selection'] = selection_results
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.warning(f"Feature selection failed: {e}")
 
         # Combinar importancias
@@ -1035,7 +1035,7 @@ class PermutationImportanceAnalyzer:
                 "n_samples_used": len(X_sample),
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculating permutation importance: {e}")
             return {"error": str(e)}
 
@@ -1109,7 +1109,7 @@ class PermutationImportanceAnalyzer:
                 "method": "fallback",
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error in fallback permutation importance: {e}")
             return {"error": str(e)}
 
@@ -1194,7 +1194,7 @@ class BuiltInImportanceAnalyzer:
                 "supported": True,
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error extracting built-in importance: {e}")
             return {"error": str(e), "supported": False}
 
@@ -1310,7 +1310,7 @@ class CorrelationAnalyzer:
             )
             results["ranked_by_correlation"] = ranked_by_correlation
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error in correlation analysis: {e}")
             results["error"] = str(e)
 
@@ -1337,7 +1337,7 @@ class CorrelationAnalyzer:
                     corr, _ = stats.pearsonr(X[:, i], y)
 
                 correlations[name] = float(corr) if not np.isnan(corr) else 0.0
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError):
                 correlations[name] = 0.0
 
         return correlations
@@ -1401,7 +1401,7 @@ class CorrelationAnalyzer:
 
             return {name: float(score) for name, score in zip(feature_names, mi_scores)}
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.warning(f"Could not calculate mutual information: {e}")
             return {}
 
@@ -1567,7 +1567,7 @@ class FeatureStabilityTracker:
 
             return "stable"
 
-        except Exception:
+        except (RuntimeError, ValueError, TypeError, KeyError):
             return "unknown"
 
     def get_importance_change(self) -> Dict[str, float]:
@@ -1689,7 +1689,7 @@ class ComprehensiveFeatureAnalyzer:
                 if "feature_importance" in shap_result:
                     all_importances["shap"] = shap_result["feature_importance"]
                     methods_used.append("shap")
-            except Exception as e:
+            except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"SHAP analysis failed: {e}")
 
         # Permutation importance
@@ -1705,7 +1705,7 @@ class ComprehensiveFeatureAnalyzer:
                 if "feature_importance" in perm_result:
                     all_importances["permutation"] = perm_result["feature_importance"]
                     methods_used.append("permutation")
-            except Exception as e:
+            except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"Permutation importance failed: {e}")
 
         # Built-in importance
@@ -1715,7 +1715,7 @@ class ComprehensiveFeatureAnalyzer:
                 if builtin_result.get("supported", False):
                     all_importances["builtin"] = builtin_result["feature_importance"]
                     methods_used.append("builtin")
-            except Exception as e:
+            except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"Built-in importance failed: {e}")
 
         # Correlation analysis
@@ -1727,7 +1727,7 @@ class ComprehensiveFeatureAnalyzer:
         ):
             try:
                 correlation_result = self.correlation_analyzer.analyze(X, y, feature_names)
-            except Exception as e:
+            except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"Correlation analysis failed: {e}")
 
         # Combine importances (average across methods)

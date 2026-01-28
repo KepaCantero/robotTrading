@@ -93,7 +93,7 @@ class SyntheticDataGenerator:
             logger.info("✅ Connected to GAN generator")
             return True
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"❌ Failed to initialize GAN models: {str(e)}")
             self.connected = False
             return False
@@ -182,7 +182,7 @@ class SyntheticDataGenerator:
             logger.info("✅ GAN training completed")
             return result
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ GAN training failed: {str(e)}")
             return {}
 
@@ -246,7 +246,7 @@ class SyntheticDataGenerator:
             logger.info(f"✅ Generated {num_samples} synthetic samples")
             return synthetic_data
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Synthetic data generation failed: {str(e)}")
             return np.array([])
 
@@ -297,7 +297,7 @@ class SyntheticDataGenerator:
             logger.info(f"✅ Evaluated synthetic data quality: {metrics['quality_score']:.4f}")
             return metrics
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Quality evaluation failed: {str(e)}")
             return {}
 
@@ -336,7 +336,7 @@ class TimeSeriesGANGenerator:
             self.connected = True
             logger.info("✅ Connected to TimeSeriesGAN generator")
             return True
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(f"❌ Failed to initialize TimeSeriesGAN: {str(e)}")
             self.connected = False
             return False
@@ -400,7 +400,7 @@ class TimeSeriesGANGenerator:
             logger.info(f"✅ Generated {num_sequences} synthetic sequences")
             return synthetic_sequences
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"❌ Sequence generation failed: {str(e)}")
             return np.array([])
 

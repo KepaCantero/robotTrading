@@ -32,6 +32,27 @@ from .modules.market_analyzer import MarketAnalyzer
 logger = logging.getLogger(__name__)
 
 
+class RateLimitedLogger:
+    """Logger que solo imprime warnings cada N veces para evitar spam."""
+
+    def __init__(self, logger_obj, rate_limit: int = 100):
+        self.logger = logger_obj
+        self.rate_limit = rate_limit
+        self.counters: Dict[str, int] = {}
+
+    def warning(self, msg: str, key: str = "default"):
+        """Log warning only every N times."""
+        if key not in self.counters:
+            self.counters[key] = 0
+        self.counters[key] += 1
+
+        if self.counters[key] == 1 or self.counters[key] % self.rate_limit == 0:
+            self.logger.warning(f"{msg} (occurrence #{self.counters[key]})")
+
+
+_rate_limited_logger = RateLimitedLogger(logger, rate_limit=100)
+
+
 class ModularMomentumStrategy(BaseStrategy):
     """
     Estrategia de momentum completamente modular con learning engines integrado.
@@ -203,7 +224,7 @@ class ModularMomentumStrategy(BaseStrategy):
                 "⚠️ Asegúrate de instalar todas las dependencias: pip install -r requirements.txt"
             )
             self.learning_engine = None
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             error_msg = str(e).lower()
             if 'mutex' in error_msg or 'lock' in error_msg or 'blocking' in error_msg:
                 logger.error(f"❌ Bloqueo de mutex al inicializar {engine_type}: {e}")
@@ -236,10 +257,11 @@ class ModularMomentumStrategy(BaseStrategy):
 
         # 1. Bear market crash: trend DOWN with high strength
         if market_type == 'trend_down' and trend_strength > 0.6:
-            logger.warning(
+            _rate_limited_logger.warning(
                 f"🚨 BEAR MARKET CRASH DETECTED: "
                 f"type={market_type}, strength={trend_strength:.2f} > 0.6 - "
-                f"STOPPING TRADING to prevent losses"
+                f"STOPPING TRADING to prevent losses",
+                key="bear_market_crash"
             )
             return False
 
@@ -255,10 +277,11 @@ class ModularMomentumStrategy(BaseStrategy):
         # 3. HIGH volatility regime (crash/crisis conditions)
         # If volatility is above 75th percentile, market is in crisis
         if volatility_percentile > 75:
-            logger.warning(
+            _rate_limited_logger.warning(
                 f"🔥 EXTREME VOLATILITY CRISIS: "
                 f"volatility_percentile={volatility_percentile} > 75 - "
-                f"STOPPING TRADING to prevent crash losses"
+                f"STOPPING TRADING to prevent crash losses",
+                key="volatility_crisis"
             )
             return False
 
@@ -384,7 +407,7 @@ class ModularMomentumStrategy(BaseStrategy):
                         if len(self.price_history) >= 100:  # Mínimo de datos para entrenar
                             try:
                                 self._auto_train_learning_engine()
-                            except Exception as e:
+                            except (RuntimeError, ValueError, TypeError, KeyError) as e:
                                 logger.debug(
                                     f"No se pudo entrenar learning engine automáticamente: {e}"
                                 )
@@ -434,7 +457,7 @@ class ModularMomentumStrategy(BaseStrategy):
                                 }
                             else:
                                 raise
-                        except Exception as e:
+                        except (RuntimeError, ValueError, TypeError, KeyError) as e:
                             logger.warning(f"⚠️ Error en predicción de learning engine: {e}")
                             learning_prediction = {
                                 'success_probability': 0.5,
@@ -549,7 +572,7 @@ class ModularMomentumStrategy(BaseStrategy):
 
             signals.append(signal)
 
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError) as e:
             logger.error(f"Error generando señal: {e}", exc_info=True)
 
         return signals
@@ -645,7 +668,7 @@ class ModularMomentumStrategy(BaseStrategy):
                 # Resultado general (usar BUY para simplificar)
                 filter_results[filter_instance.name] = result_buy
 
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.error(f"Error evaluando filtro {filter_instance.name}: {e}")
                 filter_results[filter_instance.name] = {
                     'passed': False,
@@ -661,7 +684,10 @@ class ModularMomentumStrategy(BaseStrategy):
         """Determinar tipo de señal basado en resultados de filtros."""
 
         if len(self.filters) == 0:
-            logger.warning("⚠️ No hay filtros activos - no se pueden generar señales")
+            _rate_limited_logger.warning(
+                "⚠️ No hay filtros activos - no se pueden generar señales",
+                key="no_filters"
+            )
             return None
 
         # Contar solo los resultados principales de cada filtro (sin _buy/_sell)
@@ -811,7 +837,7 @@ class ModularMomentumStrategy(BaseStrategy):
                     from .learning.feature_extractor import FeatureExtractor
 
                     self._feature_extractor = FeatureExtractor()
-                except Exception as e:
+                except (RuntimeError, ValueError, TypeError, KeyError) as e:
                     logger.debug(f"FeatureExtractor no disponible: {e}")
                     self._feature_extractor = None
 
@@ -828,7 +854,7 @@ class ModularMomentumStrategy(BaseStrategy):
                     "⚠️ Auto-entrenamiento requiere quotes completos - será entrenado en el backtest"
                 )
 
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError) as e:
             logger.debug(f"Error en auto-entrenamiento: {e}")
 
     def _prepare_sequence_features_for_learning(
@@ -870,7 +896,7 @@ class ModularMomentumStrategy(BaseStrategy):
                 from .learning.feature_extractor import FeatureExtractor
 
                 self._feature_extractor = FeatureExtractor()
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.debug(f"FeatureExtractor no disponible: {e}")
                 self._feature_extractor = None
 
@@ -903,7 +929,7 @@ class ModularMomentumStrategy(BaseStrategy):
             sequence = self._feature_extractor.extract_sequence_features(
                 historical_data[-sequence_length:], sequence_length=sequence_length
             )
-        except Exception as e:
+        except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.warning(f"Error extrayendo secuencia: {e}, usando fallback")
             sequence = self._build_basic_sequence(sequence_length)
 

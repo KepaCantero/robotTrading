@@ -328,9 +328,9 @@ class PairsTradingStrategy(BaseStrategy):
                                                 half_life_passed = True  # Pass if out of bounds
                                         else:
                                             half_life_passed = True  # Pass if not mean-reverting
-                                    except Exception:
+                                    except (ValueError, TypeError, KeyError, AttributeError, IndexError):
                                         half_life_passed = True  # Pass on error
-                    except Exception as e:
+                    except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                         logger.debug(f"Error calculating spread filters: {e}")
 
             # FIX: Generate signals if spread is significant enough + all filters pass
@@ -385,7 +385,7 @@ class PairsTradingStrategy(BaseStrategy):
                         f"❌ PAIRS_TRADING CANDIDATE REJECTED {market_data.symbol}: {', '.join(reasons)}"
                     )
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(
                 f"PAIRS_TRADING Error generating signals for {market_data.symbol}: {e}",
                 exc_info=True,
@@ -495,7 +495,7 @@ class PairsTradingStrategy(BaseStrategy):
             )
             return True
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(
                 f"❌ PAIRS_TRADING risk_check ERROR for {signal.symbol}: {e}", exc_info=True
             )
@@ -719,7 +719,7 @@ class PairsTradingStrategy(BaseStrategy):
                     self.last_cointegration_recalc_date = current_date
 
                 return self.cached_cointegration_score
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 logger.warning(f"PAIRS_TRADING cointegration calculation error: {e}")
                 return Decimal("0.75")
         else:

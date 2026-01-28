@@ -110,7 +110,7 @@ class PortfolioAnalyzer:
                     best_metrics['symbol'] = symbol
                     best_metrics['score'] = score
 
-            except Exception as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 logger.warning(f"Error analizando {symbol}: {e}")
                 continue
 
@@ -415,7 +415,7 @@ class AutomatedBacktestRunner:
 
             return metrics
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Error ejecutando {engine_type}: {e}", exc_info=True)
             return {
                 'name': f"{engine_type.upper()} - {algorithm.upper()}",

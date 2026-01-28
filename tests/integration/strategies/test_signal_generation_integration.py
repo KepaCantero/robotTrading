@@ -38,9 +38,12 @@ logger = logging.getLogger(__name__)
 
 
 def dataframe_to_quotes(symbol: str, df: pd.DataFrame) -> List[Quote]:
-    """Convert DataFrame to list of Quote objects."""
+    """Convert DataFrame to list of Quote objects using vectorized operations."""
+    # VECTORIZED: Usar operaciones vectorizadas en lugar de iterrows
     quotes = []
-    for date, row in df.iterrows():
+    for i in range(len(df)):
+        date = df.index[i]
+        row = df.iloc[i]
         try:
             timestamp = date.to_pydatetime() if hasattr(date, 'to_pydatetime') else date
 

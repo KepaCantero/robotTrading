@@ -725,7 +725,7 @@ class WalkForwardValidator:
                         "total_trades": train_result.performance.total_trades,
                         "win_rate": float(train_result.performance.win_rate),
                     }
-                except Exception as e:
+                except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                     logger.warning(f"Window {i+1}: IS backtest failed: {e}")
 
             # Run backtest on validation period (OOS metrics)
@@ -1230,7 +1230,7 @@ class StressTester:
                             signal = strategy.analyze(quote)
                             if signal:
                                 signals.append(signal)
-                        except Exception:
+                        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
                             pass
 
                     if not signals:
@@ -1262,7 +1262,7 @@ class StressTester:
                         )
                     )
 
-                except Exception as e:
+                except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                     logger.warning(f"Error in {scenario_type} scenario {i+1}: {e}")
 
         if not results:

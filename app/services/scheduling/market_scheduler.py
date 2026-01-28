@@ -386,7 +386,7 @@ class MarketScheduler:
                             task.run_count += 1
                         except asyncio.CancelledError:
                             raise
-                        except Exception as e:
+                        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                             task.error_count += 1
                             logger.error(
                                 f"Error in task {task.name} ({task.task_id}): {e}",
@@ -406,7 +406,7 @@ class MarketScheduler:
             except asyncio.CancelledError:
                 logger.info(f"Task loop for {market_type.value} cancelled")
                 break
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.error(
                     f"Error in task loop for {market_type.value}: {e}",
                     exc_info=True,
@@ -657,7 +657,7 @@ class MarketScheduler:
             task.run_count += 1
             logger.info(f"Ran task {task.name} ({task_id}) once")
             return True
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             task.error_count += 1
             logger.error(f"Error running task {task_id}: {e}", exc_info=True)
             return False

@@ -50,27 +50,19 @@ class AdvancedMetricsCalculator:
 
         Returns:
             Calmar Ratio or None if calculation not possible
-
-        Raises:
-            ValueError: If max_drawdown is zero or None
         """
         try:
-            if max_drawdown is None:
-                raise ValueError("max_drawdown cannot be None")
-            if cagr is None:
-                raise ValueError("cagr cannot be None")
+            if max_drawdown is None or cagr is None:
+                return None
 
             abs_drawdown = abs(float(max_drawdown))
             if abs_drawdown == 0:
-                raise ValueError("max_drawdown cannot be zero (no drawdown to calculate ratio)")
+                return None
 
             calmar = float(cagr) / abs_drawdown
             return Decimal(str(round(calmar, 4)))
 
-        except ValueError:
-            # Re-raise ValueError with context
-            raise
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError) as e:
             logger.error(f"Error calculating Calmar ratio: {e}")
             return None
 
@@ -117,7 +109,7 @@ class AdvancedMetricsCalculator:
             omega = avg_gain / avg_loss
             return Decimal(str(round(omega, 4)))
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculating Omega ratio: {e}")
             return None
 
@@ -156,7 +148,7 @@ class AdvancedMetricsCalculator:
 
             return Decimal(str(round(ulcer, 6)))
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculating Ulcer index: {e}")
             return None
 
@@ -187,7 +179,7 @@ class AdvancedMetricsCalculator:
 
             return Decimal(str(round(annualized_vol, 6)))
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculating annualized volatility: {e}")
             return None
 
@@ -220,7 +212,7 @@ class AdvancedMetricsCalculator:
             recovery = float(total_pnl) / abs_drawdown
             return Decimal(str(round(recovery, 4)))
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculating Recovery factor: {e}")
             return None
 
@@ -254,7 +246,7 @@ class AdvancedMetricsCalculator:
             profit_factor = float(gross_profit) / abs_loss
             return Decimal(str(round(profit_factor, 4)))
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculating Profit factor: {e}")
             return None
 
@@ -282,7 +274,7 @@ class AdvancedMetricsCalculator:
 
             return Decimal(str(round(skewness, 6)))
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculating Skewness: {e}")
             return None
 
@@ -311,7 +303,7 @@ class AdvancedMetricsCalculator:
 
             return Decimal(str(round(kurtosis, 6)))
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculating Kurtosis: {e}")
             return None
 
@@ -345,7 +337,7 @@ class AdvancedMetricsCalculator:
 
             return Decimal(str(round(var, 6)))
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculating VaR: {e}")
             return None
 
@@ -389,7 +381,7 @@ class AdvancedMetricsCalculator:
 
             return Decimal(str(round(cvar, 6)))
 
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError) as e:
             logger.error(f"Error calculating CVaR: {e}")
             return None
 
@@ -431,7 +423,7 @@ class AdvancedMetricsCalculator:
 
             return Decimal(str(round(sortino, 4)))
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculating Modified Sortino: {e}")
             return None
 
@@ -473,7 +465,7 @@ class AdvancedMetricsCalculator:
 
             return Decimal(str(round(tail_ratio, 4)))
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculating Tail Ratio: {e}")
             return None
 
@@ -518,7 +510,7 @@ class AdvancedMetricsCalculator:
 
             return Decimal(str(round(sqn, 4)))
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculating SQN: {e}")
             return None
 

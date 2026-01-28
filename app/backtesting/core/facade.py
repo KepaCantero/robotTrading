@@ -57,7 +57,7 @@ class BacktestRunnerFacade:
 
         logger.info(f"BacktestRunnerFacade initialized with config: {config_path}")
 
-    def load_data(
+    async def load_data(
         self,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None
@@ -79,11 +79,11 @@ class BacktestRunnerFacade:
             end_date = datetime.strptime(input_config['end_date'], "%Y-%m-%d")
 
         self.data_loader = DataLoader()
-        self.quotes = self._load_portfolio_market_data(start_date, end_date)
+        self.quotes = await self._load_portfolio_market_data(start_date, end_date)
 
         logger.info(f"Loaded {len(self.quotes)} quotes for backtesting")
 
-    def _load_portfolio_market_data(
+    async def _load_portfolio_market_data(
         self,
         start_date: datetime,
         end_date: datetime
@@ -98,7 +98,7 @@ class BacktestRunnerFacade:
             data_loader=self.data_loader
         )
 
-        return portfolio_builder.build_portfolio_quotes(
+        return await portfolio_builder.build_portfolio_quotes(
             start_date=start_date,
             end_date=end_date
         )

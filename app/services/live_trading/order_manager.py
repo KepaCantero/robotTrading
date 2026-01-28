@@ -119,7 +119,7 @@ class OrderManager:
                 logger.error(f"❌ Order placement failed for {symbol}")
                 return None
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"❌ Error placing order: {str(e)}")
             return None
 
@@ -146,7 +146,7 @@ class OrderManager:
                 self.order_history.append(order)
                 logger.info(f"✅ Order canceled: {order_id}")
             return success
-        except Exception as e:
+        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
             logger.error(f"❌ Error canceling order: {str(e)}")
             return False
 

@@ -100,7 +100,7 @@ class StrategyConfigLoader:
             self._cache[filename] = config
             return config
 
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.error(f"Error loading config from {config_path}: {e}")
             return {}
 
@@ -448,13 +448,19 @@ class StrategyConfigLoader:
         capital_decimal = Decimal(str(capital))
         thresholds = self.get_tier_config().get('tiers', {})
 
-        if capital_decimal < Decimal(str(thresholds.get('small', {}).get('max_capital', 15000))):
+        # Use min_capital thresholds for proper tier determination
+        small_min = Decimal(str(thresholds.get('small', {}).get('min_capital', 15000)))
+        medium_min = Decimal(str(thresholds.get('medium', {}).get('min_capital', 50000)))
+        large_min = Decimal(str(thresholds.get('large', {}).get('min_capital', 250000)))
+        institutional_min = Decimal(str(thresholds.get('institutional', {}).get('min_capital', 1000000)))
+
+        if capital_decimal < small_min:
             return 'micro'
-        elif capital_decimal < Decimal(str(thresholds.get('medium', {}).get('max_capital', 50000))):
+        elif capital_decimal < medium_min:
             return 'small'
-        elif capital_decimal < Decimal(str(thresholds.get('large', {}).get('max_capital', 250000))):
+        elif capital_decimal < large_min:
             return 'medium'
-        elif capital_decimal < Decimal(str(thresholds.get('institutional', {}).get('min_capital', 1000000))):
+        elif capital_decimal < institutional_min:
             return 'large'
         else:
             return 'institutional'

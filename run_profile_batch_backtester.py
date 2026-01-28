@@ -366,7 +366,7 @@ Examples:
     except KeyboardInterrupt:
         logger.info("\nInterrupted by user")
         sys.exit(1)
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         logger.error(f"Error: {e}", exc_info=True)
         sys.exit(1)
 

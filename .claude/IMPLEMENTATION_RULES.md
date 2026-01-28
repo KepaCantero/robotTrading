@@ -23,17 +23,13 @@ vim app/strategies/my_feature.py
 
 ### 2️⃣ Validar la implementación
 
-```bash
-# OPCIÓN A: Validación completa (recomendado)
-./scripts/validate_implementation.sh
-
-# OPCIÓN B: Solo formateo y fixes
+```
 ./scripts/check_all.sh
 ```
 
 ### 3️⃣ Revisar resultados
 
-- Si `validate_implementation.sh` retorna **0**: ✅ LISTO PARA COMMIT
+- Si `./scripts/check_all.sh` retorna **0**: ✅ LISTO PARA COMMIT
 - Si retorna **>0**: ❌ Corregir errores y repetir paso 2
 
 ### 4️⃣ Hacer commit (SOLO si paso 2 tuvo éxito)

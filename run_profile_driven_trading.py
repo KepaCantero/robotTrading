@@ -494,7 +494,7 @@ def run(
 
             try:
                 generate_report(result, report_path, input_params)
-            except Exception as e:
+            except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
                 logger.error(f"Failed to generate report: {e}")
 
         # Exit with appropriate code
@@ -504,7 +504,7 @@ def run(
         logger.warning("")
         logger.warning("⚠️  Execution cancelled by user")
         sys.exit(130)
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
         logger.error("")
         logger.error(f"❌ Fatal error: {e}", exc_info=True)
         sys.exit(1)
@@ -655,7 +655,7 @@ def interactive():
         logger.warning("")
         logger.warning("⚠️  Interactive mode cancelled by user")
         sys.exit(130)
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
         logger.error(f"❌ Error: {e}", exc_info=True)
         sys.exit(1)
 

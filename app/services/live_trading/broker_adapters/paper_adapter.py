@@ -151,7 +151,7 @@ class PaperAdapter:
 
             return order_id
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"❌ Paper order placement failed: {str(e)}")
             raise
 

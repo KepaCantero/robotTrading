@@ -62,7 +62,7 @@ class MomentumStrategyEngine(BaseStrategyEngine):
                 try:
                     self.config.update({k: v for k, v in params.items() if v is not None})
                     config.update({k: v for k, v in params.items() if v is not None})
-                except Exception:
+                except (FileNotFoundError, ValueError, KeyError, TypeError):
                     pass
 
             # Core thresholds
@@ -310,7 +310,7 @@ class MomentumStrategyEngine(BaseStrategyEngine):
 
                 signals.append(signal)
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Error generando señal en MomentumStrategyEngine: {e}", exc_info=True)
 
         return signals

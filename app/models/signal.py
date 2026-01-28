@@ -611,7 +611,7 @@ class SignalPriorityQueue:
             # Ensure confidence is within bounds
             return max(0.0, min(100.0, base_confidence))
 
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError):
             return 50.0  # Default confidence
 
     def calculate_liquidity_score(
@@ -649,7 +649,7 @@ class SignalPriorityQueue:
             # Ensure score is within bounds
             return max(0.0, min(100.0, base_score))
 
-        except Exception:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError):
             return 50.0  # Default liquidity score
 
     def calculate_priority_score(self, signal: Signal, market_data: MarketData) -> float:
@@ -681,7 +681,7 @@ class SignalPriorityQueue:
             # Ensure priority is within bounds
             return max(0.0, min(100.0, base_priority))
 
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
             return 50.0  # Default priority score
 
     def _calculate_momentum_score(self, metadata: Dict[str, Any]) -> float:
@@ -708,7 +708,7 @@ class SignalPriorityQueue:
                     score += 5.0
 
             return max(0.0, min(100.0, score))
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError):
             return 50.0
 
     def _calculate_volume_score(self, market_data: MarketData, metadata: Dict[str, Any]) -> float:
@@ -743,7 +743,7 @@ class SignalPriorityQueue:
                     score -= 10.0
 
             return max(0.0, min(100.0, score))
-        except Exception:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError):
             return 50.0
 
     def _calculate_volatility_score(self, market_data_or_metadata, metadata=None) -> float:
@@ -795,7 +795,7 @@ class SignalPriorityQueue:
                     score -= 10.0
 
             return max(0.0, min(100.0, score))
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
             return 50.0
 
     def _calculate_technical_score(self, metadata: Dict[str, Any]) -> float:
@@ -827,7 +827,7 @@ class SignalPriorityQueue:
                     score += 15.0
 
             return max(0.0, min(100.0, score))
-        except Exception:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError):
             return 50.0
 
     def score_signal(self, signal: Signal) -> Signal:
@@ -856,6 +856,6 @@ class SignalPriorityQueue:
 
             return signal
 
-        except Exception:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError):
             # Return signal as-is if scoring fails
             return signal

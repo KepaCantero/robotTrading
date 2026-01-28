@@ -136,7 +136,7 @@ class QualityValidator:
             if not (low <= close_price <= high):
                 errors.append(f"Close ({close_price}) no está entre Low ({low}) y High ({high})")
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             errors.append(f"Error validando consistencia OHLC: {e}")
 
         return errors
@@ -169,7 +169,7 @@ class QualityValidator:
             # Serializar datos a string
             data_str = str(sorted([str(d) for d in data]))
             return hashlib.md5(data_str.encode(), usedforsecurity=False).hexdigest()  # nosec B324
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error calculando checksum: {e}")
             return ""
 

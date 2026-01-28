@@ -92,7 +92,7 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
                 try:
                     self.config.update({k: v for k, v in params.items() if v is not None})
                     config.update({k: v for k, v in params.items() if v is not None})
-                except Exception:
+                except (ValueError, TypeError, KeyError, AttributeError):
                     pass
 
                 # Override defaults with YAML values
@@ -373,7 +373,7 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
                         else None
                     )
             return None
-        except Exception:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError):
             return None
 
     def _generate_signals_impl(self, market_data: Quote) -> List[Signal]:
@@ -491,7 +491,7 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
                     )
                 )
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error generando senal en ArbitrageStrategyEngine: {e}", exc_info=True)
 
         return signals
@@ -855,7 +855,7 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
         # Check total exposure
         try:
             current_exposure = portfolio.get_total_exposure()
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
             current_exposure = 0.0
 
         if current_exposure >= float(self.max_exposure):

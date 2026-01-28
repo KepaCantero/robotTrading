@@ -61,7 +61,7 @@ import logging
 import uuid
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
@@ -128,7 +128,7 @@ class ShadowExecutionResult:
     rejection_reason: Optional[str] = None
     was_partial_fill: bool = False
     wal_recorded: bool = True
-    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -169,7 +169,7 @@ class ShadowRealComparison:
     timing_difference_ms: Optional[int]
     shadow_status: str
     real_status: Optional[str]
-    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class ShadowModeExecutor:
@@ -269,7 +269,7 @@ class ShadowModeExecutor:
         if not await self.is_shadow_mode_enabled():
             raise RuntimeError("Shadow mode is not enabled")
 
-        start_time = datetime.now(UTC)
+        start_time = datetime.now(timezone.utc)
         order_id = str(uuid.uuid4())
         shadow_order_id = f"SHADOW_{order_id}"
 
@@ -287,7 +287,7 @@ class ShadowModeExecutor:
             await self.validate_order_for_shadow(symbol, side, quantity, price, order_type)
 
             # Step 2: Check daily limits
-            today = datetime.now(UTC).date()
+            today = datetime.now(timezone.utc).date()
             date_key = today.isoformat()
             self.daily_order_count[date_key] += 1
 
@@ -316,7 +316,7 @@ class ShadowModeExecutor:
             log = OrderLog(
                 order_id=shadow_order_id,
                 state=OrderState.SUBMITTING,
-                timestamp=datetime.now(UTC),
+                timestamp=datetime.now(timezone.utc),
                 symbol=symbol,
                 side=side,
                 quantity=quantity,
@@ -342,7 +342,7 @@ class ShadowModeExecutor:
 
             # Step 6: Write ACK_RECEIVED to WAL
             log.state = OrderState.ACK_RECEIVED
-            log.timestamp = datetime.now(UTC)
+            log.timestamp = datetime.now(timezone.utc)
             log.broker_order_id = shadow_order_id
             await self.wal.write_state(log)
 
@@ -355,11 +355,11 @@ class ShadowModeExecutor:
             else:
                 log.state = OrderState.FILLED
 
-            log.timestamp = datetime.now(UTC)
+            log.timestamp = datetime.now(timezone.utc)
             await self.wal.write_state(log)
 
             # Step 8: Calculate execution time
-            execution_time_ms = int((datetime.now(UTC) - start_time).total_seconds() * 1000)
+            execution_time_ms = int((datetime.now(timezone.utc) - start_time).total_seconds() * 1000)
             result.execution_time_ms = execution_time_ms
 
             # Step 9: Track result
@@ -381,7 +381,7 @@ class ShadowModeExecutor:
 
             return result
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"SHADOW MODE: Order {shadow_order_id} failed: {e}")
 
             # Write failure to WAL
@@ -389,7 +389,7 @@ class ShadowModeExecutor:
                 log = OrderLog(
                     order_id=shadow_order_id,
                     state=OrderState.FAILED,
-                    timestamp=datetime.now(UTC),
+                    timestamp=datetime.now(timezone.utc),
                     symbol=symbol,
                     side=side,
                     quantity=quantity,
@@ -402,7 +402,7 @@ class ShadowModeExecutor:
                     },
                 )
                 await self.wal.write_state(log)
-            except Exception as wal_error:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as wal_error:
                 logger.critical(f"SHADOW MODE: Failed to write error to WAL: {wal_error}")
 
             raise
@@ -506,25 +506,28 @@ class ShadowModeExecutor:
             )
 
         # Calculate fill price
-        if order_type == "MARKET":
+        if order_type.upper() == "MARKET":
             # For market orders, get current price from broker
             try:
                 ticker = await self.broker.get_live_ticker(symbol)
                 base_price = ticker.last
-            except Exception:
-                # Fallback to requested price
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError):
+                # Fallback to requested price or default
                 base_price = price or Decimal("100.00")
         else:
+            # For LIMIT orders, use the limit price
             base_price = price
+            if base_price is None:
+                raise ValueError("LIMIT orders require a price")
 
         # Apply slippage
         slippage_bps = self.config.slippage_bps
-        slippage_multiplier = 1 + (slippage_bps / 10000)
+        slippage_multiplier = Decimal("1") + (Decimal(slippage_bps) / Decimal("10000"))
 
         if side == "BUY":
             fill_price = base_price * slippage_multiplier
         else:
-            fill_price = base_price * (2 - slippage_multiplier)
+            fill_price = base_price * (Decimal("2") - slippage_multiplier)
 
         # Check for partial fill
         fill_quantity = quantity
@@ -599,7 +602,7 @@ class ShadowModeExecutor:
         logger.critical("=" * 80)
 
         report = {
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "validation_period_minutes": validation_period_minutes,
             "can_transition": False,
             "validations": [],
@@ -608,7 +611,7 @@ class ShadowModeExecutor:
         }
 
         # Get recent shadow results
-        cutoff = datetime.now(UTC) - timedelta(minutes=validation_period_minutes)
+        cutoff = datetime.now(timezone.utc) - timedelta(minutes=validation_period_minutes)
         recent_results = [
             r for r in self.shadow_results if r.timestamp >= cutoff
         ]
@@ -645,7 +648,7 @@ class ShadowModeExecutor:
                     "value": f"{len(shadow_pending)} pending",
                     "passed": True,
                 })
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             report["errors"].append(f"WAL validation failed: {e}")
 
         # Validation 3: No critical errors
@@ -762,7 +765,7 @@ class ShadowModeExecutor:
         Returns:
             Dictionary with shadow mode statistics
         """
-        cutoff = datetime.now(UTC) - timedelta(minutes=minutes)
+        cutoff = datetime.now(timezone.utc) - timedelta(minutes=minutes)
         recent = [r for r in self.shadow_results if r.timestamp >= cutoff]
 
         if not recent:
@@ -823,7 +826,7 @@ class ShadowModeExecutor:
                     "data": result.to_dict(),
                 }
                 await f.write(json.dumps(log_entry) + "\n")
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.error(f"Failed to write audit log: {e}")
 
     async def reset_daily_counters(self) -> None:

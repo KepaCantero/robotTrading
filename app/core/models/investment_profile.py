@@ -288,7 +288,7 @@ class ProfileGenerator:
 
             return investment_profile
 
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.error(f"Failed to generate InvestmentProfile: {e}")
             raise
 

@@ -79,7 +79,7 @@ class SymbolNormalizer:
 
             return symbol_str
 
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error normalizando símbolo {symbol}: {e}")
             return str(symbol).strip().upper()
 

@@ -11,6 +11,7 @@ Endpoints:
   - Trading statistics and metrics
 """
 
+from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 from typing import Optional
@@ -33,6 +34,8 @@ from app.services.live_trading.trading_bridge_orchestrator import (
     TradingBridgeOrchestrator,
     get_trading_bridge_orchestrator,
 )
+import requests
+from requests.exceptions import ConnectionError, HTTPError, RequestException
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +62,7 @@ async def start_live_trading(
             "message": "Live trading bridge started successfully",
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to start live trading bridge: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -79,7 +82,7 @@ async def stop_live_trading(
             "message": "Live trading bridge stopped successfully",
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to stop live trading bridge: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -96,7 +99,7 @@ async def get_bridge_status(
             "statistics": status,
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get bridge status: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -150,7 +153,7 @@ async def place_order(
             "status": "SUBMITTED",
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to place order: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -173,7 +176,7 @@ async def get_order_status(
         }
     except HTTPException:
         raise
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get order status: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -197,7 +200,7 @@ async def cancel_order(
         }
     except HTTPException:
         raise
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to cancel order: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -214,7 +217,7 @@ async def cancel_all_orders(
             "message": f"{count} orders cancelled",
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to cancel all orders: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -249,7 +252,7 @@ async def list_orders(
             "orders": orders[:limit],
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to list orders: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -278,7 +281,7 @@ async def get_account_info(
             "margin_multiplier": account.multiplier,
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get account info: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -306,7 +309,7 @@ async def list_positions(
             ],
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to list positions: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -334,7 +337,7 @@ async def get_position(
         }
     except HTTPException:
         raise
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get position: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -372,7 +375,7 @@ async def validate_order_risk(
             "warnings": result.warnings,
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to validate order risk: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -396,7 +399,7 @@ async def get_risk_limits(
             },
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get risk limits: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -433,7 +436,7 @@ async def update_risk_limits(
             "message": "Risk limits updated successfully",
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to update risk limits: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -483,7 +486,7 @@ async def list_executions(
             "executions": executions[:limit],
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to list executions: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -505,7 +508,7 @@ async def get_execution(
         }
     except HTTPException:
         raise
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get execution: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -553,7 +556,7 @@ async def get_audit_trail(
             "events": events[:limit],
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get audit trail: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -595,7 +598,7 @@ async def get_compliance_report(
             },
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to generate compliance report: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -614,7 +617,7 @@ async def list_non_compliant_events(
             "events": events[:limit],
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to list non-compliant events: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -636,7 +639,7 @@ async def get_trading_statistics(
             "statistics": stats,
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get trading statistics: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -653,7 +656,7 @@ async def get_audit_statistics(
             "statistics": stats,
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get audit statistics: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -675,7 +678,7 @@ async def get_portfolio_snapshot(
             "buying_power": snapshot.buying_power,
             "num_positions": snapshot.num_positions,
         }
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get portfolio snapshot: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -711,7 +714,7 @@ async def get_portfolio_history(
             "history": filtered,
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get portfolio history: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -729,7 +732,7 @@ async def get_daily_return(
             "daily_pnl_pct": daily_return.get("pnl_pct", 0),
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get daily return: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -755,7 +758,7 @@ async def create_alert_to_trade_rule(
             "message": "Rule created successfully",
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to create rule: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -773,7 +776,7 @@ async def delete_alert_to_trade_rule(
             "message": "Rule deleted successfully",
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to delete rule: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -791,7 +794,7 @@ async def list_pending_signals(
             "signals": signals,
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to list pending signals: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -807,6 +810,6 @@ async def get_signal_statistics(
             "statistics": stats,
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except Exception as e:
+    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get signal statistics: {e}")
         raise HTTPException(status_code=500, detail=str(e))

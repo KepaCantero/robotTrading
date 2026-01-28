@@ -344,7 +344,7 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
 
                 signals.append(signal)
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(
                 f"Error generando señal en MeanReversionStrategyEngine: {e}", exc_info=True
             )

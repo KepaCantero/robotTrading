@@ -89,7 +89,7 @@ class ProfileGenerator:
                 templates = yaml.safe_load(f)
             logger.info(f"✅ Loaded {len(templates)} profile templates")
             return templates
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"❌ Error loading templates: {e}")
             return self._get_default_templates()
 
@@ -345,7 +345,7 @@ class ProfileGenerator:
             )
             return result
 
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.error(f"❌ Error generating profile: {e}")
             elapsed_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
             return ProfileGenerationResult(
@@ -380,7 +380,7 @@ class ProfileGenerator:
             else:
                 # Flat structure
                 return self.profile_templates.get(obj_key, {}).get(tier_key)
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Error getting template: {e}")
             return None
 
@@ -559,7 +559,7 @@ class ProfileGenerator:
                 f"  Feasibility: {validation_result.confidence_level}"
             )
 
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.error(f"❌ Error integrating MAESTRO PHASE 1: {e}", exc_info=True)
             # Don't raise - allow profile generation to continue with partial data
 

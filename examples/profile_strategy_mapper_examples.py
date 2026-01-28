@@ -318,7 +318,7 @@ def main():
         print("All examples completed successfully!")
         print("=" * 80)
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"Error running examples: {e}", exc_info=True)
         print(f"\nError: {e}")
         print("Make sure configuration files exist in config/")

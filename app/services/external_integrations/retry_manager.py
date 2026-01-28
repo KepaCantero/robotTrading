@@ -108,7 +108,7 @@ class RetryManager:
 
                 await asyncio.sleep(delay_ms / 1000.0)
 
-            except Exception as e:
+            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 # Non-retryable exception
                 self.logger.error(
                     f"❌ {operation_name} failed with non-retryable exception: {str(e)}"

@@ -191,7 +191,7 @@ class RebalancingEngine:
             self.rebalancing_events.append(event)
             logger.info(f"✅ Rebalancing executed: {event.event_id} ({event.num_trades} trades)")
             return True
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             event.status = "failed"
             logger.error(f"❌ Rebalancing failed: {e}")
             return False

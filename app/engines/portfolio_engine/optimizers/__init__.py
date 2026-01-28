@@ -108,7 +108,7 @@ class MarkowitzOptimizer(BaseOptimizer):
                 return self._optimize_cvxpy(expected_returns, cov_matrix, constraints)
             else:
                 return self._optimize_basic(expected_returns, cov_matrix, constraints)
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             self.logger.error(f"Error en optimización Markowitz: {e}", exc_info=True)
             return self._equal_weight_fallback(len(expected_returns))
 
@@ -143,7 +143,7 @@ class MarkowitzOptimizer(BaseOptimizer):
                 'sharpe_ratio': float(performance[2]),
                 'method': 'markowitz_pypfopt',
             }
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.warning(f"PyPortfolioOpt falló: {e}. Usando método básico.")
             return self._optimize_basic(expected_returns, cov_matrix, constraints)
 
@@ -301,7 +301,7 @@ class RiskParityOptimizer(BaseOptimizer):
                 },
                 'method': 'risk_parity_iterative',
             }
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"Error en optimización Risk Parity: {e}", exc_info=True)
             return self._equal_weight_fallback(len(cov_matrix))
 
@@ -390,7 +390,7 @@ class RiskParityOptimizer(BaseOptimizer):
                     if result.fun < 1e-4:
                         return result.x
 
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 self.logger.warning(f"Scipy optimization failed: {e}, using fallback")
 
         # Fallback: simple iterative method
@@ -556,7 +556,7 @@ class BlackLittermanOptimizer(BaseOptimizer):
 
             return result
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"Error en optimización Black-Litterman: {e}", exc_info=True)
             return self._equal_weight_fallback(len(expected_returns))
 
@@ -749,7 +749,7 @@ class KellyCriterionOptimizer(BaseOptimizer):
                     f'asset_{i}': float(kf) for i, kf in enumerate(kelly_fractions)
                 },
             }
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"Error en optimización Kelly Criterion: {e}", exc_info=True)
             return self._equal_weight_fallback(len(expected_returns))
 

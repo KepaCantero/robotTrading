@@ -67,7 +67,7 @@ class AdvancedVisualizer:
             try:
                 plt.style.use("seaborn-v0_8-darkgrid")
                 sns.set_palette("husl")
-            except Exception as e:
+            except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
                 logger.warning(f"Could not set matplotlib style: {e}")
 
         logger.info(f"AdvancedVisualizer initialized: output_dir={self.output_dir}, dpi={dpi}")
@@ -157,7 +157,7 @@ class AdvancedVisualizer:
             logger.info(f"Correlation network saved: {output_path}")
             return fig
 
-        except Exception as e:
+        except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.error(f"Error plotting correlation network: {e}", exc_info=True)
             return None
 
@@ -223,7 +223,7 @@ class AdvancedVisualizer:
             logger.info(f"Parallel coordinates plot saved: {output_path}")
             return str(output_path)
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error plotting parallel coordinates: {e}", exc_info=True)
             return None
 
@@ -315,7 +315,7 @@ class AdvancedVisualizer:
             logger.info(f"3D scatter plot saved: {output_path}")
             return str(output_path)
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error plotting 3D scatter: {e}", exc_info=True)
             return None
 
@@ -383,7 +383,7 @@ class AdvancedVisualizer:
             logger.info(f"Underwater drawdown chart saved: {output_path}")
             return fig
 
-        except Exception as e:
+        except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.error(f"Error plotting underwater drawdown: {e}", exc_info=True)
             return None
 
@@ -467,7 +467,7 @@ class AdvancedVisualizer:
             logger.info(f"Rolling metrics chart saved: {output_path}")
             return fig
 
-        except Exception as e:
+        except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.error(f"Error plotting rolling metrics: {e}", exc_info=True)
             return None
 
@@ -585,7 +585,7 @@ class AdvancedVisualizer:
             logger.info(f"Regime performance chart saved: {output_path}")
             return fig
 
-        except Exception as e:
+        except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.error(f"Error plotting regime performance: {e}", exc_info=True)
             return None
 
@@ -672,7 +672,7 @@ class AdvancedVisualizer:
             logger.info(f"Seasonality heatmap saved: {output_path}")
             return fig
 
-        except Exception as e:
+        except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.error(f"Error plotting seasonality heatmap: {e}", exc_info=True)
             return None
 
@@ -735,6 +735,6 @@ class AdvancedVisualizer:
             logger.info(f"Interactive dashboard saved: {output_path}")
             return str(output_path)
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error generating dashboard: {e}", exc_info=True)
             return None

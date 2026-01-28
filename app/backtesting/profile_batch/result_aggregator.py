@@ -207,7 +207,7 @@ class ResultAggregator:
             session.commit()
             logger.debug(f"Stored result for {result.profile_id}")
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             session.rollback()
             logger.error(f"Failed to store result: {e}", exc_info=True)
 
@@ -268,14 +268,14 @@ class ResultAggregator:
                         session.add(db_result)
 
                     stored_count += 1
-                except Exception as e:
+                except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
                     failed_count += 1
                     logger.error(f"Failed to store result for {result.profile_id}: {e}")
 
             session.commit()
             logger.info(f"Batch store complete: {stored_count} stored, {failed_count} failed")
 
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             session.rollback()
             logger.error(f"Batch store failed: {e}", exc_info=True)
 

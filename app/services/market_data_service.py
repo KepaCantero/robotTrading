@@ -5,6 +5,7 @@ This module provides a centralized service for managing market data feeds,
 caching, and real-time data subscriptions.
 """
 
+from __future__ import annotations
 import asyncio
 import logging
 from datetime import datetime
@@ -57,7 +58,7 @@ class MarketDataService:
             default_symbols = loader.SP500_FALLBACK[
                 :20
             ]  # Use fallback for immediate initialization
-        except Exception:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError):
             default_symbols = ["AAPL", "MSFT", "GOOGL", "TSLA", "AMZN"]
 
         # Yahoo Finance feed (PRIMARY - free, real data)
@@ -131,7 +132,7 @@ class MarketDataService:
             else:
                 logger.error(f"Failed to connect to feed: {config.name}")
                 return False
-        except Exception as e:
+        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Error connecting to feed {config.name}: {e}")
             return False
 
@@ -169,7 +170,7 @@ class MarketDataService:
             else:
                 logger.warning(f"No quote data for {symbol}")
                 return None
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error getting quote for {symbol}: {e}")
             return None
 
@@ -208,7 +209,7 @@ class MarketDataService:
             else:
                 logger.warning(f"No historical data for {symbol}")
                 return []
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error getting historical data for {symbol}: {e}")
             return []
 
@@ -238,7 +239,7 @@ class MarketDataService:
             else:
                 logger.warning(f"Failed to subscribe to symbols: {symbols}")
                 return False
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error subscribing to symbols {symbols}: {e}")
             return False
 

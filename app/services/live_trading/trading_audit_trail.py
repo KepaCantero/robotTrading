@@ -222,7 +222,7 @@ class AuditPersistence:
             )
             conn.commit()
             return True
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Failed to persist audit event: {e}")
             return False
 
@@ -267,7 +267,7 @@ class AuditPersistence:
 
             cursor = conn.execute(query, params)
             return [dict(row) for row in cursor.fetchall()]
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Failed to get audit events: {e}")
             return []
 
@@ -291,7 +291,7 @@ class AuditPersistence:
 
             cursor = conn.execute(query, params)
             return cursor.fetchone()[0]
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Failed to count audit events: {e}")
             return 0
 
@@ -304,7 +304,7 @@ class AuditPersistence:
                 (limit,),
             )
             return [dict(row) for row in cursor.fetchall()]
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Failed to get non-compliant events: {e}")
             return []
 
@@ -315,7 +315,7 @@ class AuditPersistence:
                 self._local.connection.close()
                 self._local.connection = None
                 logger.debug("AuditPersistence connection closed")
-        except Exception as e:
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.warning(f"Error closing AuditPersistence connection: {e}")
 
 
@@ -388,7 +388,7 @@ class TradingAuditTrail:
                         except (ValueError, IndexError):
                             pass
             logger.info(f"Loaded {len(self.events)} audit events from persistence")
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error loading from persistence: {e}")
 
     def _dict_to_audit_event(self, data: Dict) -> Optional[AuditEvent]:
@@ -425,7 +425,7 @@ class TradingAuditTrail:
                 is_compliant=bool(data.get('is_compliant', 1)),
                 risk_level=data.get('risk_level'),
             )
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.warning(f"Failed to convert audit event data: {e}")
             return None
 

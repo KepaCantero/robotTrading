@@ -118,7 +118,7 @@ class WorkflowManager:
 
             return result
 
-        except Exception as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             duration_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
             error_msg = f"Stage {stage_type.value} failed: {str(e)}"
             errors.append(error_msg)
@@ -295,6 +295,6 @@ class WorkflowManager:
             self._current_state = checkpoint["state"].copy()
             logger.info(f"✅ Rolled back to checkpoint from {checkpoint['timestamp']}")
             return True
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Rollback failed: {e}", exc_info=True)
             return False
