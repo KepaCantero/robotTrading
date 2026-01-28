@@ -20,22 +20,25 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 import pandas as pd
 
+# Optional dependencies with graceful fallbacks
 try:
     from sklearn.cluster import KMeans
 
-    SKLEARN_AVAILABLE = True
+    HAS_SKLEARN = True
 except ImportError:
-    SKLEARN_AVAILABLE = False
-    logging.warning("scikit-learn no disponible. Clustering deshabilitado.")
+    HAS_SKLEARN = False
+    KMeans = None
 
 try:
     import matplotlib.pyplot as plt
     import seaborn as sns
 
-    MATPLOTLIB_AVAILABLE = True
-except ImportError:
-    MATPLOTLIB_AVAILABLE = False
-    logging.warning("matplotlib no disponible. Visualizaciones deshabilitadas.")
+    HAS_MATPLOTLIB = True
+except (ImportError, Exception):
+    # Matplotlib may fail due to numpy version incompatibility
+    HAS_MATPLOTLIB = False
+    plt = None
+    sns = None
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +65,7 @@ class BacktestMetaAnalyzer:
         self.data_dir = Path(data_dir)
         self.output_dir = Path(output_dir) if output_dir else Path("reports/meta")
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        self.enable_visualizations = enable_visualizations and MATPLOTLIB_AVAILABLE
+        self.enable_visualizations = enable_visualizations
 
         # Thread-safe state management with RLock
         self._lock = threading.RLock()
@@ -264,7 +267,9 @@ class BacktestMetaAnalyzer:
 
         return analysis
 
-    def _analyze_by_category(self, df: pd.DataFrame, category_col: str, metrics: List[str]) -> Dict[str, Any]:
+    def _analyze_by_category(
+        self, df: pd.DataFrame, category_col: str, metrics: List[str]
+    ) -> Dict[str, Any]:
         """Analizar métricas por categoría (thread-safe with df copy)."""
         category_analysis = {}
 
@@ -296,8 +301,9 @@ class BacktestMetaAnalyzer:
         Returns:
             Dict con clusters y sus características
         """
-        if not SKLEARN_AVAILABLE:
-            logger.warning("scikit-learn no disponible. Clustering deshabilitado.")
+        # Check if required dependencies are available
+        if not HAS_SKLEARN or KMeans is None:
+            logger.warning("sklearn not available, skipping cluster detection")
             return {}
 
         # Thread-safe read of shared state
@@ -440,7 +446,7 @@ class BacktestMetaAnalyzer:
             {
                 'index': idx,
                 'score': scores_sorted.loc[idx, 'score'],
-                'row': df_copy.loc[idx].to_dict()
+                'row': df_copy.loc[idx].to_dict(),
             }
             for idx in scores_sorted.head(top_n).index
         ]
@@ -464,7 +470,9 @@ class BacktestMetaAnalyzer:
         # Thread-safe read of shared state
         with self._lock:
             if not self.analysis_results:
-                logger.warning("No hay análisis para exportar. Ejecuta analyze_performance() primero.")
+                logger.warning(
+                    "No hay análisis para exportar. Ejecuta analyze_performance() primero."
+                )
                 return ""
 
             analysis_copy = self.analysis_results.copy()
@@ -497,9 +505,14 @@ class BacktestMetaAnalyzer:
 
     def _generate_visualizations(self) -> None:
         """Generar visualizaciones de análisis (thread-safe)."""
+        # Check if required dependencies are available
+        if not HAS_MATPLOTLIB or plt is None:
+            logger.warning("matplotlib not available, skipping visualizations")
+            return
+
         # Thread-safe read of shared state
         with self._lock:
-            if not MATPLOTLIB_AVAILABLE or self.df_results is None:
+            if self.df_results is None:
                 return
 
             # Make a copy to avoid holding lock during plotting
@@ -510,7 +523,8 @@ class BacktestMetaAnalyzer:
         try:
             # Configurar estilo
             plt.style.use('seaborn-v0_8-darkgrid')
-            sns.set_palette("husl")
+            if sns is not None:
+                sns.set_palette("husl")
 
             # 1. Distribución de Sharpe Ratio
             if 'sharpe_ratio' in df_copy.columns:
@@ -546,7 +560,15 @@ class BacktestMetaAnalyzer:
                 numeric_cols = df_copy.select_dtypes(include=[np.number]).columns[:10]  # Top 10
                 corr = df_copy[numeric_cols].corr()
                 fig, ax = plt.subplots(figsize=(10, 8))
-                sns.heatmap(corr, annot=True, fmt='.2', cmap='coolwarm', center=0, ax=ax)
+                if sns is not None:
+                    sns.heatmap(corr, annot=True, fmt='.2', cmap='coolwarm', center=0, ax=ax)
+                else:
+                    # Fallback if seaborn is not available
+                    ax.imshow(corr, cmap='coolwarm', aspect='auto', vmin=-1, vmax=1)
+                    ax.set_xticks(range(len(corr.columns)))
+                    ax.set_yticks(range(len(corr.columns)))
+                    ax.set_xticklabels(corr.columns, rotation=45, ha='right')
+                    ax.set_yticklabels(corr.columns)
                 ax.set_title('Matriz de Correlaciones')
                 plt.savefig(
                     self.output_dir / 'correlation_heatmap.png', dpi=150, bbox_inches='tight'
@@ -583,7 +605,7 @@ class BacktestMetaAnalyzer:
             return self.analyze_performance()
 
         def cluster_cpu():
-            if include_clustering and SKLEARN_AVAILABLE:
+            if include_clustering:
                 return self.detect_clusters(n_clusters=n_clusters)
             return {}
 

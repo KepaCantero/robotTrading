@@ -13,24 +13,25 @@ from typing import Any, Callable, Dict, List, Optional
 
 import numpy as np
 
+# Configurar logger
 logger = logging.getLogger(__name__)
 
-# Importaciones opcionales para Optuna
+# Verificar disponibilidad de dependencias opcionales
 try:
     import optuna
 
     OPTUNA_AVAILABLE = True
 except ImportError:
     OPTUNA_AVAILABLE = False
-    logger.warning("Optuna no disponible. Hyperparameter tuning limitado.")
+    optuna = None
 
-# Importaciones opcionales para PyTorch (para detectar GPU)
 try:
     import torch
 
     PYTORCH_AVAILABLE = True
 except ImportError:
     PYTORCH_AVAILABLE = False
+    torch = None
 
 
 class EarlyStoppingAdaptive:
@@ -408,31 +409,22 @@ class HyperparameterTuner:
                 fig.write_html(f"{output_path}_optimization_history.html")
 
             # Parameter importance
-            try:
-                fig = vis.plot_param_importances(self.study)
-                if output_path:
-                    fig.write_html(f"{output_path}_param_importances.html")
-            except (FileNotFoundError, ValueError, KeyError, TypeError):
-                logger.warning("No se pudo generar param importances (pocos trials completados)")
-
-            logger.info(f"Visualizaciones generadas en {output_path}")
+            fig = vis.plot_param_importances(self.study)
+            if output_path:
+                fig.write_html(f"{output_path}_param_importances.html")
 
         except ImportError:
-            logger.warning(
-                "optuna.visualization no disponible. Instalar 'plotly' para visualizaciones"
-            )
-        except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
-            logger.error(f"Error generando visualizaciones: {e}")
+            logger.warning("Optuna visualization no disponible")
 
 
 class LearningEngineTuner:
     """
-    Wrapper específico para tunear Learning Engines.
+    Tuner especializado para learning engines.
     """
 
     def __init__(
         self,
-        learning_engine_class: type,
+        learning_engine_class,
         engine_config: Dict[str, Any],
         tuner_config: Dict[str, Any],
     ):

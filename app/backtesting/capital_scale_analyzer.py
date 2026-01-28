@@ -101,7 +101,9 @@ class CapitalScaleAnalyzer:
             enable_adaptive_commission: Whether to use adaptive commission by capital level
         """
         self.capital_levels = capital_levels or DEFAULT_CAPITAL_LEVELS
-        self.adv_limit_pct = adv_limit_pct if adv_limit_pct is not None else CS_CONSTANTS.ADV_LIMIT_PCT_DEFAULT
+        self.adv_limit_pct = (
+            adv_limit_pct if adv_limit_pct is not None else CS_CONSTANTS.ADV_LIMIT_PCT_DEFAULT
+        )
         self.enable_adv_rule = enable_adv_rule
         self.enable_adaptive_commission = enable_adaptive_commission
         self.cost_calculator = CostCalculator(use_dynamic_costs=True)
@@ -308,7 +310,10 @@ class CapitalScaleAnalyzer:
                 results.append(level_result)
 
                 # Check for commission impact warning (using config threshold)
-                if level_result.commission_impact_ratio > CS_CONSTANTS.COMMISSION_IMPACT_WARNING_THRESHOLD:
+                if (
+                    level_result.commission_impact_ratio
+                    > CS_CONSTANTS.COMMISSION_IMPACT_WARNING_THRESHOLD
+                ):
                     warnings.append(
                         f"€{capital_level:,.0f}: Commission impact {level_result.commission_impact_ratio:.1%} "
                         f"exceeds {CS_CONSTANTS.COMMISSION_IMPACT_WARNING_THRESHOLD:.1%} threshold - "
@@ -413,8 +418,12 @@ class CapitalScaleAnalyzer:
         # Alpha degradation score (using config weights)
         degradation_score = max(
             Decimal("0"),
-            CS_CONSTANTS.SCALABILITY_ALPHA_DEGRADATION_MAX_POINTS -
-            (alpha_degradation * CS_CONSTANTS.SCALABILITY_ALPHA_DEGRADATION_MAX_POINTS * Decimal("2"))
+            CS_CONSTANTS.SCALABILITY_ALPHA_DEGRADATION_MAX_POINTS
+            - (
+                alpha_degradation
+                * CS_CONSTANTS.SCALABILITY_ALPHA_DEGRADATION_MAX_POINTS
+                * Decimal("2")
+            ),
         )
 
         # Commission impact score (using config thresholds)
@@ -423,7 +432,9 @@ class CapitalScaleAnalyzer:
             if r.commission_impact_ratio < CS_CONSTANTS.COMMISSION_IMPACT_EXCELLENT_THRESHOLD:
                 commission_scores.append(CS_CONSTANTS.SCALABILITY_COMMISSION_MAX_POINTS)
             elif r.commission_impact_ratio < CS_CONSTANTS.COMMISSION_IMPACT_GOOD_THRESHOLD:
-                commission_scores.append(CS_CONSTANTS.SCALABILITY_COMMISSION_MAX_POINTS * Decimal("2") / Decimal("3"))
+                commission_scores.append(
+                    CS_CONSTANTS.SCALABILITY_COMMISSION_MAX_POINTS * Decimal("2") / Decimal("3")
+                )
             else:
                 commission_scores.append(Decimal("10"))
         commission_score = (
@@ -436,8 +447,8 @@ class CapitalScaleAnalyzer:
             win_rate_std = Decimal(str(np.std(win_rates)))
             stability_score = max(
                 Decimal("0"),
-                CS_CONSTANTS.SCALABILITY_STABILITY_MAX_POINTS -
-                (win_rate_std * CS_CONSTANTS.WIN_RATE_STABILITY_PENALTY_FACTOR)
+                CS_CONSTANTS.SCALABILITY_STABILITY_MAX_POINTS
+                - (win_rate_std * CS_CONSTANTS.WIN_RATE_STABILITY_PENALTY_FACTOR),
             )
         else:
             stability_score = Decimal("0")
@@ -453,7 +464,8 @@ class CapitalScaleAnalyzer:
         - Minimal partial fills/rejections
         """
         valid_results = [
-            r for r in results
+            r
+            for r in results
             if r.commission_impact_ratio < CS_CONSTANTS.COMMISSION_IMPACT_OPTIMAL_THRESHOLD
         ]
 

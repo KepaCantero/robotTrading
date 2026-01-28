@@ -95,11 +95,9 @@ class BaseRepository(Generic[T]):
             instance = self.get_by_id(id)
             if not instance:
                 return None
-
             for key, value in kwargs.items():
                 if hasattr(instance, key):
                     setattr(instance, key, value)
-
             self.session.commit()
             self.session.refresh(instance)
             return instance
@@ -117,7 +115,6 @@ class BaseRepository(Generic[T]):
             instance = self.get_by_id(id)
             if not instance:
                 return False
-
             self.session.delete(instance)
             self.session.commit()
             return True
@@ -315,10 +312,8 @@ class PositionRepository(BaseRepository[Position]):
             position = self.get_by_id(position_id)
             if not position:
                 return False
-
             position.current_price = current_price
             position.unrealized_pnl = (current_price - position.average_price) * position.quantity
-
             self.session.commit()
             return True
         except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
@@ -341,10 +336,8 @@ class TradeRepository(BaseRepository[Trade]):
                 .filter(Trade.portfolio_id == portfolio_id)
                 .order_by(Trade.executed_at.desc())
             )
-
             if limit:
                 query = query.limit(limit)
-
             return query.all()
         except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
@@ -361,10 +354,8 @@ class TradeRepository(BaseRepository[Trade]):
                 .filter(Trade.asset_id == asset_id)
                 .order_by(Trade.executed_at.desc())
             )
-
             if limit:
                 query = query.limit(limit)
-
             return query.all()
         except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
@@ -400,7 +391,6 @@ class TradeRepository(BaseRepository[Trade]):
                 .filter(Trade.portfolio_id == portfolio_id)
                 .first()
             )
-
             return {
                 "total_trades": result.total_trades or 0,
                 "total_commission": result.total_commission or Decimal("0"),
@@ -482,10 +472,8 @@ class SignalRepository(BaseRepository[Signal]):
                 .filter(Signal.strategy_name == strategy_name)
                 .order_by(Signal.created_at.desc())
             )
-
             if limit:
                 query = query.limit(limit)
-
             return query.all()
         except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
@@ -502,10 +490,8 @@ class SignalRepository(BaseRepository[Signal]):
                 .filter(Signal.asset_id == asset_id)
                 .order_by(Signal.created_at.desc())
             )
-
             if limit:
                 query = query.limit(limit)
-
             return query.all()
         except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
@@ -637,10 +623,8 @@ class SystemLogRepository(BaseRepository[SystemLog]):
                 .filter(SystemLog.level == level)
                 .order_by(SystemLog.timestamp.desc())
             )
-
             if limit:
                 query = query.limit(limit)
-
             return query.all()
         except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
@@ -655,10 +639,8 @@ class SystemLogRepository(BaseRepository[SystemLog]):
                 .filter(SystemLog.service == service)
                 .order_by(SystemLog.timestamp.desc())
             )
-
             if limit:
                 query = query.limit(limit)
-
             return query.all()
         except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(
@@ -676,10 +658,8 @@ class SystemLogRepository(BaseRepository[SystemLog]):
                 .filter(SystemLog.timestamp >= cutoff_time)
                 .order_by(SystemLog.timestamp.desc())
             )
-
             if limit:
                 query = query.limit(limit)
-
             return query.all()
         except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
             raise_database_error(

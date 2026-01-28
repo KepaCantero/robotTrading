@@ -1,29 +1,25 @@
 """
-Página Streamlit para Meta Dashboard - Control de Misión Quant
+Página Streamlit para Meta Dashboard - Control de Misión Quant.
 """
 
 import asyncio
 import logging
-import sys
 from pathlib import Path
+
+import streamlit as st
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
+import sys
+
 sys.path.insert(0, str(project_root))
-
-try:
-    import streamlit as st
-
-    from app.dashboard.meta_dashboard import MetaDashboard
-
-    STREAMLIT_AVAILABLE = True
-except ImportError:
-    STREAMLIT_AVAILABLE = False
-    logging.warning("Streamlit no disponible")
 
 logger = logging.getLogger(__name__)
 
-if STREAMLIT_AVAILABLE:
+
+def main() -> None:
+    """Main function for the Meta Dashboard page."""
+    # Page config
     st.set_page_config(
         page_title="Control de Misión Quant",
         page_icon="🎯",
@@ -54,31 +50,23 @@ if STREAMLIT_AVAILABLE:
         if st.button("🔄 Cargar y Analizar", type="primary"):
             with st.spinner("Cargando resultados y ejecutando análisis..."):
                 try:
+                    from app.dashboard.meta_dashboard import MetaDashboard
+
                     dashboard = MetaDashboard(
-                        results_dir=results_dir, config_path=config_path if config_path else None
+                        results_dir=results_dir,
+                        config_path=config_path if config_path else None,
                     )
 
                     # Ejecutar análisis asíncrono
                     try:
-                        loop = asyncio.get_event_loop()
-                        if loop.is_running():
-                            # Si ya hay loop, crear tarea
-                            try:
-                                import nest_asyncio
+                        import nest_asyncio
 
-                                nest_asyncio.apply()
-                            except ImportError:
-                                st.warning(
-                                    "⚠️ nest_asyncio no está instalado. "
-                                    "Ejecutando sin anidación de eventos."
-                                )
-                            results = loop.run_until_complete(dashboard.load_and_analyze())
-                        else:
-                            results = loop.run_until_complete(dashboard.load_and_analyze())
+                        nest_asyncio.apply()
+                        asyncio.run(dashboard.load_and_analyze())
                     except RuntimeError:
-                        results = asyncio.run(dashboard.load_and_analyze())
+                        asyncio.run(dashboard.load_and_analyze())
 
-                    st.session_state['meta_dashboard'] = dashboard
+                    st.session_state["meta_dashboard"] = dashboard
                     st.success("✅ Análisis completado")
                     st.rerun()
 
@@ -87,13 +75,12 @@ if STREAMLIT_AVAILABLE:
                     logger.error(f"Error en análisis: {e}", exc_info=True)
 
     # Renderizar dashboard si está cargado
-    if 'meta_dashboard' in st.session_state:
-        dashboard = st.session_state['meta_dashboard']
+    if "meta_dashboard" in st.session_state:
+        dashboard = st.session_state["meta_dashboard"]
         dashboard.render_dashboard()
     else:
         st.info("👈 Usa el sidebar para cargar y analizar resultados")
-        st.markdown(
-            """
+        st.markdown("""
         ### 📋 Instrucciones
 
         1. **Configura el directorio** con los resultados de backtests
@@ -108,5 +95,8 @@ if STREAMLIT_AVAILABLE:
         - **Indicadores Avanzados**: Stability Index, Profit Consistency, etc.
         - **Volatility Context**: Overlay de volatilidad vs drawdown
         - **Drilldown Panel**: Detalles por test individual
-        """
-        )
+        """)
+
+
+if __name__ == "__main__":
+    main()

@@ -10,6 +10,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional
 
+from requests.exceptions import HTTPError, RequestException
+
 logger = logging.getLogger(__name__)
 
 

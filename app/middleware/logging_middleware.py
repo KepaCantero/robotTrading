@@ -5,25 +5,27 @@ TASK-3: Configuración de logging centralizado
 
 import time
 import uuid
+from typing import Callable
 
 from fastapi import Request, Response
+from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.types import ASGIApp
 
-try:
-    from fastapi.middleware.base import BaseHTTPMiddleware
-except ImportError:
-    from starlette.middleware.base import BaseHTTPMiddleware
+from app.core.logging_config import LogService, get_logger
 
-from starlette.middleware.base import RequestResponseEndpoint
-
-from app.services.centralized_logging import LogService, centralized_logger, log_performance
+logger = get_logger(__name__)
+centralized_logger = logger
 
 
 class LoggingMiddleware(BaseHTTPMiddleware):
-    """Middleware for logging HTTP requests and responses."""
+    """Middleware for logging all HTTP requests and responses."""
 
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
-        """Log HTTP requests and responses."""
-        # Generate request ID
+    def __init__(self, app: ASGIApp):
+        super().__init__(app)
+
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        """Log request and response."""
         request_id = str(uuid.uuid4())
 
         # Start timing
@@ -71,7 +73,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 
             return response
 
-        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        except (ConnectionError, TimeoutError) as e:
             # Calculate duration
             duration = (time.time() - start_time) * 1000
 
@@ -95,7 +97,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 class TradingLoggingMiddleware(BaseHTTPMiddleware):
     """Middleware for logging trading-specific requests."""
 
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Log trading-specific requests."""
         # Check if this is a trading endpoint
         if request.url.path.startswith("/api/trading/"):
@@ -132,7 +134,7 @@ class TradingLoggingMiddleware(BaseHTTPMiddleware):
 class PortfolioLoggingMiddleware(BaseHTTPMiddleware):
     """Middleware for logging portfolio-specific requests."""
 
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Log portfolio-specific requests."""
         # Check if this is a portfolio endpoint
         if request.url.path.startswith("/api/portfolio/"):
@@ -169,7 +171,7 @@ class PortfolioLoggingMiddleware(BaseHTTPMiddleware):
 class MarketDataLoggingMiddleware(BaseHTTPMiddleware):
     """Middleware for logging market data requests."""
 
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Log market data requests."""
         # Check if this is a market data endpoint
         if request.url.path.startswith("/api/market-data/"):
@@ -206,19 +208,119 @@ class MarketDataLoggingMiddleware(BaseHTTPMiddleware):
 # Performance logging decorators
 def log_trading_performance(operation: str):
     """Decorator for logging trading performance."""
-    return log_performance(LogService.TRADING, operation)
+
+    def decorator(func):
+        async def wrapper(*args, **kwargs):
+            start_time = time.time()
+            try:
+                result = await func(*args, **kwargs)
+                duration = (time.time() - start_time) * 1000
+                centralized_logger.info(
+                    LogService.TRADING,
+                    f"{operation} completed",
+                    metadata={"duration_ms": duration},
+                )
+                return result
+            except Exception as e:
+                duration = (time.time() - start_time) * 1000
+                centralized_logger.error(
+                    LogService.TRADING,
+                    f"{operation} failed",
+                    metadata={"duration_ms": duration, "error_type": type(e).__name__},
+                    error_message=str(e),
+                )
+                raise
+
+        return wrapper
+
+    return decorator
 
 
 def log_portfolio_performance(operation: str):
     """Decorator for logging portfolio performance."""
-    return log_performance(LogService.PORTFOLIO, operation)
+
+    def decorator(func):
+        async def wrapper(*args, **kwargs):
+            start_time = time.time()
+            try:
+                result = await func(*args, **kwargs)
+                duration = (time.time() - start_time) * 1000
+                centralized_logger.info(
+                    LogService.PORTFOLIO,
+                    f"{operation} completed",
+                    metadata={"duration_ms": duration},
+                )
+                return result
+            except Exception as e:
+                duration = (time.time() - start_time) * 1000
+                centralized_logger.error(
+                    LogService.PORTFOLIO,
+                    f"{operation} failed",
+                    metadata={"duration_ms": duration, "error_type": type(e).__name__},
+                    error_message=str(e),
+                )
+                raise
+
+        return wrapper
+
+    return decorator
 
 
 def log_market_data_performance(operation: str):
     """Decorator for logging market data performance."""
-    return log_performance(LogService.MARKET_DATA, operation)
+
+    def decorator(func):
+        async def wrapper(*args, **kwargs):
+            start_time = time.time()
+            try:
+                result = await func(*args, **kwargs)
+                duration = (time.time() - start_time) * 1000
+                centralized_logger.info(
+                    LogService.MARKET_DATA,
+                    f"{operation} completed",
+                    metadata={"duration_ms": duration},
+                )
+                return result
+            except Exception as e:
+                duration = (time.time() - start_time) * 1000
+                centralized_logger.error(
+                    LogService.MARKET_DATA,
+                    f"{operation} failed",
+                    metadata={"duration_ms": duration, "error_type": type(e).__name__},
+                    error_message=str(e),
+                )
+                raise
+
+        return wrapper
+
+    return decorator
 
 
 def log_fastapi_performance(operation: str):
     """Decorator for logging FastAPI performance."""
-    return log_performance(LogService.FASTAPI, operation)
+
+    def decorator(func):
+        async def wrapper(*args, **kwargs):
+            start_time = time.time()
+            try:
+                result = await func(*args, **kwargs)
+                duration = (time.time() - start_time) * 1000
+                centralized_logger.info(
+                    LogService.FASTAPI,
+                    f"{operation} completed",
+                    metadata={"duration_ms": duration},
+                )
+                return result
+            except Exception as e:
+                duration = (time.time() - start_time) * 1000
+                centralized_logger.error(
+                    LogService.FASTAPI,
+                    f"{operation} failed",
+                    metadata={"duration_ms": duration, "error_type": type(e).__name__},
+                    error_message=str(e),
+                )
+                raise
+
+        return wrapper
+
+    return decorator

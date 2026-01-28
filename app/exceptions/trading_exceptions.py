@@ -6,6 +6,8 @@ TASK-4: Sistema de manejo de errores unificado
 from enum import Enum
 from typing import Any, Dict, Optional
 
+from sqlalchemy.exc import DatabaseError
+
 
 class ErrorSeverity(Enum):
     """Severity levels for errors."""

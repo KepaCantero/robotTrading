@@ -11,8 +11,8 @@ Key principles:
 """
 
 import logging
-from decimal import Decimal, InvalidOperation, getcontext, ROUND_DOWN, ROUND_HALF_UP, ROUND_UP
-from typing import Any, Dict, List, Optional, Union
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation, getcontext
+from typing import Optional, Union
 
 # Set high precision for financial calculations
 getcontext().prec = 28  # Sufficient for most financial calculations
@@ -58,7 +58,9 @@ def to_decimal(value: Union[int, float, str, Decimal, None]) -> Optional[Decimal
     if isinstance(value, str):
         try:
             # Remove common currency symbols and formatting
-            cleaned = value.strip().replace('$', '').replace(',', '').replace('€', '').replace('£', '')
+            cleaned = (
+                value.strip().replace('$', '').replace(',', '').replace('€', '').replace('£', '')
+            )
             return Decimal(cleaned)
         except (InvalidOperation, ValueError) as e:
             raise ValueError(f"Cannot convert string '{value}' to Decimal: {e}") from e
@@ -101,7 +103,7 @@ def to_decimal_required(value: Union[int, float, str, Decimal]) -> Decimal:
 def safe_decimal_divide(
     numerator: Union[int, float, str, Decimal],
     denominator: Union[int, float, str, Decimal],
-    default: Optional[Decimal] = None
+    default: Optional[Decimal] = None,
 ) -> Optional[Decimal]:
     """
     Safely divide two Decimal values, handling division by zero.
@@ -135,7 +137,11 @@ def safe_decimal_divide(
         return default
 
 
-def validate_price(value: Union[int, float, str, Decimal], min_value: Decimal = Decimal("0.01"), max_value: Decimal = Decimal("1000000")) -> Decimal:
+def validate_price(
+    value: Union[int, float, str, Decimal],
+    min_value: Decimal = Decimal("0.01"),
+    max_value: Decimal = Decimal("1000000"),
+) -> Decimal:
     """
     Validate that a value is a valid price within acceptable bounds.
 
@@ -166,7 +172,11 @@ def validate_price(value: Union[int, float, str, Decimal], min_value: Decimal = 
     return price
 
 
-def validate_quantity(value: Union[int, float, str, Decimal], min_value: Decimal = Decimal("0.001"), max_value: Decimal = Decimal("1000000000")) -> Decimal:
+def validate_quantity(
+    value: Union[int, float, str, Decimal],
+    min_value: Decimal = Decimal("0.001"),
+    max_value: Decimal = Decimal("1000000000"),
+) -> Decimal:
     """
     Validate that a value is a valid quantity within acceptable bounds.
 
@@ -197,7 +207,9 @@ def validate_quantity(value: Union[int, float, str, Decimal], min_value: Decimal
     return quantity
 
 
-def round_decimal(value: Union[int, float, str, Decimal], precision: int, rounding: str = ROUND_HALF_UP) -> Decimal:
+def round_decimal(
+    value: Union[int, float, str, Decimal], precision: int, rounding: str = ROUND_HALF_UP
+) -> Decimal:
     """
     Round a Decimal value to specified precision.
 
@@ -245,7 +257,7 @@ def format_currency(value: Union[int, float, str, Decimal], symbol: str = "$") -
 def calculate_percentage(
     numerator: Union[int, float, str, Decimal],
     denominator: Union[int, float, str, Decimal],
-    precision: int = 2
+    precision: int = 2,
 ) -> Optional[Decimal]:
     """
     Calculate percentage safely, handling division by zero.
@@ -284,12 +296,12 @@ CURRENCY_PRECISIONS = {
 
 # Asset class specific price precisions
 ASSET_CLASS_PRECISIONS = {
-    "equity": 2,      # Stocks: 2 decimal places (e.g., $150.25)
-    "forex": 5,       # Forex pairs: up to 5 decimal places (e.g., EUR/USD 1.08452)
-    "crypto": 8,      # Crypto pairs: up to 8 decimal places (e.g., BTC/USD or SAT/BTC)
-    "commodity": 2,   # Commodities: 2 decimal places (e.g., Gold $1950.50)
-    "bond": 4,        # Bonds: 4 decimal places (e.g., 99.8750)
-    "index": 2,       # Indices: 2 decimal places (e.g., SPX 4785.50)
+    "equity": 2,  # Stocks: 2 decimal places (e.g., $150.25)
+    "forex": 5,  # Forex pairs: up to 5 decimal places (e.g., EUR/USD 1.08452)
+    "crypto": 8,  # Crypto pairs: up to 8 decimal places (e.g., BTC/USD or SAT/BTC)
+    "commodity": 2,  # Commodities: 2 decimal places (e.g., Gold $1950.50)
+    "bond": 4,  # Bonds: 4 decimal places (e.g., 99.8750)
+    "index": 2,  # Indices: 2 decimal places (e.g., SPX 4785.50)
 }
 
 # Common forex pair specific precisions (some pairs use 4, others 5)
@@ -332,7 +344,9 @@ CRYPTO_PAIR_PRECISIONS = {
 }
 
 
-def round_to_currency_precision(value: Union[int, float, str, Decimal], currency: str = "USD") -> Decimal:
+def round_to_currency_precision(
+    value: Union[int, float, str, Decimal], currency: str = "USD"
+) -> Decimal:
     """
     Round a value to the standard precision for a given currency.
 
@@ -410,7 +424,7 @@ def round_price(
     value: Union[int, float, str, Decimal],
     asset_class: str = "equity",
     symbol: Optional[str] = None,
-    rounding: str = ROUND_HALF_UP
+    rounding: str = ROUND_HALF_UP,
 ) -> Decimal:
     """
     Round a price value to the appropriate precision for its asset class.

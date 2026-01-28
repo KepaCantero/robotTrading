@@ -1,12 +1,23 @@
 """
-PHASE 3: Risk Scaling Orchestrator - Integration of All Risk Monitors
+PHASE 3: Risk Scaling Orchestrator - Integration of All Risk Monitors (Hull Chapter 18)
 
 Orchestrates all 4 risk scaling monitors into a unified risk management system.
 Coordinates scaling decisions and integrates with SignalExecutionEngine,
 PositionSizingEngine, and other portfolio management systems.
 
+Now integrated with Hull-compliant risk management:
+- Component VaR for risk budgeting
+- EWMA VaR for dynamic volatility adjustment
+- Risk limits enforcement with automatic position reduction
+- Correlation stress testing for diversification monitoring
+
 Key Formula:
 combined_scale = volatility_scale × sharpe_scale × loss_scale × drawdown_scale
+
+Enhanced with VaR-based scaling:
+var_adjusted_scale = combined_scale × (1 - VaR_utilization)
+
+Reference: Hull, Options, Futures, and Other Derivatives, Chapter 18
 """
 
 import logging

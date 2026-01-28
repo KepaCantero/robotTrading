@@ -14,12 +14,12 @@ a more robust, persistent solution that survives system restarts.
 """
 
 from .persistent_queue import (
+    PersistentTaskQueue,
     Task,
     TaskPriority,
     TaskStatus,
-    PersistentTaskQueue,
-    exponential_backoff,
     create_task,
+    exponential_backoff,
 )
 
 __all__ = [

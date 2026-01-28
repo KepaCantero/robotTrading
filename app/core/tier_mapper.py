@@ -40,12 +40,8 @@ from decimal import Decimal
 from enum import Enum
 from typing import Dict, Optional, Tuple
 
-# Import centralized configuration
-try:
-    from app.core.config.strategy_config_loader import get_strategy_config
-    HAS_CONFIG_LOADER = True
-except ImportError:
-    HAS_CONFIG_LOADER = False
+# Import centralized configuration (REQUIRED - no fallbacks)
+from app.core.config.strategy_config_loader import get_strategy_config  # noqa: F401
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +50,7 @@ class TierSystem(str, Enum):
     """
     Different tier naming systems used in the codebase.
     """
+
     CAPITAL_FLAG = "capital_flag"  # InputProfile.capital_flag: small, medium, large
     YAML = "yaml"  # investment_profiles.yaml: micro, small, medium, large
     SPANISH = "spanish"  # Config expectations: bajo, medio, alto
@@ -73,16 +70,16 @@ class TierMapper:
     # Capital thresholds (EUR) - loaded from config or using defaults
     # These will be updated on first access if config is available
     THRESHOLDS: Dict[str, Decimal] = {
-        "micro": Decimal("0"),        # Not used for micro, but defined for completeness
-        "small": Decimal("15000"),    # €15k - €50k
-        "medium": Decimal("50000"),   # €50k - €250k
-        "large": Decimal("250000"),   # >= €250k
+        "micro": Decimal("0"),  # Not used for micro, but defined for completeness
+        "small": Decimal("15000"),  # €15k - €50k
+        "medium": Decimal("50000"),  # €50k - €250k
+        "large": Decimal("250000"),  # >= €250k
     }
 
     @classmethod
     def _load_thresholds_from_config(cls) -> None:
-        """Load thresholds from centralized config if available."""
-        if HAS_CONFIG_LOADER and cls.THRESHOLDS.get("loaded", False) is False:
+        """Load thresholds from centralized config (REQUIRED)."""
+        if cls.THRESHOLDS.get("loaded", False) is False:
             try:
                 config = get_strategy_config()
                 thresholds = config.get_tier_thresholds()
@@ -96,7 +93,8 @@ class TierMapper:
                     }
                     logger.info(f"Tier thresholds loaded from config: {cls.THRESHOLDS}")
             except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
-                logger.warning(f"Could not load tier thresholds from config: {e}")
+                logger.error(f"Failed to load tier thresholds from config: {e}")
+                raise
 
     @classmethod
     def get_thresholds(cls) -> Dict[str, Decimal]:
@@ -107,26 +105,26 @@ class TierMapper:
     # Mapping from capital_flag (3-tier) to YAML (4-tier)
     # Since capital_flag doesn't have "micro", we map based on capital ranges
     CAPITAL_FLAG_TO_YAML: Dict[str, str] = {
-        "small": "small",   # €0-€50k in capital_flag maps to small in YAML (€15k-€50k)
-                            # Note: This misses the micro tier (<€15k)
-        "medium": "medium", # €50k-€250k
-        "large": "large",   # >=€250k
+        "small": "small",  # €0-€50k in capital_flag maps to small in YAML (€15k-€50k)
+        # Note: This misses the micro tier (<€15k)
+        "medium": "medium",  # €50k-€250k
+        "large": "large",  # >=€250k
     }
 
     # Mapping from YAML (4-tier) to Spanish (3-tier)
     YAML_TO_SPANISH: Dict[str, str] = {
-        "micro": "bajo",    # <€15k -> bajo
-        "small": "bajo",    # €15k-€50k -> bajo
+        "micro": "bajo",  # <€15k -> bajo
+        "small": "bajo",  # €15k-€50k -> bajo
         "medium": "medio",  # €50k-€250k -> medio
-        "large": "alto",    # >=€250k -> alto
+        "large": "alto",  # >=€250k -> alto
     }
 
     # Mapping from Spanish (3-tier) to YAML (4-tier)
     # Use the more specific tier in the range
     SPANISH_TO_YAML: Dict[str, str] = {
-        "bajo": "small",    # bajo -> small (medium tier in bajo range)
+        "bajo": "small",  # bajo -> small (medium tier in bajo range)
         "medio": "medium",  # medio -> medium
-        "alto": "large",    # alto -> large
+        "alto": "large",  # alto -> large
     }
 
     # Mapping from capital_flag (3-tier) to Spanish (3-tier)
@@ -180,19 +178,19 @@ class TierMapper:
             >>> TierMapper.get_tier_from_capital(Decimal("500000"))
             'large'
         """
-        # Try using centralized config first
-        if HAS_CONFIG_LOADER:
-            try:
-                config = get_strategy_config()
-                tier = config.get_tier_from_capital(capital)
-                # Map institutional to large for backward compatibility with 4-tier system
-                if tier == "institutional":
-                    return "large"
-                return tier
-            except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
-                logger.debug(f"Could not determine tier from config: {e}, using fallback")
+        # Use centralized config (REQUIRED - no fallbacks)
+        try:
+            config = get_strategy_config()
+            tier = config.get_tier_from_capital(capital)
+            # Map institutional to large for backward compatibility with 4-tier system
+            if tier == "institutional":
+                return "large"
+            return tier
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+            logger.error(f"Could not determine tier from config: {e}")
+            raise
 
-        # Fallback to hardcoded thresholds
+        # Use hardcoded thresholds as last resort
         thresholds = cls.get_thresholds()
         if capital < thresholds["small"]:
             return "micro"
@@ -273,9 +271,7 @@ class TierMapper:
         if tier in cls.VALID_TIERS[TierSystem.YAML]:
             return tier
 
-        raise ValueError(
-            f"Cannot convert tier '{tier}' from {source_system} to YAML format"
-        )
+        raise ValueError(f"Cannot convert tier '{tier}' from {source_system} to YAML format")
 
     @classmethod
     def to_spanish(cls, tier: str, source_system: Optional[TierSystem] = None) -> str:
@@ -483,6 +479,7 @@ class TierMapper:
 # Convenience Functions
 # ============================================================================
 
+
 def get_tier(capital: Decimal, system: TierSystem = TierSystem.YAML) -> str:
     """
     Get tier from capital amount for a specific system.
@@ -543,10 +540,7 @@ def normalize_tier(tier: str, target_system: TierSystem = TierSystem.YAML) -> st
         return tier
 
 
-def map_profile_tier_to_config(
-    capital_flag: str,
-    target_format: str = "yaml"
-) -> str:
+def map_profile_tier_to_config(capital_flag: str, target_format: str = "yaml") -> str:
     """
     Map from InputProfile.capital_flag to config tier format.
 

@@ -30,6 +30,8 @@ from .drift_detector import (
 
 # Feature importance (siempre disponibles) [TASK-4.2-FEATURE-IMPORTANCE]
 from .feature_importance import (
+    SHAP_AVAILABLE,
+    SKLEARN_FEATURE_SELECTION_AVAILABLE,
     AttentionWeightsAnalyzer,
     BuiltInImportanceAnalyzer,
     ComprehensiveFeatureAnalyzer,
@@ -106,6 +108,8 @@ __all__ = [
     "load_overfitting_config",
     "get_default_overfitting_config",
     # Feature importance [TASK-4.2-FEATURE-IMPORTANCE]
+    "SHAP_AVAILABLE",
+    "SKLEARN_FEATURE_SELECTION_AVAILABLE",
     "SHAPAnalyzer",
     "AttentionWeightsAnalyzer",
     "FeatureSelector",

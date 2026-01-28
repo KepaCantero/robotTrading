@@ -103,9 +103,13 @@ def get_database_engine() -> AsyncEngine:
                 )
                 # Sanitize connection string - only log host, not credentials
                 url_part = (
-                    settings.database_url.split("@")[1] if "@" in settings.database_url else "localhost"
+                    settings.database_url.split("@")[1]
+                    if "@" in settings.database_url
+                    else "localhost"
                 )
-                logger.info(f"Database engine created (host={url_part}, pool_size={settings.database_pool_size})")
+                logger.info(
+                    f"Database engine created (host={url_part}, pool_size={settings.database_pool_size})"
+                )
 
         except (ArgumentError, OperationalError, TimeoutError, ValueError) as e:
             logger.error(f"Failed to create database engine: {e}")

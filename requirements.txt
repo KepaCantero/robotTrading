@@ -1,84 +1,259 @@
-# Core Web Framework
+# =============================================================================
+# AlgoTrading System - PRODUCTION Dependencies
+# =============================================================================
+# PRINCIPLE: "If it's in the code, it's REQUIRED. No optional dependencies."
+#
+# Last Updated: 2026-01-28
+# Python Version: >= 3.9, < 3.14
+#
+# ALL dependencies listed here are REQUIRED for production operation.
+# For development/testing dependencies, see requirements-dev.txt
+# =============================================================================
+
+# =============================================================================
+# CORE WEB FRAMEWORK
+# =============================================================================
+# Required by: app/main.py, all API endpoints, FastAPI application
 fastapi>=0.104.0,<0.110.0
 uvicorn[standard]>=0.24.0,<0.30.0
+starlette>=0.27.0,<0.28.0
 pydantic>=2.0.0,<3.0.0
 pydantic-settings>=2.0.0,<3.0.0
+python-multipart>=0.0.6,<1.0.0
 
-# Database
+# =============================================================================
+# DATABASE & PERSISTENCE
+# =============================================================================
+# Required by: app/database/, migrations, all database models
 sqlalchemy>=2.0.0,<3.0.0
 alembic>=1.12.0,<2.0.0
 psycopg2-binary>=2.9.0,<3.0.0
+aiosqlite>=0.19.0,<1.0.0
+asyncpg>=0.29.0,<1.0.0
+greenlet>=3.0.0,<4.0.0
 
-# Data Processing & Analysis
+# =============================================================================
+# DATA PROCESSING & ANALYSIS (CORE)
+# =============================================================================
+# Required by: ALL data processing, backtesting, analysis modules
 pandas>=2.0.0,<3.0.0
-numpy>=1.24.0,<3.0.0  # Updated to allow numpy 2.x for pandas-ta-classic compatibility
-pandas-ta-classic>=0.3.36,<1.0.0  # Technical Analysis Library (REQUIRED - compatible with Python 3.9+, uses library ONLY, NO manual calculations)
-scipy>=1.11.0,<2.0.0  # Statistical calculations (cointegration, etc.)
-statsmodels>=0.14.0,<1.0.0  # Statistical tests (ADF, KPSS, Johansen, Engle-Granger)
-arch>=6.0.0,<8.0.0  # GARCH volatility modeling (7.x required for numpy 2.x)
-numba>=0.59.0,<1.0.0  # JIT compilation for 10-100x speedup on numerical computations (Phase 2 optimization)
+numpy>=1.24.0,<2.0.0  # CRITICAL: <2.0.0 REQUIRED for matplotlib, stable-baselines3, pandas-ta compatibility
+scipy>=1.11.0,<2.0.0
 
-# Market Data
-yfinance>=0.2.0,<1.0.0
-yahoo-fin>=0.8.9,<1.0.0  # Alternative to yfinance (yahoo_fin)
-requests-html>=0.10.0,<1.0.0  # Required by yahoo_fin
+# =============================================================================
+# STATISTICAL MODELING & TESTING
+# =============================================================================
+# Required by: pairs_trading, statistical_arb, cointegration tests
+statsmodels>=0.14.0,<1.0.0
 
-# Configuration
-pyyaml>=6.0  # Allow any 6.x version for compatibility
+# Required by: volatility_regime_detector, garch_analyzer
+arch>=6.0.0,<8.0.0
 
-# Optimization (NEW - Multi-Strategy Optimizer)
+# Required by: hmm_regime_detector (regime detection)
+hmmlearn>=0.3.0,<1.0.0
+
+# =============================================================================
+# PERFORMANCE ACCELERATION (MANDATORY - NO FALLBACKS)
+# =============================================================================
+# CRITICAL: Numba is MANDATORY for ALL performance-critical code
+# Required by: app/core/numba_accelerators.py, momentum_analysis.py
+# Provides 10-100x acceleration for all numerical computations
+# System will NOT run without Numba. NO exceptions.
+llvmlite>=0.40.0,<1.0.0
+numba>=0.59.0,<1.0.0
+
+# =============================================================================
+# TECHNICAL ANALYSIS
+# =============================================================================
+# Required by: momentum_analysis.py, all strategy modules
+pandas-ta-classic>=0.3.36,<1.0.0
+
+# =============================================================================
+# MACHINE LEARNING - SUPERVISED LEARNING (REQUIRED)
+# =============================================================================
+# Required by: supervised_learning_engine.py (NO FALLBACKS)
+scikit-learn>=1.3.0,<2.0.0
+xgboost>=2.0.0,<3.0.0
+lightgbm>=4.0.0,<5.0.0
+catboost>=1.2.0,<2.0.0
+shap>=0.42.0,<1.0.0
+
+# =============================================================================
+# DEEP LEARNING (REQUIRED)
+# =============================================================================
+# Required by: deep_learning_engine.py, transformer_engine.py
+torch>=2.0.0,<3.0.0
+torchvision>=0.15.0,<1.0.0
+tensorflow>=2.13.0,<3.0.0
+
+# =============================================================================
+# REINFORCEMENT LEARNING (REQUIRED)
+# =============================================================================
+# Required by: reinforcement_learning_engine.py
+stable-baselines3>=2.0.0,<3.0.0
+gym>=0.26.0,<1.0.0
+gymnasium>=0.29.0,<1.0.0
+
+# =============================================================================
+# OPTIMIZATION (REQUIRED)
+# =============================================================================
+# Required by: bayesian_optimizer.py, hyperparameter_optimizer.py
 optuna>=3.4.0,<4.0.0
 
-# Machine Learning - Supervised Learning (REQUIRED for SupervisedLearningEngine)
-scikit-learn>=1.3.0,<2.0.0
-xgboost>=2.0.0,<3.0.0  # Optional but recommended for better performance
-lightgbm>=4.0.0,<5.0.0  # Optional but recommended for better performance
-catboost>=1.2.0,<2.0.0  # Optional but recommended for better performance
-shap>=0.42.0,<1.0.0  # Optional but recommended for feature importance analysis (SHAP values)
+# Required by: portfolio_engine/optimizers
+pyportfolioopt>=1.3.0
+cvxpy>=1.4.0,<2.0.0
 
-# Deep Learning - PyTorch (REQUIRED for DeepLearningEngine)
-torch>=2.0.0,<3.0.0  # PyTorch core
-torchvision>=0.15.0,<1.0.0  # Optional, for data transforms
+# =============================================================================
+# MARKET DATA SOURCES
+# =============================================================================
+# Required by: market_universe_loader.py, real_market_data.py
+yfinance>=0.2.28,<1.0.0
+yahoo-fin>=0.8.9,<1.0.0
+requests-html>=0.10.0,<1.0.0
 
-# Deep Learning - TensorFlow (Alternative backend for DeepLearningEngine)
-tensorflow>=2.13.0,<3.0.0  # Optional alternative to PyTorch
-
-# Reinforcement Learning (REQUIRED for ReinforcementLearningEngine)
-stable-baselines3>=2.0.0,<3.0.0  # RL algorithms (PPO, A2C, DDPG, etc.)
-gym>=0.26.0,<1.0.0  # RL environments
-gymnasium>=0.29.0,<1.0.0  # Newer gym API (optional)
-
-# HTTP & API Clients
-httpx>=0.25.0,<0.28.0  # <0.28 required for starlette TestClient compatibility
+# =============================================================================
+# HTTP CLIENTS & ASYNC I/O
+# =============================================================================
+# Required by: data_engine, all API integrations
+httpx>=0.25.0,<0.28.0
 requests>=2.31.0,<3.0.0
-aiohttp>=3.8.0,<4.0.0  # Required for async HTTP requests in DataEngine sources
-websockets>=10.0,<13.0  # Required for WebSocket streaming in DataEngine
+aiohttp>=3.8.0,<4.0.0
+websockets>=10.0,<13.0
+aiofiles>=23.0.0,<24.0.0
 
-# Broker APIs
-alpaca-trade-api>=2.0.0,<3.0.0  # Alpaca broker API client (legacy, consider migrating to alpaca-py)
-alpaca-py>=0.1.0  # Modern Alpaca SDK with better Python 3.13 support
-ib-insync>=0.5.0  # Interactive Brokers API client (async)
+# =============================================================================
+# BROKER APIs (LIVE TRADING)
+# =============================================================================
+# Required by: alpaca_adapter.py, alpaca_client.py
+alpaca-trade-api>=3.0.0,<4.0.0
+alpaca-py>=0.8.0,<1.0.0
 
-# Redis (for caching if used)
+# Required by: ib_adapter.py
+ib-insync>=0.5.0,<1.0.0
+
+# =============================================================================
+# CACHING & MESSAGE QUEUES
+# =============================================================================
+# Required by: distributed_cache.py, messaging.py
 redis>=5.0.0,<6.0.0
+pyzmq>=25.0.0,<26.0.0
 
-# Logging & Monitoring
+# =============================================================================
+# CONFIGURATION & SERIALIZATION
+# =============================================================================
+# Required by: config_loader.py, yaml_config_updater.py
+pyyaml>=6.0,<7.0.0
+python-dotenv>=1.0.0,<2.0.0
+
+# Required by: secure_serialization.py
+msgpack>=1.0.0,<2.0.0
+joblib>=1.3.0,<2.0.0
+
+# =============================================================================
+# LOGGING & MONITORING
+# =============================================================================
+# Required by: logging_config.py, monitoring modules
 python-json-logger>=2.0.0,<3.0.0
-psutil>=5.9.0,<6.0.0  # System and process monitoring for health checks
-ntplib>=0.4.0  # NTP time synchronization for TimeSyncMonitor (Phase 2.7)
-tenacity>=8.2.0,<9.0.0  # Retry library for error handling (Phase 2)
+structlog>=23.0.0,<24.0.0
 
-# CORS & Security
-python-multipart>=0.0.6,<1.0.0
+# Required by: memory_monitor.py, health checks
+psutil>=5.9.0,<6.0.0
 
-# Performance Analytics & Reporting (Fase 1 - Awesome-Quant)
-quantstats>=0.0.62,<1.0.0  # Portfolio analytics and HTML reports
-empyrical-reloaded>=0.5.0,<1.0.0  # Risk and performance metrics (standard library)
-pyfolio-reloaded>=0.9.5,<1.0.0  # Portfolio and risk analytics with tearsheets
+# Required by: time_sync_monitor.py
+ntplib>=0.4.0,<1.0.0
 
-aiosqlite>=0.19.0
-greenlet>=3.0.0
+# Required by: retry_manager.py, error_handler.py
+tenacity>=8.2.0,<9.0.0
 
-# Secure Serialization (for replacing pickle)
-msgpack>=1.0.0
-joblib>=1.3.0  # Safe serialization for sklearn models
+# Progress tracking
+tqdm>=4.66.0,<5.0.0
+
+# =============================================================================
+# NOTIFICATIONS
+# =============================================================================
+# Required by: notification_channels.py (email notifications)
+aiosmtplib>=3.0.0,<4.0.0
+
+# =============================================================================
+# SECURITY & CRYPTOGRAPHY
+# =============================================================================
+# Required by: secure_serialization.py
+cryptography>=41.0.0,<43.0.0
+pynacl>=1.5.0,<2.0.0
+
+# =============================================================================
+# PERFORMANCE ANALYTICS & REPORTING
+# =============================================================================
+# Required by: quantstats_integrator.py, reporting_generator
+quantstats>=0.0.62,<1.0.0
+empyrical-reloaded>=0.5.0,<1.0.0
+pyfolio-reloaded>=0.9.5,<1.0.0
+
+# =============================================================================
+# VISUALIZATION
+# =============================================================================
+# Required by: advanced_visualizations.py, all charting
+matplotlib>=3.7.0,<4.0.0
+seaborn>=0.13.0,<1.0.0
+plotly>=5.18.0,<6.0.0
+
+# Required by: correlation_network_analyzer.py
+networkx>=3.2.0,<4.0.0
+
+# =============================================================================
+# DASHBOARD
+# =============================================================================
+# Required by: dashboard/main.py
+streamlit>=1.31.0,<2.0.0
+jinja2>=3.1.0,<4.0.0
+
+# =============================================================================
+# TIME & TIMEZONE HANDLING
+# =============================================================================
+# Required by: all time-sensitive operations
+pytz>=2023.3,<2025.0
+tzlocal>=5.0,<6.0
+
+# Required by: async operations
+nest-asyncio>=1.5.0,<2.0.0
+
+# =============================================================================
+# CLOUD STORAGE (AWS S3)
+# =============================================================================
+# Required by: delivery_manager.py for cloud storage
+boto3>=1.28.0,<2.0.0
+botocore>=1.31.0,<2.0.0
+
+# =============================================================================
+# TIME-SERIES DATABASE
+# =============================================================================
+# Required by: questdb_connector.py for metrics storage
+questdb>=1.2.0,<2.0.0
+
+# =============================================================================
+# EXTERNAL INTEGRATIONS
+# =============================================================================
+# Required by: sentiment_sources.py (social media sentiment)
+tweepy>=4.14.0,<5.0.0
+
+# Required by: fundamental_sources.py (web scraping)
+beautifulsoup4>=4.12.0,<5.0.0
+
+# =============================================================================
+# IMPORTANT NOTES
+# =============================================================================
+# 1. ALL dependencies in this file are REQUIRED for production operation
+# 2. NO optional dependencies - principle: "If it's in the code, it's REQUIRED"
+# 3. Version constraints are carefully chosen for compatibility
+# 4. Some dependencies have platform-specific requirements:
+#    - psycopg2-binary: PostgreSQL client libs required on Linux
+#    - llvmlite: LLVM required for Numba compilation
+#    - torch/tensorflow: Platform-specific wheels recommended
+# 5. For development dependencies, see requirements-dev.txt
+# =============================================================================
+
+# Required dependencies (no fallbacks)
+colorama
+prometheus_client
+yahoo_fin

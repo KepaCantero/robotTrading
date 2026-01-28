@@ -4,6 +4,7 @@ T9.1: ReportingGenerator - Generate performance reports
 Creates detailed performance analysis and visual reports.
 """
 
+import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime

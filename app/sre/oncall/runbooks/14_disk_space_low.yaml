@@ -1,0 +1,104 @@
+---
+name: "Disk Space Low"
+severity: "high"
+trigger: "disk_usage > 80%"
+category: "infrastructure"
+tags: ["disk", "storage", "infrastructure"]
+estimated_duration_minutes: 20
+last_updated: "2026-01-28"
+version: "1.0"
+
+description: |
+  Respond to low disk space. Running out of disk space can cause
+  service failures, data corruption, and system crashes.
+
+prerequisites:
+  - System access
+  - Disk management tools
+  - Log rotation access
+
+steps:
+  - title: "Verify Disk Space Issue"
+    description: "Confirm disk is low"
+    commands:
+      - "Check disk usage metrics"
+      - "Identify which volumes are affected"
+      - "Check growth rate"
+      - "Determine time to exhaustion"
+    expected_outcome: "Disk space issue confirmed"
+
+  - title: "Assess Urgency"
+    description: "Determine how quickly action is needed"
+    commands:
+      - "Calculate time until full"
+      - "Check if services are failing"
+      - "Review impact of disk exhaustion"
+      - "Check if database affected"
+    expected_outcome: "Urgency assessed"
+    decision_point:
+      condition: "disk_usage > 95% OR database_affected"
+      true_branch: "Critical - immediate action"
+      false_branch: "Standard response"
+
+  - title: "Identify Space Consumers"
+    description: "Find what's using disk space"
+    commands:
+      - "Check directory sizes"
+      - "Identify largest files/directories"
+      - "Check log file sizes"
+      - "Review temporary file directories"
+      - "Check database data files"
+    expected_outcome: "Space consumers identified"
+
+  - title: "Free Disk Space"
+    description: "Reclaim disk space"
+    commands:
+      - "Rotate or delete old logs"
+      - "Clean temporary files"
+      - "Remove old backups if appropriate"
+      - "Archive old data if possible"
+      - "Clear caches if safe"
+    expected_outcome: "Disk space freed"
+
+  - title: "Address Root Cause"
+    description: "Fix underlying issue"
+    commands:
+      - "Fix log rotation if broken"
+      - "Adjust retention policies"
+      - "Fix data cleanup jobs"
+      - "Review backup strategy"
+      - "Implement monitoring alerts"
+    expected_outcome: "Root cause addressed"
+
+  - title: "Plan Capacity Increase"
+    description: "Prevent future issues"
+    commands:
+      - "Calculate needed capacity"
+      - "Plan disk expansion"
+      - "Schedule maintenance window"
+      - "Document capacity requirements"
+    expected_outcome: "Capacity plan created"
+
+post_actions:
+  - "Implement disk space monitoring"
+  - "Set up automated cleanup"
+  - "Review retention policies"
+  - "Update runbook with lessons learned"
+
+related_runbooks:
+  - "database_slow.yaml"
+  - "log_management.yaml"
+
+metrics_to_track:
+  - "disk_usage_percentage"
+  - "disk_available_gb"
+  - "disk_growth_rate_mb_per_hour"
+
+success_criteria:
+  - "Disk usage reduced to safe levels"
+  - "Root cause addressed"
+  - "Preventive measures in place"
+
+escalation_path: "infrastructure"
+owner: "platform-team"
+review_frequency: "monthly"

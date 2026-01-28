@@ -1,0 +1,150 @@
+---
+name: "Broker API Failure"
+severity: "critical"
+trigger: "broker_api_error_rate > 5% OR broker_api_unavailable"
+category: "trading"
+tags: ["broker", "api", "trading-ops", "critical"]
+estimated_duration_minutes: 30
+last_updated: "2026-01-28"
+version: "1.0"
+
+description: |
+  Respond to broker API failures. The broker API is critical for
+  executing trades and managing positions. Failures can prevent
+  trading and put existing positions at risk.
+
+prerequisites:
+  - Broker API credentials
+  - Backup broker access (if available)
+  - Position management access
+  - Order management system access
+
+steps:
+  - title: "Verify Broker API Failure"
+    description: "Confirm the API is actually failing"
+    commands:
+      - "Check broker API status page"
+      - "Test API connectivity"
+      - "Review API error logs"
+      - "Check error rate metrics"
+      - "Identify error types (timeout, auth, rate limit, etc.)"
+    expected_outcome: "Failure confirmed and characterized"
+
+  - title: "Assess Trading Impact"
+    description: "Determine impact on trading operations"
+    commands:
+      - "Check if there are open orders"
+      - "Review pending order cancellations"
+      - "Assess position sync status"
+      - "Check for any failed trades"
+    expected_outcome: "Impact understood"
+
+  - title: "Halt New Trading"
+    description: "Stop new trading activity"
+    commands:
+      - "Disable strategy execution"
+      - "Cancel all pending orders if safe"
+      - "Prevent new order submission"
+      - "Notify trading team"
+    expected_outcome: "New trading halted"
+
+  - title: "Check Broker Status"
+    description: "Get official status from broker"
+    commands:
+      - "Check broker status page"
+      - "Review broker social media for updates"
+      - "Check broker maintenance calendar"
+      - "Contact broker support if critical"
+    expected_outcome: "Broker status known"
+
+  - title: "Implement Temporary Workaround"
+    description: "Apply workaround while waiting for resolution"
+    commands:
+      - "Switch to backup broker if available"
+      - "Implement manual order entry if volume low"
+      - "Use alternative API endpoints if available"
+      - "Increase timeout values if appropriate"
+    expected_outcome: "Workaround in place"
+
+  - title: "Monitor for Recovery"
+    description: "Watch for broker API recovery"
+    commands:
+      - "Continuously test API connectivity"
+      - "Monitor broker status page"
+      - "Watch for broker notifications"
+      - "Check for improvements in error rate"
+    expected_outcome: "API recovery detected"
+
+  - title: "Verify Recovery Before Resuming"
+    description: "Ensure API is truly stable before resuming"
+    commands:
+      - "Run test orders (small quantity)"
+      - "Verify order submission works"
+      - "Verify order cancellation works"
+      - "Check position data sync"
+      - "Monitor for 15 minutes"
+    expected_outcome: "API confirmed stable"
+
+  - title: "Resume Trading Operations"
+    description: "Carefully resume trading"
+    commands:
+      - "Re-enable strategy execution"
+      - "Start with reduced size"
+      - "Monitor first 10 trades closely"
+      - "Gradually return to normal operation"
+    expected_outcome: "Trading resumed safely"
+
+  - title: "Sync Position Data"
+    description: "Ensure all position data is current"
+    commands:
+      - "Force full position sync"
+      - "Reconcile local vs broker positions"
+      - "Investigate any discrepancies"
+      - "Correct any position mismatches"
+    expected_outcome: "Positions fully synced"
+
+  - title: "Document Incident"
+    description: "Complete incident documentation"
+    commands:
+      - "Log all events and timeline"
+      - "Document impact (lost trades, etc.)"
+      - "Record communication with broker"
+      - "Document workaround and resolution"
+    expected_outcome: "Incident fully documented"
+
+post_actions:
+  - "Review broker API integration"
+  - "Consider adding backup broker"
+  - "Improve error handling and retry logic"
+  - "Review SLAs with broker"
+  - "Update runbook with lessons learned"
+
+rollback_actions:
+  - title: "Revert to Primary Broker"
+    description: "If using backup broker"
+    commands:
+      - "Verify primary broker API is stable"
+      - "Test primary broker connectivity"
+      - "Switch back to primary broker"
+      - "Monitor closely"
+
+related_runbooks:
+  - "trading_halt.yaml"
+  - "position_sync_issue.yaml"
+  - "order_failure.yaml"
+
+metrics_to_track:
+  - "broker_api_error_rate"
+  - "broker_api_latency_p99"
+  - "broker_api_availability"
+  - "order_failure_rate"
+
+success_criteria:
+  - "Broker API functioning normally"
+  - "Trading resumed safely"
+  - "Positions fully synced"
+  - "Incident documented"
+
+escalation_path: "trading_critical"
+owner: "trading-ops"
+review_frequency: "monthly"

@@ -15,12 +15,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-try:
-    import aiofiles
-
-    AIOFILES_AVAILABLE = True
-except ImportError:
-    AIOFILES_AVAILABLE = False
+# REQUIRED: aiofiles is REQUIRED - NO FALLBACKS
+import aiofiles
 
 logger = logging.getLogger(__name__)
 
@@ -179,13 +175,8 @@ class AuditTrail:
         }
 
         # Guardar en JSONL (una línea por registro)
-        if AIOFILES_AVAILABLE:
-            async with aiofiles.open(self.log_file, 'a') as f:
-                await f.write(json.dumps(record, ensure_ascii=False) + '\n')
-        else:
-            # Fallback síncrono
-            with open(self.log_file, 'a') as f:
-                f.write(json.dumps(record, ensure_ascii=False) + '\n')
+        async with aiofiles.open(self.log_file, 'a') as f:
+            await f.write(json.dumps(record, ensure_ascii=False) + '\n')
 
         logger.info(f"✅ Registro de auditoría guardado: {hash_value[:16]}...")
 

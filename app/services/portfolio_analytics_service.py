@@ -6,6 +6,7 @@ metrics calculation, risk analysis, and portfolio management features.
 """
 
 from __future__ import annotations
+
 import statistics
 from datetime import datetime, timedelta
 from decimal import Decimal

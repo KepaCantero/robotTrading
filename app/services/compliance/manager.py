@@ -40,18 +40,17 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Optional, Tuple
 
+from app.services.compliance.order_pattern_analyzer import (
+    OrderPatternAnalyzer,
+)
 from app.services.compliance.pdt_tracker import (
     Country,
-    PDTTracker,
     PDTStatus,
+    PDTTracker,
 )
 from app.services.compliance.wash_sale_tracker import (
     WashSaleTracker,
 )
-from app.services.compliance.order_pattern_analyzer import (
-    OrderPatternAnalyzer,
-)
-
 
 logger = logging.getLogger(__name__)
 
@@ -263,10 +262,7 @@ class ComplianceManager:
                 trade.price,
             )
             if is_wash:
-                wash_msg = (
-                    f"Wash sale detected: {trade.symbol} - "
-                    f"loss may be disallowed"
-                )
+                wash_msg = f"Wash sale detected: {trade.symbol} - " f"loss may be disallowed"
                 violations.append(wash_msg)
                 self._record_violation(
                     "WASH_SALE",
@@ -348,9 +344,7 @@ class ComplianceManager:
             account_equity=self.account_equity,
             pdt_status=pdt_status,
             wash_sale_count=wash_summary.get("total_wash_sales", 0),
-            wash_sale_disallowed_loss=Decimal(
-                wash_summary.get("total_disallowed_loss", "0")
-            ),
+            wash_sale_disallowed_loss=Decimal(wash_summary.get("total_disallowed_loss", "0")),
             order_pattern_alerts=len(pattern_alerts),
             active_violations=self._violations.copy(),
             can_day_trade=not restricted,

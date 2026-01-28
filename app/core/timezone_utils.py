@@ -11,7 +11,7 @@ Phase 0.3: Timezone Awareness Implementation
 """
 
 import logging
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from typing import Optional
 
 logger = logging.getLogger(__name__)
@@ -200,7 +200,9 @@ def is_market_open(market: str, dt: Optional[datetime] = None) -> bool:
     return True
 
 
-def get_market_open_close_time(market: str, dt: Optional[datetime] = None) -> tuple[datetime, datetime]:
+def get_market_open_close_time(
+    market: str, dt: Optional[datetime] = None
+) -> tuple[datetime, datetime]:
     """
     Get market open and close times for a given date.
 
@@ -329,6 +331,7 @@ def parse_iso_datetime(iso_string: str) -> datetime:
 # DATABASE COMPATIBILITY
 # ============================================================================
 
+
 def get_db_timestamp_default():
     """
     Get default timestamp for database columns.
@@ -367,6 +370,7 @@ def get_db_timestamp_onupdate():
 # DISPLAY UTILITIES
 # ============================================================================
 
+
 def to_local_timezone(dt: datetime, local_tz: Optional[timezone] = None) -> datetime:
     """
     Convert datetime to local timezone for display.
@@ -387,6 +391,7 @@ def to_local_timezone(dt: datetime, local_tz: Optional[timezone] = None) -> date
     if local_tz is None:
         # Use system local timezone
         import tzlocal
+
         local_tz = tzlocal.get_localzone()
     return dt_utc.astimezone(local_tz)
 

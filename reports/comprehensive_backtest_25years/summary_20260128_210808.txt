@@ -1,0 +1,81 @@
+================================================================================
+COMPREHENSIVE BACKTEST SUMMARY
+================================================================================
+
+Symbol: AAPL
+Period: 2000-01-01 to 2025-01-25
+Initial Capital: $100,000.00
+Total Backtests: 53
+
+TOP 10 RESULTS:
+--------------------------------------------------------------------------------
+
+Walk-Forward - Window 29:
+  Sharpe Ratio: 1.65
+  Total PnL: $3,152.13
+  Return %: 3.15%
+  Win Rate: 46.58%
+  Max Drawdown: -290.15%
+
+Walk-Forward - Window 10:
+  Sharpe Ratio: 1.60
+  Total PnL: $-514.86
+  Return %: -0.51%
+  Win Rate: 43.40%
+  Max Drawdown: -4708.57%
+
+Walk-Forward - Window 23:
+  Sharpe Ratio: 1.58
+  Total PnL: $-3,754.10
+  Return %: -3.75%
+  Win Rate: 32.24%
+  Max Drawdown: -497.28%
+
+Walk-Forward - Window 7:
+  Sharpe Ratio: 1.58
+  Total PnL: $-6,263.54
+  Return %: -6.26%
+  Win Rate: 36.48%
+  Max Drawdown: -1726.20%
+
+Walk-Forward - Window 9:
+  Sharpe Ratio: 1.56
+  Total PnL: $3,153.92
+  Return %: 3.15%
+  Win Rate: 45.81%
+  Max Drawdown: -9594.68%
+
+Walk-Forward - Window 18:
+  Sharpe Ratio: 1.51
+  Total PnL: $-4,750.65
+  Return %: -4.75%
+  Win Rate: 37.87%
+  Max Drawdown: -2215.40%
+
+Walk-Forward - Window 25:
+  Sharpe Ratio: 1.51
+  Total PnL: $2,991.30
+  Return %: 2.99%
+  Win Rate: 37.67%
+  Max Drawdown: -766.91%
+
+Walk-Forward - Window 15:
+  Sharpe Ratio: 1.49
+  Total PnL: $-4,044.41
+  Return %: -4.04%
+  Win Rate: 37.50%
+  Max Drawdown: -1962.56%
+
+Walk-Forward - Window 11:
+  Sharpe Ratio: 1.48
+  Total PnL: $3,670.54
+  Return %: 3.67%
+  Win Rate: 45.24%
+  Max Drawdown: -5755.07%
+
+Walk-Forward - Window 6:
+  Sharpe Ratio: 1.47
+  Total PnL: $-6,173.55
+  Return %: -6.17%
+  Win Rate: 41.14%
+  Max Drawdown: -2333.01%

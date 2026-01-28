@@ -7,19 +7,31 @@ Fuentes soportadas:
 - News APIs
 """
 
+import asyncio
 import logging
 from typing import Any, Dict, List, Optional
 
-try:
-    import aiohttp
-
-    AIOHTTP_AVAILABLE = True
-except ImportError:
-    AIOHTTP_AVAILABLE = False
-    logger = logging.getLogger(__name__)
-    logger.warning("aiohttp no disponible. Fuentes de sentimiento no funcionarán.")
+# REQUIRED: No fallbacks - aiohttp is required for async HTTP requests
+import aiohttp  # noqa: F401
+from requests.exceptions import HTTPError, RequestException
+from sqlalchemy.exc import (
+    DatabaseError,
+    DataError,
+    IntegrityError,
+    OperationalError,
+    ProgrammingError,
+)
 
 from .base_source import BaseDataSource
+
+# Optional tweepy import for Twitter sentiment analysis
+try:
+    import tweepy
+
+    TWEEPY_AVAILABLE = True
+except ImportError:
+    tweepy = None
+    TWEEPY_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -55,33 +67,19 @@ class TwitterSentimentSource(BaseDataSource):
             self.is_connected = False
             return False
 
-        try:
-            if self.use_tweepy:
-                try:
-                    import tweepy
+        # Initialize tweepy client if available and requested
+        if self.use_tweepy and TWEEPY_AVAILABLE and tweepy is not None:
+            try:
+                self._tweepy_client = tweepy.Client(bearer_token=self.bearer_token)
+                self.is_connected = True
+                logger.info("Conectado a Twitter API usando tweepy")
+                return True
+            except Exception as e:
+                logger.error(f"Error inicializando tweepy: {e}")
+                self._tweepy_client = None
 
-                    self._tweepy_client = tweepy.Client(bearer_token=self.bearer_token)
-                    self.is_connected = True
-                    logger.info("Conectado a Twitter API (tweepy)")
-                    return True
-                except ImportError:
-                    logger.warning("tweepy no disponible, usando requests directos")
-
-            if not AIOHTTP_AVAILABLE:
-                logger.error("aiohttp no disponible. TwitterSource no puede conectarse.")
-                self.last_error = "aiohttp no disponible"
-                return False
-
-            self.session = aiohttp.ClientSession(
-                headers={'Authorization': f'Bearer {self.bearer_token}'}
-            )
-            self.is_connected = True
-            logger.info("Conectado a Twitter API")
-            return True
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
-            logger.error(f"Error conectando a Twitter: {e}")
-            self.last_error = str(e)
-            return False
+        self.is_connected = True
+        return True
 
     async def disconnect(self) -> bool:
         """Desconectar de Twitter."""
@@ -224,11 +222,6 @@ class RedditSentimentSource(BaseDataSource):
 
     async def connect(self) -> bool:
         """Conectar a Reddit API."""
-        if not AIOHTTP_AVAILABLE:
-            logger.error("aiohttp no disponible. RedditSource no puede conectarse.")
-            self.last_error = "aiohttp no disponible"
-            return False
-
         try:
             self.session = aiohttp.ClientSession(headers={'User-Agent': self.user_agent})
 
@@ -239,10 +232,10 @@ class RedditSentimentSource(BaseDataSource):
             self.is_connected = True
             logger.info("Conectado a Reddit API")
             return True
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (ConnectionError, TimeoutError) as e:
             logger.error(f"Error conectando a Reddit: {e}")
             self.last_error = str(e)
-            return False
+            raise
 
     async def _get_access_token(self) -> None:
         """Obtener access token de Reddit."""
@@ -415,20 +408,15 @@ class NewsSentimentSource(BaseDataSource):
 
     async def connect(self) -> bool:
         """Conectar a News API."""
-        if not AIOHTTP_AVAILABLE:
-            logger.error("aiohttp no disponible. NewsSource no puede conectarse.")
-            self.last_error = "aiohttp no disponible"
-            return False
-
         try:
             self.session = aiohttp.ClientSession()
             self.is_connected = True
             logger.info(f"Conectado a News API ({self.provider})")
             return True
-        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        except (ConnectionError, TimeoutError) as e:
             logger.error(f"Error conectando a News API: {e}")
             self.last_error = str(e)
-            return False
+            raise
 
     async def disconnect(self) -> bool:
         """Desconectar de News API."""

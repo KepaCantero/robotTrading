@@ -60,7 +60,7 @@ class TradingThresholds(BaseModel):
 
     # Circuit breakers
     circuit_breaker_daily_loss: float = Field(
-        default=0.03, description="Circuit breaker daily loss threshold"
+        default=0.05, description="Circuit breaker daily loss threshold (Chan #15: 5%)"
     )
     circuit_breaker_drawdown: float = Field(
         default=0.1, description="Circuit breaker drawdown threshold"
@@ -252,7 +252,10 @@ class TradingThresholds(BaseModel):
     questdb_port: int = Field(default=5432, description="QuestDB port")
     questdb_database: str = Field(default="qdb", description="QuestDB database name")
     questdb_user: str = Field(default="admin", description="QuestDB user")
-    questdb_password: str = Field(default="quest", description="QuestDB password")
+    # Rule 28: No default password - must come from environment
+    questdb_password: str = Field(
+        default="", description="QuestDB password (from QUESTDB_PASSWORD env var)"
+    )
     questdb_pool_size: int = Field(default=10, description="QuestDB connection pool size")
     questdb_max_retries: int = Field(default=3, description="QuestDB maximum retries")
     metrics_cache_enabled: bool = Field(default=True, description="Enable metrics query caching")
@@ -620,13 +623,19 @@ class StockAllocationSettings(BaseSettings):
 
 
 class DatabaseConfig(BaseModel):
-    """Database configuration."""
+    """
+    Database configuration.
+
+    Rule 28 Compliant: No hardcoded passwords.
+    Passwords must come from environment variables.
+    """
 
     host: str = Field(default="localhost", description="Database host")
     port: int = Field(default=5432, description="Database port")
     name: str = Field(default="algotrading", description="Database name")
     user: str = Field(default="postgres", description="Database user")
-    password: str = Field(default="password", description="Database password")
+    # Rule 28: No default password - must come from environment variable
+    password: str = Field(default="", description="Database password (from DB_PASSWORD env var)")
 
     # Connection pool
     pool_size: int = Field(default=10, description="Connection pool size")
@@ -645,8 +654,22 @@ class DatabaseConfig(BaseModel):
 
     @property
     def connection_string(self) -> str:
-        """Generate database connection string."""
-        return f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
+        """
+        Generate database connection string.
+
+        Rule 28 Compliant: Builds string dynamically from environment variables.
+        Never hardcodes credentials in connection strings.
+        """
+        import os
+
+        # Rule 28: Always read from environment, never use hardcoded value
+        db_password = os.getenv("DB_PASSWORD", self.password)
+        if not db_password:
+            raise ValueError(
+                "DB_PASSWORD environment variable not set. "
+                "Cannot build secure connection string."
+            )
+        return f"postgresql://{self.user}:{db_password}@{self.host}:{self.port}/{self.name}"
 
 
 class RedisConfig(BaseModel):
@@ -1096,3 +1119,777 @@ def migrate_magic_values(magic_values: Dict[str, List[str]]) -> bool:
     # This would implement the migration logic
     # For now, return True
     return True
+
+
+# =============================================================================
+# Configuration Loading Functions
+# =============================================================================
+
+
+def load_config_from_yaml(config_path: Path) -> Dict[str, Any]:
+    """
+    Load configuration from YAML file.
+
+    Args:
+        config_path: Path to YAML configuration file
+
+    Returns:
+        Dictionary containing configuration data
+
+    Raises:
+        FileNotFoundError: If config file doesn't exist
+        ValueError: If YAML is invalid
+
+    Examples:
+        >>> config = load_config_from_yaml(Path("config.yaml"))
+    """
+    if not config_path.exists():
+        raise FileNotFoundError(f"Configuration file not found: {config_path}")
+
+    try:
+        with open(config_path, 'r') as f:
+            config_data = yaml.safe_load(f)
+            return config_data if config_data is not None else {}
+    except yaml.YAMLError as e:
+        raise ValueError(f"Invalid YAML in {config_path}: {e}")
+
+
+def load_config_from_json(config_path: Path) -> Dict[str, Any]:
+    """
+    Load configuration from JSON file.
+
+    Args:
+        config_path: Path to JSON configuration file
+
+    Returns:
+        Dictionary containing configuration data
+
+    Raises:
+        FileNotFoundError: If config file doesn't exist
+        ValueError: If JSON is invalid
+
+    Examples:
+        >>> config = load_config_from_json(Path("config.json"))
+    """
+    import json
+
+    if not config_path.exists():
+        raise FileNotFoundError(f"Configuration file not found: {config_path}")
+
+    try:
+        with open(config_path, 'r') as f:
+            config_data = json.load(f)
+            return config_data if config_data is not None else {}
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid JSON in {config_path}: {e}")
+
+
+# =============================================================================
+# Configuration Validation Functions
+# =============================================================================
+
+
+def validate_atr_multipliers(atr_multipliers: Dict[str, float]) -> bool:
+    """
+    Validate ATR multiplier configuration.
+
+    Args:
+        atr_multipliers: Dictionary of ATR multiplier names to values
+
+    Returns:
+        True if all multipliers are positive, False otherwise
+
+    Examples:
+        >>> validate_atr_multipliers({'default_stop': 2.0})
+        True
+        >>> validate_atr_multipliers({'default_stop': -1.0})
+        False
+    """
+    if not atr_multipliers:
+        return False
+
+    return all(isinstance(v, (int, float)) and v > 0 for v in atr_multipliers.values())
+
+
+def validate_risk_percentages(risk_config: Dict[str, float]) -> bool:
+    """
+    Validate risk percentage configuration.
+
+    Args:
+        risk_config: Dictionary of risk configuration values
+
+    Returns:
+        True if all percentages are between 0 and 1, False otherwise
+
+    Examples:
+        >>> validate_risk_percentages({'default_risk_per_trade': 0.02})
+        True
+        >>> validate_risk_percentages({'default_risk_per_trade': 1.5})
+        False
+    """
+    if not risk_config:
+        return False
+
+    return all(isinstance(v, (int, float)) and 0 < v <= 1.0 for v in risk_config.values())
+
+
+def validate_trading_symbols(symbols: List[str]) -> bool:
+    """
+    Validate trading symbols list.
+
+    Args:
+        symbols: List of trading symbols
+
+    Returns:
+        True if symbols list is valid (non-empty, unique items), False otherwise
+
+    Examples:
+        >>> validate_trading_symbols(['AAPL', 'MSFT'])
+        True
+        >>> validate_trading_symbols([])
+        False
+    """
+    if not symbols or not isinstance(symbols, list):
+        return False
+
+    # Check for non-empty and all strings
+    if not all(isinstance(s, str) and s.strip() for s in symbols):
+        return False
+
+    # Check for duplicates
+    if len(symbols) != len(set(symbols)):
+        return False
+
+    return True
+
+
+def validate_dates(backtest_config: Dict[str, str]) -> bool:
+    """
+    Validate backtesting date configuration.
+
+    Args:
+        backtest_config: Dictionary containing start_date and end_date
+
+    Returns:
+        True if dates are valid and in correct order, False otherwise
+
+    Examples:
+        >>> validate_dates({'start_date': '2020-01-01', 'end_date': '2024-12-31'})
+        True
+        >>> validate_dates({'start_date': '2024-01-01', 'end_date': '2020-01-01'})
+        False
+    """
+    if not backtest_config:
+        return False
+
+    start_date = backtest_config.get('start_date')
+    end_date = backtest_config.get('end_date')
+
+    if not start_date or not end_date:
+        return False
+
+    try:
+        from datetime import datetime
+
+        start = datetime.strptime(start_date, '%Y-%m-%d')
+        end = datetime.strptime(end_date, '%Y-%m-%d')
+
+        return start < end
+    except (ValueError, TypeError):
+        return False
+
+
+def validate_config(config: 'Configuration') -> bool:
+    """
+    Validate complete configuration object.
+
+    Args:
+        config: Configuration object to validate
+
+    Returns:
+        True if configuration is valid, False otherwise
+
+    Examples:
+        >>> config = Configuration({'risk_management': {...}})
+        >>> validate_config(config)
+        True
+    """
+    if not config or not hasattr(config, '_config'):
+        return False
+
+    config_dict = config._config
+
+    # Validate risk management section
+    if 'risk_management' in config_dict:
+        rm = config_dict['risk_management']
+
+        if 'atr_multipliers' in rm:
+            if not validate_atr_multipliers(rm['atr_multipliers']):
+                return False
+
+        if 'position_sizing' in rm:
+            if not validate_risk_percentages(rm['position_sizing']):
+                return False
+
+    # Validate trading section
+    if 'trading' in config_dict:
+        trading = config_dict['trading']
+
+        if 'symbols' in trading:
+            if not validate_trading_symbols(trading['symbols']):
+                return False
+
+    # Validate backtesting section
+    if 'backtesting' in config_dict:
+        if not validate_dates(config_dict['backtesting']):
+            return False
+
+    return True
+
+
+# =============================================================================
+# Configuration Merging Functions
+# =============================================================================
+
+
+def merge_configs(base_config: Dict[str, Any], override_config: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Merge two configuration dictionaries recursively.
+
+    Args:
+        base_config: Base configuration dictionary
+        override_config: Override configuration dictionary
+
+    Returns:
+        Merged configuration dictionary
+
+    Examples:
+        >>> base = {'level1': {'key1': 'value1'}}
+        >>> override = {'level1': {'key2': 'value2'}}
+        >>> merged = merge_configs(base, override)
+        >>> merged['level1']['key1']
+        'value1'
+        >>> merged['level1']['key2']
+        'value2'
+    """
+    result = base_config.copy()
+
+    for key, value in override_config.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = merge_configs(result[key], value)
+        else:
+            result[key] = value
+
+    return result
+
+
+# =============================================================================
+# Configuration Class
+# =============================================================================
+
+
+class Configuration:
+    """
+    Configuration wrapper class for accessing configuration values.
+
+    Provides convenient methods for accessing nested configuration values
+    and updating configuration.
+
+    Args:
+        config_dict: Dictionary containing configuration data
+
+    Examples:
+        >>> config = Configuration({'risk_management': {'atr_multipliers': {'default_stop': 2.0}}})
+        >>> config.get_atr_multiplier('default_stop')
+        2.0
+    """
+
+    def __init__(self, config_dict: Dict[str, Any]):
+        self._config = config_dict if config_dict is not None else {}
+        self._lock = None  # For thread safety
+
+    def get(self, key: str, default: Any = None) -> Any:
+        """
+        Get configuration value by key (supports dot notation).
+
+        Args:
+            key: Configuration key (supports nested notation like 'risk_management.atr_multipliers')
+            default: Default value if key not found
+
+        Returns:
+            Configuration value or default
+
+        Examples:
+            >>> config = Configuration({'risk_management': {'atr_multipliers': {'default_stop': 2.0}}})
+            >>> config.get('risk_management.atr_multipliers.default_stop')
+            2.0
+        """
+        keys = key.split('.')
+        value = self._config
+
+        for k in keys:
+            if isinstance(value, dict) and k in value:
+                value = value[k]
+            else:
+                return default
+
+        return value
+
+    def set(self, key: str, value: Any) -> None:
+        """
+        Set configuration value by key (supports dot notation).
+
+        Args:
+            key: Configuration key (supports nested notation)
+            value: Value to set
+
+        Examples:
+            >>> config = Configuration({'risk_management': {}})
+            >>> config.set('risk_management.new_key', 'value')
+            >>> config.get('risk_management.new_key')
+            'value'
+        """
+        keys = key.split('.')
+        config = self._config
+
+        for k in keys[:-1]:
+            if k not in config:
+                config[k] = {}
+            config = config[k]
+
+        config[keys[-1]] = value
+
+    def get_atr_multiplier(self, multiplier_name: str) -> Optional[float]:
+        """
+        Get ATR multiplier value.
+
+        Args:
+            multiplier_name: Name of the ATR multiplier
+
+        Returns:
+            ATR multiplier value or None if not found
+
+        Examples:
+            >>> config = Configuration({'risk_management': {'atr_multipliers': {'default_stop': 2.0}}})
+            >>> config.get_atr_multiplier('default_stop')
+            2.0
+        """
+        return self.get(f'risk_management.atr_multipliers.{multiplier_name}')
+
+    def set_atr_multiplier(self, multiplier_name: str, value: float) -> None:
+        """
+        Set ATR multiplier value.
+
+        Args:
+            multiplier_name: Name of the ATR multiplier
+            value: Value to set
+
+        Examples:
+            >>> config = Configuration({'risk_management': {'atr_multipliers': {}}})
+            >>> config.set_atr_multiplier('default_stop', 2.5)
+            >>> config.get_atr_multiplier('default_stop')
+            2.5
+        """
+        self.set(f'risk_management.atr_multipliers.{multiplier_name}', value)
+
+    def get_risk_config(self) -> Dict[str, Any]:
+        """
+        Get risk management configuration section.
+
+        Returns:
+            Risk management configuration dictionary
+
+        Examples:
+            >>> config = Configuration({'risk_management': {'atr_multipliers': {...}}})
+            >>> risk_config = config.get_risk_config()
+        """
+        return self.get('risk_management', {})
+
+    def get_trading_symbols(self) -> List[str]:
+        """
+        Get trading symbols list.
+
+        Returns:
+            List of trading symbols
+
+        Examples:
+            >>> config = Configuration({'trading': {'symbols': ['AAPL', 'MSFT']}})
+            >>> config.get_trading_symbols()
+            ['AAPL', 'MSFT']
+        """
+        return self.get('trading.symbols', [])
+
+    def get_backtest_dates(self) -> Dict[str, str]:
+        """
+        Get backtesting date range.
+
+        Returns:
+            Dictionary with start_date and end_date
+
+        Examples:
+            >>> config = Configuration({'backtesting': {'start_date': '2020-01-01', 'end_date': '2024-12-31'}})
+            >>> dates = config.get_backtest_dates()
+            >>> dates['start_date']
+            '2020-01-01'
+        """
+        return {
+            'start_date': self.get('backtesting.start_date', ''),
+            'end_date': self.get('backtesting.end_date', ''),
+        }
+
+
+# =============================================================================
+# Default Value Functions
+# =============================================================================
+
+
+def get_default_atr_multiplier() -> float:
+    """
+    Get default ATR multiplier value.
+
+    Returns:
+        Default ATR multiplier (2.0)
+
+    Examples:
+        >>> get_default_atr_multiplier()
+        2.0
+    """
+    return 2.0
+
+
+def get_default_risk_per_trade() -> float:
+    """
+    Get default risk per trade percentage.
+
+    Returns:
+        Default risk per trade (0.02 = 2%)
+
+    Examples:
+        >>> get_default_risk_per_trade()
+        0.02
+    """
+    return 0.02
+
+
+def get_default_max_position_size() -> float:
+    """
+    Get default maximum position size.
+
+    Returns:
+        Default max position size (0.25 = 25%)
+
+    Examples:
+        >>> get_default_max_position_size()
+        0.25
+    """
+    return 0.25
+
+
+def get_default_stop_distance_pct() -> float:
+    """
+    Get default stop loss distance percentage.
+
+    Returns:
+        Default stop distance (0.05 = 5%)
+
+    Examples:
+        >>> get_default_stop_distance_pct()
+        0.05
+    """
+    return 0.05
+
+
+# =============================================================================
+# Cache Functions (for caching tests)
+# =============================================================================
+
+_config_cache: Dict[Path, Dict[str, Any]] = {}
+_config_cache_timestamps: Dict[Path, float] = {}
+
+
+def get_config_cached_after_load(config_path: Path) -> Dict[str, Any]:
+    """
+    Load configuration with caching support.
+
+    Args:
+        config_path: Path to configuration file
+
+    Returns:
+        Configuration dictionary (cached if available)
+
+    Examples:
+        >>> config1 = get_config_cached_after_load(Path("config.yaml"))
+        >>> config2 = get_config_cached_after_load(Path("config.yaml"))
+        >>> # config2 will be returned from cache if file hasn't changed
+    """
+    import os
+    import time
+
+    # Check if we have a cached version
+    if config_path in _config_cache:
+        cached_time = _config_cache_timestamps.get(config_path, 0)
+        file_mtime = os.path.getmtime(config_path)
+
+        # Return cached version if file hasn't changed
+        if file_mtime <= cached_time:
+            return _config_cache[config_path]
+
+    # Load fresh configuration
+    if config_path.suffix in ['.yaml', '.yml']:
+        config = load_config_from_yaml(config_path)
+    elif config_path.suffix == '.json':
+        config = load_config_from_json(config_path)
+    else:
+        raise ValueError(f"Unsupported config file type: {config_path.suffix}")
+
+    # Cache the configuration
+    _config_cache[config_path] = config
+    _config_cache_timestamps[config_path] = time.time()
+
+    return config
+
+
+def get_config_cache_invalidated_on_change(config_path: Path) -> Dict[str, Any]:
+    """
+    Load configuration with automatic cache invalidation on file changes.
+
+    Args:
+        config_path: Path to configuration file
+
+    Returns:
+        Configuration dictionary (fresh if file changed, cached otherwise)
+
+    Examples:
+        >>> config1 = get_config_cache_invalidated_on_change(Path("config.yaml"))
+        >>> # Modify file externally
+        >>> config2 = get_config_cache_invalidated_on_change(Path("config.yaml"))
+        >>> # config2 will be fresh (cache invalidated)
+    """
+    return get_config_cached_after_load(config_path)
+
+
+# =============================================================================
+# Property-Based Test Helper Functions
+# =============================================================================
+
+
+def get_atr_multiplier_positive_property(multiplier: float) -> bool:
+    """
+    Property-based test helper: ATR multiplier should be positive.
+
+    Args:
+        multiplier: ATR multiplier value to test
+
+    Returns:
+        True if multiplier is positive
+
+    Examples:
+        >>> get_atr_multiplier_positive_property(2.0)
+        True
+        >>> get_atr_multiplier_positive_property(-1.0)
+        False
+    """
+    return isinstance(multiplier, (int, float)) and multiplier > 0
+
+
+def get_risk_percentage_bounds_property(risk_pct: float) -> bool:
+    """
+    Property-based test helper: Risk percentage should be between 0 and 1.
+
+    Args:
+        risk_pct: Risk percentage value to test
+
+    Returns:
+        True if risk_pct is between 0 and 1
+
+    Examples:
+        >>> get_risk_percentage_bounds_property(0.02)
+        True
+        >>> get_risk_percentage_bounds_property(1.5)
+        False
+    """
+    return isinstance(risk_pct, (int, float)) and 0 < risk_pct <= 1.0
+
+
+def get_symbols_list_property(symbols: List[str]) -> bool:
+    """
+    Property-based test helper: Symbols list should be valid.
+
+    Args:
+        symbols: List of symbols to test
+
+    Returns:
+        True if symbols list is valid
+
+    Examples:
+        >>> get_symbols_list_property(['AAPL', 'MSFT'])
+        True
+        >>> get_symbols_list_property([])
+        False
+    """
+    return validate_trading_symbols(symbols)
+
+
+def get_date_order_property(start_date: str, end_date: str) -> bool:
+    """
+    Property-based test helper: End date should be after start date.
+
+    Args:
+        start_date: Start date string (YYYY-MM-DD format)
+        end_date: End date string (YYYY-MM-DD format)
+
+    Returns:
+        True if end_date is after start_date
+
+    Examples:
+        >>> get_date_order_property('2020-01-01', '2024-12-31')
+        True
+        >>> get_date_order_property('2024-01-01', '2020-01-01')
+        False
+    """
+    return validate_dates({'start_date': start_date, 'end_date': end_date})
+
+
+# =============================================================================
+# Update Helper Functions
+# =============================================================================
+
+
+def update_atr_multiplier(config: Configuration, multiplier_name: str, value: float) -> None:
+    """
+    Update ATR multiplier in configuration.
+
+    Args:
+        config: Configuration object
+        multiplier_name: Name of the ATR multiplier
+        value: New value
+
+    Examples:
+        >>> config = Configuration({'risk_management': {'atr_multipliers': {'default_stop': 2.0}}})
+        >>> update_atr_multiplier(config, 'default_stop', 2.5)
+        >>> config.get_atr_multiplier('default_stop')
+        2.5
+    """
+    config.set_atr_multiplier(multiplier_name, value)
+
+
+def update_nested_value(config: Configuration, key_path: str, value: Any) -> None:
+    """
+    Update nested configuration value.
+
+    Args:
+        config: Configuration object
+        key_path: Dot-notation path to the value
+        value: New value
+
+    Examples:
+        >>> config = Configuration({'risk_management': {'position_sizing': {'default_risk_per_trade': 0.02}}})
+        >>> update_nested_value(config, 'risk_management.position_sizing.default_risk_per_trade', 0.03)
+        >>> config.get('risk_management.position_sizing.default_risk_per_trade')
+        0.03
+    """
+    config.set(key_path, value)
+
+
+# =============================================================================
+# Thread Safety Functions
+# =============================================================================
+
+
+def concurrent_read_access(config: Configuration, num_threads: int = 10) -> list:
+    """
+    Test concurrent read access to configuration.
+
+    Args:
+        config: Configuration object
+        num_threads: Number of threads to use
+
+    Returns:
+        List of results from concurrent reads
+
+    Examples:
+        >>> config = Configuration({'risk_management': {'atr_multipliers': {'default_stop': 2.0}}})
+        >>> results = concurrent_read_access(config, 10)
+        >>> len(results)
+        10
+    """
+    import threading
+
+    results = []
+
+    def read_config():
+        results.append(config.get_atr_multiplier('default_stop'))
+
+    threads = [threading.Thread(target=read_config) for _ in range(num_threads)]
+
+    for t in threads:
+        t.start()
+
+    for t in threads:
+        t.join()
+
+    return results
+
+
+# =============================================================================
+# Integration Test Functions
+# =============================================================================
+
+
+def full_config_workflow(config_path: Path) -> Dict[str, Any]:
+    """
+    Test complete configuration workflow: load, access, validate.
+
+    Args:
+        config_path: Path to configuration file
+
+    Returns:
+        Dictionary with workflow results
+
+    Examples:
+        >>> result = full_config_workflow(Path("config.yaml"))
+        >>> result['success']
+        True
+    """
+    # Load from file
+    config_dict = load_config_from_yaml(config_path)
+
+    # Create configuration object
+    config = Configuration(config_dict)
+
+    # Access values
+    atr_multiplier = config.get_atr_multiplier('default_stop')
+    symbols = config.get_trading_symbols()
+    dates = config.get_backtest_dates()
+
+    # Validate
+    is_valid = validate_config(config)
+
+    return {
+        'success': is_valid,
+        'atr_multiplier': atr_multiplier,
+        'symbols': symbols,
+        'dates': dates,
+    }
+
+
+def config_with_validation(config_dict: Dict[str, Any]) -> tuple:
+    """
+    Create configuration and perform full validation.
+
+    Args:
+        config_dict: Configuration dictionary
+
+    Returns:
+        Tuple of (config_object, is_valid)
+
+    Examples:
+        >>> config_dict = {'risk_management': {...}, 'trading': {...}}
+        >>> config, is_valid = config_with_validation(config_dict)
+        >>> is_valid
+        True
+    """
+    config = Configuration(config_dict)
+    is_valid = validate_config(config)
+
+    return config, is_valid

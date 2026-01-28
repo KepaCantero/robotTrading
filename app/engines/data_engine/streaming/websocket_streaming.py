@@ -14,16 +14,9 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, List, Set
 
-try:
-    from fastapi import WebSocket, WebSocketDisconnect
-    from fastapi.routing import APIRouter
-
-    WEBSOCKET_AVAILABLE = True
-except ImportError:
-    WEBSOCKET_AVAILABLE = False
-    WebSocket = None
-    WebSocketDisconnect = None
-    APIRouter = None
+from fastapi import WebSocket, WebSocketDisconnect
+from fastapi.routing import APIRouter
+from requests.exceptions import HTTPError, RequestException
 
 logger = logging.getLogger(__name__)
 
@@ -71,10 +64,8 @@ class WebSocketStreamingManager:
         self.symbol_subscriptions: Dict[str, Set[str]] = {}
 
         # Router para endpoints WebSocket
-        self.router = None
-        if WEBSOCKET_AVAILABLE:
-            self.router = APIRouter()
-            self._setup_routes()
+        self.router = APIRouter()
+        self._setup_routes()
 
         self._heartbeat_task = None
         self._running = False
@@ -85,8 +76,6 @@ class WebSocketStreamingManager:
 
     def _setup_routes(self) -> None:
         """Configurar rutas WebSocket."""
-        if not WEBSOCKET_AVAILABLE or not self.router:
-            return
 
         # Usar path desde config (mantener {client_id} como parámetro de ruta)
         @self.router.websocket(self.websocket_path)

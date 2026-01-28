@@ -16,15 +16,9 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-# Optional dependencies
-try:
-    import torch
-    import torch.nn as nn
-
-    PYTORCH_AVAILABLE = True
-except ImportError:
-    PYTORCH_AVAILABLE = False
-    logger.warning("PyTorch no disponible. Meta-learning RL limitado.")
+# REQUIRED: PyTorch is REQUIRED - NO FALLBACKS
+import torch
+import torch.nn as nn
 
 
 class BaseMetaLearner(ABC):
@@ -241,11 +235,8 @@ class ReinforcementLearningLearner(BaseMetaLearner):
         """Inicializar RL learner."""
         super().__init__(config)
 
-        if not PYTORCH_AVAILABLE:
-            self.logger.warning("PyTorch no disponible. RL learner limitado.")
-            self.model = None
-        else:
-            self._initialize_model()
+        # PyTorch es REQUIRED - ya importado al inicio del módulo
+        self._initialize_model()
 
         self.learning_rate = config.get('learning_rate', 0.001)
         self.discount_factor = config.get('discount_factor', 0.99)
@@ -254,8 +245,7 @@ class ReinforcementLearningLearner(BaseMetaLearner):
 
     def _initialize_model(self) -> None:
         """Inicializar modelo de RL."""
-        if not PYTORCH_AVAILABLE:
-            return
+        # PyTorch es REQUIRED - ya importado al inicio del módulo
 
         # Red neuronal simple para Q-learning
         class AllocationNetwork(nn.Module):
@@ -296,9 +286,10 @@ class ReinforcementLearningLearner(BaseMetaLearner):
             Pesos aprendidos
         """
         if not self.model:
-            # Fallback a historical performance
-            learner = HistoricalPerformanceLearner(self.config)
-            return learner.learn_weights(strategy_performance, market_context)
+            raise RuntimeError(
+                "ReinforcementLearningLearner model not initialized. "
+                "PyTorch is required and must be available."
+            )
 
         try:
             # Preparar features
@@ -326,9 +317,8 @@ class ReinforcementLearningLearner(BaseMetaLearner):
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"Error en RL learner: {e}", exc_info=True)
-            # Fallback
-            learner = HistoricalPerformanceLearner(self.config)
-            return learner.learn_weights(strategy_performance, market_context)
+            # No fallback - PyTorch is REQUIRED
+            raise RuntimeError(f"RL learner failed: {e}") from e
 
     def _extract_features(
         self,
@@ -367,7 +357,10 @@ class ReinforcementLearningLearner(BaseMetaLearner):
     ) -> None:
         """Actualizar modelo RL con nueva experiencia."""
         if not self.model:
-            return
+            raise RuntimeError(
+                "ReinforcementLearningLearner model not initialized. "
+                "PyTorch is required and must be available."
+            )
 
         try:
             # Preparar features y target
@@ -419,7 +412,8 @@ class EnsembleMetaLearner(BaseMetaLearner):
         if config.get('use_historical', True):
             self.learners.append(HistoricalPerformanceLearner(config))
 
-        if config.get('use_rl', False) and PYTORCH_AVAILABLE:
+        if config.get('use_rl', False):
+            # PyTorch es REQUIRED - ya importado al inicio del módulo
             self.learners.append(ReinforcementLearningLearner(config))
 
         # Pesos del ensemble

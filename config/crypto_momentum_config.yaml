@@ -1,0 +1,171 @@
+# Crypto Momentum Strategy Configuration
+# This configuration is optimized for cryptocurrency markets with their unique characteristics
+
+strategy:
+  name: "CryptoMomentumStrategy"
+  description: "Momentum strategy optimized for crypto assets with BTC correlation adjustment"
+  version: "1.0.0"
+
+  # ============================================================================
+  # MOMENTUM PARAMETERS
+  # ============================================================================
+  momentum:
+    # Lookback period for momentum calculation (days)
+    lookback_days: 90
+
+    # Whether to adjust momentum score for volatility
+    volatility_adjustment: true
+
+    # Whether to adjust momentum score for BTC correlation
+    btc_adjustment: true
+
+  # ============================================================================
+  # PORTFOLIO PARAMETERS
+  # ============================================================================
+  portfolio:
+    # Maximum position size (0.01 = 1%, 0.10 = 10%)
+    max_position_size: 0.10
+
+    # Target Bitcoin weight in portfolio (0.50 = 50%)
+    btc_weight: 0.50
+
+    # Target number of positions in portfolio
+    portfolio_size: 10
+
+    # Rebalance threshold - trade only if weight deviation exceeds this (0.05 = 5%)
+    rebalance_threshold: 0.05
+
+  # ============================================================================
+  # SCREENING PARAMETERS
+  # ============================================================================
+  screening:
+    # Minimum market cap (USD)
+    min_market_cap: 1000000000  # $1B
+
+    # Minimum daily trading volume (USD)
+    min_daily_volume: 10000000  # $10M
+
+    # Minimum liquidity score (0-100)
+    min_liquidity_score: 50
+
+    # Maximum allowed volatility (% annualized)
+    max_volatility: 150
+
+  # ============================================================================
+  # EXCHANGE REQUIREMENTS
+  # ============================================================================
+  exchanges:
+    # Required exchanges for asset listing
+    required_exchanges:
+      - binance
+      - coinbase
+      - kraken
+      - bitstamp
+
+  # ============================================================================
+  # ADVANCED FEATURES
+  # ============================================================================
+  advanced:
+    # Use on-chain metrics for scoring
+    use_on_chain_metrics: false
+
+    # Weight for social sentiment (0.0-1.0)
+    social_sentiment_weight: 0.0
+
+# ============================================================================
+# ASSET UNIVERSE
+# ============================================================================
+universe:
+  # Major cryptocurrencies
+  - symbol: "BTC"
+    name: "Bitcoin"
+    asset_type: "bitcoin"
+  - symbol: "ETH"
+    name: "Ethereum"
+    asset_type: "ethereum"
+
+  # Layer 1 blockchains
+  - symbol: "SOL"
+    name: "Solana"
+    asset_type: "l1_blockchain"
+  - symbol: "ADA"
+    name: "Cardano"
+    asset_type: "l1_blockchain"
+  - symbol: "AVAX"
+    name: "Avalanche"
+    asset_type: "l1_blockchain"
+  - symbol: "DOT"
+    name: "Polkadot"
+    asset_type: "l1_blockchain"
+
+  # Layer 2 scaling
+  - symbol: "MATIC"
+    name: "Polygon"
+    asset_type: "l2_scaling"
+  - symbol: "ARB"
+    name: "Arbitrum"
+    asset_type: "l2_scaling"
+
+  # DeFi tokens
+  - symbol: "UNI"
+    name: "Uniswap"
+    asset_type: "defi"
+  - symbol: "AAVE"
+    name: "Aave"
+    asset_type: "defi"
+  - symbol: "LINK"
+    name: "Chainlink"
+    asset_type: "defi"
+
+# ============================================================================
+# BACKTESTING CONFIGURATION
+# ============================================================================
+backtesting:
+  # Start date for backtesting
+  start_date: "2020-01-01"
+
+  # End date for backtesting
+  end_date: "2024-12-31"
+
+  # Initial capital
+  initial_capital: 100000
+
+  # Commission rate (0.001 = 0.1%)
+  commission: 0.001
+
+  # Slippage rate (0.0005 = 0.05%)
+  slippage: 0.0005
+
+# ============================================================================
+# RISK MANAGEMENT
+# ============================================================================
+risk_management:
+  # Stop loss percentage (0.15 = 15%)
+  stop_loss: 0.15
+
+  # Take profit percentage (0.30 = 30%)
+  take_profit: 0.30
+
+  # Maximum drawdown before halting (0.20 = 20%)
+  max_drawdown: 0.20
+
+  # Maximum portfolio volatility target (0.60 = 60%)
+  target_volatility: 0.60
+
+# ============================================================================
+# DATA SOURCES
+# ============================================================================
+data_sources:
+  # Primary data source
+  primary: "binance"
+
+  # Backup data source
+  backup: "coinbase"
+
+  # API configuration
+  api:
+    # Update interval (seconds)
+    update_interval: 60
+
+    # Batch size for data fetching
+    batch_size: 100

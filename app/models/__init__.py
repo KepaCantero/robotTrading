@@ -4,15 +4,30 @@ Portfolio, Signal, and Asset models and interfaces.
 This module exports the core portfolio, signal, and asset models and interfaces for the AlgoTrading system.
 """
 
-from .momentum import (
-    MomentumAnalysis,
-    MomentumFilter,
-    MomentumSignal,
-    MomentumStrategy,
-    MomentumType,
-    TechnicalIndicators,
-    Timeframe,
-)
+# Optional imports - pydantic is a required dependency for momentum models
+try:
+    from .momentum import (
+        MomentumAnalysis,
+        MomentumFilter,
+        MomentumSignal,
+        MomentumStrategy,
+        MomentumType,
+        TechnicalIndicators,
+        Timeframe,
+    )
+
+    MOMENTUM_AVAILABLE = True
+except ImportError:
+    # pydantic not available - momentum models will not be available
+    MOMENTUM_AVAILABLE = False
+    MomentumAnalysis = None
+    MomentumFilter = None
+    MomentumSignal = None
+    MomentumStrategy = None
+    MomentumType = None
+    TechnicalIndicators = None
+    Timeframe = None
+
 from .portfolio import (
     AssetClass,
     AssetUniverse,

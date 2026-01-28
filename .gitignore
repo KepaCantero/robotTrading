@@ -93,3 +93,6 @@ logs/staging.log
 *.encrypted
 *.gpg
 
+
+# ralphex progress logs
+progress*.txt

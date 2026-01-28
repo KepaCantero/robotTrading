@@ -262,9 +262,9 @@ class WorkflowManager:
             "failed_executions": total_executions - successful_executions,
             "success_rate": successful_executions / total_executions,
             "avg_duration_ms": avg_duration,
-            "last_execution": self.execution_history[-1].to_dict()
-            if self.execution_history
-            else None,
+            "last_execution": (
+                self.execution_history[-1].to_dict() if self.execution_history else None
+            ),
         }
 
     def create_rollback_checkpoint(self) -> Dict[str, Any]:

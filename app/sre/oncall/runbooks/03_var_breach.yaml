@@ -1,0 +1,117 @@
+---
+name: "VaR (Value at Risk) Breach"
+severity: "high"
+trigger: "var_exceeded_threshold == true"
+category: "risk"
+tags: ["var", "risk-limits", "exposure"]
+estimated_duration_minutes: 10
+last_updated: "2026-01-28"
+version: "1.0"
+
+description: |
+  Respond to VaR limit breaches. VaR measures maximum potential loss
+  with a given confidence level. A breach indicates risk exposure
+  exceeds acceptable thresholds.
+
+prerequisites:
+  - Risk dashboard access
+  - Portfolio view access
+  - Understanding of VaR calculations
+
+steps:
+  - title: "Verify VaR Breach"
+    description: "Confirm VaR calculation and breach"
+    commands:
+      - "Check VaR calculation methodology (parametric, historical, Monte Carlo)"
+      - "Verify confidence level (typically 95% or 99%)"
+      - "Confirm time horizon (typically 1 day)"
+      - "Cross-check with alternative calculation methods"
+    expected_outcome: "VaR breach confirmed"
+
+  - title: "Assess Breach Severity"
+    description: "Determine how far over the limit we are"
+    commands:
+      - "Calculate breach percentage"
+      - "Check if this is a one-time or recurring breach"
+      - "Review trend of VaR over past week"
+      - "Identify contributing factors"
+    expected_outcome: "Breach severity understood"
+
+  - title: "Identify Risk Contributors"
+    description: "Find which positions/strategies are driving VaR"
+    commands:
+      - "Run VaR contribution analysis"
+      - "Identify top 5 contributing positions"
+      - "Check for concentration risk"
+      - "Review correlation effects"
+    expected_outcome: "Key risk contributors identified"
+
+  - title: "Review Position Sizing"
+    description: "Check if positions are appropriately sized"
+    commands:
+      - "Review position sizes vs limits"
+      - "Check if Kelly criterion being followed"
+      - "Review leverage usage"
+      - "Assess position concentration"
+    expected_outcome: "Position sizing understood"
+
+  - title: "Determine Response"
+    description: "Decide on appropriate response"
+    commands: []
+    decision_point:
+      condition: "var_breach > 20% over limit OR recurring_breach"
+      true_branch: "Reduce positions immediately"
+      false_branch: "Monitor closely, prepare reduction plan"
+
+  - title: "Execute Risk Reduction"
+    description: "If required, reduce risk exposure"
+    commands:
+      - "Reduce largest contributing positions"
+      - "Consider hedging strategies"
+      - "Tighten position limits temporarily"
+      - "Review and adjust strategy parameters"
+    expected_outcome: "Risk exposure reduced"
+
+  - title: "Document and Report"
+    description: "Record breach and response"
+    commands:
+      - "Log VaR breach incident"
+      - "Document actions taken"
+      - "Report to risk management team"
+      - "Update risk dashboards"
+    expected_outcome: "Incident documented"
+
+post_actions:
+  - "Monitor VaR for next 48 hours"
+  - "Review VaR model accuracy"
+  - "Consider recalibrating risk models"
+  - "Update position sizing methodology"
+
+rollback_actions:
+  - title: "Restore Positions"
+    description: "If reduction was premature"
+    commands:
+      - "Verify VaR back within limits"
+      - "Gradually restore positions"
+      - "Monitor closely"
+
+related_runbooks:
+  - "position_limit_violation.yaml"
+  - "high_drawdown_alert.yaml"
+  - "concentration_risk.yaml"
+
+metrics_to_track:
+  - "var_percentage"
+  - "var_breach_amount"
+  - "top_var_contributors"
+  - "portfolio_exposure"
+
+success_criteria:
+  - "VaR brought back within limits"
+  - "Root cause identified"
+  - "Appropriate response executed"
+  - "Incident documented"
+
+escalation_path: "risk_management"
+owner: "risk-team"
+review_frequency: "monthly"

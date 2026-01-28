@@ -184,9 +184,7 @@ class TradingValidator:
                 )
 
         else:
-            raise ValueError(
-                f"Invalid trade side: '{side}'. Must be 'long' or 'short'."
-            )
+            raise ValueError(f"Invalid trade side: '{side}'. Must be 'long' or 'short'.")
 
         logger.debug(
             f"Stop-loss validation passed: {side} position @ ${entry_price:.2f}, "

@@ -15,7 +15,6 @@ Detectores implementados:
 - MMD (Maximum Mean Discrepancy): Compara en RKHS
 """
 
-import logging
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -25,25 +24,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import yaml
-
-logger = logging.getLogger(__name__)
-
-# Importaciones opcionales
-try:
-    from scipy.stats import ks_2samp
-
-    SCIPY_AVAILABLE = True
-except ImportError:
-    SCIPY_AVAILABLE = False
-    logger.warning("scipy no disponible. Algunos tests estadísticos no funcionarán.")
-
-try:
-    pass
-
-    SKLEARN_METRICS_AVAILABLE = True
-except ImportError:
-    SKLEARN_METRICS_AVAILABLE = False
-
+from scipy.stats import ks_2samp
 
 # ============================================================================
 # Configuration Loading
@@ -601,56 +582,38 @@ class ConceptDriftDetector:
             self.drift_history.append(result)
             return result
 
-        if not SCIPY_AVAILABLE:
-            return DriftResult(
-                drift_detected=False,
-                detector_name="ks_test",
-                statistic=0.0,
-                details={"error": "scipy_not_available"},
-            )
+        ks_stat, ks_pvalue = ks_2samp(reference_array, current_flat)
 
-        try:
-            ks_stat, ks_pvalue = ks_2samp(reference_array, current_flat)
+        drift_detected = ks_pvalue < self.drift_threshold_ks
 
-            drift_detected = ks_pvalue < self.drift_threshold_ks
+        # Determine severity based on p-value
+        if ks_pvalue >= 0.1:
+            severity = DriftSeverity.NONE
+        elif ks_pvalue >= 0.05:
+            severity = DriftSeverity.LOW
+        elif ks_pvalue >= 0.01:
+            severity = DriftSeverity.MEDIUM
+        elif ks_pvalue >= 0.001:
+            severity = DriftSeverity.HIGH
+        else:
+            severity = DriftSeverity.CRITICAL
 
-            # Determine severity based on p-value
-            if ks_pvalue >= 0.1:
-                severity = DriftSeverity.NONE
-            elif ks_pvalue >= 0.05:
-                severity = DriftSeverity.LOW
-            elif ks_pvalue >= 0.01:
-                severity = DriftSeverity.MEDIUM
-            elif ks_pvalue >= 0.001:
-                severity = DriftSeverity.HIGH
-            else:
-                severity = DriftSeverity.CRITICAL
+        result = DriftResult(
+            drift_detected=drift_detected,
+            detector_name="ks_test",
+            statistic=float(ks_stat),
+            p_value=float(ks_pvalue),
+            threshold=self.drift_threshold_ks,
+            severity=severity,
+            details={
+                "reference_samples": len(reference_array),
+                "current_samples": len(current_flat),
+            },
+            timestamp=timestamp or datetime.now(),
+        )
 
-            result = DriftResult(
-                drift_detected=drift_detected,
-                detector_name="ks_test",
-                statistic=float(ks_stat),
-                p_value=float(ks_pvalue),
-                threshold=self.drift_threshold_ks,
-                severity=severity,
-                details={
-                    "reference_samples": len(reference_array),
-                    "current_samples": len(current_flat),
-                },
-                timestamp=timestamp or datetime.now(),
-            )
-
-            self.drift_history.append(result)
-            return result
-
-        except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.warning(f"Error in KS test: {e}")
-            return DriftResult(
-                drift_detected=False,
-                detector_name="ks_test",
-                statistic=0.0,
-                details={"error": str(e)},
-            )
+        self.drift_history.append(result)
+        return result
 
     def detect_drift_mmd(
         self,

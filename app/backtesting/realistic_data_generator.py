@@ -15,9 +15,8 @@ previously used, providing much more realistic test scenarios.
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from decimal import Decimal
 from enum import Enum
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 import numpy as np
 
@@ -29,8 +28,9 @@ logger = logging.getLogger(__name__)
 
 class MarketRegime(str, Enum):
     """Market regime types for regime-switching model."""
-    BULL = "bull"      # Uptrend, moderate volatility
-    BEAR = "bear"      # Downtrend, high volatility
+
+    BULL = "bull"  # Uptrend, moderate volatility
+    BEAR = "bear"  # Downtrend, high volatility
     SIDEWAYS = "sideways"  # Range-bound, low volatility
     VOLATILE = "volatile"  # High volatility, no clear trend
 
@@ -38,12 +38,13 @@ class MarketRegime(str, Enum):
 @dataclass
 class RegimeParameters:
     """Parameters for a market regime."""
+
     name: MarketRegime
-    drift: float          # Daily return (annualized / 252)
-    volatility: float     # Daily volatility (annual / sqrt(252))
+    drift: float  # Daily return (annualized / 252)
+    volatility: float  # Daily volatility (annual / sqrt(252))
     volume_multiplier: float  # Volume relative to baseline
-    jump_probability: float   # Probability of price jump
-    jump_mean: float       # Mean jump size (as decimal, e.g., 0.02 = 2%)
+    jump_probability: float  # Probability of price jump
+    jump_mean: float  # Mean jump size (as decimal, e.g., 0.02 = 2%)
     transition_prob: dict  # Probability of transitioning to other regimes
 
 
@@ -65,55 +66,55 @@ class RealisticDataGenerator:
     DEFAULT_REGIMES = {
         MarketRegime.BULL: RegimeParameters(
             name=MarketRegime.BULL,
-            drift=0.0005,          # ~12.6% annually
-            volatility=0.012,      # ~19% annually
+            drift=0.0005,  # ~12.6% annually
+            volatility=0.012,  # ~19% annually
             volume_multiplier=1.2,
             jump_probability=0.005,  # 0.5% chance per day
-            jump_mean=0.01,        # +1% average jump
+            jump_mean=0.01,  # +1% average jump
             transition_prob={
-                MarketRegime.BULL: 0.96,    # 96% stay in bull
-                MarketRegime.BEAR: 0.02,    # 2% transition to bear
+                MarketRegime.BULL: 0.96,  # 96% stay in bull
+                MarketRegime.BEAR: 0.02,  # 2% transition to bear
                 MarketRegime.SIDEWAYS: 0.02,  # 2% transition to sideways
-            }
+            },
         ),
         MarketRegime.BEAR: RegimeParameters(
             name=MarketRegime.BEAR,
-            drift=-0.0003,         # ~-7.5% annually
-            volatility=0.025,      # ~40% annually
+            drift=-0.0003,  # ~-7.5% annually
+            volatility=0.025,  # ~40% annually
             volume_multiplier=1.8,
-            jump_probability=0.02,   # 2% chance per day
-            jump_mean=-0.03,       # -3% average jump
+            jump_probability=0.02,  # 2% chance per day
+            jump_mean=-0.03,  # -3% average jump
             transition_prob={
-                MarketRegime.BEAR: 0.94,    # 94% stay in bear
-                MarketRegime.BULL: 0.04,    # 4% transition to bull
+                MarketRegime.BEAR: 0.94,  # 94% stay in bear
+                MarketRegime.BULL: 0.04,  # 4% transition to bull
                 MarketRegime.SIDEWAYS: 0.02,  # 2% transition to sideways
-            }
+            },
         ),
         MarketRegime.SIDEWAYS: RegimeParameters(
             name=MarketRegime.SIDEWAYS,
-            drift=0.0001,          # ~2.5% annually
-            volatility=0.008,      # ~13% annually
+            drift=0.0001,  # ~2.5% annually
+            volatility=0.008,  # ~13% annually
             volume_multiplier=0.9,
             jump_probability=0.002,  # 0.2% chance per day
             jump_mean=0.0,
             transition_prob={
                 MarketRegime.SIDEWAYS: 0.95,  # 95% stay sideways
-                MarketRegime.BULL: 0.03,     # 3% transition to bull
-                MarketRegime.BEAR: 0.02,     # 2% transition to bear
-            }
+                MarketRegime.BULL: 0.03,  # 3% transition to bull
+                MarketRegime.BEAR: 0.02,  # 2% transition to bear
+            },
         ),
         MarketRegime.VOLATILE: RegimeParameters(
             name=MarketRegime.VOLATILE,
-            drift=0.0,              # No trend
-            volatility=0.035,      # ~55% annually
+            drift=0.0,  # No trend
+            volatility=0.035,  # ~55% annually
             volume_multiplier=2.5,
-            jump_probability=0.05,   # 5% chance per day
+            jump_probability=0.05,  # 5% chance per day
             jump_mean=0.0,
             transition_prob={
                 MarketRegime.VOLATILE: 0.85,  # 85% stay volatile
-                MarketRegime.BULL: 0.10,      # 10% transition to bull
-                MarketRegime.BEAR: 0.05,      # 5% transition to bear
-            }
+                MarketRegime.BULL: 0.10,  # 10% transition to bull
+                MarketRegime.BEAR: 0.05,  # 5% transition to bear
+            },
         ),
     }
 
@@ -143,9 +144,9 @@ class RealisticDataGenerator:
         self.asset_class = asset_class
 
         # GARCH-like parameters for volatility clustering
-        self.garch_omega = 0.00002   # Long-term variance
-        self.garch_alpha = 0.08      # ARCH coefficient (past shocks)
-        self.garch_beta = 0.90       # GARCH coefficient (past variance)
+        self.garch_omega = 0.00002  # Long-term variance
+        self.garch_alpha = 0.08  # ARCH coefficient (past shocks)
+        self.garch_beta = 0.90  # GARCH coefficient (past variance)
         self.volatility_clustering = True
 
     def generate_realistic_quotes(
@@ -181,13 +182,10 @@ class RealisticDataGenerator:
         dates = [start_date + timedelta(days=i) for i in range(n_days)]
         prices = np.empty(n_days)
         volumes = np.empty(n_days)
-        regimes_sequence = []
 
         # Generate regime sequence if using regime-switching
         if use_regime_switching:
-            regime_sequence = self._generate_regime_sequence(
-                n_days, initial_regime
-            )
+            regime_sequence = self._generate_regime_sequence(n_days, initial_regime)
         else:
             regime_sequence = [initial_regime] * n_days
 
@@ -203,18 +201,18 @@ class RealisticDataGenerator:
             # Update volatility (GARCH-like)
             if self.volatility_clustering:
                 # Past return shock
-                past_return = np.log(prices[i] / max(prices[i-1], prices[i])) if i > 0 else 0
+                past_return = np.log(prices[i] / max(prices[i - 1], prices[i])) if i > 0 else 0
                 # Update variance: omega + alpha * shock^2 + beta * past_variance
                 current_variance = (
-                    self.garch_omega +
-                    self.garch_alpha * past_return ** 2 +
-                    self.garch_beta * current_variance
+                    self.garch_omega
+                    + self.garch_alpha * past_return**2
+                    + self.garch_beta * current_variance
                 )
                 # Bounds check
-                current_variance = max(current_variance, regime.volatility ** 2 * 0.5)
-                current_variance = min(current_variance, regime.volatility ** 2 * 2.0)
+                current_variance = max(current_variance, regime.volatility**2 * 0.5)
+                current_variance = min(current_variance, regime.volatility**2 * 2.0)
             else:
-                current_variance = regime.volatility ** 2
+                current_variance = regime.volatility**2
 
             current_vol = np.sqrt(current_variance)
 
@@ -228,11 +226,7 @@ class RealisticDataGenerator:
                 log_return = regime.drift + jump_size
             else:
                 # Standard GBM return
-                log_return = (
-                    regime.drift -
-                    0.5 * current_variance +
-                    current_vol * dW
-                )
+                log_return = regime.drift - 0.5 * current_variance + current_vol * dW
 
             prices[i + 1] = prices[i] * np.exp(log_return)
             prices[i + 1] = max(prices[i + 1], 0.01)  # Floor at 1 cent
@@ -246,9 +240,9 @@ class RealisticDataGenerator:
             # 2. Larger price movements
             # 3. Random lognormal noise
             vol_multiplier = (
-                1.0 +                           # Base
-                (current_vol / regime.volatility - 1.0) * 2.0 +  # Volatility effect
-                price_change_pct * 10.0         # Price movement effect
+                1.0  # Base
+                + (current_vol / regime.volatility - 1.0) * 2.0  # Volatility effect
+                + price_change_pct * 10.0  # Price movement effect
             )
 
             volume_noise = self.rng.lognormal(0, 0.3)  # 30% std lognormal
@@ -275,9 +269,7 @@ class RealisticDataGenerator:
         return quotes
 
     def _generate_regime_sequence(
-        self,
-        n_days: int,
-        initial_regime: MarketRegime
+        self, n_days: int, initial_regime: MarketRegime
     ) -> List[MarketRegime]:
         """
         Generate regime sequence using Markov chain.
@@ -351,7 +343,7 @@ class RealisticDataGenerator:
                 # Typical overnight gap: 0.1% to 0.5% in either direction
                 gap = self.rng.normal(0, 0.002)  # 0.2% std
                 gap = max(min(gap, 0.01), -0.01)  # Clamp to ±1%
-                open_price = prices[i-1] * (1 + gap)
+                open_price = prices[i - 1] * (1 + gap)
 
             # Intraday movement (open to close)
             # High and Low reflect intraday trading range
@@ -469,19 +461,19 @@ class RealisticDataGenerator:
             sim_prices[0] = base_prices[0]
 
             # GARCH-like volatility for simulation
-            current_variance = base_vol ** 2
+            current_variance = base_vol**2
 
             for i in range(n_days - 1):
                 # Update volatility with GARCH
                 if i > 0:
-                    past_return = np.log(sim_prices[i] / sim_prices[i-1])
+                    past_return = np.log(sim_prices[i] / sim_prices[i - 1])
                     current_variance = (
-                        self.garch_omega +
-                        self.garch_alpha * past_return ** 2 +
-                        self.garch_beta * current_variance
+                        self.garch_omega
+                        + self.garch_alpha * past_return**2
+                        + self.garch_beta * current_variance
                     )
-                    current_variance = max(current_variance, base_vol ** 2 * 0.5)
-                    current_variance = min(current_variance, base_vol ** 2 * 2.0)
+                    current_variance = max(current_variance, base_vol**2 * 0.5)
+                    current_variance = min(current_variance, base_vol**2 * 2.0)
 
                 sim_vol = np.sqrt(current_variance)
 
@@ -489,8 +481,8 @@ class RealisticDataGenerator:
                 dW = sim_rng.standard_normal()
                 log_return = base_drift - 0.5 * current_variance + sim_vol * dW
 
-                sim_prices[i+1] = sim_prices[i] * np.exp(log_return)
-                sim_prices[i+1] = max(sim_prices[i+1], 0.01)
+                sim_prices[i + 1] = sim_prices[i] * np.exp(log_return)
+                sim_prices[i + 1] = max(sim_prices[i + 1], 0.01)
 
             # Convert to quotes
             sim_quotes = self._prices_to_realistic_quotes(

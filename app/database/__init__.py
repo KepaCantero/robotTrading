@@ -66,7 +66,9 @@ class DatabaseManager:
                     echo=self.config.debug,  # Log SQL queries in debug mode
                     echo_pool=self.config.debug,  # Log pool events in debug mode
                 )
-                logger.info(f"Synchronous database engine initialized (PostgreSQL, pool_size={self.config.database.db_pool_size})")
+                logger.info(
+                    f"Synchronous database engine initialized (PostgreSQL, pool_size={self.config.database.db_pool_size})"
+                )
 
             # Create session factory
             self.session_factory = sessionmaker(
@@ -113,7 +115,9 @@ class DatabaseManager:
                     echo=self.config.debug,
                     echo_pool=self.config.debug,
                 )
-                logger.info(f"Asynchronous database engine initialized (PostgreSQL, pool_size={self.config.database.db_pool_size})")
+                logger.info(
+                    f"Asynchronous database engine initialized (PostgreSQL, pool_size={self.config.database.db_pool_size})"
+                )
 
             # Create async session factory
             self.async_session_factory = async_sessionmaker(

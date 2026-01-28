@@ -228,7 +228,9 @@ class ModularMomentumStrategy(BaseStrategy):
             error_msg = str(e).lower()
             if 'mutex' in error_msg or 'lock' in error_msg or 'blocking' in error_msg:
                 logger.error(f"❌ Bloqueo de mutex al inicializar {engine_type}: {e}")
-                logger.error("💡 El learning engine se intentará inicializar más tarde o se omitirá")
+                logger.error(
+                    "💡 El learning engine se intentará inicializar más tarde o se omitirá"
+                )
                 self.learning_engine = None
             else:
                 raise
@@ -261,7 +263,7 @@ class ModularMomentumStrategy(BaseStrategy):
                 f"🚨 BEAR MARKET CRASH DETECTED: "
                 f"type={market_type}, strength={trend_strength:.2f} > 0.6 - "
                 f"STOPPING TRADING to prevent losses",
-                key="bear_market_crash"
+                key="bear_market_crash",
             )
             return False
 
@@ -281,7 +283,7 @@ class ModularMomentumStrategy(BaseStrategy):
                 f"🔥 EXTREME VOLATILITY CRISIS: "
                 f"volatility_percentile={volatility_percentile} > 75 - "
                 f"STOPPING TRADING to prevent crash losses",
-                key="volatility_crisis"
+                key="volatility_crisis",
             )
             return False
 
@@ -685,8 +687,7 @@ class ModularMomentumStrategy(BaseStrategy):
 
         if len(self.filters) == 0:
             _rate_limited_logger.warning(
-                "⚠️ No hay filtros activos - no se pueden generar señales",
-                key="no_filters"
+                "⚠️ No hay filtros activos - no se pueden generar señales", key="no_filters"
             )
             return None
 

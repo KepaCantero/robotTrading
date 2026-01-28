@@ -1,0 +1,109 @@
+---
+name: "High Error Rate Detected"
+severity: "high"
+trigger: "error_rate > 1% OR error_spike_detected"
+category: "application"
+tags: ["errors", "application", "monitoring"]
+estimated_duration_minutes: 20
+last_updated: "2026-01-28"
+version: "1.0"
+
+description: |
+  Respond to elevated error rates. High error rates indicate
+  application problems that need immediate attention.
+
+prerequisites:
+  - Error tracking access
+  - Application logs
+  - Error analysis tools
+
+steps:
+  - title: "Verify Error Rate"
+    description: "Confirm error rate is elevated"
+    commands:
+      - "Check error rate metrics"
+      - "Identify which services affected"
+      - "Determine error types"
+      - "Check if sudden spike or gradual increase"
+    expected_outcome: "Error rate confirmed"
+
+  - title: "Assess Impact"
+    description: "Determine impact on operations"
+    commands:
+      - "Check if trading affected"
+      - "Review user impact"
+      - "Assess data integrity"
+      - "Check for cascading failures"
+    expected_outcome: "Impact assessed"
+
+  - title: "Analyze Error Patterns"
+    description: "Understand error characteristics"
+    commands:
+      - "Group errors by type"
+      - "Identify top errors"
+      - "Check for correlation with deployments"
+      - "Review error timing"
+      - "Check for specific endpoint errors"
+    expected_outcome: "Error patterns understood"
+
+  - title: "Identify Root Cause"
+    description: "Determine why errors are occurring"
+    commands:
+      - "Review error stack traces"
+      - "Check recent code changes"
+      - "Review configuration changes"
+      - "Check dependency failures"
+      - "Review infrastructure changes"
+    expected_outcome: "Root cause identified"
+
+  - title: "Implement Quick Fix"
+    description: "Address immediate issues"
+    commands:
+      - "Fix obvious bugs if found"
+      - "Rollback recent changes if suspicious"
+      - "Restart affected services"
+      - "Implement circuit breakers"
+      - "Scale resources if applicable"
+    expected_outcome: "Errors reduced"
+
+  - title: "Verify Recovery"
+    description: "Confirm error rate normalized"
+    commands:
+      - "Monitor error rate metrics"
+      - "Check for new errors"
+      - "Verify services healthy"
+      - "Monitor for 30 minutes"
+    expected_outcome: "Error rate normalized"
+
+  - title: "Document Incident"
+    description: "Complete incident documentation"
+    commands:
+      - "Log error incident"
+      - "Document root cause"
+      - "Record fix implemented"
+      - "Create preventive measures"
+    expected_outcome: "Incident documented"
+
+post_actions:
+  - "Review error handling"
+  - "Improve error monitoring"
+  - "Add unit tests for bugs"
+  - "Update runbook with lessons learned"
+
+related_runbooks:
+  - "api_latency_spike.yaml"
+  - "service_degraded.yaml"
+
+metrics_to_track:
+  - "error_rate_percentage"
+  - "error_count_by_type"
+  - "error_rate_by_endpoint"
+
+success_criteria:
+  - "Error rate returned to normal"
+  - "Root cause addressed"
+  - "Incident documented"
+
+escalation_path: "platform"
+owner: "platform-team"
+review_frequency: "monthly"

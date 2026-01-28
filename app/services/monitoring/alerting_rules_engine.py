@@ -12,6 +12,7 @@ from enum import Enum
 from typing import Dict, List, Optional
 
 import aiohttp
+from requests.exceptions import HTTPError, RequestException
 
 logger = logging.getLogger(__name__)
 

@@ -1,0 +1,161 @@
+---
+name: "High Drawdown Alert"
+severity: "critical"
+trigger: "drawdown > 15%"
+category: "risk"
+tags: ["drawdown", "circuit-breaker", "risk-management"]
+estimated_duration_minutes: 15
+last_updated: "2026-01-28"
+version: "1.0"
+
+description: |
+  Respond to high drawdown alerts that indicate significant portfolio losses.
+  This runbook guides you through assessing the situation, checking circuit breakers,
+  and deciding whether to halt trading or reduce exposure.
+
+prerequisites:
+  - Access to risk dashboard
+  - Portfolio view permissions
+  - Circuit breaker override access (if needed)
+
+steps:
+  - title: "Verify Alert Validity"
+    description: "Confirm the drawdown alert is accurate and not a false positive"
+    commands:
+      - "Check risk dashboard for current drawdown percentage"
+      - "Verify drawdown calculation methodology"
+      - "Cross-check with portfolio P&L"
+    expected_outcome: "Confirmed drawdown level and calculation accuracy"
+    runbook_reference: "data_quality_validation.yaml"
+
+  - title: "Check Circuit Breaker Status"
+    description: "Determine if circuit breaker has been triggered"
+    commands:
+      - "Review circuit breaker status in risk engine"
+      - "Check if global circuit breaker is active"
+      - "Identify which circuit breaker level was triggered (1%, 5%, 10%, 15%)"
+    expected_outcome: "Circuit breaker status known"
+    decision_point:
+      condition: "circuit_breaker_active == true"
+      true_branch: "Proceed to step 3 (Trading Halted)"
+      false_branch: "Proceed to step 4 (Assess Manual Intervention)"
+
+  - title: "Trading Halted - Assess Situation"
+    description: "Trading is halted by circuit breaker. Assess next steps."
+    commands:
+      - "Review what triggered the circuit breaker"
+      - "Check recent trades that led to drawdown"
+      - "Identify contributing positions/strategies"
+      - "Review market conditions during drawdown"
+    expected_outcome: "Root cause of drawdown identified"
+
+  - title: "Assess Manual Intervention"
+    description: "Circuit breaker not triggered. Determine if manual intervention needed."
+    commands:
+      - "Review drawdown trend (increasing, stable, decreasing)"
+      - "Check if risk limits are being approached"
+      - "Assess market volatility and conditions"
+      - "Review recent trading activity"
+    expected_outcome: "Decision on whether to intervene"
+
+  - title: "Review Recent Trades"
+    description: "Analyze recent trades that may have contributed to drawdown"
+    commands:
+      - "Pull last 50 trades from execution log"
+      - "Identify largest losing trades"
+      - "Check for any failed or partially filled orders"
+      - "Review trade timing vs market events"
+    expected_outcome: "Understanding of trading activity during drawdown"
+
+  - title: "Verify Market Data Quality"
+    description: "Ensure market data is accurate and complete"
+    commands:
+      - "Check data quality metrics in data engine"
+      - "Verify no data gaps or staleness"
+      - "Cross-check prices with multiple sources"
+      - "Check for outlier prices"
+    expected_outcome: "Market data quality confirmed"
+
+  - title: "Check Position Limits"
+    description: "Verify current positions against limits"
+    commands:
+      - "Review current position sizes"
+      - "Check exposure per asset and total"
+      - "Verify leverage levels"
+      - "Check correlation exposure"
+    expected_outcome: "Position limits status known"
+
+  - title: "Make Intervention Decision"
+    description: "Decide on course of action based on findings"
+    commands: []
+    decision_point:
+      condition: "drawdown > 20% OR circuit_breaker_active == true"
+      true_branch: "Halt trading immediately"
+      false_branch: "Consider reducing exposure or monitoring"
+
+  - title: "Execute Intervention (If Required)"
+    description: "Execute decided intervention"
+    commands:
+      - "If halting: Activate trading halt in execution engine"
+      - "If reducing: Close largest losing positions"
+      - "If monitoring: Set up additional alerts"
+      - "Document all actions taken"
+    expected_outcome: "Intervention executed and documented"
+
+  - title: "Document Incident"
+    description: "Create incident report and update documentation"
+    commands:
+      - "Log incident in incident tracking system"
+      - "Document root cause analysis"
+      - "Record actions taken"
+      - "Create follow-up tasks if needed"
+      - "Update runbook if new insights learned"
+    expected_outcome: "Incident fully documented"
+
+  - title: "Communicate with Stakeholders"
+    description: "Inform relevant stakeholders of the situation"
+    commands:
+      - "Notify engineering manager if SEV1/SEV2"
+      - "Update status dashboard"
+      - "Send postmortum summary if major incident"
+    expected_outcome: "Stakeholders informed"
+
+post_actions:
+  - "Monitor drawdown for next 24 hours"
+  - "Review and adjust risk limits if needed"
+  - "Schedule post-incident review"
+  - "Update runbook based on lessons learned"
+
+rollback_actions:
+  - title: "Revert Trading Halt"
+    description: "If trading was halted and conditions improved"
+    commands:
+      - "Verify drawdown is decreasing"
+      - "Check market conditions are stable"
+      - "Disable circuit breaker if safe"
+      - "Resume trading cautiously"
+      - "Monitor closely for first hour"
+
+related_runbooks:
+  - "circuit_breaker_triggered.yaml"
+  - "position_limit_violation.yaml"
+  - "market_data_quality_issue.yaml"
+  - "trading_halt.yaml"
+
+metrics_to_track:
+  - "drawdown_percentage"
+  - "circuit_breaker_status"
+  - "portfolio_value"
+  - "position_count"
+  - "active_trades"
+
+success_criteria:
+  - "Drawdown stabilized or decreasing"
+  - "Root cause identified"
+  - "Appropriate intervention executed"
+  - "Incident documented"
+  - "Stakeholders informed"
+
+escalation_path: "trading_critical"
+owner: "risk-team"
+review_frequency: "quarterly"

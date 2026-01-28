@@ -10,10 +10,9 @@ efficient calculation.
 
 import asyncio
 import logging
-from dataclasses import dataclass, field
-from datetime import datetime, timezone, timedelta
-from decimal import Decimal
-from typing import Dict, List, Optional, Set, Tuple
+from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
+from typing import Dict, List, Optional, Set
 
 import numpy as np
 import pandas as pd
@@ -143,9 +142,7 @@ class CorrelationAnalyzer:
 
         # Check if we have at least 2 symbols (minimum for correlation)
         if len(prices_dict) < 2:
-            logger.warning(
-                f"Insufficient symbols with data: {len(prices_dict)} < 2"
-            )
+            logger.warning(f"Insufficient symbols with data: {len(prices_dict)} < 2")
             if self.config.use_fallback:
                 return self._generate_fallback_matrix(symbols)
             raise RuntimeError("Insufficient data for correlation calculation")
@@ -226,9 +223,7 @@ class CorrelationAnalyzer:
 
         # Calculate on-demand if not in cache
         try:
-            correlation_matrix = await self.calculate_correlation_matrix(
-                [symbol1, symbol2]
-            )
+            correlation_matrix = await self.calculate_correlation_matrix([symbol1, symbol2])
             correlation = float(correlation_matrix.loc[symbol1, symbol2])
 
             # Update cache with new calculation
@@ -285,9 +280,7 @@ class CorrelationAnalyzer:
             return
 
         self._update_loop_running = True
-        self._update_task = asyncio.create_task(
-            self._update_loop(set(symbols))
-        )
+        self._update_task = asyncio.create_task(self._update_loop(set(symbols)))
 
         logger.info(
             f"Started background correlation updates (interval: "
@@ -366,20 +359,12 @@ class CorrelationAnalyzer:
 
                 if historical_data:
                     # Convert to pandas Series
-                    dates = [
-                        pd.to_datetime(data.timestamp) for data in historical_data
-                    ]
-                    close_prices = [
-                        float(data.close) for data in historical_data
-                    ]
+                    dates = [pd.to_datetime(data.timestamp) for data in historical_data]
+                    close_prices = [float(data.close) for data in historical_data]
 
                     if len(close_prices) >= self.config.min_data_points:
-                        prices_dict[symbol] = pd.Series(
-                            close_prices, index=dates, name=symbol
-                        )
-                        logger.debug(
-                            f"Fetched {len(close_prices)} data points for {symbol}"
-                        )
+                        prices_dict[symbol] = pd.Series(close_prices, index=dates, name=symbol)
+                        logger.debug(f"Fetched {len(close_prices)} data points for {symbol}")
                 else:
                     logger.warning(f"No historical data for {symbol}")
 
@@ -448,9 +433,7 @@ class CorrelationAnalyzer:
                 if i == j:
                     matrix[i, j] = 1.0  # Perfect correlation with self
                 else:
-                    matrix[i, j] = self._get_fallback_correlation(
-                        symbols[i], symbols[j]
-                    )
+                    matrix[i, j] = self._get_fallback_correlation(symbols[i], symbols[j])
 
         return pd.DataFrame(matrix, index=symbols, columns=symbols)
 

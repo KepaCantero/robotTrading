@@ -5,12 +5,14 @@ Handles metrics export in multiple formats (Prometheus, JSON, CSV) and
 supports real-time streaming to monitoring backends.
 """
 
+import asyncio
 import json
 import logging
 from datetime import datetime
 from typing import Dict, List, Optional
 
 import aiohttp
+from requests.exceptions import HTTPError, RequestException
 
 logger = logging.getLogger(__name__)
 
@@ -111,7 +113,8 @@ class MetricsExporter:
             ) as resp:
                 if resp.status in (200, 201, 204):
                     logger.info(
-                        f"✅ Pushed metrics to PushGateway " f"(job={job_name}, instance={instance})"
+                        f"✅ Pushed metrics to PushGateway "
+                        f"(job={job_name}, instance={instance})"
                     )
                     self.export_history.append(
                         {

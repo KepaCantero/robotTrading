@@ -14,13 +14,10 @@ from typing import Any, Dict, List
 
 import numpy as np
 
-try:
-    import scipy.stats  # noqa: F401
+# Import scipy for cointegration tests (REQUIRED)
+import scipy.stats  # noqa: F401
 
-    SCIPY_AVAILABLE = True
-except ImportError:
-    SCIPY_AVAILABLE = False
-    logging.warning("scipy not available, cointegration tests will be limited")
+SCIPY_AVAILABLE = True
 
 from app.core.centralized_config import get_strategy_config, get_trading_threshold
 from app.models.market_data import Quote
@@ -328,7 +325,13 @@ class PairsTradingStrategy(BaseStrategy):
                                                 half_life_passed = True  # Pass if out of bounds
                                         else:
                                             half_life_passed = True  # Pass if not mean-reverting
-                                    except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                                    except (
+                                        ValueError,
+                                        TypeError,
+                                        KeyError,
+                                        AttributeError,
+                                        IndexError,
+                                    ):
                                         half_life_passed = True  # Pass on error
                     except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                         logger.debug(f"Error calculating spread filters: {e}")

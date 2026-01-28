@@ -11,11 +11,13 @@ Revises: 0001
 Create Date: 2026-01-27
 
 """
+
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "0002"
@@ -56,13 +58,18 @@ def upgrade() -> None:
         sa.Column("balance_updated_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("last_sync_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default="true"),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
         sa.Column("closed_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("meta_data", postgresql.JSONB(), nullable=False, server_default="{}"),
         sa.PrimaryKeyConstraint("id", name="pk_accounts"),
         sa.CheckConstraint(
             "exchange_type IN ('cex', 'dex', 'broker', 'wallet', 'otc')",
-            name="ck_accounts_exchange_type"
+            name="ck_accounts_exchange_type",
         ),
     )
     op.create_index("idx_accounts_user_active", "accounts", ["user_id", "is_active"])
@@ -90,7 +97,12 @@ def upgrade() -> None:
         sa.Column("fee_currency", sa.String(10), nullable=False),
         sa.Column("fee_included", sa.Boolean(), nullable=False, server_default="false"),
         sa.Column("occurred_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("recorded_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column(
+            "recorded_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
         sa.Column("settled_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("settlement_date", sa.Date(), nullable=True),
         sa.Column("lot_id", postgresql.UUID(as_uuid=True), nullable=True),
@@ -102,22 +114,36 @@ def upgrade() -> None:
         sa.Column("to_address", sa.String(255), nullable=True),
         sa.Column("notes", sa.Text(), nullable=True),
         sa.Column("meta_data", postgresql.JSONB(), nullable=False, server_default="{}"),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
-        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
         sa.Column("is_verified", sa.Boolean(), nullable=False, server_default="false"),
         sa.ForeignKeyConstraint(["account_id"], ["accounts.id"], name="fk_transactions_account_id"),
-        sa.ForeignKeyConstraint(["from_account_id"], ["accounts.id"], name="fk_transactions_from_account_id"),
-        sa.ForeignKeyConstraint(["to_account_id"], ["accounts.id"], name="fk_transactions_to_account_id"),
+        sa.ForeignKeyConstraint(
+            ["from_account_id"], ["accounts.id"], name="fk_transactions_from_account_id"
+        ),
+        sa.ForeignKeyConstraint(
+            ["to_account_id"], ["accounts.id"], name="fk_transactions_to_account_id"
+        ),
         sa.ForeignKeyConstraint(["lot_id"], ["lots.id"], name="fk_transactions_lot_id"),
         sa.PrimaryKeyConstraint("id", name="pk_transactions"),
         sa.UniqueConstraint("external_id", "account_id", name="uq_tx_external_account"),
         sa.CheckConstraint(
             "asset_type IN ('crypto', 'stock_us', 'stock_eu', 'forex', 'etf')",
-            name="ck_transactions_asset_type"
+            name="ck_transactions_asset_type",
         ),
         sa.CheckConstraint(
             "tx_type IN ('buy', 'sell', 'transfer_in', 'transfer_out', 'staking_reward', 'mining_reward', 'airdrop', 'fork', 'fee', 'gas')",
-            name="ck_transactions_tx_type"
+            name="ck_transactions_tx_type",
         ),
     )
     op.create_index("idx_transactions_symbol_type", "transactions", ["symbol", "tx_type"])
@@ -147,20 +173,18 @@ def upgrade() -> None:
         sa.Column("tax_year_closed", sa.Integer(), nullable=True),
         sa.Column("meta_data", postgresql.JSONB(), nullable=False, server_default="{}"),
         sa.ForeignKeyConstraint(["account_id"], ["accounts.id"], name="fk_lots_account_id"),
-        sa.ForeignKeyConstraint(["opening_transaction_id"], ["transactions.id"], name="fk_lots_opening_transaction_id"),
+        sa.ForeignKeyConstraint(
+            ["opening_transaction_id"], ["transactions.id"], name="fk_lots_opening_transaction_id"
+        ),
         sa.PrimaryKeyConstraint("id", name="pk_lots"),
         sa.CheckConstraint(
             "asset_type IN ('crypto', 'stock_us', 'stock_eu', 'forex', 'etf')",
-            name="ck_lots_asset_type"
+            name="ck_lots_asset_type",
         ),
-        sa.CheckConstraint(
-            "status IN ('open', 'closed', 'partial')",
-            name="ck_lots_status"
-        ),
+        sa.CheckConstraint("status IN ('open', 'closed', 'partial')", name="ck_lots_status"),
         sa.CheckConstraint("quantity_remaining >= 0", name="ck_lot_remaining_positive"),
         sa.CheckConstraint(
-            "quantity_remaining <= quantity_opened",
-            name="ck_lot_remaining_le_opened"
+            "quantity_remaining <= quantity_opened", name="ck_lot_remaining_le_opened"
         ),
     )
     op.create_index("idx_lots_symbol_status", "lots", ["symbol", "status"])
@@ -180,10 +204,14 @@ def upgrade() -> None:
         sa.Column("exchange_rate_eur", sa.Numeric(18, 8), nullable=False),
         sa.Column("captured_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("source", sa.String(50), nullable=False),
-        sa.ForeignKeyConstraint(["account_id"], ["accounts.id"], name="fk_balance_snapshots_account_id"),
+        sa.ForeignKeyConstraint(
+            ["account_id"], ["accounts.id"], name="fk_balance_snapshots_account_id"
+        ),
         sa.PrimaryKeyConstraint("id", name="pk_balance_snapshots"),
     )
-    op.create_index("idx_balances_account_captured", "balance_snapshots", ["account_id", "captured_at"])
+    op.create_index(
+        "idx_balances_account_captured", "balance_snapshots", ["account_id", "captured_at"]
+    )
 
     # ==========================================================================
     # TAX REPORTS (Modelo 721/720)
@@ -203,18 +231,23 @@ def upgrade() -> None:
         sa.Column("is_amended", sa.Boolean(), nullable=False, server_default="false"),
         sa.Column("amended_from_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("report_date", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("generated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column(
+            "generated_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
         sa.Column("filed_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("checksum", sa.String(64), nullable=True),
         sa.PrimaryKeyConstraint("id", name="pk_tax_reports"),
         sa.UniqueConstraint(
-            "user_id", "report_type", "tax_year", "is_amended",
-            name="uq_tax_report_user_type_year_amended"
+            "user_id",
+            "report_type",
+            "tax_year",
+            "is_amended",
+            name="uq_tax_report_user_type_year_amended",
         ),
-        sa.CheckConstraint(
-            "status IN ('draft', 'final', 'filed')",
-            name="ck_tax_reports_status"
-        ),
+        sa.CheckConstraint("status IN ('draft', 'final', 'filed')", name="ck_tax_reports_status"),
     )
     op.create_index("idx_tax_reports_user_year", "tax_reports", ["user_id", "tax_year"])
 

@@ -17,8 +17,7 @@ Implementa arquitectura profesional, verificable y auditable con:
 
 import logging
 from collections import defaultdict
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -27,26 +26,23 @@ from scipy import stats
 from scipy.optimize import minimize
 
 from app.core.centralized_config import StockAllocationSettings
-from app.core.decimal_utils import to_decimal, validate_price, validate_quantity, safe_decimal_divide
 from app.services.momentum_analysis import TechnicalIndicatorCalculator
 
 logger = logging.getLogger(__name__)
 
 # Optional dependencies - use numpy/pandas when not available
 try:
-    from statsmodels.regression.linear_model import OLS
-    from statsmodels.tsa.stattools import adfuller, kpss
+    from statsmodels.regression.linear_model import OLS as sm_OLS
 
     STATSMODELS_AVAILABLE = True
+
+    def OLS(*args, **kwargs):
+        return sm_OLS(*args, **kwargs)
+
 except ImportError:
+    from app.core.statsmodels_fallback import OLS
+
     STATSMODELS_AVAILABLE = False
-
-try:
-    from arch import arch_model
-
-    ARCH_AVAILABLE = True
-except ImportError:
-    ARCH_AVAILABLE = False
 
 
 class StockMetrics(BaseModel):
@@ -854,9 +850,7 @@ class StrategyStockAllocator:
             _macd_norm = (  # noqa: F841
                 1.0
                 if (macd is not None and macd > macd_signal)
-                else 0.0
-                if macd is not None
-                else 0.5
+                else 0.0 if macd is not None else 0.5
             )
             _roc_norm = (  # noqa: F841
                 min(1.0, max(0.0, (roc_optimal + 0.1) / 0.2)) if roc_optimal is not None else 0.5

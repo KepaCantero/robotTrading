@@ -16,27 +16,15 @@ from typing import Any, Dict, Optional
 import numpy as np
 import pandas as pd
 
-try:
-    import streamlit as st
+# REQUIRED: plotly is REQUIRED - NO FALLBACKS
+import plotly.express as px
+import plotly.graph_objects as go
 
-    STREAMLIT_AVAILABLE = True
-except ImportError:
-    STREAMLIT_AVAILABLE = False
+# REQUIRED: streamlit is REQUIRED - NO FALLBACKS
+import streamlit as st
 
-try:
-    import plotly.express as px
-    import plotly.graph_objects as go
-
-    PLOTLY_AVAILABLE = True
-except ImportError:
-    PLOTLY_AVAILABLE = False
-
-try:
-    from sklearn.metrics import silhouette_score
-
-    SKLEARN_AVAILABLE = True
-except ImportError:
-    SKLEARN_AVAILABLE = False
+# REQUIRED: sklearn is REQUIRED - NO FALLBACKS
+from sklearn.metrics import silhouette_score
 
 from app.backtesting.meta_analyzer import BacktestMetaAnalyzer
 
@@ -210,33 +198,39 @@ class MetaDashboard:
 
         # Generar alertas para Sharpe bajo
         for idx in bad_sharpe_mask[bad_sharpe_mask].index:
-            alerts.append({
-                'type': 'critical',
-                'test': test_names.iloc[idx],
-                'metric': 'Sharpe Ratio',
-                'value': sharpes.iloc[idx],
-                'message': f'Sharpe negativo: {sharpes.iloc[idx]:.2f}',
-            })
+            alerts.append(
+                {
+                    'type': 'critical',
+                    'test': test_names.iloc[idx],
+                    'metric': 'Sharpe Ratio',
+                    'value': sharpes.iloc[idx],
+                    'message': f'Sharpe negativo: {sharpes.iloc[idx]:.2f}',
+                }
+            )
 
         # Generar alertas para Drawdown alto
         for idx in bad_drawdown_mask[bad_drawdown_mask].index:
-            alerts.append({
-                'type': 'critical',
-                'test': test_names.iloc[idx],
-                'metric': 'Max Drawdown',
-                'value': abs(drawdowns.iloc[idx]),
-                'message': f'Drawdown crítico: {abs(drawdowns.iloc[idx]):.1f}%',
-            })
+            alerts.append(
+                {
+                    'type': 'critical',
+                    'test': test_names.iloc[idx],
+                    'metric': 'Max Drawdown',
+                    'value': abs(drawdowns.iloc[idx]),
+                    'message': f'Drawdown crítico: {abs(drawdowns.iloc[idx]):.1f}%',
+                }
+            )
 
         # Generar alertas para Win Rate bajo
         for idx in bad_winrate_mask[bad_winrate_mask].index:
-            alerts.append({
-                'type': 'warning',
-                'test': test_names.iloc[idx],
-                'metric': 'Win Rate',
-                'value': winrates.iloc[idx],
-                'message': f'Win rate bajo: {winrates.iloc[idx]:.1%}',
-            })
+            alerts.append(
+                {
+                    'type': 'warning',
+                    'test': test_names.iloc[idx],
+                    'metric': 'Win Rate',
+                    'value': winrates.iloc[idx],
+                    'message': f'Win rate bajo: {winrates.iloc[idx]:.1%}',
+                }
+            )
 
         if alerts:
             for alert in alerts[:10]:  # Top 10 alertas

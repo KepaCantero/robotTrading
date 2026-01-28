@@ -12,10 +12,10 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import yaml
-from pydantic import BaseModel, Field, field_validator, ValidationError
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 logger = logging.getLogger(__name__)
 
@@ -124,7 +124,9 @@ class BatchBacktestConfigValidator(BaseModel):
         if not v or not v.strip():
             raise ValueError("database_url cannot be empty")
         if not any(v.startswith(prefix) for prefix in ["sqlite://", "postgresql://", "mysql://"]):
-            raise ValueError("database_url must use a supported protocol (sqlite, postgresql, mysql)")
+            raise ValueError(
+                "database_url must use a supported protocol (sqlite, postgresql, mysql)"
+            )
         return v
 
     @field_validator("capital_tiers", "investment_horizons")
@@ -176,9 +178,7 @@ class ValidationErrorDetail(BaseModel):
 
     field: str = Field(description="Field name that failed validation")
     message: str = Field(description="Error message")
-    severity: str = Field(
-        default="error", description="Severity level: error, warning, or info"
-    )
+    severity: str = Field(default="error", description="Severity level: error, warning, or info")
 
 
 class ValidationResult(BaseModel):
@@ -196,9 +196,7 @@ class ValidationResult(BaseModel):
 
     def add_error(self, field: str, message: str) -> None:
         """Add an error to the validation result."""
-        self.errors.append(
-            ValidationErrorDetail(field=field, message=message, severity="error")
-        )
+        self.errors.append(ValidationErrorDetail(field=field, message=message, severity="error"))
         self.is_valid = False
 
     def add_warning(self, field: str, message: str) -> None:
@@ -566,9 +564,7 @@ class ConfigValidator:
                 self.result.add_error(f"circuit_breaker.{field}", error["msg"])
             return False
 
-    def validate_production_config(
-        self, env_file: Optional[Path] = None
-    ) -> ValidationResult:
+    def validate_production_config(self, env_file: Optional[Path] = None) -> ValidationResult:
         """
         Validate production configuration file.
 
@@ -765,9 +761,7 @@ class ConfigValidator:
 
         return self.result
 
-    def _validate_threshold_ranges(
-        self, threshold_config: Dict[str, Any]
-    ) -> None:
+    def _validate_threshold_ranges(self, threshold_config: Dict[str, Any]) -> None:
         """Validate threshold optimization ranges."""
         for indicator, params in threshold_config.items():
             if indicator == "optimization":
@@ -789,8 +783,12 @@ class ConfigValidator:
     def _validate_profile_overrides(self, profiles: Dict[str, Any]) -> None:
         """Validate profile-specific overrides."""
         valid_profiles = [
-            "conservative", "balanced", "aggressive",
-            "income", "growth", "dividendos"
+            "conservative",
+            "balanced",
+            "aggressive",
+            "income",
+            "growth",
+            "dividendos",
         ]
 
         for profile_name in profiles:
@@ -950,9 +948,7 @@ class ConfigValidator:
         # Check enabled modules against known modules
         if "modules" in batch_config:
             modules = batch_config["modules"]
-            known_filters = [
-                "momentum", "ema", "rsi", "volume", "atr", "stoch_rsi"
-            ]
+            known_filters = ["momentum", "ema", "rsi", "volume", "atr", "stoch_rsi"]
 
             if "filters" in modules:
                 for filter_name in modules["filters"]:

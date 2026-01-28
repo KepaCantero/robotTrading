@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 class CostCalculatorError(ValueError):
     """Raised when cost calculation parameters are invalid."""
+
     pass
 
 
@@ -95,10 +96,7 @@ class CostCalculator:
         self.use_dynamic_costs = use_dynamic_costs
 
     def _validate_positive_decimal(
-        self,
-        value: Decimal,
-        name: str,
-        allow_zero: bool = False
+        self, value: Decimal, name: str, allow_zero: bool = False
     ) -> None:
         """
         Validate that a Decimal value is positive.
@@ -118,10 +116,7 @@ class CostCalculator:
             raise CostCalculatorError(f"{name} must be positive, got: {value}")
 
     def _validate_percentage(
-        self,
-        value: Optional[Decimal],
-        name: str,
-        max_value: Decimal = Decimal("1")
+        self, value: Optional[Decimal], name: str, max_value: Decimal = Decimal("1")
     ) -> None:
         """
         Validate that a value is a percentage (0-1 or 0-100).
@@ -141,9 +136,7 @@ class CostCalculator:
             raise CostCalculatorError(f"{name} must be non-negative, got: {value}")
 
         if value > max_value:
-            raise CostCalculatorError(
-                f"{name} must be <= {max_value} (as decimal), got: {value}"
-            )
+            raise CostCalculatorError(f"{name} must be <= {max_value} (as decimal), got: {value}")
 
     def detect_asset_type(self, symbol: str) -> AssetType:
         """

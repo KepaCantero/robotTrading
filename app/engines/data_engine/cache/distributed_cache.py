@@ -2,65 +2,62 @@
 Distributed Cache - Sistema de cache distribuido con Redis y PostgreSQL.
 
 Proporciona:
-- Cache rápido con Redis (TTL, expiración automática)
-- Persistencia con PostgreSQL (datos históricos, metadata)
-- Fallback a cache en memoria si Redis no está disponible
+- Cache rápido con Redis (TTL, expiración automática) - REQUIRED
+- Persistencia con PostgreSQL (datos históricos, metadata) - REQUIRED
+- Cache en memoria como respaldo temporal
+
+REQUIREMENTS:
+- redis>=5.0.0 (OPTIONAL - will use in-memory fallback if not available)
+- sqlalchemy>=2.0.0 must be installed
 """
 
+import asyncio
+import json
 import logging
-import os
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
-from app.core.secure_serialization import sign_and_dump, verify_and_load
-
-# Redis (opcional)
+# Fallback pattern: Try to import redis, provide in-memory fallback if not available
 try:
     import redis.asyncio as redis
 
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
-    redis = None
+    redis = None  # type: ignore
+    logging.warning("redis package not installed. Using in-memory cache fallback only.")
 
-# PostgreSQL (opcional)
-try:
-    from sqlalchemy import Column, DateTime, Index, LargeBinary, String, Text, create_engine
-    from sqlalchemy.ext.declarative import declarative_base
-    from sqlalchemy.orm import sessionmaker
+from sqlalchemy import Column, DateTime, Index, LargeBinary, String, Text, create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
-    POSTGRESQL_AVAILABLE = True
-except ImportError:
-    POSTGRESQL_AVAILABLE = False
-    create_engine = None
-    declarative_base = None
-    sessionmaker = None
+from app.core.secure_serialization import sign_and_dump, verify_and_load
 
 logger = logging.getLogger(__name__)
 
 
 # Base para modelos SQLAlchemy
-if POSTGRESQL_AVAILABLE:
-    Base = declarative_base()
+Base = declarative_base()
 
-    class CacheEntry(Base):
-        """Modelo de entrada de cache en PostgreSQL."""
 
-        __tablename__ = 'cache_entries'
+class CacheEntry(Base):
+    """Modelo de entrada de cache en PostgreSQL."""
 
-        key = Column(String(255), primary_key=True)
-        data = Column(LargeBinary, nullable=False)
-        data_type = Column(String(50), nullable=False)
-        symbol = Column(String(50), index=True)
-        source = Column(String(50))
-        created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-        expires_at = Column(DateTime, index=True)
-        metadata_json = Column(Text)  # JSON metadata
+    __tablename__ = 'cache_entries'
 
-        __table_args__ = (
-            Index('idx_symbol_source', 'symbol', 'source'),
-            Index('idx_expires_at', 'expires_at'),
-        )
+    key = Column(String(255), primary_key=True)
+    data = Column(LargeBinary, nullable=False)
+    data_type = Column(String(50), nullable=False)
+    symbol = Column(String(50), index=True)
+    source = Column(String(50))
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    expires_at = Column(DateTime, index=True)
+    metadata_json = Column(Text)  # JSON metadata
+
+    __table_args__ = (
+        Index('idx_symbol_source', 'symbol', 'source'),
+        Index('idx_expires_at', 'expires_at'),
+    )
 
 
 class DistributedCache:
@@ -96,21 +93,27 @@ class DistributedCache:
             raise ValueError("use_postgres debe estar en config (cargado desde YAML)")
 
         self.default_ttl = config['default_ttl']
-        self.use_redis = config.get('use_redis', False) and REDIS_AVAILABLE
-        self.use_postgres = config.get('use_postgres', False) and POSTGRESQL_AVAILABLE
+        self.use_redis = config.get('use_redis', False)
+        self.use_postgres = config.get('use_postgres', False)
 
         # Redis client
-        self.redis_client: Optional[redis.Redis] = None
+        self.redis_client: Optional[Any] = None
         if self.use_redis:
-            try:
-                redis_url = config.get('redis_url')
-                if not redis_url:
-                    raise ValueError("redis_url debe estar en config cuando use_redis=True")
-                self.redis_client = redis.from_url(redis_url, decode_responses=False)
-                logger.info("Redis cache inicializado")
-            except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
-                logger.warning(f"No se pudo conectar a Redis: {e}. Usando cache en memoria.")
+            if not REDIS_AVAILABLE:
+                logger.warning(
+                    "Redis package not installed. Disabling Redis cache, using in-memory fallback."
+                )
                 self.use_redis = False
+            else:
+                try:
+                    redis_url = config.get('redis_url')
+                    if not redis_url:
+                        raise ValueError("redis_url debe estar en config cuando use_redis=True")
+                    self.redis_client = redis.from_url(redis_url, decode_responses=False)  # type: ignore
+                    logger.info("Redis cache inicializado")
+                except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
+                    logger.warning(f"No se pudo conectar a Redis: {e}. Usando cache en memoria.")
+                    self.use_redis = False
 
         # PostgreSQL connection
         self.postgres_engine = None
@@ -128,11 +131,10 @@ class DistributedCache:
 
                     # Configurar esquema desde config
                     postgres_schema = config.get('postgres_schema', {})
-                    if POSTGRESQL_AVAILABLE:
-                        # Actualizar tabla si hay configuración personalizada
-                        CacheEntry.__tablename__ = postgres_schema.get(
-                            'table_name', 'data_engine_cache'
-                        )
+                    # Actualizar tabla si hay configuración personalizada
+                    CacheEntry.__tablename__ = postgres_schema.get(
+                        'table_name', 'data_engine_cache'
+                    )
 
                     # Crear tablas si no existen
                     Base.metadata.create_all(self.postgres_engine)
@@ -178,7 +180,13 @@ class DistributedCache:
                     return verify_and_load(cached_data)
             except ValueError as e:
                 logger.warning(f"Security error getting from Redis: {e}")
-            except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
+            except (
+                IntegrityError,
+                OperationalError,
+                DatabaseError,
+                DataError,
+                ProgrammingError,
+            ) as e:
                 logger.warning(f"Error obteniendo de Redis: {e}")
 
         # Intentar PostgreSQL
@@ -195,7 +203,13 @@ class DistributedCache:
                     return verify_and_load(entry.data)
             except ValueError as e:
                 logger.warning(f"Security error getting from PostgreSQL: {e}")
-            except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
+            except (
+                IntegrityError,
+                OperationalError,
+                DatabaseError,
+                DataError,
+                ProgrammingError,
+            ) as e:
                 logger.warning(f"Error obteniendo de PostgreSQL: {e}")
 
         # Fallback a memoria
@@ -272,7 +286,13 @@ class DistributedCache:
                     self.postgres_session.add(entry)
 
                 self.postgres_session.commit()
-            except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
+            except (
+                IntegrityError,
+                OperationalError,
+                DatabaseError,
+                DataError,
+                ProgrammingError,
+            ) as e:
                 logger.warning(f"Error guardando en PostgreSQL: {e}")
                 if self.postgres_session:
                     self.postgres_session.rollback()
@@ -291,7 +311,13 @@ class DistributedCache:
         if self.use_redis and self.redis_client:
             try:
                 await self.redis_client.delete(key)
-            except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
+            except (
+                IntegrityError,
+                OperationalError,
+                DatabaseError,
+                DataError,
+                ProgrammingError,
+            ) as e:
                 logger.warning(f"Error eliminando de Redis: {e}")
                 success = False
 
@@ -300,7 +326,13 @@ class DistributedCache:
             try:
                 self.postgres_session.query(CacheEntry).filter_by(key=key).delete()
                 self.postgres_session.commit()
-            except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
+            except (
+                IntegrityError,
+                OperationalError,
+                DatabaseError,
+                DataError,
+                ProgrammingError,
+            ) as e:
                 logger.warning(f"Error eliminando de PostgreSQL: {e}")
                 if self.postgres_session:
                     self.postgres_session.rollback()
@@ -334,7 +366,13 @@ class DistributedCache:
                 for entry in expired:
                     self.postgres_session.delete(entry)
                 self.postgres_session.commit()
-            except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
+            except (
+                IntegrityError,
+                OperationalError,
+                DatabaseError,
+                DataError,
+                ProgrammingError,
+            ) as e:
                 logger.warning(f"Error limpiando PostgreSQL: {e}")
 
         # Memoria

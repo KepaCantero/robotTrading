@@ -4,6 +4,7 @@ T18.1: Metrics Query Engine - Query builder and executor for time-series metrics
 Provides flexible querying, aggregation, and analysis capabilities.
 """
 
+import asyncio
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal

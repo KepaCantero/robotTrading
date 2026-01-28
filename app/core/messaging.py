@@ -4,28 +4,31 @@ Uses Redis for pub/sub and ZeroMQ as fallback for high-throughput scenarios.
 Optimized for single-instance deployment with memory constraints.
 """
 
-import asyncio
 import logging
-import os
 import time
 from threading import Thread
 from typing import Any, Callable, Dict, Optional
 
 from .secure_serialization import sign_and_dump, verify_and_load
 
+# Fallback pattern: Try to import redis and zmq
 try:
-    import redis
+    import redis  # noqa: F401
 
-    HAS_REDIS = True
+    REDIS_AVAILABLE = True
 except ImportError:
-    HAS_REDIS = False
+    REDIS_AVAILABLE = False
+    redis = None  # type: ignore
+    logging.warning("redis package not installed. Messaging system will use in-memory fallback.")
 
 try:
-    import zmq
+    import zmq  # noqa: F401
 
-    HAS_ZMQ = True
+    ZMQ_AVAILABLE = True
 except ImportError:
-    HAS_ZMQ = False
+    ZMQ_AVAILABLE = False
+    zmq = None  # type: ignore
+    logging.warning("zmq package not installed. ZeroMQ messaging disabled.")
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +41,7 @@ class MessageBus:
     """
     Unified message bus for inter-module communication.
     Uses Redis pub/sub for most cases, ZeroMQ for high-frequency data.
+    Falls back to in-memory message passing if dependencies are unavailable.
     """
 
     def __init__(
@@ -49,15 +53,17 @@ class MessageBus:
     ):
         self.redis_host = redis_host
         self.redis_port = redis_port
-        self.use_zmq = use_zmq and HAS_ZMQ
+        self.use_zmq = use_zmq
         self.redis_client = None
         self.redis_pubsub = None
         self.zmq_context = None
         self.zmq_socket = None
+        self._memory_subscribers: Dict[str, list] = {}
 
-        if HAS_REDIS:
+        # Redis connection with fallback
+        if REDIS_AVAILABLE:
             try:
-                self.redis_client = redis.Redis(
+                self.redis_client = redis.Redis(  # type: ignore
                     host=redis_host,
                     port=redis_port,
                     decode_responses=False,  # Binary mode for pickle
@@ -67,18 +73,27 @@ class MessageBus:
                 )
                 self.redis_client.ping()
                 logger.info("✅ Redis connected for messaging")
-            except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-                logger.warning(f"⚠️ Redis connection failed: {e}, falling back to in-memory")
+            except (ConnectionError, TimeoutError) as e:
+                logger.warning(f"⚠️ Redis connection failed: {e}. Using in-memory fallback.")
                 self.redis_client = None
+        else:
+            logger.warning("⚠️ Redis not installed. Using in-memory fallback.")
 
+        # ZeroMQ setup if requested
         if self.use_zmq:
-            try:
-                self.zmq_context = zmq.Context()
-                self.zmq_socket = self.zmq_context.socket(zmq.PUB)
-                self.zmq_socket.bind(f"tcp://*:{zmq_port}")
-                logger.info(f"✅ ZeroMQ PUB socket bound on port {zmq_port}")
-            except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-                logger.warning(f"⚠️ ZeroMQ setup failed: {e}")
+            if ZMQ_AVAILABLE:
+                try:
+                    self.zmq_context = zmq.Context()  # type: ignore
+                    self.zmq_socket = self.zmq_context.socket(zmq.PUB)  # type: ignore
+                    self.zmq_socket.bind(f"tcp://*:{zmq_port}")
+                    logger.info(f"✅ ZeroMQ PUB socket bound on port {zmq_port}")
+                except (ConnectionError, TimeoutError) as e:
+                    logger.warning(f"⚠️ ZeroMQ setup failed: {e}. Using Redis fallback.")
+                    self.zmq_context = None
+                    self.zmq_socket = None
+                    self.use_zmq = False
+            else:
+                logger.warning("⚠️ ZeroMQ not installed. Using Redis fallback.")
                 self.use_zmq = False
 
     def publish(self, channel: str, message: Dict[str, Any]) -> bool:
@@ -93,26 +108,34 @@ class MessageBus:
             True if published successfully
         """
         try:
-            if self.use_zmq and channel in ['market-ticks', 'signals']:
+            if self.use_zmq and channel in ['market-ticks', 'signals'] and self.zmq_socket:
                 # Use ZeroMQ for high-frequency channels
                 # SECURE: Use JSON+HMAC instead of pickle
                 data = sign_and_dump({'channel': channel, 'data': message})
-                self.zmq_socket.send(data, zmq.NOBLOCK)
+                self.zmq_socket.send(data, zmq.NOBLOCK)  # type: ignore
                 return True
             elif self.redis_client:
                 # Use Redis for most channels
                 # SECURE: Use JSON+HMAC instead of pickle
                 data = sign_and_dump(message)
-                self.redis_client.publish(channel, data)
+                self.redis_client.publish(channel, data)  # type: ignore
                 return True
             else:
-                logger.warning(f"No messaging backend available for channel: {channel}")
-                return False
-        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+                # In-memory fallback
+                if channel in self._memory_subscribers:
+                    for callback in self._memory_subscribers[channel]:
+                        try:
+                            callback(message)
+                        except Exception as e:
+                            logger.error(f"Error in memory subscriber callback: {e}")
+                return True
+        except (ConnectionError, TimeoutError) as e:
             logger.error(f"Failed to publish to {channel}: {e}")
             return False
 
-    def subscribe(self, channel: str, callback: Callable[[Dict[str, Any]], None]) -> Thread:
+    def subscribe(
+        self, channel: str, callback: Callable[[Dict[str, Any]], None]
+    ) -> Optional[Thread]:
         """
         Subscribe to channel and call callback for each message.
 
@@ -121,14 +144,18 @@ class MessageBus:
             callback: Function to call with message data
 
         Returns:
-            Thread running the subscription
+            Thread running the subscription, or None if using in-memory fallback
         """
-        if self.use_zmq and channel in ['market-ticks', 'signals']:
+        if self.use_zmq and channel in ['market-ticks', 'signals'] and self.zmq_context:
             return self._subscribe_zmq(channel, callback)
         elif self.redis_client:
             return self._subscribe_redis(channel, callback)
         else:
-            logger.warning(f"No messaging backend available for subscription: {channel}")
+            # In-memory fallback
+            if channel not in self._memory_subscribers:
+                self._memory_subscribers[channel] = []
+            self._memory_subscribers[channel].append(callback)
+            logger.info(f"Registered in-memory subscriber for channel: {channel}")
             return None
 
     def _subscribe_redis(self, channel: str, callback: Callable) -> Thread:
@@ -183,7 +210,13 @@ class MessageBus:
                         # in a dedicated thread, not in an async event loop
                     except ValueError as e:
                         logger.error(f"Security error processing ZMQ message: {e}")
-                    except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+                    except (
+                        FileNotFoundError,
+                        PermissionError,
+                        IOError,
+                        OSError,
+                        IsADirectoryError,
+                    ) as e:
                         logger.error(f"Error processing ZMQ message: {e}")
             except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
                 logger.error(f"ZMQ subscription error: {e}")

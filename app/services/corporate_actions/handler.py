@@ -21,7 +21,6 @@ Author: Algorithmic Trading System
 Date: 2026-01-25
 """
 
-import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -30,7 +29,6 @@ from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
 
 from app.core.timezone_utils import utc_now
-
 
 logger = logging.getLogger(__name__)
 
@@ -769,7 +767,7 @@ class CorporateActionsHandler:
                 all_positions = await self.broker.get_positions()
                 return [p for p in (all_positions or []) if p.get("symbol") == symbol]
             else:
-                logger.warning(f"Broker does not support position queries")
+                logger.warning("Broker does not support position queries")
                 return []
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error getting positions for {symbol}: {e}")
@@ -838,9 +836,7 @@ class CorporateActionsHandler:
             for position in positions:
                 position_id = self._get_position_id(position)
                 # This would call the position monitor to adjust baseline
-                logger.debug(
-                    f"Adjusting baseline for {position_id} by dividend amount {amount}"
-                )
+                logger.debug(f"Adjusting baseline for {position_id} by dividend amount {amount}")
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Error adjusting dividend baseline: {e}")
 

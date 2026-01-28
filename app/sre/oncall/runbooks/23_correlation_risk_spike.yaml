@@ -1,0 +1,122 @@
+---
+name: "Correlation Risk Spike"
+severity: "high"
+trigger: "portfolio_correlation > 0.8 OR correlation_breakdown"
+category: "risk"
+tags: ["correlation", "risk", "portfolio", "diversification"]
+estimated_duration_minutes: 15
+last_updated: "2026-01-28"
+version: "1.0"
+
+description: |
+  Respond to correlation risk spikes. High correlations reduce
+  diversification benefits and increase portfolio risk.
+
+prerequisites:
+  - Risk dashboard access
+  - Portfolio analysis tools
+  - Correlation monitoring
+
+steps:
+  - title: "Verify Correlation Spike"
+    description: "Confirm correlation is elevated"
+    commands:
+      - "Check correlation metrics dashboard"
+      - "Identify affected assets/pairs"
+      - "Review correlation trend"
+      - "Check if correlation breakdown or convergence"
+    expected_outcome: "Correlation spike confirmed"
+
+  - title: "Assess Portfolio Impact"
+    description: "Determine impact on portfolio risk"
+    commands:
+      - "Calculate portfolio correlation risk"
+      - "Review diversification benefit"
+      - "Assess concentration risk"
+      - "Check if correlation limits breached"
+    expected_outcome: "Impact assessed"
+    decision_point:
+      condition: "correlation_limit_breached OR high_risk_impact"
+      true_branch: "Reduce exposure immediately"
+      false_branch: "Monitor and prepare reduction"
+
+  - title: "Identify Correlated Assets"
+    description: "Find which assets are driving correlation"
+    commands:
+      - "Run correlation analysis"
+      - "Identify top correlated pairs"
+      - "Check sector/industry correlations"
+      - "Review beta correlations"
+    expected_outcome: "Correlated assets identified"
+
+  - title: "Analyze Correlation Cause"
+    description: "Understand why correlation changed"
+    commands:
+      - "Check for market regime change"
+      - "Review sector-specific events"
+      - "Check for market stress"
+      - "Review macroeconomic factors"
+    expected_outcome: "Cause understood"
+
+  - title: "Reduce Correlated Exposure"
+    description: "Lower exposure to correlated assets"
+    commands:
+      - "Reduce positions in highly correlated assets"
+      - "Increase diversification"
+      - "Add uncorrelated assets if available"
+      - "Hedge correlated exposure"
+    expected_outcome: "Exposure reduced"
+
+  - title: "Adjust Risk Limits"
+    description: "Update risk management parameters"
+    commands:
+      - "Review and adjust correlation limits"
+      - "Update position sizing models"
+      - "Adjust portfolio constraints"
+      - "Update correlation monitoring"
+    expected_outcome: "Risk limits adjusted"
+
+  - title: "Monitor Correlation Recovery"
+    description: "Watch for correlation normalization"
+    commands:
+      - "Monitor correlation metrics"
+      - "Check for regime changes"
+      - "Assess if reduction was appropriate"
+      - "Monitor for 24 hours"
+    expected_outcome: "Correlation monitored"
+
+  - title: "Document Incident"
+    description: "Record correlation spike incident"
+    commands:
+      - "Log correlation spike incident"
+      - "Document root cause analysis"
+      - "Record actions taken"
+      - "Update correlation models"
+    expected_outcome: "Incident documented"
+
+post_actions:
+  - "Review correlation modeling"
+  - "Improve correlation monitoring"
+  - "Add correlation stress tests"
+  - "Update runbook with lessons learned"
+
+related_runbooks:
+  - "var_breach.yaml"
+  - "concentration_risk.yaml"
+  - "market_regime_change.yaml"
+
+metrics_to_track:
+  - "portfolio_correlation"
+  - "correlation_breakdown_count"
+  - "diversification_ratio"
+  - "concentration_score"
+
+success_criteria:
+  - "Correlation risk reduced"
+  - "Portfolio rebalanced"
+  - "Risk limits updated"
+  - "Incident documented"
+
+escalation_path: "risk_management"
+owner: "risk-team"
+review_frequency: "monthly"

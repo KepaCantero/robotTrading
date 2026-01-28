@@ -8,6 +8,8 @@ import logging
 from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
 
+from requests.exceptions import HTTPError, RequestException
+
 logger = logging.getLogger(__name__)
 
 

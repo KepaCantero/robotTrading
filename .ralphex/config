@@ -1,0 +1,107 @@
+# Ralphex Configuration for FASE 5 Backtesting Engine
+
+[ralphex]
+# Plan file location
+plan_file = docs/plans/FASE5_Backtesting_Engine.md
+
+# Default branch
+default_branch = main
+
+# Goal description
+goal = Implement FASE 5 Backtesting Engine with 95% compliance
+
+[agents]
+# Agent definitions for the workflow
+
+# Agent 1: Planner - Breaks down tasks and creates implementation plans
+planner_agent = .ralphex/agents/planner.txt
+planner_prompt = """
+Read the task from the plan file and create a structured implementation plan.
+1. Read relevant /rules/ files
+2. Search for existing implementations using Grep
+3. Read existing code to understand patterns
+4. Output JSON plan with steps and validation criteria
+"""
+
+# Agent 2: Implementer - Implements code following the plan
+implementer_agent = .ralphex/agents/implementer.txt
+implementer_prompt = """
+Implement code according to the plan:
+1. Read /rules/ for implementation details
+2. Follow existing code patterns
+3. Use type hints (mypy strict)
+4. Use Google style docstrings
+5. Run mypy --strict and ruff check
+"""
+
+# Agent 3: Tester - Creates and runs tests
+tester_agent = .ralphex/agents/tester.txt
+tester_prompt = """
+Create comprehensive tests:
+1. Read the implementation
+2. Create pytest tests
+3. Verify edge cases and error handling
+4. Run tests with coverage (> 80% target)
+"""
+
+# Agent 4: Auditor - Audits against /rules/
+auditor_agent = .ralphex/agents/auditor.txt
+auditor_prompt = """
+Audit implementation against /rules/:
+1. Read implementation and tests
+2. Verify trading rules compliance (Chan, Hull, etc.)
+3. Verify Python QA standards (type hints, docstrings, SOLID)
+4. Output audit decision (APPROVED/FIXES_REQUIRED/PARTIAL)
+"""
+
+[workflow]
+# Workflow configuration
+
+# Agent execution order
+agent_sequence = planner, implementer, tester, auditor
+
+# Loop until auditor approves
+loop_until_approved = true
+
+# Maximum iterations before manual intervention
+max_iterations = 5
+
+[validation]
+# Validation commands to run
+
+# Type checking
+type_check = mypy --strict app/
+
+# Linting
+lint = ruff check app/
+lint_fix = ruff check --fix app/
+
+# Testing
+test = python -m pytest app/tests/ -v --tb=short
+
+# Coverage
+coverage = python -m pytest app/tests/ --cov=app/ --cov-report=term-missing
+
+[rules]
+# Rules directory reference
+
+trading_rules = /rules/trading/
+python_qa_rules = /rules/python/
+
+# Critical rule files for FASE 5
+chan_rules = /rules/trading/01-ernest-chan-algorithmic-trading.md
+carver_rules = /rules/trading/10-robert-carver-systematic-trading.md
+hull_rules = /rules/trading/13-john-hull-risk-management.md
+lopez_rules = /rules/trading/03-lopez-de-prado-advances-financial-ml.md
+
+[output]
+# Output configuration
+
+# Log file for execution
+log_file = .ralphex/execution.log
+
+# Report directory
+report_dir = reports/ralphex/
+
+# Update plan file with completed tasks
+update_plan = true

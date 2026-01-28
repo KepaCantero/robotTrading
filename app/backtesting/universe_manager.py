@@ -12,7 +12,7 @@ because failed companies are systematically excluded from historical data.
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -238,16 +238,10 @@ class UniverseManager:
         if not survivor_returns or not full_universe_returns:
             return {"bias_detected": False}
 
-        import numpy as np
-
         survivor_cagr = self._calculate_cagr_from_returns(survivor_returns)
         full_cagr = self._calculate_cagr_from_returns(full_universe_returns)
 
-        bias_pct = (
-            ((survivor_cagr - full_cagr) / abs(full_cagr) * 100)
-            if full_cagr != 0
-            else 0
-        )
+        bias_pct = ((survivor_cagr - full_cagr) / abs(full_cagr) * 100) if full_cagr != 0 else 0
 
         result = {
             "survivor_cagr": survivor_cagr,
@@ -288,9 +282,7 @@ class UniverseManager:
 
         return cagr
 
-    def get_sector_diversification(
-        self, symbols: List[str]
-    ) -> Dict[str, List[str]]:
+    def get_sector_diversification(self, symbols: List[str]) -> Dict[str, List[str]]:
         """
         Get sector breakdown for a list of symbols.
 
@@ -327,9 +319,7 @@ class UniverseManager:
 
         return sectors
 
-    def get_universe_statistics(
-        self, start_date: datetime, end_date: datetime
-    ) -> Dict[str, any]:
+    def get_universe_statistics(self, start_date: datetime, end_date: datetime) -> Dict[str, any]:
         """
         Get statistics about the backtesting universe.
 
@@ -353,15 +343,9 @@ class UniverseManager:
             "total_symbols": len(symbols),
             "sectors": {k: len(v) for k, v in sectors.items()},
             "delisted_included": sum(
-                1
-                for s in symbols
-                for entry in self.universe["delisted"]
-                if s == entry[0]
+                1 for s in symbols for entry in self.universe["delisted"] if s == entry[0]
             ),
             "acquired_included": sum(
-                1
-                for s in symbols
-                for entry in self.universe["spun_off"]
-                if s == entry[0]
+                1 for s in symbols for entry in self.universe["spun_off"] if s == entry[0]
             ),
         }

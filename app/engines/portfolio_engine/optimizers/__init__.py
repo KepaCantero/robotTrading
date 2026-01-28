@@ -6,6 +6,7 @@ Implementa diferentes métodos de optimización de portfolio:
 - Risk parity allocation
 - Black-Litterman model
 - Kelly Criterion adaptativo
+- Handcrafted Weights (Carver's methodology)
 """
 
 import logging
@@ -16,30 +17,79 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-# Optional dependencies
+# Import handcrafted optimizer from separate file
+try:
+    from .handcrafted_optimizer import HandcraftedWeightsOptimizer, create_handcrafted_weights
+
+    HANDCRAFTED_AVAILABLE = True
+except ImportError:
+    HANDCRAFTED_AVAILABLE = False
+    HandcraftedWeightsOptimizer = None  # type: ignore
+    create_handcrafted_weights = None  # type: ignore
+
+# Import HRP optimizer from separate file
+try:
+    from .hierarchical_risk_parity import (
+        HierarchicalRiskParity,
+        HRPOptimizer,
+        compute_hrp_weights,
+        plot_hrp_dendrogram,
+    )
+
+    HRP_AVAILABLE = True
+    logger.info("Hierarchical Risk Parity (HRP) optimizer is available")
+except ImportError:
+    HRP_AVAILABLE = False
+    HierarchicalRiskParity = None  # type: ignore
+    HRPOptimizer = None  # type: ignore
+    compute_hrp_weights = None  # type: ignore
+    plot_hrp_dendrogram = None  # type: ignore
+    logger.warning(
+        "Hierarchical Risk Parity (HRP) optimizer could not be imported. "
+        "Check scipy installation."
+    )
+
+# cvxpy import with fallback - provides convex optimization
 try:
     import cvxpy as cp
 
     CVXPY_AVAILABLE = True
+    logger.info("cvxpy is available for convex optimization")
 except ImportError:
+    cp = None  # type: ignore
     CVXPY_AVAILABLE = False
-    logger.warning("cvxpy no disponible. Optimización avanzada limitada.")
+    logger.warning(
+        "cvxpy is not installed. Portfolio optimization will use scipy-based fallbacks. "
+        "For full convex optimization capabilities, install cvxpy: pip install cvxpy"
+    )
 
+# PyPortfolioOpt import with fallback - provides efficient frontier optimization
 try:
-    from pypfopt import EfficientFrontier
+    from pyportfolioopt import EfficientFrontier
 
-    PYPORTFOLIO_AVAILABLE = True
+    PYPFOPT_AVAILABLE = True
+    logger.info("PyPortfolioOpt is available for efficient frontier optimization")
 except ImportError:
-    PYPORTFOLIO_AVAILABLE = False
-    logger.warning("PyPortfolioOpt no disponible. Usando implementación básica.")
+    EfficientFrontier = None  # type: ignore
+    PYPFOPT_AVAILABLE = False
+    logger.warning(
+        "PyPortfolioOpt is not installed. Portfolio optimization will use basic methods. "
+        "For advanced optimization features, install PyPortfolioOpt: pip install pyportfolioopt"
+    )
 
+# scipy is REQUIRED - provides core optimization capabilities
 try:
     from scipy.optimize import minimize
 
     SCIPY_AVAILABLE = True
+    logger.info("scipy.optimize is available")
 except ImportError:
+    minimize = None  # type: ignore
     SCIPY_AVAILABLE = False
-    logger.warning("scipy no disponible. Risk Parity usará método heurístico.")
+    logger.error(
+        "scipy is not installed and is REQUIRED for optimization. "
+        "Please install scipy: pip install scipy"
+    )
 
 
 class BaseOptimizer(ABC):
@@ -102,11 +152,23 @@ class MarkowitzOptimizer(BaseOptimizer):
         constraints = constraints or {}
 
         try:
-            if PYPORTFOLIO_AVAILABLE:
+            # Try PyPortfolioOpt first (most robust)
+            if PYPFOPT_AVAILABLE:
                 return self._optimize_pypfopt(expected_returns, cov_matrix, constraints)
+            # Fall back to cvxpy if available
             elif CVXPY_AVAILABLE:
                 return self._optimize_cvxpy(expected_returns, cov_matrix, constraints)
+            # Fall back to scipy-based optimization
+            elif SCIPY_AVAILABLE:
+                self.logger.info(
+                    "Using scipy-based optimization (cvxpy and PyPortfolioOpt not available)"
+                )
+                return self._optimize_scipy(expected_returns, cov_matrix, constraints)
+            # Final fallback to basic analytical methods
             else:
+                self.logger.warning(
+                    "No optimization libraries available, using basic analytical method"
+                )
                 return self._optimize_basic(expected_returns, cov_matrix, constraints)
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             self.logger.error(f"Error en optimización Markowitz: {e}", exc_info=True)
@@ -151,6 +213,9 @@ class MarkowitzOptimizer(BaseOptimizer):
         self, expected_returns: np.ndarray, cov_matrix: np.ndarray, constraints: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Optimizar usando cvxpy."""
+        if not CVXPY_AVAILABLE or cp is None:
+            raise ImportError("cvxpy is not available")
+
         n = len(expected_returns)
 
         # Variables de decisión (pesos)
@@ -201,6 +266,105 @@ class MarkowitzOptimizer(BaseOptimizer):
         else:
             self.logger.warning(f"Optimización cvxpy no convergió: {problem.status}")
             return self._equal_weight_fallback(n)
+
+    def _optimize_scipy(
+        self, expected_returns: np.ndarray, cov_matrix: np.ndarray, constraints: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Optimización usando scipy.optimize.minimize.
+
+        Maximiza el Sharpe ratio usando optimización numérica.
+        Funciona como fallback cuando cvxpy no está disponible.
+        """
+        if not SCIPY_AVAILABLE or minimize is None:
+            raise ImportError("scipy is not available")
+
+        n = len(expected_returns)
+
+        # Obtener restricciones
+        max_weight = constraints.get('max_weight', 1.0)
+        min_weight = constraints.get('min_weight', 0.0)
+
+        # Punto inicial: pesos inversos a volatilidad
+        variances = np.diag(cov_matrix)
+        variances = np.maximum(variances, 1e-10)
+        inv_vol = 1.0 / np.sqrt(variances)
+        x0 = inv_vol / inv_vol.sum()
+
+        # Función objetivo: negativo del Sharpe ratio (para minimizar)
+        def _negative_sharpe(weights: np.ndarray) -> float:
+            """Calcula el negativo del Sharpe ratio."""
+            portfolio_return = np.dot(weights, expected_returns)
+            portfolio_variance = np.dot(weights, np.dot(cov_matrix, weights))
+            portfolio_volatility = np.sqrt(portfolio_variance)
+
+            if portfolio_volatility < 1e-10:
+                return -1e10  # Penalizar portfolios con muy baja volatilidad
+
+            sharpe_ratio = portfolio_return / portfolio_volatility
+            return -sharpe_ratio
+
+        # Gradiente del negativo del Sharpe ratio
+        def _negative_sharpe_gradient(weights: np.ndarray) -> np.ndarray:
+            """Calcula el gradiente del negativo del Sharpe ratio."""
+            portfolio_return = np.dot(weights, expected_returns)
+            portfolio_variance = np.dot(weights, np.dot(cov_matrix, weights))
+            portfolio_volatility = np.sqrt(portfolio_variance)
+
+            if portfolio_volatility < 1e-10:
+                return np.zeros(n)
+
+            # Gradiente de Sharpe ratio:
+            # dSR/dw = (mu * sigma_p - r_p * (1/sigma_p) * Sigma * w) / sigma_p^2
+            #       = (mu * sigma_p^2 - r_p * Sigma * w) / sigma_p^3
+
+            sigma_w = np.dot(cov_matrix, weights)
+            grad_sharpe = (
+                expected_returns * portfolio_volatility
+                - portfolio_return * sigma_w / portfolio_volatility
+            ) / (portfolio_volatility**2)
+
+            return -grad_sharpe
+
+        # Restricciones
+        bounds = [(min_weight, max_weight) for _ in range(n)]
+        constraints_dict = {'type': 'eq', 'fun': lambda w: np.sum(w) - 1.0}
+
+        # Optimizar usando SLSQP (método robusto para problemas con restricciones)
+        result = minimize(
+            _negative_sharpe,
+            x0,
+            method='SLSQP',
+            bounds=bounds,
+            constraints=constraints_dict,
+            jac=_negative_sharpe_gradient,
+            options={
+                'ftol': 1e-12,
+                'maxiter': 1000,
+                'disp': False,
+            },
+        )
+
+        if result.success or (result.x is not None and np.all(np.isfinite(result.x))):
+            weights = result.x
+            weights = np.maximum(weights, 0)  # Asegurar no negativos
+            weights = weights / weights.sum()  # Normalizar
+
+            # Calcular métricas
+            expected_return = float(np.dot(weights, expected_returns))
+            volatility = float(np.sqrt(np.dot(weights, np.dot(cov_matrix, weights))))
+            sharpe_ratio = expected_return / volatility if volatility > 0 else 0.0
+
+            return {
+                'weights': {f'asset_{i}': float(w) for i, w in enumerate(weights)},
+                'expected_return': expected_return,
+                'volatility': volatility,
+                'sharpe_ratio': sharpe_ratio,
+                'method': 'markowitz_scipy',
+            }
+        else:
+            self.logger.warning(f"Optimización scipy no convergió: {result.message}")
+            return self._optimize_basic(expected_returns, cov_matrix, constraints)
 
     def _optimize_basic(
         self, expected_returns: np.ndarray, cov_matrix: np.ndarray, constraints: Dict[str, Any]
@@ -317,6 +481,14 @@ class RiskParityOptimizer(BaseOptimizer):
         This ensures each asset contributes equally to portfolio risk.
         Uses SLSQP optimizer with guaranteed convergence.
         """
+        if not SCIPY_AVAILABLE or minimize is None:
+            # Fallback to iterative method if scipy is not available
+            self.logger.warning("scipy not available, using iterative risk parity method")
+            weights = self._get_inverse_volatility_weights(cov_matrix)
+            return self._risk_parity_fallback(
+                cov_matrix, weights, 1.0 / len(cov_matrix), constraints
+            )
+
         n = len(cov_matrix)
 
         # Initial guess: inverse volatility weights (good starting point)
@@ -364,37 +536,46 @@ class RiskParityOptimizer(BaseOptimizer):
 
             return grad
 
-        if SCIPY_AVAILABLE:
-            # Use scipy.optimize.minimize with SLSQP
-            try:
-                result = minimize(
-                    _risk_parity_objective,
-                    x0,
-                    method='SLSQP',
-                    jac=_risk_parity_gradient,
-                    bounds=[(1e-10, 1.0) for _ in range(n)],
-                    constraints={'type': 'eq', 'fun': lambda w: np.sum(w) - 1.0},
-                    options={
-                        'ftol': 1e-12,
-                        'maxiter': constraints.get('max_iterations', 500),
-                        'disp': False,
-                    },
-                )
+        # Use scipy.optimize.minimize with SLSQP
+        try:
+            result = minimize(
+                _risk_parity_objective,
+                x0,
+                method='SLSQP',
+                jac=_risk_parity_gradient,
+                bounds=[(1e-10, 1.0) for _ in range(n)],
+                constraints={'type': 'eq', 'fun': lambda w: np.sum(w) - 1.0},
+                options={
+                    'ftol': 1e-12,
+                    'maxiter': constraints.get('max_iterations', 500),
+                    'disp': False,
+                },
+            )
 
-                if result.success:
-                    self.logger.debug(f"Risk parity converged: {result.message}")
+            if result.success:
+                self.logger.debug(f"Risk parity converged: {result.message}")
+                return result.x
+            else:
+                self.logger.warning(f"Scipy optimization warning: {result.message}")
+                # Still use result if it's reasonable
+                if result.fun < 1e-4:
                     return result.x
-                else:
-                    self.logger.warning(f"Scipy optimization warning: {result.message}")
-                    # Still use result if it's reasonable
-                    if result.fun < 1e-4:
-                        return result.x
+                # Otherwise fall back to iterative method
+                weights = self._get_inverse_volatility_weights(cov_matrix)
+                return self._risk_parity_fallback(cov_matrix, weights, target_risk, constraints)
 
-            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-                self.logger.warning(f"Scipy optimization failed: {e}, using fallback")
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
+            self.logger.warning(f"Scipy optimization failed: {e}, using fallback")
+            # Fallback to iterative method
+            weights = self._get_inverse_volatility_weights(cov_matrix)
+            return self._risk_parity_fallback(cov_matrix, weights, target_risk, constraints)
 
-        # Fallback: simple iterative method
-        return self._risk_parity_fallback(cov_matrix, x0, target_risk, constraints)
+    def _get_inverse_volatility_weights(self, cov_matrix: np.ndarray) -> np.ndarray:
+        """Get initial weights using inverse volatility weighting."""
+        variances = np.diag(cov_matrix)
+        variances = np.maximum(variances, 1e-10)
+        inv_vol = 1.0 / np.sqrt(variances)
+        return inv_vol / inv_vol.sum()
 
     def _risk_parity_fallback(
         self,
@@ -763,3 +944,65 @@ class KellyCriterionOptimizer(BaseOptimizer):
             'sharpe_ratio': 0.0,
             'method': 'equal_weight_fallback',
         }
+
+
+def get_optimization_capabilities() -> Dict[str, bool]:
+    """
+    Get available optimization capabilities.
+
+    Returns a dictionary indicating which optimization libraries are available.
+
+    Returns:
+        Dict with keys:
+        - cvxpy: True if cvxpy is available for convex optimization
+        - pypfopt: True if PyPortfolioOpt is available for efficient frontier
+        - scipy: True if scipy.optimize is available for numerical optimization
+        - handcrafted: True if handcrafted optimizer is available
+        - hrp: True if HRP optimizer is available
+    """
+    return {
+        'cvxpy': CVXPY_AVAILABLE,
+        'pypfopt': PYPFOPT_AVAILABLE,
+        'scipy': SCIPY_AVAILABLE,
+        'handcrafted': HANDCRAFTED_AVAILABLE,
+        'hrp': HRP_AVAILABLE,
+    }
+
+
+def get_optimization_method() -> str:
+    """
+    Get the recommended optimization method based on available libraries.
+
+    Returns:
+        str: The recommended optimization method
+    """
+    if PYPFOPT_AVAILABLE:
+        return 'pypfopt'
+    elif CVXPY_AVAILABLE:
+        return 'cvxpy'
+    elif SCIPY_AVAILABLE:
+        return 'scipy'
+    else:
+        return 'basic'
+
+
+__all__ = [
+    'BaseOptimizer',
+    'MarkowitzOptimizer',
+    'RiskParityOptimizer',
+    'BlackLittermanOptimizer',
+    'KellyCriterionOptimizer',
+    'HandcraftedWeightsOptimizer',
+    'create_handcrafted_weights',
+    'HierarchicalRiskParity',
+    'HRPOptimizer',
+    'compute_hrp_weights',
+    'plot_hrp_dendrogram',
+    'get_optimization_capabilities',
+    'get_optimization_method',
+    'CVXPY_AVAILABLE',
+    'PYPFOPT_AVAILABLE',
+    'SCIPY_AVAILABLE',
+    'HANDCRAFTED_AVAILABLE',
+    'HRP_AVAILABLE',
+]

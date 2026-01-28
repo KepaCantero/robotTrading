@@ -17,11 +17,10 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
-from sqlalchemy import Boolean, Column, DateTime, Float, Integer, JSON, String, create_engine
+from sqlalchemy import JSON, Boolean, Column, DateTime, Float, Integer, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -166,9 +165,7 @@ class ResultAggregator:
 
         try:
             existing = (
-                session.query(ProfileResultDB)
-                .filter_by(profile_id=result.profile_id)
-                .first()
+                session.query(ProfileResultDB).filter_by(profile_id=result.profile_id).first()
             )
 
             capital_tier_key = self.get_capital_tier_fn(result.profile)
@@ -253,7 +250,9 @@ class ResultAggregator:
                         "sharpe_improvement": result.improvement_metrics.get("sharpe_improvement"),
                         "return_improvement": result.improvement_metrics.get("return_improvement"),
                         "max_dd_improvement": result.improvement_metrics.get("max_dd_improvement"),
-                        "win_rate_improvement": result.improvement_metrics.get("win_rate_improvement"),
+                        "win_rate_improvement": result.improvement_metrics.get(
+                            "win_rate_improvement"
+                        ),
                         "best_parameters": result.best_parameters,
                         "ready_for_paper_trading": result.ready_for_paper_trading,
                         "recommendation": result.recommendation,
@@ -268,7 +267,13 @@ class ResultAggregator:
                         session.add(db_result)
 
                     stored_count += 1
-                except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
+                except (
+                    IntegrityError,
+                    OperationalError,
+                    DatabaseError,
+                    DataError,
+                    ProgrammingError,
+                ) as e:
                     failed_count += 1
                     logger.error(f"Failed to store result for {result.profile_id}: {e}")
 
@@ -282,9 +287,7 @@ class ResultAggregator:
         finally:
             session.close()
 
-    def get_best_strategy(
-        self, objective: str, tier: str, risk: str
-    ) -> Dict[str, Any]:
+    def get_best_strategy(self, objective: str, tier: str, risk: str) -> Dict[str, Any]:
         """
         Get best strategy for specific objective, tier, and risk.
 
@@ -371,8 +374,11 @@ class ResultAggregator:
         }
 
     def evaluate_readiness(
-        self, profile: InputProfile, optimized: Any, improvements: Dict[str, float],
-        acceptance_criteria: Dict[str, Any]
+        self,
+        profile: InputProfile,
+        optimized: Any,
+        improvements: Dict[str, float],
+        acceptance_criteria: Dict[str, Any],
     ) -> Tuple[bool, str]:
         """
         Evaluate if strategy is ready for paper trading.

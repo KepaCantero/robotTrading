@@ -10,31 +10,35 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 from scipy import stats
 
+logger = logging.getLogger(__name__)
+
+# Try to import statsmodels with fallback
 try:
     from statsmodels.stats.diagnostic import breaks_cusumolsresid
 
     STATSMODELS_AVAILABLE = True
 except ImportError:
     STATSMODELS_AVAILABLE = False
-    logger = logging.getLogger(__name__)
-    logger.warning("statsmodels no disponible. CUSUM test limitado.")
-
-logger = logging.getLogger(__name__)
+    logger.warning(
+        "statsmodels not available. CUSUM test will be disabled. "
+        "Install with: pip install statsmodels"
+    )
 
 
 class StructuralChangeDetector:
     """
-    Detector de cambios estructurales.
+    Detector de cambios estructurales en series temporales.
 
-    Usa CUSUM y Chow test para detectar cambios en la media o varianza.
+    Implementa pruebas como CUSUM y Chow test para detectar cambios
+    en la distribución de retornos.
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
         """
         Inicializar detector.
 
         Args:
-            config: Configuración
+            config: Configuración del detector
         """
         config = config or {}
         self.method = config.get('method', 'cusum')  # cusum, chow

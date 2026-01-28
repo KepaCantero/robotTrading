@@ -216,7 +216,9 @@ class MonitoredPosition:
             "last_checked": self.last_checked.isoformat(),
             "check_count": self.check_count,
             "unrealized_pnl": str(self.calculate_pnl()),
-            "unrealized_pnl_pct": str(self.calculate_pnl_percentage()) if self.calculate_pnl_percentage() else None,
+            "unrealized_pnl_pct": (
+                str(self.calculate_pnl_percentage()) if self.calculate_pnl_percentage() else None
+            ),
         }
 
     @classmethod
@@ -229,13 +231,27 @@ class MonitoredPosition:
             entry_price=to_decimal(data["entry_price"]),
             quantity=to_decimal(data["quantity"]),
             current_price=to_decimal(data["current_price"]),
-            stop_loss_price=to_decimal(data["stop_loss_price"]) if data.get("stop_loss_price") else None,
+            stop_loss_price=(
+                to_decimal(data["stop_loss_price"]) if data.get("stop_loss_price") else None
+            ),
             stop_loss_pct=to_decimal(data["stop_loss_pct"]) if data.get("stop_loss_pct") else None,
-            take_profit_price=to_decimal(data["take_profit_price"]) if data.get("take_profit_price") else None,
-            take_profit_pct=to_decimal(data["take_profit_pct"]) if data.get("take_profit_pct") else None,
+            take_profit_price=(
+                to_decimal(data["take_profit_price"]) if data.get("take_profit_price") else None
+            ),
+            take_profit_pct=(
+                to_decimal(data["take_profit_pct"]) if data.get("take_profit_pct") else None
+            ),
             status=PositionStatus(data.get("status", "active")),
-            opened_at=datetime.fromisoformat(data["opened_at"]) if data.get("opened_at") else datetime.now(timezone.utc),
-            last_checked=datetime.fromisoformat(data["last_checked"]) if data.get("last_checked") else datetime.now(timezone.utc),
+            opened_at=(
+                datetime.fromisoformat(data["opened_at"])
+                if data.get("opened_at")
+                else datetime.now(timezone.utc)
+            ),
+            last_checked=(
+                datetime.fromisoformat(data["last_checked"])
+                if data.get("last_checked")
+                else datetime.now(timezone.utc)
+            ),
             check_count=data.get("check_count", 0),
         )
 
@@ -324,7 +340,9 @@ class PositionMonitor:
         self.on_stop_triggered = on_stop_triggered
 
         # Unique monitor ID for state persistence
-        self.monitor_id = f"monitor_{id(self)}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
+        self.monitor_id = (
+            f"monitor_{id(self)}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
+        )
 
         # State
         self.is_running = False
@@ -453,8 +471,12 @@ class PositionMonitor:
                     "side": position.side,
                     "entry_price": str(position.entry_price),
                     "quantity": str(position.quantity),
-                    "stop_loss_price": str(position.stop_loss_price) if position.stop_loss_price else None,
-                    "take_profit_price": str(position.take_profit_price) if position.take_profit_price else None,
+                    "stop_loss_price": (
+                        str(position.stop_loss_price) if position.stop_loss_price else None
+                    ),
+                    "take_profit_price": (
+                        str(position.take_profit_price) if position.take_profit_price else None
+                    ),
                 }
             )
 
@@ -513,9 +535,11 @@ class PositionMonitor:
             for pos in positions:
                 # Convert broker position to MonitoredPosition
                 # Handle different broker position formats
-                position_id = getattr(pos, "position_id", None) or getattr(
-                    pos, "id", None
-                ) or f"pos_{pos.symbol}_{id(pos)}"
+                position_id = (
+                    getattr(pos, "position_id", None)
+                    or getattr(pos, "id", None)
+                    or f"pos_{pos.symbol}_{id(pos)}"
+                )
 
                 # Get position side
                 quantity = getattr(pos, "position", getattr(pos, "quantity", 0))
@@ -525,7 +549,9 @@ class PositionMonitor:
                     position_id=position_id,
                     symbol=getattr(pos, "symbol", "UNKNOWN"),
                     side=side,
-                    entry_price=to_decimal(getattr(pos, "avg_cost", getattr(pos, "avg_entry_price", 0))),
+                    entry_price=to_decimal(
+                        getattr(pos, "avg_cost", getattr(pos, "avg_entry_price", 0))
+                    ),
                     quantity=to_decimal(abs(quantity)),
                     current_price=to_decimal(getattr(pos, "current_price", 0)),
                 )
@@ -550,10 +576,11 @@ class PositionMonitor:
                 from app.database.models import PositionState
 
                 # Query the position_state table
-                state_record = session.query(PositionState).filter(
-                    PositionState.monitor_id == self.monitor_id,
-                    PositionState.is_active == True
-                ).first()
+                state_record = (
+                    session.query(PositionState)
+                    .filter(PositionState.monitor_id == self.monitor_id, PositionState.is_active)
+                    .first()
+                )
 
                 if state_record:
                     # Deserialize positions
@@ -569,7 +596,9 @@ class PositionMonitor:
                         f"for monitor {self.monitor_id}"
                     )
                 else:
-                    logger.info(f"No existing state found in database for monitor {self.monitor_id}")
+                    logger.info(
+                        f"No existing state found in database for monitor {self.monitor_id}"
+                    )
 
         except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Failed to load state from database: {e}", exc_info=True)
@@ -819,15 +848,20 @@ class PositionMonitor:
 
                 # Serialize current positions
                 positions_list = [pos.to_dict() for pos in self._positions.values()]
-                state_json = json.dumps({
-                    'positions': positions_list,
-                    'timestamp': datetime.now(timezone.utc).isoformat()
-                }, default=str)
+                state_json = json.dumps(
+                    {
+                        'positions': positions_list,
+                        'timestamp': datetime.now(timezone.utc).isoformat(),
+                    },
+                    default=str,
+                )
 
                 # Check if state exists
-                existing = session.query(PositionState).filter(
-                    PositionState.monitor_id == self.monitor_id
-                ).first()
+                existing = (
+                    session.query(PositionState)
+                    .filter(PositionState.monitor_id == self.monitor_id)
+                    .first()
+                )
 
                 if existing:
                     # Update existing
@@ -840,7 +874,7 @@ class PositionMonitor:
                         monitor_id=self.monitor_id,
                         positions_json=state_json,
                         last_sync=datetime.now(timezone.utc),
-                        is_active=True
+                        is_active=True,
                     )
                     session.add(new_state)
 
@@ -873,8 +907,12 @@ class PositionMonitor:
     def get_statistics(self) -> Dict[str, Any]:
         """Get monitor statistics."""
         active = sum(1 for p in self._positions.values() if p.status == PositionStatus.ACTIVE)
-        stopped = sum(1 for p in self._positions.values() if p.status == PositionStatus.STOP_LOSS_TRIGGERED)
-        profited = sum(1 for p in self._positions.values() if p.status == PositionStatus.TAKE_PROFIT_TRIGGERED)
+        stopped = sum(
+            1 for p in self._positions.values() if p.status == PositionStatus.STOP_LOSS_TRIGGERED
+        )
+        profited = sum(
+            1 for p in self._positions.values() if p.status == PositionStatus.TAKE_PROFIT_TRIGGERED
+        )
         errors = sum(1 for p in self._positions.values() if p.status == PositionStatus.ERROR)
 
         uptime = (
@@ -917,8 +955,12 @@ class PositionMonitor:
             },
             "positions_by_status": {
                 "active": sum(1 for p in positions if p.status == PositionStatus.ACTIVE),
-                "stopped": sum(1 for p in positions if p.status == PositionStatus.STOP_LOSS_TRIGGERED),
-                "profited": sum(1 for p in positions if p.status == PositionStatus.TAKE_PROFIT_TRIGGERED),
+                "stopped": sum(
+                    1 for p in positions if p.status == PositionStatus.STOP_LOSS_TRIGGERED
+                ),
+                "profited": sum(
+                    1 for p in positions if p.status == PositionStatus.TAKE_PROFIT_TRIGGERED
+                ),
                 "closed": sum(1 for p in positions if p.status == PositionStatus.CLOSED),
                 "error": sum(1 for p in positions if p.status == PositionStatus.ERROR),
             },

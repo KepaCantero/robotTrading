@@ -20,22 +20,27 @@ logger = logging.getLogger(__name__)
 try:
     import torch
     import torch.nn as nn
-    import torch.optim as optim
 
     PYTORCH_AVAILABLE = True
-except ImportError:
+except (ImportError, ModuleNotFoundError):
+    torch = None  # type: ignore
+    nn = None  # type: ignore
     PYTORCH_AVAILABLE = False
-    logger.warning("PyTorch no disponible. Multi-task learning limitado.")
 
 
-class SharedBackbone(nn.Module):
+class SharedBackbone(nn.Module):  # type: ignore
     """
     Backbone compartido para múltiples tareas.
 
-    Extrae representaciones comunes que pueden ser usadas por diferentes tareas.
+    Extrae características que son compartidas entre todas las tareas.
     """
 
-    def __init__(self, input_dim: int, hidden_dims: List[int], dropout: float = 0.1):
+    def __init__(
+        self,
+        input_dim: int,
+        hidden_dims: List[int],
+        dropout: float = 0.1,
+    ):
         """
         Inicializar backbone compartido.
 

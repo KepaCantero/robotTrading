@@ -171,7 +171,7 @@ drawdown:
 
   # Circuit breaker thresholds
   circuit_breaker:
-    daily: 0.03              # 3% daily loss triggers circuit breaker
+    daily: 0.05              # 5% daily loss triggers circuit breaker (Chan #15)
     total: 0.10              # 10% total loss triggers circuit breaker
 
 # ============================================================================

@@ -5,6 +5,7 @@ This service handles the identification, ranking, and management of liquid asset
 for momentum trading strategies.
 """
 
+import asyncio
 import logging
 from decimal import Decimal
 from typing import Any, Dict, List, Optional

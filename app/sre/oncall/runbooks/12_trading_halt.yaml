@@ -1,0 +1,109 @@
+---
+name: "Trading Halt"
+severity: "critical"
+trigger: "trading_halt_requested OR emergency_halt"
+category: "trading"
+tags: ["trading", "emergency", "halt", "critical"]
+estimated_duration_minutes: 10
+last_updated: "2026-01-28"
+version: "1.0"
+
+description: |
+  Execute emergency trading halt. Used when trading must be stopped
+  immediately to prevent losses or protect the system.
+
+prerequisites:
+  - Trading halt authority
+  - Order management access
+  - Communication channels
+
+steps:
+  - title: "Verify Halt Necessity"
+    description: "Confirm trading halt is appropriate"
+    commands:
+      - "Review reason for halt request"
+      - "Assess severity of situation"
+      - "Confirm halt authority"
+      - "Check if partial halt is sufficient"
+    expected_outcome: "Halt necessity confirmed"
+
+  - title: "Execute Trading Halt"
+    description: "Stop all trading activity"
+    commands:
+      - "Disable all strategy execution"
+      - "Cancel all pending orders"
+      - "Prevent new order submission"
+      - "Update trading status indicators"
+      - "Log halt execution"
+    expected_outcome: "Trading halted"
+
+  - title: "Verify Halt Complete"
+    description: "Ensure trading fully stopped"
+    commands:
+      - "Confirm no strategies running"
+      - "Verify no pending orders"
+      - "Check execution engine status"
+      - "Confirm position freeze"
+    expected_outcome: "Halt verified complete"
+
+  - title: "Assess Current Positions"
+    description: "Review existing positions"
+    commands:
+      - "Review all open positions"
+      - "Check for any hedging needs"
+      - "Assess exposure levels"
+      - "Review position risk"
+    expected_outcome: "Positions assessed"
+
+  - title: "Communicate Halt"
+    description: "Notify stakeholders"
+    commands:
+      - "Notify trading team"
+      - "Update status dashboards"
+      - "Send halt notification"
+      - "Document halt reason"
+    expected_outcome: "Stakeholders notified"
+
+  - title: "Plan Recovery"
+    description: "Prepare for trading resume"
+    commands:
+      - "Identify conditions for resume"
+      - "Plan position adjustments if needed"
+      - "Prepare monitoring for resume"
+      - "Define resume procedures"
+    expected_outcome: "Recovery plan ready"
+
+  - title: "Document Halt"
+    description: "Complete halt documentation"
+    commands:
+      - "Log halt incident"
+      - "Document reason and trigger"
+      - "Record all actions taken"
+      - "Create follow-up tasks"
+    expected_outcome: "Halt documented"
+
+post_actions:
+  - "Review halt procedures"
+  - "Improve halt detection"
+  - "Review automated halt triggers"
+  - "Update runbook with lessons learned"
+
+related_runbooks:
+  - "high_drawdown_alert.yaml"
+  - "circuit_breaker_triggered.yaml"
+  - "broker_api_failure.yaml"
+
+metrics_to_track:
+  - "trading_status"
+  - "halt_count"
+  - "halt_duration_minutes"
+
+success_criteria:
+  - "Trading safely halted"
+  - "Positions secure"
+  - "Stakeholders notified"
+  - "Incident documented"
+
+escalation_path: "trading_critical"
+owner: "trading-ops"
+review_frequency: "quarterly"

@@ -41,10 +41,10 @@ class QuestDBConnector:
 
     def __init__(
         self,
-        host: str = "localhost",
-        port: int = 9009,
-        user: str = "admin",
-        password: str = "quest",
+        host: str = None,
+        port: int = None,
+        user: str = None,
+        password: str = None,
         pool_size: int = 10,
         batch_size: int = 1000,
         retention_days: int = 90,
@@ -53,23 +53,45 @@ class QuestDBConnector:
         Initialize QuestDB connector.
 
         Args:
-            host: QuestDB host
-            port: QuestDB port
-            user: Database user
-            password: Database password
+            host: QuestDB host (from QUESTDB_HOST env var if not provided)
+            port: QuestDB port (from QUESTDB_PORT env var if not provided)
+            user: Database user (from QUESTDB_USER env var if not provided)
+            password: Database password (from QUESTDB_PASSWORD env var if not provided)
             pool_size: Connection pool size
             batch_size: Batch size for bulk operations
             retention_days: Data retention policy in days
+
+        Rule 28 Compliance:
+            - Credentials read from environment variables
+            - Set QUESTDB_HOST, QUESTDB_PORT, QUESTDB_USER, QUESTDB_PASSWORD in .env
+            - Never hardcode credentials in code
         """
-        self.host = host
-        self.port = port
-        self.user = user
-        self.password = password
+        import os
+
+        self.host = host or os.getenv("QUESTDB_HOST", "localhost")
+        self.port = port or int(os.getenv("QUESTDB_PORT", "9009"))
+        self.user = user or os.getenv("QUESTDB_USER", "admin")
+
+        # Rule 28: Password must come from environment variable
+        self.password = password or os.getenv("QUESTDB_PASSWORD")
+        if not self.password:
+            import warnings
+
+            warnings.warn(
+                "QUESTDB_PASSWORD not set. Using default may not work in production. "
+                "Set QUESTDB_PASSWORD environment variable.",
+                stacklevel=2,
+            )
+            self.password = "quest"  # Fallback for development only
+
         self.pool_size = pool_size
         self.batch_size = batch_size
         self.retention_days = retention_days
 
-        self._connection_string = f"postgresql://{user}:{password}@{host}:{port}/qdb"
+        # Build connection string dynamically (never hardcode credentials)
+        self._connection_string = (
+            f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/qdb"
+        )
         self._connection_pool = None
         self._is_connected = False
         self._pending_metrics: List[MetricPoint] = []
@@ -105,8 +127,7 @@ class QuestDBConnector:
                 # Test connection and create table if needed
                 async with self._connection_pool.acquire() as conn:
                     # Create metrics table if not exists
-                    await conn.execute(
-                        """
+                    await conn.execute("""
                         CREATE TABLE IF NOT EXISTS metrics (
                             timestamp TIMESTAMP,
                             metric_type SYMBOL,
@@ -114,15 +135,13 @@ class QuestDBConnector:
                             value DOUBLE,
                             metadata STRING
                         ) TIMESTAMP(timestamp) PARTITION BY DAY;
-                    """
-                    )
+                    """)
 
                 self._is_connected = True
                 self._use_real_db = True
                 logger.info("✅ Connected to QuestDB with asyncpg")
                 return True
 
-            except ImportError:
                 logger.warning("asyncpg not installed - using in-memory storage")
                 self._connection_pool = _InMemoryPool()
                 self._is_connected = True

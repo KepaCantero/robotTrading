@@ -6,15 +6,13 @@ caching, and real-time data subscriptions.
 """
 
 from __future__ import annotations
+
 import asyncio
 import logging
 from datetime import datetime
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from app.core.decimal_utils import to_decimal, validate_price, validate_quantity
-from app.core.timezone_utils import utc_now
 from app.data.feeds import DataFeedInterface, create_data_feed
 from app.models.market_data import (
     DataFeedConfig,

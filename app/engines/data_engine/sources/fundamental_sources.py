@@ -6,17 +6,12 @@ Fuentes soportadas:
 - Alpha Vantage
 """
 
+import asyncio
 import logging
 from typing import Any, Dict, List, Optional
 
-try:
-    import aiohttp
-
-    AIOHTTP_AVAILABLE = True
-except ImportError:
-    AIOHTTP_AVAILABLE = False
-    logger = logging.getLogger(__name__)
-    logger.warning("aiohttp no disponible. Fuentes fundamentales no funcionarán.")
+# REQUIRED: No fallbacks - aiohttp is required for async HTTP requests
+import aiohttp  # noqa: F401
 
 from .base_source import BaseDataSource
 
@@ -58,17 +53,17 @@ class FinancialModelingPrepSource(BaseDataSource):
         if not self.api_key:
             logger.error("FMP API key requerido")
             self.last_error = "API key missing"
-            return False
+            raise ValueError("FMP API key requerido")
 
         try:
             self.session = aiohttp.ClientSession()
             self.is_connected = True
             logger.info("Conectado a Financial Modeling Prep API")
             return True
-        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        except (ConnectionError, TimeoutError) as e:
             logger.error(f"Error conectando a FMP: {e}")
             self.last_error = str(e)
-            return False
+            raise
 
     async def disconnect(self) -> bool:
         """Desconectar de FMP."""
@@ -205,27 +200,20 @@ class AlphaVantageFundamentalSource(BaseDataSource):
 
     async def connect(self) -> bool:
         """Conectar a Alpha Vantage API."""
-        if not AIOHTTP_AVAILABLE:
-            logger.error(
-                "aiohttp no disponible. AlphaVantageFundamentalSource no puede conectarse."
-            )
-            self.last_error = "aiohttp no disponible"
-            return False
-
         if not self.api_key:
             logger.error("Alpha Vantage API key requerido")
             self.last_error = "API key missing"
-            return False
+            raise ValueError("Alpha Vantage API key requerido")
 
         try:
             self.session = aiohttp.ClientSession()
             self.is_connected = True
             logger.info("Conectado a Alpha Vantage Fundamental API")
             return True
-        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        except (ConnectionError, TimeoutError) as e:
             logger.error(f"Error conectando a Alpha Vantage: {e}")
             self.last_error = str(e)
-            return False
+            raise
 
     async def disconnect(self) -> bool:
         """Desconectar de Alpha Vantage."""

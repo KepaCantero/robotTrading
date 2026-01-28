@@ -10,7 +10,6 @@ Extiende BaseStrategy con funcionalidades adicionales para:
 - Integración con DataEngine y ContextEngine (Módulos 1 y 2)
 """
 
-import logging
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from datetime import datetime
@@ -20,42 +19,6 @@ from typing import Any, Callable, Dict, List, Optional
 from app.models.market_data import Quote
 from app.models.signal import Signal
 from app.strategies.base import BaseStrategy
-
-logger = logging.getLogger(__name__)
-
-# Importaciones opcionales para DataEngine y ContextEngine
-try:
-    from app.engines.data_engine import DataEngine
-
-    DATA_ENGINE_AVAILABLE = True
-except ImportError:
-    DATA_ENGINE_AVAILABLE = False
-    logger.debug("DataEngine no disponible")
-
-try:
-    from app.engines.context_engine import ContextEngine
-
-    CONTEXT_ENGINE_AVAILABLE = True
-except ImportError:
-    CONTEXT_ENGINE_AVAILABLE = False
-    logger.debug("ContextEngine no disponible")
-
-# Importaciones opcionales para PortfolioEngine y RiskEngine (Fase 3)
-try:
-    from app.engines.portfolio_engine import PortfolioEngine
-
-    PORTFOLIO_ENGINE_AVAILABLE = True
-except ImportError:
-    PORTFOLIO_ENGINE_AVAILABLE = False
-    logger.debug("PortfolioEngine no disponible")
-
-try:
-    from app.engines.risk_engine import RiskEngine
-
-    RISK_ENGINE_AVAILABLE = True
-except ImportError:
-    RISK_ENGINE_AVAILABLE = False
-    logger.debug("RiskEngine no disponible")
 
 
 class BaseStrategyEngine(BaseStrategy, ABC):
@@ -381,7 +344,6 @@ class BaseStrategyEngine(BaseStrategy, ABC):
             return []
 
         try:
-            import asyncio
 
             # Obtener datos OHLCV del DataEngine
             ohlcv_data = asyncio.run(

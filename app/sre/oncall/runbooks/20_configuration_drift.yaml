@@ -1,0 +1,110 @@
+---
+name: "Configuration Drift Detected"
+severity: "medium"
+trigger: "config_drift_detected OR config_inconsistency"
+category: "configuration"
+tags: ["configuration", "drift", "consistency"]
+estimated_duration_minutes: 25
+last_updated: "2026-01-28"
+version: "1.0"
+
+description: |
+  Address configuration drift between environments or instances.
+  Configuration drift can cause unexpected behavior and failures.
+
+prerequisites:
+  - Configuration management access
+  - Environment access
+  - Configuration comparison tools
+
+steps:
+  - title: "Verify Configuration Drift"
+    description: "Confirm configuration differences exist"
+    commands:
+      - "Compare configurations across instances"
+      - "Identify specific differences"
+      - "Determine drift scope"
+      - "Assess drift impact"
+    expected_outcome: "Configuration drift confirmed"
+
+  - title: "Assess Impact"
+    description: "Determine impact of drift"
+    commands:
+      - "Check if critical configs affected"
+      - "Review if behavior differs"
+      - "Assess risk level"
+      - "Check for service issues"
+    expected_outcome: "Impact assessed"
+    decision_point:
+      condition: "critical_config_drift OR service_issues"
+      true_branch: "Immediate correction needed"
+      false_branch: "Plan correction for maintenance window"
+
+  - title: "Identify Correct Configuration"
+    description: "Determine which config is correct"
+    commands:
+      - "Review configuration repository"
+      - "Check documentation"
+      - "Consult with team"
+      - "Review change history"
+    expected_outcome: "Correct config identified"
+
+  - title: "Correct Configuration"
+    description: "Apply correct configuration"
+    commands:
+      - "Update incorrect configurations"
+      - "Verify changes applied"
+      - "Check for syntax errors"
+      - "Validate configuration"
+    expected_outcome: "Configuration corrected"
+
+  - title: "Verify Correction"
+    description: "Ensure fix is working"
+    commands:
+      - "Test affected services"
+      - "Monitor for errors"
+      - "Verify consistent behavior"
+      - "Check metrics normal"
+    expected_outcome: "Correction verified"
+
+  - title: "Implement Preventive Measures"
+    description: "Prevent future drift"
+    commands:
+      - "Implement config management"
+      - "Add config validation"
+      - "Set up drift monitoring"
+      - "Implement configuration as code"
+    expected_outcome: "Prevention in place"
+
+  - title: "Document Incident"
+    description: "Record drift incident"
+    commands:
+      - "Log configuration drift"
+      - "Document differences"
+      - "Record resolution"
+      - "Update procedures"
+    expected_outcome: "Incident documented"
+
+post_actions:
+  - "Review configuration management practices"
+  - "Improve configuration automation"
+  - "Add drift detection alerts"
+  - "Update runbook with lessons learned"
+
+related_runbooks:
+  - "deployment_rollback.yaml"
+  - "service_degraded.yaml"
+
+metrics_to_track:
+  - "config_drift_count"
+  - "config_inconsistency_count"
+  - "config_change_rate"
+
+success_criteria:
+  - "Configuration synchronized"
+  - "Services working correctly"
+  - "Drift prevented in future"
+
+escalation_path: "platform"
+owner: "platform-team"
+review_frequency: "monthly"

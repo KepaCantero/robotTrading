@@ -1,0 +1,162 @@
+---
+name: "Strategy Drift Detected"
+severity: "medium"
+trigger: "strategy_performance_degraded OR model_drift_detected"
+category: "strategy"
+tags: ["strategy", "performance", "machine-learning", "drift"]
+estimated_duration_minutes: 30
+last_updated: "2026-01-28"
+version: "1.0"
+
+description: |
+  Respond to strategy performance degradation or model drift.
+  Strategies can degrade over time due to market regime changes,
+  feature degradation, or model staleness.
+
+prerequisites:
+  - Strategy performance dashboard
+  - Model monitoring tools
+  - Feature importance analysis
+  - Backtesting environment
+
+steps:
+  - title: "Verify Strategy Drift"
+    description: "Confirm strategy is underperforming"
+    commands:
+      - "Review strategy performance metrics (Sharpe, Sortino, etc.)"
+      - "Compare to expected performance baseline"
+      - "Check drawdown metrics"
+      - "Review win rate and profit factor"
+      - "Check performance over different time periods"
+    expected_outcome: "Strategy drift confirmed and quantified"
+
+  - title: "Identify Affected Strategies"
+    description: "Determine which strategies are affected"
+    commands:
+      - "Review performance of all active strategies"
+      - "Identify which strategies show degradation"
+      - "Check if degradation is correlated across strategies"
+      - "Prioritize most affected strategies"
+    expected_outcome: "Affected strategies identified"
+
+  - title: "Check Market Regime"
+    description: "Determine if market conditions have changed"
+    commands:
+      - "Review regime detection output"
+      - "Check market volatility metrics"
+      - "Review market correlation structure"
+      - "Check for unusual market events"
+      - "Review sector performance if applicable"
+    expected_outcome: "Current market regime understood"
+
+  - title: "Analyze Feature Degradation"
+    description: "Check if predictive features are degrading"
+    commands:
+      - "Review feature importance over time"
+      - "Check feature predictive power"
+      - "Identify which features are degrading"
+      - "Review feature distributions"
+    expected_outcome: "Feature degradation identified"
+
+  - title: "Check Model Performance"
+    description: "Review ML model metrics"
+    commands:
+      - "Check model accuracy on recent data"
+      - "Review precision/recall if classification"
+      - "Check prediction error distribution"
+      - "Compare train/test performance gap"
+      - "Review model calibration"
+    expected_outcome: "Model performance understood"
+
+  - title: "Determine Response Strategy"
+    description: "Plan appropriate response based on findings"
+    commands: []
+    decision_point:
+      condition: "severe_drift OR significant_loss"
+      true_branch: "Disable affected strategies"
+      false_branch: "Reduce allocation and monitor"
+
+  - title: "Disable or Reduce Strategies"
+    description: "Adjust strategy allocations"
+    commands:
+      - "Disable severely degraded strategies"
+      - "Reduce allocation to underperforming strategies"
+      - "Increase allocation to stable strategies"
+      - "Update portfolio weights"
+    expected_outcome: "Strategy allocations adjusted"
+
+  - title: "Retrain or Update Models"
+    description: "Update models if applicable"
+    commands:
+      - "Collect recent training data"
+      - "Retrain models with new data"
+      - "Validate model performance on holdout set"
+      - "Backtest updated models"
+      - "Deploy updated models if better"
+    expected_outcome: "Models updated if appropriate"
+
+  - title: "Adjust Strategy Parameters"
+    description: "Tune strategy parameters if needed"
+    commands:
+      - "Review current parameter settings"
+      - "Run parameter optimization"
+      - "Test new parameters in simulation"
+      - "Deploy updated parameters if improved"
+    expected_outcome: "Parameters optimized if appropriate"
+
+  - title: "Monitor Recovery"
+    description: "Watch for strategy performance recovery"
+    commands:
+      - "Monitor strategy performance metrics"
+      - "Check if drift continues or stabilizes"
+      - "Review market regime changes"
+      - "Assess if intervention was effective"
+    expected_outcome: "Strategy performance monitored"
+
+  - title: "Document and Review"
+    description: "Document drift incident and response"
+    commands:
+      - "Log strategy drift incident"
+      - "Document root cause analysis"
+      - "Record actions taken and effectiveness"
+      - "Create postmortem if significant"
+      - "Update strategy monitoring"
+    expected_outcome: "Incident documented and monitoring improved"
+
+post_actions:
+  - "Review strategy robustness"
+  - "Improve drift detection"
+  - "Consider adding adaptive strategies"
+  - "Review model retraining schedule"
+  - "Update runbook with lessons learned"
+
+rollback_actions:
+  - title: "Restore Strategy"
+    description: "If performance recovers or was temporary"
+    commands:
+      - "Verify market conditions improved"
+      - "Re-enable disabled strategies"
+      - "Restore original allocations"
+      - "Monitor closely"
+
+related_runbooks:
+  - "poor_strategy_performance.yaml"
+  - "model_retraining.yaml"
+  - "market_regime_change.yaml"
+
+metrics_to_track:
+  - "strategy_sharpe_ratio"
+  - "strategy_win_rate"
+  - "model_accuracy"
+  - "feature_importance_shift"
+  - "regime_indicator"
+
+success_criteria:
+  - "Strategy performance stable or improved"
+  - "Root cause identified"
+  - "Appropriate actions taken"
+  - "Monitoring improved"
+
+escalation_path: "strategy"
+owner: "quant-team"
+review_frequency: "monthly"

@@ -17,7 +17,6 @@ from __future__ import annotations
 import logging
 import threading
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from decimal import Decimal
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -25,13 +24,11 @@ import yaml
 
 from app.core.config.profile_config_loader import ProfileConfigLoader
 from app.core.models.input_profile import InputProfile
-from app.services.profile_driven_trading.profile_strategy_mapper import create_profile_mapper
 
-from .profile_generator import ProfileGenerator
 from .baseline_executor import BaselineBacktestExecutor
-from .optimization_pipeline import OptimizedStrategy
-from .result_aggregator import ProfileResult, ResultAggregator
+from .profile_generator import ProfileGenerator
 from .report_generator import ReportGenerator
+from .result_aggregator import ProfileResult, ResultAggregator
 
 logger = logging.getLogger(__name__)
 
@@ -82,8 +79,7 @@ class ProfileBatchBacktester:
         # Initialize result aggregator
         db_url = self.config.get("database", {}).get("url", "sqlite:///profile_backtest_results.db")
         self.result_aggregator = ResultAggregator(
-            db_url,
-            self.profile_generator.get_capital_tier_key
+            db_url, self.profile_generator.get_capital_tier_key
         )
 
         # Initialize report generator
@@ -153,7 +149,7 @@ class ProfileBatchBacktester:
             optimization_config=self.config.get("optimization", {}),
             validation_config=self.config.get("validation", {}),
             acceptance_criteria=self.config.get("acceptance_criteria", {}),
-            profile_config_loader=self.profile_config_loader
+            profile_config_loader=self.profile_config_loader,
         )
 
         optimized_strategy = optimization_pipeline.run_optimization_pipeline(
@@ -167,15 +163,19 @@ class ProfileBatchBacktester:
 
         # Determine readiness
         ready, recommendation = self.result_aggregator.evaluate_readiness(
-            profile, optimized_strategy, improvement_metrics,
-            self.config.get("acceptance_criteria", {})
+            profile,
+            optimized_strategy,
+            improvement_metrics,
+            self.config.get("acceptance_criteria", {}),
         )
 
         # Get StrategyMapping if available
         strategy_mapping_obj = None
         try:
             if self.profile_generator.profile_mapper is not None:
-                strategy_mapping_obj = self.profile_generator.profile_mapper.create_strategy_mapping(profile)
+                strategy_mapping_obj = (
+                    self.profile_generator.profile_mapper.create_strategy_mapping(profile)
+                )
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.debug(f"Could not create StrategyMapping: {e}")
 
@@ -225,7 +225,9 @@ class ProfileBatchBacktester:
         """
         profiles = self.generate_all_profiles()
 
-        logger.info(f"Running {len(profiles)} profiles (parallel={parallel}, workers={max_workers})")
+        logger.info(
+            f"Running {len(profiles)} profiles (parallel={parallel}, workers={max_workers})"
+        )
 
         if parallel:
             results = self._run_parallel(profiles, max_workers)
@@ -235,10 +237,7 @@ class ProfileBatchBacktester:
         self.results = results
 
         # Generate summary
-        self.report_generator.generate_batch_summary(
-            results,
-            self.get_fallback_metrics()
-        )
+        self.report_generator.generate_batch_summary(results, self.get_fallback_metrics())
 
         return results
 
@@ -290,9 +289,7 @@ class ProfileBatchBacktester:
         backtester = ProfileBatchBacktester(config_path)
         return backtester.run_single_profile(profile)
 
-    def get_best_strategy(
-        self, objective: str, tier: str, risk: str
-    ) -> Dict[str, Any]:
+    def get_best_strategy(self, objective: str, tier: str, risk: str) -> Dict[str, Any]:
         """
         Get best strategy for specific objective, tier, and risk.
 
@@ -354,7 +351,7 @@ class ProfileBatchBacktester:
 
 
 def create_profile_batch_backtester(
-    config_path: str = "config/profile_batch_backtest.yaml"
+    config_path: str = "config/profile_batch_backtest.yaml",
 ) -> ProfileBatchBacktester:
     """
     Convenience function to create ProfileBatchBacktester.

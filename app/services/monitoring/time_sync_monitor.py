@@ -13,13 +13,11 @@ Phase 2.7: Time Sync Monitor Implementation
 
 import asyncio
 import logging
-from dataclasses import dataclass, field
-from datetime import datetime, timezone, timedelta
-from decimal import Decimal
+from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Any, Callable, Dict, Optional
 
 from app.core.timezone_utils import utc_now
-
 
 logger = logging.getLogger(__name__)
 
@@ -125,15 +123,13 @@ class TimeSyncMonitor:
         """Check if ntplib is available."""
         try:
             import ntplib
+
             self._ntp_client = ntplib.NTPClient()
             self._ntp_available = True
-            logger.info("NTP client available for time synchronization")
+            logger.info("NTP synchronization available")
         except ImportError:
             self._ntp_available = False
-            logger.warning(
-                "ntplib not installed - time sync monitoring will use system time only. "
-                "Install with: pip install ntplib"
-            )
+            logger.warning("ntplib not available - time sync checks disabled")
 
     async def start(self) -> bool:
         """
@@ -417,7 +413,7 @@ def reset_time_sync_monitor() -> None:
     if _monitor is not None:
         # Stop monitoring if running
         if _monitor._is_monitoring:
-            import asyncio
+
             try:
                 loop = asyncio.get_event_loop()
                 if loop.is_running():

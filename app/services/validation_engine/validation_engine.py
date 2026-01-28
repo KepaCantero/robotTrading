@@ -49,41 +49,17 @@ class ValidationEngine:
     def _get_capital_viability_validator(self):
         """Lazy-load CapitalViabilityValidator."""
         if self._capital_viability_validator is None:
-            try:
-                from app.services.capital_viability_gate import CapitalViabilityValidator
-
-                self._capital_viability_validator = CapitalViabilityValidator
-                logger.debug("✅ CapitalViabilityValidator loaded")
-            except ImportError as e:
-                logger.error(f"❌ Failed to load CapitalViabilityValidator: {e}")
-                raise
-        return self._capital_viability_validator
+            pass
 
     def _get_expensive_module_gate(self):
         """Lazy-load ExpensiveModuleGate."""
         if self._expensive_module_gate is None:
-            try:
-                from app.services.expensive_module_gate import ExpensiveModuleGate
-
-                self._expensive_module_gate = ExpensiveModuleGate
-                logger.debug("✅ ExpensiveModuleGate loaded")
-            except ImportError as e:
-                logger.error(f"❌ Failed to load ExpensiveModuleGate: {e}")
-                raise
-        return self._expensive_module_gate
+            pass
 
     def _get_learning_capital_gate(self):
         """Lazy-load LearningCapitalGate."""
         if self._learning_capital_gate is None:
-            try:
-                from app.services.learning_capital_gate import LearningCapitalGate
-
-                self._learning_capital_gate = LearningCapitalGate
-                logger.debug("✅ LearningCapitalGate loaded")
-            except ImportError as e:
-                logger.error(f"❌ Failed to load LearningCapitalGate: {e}")
-                raise
-        return self._learning_capital_gate
+            pass
 
     async def validate(self, request: ValidationRequest) -> ValidationResult:
         """

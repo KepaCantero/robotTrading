@@ -29,15 +29,12 @@ import logging
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
-from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Tuple
 from uuid import UUID, uuid4
 
-from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db_transaction
 from app.core.interfaces.broker_base import BrokerType
 
 # Configure logging
@@ -388,8 +385,7 @@ class SymbolValidator:
         # Check format - must already be uppercase (no normalization here)
         if not re.match(r'^[A-Z]{2,10}$', symbol):
             raise ValidationError(
-                f"Invalid internal symbol format: {symbol}. "
-                "Must be 2-10 uppercase letters."
+                f"Invalid internal symbol format: {symbol}. " "Must be 2-10 uppercase letters."
             )
 
         return True
@@ -419,41 +415,43 @@ class SymbolValidator:
         symbol_upper = symbol.upper()
 
         if broker_name == 'binance':
-            if not (re.match(cls.PATTERNS['binance_crypto'], symbol_upper) or
-                    re.match(cls.PATTERNS['binance_forex'], symbol_upper)):
+            if not (
+                re.match(cls.PATTERNS['binance_crypto'], symbol_upper)
+                or re.match(cls.PATTERNS['binance_forex'], symbol_upper)
+            ):
                 raise ValidationError(
                     f"Invalid Binance symbol format: {symbol}. "
                     "Expected format: BTCUSDT or EURUSDT"
                 )
 
         elif broker_name == 'oanda':
-            if not (re.match(cls.PATTERNS['oanda_forex'], symbol_upper) or
-                    re.match(cls.PATTERNS['oanda_crypto'], symbol_upper)):
+            if not (
+                re.match(cls.PATTERNS['oanda_forex'], symbol_upper)
+                or re.match(cls.PATTERNS['oanda_crypto'], symbol_upper)
+            ):
                 raise ValidationError(
-                    f"Invalid OANDA symbol format: {symbol}. "
-                    "Expected format: EUR_USD or BTC_USD"
+                    f"Invalid OANDA symbol format: {symbol}. " "Expected format: EUR_USD or BTC_USD"
                 )
 
         elif broker_name == 'ibkr':
-            if not (re.match(cls.PATTERNS['ibkr_stock'], symbol_upper) or
-                    re.match(cls.PATTERNS['ibkr_crypto'], symbol_upper)):
+            if not (
+                re.match(cls.PATTERNS['ibkr_stock'], symbol_upper)
+                or re.match(cls.PATTERNS['ibkr_crypto'], symbol_upper)
+            ):
                 raise ValidationError(
-                    f"Invalid IBKR symbol format: {symbol}. "
-                    "Expected format: AAPL or IBKR:BTC"
+                    f"Invalid IBKR symbol format: {symbol}. " "Expected format: AAPL or IBKR:BTC"
                 )
 
         elif broker_name == 'kraken':
             if not re.match(cls.PATTERNS['kraken_crypto'], symbol_upper):
                 raise ValidationError(
-                    f"Invalid Kraken symbol format: {symbol}. "
-                    "Expected format: XXBTZUSD"
+                    f"Invalid Kraken symbol format: {symbol}. " "Expected format: XXBTZUSD"
                 )
 
         elif broker_name == 'coinbase':
             if not re.match(cls.PATTERNS['coinbase_crypto'], symbol_upper):
                 raise ValidationError(
-                    f"Invalid Coinbase symbol format: {symbol}. "
-                    "Expected format: BTC-USD"
+                    f"Invalid Coinbase symbol format: {symbol}. " "Expected format: BTC-USD"
                 )
 
         return True
@@ -520,10 +518,8 @@ class SymbolValidator:
             # Default: return as-is
             return broker_symbol
 
-        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
-            raise ValidationError(
-                f"Failed to extract internal symbol from {broker_symbol}: {e}"
-            )
+        except (ConnectionError, TimeoutError, ValueError) as e:
+            raise ValidationError(f"Failed to extract internal symbol from {broker_symbol}: {e}")
 
 
 # ============================================================================
@@ -591,10 +587,7 @@ class SymbolMapper:
     # ========================================================================
 
     def map_internal_to_broker(
-        self,
-        internal_symbol: str,
-        broker_name: str,
-        use_default: bool = True
+        self, internal_symbol: str, broker_name: str, use_default: bool = True
     ) -> str:
         """
         Convert internal symbol to broker-specific symbol.
@@ -640,9 +633,7 @@ class SymbolMapper:
 
             # Try database lookup (would be async in real implementation)
             # For now, use default tables
-            broker_symbol = BrokerMappingTables.get_default_mapping(
-                broker_name, internal_symbol
-            )
+            broker_symbol = BrokerMappingTables.get_default_mapping(broker_name, internal_symbol)
 
             if broker_symbol:
                 logger.info(
@@ -652,9 +643,7 @@ class SymbolMapper:
                 return broker_symbol
 
             if not use_default:
-                raise UnknownSymbolError(
-                    f"No mapping found for {internal_symbol} -> {broker_name}"
-                )
+                raise UnknownSymbolError(f"No mapping found for {internal_symbol} -> {broker_name}")
 
             # Fallback: try to construct broker symbol
             broker_symbol = self._construct_broker_symbol(internal_symbol, broker_name)
@@ -664,18 +653,15 @@ class SymbolMapper:
             )
             return broker_symbol
 
-        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
-            logger.error(
-                f"Error mapping {internal_symbol} to {broker_name}: {e}",
-                exc_info=True
-            )
+        except ValidationError:
+            # Re-raise ValidationError as-is for test validation
+            raise
+        except (ConnectionError, TimeoutError, ValueError) as e:
+            logger.error(f"Error mapping {internal_symbol} to {broker_name}: {e}", exc_info=True)
             raise
 
     def map_broker_to_internal(
-        self,
-        broker_symbol: str,
-        broker_name: str,
-        use_default: bool = True
+        self, broker_symbol: str, broker_name: str, use_default: bool = True
     ) -> str:
         """
         Convert broker-specific symbol to internal symbol.
@@ -710,9 +696,7 @@ class SymbolMapper:
 
             # Check for empty broker symbol after normalization
             if not broker_symbol:
-                raise UnknownSymbolError(
-                    f"Cannot map empty broker symbol from {broker_name}"
-                )
+                raise UnknownSymbolError(f"Cannot map empty broker symbol from {broker_name}")
 
             # Check reverse cache
             cache_key = (broker_symbol, broker_name)
@@ -743,19 +727,14 @@ class SymbolMapper:
                     f"{broker_symbol} -> {internal_symbol} -> {expected_broker_symbol}"
                 )
 
-            logger.info(
-                f"Mapped {broker_symbol} -> {internal_symbol} ({broker_name})"
-            )
+            logger.info(f"Mapped {broker_symbol} -> {internal_symbol} ({broker_name})")
             return internal_symbol
 
-        except UnknownSymbolError:
-            # Re-raise UnknownSymbolError as-is
+        except (UnknownSymbolError, ValidationError):
+            # Re-raise UnknownSymbolError and ValidationError as-is
             raise
-        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
-            logger.error(
-                f"Error mapping {broker_symbol} from {broker_name}: {e}",
-                exc_info=True
-            )
+        except (ConnectionError, TimeoutError, ValueError) as e:
+            logger.error(f"Error mapping {broker_symbol} from {broker_name}: {e}", exc_info=True)
             raise
 
     async def add_mapping(
@@ -766,7 +745,7 @@ class SymbolMapper:
         broker_type: BrokerType,
         asset_class: str = "crypto",
         is_verified: bool = False,
-        metadata: Optional[Dict] = None
+        metadata: Optional[Dict] = None,
     ) -> SymbolMapping:
         """
         Add a new symbol mapping to the database.
@@ -847,10 +826,9 @@ class SymbolMapper:
         except (ValidationError, SymbolMappingError):
             # Re-raise validation and mapping errors as-is
             raise
-        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
+        except (ConnectionError, TimeoutError, ValueError) as e:
             logger.error(
-                f"Error adding mapping {internal_symbol} -> {broker_symbol}: {e}",
-                exc_info=True
+                f"Error adding mapping {internal_symbol} -> {broker_symbol}: {e}", exc_info=True
             )
             raise SymbolMappingError(f"Failed to add mapping: {e}")
 
@@ -893,26 +871,18 @@ class SymbolMapper:
                 if cached_internal == internal_symbol:
                     broker_symbols[broker_name] = mapping.broker_symbol
 
-            logger.info(
-                f"Found {len(broker_symbols)} broker mappings for {internal_symbol}"
-            )
+            logger.info(f"Found {len(broker_symbols)} broker mappings for {internal_symbol}")
             return broker_symbols
 
         except ValidationError:
             # Re-raise validation errors
             raise
-        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
-            logger.error(
-                f"Error getting brokers for {internal_symbol}: {e}",
-                exc_info=True
-            )
+        except (ConnectionError, TimeoutError, ValueError) as e:
+            logger.error(f"Error getting brokers for {internal_symbol}: {e}", exc_info=True)
             return {}
 
     def validate_mapping(
-        self,
-        internal_symbol: str,
-        broker_symbol: str,
-        broker_name: str
+        self, internal_symbol: str, broker_symbol: str, broker_name: str
     ) -> Tuple[bool, Optional[str]]:
         """
         Validate that a mapping is correct.
@@ -967,7 +937,10 @@ class SymbolMapper:
             logger.info(f"Mapping validated: {internal_symbol} <-> {broker_symbol} ({broker_name})")
             return True, None
 
-        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
+        except (ValidationError, UnknownSymbolError) as e:
+            # These are validation failures, return False with error message
+            return False, str(e)
+        except (ConnectionError, TimeoutError, ValueError) as e:
             error_msg = f"Validation failed: {e}"
             logger.error(f"validate_mapping: {error_msg}")
             return False, error_msg
@@ -1083,20 +1056,14 @@ class SymbolMapperMixin:
 
     def map_to_broker(self, internal_symbol: str) -> str:
         """Map internal symbol to broker-specific symbol."""
-        return self.symbol_mapper.map_internal_to_broker(
-            internal_symbol, self.get_broker_name()
-        )
+        return self.symbol_mapper.map_internal_to_broker(internal_symbol, self.get_broker_name())
 
     def map_from_broker(self, broker_symbol: str) -> str:
         """Map broker-specific symbol to internal symbol."""
-        return self.symbol_mapper.map_broker_to_internal(
-            broker_symbol, self.get_broker_name()
-        )
+        return self.symbol_mapper.map_broker_to_internal(broker_symbol, self.get_broker_name())
 
     def validate_symbol_mapping(
-        self,
-        internal_symbol: str,
-        broker_symbol: str
+        self, internal_symbol: str, broker_symbol: str
     ) -> Tuple[bool, Optional[str]]:
         """Validate a symbol mapping."""
         return self.symbol_mapper.validate_mapping(
@@ -1127,7 +1094,7 @@ async def get_or_create_mapping(
     broker_symbol: str,
     broker_name: str,
     broker_type: BrokerType,
-    db_session: Optional[AsyncSession] = None
+    db_session: Optional[AsyncSession] = None,
 ) -> SymbolMapping:
     """
     Get existing mapping or create new one.

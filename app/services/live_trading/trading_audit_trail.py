@@ -158,8 +158,7 @@ class AuditPersistence:
     def _init_database(self) -> None:
         """Initialize database schema."""
         conn = self._get_connection()
-        conn.execute(
-            """
+        conn.execute("""
             CREATE TABLE IF NOT EXISTS audit_events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 event_id TEXT UNIQUE NOT NULL,
@@ -176,8 +175,7 @@ class AuditPersistence:
                 risk_level TEXT,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
-        """
-        )
+        """)
         # Indices for fast queries (MiFID II compliance queries)
         conn.execute("CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_events(timestamp)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_audit_alert_id ON audit_events(alert_id)")

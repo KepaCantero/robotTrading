@@ -981,8 +981,12 @@ def main():
                                 return True
                             return False
 
-                        before_valid = learning_engine_results['before_training_metrics'].apply(has_valid_metrics)
-                        after_valid = learning_engine_results['after_training_metrics'].apply(has_valid_metrics)
+                        before_valid = learning_engine_results['before_training_metrics'].apply(
+                            has_valid_metrics
+                        )
+                        after_valid = learning_engine_results['after_training_metrics'].apply(
+                            has_valid_metrics
+                        )
                         complete_count = ((before_valid) & (after_valid)).sum()
 
                         if complete_count > 0:
@@ -1081,29 +1085,25 @@ def main():
                     st.info(
                         "📋 No hay resultados cargados. Ejecuta tests o carga resultados existentes."
                     )
-                    st.markdown(
-                        """
+                    st.markdown("""
                     **💡 Para empezar:**
                     1. Ve al sidebar y selecciona tests (Baseline, Learning Engines, etc.)
                     2. Activa los learning engines que quieras probar
                     3. Haz clic en "🚀 EXECUTE SELECTED TESTS" (arriba o en el sidebar)
                     4. O carga resultados existentes desde la tab "📁 Load Results"
-                    """
-                    )
+                    """)
             except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 st.error(f"❌ Error cargando resultados: {e}")
                 st.exception(e)
                 logger.error(f"Error en dashboard: {e}", exc_info=True)
 
             # Show helpful message even on error
-            st.markdown(
-                """
+            st.markdown("""
             **🔧 Solución:**
             1. Verifica que el directorio `reports/comprehensive_backtest` existe
             2. Ejecuta algunos backtests primero desde el sidebar
             3. O carga resultados desde la tab "📁 Load Results"
-            """
-            )
+            """)
 
         # Tab 2: Individual Results
         with tabs[1]:
@@ -1441,9 +1441,7 @@ def main():
                                     else (
                                         return_imp
                                         if metric == 'return_pct'
-                                        else winrate_imp
-                                        if metric == 'win_rate'
-                                        else dd_imp
+                                        else winrate_imp if metric == 'win_rate' else dd_imp
                                     )
                                 )
 
@@ -1730,13 +1728,11 @@ def main():
         # Tab 5: Integration Test Objectives
         with tabs[4]:
             st.header("🎯 Integration Test Objectives")
-            st.markdown(
-                """
+            st.markdown("""
             ### Objetivos de Métricas para Integration Tests
 
             Esta sección muestra qué estrategias con qué parámetros cumplen los objetivos establecidos para los integration tests.
-            """
-            )
+            """)
 
             # Load and display Meta Analysis results if available
             loader = ComprehensiveBacktestLoader()
@@ -2137,7 +2133,13 @@ def main():
                         st.dataframe(df_results.head(10))
                     else:
                         st.warning("No results found in the specified directory.")
-                except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+                except (
+                    FileNotFoundError,
+                    PermissionError,
+                    IOError,
+                    OSError,
+                    IsADirectoryError,
+                ) as e:
                     st.error(f"Error loading results: {e}")
                     logger.error(f"Error loading results: {e}", exc_info=True)
 
@@ -2275,13 +2277,13 @@ def main():
                     config['backtests']['multi_strategy']['strategies'] = params.get(
                         'strategies', ["momentum", "mean_reversion", "pairs_trading"]
                     )
-                    config['backtests']['multi_strategy'][
-                        'enable_dynamic_reallocation'
-                    ] = params.get('enable_dynamic_reallocation', True)
+                    config['backtests']['multi_strategy']['enable_dynamic_reallocation'] = (
+                        params.get('enable_dynamic_reallocation', True)
+                    )
                     if params.get('enable_dynamic_reallocation', True):
-                        config['backtests']['multi_strategy'][
-                            'reallocation_frequency_days'
-                        ] = params.get('reallocation_frequency', 30)
+                        config['backtests']['multi_strategy']['reallocation_frequency_days'] = (
+                            params.get('reallocation_frequency', 30)
+                        )
 
                 # Enable/disable specific backtests
                 for test_name in [
@@ -2390,8 +2392,15 @@ def main():
                                     ComprehensiveBacktestRunner,
                                 )
 
-                                logger.info("✅ ComprehensiveBacktestRunner importado correctamente")
-                            except (ValueError, TypeError, KeyError, AttributeError) as import_error:
+                                logger.info(
+                                    "✅ ComprehensiveBacktestRunner importado correctamente"
+                                )
+                            except (
+                                ValueError,
+                                TypeError,
+                                KeyError,
+                                AttributeError,
+                            ) as import_error:
                                 logger.error(f"Error durante import: {import_error}", exc_info=True)
                                 raise
                         st.success("✅ ComprehensiveBacktestRunner cargado correctamente")
@@ -2566,16 +2575,14 @@ def main():
         logger.error(f"Error crítico en dashboard main(): {e}", exc_info=True)
 
         # Show minimal working interface
-        st.markdown(
-            """
+        st.markdown("""
         ## 🔧 Dashboard en modo recuperación
 
         El dashboard encontró un error. Por favor:
         1. Recarga la página (F5 o Cmd+R)
         2. Si persiste, revisa los logs en `logs/errors.log`
         3. Intenta ejecutar el dashboard básico: `python run_dashboard.py`
-        """
-        )
+        """)
 
 
 # Streamlit ejecuta el script directamente, así que siempre llamamos main()

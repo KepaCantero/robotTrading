@@ -13,14 +13,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-try:
-    import aiohttp
-
-    AIOHTTP_AVAILABLE = True
-except ImportError:
-    AIOHTTP_AVAILABLE = False
-    logger = logging.getLogger(__name__)
-    logger.warning("aiohttp no disponible. Fuentes OHLCV asíncronas no funcionarán.")
+# REQUIRED: No fallbacks - aiohttp is required for async HTTP requests
+import aiohttp  # noqa: F401
 
 from .base_source import BaseDataSource
 
@@ -54,30 +48,6 @@ class IBKRSource(BaseDataSource):
         """Conectar a IBKR TWS/IB Gateway."""
         try:
             # Intentar importar ib_insync
-            try:
-                from ib_insync import IB
-
-                self._ib = IB()
-                await self._ib.connect(self.host, self.port, clientId=self.client_id)
-                self.is_connected = True
-                logger.info(f"Conectado a IBKR en {self.host}:{self.port}")
-                return True
-            except ImportError:
-                logger.warning("ib_insync no disponible. IBKR source no funcionará.")
-                self.last_error = "ib_insync no instalado"
-                return False
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
-                logger.error(f"Error conectando a IBKR: {e}")
-                self.last_error = str(e)
-                return False
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
-            logger.error(f"Error en conexión IBKR: {e}")
-            self.last_error = str(e)
-            return False
-
-    async def disconnect(self) -> bool:
-        """Desconectar de IBKR."""
-        try:
             if self._ib and self.is_connected:
                 await self._ib.disconnect()
                 self.is_connected = False
@@ -148,7 +118,6 @@ class IBKRSource(BaseDataSource):
 
             return ohlcv_data
 
-        except ImportError:
             logger.error("ib_insync no disponible")
             return []
         except (ValueError, TypeError, KeyError, AttributeError) as e:
@@ -184,20 +153,15 @@ class BinanceSource(BaseDataSource):
 
     async def connect(self) -> bool:
         """Conectar a Binance API."""
-        if not AIOHTTP_AVAILABLE:
-            logger.error("aiohttp no disponible. BinanceSource no puede conectarse.")
-            self.last_error = "aiohttp no disponible"
-            return False
-
         try:
             self.session = aiohttp.ClientSession()
             self.is_connected = True
             logger.info(f"Conectado a Binance API (testnet={self.testnet})")
             return True
-        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        except (ConnectionError, TimeoutError) as e:
             logger.error(f"Error conectando a Binance: {e}")
             self.last_error = str(e)
-            return False
+            raise
 
     async def disconnect(self) -> bool:
         """Desconectar de Binance."""
@@ -323,7 +287,7 @@ class AlpacaSource(BaseDataSource):
         if not self.api_key or not self.api_secret:
             logger.error("Alpaca API key y secret requeridos")
             self.last_error = "API credentials missing"
-            return False
+            raise ValueError("Alpaca API key y secret requeridos")
 
         try:
             self.session = aiohttp.ClientSession(
@@ -332,10 +296,10 @@ class AlpacaSource(BaseDataSource):
             self.is_connected = True
             logger.info("Conectado a Alpaca API")
             return True
-        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        except (ConnectionError, TimeoutError) as e:
             logger.error(f"Error conectando a Alpaca: {e}")
             self.last_error = str(e)
-            return False
+            raise
 
     async def disconnect(self) -> bool:
         """Desconectar de Alpaca."""
@@ -443,11 +407,6 @@ class PolygonSource(BaseDataSource):
 
     async def connect(self) -> bool:
         """Conectar a Polygon API."""
-        if not AIOHTTP_AVAILABLE:
-            logger.error("aiohttp no disponible. PolygonSource no puede conectarse.")
-            self.last_error = "aiohttp no disponible"
-            return False
-
         if not self.api_key:
             logger.warning("Polygon API key no configurado")
 
@@ -456,10 +415,10 @@ class PolygonSource(BaseDataSource):
             self.is_connected = True
             logger.info("Conectado a Polygon API")
             return True
-        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        except (ConnectionError, TimeoutError) as e:
             logger.error(f"Error conectando a Polygon: {e}")
             self.last_error = str(e)
-            return False
+            raise
 
     async def disconnect(self) -> bool:
         """Desconectar de Polygon."""

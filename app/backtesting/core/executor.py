@@ -6,6 +6,7 @@ following the Template Method pattern for extensible backtesting strategies.
 
 Updated in Phase 2 with complete type hints and improved error handling.
 """
+
 from __future__ import annotations
 
 import logging
@@ -136,13 +137,10 @@ class BacktestExecutor(ABC):
             raise ValueError("Strategy cannot be None")
 
         if self.config.initial_capital <= 0:
-            raise ValueError(
-                f"Initial capital must be positive: {self.config.initial_capital}"
-            )
+            raise ValueError(f"Initial capital must be positive: {self.config.initial_capital}")
 
         logger.debug(
-            f"Inputs validated: {len(quotes)} quotes, "
-            f"strategy: {type(strategy).__name__}"
+            f"Inputs validated: {len(quotes)} quotes, " f"strategy: {type(strategy).__name__}"
         )
 
     def _pre_execute(
@@ -207,10 +205,7 @@ class SimpleBacktestExecutor(BacktestExecutor):
         from app.backtesting.engine import SimpleBacktester
 
         # Get strategy name
-        strategy_name: str = kwargs.get(
-            'strategy_name',
-            getattr(strategy, 'name', 'unknown')
-        )
+        strategy_name: str = kwargs.get('strategy_name', getattr(strategy, 'name', 'unknown'))
 
         # Create backtester
         backtester = SimpleBacktester(
@@ -385,10 +380,7 @@ class ProcessPoolBacktestExecutor(BacktestExecutor):
 
         result_queue: Queue = Queue()
 
-        strategy_name = kwargs.get(
-            'strategy_name',
-            getattr(strategy, 'name', 'unknown')
-        )
+        strategy_name = kwargs.get('strategy_name', getattr(strategy, 'name', 'unknown'))
 
         p = Process(
             target=_run_backtest_process,
@@ -399,7 +391,7 @@ class ProcessPoolBacktestExecutor(BacktestExecutor):
                 strategy_name,
                 kwargs.get('enable_risk_envelope', True),
                 result_queue,
-            )
+            ),
         )
         p.start()
         p.join(timeout=300)  # 5 minute timeout

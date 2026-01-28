@@ -1,0 +1,141 @@
+---
+name: "Data Pipeline Failure"
+severity: "high"
+trigger: "data_pipeline_failed OR data_stale"
+category: "data"
+tags: ["data", "pipeline", "etl", "infrastructure"]
+estimated_duration_minutes: 25
+last_updated: "2026-01-28"
+version: "1.0"
+
+description: |
+  Respond to data pipeline failures. Data pipelines are critical
+  for feeding strategies with market data and features.
+
+prerequisites:
+  - Data pipeline monitoring access
+  - Pipeline execution logs
+  - Data storage access
+
+steps:
+  - title: "Verify Pipeline Failure"
+    description: "Confirm data pipeline is failing"
+    commands:
+      - "Check pipeline status dashboard"
+      - "Review pipeline execution logs"
+      - "Identify failed pipeline jobs"
+      - "Determine failure type"
+    expected_outcome: "Pipeline failure confirmed"
+
+  - title: "Assess Impact"
+    description: "Determine impact on operations"
+    commands:
+      - "Check if strategies depend on affected data"
+      - "Assess data staleness"
+      - "Review impact on feature generation"
+      - "Check if trading affected"
+    expected_outcome: "Impact assessed"
+    decision_point:
+      condition: "critical_data_affected OR trading_affected"
+      true_branch: "Halt affected strategies"
+      false_branch: "Monitor and repair"
+
+  - title: "Identify Failure Point"
+    description: "Find where pipeline is failing"
+    commands:
+      - "Review pipeline stages"
+      - "Check for data source issues"
+      - "Review transformation logic"
+      - "Check storage layer"
+      - "Review dependency issues"
+    expected_outcome: "Failure point identified"
+
+  - title: "Address Root Cause"
+    description: "Fix the underlying issue"
+    commands:
+      - "Fix data source issues if applicable"
+      - "Correct transformation errors"
+      - "Resolve resource constraints"
+      - "Fix code bugs if found"
+      - "Address network issues"
+    expected_outcome: "Root cause addressed"
+
+  - title: "Repair Data Pipeline"
+    description: "Get pipeline running again"
+    commands:
+      - "Fix identified issues"
+      - "Restart failed pipeline jobs"
+      - "Verify job execution"
+      - "Check data quality"
+    expected_outcome: "Pipeline operational"
+
+  - title: "Backfill Missing Data"
+    description: "Recover data from failure period"
+    commands:
+      - "Identify missing data time range"
+      - "Execute backfill jobs"
+      - "Verify backfill data quality"
+      - "Update downstream systems"
+    expected_outcome: "Data backfilled"
+
+  - title: "Verify Data Quality"
+    description: "Ensure output data is good"
+    commands:
+      - "Run data quality checks"
+      - "Verify data completeness"
+      - "Check data accuracy"
+      - "Validate data formats"
+    expected_outcome: "Data quality verified"
+
+  - title: "Resume Dependent Systems"
+    description: "Get affected systems running"
+    commands:
+      - "Restart strategies if halted"
+      - "Rebuild features if needed"
+      - "Update caches"
+      - "Monitor for issues"
+    expected_outcome: "Systems resumed"
+
+  - title: "Monitor Pipeline Health"
+    description: "Ensure pipeline stays stable"
+    commands:
+      - "Monitor pipeline executions"
+      - "Check for new failures"
+      - "Review data quality metrics"
+      - "Monitor for 1 hour"
+    expected_outcome: "Pipeline stable"
+
+  - title: "Document Incident"
+    description: "Complete incident documentation"
+    commands:
+      - "Log pipeline failure incident"
+      - "Document root cause"
+      - "Record impact and duration"
+      - "Create preventive measures"
+    expected_outcome: "Incident documented"
+
+post_actions:
+  - "Review pipeline reliability"
+  - "Improve pipeline monitoring"
+  - "Add pipeline redundancy"
+  - "Update runbook with lessons learned"
+
+related_runbooks:
+  - "market_data_quality_issue.yaml"
+  - "data_quality_validation.yaml"
+
+metrics_to_track:
+  - "pipeline_success_rate"
+  - "pipeline_latency_p99"
+  - "pipeline_failure_count"
+  - "data_staleness_seconds"
+
+success_criteria:
+  - "Pipeline operational"
+  - "Data backfilled"
+  - "Systems resumed"
+  - "Incident documented"
+
+escalation_path: "data_operations"
+owner: "data-team"
+review_frequency: "monthly"

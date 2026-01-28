@@ -355,6 +355,26 @@ parallelization:
   # Tests paralelizables: monte_carlo, grid_search, learning_engines
   # Reducción estimada de tiempo: hasta 70% con múltiples cores
 
+# ============================================
+# CAPITAL TIERS (para ProfileBatchBacktester)
+# ============================================
+capital_tiers:
+  bajo: 50000      # $50k
+  medio: 150000    # $150k
+  alto: 500000     # $500k
+
+# Investment horizons (para ProfileBatchBacktester)
+investment_horizons:
+  corto:
+    name: "Corto Plazo"
+    months: 3
+  medio:
+    name: "Medio Plazo"
+    months: 12
+  largo:
+    name: "Largo Plazo"
+    months: 36
+
 # Umbrales para colores dinámicos en dashboard
 thresholds:
   sharpe:

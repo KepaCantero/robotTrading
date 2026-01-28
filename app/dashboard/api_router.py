@@ -8,18 +8,18 @@ Provides FastAPI endpoints for the production dashboard including:
 """
 
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException, Depends
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.responses import HTMLResponse
 
 from app.dashboard.production_dashboard import (
+    AlertHistoryItem,
+    DashboardMetrics,
+    HistoricalDataPoint,
+    PositionMetric,
     ProductionDashboard,
     get_production_dashboard,
-    DashboardMetrics,
-    PositionMetric,
-    AlertHistoryItem,
-    HistoricalDataPoint,
 )
 
 logger = logging.getLogger(__name__)
@@ -70,7 +70,9 @@ async def get_health_status(dashboard: ProductionDashboard = Depends(get_dashboa
 
 
 @router.get("/metrics", response_model=DashboardMetrics)
-async def get_dashboard_metrics(dashboard: ProductionDashboard = Depends(get_dashboard)) -> DashboardMetrics:
+async def get_dashboard_metrics(
+    dashboard: ProductionDashboard = Depends(get_dashboard),
+) -> DashboardMetrics:
     """
     Get current dashboard metrics.
 
@@ -85,7 +87,9 @@ async def get_dashboard_metrics(dashboard: ProductionDashboard = Depends(get_das
 
 
 @router.get("/positions", response_model=List[PositionMetric])
-async def get_positions(dashboard: ProductionDashboard = Depends(get_dashboard)) -> List[PositionMetric]:
+async def get_positions(
+    dashboard: ProductionDashboard = Depends(get_dashboard),
+) -> List[PositionMetric]:
     """
     Get current position metrics.
 
@@ -101,8 +105,7 @@ async def get_positions(dashboard: ProductionDashboard = Depends(get_dashboard))
 
 @router.get("/alerts", response_model=List[AlertHistoryItem])
 async def get_alert_history(
-    hours: int = 24,
-    dashboard: ProductionDashboard = Depends(get_dashboard)
+    hours: int = 24, dashboard: ProductionDashboard = Depends(get_dashboard)
 ) -> List[AlertHistoryItem]:
     """
     Get alert history.
@@ -122,8 +125,7 @@ async def get_alert_history(
 
 @router.get("/historical", response_model=List[HistoricalDataPoint])
 async def get_historical_data(
-    period: str = "7d",
-    dashboard: ProductionDashboard = Depends(get_dashboard)
+    period: str = "7d", dashboard: ProductionDashboard = Depends(get_dashboard)
 ) -> List[HistoricalDataPoint]:
     """
     Get historical performance data.
@@ -148,8 +150,7 @@ async def get_historical_data(
 
 @router.post("/alerts/{alert_id}/acknowledge")
 async def acknowledge_alert(
-    alert_id: str,
-    dashboard: ProductionDashboard = Depends(get_dashboard)
+    alert_id: str, dashboard: ProductionDashboard = Depends(get_dashboard)
 ) -> Dict[str, bool]:
     """
     Acknowledge an alert.
@@ -174,8 +175,7 @@ async def acknowledge_alert(
 
 @router.post("/alerts/{alert_id}/resolve")
 async def resolve_alert(
-    alert_id: str,
-    dashboard: ProductionDashboard = Depends(get_dashboard)
+    alert_id: str, dashboard: ProductionDashboard = Depends(get_dashboard)
 ) -> Dict[str, bool]:
     """
     Resolve an alert.
@@ -200,8 +200,7 @@ async def resolve_alert(
 
 @router.websocket("/ws")
 async def websocket_endpoint(
-    websocket: WebSocket,
-    dashboard: ProductionDashboard = Depends(get_dashboard)
+    websocket: WebSocket, dashboard: ProductionDashboard = Depends(get_dashboard)
 ):
     """
     WebSocket endpoint for real-time dashboard updates.
@@ -225,7 +224,7 @@ async def websocket_endpoint(
 
 @router.get("/connections")
 async def get_active_connections(
-    dashboard: ProductionDashboard = Depends(get_dashboard)
+    dashboard: ProductionDashboard = Depends(get_dashboard),
 ) -> Dict[str, int]:
     """
     Get number of active WebSocket connections.
@@ -241,9 +240,7 @@ async def get_active_connections(
 
 
 @router.get("/stats")
-async def get_dashboard_statistics(
-    dashboard: ProductionDashboard = Depends(get_dashboard)
-) -> Dict:
+async def get_dashboard_statistics(dashboard: ProductionDashboard = Depends(get_dashboard)) -> Dict:
     """
     Get aggregated dashboard statistics.
 
@@ -266,7 +263,7 @@ async def get_dashboard_statistics(
 
 @router.post("/refresh")
 async def refresh_dashboard_data(
-    dashboard: ProductionDashboard = Depends(get_dashboard)
+    dashboard: ProductionDashboard = Depends(get_dashboard),
 ) -> Dict[str, bool]:
     """
     Force refresh of all dashboard data.
@@ -279,7 +276,9 @@ async def refresh_dashboard_data(
         dashboard._historical_cache = {"7d": [], "30d": []}
 
         # Broadcast update to all connected clients
-        await dashboard.broadcast_update({"type": "refresh", "timestamp": dashboard._last_update.isoformat()})
+        await dashboard.broadcast_update(
+            {"type": "refresh", "timestamp": dashboard._last_update.isoformat()}
+        )
 
         return {"success": True}
     except (ValueError, TypeError, KeyError, AttributeError) as e:

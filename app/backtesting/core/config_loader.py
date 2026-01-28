@@ -55,7 +55,9 @@ class BacktestConfigLoader:
 
         logger.debug(f"Loaded configuration from {self.config_path}")
 
-    def _validate_positive_decimal(self, value: Any, name: str, allow_zero: bool = False) -> Decimal:
+    def _validate_positive_decimal(
+        self, value: Any, name: str, allow_zero: bool = False
+    ) -> Decimal:
         """
         Validate that a value is a positive Decimal.
 
@@ -83,7 +85,9 @@ class BacktestConfigLoader:
 
         return decimal_value
 
-    def _validate_percentage(self, value: Any, name: str, max_value: Optional[Decimal] = None) -> Decimal:
+    def _validate_percentage(
+        self, value: Any, name: str, max_value: Optional[Decimal] = None
+    ) -> Decimal:
         """
         Validate that a value is a percentage (0-100 or 0-1).
 
@@ -140,31 +144,29 @@ class BacktestConfigLoader:
         input_config = self._raw_config.get('input', {})
 
         # Get initial capital from input section if not in backtest section
-        initial_capital_raw = config.get('initial_capital') or input_config.get('initial_capital', 100000)
+        initial_capital_raw = config.get('initial_capital') or input_config.get(
+            'initial_capital', 100000
+        )
 
         # Validate all configuration parameters
         initial_capital = self._validate_positive_decimal(
-            initial_capital_raw,
-            "initial_capital",
-            allow_zero=False
+            initial_capital_raw, "initial_capital", allow_zero=False
         )
 
         commission_per_trade = self._validate_positive_decimal(
             config.get('commission_per_trade', 1.0),
             "commission_per_trade",
-            allow_zero=True  # Zero commission is allowed
+            allow_zero=True,  # Zero commission is allowed
         )
 
         slippage_percentage = self._validate_percentage(
-            config.get('slippage', 0.1),
-            "slippage",
-            max_value=Decimal("100")  # Up to 100%
+            config.get('slippage', 0.1), "slippage", max_value=Decimal("100")  # Up to 100%
         )
 
         max_position_size = self._validate_percentage(
             config.get('max_position_size', 0.20),
             "max_position_size",
-            max_value=Decimal("1")  # 0-100% as decimal (0.0 to 1.0)
+            max_value=Decimal("1"),  # 0-100% as decimal (0.0 to 1.0)
         )
 
         # Optional stop loss
@@ -172,9 +174,7 @@ class BacktestConfigLoader:
         stop_loss_percentage = None
         if stop_loss_raw is not None:
             stop_loss_percentage = self._validate_percentage(
-                stop_loss_raw,
-                "stop_loss",
-                max_value=Decimal("100")
+                stop_loss_raw, "stop_loss", max_value=Decimal("100")
             )
 
         # Optional take profit
@@ -182,9 +182,7 @@ class BacktestConfigLoader:
         take_profit_percentage = None
         if take_profit_raw is not None:
             take_profit_percentage = self._validate_positive_decimal(
-                take_profit_raw,
-                "take_profit",
-                allow_zero=False
+                take_profit_raw, "take_profit", allow_zero=False
             )
             # Take profit can be any positive number (not really a percentage)
 
@@ -193,7 +191,9 @@ class BacktestConfigLoader:
         try:
             risk_free_rate = Decimal(str(risk_free_rate_raw))
         except (ValueError, TypeError) as e:
-            raise ConfigValidationError(f"risk_free_rate must be a number, got: {risk_free_rate_raw}") from e
+            raise ConfigValidationError(
+                f"risk_free_rate must be a number, got: {risk_free_rate_raw}"
+            ) from e
 
         return BacktestConfig(
             strategy_name=config.get('strategy_name', 'default'),

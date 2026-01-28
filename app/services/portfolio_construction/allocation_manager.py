@@ -4,6 +4,7 @@ T18.1.1: AllocationManager - Portfolio allocation tracking and management
 Manages current portfolio allocations, tracks deviations, and maintains allocation history.
 """
 
+import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime

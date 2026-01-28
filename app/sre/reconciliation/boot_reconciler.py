@@ -20,6 +20,7 @@ Usage:
     await reconciler.reconcile_on_startup()
 """
 
+import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -28,6 +29,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 import aiosqlite
+from requests.exceptions import HTTPError
 
 logger = logging.getLogger(__name__)
 
@@ -204,8 +206,7 @@ class BootReconciler:
         """Fetch all open positions from local database."""
         try:
             async with aiosqlite.connect(self.db_path) as db:
-                cursor = await db.execute(
-                    """
+                cursor = await db.execute("""
                     SELECT
                         id, symbol, side, quantity, entry_price,
                         current_price, stop_loss_price, take_profit_price,
@@ -213,8 +214,7 @@ class BootReconciler:
                     FROM positions
                     WHERE status = 'OPEN'
                     ORDER BY created_at DESC
-                """
-                )
+                """)
                 rows = await cursor.fetchall()
 
                 return [
@@ -432,7 +432,13 @@ class BootReconciler:
                     f"{pos['side']} {pos['quantity']}"
                 )
 
-            except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
+            except (
+                IntegrityError,
+                OperationalError,
+                DatabaseError,
+                DataError,
+                ProgrammingError,
+            ) as e:
                 logger.error(f"Error resolving phantom position: {e}")
                 actions.append(
                     {

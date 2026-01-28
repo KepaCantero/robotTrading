@@ -19,13 +19,13 @@ Phase 3.4: Broker API Rate Limiting for 24/7 Operation
 import asyncio
 import logging
 import time
-from dataclasses import dataclass, field
-from decimal import Decimal
+from dataclasses import dataclass
 from enum import Enum, IntEnum
 from typing import Callable, Dict, List, Optional
 
-from app.core.timezone_utils import utc_now
+from requests.exceptions import HTTPError
 
+from app.core.timezone_utils import utc_now
 
 logger = logging.getLogger(__name__)
 
@@ -83,9 +83,7 @@ BROKER_RATE_LIMITS = {
     BrokerType.IBKR: RateLimit(
         requests_per_second=50, burst_capacity=100
     ),  # 50-100 req/s depending on endpoint
-    BrokerType.ALPACA: RateLimit(
-        requests_per_second=3.33, burst_capacity=20
-    ),  # 200/min
+    BrokerType.ALPACA: RateLimit(requests_per_second=3.33, burst_capacity=20),  # 200/min
     BrokerType.POLYGON: RateLimit(
         requests_per_second=5, burst_capacity=50
     ),  # 5 req/s for free tier
@@ -219,7 +217,10 @@ class TokenBucketRateLimiter:
         )
 
     async def acquire(
-        self, tokens: int = 1, priority: int = RequestPriority.MEDIUM, timeout: Optional[float] = None
+        self,
+        tokens: int = 1,
+        priority: int = RequestPriority.MEDIUM,
+        timeout: Optional[float] = None,
     ) -> bool:
         """
         Acquire tokens, wait if necessary.
@@ -331,9 +332,7 @@ class TokenBucketRateLimiter:
         elapsed = now - self._state.last_update
         refill = elapsed * self.rate_limit.requests_per_second
 
-        current_tokens = min(
-            self._state.tokens + refill, float(self.rate_limit.burst_capacity)
-        )
+        current_tokens = min(self._state.tokens + refill, float(self.rate_limit.burst_capacity))
 
         # Calculate time needed for refill
         tokens_needed = tokens - current_tokens
@@ -381,7 +380,7 @@ class TokenBucketRateLimiter:
             except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 if attempt < max_retries - 1:
                     # Exponential backoff with jitter
-                    backoff = initial_backoff * (2 ** attempt)
+                    backoff = initial_backoff * (2**attempt)
                     jitter = backoff * 0.1  # 10% jitter
                     wait_time = backoff + (jitter * (2 * (hash(id(self)) % 100) / 100 - 1))
 
@@ -398,7 +397,12 @@ class TokenBucketRateLimiter:
                     if self.on_limit_exceeded:
                         try:
                             self.on_limit_exceeded()
-                        except (ConnectionError, TimeoutError, HTTPError, ValueError) as callback_error:
+                        except (
+                            ConnectionError,
+                            TimeoutError,
+                            HTTPError,
+                            ValueError,
+                        ) as callback_error:
                             logger.error(f"Error in limit exceeded callback: {callback_error}")
 
                     await asyncio.sleep(wait_time)
@@ -430,9 +434,7 @@ class TokenBucketRateLimiter:
         elapsed = now - self._state.last_update
         refill = elapsed * self.rate_limit.requests_per_second
 
-        self._state.tokens = min(
-            self._state.tokens + refill, float(self.rate_limit.burst_capacity)
-        )
+        self._state.tokens = min(self._state.tokens + refill, float(self.rate_limit.burst_capacity))
         self._state.last_update = now
 
         return int(self._state.tokens)

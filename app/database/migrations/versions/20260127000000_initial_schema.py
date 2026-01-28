@@ -9,11 +9,13 @@ Revises:
 Create Date: 2026-01-27
 
 """
+
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql, sqlite
+from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "0001"
@@ -37,8 +39,12 @@ def upgrade() -> None:
         sa.Column("hashed_password", sa.String(255), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default="true"),
         sa.Column("is_superuser", sa.Boolean(), nullable=False, server_default="false"),
-        sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
-        sa.Column("updated_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column(
+            "created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")
+        ),
         sa.Column("last_login", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("id", name="pk_users"),
     )
@@ -60,7 +66,9 @@ def upgrade() -> None:
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default="true"),
         sa.Column("expires_at", sa.DateTime(), nullable=True),
         sa.Column("last_used", sa.DateTime(), nullable=True),
-        sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column(
+            "created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")
+        ),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], name="fk_api_keys_user_id"),
         sa.PrimaryKeyConstraint("id", name="pk_api_keys"),
     )
@@ -81,8 +89,12 @@ def upgrade() -> None:
         sa.Column("exchange", sa.String(50), nullable=True),
         sa.Column("currency", sa.String(3), nullable=False, server_default="USD"),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default="true"),
-        sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
-        sa.Column("updated_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column(
+            "created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")
+        ),
         sa.PrimaryKeyConstraint("id", name="pk_assets"),
     )
     op.create_index("idx_assets_symbol", "assets", ["symbol"], unique=True)
@@ -104,8 +116,12 @@ def upgrade() -> None:
         sa.Column("current_cash", sa.Numeric(15, 2), nullable=False),
         sa.Column("total_value", sa.Numeric(15, 2), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default="true"),
-        sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
-        sa.Column("updated_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column(
+            "created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")
+        ),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], name="fk_portfolios_user_id"),
         sa.PrimaryKeyConstraint("id", name="pk_portfolios"),
         sa.UniqueConstraint("user_id", "name", name="uq_portfolios_user_name"),
@@ -128,9 +144,15 @@ def upgrade() -> None:
         sa.Column("current_price", sa.Numeric(15, 4), nullable=True),
         sa.Column("unrealized_pnl", sa.Numeric(15, 2), nullable=True),
         sa.Column("realized_pnl", sa.Numeric(15, 2), nullable=False, server_default="0"),
-        sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
-        sa.Column("updated_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
-        sa.ForeignKeyConstraint(["portfolio_id"], ["portfolios.id"], name="fk_positions_portfolio_id"),
+        sa.Column(
+            "created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")
+        ),
+        sa.ForeignKeyConstraint(
+            ["portfolio_id"], ["portfolios.id"], name="fk_positions_portfolio_id"
+        ),
         sa.ForeignKeyConstraint(["asset_id"], ["assets.id"], name="fk_positions_asset_id"),
         sa.PrimaryKeyConstraint("id", name="pk_positions"),
         sa.UniqueConstraint("portfolio_id", "asset_id", name="uq_positions_portfolio_asset"),
@@ -157,8 +179,15 @@ def upgrade() -> None:
         sa.Column("slippage", sa.Numeric(15, 4), nullable=False, server_default="0"),
         sa.Column("total_cost", sa.Numeric(15, 2), nullable=False),
         sa.Column("status", sa.String(20), nullable=False, server_default="FILLED"),
-        sa.Column("executed_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
-        sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column(
+            "executed_at",
+            sa.DateTime(),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
+        sa.Column(
+            "created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")
+        ),
         sa.ForeignKeyConstraint(["portfolio_id"], ["portfolios.id"], name="fk_trades_portfolio_id"),
         sa.ForeignKeyConstraint(["asset_id"], ["assets.id"], name="fk_trades_asset_id"),
         sa.PrimaryKeyConstraint("id", name="pk_trades"),
@@ -187,7 +216,9 @@ def upgrade() -> None:
         sa.Column("close_price", sa.Numeric(15, 4), nullable=False),
         sa.Column("volume", sa.Numeric(20, 0), nullable=False),
         sa.Column("adjusted_close", sa.Numeric(15, 4), nullable=True),
-        sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column(
+            "created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")
+        ),
         sa.ForeignKeyConstraint(["asset_id"], ["assets.id"], name="fk_market_data_asset_id"),
         sa.PrimaryKeyConstraint("id", name="pk_market_data"),
         sa.UniqueConstraint("asset_id", "timestamp", name="uq_market_data_asset_timestamp"),
@@ -217,11 +248,15 @@ def upgrade() -> None:
         sa.Column("price", sa.Numeric(15, 4), nullable=False),
         sa.Column("volume", sa.Numeric(15, 8), nullable=True),
         sa.Column("meta_data", sa.JSON(), nullable=False, server_default="{}"),
-        sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column(
+            "created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")
+        ),
         sa.ForeignKeyConstraint(["asset_id"], ["assets.id"], name="fk_signals_asset_id"),
         sa.PrimaryKeyConstraint("id", name="pk_signals"),
         sa.CheckConstraint("signal_type IN ('BUY', 'SELL', 'HOLD')", name="ck_signals_signal_type"),
-        sa.CheckConstraint("strength IN ('WEAK', 'MODERATE', 'STRONG')", name="ck_signals_strength"),
+        sa.CheckConstraint(
+            "strength IN ('WEAK', 'MODERATE', 'STRONG')", name="ck_signals_strength"
+        ),
         sa.CheckConstraint("confidence >= 0 AND confidence <= 100", name="ck_signals_confidence"),
         sa.CheckConstraint("price > 0", name="ck_signals_price_positive"),
     )
@@ -251,11 +286,17 @@ def upgrade() -> None:
         sa.Column("parameters", sa.JSON(), nullable=False, server_default="{}"),
         sa.Column("results", sa.JSON(), nullable=False, server_default="{}"),
         sa.Column("status", sa.String(20), nullable=False, server_default="COMPLETED"),
-        sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column(
+            "created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")
+        ),
         sa.Column("completed_at", sa.DateTime(), nullable=True),
-        sa.ForeignKeyConstraint(["portfolio_id"], ["portfolios.id"], name="fk_backtests_portfolio_id"),
+        sa.ForeignKeyConstraint(
+            ["portfolio_id"], ["portfolios.id"], name="fk_backtests_portfolio_id"
+        ),
         sa.PrimaryKeyConstraint("id", name="pk_backtests"),
-        sa.CheckConstraint("status IN ('RUNNING', 'COMPLETED', 'FAILED')", name="ck_backtests_status"),
+        sa.CheckConstraint(
+            "status IN ('RUNNING', 'COMPLETED', 'FAILED')", name="ck_backtests_status"
+        ),
         sa.CheckConstraint("start_date < end_date", name="ck_backtests_date_range"),
         sa.CheckConstraint("initial_capital > 0", name="ck_backtests_initial_capital"),
     )
@@ -280,13 +321,19 @@ def upgrade() -> None:
         sa.Column("volatility", sa.Numeric(8, 4), nullable=True),
         sa.Column("beta", sa.Numeric(8, 4), nullable=True),
         sa.Column("correlation_matrix", sa.JSON(), nullable=True),
-        sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
-        sa.ForeignKeyConstraint(["portfolio_id"], ["portfolios.id"], name="fk_risk_metrics_portfolio_id"),
+        sa.Column(
+            "created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")
+        ),
+        sa.ForeignKeyConstraint(
+            ["portfolio_id"], ["portfolios.id"], name="fk_risk_metrics_portfolio_id"
+        ),
         sa.PrimaryKeyConstraint("id", name="pk_risk_metrics"),
     )
     op.create_index("idx_risk_metrics_portfolio_id", "risk_metrics", ["portfolio_id"])
     op.create_index("idx_risk_metrics_calculation_date", "risk_metrics", ["calculation_date"])
-    op.create_index("idx_risk_metrics_portfolio_date", "risk_metrics", ["portfolio_id", "calculation_date"])
+    op.create_index(
+        "idx_risk_metrics_portfolio_date", "risk_metrics", ["portfolio_id", "calculation_date"]
+    )
 
     # ==========================================================================
     # SYSTEM LOGS
@@ -300,11 +347,13 @@ def upgrade() -> None:
         sa.Column("message", sa.Text(), nullable=False),
         sa.Column("meta_data", sa.JSON(), nullable=True),
         sa.Column("timestamp", sa.DateTime(), nullable=False),
-        sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column(
+            "created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")
+        ),
         sa.PrimaryKeyConstraint("id", name="pk_system_logs"),
         sa.CheckConstraint(
             "level IN ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL')",
-            name="ck_system_logs_level"
+            name="ck_system_logs_level",
         ),
     )
     op.create_index("idx_system_logs_level", "system_logs", ["level"])
@@ -321,11 +370,17 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("monitor_id", sa.String(255), nullable=False),
         sa.Column("positions_json", sa.Text(), nullable=False),
-        sa.Column("last_sync", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column(
+            "last_sync", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")
+        ),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default="true"),
         sa.Column("version", sa.Integer(), nullable=False, server_default="1"),
-        sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
-        sa.Column("updated_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column(
+            "created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")
+        ),
         sa.PrimaryKeyConstraint("id", name="pk_position_states"),
     )
     op.create_index("idx_position_states_monitor_id", "position_states", ["monitor_id"])

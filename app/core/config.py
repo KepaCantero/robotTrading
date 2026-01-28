@@ -6,10 +6,10 @@ to load environment variables from .env files and provide type-safe configuratio
 """
 
 import logging
+import os
 from typing import List, Optional
 
-import os
-from pydantic import ConfigDict, Field, field_validator, ValidationInfo
+from pydantic import ConfigDict, Field, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings
 
 logger = logging.getLogger(__name__)
@@ -197,9 +197,16 @@ class Settings(BaseSettings):
         # Check for known weak keys
         weak_keys = [
             'your_secret_key_change_this_in_production',
-            'dev', 'test', 'secret', 'changeme', 'password',
+            'dev',
+            'test',
+            'secret',
+            'changeme',
+            'password',
             '0123456789abcdef0123456789abcdef',  # Common hex pattern
-            'secret', 'SECRET', 'key', 'KEY',
+            'secret',
+            'SECRET',
+            'key',
+            'KEY',
             'change-this-secret-key-in-production-min-32-chars',
             '12345678901234567890123456789012',
         ]
@@ -213,9 +220,7 @@ class Settings(BaseSettings):
                     "This is a security risk. To use this key anyway, set "
                     "ALLOW_WEAK_SECRET_KEY=true environment variable."
                 )
-            logger.warning(
-                "⚠️ Using weak SECRET_KEY - this should NEVER be done in production!"
-            )
+            logger.warning("⚠️ Using weak SECRET_KEY - this should NEVER be done in production!")
 
         return v
 

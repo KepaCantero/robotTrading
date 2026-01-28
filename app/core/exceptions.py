@@ -5,6 +5,8 @@ Independent exception definitions to avoid circular imports
 
 from typing import Any, Dict, Optional
 
+from sqlalchemy.exc import DatabaseError
+
 
 class AlgoTradingError(Exception):
     """Base exception for all AlgoTrading errors."""

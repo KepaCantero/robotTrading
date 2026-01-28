@@ -13,7 +13,28 @@ import pytest
 from dotenv import load_dotenv
 from fastapi.testclient import TestClient
 
+# ==============================================================================
+# CRITICAL: Configure Numba BEFORE any imports that use it
+# ==============================================================================
+# This must happen before importing any modules with Numba JIT functions
+# to prevent: "RuntimeError: cannot cache function 'func_name': no locator available for file '<string>'"
+#
+# The error occurs because:
+# 1. Numba JIT functions with cache=True try to cache compiled functions
+# 2. When imported during tests, Numba can't determine the source file location
+# 3. Setting NUMBA_CACHE_DIR to a valid path before imports fixes this
+
+# Set Numba cache directory to a writable location
+os.environ["NUMBA_CACHE_DIR"] = "/tmp/numba_cache_test"
+try:
+    os.makedirs("/tmp/numba_cache_test", exist_ok=True)
+except (OSError, PermissionError):
+    # If we can't create the directory, disable caching entirely
+    os.environ["NUMBA_CACHE_DIR"] = ""
+
+# ==============================================================================
 # Load test environment variables from .env.test before importing app
+# ==============================================================================
 test_env_file = Path(__file__).parent.parent / ".env.test"
 if test_env_file.exists():
     load_dotenv(test_env_file)
@@ -22,7 +43,21 @@ else:
     os.environ.setdefault("DEBUG", "true")
     os.environ.setdefault("SECRET_KEY", "test-secret-key-do-not-use-in-production")
 
-from app.main import app  # noqa: E402
+# ==============================================================================
+# Import app.main conditionally to avoid NumPy compatibility issues
+# ==============================================================================
+# Matplotlib compiled with NumPy 1.x is incompatible with NumPy 2.x
+# This causes ImportError during test collection. We import app.main lazily.
+_app = None
+def get_app():
+    """Lazy load FastAPI app to avoid import errors during collection."""
+    global _app
+    if _app is None:
+        from app.main import app as _app_impl
+        _app = _app_impl
+    return _app
+
+# Import models that don't depend on matplotlib/numpy 2.x compatibility
 from app.models.assets import Asset, AssetClass, AssetRanking, Exchange  # noqa: E402
 from app.models.momentum import MomentumStrategy, TechnicalIndicators, Timeframe  # noqa: E402
 
@@ -30,7 +65,7 @@ from app.models.momentum import MomentumStrategy, TechnicalIndicators, Timeframe
 @pytest.fixture
 def client():
     """FastAPI test client."""
-    return TestClient(app)
+    return TestClient(get_app())
 
 
 @pytest.fixture

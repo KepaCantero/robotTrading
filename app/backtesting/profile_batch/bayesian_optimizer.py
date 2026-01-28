@@ -37,7 +37,7 @@ class BayesianOptimizer:
         self,
         output_dir: Path,
         optimization_config: Dict[str, Any],
-        profile_config_loader: ProfileConfigLoader | None = None
+        profile_config_loader: ProfileConfigLoader | None = None,
     ):
         """
         Initialize Bayesian optimizer.
@@ -52,10 +52,7 @@ class BayesianOptimizer:
         self.profile_config_loader = profile_config_loader
 
     def optimize(
-        self,
-        profile: InputProfile,
-        config: Dict[str, Any],
-        multi_strategy: bool = False
+        self, profile: InputProfile, config: Dict[str, Any], multi_strategy: bool = False
     ) -> Dict[str, Any]:
         """
         Run Bayesian optimization.
@@ -112,10 +109,7 @@ class BayesianOptimizer:
         best_value = study.best_value
         best_metrics = self._run_backtest_with_params(profile, config, best_params)
 
-        history = [
-            {"trial": t.number, "value": t.value, "params": t.params}
-            for t in study.trials
-        ]
+        history = [{"trial": t.number, "value": t.value, "params": t.params} for t in study.trials]
 
         logger.info(f"Optimization complete: Best Sharpe={best_value:.2f}")
 
@@ -131,7 +125,9 @@ class BayesianOptimizer:
         """Get parameter ranges from config or defaults."""
         if self.profile_config_loader is not None:
             try:
-                rsi_buy_config = self.profile_config_loader.get_threshold_config("rsi").get("buy_threshold", {})
+                rsi_buy_config = self.profile_config_loader.get_threshold_config("rsi").get(
+                    "buy_threshold", {}
+                )
                 rsi_buy_min = rsi_buy_config.get("min", 20)
                 rsi_buy_max = rsi_buy_config.get("max", 35)
 
@@ -152,7 +148,7 @@ class BayesianOptimizer:
         profile: InputProfile,
         config: Dict[str, Any],
         params: Dict[str, Any],
-        multi_strategy: bool = False
+        multi_strategy: bool = False,
     ) -> Dict[str, Any]:
         """Run backtest with specific parameters."""
         from uuid import uuid4

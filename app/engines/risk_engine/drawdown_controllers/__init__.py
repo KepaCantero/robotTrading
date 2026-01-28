@@ -4,6 +4,16 @@ Drawdown Controllers Module
 Exporta todos los drawdown controllers disponibles.
 """
 
-from .drawdown_controllers import DrawdownController
+from .drawdown_controllers import (
+    BaseDrawdownController,
+    CircuitBreakerController,
+    DrawdownController,
+    PeakDrawdownController,
+)
 
-__all__ = ["DrawdownController"]
+__all__ = [
+    "BaseDrawdownController",
+    "DrawdownController",
+    "CircuitBreakerController",
+    "PeakDrawdownController",
+]

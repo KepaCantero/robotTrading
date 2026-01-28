@@ -11,14 +11,13 @@ Provides:
 
 import asyncio
 import logging
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
 
 from app.core.timezone_utils import utc_now
-
 
 logger = logging.getLogger(__name__)
 
@@ -244,13 +243,9 @@ class BrokerFailoverManager:
                 from app.services.live_trading.broker_connector import BrokerPosition
 
                 positions: List[BrokerPosition] = await broker_config.broker.get_positions()
-                positions_by_broker[broker_config.name] = {
-                    pos.symbol: pos for pos in positions
-                }
+                positions_by_broker[broker_config.name] = {pos.symbol: pos for pos in positions}
 
-                logger.debug(
-                    f"Synced {len(positions)} positions from {broker_config.name}"
-                )
+                logger.debug(f"Synced {len(positions)} positions from {broker_config.name}")
             except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.error(f"Failed to sync positions from {broker_config.name}: {e}")
                 positions_by_broker[broker_config.name] = {}
@@ -271,9 +266,7 @@ class BrokerFailoverManager:
                 if account:
                     return account
             except (asyncio.TimeoutError, ConnectionError, OSError) as e:
-                logger.warning(
-                    f"Failed to get account info from {self._active_broker.name}: {e}"
-                )
+                logger.warning(f"Failed to get account info from {self._active_broker.name}: {e}")
 
         # Try other brokers
         for broker_config in self.brokers:
@@ -334,8 +327,7 @@ class BrokerFailoverManager:
 
                         if state.consecutive_failures >= 3:
                             await self._mark_broker_unhealthy(
-                                broker.name,
-                                f"{state.consecutive_failures} consecutive failures"
+                                broker.name, f"{state.consecutive_failures} consecutive failures"
                             )
 
                 # Check if we need to failover
@@ -428,12 +420,10 @@ class BrokerFailoverManager:
             "active_broker": self._active_broker.name if self._active_broker else None,
             "total_brokers": len(self.brokers),
             "healthy_brokers": sum(
-                1 for s in self._broker_states.values()
-                if s.health == BrokerHealth.HEALTHY
+                1 for s in self._broker_states.values() if s.health == BrokerHealth.HEALTHY
             ),
             "unhealthy_brokers": sum(
-                1 for s in self._broker_states.values()
-                if s.health == BrokerHealth.UNHEALTHY
+                1 for s in self._broker_states.values() if s.health == BrokerHealth.UNHEALTHY
             ),
             "is_monitoring": self._is_monitoring,
         }

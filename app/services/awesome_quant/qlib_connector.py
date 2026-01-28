@@ -5,6 +5,7 @@ Qlib provides comprehensive quantitative data downloading, preprocessing, and an
 Integrates market data, financial factors, and machine learning utilities.
 """
 
+import asyncio
 import logging
 from datetime import datetime
 from decimal import Decimal

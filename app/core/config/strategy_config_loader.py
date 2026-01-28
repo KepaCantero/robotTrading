@@ -185,11 +185,7 @@ class StrategyConfigLoader:
             25
         """
         config = self.get_indicator_config()
-        return self._get_nested(
-            config,
-            f"rsi.adaptive.{market_type}.{threshold_type}",
-            30
-        )
+        return self._get_nested(config, f"rsi.adaptive.{market_type}.{threshold_type}", 30)
 
     def get_ma_period(self, length: str = "medium") -> int:
         """
@@ -243,11 +239,7 @@ class StrategyConfigLoader:
         """Load risk management configuration from risk_management.yaml."""
         return self._load_yaml("risk_management.yaml")
 
-    def get_position_sizing(
-        self,
-        tier: str = "medium",
-        variant: str = "default"
-    ) -> Decimal:
+    def get_position_sizing(self, tier: str = "medium", variant: str = "default") -> Decimal:
         """
         Get position sizing as percentage of capital.
 
@@ -266,19 +258,11 @@ class StrategyConfigLoader:
         config = self.get_risk_config()
 
         # Try tier-specific first
-        value = self._get_nested(
-            config,
-            f"position_sizing.by_tier.{tier}.default_percent",
-            None
-        )
+        value = self._get_nested(config, f"position_sizing.by_tier.{tier}.default_percent", None)
 
         if value is None:
             # Fall back to general variant
-            value = self._get_nested(
-                config,
-                f"position_sizing.{variant}.percent",
-                0.10
-            )
+            value = self._get_nested(config, f"position_sizing.{variant}.percent", 0.10)
 
         return Decimal(str(value))
 
@@ -293,18 +277,10 @@ class StrategyConfigLoader:
             Maximum position size as Decimal (0-1 range)
         """
         config = self.get_risk_config()
-        value = self._get_nested(
-            config,
-            f"position_sizing.by_tier.{tier}.max_percent",
-            0.25
-        )
+        value = self._get_nested(config, f"position_sizing.by_tier.{tier}.max_percent", 0.25)
         return Decimal(str(value))
 
-    def get_stop_loss(
-        self,
-        strategy: str = "momentum",
-        variant: str = "default"
-    ) -> Decimal:
+    def get_stop_loss(self, strategy: str = "momentum", variant: str = "default") -> Decimal:
         """
         Get stop loss percentage.
 
@@ -321,18 +297,10 @@ class StrategyConfigLoader:
             Decimal('0.05')
         """
         config = self.get_risk_config()
-        value = self._get_nested(
-            config,
-            f"stop_loss.by_strategy.{strategy}.{variant}",
-            0.05
-        )
+        value = self._get_nested(config, f"stop_loss.by_strategy.{strategy}.{variant}", 0.05)
         return Decimal(str(value))
 
-    def get_take_profit(
-        self,
-        strategy: str = "momentum",
-        variant: str = "default"
-    ) -> Decimal:
+    def get_take_profit(self, strategy: str = "momentum", variant: str = "default") -> Decimal:
         """
         Get take profit percentage.
 
@@ -349,11 +317,7 @@ class StrategyConfigLoader:
             Decimal('0.08')
         """
         config = self.get_risk_config()
-        value = self._get_nested(
-            config,
-            f"take_profit.by_strategy.{strategy}.{variant}",
-            0.10
-        )
+        value = self._get_nested(config, f"take_profit.by_strategy.{strategy}.{variant}", 0.10)
         return Decimal(str(value))
 
     def get_risk_reward_ratio(self, strategy: str = "momentum") -> float:
@@ -367,13 +331,7 @@ class StrategyConfigLoader:
             Risk/reward ratio (e.g., 2.0 means 2:1)
         """
         config = self.get_risk_config()
-        return float(
-            self._get_nested(
-                config,
-                f"risk_reward.by_strategy.{strategy}.min_ratio",
-                2.0
-            )
-        )
+        return float(self._get_nested(config, f"risk_reward.by_strategy.{strategy}.min_ratio", 2.0))
 
     def get_max_leverage(self, tier: str = "medium") -> float:
         """
@@ -386,13 +344,7 @@ class StrategyConfigLoader:
             Maximum leverage multiplier
         """
         config = self.get_risk_config()
-        return float(
-            self._get_nested(
-                config,
-                f"leverage.max_leverage.{tier}",
-                1.0
-            )
-        )
+        return float(self._get_nested(config, f"leverage.max_leverage.{tier}", 1.0))
 
     # ========================================================================
     # CAPITAL TIER CONFIGURATION
@@ -452,7 +404,9 @@ class StrategyConfigLoader:
         small_min = Decimal(str(thresholds.get('small', {}).get('min_capital', 15000)))
         medium_min = Decimal(str(thresholds.get('medium', {}).get('min_capital', 50000)))
         large_min = Decimal(str(thresholds.get('large', {}).get('min_capital', 250000)))
-        institutional_min = Decimal(str(thresholds.get('institutional', {}).get('min_capital', 1000000)))
+        institutional_min = Decimal(
+            str(thresholds.get('institutional', {}).get('min_capital', 1000000))
+        )
 
         if capital_decimal < small_min:
             return 'micro'

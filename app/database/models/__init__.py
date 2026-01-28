@@ -15,8 +15,7 @@ models_file = Path(__file__).parent.parent / "models.py"
 
 # Import the module using importlib to avoid circular reference
 spec = __import__("importlib.util").util.spec_from_file_location(
-    "app.database.models_module",
-    models_file
+    "app.database.models_module", models_file
 )
 models_module = __import__("importlib.util").util.module_from_spec(spec)
 sys.modules["app.database.models_module"] = models_module

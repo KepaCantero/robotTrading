@@ -168,9 +168,7 @@ class VaRPositionLimiter:
             var_limit = portfolio_value * self.config.max_var_limit_pct
 
             # Calculate utilization
-            utilization = (
-                projected_var / var_limit if var_limit > 0 else Decimal("0")
-            )
+            utilization = projected_var / var_limit if var_limit > 0 else Decimal("0")
 
             # Check if exceeded
             if projected_var > var_limit:
@@ -192,9 +190,7 @@ class VaRPositionLimiter:
             # Check warning threshold
             warnings = []
             if utilization >= self.config.warning_threshold_pct:
-                warnings.append(
-                    f"Warning: Position at {utilization:.1%} of VaR limit"
-                )
+                warnings.append(f"Warning: Position at {utilization:.1%} of VaR limit")
 
             return ValidationResult(
                 passed=True,
@@ -254,10 +250,7 @@ class VaRPositionLimiter:
             correlation_type = "identity"
             corr_matrix = None
 
-            if (
-                self.config.use_real_correlation
-                and self.correlation_analyzer is not None
-            ):
+            if self.config.use_real_correlation and self.correlation_analyzer is not None:
                 try:
                     # Try to get cached correlation matrix
                     if hasattr(self.correlation_analyzer, "get_cached_matrix"):
@@ -268,9 +261,7 @@ class VaRPositionLimiter:
                     logger.debug(f"Could not get cached correlation matrix: {e}")
 
             # Calculate portfolio variance
-            portfolio_variance = self._calculate_portfolio_variance(
-                positions, corr_matrix
-            )
+            portfolio_variance = self._calculate_portfolio_variance(positions, corr_matrix)
 
             # Calculate VaR using z-score for confidence level
             from scipy.stats import norm
@@ -278,10 +269,8 @@ class VaRPositionLimiter:
             z_score = norm.ppf(confidence_level)
 
             # VaR = portfolio_value * sqrt(variance) * z_score
-            std_dev = portfolio_variance ** 0.5
-            var = portfolio_value * to_decimal(str(std_dev)) * to_decimal(
-                str(z_score)
-            )
+            std_dev = portfolio_variance**0.5
+            var = portfolio_value * to_decimal(str(std_dev)) * to_decimal(str(z_score))
 
             logger.debug(
                 f"Portfolio VaR ({confidence_level:.0%}): "
@@ -352,17 +341,18 @@ class VaRPositionLimiter:
             # Incremental variance contribution (simplified)
             # σ²_new = w_new² * σ²_new + 2 * w_new * w_avg * σ_new * σ_avg * ρ
             incremental_variance = (
-                weight_new ** 2 * volatility ** 2
-                + 2 * weight_new * avg_correlation * volatility * 0.2
+                weight_new**2 * volatility**2 + 2 * weight_new * avg_correlation * volatility * 0.2
             )  # Assuming 20% avg portfolio vol
 
             # Incremental VaR = portfolio_value * sqrt(incremental_variance) * z_score
             from scipy.stats import norm
 
             z_score = norm.ppf(confidence_level)
-            incremental_var = portfolio_value * to_decimal(
-                str(incremental_variance ** 0.5)
-            ) * to_decimal(str(z_score))
+            incremental_var = (
+                portfolio_value
+                * to_decimal(str(incremental_variance**0.5))
+                * to_decimal(str(z_score))
+            )
 
             projected_var = current_var + incremental_var
 
@@ -403,7 +393,7 @@ class VaRPositionLimiter:
         if n == 1:
             # Single position variance
             vol = self._get_position_volatility(positions[0])
-            return vol ** 2
+            return vol**2
 
         # Build weight vector
         weights = []
@@ -589,8 +579,8 @@ class VaRPositionLimiter:
             volatility = self._get_symbol_volatility(symbol)
 
             # Solve for position_value: allowable_var = position_value * vol * z
-            max_position_value = allowable_var / to_decimal(str(volatility)) / to_decimal(
-                str(z_score)
+            max_position_value = (
+                allowable_var / to_decimal(str(volatility)) / to_decimal(str(z_score))
             )
 
             # Calculate max quantity
@@ -607,9 +597,7 @@ class VaRPositionLimiter:
             logger.error(f"Error calculating max position size: {e}", exc_info=True)
             return Decimal("0")
 
-    def update_volatility_cache(
-        self, volatilities: Dict[str, float]
-    ) -> None:
+    def update_volatility_cache(self, volatilities: Dict[str, float]) -> None:
         """
         Update the volatility cache with new values.
 

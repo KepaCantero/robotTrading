@@ -12,6 +12,8 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any, Dict, List
 
+from requests.exceptions import ConnectionError, HTTPError, RequestException
+
 from app.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
@@ -22,18 +24,19 @@ try:
     from email.mime.multipart import MIMEMultipart
     from email.mime.text import MIMEText
 
+    SMTPLIB_AVAILABLE = True
     EMAIL_AVAILABLE = True
 except ImportError:
+    SMTPLIB_AVAILABLE = False
     EMAIL_AVAILABLE = False
-    logger.warning("smtplib no disponible. Alertas por email limitadas.")
 
 
 class BaseAlertSystem(ABC):
-    """Clase base para alert systems."""
+    """Clase base para sistemas de alerta."""
 
     def __init__(self, config: Dict[str, Any]):
         """
-        Inicializar alert system.
+        Inicializar sistema de alerta.
 
         Args:
             config: Configuración del sistema
@@ -238,11 +241,24 @@ class AlertSystem(BaseAlertSystem):
         """Verificar umbrales de exposición."""
         alerts = []
 
+        # Check max single asset exposure
+        max_single_exposure = exposure_result.get('max_single_exposure', 0.0)
+        exposure_threshold = self.thresholds.get('exposure_limit', 0.20)
+
+        if max_single_exposure > exposure_threshold:
+            alerts.append(
+                {
+                    'type': 'exposure_limit',
+                    'severity': 'high',
+                    'message': f"Exposición máxima excedida: {max_single_exposure:.2%} > {exposure_threshold:.2%}",
+                    'max_single_exposure': max_single_exposure,
+                    'threshold': exposure_threshold,
+                }
+            )
+
         violations = exposure_result.get('violations', [])
 
         if violations:
-            self.thresholds.get('exposure_limit', 0.20)
-
             for violation in violations:
                 alerts.append(
                     {
@@ -255,7 +271,14 @@ class AlertSystem(BaseAlertSystem):
 
         # Leverage alerts
         leverage = exposure_result.get('leverage', {})
-        leverage_value = leverage.get('leverage', 0.0)
+        # Handle leverage being either a dict or a float value
+        if isinstance(leverage, dict):
+            leverage_value = leverage.get('leverage', 0.0)
+        elif isinstance(leverage, (int, float)):
+            leverage_value = leverage
+        else:
+            leverage_value = 0.0
+
         leverage_threshold = self.thresholds.get('leverage_limit', 1.0)
 
         if leverage_value > leverage_threshold:
@@ -277,11 +300,25 @@ class AlertSystem(BaseAlertSystem):
         """Verificar umbrales de correlación."""
         alerts = []
 
+        # Check max correlation value
+        max_correlation = correlation_result.get('max_correlation', 0.0)
+        correlation_threshold = self.thresholds.get('correlation_limit', 0.8)
+
+        if max_correlation > correlation_threshold:
+            alerts.append(
+                {
+                    'type': 'correlation_limit',
+                    'severity': 'high',
+                    'message': f"Correlación máxima excedida: {max_correlation:.2%} > {correlation_threshold:.2%}",
+                    'max_correlation': max_correlation,
+                    'threshold': correlation_threshold,
+                }
+            )
+
+        # Check for specific violations
         violations = correlation_result.get('violations', [])
 
         if violations:
-            self.thresholds.get('correlation_limit', 0.8)
-
             for violation in violations:
                 alerts.append(
                     {
@@ -452,6 +489,7 @@ class AlertSystem(BaseAlertSystem):
 
         try:
             import requests
+            from requests.exceptions import RequestException
 
             # Preparar mensaje
             text = f"🚨 *{len(alerts)} Alertas de Riesgo*\n\n"
@@ -466,8 +504,7 @@ class AlertSystem(BaseAlertSystem):
             response.raise_for_status()
 
             self.logger.info("Alertas enviadas por Slack")
-        except ImportError:
-            self.logger.warning("requests no disponible para Slack")
+
         except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             self.logger.error(f"Error enviando Slack: {e}", exc_info=True)
 

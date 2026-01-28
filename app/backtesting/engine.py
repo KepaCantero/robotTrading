@@ -6,6 +6,7 @@ historical data simulation, trade execution, and performance metrics calculation
 """
 
 from __future__ import annotations
+
 import logging
 import math
 from datetime import datetime
@@ -13,6 +14,7 @@ from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
+from app.backtesting.liquidity_validator import LiquidityValidator
 from app.backtesting.models import (
     BacktestConfig,
     BacktestResult,
@@ -20,7 +22,6 @@ from app.backtesting.models import (
     Trade,
     TradeStatus,
 )
-from app.backtesting.liquidity_validator import LiquidityValidator
 from app.core.trading_validators import TradingValidator
 from app.models.portfolio import AssetClass, Portfolio, Position
 from app.models.signal import Signal, SignalType
@@ -180,7 +181,7 @@ class SimpleBacktester:
             # This ensures we have the most recent price for accurate unrealized P&L calculation
             current_md_price = get_price(md)
             self.last_known_prices[md.symbol] = current_md_price
-            
+
             # Update equity curve
             self._update_equity_curve(md.timestamp)
 
@@ -480,9 +481,9 @@ class SimpleBacktester:
                 current_price = get_price(market_data)
                 portfolio = self._create_portfolio_from_state(
                     current_price_func=lambda s: (
-                        current_price if s == signal.symbol else (
-                            self.last_known_prices.get(s, current_price)  # Use tracked price
-                        )
+                        current_price
+                        if s == signal.symbol
+                        else (self.last_known_prices.get(s, current_price))  # Use tracked price
                     )
                 )
 
@@ -585,7 +586,9 @@ class SimpleBacktester:
                                     pos_price = trade.entry_price
                                 break
                         if not pos_price:
-                            logger.warning(f"⚠️ No price available for {symbol} in risk envelope check")
+                            logger.warning(
+                                f"⚠️ No price available for {symbol} in risk envelope check"
+                            )
                             pos_price = current_price  # Best available fallback
 
                     position_value = quantity * pos_price
@@ -596,8 +599,10 @@ class SimpleBacktester:
             if signal.signal_type == SignalType.BUY:
                 # Estimate trade value from position size
                 portfolio = self._create_portfolio_from_state(
-                    current_price_func=lambda s: current_price if s == signal.symbol else (
-                        self.last_known_prices.get(s, current_price)  # Use tracked price
+                    current_price_func=lambda s: (
+                        current_price
+                        if s == signal.symbol
+                        else (self.last_known_prices.get(s, current_price))  # Use tracked price
                     )
                 )
                 position_size = (
@@ -713,7 +718,9 @@ class SimpleBacktester:
         # CRITICAL: Validate stop-loss is set for this trade (if configured)
         if self.config.stop_loss_percentage is not None:
             try:
-                stop_loss_price = current_price * (Decimal("1") - self.config.stop_loss_percentage / Decimal("100"))
+                stop_loss_price = current_price * (
+                    Decimal("1") - self.config.stop_loss_percentage / Decimal("100")
+                )
                 self.trading_validator.validate_stop_loss(
                     entry_price=current_price,
                     stop_loss=stop_loss_price,
@@ -731,7 +738,7 @@ class SimpleBacktester:
             order_quantity=position_size,
             current_bar=market_data,
             order_side="buy",
-            symbol=signal.symbol
+            symbol=signal.symbol,
         )
 
         if fill_result.fill_status == "REJECTED":
@@ -762,9 +769,7 @@ class SimpleBacktester:
 
         # Log market impact if significant
         if fill_result.market_impact and fill_result.market_impact > Decimal("0.005"):
-            logger.info(
-                f"📊 BUY {signal.symbol}: Market impact = {fill_result.market_impact:.2%}"
-            )
+            logger.info(f"📊 BUY {signal.symbol}: Market impact = {fill_result.market_impact:.2%}")
 
         # Check if we have enough capital (using liquidity-aware execution price)
         total_cost = position_size * execution_price
@@ -811,7 +816,9 @@ class SimpleBacktester:
             )
             return
 
-        logger.info(f"✅ EXECUTING BUY: {signal.symbol} qty={position_size} price=${execution_price:.4f}")
+        logger.info(
+            f"✅ EXECUTING BUY: {signal.symbol} qty={position_size} price=${execution_price:.4f}"
+        )
 
         # Build reason from signal metadata
         reason = self._build_trade_reason(signal, market_data)
@@ -909,7 +916,7 @@ class SimpleBacktester:
             order_quantity=sell_quantity,
             current_bar=market_data,
             order_side="sell",
-            symbol=signal.symbol
+            symbol=signal.symbol,
         )
 
         if fill_result.fill_status == "REJECTED":
@@ -940,9 +947,7 @@ class SimpleBacktester:
 
         # Log market impact if significant
         if fill_result.market_impact and fill_result.market_impact > Decimal("0.005"):
-            logger.info(
-                f"📊 SELL {signal.symbol}: Market impact = {fill_result.market_impact:.2%}"
-            )
+            logger.info(f"📊 SELL {signal.symbol}: Market impact = {fill_result.market_impact:.2%}")
 
         logger.info(
             f"✅ EXECUTING SELL: {signal.symbol} (strategy={strategy_name}) qty={sell_quantity} price=${execution_price:.4f}"
@@ -1138,7 +1143,9 @@ class SimpleBacktester:
         round_trip_commission = commission * 2  # Buy + sell
 
         # Check if commission ratio exceeds 1% of position value
-        commission_ratio = round_trip_commission / max_position_value if max_position_value > 0 else Decimal("1")
+        commission_ratio = (
+            round_trip_commission / max_position_value if max_position_value > 0 else Decimal("1")
+        )
 
         if commission_ratio > Decimal("0.01"):
             # Commission is too high relative to position size
@@ -1219,7 +1226,9 @@ class SimpleBacktester:
             commission = self.config.commission_per_trade
             if commission > 0:
                 round_trip_commission = commission * 2
-                current_commission_ratio = round_trip_commission / position_value if position_value > 0 else Decimal("1")
+                current_commission_ratio = (
+                    round_trip_commission / position_value if position_value > 0 else Decimal("1")
+                )
 
                 # If commission ratio exceeds 1%, increase position size
                 if current_commission_ratio > Decimal("0.01"):
@@ -1435,15 +1444,21 @@ class SimpleBacktester:
         elif stop_loss_triggered:
             # Only stop-loss hit
             # Use the stop-loss price if available from low, otherwise use close
-            exit_price = stop_loss_price if hasattr(market_data, 'low') and market_data.low is not None else close_price
-            self._close_position(
-                market_data.symbol, market_data.timestamp, "stop_loss", exit_price
+            exit_price = (
+                stop_loss_price
+                if hasattr(market_data, 'low') and market_data.low is not None
+                else close_price
             )
+            self._close_position(market_data.symbol, market_data.timestamp, "stop_loss", exit_price)
             return
         elif take_profit_triggered:
             # Only take-profit hit
             # Use the take-profit price if available from high, otherwise use close
-            exit_price = take_profit_price if hasattr(market_data, 'high') and market_data.high is not None else close_price
+            exit_price = (
+                take_profit_price
+                if hasattr(market_data, 'high') and market_data.high is not None
+                else close_price
+            )
             self._close_position(
                 market_data.symbol, market_data.timestamp, "take_profit", exit_price
             )
@@ -1757,7 +1772,7 @@ class SimpleBacktester:
         # Calculate returns from equity curve (time-series returns)
         returns = []
         for i in range(1, len(equity_values)):
-            ret = (equity_values[i] - equity_values[i-1]) / equity_values[i-1]
+            ret = (equity_values[i] - equity_values[i - 1]) / equity_values[i - 1]
             returns.append(ret)
 
         if not returns or len(returns) < 2:

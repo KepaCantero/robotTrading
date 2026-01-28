@@ -16,53 +16,44 @@ import hmac
 import json
 import logging
 import os
+from decimal import Decimal  # noqa: F401
 from typing import Any, Union
 
-try:
-    import msgpack
-
-    HAS_MSGPACK = True
-except ImportError:
-    HAS_MSGPACK = False
-    msgpack = None
-
-try:
-    import numpy as np
-
-    HAS_NUMPY = True
-except ImportError:
-    HAS_NUMPY = False
-    np = None
-
-try:
-    import pandas as pd
-
-    HAS_PANDAS = True
-except ImportError:
-    HAS_PANDAS = False
-    pd = None
-
-try:
-    from decimal import Decimal
-
-    HAS_DECIMAL = True
-except ImportError:
-    HAS_DECIMAL = False
-    Decimal = None
+# REQUIRED: No fallbacks - fail fast if dependencies are missing
+import msgpack  # noqa: F401
+import numpy as np  # noqa: F401
+import pandas as pd  # noqa: F401
 
 logger = logging.getLogger(__name__)
 
+# Dependency availability flags for testing
+# All dependencies are now required (no fallbacks), so these are always True
+HAS_MSGPACK = True
+HAS_NUMPY = True
+HAS_PANDAS = True
+HAS_DECIMAL = True
+
 
 def _get_secret_key() -> bytes:
-    """Get secret key for signing messages."""
+    """
+    Get secret key for signing messages.
+
+    Rule 28 Compliance:
+        - Reads SECRET_KEY from environment variable
+        - No hardcoded secrets in code
+        - Warns if using weak key
+    """
     secret_key = os.getenv('SECRET_KEY', '')
     if not secret_key or len(secret_key) < 32:
         logger.warning(
             "SECRET_KEY not set or too short for secure messaging. "
-            "Using fallback key. Set SECRET_KEY environment variable."
+            "Set SECRET_KEY environment variable (minimum 32 characters)."
         )
-        # Fallback key - should be replaced in production
-        secret_key = 'change-this-secret-key-in-production-min-32-chars'
+        # Rule 28: No hardcoded fallback keys
+        raise ValueError(
+            "SECRET_KEY environment variable not set or too short. "
+            "Generate a secure key: python -c 'import secrets; print(secrets.token_urlsafe(32))'"
+        )
     return secret_key.encode() if isinstance(secret_key, str) else secret_key
 
 
@@ -129,38 +120,38 @@ def _convert_for_msgpack(obj: Any) -> Any:
         Msgpack-compatible representation
     """
     # Handle numpy arrays
-    if HAS_NUMPY and isinstance(obj, np.ndarray):
+    if isinstance(obj, np.ndarray):
         return {
             '__type__': 'numpy.ndarray',
             'dtype': str(obj.dtype),
             'shape': obj.shape,
-            'data': obj.tolist()  # Convert to nested list
+            'data': obj.tolist(),  # Convert to nested list
         }
 
     # Handle pandas DataFrames
-    if HAS_PANDAS and isinstance(obj, pd.DataFrame):
+    if isinstance(obj, pd.DataFrame):
         return {
             '__type__': 'pandas.DataFrame',
             'columns': obj.columns.tolist(),
             'index': obj.index.tolist(),
             'dtypes': [str(dtype) for dtype in obj.dtypes],  # Preserve dtypes
-            'data': obj.values.tolist()  # Convert to nested list
+            'data': obj.values.tolist(),  # Convert to nested list
         }
 
     # Handle pandas Series
-    if HAS_PANDAS and isinstance(obj, pd.Series):
+    if isinstance(obj, pd.Series):
         return {
             '__type__': 'pandas.Series',
             'name': obj.name,
             'index': obj.index.tolist(),
-            'data': obj.values.tolist()
+            'data': obj.values.tolist(),
         }
 
     # Handle Decimal (convert to float)
-    if HAS_DECIMAL and isinstance(obj, Decimal):
+    if isinstance(obj, Decimal):
         return {
             '__type__': 'decimal.Decimal',
-            'value': str(obj)  # Preserve as string to avoid precision loss
+            'value': str(obj),  # Preserve as string to avoid precision loss
         }
 
     # Handle dicts recursively
@@ -193,19 +184,11 @@ def _restore_from_msgpack(obj: Any) -> Any:
     """
     # Restore numpy arrays
     if isinstance(obj, dict) and obj.get('__type__') == 'numpy.ndarray':
-        if not HAS_NUMPY:
-            raise ValueError("Cannot restore numpy array: numpy not installed")
         return np.array(obj['data'], dtype=obj['dtype']).reshape(obj['shape'])
 
     # Restore pandas DataFrames
     if isinstance(obj, dict) and obj.get('__type__') == 'pandas.DataFrame':
-        if not HAS_PANDAS:
-            raise ValueError("Cannot restore pandas DataFrame: pandas not installed")
-        df = pd.DataFrame(
-            data=obj['data'],
-            index=obj['index'],
-            columns=obj['columns']
-        )
+        df = pd.DataFrame(data=obj['data'], index=obj['index'], columns=obj['columns'])
         # Restore dtypes if available
         if 'dtypes' in obj:
             for col, dtype_str in zip(obj['columns'], obj['dtypes']):
@@ -218,19 +201,10 @@ def _restore_from_msgpack(obj: Any) -> Any:
 
     # Restore pandas Series
     if isinstance(obj, dict) and obj.get('__type__') == 'pandas.Series':
-        if not HAS_PANDAS:
-            raise ValueError("Cannot restore pandas Series: pandas not installed")
-        return pd.Series(
-            data=obj['data'],
-            index=obj['index'],
-            name=obj['name']
-        )
+        return pd.Series(data=obj['data'], index=obj['index'], name=obj['name'])
 
     # Restore Decimal
     if isinstance(obj, dict) and obj.get('__type__') == 'decimal.Decimal':
-        if not HAS_DECIMAL:
-            # Fallback to float if Decimal not available
-            return float(obj['value'])
         return Decimal(obj['value'])
 
     # Handle dicts recursively
@@ -281,23 +255,14 @@ def sign_and_dump(data: Any, secret_key: Union[str, bytes] = None) -> str:
             serialized = json.dumps(data).encode('utf-8')
             format_type = b'json'  # 4 bytes
         else:
-            # Fall back to msgpack for binary/complex data
-            if not HAS_MSGPACK:
-                raise ValueError(
-                    "Data is not JSON-serializable and msgpack is not installed. "
-                    "Install msgpack: pip install msgpack>=1.0.0"
-                )
+            # Use msgpack for binary/complex data
             # Convert complex objects (numpy, pandas) to msgpack-compatible format
             converted_data = _convert_for_msgpack(data)
             serialized = msgpack.packb(converted_data, use_bin_type=True)
             format_type = b'msgp'  # 4 bytes (msgpack prefix)
 
         # Create HMAC-SHA256 signature
-        signature = hmac.new(
-            secret_key,
-            serialized,
-            hashlib.sha256
-        ).digest()  # 32 bytes
+        signature = hmac.new(secret_key, serialized, hashlib.sha256).digest()  # 32 bytes
 
         # Combine: format_type (4) + signature (32) + data (variable)
         combined = format_type + signature + serialized
@@ -353,11 +318,7 @@ def verify_and_load(signed_data: str, secret_key: Union[str, bytes] = None) -> A
         serialized = combined[36:]  # Rest is data
 
         # Verify signature using constant-time comparison
-        expected_signature = hmac.new(
-            secret_key,
-            serialized,
-            hashlib.sha256
-        ).digest()
+        expected_signature = hmac.new(secret_key, serialized, hashlib.sha256).digest()
 
         if not hmac.compare_digest(received_signature, expected_signature):
             logger.error("HMAC signature verification failed - data may be tampered")
@@ -367,11 +328,6 @@ def verify_and_load(signed_data: str, secret_key: Union[str, bytes] = None) -> A
         if format_type == b'json':
             return json.loads(serialized.decode('utf-8'))
         elif format_type == b'msgp':
-            if not HAS_MSGPACK:
-                raise ValueError(
-                    "Data is in msgpack format but msgpack is not installed. "
-                    "Install msgpack: pip install msgpack>=1.0.0"
-                )
             # Unpack and restore complex objects (numpy, pandas)
             unpacked = msgpack.unpackb(serialized, raw=False)
             return _restore_from_msgpack(unpacked)

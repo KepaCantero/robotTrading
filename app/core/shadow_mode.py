@@ -64,9 +64,9 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
-from app.core.interfaces.broker_base import Order, OrderStatus, OrderType
+from app.core.interfaces.broker_base import Order
 from app.sre.data_integrity.sanity_layer import DataSanityLayer, SanityCheckResult
 from app.sre.state_machine.wal_persistence import OrderLog, OrderState, OrderStateMachine
 
@@ -140,7 +140,9 @@ class ShadowExecutionResult:
             "side": self.side,
             "quantity": str(self.quantity),
             "requested_price": str(self.requested_price) if self.requested_price else None,
-            "simulated_fill_price": str(self.simulated_fill_price) if self.simulated_fill_price else None,
+            "simulated_fill_price": (
+                str(self.simulated_fill_price) if self.simulated_fill_price else None
+            ),
             "simulated_fill_quantity": str(self.simulated_fill_quantity),
             "status": self.status,
             "execution_time_ms": self.execution_time_ms,
@@ -359,7 +361,9 @@ class ShadowModeExecutor:
             await self.wal.write_state(log)
 
             # Step 8: Calculate execution time
-            execution_time_ms = int((datetime.now(timezone.utc) - start_time).total_seconds() * 1000)
+            execution_time_ms = int(
+                (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
+            )
             result.execution_time_ms = execution_time_ms
 
             # Step 9: Track result
@@ -448,9 +452,7 @@ class ShadowModeExecutor:
         if not symbol.isalpha() or len(symbol) > 10:
             raise ValueError(f"Invalid symbol format: {symbol}")
 
-        logger.debug(
-            f"SHADOW MODE: Order validation passed - {symbol} {side} {quantity} @ {price}"
-        )
+        logger.debug(f"SHADOW MODE: Order validation passed - {symbol} {side} {quantity} @ {price}")
 
     async def simulate_fill(
         self,
@@ -612,9 +614,7 @@ class ShadowModeExecutor:
 
         # Get recent shadow results
         cutoff = datetime.now(timezone.utc) - timedelta(minutes=validation_period_minutes)
-        recent_results = [
-            r for r in self.shadow_results if r.timestamp >= cutoff
-        ]
+        recent_results = [r for r in self.shadow_results if r.timestamp >= cutoff]
 
         if not recent_results:
             report["errors"].append("No shadow results found in validation period")
@@ -623,12 +623,14 @@ class ShadowModeExecutor:
 
         # Validation 1: Success rate
         success_rate = sum(1 for r in recent_results if not r.was_rejected) / len(recent_results)
-        report["validations"].append({
-            "name": "success_rate",
-            "value": f"{success_rate:.2%}",
-            "passed": success_rate >= 0.95,
-            "threshold": ">= 95%",
-        })
+        report["validations"].append(
+            {
+                "name": "success_rate",
+                "value": f"{success_rate:.2%}",
+                "passed": success_rate >= 0.95,
+                "threshold": ">= 95%",
+            }
+        )
 
         if success_rate < 0.95:
             report["errors"].append(f"Low success rate: {success_rate:.2%}")
@@ -643,18 +645,19 @@ class ShadowModeExecutor:
                     f"Too many pending shadow orders in WAL: {len(shadow_pending)}"
                 )
             else:
-                report["validations"].append({
-                    "name": "wal_consistency",
-                    "value": f"{len(shadow_pending)} pending",
-                    "passed": True,
-                })
+                report["validations"].append(
+                    {
+                        "name": "wal_consistency",
+                        "value": f"{len(shadow_pending)} pending",
+                        "passed": True,
+                    }
+                )
         except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             report["errors"].append(f"WAL validation failed: {e}")
 
         # Validation 3: No critical errors
         critical_errors = [
-            r for r in recent_results
-            if r.was_rejected and r.rejection_reason == "CRITICAL"
+            r for r in recent_results if r.was_rejected and r.rejection_reason == "CRITICAL"
         ]
 
         if critical_errors:
@@ -662,20 +665,22 @@ class ShadowModeExecutor:
 
         # Validation 4: Shadow vs real comparison (if available)
         if self.comparisons:
-            avg_price_diff_bps = sum(
-                c.price_difference_bps or 0 for c in self.comparisons
-            ) / len(self.comparisons)
+            avg_price_diff_bps = sum(c.price_difference_bps or 0 for c in self.comparisons) / len(
+                self.comparisons
+            )
 
             if abs(avg_price_diff_bps) > 50:  # 50 bps threshold
                 report["warnings"].append(
                     f"High shadow vs real price difference: {avg_price_diff_bps:.1f}bps"
                 )
 
-            report["validations"].append({
-                "name": "shadow_real_comparison",
-                "value": f"{avg_price_diff_bps:.1f}bps",
-                "passed": abs(avg_price_diff_bps) <= 50,
-            })
+            report["validations"].append(
+                {
+                    "name": "shadow_real_comparison",
+                    "value": f"{avg_price_diff_bps:.1f}bps",
+                    "passed": abs(avg_price_diff_bps) <= 50,
+                }
+            )
 
         # Final decision
         all_passed = all(v.get("passed", False) for v in report["validations"])
@@ -695,9 +700,7 @@ class ShadowModeExecutor:
 
         return report
 
-    async def compare_shadow_vs_real(
-        self, limit: int = 100
-    ) -> List[ShadowRealComparison]:
+    async def compare_shadow_vs_real(self, limit: int = 100) -> List[ShadowRealComparison]:
         """
         Compare shadow mode execution vs real execution.
 
@@ -722,9 +725,7 @@ class ShadowModeExecutor:
         comparisons = []
 
         # Get recent shadow results
-        recent_shadow = sorted(
-            self.shadow_results, key=lambda r: r.timestamp, reverse=True
-        )[:limit]
+        recent_shadow = sorted(self.shadow_results, key=lambda r: r.timestamp, reverse=True)[:limit]
 
         for shadow_result in recent_shadow:
             # Try to find corresponding real order
@@ -753,9 +754,7 @@ class ShadowModeExecutor:
 
         return comparisons
 
-    async def get_shadow_statistics(
-        self, minutes: int = 60
-    ) -> Dict[str, Any]:
+    async def get_shadow_statistics(self, minutes: int = 60) -> Dict[str, Any]:
         """
         Get statistics about shadow mode execution.
 
@@ -815,8 +814,9 @@ class ShadowModeExecutor:
         Args:
             result: Shadow execution result
         """
-        import aiofiles
         import json
+
+        import aiofiles
 
         try:
             async with aiofiles.open(self.config.audit_log_path, mode="a") as f:
@@ -858,9 +858,7 @@ class ShadowModeAwareBroker:
         self.real_broker = real_broker
         self.shadow_executor = shadow_executor
 
-    async def execute_order_with_wal(
-        self, order: Order, dry_run: bool = False
-    ) -> Any:
+    async def execute_order_with_wal(self, order: Order, dry_run: bool = False) -> Any:
         """
         Execute order with WAL, intercepting for shadow mode.
 
@@ -890,7 +888,9 @@ class ShadowModeAwareBroker:
                 "order_id": result.shadow_order_id,
                 "status": result.status,
                 "filled_quantity": float(result.simulated_fill_quantity),
-                "execution_price": float(result.simulated_fill_price) if result.simulated_fill_price else None,
+                "execution_price": (
+                    float(result.simulated_fill_price) if result.simulated_fill_price else None
+                ),
                 "shadow_mode": True,
                 "metadata": result.to_dict(),
             }

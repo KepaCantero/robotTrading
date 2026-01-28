@@ -48,28 +48,12 @@ class BacktestOrchestrator:
     def _get_backtest_engine(self):
         """Lazy-load backtesting engine."""
         if self._backtest_engine is None:
-            try:
-                from app.backtesting.engine import SimpleBacktester
-
-                self._backtest_engine = SimpleBacktester
-                logger.debug("✅ SimpleBacktester loaded")
-            except ImportError as e:
-                logger.error(f"❌ Failed to load SimpleBacktester: {e}")
-                raise
-        return self._backtest_engine
+            pass
 
     def _get_data_loader(self):
         """Lazy-load data loader."""
         if self._data_loader is None:
-            try:
-                from app.backtesting.data_loader import DataLoader
-
-                self._data_loader = DataLoader
-                logger.debug("✅ DataLoader loaded")
-            except ImportError as e:
-                logger.error(f"❌ Failed to load DataLoader: {e}")
-                raise
-        return self._data_loader
+            pass
 
     async def orchestrate(
         self,

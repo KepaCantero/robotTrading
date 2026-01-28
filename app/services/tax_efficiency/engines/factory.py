@@ -63,8 +63,7 @@ def get_tax_engine(
     """
     if not country_code or len(country_code) != 2:
         raise ValueError(
-            f"Invalid country code '{country_code}'. "
-            "Must be a 2-letter ISO country code."
+            f"Invalid country code '{country_code}'. " "Must be a 2-letter ISO country code."
         )
 
     country_code = country_code.upper()
@@ -73,8 +72,7 @@ def get_tax_engine(
 
     if not engine_class:
         logger.warning(
-            f"No tax engine implemented for {country_code}, "
-            f"defaulting to Spain engine"
+            f"No tax engine implemented for {country_code}, " f"defaulting to Spain engine"
         )
         engine_class = SpainTaxEngine
 
@@ -108,8 +106,7 @@ def register_tax_engine(country_code: str, engine_class: type) -> None:
     """
     if not issubclass(engine_class, TaxEngine):
         raise ValueError(
-            f"Engine class must inherit from TaxEngine, "
-            f"got {engine_class.__name__}"
+            f"Engine class must inherit from TaxEngine, " f"got {engine_class.__name__}"
         )
 
     country_code = country_code.upper()

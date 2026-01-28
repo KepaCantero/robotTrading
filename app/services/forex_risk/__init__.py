@@ -33,16 +33,16 @@ Example usage:
     )
 """
 
+from app.services.forex_risk.hedging_engine import (
+    HedgeEffectiveness,
+    HedgeInstrument,
+    HedgeRecommendation,
+    HedgingEngine,
+)
 from app.services.forex_risk.tracker import (
     CurrencyExposure,
-    ForexRiskTracker,
     ForexExposureReport,
-)
-from app.services.forex_risk.hedging_engine import (
-    HedgeRecommendation,
-    HedgeInstrument,
-    HedgingEngine,
-    HedgeEffectiveness,
+    ForexRiskTracker,
 )
 
 __all__ = [

@@ -9,6 +9,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import numpy as np
+from requests.exceptions import HTTPError, RequestException
 
 logger = logging.getLogger(__name__)
 

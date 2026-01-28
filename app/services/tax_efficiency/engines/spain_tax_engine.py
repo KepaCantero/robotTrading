@@ -66,12 +66,8 @@ class SpainTaxEngine(TaxEngine):
             self.RATE_1 = to_decimal(config.get("rate_1", self.RATE_1))
             self.RATE_2 = to_decimal(config.get("rate_2", self.RATE_2))
             self.RATE_3 = to_decimal(config.get("rate_3", self.RATE_3))
-            self.BRACKET_1_LIMIT = to_decimal(
-                config.get("bracket_1_limit", self.BRACKET_1_LIMIT)
-            )
-            self.BRACKET_2_LIMIT = to_decimal(
-                config.get("bracket_2_limit", self.BRACKET_2_LIMIT)
-            )
+            self.BRACKET_1_LIMIT = to_decimal(config.get("bracket_1_limit", self.BRACKET_1_LIMIT))
+            self.BRACKET_2_LIMIT = to_decimal(config.get("bracket_2_limit", self.BRACKET_2_LIMIT))
 
     def calculate_capital_gains_tax(
         self,
@@ -97,9 +93,7 @@ class SpainTaxEngine(TaxEngine):
         rate = self._get_progressive_rate(gain)
         tax = gain * rate
 
-        logger.debug(
-            f"Spain tax on gain €{gain:,.2f}: rate={rate:.0%}, tax=€{tax:,.2f}"
-        )
+        logger.debug(f"Spain tax on gain €{gain:,.2f}: rate={rate:.0%}, tax=€{tax:,.2f}")
 
         return tax
 
@@ -207,9 +201,33 @@ class SpainTaxEngine(TaxEngine):
         """
         # EU/EEA countries with 0% withholding (Parent-Subsidiary Directive)
         eu_countries = {
-            "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR",
-            "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL",
-            "PL", "PT", "RO", "SK", "SI", "ES", "SE",
+            "AT",
+            "BE",
+            "BG",
+            "HR",
+            "CY",
+            "CZ",
+            "DK",
+            "EE",
+            "FI",
+            "FR",
+            "DE",
+            "GR",
+            "HU",
+            "IE",
+            "IT",
+            "LV",
+            "LT",
+            "LU",
+            "MT",
+            "NL",
+            "PL",
+            "PT",
+            "RO",
+            "SK",
+            "SI",
+            "ES",
+            "SE",
         }
 
         country_upper = country.upper()
@@ -331,8 +349,7 @@ class SpainTaxEngine(TaxEngine):
         net_gain = max(total_gains - total_losses, Decimal("0"))
 
         logger.info(
-            f"Gain compensation: gains={total_gains}, losses={total_losses}, "
-            f"net={net_gain}"
+            f"Gain compensation: gains={total_gains}, losses={total_losses}, " f"net={net_gain}"
         )
 
         return self.calculate_capital_gains_tax(net_gain)
@@ -358,15 +375,18 @@ class SpainTaxEngine(TaxEngine):
             "unrealized_gains": float(unrealized_gains),
             "estimated_dividends": float(estimated_dividends),
             "total_income": float(total_savings_income),
-            "estimated_tax": float(self.calculate_total_tax_liability(
-                capital_gains=unrealized_gains,
-                dividends=estimated_dividends,
-            )),
+            "estimated_tax": float(
+                self.calculate_total_tax_liability(
+                    capital_gains=unrealized_gains,
+                    dividends=estimated_dividends,
+                )
+            ),
             "effective_rate": float(
                 self.calculate_total_tax_liability(
                     capital_gains=unrealized_gains,
                     dividends=estimated_dividends,
-                ) / total_savings_income
+                )
+                / total_savings_income
                 if total_savings_income > 0
                 else Decimal("0")
             ),

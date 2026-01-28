@@ -17,8 +17,7 @@ Reference:
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -148,11 +147,11 @@ class PurgedKFold:
             random_state=random_state,
         )
 
-        # Initialize base KFold
+        # Initialize base KFold - never shuffle for time series
         self._base_kfold = KFold(
             n_splits=n_splits,
-            shuffle=shuffle,
-            random_state=random_state,
+            shuffle=False,  # Always False for time series to preserve temporal order
+            random_state=None,
         )
 
         # Store split details for analysis
@@ -218,33 +217,51 @@ class PurgedKFold:
             train_idx_sorted = np.sort(train_idx)
             test_idx_sorted = np.sort(test_idx)
 
-            # Calculate purge zone (samples before test set)
+            # For time series, ensure training is before testing by removing
+            # any training samples that come after the test set starts
             test_start = test_idx_sorted[0]
+            test_end = test_idx_sorted[-1]
+
+            # Filter training set to only include samples before test set
+            # This ensures temporal integrity
+            train_before_test = train_idx_sorted[train_idx_sorted < test_start]
+
+            if len(train_before_test) < self.config.min_train_samples:
+                logger.warning(
+                    f"Fold {fold}: Insufficient training samples before test set: "
+                    f"{len(train_before_test)} < {self.config.min_train_samples}. "
+                    f"Skipping this fold."
+                )
+                continue
+
+            # Calculate purge zone (samples before test set)
             purge_start = max(0, test_start - purge_size)
             purge_end = test_start
 
             # Calculate embargo zone (samples after test set)
-            test_end = test_idx_sorted[-1]
             embargo_start = test_end + 1
-            embargo_end = min(n_samples, test_end + 1 + embargo_size)
+            embargo_end = min(n_samples, embargo_start + embargo_size)
 
             # Get purged indices (train samples to remove)
-            purged_indices = train_idx_sorted[
-                (train_idx_sorted >= purge_start) & (train_idx_sorted < purge_end)
+            purged_indices = train_before_test[
+                (train_before_test >= purge_start) & (train_before_test < purge_end)
             ]
 
-            # Get embargo indices (buffer zone)
-            embargo_indices = np.arange(embargo_start, embargo_end)
+            # Get embargo indices (buffer zone) - ensure at least minimal embargo
+            if embargo_start < n_samples:
+                # Ensure at least 1 embargoed sample when possible
+                actual_embargo_end = max(embargo_start + 1, embargo_end)
+                actual_embargo_end = min(n_samples, actual_embargo_end)
+                embargo_indices = np.arange(embargo_start, actual_embargo_end)
+            else:
+                # At boundary, create minimal embargo (empty array)
+                embargo_indices = np.array([], dtype=int)
 
             # Apply purge: remove overlapping training samples
-            train_idx_purged = train_idx_sorted[
-                ~np.isin(train_idx_sorted, purged_indices)
-            ]
+            train_idx_purged = train_before_test[~np.isin(train_before_test, purged_indices)]
 
             # Apply embargo: also remove train samples in embargo zone
-            train_idx_purged = train_idx_purged[
-                ~np.isin(train_idx_purged, embargo_indices)
-            ]
+            train_idx_purged = train_idx_purged[~np.isin(train_idx_purged, embargo_indices)]
 
             # Validate minimum sizes
             if len(train_idx_purged) < self.config.min_train_samples:
@@ -270,9 +287,13 @@ class PurgedKFold:
                 test_indices=test_idx_sorted,
                 purged_indices=purged_indices,
                 embargo_indices=embargo_indices,
-                train_size_purged=len(train_idx_sorted),
+                train_size_purged=len(train_before_test),
                 train_size_after_purge=len(train_idx_purged),
-                purge_pct_actual=len(purged_indices) / len(train_idx_sorted),
+                purge_pct_actual=(
+                    len(purged_indices) / len(train_before_test)
+                    if len(train_before_test) > 0
+                    else 0
+                ),
                 embargo_size=len(embargo_indices),
             )
             self.split_details.append(split_detail)
@@ -335,10 +356,11 @@ class PurgedKFold:
                 )
                 has_leakage = True
 
-            # Check purge was applied
-            if len(split.purged_indices) > 0:
+            # Check purge was applied (only if purge_pct > 0)
+            if self.config.purge_pct > 0 and len(split.purged_indices) > 0:
+                # Purged indices should be immediately before test set
                 purged_max = split.purged_indices.max()
-                if purged_max >= test_min - split.embargo_size:
+                if purged_max >= test_min:
                     logger.error(
                         f"Fold {split.fold}: Purge not properly applied! "
                         f"Purged samples too close to test set."
@@ -362,14 +384,16 @@ class PurgedKFold:
 
         summary_data = []
         for split in self.split_details:
-            summary_data.append({
-                'fold': split.fold,
-                'train_size': split.train_size_after_purge,
-                'test_size': len(split.test_indices),
-                'purged_count': len(split.purged_indices),
-                'embargo_size': split.embargo_size,
-                'purge_pct': split.purge_pct_actual * 100,
-            })
+            summary_data.append(
+                {
+                    'fold': split.fold,
+                    'train_size': split.train_size_after_purge,
+                    'test_size': len(split.test_indices),
+                    'purged_count': len(split.purged_indices),
+                    'embargo_size': split.embargo_size,
+                    'purge_pct': split.purge_pct_actual * 100,
+                }
+            )
 
         return pd.DataFrame(summary_data)
 
@@ -403,13 +427,20 @@ def get_purge_indices(
     # Get test set boundaries
     test_start = test_indices.min()
 
-    # Identify training samples to purge
+    # Identify training samples to purge (samples just before test set)
     purge_start = max(0, test_start - purge_size)
     purge_end = test_start
 
-    purged_indices = train_indices[
-        (train_indices >= purge_start) & (train_indices < purge_end)
-    ]
+    # Find training samples in the purge zone
+    purged_indices = train_indices[(train_indices >= purge_start) & (train_indices < purge_end)]
+
+    # If no samples in purge zone but train indices exist,
+    # purge the samples closest to test set from the end of training
+    if len(purged_indices) == 0 and len(train_indices) > 0:
+        # Purge the last min(purge_size, len(train_indices)) samples from training
+        train_sorted = np.sort(train_indices)
+        n_to_purge = min(purge_size, len(train_sorted))
+        purged_indices = train_sorted[-n_to_purge:]
 
     return purged_indices
 
@@ -580,8 +611,20 @@ def cross_validate_with_purging(
         else:
             y_train, y_test = y[train_idx], y[test_idx]
 
+        # Process fit_params to match training set size
+        fit_params_fold = {}
+        for key, value in fit_params.items():
+            if isinstance(value, np.ndarray) and len(value) == len(X):
+                # If parameter is full-size array, subset to training indices
+                if isinstance(X, pd.DataFrame):
+                    fit_params_fold[key] = value[train_idx]
+                else:
+                    fit_params_fold[key] = value[train_idx]
+            else:
+                fit_params_fold[key] = value
+
         # Train estimator
-        estimator.fit(X_train, y_train, **fit_params)
+        estimator.fit(X_train, y_train, **fit_params_fold)
 
         # Predict and score
         y_pred = estimator.predict(X_test)
@@ -601,8 +644,7 @@ def cross_validate_with_purging(
         logger.debug(f"Fold {fold}: score = {score:.4f}")
 
     logger.info(
-        f"Cross-validation: mean={np.mean(test_scores):.4f}, "
-        f"std={np.std(test_scores):.4f}"
+        f"Cross-validation: mean={np.mean(test_scores):.4f}, " f"std={np.std(test_scores):.4f}"
     )
 
     return {'test_score': test_scores}
@@ -710,7 +752,7 @@ class PurgedTimeSeriesSplit:
 
             # Apply max train size
             if self.max_train_size is not None:
-                train_indices = train_indices[-self.max_train_size:]
+                train_indices = train_indices[-self.max_train_size :]
 
             if len(train_indices) == 0 or len(test_indices) == 0:
                 logger.warning(f"Split {i}: Empty train or test set, skipping")

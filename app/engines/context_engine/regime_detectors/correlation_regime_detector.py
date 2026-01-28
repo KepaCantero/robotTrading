@@ -4,28 +4,14 @@ CorrelationRegimeDetector - Detección de régimen basada en correlaciones diná
 Usa análisis de correlaciones para detectar cambios de régimen.
 """
 
-import logging
 from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
 
-logger = logging.getLogger(__name__)
-
-# Importaciones opcionales
-try:
-    from sklearn.decomposition import PCA
-
-    SKLEARN_AVAILABLE = True
-except ImportError:
-    SKLEARN_AVAILABLE = False
-    logger.warning("sklearn no disponible. CorrelationRegimeDetector limitado.")
-
 
 class CorrelationRegimeDetector:
     """
-    Detector de régimen basado en correlaciones dinámicas.
-
     Usa cambios en correlaciones entre activos para detectar cambios de régimen.
     """
 

@@ -10,16 +10,18 @@ import os
 import sys
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy import engine_from_config, pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
+
+from alembic import context
 
 # Add parent directory to path to import app modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-# Import Base and metadata from app.database
-from app.database import Base, metadata
 from app.core.config import get_settings
+
+# Import Base and metadata from app.database
+from app.database import Base
 
 # Alembic Config object
 config = context.config

@@ -25,7 +25,6 @@ from typing import Dict, List, Optional, Tuple
 
 from app.core.timezone_utils import utc_now
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -304,18 +303,14 @@ class PDTTracker:
         """
         cutoff = date.today() - timedelta(days=days)
 
-        return [
-            dt for dt in self._day_trades
-            if dt.open_time.date() >= cutoff
-        ]
+        return [dt for dt in self._day_trades if dt.open_time.date() >= cutoff]
 
     def _get_day_trades_last_5_days(self) -> int:
         """Get day trades in last 5 business days."""
         cutoff = date.today() - timedelta(days=self.ROLLING_WINDOW_DAYS)
 
         return sum(
-            count for trade_date, count in self._day_trades_by_date.items()
-            if trade_date >= cutoff
+            count for trade_date, count in self._day_trades_by_date.items() if trade_date >= cutoff
         )
 
     def _would_create_day_trade(self, symbol: str) -> bool:
@@ -367,10 +362,7 @@ class PDTTracker:
         self._day_trades.append(day_trade)
         self._day_trades_by_date[trade_date] += 1
 
-        logger.info(
-            f"Day trade recorded: {symbol} - "
-            f"PnL: ${pnl:.2f}"
-        )
+        logger.info(f"Day trade recorded: {symbol} - " f"PnL: ${pnl:.2f}")
 
     def reset(self) -> None:
         """Reset all tracking (for testing)."""

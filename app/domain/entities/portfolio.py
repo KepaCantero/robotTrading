@@ -1,0 +1,500 @@
+"""
+Portfolio Entity - Core business object
+
+A Portfolio represents a collection of positions with associated
+capital, risk parameters, and trading constraints.
+
+Reference: Rule 05-architecture.md, Rule 03-solid-principles.md
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from datetime import datetime
+from decimal import Decimal
+from enum import Enum
+from typing import Dict, Iterator, List, Optional
+
+from app.domain.entities.position import Position, PositionSide, PositionStatus
+from app.domain.value_objects.capital import Capital
+from app.domain.value_objects.money import Money
+from app.domain.value_objects.risk_parameters import RiskParameters
+
+
+class PortfolioStatus(str, Enum):
+    """Portfolio status enumeration."""
+
+    ACTIVE = "active"
+    SUSPENDED = "suspended"
+    CLOSED = "closed"
+    FROZEN = "frozen"
+
+
+@dataclass
+class Portfolio:
+    """
+    Portfolio entity representing a trading portfolio.
+
+    This is a pure domain entity that maintains business rules
+    and invariants for portfolio management.
+
+    Key behaviors:
+    - Position management (add, remove, update)
+    - Risk management (exposure limits, position sizing)
+    - P&L calculation and tracking
+    - Portfolio rebalancing
+    """
+
+    # Identity
+    portfolio_id: str
+
+    # Capital and risk
+    capital: Capital
+    risk_parameters: RiskParameters
+
+    # State
+    status: PortfolioStatus = PortfolioStatus.ACTIVE
+    positions: Dict[str, Position] = field(default_factory=dict)
+
+    # Metadata
+    broker: str = ""
+    currency: str = "USD"
+    created_at: datetime = field(default_factory=datetime.utcnow)
+    updated_at: datetime = field(default_factory=datetime.utcnow)
+
+    def __post_init__(self):
+        """Validate portfolio invariants."""
+        if not self.portfolio_id:
+            raise ValueError("Portfolio ID cannot be empty")
+        if self.capital.amount <= 0:
+            raise ValueError("Initial capital must be positive")
+
+        # Ensure positions dict is initialized
+        if self.positions is None:
+            self.positions = {}
+
+    # ==========================================================================
+    # Position Management
+    # ==========================================================================
+
+    def add_position(self, position: Position) -> None:
+        """
+        Add a position to the portfolio.
+
+        Args:
+            position: Position to add
+
+        Raises:
+            ValueError: If position validation fails
+        """
+        # Business rule: Check if adding position would exceed risk limits
+        if not self._validate_position_risk(position):
+            position_value = position.get_value().amount
+            max_position_value = self.capital.amount * self.risk_parameters.max_position_size
+            raise ValueError(
+                f"Position {position.symbol} exceeds risk parameters. "
+                f"Position value: ${position_value}, "
+                f"Max allowed: ${max_position_value} ({self.risk_parameters.max_position_size * 100}% of capital)"
+            )
+
+        # Check if position already exists
+        if position.symbol in self.positions:
+            # Add to existing position
+            existing = self.positions[position.symbol]
+            existing.add_shares(position.quantity, position.avg_entry_price)
+        else:
+            # Add new position
+            self.positions[position.symbol] = position
+
+        self._mark_updated()
+
+    def remove_position(self, symbol: str, quantity: Optional[Decimal] = None) -> None:
+        """
+        Remove a position or part of a position.
+
+        Args:
+            symbol: Symbol of position to remove
+            quantity: Quantity to remove (None = full position)
+        """
+        if symbol not in self.positions:
+            raise ValueError(f"Position {symbol} not found in portfolio")
+
+        position = self.positions[symbol]
+
+        if quantity is None or quantity >= position.quantity:
+            # Full exit
+            position.quantity = Decimal("0")
+            position.status = PositionStatus.CLOSED
+            position.exit_date = datetime.utcnow()
+            del self.positions[symbol]
+        else:
+            # Partial exit
+            position.remove_shares(quantity, position.current_price)
+
+        self._mark_updated()
+
+    def update_position_price(self, symbol: str, new_price: Decimal) -> None:
+        """
+        Update current price for a position.
+
+        Args:
+            symbol: Symbol to update
+            new_price: New current price
+
+        Raises:
+            ValueError: If symbol not found or price invalid
+        """
+        if symbol not in self.positions:
+            raise ValueError(f"Position {symbol} not found in portfolio")
+
+        self.positions[symbol].update_price(new_price)
+        self._mark_updated()
+
+    def get_position(self, symbol: str) -> Optional[Position]:
+        """Get position by symbol."""
+        return self.positions.get(symbol)
+
+    def get_open_positions(self) -> List[Position]:
+        """Get all open positions."""
+        return [p for p in self.positions.values() if p.is_open()]
+
+    def get_closed_positions(self) -> List[Position]:
+        """Get all closed positions (not stored by default)."""
+        return [p for p in self.positions.values() if p.is_closed()]
+
+    def iterate_positions(self) -> Iterator[Position]:
+        """Iterate over all positions."""
+        return iter(self.positions.values())
+
+    # ==========================================================================
+    # Portfolio Value & P&L
+    # ==========================================================================
+
+    def get_total_value(self) -> Money:
+        """
+        Calculate total portfolio value.
+
+        Includes cash + open positions.
+        """
+        cash = self.get_cash()
+        positions_value = self.get_positions_value()
+        return Money(amount=cash + positions_value, currency=self.currency)
+
+    def get_cash(self) -> Decimal:
+        """
+        Get available cash.
+
+        Simplified: capital minus deployed in positions.
+        """
+        deployed = sum(
+            (p.quantity * p.avg_entry_price for p in self.positions.values()),
+            start=Decimal("0"),
+        )
+        return self.capital.amount - deployed
+
+    def get_positions_value(self) -> Decimal:
+        """Calculate total value of all positions at current prices."""
+        return sum(
+            (p.get_value().amount for p in self.positions.values()),
+            start=Decimal("0"),
+        )
+
+    def get_total_pnl(self) -> Money:
+        """Calculate total portfolio P&L (realized + unrealized)."""
+        total = Decimal("0")
+        for position in self.positions.values():
+            if position.is_closed():
+                total += position.get_realized_pnl_amount()
+            else:
+                total += position.get_unrealized_pnl_amount()
+        return Money(amount=abs(total), currency=self.currency)
+
+    def get_unrealized_pnl(self) -> Money:
+        """Calculate unrealized P&L from open positions."""
+        total = Decimal("0")
+        for position in self.positions.values():
+            if position.is_open():
+                total += position.get_unrealized_pnl_amount()
+        return Money(amount=abs(total), currency=self.currency)
+
+    def get_realized_pnl(self) -> Money:
+        """Calculate realized P&L from closed positions."""
+        total = Decimal("0")
+        for position in self.positions.values():
+            if position.is_closed():
+                total += position.get_realized_pnl_amount()
+        return Money(amount=abs(total), currency=self.currency)
+
+    def get_total_return_percent(self) -> Decimal:
+        """Calculate total return as percentage of initial capital."""
+        if self.capital.amount == 0:
+            return Decimal("0")
+
+        current_value = self.get_total_value().amount
+        return ((current_value - self.capital.amount) / self.capital.amount) * Decimal("100")
+
+    # ==========================================================================
+    # Risk Management
+    # ==========================================================================
+
+    def get_exposure(self) -> Decimal:
+        """Calculate total portfolio exposure (long - short)."""
+        gross_exposure = Decimal("0")
+        for position in self.positions.values():
+            if position.side == PositionSide.LONG:
+                gross_exposure += position.get_value().amount
+            else:  # SHORT
+                gross_exposure -= position.get_value().amount
+        return gross_exposure
+
+    def get_gross_exposure(self) -> Decimal:
+        """Calculate gross exposure (absolute value of all positions)."""
+        return sum(
+            (abs(p.get_value().amount) for p in self.positions.values()),
+            start=Decimal("0"),
+        )
+
+    def get_portfolio_beta(self) -> Decimal:
+        """
+        Calculate portfolio beta (simplified).
+
+        Returns 1.0 as placeholder. Real implementation would
+        use individual position betas weighted by position size.
+        """
+        return Decimal("1.0")
+
+    def is_risk_limit_exceeded(self, additional_exposure: Decimal = Decimal("0")) -> bool:
+        """
+        Check if risk limits would be exceeded.
+
+        Args:
+            additional_exposure: Additional exposure to consider
+
+        Returns:
+            True if risk limits exceeded
+        """
+        total_exposure = self.get_gross_exposure() + additional_exposure
+        # max_portfolio_exposure is a multiplier of capital (e.g., 1.5 = 150%)
+        max_exposure = self.capital.amount * self.risk_parameters.max_portfolio_exposure
+        return total_exposure > max_exposure
+
+    def get_concentration(self, symbol: str) -> Decimal:
+        """
+        Get concentration of a single position.
+
+        Returns position value as percentage of total portfolio value.
+        """
+        if symbol not in self.positions:
+            return Decimal("0")
+
+        position_value = self.positions[symbol].get_value().amount
+        total_value = self.get_total_value().amount
+
+        if total_value == 0:
+            return Decimal("0")
+
+        return (position_value / total_value) * Decimal("100")
+
+    def get_max_concentration(self) -> tuple[str, Decimal]:
+        """
+        Get the position with highest concentration.
+
+        Returns:
+            Tuple of (symbol, concentration_percent)
+        """
+        if not self.positions:
+            return ("", Decimal("0"))
+
+        max_symbol = ""
+        max_concentration = Decimal("0")
+
+        for symbol in self.positions:
+            concentration = self.get_concentration(symbol)
+            if concentration > max_concentration:
+                max_concentration = concentration
+                max_symbol = symbol
+
+        return (max_symbol, max_concentration)
+
+    def is_position_size_allowed(self, position_value: Decimal) -> bool:
+        """Check if position size is within risk limits."""
+        # max_position_size is a percentage of capital
+        max_position_value = self.capital.amount * self.risk_parameters.max_position_size
+        return position_value <= max_position_value
+
+    def can_add_position(self, position: Position) -> tuple[bool, str]:
+        """
+        Check if position can be added without violating risk limits.
+
+        Returns:
+            Tuple of (allowed, reason)
+        """
+        # Check position size
+        position_value = position.get_value().amount
+        max_position_value = self.capital.amount * self.risk_parameters.max_position_size
+        if position_value > max_position_value:
+            return (
+                False,
+                f"Position size ${position_value} exceeds max ${max_position_value} ({self.risk_parameters.max_position_size * 100}% of capital)",
+            )
+
+        # Check portfolio exposure
+        if self.is_risk_limit_exceeded(position_value):
+            max_exposure = self.capital.amount * self.risk_parameters.max_portfolio_exposure
+            return (
+                False,
+                f"Adding position would exceed max portfolio exposure of ${max_exposure} ({self.risk_parameters.max_portfolio_exposure * 100}% of capital)",
+            )
+
+        # Check max positions
+        if len(self.get_open_positions()) >= self.capital.max_positions:
+            return (
+                False,
+                f"Maximum number of positions ({self.capital.max_positions}) reached",
+            )
+
+        return (True, "")
+
+    # ==========================================================================
+    # Portfolio Status
+    # ==========================================================================
+
+    def freeze(self) -> None:
+        """Freeze portfolio (no new positions allowed)."""
+        self.status = PortfolioStatus.FROZEN
+        self._mark_updated()
+
+    def unfreeze(self) -> None:
+        """Unfreeze portfolio."""
+        if self.status == PortfolioStatus.FROZEN:
+            self.status = PortfolioStatus.ACTIVE
+            self._mark_updated()
+
+    def suspend(self) -> None:
+        """Suspend portfolio (no trading)."""
+        self.status = PortfolioStatus.SUSPENDED
+        self._mark_updated()
+
+    def activate(self) -> None:
+        """Activate portfolio for trading."""
+        if self.status in [PortfolioStatus.SUSPENDED, PortfolioStatus.FROZEN]:
+            self.status = PortfolioStatus.ACTIVE
+            self._mark_updated()
+
+    def close(self) -> None:
+        """Close portfolio and liquidate all positions."""
+        self.status = PortfolioStatus.CLOSED
+        for position in self.positions.values():
+            if position.is_open():
+                position.status = PositionStatus.CLOSED
+                position.exit_date = datetime.utcnow()
+        self._mark_updated()
+
+    # ==========================================================================
+    # Private Helper Methods
+    # ==========================================================================
+
+    def _validate_position_risk(self, position: Position) -> bool:
+        """Validate position against risk parameters."""
+        # Check position size - max_position_size is a percentage of capital
+        position_value = position.get_value().amount
+        max_position_value = self.capital.amount * self.risk_parameters.max_position_size
+        if position_value > max_position_value:
+            return False
+
+        # Check total exposure - max_portfolio_exposure is a multiplier of capital
+        if self.is_risk_limit_exceeded(position_value):
+            return False
+
+        # Check max positions
+        if len(self.get_open_positions()) >= self.capital.max_positions:
+            return False
+
+        return True
+
+    def _mark_updated(self) -> None:
+        """Mark portfolio as updated."""
+        self.updated_at = datetime.utcnow()
+
+    # ==========================================================================
+    # Factory Methods & Serialization
+    # ==========================================================================
+
+    @classmethod
+    def create(
+        cls,
+        portfolio_id: str,
+        initial_capital: Decimal,
+        currency: str = "USD",
+        max_position_size_pct: Decimal = Decimal("0.2"),
+        max_portfolio_exposure_pct: Decimal = Decimal("0.8"),
+    ) -> Portfolio:
+        """
+        Factory to create a new portfolio.
+
+        Args:
+            portfolio_id: Unique portfolio identifier
+            initial_capital: Initial capital amount
+            currency: Base currency
+            max_position_size_pct: Max position size as percentage
+            max_portfolio_exposure_pct: Max portfolio exposure as percentage
+
+        Returns:
+            New Portfolio instance
+        """
+        # Create Capital value object
+        capital = Capital.from_amount(initial_capital, currency)
+
+        # Create RiskParameters
+        max_position_size = initial_capital * max_position_size_pct
+        max_portfolio_exposure = initial_capital * max_portfolio_exposure_pct
+
+        risk_params = RiskParameters(
+            max_position_size=max_position_size,
+            max_portfolio_exposure=max_portfolio_exposure,
+        )
+
+        return cls(
+            portfolio_id=portfolio_id,
+            capital=capital,
+            risk_parameters=risk_params,
+            currency=currency,
+        )
+
+    def to_dict(self) -> dict:
+        """Convert to dictionary for serialization."""
+        return {
+            "portfolio_id": self.portfolio_id,
+            "status": self.status.value,
+            "currency": self.currency,
+            "capital": {
+                "amount": str(self.capital.amount),
+                "tier": self.capital.tier.value,
+            },
+            "total_value": str(self.get_total_value().amount),
+            "cash": str(self.get_cash()),
+            "positions_value": str(self.get_positions_value()),
+            "total_pnl": str(self.get_total_pnl().amount),
+            "total_return_pct": str(self.get_total_return_percent()),
+            "num_positions": len(self.get_open_positions()),
+            "gross_exposure": str(self.get_gross_exposure()),
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat(),
+        }
+
+    def __str__(self) -> str:
+        """String representation."""
+        return (
+            f"Portfolio(id={self.portfolio_id}, "
+            f"value=${self.get_total_value().amount:.2f}, "
+            f"pnl={self.get_total_return_percent():.2f}%, "
+            f"positions={len(self.get_open_positions())})"
+        )
+
+    def __repr__(self) -> str:
+        """Developer representation."""
+        return (
+            f"Portfolio(portfolio_id='{self.portfolio_id}', "
+            f"capital={self.capital.amount} {self.currency}, "
+            f"status={self.status})"
+        )

@@ -24,7 +24,6 @@ from typing import Deque, Dict, List, Optional, Tuple
 
 from app.services.compliance.pdt_tracker import Country
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -49,12 +48,9 @@ class WashSale:
             "loss_amount": str(self.loss_amount),
             "disallowed_loss": str(self.disallowed_loss),
             "replacement_buy_date": (
-                self.replacement_buy_date.isoformat()
-                if self.replacement_buy_date else None
+                self.replacement_buy_date.isoformat() if self.replacement_buy_date else None
             ),
-            "replacement_price": (
-                str(self.replacement_price) if self.replacement_price else None
-            ),
+            "replacement_price": (str(self.replacement_price) if self.replacement_price else None),
         }
 
 
@@ -228,9 +224,7 @@ class WashSaleTracker:
         # Check if this is a wash sale
         if side == "SELL" and self.country == Country.US:
             if self._check_and_record_wash_sale(position):
-                logger.warning(
-                    f"Wash sale detected: {symbol} sold on {trade_date}"
-                )
+                logger.warning(f"Wash sale detected: {symbol} sold on {trade_date}")
 
     def check_wash_sale_impact(
         self,
@@ -294,10 +288,7 @@ class WashSaleTracker:
         if start_date is None:
             return self._wash_sales.copy()
 
-        return [
-            ws for ws in self._wash_sales
-            if ws.sale_date >= start_date
-        ]
+        return [ws for ws in self._wash_sales if ws.sale_date >= start_date]
 
     def get_wash_sale_summary(self) -> Dict:
         """

@@ -19,7 +19,6 @@ from pathlib import Path
 from typing import Any, Dict
 
 import numpy as np
-import optuna
 import pandas as pd
 import yaml
 
@@ -42,7 +41,7 @@ class WalkForwardValidator:
         self,
         output_dir: Path,
         validation_config: Dict[str, Any],
-        profile_config_loader: ProfileConfigLoader | None = None
+        profile_config_loader: ProfileConfigLoader | None = None,
     ):
         """
         Initialize walk-forward validator.
@@ -57,10 +56,7 @@ class WalkForwardValidator:
         self.profile_config_loader = profile_config_loader
 
     def validate(
-        self,
-        profile: InputProfile,
-        config: Dict[str, Any],
-        params: Dict[str, Any]
+        self, profile: InputProfile, config: Dict[str, Any], params: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         Run walk-forward validation.
@@ -117,12 +113,14 @@ class WalkForwardValidator:
                 train_sharpe = train_results.get("sharpe_ratio", 0)
                 test_sharpe = test_results.get("sharpe_ratio", 0)
 
-                window_results.append({
-                    "window": i,
-                    "train_sharpe": train_sharpe,
-                    "test_sharpe": test_sharpe,
-                    "sharpe_decay": train_sharpe - test_sharpe if train_sharpe > 0 else 0,
-                })
+                window_results.append(
+                    {
+                        "window": i,
+                        "train_sharpe": train_sharpe,
+                        "test_sharpe": test_sharpe,
+                        "sharpe_decay": train_sharpe - test_sharpe if train_sharpe > 0 else 0,
+                    }
+                )
 
             except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.error(f"Window {i} failed: {e}")
@@ -144,10 +142,7 @@ class WalkForwardValidator:
         }
 
     def _run_backtest_with_params(
-        self,
-        profile: InputProfile,
-        config: Dict[str, Any],
-        params: Dict[str, Any]
+        self, profile: InputProfile, config: Dict[str, Any], params: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Run backtest with specific parameters."""
         updated_config = config.copy()
@@ -191,7 +186,7 @@ class MonteCarloSimulator:
         self,
         output_dir: Path,
         validation_config: Dict[str, Any],
-        profile_config_loader: ProfileConfigLoader | None = None
+        profile_config_loader: ProfileConfigLoader | None = None,
     ):
         """
         Initialize Monte Carlo simulator.
@@ -206,10 +201,7 @@ class MonteCarloSimulator:
         self.profile_config_loader = profile_config_loader
 
     def simulate(
-        self,
-        profile: InputProfile,
-        config: Dict[str, Any],
-        params: Dict[str, Any]
+        self, profile: InputProfile, config: Dict[str, Any], params: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         Run Monte Carlo simulation.
@@ -269,13 +261,11 @@ class MonteCarloSimulator:
         }
 
     def _run_backtest_with_params(
-        self,
-        profile: InputProfile,
-        config: Dict[str, Any],
-        params: Dict[str, Any]
+        self, profile: InputProfile, config: Dict[str, Any], params: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Run backtest with specific parameters."""
         import uuid
+
         updated_config = config.copy()
         updated_config["strategy"].update(params)
 
@@ -317,7 +307,7 @@ class OutOfSampleValidator:
         self,
         output_dir: Path,
         validation_config: Dict[str, Any],
-        profile_config_loader: ProfileConfigLoader | None = None
+        profile_config_loader: ProfileConfigLoader | None = None,
     ):
         """
         Initialize OOS validator.
@@ -332,10 +322,7 @@ class OutOfSampleValidator:
         self.profile_config_loader = profile_config_loader
 
     def validate(
-        self,
-        profile: InputProfile,
-        config: Dict[str, Any],
-        params: Dict[str, Any]
+        self, profile: InputProfile, config: Dict[str, Any], params: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         Run out-of-sample validation.
@@ -381,9 +368,9 @@ class OutOfSampleValidator:
                 sharpe_decay = (train_sharpe - oos_sharpe) / train_sharpe
 
             passed = (
-                oos_sharpe >= min_oos_sharpe and
-                sharpe_decay <= max_performance_decay and
-                oos_sharpe > 0
+                oos_sharpe >= min_oos_sharpe
+                and sharpe_decay <= max_performance_decay
+                and oos_sharpe > 0
             )
 
             return {
@@ -397,13 +384,11 @@ class OutOfSampleValidator:
             return {"passed": False, "error": str(e)}
 
     def _run_backtest_with_params(
-        self,
-        profile: InputProfile,
-        config: Dict[str, Any],
-        params: Dict[str, Any]
+        self, profile: InputProfile, config: Dict[str, Any], params: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Run backtest with specific parameters."""
         import uuid
+
         updated_config = config.copy()
         updated_config["strategy"].update(params)
 

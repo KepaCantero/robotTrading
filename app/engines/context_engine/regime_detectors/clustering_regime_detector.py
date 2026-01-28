@@ -11,16 +11,10 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-# Importaciones opcionales
-try:
-    from sklearn.cluster import DBSCAN, KMeans
-    from sklearn.decomposition import PCA
-    from sklearn.preprocessing import StandardScaler
-
-    SKLEARN_AVAILABLE = True
-except ImportError:
-    SKLEARN_AVAILABLE = False
-    logger.warning("sklearn no disponible. ClusteringRegimeDetector limitado.")
+# REQUIRED: sklearn is REQUIRED - NO FALLBACKS
+from sklearn.cluster import DBSCAN, KMeans
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 
 
 class ClusteringRegimeDetector:
@@ -46,10 +40,8 @@ class ClusteringRegimeDetector:
         self.n_components_pca = config.get('n_components_pca', 2)
 
         self.model = None
-        self.scaler = StandardScaler() if SKLEARN_AVAILABLE else None
-        self.pca = (
-            PCA(n_components=self.n_components_pca) if SKLEARN_AVAILABLE and self.use_pca else None
-        )
+        self.scaler = StandardScaler()
+        self.pca = PCA(n_components=self.n_components_pca) if self.use_pca else None
         self.regime_labels = (
             ['bear', 'sideways', 'bull']
             if self.n_clusters == 3
@@ -112,9 +104,7 @@ class ClusteringRegimeDetector:
         Returns:
             True si el entrenamiento fue exitoso
         """
-        if not SKLEARN_AVAILABLE:
-            logger.warning("sklearn no disponible. Clustering no puede entrenarse.")
-            return False
+        # sklearn es REQUIRED - ya importado al inicio del módulo
 
         if len(prices) < self.min_samples:
             logger.warning(f"No hay suficientes datos: {len(prices)} < {self.min_samples}")

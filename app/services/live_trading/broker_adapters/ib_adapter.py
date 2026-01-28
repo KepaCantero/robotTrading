@@ -41,10 +41,10 @@ from typing import Any, Callable, Dict, List, Optional
 from ib_insync import IB, LimitOrder, MarketOrder, StopOrder, util
 from ib_insync.contract import Contract as IBContract
 from ib_insync.ticker import Ticker
+from requests.exceptions import HTTPError, RequestException
 
 from app.core.reconnection_manager import ReconnectionConfig, ReconnectionManager
 from app.core.trading_validators import TradingValidator
-
 
 # from app.models.position import Position  # TODO: Position model not implemented yet
 # from app.utils.exceptions import BrokerError, ConfigurationError  # TODO: Not implemented
@@ -55,10 +55,8 @@ class BrokerError(Exception):
     """Base exception for broker errors."""
 
 
-
 class ConfigurationError(Exception):
     """Exception for configuration errors."""
-
 
 
 logger = logging.getLogger(__name__)
@@ -213,6 +211,7 @@ class IBConnection:
         Returns:
             True if reconnection successful, False otherwise
         """
+
         async def _connect() -> bool:
             """Internal connection function."""
             return await self.connect()
@@ -450,7 +449,9 @@ class IBConnection:
             # Get available capital (estimate from account if possible)
             try:
                 account_summary = await self.get_account_summary()
-                available_capital = Decimal(str(account_summary.get('NetLiquidation', {}).get('value', 100000)))
+                available_capital = Decimal(
+                    str(account_summary.get('NetLiquidation', {}).get('value', 100000))
+                )
             except (ValueError, TypeError, KeyError, AttributeError):
                 # Fallback to default if account summary unavailable
                 available_capital = Decimal("100000")
@@ -458,7 +459,9 @@ class IBConnection:
 
             # Calculate position value
             market_data_for_price = await self.get_market_data(symbol, **contract_kwargs)
-            estimated_price = Decimal(str(market_data_for_price.get('last', market_data_for_price.get('bid', 100))))
+            estimated_price = Decimal(
+                str(market_data_for_price.get('last', market_data_for_price.get('bid', 100)))
+            )
             position_value = Decimal(str(quantity)) * estimated_price
 
             # Validate position size
@@ -466,7 +469,7 @@ class IBConnection:
                 self.validator.validate_position_size(
                     capital=available_capital,
                     position_size=position_value,
-                    max_position_percent=Decimal("0.25")
+                    max_position_percent=Decimal("0.25"),
                 )
             except ValueError as e:
                 logger.error(f"Position size validation failed: {e}")
@@ -478,14 +481,16 @@ class IBConnection:
                     self.validator.validate_stop_loss(
                         entry_price=estimated_price,
                         stop_loss=Decimal(str(stop_price)),
-                        side='long' if side == 'BUY' else 'short'
+                        side='long' if side == 'BUY' else 'short',
                     )
                 except ValueError as e:
                     logger.error(f"Stop-loss validation failed: {e}")
                     return {'error': str(e)}
             else:
                 # Log warning but don't fail (some strategies may not use SL)
-                logger.warning(f"Order for {symbol} placed without stop-loss - ensure risk is managed elsewhere")
+                logger.warning(
+                    f"Order for {symbol} placed without stop-loss - ensure risk is managed elsewhere"
+                )
 
             # Get market data for validation
             market_data = await self.get_market_data(symbol, **contract_kwargs)
@@ -717,7 +722,6 @@ class IBConnection:
         except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             # Log any other unexpected errors during cleanup
             logger.error(f"Unexpected error during IB adapter cleanup: {e}", exc_info=True)
-
 
     def get_connection_stats(self) -> Dict[str, Any]:
         """Get reconnection statistics."""

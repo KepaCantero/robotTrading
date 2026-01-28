@@ -37,12 +37,12 @@ Example:
 """
 
 from app.services.scheduling.market_scheduler import (
-    MarketScheduler,
-    MarketType,
-    MarketStatus,
-    MarketSchedule,
-    ScheduledTask,
     MARKET_SCHEDULES,
+    MarketSchedule,
+    MarketScheduler,
+    MarketStatus,
+    MarketType,
+    ScheduledTask,
 )
 
 __all__ = [

@@ -1,0 +1,153 @@
+---
+name: "API Latency Spike"
+severity: "medium"
+trigger: "api_latency_p99 > 1000ms"
+category: "performance"
+tags: ["api", "latency", "performance"]
+estimated_duration_minutes: 15
+last_updated: "2026-01-28"
+version: "1.0"
+
+description: |
+  Respond to API latency spikes. High latency can cause slippage,
+  missed opportunities, and poor user experience.
+
+prerequisites:
+  - APM tools access (Datadog, New Relic, etc.)
+  - API metrics dashboard
+  - Service logs access
+
+steps:
+  - title: "Verify Latency Spike"
+    description: "Confirm the latency issue is real"
+    commands:
+      - "Check API metrics dashboard"
+      - "Verify p50, p95, p99 latencies"
+      - "Identify which endpoints are affected"
+      - "Check if spike is across all traffic or specific"
+    expected_outcome: "Latency spike confirmed and characterized"
+
+  - title: "Check System Resources"
+    description: "Verify system has adequate resources"
+    commands:
+      - "Check CPU usage"
+      - "Check memory usage"
+      - "Check disk I/O"
+      - "Check network bandwidth"
+    expected_outcome: "Resource status known"
+    decision_point:
+      condition: "resource_utilization > 80%"
+      true_branch: "Resource constraint - proceed to step 4"
+      false_branch: "Resources OK - proceed to step 5"
+
+  - title: "Identify Resource Bottleneck"
+    description: "Determine which resource is constrained"
+    commands:
+      - "Review resource metrics in detail"
+      - "Check for resource exhaustion"
+      - "Identify top resource-consuming processes"
+      - "Check for memory leaks"
+    expected_outcome: "Bottleneck identified"
+
+  - title: "Address Resource Constraints"
+    description: "Resolve resource limitations"
+    commands:
+      - "Scale up resources if possible"
+      - "Kill non-critical processes"
+      - "Restart services if memory leak suspected"
+      - "Implement rate limiting if needed"
+    expected_outcome: "Resource constraints addressed"
+
+  - title: "Check Database Performance"
+    description: "Investigate database query performance"
+    commands:
+      - "Check slow query log"
+      - "Review database connection pool"
+      - "Check for table locks"
+      - "Review index usage"
+    expected_outcome: "Database performance understood"
+    decision_point:
+      condition: "slow_queries_found"
+      true_branch: "Optimize queries - proceed to step 7"
+      false_branch: "DB OK - check external dependencies"
+
+  - title: "Optimize Slow Queries"
+    description: "Improve database query performance"
+    commands:
+      - "Add missing indexes"
+      - "Rewrite inefficient queries"
+      - "Implement query caching"
+      - "Consider read replicas"
+    expected_outcome: "Query performance improved"
+
+  - title: "Check External Dependencies"
+    description: "Verify external services are responsive"
+    commands:
+      - "Check broker API latency"
+      - "Check market data provider latency"
+      - "Check any other external APIs"
+      - "Review timeout settings"
+    expected_outcome: "External dependency status known"
+
+  - title: "Review Recent Deployments"
+    description: "Check if recent code changes caused issues"
+    commands:
+      - "Review recent deployment logs"
+      - "Check if spike correlates with deployment"
+      - "Consider rollback if recent deploy"
+      - "Review performance test results"
+    expected_outcome: "Deployment impact assessed"
+
+  - title: "Implement Mitigation"
+    description: "Apply appropriate mitigation based on findings"
+    commands:
+      - "Rollback recent changes if applicable"
+      - "Scale infrastructure"
+      - "Implement caching"
+      - "Add rate limiting"
+      - "Optimize database queries"
+    expected_outcome: "Mitigation implemented"
+
+  - title: "Monitor Recovery"
+    description: "Verify latency returns to normal"
+    commands:
+      - "Monitor latency metrics"
+      - "Check for 30 minutes post-fix"
+      - "Verify no side effects from fix"
+      - "Document resolution"
+    expected_outcome: "Latency normalized, incident resolved"
+
+post_actions:
+  - "Conduct postmortem if significant"
+  - "Update performance tests"
+  - "Review capacity planning"
+  - "Consider auto-scaling improvements"
+
+rollback_actions:
+  - title: "Revert Mitigation"
+    description: "If mitigation caused issues"
+    commands:
+      - "Rollback changes"
+      - "Restore previous configuration"
+      - "Monitor for return of issues"
+
+related_runbooks:
+  - "service_degraded.yaml"
+  - "database_slow.yaml"
+  - "external_dependency_failure.yaml"
+
+metrics_to_track:
+  - "api_latency_p50"
+  - "api_latency_p95"
+  - "api_latency_p99"
+  - "endpoint_latency_breakdown"
+
+success_criteria:
+  - "Latency returned to normal levels"
+  - "Root cause identified"
+  - "Fix implemented and verified"
+  - "Incident documented"
+
+escalation_path: "performance"
+owner: "platform-team"
+review_frequency: "monthly"

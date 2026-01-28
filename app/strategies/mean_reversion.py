@@ -9,6 +9,7 @@ y espera que regrese a ella.
 """
 
 from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import Any, Dict, List
