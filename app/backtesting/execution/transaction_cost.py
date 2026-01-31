@@ -19,7 +19,7 @@ import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple, Any
 
 logger = logging.getLogger(__name__)
 
@@ -156,7 +156,7 @@ class TransactionCost:
         """Sum of execution-related fees."""
         return self.commission + self.regulatory_fees
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> Dict[str, float]:
         """
         Convert to dictionary for serialization.
 
@@ -545,7 +545,7 @@ class TransactionCostCalculator:
         shares: int,
         price_min: Decimal,
         price_max: Decimal,
-    ) -> tuple[TransactionCost, TransactionCost]:
+    ) -> Tuple[TransactionCost, TransactionCost]:
         """
         Estimate cost range for an order with price uncertainty.
 

@@ -218,6 +218,7 @@ class TestPITDatabaseClient:
         # Verify data after query_date is filtered out
         if len(result) > 0:
             # Filter is applied by implementation - data on query_date may be included
+            pass
 
     def test_get_ohlcv_as_of_with_corporate_actions(self, pit_client, mock_pit_db, sample_market_data):
         """Test OHLCV retrieval with corporate action adjustments."""

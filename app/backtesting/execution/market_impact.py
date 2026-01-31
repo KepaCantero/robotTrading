@@ -31,7 +31,7 @@ import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -109,7 +109,7 @@ class MarketImpact:
         """Total impact as decimal adjustment."""
         return self.total_impact_bps / Decimal("10000")
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "temporary_impact_bps": float(self.temporary_impact_bps),
@@ -387,7 +387,7 @@ class MarketImpactModel:
 
     def calibrate_coefficients(
         self,
-        historical_impacts: list[dict],
+        historical_impacts: List[Dict[str, Any]],
     ) -> AlmgrenChrissConfig:
         """
         Calibrate impact coefficients from historical execution data.
