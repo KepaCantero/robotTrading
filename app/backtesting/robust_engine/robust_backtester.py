@@ -420,7 +420,9 @@ class RobustBacktester:
             chunk: Data chunk to process
             signals: Optional signals for this period
         """
-        for idx, row in chunk.iterrows():
+        # Use itertuples instead of iterrows for better performance
+        for row in chunk.itertuples():
+            idx = row.Index
             current_date = idx.date() if hasattr(idx, 'date') else idx
             self._current_date = current_date
 

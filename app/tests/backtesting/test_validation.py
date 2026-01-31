@@ -20,56 +20,50 @@ import numpy as np
 import pandas as pd
 import pytest
 
-# Try to import from the validation module
-try:
-    from app.backtesting.validation.models import (
-        MarketRegime,
-        OverfittingLevel,
-        OverfittingMetrics,
-        ParameterStabilityResult,
-        PeriodResult,
-        RegimeConfig,
-        RegimeTransitionMatrix,
-        RegimeType,
-        StabilityLevel,
-        TrendRegime,
-        VolatilityRegime,
-        WalkForwardConfig,
-        WalkForwardResult,
-    )
-    from app.backtesting.validation.overfitting_detector import (
-        OverfittingDetector,
-        analyze_parameter_stability,
-        calculate_overfitting_metrics,
-        calculate_stability_score,
-        classify_stability,
-        detect_parameter_drift,
-        generate_stability_recommendation,
-    )
-    from app.backtesting.validation.parameter_stability import (
-        ParameterStabilityAnalyzer,
-        calculate_parameter_stability,
-        detect_parameter_drift_simple,
-        detect_redundant_parameters,
-        filter_stable_parameters,
-        rank_parameters_by_stability,
-    )
-    from app.backtesting.validation.regime_detector import (
-        RegimeDetector,
-        classify_market_state,
-        detect_regime_from_data,
-    )
-    from app.backtesting.validation.walk_forward import (
-        RollingWindowOptimizer,
-        WalkForwardValidator,
-        calculate_consistency_score,
-        calculate_degradation,
-    )
-
-    VALIDATION_MODULE_AVAILABLE = True
-except ImportError as e:
-    VALIDATION_MODULE_AVAILABLE = False
-    print(f"Warning: Could not import validation module: {e}")
+# Import validation module components
+from app.backtesting.validation.models import (
+    MarketRegime,
+    OverfittingLevel,
+    OverfittingMetrics,
+    ParameterStabilityResult,
+    PeriodResult,
+    RegimeConfig,
+    RegimeTransitionMatrix,
+    RegimeType,
+    StabilityLevel,
+    TrendRegime,
+    VolatilityRegime,
+    WalkForwardConfig,
+    WalkForwardResult,
+)
+from app.backtesting.validation.overfitting_detector import (
+    OverfittingDetector,
+    analyze_parameter_stability,
+    calculate_overfitting_metrics,
+    calculate_stability_score,
+    classify_stability,
+    detect_parameter_drift,
+    generate_stability_recommendation,
+)
+from app.backtesting.validation.parameter_stability import (
+    ParameterStabilityAnalyzer,
+    calculate_parameter_stability,
+    detect_parameter_drift_simple,
+    detect_redundant_parameters,
+    filter_stable_parameters,
+    rank_parameters_by_stability,
+)
+from app.backtesting.validation.regime_detector import (
+    RegimeDetector,
+    classify_market_state,
+    detect_regime_from_data,
+)
+from app.backtesting.validation.walk_forward import (
+    RollingWindowOptimizer,
+    WalkForwardValidator,
+    calculate_consistency_score,
+    calculate_degradation,
+)
 
 
 # =============================================================================
@@ -199,7 +193,6 @@ def sample_parameter_history() -> List[Dict[str, Any]]:
 # =============================================================================
 
 
-@pytest.mark.skipif(not VALIDATION_MODULE_AVAILABLE, reason="Validation module not available")
 class TestValidationModels:
     """Tests for validation module data models."""
 
@@ -394,7 +387,6 @@ class TestValidationModels:
 # =============================================================================
 
 
-@pytest.mark.skipif(not VALIDATION_MODULE_AVAILABLE, reason="Validation module not available")
 class TestWalkForwardValidator:
     """Tests for WalkForwardValidator."""
 
@@ -453,7 +445,6 @@ class TestWalkForwardValidator:
             assert len(train_data) >= walk_forward_config.min_observations
 
 
-@pytest.mark.skipif(not VALIDATION_MODULE_AVAILABLE, reason="Validation module not available")
 class TestRollingWindowOptimizer:
     """Tests for RollingWindowOptimizer."""
 
@@ -486,7 +477,6 @@ class TestRollingWindowOptimizer:
 # =============================================================================
 
 
-@pytest.mark.skipif(not VALIDATION_MODULE_AVAILABLE, reason="Validation module not available")
 class TestOverfittingDetector:
     """Tests for OverfittingDetector."""
 
@@ -619,7 +609,6 @@ class TestOverfittingDetector:
         assert isinstance(is_in_mcs, bool)
 
 
-@pytest.mark.skipif(not VALIDATION_MODULE_AVAILABLE, reason="Validation module not available")
 class TestParameterStabilityFunctions:
     """Tests for parameter stability utility functions."""
 
@@ -697,7 +686,6 @@ class TestParameterStabilityFunctions:
 # =============================================================================
 
 
-@pytest.mark.skipif(not VALIDATION_MODULE_AVAILABLE, reason="Validation module not available")
 class TestRegimeDetector:
     """Tests for RegimeDetector."""
 
@@ -836,7 +824,6 @@ class TestRegimeDetector:
         assert any("bear" in rec.lower() for rec in recommendations)
 
 
-@pytest.mark.skipif(not VALIDATION_MODULE_AVAILABLE, reason="Validation module not available")
 class TestRegimeUtilityFunctions:
     """Tests for regime detection utility functions."""
 
@@ -860,7 +847,6 @@ class TestRegimeUtilityFunctions:
 # =============================================================================
 
 
-@pytest.mark.skipif(not VALIDATION_MODULE_AVAILABLE, reason="Validation module not available")
 class TestParameterStabilityAnalyzer:
     """Tests for ParameterStabilityAnalyzer."""
 
@@ -998,7 +984,6 @@ class TestParameterStabilityAnalyzer:
             assert len(redundant) > 0
 
 
-@pytest.mark.skipif(not VALIDATION_MODULE_AVAILABLE, reason="Validation module not available")
 class TestParameterStabilityUtilityFunctions:
     """Tests for parameter stability utility functions."""
 
@@ -1060,7 +1045,6 @@ class TestParameterStabilityUtilityFunctions:
 # =============================================================================
 
 
-@pytest.mark.skipif(not VALIDATION_MODULE_AVAILABLE, reason="Validation module not available")
 class TestValidationIntegration:
     """Integration tests for validation module."""
 
@@ -1137,7 +1121,6 @@ class TestValidationIntegration:
 # =============================================================================
 
 
-@pytest.mark.skipif(not VALIDATION_MODULE_AVAILABLE, reason="Validation module not available")
 class TestValidationEdgeCases:
     """Tests for edge cases and error handling."""
 

@@ -17,7 +17,7 @@ import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -598,24 +598,3 @@ class SlippageModel:
         else:
             return 0.2
 
-    def get_slippage_for_side(
-        self,
-        estimate: SlippageEstimate,
-        side: str,
-    ) -> Decimal:
-        """
-        Get slippage-adjusted price for a given side.
-
-        Args:
-            estimate: Slippage estimate
-            side: "buy" or "sell"
-
-        Returns:
-            Adjusted price
-        """
-        side_lower = side.lower()
-
-        if side_lower == "buy":
-            return estimate.estimated_fill_price
-        else:
-            return estimate.estimated_fill_price

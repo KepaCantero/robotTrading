@@ -28,7 +28,7 @@ Reference:
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 from typing import Dict, Optional, Tuple
@@ -195,7 +195,8 @@ class MarketImpactModel:
     TEMPORARY_COEF_RANGE = (Decimal("0.05"), Decimal("0.50"))  # 5-50 bps
 
     # Volatility scaling (convert annual to daily)
-    ANNUAL_TO_DAILY_VOL = Decimal("1") / Decimal("252")  # ~1/sqrt(252)
+    # For Almgren-Chriss: daily_vol = annual_vol / sqrt(252)
+    ANNUAL_TO_DAILY_VOL_FACTOR = Decimal("1") / (Decimal("252").sqrt())
 
     def __init__(self, config: Optional[ImpactConfig] = None):
         """
@@ -294,8 +295,9 @@ class MarketImpactModel:
         if side_lower not in ("buy", "sell"):
             raise ValueError(f"Side must be 'buy' or 'sell', got '{side}'")
 
-        # Convert annual volatility to daily
-        daily_vol = volatility * self.ac_config.volatility_exponent
+        # Convert annual volatility to daily using proper Almgren-Chriss formula
+        # daily_vol = annual_vol / sqrt(252)
+        daily_vol = volatility * self.ANNUAL_TO_DAILY_VOL_FACTOR
 
         # Calculate order size fraction
         order_fraction = order_size / adv

@@ -592,14 +592,15 @@ def create_summary_report(
 
     # Create summary table
     summary_data = []
-    for _, row in comparison.iterrows():
+    # Use itertuples instead of iterrows for better performance
+    for row in comparison.itertuples():
         summary_data.append(
             [
-                f"d={row['d']:.1f}",
-                f"{row['p_value']:.4f}",
-                "Yes" if row['is_stationary'] else "No",
-                f"{row['memory_preservation']:.3f}",
-                f"{row['memory_loss_pct']:.1f}%",
+                f"d={row.d:.1f}",
+                f"{row.p_value:.4f}",
+                "Yes" if row.is_stationary else "No",
+                f"{row.memory_preservation:.3f}",
+                f"{row.memory_loss_pct:.1f}%",
             ]
         )
 

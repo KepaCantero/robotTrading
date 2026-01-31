@@ -426,12 +426,13 @@ class DividendHandler:
         """
         actions = []
 
-        for _, row in dividend_data.iterrows():
-            symbol = row["symbol"]
+        # Use itertuples instead of iterrows for better performance
+        for row in dividend_data.itertuples():
+            symbol = row.symbol
             ex_date = (
-                row["ex_date"]
-                if isinstance(row["ex_date"], date)
-                else pd.to_datetime(row["ex_date"]).date()
+                row.ex_date
+                if isinstance(row.ex_date, date)
+                else pd.to_datetime(row.ex_date).date()
             )
 
             # Only process if we hold the stock
@@ -439,13 +440,13 @@ class DividendHandler:
                 continue
 
             shares = positions[symbol]
-            amount = Decimal(str(row["amount"]))
+            amount = Decimal(str(row.amount))
             payment_date = (
-                row["payment_date"]
-                if "payment_date" in row and pd.notna(row["payment_date"])
+                row.payment_date
+                if hasattr(row, "payment_date") and pd.notna(row.payment_date)
                 else None
             )
-            qualified = row.get("qualified", True)
+            qualified = getattr(row, "qualified", True)
 
             current_price = prices.get(symbol)
 

@@ -143,20 +143,21 @@ class SurvivorshipAdjuster:
             df["delisting_date"] = pd.to_datetime(df["delisting_date"]).dt.date
 
             count = 0
-            for _, row in df.iterrows():
+            # Use itertuples instead of iterrows for better performance
+            for row in df.itertuples():
                 stock = DelistedStock(
-                    symbol=row["symbol"],
-                    delisting_date=row["delisting_date"],
-                    reason=DelistingReason(row.get("reason", "delisting")),
-                    last_price=Decimal(str(row["last_price"])),
-                    recovery_rate=Decimal(str(row.get("recovery_rate", 0.1))),
+                    symbol=row.symbol,
+                    delisting_date=row.delisting_date,
+                    reason=DelistingReason(getattr(row, "reason", "delisting")),
+                    last_price=Decimal(str(row.last_price)),
+                    recovery_rate=Decimal(str(getattr(row, "recovery_rate", 0.1))),
                 )
 
                 # Parse returns if provided
-                if "returns_csv" in row and pd.notna(row["returns_csv"]):
+                if hasattr(row, "returns_csv") and pd.notna(row.returns_csv):
                     returns_list = [
                         (date.fromisoformat(d.split(":")[0]), Decimal(d.split(":")[1]))
-                        for d in str(row["returns_csv"]).split(";")
+                        for d in str(row.returns_csv).split(";")
                     ]
                     stock.returns_daily = returns_list
 
