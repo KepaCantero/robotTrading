@@ -64,10 +64,7 @@ def sample_dataframe():
     np.random.seed(42)
     n_samples = 300
 
-    X = pd.DataFrame({
-        f"feature_{i}": np.random.randn(n_samples)
-        for i in range(10)
-    })
+    X = pd.DataFrame({f"feature_{i}": np.random.randn(n_samples) for i in range(10)})
     y = pd.Series(np.random.randn(n_samples))
 
     return X, y
@@ -208,10 +205,7 @@ class TestBoostingEnsemble:
         X_train, X_test = X[:250], X[250:]
         y_train = y[:250]
 
-        boosting = BoostingEnsemble(
-            config=BoostingConfig(n_estimators=10),
-            task_type="regression"
-        )
+        boosting = BoostingEnsemble(config=BoostingConfig(n_estimators=10), task_type="regression")
         boosting.fit(X_train, y_train)
 
         staged_preds = list(boosting.staged_predict(X_test))
@@ -438,7 +432,8 @@ class TestEnsembleAnalyzer:
 
         analyzer = EnsembleAnalyzer()
         results = analyzer.compare_ensembles(
-            X, y,
+            X,
+            y,
             base_estimator=DecisionTreeRegressor(),
             n_estimators=20,
         )

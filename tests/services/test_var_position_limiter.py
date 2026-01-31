@@ -275,7 +275,9 @@ class TestVaRPositionLimiter:
 
         # Should return a failed result, not raise exception
         assert result.passed is False
-        assert "VaR validation error" in result.message or "Price must be at least" in result.message
+        assert (
+            "VaR validation error" in result.message or "Price must be at least" in result.message
+        )
 
     def test_factory_function(self, sample_portfolio):
         """Test factory function for creating limiter."""

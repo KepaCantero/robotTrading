@@ -51,16 +51,12 @@ class TestPointInTimeDatabase:
         query_date = datetime(2020, 6, 15)
 
         # Test with market cap filter
-        universe = pit_db.get_universe_at_date(
-            query_date, min_market_cap=Decimal("1000000000")
-        )
+        universe = pit_db.get_universe_at_date(query_date, min_market_cap=Decimal("1000000000"))
 
         assert isinstance(universe, list)
 
         # Test with sector filter
-        universe = pit_db.get_universe_at_date(
-            query_date, sectors=["Technology", "Finance"]
-        )
+        universe = pit_db.get_universe_at_date(query_date, sectors=["Technology", "Finance"])
 
         assert isinstance(universe, list)
 
@@ -88,13 +84,9 @@ class TestPointInTimeDatabase:
         dates = pd.date_range(start="2020-01-01", periods=100, freq="D")
         data_sources = {}
         for symbol in sample_symbols[:3]:
-            data_sources[symbol] = pd.Series(
-                range(100), index=dates, name="close"
-            ).to_frame()
+            data_sources[symbol] = pd.Series(range(100), index=dates, name="close").to_frame()
 
-        snapshot = pit_db.create_pit_snapshot(
-            as_of_date, sample_symbols[:3], data_sources
-        )
+        snapshot = pit_db.create_pit_snapshot(as_of_date, sample_symbols[:3], data_sources)
 
         assert isinstance(snapshot, PITDataSnapshot)
         assert snapshot.as_of_date == as_of_date

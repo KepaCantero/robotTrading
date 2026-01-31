@@ -189,8 +189,12 @@ class RiskConfigurator:
         var_95_idx = int((1 - 0.95) * len(sorted_returns))
         var_99_idx = int((1 - 0.99) * len(sorted_returns))
 
-        var_95_daily = sorted_returns[var_95_idx] if var_95_idx < len(sorted_returns) else sorted_returns[0]
-        var_99_daily = sorted_returns[var_99_idx] if var_99_idx < len(sorted_returns) else sorted_returns[0]
+        var_95_daily = (
+            sorted_returns[var_95_idx] if var_95_idx < len(sorted_returns) else sorted_returns[0]
+        )
+        var_99_daily = (
+            sorted_returns[var_99_idx] if var_99_idx < len(sorted_returns) else sorted_returns[0]
+        )
 
         # Convert to absolute value
         var_95 = abs(Decimal(str(var_95_daily)) * capital)
@@ -354,14 +358,16 @@ class RiskConfigurator:
             # Check if breached
             is_breached = current_value > limit_value
 
-            risk_limit_objects.append(RiskLimit(
-                limit_type=limit_type,
-                limit_value=limit_value,
-                current_value=current_value,
-                utilization=min(1.0, utilization),
-                is_breached=is_breached,
-                timestamp=datetime.now(),
-            ))
+            risk_limit_objects.append(
+                RiskLimit(
+                    limit_type=limit_type,
+                    limit_value=limit_value,
+                    current_value=current_value,
+                    utilization=min(1.0, utilization),
+                    is_breached=is_breached,
+                    timestamp=datetime.now(),
+                )
+            )
 
         return risk_limit_objects
 

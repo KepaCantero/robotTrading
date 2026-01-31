@@ -65,9 +65,11 @@ class TestPurgedKFold:
 
         # Create events and labels
         events = pd.date_range("2020-01-01", periods=100, freq="D")
-        labels = pd.DataFrame({
-            "bars_to_barrier": np.random.randint(1, 10, 100),
-        })
+        labels = pd.DataFrame(
+            {
+                "bars_to_barrier": np.random.randint(1, 10, 100),
+            }
+        )
 
         splits = list(cv.split(X, events, labels))
         assert len(splits) > 0
@@ -99,9 +101,11 @@ class TestMetaLabelingCV:
 
         # Create events and labels
         events = pd.date_range("2020-01-01", periods=n_samples, freq="D")
-        labels = pd.DataFrame({
-            "bars_to_barrier": np.random.randint(1, 10, n_samples),
-        })
+        labels = pd.DataFrame(
+            {
+                "bars_to_barrier": np.random.randint(1, 10, n_samples),
+            }
+        )
 
         return X, y, events, labels
 
@@ -119,9 +123,7 @@ class TestMetaLabelingCV:
         meta_model = RandomForestClassifier(n_estimators=10, random_state=42)
 
         cv = MetaLabelingCV(n_folds=3, scoring="accuracy")
-        result = cv.cross_validate(
-            primary_model, meta_model, X, y, events, labels
-        )
+        result = cv.cross_validate(primary_model, meta_model, X, y, events, labels)
 
         # Check result structure
         assert result.mean_score >= 0
@@ -142,7 +144,12 @@ class TestMetaLabelingCV:
 
         cv = MetaLabelingCV(n_folds=3)
         result = cv.cross_validate(
-            primary_model, meta_model, X, y, events, labels,
+            primary_model,
+            meta_model,
+            X,
+            y,
+            events,
+            labels,
             sample_weights=sample_weights,
         )
 
@@ -157,9 +164,7 @@ class TestMetaLabelingCV:
 
         for scoring in ["accuracy", "f1"]:
             cv = MetaLabelingCV(n_folds=3, scoring=scoring)
-            result = cv.cross_validate(
-                primary_model, meta_model, X, y, events, labels
-            )
+            result = cv.cross_validate(primary_model, meta_model, X, y, events, labels)
 
             assert result.mean_score >= 0
             assert result.metadata["scoring"] == scoring
@@ -218,9 +223,11 @@ class TestCVScoreMetaLabeling:
         y = np.random.choice([-1, 0, 1], size=n_samples)
 
         events = pd.date_range("2020-01-01", periods=n_samples, freq="D")
-        labels = pd.DataFrame({
-            "bars_to_barrier": np.random.randint(1, 10, n_samples),
-        })
+        labels = pd.DataFrame(
+            {
+                "bars_to_barrier": np.random.randint(1, 10, n_samples),
+            }
+        )
 
         return X, y, events, labels
 
@@ -232,7 +239,12 @@ class TestCVScoreMetaLabeling:
         meta_model = RandomForestClassifier(n_estimators=10, random_state=42)
 
         scores = cv_score_meta_labeling(
-            primary_model, meta_model, X, y, events, labels,
+            primary_model,
+            meta_model,
+            X,
+            y,
+            events,
+            labels,
             n_folds=3,
         )
 
@@ -263,7 +275,7 @@ class TestCalculatePurgeEmbargoSizes:
 
         # Check values are reasonable
         assert sizes["fold_size"] == 200  # 1000 / 5
-        assert sizes["purge_size"] == 50   # 1000 * 0.05
+        assert sizes["purge_size"] == 50  # 1000 * 0.05
         assert sizes["embargo_size"] == 10  # 1000 * 0.01
 
     def test_different_folds(self):
@@ -345,13 +357,15 @@ class TestIntegration:
 
         # Labels with some predictability
         y = np.where(X[:, 0] + X[:, 1] > 0, 1, -1)
-        y[np.random.choice(n_samples, size=n_samples//5)] = 0  # Some zeros
+        y[np.random.choice(n_samples, size=n_samples // 5)] = 0  # Some zeros
 
         # Events and labels
         events = pd.date_range("2020-01-01", periods=n_samples, freq="H")
-        labels = pd.DataFrame({
-            "bars_to_barrier": np.random.randint(5, 20, n_samples),
-        })
+        labels = pd.DataFrame(
+            {
+                "bars_to_barrier": np.random.randint(5, 20, n_samples),
+            }
+        )
 
         return X, y, events, labels
 
@@ -372,9 +386,7 @@ class TestIntegration:
 
         # Run CV
         cv = MetaLabelingCV(n_folds=5, purge_pct=0.05, embargo_pct=0.01)
-        result = cv.cross_validate(
-            primary_model, meta_model, X, y, events, labels
-        )
+        result = cv.cross_validate(primary_model, meta_model, X, y, events, labels)
 
         # Check results
         assert result.mean_score > 0
@@ -393,14 +405,10 @@ class TestIntegration:
         cv = PurgedKFold(n_folds=5, purge_pct=0.05, embargo_pct=0.01)
 
         # Calculate uniqueness weights
-        from app.backtesting.labeling.triple_barrier import (
-            calculate_sample_weights_uniqueness
-        )
+        from app.backtesting.labeling.triple_barrier import calculate_sample_weights_uniqueness
 
         price_series = pd.Series(range(len(X)))
-        weights = calculate_sample_weights_uniqueness(
-            events, labels, price_series
-        )
+        weights = calculate_sample_weights_uniqueness(events, labels, price_series)
 
         # Train with weights
         model = RandomForestClassifier(n_estimators=10, random_state=42)

@@ -436,9 +436,7 @@ class TestConcurrentLoad:
             await asyncio.sleep(0.01)  # Simulate I/O
             return {"status": "filled"}
 
-        processing = asyncio.create_task(
-            queue.process_queue(handler, max_concurrent=10)
-        )
+        processing = asyncio.create_task(queue.process_queue(handler, max_concurrent=10))
         await asyncio.sleep(1.0)
         await queue.shutdown()
         await processing
@@ -625,9 +623,7 @@ class TestErrorRecovery:
             await create_task(queue, f"fail_{i}", {}, max_retries=0)
 
         # Process - should not crash
-        processing = asyncio.create_task(
-            queue.process_queue(failing_handler, max_concurrent=1)
-        )
+        processing = asyncio.create_task(queue.process_queue(failing_handler, max_concurrent=1))
         # Wait longer for all tasks to be processed
         await asyncio.sleep(2.0)
         await queue.shutdown()
@@ -700,10 +696,12 @@ class TestBackpressureAndFlowControl:
         tasks_processed = []
 
         async def tracking_handler(task):
-            tasks_processed.append({
-                "task_id": task.task_id,
-                "timestamp": datetime.now(timezone.utc),
-            })
+            tasks_processed.append(
+                {
+                    "task_id": task.task_id,
+                    "timestamp": datetime.now(timezone.utc),
+                }
+            )
             await asyncio.sleep(0.01)
             return {"done": True}
 
@@ -788,9 +786,7 @@ class TestRealWorldScenarios:
             await asyncio.sleep(0.02)
             return {"analysis": "complete"}
 
-        processing = asyncio.create_task(
-            queue.process_queue(analysis_handler, max_concurrent=10)
-        )
+        processing = asyncio.create_task(queue.process_queue(analysis_handler, max_concurrent=10))
         await asyncio.sleep(0.5)
         await queue.shutdown()
         await processing

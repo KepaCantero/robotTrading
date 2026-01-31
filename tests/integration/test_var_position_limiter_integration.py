@@ -132,9 +132,7 @@ class TestVaRIntegration:
         assert metrics.position_count == 4
         assert metrics.correlation_used == "identity"
 
-    def test_var_with_real_correlation(
-        self, multi_asset_portfolio, correlation_matrix
-    ):
+    def test_var_with_real_correlation(self, multi_asset_portfolio, correlation_matrix):
         """Test VaR calculation with real correlation matrix."""
         # Create mock correlation analyzer
         mock_analyzer = Mock()
@@ -302,9 +300,7 @@ class TestVaRIntegration:
         # Note: May or may not have warnings depending on portfolio state
         assert isinstance(result.warnings, list)
 
-    def test_cross_asset_correlation_impact(
-        self, multi_asset_portfolio, correlation_matrix
-    ):
+    def test_cross_asset_correlation_impact(self, multi_asset_portfolio, correlation_matrix):
         """Test impact of cross-asset correlations on VaR."""
         # Create two limiters: one with correlation, one without
         mock_analyzer = Mock()

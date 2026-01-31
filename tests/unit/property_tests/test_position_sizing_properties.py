@@ -30,11 +30,10 @@ from app.services.position_sizing_engine import (
 # Test Strategies
 # ============================================================================
 
+
 def valid_capital() -> st.SearchStrategy[Decimal]:
     """Generate valid capital values."""
-    return st.floats(min_value=1_000, max_value=10_000_000).map(
-        lambda x: Decimal(str(x))
-    )
+    return st.floats(min_value=1_000, max_value=10_000_000).map(lambda x: Decimal(str(x)))
 
 
 def valid_win_rate() -> st.SearchStrategy[float]:
@@ -68,6 +67,7 @@ def valid_entry_price() -> st.SearchStrategy[Decimal]:
 # Kelly Criterion Property Tests
 # ============================================================================
 
+
 @pytest.mark.unit
 @pytest.mark.property
 class TestKellyCriterionProperties:
@@ -86,8 +86,7 @@ class TestKellyCriterionProperties:
 
         # Half-Kelly should be bounded between 0 and 0.25
         half_kelly = float(result['half_kelly_fraction'])
-        assert 0.0 <= half_kelly <= 0.25, \
-            f"Half-Kelly {half_kelly} outside bounds [0, 0.25]"
+        assert 0.0 <= half_kelly <= 0.25, f"Half-Kelly {half_kelly} outside bounds [0, 0.25]"
 
     @given(win_rate=valid_win_rate(), avg_win=valid_avg_win(), avg_loss=valid_avg_loss())
     @settings(max_examples=100)
@@ -108,14 +107,15 @@ class TestKellyCriterionProperties:
         if raw_kelly <= 0:
             assert half_kelly == 0.0, "Negative Kelly should result in zero position"
         elif raw_kelly * 0.5 <= 0.25:
-            assert abs(half_kelly - (raw_kelly * 0.5)) < 0.01, \
-                f"Half-Kelly {half_kelly} != {raw_kelly * 0.5}"
+            assert (
+                abs(half_kelly - (raw_kelly * 0.5)) < 0.01
+            ), f"Half-Kelly {half_kelly} != {raw_kelly * 0.5}"
 
     @given(
         win_rate=valid_win_rate(),
         avg_win=valid_avg_win(),
         avg_loss=valid_avg_loss(),
-        capital=valid_capital()
+        capital=valid_capital(),
     )
     @settings(max_examples=100)
     def test_position_value_never_exceeds_capital(self, win_rate, avg_win, avg_loss, capital):
@@ -130,14 +130,13 @@ class TestKellyCriterionProperties:
 
         position_value = result.get('position_value', Decimal('0'))
         assert position_value >= Decimal('0'), "Position value should be non-negative"
-        assert position_value <= capital, \
-            f"Position value {position_value} > capital {capital}"
+        assert position_value <= capital, f"Position value {position_value} > capital {capital}"
 
     @given(
         win_rate=valid_win_rate(),
         avg_win=valid_avg_win(),
         avg_loss=valid_avg_loss(),
-        capital=valid_capital()
+        capital=valid_capital(),
     )
     @settings(max_examples=100)
     def test_position_value_capped_at_25_percent(self, win_rate, avg_win, avg_loss, capital):
@@ -152,13 +151,14 @@ class TestKellyCriterionProperties:
 
         position_value = result.get('position_value', Decimal('0'))
         max_position = capital * Decimal('0.25')
-        assert position_value <= max_position, \
-            f"Position value {position_value} exceeds 25% cap {max_position}"
+        assert (
+            position_value <= max_position
+        ), f"Position value {position_value} exceeds 25% cap {max_position}"
 
     @given(
         win_rate=st.floats(min_value=0.51, max_value=0.90),
         avg_win=valid_avg_win(),
-        avg_loss=valid_avg_loss()
+        avg_loss=valid_avg_loss(),
     )
     @settings(max_examples=50)
     def test_positive_expectancy_gives_positive_kelly(self, win_rate, avg_win, avg_loss):
@@ -177,11 +177,7 @@ class TestKellyCriterionProperties:
         raw_kelly = float(result['kelly_fraction'])
         assert raw_kelly > 0, f"Positive expectancy should give positive Kelly, got {raw_kelly}"
 
-    @given(
-        win_rate=valid_win_rate(),
-        avg_win=valid_avg_win(),
-        avg_loss=valid_avg_loss()
-    )
+    @given(win_rate=valid_win_rate(), avg_win=valid_avg_win(), avg_loss=valid_avg_loss())
     @settings(max_examples=50)
     def test_negative_expectancy_gives_negative_or_zero_kelly(self, win_rate, avg_win, avg_loss):
         """Negative expectancy should result in negative or zero Kelly fraction."""
@@ -197,17 +193,20 @@ class TestKellyCriterionProperties:
         )
 
         raw_kelly = float(result['kelly_fraction'])
-        assert raw_kelly <= 0, \
-            f"Negative expectancy should give non-positive Kelly, got {raw_kelly}"
+        assert (
+            raw_kelly <= 0
+        ), f"Negative expectancy should give non-positive Kelly, got {raw_kelly}"
 
     @given(
         win_rate=valid_win_rate(),
         avg_win=valid_avg_win(),
         avg_loss=valid_avg_loss(),
-        capital=valid_capital()
+        capital=valid_capital(),
     )
     @settings(max_examples=100)
-    def test_position_percentage_equals_fraction_times_100(self, win_rate, avg_win, avg_loss, capital):
+    def test_position_percentage_equals_fraction_times_100(
+        self, win_rate, avg_win, avg_loss, capital
+    ):
         """Position percentage should equal fraction times 100."""
         engine = PositionSizingEngine(atr_multiplier=2.0)
         result = engine.calculate_kelly_position_size(
@@ -220,13 +219,14 @@ class TestKellyCriterionProperties:
         position_pct = float(result['position_percentage'])
         half_kelly = float(result['half_kelly_fraction'])
 
-        assert abs(position_pct - (half_kelly * 100)) < 0.01, \
-            f"Position percentage {position_pct} != {half_kelly * 100}"
+        assert (
+            abs(position_pct - (half_kelly * 100)) < 0.01
+        ), f"Position percentage {position_pct} != {half_kelly * 100}"
 
     @given(
         win_rate=st.floats(min_value=0.45, max_value=0.55),
         avg_win=st.floats(min_value=10.0, max_value=100.0),
-        avg_loss=st.floats(min_value=10.0, max_value=100.0)
+        avg_loss=st.floats(min_value=10.0, max_value=100.0),
     )
     @settings(max_examples=50, suppress_health_check=[HealthCheck.filter_too_much])
     def test_kelly_symmetry_with_win_loss_swap(self, win_rate, avg_win, avg_loss):
@@ -258,14 +258,9 @@ class TestKellyCriterionProperties:
             return
 
         # When win/loss are similar and symmetric around 0.5, results should be opposite
-        assert abs(kelly1 + kelly2) < 0.15, \
-            f"Symmetry violation: {kelly1} vs {kelly2}"
+        assert abs(kelly1 + kelly2) < 0.15, f"Symmetry violation: {kelly1} vs {kelly2}"
 
-    @given(
-        win_rate=valid_win_rate(),
-        avg_win=valid_avg_win(),
-        avg_loss=valid_avg_loss()
-    )
+    @given(win_rate=valid_win_rate(), avg_win=valid_avg_win(), avg_loss=valid_avg_loss())
     @settings(max_examples=100)
     def test_recommendation_matches_kelly_sign(self, win_rate, avg_win, avg_loss):
         """Recommendation should match Kelly fraction sign."""
@@ -280,30 +275,32 @@ class TestKellyCriterionProperties:
         recommendation = result['recommendation']
 
         if raw_kelly <= 0:
-            assert recommendation in ['AVOID', 'REDUCE'], \
-                f"Negative Kelly {raw_kelly} should give AVOID/REDUCE, got {recommendation}"
+            assert recommendation in [
+                'AVOID',
+                'REDUCE',
+            ], f"Negative Kelly {raw_kelly} should give AVOID/REDUCE, got {recommendation}"
         elif raw_kelly < 0.02:
-            assert recommendation in ['REDUCE', 'BUY'], \
-                f"Small Kelly {raw_kelly} should give REDUCE/BUY, got {recommendation}"
+            assert recommendation in [
+                'REDUCE',
+                'BUY',
+            ], f"Small Kelly {raw_kelly} should give REDUCE/BUY, got {recommendation}"
         else:
-            assert recommendation == 'BUY', \
-                f"Positive Kelly {raw_kelly} should give BUY, got {recommendation}"
+            assert (
+                recommendation == 'BUY'
+            ), f"Positive Kelly {raw_kelly} should give BUY, got {recommendation}"
 
 
 # ============================================================================
 # ATR-Based Position Sizing Property Tests
 # ============================================================================
 
+
 @pytest.mark.unit
 @pytest.mark.property
 class TestATRPositionSizingProperties:
     """Property tests for ATR-based position sizing."""
 
-    @given(
-        capital=valid_capital(),
-        entry_price=valid_entry_price(),
-        atr=valid_atr()
-    )
+    @given(capital=valid_capital(), entry_price=valid_entry_price(), atr=valid_atr())
     @settings(max_examples=100)
     def test_position_size_non_negative(self, capital, entry_price, atr):
         """Position size should never be negative."""
@@ -317,11 +314,7 @@ class TestATRPositionSizingProperties:
         assert position_size is not None, "Position size should not be None"
         assert position_size >= 0, f"Position size {position_size} should be non-negative"
 
-    @given(
-        capital=valid_capital(),
-        entry_price=valid_entry_price(),
-        atr=valid_atr()
-    )
+    @given(capital=valid_capital(), entry_price=valid_entry_price(), atr=valid_atr())
     @settings(max_examples=100)
     def test_position_value_never_exceeds_capital(self, capital, entry_price, atr):
         """Position value should never exceed available capital."""
@@ -337,13 +330,14 @@ class TestATRPositionSizingProperties:
         position_value = position_size * entry_price
         # Allow small tolerance for floating point arithmetic
         tolerance = capital * Decimal('0.0001')  # 0.01% tolerance
-        assert position_value <= capital + tolerance, \
-            f"Position value {position_value} > capital {capital}"
+        assert (
+            position_value <= capital + tolerance
+        ), f"Position value {position_value} > capital {capital}"
 
     @given(
         capital=valid_capital(),
         entry_price=valid_entry_price(),
-        atr=st.floats(min_value=0.01, max_value=100)
+        atr=st.floats(min_value=0.01, max_value=100),
     )
     @settings(max_examples=100)
     def test_higher_atr_gives_smaller_position(self, capital, entry_price, atr):
@@ -366,14 +360,11 @@ class TestATRPositionSizingProperties:
         assume(size_low is not None and size_high is not None)
 
         # Higher ATR should result in smaller or equal position size
-        assert size_high <= size_low, \
-            f"Higher ATR {atr_high} should give smaller position {size_high} <= {size_low}"
+        assert (
+            size_high <= size_low
+        ), f"Higher ATR {atr_high} should give smaller position {size_high} <= {size_low}"
 
-    @given(
-        capital=valid_capital(),
-        entry_price=valid_entry_price(),
-        atr=valid_atr()
-    )
+    @given(capital=valid_capital(), entry_price=valid_entry_price(), atr=valid_atr())
     @settings(max_examples=100)
     def test_atr_multiplier_2_gives_reasonable_stop(self, capital, entry_price, atr):
         """ATR multiplier of 2 should give reasonable stop loss distance."""
@@ -391,14 +382,11 @@ class TestATRPositionSizingProperties:
         # Stop distance should be 2x ATR
         expected_distance = Decimal(str(atr)) * engine.atr_multiplier
 
-        assert abs(stop_distance - expected_distance) < Decimal('0.01'), \
-            f"Stop distance {stop_distance} != 2*ATR {expected_distance}"
+        assert abs(stop_distance - expected_distance) < Decimal(
+            '0.01'
+        ), f"Stop distance {stop_distance} != 2*ATR {expected_distance}"
 
-    @given(
-        capital=valid_capital(),
-        entry_price=valid_entry_price(),
-        atr=valid_atr()
-    )
+    @given(capital=valid_capital(), entry_price=valid_entry_price(), atr=valid_atr())
     @settings(max_examples=100)
     def test_buy_stop_below_entry(self, capital, entry_price, atr):
         """Buy stop loss should be below entry price."""
@@ -411,14 +399,9 @@ class TestATRPositionSizingProperties:
 
         assume(stop_loss is not None)
 
-        assert stop_loss < entry_price, \
-            f"Buy stop {stop_loss} should be below entry {entry_price}"
+        assert stop_loss < entry_price, f"Buy stop {stop_loss} should be below entry {entry_price}"
 
-    @given(
-        capital=valid_capital(),
-        entry_price=valid_entry_price(),
-        atr=valid_atr()
-    )
+    @given(capital=valid_capital(), entry_price=valid_entry_price(), atr=valid_atr())
     @settings(max_examples=100)
     def test_sell_stop_above_entry(self, capital, entry_price, atr):
         """Sell stop loss should be above entry price."""
@@ -431,13 +414,13 @@ class TestATRPositionSizingProperties:
 
         assume(stop_loss is not None)
 
-        assert stop_loss > entry_price, \
-            f"Sell stop {stop_loss} should be above entry {entry_price}"
+        assert stop_loss > entry_price, f"Sell stop {stop_loss} should be above entry {entry_price}"
 
 
 # ============================================================================
 # Stop Loss Properties
 # ============================================================================
+
 
 @pytest.mark.unit
 @pytest.mark.property
@@ -447,7 +430,7 @@ class TestStopLossProperties:
     @given(
         entry_price=valid_entry_price(),
         atr=valid_atr(),
-        stop_pct=st.floats(min_value=0.01, max_value=0.20)
+        stop_pct=st.floats(min_value=0.01, max_value=0.20),
     )
     @settings(max_examples=100)
     def test_atr_priority_over_percentage(self, entry_price, atr, stop_pct):
@@ -470,13 +453,9 @@ class TestStopLossProperties:
         assume(stop_with_atr is not None and stop_without_atr is not None)
 
         # ATR-based stop should differ from percentage-based stop
-        assert stop_with_atr != stop_without_atr, \
-            "ATR stop should differ from percentage stop"
+        assert stop_with_atr != stop_without_atr, "ATR stop should differ from percentage stop"
 
-    @given(
-        entry_price=valid_entry_price(),
-        stop_pct=st.floats(min_value=0.01, max_value=0.50)
-    )
+    @given(entry_price=valid_entry_price(), stop_pct=st.floats(min_value=0.01, max_value=0.50))
     @settings(max_examples=100)
     def test_percentage_stop_distance_proportional(self, entry_price, stop_pct):
         """Percentage-based stop distance should be proportional to entry price."""
@@ -500,43 +479,48 @@ class TestStopLossProperties:
         # Check buy stop
         buy_distance = abs(entry_price - stop_buy)
         expected_buy_distance = entry_price * Decimal(str(stop_pct))
-        assert abs(buy_distance - expected_buy_distance) < Decimal('0.01'), \
-            f"Buy stop distance {buy_distance} != {expected_buy_distance}"
+        assert abs(buy_distance - expected_buy_distance) < Decimal(
+            '0.01'
+        ), f"Buy stop distance {buy_distance} != {expected_buy_distance}"
 
         # Check sell stop
         sell_distance = abs(stop_sell - entry_price)
         expected_sell_distance = entry_price * Decimal(str(stop_pct))
-        assert abs(sell_distance - expected_sell_distance) < Decimal('0.01'), \
-            f"Sell stop distance {sell_distance} != {expected_sell_distance}"
+        assert abs(sell_distance - expected_sell_distance) < Decimal(
+            '0.01'
+        ), f"Sell stop distance {sell_distance} != {expected_sell_distance}"
 
 
 # ============================================================================
 # Meta-Labeling Position Sizing Properties
 # ============================================================================
 
+
 @pytest.mark.unit
 @pytest.mark.property
 class TestMetaLabelingPositionSizingProperties:
     """Property tests for meta-labeling position sizing."""
 
-    @given(
-        data=st.data()
-    )
+    @given(data=st.data())
     @settings(max_examples=20, deadline=None, suppress_health_check=[HealthCheck.filter_too_much])
     def test_position_sizes_bounded(self, data):
         """Position sizes should be bounded between -1 and 1."""
         # Generate arrays of the same size
         size = data.draw(st.integers(min_value=1, max_value=50))
-        signals = data.draw(np_strategies.arrays(
-            dtype=np.int8,
-            shape=st.just(size),
-            elements=st.sampled_from([-1, 0, 1])
-        ))
-        meta_proba = data.draw(np_strategies.arrays(
-            dtype=np.float64,
-            shape=st.just(size),
-            elements=st.floats(min_value=0.0, max_value=1.0, allow_nan=False, allow_infinity=False)
-        ))
+        signals = data.draw(
+            np_strategies.arrays(
+                dtype=np.int8, shape=st.just(size), elements=st.sampled_from([-1, 0, 1])
+            )
+        )
+        meta_proba = data.draw(
+            np_strategies.arrays(
+                dtype=np.float64,
+                shape=st.just(size),
+                elements=st.floats(
+                    min_value=0.0, max_value=1.0, allow_nan=False, allow_infinity=False
+                ),
+            )
+        )
 
         sizer = MetaLabelingPositionSizer()
 
@@ -546,29 +530,32 @@ class TestMetaLabelingPositionSizingProperties:
                 meta_proba=meta_proba,
             )
 
-            assert all(-1 <= size <= 1 for size in position_sizes), \
-                f"Position sizes should be in [-1, 1], got {position_sizes}"
+            assert all(
+                -1 <= size <= 1 for size in position_sizes
+            ), f"Position sizes should be in [-1, 1], got {position_sizes}"
         except ImportError:
             pytest.skip("ML modules not available")
 
-    @given(
-        data=st.data()
-    )
+    @given(data=st.data())
     @settings(max_examples=20, deadline=None, suppress_health_check=[HealthCheck.filter_too_much])
     def test_zero_signal_gives_zero_position(self, data):
         """Signal of 0 should result in position size of 0."""
         # Generate arrays of the same size with at least one zero signal
         size = data.draw(st.integers(min_value=1, max_value=50))
-        signals = data.draw(np_strategies.arrays(
-            dtype=np.int8,
-            shape=st.just(size),
-            elements=st.sampled_from([-1, 0, 1])
-        ))
-        meta_proba = data.draw(np_strategies.arrays(
-            dtype=np.float64,
-            shape=st.just(size),
-            elements=st.floats(min_value=0.0, max_value=1.0, allow_nan=False, allow_infinity=False)
-        ))
+        signals = data.draw(
+            np_strategies.arrays(
+                dtype=np.int8, shape=st.just(size), elements=st.sampled_from([-1, 0, 1])
+            )
+        )
+        meta_proba = data.draw(
+            np_strategies.arrays(
+                dtype=np.float64,
+                shape=st.just(size),
+                elements=st.floats(
+                    min_value=0.0, max_value=1.0, allow_nan=False, allow_infinity=False
+                ),
+            )
+        )
 
         # Ensure we have at least one zero signal
         assume(np.any(signals == 0))
@@ -584,29 +571,32 @@ class TestMetaLabelingPositionSizingProperties:
             # Find indices where signal is 0
             zero_indices = np.where(signals == 0)[0]
             for idx in zero_indices:
-                assert position_sizes[idx] == 0, \
-                    f"Signal 0 should give position 0, got {position_sizes[idx]}"
+                assert (
+                    position_sizes[idx] == 0
+                ), f"Signal 0 should give position 0, got {position_sizes[idx]}"
         except ImportError:
             pytest.skip("ML modules not available")
 
-    @given(
-        data=st.data()
-    )
+    @given(data=st.data())
     @settings(max_examples=20, deadline=None, suppress_health_check=[HealthCheck.filter_too_much])
     def test_position_sign_matches_signal_sign(self, data):
         """Position size sign should match signal sign."""
         # Generate arrays of the same size
         size = data.draw(st.integers(min_value=1, max_value=50))
-        signals = data.draw(np_strategies.arrays(
-            dtype=np.int8,
-            shape=st.just(size),
-            elements=st.sampled_from([-1, 0, 1])
-        ))
-        meta_proba = data.draw(np_strategies.arrays(
-            dtype=np.float64,
-            shape=st.just(size),
-            elements=st.floats(min_value=0.0, max_value=1.0, allow_nan=False, allow_infinity=False)
-        ))
+        signals = data.draw(
+            np_strategies.arrays(
+                dtype=np.int8, shape=st.just(size), elements=st.sampled_from([-1, 0, 1])
+            )
+        )
+        meta_proba = data.draw(
+            np_strategies.arrays(
+                dtype=np.float64,
+                shape=st.just(size),
+                elements=st.floats(
+                    min_value=0.0, max_value=1.0, allow_nan=False, allow_infinity=False
+                ),
+            )
+        )
 
         sizer = MetaLabelingPositionSizer()
 
@@ -618,8 +608,9 @@ class TestMetaLabelingPositionSizingProperties:
 
             for i, (signal, size) in enumerate(zip(signals, position_sizes)):
                 if signal != 0 and size != 0:
-                    assert np.sign(size) == np.sign(signal), \
-                        f"Position sign {np.sign(size)} != signal sign {np.sign(signal)} at index {i}"
+                    assert np.sign(size) == np.sign(
+                        signal
+                    ), f"Position sign {np.sign(size)} != signal sign {np.sign(signal)} at index {i}"
         except ImportError:
             pytest.skip("ML modules not available")
 
@@ -628,6 +619,7 @@ class TestMetaLabelingPositionSizingProperties:
 # Edge Cases and Validation
 # ============================================================================
 
+
 @pytest.mark.unit
 @pytest.mark.property
 class TestPositionSizingEdgeCases:
@@ -635,8 +627,7 @@ class TestPositionSizingEdgeCases:
 
     @given(
         invalid_capital=st.one_of(
-            st.floats(max_value=0),
-            st.floats(min_value=-1_000_000, max_value=-1)
+            st.floats(max_value=0), st.floats(min_value=-1_000_000, max_value=-1)
         )
     )
     @settings(max_examples=50)
@@ -652,12 +643,19 @@ class TestPositionSizingEdgeCases:
             )
 
     @given(
-        invalid_win_rate=st.sampled_from([
-            -0.5, -0.1, -1.0,  # Negative values
-            1.1, 1.5, 2.0,  # Values > 1.0
-            float('nan'),  # NaN
-            float('inf'), float('-inf')  # Infinity
-        ])
+        invalid_win_rate=st.sampled_from(
+            [
+                -0.5,
+                -0.1,
+                -1.0,  # Negative values
+                1.1,
+                1.5,
+                2.0,  # Values > 1.0
+                float('nan'),  # NaN
+                float('inf'),
+                float('-inf'),  # Infinity
+            ]
+        )
     )
     @settings(max_examples=50)
     def test_invalid_win_rate_raises_error(self, invalid_win_rate):
@@ -671,11 +669,17 @@ class TestPositionSizingEdgeCases:
             )
 
     @given(
-        invalid_avg_win=st.sampled_from([
-            -100.0, -10.0, -1.0, 0.0,  # Negative or zero values
-            float('nan'),  # NaN
-            float('inf'), float('-inf')  # Infinity
-        ])
+        invalid_avg_win=st.sampled_from(
+            [
+                -100.0,
+                -10.0,
+                -1.0,
+                0.0,  # Negative or zero values
+                float('nan'),  # NaN
+                float('inf'),
+                float('-inf'),  # Infinity
+            ]
+        )
     )
     @settings(max_examples=50)
     def test_invalid_avg_win_raises_error(self, invalid_avg_win):

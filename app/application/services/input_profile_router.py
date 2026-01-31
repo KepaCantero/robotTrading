@@ -411,46 +411,56 @@ class InputProfileRouter:
 
         # Strategy-specific parameters
         if strategy_type == StrategyType.MOMENTUM:
-            strategy_config.update({
-                "lookback_period": 252,  # 12 months
-                "rebalance_frequency": "monthly",
-                "top_percentile": 0.3,
-                "bottom_percentile": 0.3,
-                "long_only": config.long_only,
-            })
+            strategy_config.update(
+                {
+                    "lookback_period": 252,  # 12 months
+                    "rebalance_frequency": "monthly",
+                    "top_percentile": 0.3,
+                    "bottom_percentile": 0.3,
+                    "long_only": config.long_only,
+                }
+            )
         elif strategy_type == StrategyType.DIVIDEND:
-            strategy_config.update({
-                "min_yield": 0.02,
-                "max_yield": 0.10,
-                "min_dividend_growth": 0.0,
-                "max_payout_ratio": 0.8,
-                "min_dividend_years": 5,
-            })
+            strategy_config.update(
+                {
+                    "min_yield": 0.02,
+                    "max_yield": 0.10,
+                    "min_dividend_growth": 0.0,
+                    "max_payout_ratio": 0.8,
+                    "min_dividend_years": 5,
+                }
+            )
         elif strategy_type == StrategyType.LOW_VOLATILITY:
-            strategy_config.update({
-                "max_beta": 0.8,
-                "max_volatility": 0.25,
-                "rebalance_frequency": "monthly",
-            })
+            strategy_config.update(
+                {
+                    "max_beta": 0.8,
+                    "max_volatility": 0.25,
+                    "rebalance_frequency": "monthly",
+                }
+            )
         elif strategy_type == StrategyType.MULTI_FACTOR:
-            strategy_config.update({
-                "factor_weights": {
-                    "value": 0.25,
-                    "size": 0.25,
-                    "momentum": 0.25,
-                    "quality": 0.25,
-                },
-                "rebalance_frequency": "quarterly",
-            })
+            strategy_config.update(
+                {
+                    "factor_weights": {
+                        "value": 0.25,
+                        "size": 0.25,
+                        "momentum": 0.25,
+                        "quality": 0.25,
+                    },
+                    "rebalance_frequency": "quarterly",
+                }
+            )
 
         # Add risk parameters
-        strategy_config.update({
-            "max_drawdown": float(config.risk_config.max_drawdown),
-            "max_position_size": float(config.risk_config.max_position_size),
-            "leverage_allowed": config.risk_config.leverage_allowed,
-            "max_leverage": float(config.risk_config.max_leverage),
-            "stop_loss_atr_multiplier": float(config.risk_config.stop_loss_atr_multiplier),
-            "take_profit_atr_multiplier": float(config.risk_config.take_profit_atr_multiplier),
-        })
+        strategy_config.update(
+            {
+                "max_drawdown": float(config.risk_config.max_drawdown),
+                "max_position_size": float(config.risk_config.max_position_size),
+                "leverage_allowed": config.risk_config.leverage_allowed,
+                "max_leverage": float(config.risk_config.max_leverage),
+                "stop_loss_atr_multiplier": float(config.risk_config.stop_loss_atr_multiplier),
+                "take_profit_atr_multiplier": float(config.risk_config.take_profit_atr_multiplier),
+            }
+        )
 
         return strategy_config

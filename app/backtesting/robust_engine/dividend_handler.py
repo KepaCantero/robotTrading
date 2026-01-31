@@ -430,9 +430,7 @@ class DividendHandler:
         for row in dividend_data.itertuples():
             symbol = row.symbol
             ex_date = (
-                row.ex_date
-                if isinstance(row.ex_date, date)
-                else pd.to_datetime(row.ex_date).date()
+                row.ex_date if isinstance(row.ex_date, date) else pd.to_datetime(row.ex_date).date()
             )
 
             # Only process if we hold the stock

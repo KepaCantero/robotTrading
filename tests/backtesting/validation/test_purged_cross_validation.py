@@ -31,21 +31,18 @@ def sample_data():
     X = pd.DataFrame(
         np.random.randn(n_samples, n_features),
         columns=[f'feature_{i}' for i in range(n_features)],
-        index=pd.date_range('2020-01-01', periods=n_samples, freq='D')
+        index=pd.date_range('2020-01-01', periods=n_samples, freq='D'),
     )
 
     # Create binary labels
-    y = pd.Series(
-        np.random.randint(0, 2, n_samples),
-        index=X.index,
-        name='label'
-    )
+    y = pd.Series(np.random.randint(0, 2, n_samples), index=X.index, name='label')
 
     # Create events with t1 (exit times)
     random_days = np.random.randint(1, 10, n_samples)
-    events = pd.DataFrame({
-        't1': [X.index[i] + pd.Timedelta(days=random_days[i]) for i in range(n_samples)]
-    }, index=X.index)
+    events = pd.DataFrame(
+        {'t1': [X.index[i] + pd.Timedelta(days=random_days[i]) for i in range(n_samples)]},
+        index=X.index,
+    )
 
     return X, y, events
 
@@ -131,8 +128,10 @@ class TestPurgedKFold:
             assert split_result.n_embargoed >= 0
 
             # Check that embargoed samples are not in training set
-            assert split_result.n_embargoed == 0 or \
-                   split_result.train_size_after < split_result.train_size_before
+            assert (
+                split_result.n_embargoed == 0
+                or split_result.train_size_after < split_result.train_size_before
+            )
 
     def test_get_n_splits(self):
         """Test get_n_splits method."""
@@ -184,9 +183,7 @@ class TestPurgedKFold:
 
         # Set very high minimum samples
         cv = PurgedKFold(
-            n_splits=5,
-            min_train_samples=10000,  # More than total samples
-            min_test_samples=1000
+            n_splits=5, min_train_samples=10000, min_test_samples=1000  # More than total samples
         )
 
         # Should raise error or return empty list
@@ -196,14 +193,11 @@ class TestPurgedKFold:
     def test_with_small_dataset(self):
         """Test behavior with small dataset."""
         # Create very small dataset
-        X = pd.DataFrame(
-            np.random.randn(50, 5),
-            columns=[f'feature_{i}' for i in range(5)]
-        )
+        X = pd.DataFrame(np.random.randn(50, 5), columns=[f'feature_{i}' for i in range(5)])
         y = pd.Series(np.random.randint(0, 2, 50))
-        events = pd.DataFrame({
-            't1': pd.date_range('2020-01-01', periods=50, freq='D') + pd.Timedelta(days=5)
-        })
+        events = pd.DataFrame(
+            {'t1': pd.date_range('2020-01-01', periods=50, freq='D') + pd.Timedelta(days=5)}
+        )
 
         cv = PurgedKFold(n_splits=3, min_train_samples=20, min_test_samples=5)
 
@@ -267,13 +261,7 @@ class TestCVScore:
 
         estimator = RandomForestClassifier(n_estimators=10, random_state=42)
 
-        results = cv_score(
-            estimator,
-            X.values,
-            y.values,
-            events=events,
-            n_splits=3
-        )
+        results = cv_score(estimator, X.values, y.values, events=events, n_splits=3)
 
         assert 'mean_score' in results
         assert 'std_score' in results
@@ -289,12 +277,7 @@ class TestCVScore:
         estimator = RandomForestClassifier(n_estimators=10, random_state=42)
 
         results = cv_score(
-            estimator,
-            X.values,
-            y.values,
-            events=events,
-            n_splits=3,
-            scoring=f1_score
+            estimator, X.values, y.values, events=events, n_splits=3, scoring=f1_score
         )
 
         assert 'mean_score' in results
@@ -344,7 +327,7 @@ class TestPurgedSplitResult:
             train_size_before=4,
             train_size_after=3,
             n_purged=1,
-            n_embargoed=1
+            n_embargoed=1,
         )
 
         assert result.fold == 0
@@ -401,14 +384,9 @@ class TestIntegration:
         """Test with DataFrame that has datetime index."""
         # Create data with datetime index
         dates = pd.date_range('2020-01-01', periods=500, freq='D')
-        X = pd.DataFrame(
-            np.random.randn(500, 5),
-            index=dates
-        )
+        X = pd.DataFrame(np.random.randn(500, 5), index=dates)
         y = pd.Series(np.random.randint(0, 2, 500), index=dates)
-        events = pd.DataFrame({
-            't1': dates + pd.Timedelta(days=5)
-        }, index=dates)
+        events = pd.DataFrame({'t1': dates + pd.Timedelta(days=5)}, index=dates)
 
         cv = PurgedKFold(n_splits=5)
         splits = list(cv.split(X, y, events=events))

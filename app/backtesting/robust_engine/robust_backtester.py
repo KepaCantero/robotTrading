@@ -41,6 +41,7 @@ from .models import (
     CorporateAction,
     DelistedReturnData,
     ProgressUpdate,
+    StockSplit,
 )
 from .performance_tracker import PerformanceMetrics, PerformanceTracker
 from .pit_database import PITDatabaseClient
@@ -468,11 +469,11 @@ class RobustBacktester:
             symbol = signal.symbol
             # Use Decimal for price to maintain precision
             price_input = (
-                signal.price
-                if hasattr(signal, 'price')
-                else market_data.get('close', Decimal("0"))
+                signal.price if hasattr(signal, 'price') else market_data.get('close', Decimal("0"))
             )
-            price = Decimal(str(price_input)) if not isinstance(price_input, Decimal) else price_input
+            price = (
+                Decimal(str(price_input)) if not isinstance(price_input, Decimal) else price_input
+            )
         except (AttributeError, KeyError, ValueError) as e:
             logger.warning(f"Could not process signal: {e}")
             return
@@ -520,7 +521,11 @@ class RobustBacktester:
         current_shares = self._positions.get(symbol, Decimal("0")) - Decimal(str(shares))
         new_shares = Decimal(str(shares))
         total_cost = current_cost_basis * current_shares + Decimal(str(shares)) * price
-        self._cost_basis[symbol] = total_cost / (current_shares + new_shares) if (current_shares + new_shares) > 0 else price
+        self._cost_basis[symbol] = (
+            total_cost / (current_shares + new_shares)
+            if (current_shares + new_shares) > 0
+            else price
+        )
 
         # Record trade
         self._trades.append(
@@ -726,6 +731,7 @@ class RobustBacktester:
             current_date=self._current_date or self.config.start_date,
             capital=self._capital,
             positions=dict(self._positions),
+            cost_basis=dict(self._cost_basis),
             year=(
                 (self._current_date.year - self.config.start_date.year) + 1
                 if self._current_date
@@ -783,6 +789,7 @@ class RobustBacktester:
             self._current_date = checkpoint.current_date
             self._capital = checkpoint.capital
             self._positions = checkpoint.positions
+            self._cost_basis = checkpoint.cost_basis
 
             self._latest_checkpoint = checkpoint
             self._checkpoint_count += 1
@@ -801,7 +808,7 @@ class RobustBacktester:
         Args:
             action: CorporateAction object
         """
-        if isinstance(action, type(self)).__name__ == "StockSplit":
+        if isinstance(action, StockSplit):
             self.corporate_action_handler.add_split(
                 symbol=action.symbol,
                 split_ratio=action.split_ratio,

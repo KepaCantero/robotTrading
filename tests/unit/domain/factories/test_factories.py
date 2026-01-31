@@ -28,6 +28,7 @@ from app.domain.factories import (
 # TEST ABSTRACT FACTORY
 # ============================================================================
 
+
 class TestAbstractEntityFactory:
     """Tests for AbstractEntityFactory interface."""
 
@@ -43,6 +44,7 @@ class TestAbstractEntityFactory:
 # TEST TRADING ENTITY FACTORY
 # ============================================================================
 
+
 class TestTradingEntityFactory:
     """Tests for TradingEntityFactory."""
 
@@ -51,10 +53,7 @@ class TestTradingEntityFactory:
         factory = TradingEntityFactory()
 
         order = factory.create_order(
-            symbol="AAPL",
-            quantity=Decimal("100"),
-            side="buy",
-            order_type="market"
+            symbol="AAPL", quantity=Decimal("100"), side="buy", order_type="market"
         )
 
         assert order.symbol == "AAPL"
@@ -71,7 +70,7 @@ class TestTradingEntityFactory:
             quantity=Decimal("50"),
             side="sell",
             order_type="limit",
-            price=Decimal("250.00")
+            price=Decimal("250.00"),
         )
 
         assert order.price == Decimal("250.00")
@@ -86,7 +85,7 @@ class TestTradingEntityFactory:
             quantity=Decimal("25"),
             side="buy",
             order_type="stop_loss",
-            stop_price=Decimal("200.00")
+            stop_price=Decimal("200.00"),
         )
 
         assert order.stop_price == Decimal("200.00")
@@ -97,10 +96,7 @@ class TestTradingEntityFactory:
         factory = TradingEntityFactory()
 
         order = factory.create_order(
-            symbol="AAPL",
-            quantity=Decimal("100"),
-            side="buy",
-            portfolio_id="PORT123"
+            symbol="AAPL", quantity=Decimal("100"), side="buy", portfolio_id="PORT123"
         )
 
         # The portfolio_id should be stored (implementation dependent)
@@ -111,33 +107,21 @@ class TestTradingEntityFactory:
         factory = TradingEntityFactory()
 
         with pytest.raises(ValueError, match="Quantity must be positive"):
-            factory.create_order(
-                symbol="AAPL",
-                quantity=Decimal("-10"),
-                side="buy"
-            )
+            factory.create_order(symbol="AAPL", quantity=Decimal("-10"), side="buy")
 
     def test_create_order_validates_symbol(self):
         """Test that factory validates symbol."""
         factory = TradingEntityFactory()
 
         with pytest.raises(ValueError, match="Symbol is required"):
-            factory.create_order(
-                symbol="",
-                quantity=Decimal("100"),
-                side="buy"
-            )
+            factory.create_order(symbol="", quantity=Decimal("100"), side="buy")
 
     def test_create_order_validates_side(self):
         """Test that factory validates side."""
         factory = TradingEntityFactory()
 
         with pytest.raises(ValueError, match="Side must be"):
-            factory.create_order(
-                symbol="AAPL",
-                quantity=Decimal("100"),
-                side="invalid"
-            )
+            factory.create_order(symbol="AAPL", quantity=Decimal("100"), side="invalid")
 
     def test_create_order_requires_limit_price(self):
         """Test that limit orders require price."""
@@ -145,21 +129,14 @@ class TestTradingEntityFactory:
 
         with pytest.raises(ValueError, match="Limit orders must have a price"):
             factory.create_order(
-                symbol="AAPL",
-                quantity=Decimal("100"),
-                side="buy",
-                order_type="limit"
+                symbol="AAPL", quantity=Decimal("100"), side="buy", order_type="limit"
             )
 
     def test_create_order_uppercases_symbol(self):
         """Test that symbol is uppercased."""
         factory = TradingEntityFactory()
 
-        order = factory.create_order(
-            symbol="aapl",
-            quantity=Decimal("100"),
-            side="buy"
-        )
+        order = factory.create_order(symbol="aapl", quantity=Decimal("100"), side="buy")
 
         assert order.symbol == "AAPL"
 
@@ -168,9 +145,7 @@ class TestTradingEntityFactory:
         factory = TradingEntityFactory()
 
         portfolio = factory.create_portfolio(
-            portfolio_id="PORT123",
-            initial_capital=Decimal("100000"),
-            currency="USD"
+            portfolio_id="PORT123", initial_capital=Decimal("100000"), currency="USD"
         )
 
         assert portfolio.portfolio_id == "PORT123"
@@ -182,30 +157,21 @@ class TestTradingEntityFactory:
         factory = TradingEntityFactory()
 
         with pytest.raises(ValueError, match="Initial capital must be positive"):
-            factory.create_portfolio(
-                portfolio_id="PORT123",
-                initial_capital=Decimal("0")
-            )
+            factory.create_portfolio(portfolio_id="PORT123", initial_capital=Decimal("0"))
 
     def test_create_portfolio_validates_id(self):
         """Test that factory validates portfolio ID."""
         factory = TradingEntityFactory()
 
         with pytest.raises(ValueError, match="Portfolio ID is required"):
-            factory.create_portfolio(
-                portfolio_id="",
-                initial_capital=Decimal("100000")
-            )
+            factory.create_portfolio(portfolio_id="", initial_capital=Decimal("100000"))
 
     def test_create_position(self):
         """Test creating a position."""
         factory = TradingEntityFactory()
 
         position = factory.create_position(
-            symbol="AAPL",
-            quantity=Decimal("100"),
-            entry_price=Decimal("150.00"),
-            currency="USD"
+            symbol="AAPL", quantity=Decimal("100"), entry_price=Decimal("150.00"), currency="USD"
         )
 
         assert position.symbol == "AAPL"
@@ -218,9 +184,7 @@ class TestTradingEntityFactory:
         factory = TradingEntityFactory()
 
         position = factory.create_position(
-            symbol="AAPL",
-            quantity=Decimal("-50"),
-            entry_price=Decimal("150.00")
+            symbol="AAPL", quantity=Decimal("-50"), entry_price=Decimal("150.00")
         )
 
         assert position.quantity == Decimal("-50")
@@ -230,6 +194,7 @@ class TestTradingEntityFactory:
 # TEST ORDER FACTORY (Factory Method)
 # ============================================================================
 
+
 class TestOrderFactory:
     """Tests for OrderFactory."""
 
@@ -237,11 +202,7 @@ class TestOrderFactory:
         """Test creating market order."""
         factory = OrderFactory()
 
-        order = factory.create_market_order(
-            symbol="AAPL",
-            quantity=Decimal("100"),
-            side="buy"
-        )
+        order = factory.create_market_order(symbol="AAPL", quantity=Decimal("100"), side="buy")
 
         assert order.order_type.value == "market"
         assert order.side.value == "buy"
@@ -251,10 +212,7 @@ class TestOrderFactory:
         factory = OrderFactory()
 
         order = factory.create_limit_order(
-            symbol="AAPL",
-            quantity=Decimal("100"),
-            price=Decimal("150.00"),
-            side="buy"
+            symbol="AAPL", quantity=Decimal("100"), price=Decimal("150.00"), side="buy"
         )
 
         assert order.order_type.value == "limit"
@@ -265,10 +223,7 @@ class TestOrderFactory:
         factory = OrderFactory()
 
         order = factory.create_stop_loss_order(
-            symbol="AAPL",
-            quantity=Decimal("100"),
-            stop_price=Decimal("145.00"),
-            side="buy"
+            symbol="AAPL", quantity=Decimal("100"), stop_price=Decimal("145.00"), side="buy"
         )
 
         assert order.order_type.value == "stop_loss"
@@ -283,7 +238,7 @@ class TestOrderFactory:
             symbol="AAPL",
             quantity=Decimal("100"),
             price=Decimal("155.00"),
-            side="buy"  # Original position side
+            side="buy",  # Original position side
         )
 
         assert order.order_type.value == "take_profit"
@@ -298,7 +253,7 @@ class TestOrderFactory:
             quantity=Decimal("100"),
             stop_price=Decimal("145.00"),
             limit_price=Decimal("144.00"),
-            side="buy"
+            side="buy",
         )
 
         assert order.order_type.value == "stop_limit"
@@ -310,17 +265,15 @@ class TestOrderFactory:
 # TEST ORDER BUILDER (Builder Pattern)
 # ============================================================================
 
+
 class TestOrderBuilder:
     """Tests for OrderBuilder."""
 
     def test_build_simple_market_order(self):
         """Test building a simple market order."""
-        order = (OrderBuilder()
-                 .for_symbol("AAPL")
-                 .buy()
-                 .quantity(Decimal("100"))
-                 .market_order()
-                 .build())
+        order = (
+            OrderBuilder().for_symbol("AAPL").buy().quantity(Decimal("100")).market_order().build()
+        )
 
         assert order.symbol == "AAPL"
         assert order.side.value == "buy"
@@ -328,12 +281,14 @@ class TestOrderBuilder:
 
     def test_build_limit_order_with_price(self):
         """Test building a limit order with price."""
-        order = (OrderBuilder()
-                 .for_symbol("AAPL")
-                 .sell()
-                 .quantity(Decimal("50"))
-                 .limit_price(Decimal("250.00"))
-                 .build())
+        order = (
+            OrderBuilder()
+            .for_symbol("AAPL")
+            .sell()
+            .quantity(Decimal("50"))
+            .limit_price(Decimal("250.00"))
+            .build()
+        )
 
         assert order.order_type.value == "limit"
         assert order.price == Decimal("250.00")
@@ -341,81 +296,87 @@ class TestOrderBuilder:
 
     def test_build_with_time_in_force(self):
         """Test building with time in force."""
-        order = (OrderBuilder()
-                 .for_symbol("AAPL")
-                 .buy()
-                 .quantity(Decimal("100"))
-                 .limit_price(Decimal("150.00"))
-                 .immediate_or_cancel()
-                 .build())
+        order = (
+            OrderBuilder()
+            .for_symbol("AAPL")
+            .buy()
+            .quantity(Decimal("100"))
+            .limit_price(Decimal("150.00"))
+            .immediate_or_cancel()
+            .build()
+        )
 
         assert order.time_in_force == "IOC"
 
     def test_build_good_til_cancelled(self):
         """Test building good-til-cancelled order."""
-        order = (OrderBuilder()
-                 .for_symbol("AAPL")
-                 .buy()
-                 .quantity(Decimal("100"))
-                 .limit_price(Decimal("150.00"))
-                 .with_good_til_cancel(days=30)
-                 .build())
+        order = (
+            OrderBuilder()
+            .for_symbol("AAPL")
+            .buy()
+            .quantity(Decimal("100"))
+            .limit_price(Decimal("150.00"))
+            .with_good_til_cancel(days=30)
+            .build()
+        )
 
         assert order.time_in_force == "GTC"
         assert order.expiry_time is not None
 
     def test_build_day_order(self):
         """Test building day order."""
-        order = (OrderBuilder()
-                 .for_symbol("AAPL")
-                 .buy()
-                 .quantity(Decimal("100"))
-                 .limit_price(Decimal("150.00"))
-                 .day_order()
-                 .build())
+        order = (
+            OrderBuilder()
+            .for_symbol("AAPL")
+            .buy()
+            .quantity(Decimal("100"))
+            .limit_price(Decimal("150.00"))
+            .day_order()
+            .build()
+        )
 
         assert order.time_in_force == "DAY"
 
     def test_build_fill_or_kill(self):
         """Test building fill-or-kill order."""
-        order = (OrderBuilder()
-                 .for_symbol("AAPL")
-                 .buy()
-                 .quantity(Decimal("100"))
-                 .limit_price(Decimal("150.00"))
-                 .fill_or_kill()
-                 .build())
+        order = (
+            OrderBuilder()
+            .for_symbol("AAPL")
+            .buy()
+            .quantity(Decimal("100"))
+            .limit_price(Decimal("150.00"))
+            .fill_or_kill()
+            .build()
+        )
 
         assert order.time_in_force == "FOK"
 
     def test_build_requires_symbol(self):
         """Test that builder requires symbol."""
-        builder = (OrderBuilder()
-                   .buy()
-                   .quantity(Decimal("100")))
+        builder = OrderBuilder().buy().quantity(Decimal("100"))
 
         with pytest.raises(ValueError, match="Symbol is required"):
             builder.build()
 
     def test_build_requires_quantity(self):
         """Test that builder requires quantity."""
-        builder = (OrderBuilder()
-                   .for_symbol("AAPL")
-                   .buy())
+        builder = OrderBuilder().for_symbol("AAPL").buy()
 
         with pytest.raises(ValueError, match="Quantity is required"):
             builder.build()
 
     def test_fluent_interface(self):
         """Test builder's fluent interface."""
-        order = (OrderBuilder()
-                 .for_symbol("AAPL")
-                 .buy()
-                 .quantity(Decimal("100"))
-                 .limit_price(Decimal("150.00"))
-                 .for_portfolio("PORT123")
-                 .with_time_in_force("GTC")
-                 .build())
+        order = (
+            OrderBuilder()
+            .for_symbol("AAPL")
+            .buy()
+            .quantity(Decimal("100"))
+            .limit_price(Decimal("150.00"))
+            .for_portfolio("PORT123")
+            .with_time_in_force("GTC")
+            .build()
+        )
 
         assert order.symbol == "AAPL"
 
@@ -424,16 +385,13 @@ class TestOrderBuilder:
 # TEST ORDER PROTOTYPE (Prototype Pattern)
 # ============================================================================
 
+
 class TestOrderPrototype:
     """Tests for OrderPrototype."""
 
     def test_build_from_prototype(self):
         """Test building order from prototype."""
-        prototype = OrderPrototype(
-            symbol="AAPL",
-            quantity=Decimal("100"),
-            side="buy"
-        )
+        prototype = OrderPrototype(symbol="AAPL", quantity=Decimal("100"), side="buy")
 
         order = prototype.build()
 
@@ -443,11 +401,7 @@ class TestOrderPrototype:
 
     def test_with_price_creates_new_prototype(self):
         """Test creating prototype with specific price."""
-        base_prototype = OrderPrototype(
-            symbol="AAPL",
-            quantity=Decimal("100"),
-            side="buy"
-        )
+        base_prototype = OrderPrototype(symbol="AAPL", quantity=Decimal("100"), side="buy")
 
         priced_prototype = base_prototype.with_price(Decimal("150.00"))
 
@@ -458,11 +412,7 @@ class TestOrderPrototype:
 
     def test_with_quantity(self):
         """Test creating prototype with specific quantity."""
-        base_prototype = OrderPrototype(
-            symbol="AAPL",
-            quantity=Decimal("100"),
-            side="buy"
-        )
+        base_prototype = OrderPrototype(symbol="AAPL", quantity=Decimal("100"), side="buy")
 
         new_prototype = base_prototype.with_quantity(Decimal("200"))
         order = new_prototype.build()
@@ -471,11 +421,7 @@ class TestOrderPrototype:
 
     def test_for_symbol(self):
         """Test creating prototype for different symbol."""
-        base_prototype = OrderPrototype(
-            symbol="AAPL",
-            quantity=Decimal("100"),
-            side="buy"
-        )
+        base_prototype = OrderPrototype(symbol="AAPL", quantity=Decimal("100"), side="buy")
 
         msft_prototype = base_prototype.for_symbol("MSFT")
         order = msft_prototype.build()
@@ -484,16 +430,10 @@ class TestOrderPrototype:
 
     def test_build_with_overrides(self):
         """Test building with parameter overrides."""
-        prototype = OrderPrototype(
-            symbol="AAPL",
-            quantity=Decimal("100"),
-            side="buy"
-        )
+        prototype = OrderPrototype(symbol="AAPL", quantity=Decimal("100"), side="buy")
 
         order = prototype.build(
-            quantity=Decimal("200"),
-            order_type="limit",
-            price=Decimal("150.00")
+            quantity=Decimal("200"), order_type="limit", price=Decimal("150.00")
         )
 
         assert order.quantity == Decimal("200")
@@ -503,6 +443,7 @@ class TestOrderPrototype:
 # ============================================================================
 # TEST FACTORY REGISTRY
 # ============================================================================
+
 
 class TestFactoryRegistry:
     """Tests for FactoryRegistry."""
@@ -553,6 +494,7 @@ class TestFactoryRegistry:
 # ============================================================================
 # TEST GLOBAL REGISTRY
 # ============================================================================
+
 
 class TestGlobalRegistry:
     """Tests for global registry functions."""

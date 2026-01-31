@@ -315,11 +315,7 @@ class TestTradingInputValidation:
         validator = TradingValidator()
 
         params = validator.validate_order_params(
-            symbol="AAPL",
-            side="buy",
-            quantity=100,
-            price=150.25,
-            order_type="limit"
+            symbol="AAPL", side="buy", quantity=100, price=150.25, order_type="limit"
         )
 
         assert params["symbol"] == "AAPL"
@@ -333,11 +329,7 @@ class TestTradingInputValidation:
         validator = TradingValidator()
 
         with pytest.raises(ValidationError):
-            validator.validate_order_params(
-                symbol="AAPL",
-                side="invalid",
-                quantity=100
-            )
+            validator.validate_order_params(symbol="AAPL", side="invalid", quantity=100)
 
     def test_validate_order_params_invalid_type(self):
         """Test validation rejects invalid order type."""
@@ -345,21 +337,14 @@ class TestTradingInputValidation:
 
         with pytest.raises(ValidationError):
             validator.validate_order_params(
-                symbol="AAPL",
-                side="buy",
-                quantity=100,
-                order_type="invalid_type"
+                symbol="AAPL", side="buy", quantity=100, order_type="invalid_type"
             )
 
     def test_validate_portfolio_allocation_valid(self):
         """Test validation of valid portfolio allocation."""
         validator = TradingValidator()
 
-        allocations = validator.validate_portfolio_allocation({
-            "AAPL": 50,
-            "MSFT": 30,
-            "GOOGL": 20
-        })
+        allocations = validator.validate_portfolio_allocation({"AAPL": 50, "MSFT": 30, "GOOGL": 20})
 
         assert allocations["AAPL"] == Decimal("50")
         assert allocations["MSFT"] == Decimal("30")
@@ -370,32 +355,23 @@ class TestTradingInputValidation:
         validator = TradingValidator()
 
         with pytest.raises(ValidationError):
-            validator.validate_portfolio_allocation({
-                "AAPL": 50,
-                "MSFT": 30,
-                "GOOGL": 10  # Total = 90
-            })
+            validator.validate_portfolio_allocation(
+                {"AAPL": 50, "MSFT": 30, "GOOGL": 10}  # Total = 90
+            )
 
     def test_validate_portfolio_allocation_negative(self):
         """Test validation rejects negative allocation."""
         validator = TradingValidator()
 
         with pytest.raises(ValidationError):
-            validator.validate_portfolio_allocation({
-                "AAPL": 50,
-                "MSFT": -10,
-                "GOOGL": 60
-            })
+            validator.validate_portfolio_allocation({"AAPL": 50, "MSFT": -10, "GOOGL": 60})
 
     def test_validate_portfolio_allocation_over_100(self):
         """Test validation rejects allocation over 100%."""
         validator = TradingValidator()
 
         with pytest.raises(ValidationError):
-            validator.validate_portfolio_allocation({
-                "AAPL": 50,
-                "MSFT": 60  # > 100
-            })
+            validator.validate_portfolio_allocation({"AAPL": 50, "MSFT": 60})  # > 100
 
 
 class TestRateLimiting:
@@ -405,11 +381,7 @@ class TestRateLimiting:
         """Test request within rate limit is allowed."""
         limiter = RateLimiter()
 
-        allowed, info = limiter.check_rate_limit(
-            identifier="test_user",
-            limit=10,
-            window=60
-        )
+        allowed, info = limiter.check_rate_limit(identifier="test_user", limit=10, window=60)
 
         assert allowed is True
         assert info["remaining"] == 9
@@ -420,19 +392,11 @@ class TestRateLimiting:
 
         # Make requests up to limit
         for i in range(10):
-            limiter.check_rate_limit(
-                identifier="test_user_exceed",
-                limit=10,
-                window=60
-            )
+            limiter.check_rate_limit(identifier="test_user_exceed", limit=10, window=60)
 
         # Next request should be blocked
         with pytest.raises(ValidationError):
-            limiter.check_rate_limit(
-                identifier="test_user_exceed",
-                limit=10,
-                window=60
-            )
+            limiter.check_rate_limit(identifier="test_user_exceed", limit=10, window=60)
 
     def test_rate_limit_sliding_window(self):
         """Test rate limit sliding window behavior."""
@@ -441,9 +405,7 @@ class TestRateLimiting:
         # Make requests
         for i in range(5):
             limiter.check_rate_limit(
-                identifier="test_window",
-                limit=10,
-                window=1  # 1 second window
+                identifier="test_window", limit=10, window=1  # 1 second window
             )
 
         # Check stats
@@ -457,21 +419,13 @@ class TestRateLimiting:
 
         # Use up limit
         for i in range(5):
-            limiter.check_rate_limit(
-                identifier="test_reset",
-                limit=5,
-                window=60
-            )
+            limiter.check_rate_limit(identifier="test_reset", limit=5, window=60)
 
         # Reset
         limiter.reset_limit("test_reset")
 
         # Should be able to make requests again
-        allowed, info = limiter.check_rate_limit(
-            identifier="test_reset",
-            limit=5,
-            window=60
-        )
+        allowed, info = limiter.check_rate_limit(identifier="test_reset", limit=5, window=60)
 
         assert allowed is True
 
@@ -481,17 +435,11 @@ class TestRateLimiting:
 
         # Auth has strict limits (5 per minute)
         for i in range(5):
-            limiter.check_rate_limit(
-                identifier="test_auth",
-                category="auth"
-            )
+            limiter.check_rate_limit(identifier="test_auth", category="auth")
 
         # Should be blocked
         with pytest.raises(ValidationError):
-            limiter.check_rate_limit(
-                identifier="test_auth",
-                category="auth"
-            )
+            limiter.check_rate_limit(identifier="test_auth", category="auth")
 
     def test_rate_limit_category_trade(self):
         """Test trade category rate limiting."""
@@ -499,17 +447,11 @@ class TestRateLimiting:
 
         # Trade has higher limits (100 per minute)
         for i in range(100):
-            limiter.check_rate_limit(
-                identifier="test_trade",
-                category="trade"
-            )
+            limiter.check_rate_limit(identifier="test_trade", category="trade")
 
         # Should be blocked
         with pytest.raises(ValidationError):
-            limiter.check_rate_limit(
-                identifier="test_trade",
-                category="trade"
-            )
+            limiter.check_rate_limit(identifier="test_trade", category="trade")
 
 
 class TestNumericValidation:
@@ -526,11 +468,7 @@ class TestNumericValidation:
         """Test validation with range constraints."""
         validator = NumericValidator()
 
-        result = validator.validate_decimal(
-            "50",
-            min_value=Decimal("0"),
-            max_value=Decimal("100")
-        )
+        result = validator.validate_decimal("50", min_value=Decimal("0"), max_value=Decimal("100"))
 
         assert result == Decimal("50")
 
@@ -539,30 +477,21 @@ class TestNumericValidation:
         validator = NumericValidator()
 
         with pytest.raises(ValidationError):
-            validator.validate_decimal(
-                "-10",
-                min_value=Decimal("0")
-            )
+            validator.validate_decimal("-10", min_value=Decimal("0"))
 
     def test_validate_decimal_above_maximum(self):
         """Test validation rejects value above maximum."""
         validator = NumericValidator()
 
         with pytest.raises(ValidationError):
-            validator.validate_decimal(
-                "150",
-                max_value=Decimal("100")
-            )
+            validator.validate_decimal("150", max_value=Decimal("100"))
 
     def test_validate_decimal_too_many_decimals(self):
         """Test validation rejects too many decimal places."""
         validator = NumericValidator()
 
         with pytest.raises(ValidationError):
-            validator.validate_decimal(
-                "1.23456789",
-                max_precision=4
-            )
+            validator.validate_decimal("1.23456789", max_precision=4)
 
     def test_validate_integer_valid(self):
         """Test validation of valid integer."""
@@ -575,11 +504,7 @@ class TestNumericValidation:
         """Test validation with range constraints."""
         validator = NumericValidator()
 
-        result = validator.validate_integer(
-            "50",
-            min_value=0,
-            max_value=100
-        )
+        result = validator.validate_integer("50", min_value=0, max_value=100)
 
         assert result == 50
 
@@ -620,19 +545,13 @@ class TestListValidation:
         validator = ListValidator()
 
         with pytest.raises(ValidationError):
-            validator.validate_list(
-                list(range(1000)),
-                max_length=100
-            )
+            validator.validate_list(list(range(1000)), max_length=100)
 
     def test_validate_list_with_element_type(self):
         """Test validation with element type constraint."""
         validator = ListValidator()
 
-        result = validator.validate_list(
-            ["a", "b", "c"],
-            element_type=str
-        )
+        result = validator.validate_list(["a", "b", "c"], element_type=str)
 
         assert result == ["a", "b", "c"]
 
@@ -641,10 +560,7 @@ class TestListValidation:
         validator = ListValidator()
 
         with pytest.raises(ValidationError):
-            validator.validate_list(
-                [1, 2, "string"],
-                element_type=int
-            )
+            validator.validate_list([1, 2, "string"], element_type=int)
 
     def test_validate_symbol_list(self):
         """Test validation of symbol list."""
@@ -669,20 +585,13 @@ class TestDictValidation:
         validator = DictValidator()
 
         with pytest.raises(ValidationError):
-            validator.validate_dict(
-                {str(i): i for i in range(200)},
-                max_keys=100
-            )
+            validator.validate_dict({str(i): i for i in range(200)}, max_keys=100)
 
     def test_validate_dict_with_types(self):
         """Test validation with key/value type constraints."""
         validator = DictValidator()
 
-        result = validator.validate_dict(
-            {"a": 1, "b": 2},
-            key_type=str,
-            value_type=int
-        )
+        result = validator.validate_dict({"a": 1, "b": 2}, key_type=str, value_type=int)
 
         assert result == {"a": 1, "b": 2}
 

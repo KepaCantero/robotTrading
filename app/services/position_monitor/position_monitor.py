@@ -21,6 +21,15 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
 
+from requests.exceptions import HTTPError
+from sqlalchemy.exc import (
+    DataError,
+    DatabaseError,
+    IntegrityError,
+    OperationalError,
+    ProgrammingError,
+)
+
 from app.core.decimal_utils import to_decimal, validate_price
 
 logger = logging.getLogger(__name__)

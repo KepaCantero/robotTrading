@@ -15,7 +15,9 @@ from unittest.mock import Mock, patch, MagicMock
 # Skip all tests if lightgbm is not available
 pytest.importorskip("lightgbm")
 
-from app.strategies.momentum_modular.learning.supervised_learning_engine import SupervisedLearningEngine
+from app.strategies.momentum_modular.learning.supervised_learning_engine import (
+    SupervisedLearningEngine,
+)
 
 
 class TestSampleWeightsIntegration:
@@ -31,7 +33,7 @@ class TestSampleWeightsIntegration:
         n_features = 10
         features = pd.DataFrame(
             np.random.randn(n_samples, n_features),
-            columns=[f'feature_{i}' for i in range(n_features)]
+            columns=[f'feature_{i}' for i in range(n_features)],
         )
 
         # Create binary labels
@@ -42,40 +44,34 @@ class TestSampleWeightsIntegration:
         events = pd.date_range('2024-01-01', periods=n_samples, freq='1H')
 
         # labels_df: DataFrame with bars_to_barrier and label
-        labels_df = pd.DataFrame({
-            'bars_to_barrier': np.random.randint(1, 10, n_samples),
-            'label': labels.values
-        }, index=events)
+        labels_df = pd.DataFrame(
+            {'bars_to_barrier': np.random.randint(1, 10, n_samples), 'label': labels.values},
+            index=events,
+        )
 
         # prices: price series aligned with events
         prices = pd.Series(
             100 + np.random.randn(n_samples + 100).cumsum(),
-            index=pd.date_range('2024-01-01', periods=n_samples + 100, freq='1H')
+            index=pd.date_range('2024-01-01', periods=n_samples + 100, freq='1H'),
         )
 
-        metadata = {
-            'events': events,
-            'labels': labels_df,
-            'prices': prices
-        }
+        metadata = {'events': events, 'labels': labels_df, 'prices': prices}
 
-        return {
-            'features': features,
-            'labels': labels,
-            'metadata': metadata
-        }
+        return {'features': features, 'labels': labels, 'metadata': metadata}
 
     def test_sample_weights_calculation(self, sample_training_data):
         """Test that sample weights are calculated correctly."""
         config = {
             'algorithm': 'random_forest',
-            'model_parameters': {'n_estimators': 10, 'max_depth': 3}
+            'model_parameters': {'n_estimators': 10, 'max_depth': 3},
         }
 
         engine = SupervisedLearningEngine(config)
 
         # Mock the calculate_sample_weights_uniqueness function
-        with patch('app.strategies.momentum_modular.learning.supervised_learning_engine.calculate_sample_weights_uniqueness') as mock_calc:
+        with patch(
+            'app.strategies.momentum_modular.learning.supervised_learning_engine.calculate_sample_weights_uniqueness'
+        ) as mock_calc:
             # Set up mock return value
             mock_weights = pd.Series(np.ones(len(sample_training_data['labels'])))
             mock_calc.return_value = mock_weights
@@ -96,13 +92,17 @@ class TestSampleWeightsIntegration:
         """Test that sample weights are stored in the engine."""
         config = {
             'algorithm': 'random_forest',
-            'model_parameters': {'n_estimators': 10, 'max_depth': 3}
+            'model_parameters': {'n_estimators': 10, 'max_depth': 3},
         }
 
         engine = SupervisedLearningEngine(config)
 
-        with patch('app.strategies.momentum_modular.learning.supervised_learning_engine.calculate_sample_weights_uniqueness') as mock_calc:
-            mock_weights = pd.Series(np.random.uniform(0.5, 1.5, len(sample_training_data['labels'])))
+        with patch(
+            'app.strategies.momentum_modular.learning.supervised_learning_engine.calculate_sample_weights_uniqueness'
+        ) as mock_calc:
+            mock_weights = pd.Series(
+                np.random.uniform(0.5, 1.5, len(sample_training_data['labels']))
+            )
             mock_calc.return_value = mock_weights
 
             # Train the model
@@ -116,13 +116,17 @@ class TestSampleWeightsIntegration:
         """Test that sample weight statistics are included in metrics."""
         config = {
             'algorithm': 'random_forest',
-            'model_parameters': {'n_estimators': 10, 'max_depth': 3}
+            'model_parameters': {'n_estimators': 10, 'max_depth': 3},
         }
 
         engine = SupervisedLearningEngine(config)
 
-        with patch('app.strategies.momentum_modular.learning.supervised_learning_engine.calculate_sample_weights_uniqueness') as mock_calc:
-            mock_weights = pd.Series(np.random.uniform(0.5, 1.5, len(sample_training_data['labels'])))
+        with patch(
+            'app.strategies.momentum_modular.learning.supervised_learning_engine.calculate_sample_weights_uniqueness'
+        ) as mock_calc:
+            mock_weights = pd.Series(
+                np.random.uniform(0.5, 1.5, len(sample_training_data['labels']))
+            )
             mock_calc.return_value = mock_weights
 
             # Train the model
@@ -142,13 +146,17 @@ class TestSampleWeightsIntegration:
         """Test that RandomForest accepts sample weights."""
         config = {
             'algorithm': 'random_forest',
-            'model_parameters': {'n_estimators': 10, 'max_depth': 3}
+            'model_parameters': {'n_estimators': 10, 'max_depth': 3},
         }
 
         engine = SupervisedLearningEngine(config)
 
-        with patch('app.strategies.momentum_modular.learning.supervised_learning_engine.calculate_sample_weights_uniqueness') as mock_calc:
-            mock_weights = pd.Series(np.random.uniform(0.5, 1.5, len(sample_training_data['labels'])))
+        with patch(
+            'app.strategies.momentum_modular.learning.supervised_learning_engine.calculate_sample_weights_uniqueness'
+        ) as mock_calc:
+            mock_weights = pd.Series(
+                np.random.uniform(0.5, 1.5, len(sample_training_data['labels']))
+            )
             mock_calc.return_value = mock_weights
 
             # Train the model - should not raise an error
@@ -160,15 +168,16 @@ class TestSampleWeightsIntegration:
 
     def test_sample_weights_xgboost(self, sample_training_data):
         """Test that XGBoost accepts sample weights."""
-        config = {
-            'algorithm': 'xgboost',
-            'model_parameters': {'n_estimators': 10, 'max_depth': 3}
-        }
+        config = {'algorithm': 'xgboost', 'model_parameters': {'n_estimators': 10, 'max_depth': 3}}
 
         engine = SupervisedLearningEngine(config)
 
-        with patch('app.strategies.momentum_modular.learning.supervised_learning_engine.calculate_sample_weights_uniqueness') as mock_calc:
-            mock_weights = pd.Series(np.random.uniform(0.5, 1.5, len(sample_training_data['labels'])))
+        with patch(
+            'app.strategies.momentum_modular.learning.supervised_learning_engine.calculate_sample_weights_uniqueness'
+        ) as mock_calc:
+            mock_weights = pd.Series(
+                np.random.uniform(0.5, 1.5, len(sample_training_data['labels']))
+            )
             mock_calc.return_value = mock_weights
 
             # Train the model - should not raise an error
@@ -182,13 +191,17 @@ class TestSampleWeightsIntegration:
         """Test that GradientBoosting accepts sample weights."""
         config = {
             'algorithm': 'gradient_boosting',
-            'model_parameters': {'n_estimators': 10, 'max_depth': 3}
+            'model_parameters': {'n_estimators': 10, 'max_depth': 3},
         }
 
         engine = SupervisedLearningEngine(config)
 
-        with patch('app.strategies.momentum_modular.learning.supervised_learning_engine.calculate_sample_weights_uniqueness') as mock_calc:
-            mock_weights = pd.Series(np.random.uniform(0.5, 1.5, len(sample_training_data['labels'])))
+        with patch(
+            'app.strategies.momentum_modular.learning.supervised_learning_engine.calculate_sample_weights_uniqueness'
+        ) as mock_calc:
+            mock_weights = pd.Series(
+                np.random.uniform(0.5, 1.5, len(sample_training_data['labels']))
+            )
             mock_calc.return_value = mock_weights
 
             # Train the model - should not raise an error
@@ -202,7 +215,7 @@ class TestSampleWeightsIntegration:
         """Test that training works without metadata (no sample weights)."""
         config = {
             'algorithm': 'random_forest',
-            'model_parameters': {'n_estimators': 10, 'max_depth': 3}
+            'model_parameters': {'n_estimators': 10, 'max_depth': 3},
         }
 
         engine = SupervisedLearningEngine(config)
@@ -210,7 +223,7 @@ class TestSampleWeightsIntegration:
         # Remove metadata
         training_data = {
             'features': sample_training_data['features'],
-            'labels': sample_training_data['labels']
+            'labels': sample_training_data['labels'],
         }
 
         # Train the model - should work without sample weights
@@ -226,7 +239,7 @@ class TestSampleWeightsIntegration:
         """Test that incomplete metadata doesn't crash training."""
         config = {
             'algorithm': 'random_forest',
-            'model_parameters': {'n_estimators': 10, 'max_depth': 3}
+            'model_parameters': {'n_estimators': 10, 'max_depth': 3},
         }
 
         engine = SupervisedLearningEngine(config)
@@ -235,7 +248,9 @@ class TestSampleWeightsIntegration:
         training_data = {
             'features': sample_training_data['features'],
             'labels': sample_training_data['labels'],
-            'metadata': {'events': pd.date_range('2024-01-01', periods=10)}  # Missing labels and prices
+            'metadata': {
+                'events': pd.date_range('2024-01-01', periods=10)
+            },  # Missing labels and prices
         }
 
         # Train the model - should work without sample weights
@@ -250,13 +265,17 @@ class TestSampleWeightsIntegration:
         """Test sample weights work with separate validation data."""
         config = {
             'algorithm': 'random_forest',
-            'model_parameters': {'n_estimators': 10, 'max_depth': 3}
+            'model_parameters': {'n_estimators': 10, 'max_depth': 3},
         }
 
         engine = SupervisedLearningEngine(config)
 
-        with patch('app.strategies.momentum_modular.learning.supervised_learning_engine.calculate_sample_weights_uniqueness') as mock_calc:
-            mock_weights = pd.Series(np.random.uniform(0.5, 1.5, len(sample_training_data['labels'])))
+        with patch(
+            'app.strategies.momentum_modular.learning.supervised_learning_engine.calculate_sample_weights_uniqueness'
+        ) as mock_calc:
+            mock_weights = pd.Series(
+                np.random.uniform(0.5, 1.5, len(sample_training_data['labels']))
+            )
             mock_calc.return_value = mock_weights
 
             # Split data manually
@@ -266,12 +285,12 @@ class TestSampleWeightsIntegration:
             train_data = {
                 'features': sample_training_data['features'].iloc[:train_size],
                 'labels': sample_training_data['labels'].iloc[:train_size],
-                'metadata': sample_training_data['metadata']
+                'metadata': sample_training_data['metadata'],
             }
 
             val_data = {
                 'features': sample_training_data['features'].iloc[train_size:],
-                'labels': sample_training_data['labels'].iloc[train_size:]
+                'labels': sample_training_data['labels'].iloc[train_size:],
             }
 
             # Train with validation data

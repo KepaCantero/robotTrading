@@ -31,14 +31,7 @@ class TestJSONSerialization:
 
     def test_nested_dict(self):
         """Test nested dictionary serialization."""
-        data = {
-            'level1': {
-                'level2': {
-                    'level3': 'deep_value'
-                },
-                'list': [1, 2, 3]
-            }
-        }
+        data = {'level1': {'level2': {'level3': 'deep_value'}, 'list': [1, 2, 3]}}
         signed = sign_and_dump(data, 'test_key')
         loaded = verify_and_load(signed, 'test_key')
         assert loaded == data
@@ -59,23 +52,14 @@ class TestJSONSerialization:
 
     def test_numeric_types(self):
         """Test various numeric types."""
-        data = {
-            'int': 42,
-            'float': 3.14159,
-            'negative': -123,
-            'zero': 0
-        }
+        data = {'int': 42, 'float': 3.14159, 'negative': -123, 'zero': 0}
         signed = sign_and_dump(data, 'test_key')
         loaded = verify_and_load(signed, 'test_key')
         assert loaded == data
 
     def test_boolean_and_none(self):
         """Test boolean and None values."""
-        data = {
-            'true': True,
-            'false': False,
-            'none': None
-        }
+        data = {'true': True, 'false': False, 'none': None}
         signed = sign_and_dump(data, 'test_key')
         loaded = verify_and_load(signed, 'test_key')
         assert loaded == data
@@ -126,11 +110,7 @@ class TestPandasSerialization:
     @pytest.mark.skipif(not HAS_MSGPACK, reason="msgpack not installed")
     def test_dataframe_basic(self):
         """Test basic DataFrame serialization."""
-        df = pd.DataFrame({
-            'a': [1, 2, 3],
-            'b': [4, 5, 6],
-            'c': ['x', 'y', 'z']
-        })
+        df = pd.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6], 'c': ['x', 'y', 'z']})
         data = {'df': df}
         signed = sign_and_dump(data, 'test_key')
         loaded = verify_and_load(signed, 'test_key')
@@ -139,10 +119,7 @@ class TestPandasSerialization:
     @pytest.mark.skipif(not HAS_MSGPACK, reason="msgpack not installed")
     def test_dataframe_with_floats(self):
         """Test DataFrame with float columns."""
-        df = pd.DataFrame({
-            'floats': [1.1, 2.2, 3.3],
-            'ints': [1, 2, 3]
-        })
+        df = pd.DataFrame({'floats': [1.1, 2.2, 3.3], 'ints': [1, 2, 3]})
         data = {'df': df}
         signed = sign_and_dump(data, 'test_key')
         loaded = verify_and_load(signed, 'test_key')
@@ -186,13 +163,10 @@ class TestComplexStructures:
     def test_mixed_structure(self):
         """Test structure with JSON and binary data."""
         data = {
-            'metadata': {
-                'version': '1.0',
-                'created_at': '2024-01-01'
-            },
+            'metadata': {'version': '1.0', 'created_at': '2024-01-01'},
             'array': np.array([1, 2, 3]),
             'binary': b'some_binary_data',
-            'list': [1, 2, 'three']
+            'list': [1, 2, 'three'],
         }
         signed = sign_and_dump(data, 'test_key')
         loaded = verify_and_load(signed, 'test_key')
@@ -205,11 +179,7 @@ class TestComplexStructures:
     def test_dataframe_in_dict(self):
         """Test DataFrame within a dictionary."""
         df = pd.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})
-        data = {
-            'description': 'Test data',
-            'dataframe': df,
-            'count': len(df)
-        }
+        data = {'description': 'Test data', 'dataframe': df, 'count': len(df)}
         signed = sign_and_dump(data, 'test_key')
         loaded = verify_and_load(signed, 'test_key')
         assert loaded['description'] == data['description']
@@ -240,6 +210,7 @@ class TestSignatureVerification:
         signed = sign_and_dump(data, 'test_key')
         # Tamper with the data
         import base64
+
         decoded = base64.b64decode(signed.encode('ascii'))
         tampered = decoded[:-5] + b'XXXXX'  # Change last 5 bytes
         tampered_signed = base64.b64encode(tampered).decode('ascii')
@@ -349,6 +320,7 @@ class TestMsgpackFallback:
         signed = sign_and_dump(data, 'test_key')
         # Verify the format type is 'msgp' (msgpack)
         import base64
+
         decoded = base64.b64decode(signed.encode('ascii'))
         format_type = decoded[:4]
         assert format_type == b'msgp'

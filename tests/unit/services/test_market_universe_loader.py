@@ -494,7 +494,9 @@ class TestMarketUniverseLoaderRealAPI:
 
         # If no data was returned, skip with informative message
         if len(data) == 0:
-            pytest.skip("yfinance returned empty S&P 500 data - API may be unavailable or rate limited")
+            pytest.skip(
+                "yfinance returned empty S&P 500 data - API may be unavailable or rate limited"
+            )
 
     @pytest.mark.asyncio
     async def test_real_crypto_data(self, loader):
@@ -517,4 +519,6 @@ class TestMarketUniverseLoaderRealAPI:
 
         # If no data was returned, skip with informative message
         if len(data) == 0:
-            pytest.skip("yfinance returned empty crypto data - API may be unavailable or rate limited")
+            pytest.skip(
+                "yfinance returned empty crypto data - API may be unavailable or rate limited"
+            )

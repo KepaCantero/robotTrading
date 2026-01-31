@@ -220,9 +220,7 @@ class TestSpainTaxEngine:
         dividends = Decimal("10000")
         other_income = Decimal("50000")
 
-        tax = engine.calculate_total_tax_liability(
-            capital_gains, dividends, other_income
-        )
+        tax = engine.calculate_total_tax_liability(capital_gains, dividends, other_income)
 
         # Other income is taxed separately under general IRPF
         # Only savings income (capital gains + dividends) combined
@@ -360,7 +358,9 @@ class TestSpainTaxEngine:
         engine_lower = get_tax_engine("es")
         engine_mixed = get_tax_engine("Es")
 
-        assert all(isinstance(e, SpainTaxEngine) for e in [engine_upper, engine_lower, engine_mixed])
+        assert all(
+            isinstance(e, SpainTaxEngine) for e in [engine_upper, engine_lower, engine_mixed]
+        )
 
     # Test repr
     def test_repr(self, engine):

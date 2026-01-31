@@ -36,13 +36,16 @@ def sample_market_data():
     # Volume
     volume = np.random.randint(1000000, 5000000, 100)
 
-    df = pd.DataFrame({
-        "close": prices,
-        "high": prices + np.random.rand(100) * 2,
-        "low": prices - np.random.rand(100) * 2,
-        "volume": volume,
-        "open": prices + np.random.randn(100) * 0.5,
-    }, index=dates)
+    df = pd.DataFrame(
+        {
+            "close": prices,
+            "high": prices + np.random.rand(100) * 2,
+            "low": prices - np.random.rand(100) * 2,
+            "volume": volume,
+            "open": prices + np.random.randn(100) * 0.5,
+        },
+        index=dates,
+    )
 
     return df
 
@@ -213,17 +216,22 @@ class TestMeanReversionAlphaModel:
         # Create price series with large drop (oversold)
         np.random.seed(42)
         dates = pd.date_range(start="2024-01-01", periods=50, freq="D")
-        prices = np.concatenate([
-            np.ones(25) * 100,  # First half at 100
-            np.ones(25) * 90,   # Second half at 90 (big drop)
-        ])
+        prices = np.concatenate(
+            [
+                np.ones(25) * 100,  # First half at 100
+                np.ones(25) * 90,  # Second half at 90 (big drop)
+            ]
+        )
 
-        market_data = pd.DataFrame({
-            "close": prices,
-            "high": prices + 1,
-            "low": prices - 1,
-            "volume": np.random.randint(1000000, 5000000, 50),
-        }, index=dates)
+        market_data = pd.DataFrame(
+            {
+                "close": prices,
+                "high": prices + 1,
+                "low": prices - 1,
+                "volume": np.random.randint(1000000, 5000000, 50),
+            },
+            index=dates,
+        )
 
         signal = model.generate_alpha("TEST", market_data, datetime.now())
 
@@ -241,12 +249,15 @@ class TestMeanReversionAlphaModel:
         dates = pd.date_range(start="2024-01-01", periods=50, freq="D")
         prices = np.ones(50) * 100 + np.random.randn(50) * 0.5  # Small noise
 
-        market_data = pd.DataFrame({
-            "close": prices,
-            "high": prices + 1,
-            "low": prices - 1,
-            "volume": np.random.randint(1000000, 5000000, 50),
-        }, index=dates)
+        market_data = pd.DataFrame(
+            {
+                "close": prices,
+                "high": prices + 1,
+                "low": prices - 1,
+                "volume": np.random.randint(1000000, 5000000, 50),
+            },
+            index=dates,
+        )
 
         signal = model.generate_alpha("TEST", market_data, datetime.now())
 

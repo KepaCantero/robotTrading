@@ -346,6 +346,7 @@ class TimeSyncMonitor:
                 ["sudo", "ntpdate", "-u", server],
                 capture_output=True,
                 timeout=30,
+                check=False,
             )
 
             if result.returncode == 0:
@@ -413,7 +414,6 @@ def reset_time_sync_monitor() -> None:
     if _monitor is not None:
         # Stop monitoring if running
         if _monitor._is_monitoring:
-
             try:
                 loop = asyncio.get_event_loop()
                 if loop.is_running():

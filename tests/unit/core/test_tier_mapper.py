@@ -282,9 +282,13 @@ class TestEdgeCases:
         ]
 
         for tier, source, target in test_cases:
-            converted = TierMapper.to_yaml_tier(tier, source) if target == TierSystem.YAML else \
-                       TierMapper.to_spanish(tier, source) if target == TierSystem.SPANISH else \
-                       TierMapper.to_capital_flag(tier, source)
+            converted = (
+                TierMapper.to_yaml_tier(tier, source)
+                if target == TierSystem.YAML
+                else TierMapper.to_spanish(tier, source)
+                if target == TierSystem.SPANISH
+                else TierMapper.to_capital_flag(tier, source)
+            )
             # For valid conversions, should not raise exceptions
             assert converted is not None
 
@@ -320,8 +324,8 @@ class TestIntegrationScenarios:
     def test_capital_amount_to_all_systems(self):
         """Test converting capital amount to all tier systems."""
         test_amounts = [
-            Decimal("10000"),   # micro / small / bajo
-            Decimal("30000"),   # small / small / bajo
+            Decimal("10000"),  # micro / small / bajo
+            Decimal("30000"),  # small / small / bajo
             Decimal("100000"),  # medium / medium / medio
             Decimal("500000"),  # large / large / alto
         ]

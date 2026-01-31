@@ -176,7 +176,9 @@ class LowVolatilityAnomaly:
             beta = 1.0
 
         # Idiosyncratic volatility
-        idiosyncratic_vol = float(np.std(returns - beta * market_returns)) if len(returns) > 0 else annual_vol
+        idiosyncratic_vol = (
+            float(np.std(returns - beta * market_returns)) if len(returns) > 0 else annual_vol
+        )
 
         # Downside deviation (only negative returns)
         negative_returns = returns[returns < 0]
@@ -323,13 +325,9 @@ class LowVolatilityAnomaly:
 
         # Calculate weights based on method
         if self._weighting == "inverse_variance":
-            weights = self._inverse_variance_weights(
-                selected, volatility_metrics
-            )
+            weights = self._inverse_variance_weights(selected, volatility_metrics)
         elif self._weighting == "min_variance":
-            weights = self._minimum_variance_weights(
-                selected, volatility_metrics
-            )
+            weights = self._minimum_variance_weights(selected, volatility_metrics)
         else:  # equal_weight
             weights = {s: 1.0 / n_stocks for s, _ in selected}
 
@@ -343,17 +341,10 @@ class LowVolatilityAnomaly:
 
         # Calculate portfolio metrics
         portfolio_vol = sum(
-            volatility_metrics[s].annualized_volatility * w
-            for s, w in weights.items()
+            volatility_metrics[s].annualized_volatility * w for s, w in weights.items()
         )
-        portfolio_beta = sum(
-            volatility_metrics[s].beta * w
-            for s, w in weights.items()
-        )
-        portfolio_sharpe = sum(
-            volatility_metrics[s].sharpe_ratio * w
-            for s, w in weights.items()
-        )
+        portfolio_beta = sum(volatility_metrics[s].beta * w for s, w in weights.items())
+        portfolio_sharpe = sum(volatility_metrics[s].sharpe_ratio * w for s, w in weights.items())
 
         return LowVolatilityPortfolio(
             positions=weights,
@@ -374,7 +365,7 @@ class LowVolatilityAnomaly:
         for symbol, _ in selected:
             metrics = volatility_metrics[symbol]
             # Weight = 1 / variance
-            variance = metrics.annualized_volatility ** 2
+            variance = metrics.annualized_volatility**2
             weights[symbol] = 1.0 / variance if variance > 0 else 1.0
 
         return weights
@@ -394,7 +385,9 @@ class LowVolatilityAnomaly:
         # Inverse volatility weighting (approximation of min variance)
         for symbol, _ in selected:
             metrics = volatility_metrics[symbol]
-            inv_vol = 1.0 / metrics.annualized_volatility if metrics.annualized_volatility > 0 else 1.0
+            inv_vol = (
+                1.0 / metrics.annualized_volatility if metrics.annualized_volatility > 0 else 1.0
+            )
             weights[symbol] = inv_vol
 
         return weights

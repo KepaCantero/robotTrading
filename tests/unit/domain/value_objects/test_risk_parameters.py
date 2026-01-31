@@ -22,7 +22,7 @@ class TestRiskParametersCreation:
             take_profit_pct=Decimal('0.06'),
             risk_reward_ratio=Decimal('2'),
             max_daily_loss_pct=Decimal('0.05'),
-            max_drawdown_pct=Decimal('0.15')
+            max_drawdown_pct=Decimal('0.15'),
         )
 
         assert params.max_position_size == Decimal('0.10')
@@ -37,7 +37,7 @@ class TestRiskParametersCreation:
                 max_position_size=Decimal('-0.10'),
                 max_portfolio_exposure=Decimal('1.5'),
                 stop_loss_pct=Decimal('0.03'),
-                take_profit_pct=Decimal('0.06')
+                take_profit_pct=Decimal('0.06'),
             )
 
     def test_create_with_zero_max_position_size_raises_error(self):
@@ -47,7 +47,7 @@ class TestRiskParametersCreation:
                 max_position_size=Decimal('0'),
                 max_portfolio_exposure=Decimal('1.5'),
                 stop_loss_pct=Decimal('0.03'),
-                take_profit_pct=Decimal('0.06')
+                take_profit_pct=Decimal('0.06'),
             )
 
     def test_create_with_negative_max_portfolio_exposure_raises_error(self):
@@ -57,7 +57,7 @@ class TestRiskParametersCreation:
                 max_position_size=Decimal('0.10'),
                 max_portfolio_exposure=Decimal('-1.5'),
                 stop_loss_pct=Decimal('0.03'),
-                take_profit_pct=Decimal('0.06')
+                take_profit_pct=Decimal('0.06'),
             )
 
     def test_create_with_stop_loss_out_of_range_raises_error(self):
@@ -67,7 +67,7 @@ class TestRiskParametersCreation:
                 max_position_size=Decimal('0.10'),
                 max_portfolio_exposure=Decimal('1.5'),
                 stop_loss_pct=Decimal('-0.03'),
-                take_profit_pct=Decimal('0.06')
+                take_profit_pct=Decimal('0.06'),
             )
 
         with pytest.raises(ValueError, match="Stop loss must be between 0 and 1"):
@@ -75,7 +75,7 @@ class TestRiskParametersCreation:
                 max_position_size=Decimal('0.10'),
                 max_portfolio_exposure=Decimal('1.5'),
                 stop_loss_pct=Decimal('1.5'),
-                take_profit_pct=Decimal('0.06')
+                take_profit_pct=Decimal('0.06'),
             )
 
     def test_create_with_zero_stop_loss_raises_error(self):
@@ -85,7 +85,7 @@ class TestRiskParametersCreation:
                 max_position_size=Decimal('0.10'),
                 max_portfolio_exposure=Decimal('1.5'),
                 stop_loss_pct=Decimal('0'),
-                take_profit_pct=Decimal('0.06')
+                take_profit_pct=Decimal('0.06'),
             )
 
     def test_create_with_negative_take_profit_raises_error(self):
@@ -95,7 +95,7 @@ class TestRiskParametersCreation:
                 max_position_size=Decimal('0.10'),
                 max_portfolio_exposure=Decimal('1.5'),
                 stop_loss_pct=Decimal('0.03'),
-                take_profit_pct=Decimal('-0.06')
+                take_profit_pct=Decimal('-0.06'),
             )
 
     def test_create_with_negative_risk_reward_ratio_raises_error(self):
@@ -106,7 +106,7 @@ class TestRiskParametersCreation:
                 max_portfolio_exposure=Decimal('1.5'),
                 stop_loss_pct=Decimal('0.03'),
                 take_profit_pct=Decimal('0.06'),
-                risk_reward_ratio=Decimal('-2')
+                risk_reward_ratio=Decimal('-2'),
             )
 
     def test_create_with_invalid_max_daily_loss_raises_error(self):
@@ -117,7 +117,7 @@ class TestRiskParametersCreation:
                 max_portfolio_exposure=Decimal('1.5'),
                 stop_loss_pct=Decimal('0.03'),
                 take_profit_pct=Decimal('0.06'),
-                max_daily_loss_pct=Decimal('-0.05')
+                max_daily_loss_pct=Decimal('-0.05'),
             )
 
         with pytest.raises(ValueError, match="Max daily loss must be between 0 and 1"):
@@ -126,7 +126,7 @@ class TestRiskParametersCreation:
                 max_portfolio_exposure=Decimal('1.5'),
                 stop_loss_pct=Decimal('0.03'),
                 take_profit_pct=Decimal('0.06'),
-                max_daily_loss_pct=Decimal('1.5')
+                max_daily_loss_pct=Decimal('1.5'),
             )
 
     def test_create_with_invalid_max_drawdown_raises_error(self):
@@ -137,7 +137,7 @@ class TestRiskParametersCreation:
                 max_portfolio_exposure=Decimal('1.5'),
                 stop_loss_pct=Decimal('0.03'),
                 take_profit_pct=Decimal('0.06'),
-                max_drawdown_pct=Decimal('-0.15')
+                max_drawdown_pct=Decimal('-0.15'),
             )
 
         with pytest.raises(ValueError, match="Max drawdown must be between 0 and 1"):
@@ -146,7 +146,7 @@ class TestRiskParametersCreation:
                 max_portfolio_exposure=Decimal('1.5'),
                 stop_loss_pct=Decimal('0.03'),
                 take_profit_pct=Decimal('0.06'),
-                max_drawdown_pct=Decimal('1.5')
+                max_drawdown_pct=Decimal('1.5'),
             )
 
 
@@ -160,7 +160,7 @@ class TestRiskParametersImmutability:
             max_position_size=Decimal('0.10'),
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.03'),
-            take_profit_pct=Decimal('0.06')
+            take_profit_pct=Decimal('0.06'),
         )
 
         with pytest.raises(Exception):  # FrozenInstanceError
@@ -172,13 +172,13 @@ class TestRiskParametersImmutability:
             max_position_size=Decimal('0.10'),
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.03'),
-            take_profit_pct=Decimal('0.06')
+            take_profit_pct=Decimal('0.06'),
         )
         params2 = RiskParameters(
             max_position_size=Decimal('0.10'),
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.03'),
-            take_profit_pct=Decimal('0.06')
+            take_profit_pct=Decimal('0.06'),
         )
 
         assert hash(params1) == hash(params2)
@@ -194,7 +194,7 @@ class TestRiskParametersCalculation:
             max_position_size=Decimal('0.10'),
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.05'),  # 5%
-            take_profit_pct=Decimal('0.10')
+            take_profit_pct=Decimal('0.10'),
         )
 
         entry_price = Decimal('100')
@@ -208,7 +208,7 @@ class TestRiskParametersCalculation:
             max_position_size=Decimal('0.10'),
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.05'),  # 5%
-            take_profit_pct=Decimal('0.10')
+            take_profit_pct=Decimal('0.10'),
         )
 
         entry_price = Decimal('100')
@@ -219,10 +219,10 @@ class TestRiskParametersCalculation:
     def test_get_stop_loss_price_long_with_various_percentages(self):
         """Test stop loss calculation with various percentages."""
         test_cases = [
-            (Decimal('0.02'), Decimal('98')),   # 2%
-            (Decimal('0.05'), Decimal('95')),   # 5%
-            (Decimal('0.10'), Decimal('90')),   # 10%
-            (Decimal('0.15'), Decimal('85')),   # 15%
+            (Decimal('0.02'), Decimal('98')),  # 2%
+            (Decimal('0.05'), Decimal('95')),  # 5%
+            (Decimal('0.10'), Decimal('90')),  # 10%
+            (Decimal('0.15'), Decimal('85')),  # 15%
         ]
 
         entry_price = Decimal('100')
@@ -232,7 +232,7 @@ class TestRiskParametersCalculation:
                 max_position_size=Decimal('0.10'),
                 max_portfolio_exposure=Decimal('1.5'),
                 stop_loss_pct=stop_loss_pct,
-                take_profit_pct=Decimal('0.10')
+                take_profit_pct=Decimal('0.10'),
             )
 
             result = params.get_stop_loss_price(entry_price, side='long')
@@ -244,7 +244,7 @@ class TestRiskParametersCalculation:
             max_position_size=Decimal('0.10'),
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.05'),
-            take_profit_pct=Decimal('0.10')  # 10%
+            take_profit_pct=Decimal('0.10'),  # 10%
         )
 
         entry_price = Decimal('100')
@@ -258,7 +258,7 @@ class TestRiskParametersCalculation:
             max_position_size=Decimal('0.10'),
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.05'),
-            take_profit_pct=Decimal('0.10')  # 10%
+            take_profit_pct=Decimal('0.10'),  # 10%
         )
 
         entry_price = Decimal('100')
@@ -282,7 +282,7 @@ class TestRiskParametersCalculation:
                 max_position_size=Decimal('0.10'),
                 max_portfolio_exposure=Decimal('1.5'),
                 stop_loss_pct=Decimal('0.05'),
-                take_profit_pct=take_profit_pct
+                take_profit_pct=take_profit_pct,
             )
 
             result = params.get_take_profit_price(entry_price, side='long')
@@ -300,7 +300,7 @@ class TestRiskRewardValidation:
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.05'),
             take_profit_pct=Decimal('0.10'),
-            risk_reward_ratio=Decimal('2')
+            risk_reward_ratio=Decimal('2'),
         )
 
         # Entry: 100, Target: 110, Stop: 95
@@ -310,7 +310,7 @@ class TestRiskRewardValidation:
             entry_price=Decimal('100'),
             target_price=Decimal('110'),
             stop_price=Decimal('95'),
-            side='long'
+            side='long',
         )
 
         assert result is True
@@ -322,7 +322,7 @@ class TestRiskRewardValidation:
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.05'),
             take_profit_pct=Decimal('0.10'),
-            risk_reward_ratio=Decimal('3')
+            risk_reward_ratio=Decimal('3'),
         )
 
         # Entry: 100, Target: 110, Stop: 95
@@ -332,7 +332,7 @@ class TestRiskRewardValidation:
             entry_price=Decimal('100'),
             target_price=Decimal('110'),
             stop_price=Decimal('95'),
-            side='long'
+            side='long',
         )
 
         assert result is False
@@ -344,7 +344,7 @@ class TestRiskRewardValidation:
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.05'),
             take_profit_pct=Decimal('0.10'),
-            risk_reward_ratio=Decimal('2')
+            risk_reward_ratio=Decimal('2'),
         )
 
         # Entry: 100, Target: 90, Stop: 105
@@ -354,7 +354,7 @@ class TestRiskRewardValidation:
             entry_price=Decimal('100'),
             target_price=Decimal('90'),
             stop_price=Decimal('105'),
-            side='short'
+            side='short',
         )
 
         assert result is True
@@ -366,7 +366,7 @@ class TestRiskRewardValidation:
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.05'),
             take_profit_pct=Decimal('0.10'),
-            risk_reward_ratio=Decimal('2')
+            risk_reward_ratio=Decimal('2'),
         )
 
         # Entry and stop are the same (no loss protection)
@@ -374,7 +374,7 @@ class TestRiskRewardValidation:
             entry_price=Decimal('100'),
             target_price=Decimal('110'),
             stop_price=Decimal('100'),
-            side='long'
+            side='long',
         )
 
         assert result is False
@@ -386,24 +386,62 @@ class TestRiskRewardValidation:
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.05'),
             take_profit_pct=Decimal('0.10'),
-            risk_reward_ratio=Decimal('2')
+            risk_reward_ratio=Decimal('2'),
         )
 
         test_cases = [
             # (entry, target, stop, side, expected)
             # For long: profit = target - entry, loss = entry - stop
-            (Decimal('100'), Decimal('110'), Decimal('95'), 'long', True),   # profit=10, loss=5, ratio=2:1
-            (Decimal('100'), Decimal('120'), Decimal('95'), 'long', True),   # profit=20, loss=5, ratio=4:1
-            (Decimal('100'), Decimal('105'), Decimal('95'), 'long', False),  # profit=5, loss=5, ratio=1:1 (<2:1)
-            (Decimal('100'), Decimal('105'), Decimal('90'), 'long', False),  # profit=5, loss=10, ratio=0.5:1 (<2:1)
+            (
+                Decimal('100'),
+                Decimal('110'),
+                Decimal('95'),
+                'long',
+                True,
+            ),  # profit=10, loss=5, ratio=2:1
+            (
+                Decimal('100'),
+                Decimal('120'),
+                Decimal('95'),
+                'long',
+                True,
+            ),  # profit=20, loss=5, ratio=4:1
+            (
+                Decimal('100'),
+                Decimal('105'),
+                Decimal('95'),
+                'long',
+                False,
+            ),  # profit=5, loss=5, ratio=1:1 (<2:1)
+            (
+                Decimal('100'),
+                Decimal('105'),
+                Decimal('90'),
+                'long',
+                False,
+            ),  # profit=5, loss=10, ratio=0.5:1 (<2:1)
             # For short: profit = entry - target, loss = stop - entry
-            (Decimal('100'), Decimal('90'), Decimal('105'), 'short', True),  # profit=10, loss=5, ratio=2:1
-            (Decimal('100'), Decimal('80'), Decimal('105'), 'short', True),  # profit=20, loss=5, ratio=4:1
+            (
+                Decimal('100'),
+                Decimal('90'),
+                Decimal('105'),
+                'short',
+                True,
+            ),  # profit=10, loss=5, ratio=2:1
+            (
+                Decimal('100'),
+                Decimal('80'),
+                Decimal('105'),
+                'short',
+                True,
+            ),  # profit=20, loss=5, ratio=4:1
         ]
 
         for entry, target, stop, side, expected in test_cases:
             result = params.validate_risk_reward(entry, target, stop, side)
-            assert result is expected, f"Failed for entry={entry}, target={target}, stop={stop}, side={side}. Expected {expected}, got {result}"
+            assert (
+                result is expected
+            ), f"Failed for entry={entry}, target={target}, stop={stop}, side={side}. Expected {expected}, got {result}"
 
 
 @pytest.mark.unit
@@ -486,21 +524,24 @@ class TestRiskParametersForTier:
 class TestRiskParametersPropertyBased:
     """Property-based tests for RiskParameters operations."""
 
-    @pytest.mark.parametrize("entry_price,stop_pct,side", [
-        (Decimal('100'), Decimal('0.01'), 'long'),
-        (Decimal('100'), Decimal('0.05'), 'long'),
-        (Decimal('100'), Decimal('0.10'), 'long'),
-        (Decimal('50'), Decimal('0.03'), 'long'),
-        (Decimal('200'), Decimal('0.07'), 'short'),
-        (Decimal('150'), Decimal('0.04'), 'short'),
-    ])
+    @pytest.mark.parametrize(
+        "entry_price,stop_pct,side",
+        [
+            (Decimal('100'), Decimal('0.01'), 'long'),
+            (Decimal('100'), Decimal('0.05'), 'long'),
+            (Decimal('100'), Decimal('0.10'), 'long'),
+            (Decimal('50'), Decimal('0.03'), 'long'),
+            (Decimal('200'), Decimal('0.07'), 'short'),
+            (Decimal('150'), Decimal('0.04'), 'short'),
+        ],
+    )
     def test_stop_loss_calculation_properties(self, entry_price, stop_pct, side):
         """Test stop loss calculation properties with various inputs."""
         params = RiskParameters(
             max_position_size=Decimal('0.10'),
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=stop_pct,
-            take_profit_pct=Decimal('0.10')
+            take_profit_pct=Decimal('0.10'),
         )
 
         result = params.get_stop_loss_price(entry_price, side)
@@ -512,21 +553,24 @@ class TestRiskParametersPropertyBased:
 
         assert result == expected
 
-    @pytest.mark.parametrize("entry_price,target_pct,side", [
-        (Decimal('100'), Decimal('0.05'), 'long'),
-        (Decimal('100'), Decimal('0.10'), 'long'),
-        (Decimal('100'), Decimal('0.20'), 'long'),
-        (Decimal('50'), Decimal('0.15'), 'long'),
-        (Decimal('200'), Decimal('0.08'), 'short'),
-        (Decimal('150'), Decimal('0.12'), 'short'),
-    ])
+    @pytest.mark.parametrize(
+        "entry_price,target_pct,side",
+        [
+            (Decimal('100'), Decimal('0.05'), 'long'),
+            (Decimal('100'), Decimal('0.10'), 'long'),
+            (Decimal('100'), Decimal('0.20'), 'long'),
+            (Decimal('50'), Decimal('0.15'), 'long'),
+            (Decimal('200'), Decimal('0.08'), 'short'),
+            (Decimal('150'), Decimal('0.12'), 'short'),
+        ],
+    )
     def test_take_profit_calculation_properties(self, entry_price, target_pct, side):
         """Test take profit calculation properties with various inputs."""
         params = RiskParameters(
             max_position_size=Decimal('0.10'),
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.05'),
-            take_profit_pct=target_pct
+            take_profit_pct=target_pct,
         )
 
         result = params.get_take_profit_price(entry_price, side)
@@ -538,14 +582,17 @@ class TestRiskParametersPropertyBased:
 
         assert result == expected
 
-    @pytest.mark.parametrize("ratio,profit,loss,expected", [
-        (Decimal('2'), Decimal('10'), Decimal('5'), True),    # 2:1 ratio
-        (Decimal('2'), Decimal('20'), Decimal('10'), True),   # 2:1 ratio
-        (Decimal('3'), Decimal('15'), Decimal('5'), True),    # 3:1 ratio
-        (Decimal('2'), Decimal('5'), Decimal('5'), False),    # 1:1 ratio (below 2:1)
-        (Decimal('3'), Decimal('10'), Decimal('5'), False),   # 2:1 ratio (below 3:1)
-        (Decimal('1.5'), Decimal('10'), Decimal('10'), False), # 1:1 ratio (below 1.5:1)
-    ])
+    @pytest.mark.parametrize(
+        "ratio,profit,loss,expected",
+        [
+            (Decimal('2'), Decimal('10'), Decimal('5'), True),  # 2:1 ratio
+            (Decimal('2'), Decimal('20'), Decimal('10'), True),  # 2:1 ratio
+            (Decimal('3'), Decimal('15'), Decimal('5'), True),  # 3:1 ratio
+            (Decimal('2'), Decimal('5'), Decimal('5'), False),  # 1:1 ratio (below 2:1)
+            (Decimal('3'), Decimal('10'), Decimal('5'), False),  # 2:1 ratio (below 3:1)
+            (Decimal('1.5'), Decimal('10'), Decimal('10'), False),  # 1:1 ratio (below 1.5:1)
+        ],
+    )
     def test_risk_reward_validation_properties(self, ratio, profit, loss, expected):
         """Test risk/reward validation with various scenarios."""
         params = RiskParameters(
@@ -553,7 +600,7 @@ class TestRiskParametersPropertyBased:
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.05'),
             take_profit_pct=Decimal('0.10'),
-            risk_reward_ratio=ratio
+            risk_reward_ratio=ratio,
         )
 
         # Use entry=100, construct target and stop from profit/loss

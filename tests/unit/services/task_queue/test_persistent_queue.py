@@ -245,6 +245,7 @@ class TestQueueInitialization:
         await q.initialize()
         # Database should be created
         import os
+
         assert os.path.exists(temp_db_path)
         await q.shutdown()
 
@@ -340,9 +341,15 @@ class TestTaskDequeue:
         """Test dequeue respects priority order."""
         # Enqueue in random order
         await queue.enqueue(Task(task_id="low", name="Low", payload={}, priority=TaskPriority.LOW))
-        await queue.enqueue(Task(task_id="critical", name="Critical", payload={}, priority=TaskPriority.CRITICAL))
-        await queue.enqueue(Task(task_id="normal", name="Normal", payload={}, priority=TaskPriority.NORMAL))
-        await queue.enqueue(Task(task_id="high", name="High", payload={}, priority=TaskPriority.HIGH))
+        await queue.enqueue(
+            Task(task_id="critical", name="Critical", payload={}, priority=TaskPriority.CRITICAL)
+        )
+        await queue.enqueue(
+            Task(task_id="normal", name="Normal", payload={}, priority=TaskPriority.NORMAL)
+        )
+        await queue.enqueue(
+            Task(task_id="high", name="High", payload={}, priority=TaskPriority.HIGH)
+        )
 
         # Should dequeue in priority order
         first = await queue.dequeue()
@@ -360,8 +367,12 @@ class TestTaskDequeue:
     @pytest.mark.asyncio
     async def test_dequeue_fifo_within_priority(self, queue):
         """Test FIFO ordering within same priority."""
-        await queue.enqueue(Task(task_id="first", name="First", payload={}, priority=TaskPriority.NORMAL))
-        await queue.enqueue(Task(task_id="second", name="Second", payload={}, priority=TaskPriority.NORMAL))
+        await queue.enqueue(
+            Task(task_id="first", name="First", payload={}, priority=TaskPriority.NORMAL)
+        )
+        await queue.enqueue(
+            Task(task_id="second", name="Second", payload={}, priority=TaskPriority.NORMAL)
+        )
 
         first = await queue.dequeue()
         second = await queue.dequeue()
@@ -637,9 +648,15 @@ class TestQueueStatistics:
     async def test_get_statistics(self, queue):
         """Test getting queue statistics."""
         # Add tasks with different statuses
-        await queue.enqueue(Task(task_id="stat-1", name="P1", payload={}, status=TaskStatus.PENDING))
-        await queue.enqueue(Task(task_id="stat-2", name="P2", payload={}, status=TaskStatus.PENDING))
-        await queue.enqueue(Task(task_id="stat-3", name="C1", payload={}, status=TaskStatus.COMPLETED))
+        await queue.enqueue(
+            Task(task_id="stat-1", name="P1", payload={}, status=TaskStatus.PENDING)
+        )
+        await queue.enqueue(
+            Task(task_id="stat-2", name="P2", payload={}, status=TaskStatus.PENDING)
+        )
+        await queue.enqueue(
+            Task(task_id="stat-3", name="C1", payload={}, status=TaskStatus.COMPLETED)
+        )
 
         stats = await queue.get_statistics()
         assert stats["total_tasks"] == 3
@@ -649,9 +666,15 @@ class TestQueueStatistics:
     @pytest.mark.asyncio
     async def test_statistics_by_priority(self, queue):
         """Test statistics broken down by priority."""
-        await queue.enqueue(Task(task_id="prio-1", name="High", payload={}, priority=TaskPriority.HIGH))
-        await queue.enqueue(Task(task_id="prio-2", name="Normal", payload={}, priority=TaskPriority.NORMAL))
-        await queue.enqueue(Task(task_id="prio-3", name="Low", payload={}, priority=TaskPriority.LOW))
+        await queue.enqueue(
+            Task(task_id="prio-1", name="High", payload={}, priority=TaskPriority.HIGH)
+        )
+        await queue.enqueue(
+            Task(task_id="prio-2", name="Normal", payload={}, priority=TaskPriority.NORMAL)
+        )
+        await queue.enqueue(
+            Task(task_id="prio-3", name="Low", payload={}, priority=TaskPriority.LOW)
+        )
 
         stats = await queue.get_statistics()
         assert stats["pending_by_priority"]["HIGH"] == 1
@@ -696,8 +719,12 @@ class TestTaskRetrieval:
     @pytest.mark.asyncio
     async def test_list_tasks_by_status(self, queue):
         """Test listing tasks filtered by status."""
-        await queue.enqueue(Task(task_id="filter-1", name="Pending", payload={}, status=TaskStatus.PENDING))
-        await queue.enqueue(Task(task_id="filter-2", name="Completed", payload={}, status=TaskStatus.COMPLETED))
+        await queue.enqueue(
+            Task(task_id="filter-1", name="Pending", payload={}, status=TaskStatus.PENDING)
+        )
+        await queue.enqueue(
+            Task(task_id="filter-2", name="Completed", payload={}, status=TaskStatus.COMPLETED)
+        )
 
         pending = await queue.list_tasks(status=TaskStatus.PENDING)
         assert len(pending) == 1
@@ -737,9 +764,15 @@ class TestTaskDeletion:
     @pytest.mark.asyncio
     async def test_clear_completed(self, queue):
         """Test clearing completed tasks."""
-        await queue.enqueue(Task(task_id="clear-1", name="Completed 1", payload={}, status=TaskStatus.COMPLETED))
-        await queue.enqueue(Task(task_id="clear-2", name="Completed 2", payload={}, status=TaskStatus.COMPLETED))
-        await queue.enqueue(Task(task_id="clear-3", name="Pending", payload={}, status=TaskStatus.PENDING))
+        await queue.enqueue(
+            Task(task_id="clear-1", name="Completed 1", payload={}, status=TaskStatus.COMPLETED)
+        )
+        await queue.enqueue(
+            Task(task_id="clear-2", name="Completed 2", payload={}, status=TaskStatus.COMPLETED)
+        )
+        await queue.enqueue(
+            Task(task_id="clear-3", name="Pending", payload={}, status=TaskStatus.PENDING)
+        )
 
         count = await queue.clear_completed()
         assert count == 2

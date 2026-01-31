@@ -19,12 +19,14 @@ from app.services.forex_risk.hedging_engine import (
 @pytest.fixture
 def forex_service():
     """Mock forex service."""
+
     class MockForexService:
         def get_current_rates(self, pairs):
             return {
                 "EUR/USD": Decimal("1.08"),
                 "EUR/GBP": Decimal("0.86"),
             }
+
     return MockForexService()
 
 

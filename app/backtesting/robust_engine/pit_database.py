@@ -305,7 +305,11 @@ class PITDatabaseClient:
 
         # Check that all signal dates exist in data
         signal_dates = pd.to_datetime(signals.index)
-        data_dates = pd.to_datetime(market_data.index) if not isinstance(market_data.index, pd.DatetimeIndex) else market_data.index
+        data_dates = (
+            pd.to_datetime(market_data.index)
+            if not isinstance(market_data.index, pd.DatetimeIndex)
+            else market_data.index
+        )
 
         for signal_date in signal_dates:
             available_data = data_dates[data_dates <= signal_date]

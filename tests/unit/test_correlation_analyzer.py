@@ -84,9 +84,7 @@ def test_correlation_cache_validity():
 
 
 @pytest.mark.asyncio
-async def test_calculate_correlation_matrix_success(
-    correlation_analyzer, mock_data_service
-):
+async def test_calculate_correlation_matrix_success(correlation_analyzer, mock_data_service):
     """Test successful correlation matrix calculation."""
     # Create mock historical data
     end_date = datetime.now(timezone.utc)
@@ -161,9 +159,7 @@ async def test_calculate_correlation_matrix_empty_symbols(correlation_analyzer):
 
 
 @pytest.mark.asyncio
-async def test_calculate_correlation_matrix_no_data(
-    correlation_analyzer, mock_data_service
-):
+async def test_calculate_correlation_matrix_no_data(correlation_analyzer, mock_data_service):
     """Test fallback when no historical data available."""
     mock_data_service.get_historical_data.return_value = []
 
@@ -221,7 +217,9 @@ async def test_get_correlation_fallback(correlation_analyzer, mock_data_service)
     # Same sector = 0.5
     assert correlation == 0.5
     # Fallback is used when calculate_correlation_matrix generates fallback matrix
-    assert correlation_analyzer._fallback_used >= 0  # May or may not be incremented depending on implementation
+    assert (
+        correlation_analyzer._fallback_used >= 0
+    )  # May or may not be incremented depending on implementation
 
 
 def test_get_fallback_correlation_same_sector(correlation_analyzer):

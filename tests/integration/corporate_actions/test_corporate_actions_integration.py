@@ -98,9 +98,7 @@ class TestCorporateActionsIntegration:
     """Integration tests for corporate actions handling."""
 
     @pytest.mark.asyncio
-    async def test_full_stock_split_workflow(
-        self, mock_broker_with_positions
-    ):
+    async def test_full_stock_split_workflow(self, mock_broker_with_positions):
         """Test complete stock split workflow from action to position update."""
         # Setup
         handler = CorporateActionsHandler(broker=mock_broker_with_positions)
@@ -249,9 +247,7 @@ class TestCorporateActionsCallbacks:
         def on_action(action):
             callback_actions.append(action)
 
-        handler = CorporateActionsHandler(
-            broker=mock_broker_with_positions, on_action=on_action
-        )
+        handler = CorporateActionsHandler(broker=mock_broker_with_positions, on_action=on_action)
 
         # Execute action
         await handler.on_stock_split("AAPL", Decimal("2"), date(2024, 6, 1))
@@ -269,9 +265,7 @@ class TestCorporateActionsCallbacks:
         def on_action(action):
             callback_actions.append(action)
 
-        handler = CorporateActionsHandler(
-            broker=mock_broker_with_positions, on_action=on_action
-        )
+        handler = CorporateActionsHandler(broker=mock_broker_with_positions, on_action=on_action)
 
         # Execute multiple actions
         await handler.on_stock_split("AAPL", Decimal("2"), date(2024, 6, 1))

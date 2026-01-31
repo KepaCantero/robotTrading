@@ -407,7 +407,8 @@ class TradingMetricsMonitor:
 
             async with aiosqlite.connect(self.config.db_path) as db:
                 # Main metrics table
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS trading_metrics_history (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         timestamp TEXT NOT NULL,
@@ -423,10 +424,12 @@ class TradingMetricsMonitor:
                         overall_health TEXT NOT NULL,
                         created_at TEXT NOT NULL DEFAULT (datetime('utc'))
                     )
-                """)
+                """
+                )
 
                 # Orders table
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS order_records (
                         order_id TEXT PRIMARY KEY,
                         symbol TEXT NOT NULL,
@@ -441,18 +444,23 @@ class TradingMetricsMonitor:
                         broker_order_id TEXT,
                         created_at TEXT NOT NULL DEFAULT (datetime('utc'))
                     )
-                """)
+                """
+                )
 
                 # Create indexes
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE INDEX IF NOT EXISTS idx_trading_metrics_timestamp
                     ON trading_metrics_history(timestamp)
-                """)
+                """
+                )
 
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE INDEX IF NOT EXISTS idx_order_records_symbol
                     ON order_records(symbol, submitted_at)
-                """)
+                """
+                )
 
                 await db.commit()
 

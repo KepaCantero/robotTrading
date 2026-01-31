@@ -291,9 +291,7 @@ class TestBrokerFailoverManager:
         assert primary_state.health == BrokerHealth.HEALTHY
 
     @pytest.mark.asyncio
-    async def test_execute_order_with_success(
-        self, broker_configs, primary_broker
-    ):
+    async def test_execute_order_with_success(self, broker_configs, primary_broker):
         """Test successful order execution."""
         manager = BrokerFailoverManager(brokers=broker_configs)
         manager._active_broker = broker_configs[0]
@@ -381,9 +379,7 @@ class TestBrokerFailoverManager:
         assert "MSFT" in positions["secondary"]
 
     @pytest.mark.asyncio
-    async def test_get_account_info_from_active(
-        self, broker_configs, primary_broker
-    ):
+    async def test_get_account_info_from_active(self, broker_configs, primary_broker):
         """Test getting account info from active broker."""
         manager = BrokerFailoverManager(brokers=broker_configs)
         manager._active_broker = broker_configs[0]
@@ -443,9 +439,7 @@ class TestBrokerFailoverManager:
         assert primary_state.last_error == "Connection timeout"
 
     @pytest.mark.asyncio
-    async def test_trigger_failover(
-        self, broker_configs, failover_callback, primary_broker
-    ):
+    async def test_trigger_failover(self, broker_configs, failover_callback, primary_broker):
         """Test triggering failover to secondary broker."""
         manager = BrokerFailoverManager(
             brokers=broker_configs,

@@ -183,7 +183,7 @@ class PairsTrading:
         # Sort by p-value (lowest first) and return top pairs
         pairs.sort(key=lambda p: p.p_value)
 
-        return pairs[:self._num_pairs]
+        return pairs[: self._num_pairs]
 
     def _test_cointegration(
         self,
@@ -421,7 +421,10 @@ class PairsTrading:
 
             # Check stop loss / take profit
             if current_position.stop_loss_spread and current_position.take_profit_spread:
-                if spread >= current_position.take_profit_spread or spread <= current_position.stop_loss_spread:
+                if (
+                    spread >= current_position.take_profit_spread
+                    or spread <= current_position.stop_loss_spread
+                ):
                     if current_position.is_long_short():
                         return PairSignal.CLOSE_LONG_SHORT
                     else:
@@ -487,8 +490,16 @@ class PairsTrading:
         spread_std = np.std(log_a - hedge_ratio * log_b) if len(prices_a) > 1 else 0.01
 
         entry_spread = spread
-        stop_loss = entry_spread + 3 * spread_std if signal == PairSignal.LONG_SHORT else entry_spread - 3 * spread_std
-        take_profit = entry_spread - spread_std if signal == PairSignal.LONG_SHORT else entry_spread + spread_std
+        stop_loss = (
+            entry_spread + 3 * spread_std
+            if signal == PairSignal.LONG_SHORT
+            else entry_spread - 3 * spread_std
+        )
+        take_profit = (
+            entry_spread - spread_std
+            if signal == PairSignal.LONG_SHORT
+            else entry_spread + spread_std
+        )
 
         return PairPosition(
             symbol_a=trading_pair.symbol_a,

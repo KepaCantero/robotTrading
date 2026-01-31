@@ -80,9 +80,7 @@ def config_path(tmp_path):
             "filters": {
                 "momentum": {
                     "enabled": True,
-                    "parameters": {
-                        "momentum_threshold": {"type": "float", "default": 0.02}
-                    },
+                    "parameters": {"momentum_threshold": {"type": "float", "default": 0.02}},
                 }
             }
         },
@@ -162,10 +160,14 @@ class TestProfileGeneration:
         # Note: both "bajo" (50000) and "medio" (150000) tiers map to capital_flag="medium"
         # So we need to check for the specific capital_initial value to find the right one
         profile = next(
-            (p for p in profiles if p.objetivo_inversion == ObjectivoInversion.MAXIMIZAR_CAPITAL
-             and p.risk_tolerance == RiskTolerance.MEDIO
-             and p.capital_initial == Decimal("150000")
-             and p.investment_horizon == 24),
+            (
+                p
+                for p in profiles
+                if p.objetivo_inversion == ObjectivoInversion.MAXIMIZAR_CAPITAL
+                and p.risk_tolerance == RiskTolerance.MEDIO
+                and p.capital_initial == Decimal("150000")
+                and p.investment_horizon == 24
+            ),
             None,
         )
 
@@ -590,9 +592,7 @@ class TestGetBestStrategy:
 
         # Get best strategy
         best = backtester.get_best_strategy(
-            objective="maximizar_capital",
-            tier="medio",
-            risk="medio"
+            objective="maximizar_capital", tier="medio", risk="medio"
         )
 
         assert best is not None
@@ -602,11 +602,7 @@ class TestGetBestStrategy:
 
     def test_get_best_strategy_not_found(self, backtester):
         """Test getting best strategy when no results exist."""
-        best = backtester.get_best_strategy(
-            objective="nonexistent",
-            tier="medio",
-            risk="medio"
-        )
+        best = backtester.get_best_strategy(objective="nonexistent", tier="medio", risk="medio")
 
         assert best == {}
 
@@ -649,6 +645,8 @@ class TestResultToDict:
         assert result_dict["profile_id"] == "test_profile"
         assert result_dict["objective"] == "maximizar_capital"
         assert result_dict["risk_tolerance"] == "medio"
-        assert result_dict["capital_tier"] == "medium"  # InputProfile.capital_flag returns English values
+        assert (
+            result_dict["capital_tier"] == "medium"
+        )  # InputProfile.capital_flag returns English values
         assert "baseline_results" in result_dict
         assert "optimization_results" in result_dict

@@ -189,10 +189,20 @@ class TestPortfolioStabilityValidator:
     def sample_returns(self):
         """Create sample returns."""
         # 10 periods of returns
-        returns = np.array([
-            0.01, -0.005, 0.015, 0.008, 0.012,
-            -0.003, 0.01, 0.005, -0.002, 0.008,
-        ])
+        returns = np.array(
+            [
+                0.01,
+                -0.005,
+                0.015,
+                0.008,
+                0.012,
+                -0.003,
+                0.01,
+                0.005,
+                -0.002,
+                0.008,
+            ]
+        )
         return returns
 
     def test_validator_initialization(self, validator):
@@ -407,9 +417,9 @@ class TestPortfolioStabilityValidator:
 
         # Check for expected recommendation types
         rec_text = " ".join(recommendations).lower()
-        assert any(keyword in rec_text for keyword in [
-            "turnover", "concentration", "costs", "sharpe"
-        ])
+        assert any(
+            keyword in rec_text for keyword in ["turnover", "concentration", "costs", "sharpe"]
+        )
 
     def test_save_validation_report(self, validator, tmp_path):
         """Test saving validation report to file."""
@@ -433,6 +443,7 @@ class TestPortfolioStabilityValidator:
 
         # Should be valid JSON
         import json
+
         with open(report_path) as f:
             report = json.load(f)
 

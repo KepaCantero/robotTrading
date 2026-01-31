@@ -109,7 +109,7 @@ class TestCalculateCVaRNumba:
         data = np.array([-0.05, -0.04, -0.03, -0.02, -0.01])
         var = -0.03
         cvar = calculate_cvar_numba(data, var)
-        
+
         # CVaR should be average of values <= var
         # (-0.05, -0.04, -0.03) / 3 = -0.04
         assert abs(cvar - (-0.04)) < 0.01
@@ -119,7 +119,7 @@ class TestCalculateCVaRNumba:
         data = np.array([0.01, 0.02, 0.03])
         var = -0.05
         cvar = calculate_cvar_numba(data, var)
-        
+
         # Should return var when no values <= var
         assert cvar == var
 
@@ -128,7 +128,7 @@ class TestCalculateCVaRNumba:
         data = np.array([])
         var = -0.03
         cvar = calculate_cvar_numba(data, var)
-        
+
         # Should return var
         assert cvar == var
 
@@ -137,7 +137,7 @@ class TestCalculateCVaRNumba:
         data = np.array([-0.08, -0.06, -0.04, -0.02, 0.01, 0.03])
         var = -0.05
         cvar = calculate_cvar_numba(data, var)
-        
+
         # Should average values <= -0.05
         assert cvar <= var
 
@@ -146,7 +146,7 @@ class TestCalculateCVaRNumba:
         data = np.array([-0.10, -0.08, -0.06, -0.04, -0.02, 0.01])
         var = -0.05
         cvar = calculate_cvar_numba(data, var)
-        
+
         # CVaR should be more negative
         assert cvar <= var
 
@@ -159,9 +159,9 @@ class TestCalculateJarqueBeraNumba:
         """Test JB statistic for normal distribution."""
         np.random.seed(42)
         data = np.random.normal(0, 1, 1000)
-        
+
         jb_stat, p_value = calculate_jarque_bera_numba(data)
-        
+
         # p-value should be relatively high for normal data
         assert p_value > 0.01
 
@@ -169,18 +169,18 @@ class TestCalculateJarqueBeraNumba:
         """Test JB statistic for skewed distribution."""
         np.random.seed(42)
         data = np.random.exponential(1, 1000)
-        
+
         jb_stat, p_value = calculate_jarque_bera_numba(data)
-        
+
         # p-value should be very low for non-normal data
         assert p_value < 0.05
 
     def test_jb_small_sample(self):
         """Test JB with small sample."""
         data = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-        
+
         jb_stat, p_value = calculate_jarque_bera_numba(data)
-        
+
         # Should still calculate
         assert isinstance(jb_stat, float)
         assert isinstance(p_value, float)
@@ -188,17 +188,17 @@ class TestCalculateJarqueBeraNumba:
     def test_jb_constant_values(self):
         """Test JB with constant values (zero variance)."""
         data = np.array([5.0] * 100)
-        
+
         jb_stat, p_value = calculate_jarque_bera_numba(data)
-        
+
         # Should handle gracefully
         assert p_value == 1.0
 
     def test_jb_very_small_sample(self):
         """Test JB with very small sample (< 20)."""
         data = np.array([1, 2, 3, 4, 5])
-        
+
         jb_stat, p_value = calculate_jarque_bera_numba(data)
-        
+
         # Should return p_value = 1 for small samples
         assert p_value == 1.0

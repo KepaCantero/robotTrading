@@ -14,8 +14,6 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-import numpy as np
-
 
 class SignalType(str, Enum):
     """Signal type enumeration."""
@@ -301,7 +299,9 @@ class SignalGenerator:
 
         elif position > Decimal("0.9"):
             # Near or above upper band - overbought
-            strength = SignalStrength.VERY_STRONG if position > Decimal("1") else SignalStrength.STRONG
+            strength = (
+                SignalStrength.VERY_STRONG if position > Decimal("1") else SignalStrength.STRONG
+            )
             confidence = position
 
             return Signal(
@@ -414,12 +414,8 @@ class SignalGenerator:
         hold_count = sum(1 for s in signals if s.signal_type == SignalType.HOLD)
 
         # Calculate weighted confidence
-        buy_confidence = sum(
-            s.confidence for s in signals if s.signal_type == SignalType.BUY
-        )
-        sell_confidence = sum(
-            s.confidence for s in signals if s.signal_type == SignalType.SELL
-        )
+        buy_confidence = sum(s.confidence for s in signals if s.signal_type == SignalType.BUY)
+        sell_confidence = sum(s.confidence for s in signals if s.signal_type == SignalType.SELL)
 
         # Determine consensus
         if buy_count > sell_count and buy_count > hold_count:
@@ -509,9 +505,7 @@ class SignalGenerator:
             return SignalStrength.WEAK
 
         strong_count = sum(
-            1
-            for s in signals
-            if s.strength in (SignalStrength.STRONG, SignalStrength.VERY_STRONG)
+            1 for s in signals if s.strength in (SignalStrength.STRONG, SignalStrength.VERY_STRONG)
         )
 
         if strong_count >= len(signals):

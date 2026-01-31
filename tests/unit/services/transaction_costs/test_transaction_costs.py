@@ -262,9 +262,7 @@ class TestCommissionModel:
         """Test that only commission is charged."""
         model = CommissionModel({})
 
-        cost_breakdown = model.calculate_transaction_costs(
-            small_buy_order, sample_market_data
-        )
+        cost_breakdown = model.calculate_transaction_costs(small_buy_order, sample_market_data)
 
         # Market impact should be zero for commission-only model
         assert cost_breakdown.market_impact == 0

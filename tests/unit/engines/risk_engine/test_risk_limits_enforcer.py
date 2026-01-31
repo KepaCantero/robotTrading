@@ -38,12 +38,14 @@ def sample_portfolio():
 
     # Create mock positions
     positions = []
-    for i, (symbol, value) in enumerate([
-        ('AAPL', 30000.0),
-        ('MSFT', 25000.0),
-        ('GOOGL', 20000.0),
-        ('TSLA', 15000.0),
-    ]):
+    for i, (symbol, value) in enumerate(
+        [
+            ('AAPL', 30000.0),
+            ('MSFT', 25000.0),
+            ('GOOGL', 20000.0),
+            ('TSLA', 15000.0),
+        ]
+    ):
         pos = Mock()
         pos.symbol = symbol
         pos.market_value = value
@@ -156,9 +158,7 @@ class TestVaRLimitsChecking:
     def test_var_with_custom_portfolio_value(self, enforcer, mock_portfolio):
         """Test VaR check with custom portfolio value."""
         result = enforcer.check_var_limits(
-            mock_portfolio,
-            current_var=0.05,
-            portfolio_value=200000.0
+            mock_portfolio, current_var=0.05, portfolio_value=200000.0
         )
 
         assert result['var_amount'] == 10000.0  # 5% of 200,000
@@ -179,10 +179,7 @@ class TestRequiredReductionCalculation:
 
     def test_no_reduction_needed(self, enforcer):
         """Test when target >= current."""
-        reduction = enforcer._calculate_required_reduction(
-            current_var=0.02,
-            target_var=0.03
-        )
+        reduction = enforcer._calculate_required_reduction(current_var=0.02, target_var=0.03)
 
         assert reduction == 0.0
 
@@ -190,19 +187,13 @@ class TestRequiredReductionCalculation:
         """Test reduction percentage calculation."""
         # To go from 0.05 to 0.02: (0.02/0.05)^2 = 0.16
         # Required reduction = (1 - 0.16) * 100 = 84%
-        reduction = enforcer._calculate_required_reduction(
-            current_var=0.05,
-            target_var=0.02
-        )
+        reduction = enforcer._calculate_required_reduction(current_var=0.05, target_var=0.02)
 
         assert 83 <= reduction <= 85
 
     def test_significant_reduction(self, enforcer):
         """Test when significant reduction is needed."""
-        reduction = enforcer._calculate_required_reduction(
-            current_var=0.10,
-            target_var=0.02
-        )
+        reduction = enforcer._calculate_required_reduction(current_var=0.10, target_var=0.02)
 
         # Should require > 90% reduction
         assert reduction > 90.0
@@ -335,7 +326,7 @@ class TestRiskHeatmap:
         heatmap = result['heatmap']
         # Should be sorted in descending order
         for i in range(len(heatmap) - 1):
-            assert abs(heatmap[i]['risk_contribution']) >= abs(heatmap[i+1]['risk_contribution'])
+            assert abs(heatmap[i]['risk_contribution']) >= abs(heatmap[i + 1]['risk_contribution'])
 
     def test_risk_distribution_analysis(self, enforcer, sample_portfolio):
         """Test risk distribution is analyzed."""
@@ -372,10 +363,7 @@ class TestRiskAttribution:
             'MSFT': [0.02, 0.01, -0.01],
         }
 
-        result = enforcer.attribute_risk_by_asset_class(
-            sample_portfolio,
-            returns_history
-        )
+        result = enforcer.attribute_risk_by_asset_class(sample_portfolio, returns_history)
 
         assert 'by_asset_class' in result
         assert len(result['by_asset_class']) > 0
@@ -394,11 +382,7 @@ class TestRiskAttribution:
             'MSFT': [0.02, 0.01, -0.01],
         }
 
-        result = enforcer.attribute_risk_by_asset_class(
-            sample_portfolio,
-            returns_history,
-            mapping
-        )
+        result = enforcer.attribute_risk_by_asset_class(sample_portfolio, returns_history, mapping)
 
         assert 'technology' in result['by_asset_class']
 
@@ -409,10 +393,7 @@ class TestRiskAttribution:
             'MSFT': [0.02, 0.01, -0.01],
         }
 
-        result = enforcer.attribute_risk_by_asset_class(
-            sample_portfolio,
-            returns_history
-        )
+        result = enforcer.attribute_risk_by_asset_class(sample_portfolio, returns_history)
 
         for asset_class, attribution in result['by_asset_class'].items():
             assert 'exposure' in attribution
@@ -427,10 +408,7 @@ class TestRiskAttribution:
             'MSFT': [0.02, 0.01, -0.01],
         }
 
-        result = enforcer.attribute_risk_by_asset_class(
-            sample_portfolio,
-            returns_history
-        )
+        result = enforcer.attribute_risk_by_asset_class(sample_portfolio, returns_history)
 
         assert 'dominant_risk' in result
         assert result['dominant_risk'] is not None
@@ -445,10 +423,7 @@ class TestDynamicPositionSizing:
         base_size = 10000.0
         utilization = 0.3  # 30%
 
-        adjusted = enforcer.calculate_dynamic_position_size(
-            base_size,
-            utilization
-        )
+        adjusted = enforcer.calculate_dynamic_position_size(base_size, utilization)
 
         # Should be close to base size
         assert adjusted > base_size * 0.6
@@ -458,10 +433,7 @@ class TestDynamicPositionSizing:
         base_size = 10000.0
         utilization = 0.9  # 90%
 
-        adjusted = enforcer.calculate_dynamic_position_size(
-            base_size,
-            utilization
-        )
+        adjusted = enforcer.calculate_dynamic_position_size(base_size, utilization)
 
         # Should be significantly reduced
         assert adjusted < base_size * 0.2
@@ -471,10 +443,7 @@ class TestDynamicPositionSizing:
         base_size = 10000.0
         utilization = 1.0  # 100%
 
-        adjusted = enforcer.calculate_dynamic_position_size(
-            base_size,
-            utilization
-        )
+        adjusted = enforcer.calculate_dynamic_position_size(base_size, utilization)
 
         assert adjusted == 0.0
 
@@ -484,11 +453,7 @@ class TestDynamicPositionSizing:
         utilization = 0.5
         max_util = 0.7
 
-        adjusted = enforcer.calculate_dynamic_position_size(
-            base_size,
-            utilization,
-            max_util
-        )
+        adjusted = enforcer.calculate_dynamic_position_size(base_size, utilization, max_util)
 
         # Should be reduced but not to zero
         assert 0 < adjusted < base_size

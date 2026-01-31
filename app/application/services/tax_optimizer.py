@@ -189,9 +189,7 @@ class TaxOptimizer:
             Tuple of (TaxCalculation, remaining_lots)
         """
         # Select lots to sell based on method
-        lots_to_sell, remaining_lots = self._select_lots(
-            tax_lots, sold_quantity, method
-        )
+        lots_to_sell, remaining_lots = self._select_lots(tax_lots, sold_quantity, method)
 
         # Calculate gains/losses
         short_term_gains = Decimal("0")
@@ -272,7 +270,7 @@ class TaxOptimizer:
                 key=lambda l: (
                     not l.is_long_term,  # Long-term first
                     l.realized_pnl,  # Losses first
-                )
+                ),
             )
         else:  # MAX_TAX
             # Sort to maximize taxes (harvest gains)
@@ -281,7 +279,7 @@ class TaxOptimizer:
                 key=lambda l: (
                     l.is_long_term,  # Short-term first
                     -l.realized_pnl,  # Gains first
-                )
+                ),
             )
 
         # Select lots
@@ -316,7 +314,8 @@ class TaxOptimizer:
                     acquisition_date=lot.acquisition_date,
                     acquisition_price=lot.acquisition_price,
                     current_price=lot.current_price,
-                    unrealized_pnl=lot.unrealized_pnl * ((lot.quantity - remaining_quantity) / lot.quantity),
+                    unrealized_pnl=lot.unrealized_pnl
+                    * ((lot.quantity - remaining_quantity) / lot.quantity),
                     holding_period_days=lot.holding_period_days,
                 )
                 remaining_lots = [remaining_lot]

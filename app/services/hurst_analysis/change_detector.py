@@ -22,22 +22,24 @@ logger = logging.getLogger(__name__)
 
 class RegimeChangeDetector:
     """
-    Detects regime changes in market conditions.
+        Detects regime changes in market conditions.
 
-    This class follows the Single Responsibility Principle - it only
-    detects regime changes. It does not calculate Hurst exponents,
-    classify regimes, or store historical data (those are handled by
-    other components).
+    from __future__ import annotations
 
-    Attributes:
-        classifier: Regime classifier for regime determination
-        threshold: Minimum Hurst difference to consider as change
+        This class follows the Single Responsibility Principle - it only
+        detects regime changes. It does not calculate Hurst exponents,
+        classify regimes, or store historical data (those are handled by
+        other components).
 
-    Example:
-        >>> detector = RegimeChangeDetector(classifier, threshold=0.1)
-        >>> change = detector.detect_change("AAPL", tracker.get_history)
-        >>> if change:
-        ...     print(f"Regime changed: {change.old_regime} -> {change.new_regime}")
+        Attributes:
+            classifier: Regime classifier for regime determination
+            threshold: Minimum Hurst difference to consider as change
+
+        Example:
+            >>> detector = RegimeChangeDetector(classifier, threshold=0.1)
+            >>> change = detector.detect_change("AAPL", tracker.get_history)
+            >>> if change:
+            ...     print(f"Regime changed: {change.old_regime} -> {change.new_regime}")
     """
 
     def __init__(

@@ -26,6 +26,7 @@ from app.engines.risk_engine.greeks_calculator import GreeksCalculator
 # Test Strategies
 # ============================================================================
 
+
 def valid_option_type() -> st.SearchStrategy[str]:
     """Generate valid option types."""
     return st.sampled_from(['call', 'put'])
@@ -65,6 +66,7 @@ def valid_dividend_yield() -> st.SearchStrategy[float]:
 # Delta Properties
 # ============================================================================
 
+
 @pytest.mark.unit
 @pytest.mark.property
 class TestDeltaProperties:
@@ -77,11 +79,19 @@ class TestDeltaProperties:
         time_to_expiry=valid_time_to_expiry(),
         volatility=valid_volatility(),
         risk_free_rate=valid_risk_free_rate(),
-        dividend_yield=valid_dividend_yield()
+        dividend_yield=valid_dividend_yield(),
     )
     @settings(max_examples=100)
-    def test_delta_in_bounds(self, option_type, spot_price, strike_price,
-                             time_to_expiry, volatility, risk_free_rate, dividend_yield):
+    def test_delta_in_bounds(
+        self,
+        option_type,
+        spot_price,
+        strike_price,
+        time_to_expiry,
+        volatility,
+        risk_free_rate,
+        dividend_yield,
+    ):
         """Delta should be within theoretical bounds."""
         calculator = GreeksCalculator()
         result = calculator.calculate_all_greeks(
@@ -109,11 +119,12 @@ class TestDeltaProperties:
         time_to_expiry=valid_time_to_expiry(),
         volatility=valid_volatility(),
         risk_free_rate=valid_risk_free_rate(),
-        dividend_yield=valid_dividend_yield()
+        dividend_yield=valid_dividend_yield(),
     )
     @settings(max_examples=100)
-    def test_call_delta_decreases_with_strike(self, spot_price, strike_price,
-                                               time_to_expiry, volatility, risk_free_rate, dividend_yield):
+    def test_call_delta_decreases_with_strike(
+        self, spot_price, strike_price, time_to_expiry, volatility, risk_free_rate, dividend_yield
+    ):
         """Call delta should decrease as strike increases."""
         calculator = GreeksCalculator()
         result1 = calculator.calculate_all_greeks(
@@ -141,8 +152,7 @@ class TestDeltaProperties:
         delta1 = result1['primary_greeks']['delta']
         delta2 = result2['primary_greeks']['delta']
 
-        assert delta2 <= delta1, \
-            f"Call delta should decrease with strike: {delta2} > {delta1}"
+        assert delta2 <= delta1, f"Call delta should decrease with strike: {delta2} > {delta1}"
 
     @given(
         spot_price=valid_spot_price(),
@@ -150,11 +160,12 @@ class TestDeltaProperties:
         time_to_expiry=valid_time_to_expiry(),
         volatility=valid_volatility(),
         risk_free_rate=valid_risk_free_rate(),
-        dividend_yield=valid_dividend_yield()
+        dividend_yield=valid_dividend_yield(),
     )
     @settings(max_examples=100)
-    def test_put_call_delta_relationship(self, spot_price, strike_price,
-                                          time_to_expiry, volatility, risk_free_rate, dividend_yield):
+    def test_put_call_delta_relationship(
+        self, spot_price, strike_price, time_to_expiry, volatility, risk_free_rate, dividend_yield
+    ):
         """Put delta should approximately equal call delta minus 1."""
         calculator = GreeksCalculator()
         call_result = calculator.calculate_all_greeks(
@@ -185,13 +196,15 @@ class TestDeltaProperties:
         # Put delta ≈ Call delta - 1 (with dividend adjustment)
         expected_put_delta = call_delta - np.exp(-dividend_yield * time_to_expiry)
 
-        assert abs(put_delta - expected_put_delta) < 0.01, \
-            f"Put delta {put_delta} != call delta {call_delta} - 1"
+        assert (
+            abs(put_delta - expected_put_delta) < 0.01
+        ), f"Put delta {put_delta} != call delta {call_delta} - 1"
 
 
 # ============================================================================
 # Gamma Properties
 # ============================================================================
+
 
 @pytest.mark.unit
 @pytest.mark.property
@@ -205,11 +218,19 @@ class TestGammaProperties:
         time_to_expiry=valid_time_to_expiry(),
         volatility=valid_volatility(),
         risk_free_rate=valid_risk_free_rate(),
-        dividend_yield=valid_dividend_yield()
+        dividend_yield=valid_dividend_yield(),
     )
     @settings(max_examples=100)
-    def test_gamma_always_positive(self, option_type, spot_price, strike_price,
-                                    time_to_expiry, volatility, risk_free_rate, dividend_yield):
+    def test_gamma_always_positive(
+        self,
+        option_type,
+        spot_price,
+        strike_price,
+        time_to_expiry,
+        volatility,
+        risk_free_rate,
+        dividend_yield,
+    ):
         """Gamma should always be positive for both calls and puts."""
         calculator = GreeksCalculator()
         result = calculator.calculate_all_greeks(
@@ -233,11 +254,12 @@ class TestGammaProperties:
         strike_price=valid_strike_price(),
         volatility=valid_volatility(),
         risk_free_rate=valid_risk_free_rate(),
-        dividend_yield=valid_dividend_yield()
+        dividend_yield=valid_dividend_yield(),
     )
     @settings(max_examples=100)
-    def test_gamma_same_for_call_and_put(self, spot_price, strike_price,
-                                          volatility, risk_free_rate, dividend_yield):
+    def test_gamma_same_for_call_and_put(
+        self, spot_price, strike_price, volatility, risk_free_rate, dividend_yield
+    ):
         """Gamma should be identical for calls and puts with same parameters."""
         calculator = GreeksCalculator()
         call_result = calculator.calculate_all_greeks(
@@ -265,19 +287,21 @@ class TestGammaProperties:
         call_gamma = call_result['primary_greeks']['gamma']
         put_gamma = put_result['primary_greeks']['gamma']
 
-        assert abs(call_gamma - put_gamma) < 1e-10, \
-            f"Call gamma {call_gamma} should equal put gamma {put_gamma}"
+        assert (
+            abs(call_gamma - put_gamma) < 1e-10
+        ), f"Call gamma {call_gamma} should equal put gamma {put_gamma}"
 
     @given(
         spot_price=valid_spot_price(),
         strike_price=valid_strike_price(),
         volatility=valid_volatility(),
         risk_free_rate=valid_risk_free_rate(),
-        dividend_yield=valid_dividend_yield()
+        dividend_yield=valid_dividend_yield(),
     )
     @settings(max_examples=100)
-    def test_gamma_decreases_with_time(self, spot_price, strike_price,
-                                        volatility, risk_free_rate, dividend_yield):
+    def test_gamma_decreases_with_time(
+        self, spot_price, strike_price, volatility, risk_free_rate, dividend_yield
+    ):
         """Gamma should be positive for different time horizons."""
         calculator = GreeksCalculator()
         result_long = calculator.calculate_all_greeks(
@@ -306,13 +330,15 @@ class TestGammaProperties:
         gamma_short = result_short['primary_greeks']['gamma']
 
         # Both gammas should be non-negative
-        assert gamma_long >= 0 and gamma_short >= 0, \
-            f"Both gammas should be non-negative: long={gamma_long}, short={gamma_short}"
+        assert (
+            gamma_long >= 0 and gamma_short >= 0
+        ), f"Both gammas should be non-negative: long={gamma_long}, short={gamma_short}"
 
 
 # ============================================================================
 # Theta Properties
 # ============================================================================
+
 
 @pytest.mark.unit
 @pytest.mark.property
@@ -326,11 +352,19 @@ class TestThetaProperties:
         time_to_expiry=valid_time_to_expiry(),
         volatility=valid_volatility(),
         risk_free_rate=valid_risk_free_rate(),
-        dividend_yield=valid_dividend_yield()
+        dividend_yield=valid_dividend_yield(),
     )
     @settings(max_examples=100)
-    def test_theta_negative_for_long_options(self, option_type, spot_price, strike_price,
-                                              time_to_expiry, volatility, risk_free_rate, dividend_yield):
+    def test_theta_negative_for_long_options(
+        self,
+        option_type,
+        spot_price,
+        strike_price,
+        time_to_expiry,
+        volatility,
+        risk_free_rate,
+        dividend_yield,
+    ):
         """Theta should typically be negative for long options (time decay)."""
         calculator = GreeksCalculator()
         result = calculator.calculate_all_greeks(
@@ -358,11 +392,12 @@ class TestThetaProperties:
         strike_price=valid_strike_price(),
         volatility=valid_volatility(),
         risk_free_rate=valid_risk_free_rate(),
-        dividend_yield=valid_dividend_yield()
+        dividend_yield=valid_dividend_yield(),
     )
     @settings(max_examples=100)
-    def test_theta_magnitude_increases_near_expiry(self, option_type, spot_price,
-                                                    strike_price, volatility, risk_free_rate, dividend_yield):
+    def test_theta_magnitude_increases_near_expiry(
+        self, option_type, spot_price, strike_price, volatility, risk_free_rate, dividend_yield
+    ):
         """Theta magnitude should increase as expiry approaches (for ATM options)."""
         # Use ATM strike
         atm_strike = spot_price
@@ -394,13 +429,15 @@ class TestThetaProperties:
         theta_near = result_near['primary_greeks']['theta']
 
         # Both thetas should be finite values
-        assert np.isfinite(theta_far) and np.isfinite(theta_near), \
-            f"Both thetas should be finite: far={theta_far}, near={theta_near}"
+        assert np.isfinite(theta_far) and np.isfinite(
+            theta_near
+        ), f"Both thetas should be finite: far={theta_far}, near={theta_near}"
 
 
 # ============================================================================
 # Vega Properties
 # ============================================================================
+
 
 @pytest.mark.unit
 @pytest.mark.property
@@ -414,11 +451,19 @@ class TestVegaProperties:
         time_to_expiry=valid_time_to_expiry(),
         volatility=valid_volatility(),
         risk_free_rate=valid_risk_free_rate(),
-        dividend_yield=valid_dividend_yield()
+        dividend_yield=valid_dividend_yield(),
     )
     @settings(max_examples=100)
-    def test_vega_always_positive(self, option_type, spot_price, strike_price,
-                                   time_to_expiry, volatility, risk_free_rate, dividend_yield):
+    def test_vega_always_positive(
+        self,
+        option_type,
+        spot_price,
+        strike_price,
+        time_to_expiry,
+        volatility,
+        risk_free_rate,
+        dividend_yield,
+    ):
         """Vega should always be positive (both calls and puts benefit from volatility)."""
         calculator = GreeksCalculator()
         result = calculator.calculate_all_greeks(
@@ -443,11 +488,12 @@ class TestVegaProperties:
         time_to_expiry=valid_time_to_expiry(),
         volatility=valid_volatility(),
         risk_free_rate=valid_risk_free_rate(),
-        dividend_yield=valid_dividend_yield()
+        dividend_yield=valid_dividend_yield(),
     )
     @settings(max_examples=100)
-    def test_vega_same_for_call_and_put(self, spot_price, strike_price,
-                                         time_to_expiry, volatility, risk_free_rate, dividend_yield):
+    def test_vega_same_for_call_and_put(
+        self, spot_price, strike_price, time_to_expiry, volatility, risk_free_rate, dividend_yield
+    ):
         """Vega should be identical for calls and puts with same parameters."""
         calculator = GreeksCalculator()
         call_result = calculator.calculate_all_greeks(
@@ -475,13 +521,15 @@ class TestVegaProperties:
         call_vega = call_result['primary_greeks']['vega']
         put_vega = put_result['primary_greeks']['vega']
 
-        assert abs(call_vega - put_vega) < 1e-10, \
-            f"Call vega {call_vega} should equal put vega {put_vega}"
+        assert (
+            abs(call_vega - put_vega) < 1e-10
+        ), f"Call vega {call_vega} should equal put vega {put_vega}"
 
 
 # ============================================================================
 # Put-Call Parity Properties
 # ============================================================================
+
 
 @pytest.mark.unit
 @pytest.mark.property
@@ -494,11 +542,12 @@ class TestPutCallParity:
         time_to_expiry=valid_time_to_expiry(),
         volatility=valid_volatility(),
         risk_free_rate=valid_risk_free_rate(),
-        dividend_yield=st.just(0.0)  # Parity simpler without dividends
+        dividend_yield=st.just(0.0),  # Parity simpler without dividends
     )
     @settings(max_examples=100)
-    def test_put_call_parity_holds(self, spot_price, strike_price,
-                                    time_to_expiry, volatility, risk_free_rate, dividend_yield):
+    def test_put_call_parity_holds(
+        self, spot_price, strike_price, time_to_expiry, volatility, risk_free_rate, dividend_yield
+    ):
         """Put-call parity: C - P = S - K*e^(-rT) should hold."""
         calculator = GreeksCalculator()
         call_result = calculator.calculate_all_greeks(
@@ -531,8 +580,7 @@ class TestPutCallParity:
         rhs = spot_price - strike_price * np.exp(-risk_free_rate * time_to_expiry)
 
         # Should be very close (allowing for numerical precision)
-        assert abs(lhs - rhs) < 0.01, \
-            f"Put-call parity violated: C-P={lhs}, S-K*e^(-rT)={rhs}"
+        assert abs(lhs - rhs) < 0.01, f"Put-call parity violated: C-P={lhs}, S-K*e^(-rT)={rhs}"
 
     @given(
         spot_price=valid_spot_price(),
@@ -540,11 +588,12 @@ class TestPutCallParity:
         time_to_expiry=valid_time_to_expiry(),
         volatility=valid_volatility(),
         risk_free_rate=valid_risk_free_rate(),
-        dividend_yield=valid_dividend_yield()
+        dividend_yield=valid_dividend_yield(),
     )
     @settings(max_examples=100)
-    def test_put_call_parity_with_dividends(self, spot_price, strike_price,
-                                             time_to_expiry, volatility, risk_free_rate, dividend_yield):
+    def test_put_call_parity_with_dividends(
+        self, spot_price, strike_price, time_to_expiry, volatility, risk_free_rate, dividend_yield
+    ):
         """Put-call parity with dividends: C - P = S*e^(-qT) - K*e^(-rT) should hold."""
         calculator = GreeksCalculator()
         call_result = calculator.calculate_all_greeks(
@@ -574,17 +623,20 @@ class TestPutCallParity:
 
         # Put-call parity with dividends
         lhs = call_price - put_price
-        rhs = spot_price * np.exp(-dividend_yield * time_to_expiry) - \
-              strike_price * np.exp(-risk_free_rate * time_to_expiry)
+        rhs = spot_price * np.exp(-dividend_yield * time_to_expiry) - strike_price * np.exp(
+            -risk_free_rate * time_to_expiry
+        )
 
         # Should be very close (allowing for numerical precision)
-        assert abs(lhs - rhs) < 0.05, \
-            f"Put-call parity with dividends violated: C-P={lhs}, S*e^(-qT)-K*e^(-rT)={rhs}"
+        assert (
+            abs(lhs - rhs) < 0.05
+        ), f"Put-call parity with dividends violated: C-P={lhs}, S*e^(-qT)-K*e^(-rT)={rhs}"
 
 
 # ============================================================================
 # Option Price Properties
 # ============================================================================
+
 
 @pytest.mark.unit
 @pytest.mark.property
@@ -597,11 +649,12 @@ class TestOptionPriceProperties:
         time_to_expiry=valid_time_to_expiry(),
         volatility=valid_volatility(),
         risk_free_rate=valid_risk_free_rate(),
-        dividend_yield=valid_dividend_yield()
+        dividend_yield=valid_dividend_yield(),
     )
     @settings(max_examples=100)
-    def test_option_price_positive(self, spot_price, strike_price,
-                                    time_to_expiry, volatility, risk_free_rate, dividend_yield):
+    def test_option_price_positive(
+        self, spot_price, strike_price, time_to_expiry, volatility, risk_free_rate, dividend_yield
+    ):
         """Option price should always be non-negative."""
         calculator = GreeksCalculator()
         for option_type in ['call', 'put']:
@@ -628,11 +681,12 @@ class TestOptionPriceProperties:
         time_to_expiry=valid_time_to_expiry(),
         volatility=valid_volatility(),
         risk_free_rate=valid_risk_free_rate(),
-        dividend_yield=valid_dividend_yield()
+        dividend_yield=valid_dividend_yield(),
     )
     @settings(max_examples=100)
-    def test_call_price_lower_bound(self, spot_price, strike_price,
-                                     time_to_expiry, volatility, risk_free_rate, dividend_yield):
+    def test_call_price_lower_bound(
+        self, spot_price, strike_price, time_to_expiry, volatility, risk_free_rate, dividend_yield
+    ):
         """Call price should satisfy: C >= max(S*e^(-qT) - K*e^(-rT), 0)."""
         calculator = GreeksCalculator()
         result = calculator.calculate_all_greeks(
@@ -651,13 +705,14 @@ class TestOptionPriceProperties:
 
         # Lower bound
         intrinsic_value = max(
-            spot_price * np.exp(-dividend_yield * time_to_expiry) -
-            strike_price * np.exp(-risk_free_rate * time_to_expiry),
-            0
+            spot_price * np.exp(-dividend_yield * time_to_expiry)
+            - strike_price * np.exp(-risk_free_rate * time_to_expiry),
+            0,
         )
 
-        assert call_price >= intrinsic_value - 0.01, \
-            f"Call price {call_price} below lower bound {intrinsic_value}"
+        assert (
+            call_price >= intrinsic_value - 0.01
+        ), f"Call price {call_price} below lower bound {intrinsic_value}"
 
     @given(
         spot_price=valid_spot_price(),
@@ -665,11 +720,12 @@ class TestOptionPriceProperties:
         time_to_expiry=valid_time_to_expiry(),
         volatility=valid_volatility(),
         risk_free_rate=valid_risk_free_rate(),
-        dividend_yield=valid_dividend_yield()
+        dividend_yield=valid_dividend_yield(),
     )
     @settings(max_examples=100)
-    def test_put_price_lower_bound(self, spot_price, strike_price,
-                                    time_to_expiry, volatility, risk_free_rate, dividend_yield):
+    def test_put_price_lower_bound(
+        self, spot_price, strike_price, time_to_expiry, volatility, risk_free_rate, dividend_yield
+    ):
         """Put price should satisfy: P >= max(K*e^(-rT) - S*e^(-qT), 0)."""
         calculator = GreeksCalculator()
         result = calculator.calculate_all_greeks(
@@ -688,13 +744,14 @@ class TestOptionPriceProperties:
 
         # Lower bound
         intrinsic_value = max(
-            strike_price * np.exp(-risk_free_rate * time_to_expiry) -
-            spot_price * np.exp(-dividend_yield * time_to_expiry),
-            0
+            strike_price * np.exp(-risk_free_rate * time_to_expiry)
+            - spot_price * np.exp(-dividend_yield * time_to_expiry),
+            0,
         )
 
-        assert put_price >= intrinsic_value - 0.01, \
-            f"Put price {put_price} below lower bound {intrinsic_value}"
+        assert (
+            put_price >= intrinsic_value - 0.01
+        ), f"Put price {put_price} below lower bound {intrinsic_value}"
 
     @given(
         spot_price=valid_spot_price(),
@@ -702,11 +759,12 @@ class TestOptionPriceProperties:
         time_to_expiry=valid_time_to_expiry(),
         volatility=valid_volatility(),
         risk_free_rate=valid_risk_free_rate(),
-        dividend_yield=valid_dividend_yield()
+        dividend_yield=valid_dividend_yield(),
     )
     @settings(max_examples=100)
-    def test_call_price_increases_with_spot(self, spot_price, strike_price,
-                                             time_to_expiry, volatility, risk_free_rate, dividend_yield):
+    def test_call_price_increases_with_spot(
+        self, spot_price, strike_price, time_to_expiry, volatility, risk_free_rate, dividend_yield
+    ):
         """Call price should increase (or stay same) as spot price increases."""
         calculator = GreeksCalculator()
         result1 = calculator.calculate_all_greeks(
@@ -735,8 +793,7 @@ class TestOptionPriceProperties:
         price2 = result2['option_price']
 
         # Call price should increase or stay the same with higher spot
-        assert price2 >= price1, \
-            f"Call price should increase with spot: {price2} < {price1}"
+        assert price2 >= price1, f"Call price should increase with spot: {price2} < {price1}"
 
     @given(
         spot_price=valid_spot_price(),
@@ -744,11 +801,12 @@ class TestOptionPriceProperties:
         time_to_expiry=valid_time_to_expiry(),
         volatility=valid_volatility(),
         risk_free_rate=valid_risk_free_rate(),
-        dividend_yield=valid_dividend_yield()
+        dividend_yield=valid_dividend_yield(),
     )
     @settings(max_examples=100)
-    def test_put_price_decreases_with_spot(self, spot_price, strike_price,
-                                            time_to_expiry, volatility, risk_free_rate, dividend_yield):
+    def test_put_price_decreases_with_spot(
+        self, spot_price, strike_price, time_to_expiry, volatility, risk_free_rate, dividend_yield
+    ):
         """Put price should decrease (or stay same) as spot price increases."""
         calculator = GreeksCalculator()
         result1 = calculator.calculate_all_greeks(
@@ -777,13 +835,13 @@ class TestOptionPriceProperties:
         price2 = result2['option_price']
 
         # Put price should decrease or stay the same with higher spot
-        assert price2 <= price1, \
-            f"Put price should decrease with spot: {price2} > {price1}"
+        assert price2 <= price1, f"Put price should decrease with spot: {price2} > {price1}"
 
 
 # ============================================================================
 # Higher-Order Greeks Properties
 # ============================================================================
+
 
 @pytest.mark.unit
 @pytest.mark.property
@@ -796,11 +854,12 @@ class TestHigherOrderGreeks:
         time_to_expiry=valid_time_to_expiry(),
         volatility=valid_volatility(),
         risk_free_rate=valid_risk_free_rate(),
-        dividend_yield=valid_dividend_yield()
+        dividend_yield=valid_dividend_yield(),
     )
     @settings(max_examples=100)
-    def test_vanna_defined(self, spot_price, strike_price,
-                           time_to_expiry, volatility, risk_free_rate, dividend_yield):
+    def test_vanna_defined(
+        self, spot_price, strike_price, time_to_expiry, volatility, risk_free_rate, dividend_yield
+    ):
         """Vanna should be defined and finite."""
         calculator = GreeksCalculator()
         result = calculator.calculate_all_greeks(
@@ -825,11 +884,12 @@ class TestHigherOrderGreeks:
         time_to_expiry=valid_time_to_expiry(),
         volatility=valid_volatility(),
         risk_free_rate=valid_risk_free_rate(),
-        dividend_yield=valid_dividend_yield()
+        dividend_yield=valid_dividend_yield(),
     )
     @settings(max_examples=100)
-    def test_vomma_defined(self, spot_price, strike_price,
-                           time_to_expiry, volatility, risk_free_rate, dividend_yield):
+    def test_vomma_defined(
+        self, spot_price, strike_price, time_to_expiry, volatility, risk_free_rate, dividend_yield
+    ):
         """Vomma should be defined and finite."""
         calculator = GreeksCalculator()
         result = calculator.calculate_all_greeks(
@@ -854,11 +914,12 @@ class TestHigherOrderGreeks:
         time_to_expiry=valid_time_to_expiry(),
         volatility=valid_volatility(),
         risk_free_rate=valid_risk_free_rate(),
-        dividend_yield=valid_dividend_yield()
+        dividend_yield=valid_dividend_yield(),
     )
     @settings(max_examples=100)
-    def test_charm_defined(self, spot_price, strike_price,
-                           time_to_expiry, volatility, risk_free_rate, dividend_yield):
+    def test_charm_defined(
+        self, spot_price, strike_price, time_to_expiry, volatility, risk_free_rate, dividend_yield
+    ):
         """Charm should be defined and finite."""
         calculator = GreeksCalculator()
         result = calculator.calculate_all_greeks(
@@ -882,6 +943,7 @@ class TestHigherOrderGreeks:
 # Edge Cases
 # ============================================================================
 
+
 @pytest.mark.unit
 @pytest.mark.property
 class TestGreeksEdgeCases:
@@ -891,11 +953,12 @@ class TestGreeksEdgeCases:
         spot_price=valid_spot_price(),
         strike_price=valid_strike_price(),
         volatility=valid_volatility(),
-        risk_free_rate=valid_risk_free_rate()
+        risk_free_rate=valid_risk_free_rate(),
     )
     @settings(max_examples=50)
-    def test_zero_time_to_expiry_raises_error(self, spot_price, strike_price,
-                                               volatility, risk_free_rate):
+    def test_zero_time_to_expiry_raises_error(
+        self, spot_price, strike_price, volatility, risk_free_rate
+    ):
         """Zero time to expiry should raise an error."""
         calculator = GreeksCalculator()
         result = calculator.calculate_all_greeks(
@@ -914,11 +977,12 @@ class TestGreeksEdgeCases:
         spot_price=valid_spot_price(),
         strike_price=valid_strike_price(),
         time_to_expiry=valid_time_to_expiry(),
-        risk_free_rate=valid_risk_free_rate()
+        risk_free_rate=valid_risk_free_rate(),
     )
     @settings(max_examples=50)
-    def test_zero_volatility_raises_error(self, spot_price, strike_price,
-                                           time_to_expiry, risk_free_rate):
+    def test_zero_volatility_raises_error(
+        self, spot_price, strike_price, time_to_expiry, risk_free_rate
+    ):
         """Zero volatility should raise an error."""
         calculator = GreeksCalculator()
         result = calculator.calculate_all_greeks(
@@ -937,11 +1001,12 @@ class TestGreeksEdgeCases:
         spot_price=st.floats(min_value=50, max_value=500, allow_nan=False, allow_infinity=False),
         strike_price=st.floats(min_value=50, max_value=500, allow_nan=False, allow_infinity=False),
         time_to_expiry=valid_time_to_expiry(),
-        volatility=st.floats(min_value=0.01, max_value=0.5, allow_nan=False, allow_infinity=False)
+        volatility=st.floats(min_value=0.01, max_value=0.5, allow_nan=False, allow_infinity=False),
     )
     @settings(max_examples=50)
-    def test_deep_itm_call_delta_near_one(self, spot_price, strike_price,
-                                           time_to_expiry, volatility):
+    def test_deep_itm_call_delta_near_one(
+        self, spot_price, strike_price, time_to_expiry, volatility
+    ):
         """Deep ITM call should have delta close to 1."""
         # Use a fixed deep ITM scenario: spot = 2 * strike
         calculator = GreeksCalculator()
@@ -960,18 +1025,20 @@ class TestGreeksEdgeCases:
         delta = result['primary_greeks']['delta']
 
         # Delta should be close to 1 for deep ITM (with reasonable volatility)
-        assert delta > 0.7, \
-            f"Deep ITM call delta {delta} should be close to 1"
+        assert delta > 0.7, f"Deep ITM call delta {delta} should be close to 1"
 
     @given(
         spot_price=st.floats(min_value=50, max_value=500, allow_nan=False, allow_infinity=False),
         strike_price=st.floats(min_value=50, max_value=500, allow_nan=False, allow_infinity=False),
-        time_to_expiry=st.floats(min_value=0.01, max_value=1.0, allow_nan=False, allow_infinity=False),  # Limit to 1 year
-        volatility=st.floats(min_value=0.01, max_value=0.5, allow_nan=False, allow_infinity=False)
+        time_to_expiry=st.floats(
+            min_value=0.01, max_value=1.0, allow_nan=False, allow_infinity=False
+        ),  # Limit to 1 year
+        volatility=st.floats(min_value=0.01, max_value=0.5, allow_nan=False, allow_infinity=False),
     )
     @settings(max_examples=50)
-    def test_deep_otm_call_delta_near_zero(self, spot_price, strike_price,
-                                            time_to_expiry, volatility):
+    def test_deep_otm_call_delta_near_zero(
+        self, spot_price, strike_price, time_to_expiry, volatility
+    ):
         """Deep OTM call should have delta close to 0."""
         # Use a fixed deep OTM scenario: spot = 0.5 * strike
         calculator = GreeksCalculator()
@@ -990,5 +1057,4 @@ class TestGreeksEdgeCases:
         delta = result['primary_greeks']['delta']
 
         # Delta should be reasonably close to 0 for deep OTM (with reasonable volatility)
-        assert delta < 0.45, \
-            f"Deep OTM call delta {delta} should be close to 0"
+        assert delta < 0.45, f"Deep OTM call delta {delta} should be close to 0"

@@ -25,22 +25,22 @@ class TestFamaFrenchFactorModel:
 
         asset_returns = pd.Series(
             np.random.normal(0.0005, 0.02, n),
-            index=pd.date_range('2023-01-01', periods=n, freq='D')
+            index=pd.date_range('2023-01-01', periods=n, freq='D'),
         )
 
         market_returns = pd.Series(
             np.random.normal(0.0003, 0.015, n),
-            index=pd.date_range('2023-01-01', periods=n, freq='D')
+            index=pd.date_range('2023-01-01', periods=n, freq='D'),
         )
 
         smb_returns = pd.Series(
             np.random.normal(0.0001, 0.01, n),
-            index=pd.date_range('2023-01-01', periods=n, freq='D')
+            index=pd.date_range('2023-01-01', periods=n, freq='D'),
         )
 
         hml_returns = pd.Series(
             np.random.normal(0.0002, 0.008, n),
-            index=pd.date_range('2023-01-01', periods=n, freq='D')
+            index=pd.date_range('2023-01-01', periods=n, freq='D'),
         )
 
         return {
@@ -131,7 +131,7 @@ class TestAPTModel:
         returns = pd.DataFrame(
             np.random.normal(0.0005, 0.02, (n, n_assets)),
             index=pd.date_range('2023-01-01', periods=n, freq='D'),
-            columns=[f'asset_{i}' for i in range(n_assets)]
+            columns=[f'asset_{i}' for i in range(n_assets)],
         )
 
         return returns
@@ -199,14 +199,17 @@ class TestStatisticalArbitrage:
 
         asset_returns = pd.Series(
             np.random.normal(0.0005, 0.02, n),
-            index=pd.date_range('2023-01-01', periods=n, freq='D')
+            index=pd.date_range('2023-01-01', periods=n, freq='D'),
         )
 
-        factor_returns = pd.DataFrame({
-            'market': np.random.normal(0.0003, 0.015, n),
-            'smb': np.random.normal(0.0001, 0.01, n),
-            'hml': np.random.normal(0.0002, 0.008, n),
-        }, index=pd.date_range('2023-01-01', periods=n, freq='D'))
+        factor_returns = pd.DataFrame(
+            {
+                'market': np.random.normal(0.0003, 0.015, n),
+                'smb': np.random.normal(0.0001, 0.01, n),
+                'hml': np.random.normal(0.0002, 0.008, n),
+            },
+            index=pd.date_range('2023-01-01', periods=n, freq='D'),
+        )
 
         return {'asset_returns': asset_returns, 'factor_returns': factor_returns}
 
@@ -238,8 +241,7 @@ class TestStatisticalArbitrage:
         arb = StatisticalArbitrage(factor_model)
 
         residuals = arb.calculate_residuals(
-            setup_data['asset_returns'],
-            setup_data['factor_returns']
+            setup_data['asset_returns'], setup_data['factor_returns']
         )
 
         assert isinstance(residuals, pd.Series)
@@ -257,10 +259,7 @@ class TestStatisticalArbitrage:
 
         arb = StatisticalArbitrage(factor_model, z_score_threshold=1.5)
 
-        signals = arb.generate_signals(
-            setup_data['asset_returns'],
-            setup_data['factor_returns']
-        )
+        signals = arb.generate_signals(setup_data['asset_returns'], setup_data['factor_returns'])
 
         assert isinstance(signals, pd.Series)
         assert set(signals.unique()).issubset({-1, 0, 1})
@@ -275,11 +274,13 @@ class TestUtilityFunctions:
         n = 100
 
         asset_returns = pd.Series(np.random.normal(0, 0.02, n))
-        factor_returns = pd.DataFrame({
-            'factor1': np.random.normal(0, 0.01, n),
-            'factor2': np.random.normal(0, 0.015, n),
-            'factor3': np.random.normal(0, 0.008, n),
-        })
+        factor_returns = pd.DataFrame(
+            {
+                'factor1': np.random.normal(0, 0.01, n),
+                'factor2': np.random.normal(0, 0.015, n),
+                'factor3': np.random.normal(0, 0.008, n),
+            }
+        )
 
         exposure = calculate_factor_exposure(asset_returns, factor_returns)
 
@@ -295,7 +296,7 @@ class TestUtilityFunctions:
 
         returns = pd.DataFrame(
             np.random.normal(0.0005, 0.02, (n, n_assets)),
-            columns=[f'asset_{i}' for i in range(n_assets)]
+            columns=[f'asset_{i}' for i in range(n_assets)],
         )
 
         factor_returns, weights = create_factor_portfolio(returns, n_factors=5)

@@ -191,10 +191,7 @@ class TestVaRBacktester:
         var_preds, returns = valid_var_predictions
 
         result = run_var_backtest(
-            var_preds,
-            returns,
-            confidence_level=0.95,
-            significance_level=0.05
+            var_preds, returns, confidence_level=0.95, significance_level=0.05
         )
 
         assert 'error' not in result
@@ -326,9 +323,9 @@ class TestVaRBacktesterIntegration:
         for i in range(n):
             if i < window:
                 # Use expanding window
-                hist_returns = returns[:i+1]
+                hist_returns = returns[: i + 1]
             else:
-                hist_returns = returns[i-window:i]
+                hist_returns = returns[i - window : i]
 
             var_val = np.percentile(hist_returns, 5)
             var_preds.append(var_val)

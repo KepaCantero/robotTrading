@@ -623,7 +623,6 @@ class LimitOrderBook:
                 and self._ask_prices
                 and (order.order_type == OrderType.MARKET or self._ask_prices[0] <= order.price)
             ):  # type: ignore
-
                 best_ask_price = self._ask_prices[0]
                 ask_level = self._asks[best_ask_price]
 
@@ -668,7 +667,6 @@ class LimitOrderBook:
                 and self._bid_prices
                 and (order.order_type == OrderType.MARKET or self._bid_prices[0] >= order.price)
             ):  # type: ignore
-
                 best_bid_price = self._bid_prices[0]
                 bid_level = self._bids[best_bid_price]
 

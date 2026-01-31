@@ -291,11 +291,7 @@ class DividendInvesting:
             growth_score = 0.25
 
         # Weighted score
-        score = (
-            0.5 * attractiveness
-            + 0.3 * sustainability
-            + 0.2 * growth_score
-        )
+        score = 0.5 * attractiveness + 0.3 * sustainability + 0.2 * growth_score
 
         return score
 
@@ -360,18 +356,11 @@ class DividendInvesting:
             weights = {s: w / total_weight for s, w in weights.items()}
 
         # Calculate portfolio metrics
-        portfolio_yield = sum(
-            dividend_metrics[s].dividend_yield * w
-            for s, w in weights.items()
-        )
+        portfolio_yield = sum(dividend_metrics[s].dividend_yield * w for s, w in weights.items())
         portfolio_growth = sum(
-            dividend_metrics[s].dividend_growth_rate * w
-            for s, w in weights.items()
+            dividend_metrics[s].dividend_growth_rate * w for s, w in weights.items()
         )
-        portfolio_payout = sum(
-            dividend_metrics[s].payout_ratio * w
-            for s, w in weights.items()
-        )
+        portfolio_payout = sum(dividend_metrics[s].payout_ratio * w for s, w in weights.items())
 
         return DividendPortfolio(
             positions=weights,

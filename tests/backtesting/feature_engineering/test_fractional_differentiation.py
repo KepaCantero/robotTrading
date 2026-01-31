@@ -20,7 +20,7 @@ from app.backtesting.feature_engineering import (
     get_weights,
     fractional_diff,
     find_optimal_d,
-    apply_frac_diff_to_dataframe
+    apply_frac_diff_to_dataframe,
 )
 
 
@@ -69,7 +69,7 @@ class TestWeightCalculation:
         assert abs(weights[-1]) <= threshold
         # Weights should be decreasing in magnitude after the first few
         # Check that last half of weights are non-increasing
-        second_half = weights[len(weights)//2:]
+        second_half = weights[len(weights) // 2 :]
         assert np.all(np.diff(np.abs(second_half)) <= 0)
 
     def test_weights_d_zero(self, fractional_diff_instance):
@@ -181,8 +181,7 @@ class TestOptimalDFinding:
     def test_find_optimal_d_binary_search(self, fractional_diff_instance, sample_series):
         """Test binary search method for finding optimal d."""
         optimal_d, p_value, metadata = fractional_diff_instance.find_optimal_d(
-            sample_series,
-            method='binary'
+            sample_series, method='binary'
         )
         assert metadata['method'] == 'binary_search'
         assert 0.0 <= optimal_d <= 1.0
@@ -190,8 +189,7 @@ class TestOptimalDFinding:
     def test_find_optimal_d_grid_search(self, fractional_diff_instance, sample_series):
         """Test grid search method for finding optimal d."""
         optimal_d, p_value, metadata = fractional_diff_instance.find_optimal_d(
-            sample_series,
-            method='grid'
+            sample_series, method='grid'
         )
         assert metadata['method'] == 'grid_search'
         assert 0.0 <= optimal_d <= 1.0
@@ -242,8 +240,13 @@ class TestComparisonUtilities:
         """Test that compare_d_values returns expected columns."""
         result = fractional_diff_instance.compare_d_values(sample_series)
         expected_cols = [
-            'd', 'adf_statistic', 'p_value', 'is_stationary',
-            'memory_preservation', 'memory_loss_pct', 'n_obs'
+            'd',
+            'adf_statistic',
+            'p_value',
+            'is_stationary',
+            'memory_preservation',
+            'memory_loss_pct',
+            'n_obs',
         ]
         for col in expected_cols:
             assert col in result.columns
@@ -267,11 +270,13 @@ class TestTransformer:
     def sample_dataframe(self):
         """Create a sample DataFrame for transformer testing."""
         np.random.seed(42)
-        return pd.DataFrame({
-            'feature1': np.random.randn(100).cumsum(),
-            'feature2': np.random.randn(100).cumsum(),
-            'feature3': np.random.randn(100)
-        })
+        return pd.DataFrame(
+            {
+                'feature1': np.random.randn(100).cumsum(),
+                'feature2': np.random.randn(100).cumsum(),
+                'feature3': np.random.randn(100),
+            }
+        )
 
     def test_transformer_fit(self, sample_dataframe):
         """Test transformer fit method."""
@@ -334,10 +339,9 @@ class TestConvenienceFunctions:
     def test_apply_frac_diff_to_dataframe(self):
         """Test apply_frac_diff_to_dataframe function."""
         np.random.seed(42)
-        df = pd.DataFrame({
-            'price': np.random.randn(100).cumsum(),
-            'volume': np.random.randint(100, 1000, 100)
-        })
+        df = pd.DataFrame(
+            {'price': np.random.randn(100).cumsum(), 'volume': np.random.randint(100, 1000, 100)}
+        )
         result = apply_frac_diff_to_dataframe(df, d=0.5, columns=['price'])
         assert 'price_fracdiff' in result.columns
         assert isinstance(result, pd.DataFrame)

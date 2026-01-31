@@ -102,7 +102,7 @@ def generate_realistic_price_path(
         if crash_day > 0:
             prices[crash_day] = prices[crash_day - 1] * (1 + crash_magnitude)
         else:
-            prices[crash_day] *= (1 + crash_magnitude)
+            prices[crash_day] *= 1 + crash_magnitude
 
     # Inject gap if specified
     if gap_day is not None and 0 < gap_day < days:
@@ -569,9 +569,7 @@ class TestPositionMonitorEdgeCases:
     async def test_overnight_gap_triggers_stop_loss(self, monitor, mock_broker):
         """Test stop-loss trigger due to overnight gap down."""
         # Generate prices with 8% gap down
-        prices = generate_realistic_price_path(
-            days=5, gap_day=2, gap_magnitude=-0.08
-        )
+        prices = generate_realistic_price_path(days=5, gap_day=2, gap_magnitude=-0.08)
 
         position = MonitoredPosition(
             position_id="test_gap",

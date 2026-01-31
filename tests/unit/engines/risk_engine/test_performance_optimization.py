@@ -83,10 +83,12 @@ class TestMonteCarloPerformance:
     def test_monte_carlo_with_parallel_processing(self):
         """Test Monte Carlo with parallel processing."""
         returns = np.random.normal(0, 0.02, 500)
-        calc = MonteCarloVaRCalculator({
-            'confidence_level': 0.95,
-            'n_simulations': 10000,
-        })
+        calc = MonteCarloVaRCalculator(
+            {
+                'confidence_level': 0.95,
+                'n_simulations': 10000,
+            }
+        )
 
         start = time.time()
         result = calc.calculate_var(returns)
@@ -120,10 +122,12 @@ class TestNumbaFlags:
     def test_monte_carlo_numba_flag(self):
         """Test that Monte Carlo VaR reports Numba acceleration."""
         returns = np.random.normal(0, 0.02, 1000)
-        calc = MonteCarloVaRCalculator({
-            'confidence_level': 0.95,
-            'n_simulations': 10000,
-        })
+        calc = MonteCarloVaRCalculator(
+            {
+                'confidence_level': 0.95,
+                'n_simulations': 10000,
+            }
+        )
         result = calc.calculate_var(returns)
 
         assert 'numba_accelerated' in result

@@ -24,30 +24,28 @@ def multi_asset_sample_data():
     # Simulate regime changes
     regime_returns = base_returns.copy()
     regime_returns[100:200] *= 0.5  # Lower volatility regime
-    regime_returns[200:] *= 1.5     # Higher volatility regime
+    regime_returns[200:] *= 1.5  # Higher volatility regime
 
     price_data = {
         'AAPL': [100.0],
         'MSFT': [100.0],
         'GOOGL': [100.0],
         'AMZN': [100.0],
-        'TSLA': [100.0]
+        'TSLA': [100.0],
     }
 
     correlations = {
-        'AAPL': 0.8,   # High correlation with market
+        'AAPL': 0.8,  # High correlation with market
         'MSFT': 0.75,
         'GOOGL': 0.7,
         'AMZN': 0.6,
-        'TSLA': 0.4    # Lower correlation
+        'TSLA': 0.4,  # Lower correlation
     }
 
     for i, ret in enumerate(regime_returns):
         for symbol, corr in correlations.items():
             noise = np.random.normal(0, 0.01)
-            price_data[symbol].append(
-                price_data[symbol][-1] * (1 + corr * ret + noise)
-            )
+            price_data[symbol].append(price_data[symbol][-1] * (1 + corr * ret + noise))
 
     return price_data
 
@@ -66,9 +64,7 @@ def bull_market_data():
         noise = np.random.normal(0, 0.015)
 
         for symbol in price_data:
-            price_data[symbol].append(
-                price_data[symbol][-1] * (1 + trend + noise)
-            )
+            price_data[symbol].append(price_data[symbol][-1] * (1 + trend + noise))
 
     return price_data
 
@@ -87,9 +83,7 @@ def bear_market_data():
         noise = np.random.normal(0, 0.025)
 
         for symbol in price_data:
-            price_data[symbol].append(
-                price_data[symbol][-1] * (1 + trend + noise)
-            )
+            price_data[symbol].append(price_data[symbol][-1] * (1 + trend + noise))
 
     return price_data
 
@@ -108,9 +102,7 @@ def sideways_market_data():
         noise = np.random.normal(0, 0.012)
 
         for symbol in price_data:
-            price_data[symbol].append(
-                price_data[symbol][-1] * (1 + mean_reversion + noise)
-            )
+            price_data[symbol].append(price_data[symbol][-1] * (1 + mean_reversion + noise))
 
     return price_data
 
@@ -122,7 +114,9 @@ class TestClusteringRegimeDetectorIntegration:
     @patch('app.engines.context_engine.regime_detectors.clustering_regime_detector.KMeans')
     def test_clustering_detector_with_different_markets(self, mock_kmeans):
         """Test clustering detector across different market conditions."""
-        from app.engines.context_engine.regime_detectors.clustering_regime_detector import ClusteringRegimeDetector
+        from app.engines.context_engine.regime_detectors.clustering_regime_detector import (
+            ClusteringRegimeDetector,
+        )
 
         mock_model = MagicMock()
         mock_model.predict.return_value = np.array([2])  # Bull
@@ -145,7 +139,9 @@ class TestClusteringRegimeDetectorIntegration:
     @patch('app.engines.context_engine.regime_detectors.clustering_regime_detector.KMeans')
     def test_clustering_detector_feature_extraction_consistency(self, mock_kmeans):
         """Test that feature extraction is consistent across similar data."""
-        from app.engines.context_engine.regime_detectors.clustering_regime_detector import ClusteringRegimeDetector
+        from app.engines.context_engine.regime_detectors.clustering_regime_detector import (
+            ClusteringRegimeDetector,
+        )
 
         detector = ClusteringRegimeDetector()
 
@@ -172,7 +168,9 @@ class TestCorrelationRegimeDetectorIntegration:
 
     def test_correlation_detector_with_market_regimes(self, multi_asset_sample_data):
         """Test correlation detector across different market regimes."""
-        from app.engines.context_engine.regime_detectors.correlation_regime_detector import CorrelationRegimeDetector
+        from app.engines.context_engine.regime_detectors.correlation_regime_detector import (
+            CorrelationRegimeDetector,
+        )
 
         detector = CorrelationRegimeDetector()
 
@@ -185,25 +183,31 @@ class TestCorrelationRegimeDetectorIntegration:
 
     def test_correlation_detector_baseline_functionality(self, multi_asset_sample_data):
         """Test baseline setting and comparison."""
-        from app.engines.context_engine.regime_detectors.correlation_regime_detector import CorrelationRegimeDetector
+        from app.engines.context_engine.regime_detectors.correlation_regime_detector import (
+            CorrelationRegimeDetector,
+        )
 
         detector = CorrelationRegimeDetector()
 
         # Set baseline with first half of data
-        first_half = {symbol: prices[:len(prices)//2]
-                     for symbol, prices in multi_asset_sample_data.items()}
+        first_half = {
+            symbol: prices[: len(prices) // 2] for symbol, prices in multi_asset_sample_data.items()
+        }
         detector.set_baseline(first_half)
 
         # Detect with second half
-        second_half = {symbol: prices[len(prices)//2:]
-                      for symbol, prices in multi_asset_sample_data.items()}
+        second_half = {
+            symbol: prices[len(prices) // 2 :] for symbol, prices in multi_asset_sample_data.items()
+        }
         result = detector.detect(second_half)
 
         assert 'baseline_comparison' in result
 
     def test_correlation_detector_with_high_correlation_assets(self, bull_market_data):
         """Test with highly correlated assets (ETFs)."""
-        from app.engines.context_engine.regime_detectors.correlation_regime_detector import CorrelationRegimeDetector
+        from app.engines.context_engine.regime_detectors.correlation_regime_detector import (
+            CorrelationRegimeDetector,
+        )
 
         detector = CorrelationRegimeDetector(config={'correlation_threshold': 0.8})
 
@@ -220,13 +224,15 @@ class TestHMMRegimeDetectorIntegration:
     @patch('app.engines.context_engine.regime_detectors.hmm_regime_detector.hmm.GaussianHMM')
     def test_hmm_detector_regime_classification(self, mock_hmm):
         """Test HMM detector regime classification."""
-        from app.engines.context_engine.regime_detectors.hmm_regime_detector import HMMRegimeDetector
+        from app.engines.context_engine.regime_detectors.hmm_regime_detector import (
+            HMMRegimeDetector,
+        )
 
         mock_model = MagicMock()
         mock_model.predict.return_value = np.array([2, 2, 1, 1, 0])
         mock_model.score_samples.return_value = (
             np.array([-1.0, -2.0, -3.0, -4.0, -5.0]),
-            np.array([[0.1, 0.2, 0.7]])
+            np.array([[0.1, 0.2, 0.7]]),
         )
         mock_model.transmat_ = np.eye(3)
         mock_model.means_ = np.zeros((3, 2))
@@ -245,7 +251,9 @@ class TestHMMRegimeDetectorIntegration:
     @patch('app.engines.context_engine.regime_detectors.hmm_regime_detector.hmm.GaussianHMM')
     def test_hmm_detector_volatility_calculation(self, mock_hmm):
         """Test HMM volatility calculation."""
-        from app.engines.context_engine.regime_detectors.hmm_regime_detector import HMMRegimeDetector
+        from app.engines.context_engine.regime_detectors.hmm_regime_detector import (
+            HMMRegimeDetector,
+        )
 
         detector = HMMRegimeDetector()
 
@@ -267,8 +275,12 @@ class TestCorrelationNetworkAnalyzerIntegration:
 
     def test_network_analyzer_with_multi_asset_data(self, multi_asset_sample_data):
         """Test network analysis with multiple assets."""
-        from app.engines.context_engine.correlation_analyzers.correlation_network_analyzer import CorrelationNetworkAnalyzer
-        from app.engines.regime_detectors.correlation_regime_detector import CorrelationRegimeDetector
+        from app.engines.context_engine.correlation_analyzers.correlation_network_analyzer import (
+            CorrelationNetworkAnalyzer,
+        )
+        from app.engines.regime_detectors.correlation_regime_detector import (
+            CorrelationRegimeDetector,
+        )
 
         # First get correlation matrix
         corr_detector = CorrelationRegimeDetector()
@@ -289,8 +301,12 @@ class TestCorrelationNetworkAnalyzerIntegration:
 
     def test_network_analyzer_cluster_detection(self, multi_asset_sample_data):
         """Test cluster detection in network analysis."""
-        from app.engines.context_engine.correlation_analyzers.correlation_network_analyzer import CorrelationNetworkAnalyzer
-        from app.engines.regime_detectors.correlation_regime_detector import CorrelationRegimeDetector
+        from app.engines.context_engine.correlation_analyzers.correlation_network_analyzer import (
+            CorrelationNetworkAnalyzer,
+        )
+        from app.engines.regime_detectors.correlation_regime_detector import (
+            CorrelationRegimeDetector,
+        )
 
         corr_detector = CorrelationRegimeDetector()
         result = corr_detector.detect(multi_asset_sample_data)
@@ -376,10 +392,14 @@ class TestGARCHAnalyzerIntegration:
 class TestStructuralChangeDetectorIntegration:
     """Integration tests for StructuralChangeDetector."""
 
-    @patch('app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid')
+    @patch(
+        'app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid'
+    )
     def test_structural_change_detection_methods(self, mock_cusum):
         """Test both CUSUM and Chow test methods."""
-        from app.engines.context_engine.volatility_analyzers.structural_change_detector import StructuralChangeDetector
+        from app.engines.context_engine.volatility_analyzers.structural_change_detector import (
+            StructuralChangeDetector,
+        )
 
         # Mock CUSUM
         mock_cusum.return_value = (5.5, 0.03, 4.8)
@@ -401,10 +421,14 @@ class TestStructuralChangeDetectorIntegration:
         chow_result = chow_detector.detect(prices)
         assert 'change_detected' in chow_result
 
-    @patch('app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid')
+    @patch(
+        'app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid'
+    )
     def test_structural_change_across_market_regimes(self, mock_cusum):
         """Test structural change detection across different market regimes."""
-        from app.engines.context_engine.volatility_analyzers.structural_change_detector import StructuralChangeDetector
+        from app.engines.context_engine.volatility_analyzers.structural_change_detector import (
+            StructuralChangeDetector,
+        )
 
         mock_cusum.return_value = (6.0, 0.01, 4.8)
 
@@ -429,7 +453,9 @@ class TestCrossModuleIntegration:
     @patch('app.engines.context_engine.volatility_analyzers.garch_analyzer.arch_model')
     def test_regime_and_volatility_integration(self, mock_arch, mock_kmeans):
         """Test integration between regime detection and volatility analysis."""
-        from app.engines.context_engine.regime_detectors.clustering_regime_detector import ClusteringRegimeDetector
+        from app.engines.context_engine.regime_detectors.clustering_regime_detector import (
+            ClusteringRegimeDetector,
+        )
         from app.engines.context_engine.volatility_analyzers.garch_analyzer import GARCHAnalyzer
 
         mock_model = MagicMock()
@@ -465,11 +491,19 @@ class TestCrossModuleIntegration:
         assert isinstance(regime_result, dict)
         assert isinstance(vol_result, dict)
 
-    @patch('app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid')
-    def test_correlation_and_structural_change_integration(self, mock_cusum, multi_asset_sample_data):
+    @patch(
+        'app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid'
+    )
+    def test_correlation_and_structural_change_integration(
+        self, mock_cusum, multi_asset_sample_data
+    ):
         """Test integration between correlation analysis and structural change detection."""
-        from app.engines.context_engine.regime_detectors.correlation_regime_detector import CorrelationRegimeDetector
-        from app.engines.context_engine.volatility_analyzers.structural_change_detector import StructuralChangeDetector
+        from app.engines.context_engine.regime_detectors.correlation_regime_detector import (
+            CorrelationRegimeDetector,
+        )
+        from app.engines.context_engine.volatility_analyzers.structural_change_detector import (
+            StructuralChangeDetector,
+        )
 
         mock_cusum.return_value = (5.5, 0.03, 4.8)
 
@@ -495,8 +529,12 @@ class TestPerformanceIntegration:
     @patch('app.engines.context_engine.regime_detectors.hmm_regime_detector.hmm.GaussianHMM')
     def test_multiple_detectors_on_same_data(self, mock_hmm, mock_kmeans):
         """Test running multiple detectors on the same data."""
-        from app.engines.context_engine.regime_detectors.clustering_regime_detector import ClusteringRegimeDetector
-        from app.engines.context_engine.regime_detectors.hmm_regime_detector import HMMRegimeDetector
+        from app.engines.context_engine.regime_detectors.clustering_regime_detector import (
+            ClusteringRegimeDetector,
+        )
+        from app.engines.context_engine.regime_detectors.hmm_regime_detector import (
+            HMMRegimeDetector,
+        )
 
         mock_clustering_model = MagicMock()
         mock_clustering_model.predict.return_value = np.array([1])
@@ -505,10 +543,7 @@ class TestPerformanceIntegration:
 
         mock_hmm_model = MagicMock()
         mock_hmm_model.predict.return_value = np.array([1])
-        mock_hmm_model.score_samples.return_value = (
-            np.array([-1.0]),
-            np.array([[0.1, 0.7, 0.2]])
-        )
+        mock_hmm_model.score_samples.return_value = (np.array([-1.0]), np.array([[0.1, 0.7, 0.2]]))
         mock_hmm.return_value = mock_hmm_model
 
         # Generate prices

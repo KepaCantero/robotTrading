@@ -200,7 +200,7 @@ class TestEWMAVolatilityForecasting:
         forecasts = result['forecasts']
         # Each subsequent forecast should be >= previous
         for i in range(len(forecasts) - 1):
-            assert forecasts[i+1] >= forecasts[i]
+            assert forecasts[i + 1] >= forecasts[i]
 
 
 @pytest.mark.unit

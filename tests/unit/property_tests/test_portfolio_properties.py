@@ -28,6 +28,7 @@ from app.engines.portfolio_engine.optimizers import MarkowitzOptimizer
 # Test Strategies
 # ============================================================================
 
+
 def valid_portfolio_weights() -> st.SearchStrategy[np.ndarray]:
     """
     Generate valid portfolio weights that sum to 1.
@@ -36,11 +37,15 @@ def valid_portfolio_weights() -> st.SearchStrategy[np.ndarray]:
     """
     n_assets = st.integers(min_value=2, max_value=50)
 
-    return n_assets.flatmap(lambda n: np_strategies.arrays(
-        dtype=np.float64,
-        shape=(n,),
-        elements=st.floats(min_value=0.01, max_value=1.0, allow_nan=False, allow_infinity=False)
-    ).map(lambda weights: weights / weights.sum()))
+    return n_assets.flatmap(
+        lambda n: np_strategies.arrays(
+            dtype=np.float64,
+            shape=(n,),
+            elements=st.floats(
+                min_value=0.01, max_value=1.0, allow_nan=False, allow_infinity=False
+            ),
+        ).map(lambda weights: weights / weights.sum())
+    )
 
 
 def valid_returns_matrix() -> st.SearchStrategy[np.ndarray]:
@@ -52,7 +57,9 @@ def valid_returns_matrix() -> st.SearchStrategy[np.ndarray]:
         lambda dims: np_strategies.arrays(
             dtype=np.float64,
             shape=(dims[1], dims[0]),
-            elements=st.floats(min_value=-0.10, max_value=0.10, allow_nan=False, allow_infinity=False)
+            elements=st.floats(
+                min_value=-0.10, max_value=0.10, allow_nan=False, allow_infinity=False
+            ),
         )
     )
 
@@ -61,11 +68,15 @@ def valid_expected_returns() -> st.SearchStrategy[np.ndarray]:
     """Generate valid expected returns."""
     n_assets = st.integers(min_value=2, max_value=20)
 
-    return n_assets.flatmap(lambda n: np_strategies.arrays(
-        dtype=np.float64,
-        shape=(n,),
-        elements=st.floats(min_value=-0.05, max_value=0.15, allow_nan=False, allow_infinity=False)
-    ))
+    return n_assets.flatmap(
+        lambda n: np_strategies.arrays(
+            dtype=np.float64,
+            shape=(n,),
+            elements=st.floats(
+                min_value=-0.05, max_value=0.15, allow_nan=False, allow_infinity=False
+            ),
+        )
+    )
 
 
 def valid_correlation_matrix() -> st.SearchStrategy[np.ndarray]:
@@ -76,65 +87,85 @@ def valid_correlation_matrix() -> st.SearchStrategy[np.ndarray]:
     """
     n_assets = st.integers(min_value=2, max_value=10)
 
-    return n_assets.flatmap(lambda n: np_strategies.arrays(
-        dtype=np.float64,
-        shape=(n + 1, n),  # More rows than columns to ensure valid correlation
-        elements=st.floats(min_value=-1, max_value=1, allow_nan=False, allow_infinity=False)
-    ).map(lambda X: _ensure_valid_correlation(X)))
+    return n_assets.flatmap(
+        lambda n: np_strategies.arrays(
+            dtype=np.float64,
+            shape=(n + 1, n),  # More rows than columns to ensure valid correlation
+            elements=st.floats(min_value=-1, max_value=1, allow_nan=False, allow_infinity=False),
+        ).map(lambda X: _ensure_valid_correlation(X))
+    )
 
 
 def weights_and_returns() -> st.SearchStrategy[tuple[np.ndarray, np.ndarray]]:
     """Generate matching weights and returns arrays with same dimensions."""
     n_assets = st.integers(min_value=2, max_value=50)
 
-    return n_assets.flatmap(lambda n: st.tuples(
-        np_strategies.arrays(
-            dtype=np.float64,
-            shape=(n,),
-            elements=st.floats(min_value=0.01, max_value=1.0, allow_nan=False, allow_infinity=False)
-        ).map(lambda weights: weights / weights.sum()),
-        np_strategies.arrays(
-            dtype=np.float64,
-            shape=(n,),
-            elements=st.floats(min_value=-0.05, max_value=0.15, allow_nan=False, allow_infinity=False)
+    return n_assets.flatmap(
+        lambda n: st.tuples(
+            np_strategies.arrays(
+                dtype=np.float64,
+                shape=(n,),
+                elements=st.floats(
+                    min_value=0.01, max_value=1.0, allow_nan=False, allow_infinity=False
+                ),
+            ).map(lambda weights: weights / weights.sum()),
+            np_strategies.arrays(
+                dtype=np.float64,
+                shape=(n,),
+                elements=st.floats(
+                    min_value=-0.05, max_value=0.15, allow_nan=False, allow_infinity=False
+                ),
+            ),
         )
-    ))
+    )
 
 
 def weights_and_correlation() -> st.SearchStrategy[tuple[np.ndarray, np.ndarray]]:
     """Generate matching weights and correlation matrix with same dimensions."""
     n_assets = st.integers(min_value=2, max_value=10)
 
-    return n_assets.flatmap(lambda n: st.tuples(
-        np_strategies.arrays(
-            dtype=np.float64,
-            shape=(n,),
-            elements=st.floats(min_value=0.01, max_value=1.0, allow_nan=False, allow_infinity=False)
-        ).map(lambda weights: weights / weights.sum()),
-        np_strategies.arrays(
-            dtype=np.float64,
-            shape=(n + 1, n),  # More rows than columns to ensure valid correlation
-            elements=st.floats(min_value=-1, max_value=1, allow_nan=False, allow_infinity=False)
-        ).map(lambda X: _ensure_valid_correlation(X))
-    ))
+    return n_assets.flatmap(
+        lambda n: st.tuples(
+            np_strategies.arrays(
+                dtype=np.float64,
+                shape=(n,),
+                elements=st.floats(
+                    min_value=0.01, max_value=1.0, allow_nan=False, allow_infinity=False
+                ),
+            ).map(lambda weights: weights / weights.sum()),
+            np_strategies.arrays(
+                dtype=np.float64,
+                shape=(n + 1, n),  # More rows than columns to ensure valid correlation
+                elements=st.floats(
+                    min_value=-1, max_value=1, allow_nan=False, allow_infinity=False
+                ),
+            ).map(lambda X: _ensure_valid_correlation(X)),
+        )
+    )
 
 
 def two_weights_sets() -> st.SearchStrategy[tuple[np.ndarray, np.ndarray]]:
     """Generate two matching weight arrays with same dimensions."""
     n_assets = st.integers(min_value=2, max_value=50)
 
-    return n_assets.flatmap(lambda n: st.tuples(
-        np_strategies.arrays(
-            dtype=np.float64,
-            shape=(n,),
-            elements=st.floats(min_value=0.01, max_value=1.0, allow_nan=False, allow_infinity=False)
-        ).map(lambda weights: weights / weights.sum()),
-        np_strategies.arrays(
-            dtype=np.float64,
-            shape=(n,),
-            elements=st.floats(min_value=0.01, max_value=1.0, allow_nan=False, allow_infinity=False)
-        ).map(lambda weights: weights / weights.sum())
-    ))
+    return n_assets.flatmap(
+        lambda n: st.tuples(
+            np_strategies.arrays(
+                dtype=np.float64,
+                shape=(n,),
+                elements=st.floats(
+                    min_value=0.01, max_value=1.0, allow_nan=False, allow_infinity=False
+                ),
+            ).map(lambda weights: weights / weights.sum()),
+            np_strategies.arrays(
+                dtype=np.float64,
+                shape=(n,),
+                elements=st.floats(
+                    min_value=0.01, max_value=1.0, allow_nan=False, allow_infinity=False
+                ),
+            ).map(lambda weights: weights / weights.sum()),
+        )
+    )
 
 
 def _ensure_valid_correlation(X: np.ndarray) -> np.ndarray:
@@ -188,14 +219,13 @@ def _ensure_valid_correlation(X: np.ndarray) -> np.ndarray:
 
 def valid_capitals() -> st.SearchStrategy[Decimal]:
     """Generate valid capital amounts."""
-    return st.floats(min_value=1_000, max_value=100_000_000).map(
-        lambda x: Decimal(str(x))
-    )
+    return st.floats(min_value=1_000, max_value=100_000_000).map(lambda x: Decimal(str(x)))
 
 
 # ============================================================================
 # Weight Constraint Properties
 # ============================================================================
+
 
 @pytest.mark.unit
 @pytest.mark.property
@@ -208,27 +238,23 @@ class TestPortfolioWeightConstraints:
         """Portfolio weights should sum to 1 (or very close)."""
         sum_weights = weights.sum()
 
-        assert abs(sum_weights - 1.0) < 1e-10, \
-            f"Weights sum to {sum_weights}, expected 1.0"
+        assert abs(sum_weights - 1.0) < 1e-10, f"Weights sum to {sum_weights}, expected 1.0"
 
     @given(weights=valid_portfolio_weights())
     @settings(max_examples=100)
     def test_weights_non_negative(self, weights):
         """Portfolio weights should be non-negative (long-only constraint)."""
-        assert all(w >= 0 for w in weights), \
-            f"All weights should be >= 0, got min {weights.min()}"
+        assert all(w >= 0 for w in weights), f"All weights should be >= 0, got min {weights.min()}"
 
     @given(weights=valid_portfolio_weights())
     @settings(max_examples=100)
     def test_weights_le_one(self, weights):
         """Individual weights should be <= 1."""
-        assert all(w <= 1.0 for w in weights), \
-            f"All weights should be <= 1, got max {weights.max()}"
+        assert all(
+            w <= 1.0 for w in weights
+        ), f"All weights should be <= 1, got max {weights.max()}"
 
-    @given(
-        weights=valid_portfolio_weights(),
-        capital=valid_capitals()
-    )
+    @given(weights=valid_portfolio_weights(), capital=valid_capitals())
     @settings(max_examples=100)
     def test_position_values_sum_to_capital(self, weights, capital):
         """Position values should sum to total capital."""
@@ -236,24 +262,23 @@ class TestPortfolioWeightConstraints:
         sum_positions = position_values.sum()
 
         # Allow small floating point error
-        assert abs(sum_positions - float(capital)) < 0.01, \
-            f"Position values sum to {sum_positions}, expected {capital}"
+        assert (
+            abs(sum_positions - float(capital)) < 0.01
+        ), f"Position values sum to {sum_positions}, expected {capital}"
 
-    @given(
-        weights=valid_portfolio_weights(),
-        capital=valid_capitals()
-    )
+    @given(weights=valid_portfolio_weights(), capital=valid_capitals())
     @settings(max_examples=100)
     def test_position_values_non_negative(self, weights, capital):
         """Position values should be non-negative."""
         position_values = weights * float(capital)
 
-        assert all(v >= 0 for v in position_values), \
-            f"All position values should be >= 0, got min {position_values.min()}"
+        assert all(
+            v >= 0 for v in position_values
+        ), f"All position values should be >= 0, got min {position_values.min()}"
 
     @given(
         weights=valid_portfolio_weights(),
-        concentration_limit=st.floats(min_value=0.05, max_value=0.5)
+        concentration_limit=st.floats(min_value=0.05, max_value=0.5),
     )
     @settings(max_examples=100)
     def test_concentration_limit_enforced(self, weights, concentration_limit):
@@ -269,6 +294,7 @@ class TestPortfolioWeightConstraints:
 # ============================================================================
 # Portfolio Return Properties
 # ============================================================================
+
 
 @pytest.mark.unit
 @pytest.mark.property
@@ -287,13 +313,11 @@ class TestPortfolioReturnCalculations:
         min_return = returns.min()
         max_return = returns.max()
 
-        assert min_return - 1e-10 <= portfolio_return <= max_return + 1e-10, \
-            f"Portfolio return {portfolio_return} outside bounds [{min_return}, {max_return}]"
+        assert (
+            min_return - 1e-10 <= portfolio_return <= max_return + 1e-10
+        ), f"Portfolio return {portfolio_return} outside bounds [{min_return}, {max_return}]"
 
-    @given(
-        returns=valid_expected_returns(),
-        capital=valid_capitals()
-    )
+    @given(returns=valid_expected_returns(), capital=valid_capitals())
     @settings(max_examples=100)
     def test_equal_weighted_portfolio_return(self, returns, capital):
         """Equal-weighted portfolio return should be average of returns."""
@@ -303,8 +327,9 @@ class TestPortfolioReturnCalculations:
         portfolio_return = np.dot(equal_weights, returns)
         average_return = returns.mean()
 
-        assert abs(portfolio_return - average_return) < 1e-10, \
-            f"Equal-weighted return {portfolio_return} != average {average_return}"
+        assert (
+            abs(portfolio_return - average_return) < 1e-10
+        ), f"Equal-weighted return {portfolio_return} != average {average_return}"
 
     @given(weights_returns=weights_and_returns())
     @settings(max_examples=100)
@@ -320,8 +345,9 @@ class TestPortfolioReturnCalculations:
         return1 = np.dot(weights, returns)
         return2 = np.dot(doubled_weights, returns)
 
-        assert abs(return1 - return2) < 1e-10, \
-            f"Scaled weights should give same return: {return1} != {return2}"
+        assert (
+            abs(return1 - return2) < 1e-10
+        ), f"Scaled weights should give same return: {return1} != {return2}"
 
     @given(weights_returns=weights_and_returns())
     @settings(max_examples=50)
@@ -338,13 +364,15 @@ class TestPortfolioReturnCalculations:
         return2 = np.dot(weights, returns2)
         return_combined = np.dot(weights, combined_returns)
 
-        assert abs(return_combined - (return1 + return2)) < 1e-10, \
-            f"Combined return {return_combined} != sum {return1 + return2}"
+        assert (
+            abs(return_combined - (return1 + return2)) < 1e-10
+        ), f"Combined return {return_combined} != sum {return1 + return2}"
 
 
 # ============================================================================
 # Portfolio Variance Properties
 # ============================================================================
+
 
 @pytest.mark.unit
 @pytest.mark.property
@@ -366,8 +394,9 @@ class TestPortfolioVarianceProperties:
         # Portfolio variance
         portfolio_variance = np.dot(weights, np.dot(cov_matrix, weights))
 
-        assert portfolio_variance >= 0, \
-            f"Portfolio variance should be >= 0, got {portfolio_variance}"
+        assert (
+            portfolio_variance >= 0
+        ), f"Portfolio variance should be >= 0, got {portfolio_variance}"
 
     @given(weights=valid_portfolio_weights())
     @settings(max_examples=100)
@@ -389,8 +418,9 @@ class TestPortfolioVarianceProperties:
         # With perfect correlation and equal vols: variance = (sum(weights) * vol)^2 = vol^2
         expected_variance = volatilities[0] ** 2
 
-        assert abs(portfolio_variance - expected_variance) < 1e-10, \
-            f"Variance {portfolio_variance} != expected {expected_variance}"
+        assert (
+            abs(portfolio_variance - expected_variance) < 1e-10
+        ), f"Variance {portfolio_variance} != expected {expected_variance}"
 
     @given(weights_corr=weights_and_correlation())
     @settings(max_examples=100)
@@ -411,13 +441,15 @@ class TestPortfolioVarianceProperties:
         variance1 = np.dot(weights, np.dot(cov_matrix, weights))
         variance2 = np.dot(reversed_weights, np.dot(reversed_cov, reversed_weights))
 
-        assert abs(variance1 - variance2) < 1e-10, \
-            f"Variance should be symmetric: {variance1} != {variance2}"
+        assert (
+            abs(variance1 - variance2) < 1e-10
+        ), f"Variance should be symmetric: {variance1} != {variance2}"
 
 
 # ============================================================================
 # Risk Parity Properties
 # ============================================================================
+
 
 @pytest.mark.unit
 @pytest.mark.property
@@ -458,13 +490,15 @@ class TestRiskParityProperties:
         mean_risk_contrib = risk_contrib.mean()
 
         for i, rc in enumerate(risk_contrib):
-            assert abs(rc - mean_risk_contrib) < 1e-10, \
-                f"Risk contribution {rc} at index {i} != mean {mean_risk_contrib}"
+            assert (
+                abs(rc - mean_risk_contrib) < 1e-10
+            ), f"Risk contribution {rc} at index {i} != mean {mean_risk_contrib}"
 
 
 # ============================================================================
 # Portfolio Optimization Properties
 # ============================================================================
+
 
 @pytest.mark.unit
 @pytest.mark.property
@@ -501,8 +535,9 @@ class TestPortfolioOptimizationProperties:
                 else:
                     weights_array = weights
                 sum_weights = weights_array.sum()
-                assert abs(sum_weights - 1.0) < 0.01, \
-                    f"Max Sharpe weights sum to {sum_weights}, expected 1.0"
+                assert (
+                    abs(sum_weights - 1.0) < 0.01
+                ), f"Max Sharpe weights sum to {sum_weights}, expected 1.0"
         except (ImportError, np.linalg.LinAlgError):
             pytest.skip("Optimization dependencies not available or singular matrix")
 
@@ -533,8 +568,9 @@ class TestPortfolioOptimizationProperties:
                 else:
                     weights_array = weights
                 sum_weights = weights_array.sum()
-                assert abs(sum_weights - 1.0) < 0.01, \
-                    f"Min variance weights sum to {sum_weights}, expected 1.0"
+                assert (
+                    abs(sum_weights - 1.0) < 0.01
+                ), f"Min variance weights sum to {sum_weights}, expected 1.0"
         except (ImportError, np.linalg.LinAlgError):
             pytest.skip("Optimization dependencies not available or singular matrix")
 
@@ -572,8 +608,9 @@ class TestPortfolioOptimizationProperties:
                 weights_equal = np.ones(n) / n
                 var_equal = np.dot(weights_equal, np.dot(cov_matrix, weights_equal))
 
-                assert var_min_var <= var_equal * 1.01, \
-                    f"Min variance {var_min_var} should be <= equal-weighted {var_equal}"
+                assert (
+                    var_min_var <= var_equal * 1.01
+                ), f"Min variance {var_min_var} should be <= equal-weighted {var_equal}"
         except (ImportError, np.linalg.LinAlgError):
             pytest.skip("Optimization dependencies not available or singular matrix")
 
@@ -582,14 +619,13 @@ class TestPortfolioOptimizationProperties:
 # Portfolio Rebalancing Properties
 # ============================================================================
 
+
 @pytest.mark.unit
 @pytest.mark.property
 class TestPortfolioRebalancingProperties:
     """Property tests for portfolio rebalancing."""
 
-    @given(
-        two_weights_capital=st.tuples(two_weights_sets(), valid_capitals())
-    )
+    @given(two_weights_capital=st.tuples(two_weights_sets(), valid_capitals()))
     @settings(max_examples=100)
     def test_rebalancing_trades_sum_to_zero(self, two_weights_capital):
         """Rebalancing trades should sum to zero (buy + sell = 0)."""
@@ -602,12 +638,9 @@ class TestPortfolioRebalancingProperties:
         # (some cash might be left over due to discrete units, but in continuous case it's zero)
         sum_trades = trades.sum()
 
-        assert abs(sum_trades) < 0.01, \
-            f"Rebalancing trades should sum to 0, got {sum_trades}"
+        assert abs(sum_trades) < 0.01, f"Rebalancing trades should sum to 0, got {sum_trades}"
 
-    @given(
-        two_weights_capital=st.tuples(two_weights_sets(), valid_capitals())
-    )
+    @given(two_weights_capital=st.tuples(two_weights_sets(), valid_capitals()))
     @settings(max_examples=100)
     def test_rebalancing_preserves_capital(self, two_weights_capital):
         """Rebalancing should not change total capital (ignoring costs)."""
@@ -622,15 +655,18 @@ class TestPortfolioRebalancingProperties:
         sum_target = target_values.sum()
 
         # Both should equal capital
-        assert abs(sum_current - float(capital)) < 0.01, \
-            f"Current values sum to {sum_current}, expected {capital}"
-        assert abs(sum_target - float(capital)) < 0.01, \
-            f"Target values sum to {sum_target}, expected {capital}"
+        assert (
+            abs(sum_current - float(capital)) < 0.01
+        ), f"Current values sum to {sum_current}, expected {capital}"
+        assert (
+            abs(sum_target - float(capital)) < 0.01
+        ), f"Target values sum to {sum_target}, expected {capital}"
 
 
 # ============================================================================
 # Turnover Properties
 # ============================================================================
+
 
 @pytest.mark.unit
 @pytest.mark.property
@@ -646,8 +682,7 @@ class TestPortfolioTurnoverProperties:
         # Turnover is sum of absolute weight changes divided by 2
         turnover = np.sum(np.abs(weights2 - weights1)) / 2
 
-        assert turnover >= 0, \
-            f"Turnover should be >= 0, got {turnover}"
+        assert turnover >= 0, f"Turnover should be >= 0, got {turnover}"
 
     @given(weights=valid_portfolio_weights())
     @settings(max_examples=100)
@@ -655,8 +690,7 @@ class TestPortfolioTurnoverProperties:
         """Turnover should be zero when weights don't change."""
         turnover = np.sum(np.abs(weights - weights)) / 2
 
-        assert turnover == 0, \
-            f"Turnover should be 0 for same weights, got {turnover}"
+        assert turnover == 0, f"Turnover should be 0 for same weights, got {turnover}"
 
     @given(two_weights=two_weights_sets())
     @settings(max_examples=100)
@@ -667,8 +701,9 @@ class TestPortfolioTurnoverProperties:
         turnover1_to_2 = np.sum(np.abs(weights2 - weights1)) / 2
         turnover2_to_1 = np.sum(np.abs(weights1 - weights2)) / 2
 
-        assert abs(turnover1_to_2 - turnover2_to_1) < 1e-10, \
-            f"Turnover should be symmetric: {turnover1_to_2} != {turnover2_to_1}"
+        assert (
+            abs(turnover1_to_2 - turnover2_to_1) < 1e-10
+        ), f"Turnover should be symmetric: {turnover1_to_2} != {turnover2_to_1}"
 
     @given(weights=valid_portfolio_weights())
     @settings(max_examples=100)
@@ -683,13 +718,13 @@ class TestPortfolioTurnoverProperties:
         turnover = np.sum(np.abs(reversed_weights - weights)) / 2
 
         # Maximum possible turnover is 1 (100% of portfolio turns over)
-        assert turnover <= 1.0, \
-            f"Turnover {turnover} should not exceed 1.0"
+        assert turnover <= 1.0, f"Turnover {turnover} should not exceed 1.0"
 
 
 # ============================================================================
 # Diversification Properties
 # ============================================================================
+
 
 @pytest.mark.unit
 @pytest.mark.property
@@ -703,7 +738,7 @@ class TestPortfolioDiversificationProperties:
         n = len(weights)
 
         # Herfindahl index: sum of squared weights
-        hhi = np.sum(weights ** 2)
+        hhi = np.sum(weights**2)
 
         # Minimum diversification: 1/n (equal weights)
         min_hhi = 1.0 / n
@@ -712,8 +747,9 @@ class TestPortfolioDiversificationProperties:
         max_hhi = 1.0
 
         # Allow small floating point tolerance
-        assert min_hhi - 1e-12 <= hhi <= max_hhi + 1e-12, \
-            f"HHI {hhi} outside range [{min_hhi}, {max_hhi}]"
+        assert (
+            min_hhi - 1e-12 <= hhi <= max_hhi + 1e-12
+        ), f"HHI {hhi} outside range [{min_hhi}, {max_hhi}]"
 
     @given(weights=valid_portfolio_weights())
     @settings(max_examples=100)
@@ -722,27 +758,25 @@ class TestPortfolioDiversificationProperties:
         n = len(weights)
 
         # Calculate HHI for given weights
-        hhi = np.sum(weights ** 2)
+        hhi = np.sum(weights**2)
 
         # Equal weights
         equal_weights = np.ones(n) / n
-        hhi_equal = np.sum(equal_weights ** 2)
+        hhi_equal = np.sum(equal_weights**2)
 
         # HHI for equal weights should be minimal
-        assert hhi >= hhi_equal - 1e-10, \
-            f"HHI {hhi} should be >= equal-weight HHI {hhi_equal}"
+        assert hhi >= hhi_equal - 1e-10, f"HHI {hhi} should be >= equal-weight HHI {hhi_equal}"
 
     @given(weights=valid_portfolio_weights())
     @settings(max_examples=100)
     def test_herfindahl_single_asset_maximal(self, weights):
         """Single asset portfolio should maximize Herfindahl index."""
         # Calculate HHI for given weights
-        hhi = np.sum(weights ** 2)
+        hhi = np.sum(weights**2)
 
         # Maximum possible HHI (all weight in one asset)
         # This is 1.0, but we check that our weights don't exceed it
-        assert hhi <= 1.0, \
-            f"HHI {hhi} should not exceed 1.0"
+        assert hhi <= 1.0, f"HHI {hhi} should not exceed 1.0"
 
     @given(weights_corr=weights_and_correlation())
     @settings(max_examples=100)
@@ -765,13 +799,15 @@ class TestPortfolioDiversificationProperties:
             div_ratio = weighted_avg_vol / portfolio_vol
 
             # Should be >= 1 (diversification helps)
-            assert div_ratio >= 0.99, \
-                f"Diversification ratio {div_ratio} should be >= 1 (approximately)"
+            assert (
+                div_ratio >= 0.99
+            ), f"Diversification ratio {div_ratio} should be >= 1 (approximately)"
 
 
 # ============================================================================
 # Edge Cases
 # ============================================================================
+
 
 @pytest.mark.unit
 @pytest.mark.property
@@ -788,13 +824,11 @@ class TestPortfolioEdgeCases:
         assert weights[0] == 1.0, "Single asset weight should be 1"
 
         position_value = weights[0] * float(capital)
-        assert abs(position_value - float(capital)) < 0.01, \
-            f"Position value {position_value} should equal capital {capital}"
+        assert (
+            abs(position_value - float(capital)) < 0.01
+        ), f"Position value {position_value} should equal capital {capital}"
 
-    @given(
-        capital=valid_capitals(),
-        n=st.integers(min_value=2, max_value=10)
-    )
+    @given(capital=valid_capitals(), n=st.integers(min_value=2, max_value=10))
     @settings(max_examples=50)
     def test_equal_weighted_portfolio(self, capital, n):
         """Equal-weighted portfolio should distribute capital evenly."""
@@ -806,5 +840,6 @@ class TestPortfolioEdgeCases:
         expected_value = float(capital) / n
 
         for i, value in enumerate(position_values):
-            assert abs(value - expected_value) < 0.01, \
-                f"Position {i} value {value} != expected {expected_value}"
+            assert (
+                abs(value - expected_value) < 0.01
+            ), f"Position {i} value {value} != expected {expected_value}"

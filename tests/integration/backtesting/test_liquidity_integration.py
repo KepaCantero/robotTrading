@@ -38,10 +38,12 @@ class TestLiquidityIntegration:
 
     def test_liquidity_validator_initialized(self, backtester):
         """Test that liquidity validator is properly initialized."""
-        assert backtester.liquidity_validator is not None, \
-            "LiquidityValidator should be initialized"
-        assert backtester.liquidity_validator.enable_partial_fills == True, \
-            "Partial fills should be enabled by default"
+        assert (
+            backtester.liquidity_validator is not None
+        ), "LiquidityValidator should be initialized"
+        assert (
+            backtester.liquidity_validator.enable_partial_fills == True
+        ), "Partial fills should be enabled by default"
 
     def test_normal_order_executes_with_liquidity_validation(self, backtester):
         """Test that normal orders execute successfully with liquidity validation."""
@@ -57,7 +59,7 @@ class TestLiquidityIntegration:
             low=Decimal("99"),
             close=Decimal("100"),
             volume=Decimal("1000000"),  # 1M shares daily
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         # Create buy signal
@@ -72,7 +74,7 @@ class TestLiquidityIntegration:
             price=Decimal("100"),
             volume=Decimal("1000000"),
             timestamp=past_time(hours_ago=2),
-            metadata={"strategy": "test"}
+            metadata={"strategy": "test"},
         )
 
         # Execute buy
@@ -85,8 +87,9 @@ class TestLiquidityIntegration:
 
         # Verify trade includes market impact in execution price
         trade = backtester.trades[0]
-        assert trade.entry_price > Decimal("100"), \
-            f"Entry price ${trade.entry_price} should include market impact > $100"
+        assert trade.entry_price > Decimal(
+            "100"
+        ), f"Entry price ${trade.entry_price} should include market impact > $100"
 
     def test_excessive_order_rejected_by_liquidity_validation(self, backtester):
         """Test that orders exceeding liquidity limits are rejected."""
@@ -102,7 +105,7 @@ class TestLiquidityIntegration:
             low=Decimal("4"),
             close=Decimal("5"),
             volume=Decimal("10000"),  # Only 10K shares daily (illiquid)
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         # Create buy signal for large order (>10% of daily volume)
@@ -119,7 +122,7 @@ class TestLiquidityIntegration:
             price=Decimal("5"),
             volume=Decimal("10000"),
             timestamp=past_time(hours_ago=2),
-            metadata={"strategy": "test"}
+            metadata={"strategy": "test"},
         )
 
         initial_capital = backtester.capital
@@ -129,13 +132,16 @@ class TestLiquidityIntegration:
         backtester._execute_buy_signal(signal, bar)
 
         # Verify trade was NOT executed due to liquidity rejection
-        assert len(backtester.trades) == initial_trade_count, \
-            "Trade should NOT be executed due to liquidity rejection"
-        assert "PENNY" not in backtester.positions or backtester.positions["PENNY"] == 0, \
-            "Position should NOT be opened"
+        assert (
+            len(backtester.trades) == initial_trade_count
+        ), "Trade should NOT be executed due to liquidity rejection"
+        assert (
+            "PENNY" not in backtester.positions or backtester.positions["PENNY"] == 0
+        ), "Position should NOT be opened"
         # Capital should not have decreased significantly (only commission checks)
-        assert backtester.capital >= initial_capital - Decimal("10"), \
-            "Capital should not decrease significantly for rejected trade"
+        assert backtester.capital >= initial_capital - Decimal(
+            "10"
+        ), "Capital should not decrease significantly for rejected trade"
 
     def test_partial_fill_for_large_order(self, backtester):
         """Test that large orders get partial fills."""
@@ -151,7 +157,7 @@ class TestLiquidityIntegration:
             low=Decimal("99"),
             close=Decimal("100"),
             volume=Decimal("500000"),  # 500K shares daily
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         # Create buy signal for large order (7.5% of daily volume)
@@ -167,7 +173,7 @@ class TestLiquidityIntegration:
             price=Decimal("100"),
             volume=Decimal("500000"),
             timestamp=past_time(hours_ago=2),
-            metadata={"strategy": "test"}
+            metadata={"strategy": "test"},
         )
 
         # Execute buy
@@ -182,8 +188,9 @@ class TestLiquidityIntegration:
         position_size = backtester.positions["TEST"]
         assert position_size > 0, "Position should have positive quantity"
         # Position should be <= 5% of daily volume (25,000 shares)
-        assert position_size <= Decimal("25000"), \
-            f"Position size {position_size} should be <= 25,000 shares (5% partial fill)"
+        assert position_size <= Decimal(
+            "25000"
+        ), f"Position size {position_size} should be <= 25,000 shares (5% partial fill)"
 
     def test_sell_order_liquidity_validation(self, backtester):
         """Test that sell orders also undergo liquidity validation."""
@@ -199,7 +206,7 @@ class TestLiquidityIntegration:
             low=Decimal("99"),
             close=Decimal("100"),
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         buy_signal = Signal(
@@ -213,7 +220,7 @@ class TestLiquidityIntegration:
             price=Decimal("100"),
             volume=Decimal("1000000"),
             timestamp=past_time(hours_ago=2),
-            metadata={"strategy": "test"}
+            metadata={"strategy": "test"},
         )
 
         backtester._execute_buy_signal(buy_signal, bar_buy)
@@ -234,7 +241,7 @@ class TestLiquidityIntegration:
             low=Decimal("99"),
             close=Decimal("100"),
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         sell_signal = Signal(
@@ -248,7 +255,7 @@ class TestLiquidityIntegration:
             price=Decimal("100"),
             volume=Decimal("1000000"),
             timestamp=past_time(hours_ago=1),
-            metadata={"strategy": "test"}
+            metadata={"strategy": "test"},
         )
 
         initial_capital = backtester.capital
@@ -257,12 +264,14 @@ class TestLiquidityIntegration:
         backtester._execute_sell_signal(sell_signal, bar_sell)
 
         # Verify sell was executed
-        assert len([t for t in backtester.trades if t.side == "sell"]) > 0, \
-            "Sell trade should be executed"
+        assert (
+            len([t for t in backtester.trades if t.side == "sell"]) > 0
+        ), "Sell trade should be executed"
 
         # Capital should have increased from sell proceeds
-        assert backtester.capital > initial_capital, \
-            "Capital should increase after selling position"
+        assert (
+            backtester.capital > initial_capital
+        ), "Capital should increase after selling position"
 
     def test_liquidity_metrics_available(self, backtester):
         """Test that liquidity metrics can be retrieved."""
@@ -277,13 +286,12 @@ class TestLiquidityIntegration:
             low=Decimal("99"),
             close=Decimal("100"),
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         # Get liquidity metrics
         metrics = backtester.liquidity_validator.get_liquidity_metrics(
-            current_bar=bar,
-            order_quantity=Decimal("50000")
+            current_bar=bar, order_quantity=Decimal("50000")
         )
 
         # Verify metrics

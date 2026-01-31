@@ -119,7 +119,9 @@ class TestExecutionReport:
         assert report.order_id == "order_001"
         assert report.fill_rate == 1.0
         assert report.implementation_shortfall_bps == 16.67
-        assert report.market_impact_bps + report.timing_cost_bps == pytest.approx(report.total_cost_bps, abs=0.1)
+        assert report.market_impact_bps + report.timing_cost_bps == pytest.approx(
+            report.total_cost_bps, abs=0.1
+        )
 
 
 class TestVWAPExecution:

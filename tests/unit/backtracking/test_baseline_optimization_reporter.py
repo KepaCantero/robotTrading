@@ -145,9 +145,7 @@ class TestBaselineOptimizationReporter:
         assert metrics["win_rate"] == 52.0
         assert metrics["profit_factor"] == 1.4
 
-    def test_calculate_comparison(
-        self, sample_baseline_results, sample_optimized_results
-    ):
+    def test_calculate_comparison(self, sample_baseline_results, sample_optimized_results):
         """Test comparison calculation."""
         reporter = BaselineOptimizationReporter()
 
@@ -189,18 +187,14 @@ class TestBaselineOptimizationReporter:
         improvement = reporter._pct_improvement(15.0, 20.0, higher_better=False)
         assert improvement == -33.33  # 33% degradation
 
-    def test_extract_parameter_changes(
-        self, sample_baseline_results, sample_optimized_results
-    ):
+    def test_extract_parameter_changes(self, sample_baseline_results, sample_optimized_results):
         """Test parameter change extraction."""
         reporter = BaselineOptimizationReporter()
 
         baseline_params = sample_baseline_results["parameters"]
         optimized_params = sample_optimized_results["parameters"]
 
-        changes = reporter._extract_parameter_changes(
-            baseline_params, optimized_params, {}
-        )
+        changes = reporter._extract_parameter_changes(baseline_params, optimized_params, {})
 
         assert len(changes) == 3
 
@@ -262,9 +256,7 @@ class TestBaselineOptimizationReporter:
         assert recommendation.decision == "CONSIDER_OPTIMIZED"
         assert 0.5 < recommendation.confidence < 0.8
 
-    def test_generate_recommendation_use_baseline(
-        self, sample_baseline_results
-    ):
+    def test_generate_recommendation_use_baseline(self, sample_baseline_results):
         """Test recommendation generation for USE_BASELINE case."""
         reporter = BaselineOptimizationReporter()
 
@@ -287,15 +279,11 @@ class TestBaselineOptimizationReporter:
 
         assert recommendation.decision == "USE_BASELINE"
 
-    def test_prepare_chart_data(
-        self, sample_baseline_results, sample_optimized_results
-    ):
+    def test_prepare_chart_data(self, sample_baseline_results, sample_optimized_results):
         """Test chart data preparation."""
         reporter = BaselineOptimizationReporter()
 
-        chart_data = reporter._prepare_chart_data(
-            sample_baseline_results, sample_optimized_results
-        )
+        chart_data = reporter._prepare_chart_data(sample_baseline_results, sample_optimized_results)
 
         # Check that all chart types are present
         assert "baseline_equity" in chart_data
@@ -308,9 +296,7 @@ class TestBaselineOptimizationReporter:
         assert "data" in chart_data["dual_equity"]
         assert "layout" in chart_data["dual_equity"]
 
-    def test_create_dual_equity_chart(
-        self, sample_baseline_results, sample_optimized_results
-    ):
+    def test_create_dual_equity_chart(self, sample_baseline_results, sample_optimized_results):
         """Test dual equity chart creation."""
         reporter = BaselineOptimizationReporter()
 
@@ -342,18 +328,14 @@ class TestBaselineOptimizationReporter:
         assert drawdown[2] < 0  # Below peak
         assert drawdown[4] < 0  # Below peak
 
-    def test_prepare_key_metrics_table(
-        self, sample_baseline_results, sample_optimized_results
-    ):
+    def test_prepare_key_metrics_table(self, sample_baseline_results, sample_optimized_results):
         """Test key metrics table preparation."""
         reporter = BaselineOptimizationReporter()
 
         baseline_metrics = reporter._extract_metrics(sample_baseline_results)
         optimized_metrics = reporter._extract_metrics(sample_optimized_results)
 
-        table_data = reporter._prepare_key_metrics_table(
-            baseline_metrics, optimized_metrics, {}
-        )
+        table_data = reporter._prepare_key_metrics_table(baseline_metrics, optimized_metrics, {})
 
         assert len(table_data) > 0
 
@@ -387,9 +369,7 @@ class TestBaselineOptimizationReporter:
         assert "Sharpe Ratio" in html
         assert "Total Return" in html
 
-    def test_save_report(
-        self, sample_profile, sample_baseline_results, sample_optimized_results
-    ):
+    def test_save_report(self, sample_profile, sample_baseline_results, sample_optimized_results):
         """Test saving report to file."""
         reporter = BaselineOptimizationReporter()
 
@@ -435,10 +415,7 @@ class TestBaselineOptimizationReporter:
         reporter = BaselineOptimizationReporter()
 
         assert reporter._get_recommendation_class("USE_OPTIMIZED") == "use-optimized"
-        assert (
-            reporter._get_recommendation_class("CONSIDER_OPTIMIZED")
-            == "consider-optimized"
-        )
+        assert reporter._get_recommendation_class("CONSIDER_OPTIMIZED") == "consider-optimized"
         assert reporter._get_recommendation_class("USE_BASELINE") == "use-baseline"
 
     def test_get_recommendation_icon(self):

@@ -5,6 +5,7 @@ Orchestrates the complete trading lifecycle from investor profile to trade execu
 This is the main entry point for the profile-driven trading system.
 """
 
+import asyncio
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -145,7 +146,7 @@ class ProfileDrivenTradingOrchestrator:
                     ReinforcementLearningEngine,
                 )
 
-                self._rl_engine = ReinforcementLearningEngine()
+                self._rl_engine = ReinforcementLearningEngine(config={})
                 logger.debug("✅ ReinforcementLearningEngine loaded")
             except (ImportError, ModuleNotFoundError, Exception) as e:
                 # RL engine not available, return None and log warning
@@ -905,10 +906,14 @@ class ProfileDrivenTradingOrchestrator:
 
             request = BacktestOrchestrationRequest(
                 profile_id=profile.profile_id if profile else "test",
+                input_id=profile.profile_id if profile else "test_input",
+                module_parameter_set_id="default",
                 initial_capital=profile.initial_capital if profile else Decimal("100000"),
                 target_monthly_return_eur=(
                     profile.min_monthly_return_eur if profile else Decimal("2000")
                 ),
+                objective=profile.investment_objective.value if profile else "BALANCED_GROWTH",
+                risk_profile=profile.risk_tolerance.value if profile else "MEDIO",
                 strategy_name="momentum",
                 start_date=start_date,
                 end_date=end_date,

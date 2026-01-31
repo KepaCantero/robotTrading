@@ -161,9 +161,7 @@ class TestMetaLabeling:
     def test_fit_with_numpy_arrays(self, sample_data):
         """Test fitting with numpy arrays."""
         X, y = sample_data
-        meta_labeling = MetaLabeling(
-            config=MetaLabelingConfig(compute_importance=False)
-        )
+        meta_labeling = MetaLabeling(config=MetaLabelingConfig(compute_importance=False))
 
         meta_labeling.fit(X, y)
 
@@ -178,9 +176,7 @@ class TestMetaLabeling:
         X_df = pd.DataFrame(X, columns=["f1", "f2", "f3", "f4", "f5"])
         y_series = pd.Series(y)
 
-        meta_labeling = MetaLabeling(
-            config=MetaLabelingConfig(compute_importance=False)
-        )
+        meta_labeling = MetaLabeling(config=MetaLabelingConfig(compute_importance=False))
 
         meta_labeling.fit(X_df, y_series)
 
@@ -209,9 +205,7 @@ class TestMetaLabeling:
         X_train, y_train = sample_data[0][:150], sample_data[1][:150]
         X_test = sample_data[0][150:]
 
-        meta_labeling = MetaLabeling(
-            config=MetaLabelingConfig(compute_importance=False)
-        )
+        meta_labeling = MetaLabeling(config=MetaLabelingConfig(compute_importance=False))
         meta_labeling.fit(X_train, y_train)
 
         result = meta_labeling.predict(X_test)
@@ -228,9 +222,7 @@ class TestMetaLabeling:
         X_test = sample_data[0][150:]
         y_test = sample_data[1][150:]
 
-        meta_labeling = MetaLabeling(
-            config=MetaLabelingConfig(compute_importance=False)
-        )
+        meta_labeling = MetaLabeling(config=MetaLabelingConfig(compute_importance=False))
 
         result = meta_labeling.fit_predict(X_train, y_train, X_test, y_test)
 
@@ -280,9 +272,7 @@ class TestMetaLabeling:
 
     def test_calculate_bet_sizes_kelly(self):
         """Test bet size calculation with Kelly method."""
-        meta_labeling = MetaLabeling(
-            config=MetaLabelingConfig(bet_sizing_method="kelly")
-        )
+        meta_labeling = MetaLabeling(config=MetaLabelingConfig(bet_sizing_method="kelly"))
 
         meta_proba = np.array([0.6, 0.7, 0.8, 0.4, 0.9])
         bet_sizes = meta_labeling._calculate_bet_sizes(meta_proba)
@@ -294,9 +284,7 @@ class TestMetaLabeling:
 
     def test_calculate_bet_sizes_probability(self):
         """Test bet size calculation with probability method."""
-        meta_labeling = MetaLabeling(
-            config=MetaLabelingConfig(bet_sizing_method="probability")
-        )
+        meta_labeling = MetaLabeling(config=MetaLabelingConfig(bet_sizing_method="probability"))
 
         meta_proba = np.array([0.6, 0.7, 0.8, 0.4, 0.9])
         bet_sizes = meta_labeling._calculate_bet_sizes(meta_proba)
@@ -308,9 +296,7 @@ class TestMetaLabeling:
 
     def test_calculate_bet_sizes_fixed(self):
         """Test bet size calculation with fixed method."""
-        meta_labeling = MetaLabeling(
-            config=MetaLabelingConfig(bet_sizing_method="fixed")
-        )
+        meta_labeling = MetaLabeling(config=MetaLabelingConfig(bet_sizing_method="fixed"))
 
         meta_proba = np.array([0.6, 0.7, 0.8, 0.4, 0.9])
         bet_sizes = meta_labeling._calculate_bet_sizes(meta_proba)
@@ -321,11 +307,7 @@ class TestMetaLabeling:
     def test_calculate_bet_size_clipping(self):
         """Test that bet sizes are clipped to bounds."""
         meta_labeling = MetaLabeling(
-            config=MetaLabelingConfig(
-                bet_sizing_method="kelly",
-                min_bet_size=0.1,
-                max_bet_size=0.5
-            )
+            config=MetaLabelingConfig(bet_sizing_method="kelly", min_bet_size=0.1, max_bet_size=0.5)
         )
 
         meta_proba = np.array([0.9, 0.99])  # Would give > 0.5 with Kelly
@@ -383,9 +365,7 @@ class TestCalculateMetaLabels:
         primary_predictions = np.array([1, 1, -1])
         actual_returns = np.array([0.005, 0.02, -0.005])  # 0.005 is below threshold
 
-        meta_labels = calculate_meta_labels(
-            primary_predictions, actual_returns, threshold=0.01
-        )
+        meta_labels = calculate_meta_labels(primary_predictions, actual_returns, threshold=0.01)
 
         # Only 0.02 exceeds threshold
         expected = np.array([0, 1, 0])
@@ -476,9 +456,7 @@ class TestMetaLabelingEdgeCases:
         X = np.random.randn(100, 1)
         y = np.random.randint(0, 2, 100)
 
-        meta_labeling = MetaLabeling(
-            config=MetaLabelingConfig(compute_importance=False)
-        )
+        meta_labeling = MetaLabeling(config=MetaLabelingConfig(compute_importance=False))
         meta_labeling.fit(X, y)
 
         assert meta_labeling._is_fitted is True
@@ -488,9 +466,7 @@ class TestMetaLabelingEdgeCases:
         X = np.random.randn(200, 5)
         y = np.array([0] * 190 + [1] * 10)  # 95% zeros
 
-        meta_labeling = MetaLabeling(
-            config=MetaLabelingConfig(compute_importance=False)
-        )
+        meta_labeling = MetaLabeling(config=MetaLabelingConfig(compute_importance=False))
         meta_labeling.fit(X, y)
 
         assert meta_labeling._is_fitted is True
@@ -512,9 +488,7 @@ class TestMetaLabelingIntegration:
         y_test = np.random.randint(0, 2, n_test)
 
         # Fit meta-labeling
-        meta_labeling = MetaLabeling(
-            config=MetaLabelingConfig(compute_importance=False)
-        )
+        meta_labeling = MetaLabeling(config=MetaLabelingConfig(compute_importance=False))
         result = meta_labeling.fit_predict(X_train, y_train, X_test, y_test)
 
         # Verify result structure
@@ -531,9 +505,7 @@ class TestMetaLabelingIntegration:
         X = np.random.randn(300, 5)
         y = np.random.randint(0, 2, 300)
 
-        meta_labeling = MetaLabeling(
-            config=MetaLabelingConfig(compute_importance=False)
-        )
+        meta_labeling = MetaLabeling(config=MetaLabelingConfig(compute_importance=False))
         meta_labeling.fit(X, y)
 
         result = meta_labeling.predict(X[:50])
@@ -551,18 +523,14 @@ class TestMetaLabelingIntegration:
         X = np.random.randn(300, 5)
         y = np.random.randint(0, 2, 300)
 
-        meta_labeling = MetaLabeling(
-            config=MetaLabelingConfig(compute_importance=False)
-        )
+        meta_labeling = MetaLabeling(config=MetaLabelingConfig(compute_importance=False))
         result = meta_labeling.fit_predict(X[:200], y[:200], X[200:], y[200:])
 
         # When meta says no (0), we should skip the trade
         # Verify combined accuracy is calculated correctly
         mask = result.meta_predictions == 1
         if mask.sum() > 0:
-            combined_acc = np.mean(
-                result.primary_predictions[mask] == y[200:][mask]
-            )
+            combined_acc = np.mean(result.primary_predictions[mask] == y[200:][mask])
             assert result.combined_accuracy == combined_acc
 
 
@@ -576,9 +544,7 @@ class TestMetaLabelingPerformance:
         X = np.random.randn(n_samples, 10)
         y = np.random.randint(0, 2, n_samples)
 
-        meta_labeling = MetaLabeling(
-            config=MetaLabelingConfig(compute_importance=False)
-        )
+        meta_labeling = MetaLabeling(config=MetaLabelingConfig(compute_importance=False))
 
         # Should complete without error
         meta_labeling.fit(X, y)
@@ -590,9 +556,7 @@ class TestMetaLabelingPerformance:
         X = np.random.randn(200, n_features)
         y = np.random.randint(0, 2, 200)
 
-        meta_labeling = MetaLabeling(
-            config=MetaLabelingConfig(compute_importance=False)
-        )
+        meta_labeling = MetaLabeling(config=MetaLabelingConfig(compute_importance=False))
 
         meta_labeling.fit(X, y)
         assert meta_labeling.n_features_ == n_features

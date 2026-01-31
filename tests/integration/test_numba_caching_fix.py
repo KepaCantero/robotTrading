@@ -26,9 +26,10 @@ class TestNumbaCachingFix:
             "If this test fails, the Numba caching fix may not be working."
         )
         # Should be set to /tmp/numba_cache_test or empty string
-        assert numba_cache_dir in ["/tmp/numba_cache_test", ""], (
-            f"NUMBA_CACHE_DIR should be '/tmp/numba_cache_test' or '', got: {numba_cache_dir}"
-        )
+        assert numba_cache_dir in [
+            "/tmp/numba_cache_test",
+            "",
+        ], f"NUMBA_CACHE_DIR should be '/tmp/numba_cache_test' or '', got: {numba_cache_dir}"
 
     def test_hurst_exponent_analyzer_imports(self):
         """Test that hurst_exponent_analyzer can be imported without caching errors."""
@@ -37,6 +38,7 @@ class TestNumbaCachingFix:
             calculate_cumulative_deviation_numba,
             calculate_rs_for_window_numba,
         )
+
         # If we got here without RuntimeError, the fix is working
         assert HurstExponentAnalyzer is not None
         assert calculate_cumulative_deviation_numba is not None

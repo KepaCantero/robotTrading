@@ -29,6 +29,7 @@ class RebalanceTrade:
     target_value: Decimal
     current_value: Decimal
     drift_pct: Decimal  # How far from target (percentage points)
+    average_price: Decimal  # Average price per unit (used for validation)
 
 
 @dataclass
@@ -156,7 +157,9 @@ class Rebalancer:
 
             # Calculate drift
             value_diff = target_value - current_value
-            drift_pct = (value_diff / total_value * Decimal("100")) if total_value > 0 else Decimal("0")
+            drift_pct = (
+                (value_diff / total_value * Decimal("100")) if total_value > 0 else Decimal("0")
+            )
             total_drift += abs(drift_pct)
 
             # Skip if within threshold
@@ -173,6 +176,13 @@ class Rebalancer:
                 if trade_value < self._config.min_trade_size:
                     continue
 
+                # Calculate average price for validation (handle zero quantity case)
+                if current_qty > 0:
+                    avg_price = current_value / current_qty
+                else:
+                    # For new positions, use current market price
+                    avg_price = current_price
+
                 trades.append(
                     RebalanceTrade(
                         symbol=symbol,
@@ -182,6 +192,7 @@ class Rebalancer:
                         target_value=target_value,
                         current_value=current_value,
                         drift_pct=drift_pct,
+                        average_price=avg_price,
                     )
                 )
 
@@ -247,10 +258,12 @@ class Rebalancer:
         sell_value = Decimal("0")
 
         for trade in plan.trades:
+            # Use average_price stored during plan creation (handles zero quantity case)
+            trade_price = trade.average_price
             if trade.trade_quantity > 0:  # Buy
-                buy_value += abs(trade.trade_quantity) * (trade.current_value / trade.current_quantity if trade.current_quantity > 0 else Decimal("100"))
+                buy_value += abs(trade.trade_quantity) * trade_price
             else:  # Sell
-                sell_value += abs(trade.trade_quantity) * (trade.current_value / trade.current_quantity if trade.current_quantity > 0 else Decimal("100"))
+                sell_value += abs(trade.trade_quantity) * trade_price
 
         net_cash_needed = buy_value - sell_value
 
@@ -264,7 +277,8 @@ class Rebalancer:
         max_trade_value = plan.total_value * max_trade_value_pct
 
         for trade in plan.trades:
-            trade_value = abs(trade.trade_quantity * (trade.current_value / trade.current_quantity if trade.current_quantity > 0 else Decimal("100")))
+            # Use average_price stored during plan creation (handles zero quantity case)
+            trade_value = abs(trade.trade_quantity * trade.average_price)
             if trade_value > max_trade_value:
                 issues.append(
                     f"Trade for {trade.symbol} exceeds max size: "

@@ -49,13 +49,17 @@ else:
 # Matplotlib compiled with NumPy 1.x is incompatible with NumPy 2.x
 # This causes ImportError during test collection. We import app.main lazily.
 _app = None
+
+
 def get_app():
     """Lazy load FastAPI app to avoid import errors during collection."""
     global _app
     if _app is None:
         from app.main import app as _app_impl
+
         _app = _app_impl
     return _app
+
 
 # Import models that don't depend on matplotlib/numpy 2.x compatibility
 from app.models.assets import Asset, AssetClass, AssetRanking, Exchange  # noqa: E402

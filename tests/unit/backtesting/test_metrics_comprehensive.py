@@ -30,6 +30,7 @@ from app.backtesting.models import Trade, TradeStatus
 # Test Fixtures
 # =============================================================================
 
+
 @pytest.fixture
 def sample_trades() -> List[Trade]:
     """Create sample trades for testing."""
@@ -100,7 +101,7 @@ def winning_trades() -> List[Trade]:
             entry_price=Decimal("150.00"),
             exit_price=Decimal("155.00"),
             entry_time=base_time + timedelta(days=i),
-            exit_time=base_time + timedelta(days=i+1),
+            exit_time=base_time + timedelta(days=i + 1),
             status=TradeStatus.CLOSED,
             pnl=Decimal("500"),
         )
@@ -121,7 +122,7 @@ def losing_trades() -> List[Trade]:
             entry_price=Decimal("155.00"),
             exit_price=Decimal("150.00"),
             entry_time=base_time + timedelta(days=i),
-            exit_time=base_time + timedelta(days=i+1),
+            exit_time=base_time + timedelta(days=i + 1),
             status=TradeStatus.CLOSED,
             pnl=Decimal("-500"),
         )
@@ -138,6 +139,7 @@ def calculator():
 # =============================================================================
 # MetricsCalculator Initialization Tests
 # =============================================================================
+
 
 class TestMetricsCalculatorInitialization:
     """Test suite for MetricsCalculator initialization."""
@@ -166,6 +168,7 @@ class TestMetricsCalculatorInitialization:
 # =============================================================================
 # Calculate All Metrics Tests
 # =============================================================================
+
 
 class TestCalculateAllMetrics:
     """Test suite for calculate_all_metrics method."""
@@ -259,7 +262,9 @@ class TestCalculateAllMetrics:
                 end_date=datetime(2024, 1, 31),
             )
 
-    def test_calculate_metrics_validates_initial_capital_not_negative(self, calculator, sample_trades):
+    def test_calculate_metrics_validates_initial_capital_not_negative(
+        self, calculator, sample_trades
+    ):
         """Test that negative initial capital raises ValueError."""
         with pytest.raises(ValueError, match="initial_capital must be positive"):
             calculator.calculate_all_metrics(
@@ -301,6 +306,7 @@ class TestCalculateAllMetrics:
 # =============================================================================
 # Win Rate Calculation Tests
 # =============================================================================
+
 
 class TestWinRateCalculation:
     """Test suite for win rate calculation."""
@@ -355,7 +361,7 @@ class TestWinRateCalculation:
                 entry_price=Decimal("150"),
                 exit_price=Decimal("155"),
                 entry_time=base_time + timedelta(days=i),
-                exit_time=base_time + timedelta(days=i+1),
+                exit_time=base_time + timedelta(days=i + 1),
                 status=TradeStatus.CLOSED,
                 pnl=Decimal("500"),
             )
@@ -376,6 +382,7 @@ class TestWinRateCalculation:
 # =============================================================================
 # Profit Factor Tests
 # =============================================================================
+
 
 class TestProfitFactor:
     """Test suite for profit factor calculation."""
@@ -413,6 +420,7 @@ class TestProfitFactor:
 # =============================================================================
 # Expectancy Calculation Tests
 # =============================================================================
+
 
 class TestExpectancyCalculation:
     """Test suite for expectancy calculation."""
@@ -452,7 +460,7 @@ class TestExpectancyCalculation:
                 entry_price=Decimal("150"),
                 exit_price=Decimal("140"),
                 entry_time=base_time + timedelta(days=i),
-                exit_time=base_time + timedelta(days=i+1),
+                exit_time=base_time + timedelta(days=i + 1),
                 status=TradeStatus.CLOSED,
                 pnl=Decimal("-1000"),  # Large losses
             )
@@ -480,6 +488,7 @@ class TestExpectancyCalculation:
 # Drawdown Calculation Tests
 # =============================================================================
 
+
 class TestDrawdownCalculation:
     """Test suite for drawdown calculation."""
 
@@ -495,8 +504,8 @@ class TestDrawdownCalculation:
                 quantity=Decimal("100"),
                 entry_price=Decimal("150"),
                 exit_price=Decimal("155"),
-                entry_time=base_time + timedelta(days=i*2),
-                exit_time=base_time + timedelta(days=i*2+1),
+                entry_time=base_time + timedelta(days=i * 2),
+                exit_time=base_time + timedelta(days=i * 2 + 1),
                 status=TradeStatus.CLOSED,
                 pnl=Decimal("500"),
             )
@@ -527,7 +536,7 @@ class TestDrawdownCalculation:
                 entry_price=Decimal("155"),
                 exit_price=Decimal("150"),
                 entry_time=base_time + timedelta(days=i),
-                exit_time=base_time + timedelta(days=i+1),
+                exit_time=base_time + timedelta(days=i + 1),
                 status=TradeStatus.CLOSED,
                 pnl=Decimal("-500"),
             )
@@ -541,8 +550,8 @@ class TestDrawdownCalculation:
                 quantity=Decimal("100"),
                 entry_price=Decimal("150"),
                 exit_price=Decimal("155"),
-                entry_time=base_time + timedelta(days=5+i),
-                exit_time=base_time + timedelta(days=6+i),
+                entry_time=base_time + timedelta(days=5 + i),
+                exit_time=base_time + timedelta(days=6 + i),
                 status=TradeStatus.CLOSED,
                 pnl=Decimal("500"),
             )
@@ -573,7 +582,7 @@ class TestDrawdownCalculation:
                 entry_price=Decimal("100"),
                 exit_price=Decimal("50"),
                 entry_time=base_time + timedelta(days=i),
-                exit_time=base_time + timedelta(days=i+1),
+                exit_time=base_time + timedelta(days=i + 1),
                 status=TradeStatus.CLOSED,
                 pnl=Decimal("-50000"),
             )
@@ -595,6 +604,7 @@ class TestDrawdownCalculation:
 # =============================================================================
 # CAGR Calculation Tests
 # =============================================================================
+
 
 class TestCAGRCalculation:
     """Test suite for CAGR calculation."""
@@ -681,6 +691,7 @@ class TestCAGRCalculation:
 # Risk-Reward Ratio Tests
 # =============================================================================
 
+
 class TestRiskRewardRatio:
     """Test suite for risk-reward ratio calculation."""
 
@@ -730,6 +741,7 @@ class TestRiskRewardRatio:
 # Average Win/Loss Tests
 # =============================================================================
 
+
 class TestAverageWinLoss:
     """Test suite for average win and loss calculations."""
 
@@ -778,6 +790,7 @@ class TestAverageWinLoss:
 # Trade Duration Tests
 # =============================================================================
 
+
 class TestTradeDuration:
     """Test suite for trade duration calculations."""
 
@@ -806,7 +819,7 @@ class TestTradeDuration:
                 entry_price=Decimal("150"),
                 exit_price=Decimal("155"),
                 entry_time=base_time,
-                exit_time=base_time + timedelta(days=i+1),
+                exit_time=base_time + timedelta(days=i + 1),
                 status=TradeStatus.CLOSED,
                 pnl=Decimal("500"),
             )
@@ -845,6 +858,7 @@ class TestTradeDuration:
 # Property-Based Tests with Hypothesis
 # =============================================================================
 
+
 class TestMetricsCalculatorProperties:
     """Property-based tests using Hypothesis."""
 
@@ -869,7 +883,7 @@ class TestMetricsCalculatorProperties:
                     entry_price=Decimal("150"),
                     exit_price=Decimal("155") if is_win else Decimal("145"),
                     entry_time=base_time + timedelta(days=i),
-                    exit_time=base_time + timedelta(days=i+1),
+                    exit_time=base_time + timedelta(days=i + 1),
                     status=TradeStatus.CLOSED,
                     pnl=pnl,
                 )
@@ -912,9 +926,7 @@ class TestMetricsCalculatorProperties:
         num_losing=st.integers(min_value=0, max_value=50),
     )
     @settings(max_examples=30, suppress_health_check=[HealthCheck.function_scoped_fixture])
-    def test_total_trades_equals_sum_of_wins_and_losses(
-        self, calculator, num_winning, num_losing
-    ):
+    def test_total_trades_equals_sum_of_wins_and_losses(self, calculator, num_winning, num_losing):
         """Property: Total trades should equal wins + losses."""
         base_time = datetime(2024, 1, 1)
         trades = []
@@ -930,7 +942,7 @@ class TestMetricsCalculatorProperties:
                     entry_price=Decimal("150"),
                     exit_price=Decimal("155"),
                     entry_time=base_time + timedelta(days=i),
-                    exit_time=base_time + timedelta(days=i+1),
+                    exit_time=base_time + timedelta(days=i + 1),
                     status=TradeStatus.CLOSED,
                     pnl=Decimal("500"),
                 )
@@ -946,8 +958,8 @@ class TestMetricsCalculatorProperties:
                     quantity=Decimal("100"),
                     entry_price=Decimal("155"),
                     exit_price=Decimal("150"),
-                    entry_time=base_time + timedelta(days=num_winning+i),
-                    exit_time=base_time + timedelta(days=num_winning+i+1),
+                    entry_time=base_time + timedelta(days=num_winning + i),
+                    exit_time=base_time + timedelta(days=num_winning + i + 1),
                     status=TradeStatus.CLOSED,
                     pnl=Decimal("-500"),
                 )
@@ -969,6 +981,7 @@ class TestMetricsCalculatorProperties:
 # =============================================================================
 # Edge Cases and Boundary Conditions
 # =============================================================================
+
 
 class TestEdgeCases:
     """Test suite for edge cases and boundary conditions."""
@@ -1118,6 +1131,7 @@ class TestEdgeCases:
 # Sharpe and Sortino Ratio Tests
 # =============================================================================
 
+
 class TestSharpeSortinoRatios:
     """Test suite for Sharpe and Sortino ratio calculations."""
 
@@ -1134,7 +1148,7 @@ class TestSharpeSortinoRatios:
                 entry_price=Decimal("150"),
                 exit_price=Decimal("155"),
                 entry_time=base_time + timedelta(days=i),
-                exit_time=base_time + timedelta(days=i+1),
+                exit_time=base_time + timedelta(days=i + 1),
                 status=TradeStatus.CLOSED,
                 pnl=Decimal("500"),
             )
@@ -1170,7 +1184,7 @@ class TestSharpeSortinoRatios:
                     entry_price=Decimal("150"),
                     exit_price=Decimal("155") if is_win else Decimal("145"),
                     entry_time=base_time + timedelta(days=i),
-                    exit_time=base_time + timedelta(days=i+1),
+                    exit_time=base_time + timedelta(days=i + 1),
                     status=TradeStatus.CLOSED,
                     pnl=pnl,
                 )

@@ -13,17 +13,19 @@ from enum import Enum
 
 class MarketRegime(Enum):
     """
-    Market regime classification based on Hurst Exponent.
+        Market regime classification based on Hurst Exponent.
 
-    According to Ernest Chan (Algorithmic Trading, Rule 2.2):
-    - MEAN_REVERTING: H < 0.5 (anti-persistent behavior)
-    - RANDOM_WALK: H ≈ 0.5 (efficient market, no predictability)
-    - TRENDING: H > 0.5 (persistent behavior)
+    from __future__ import annotations
 
-    Attributes:
-        MEAN_REVERTING: Market exhibits mean-reversion
-        RANDOM_WALK: Market follows random walk
-        TRENDING: Market exhibits trending behavior
+        According to Ernest Chan (Algorithmic Trading, Rule 2.2):
+        - MEAN_REVERTING: H < 0.5 (anti-persistent behavior)
+        - RANDOM_WALK: H ≈ 0.5 (efficient market, no predictability)
+        - TRENDING: H > 0.5 (persistent behavior)
+
+        Attributes:
+            MEAN_REVERTING: Market exhibits mean-reversion
+            RANDOM_WALK: Market follows random walk
+            TRENDING: Market exhibits trending behavior
     """
 
     MEAN_REVERTING = "mean_reverting"

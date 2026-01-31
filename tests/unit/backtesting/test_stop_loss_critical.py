@@ -52,7 +52,7 @@ class TestStopLossCritical:
             price=Decimal("100"),
             volume=Decimal("1000000"),
             timestamp=past_time(hours_ago=2),
-            metadata={"strategy": "test_strategy"}
+            metadata={"strategy": "test_strategy"},
         )
 
     @pytest.fixture
@@ -69,7 +69,7 @@ class TestStopLossCritical:
             low=Decimal("99"),
             close=Decimal("100"),
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
     def test_stop_loss_triggers_on_decline(self, backtester, buy_signal, entry_quote):
@@ -94,15 +94,16 @@ class TestStopLossCritical:
             low=Decimal("94"),
             close=Decimal("94"),
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         # This should trigger stop-loss
         backtester._check_exit_conditions(quote_decline)
 
         # Verify position closed
-        assert backtester.positions.get("AAPL", Decimal("0")) == Decimal("0"), \
-            "Position should be closed after stop-loss"
+        assert backtester.positions.get("AAPL", Decimal("0")) == Decimal(
+            "0"
+        ), "Position should be closed after stop-loss"
 
         # Verify trade was closed with loss
         closed_trades = [t for t in backtester.trades if t.status == TradeStatus.CLOSED]
@@ -114,8 +115,9 @@ class TestStopLossCritical:
 
         # Verify loss is approximately 5% (not 50%)
         loss_percentage = abs(final_trade.pnl_percentage)
-        assert Decimal("4") <= loss_percentage <= Decimal("7"), \
-            f"Loss should be ~5%, got {loss_percentage}% (PnL={final_trade.pnl})"
+        assert (
+            Decimal("4") <= loss_percentage <= Decimal("7")
+        ), f"Loss should be ~5%, got {loss_percentage}% (PnL={final_trade.pnl})"
 
     def test_stop_loss_does_not_trigger_small_decline(self, backtester, buy_signal, entry_quote):
         """Test that stop-loss does NOT trigger on small 2% decline."""
@@ -134,15 +136,16 @@ class TestStopLossCritical:
             low=Decimal("98"),
             close=Decimal("98"),
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         # This should NOT trigger stop-loss
         backtester._check_exit_conditions(quote_small_decline)
 
         # Verify position still open
-        assert backtester.positions.get("AAPL", Decimal("0")) > 0, \
-            "Position should remain open for small decline"
+        assert (
+            backtester.positions.get("AAPL", Decimal("0")) > 0
+        ), "Position should remain open for small decline"
 
     def test_stop_loss_and_take_profit_same_bar(self, backtester, buy_signal, entry_quote):
         """
@@ -167,17 +170,18 @@ class TestStopLossCritical:
             last=Decimal("105"),
             open=Decimal("110"),
             high=Decimal("111"),  # Above TP ($110)
-            low=Decimal("94"),    # Below SL ($95)
+            low=Decimal("94"),  # Below SL ($95)
             close=Decimal("105"),
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         backtester._check_exit_conditions(quote_both)
 
         # Verify position closed
-        assert backtester.positions.get("AAPL", Decimal("0")) == Decimal("0"), \
-            "Position should be closed when both SL and TP hit"
+        assert backtester.positions.get("AAPL", Decimal("0")) == Decimal(
+            "0"
+        ), "Position should be closed when both SL and TP hit"
 
         # Verify exit was at stop-loss price (pessimistic)
         closed_trades = [t for t in backtester.trades if t.status == TradeStatus.CLOSED]
@@ -186,13 +190,15 @@ class TestStopLossCritical:
         final_trade = closed_trades[-1]
         # Exit price should reflect stop-loss, not take-profit
         # The actual exit price depends on implementation, but PnL should be negative
-        assert final_trade.pnl < 0, \
-            f"PnL should be negative (SL hit, not TP), got {final_trade.pnl}"
+        assert (
+            final_trade.pnl < 0
+        ), f"PnL should be negative (SL hit, not TP), got {final_trade.pnl}"
 
         # Verify loss is in the stop-loss range (~5-6%)
         loss_percentage = abs(final_trade.pnl_percentage)
-        assert Decimal("4") <= loss_percentage <= Decimal("8"), \
-            f"Loss should be ~5-6% (SL range), got {loss_percentage}%"
+        assert (
+            Decimal("4") <= loss_percentage <= Decimal("8")
+        ), f"Loss should be ~5-6% (SL range), got {loss_percentage}%"
 
     def test_stop_loss_prevents_catastrophic_loss(self, backtester, buy_signal, entry_quote):
         """
@@ -219,7 +225,7 @@ class TestStopLossCritical:
             low=Decimal("50"),  # 50% crash!
             close=Decimal("50"),
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         backtester._check_exit_conditions(quote_crash)
@@ -232,15 +238,16 @@ class TestStopLossCritical:
         loss_amount = initial_total_capital - final_capital
         loss_pct = (loss_amount / initial_total_capital) * 100
 
-        assert loss_pct < Decimal("10"), \
-            f"Loss {loss_pct:.2f}% exceeds 10% - stop-loss failed to prevent catastrophic loss!"
+        assert loss_pct < Decimal(
+            "10"
+        ), f"Loss {loss_pct:.2f}% exceeds 10% - stop-loss failed to prevent catastrophic loss!"
 
-        assert loss_pct > 0, \
-            f"Should have a small loss ({loss_pct}%), not a gain"
+        assert loss_pct > 0, f"Should have a small loss ({loss_pct}%), not a gain"
 
         # Position should be closed
-        assert backtester.positions.get("AAPL", Decimal("0")) == Decimal("0"), \
-            "Position should be closed after crash"
+        assert backtester.positions.get("AAPL", Decimal("0")) == Decimal(
+            "0"
+        ), "Position should be closed after crash"
 
     def test_take_profit_triggers_on_rise(self, backtester, buy_signal, entry_quote):
         """Test that take-profit triggers when price rises 10%."""
@@ -259,26 +266,30 @@ class TestStopLossCritical:
             low=Decimal("110"),
             close=Decimal("111"),
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         backtester._check_exit_conditions(quote_rise)
 
         # Verify position closed
-        assert backtester.positions.get("AAPL", Decimal("0")) == Decimal("0"), \
-            "Position should be closed after take-profit"
+        assert backtester.positions.get("AAPL", Decimal("0")) == Decimal(
+            "0"
+        ), "Position should be closed after take-profit"
 
         # Verify P&L is positive (profit)
         closed_trades = [t for t in backtester.trades if t.status == TradeStatus.CLOSED]
         assert len(closed_trades) > 0, "Should have closed trades"
 
         final_trade = closed_trades[-1]
-        assert final_trade.pnl > 0, f"Take-profit trade should have profit, got PnL={final_trade.pnl}"
+        assert (
+            final_trade.pnl > 0
+        ), f"Take-profit trade should have profit, got PnL={final_trade.pnl}"
 
         # Verify profit is approximately 10%
         profit_percentage = final_trade.pnl_percentage
-        assert Decimal("8") <= profit_percentage <= Decimal("12"), \
-            f"Profit should be ~10%, got {profit_percentage}%"
+        assert (
+            Decimal("8") <= profit_percentage <= Decimal("12")
+        ), f"Profit should be ~10%, got {profit_percentage}%"
 
     def test_stop_loss_exact_threshold(self, backtester, buy_signal, entry_quote):
         """Test stop-loss behavior at exact 5% threshold."""
@@ -297,14 +308,15 @@ class TestStopLossCritical:
             low=Decimal("95"),
             close=Decimal("95"),
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         backtester._check_exit_conditions(quote_exact_sl)
 
         # Verify position closed (exact threshold should trigger)
-        assert backtester.positions.get("AAPL", Decimal("0")) == Decimal("0"), \
-            "Position should be closed at exact stop-loss threshold"
+        assert backtester.positions.get("AAPL", Decimal("0")) == Decimal(
+            "0"
+        ), "Position should be closed at exact stop-loss threshold"
 
     def test_take_profit_exact_threshold(self, backtester, buy_signal, entry_quote):
         """Test take-profit behavior at exact 10% threshold."""
@@ -329,14 +341,15 @@ class TestStopLossCritical:
             low=expected_tp_price,
             close=expected_tp_price,
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         backtester._check_exit_conditions(quote_exact_tp)
 
         # Verify position closed (exact threshold should trigger)
-        assert backtester.positions.get("AAPL", Decimal("0")) == Decimal("0"), \
-            "Position should be closed at exact take-profit threshold"
+        assert backtester.positions.get("AAPL", Decimal("0")) == Decimal(
+            "0"
+        ), "Position should be closed at exact take-profit threshold"
 
     def test_no_stop_loss_config(self):
         """Test that trading without stop-loss configuration works (but is not recommended)."""
@@ -375,7 +388,7 @@ class TestStopLossCritical:
             low=Decimal("99"),
             close=Decimal("100"),
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         # This should NOT raise an error (current implementation allows it)
@@ -397,14 +410,15 @@ class TestStopLossCritical:
             low=Decimal("50"),
             close=Decimal("50"),
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         backtester_no_sl._check_exit_conditions(quote_crash)
 
         # Position should STILL BE OPEN (dangerous!)
-        assert backtester_no_sl.positions.get("AAPL", Decimal("0")) > 0, \
-            "WARNING: Position remains open without stop-loss - this is dangerous!"
+        assert (
+            backtester_no_sl.positions.get("AAPL", Decimal("0")) > 0
+        ), "WARNING: Position remains open without stop-loss - this is dangerous!"
 
     def test_multiple_positions_with_stop_loss(self, backtester):
         """Test stop-loss with multiple open positions."""
@@ -433,7 +447,7 @@ class TestStopLossCritical:
             low=Decimal("99"),
             close=Decimal("100"),
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         backtester._execute_buy_signal(signal_aapl, quote_aapl)
@@ -463,7 +477,7 @@ class TestStopLossCritical:
             low=Decimal("199"),
             close=Decimal("200"),
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         backtester._execute_buy_signal(signal_msft, quote_msft)
@@ -484,16 +498,16 @@ class TestStopLossCritical:
             low=Decimal("94"),
             close=Decimal("94"),
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         backtester._check_exit_conditions(quote_aapl_decline)
 
         # Verify AAPL closed, MSFT still open
-        assert backtester.positions.get("AAPL", Decimal("0")) == Decimal("0"), \
-            "AAPL should be closed by stop-loss"
-        assert backtester.positions["MSFT"] > 0, \
-            "MSFT should remain open"
+        assert backtester.positions.get("AAPL", Decimal("0")) == Decimal(
+            "0"
+        ), "AAPL should be closed by stop-loss"
+        assert backtester.positions["MSFT"] > 0, "MSFT should remain open"
 
     def test_stop_loss_with_commission_and_slippage(self, backtester, buy_signal, entry_quote):
         """Test that stop-loss accounts for commission and slippage."""
@@ -515,7 +529,7 @@ class TestStopLossCritical:
             low=Decimal("94"),
             close=Decimal("94"),
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         backtester._check_exit_conditions(quote_decline)
@@ -523,8 +537,9 @@ class TestStopLossCritical:
         final_capital = backtester.capital
 
         # Capital should decrease (loss + commission + slippage)
-        assert final_capital < initial_total_capital, \
-            "Capital should decrease after stop-loss (loss + costs)"
+        assert (
+            final_capital < initial_total_capital
+        ), "Capital should decrease after stop-loss (loss + costs)"
 
         # Verify position closed
         assert backtester.positions.get("AAPL", Decimal("0")) == Decimal("0")
@@ -580,7 +595,7 @@ class TestStopLossEdgeCases:
             low=Decimal("99"),
             close=Decimal("100"),
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         backtester._execute_buy_signal(signal, entry_quote)
@@ -597,7 +612,7 @@ class TestStopLossEdgeCases:
             low=Decimal("96.99"),
             close=Decimal("96.99"),
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         backtester._check_exit_conditions(quote_below)
@@ -632,7 +647,7 @@ class TestStopLossEdgeCases:
             low=Decimal("99"),
             close=Decimal("100"),
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         backtester._execute_buy_signal(signal, entry_quote)
@@ -656,7 +671,7 @@ class TestStopLossEdgeCases:
             low=one_tick_above,  # One tick above SL
             close=one_tick_above,
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         backtester._check_exit_conditions(quote_above)
@@ -691,7 +706,7 @@ class TestStopLossEdgeCases:
             low=Decimal("99"),
             close=Decimal("100"),
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         backtester._execute_buy_signal(signal, entry_quote)
@@ -708,7 +723,7 @@ class TestStopLossEdgeCases:
             low=Decimal("96"),
             close=Decimal("96"),
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         backtester._check_exit_conditions(quote_1)
@@ -728,7 +743,7 @@ class TestStopLossEdgeCases:
             low=Decimal("95"),
             close=Decimal("95"),
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         backtester._check_exit_conditions(quote_2)
@@ -737,7 +752,9 @@ class TestStopLossEdgeCases:
         assert backtester.positions.get("AAPL", Decimal("0")) == Decimal("0")
 
         # Should only have one closed trade (not two)
-        closed_trades = [t for t in backtester.trades if t.status == TradeStatus.CLOSED and t.side == "sell"]
+        closed_trades = [
+            t for t in backtester.trades if t.status == TradeStatus.CLOSED and t.side == "sell"
+        ]
         # We expect one summary sell trade for the position close
         assert len(closed_trades) == 1, f"Expected 1 closed sell trade, got {len(closed_trades)}"
 
@@ -781,7 +798,7 @@ class TestStopLossWithDifferentConfigs:
             low=Decimal("99"),
             close=Decimal("100"),
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         backtester._execute_buy_signal(signal, entry_quote)
@@ -798,7 +815,7 @@ class TestStopLossWithDifferentConfigs:
             low=Decimal("98.50"),
             close=Decimal("98.50"),
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         backtester._check_exit_conditions(quote_decline)
@@ -811,8 +828,7 @@ class TestStopLossWithDifferentConfigs:
 
         # Loss should be ~1-2% (very tight)
         loss_pct = abs(closed_trades[-1].pnl_percentage)
-        assert loss_pct <= Decimal("3"), \
-            f"Tight SL should limit loss to ~3%, got {loss_pct}%"
+        assert loss_pct <= Decimal("3"), f"Tight SL should limit loss to ~3%, got {loss_pct}%"
 
     def test_wide_stop_loss_15_percent(self):
         """Test wide 15% stop-loss."""
@@ -850,7 +866,7 @@ class TestStopLossWithDifferentConfigs:
             low=Decimal("99"),
             close=Decimal("100"),
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         backtester._execute_buy_signal(signal, entry_quote)
@@ -867,14 +883,15 @@ class TestStopLossWithDifferentConfigs:
             low=Decimal("90"),
             close=Decimal("90"),
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         backtester._check_exit_conditions(quote_decline_10)
 
         # Should NOT trigger (wide SL allows more drawdown)
-        assert backtester.positions.get("AAPL", Decimal("0")) > 0, \
-            "Wide 15% SL should not trigger on 10% decline"
+        assert (
+            backtester.positions.get("AAPL", Decimal("0")) > 0
+        ), "Wide 15% SL should not trigger on 10% decline"
 
         # Price drops 20% to $80 (below 15% SL)
         quote_decline_20 = Quote(
@@ -888,7 +905,7 @@ class TestStopLossWithDifferentConfigs:
             low=Decimal("80"),
             close=Decimal("80"),
             volume=Decimal("1000000"),
-            spread=Decimal("1.0")
+            spread=Decimal("1.0"),
         )
 
         backtester._check_exit_conditions(quote_decline_20)
@@ -900,5 +917,6 @@ class TestStopLossWithDifferentConfigs:
         loss_pct = abs(closed_trades[-1].pnl_percentage)
 
         # Loss should be ~15-17% (wide SL)
-        assert Decimal("13") <= loss_pct <= Decimal("18"), \
-            f"Wide SL should allow ~15% loss, got {loss_pct}%"
+        assert (
+            Decimal("13") <= loss_pct <= Decimal("18")
+        ), f"Wide SL should allow ~15% loss, got {loss_pct}%"

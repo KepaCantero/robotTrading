@@ -34,21 +34,25 @@ class FactorReturns:
     @property
     def three_factor(self) -> np.ndarray:
         """Get 3-factor returns as array."""
-        return np.array([
-            self.market_return,
-            self.smb_return,
-            self.hml_return,
-        ])
+        return np.array(
+            [
+                self.market_return,
+                self.smb_return,
+                self.hml_return,
+            ]
+        )
 
     @property
     def four_factor(self) -> np.ndarray:
         """Get 4-factor returns as array."""
-        return np.array([
-            self.market_return,
-            self.smb_return,
-            self.hml_return,
-            self.umd_return,
-        ])
+        return np.array(
+            [
+                self.market_return,
+                self.smb_return,
+                self.hml_return,
+                self.umd_return,
+            ]
+        )
 
 
 @dataclass
@@ -152,21 +156,25 @@ class FamaFrenchModel:
         """
         # Build factor matrix
         if self._model_type == "4factor":
-            X = np.column_stack([
-                np.ones(len(asset_returns)),  # Intercept (alpha)
-                factor_returns.market_return,
-                factor_returns.smb_return,
-                factor_returns.hml_return,
-                factor_returns.umd_return,
-            ])
+            X = np.column_stack(
+                [
+                    np.ones(len(asset_returns)),  # Intercept (alpha)
+                    factor_returns.market_return,
+                    factor_returns.smb_return,
+                    factor_returns.hml_return,
+                    factor_returns.umd_return,
+                ]
+            )
             factor_names = ["alpha", "market", "smb", "hml", "umd"]
         else:  # 3factor
-            X = np.column_stack([
-                np.ones(len(asset_returns)),
-                factor_returns.market_return,
-                factor_returns.smb_return,
-                factor_returns.hml_return,
-            ])
+            X = np.column_stack(
+                [
+                    np.ones(len(asset_returns)),
+                    factor_returns.market_return,
+                    factor_returns.smb_return,
+                    factor_returns.hml_return,
+                ]
+            )
             factor_names = ["alpha", "market", "smb", "hml"]
 
         # Add constant to factor returns for intercept
@@ -187,7 +195,7 @@ class FamaFrenchModel:
 
         # R-squared
         ss_tot = np.sum((y - np.mean(y)) ** 2)
-        ss_res = np.sum(residuals ** 2)
+        ss_res = np.sum(residuals**2)
         r_squared = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0
 
         # Standard errors (simplified)

@@ -73,9 +73,7 @@ def sample_position_dict():
 @pytest.fixture
 def handler(mock_broker, mock_position_monitor):
     """Create a CorporateActionsHandler instance."""
-    return CorporateActionsHandler(
-        broker=mock_broker, position_monitor=mock_position_monitor
-    )
+    return CorporateActionsHandler(broker=mock_broker, position_monitor=mock_position_monitor)
 
 
 # =============================================================================

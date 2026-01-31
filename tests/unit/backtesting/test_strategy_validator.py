@@ -32,9 +32,7 @@ class TestStrategyValidator:
 
     def test_initialization_with_custom_thresholds(self):
         """Test validator can be initialized with custom thresholds."""
-        validator = StrategyValidator(
-            min_sharpe=Decimal("1.5"), max_drawdown=Decimal("-0.20")
-        )
+        validator = StrategyValidator(min_sharpe=Decimal("1.5"), max_drawdown=Decimal("-0.20"))
         assert validator.min_sharpe == Decimal("1.5")
         assert validator.max_drawdown == Decimal("-0.20")
 
@@ -85,9 +83,7 @@ class TestStrategyValidator:
     def test_validate_both_metrics_pass(self):
         """Test validation passes when both metrics meet thresholds."""
         validator = StrategyValidator()
-        result = validator.validate(
-            sharpe_ratio=Decimal("1.5"), max_drawdown=Decimal("-0.15")
-        )
+        result = validator.validate(sharpe_ratio=Decimal("1.5"), max_drawdown=Decimal("-0.15"))
 
         assert result.is_valid is True
         assert result.validation_level == ValidationLevel.PASS
@@ -98,9 +94,7 @@ class TestStrategyValidator:
     def test_validate_sharpe_fails_only(self):
         """Test validation fails when only Sharpe is below threshold."""
         validator = StrategyValidator()
-        result = validator.validate(
-            sharpe_ratio=Decimal("0.8"), max_drawdown=Decimal("-0.15")
-        )
+        result = validator.validate(sharpe_ratio=Decimal("0.8"), max_drawdown=Decimal("-0.15"))
 
         assert result.is_valid is False
         assert result.validation_level == ValidationLevel.FAIL
@@ -112,9 +106,7 @@ class TestStrategyValidator:
     def test_validate_drawdown_fails_only(self):
         """Test validation fails when only max drawdown exceeds threshold."""
         validator = StrategyValidator()
-        result = validator.validate(
-            sharpe_ratio=Decimal("1.5"), max_drawdown=Decimal("-0.30")
-        )
+        result = validator.validate(sharpe_ratio=Decimal("1.5"), max_drawdown=Decimal("-0.30"))
 
         assert result.is_valid is False
         assert result.validation_level == ValidationLevel.FAIL
@@ -126,9 +118,7 @@ class TestStrategyValidator:
     def test_validate_both_metrics_fail(self):
         """Test validation fails when both metrics exceed thresholds."""
         validator = StrategyValidator()
-        result = validator.validate(
-            sharpe_ratio=Decimal("0.5"), max_drawdown=Decimal("-0.40")
-        )
+        result = validator.validate(sharpe_ratio=Decimal("0.5"), max_drawdown=Decimal("-0.40"))
 
         assert result.is_valid is False
         assert result.validation_level == ValidationLevel.FAIL
@@ -139,9 +129,7 @@ class TestStrategyValidator:
     def test_validate_edge_case_sharpe_exactly_threshold(self):
         """Test validation for Sharpe ratio exactly at threshold."""
         validator = StrategyValidator()
-        result = validator.validate(
-            sharpe_ratio=Decimal("1.0"), max_drawdown=Decimal("-0.20")
-        )
+        result = validator.validate(sharpe_ratio=Decimal("1.0"), max_drawdown=Decimal("-0.20"))
 
         assert result.is_valid is True
         assert result.sharpe_passes is True
@@ -149,9 +137,7 @@ class TestStrategyValidator:
     def test_validate_edge_case_drawdown_exactly_threshold(self):
         """Test validation for max drawdown exactly at threshold."""
         validator = StrategyValidator()
-        result = validator.validate(
-            sharpe_ratio=Decimal("1.5"), max_drawdown=Decimal("-0.25")
-        )
+        result = validator.validate(sharpe_ratio=Decimal("1.5"), max_drawdown=Decimal("-0.25"))
 
         assert result.is_valid is True
         assert result.drawdown_passes is True
@@ -159,9 +145,7 @@ class TestStrategyValidator:
     def test_validate_with_warnings_marginal_sharpe(self):
         """Test validation generates warnings for marginal Sharpe (1.0-1.5)."""
         validator = StrategyValidator()
-        result = validator.validate(
-            sharpe_ratio=Decimal("1.2"), max_drawdown=Decimal("-0.15")
-        )
+        result = validator.validate(sharpe_ratio=Decimal("1.2"), max_drawdown=Decimal("-0.15"))
 
         assert result.is_valid is True
         assert len(result.warnings) > 0
@@ -170,9 +154,7 @@ class TestStrategyValidator:
     def test_validate_with_warnings_elevated_drawdown(self):
         """Test validation generates warnings for elevated drawdown (-20% to -25%)."""
         validator = StrategyValidator()
-        result = validator.validate(
-            sharpe_ratio=Decimal("1.5"), max_drawdown=Decimal("-0.22")
-        )
+        result = validator.validate(sharpe_ratio=Decimal("1.5"), max_drawdown=Decimal("-0.22"))
 
         assert result.is_valid is True
         assert len(result.warnings) > 0
@@ -262,18 +244,14 @@ class TestConvenienceFunction:
 
     def test_convenience_function_pass(self):
         """Test convenience function returns valid result for passing metrics."""
-        result = validate_strategy(
-            sharpe_ratio=Decimal("1.8"), max_drawdown=Decimal("-0.12")
-        )
+        result = validate_strategy(sharpe_ratio=Decimal("1.8"), max_drawdown=Decimal("-0.12"))
 
         assert result.is_valid is True
         assert result.validation_level == ValidationLevel.PASS
 
     def test_convenience_function_fail(self):
         """Test convenience function returns invalid result for failing metrics."""
-        result = validate_strategy(
-            sharpe_ratio=Decimal("0.7"), max_drawdown=Decimal("-0.30")
-        )
+        result = validate_strategy(sharpe_ratio=Decimal("0.7"), max_drawdown=Decimal("-0.30"))
 
         assert result.is_valid is False
         assert result.validation_level == ValidationLevel.FAIL

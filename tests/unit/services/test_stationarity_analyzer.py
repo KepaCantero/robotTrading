@@ -33,7 +33,7 @@ class TestStationarityAnalyzer:
         n = 200
         x = np.zeros(n)
         for i in range(1, n):
-            x[i] = phi * x[i-1] + np.random.randn()
+            x[i] = phi * x[i - 1] + np.random.randn()
         return x
 
     @pytest.fixture
@@ -43,7 +43,7 @@ class TestStationarityAnalyzer:
         n = 200
         x = np.zeros(n)
         for i in range(1, n):
-            x[i] = x[i-1] + np.random.randn()
+            x[i] = x[i - 1] + np.random.randn()
         return x
 
     def test_initialization(self, analyzer):
@@ -86,7 +86,7 @@ class TestStationarityAnalyzer:
         n = 200
         x = np.zeros(n)
         for i in range(1, n):
-            x[i] = phi * x[i-1] + np.random.randn()
+            x[i] = phi * x[i - 1] + np.random.randn()
 
         hurst = analyzer.calculate_hurst_exponent(x)
 

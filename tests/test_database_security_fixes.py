@@ -36,11 +36,11 @@ class TestConnectionStringSanitization:
 
         # Mock settings to return connection string with credentials
         with patch.object(
-            settings,
-            'database_url',
-            'postgresql://user:password@localhost:5432/trading'
+            settings, 'database_url', 'postgresql://user:password@localhost:5432/trading'
         ):
-            with patch.object(settings, 'get_database_url_async', return_value=settings.database_url):
+            with patch.object(
+                settings, 'get_database_url_async', return_value=settings.database_url
+            ):
                 # Trigger database engine creation
                 try:
                     engine = get_database_engine()
@@ -58,7 +58,9 @@ class TestConnectionStringSanitization:
                     assert 'postgresql://user' not in call_str, "Full connection string logged!"
 
                 # Verify at least one call contains host info
-                host_logged = any('localhost:5432' in str(call) or 'host=' in str(call) for call in info_calls)
+                host_logged = any(
+                    'localhost:5432' in str(call) or 'host=' in str(call) for call in info_calls
+                )
                 assert host_logged, "Host information not logged"
 
     @patch('app.core.database.logger')
@@ -69,12 +71,10 @@ class TestConnectionStringSanitization:
         settings = get_settings()
 
         # Mock settings for SQLite
-        with patch.object(
-            settings,
-            'database_url',
-            'sqlite:///./trading.db'
-        ):
-            with patch.object(settings, 'get_database_url_async', return_value=settings.database_url):
+        with patch.object(settings, 'database_url', 'sqlite:///./trading.db'):
+            with patch.object(
+                settings, 'get_database_url_async', return_value=settings.database_url
+            ):
                 try:
                     engine = get_database_engine()
                 except Exception as e:
@@ -135,9 +135,11 @@ class TestPositionStatePersistence:
 
         # Verify database entry
         with get_sync_db() as session:
-            state_record = session.query(PositionState).filter(
-                PositionState.monitor_id == monitor.monitor_id
-            ).first()
+            state_record = (
+                session.query(PositionState)
+                .filter(PositionState.monitor_id == monitor.monitor_id)
+                .first()
+            )
 
             assert state_record is not None
             assert state_record.monitor_id == monitor.monitor_id
@@ -186,18 +188,22 @@ class TestPositionStatePersistence:
         await monitor._sync_state()
 
         with get_sync_db() as session:
-            state = session.query(PositionState).filter(
-                PositionState.monitor_id == monitor.monitor_id
-            ).first()
+            state = (
+                session.query(PositionState)
+                .filter(PositionState.monitor_id == monitor.monitor_id)
+                .first()
+            )
             initial_version = state.version
 
         # Second sync
         await monitor._sync_state()
 
         with get_sync_db() as session:
-            state = session.query(PositionState).filter(
-                PositionState.monitor_id == monitor.monitor_id
-            ).first()
+            state = (
+                session.query(PositionState)
+                .filter(PositionState.monitor_id == monitor.monitor_id)
+                .first()
+            )
             assert state.version == initial_version + 1
 
     @pytest.mark.asyncio
@@ -211,9 +217,11 @@ class TestPositionStatePersistence:
 
         # Verify no database entry was created
         with get_sync_db() as session:
-            state = session.query(PositionState).filter(
-                PositionState.monitor_id == monitor.monitor_id
-            ).first()
+            state = (
+                session.query(PositionState)
+                .filter(PositionState.monitor_id == monitor.monitor_id)
+                .first()
+            )
             assert state is None
 
 
@@ -227,15 +235,17 @@ class TestPositionStateModel:
                 monitor_id="test_monitor_1",
                 positions_json='{"positions": []}',
                 is_active=True,
-                version=1
+                version=1,
             )
             session.add(state)
             session.commit()
 
             # Retrieve and verify
-            retrieved = session.query(PositionState).filter(
-                PositionState.monitor_id == "test_monitor_1"
-            ).first()
+            retrieved = (
+                session.query(PositionState)
+                .filter(PositionState.monitor_id == "test_monitor_1")
+                .first()
+            )
 
             assert retrieved is not None
             assert retrieved.monitor_id == "test_monitor_1"
@@ -247,9 +257,7 @@ class TestPositionStateModel:
         with get_sync_db() as session:
             # Create
             state = PositionState(
-                monitor_id="test_monitor_2",
-                positions_json='{"positions": []}',
-                version=1
+                monitor_id="test_monitor_2", positions_json='{"positions": []}', version=1
             )
             session.add(state)
             session.commit()
@@ -260,9 +268,11 @@ class TestPositionStateModel:
             session.commit()
 
             # Verify
-            retrieved = session.query(PositionState).filter(
-                PositionState.monitor_id == "test_monitor_2"
-            ).first()
+            retrieved = (
+                session.query(PositionState)
+                .filter(PositionState.monitor_id == "test_monitor_2")
+                .first()
+            )
 
             assert retrieved.version == 2
             data = json.loads(retrieved.positions_json)
@@ -271,10 +281,7 @@ class TestPositionStateModel:
 
     def test_position_state_repr(self):
         """Test PositionState string representation."""
-        state = PositionState(
-            monitor_id="test_monitor",
-            positions_json='{}'
-        )
+        state = PositionState(monitor_id="test_monitor", positions_json='{}')
         repr_str = repr(state)
         assert 'test_monitor' in repr_str
         assert 'version=' in repr_str

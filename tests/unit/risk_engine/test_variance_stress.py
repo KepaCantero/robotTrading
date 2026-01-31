@@ -65,8 +65,9 @@ class TestPortfolioVarianceStressTester:
             'GOOGL': 0.30,
         }
 
-    def test_calculate_portfolio_variance(self, stress_tester, sample_portfolio,
-                                          sample_correlations, sample_volatilities):
+    def test_calculate_portfolio_variance(
+        self, stress_tester, sample_portfolio, sample_correlations, sample_volatilities
+    ):
         """Test portfolio variance calculation."""
         variance = stress_tester._calculate_portfolio_variance(
             sample_portfolio, sample_correlations, sample_volatilities
@@ -79,8 +80,9 @@ class TestPortfolioVarianceStressTester:
         portfolio_vol = np.sqrt(variance)
         assert portfolio_vol > 0
 
-    def test_run_variance_stress_tests(self, stress_tester, sample_portfolio,
-                                       sample_correlations, sample_volatilities):
+    def test_run_variance_stress_tests(
+        self, stress_tester, sample_portfolio, sample_correlations, sample_volatilities
+    ):
         """Test running variance stress tests."""
         results = stress_tester.run_variance_stress_tests(
             sample_portfolio,
@@ -104,8 +106,9 @@ class TestPortfolioVarianceStressTester:
         assert 'variance_increase_pct' in vol_spike
         assert vol_spike['stressed_variance'] > vol_spike['baseline_variance']
 
-    def test_correlation_breakdown_scenario(self, stress_tester, sample_portfolio,
-                                           sample_correlations, sample_volatilities):
+    def test_correlation_breakdown_scenario(
+        self, stress_tester, sample_portfolio, sample_correlations, sample_volatilities
+    ):
         """Test correlation breakdown scenario."""
         results = stress_tester.run_variance_stress_tests(
             sample_portfolio,
@@ -120,8 +123,9 @@ class TestPortfolioVarianceStressTester:
         assert perfect_corr['variance_increase_pct'] > 0
         assert perfect_corr['stressed_variance'] > perfect_corr['baseline_variance']
 
-    def test_extreme_stress_scenario(self, stress_tester, sample_portfolio,
-                                     sample_correlations, sample_volatilities):
+    def test_extreme_stress_scenario(
+        self, stress_tester, sample_portfolio, sample_correlations, sample_volatilities
+    ):
         """Test extreme stress scenario (3x vol + perfect corr)."""
         results = stress_tester.run_variance_stress_tests(
             sample_portfolio,
@@ -135,8 +139,9 @@ class TestPortfolioVarianceStressTester:
         # Extreme stress should cause largest variance increase
         assert extreme['variance_increase_pct'] > 100  # At least double
 
-    def test_variance_stress_summary(self, stress_tester, sample_portfolio,
-                                     sample_correlations, sample_volatilities):
+    def test_variance_stress_summary(
+        self, stress_tester, sample_portfolio, sample_correlations, sample_volatilities
+    ):
         """Test stress test summary generation."""
         results = stress_tester.run_variance_stress_tests(
             sample_portfolio,
@@ -161,8 +166,9 @@ class TestPortfolioVarianceStressTester:
         assert 'risk_level' in assessment
         assert 'recommendation' in assessment
 
-    def test_decompose_portfolio_variance(self, stress_tester, sample_portfolio,
-                                          sample_correlations, sample_volatilities):
+    def test_decompose_portfolio_variance(
+        self, stress_tester, sample_portfolio, sample_correlations, sample_volatilities
+    ):
         """Test portfolio variance decomposition."""
         decomposition = stress_tester.decompose_portfolio_variance(
             sample_portfolio,
@@ -189,8 +195,9 @@ class TestPortfolioVarianceStressTester:
         # Check interpretation
         assert 'interpretation' in decomposition
 
-    def test_calculate_concentration_stress(self, stress_tester, sample_portfolio,
-                                            sample_volatilities):
+    def test_calculate_concentration_stress(
+        self, stress_tester, sample_portfolio, sample_volatilities
+    ):
         """Test concentration stress calculation."""
         concentration = stress_tester.calculate_concentration_stress(
             sample_portfolio,
@@ -227,8 +234,9 @@ class TestPortfolioVarianceStressTester:
         assessment = stress_tester._assess_variance_increase(150)
         assert assessment['severity'] == 'CRITICAL'
 
-    def test_stress_correlations_helper(self, stress_tester, sample_portfolio,
-                                        sample_correlations, sample_volatilities):
+    def test_stress_correlations_helper(
+        self, stress_tester, sample_portfolio, sample_correlations, sample_volatilities
+    ):
         """Test correlation stressing helper function."""
         scenario = {
             'name': 'Test',
@@ -277,8 +285,14 @@ class TestVarianceDecomposition:
         portfolio.cash = Decimal("50000.00")
 
         # Many small positions
-        for symbol, price in [('AAPL', 150), ('MSFT', 300), ('GOOGL', 2500),
-                              ('AMZN', 3200), ('TSLA', 800), ('META', 300)]:
+        for symbol, price in [
+            ('AAPL', 150),
+            ('MSFT', 300),
+            ('GOOGL', 2500),
+            ('AMZN', 3200),
+            ('TSLA', 800),
+            ('META', 300),
+        ]:
             portfolio.add_position(
                 symbol=symbol,
                 quantity=Decimal("10"),
@@ -310,32 +324,71 @@ class TestVarianceDecomposition:
 
         return portfolio
 
-    def test_diversified_vs_concentrated(self, stress_tester, diversified_portfolio,
-                                         concentrated_portfolio):
+    def test_diversified_vs_concentrated(
+        self, stress_tester, diversified_portfolio, concentrated_portfolio
+    ):
         """Compare variance decomposition of diversified vs concentrated."""
         corr = {
-            'AAPL': {'AAPL': 1.0, 'MSFT': 0.7, 'GOOGL': 0.6, 'AMZN': 0.6,
-                     'TSLA': 0.5, 'META': 0.65},
-            'MSFT': {'AAPL': 0.7, 'MSFT': 1.0, 'GOOGL': 0.65, 'AMZN': 0.65,
-                     'TSLA': 0.55, 'META': 0.7},
-            'GOOGL': {'AAPL': 0.6, 'MSFT': 0.65, 'GOOGL': 1.0, 'AMZN': 0.6,
-                      'TSLA': 0.5, 'META': 0.6},
-            'AMZN': {'AAPL': 0.6, 'MSFT': 0.65, 'GOOGL': 0.6, 'AMZN': 1.0,
-                     'TSLA': 0.55, 'META': 0.6},
-            'TSLA': {'AAPL': 0.5, 'MSFT': 0.55, 'GOOGL': 0.5, 'AMZN': 0.55,
-                     'TSLA': 1.0, 'META': 0.5},
-            'META': {'AAPL': 0.65, 'MSFT': 0.7, 'GOOGL': 0.6, 'AMZN': 0.6,
-                     'TSLA': 0.5, 'META': 1.0},
+            'AAPL': {
+                'AAPL': 1.0,
+                'MSFT': 0.7,
+                'GOOGL': 0.6,
+                'AMZN': 0.6,
+                'TSLA': 0.5,
+                'META': 0.65,
+            },
+            'MSFT': {
+                'AAPL': 0.7,
+                'MSFT': 1.0,
+                'GOOGL': 0.65,
+                'AMZN': 0.65,
+                'TSLA': 0.55,
+                'META': 0.7,
+            },
+            'GOOGL': {
+                'AAPL': 0.6,
+                'MSFT': 0.65,
+                'GOOGL': 1.0,
+                'AMZN': 0.6,
+                'TSLA': 0.5,
+                'META': 0.6,
+            },
+            'AMZN': {
+                'AAPL': 0.6,
+                'MSFT': 0.65,
+                'GOOGL': 0.6,
+                'AMZN': 1.0,
+                'TSLA': 0.55,
+                'META': 0.6,
+            },
+            'TSLA': {
+                'AAPL': 0.5,
+                'MSFT': 0.55,
+                'GOOGL': 0.5,
+                'AMZN': 0.55,
+                'TSLA': 1.0,
+                'META': 0.5,
+            },
+            'META': {
+                'AAPL': 0.65,
+                'MSFT': 0.7,
+                'GOOGL': 0.6,
+                'AMZN': 0.6,
+                'TSLA': 0.5,
+                'META': 1.0,
+            },
         }
 
         vols = {
-            'AAPL': 0.25, 'MSFT': 0.28, 'GOOGL': 0.30,
-            'AMZN': 0.32, 'TSLA': 0.45, 'META': 0.35,
+            'AAPL': 0.25,
+            'MSFT': 0.28,
+            'GOOGL': 0.30,
+            'AMZN': 0.32,
+            'TSLA': 0.45,
+            'META': 0.35,
         }
 
-        div_decomp = stress_tester.decompose_portfolio_variance(
-            diversified_portfolio, corr, vols
-        )
+        div_decomp = stress_tester.decompose_portfolio_variance(diversified_portfolio, corr, vols)
 
         conc_decomp = stress_tester.decompose_portfolio_variance(
             concentrated_portfolio,

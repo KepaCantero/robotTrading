@@ -113,10 +113,7 @@ class CoveredCallPortfolio:
     @property
     def capital_at_risk(self) -> float:
         """Calculate total capital at risk."""
-        return sum(
-            pos.stock_quantity * pos.stock_cost_basis
-            for pos in self.positions
-        )
+        return sum(pos.stock_quantity * pos.stock_cost_basis for pos in self.positions)
 
 
 class CoveredCallStrategy:
@@ -183,7 +180,8 @@ class CoveredCallStrategy:
         """
         # Filter by expiration
         valid_calls = [
-            opt for opt in available_calls
+            opt
+            for opt in available_calls
             if self._min_dte <= opt.days_to_expiration <= self._max_dte
         ]
 
@@ -244,7 +242,10 @@ class CoveredCallStrategy:
         option = covered_position.call_option
 
         # Check if close to expiration or high assignment probability
-        if option.days_to_expiration <= 7 or covered_position.assignment_probability > self._assign_threshold:
+        if (
+            option.days_to_expiration <= 7
+            or covered_position.assignment_probability > self._assign_threshold
+        ):
             # Close to expiration or high assignment risk
             if option.is_itm and option.delta > self._roll_threshold:
                 # Roll to next month
@@ -273,8 +274,7 @@ class CoveredCallStrategy:
         """Find call option for next month with similar strike."""
         # Filter for later expirations
         future_calls = [
-            opt for opt in available_calls
-            if opt.days_to_expiration > self._min_dte + 7
+            opt for opt in available_calls if opt.days_to_expiration > self._min_dte + 7
         ]
 
         # Find closest strike to current
@@ -478,10 +478,7 @@ class CoveredCallStrategy:
                 "positions_at_risk": 0,
             }
 
-        total_capital = sum(
-            pos.stock_quantity * pos.stock_cost_basis
-            for pos in positions
-        )
+        total_capital = sum(pos.stock_quantity * pos.stock_cost_basis for pos in positions)
         total_premium = sum(pos.call_premium_received for pos in positions)
 
         # Calculate weighted average days to expiration

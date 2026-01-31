@@ -25,7 +25,7 @@ class TestMarketRegimeDetector:
 
         returns = pd.Series(
             np.random.normal(0.0005, 0.02, n),
-            index=pd.date_range('2023-01-01', periods=n, freq='D')
+            index=pd.date_range('2023-01-01', periods=n, freq='D'),
         )
 
         return returns
@@ -40,10 +40,7 @@ class TestMarketRegimeDetector:
         returns = np.random.normal(0.0005, 0.02, n)
         prices = 100 * np.exp(np.cumsum(returns))
 
-        prices = pd.Series(
-            prices,
-            index=pd.date_range('2023-01-01', periods=n, freq='D')
-        )
+        prices = pd.Series(prices, index=pd.date_range('2023-01-01', periods=n, freq='D'))
 
         return prices
 
@@ -142,10 +139,7 @@ class TestVolatilityRegimeDetector:
 
             returns.append(np.random.normal(0.0005, vol))
 
-        returns = pd.Series(
-            returns,
-            index=pd.date_range('2023-01-01', periods=n, freq='D')
-        )
+        returns = pd.Series(returns, index=pd.date_range('2023-01-01', periods=n, freq='D'))
 
         return returns
 
@@ -195,7 +189,7 @@ class TestHighLevelFunctions:
 
         returns = pd.Series(
             np.random.normal(0.0005, 0.02, n),
-            index=pd.date_range('2023-01-01', periods=n, freq='D')
+            index=pd.date_range('2023-01-01', periods=n, freq='D'),
         )
 
         return returns
@@ -243,28 +237,28 @@ class TestRegimeAwareStrategy:
 
         returns = pd.Series(
             np.random.normal(0.0005, 0.02, n),
-            index=pd.date_range('2023-01-01', periods=n, freq='D')
+            index=pd.date_range('2023-01-01', periods=n, freq='D'),
         )
 
         regimes = pd.Series(
             np.random.choice(['bull', 'bear', 'neutral'], n),
-            index=pd.date_range('2023-01-01', periods=n, freq='D')
+            index=pd.date_range('2023-01-01', periods=n, freq='D'),
         )
 
         # Strategy returns for each regime
         bull_returns = pd.Series(
             np.random.normal(0.001, 0.015, n),
-            index=pd.date_range('2023-01-01', periods=n, freq='D')
+            index=pd.date_range('2023-01-01', periods=n, freq='D'),
         )
 
         bear_returns = pd.Series(
             np.random.normal(0.0003, 0.01, n),
-            index=pd.date_range('2023-01-01', periods=n, freq='D')
+            index=pd.date_range('2023-01-01', periods=n, freq='D'),
         )
 
         neutral_returns = pd.Series(
             np.random.normal(0.0005, 0.012, n),
-            index=pd.date_range('2023-01-01', periods=n, freq='D')
+            index=pd.date_range('2023-01-01', periods=n, freq='D'),
         )
 
         return {

@@ -104,9 +104,7 @@ class TestGreeksValidation:
             'max_rho': 200,
         }
 
-        validation = greeks_calculator.validate_greeks_risk_limits(
-            portfolio_greeks, limits
-        )
+        validation = greeks_calculator.validate_greeks_risk_limits(portfolio_greeks, limits)
 
         assert validation['within_limits'] is True
         assert validation['risk_level'] == 'LOW'
@@ -130,9 +128,7 @@ class TestGreeksValidation:
             'max_rho': 200,
         }
 
-        validation = greeks_calculator.validate_greeks_risk_limits(
-            portfolio_greeks, limits
-        )
+        validation = greeks_calculator.validate_greeks_risk_limits(portfolio_greeks, limits)
 
         assert validation['within_limits'] is False
         assert len(validation['violations']) > 0
@@ -149,12 +145,15 @@ class TestGreeksValidation:
             'total_rho': 0.0,
         }
 
-        limits = {'max_delta': 100, 'max_gamma': 5, 'max_theta': -1000,
-                  'max_vega': 500, 'max_rho': 200}
+        limits = {
+            'max_delta': 100,
+            'max_gamma': 5,
+            'max_theta': -1000,
+            'max_vega': 500,
+            'max_rho': 200,
+        }
 
-        validation = greeks_calculator.validate_greeks_risk_limits(
-            portfolio_greeks, limits
-        )
+        validation = greeks_calculator.validate_greeks_risk_limits(portfolio_greeks, limits)
 
         # Should have critical gamma violation
         gamma_violations = [v for v in validation['violations'] if v['greek'] == 'gamma']
@@ -163,9 +162,7 @@ class TestGreeksValidation:
 
     def test_sensitivity_analysis_spot(self, greeks_calculator, sample_call_params):
         """Test spot price sensitivity analysis."""
-        sensitivity = greeks_calculator.calculate_greeks_sensitivity_analysis(
-            sample_call_params
-        )
+        sensitivity = greeks_calculator.calculate_greeks_sensitivity_analysis(sample_call_params)
 
         assert 'sensitivity_analysis' in sensitivity
         assert 'spot_sensitivity' in sensitivity['sensitivity_analysis']
@@ -178,9 +175,7 @@ class TestGreeksValidation:
 
     def test_sensitivity_analysis_volatility(self, greeks_calculator, sample_call_params):
         """Test volatility sensitivity analysis."""
-        sensitivity = greeks_calculator.calculate_greeks_sensitivity_analysis(
-            sample_call_params
-        )
+        sensitivity = greeks_calculator.calculate_greeks_sensitivity_analysis(sample_call_params)
 
         vol_sens = sensitivity['sensitivity_analysis']['volatility_sensitivity']
         assert 'vega_change_up' in vol_sens
@@ -189,20 +184,15 @@ class TestGreeksValidation:
 
     def test_sensitivity_analysis_time(self, greeks_calculator, sample_call_params):
         """Test time decay sensitivity analysis."""
-        sensitivity = greeks_calculator.calculate_greeks_sensitivity_analysis(
-            sample_call_params
-        )
+        sensitivity = greeks_calculator.calculate_greeks_sensitivity_analysis(sample_call_params)
 
         time_sens = sensitivity['sensitivity_analysis']['time_decay_sensitivity']
         assert 'theta_acceleration' in time_sens
         assert 'theta_warning' in time_sens
 
-    def test_sensitivity_analysis_overall_assessment(self, greeks_calculator,
-                                                      sample_call_params):
+    def test_sensitivity_analysis_overall_assessment(self, greeks_calculator, sample_call_params):
         """Test overall sensitivity assessment."""
-        sensitivity = greeks_calculator.calculate_greeks_sensitivity_analysis(
-            sample_call_params
-        )
+        sensitivity = greeks_calculator.calculate_greeks_sensitivity_analysis(sample_call_params)
 
         assessment = sensitivity['sensitivity_analysis']['assessment']
         assert 'stability_score' in assessment
@@ -210,8 +200,7 @@ class TestGreeksValidation:
         assert 'recommendation' in assessment
         assert assessment['stability_level'] in ['HIGH', 'MODERATE', 'LOW']
 
-    def test_sensitivity_analysis_custom_scenarios(self, greeks_calculator,
-                                                    sample_call_params):
+    def test_sensitivity_analysis_custom_scenarios(self, greeks_calculator, sample_call_params):
         """Test sensitivity analysis with custom shock scenarios."""
         custom_scenarios = {
             'spot_shock_pct': 0.10,  # 10% spot shock
@@ -219,8 +208,7 @@ class TestGreeksValidation:
         }
 
         sensitivity = greeks_calculator.calculate_greeks_sensitivity_analysis(
-            sample_call_params,
-            shock_scenarios=custom_scenarios
+            sample_call_params, shock_scenarios=custom_scenarios
         )
 
         assert 'scenarios_applied' in sensitivity
@@ -229,9 +217,7 @@ class TestGreeksValidation:
 
     def test_validate_greeks_error_handling(self, greeks_calculator):
         """Test validation with error input."""
-        validation = greeks_calculator.validate_greeks_consistency(
-            {'error': 'Calculation failed'}
-        )
+        validation = greeks_calculator.validate_greeks_consistency({'error': 'Calculation failed'})
 
         assert validation['valid'] is False
         assert 'error' in validation
@@ -246,9 +232,7 @@ class TestGreeksValidation:
             'volatility': 0.20,
         }
 
-        result = greeks_calculator.calculate_greeks_sensitivity_analysis(
-            invalid_params
-        )
+        result = greeks_calculator.calculate_greeks_sensitivity_analysis(invalid_params)
 
         # Should handle error gracefully
         assert 'error' in result or 'sensitivity_analysis' in result
@@ -271,12 +255,15 @@ class TestGreeksRiskLimits:
             'total_rho': 0.0,
         }
 
-        limits = {'max_delta': 100, 'max_gamma': 5, 'max_theta': -1000,
-                  'max_vega': 500, 'max_rho': 200}
+        limits = {
+            'max_delta': 100,
+            'max_gamma': 5,
+            'max_theta': -1000,
+            'max_vega': 500,
+            'max_rho': 200,
+        }
 
-        validation = greeks_calculator.validate_greeks_risk_limits(
-            portfolio_greeks, limits
-        )
+        validation = greeks_calculator.validate_greeks_risk_limits(portfolio_greeks, limits)
 
         assert validation['risk_score'] > 0
         assert validation['risk_level'] == 'CRITICAL'
@@ -291,12 +278,15 @@ class TestGreeksRiskLimits:
             'total_rho': 0.0,
         }
 
-        limits = {'max_delta': 100, 'max_gamma': 5, 'max_theta': -1000,
-                  'max_vega': 500, 'max_rho': 200}
+        limits = {
+            'max_delta': 100,
+            'max_gamma': 5,
+            'max_theta': -1000,
+            'max_vega': 500,
+            'max_rho': 200,
+        }
 
-        validation = greeks_calculator.validate_greeks_risk_limits(
-            portfolio_greeks, limits
-        )
+        validation = greeks_calculator.validate_greeks_risk_limits(portfolio_greeks, limits)
 
         assert 'recommendation' in validation
         assert isinstance(validation['recommendation'], str)

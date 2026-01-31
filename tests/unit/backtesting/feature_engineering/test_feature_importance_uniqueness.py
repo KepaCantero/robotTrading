@@ -29,9 +29,11 @@ class TestUniquenessCalculator:
         """Create sample data for testing."""
         n_samples = 100
         events = pd.date_range("2020-01-01", periods=n_samples, freq="D")
-        labels = pd.DataFrame({
-            "bars_to_barrier": np.random.randint(5, 15, n_samples),
-        })
+        labels = pd.DataFrame(
+            {
+                "bars_to_barrier": np.random.randint(5, 15, n_samples),
+            }
+        )
         price_series = pd.Series(range(n_samples))
 
         return events, labels, price_series
@@ -72,9 +74,11 @@ class TestUniquenessCalculator:
         events = pd.date_range("2020-01-01", periods=n_samples, freq="D")
 
         # Create labels with high overlap
-        labels = pd.DataFrame({
-            "bars_to_barrier": np.ones(n_samples, dtype=int) * 20,  # All 20 bars
-        })
+        labels = pd.DataFrame(
+            {
+                "bars_to_barrier": np.ones(n_samples, dtype=int) * 20,  # All 20 bars
+            }
+        )
 
         price_series = pd.Series(range(n_samples))
 
@@ -90,9 +94,11 @@ class TestUniquenessCalculator:
         events = pd.date_range("2020-01-01", periods=n_samples, freq="D")
 
         # Create labels with no overlap
-        labels = pd.DataFrame({
-            "bars_to_barrier": np.ones(n_samples, dtype=int),  # All 1 bar
-        })
+        labels = pd.DataFrame(
+            {
+                "bars_to_barrier": np.ones(n_samples, dtype=int),  # All 1 bar
+            }
+        )
 
         price_series = pd.Series(range(n_samples))
 
@@ -126,9 +132,11 @@ class TestMDIWithUniqueness:
         """Create events and labels for testing."""
         n_samples = 200
         events = pd.date_range("2020-01-01", periods=n_samples, freq="D")
-        labels = pd.DataFrame({
-            "bars_to_barrier": np.random.randint(5, 15, n_samples),
-        })
+        labels = pd.DataFrame(
+            {
+                "bars_to_barrier": np.random.randint(5, 15, n_samples),
+            }
+        )
         price_series = pd.Series(range(n_samples))
 
         return events, labels, price_series
@@ -192,9 +200,11 @@ class TestMDAWithUniqueness:
         """Create events and labels for testing."""
         n_samples = 200
         events = pd.date_range("2020-01-01", periods=n_samples, freq="D")
-        labels = pd.DataFrame({
-            "bars_to_barrier": np.random.randint(5, 15, n_samples),
-        })
+        labels = pd.DataFrame(
+            {
+                "bars_to_barrier": np.random.randint(5, 15, n_samples),
+            }
+        )
         price_series = pd.Series(range(n_samples))
 
         return events, labels, price_series
@@ -240,12 +250,14 @@ class TestFeatureClusterer:
         n_samples = 100
 
         # Create correlated features
-        X = pd.DataFrame({
-            "feature_0": np.random.randn(n_samples),
-            "feature_1": np.random.randn(n_samples) * 0.9,  # Correlated with f0
-            "feature_2": np.random.randn(n_samples),
-            "feature_3": np.random.randn(n_samples),
-        })
+        X = pd.DataFrame(
+            {
+                "feature_0": np.random.randn(n_samples),
+                "feature_1": np.random.randn(n_samples) * 0.9,  # Correlated with f0
+                "feature_2": np.random.randn(n_samples),
+                "feature_3": np.random.randn(n_samples),
+            }
+        )
 
         # Make feature_1 correlated with feature_0
         X["feature_1"] = X["feature_0"] * 0.8 + X["feature_1"] * 0.2
@@ -298,9 +310,11 @@ class TestFinancialMLFeatureImportanceWithUniqueness:
         y = np.random.choice([0, 1], size=n_samples)
 
         events = pd.date_range("2020-01-01", periods=n_samples, freq="D")
-        labels = pd.DataFrame({
-            "bars_to_barrier": np.random.randint(5, 15, n_samples),
-        })
+        labels = pd.DataFrame(
+            {
+                "bars_to_barrier": np.random.randint(5, 15, n_samples),
+            }
+        )
 
         # Train model
         model = RandomForestClassifier(n_estimators=30, random_state=42)
@@ -347,15 +361,10 @@ class TestFinancialMLFeatureImportanceWithUniqueness:
         model, X, y, events, labels = sample_data
 
         # Convert to DataFrame
-        X_df = pd.DataFrame(
-            X,
-            columns=[f"feature_{i}" for i in range(X.shape[1])]
-        )
+        X_df = pd.DataFrame(X, columns=[f"feature_{i}" for i in range(X.shape[1])])
 
         importance = FinancialMLFeatureImportanceWithUniqueness()
-        result = importance.calculate_importance(
-            model, X_df, y, events, labels
-        )
+        result = importance.calculate_importance(model, X_df, y, events, labels)
 
         # Should work the same as numpy
         assert result.n_features == X.shape[1]
@@ -394,9 +403,11 @@ class TestCalculateFeatureImportanceWithUniqueness:
         y = np.random.choice([0, 1], size=n_samples)
 
         events = pd.date_range("2020-01-01", periods=n_samples, freq="D")
-        labels = pd.DataFrame({
-            "bars_to_barrier": np.random.randint(5, 15, n_samples),
-        })
+        labels = pd.DataFrame(
+            {
+                "bars_to_barrier": np.random.randint(5, 15, n_samples),
+            }
+        )
 
         model = RandomForestClassifier(n_estimators=20, random_state=42)
         model.fit(X, y)
@@ -441,7 +452,11 @@ class TestCalculateFeatureImportanceWithUniqueness:
         model, X, y, events, labels = sample_data
 
         importance = calculate_feature_importance_with_uniqueness(
-            model, X, y, events, labels,
+            model,
+            X,
+            y,
+            events,
+            labels,
             method="mda",
             mda_n_repeats=5,
             cluster_features=True,
@@ -506,9 +521,11 @@ class TestIntegration:
 
         # Events and labels
         events = pd.date_range("2020-01-01", periods=n_samples, freq="H")
-        labels = pd.DataFrame({
-            "bars_to_barrier": np.random.randint(5, 20, n_samples),
-        })
+        labels = pd.DataFrame(
+            {
+                "bars_to_barrier": np.random.randint(5, 20, n_samples),
+            }
+        )
 
         # Train model
         model = RandomForestClassifier(
@@ -557,10 +574,12 @@ class TestIntegration:
         model, X, y, events, labels = realistic_data
 
         # Standard importance
-        standard_importance = dict(zip(
-            [f"feature_{i}" for i in range(X.shape[1])],
-            model.feature_importances_,
-        ))
+        standard_importance = dict(
+            zip(
+                [f"feature_{i}" for i in range(X.shape[1])],
+                model.feature_importances_,
+            )
+        )
 
         # Uniqueness-weighted importance
         importance_calc = FinancialMLFeatureImportanceWithUniqueness()

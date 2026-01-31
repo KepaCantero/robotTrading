@@ -344,7 +344,8 @@ class ErrorBudgetManager:
             db_path.parent.mkdir(parents=True, exist_ok=True)
 
             async with aiosqlite.connect(self.config.db_path) as db:
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS error_budgets (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         service_name TEXT NOT NULL,
@@ -361,9 +362,11 @@ class ErrorBudgetManager:
                         created_at TEXT NOT NULL DEFAULT (datetime('utc')),
                         UNIQUE(service_name, period, window_start)
                     )
-                """)
+                """
+                )
 
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS budget_incidents (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         service_name TEXT NOT NULL,
@@ -374,17 +377,22 @@ class ErrorBudgetManager:
                         metadata TEXT,
                         created_at TEXT NOT NULL DEFAULT (datetime('utc'))
                     )
-                """)
+                """
+                )
 
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE INDEX IF NOT EXISTS idx_budget_service_period
                     ON error_budgets(service_name, period)
-                    """)
+                    """
+                )
 
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE INDEX IF NOT EXISTS idx_incidents_service_timestamp
                     ON budget_incidents(service_name, incident_timestamp)
-                    """)
+                    """
+                )
 
                 await db.commit()
 

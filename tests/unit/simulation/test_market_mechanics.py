@@ -418,14 +418,17 @@ class TestCreateMarketMechanicsEngine:
         assert engine.regular_session.end_time == time(16, 0)
 
 
-@pytest.mark.parametrize("phase", [
-    MarketPhase.PRE_MARKET,
-    MarketPhase.OPENING_AUCTION,
-    MarketPhase.CONTINUOUS_TRADING,
-    MarketPhase.CLOSING_AUCTION,
-    MarketPhase.POST_MARKET,
-    MarketPhase.CLOSED,
-])
+@pytest.mark.parametrize(
+    "phase",
+    [
+        MarketPhase.PRE_MARKET,
+        MarketPhase.OPENING_AUCTION,
+        MarketPhase.CONTINUOUS_TRADING,
+        MarketPhase.CLOSING_AUCTION,
+        MarketPhase.POST_MARKET,
+        MarketPhase.CLOSED,
+    ],
+)
 def test_all_market_phases(phase):
     """Test that all market phases can be set."""
     engine = MarketMechanicsEngine(symbol="AAPL")

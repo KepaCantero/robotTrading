@@ -228,6 +228,7 @@ class BacktestCheckpoint:
         current_date: Current simulation date
         capital: Current capital amount
         positions: Current open positions
+        cost_basis: Cost basis for each position (needed for accurate P&L)
         year: Year number in backtest (1-25)
         progress: Progress percentage (0-100)
         metrics_snapshot: Performance metrics snapshot
@@ -238,6 +239,7 @@ class BacktestCheckpoint:
     current_date: date = field(default_factory=date.today)
     capital: Decimal = field(default=Decimal("0"))
     positions: Dict[str, Decimal] = field(default_factory=dict)
+    cost_basis: Dict[str, Decimal] = field(default_factory=dict)
     year: int = field(default=1)
     progress: float = field(default=0.0)
     metrics_snapshot: Dict[str, Any] = field(default_factory=dict)
@@ -250,6 +252,7 @@ class BacktestCheckpoint:
             "current_date": self.current_date.isoformat(),
             "capital": float(self.capital),
             "positions": {k: float(v) for k, v in self.positions.items()},
+            "cost_basis": {k: float(v) for k, v in self.cost_basis.items()},
             "year": self.year,
             "progress": self.progress,
             "metrics_snapshot": self.metrics_snapshot,
@@ -264,6 +267,7 @@ class BacktestCheckpoint:
             current_date=date.fromisoformat(data["current_date"]),
             capital=Decimal(str(data["capital"])),
             positions={k: Decimal(str(v)) for k, v in data["positions"].items()},
+            cost_basis={k: Decimal(str(v)) for k, v in data.get("cost_basis", {}).items()},
             year=data["year"],
             progress=data["progress"],
             metrics_snapshot=data["metrics_snapshot"],

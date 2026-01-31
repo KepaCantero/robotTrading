@@ -209,7 +209,9 @@ class TestCounterpartyRiskStressTester:
         assert 'multiple_defaults' in counterparty_tester.scenarios
         assert 'systemic_default_contagion' in counterparty_tester.scenarios
 
-    def test_calculate_counterparty_exposure(self, counterparty_tester, mock_portfolio, counterparty_data):
+    def test_calculate_counterparty_exposure(
+        self, counterparty_tester, mock_portfolio, counterparty_data
+    ):
         """Test counterparty exposure calculation."""
         result = counterparty_tester.calculate_counterparty_exposure(
             portfolio=mock_portfolio,
@@ -223,7 +225,9 @@ class TestCounterpartyRiskStressTester:
         assert 'counterparty_losses' in result
         assert 'risk_assessment' in result
 
-    def test_counterparty_loss_breakdown(self, counterparty_tester, mock_portfolio, counterparty_data):
+    def test_counterparty_loss_breakdown(
+        self, counterparty_tester, mock_portfolio, counterparty_data
+    ):
         """Test counterparty loss breakdown by counterparty."""
         result = counterparty_tester.calculate_counterparty_exposure(
             portfolio=mock_portfolio,
@@ -239,7 +243,9 @@ class TestCounterpartyRiskStressTester:
             assert 'loss_given_default' in loss
             assert loss['loss_given_default'] >= 0
 
-    def test_systemic_contagion_scenario(self, counterparty_tester, mock_portfolio, counterparty_data):
+    def test_systemic_contagion_scenario(
+        self, counterparty_tester, mock_portfolio, counterparty_data
+    ):
         """Test systemic default contagion scenario."""
         result = counterparty_tester.calculate_counterparty_exposure(
             portfolio=mock_portfolio,
@@ -251,7 +257,9 @@ class TestCounterpartyRiskStressTester:
         # Should have correlation multiplier > 1
         assert result['correlation_multiplier'] > 1.0
 
-    def test_counterparty_risk_assessment(self, counterparty_tester, mock_portfolio, counterparty_data):
+    def test_counterparty_risk_assessment(
+        self, counterparty_tester, mock_portfolio, counterparty_data
+    ):
         """Test counterparty risk assessment."""
         result = counterparty_tester.calculate_counterparty_exposure(
             portfolio=mock_portfolio,

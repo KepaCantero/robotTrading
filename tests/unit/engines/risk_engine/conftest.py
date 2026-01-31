@@ -109,7 +109,7 @@ def default_limits_config():
 def pytest_configure(config):
     """
     Configure pytest with custom markers.
-    
+
     This adds the 'unit' marker for unit tests.
     """
     config.addinivalue_line("markers", "unit: Unit test")
@@ -118,7 +118,7 @@ def pytest_configure(config):
 def pytest_collection_modifyitems(config, items):
     """
     Modify test collection to add markers based on test location.
-    
+
     Automatically marks all tests in this directory as unit tests.
     """
     for item in items:

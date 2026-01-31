@@ -98,16 +98,12 @@ class TestDatabaseConfigValidator:
     def test_backup_interval_too_short(self):
         """Test that backup interval must be at least 60 seconds."""
         with pytest.raises(ValueError, match="at least 60 seconds"):
-            DatabaseConfigValidator(
-                path="/var/lib/db", backup_interval_seconds=30
-            )
+            DatabaseConfigValidator(path="/var/lib/db", backup_interval_seconds=30)
 
     def test_backup_interval_too_long(self):
         """Test that backup interval should not exceed 3600 seconds."""
         with pytest.raises(ValueError, match="should not exceed 3600"):
-            DatabaseConfigValidator(
-                path="/var/lib/db", backup_interval_seconds=5000
-            )
+            DatabaseConfigValidator(path="/var/lib/db", backup_interval_seconds=5000)
 
     def test_retention_too_short(self):
         """Test that retention must be at least 1 hour."""

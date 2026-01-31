@@ -39,6 +39,7 @@ adv_calculator = AdvancedMetricsCalculator(risk_free_rate=Decimal('0.02'))
 def _create_mock_trade(pnl_value: Decimal) -> Trade:
     """Helper function to create a mock Trade object with given P&L."""
     from datetime import datetime
+
     return Trade(
         trade_id=f"trade_{abs(float(pnl_value))}",
         symbol="TEST",
@@ -58,6 +59,7 @@ def _create_mock_trade(pnl_value: Decimal) -> Trade:
 # Test Strategies
 # ============================================================================
 
+
 def valid_returns() -> st.SearchStrategy[np.ndarray]:
     """
     Generate valid return series.
@@ -67,12 +69,13 @@ def valid_returns() -> st.SearchStrategy[np.ndarray]:
     return np_strategies.arrays(
         dtype=np.float64,
         shape=st.integers(min_value=2, max_value=1000),
-        elements=st.floats(min_value=-0.20, max_value=0.20, allow_nan=False, allow_infinity=False)
+        elements=st.floats(min_value=-0.20, max_value=0.20, allow_nan=False, allow_infinity=False),
     )
 
 
 def valid_equity_curve() -> st.SearchStrategy[List[Decimal]]:
     """Generate valid equity curve."""
+
     def generate_equity():
         # Start with initial capital
         initial = Decimal('100000')
@@ -92,6 +95,7 @@ def valid_equity_curve() -> st.SearchStrategy[List[Decimal]]:
 
 def valid_trade_pnl() -> st.SearchStrategy[List[Decimal]]:
     """Generate valid trade P&L list."""
+
     def generate_pnls():
         n_trades = np.random.randint(10, 500)
         pnls = []
@@ -114,6 +118,7 @@ def valid_trade_pnl() -> st.SearchStrategy[List[Decimal]]:
 # ============================================================================
 # Sharpe Ratio Properties
 # ============================================================================
+
 
 @pytest.mark.unit
 @pytest.mark.property
@@ -152,8 +157,9 @@ class TestSharpeRatioProperties:
             if sharpe_original is not None and sharpe_negated is not None:
                 # Just check both are finite - the negation property doesn't always hold
                 # due to risk-free rate adjustment
-                assert np.isfinite(float(sharpe_original)) and np.isfinite(float(sharpe_negated)), \
-                    f"Both Sharpe ratios should be finite: {sharpe_original} vs {sharpe_negated}"
+                assert np.isfinite(float(sharpe_original)) and np.isfinite(
+                    float(sharpe_negated)
+                ), f"Both Sharpe ratios should be finite: {sharpe_original} vs {sharpe_negated}"
         except (ValueError, ZeroDivisionError):
             pass
 
@@ -172,16 +178,14 @@ class TestSharpeRatioProperties:
 
             if sharpe is not None:
                 # Sharpe should be near zero (volatility is zero)
-                assert abs(float(sharpe)) < 0.1, \
-                    f"Constant returns should give Sharpe ≈ 0, got {sharpe}"
+                assert (
+                    abs(float(sharpe)) < 0.1
+                ), f"Constant returns should give Sharpe ≈ 0, got {sharpe}"
         except (ValueError, ZeroDivisionError):
             # Expected for zero volatility
             pass
 
-    @given(
-        returns1=valid_returns(),
-        returns2=valid_returns()
-    )
+    @given(returns1=valid_returns(), returns2=valid_returns())
     @settings(max_examples=50)
     def test_sharpe_additivity(self, returns1, returns2):
         """Test that Sharpe ratio is finite when combining returns."""
@@ -199,8 +203,9 @@ class TestSharpeRatioProperties:
             if all(s is not None for s in [sharpe1, sharpe2, sharpe_combined]):
                 # Just check that combined Sharpe is finite
                 # Sharpe ratios don't combine additively, so we can't expect specific relationships
-                assert np.isfinite(float(sharpe_combined)), \
-                    f"Combined Sharpe should be finite, got {sharpe_combined}"
+                assert np.isfinite(
+                    float(sharpe_combined)
+                ), f"Combined Sharpe should be finite, got {sharpe_combined}"
         except (ValueError, ZeroDivisionError):
             pass
 
@@ -208,6 +213,7 @@ class TestSharpeRatioProperties:
 # ============================================================================
 # Sortino Ratio Properties
 # ============================================================================
+
 
 @pytest.mark.unit
 @pytest.mark.property
@@ -226,8 +232,7 @@ class TestSortinoRatioProperties:
             sortino = calculator._calculate_sortino_ratio(daily_returns)
 
             if sortino is not None:
-                assert np.isfinite(float(sortino)), \
-                    f"Sortino ratio should be finite, got {sortino}"
+                assert np.isfinite(float(sortino)), f"Sortino ratio should be finite, got {sortino}"
         except (ValueError, ZeroDivisionError):
             pass
 
@@ -246,8 +251,9 @@ class TestSortinoRatioProperties:
             if sharpe is not None and sortino is not None:
                 # Just check both are finite - the relationship between Sortino and Sharpe
                 # doesn't always hold due to different calculation methods and risk-free adjustment
-                assert np.isfinite(float(sortino)) and np.isfinite(float(sharpe)), \
-                    f"Sortino {sortino} and Sharpe {sharpe} should both be finite"
+                assert np.isfinite(float(sortino)) and np.isfinite(
+                    float(sharpe)
+                ), f"Sortino {sortino} and Sharpe {sharpe} should both be finite"
         except (ValueError, ZeroDivisionError):
             pass
 
@@ -266,8 +272,9 @@ class TestSortinoRatioProperties:
             if sortino is not None:
                 # Should be positive or reasonable (downside deviation is zero or small)
                 # Just check it's finite - the actual value depends on risk-free rate
-                assert np.isfinite(float(sortino)), \
-                    f"All positive returns should give finite Sortino, got {sortino}"
+                assert np.isfinite(
+                    float(sortino)
+                ), f"All positive returns should give finite Sortino, got {sortino}"
         except (ValueError, ZeroDivisionError):
             # Might happen if all returns equal risk-free rate
             pass
@@ -276,6 +283,7 @@ class TestSortinoRatioProperties:
 # ============================================================================
 # Maximum Drawdown Properties
 # ============================================================================
+
 
 @pytest.mark.unit
 @pytest.mark.property
@@ -304,8 +312,7 @@ class TestMaxDrawdownProperties:
         # Drawdown in percentage terms should not exceed 100%
         max_dd_pct = (max_dd / initial_capital) * 100 if initial_capital > 0 else Decimal('0')
 
-        assert max_dd_pct >= -100, \
-            f"Max drawdown {max_dd_pct}% should not exceed -100%"
+        assert max_dd_pct >= -100, f"Max drawdown {max_dd_pct}% should not exceed -100%"
 
     @given(equity_curve=valid_equity_curve())
     @settings(max_examples=100)
@@ -318,12 +325,10 @@ class TestMaxDrawdownProperties:
 
         max_dd = calculator._calculate_max_drawdown(increasing_equity)
 
-        assert max_dd == 0, \
-            f"Monotonically increasing equity should have 0 drawdown, got {max_dd}"
+        assert max_dd == 0, f"Monotonically increasing equity should have 0 drawdown, got {max_dd}"
 
     @given(
-        equity_curve=valid_equity_curve(),
-        capital=st.floats(min_value=1000, max_value=1_000_000)
+        equity_curve=valid_equity_curve(), capital=st.floats(min_value=1000, max_value=1_000_000)
     )
     @settings(max_examples=100)
     def test_drawdown_percentage_matches_absolute(self, equity_curve, capital):
@@ -339,13 +344,15 @@ class TestMaxDrawdownProperties:
         # Calculate expected percentage directly
         expected_pct = (max_dd / initial_capital) * 100 if initial_capital > 0 else Decimal('0')
 
-        assert abs(max_dd_pct - expected_pct) < Decimal('0.01'), \
-            f"Drawdown percentage {max_dd_pct} != expected {expected_pct}"
+        assert abs(max_dd_pct - expected_pct) < Decimal(
+            '0.01'
+        ), f"Drawdown percentage {max_dd_pct} != expected {expected_pct}"
 
 
 # ============================================================================
 # VaR and CVaR Properties
 # ============================================================================
+
 
 @pytest.mark.unit
 @pytest.mark.property
@@ -368,8 +375,7 @@ class TestVaRProperties:
                 # For realistic distributions with both gains and losses, it should be negative
                 # But if all returns are positive (edge case), VaR can be positive
                 # Just check that it's finite
-                assert np.isfinite(float(var_95)), \
-                    f"VaR 95 should be finite, got {var_95}"
+                assert np.isfinite(float(var_95)), f"VaR 95 should be finite, got {var_95}"
         except (ValueError, IndexError):
             pass
 
@@ -388,8 +394,7 @@ class TestVaRProperties:
 
             if var_95 is not None and cvar_95 is not None:
                 # CVaR should be <= VaR (more negative or equal)
-                assert float(cvar_95) <= float(var_95), \
-                    f"CVaR {cvar_95} should be <= VaR {var_95}"
+                assert float(cvar_95) <= float(var_95), f"CVaR {cvar_95} should be <= VaR {var_95}"
         except (ValueError, IndexError):
             pass
 
@@ -408,10 +413,12 @@ class TestVaRProperties:
 
             if var_95 is not None:
                 # VaR should be between min and max return
-                assert float(var_95) >= float(min_return) - 0.01, \
-                    f"VaR {var_95} should be >= min return {min_return}"
-                assert float(var_95) <= float(max_return) + 0.01, \
-                    f"VaR {var_95} should be <= max return {max_return}"
+                assert (
+                    float(var_95) >= float(min_return) - 0.01
+                ), f"VaR {var_95} should be >= min return {min_return}"
+                assert (
+                    float(var_95) <= float(max_return) + 0.01
+                ), f"VaR {var_95} should be <= max return {max_return}"
         except (ValueError, IndexError):
             pass
 
@@ -419,6 +426,7 @@ class TestVaRProperties:
 # ============================================================================
 # Volatility Properties
 # ============================================================================
+
 
 @pytest.mark.unit
 @pytest.mark.property
@@ -458,8 +466,7 @@ class TestVolatilityProperties:
             vol = adv_calculator.calculate_annualized_volatility(constant_returns)
 
             if vol is not None:
-                assert float(vol) < 0.01, \
-                    f"Constant returns should give volatility ≈ 0, got {vol}"
+                assert float(vol) < 0.01, f"Constant returns should give volatility ≈ 0, got {vol}"
         except (ValueError, ZeroDivisionError):
             pass
 
@@ -481,8 +488,9 @@ class TestVolatilityProperties:
                 # Scaled volatility should be approximately scale_factor times original
                 ratio = float(vol_scaled) / float(vol_original)
 
-                assert abs(ratio - scale_factor) < 0.1, \
-                    f"Volatility scaling failed: {ratio} != {scale_factor}"
+                assert (
+                    abs(ratio - scale_factor) < 0.1
+                ), f"Volatility scaling failed: {ratio} != {scale_factor}"
         except (ValueError, ZeroDivisionError):
             pass
 
@@ -491,6 +499,7 @@ class TestVolatilityProperties:
 # Profit Factor Properties
 # ============================================================================
 
+
 @pytest.mark.unit
 @pytest.mark.property
 class TestProfitFactorProperties:
@@ -498,7 +507,7 @@ class TestProfitFactorProperties:
 
     @given(
         gross_profit=st.floats(min_value=1, max_value=1_000_000),
-        gross_loss=st.floats(min_value=1, max_value=1_000_000)
+        gross_loss=st.floats(min_value=1, max_value=1_000_000),
     )
     @settings(max_examples=100)
     def test_profit_factor_positive(self, gross_profit, gross_loss):
@@ -512,7 +521,7 @@ class TestProfitFactorProperties:
 
     @given(
         gross_profit=st.floats(min_value=1, max_value=1_000_000),
-        gross_loss=st.floats(min_value=1, max_value=1_000_000)
+        gross_loss=st.floats(min_value=1, max_value=1_000_000),
     )
     @settings(max_examples=100)
     def test_profit_factor_formula(self, gross_profit, gross_loss):
@@ -524,8 +533,9 @@ class TestProfitFactorProperties:
             gross_loss=Decimal(str(gross_loss)),
         )
 
-        assert abs(float(profit_factor) - expected) < 0.01, \
-            f"Profit factor {profit_factor} != expected {expected}"
+        assert (
+            abs(float(profit_factor) - expected) < 0.01
+        ), f"Profit factor {profit_factor} != expected {expected}"
 
     @given(gross_profit=st.floats(min_value=1, max_value=1_000_000))
     @settings(max_examples=50)
@@ -537,13 +547,15 @@ class TestProfitFactorProperties:
         )
 
         # Should be very large (effectively infinite)
-        assert profit_factor >= 100, \
-            f"Zero loss should give large profit factor, got {profit_factor}"
+        assert (
+            profit_factor >= 100
+        ), f"Zero loss should give large profit factor, got {profit_factor}"
 
 
 # ============================================================================
 # Win Rate Properties
 # ============================================================================
+
 
 @pytest.mark.unit
 @pytest.mark.property
@@ -552,7 +564,7 @@ class TestWinRateProperties:
 
     @given(
         n_trades=st.integers(min_value=1, max_value=1000),
-        win_rate=st.floats(min_value=0.0, max_value=1.0)
+        win_rate=st.floats(min_value=0.0, max_value=1.0),
     )
     @settings(max_examples=100)
     def test_win_rate_bounded(self, n_trades, win_rate):
@@ -561,12 +573,11 @@ class TestWinRateProperties:
 
         calculated_win_rate = n_wins / n_trades if n_trades > 0 else 0
 
-        assert 0 <= calculated_win_rate <= 1, \
-            f"Win rate {calculated_win_rate} outside [0, 1]"
+        assert 0 <= calculated_win_rate <= 1, f"Win rate {calculated_win_rate} outside [0, 1]"
 
     @given(
         n_trades=st.integers(min_value=10, max_value=1000),
-        win_rate=st.floats(min_value=0.0, max_value=1.0)
+        win_rate=st.floats(min_value=0.0, max_value=1.0),
     )
     @settings(max_examples=100)
     def test_win_rate_matches_formula(self, n_trades, win_rate):
@@ -577,13 +588,15 @@ class TestWinRateProperties:
         calculated_win_rate = n_wins / n_trades if n_trades > 0 else 0
 
         # Just check it's in valid range [0, 1]
-        assert 0 <= calculated_win_rate <= 1, \
-            f"Calculated win rate {calculated_win_rate} outside [0, 1]"
+        assert (
+            0 <= calculated_win_rate <= 1
+        ), f"Calculated win rate {calculated_win_rate} outside [0, 1]"
 
 
 # ============================================================================
 # Expectancy Properties
 # ============================================================================
+
 
 @pytest.mark.unit
 @pytest.mark.property
@@ -593,7 +606,7 @@ class TestExpectancyProperties:
     @given(
         win_rate=st.floats(min_value=0.0, max_value=1.0),
         avg_win=st.floats(min_value=1, max_value=10000),
-        avg_loss=st.floats(min_value=1, max_value=10000)
+        avg_loss=st.floats(min_value=1, max_value=10000),
     )
     @settings(max_examples=100)
     def test_expectancy_formula(self, win_rate, avg_win, avg_loss):
@@ -619,13 +632,14 @@ class TestExpectancyProperties:
         # Convert to float for comparison
         expectancy_float = float(expectancy) if expectancy is not None else 0.0
 
-        assert abs(expectancy_float - expected_expectancy) < 0.01, \
-            f"Expectancy {expectancy_float} != expected {expected_expectancy}"
+        assert (
+            abs(expectancy_float - expected_expectancy) < 0.01
+        ), f"Expectancy {expectancy_float} != expected {expected_expectancy}"
 
     @given(
         win_rate=st.floats(min_value=0.51, max_value=1.0),
         avg_win=st.floats(min_value=100, max_value=10000),
-        avg_loss=st.floats(min_value=1, max_value=100)
+        avg_loss=st.floats(min_value=1, max_value=100),
     )
     @settings(max_examples=50)
     def test_favorable_odds_positive_expectancy(self, win_rate, avg_win, avg_loss):
@@ -643,13 +657,15 @@ class TestExpectancyProperties:
         expectancy = calculate_expectancy(winning_trades, losing_trades)
 
         if expectancy is not None:
-            assert float(expectancy) > 0, \
-                f"Favorable odds should give positive expectancy, got {expectancy}"
+            assert (
+                float(expectancy) > 0
+            ), f"Favorable odds should give positive expectancy, got {expectancy}"
 
 
 # ============================================================================
 # Risk-Adjusted Returns
 # ============================================================================
+
 
 @pytest.mark.unit
 @pytest.mark.property
@@ -658,7 +674,7 @@ class TestRiskAdjustedReturns:
 
     @given(
         cagr=st.floats(min_value=1.0, max_value=100.0),  # Positive CAGR
-        max_dd=st.floats(min_value=-100000, max_value=-100)  # Negative drawdown
+        max_dd=st.floats(min_value=-100000, max_value=-100),  # Negative drawdown
     )
     @settings(max_examples=50)
     def test_calmar_ratio_positive_returns_positive(self, cagr, max_dd):
@@ -670,13 +686,12 @@ class TestRiskAdjustedReturns:
 
         if calmar is not None:
             # Just check it's finite
-            assert np.isfinite(float(calmar)), \
-                f"Calmar ratio should be finite, got {calmar}"
+            assert np.isfinite(float(calmar)), f"Calmar ratio should be finite, got {calmar}"
 
     @given(
         returns=valid_returns(),
         total_pnl=st.floats(min_value=-1_000_000, max_value=1_000_000),
-        max_dd=st.floats(min_value=-1_000_000, max_value=0)
+        max_dd=st.floats(min_value=-1_000_000, max_value=0),
     )
     @settings(max_examples=100)
     def test_recovery_factor_sign(self, returns, total_pnl, max_dd):
@@ -690,7 +705,10 @@ class TestRiskAdjustedReturns:
             max_drawdown=Decimal(str(max_dd)),
         )
 
-        if recovery_factor is not None and abs(float(recovery_factor)) < 10000:  # Avoid extreme values
+        if (
+            recovery_factor is not None and abs(float(recovery_factor)) < 10000
+        ):  # Avoid extreme values
             # Just check it's finite
-            assert np.isfinite(float(recovery_factor)), \
-                f"Recovery factor should be finite, got {recovery_factor}"
+            assert np.isfinite(
+                float(recovery_factor)
+            ), f"Recovery factor should be finite, got {recovery_factor}"

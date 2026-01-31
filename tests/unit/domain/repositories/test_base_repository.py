@@ -27,6 +27,7 @@ from app.domain.repositories.base_repository import (
 # TEST ENTITIES
 # ============================================================================
 
+
 class TestEntity:
     """Simple test entity."""
 
@@ -45,6 +46,7 @@ class TestEntity:
 # ============================================================================
 # IN-MEMORY REPOSITORY IMPLEMENTATION
 # ============================================================================
+
 
 class InMemoryRepository(AbstractRepository[TestEntity, str]):
     """In-memory repository for testing."""
@@ -113,6 +115,7 @@ class QueryableInMemoryRepository(QueryableRepository[TestEntity, str]):
 # ============================================================================
 # TESTS
 # ============================================================================
+
 
 class TestAbstractRepository:
     """Tests for AbstractRepository."""
@@ -209,8 +212,7 @@ class TestAbstractRepository:
         repo = InMemoryRepository()
 
         entity, created = await repo.get_or_create(
-            "1",
-            factory=lambda: TestEntity(id="1", name="New", value=100)
+            "1", factory=lambda: TestEntity(id="1", name="New", value=100)
         )
 
         assert created is True
@@ -224,8 +226,7 @@ class TestAbstractRepository:
         await repo.add(original)
 
         entity, created = await repo.get_or_create(
-            "1",
-            factory=lambda: TestEntity(id="1", name="New", value=100)
+            "1", factory=lambda: TestEntity(id="1", name="New", value=100)
         )
 
         assert created is False

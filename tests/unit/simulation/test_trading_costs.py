@@ -379,13 +379,16 @@ class TestCreateTradingCostAnalyzer:
         assert isinstance(analyzer.market_impact_model, MarketImpactModel)
 
 
-@pytest.mark.parametrize("impact_model", [
-    ImpactModel.LINEAR,
-    ImpactModel.SQUARE_ROOT,
-    ImpactModel.POWER_LAW,
-    ImpactModel.ALMGREN_CHRISS,
-    ImpactModel.STATIC,
-])
+@pytest.mark.parametrize(
+    "impact_model",
+    [
+        ImpactModel.LINEAR,
+        ImpactModel.SQUARE_ROOT,
+        ImpactModel.POWER_LAW,
+        ImpactModel.ALMGREN_CHRISS,
+        ImpactModel.STATIC,
+    ],
+)
 def test_all_impact_models(impact_model):
     """Test that all impact models work."""
     model = MarketImpactModel(model_type=impact_model)

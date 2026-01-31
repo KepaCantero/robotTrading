@@ -341,7 +341,8 @@ class VaRPositionLimiter:
             # Incremental variance contribution (simplified)
             # σ²_new = w_new² * σ²_new + 2 * w_new * w_avg * σ_new * σ_avg * ρ
             incremental_variance = (
-                weight_new**2 * volatility**2 + 2 * weight_new * avg_correlation * volatility * 0.2
+                weight_new**2 * volatility**2
+                + 2 * weight_new * avg_correlation * volatility * 0.2
             )  # Assuming 20% avg portfolio vol
 
             # Incremental VaR = portfolio_value * sqrt(incremental_variance) * z_score

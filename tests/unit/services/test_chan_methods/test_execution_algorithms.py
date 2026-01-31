@@ -183,8 +183,7 @@ class TestTWAPExecutor:
         intervals = []
         for i in range(1, len(plan.execution_slices)):
             interval = (
-                plan.execution_slices[i].target_time -
-                plan.execution_slices[i-1].target_time
+                plan.execution_slices[i].target_time - plan.execution_slices[i - 1].target_time
             ).total_seconds()
             intervals.append(interval)
 
@@ -204,9 +203,7 @@ class TestTWAPExecutor:
         )
 
         # Execution should span approximately 120 minutes
-        actual_duration = (
-            plan.end_time - plan.start_time
-        ).total_seconds() / 60
+        actual_duration = (plan.end_time - plan.start_time).total_seconds() / 60
 
         assert abs(actual_duration - 120) < 5  # Allow small tolerance
 

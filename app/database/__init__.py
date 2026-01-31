@@ -3,6 +3,7 @@ Database Configuration and Setup
 TASK-6: Configuración de base de datos
 """
 
+import contextlib
 import logging
 from typing import AsyncGenerator, Optional
 
@@ -224,6 +225,7 @@ db_manager = DatabaseManager()
 
 
 # Dependency functions for FastAPI
+@contextlib.contextmanager
 def get_sync_db() -> Session:
     """Get synchronous database session for FastAPI dependency injection."""
     session = db_manager.get_sync_session()

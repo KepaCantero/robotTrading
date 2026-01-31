@@ -41,9 +41,7 @@ class TestBacktestMetaAnalyzerInitialization:
         with tempfile.TemporaryDirectory() as temp_dir:
             custom_output = tempfile.mkdtemp()
             analyzer = BacktestMetaAnalyzer(
-                data_dir=temp_dir,
-                output_dir=custom_output,
-                enable_visualizations=False
+                data_dir=temp_dir, output_dir=custom_output, enable_visualizations=False
             )
 
             assert analyzer.output_dir == Path(custom_output)
@@ -58,10 +56,7 @@ class TestBacktestMetaAnalyzerInitialization:
             # Remove it to test creation
             shutil.rmtree(output_dir)
 
-            analyzer = BacktestMetaAnalyzer(
-                data_dir=temp_dir,
-                output_dir=output_dir
-            )
+            analyzer = BacktestMetaAnalyzer(data_dir=temp_dir, output_dir=output_dir)
 
             assert Path(output_dir).exists()
             shutil.rmtree(output_dir)
@@ -93,15 +88,17 @@ class TestLoadResults:
                 json.dump(result, f)
 
         # Create sample CSV file
-        df = pd.DataFrame({
-            "total_pnl": [500, 1500, 2500],
-            "return_pct": [0.05, 0.15, 0.25],
-            "sharpe_ratio": [0.8, 1.2, 1.6],
-            "max_drawdown": [-0.08, -0.06, -0.04],
-            "win_rate": [0.45, 0.55, 0.65],
-            "strategy_name": ["csv_strategy_0", "csv_strategy_1", "csv_strategy_2"],
-            "test_type": "unit_test",
-        })
+        df = pd.DataFrame(
+            {
+                "total_pnl": [500, 1500, 2500],
+                "return_pct": [0.05, 0.15, 0.25],
+                "sharpe_ratio": [0.8, 1.2, 1.6],
+                "max_drawdown": [-0.08, -0.06, -0.04],
+                "win_rate": [0.45, 0.55, 0.65],
+                "strategy_name": ["csv_strategy_0", "csv_strategy_1", "csv_strategy_2"],
+                "test_type": "unit_test",
+            }
+        )
         df.to_csv(results_dir / "results.csv", index=False)
 
         yield temp_dir
@@ -160,20 +157,22 @@ class TestAnalyzePerformance:
     @pytest.fixture
     def sample_dataframe(self):
         """Create a sample results DataFrame."""
-        return pd.DataFrame({
-            "total_pnl": [1000, 1500, 800, 2000, 1200],
-            "return_pct": [0.10, 0.15, 0.08, 0.20, 0.12],
-            "sharpe_ratio": [1.0, 1.5, 0.8, 2.0, 1.2],
-            "sortino_ratio": [1.2, 1.8, 1.0, 2.5, 1.5],
-            "max_drawdown": [-0.10, -0.08, -0.12, -0.05, -0.09],
-            "win_rate": [0.50, 0.60, 0.45, 0.65, 0.55],
-            "total_trades": [100, 120, 80, 150, 110],
-            "avg_trade_pnl": [10, 12.5, 10, 13.33, 10.9],
-            "profit_factor": [1.5, 1.8, 1.3, 2.2, 1.6],
-            "calmar_ratio": [1.0, 1.9, 0.67, 4.0, 1.33],
-            "strategy_name": ["strat_a", "strat_b", "strat_a", "strat_c", "strat_b"],
-            "test_type": ["unit", "unit", "integration", "unit", "unit"],
-        })
+        return pd.DataFrame(
+            {
+                "total_pnl": [1000, 1500, 800, 2000, 1200],
+                "return_pct": [0.10, 0.15, 0.08, 0.20, 0.12],
+                "sharpe_ratio": [1.0, 1.5, 0.8, 2.0, 1.2],
+                "sortino_ratio": [1.2, 1.8, 1.0, 2.5, 1.5],
+                "max_drawdown": [-0.10, -0.08, -0.12, -0.05, -0.09],
+                "win_rate": [0.50, 0.60, 0.45, 0.65, 0.55],
+                "total_trades": [100, 120, 80, 150, 110],
+                "avg_trade_pnl": [10, 12.5, 10, 13.33, 10.9],
+                "profit_factor": [1.5, 1.8, 1.3, 2.2, 1.6],
+                "calmar_ratio": [1.0, 1.9, 0.67, 4.0, 1.33],
+                "strategy_name": ["strat_a", "strat_b", "strat_a", "strat_c", "strat_b"],
+                "test_type": ["unit", "unit", "integration", "unit", "unit"],
+            }
+        )
 
     def test_analyze_performance_basic(self, sample_dataframe):
         """Test basic performance analysis."""
@@ -286,14 +285,16 @@ class TestDetectClusters:
         np.random.seed(42)
         n = 50
 
-        return pd.DataFrame({
-            "sharpe_ratio": np.random.randn(n) * 0.5 + 1.5,
-            "total_pnl": np.random.randn(n) * 500 + 1500,
-            "max_drawdown": np.random.randn(n) * 0.03 - 0.08,
-            "win_rate": np.random.randn(n) * 0.1 + 0.55,
-            "return_pct": np.random.randn(n) * 0.05 + 0.12,
-            "total_trades": np.random.randint(50, 200, n),
-        })
+        return pd.DataFrame(
+            {
+                "sharpe_ratio": np.random.randn(n) * 0.5 + 1.5,
+                "total_pnl": np.random.randn(n) * 500 + 1500,
+                "max_drawdown": np.random.randn(n) * 0.03 - 0.08,
+                "win_rate": np.random.randn(n) * 0.1 + 0.55,
+                "return_pct": np.random.randn(n) * 0.05 + 0.12,
+                "total_trades": np.random.randint(50, 200, n),
+            }
+        )
 
     def test_detect_clusters_basic(self, sample_dataframe_clustering):
         """Test basic cluster detection."""
@@ -339,10 +340,7 @@ class TestDetectClusters:
             analyzer.df_results = sample_dataframe_clustering.copy()
 
             custom_features = ["sharpe_ratio", "total_pnl", "win_rate"]
-            clusters = analyzer.detect_clusters(
-                n_clusters=3,
-                features=custom_features
-            )
+            clusters = analyzer.detect_clusters(n_clusters=3, features=custom_features)
 
             assert clusters["features_used"] == custom_features
 
@@ -360,10 +358,12 @@ class TestDetectClusters:
         with tempfile.TemporaryDirectory() as temp_dir:
             analyzer = BacktestMetaAnalyzer(data_dir=temp_dir)
             # Only 2 samples, trying to make 3 clusters
-            analyzer.df_results = pd.DataFrame({
-                "sharpe_ratio": [1.0, 1.5],
-                "total_pnl": [1000, 1500],
-            })
+            analyzer.df_results = pd.DataFrame(
+                {
+                    "sharpe_ratio": [1.0, 1.5],
+                    "total_pnl": [1000, 1500],
+                }
+            )
 
             clusters = analyzer.detect_clusters(n_clusters=3)
 
@@ -375,9 +375,11 @@ class TestDetectClusters:
         with tempfile.TemporaryDirectory() as temp_dir:
             analyzer = BacktestMetaAnalyzer(data_dir=temp_dir)
             # Only 1 numeric feature
-            analyzer.df_results = pd.DataFrame({
-                "sharpe_ratio": [1.0, 1.5, 2.0],
-            })
+            analyzer.df_results = pd.DataFrame(
+                {
+                    "sharpe_ratio": [1.0, 1.5, 2.0],
+                }
+            )
 
             clusters = analyzer.detect_clusters(n_clusters=2)
 
@@ -392,13 +394,15 @@ class TestSuggestOptimalCombinations:
     @pytest.fixture
     def sample_dataframe_suggestions(self):
         """Create sample data for suggestions."""
-        return pd.DataFrame({
-            "sharpe_ratio": [1.0, 2.5, 1.5, 3.0, 0.8, 2.0],
-            "total_pnl": [1000, 3000, 1500, 4000, 800, 2500],
-            "win_rate": [0.5, 0.7, 0.6, 0.75, 0.45, 0.65],
-            "max_drawdown": [-0.10, -0.05, -0.08, -0.04, -0.12, -0.06],
-            "strategy_name": [f"strategy_{i}" for i in range(6)],
-        })
+        return pd.DataFrame(
+            {
+                "sharpe_ratio": [1.0, 2.5, 1.5, 3.0, 0.8, 2.0],
+                "total_pnl": [1000, 3000, 1500, 4000, 800, 2500],
+                "win_rate": [0.5, 0.7, 0.6, 0.75, 0.45, 0.65],
+                "max_drawdown": [-0.10, -0.05, -0.08, -0.04, -0.12, -0.06],
+                "strategy_name": [f"strategy_{i}" for i in range(6)],
+            }
+        )
 
     def test_suggest_optimal_combinations_default(self, sample_dataframe_suggestions):
         """Test suggestions with default criteria."""
@@ -425,10 +429,7 @@ class TestSuggestOptimalCombinations:
                 "sharpe_ratio": 0.5,
                 "win_rate": 0.5,
             }
-            suggestions = analyzer.suggest_optimal_combinations(
-                top_n=3,
-                criteria=custom_criteria
-            )
+            suggestions = analyzer.suggest_optimal_combinations(top_n=3, criteria=custom_criteria)
 
             assert len(suggestions) == 3
             # Should prioritize based on custom weights
@@ -485,15 +486,15 @@ class TestExportReport:
         """Test exporting JSON report."""
         with tempfile.TemporaryDirectory() as temp_dir:
             analyzer = BacktestMetaAnalyzer(
-                data_dir=temp_dir,
-                output_dir=temp_dir,
-                enable_visualizations=False
+                data_dir=temp_dir, output_dir=temp_dir, enable_visualizations=False
             )
             analyzer.analysis_results = sample_analysis_results.copy()
-            analyzer.df_results = pd.DataFrame({
-                "sharpe_ratio": [1.0, 2.5, 2.0],
-                "total_pnl": [1000, 3000, 2500],
-            })
+            analyzer.df_results = pd.DataFrame(
+                {
+                    "sharpe_ratio": [1.0, 2.5, 2.0],
+                    "total_pnl": [1000, 3000, 2500],
+                }
+            )
 
             output_path = analyzer.export_report(format="json")
 
@@ -511,15 +512,15 @@ class TestExportReport:
         """Test exporting CSV report."""
         with tempfile.TemporaryDirectory() as temp_dir:
             analyzer = BacktestMetaAnalyzer(
-                data_dir=temp_dir,
-                output_dir=temp_dir,
-                enable_visualizations=False
+                data_dir=temp_dir, output_dir=temp_dir, enable_visualizations=False
             )
             analyzer.analysis_results = sample_analysis_results.copy()
-            analyzer.df_results = pd.DataFrame({
-                "sharpe_ratio": [1.0, 2.5, 2.0],
-                "total_pnl": [1000, 3000, 2500],
-            })
+            analyzer.df_results = pd.DataFrame(
+                {
+                    "sharpe_ratio": [1.0, 2.5, 2.0],
+                    "total_pnl": [1000, 3000, 2500],
+                }
+            )
 
             output_path = analyzer.export_report(format="csv")
 
@@ -534,9 +535,7 @@ class TestExportReport:
         """Test export when no analysis has been run."""
         with tempfile.TemporaryDirectory() as temp_dir:
             analyzer = BacktestMetaAnalyzer(
-                data_dir=temp_dir,
-                output_dir=temp_dir,
-                enable_visualizations=False
+                data_dir=temp_dir, output_dir=temp_dir, enable_visualizations=False
             )
 
             output_path = analyzer.export_report()
@@ -546,10 +545,7 @@ class TestExportReport:
     def test_export_report_custom_path(self, sample_analysis_results):
         """Test export with custom path."""
         with tempfile.TemporaryDirectory() as temp_dir:
-            analyzer = BacktestMetaAnalyzer(
-                data_dir=temp_dir,
-                enable_visualizations=False
-            )
+            analyzer = BacktestMetaAnalyzer(data_dir=temp_dir, enable_visualizations=False)
             analyzer.analysis_results = sample_analysis_results.copy()
             analyzer.df_results = pd.DataFrame({"sharpe_ratio": [1.0, 2.5]})
 
@@ -582,15 +578,9 @@ class TestRunParallelAnalysis:
             with open(results_dir / "result.json", 'w') as f:
                 json.dump(result, f)
 
-            analyzer = BacktestMetaAnalyzer(
-                data_dir=str(results_dir),
-                enable_visualizations=False
-            )
+            analyzer = BacktestMetaAnalyzer(data_dir=str(results_dir), enable_visualizations=False)
 
-            results = await analyzer.run_parallel_analysis(
-                max_workers=2,
-                include_clustering=False
-            )
+            results = await analyzer.run_parallel_analysis(max_workers=2, include_clustering=False)
 
             assert isinstance(results, dict)
             assert "performance" in results or "clustering" in results
@@ -615,15 +605,10 @@ class TestRunParallelAnalysis:
                 with open(results_dir / f"result_{i}.json", 'w') as f:
                     json.dump(result, f)
 
-            analyzer = BacktestMetaAnalyzer(
-                data_dir=str(results_dir),
-                enable_visualizations=False
-            )
+            analyzer = BacktestMetaAnalyzer(data_dir=str(results_dir), enable_visualizations=False)
 
             results = await analyzer.run_parallel_analysis(
-                max_workers=2,
-                include_clustering=True,
-                n_clusters=3
+                max_workers=2, include_clustering=True, n_clusters=3
             )
 
             assert "performance" in results
@@ -653,6 +638,7 @@ class TestMetaAnalyzerEdgeCases:
 
             # Should handle single result
             import asyncio
+
             count = asyncio.run(analyzer.load_results())
             assert count == 1
 
@@ -662,11 +648,13 @@ class TestMetaAnalyzerEdgeCases:
             analyzer = BacktestMetaAnalyzer(data_dir=temp_dir)
 
             # Results with inconsistent columns
-            analyzer.df_results = pd.DataFrame({
-                "total_pnl": [1000, 1500, 800],
-                "sharpe_ratio": [1.5, 2.0, np.nan],  # One NaN
-                # Missing other columns
-            })
+            analyzer.df_results = pd.DataFrame(
+                {
+                    "total_pnl": [1000, 1500, 800],
+                    "sharpe_ratio": [1.5, 2.0, np.nan],  # One NaN
+                    # Missing other columns
+                }
+            )
 
             analysis = analyzer.analyze_performance()
 
@@ -678,10 +666,12 @@ class TestMetaAnalyzerEdgeCases:
         with tempfile.TemporaryDirectory() as temp_dir:
             analyzer = BacktestMetaAnalyzer(data_dir=temp_dir)
 
-            analyzer.df_results = pd.DataFrame({
-                "sharpe_ratio": [np.nan, np.nan, np.nan],
-                "total_pnl": [np.nan, np.nan, np.nan],
-            })
+            analyzer.df_results = pd.DataFrame(
+                {
+                    "sharpe_ratio": [np.nan, np.nan, np.nan],
+                    "total_pnl": [np.nan, np.nan, np.nan],
+                }
+            )
 
             analysis = analyzer.analyze_performance()
 
@@ -693,12 +683,14 @@ class TestMetaAnalyzerEdgeCases:
         with tempfile.TemporaryDirectory() as temp_dir:
             analyzer = BacktestMetaAnalyzer(data_dir=temp_dir)
 
-            analyzer.df_results = pd.DataFrame({
-                "sharpe_ratio": [1.5, 2.0, 1.8],
-                "total_pnl": [1000, 1500, 1200],
-                "strategy_name": ["strat_a", "strat_b", "strat_c"],
-                "is_active": [True, False, True],  # Boolean
-            })
+            analyzer.df_results = pd.DataFrame(
+                {
+                    "sharpe_ratio": [1.5, 2.0, 1.8],
+                    "total_pnl": [1000, 1500, 1200],
+                    "strategy_name": ["strat_a", "strat_b", "strat_c"],
+                    "is_active": [True, False, True],  # Boolean
+                }
+            )
 
             analysis = analyzer.analyze_performance()
 
@@ -710,10 +702,12 @@ class TestMetaAnalyzerEdgeCases:
         with tempfile.TemporaryDirectory() as temp_dir:
             analyzer = BacktestMetaAnalyzer(data_dir=temp_dir)
 
-            analyzer.df_results = pd.DataFrame({
-                "sharpe_ratio": [1.5, 1.5, 2.0],  # Duplicate
-                "total_pnl": [1000, 1000, 1500],  # Duplicate
-            })
+            analyzer.df_results = pd.DataFrame(
+                {
+                    "sharpe_ratio": [1.5, 1.5, 2.0],  # Duplicate
+                    "total_pnl": [1000, 1000, 1500],  # Duplicate
+                }
+            )
 
             analysis = analyzer.analyze_performance()
 
@@ -742,6 +736,7 @@ class TestMetaAnalyzerThreadSafety:
 
             # Load multiple times concurrently
             import asyncio
+
             tasks = [analyzer.load_results() for _ in range(3)]
             results = await asyncio.gather(*tasks)
 
@@ -753,12 +748,14 @@ class TestMetaAnalyzerThreadSafety:
         with tempfile.TemporaryDirectory() as temp_dir:
             analyzer = BacktestMetaAnalyzer(data_dir=temp_dir)
 
-            analyzer.df_results = pd.DataFrame({
-                "sharpe_ratio": [1.0, 1.5, 2.0, 2.5, 3.0],
-                "total_pnl": [1000, 1500, 2000, 2500, 3000],
-                "max_drawdown": [-0.1, -0.08, -0.06, -0.05, -0.04],
-                "win_rate": [0.5, 0.55, 0.6, 0.65, 0.7],
-            })
+            analyzer.df_results = pd.DataFrame(
+                {
+                    "sharpe_ratio": [1.0, 1.5, 2.0, 2.5, 3.0],
+                    "total_pnl": [1000, 1500, 2000, 2500, 3000],
+                    "max_drawdown": [-0.1, -0.08, -0.06, -0.05, -0.04],
+                    "win_rate": [0.5, 0.55, 0.6, 0.65, 0.7],
+                }
+            )
 
             # Run multiple analyses
             import concurrent.futures

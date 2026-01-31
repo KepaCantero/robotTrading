@@ -305,7 +305,9 @@ class TestAdvancedBacktestingMethods:
             )
 
             # Generate signals using SMA crossover (not always BUY)
-            signals = self.generate_sma_crossover_signals(scenario_data, fast_period=10, slow_period=30)
+            signals = self.generate_sma_crossover_signals(
+                scenario_data, fast_period=10, slow_period=30
+            )
 
             backtester = SimpleBacktester(config)
             result = backtester.run_backtest(scenario_data, signals)
@@ -320,7 +322,9 @@ class TestAdvancedBacktestingMethods:
         if std_return > 0:
             t_statistic = mean_return / (std_return / np.sqrt(len(float_results)))
             # Check if returns are statistically significant (|t| > 1.96 for 95% confidence)
-            assert abs(t_statistic) > 1.0, f"Returns not statistically significant: t={t_statistic:.3f}"
+            assert (
+                abs(t_statistic) > 1.0
+            ), f"Returns not statistically significant: t={t_statistic:.3f}"
 
         # Verify that results show variation (not all identical)
         assert std_return > 0, "Standard deviation should be positive for variable data"
@@ -359,7 +363,9 @@ class TestAdvancedBacktestingMethods:
 
             backtester = SimpleBacktester(config)
             result = backtester.run_backtest(random_market_data, signals)
-            monte_carlo_results.append({"total_return": float(result.total_return), "drift": random_drift})
+            monte_carlo_results.append(
+                {"total_return": float(result.total_return), "drift": random_drift}
+            )
 
         # Analyze Monte Carlo results
         returns = [r["total_return"] for r in monte_carlo_results]
@@ -382,7 +388,9 @@ class TestAdvancedBacktestingMethods:
         # For normal-ish data, ~90% of data should be between 5th-95th percentiles
         between_percentiles = sum(1 for r in returns if percentile_5 <= r <= percentile_95)
         ratio = between_percentiles / len(returns)
-        assert 0.85 <= ratio <= 0.95, f"~90% of data should be between 5th-95th percentiles, got {ratio:.2%}"
+        assert (
+            0.85 <= ratio <= 0.95
+        ), f"~90% of data should be between 5th-95th percentiles, got {ratio:.2%}"
 
     def test_trade_randomization(self, config):
         """
@@ -568,7 +576,10 @@ class TestAdvancedBacktestingMethods:
         parameter_tests = [
             ("slippage", [Decimal("0.05"), Decimal("0.1"), Decimal("0.15"), Decimal("0.2")]),
             ("commission", [Decimal("0.5"), Decimal("1.0"), Decimal("2.0"), Decimal("5.0")]),
-            ("max_position_size", [Decimal("0.05"), Decimal("0.1"), Decimal("0.15"), Decimal("0.2")]),
+            (
+                "max_position_size",
+                [Decimal("0.05"), Decimal("0.1"), Decimal("0.15"), Decimal("0.2")],
+            ),
         ]
 
         sensitivity_results = {}
@@ -588,7 +599,9 @@ class TestAdvancedBacktestingMethods:
                     ),
                     risk_free_rate=config.risk_free_rate,
                     max_position_size=(
-                        param_value if param_name == "max_position_size" else config.max_position_size
+                        param_value
+                        if param_name == "max_position_size"
+                        else config.max_position_size
                     ),
                 )
 
@@ -613,7 +626,9 @@ class TestAdvancedBacktestingMethods:
 
             # Verify results are within reasonable bounds
             for result in float_results:
-                assert result > -100, f"Parameter {param_name} produces catastrophic loss: {result:.2f}%"
+                assert (
+                    result > -100
+                ), f"Parameter {param_name} produces catastrophic loss: {result:.2f}%"
 
     def test_sma_crossover_signal_generation(self, config):
         """
@@ -719,7 +734,9 @@ class TestAdvancedBacktestingMethods:
         # Assertion 3: For normal-ish data, ~90% should be between 5th-95th percentiles
         between_percentiles = sum(1 for r in returns if percentile_5 <= r <= percentile_95)
         ratio = between_percentiles / len(returns)
-        assert 0.85 <= ratio <= 0.95, f"~90% of data should be between 5th-95th percentiles, got {ratio:.2%}"
+        assert (
+            0.85 <= ratio <= 0.95
+        ), f"~90% of data should be between 5th-95th percentiles, got {ratio:.2%}"
 
         # Assertion 4: Mean should be within reasonable range
         assert -0.5 < mean_return < 0.5, f"Mean return should be reasonable: {mean_return:.2%}"

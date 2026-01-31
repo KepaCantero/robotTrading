@@ -304,10 +304,7 @@ class NestedClusteredOptimizer:
         inv_var = {k: 1.0 / v for k, v in cluster_vars.items()}
         total_inv_var = sum(inv_var.values())
 
-        allocation = {
-            k: v / total_inv_var
-            for k, v in inv_var.items()
-        }
+        allocation = {k: v / total_inv_var for k, v in inv_var.items()}
 
         return allocation
 

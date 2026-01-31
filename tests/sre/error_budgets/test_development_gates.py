@@ -133,9 +133,7 @@ class TestDevelopmentGates:
         allowed, decisions, blocker = await gate.check_deployment_allowed()
 
         # Should be blocked or warned
-        has_fail_or_warn = any(
-            d.status in (GateStatus.FAIL, GateStatus.WARN) for d in decisions
-        )
+        has_fail_or_warn = any(d.status in (GateStatus.FAIL, GateStatus.WARN) for d in decisions)
         assert has_fail_or_warn
 
     async def test_deployment_warning_with_low_budget(self, gate_setup):
@@ -322,9 +320,7 @@ class TestDevelopmentGates:
         allowed, decisions, blocker = await gate.check_deployment_allowed()
 
         # Should have burn rate decision
-        burn_rate_decisions = [
-            d for d in decisions if d.gate_type == GateType.BURN_RATE
-        ]
+        burn_rate_decisions = [d for d in decisions if d.gate_type == GateType.BURN_RATE]
         assert len(burn_rate_decisions) > 0
 
 

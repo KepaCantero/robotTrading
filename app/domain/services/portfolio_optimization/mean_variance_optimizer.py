@@ -273,7 +273,10 @@ class MeanVarianceOptimizer:
         # Constraints
         constraints = [
             {"type": "eq", "fun": lambda w: np.sum(w) - 1.0},  # Weights sum to 1
-            {"type": "eq", "fun": lambda w: float(w @ cov_result.means) - target_daily},  # Target return
+            {
+                "type": "eq",
+                "fun": lambda w: float(w @ cov_result.means) - target_daily,
+            },  # Target return
         ]
 
         # Bounds

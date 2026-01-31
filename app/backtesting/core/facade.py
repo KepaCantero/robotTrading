@@ -6,7 +6,8 @@ hiding complexity and providing a clean API for running backtests.
 """
 
 import logging
-from datetime import datetime
+import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -14,9 +15,7 @@ import pandas as pd
 
 from app.backtesting.core.config_loader import BacktestConfigLoader
 from app.backtesting.core.executor import BacktestExecutorFactory
-from app.backtesting.core.orchestrator import (
-    BoundedResults,
-)
+from app.backtesting.core.orchestrator import BoundedResults
 
 logger = logging.getLogger(__name__)
 
@@ -104,10 +103,31 @@ class BacktestRunnerFacade:
         Returns:
             Result dictionary with metrics
         """
+        start_time = time.perf_counter()
+        timestamp = datetime.now(timezone.utc).isoformat()
+
         if strategy_name is None:
             strategy_name = getattr(strategy, 'name', 'baseline')
 
-        logger.info(f"Running baseline backtest: {strategy_name}")
+        strategy_class = strategy.__class__.__name__
+
+        # Audit trail: execution start with structured context
+        config_summary = {
+            'initial_capital': float(self.backtest_config.initial_capital),
+            'commission': float(self.backtest_config.commission_per_trade),
+        }
+
+        logger.info(
+            "Backtest execution started",
+            extra={
+                'audit_type': 'backtest_start',
+                'timestamp': timestamp,
+                'test_type': 'baseline',
+                'strategy_name': strategy_name,
+                'strategy_class': strategy_class,
+                'config_summary': config_summary,
+            },
+        )
 
         executor = BacktestExecutorFactory.create(self.backtest_config)
         result = executor.execute(self.quotes, strategy, strategy_name=strategy_name)
@@ -116,9 +136,28 @@ class BacktestRunnerFacade:
         self.results.add(result_dict)
         self.backtest_results_objects.append((result_dict['test_name'], result))
 
+        execution_time = time.perf_counter() - start_time
+
+        # Audit trail: execution completion with results summary
+        results_summary = {
+            'total_pnl': float(result_dict['total_pnl']),
+            'return_pct': float(result_dict['return_pct']),
+            'sharpe_ratio': float(result_dict['sharpe_ratio']),
+            'total_trades': int(result_dict['total_trades']),
+            'win_rate': float(result_dict['win_rate']),
+            'max_drawdown': float(result_dict['max_drawdown']),
+        }
+
         logger.info(
-            f"Baseline complete: PnL=${result_dict['total_pnl']:.2f}, "
-            f"Sharpe={result_dict['sharpe_ratio']:.2f}"
+            "Backtest execution completed",
+            extra={
+                'audit_type': 'backtest_complete',
+                'timestamp': datetime.now(timezone.utc).isoformat(),
+                'test_type': 'baseline',
+                'strategy_name': strategy_name,
+                'execution_time_seconds': round(execution_time, 3),
+                'results_summary': results_summary,
+            },
         )
 
         return result_dict
@@ -138,7 +177,24 @@ class BacktestRunnerFacade:
         Returns:
             Result dictionary with metrics
         """
-        logger.info(f"Running {test_type} backtest: {test_name}")
+        start_time = time.perf_counter()
+        timestamp = datetime.now(timezone.utc).isoformat()
+        strategy_class = strategy.__class__.__name__
+        metadata_keys = list(metadata.keys()) if metadata else []
+
+        # Audit trail: execution start with structured context
+        logger.info(
+            "Backtest execution started",
+            extra={
+                'audit_type': 'backtest_start',
+                'timestamp': timestamp,
+                'test_type': test_type,
+                'test_name': test_name,
+                'strategy_class': strategy_class,
+                'metadata_keys': metadata_keys,
+                'metadata_count': len(metadata_keys),
+            },
+        )
 
         executor = BacktestExecutorFactory.create(self.backtest_config)
         result = executor.execute(self.quotes, strategy, strategy_name=test_name)
@@ -148,6 +204,30 @@ class BacktestRunnerFacade:
 
         self.results.add(result_dict)
         self.backtest_results_objects.append((test_name, result))
+
+        execution_time = time.perf_counter() - start_time
+
+        # Audit trail: execution completion with results summary
+        results_summary = {
+            'total_pnl': float(result_dict['total_pnl']),
+            'return_pct': float(result_dict['return_pct']),
+            'sharpe_ratio': float(result_dict['sharpe_ratio']),
+            'total_trades': int(result_dict['total_trades']),
+            'win_rate': float(result_dict['win_rate']),
+            'max_drawdown': float(result_dict['max_drawdown']),
+        }
+
+        logger.info(
+            "Backtest execution completed",
+            extra={
+                'audit_type': 'backtest_complete',
+                'timestamp': datetime.now(timezone.utc).isoformat(),
+                'test_type': test_type,
+                'test_name': test_name,
+                'execution_time_seconds': round(execution_time, 3),
+                'results_summary': results_summary,
+            },
+        )
 
         return result_dict
 
@@ -170,12 +250,26 @@ class BacktestRunnerFacade:
         """
         import itertools
 
+        start_time = time.perf_counter()
+        timestamp = datetime.now(timezone.utc).isoformat()
+
         results = []
         param_names = list(parameters.keys())
         param_values = [parameters[k] for k in param_names]
         total_combinations = len(list(itertools.product(*param_values)))
 
-        logger.info(f"Running parameter sweep: {total_combinations} combinations")
+        # Audit trail: parameter sweep start with structured context
+        logger.info(
+            "Parameter sweep started",
+            extra={
+                'audit_type': 'parameter_sweep_start',
+                'timestamp': timestamp,
+                'test_name_prefix': test_name_prefix,
+                'parameter_combinations_count': total_combinations,
+                'parameter_names': param_names,
+                'parameter_values_count': {k: len(v) for k, v in parameters.items()},
+            },
+        )
 
         for i, combination in enumerate(itertools.product(*param_values)):
             params = dict(zip(param_names, combination))
@@ -189,6 +283,33 @@ class BacktestRunnerFacade:
                 strategy, test_name, test_type='parameter_sweep', parameters=params
             )
             results.append(result_dict)
+
+        execution_time = time.perf_counter() - start_time
+
+        # Audit trail: parameter sweep completion with summary
+        best_result = max(results, key=lambda r: r.get('sharpe_ratio', 0)) if results else None
+
+        best_result_summary = None
+        if best_result:
+            best_result_summary = {
+                'test_name': best_result.get('test_name'),
+                'sharpe_ratio': float(best_result.get('sharpe_ratio', 0)),
+                'total_pnl': float(best_result.get('total_pnl', 0)),
+                'return_pct': float(best_result.get('return_pct', 0)),
+                'parameters': best_result.get('parameters', {}),
+            }
+
+        logger.info(
+            "Parameter sweep completed",
+            extra={
+                'audit_type': 'parameter_sweep_complete',
+                'timestamp': datetime.now(timezone.utc).isoformat(),
+                'test_name_prefix': test_name_prefix,
+                'total_results': len(results),
+                'execution_time_seconds': round(execution_time, 3),
+                'best_result_summary': best_result_summary,
+            },
+        )
 
         return results
 

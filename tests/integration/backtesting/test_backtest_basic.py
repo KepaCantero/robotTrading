@@ -124,8 +124,12 @@ def generate_realistic_quotes(
             Quote(
                 symbol=symbol,
                 timestamp=timestamp,
-                bid=Decimal(str(round_price(close_price * (1 - spread_bps / 10000), "equity", symbol))),
-                ask=Decimal(str(round_price(close_price * (1 + spread_bps / 10000), "equity", symbol))),
+                bid=Decimal(
+                    str(round_price(close_price * (1 - spread_bps / 10000), "equity", symbol))
+                ),
+                ask=Decimal(
+                    str(round_price(close_price * (1 + spread_bps / 10000), "equity", symbol))
+                ),
                 last=Decimal(str(round_price(close_price, "equity", symbol))),
                 volume=Decimal(str(volume)),
                 open=Decimal(str(round_price(open_price, "equity", symbol))),
@@ -309,7 +313,9 @@ class TestSimpleBacktester:
         assert backtester.max_drawdown == Decimal("0")
         assert backtester.peak_equity == default_config.initial_capital
 
-    def test_backtester_with_realistic_data(self, realistic_quotes, realistic_signals, default_config):
+    def test_backtester_with_realistic_data(
+        self, realistic_quotes, realistic_signals, default_config
+    ):
         """
         Test backtest with REALISTIC GBM data (not synthetic).
 
@@ -332,7 +338,9 @@ class TestSimpleBacktester:
             symbols=["AAPL"],
             date_range=(realistic_quotes[0].timestamp, realistic_quotes[-1].timestamp),
             data_points=len(realistic_quotes),
-            market_regime="bullish" if float(realistic_quotes[-1].close) > float(realistic_quotes[0].close) else "bearish",
+            market_regime="bullish"
+            if float(realistic_quotes[-1].close) > float(realistic_quotes[0].close)
+            else "bearish",
             data_source="GBM simulation (drift=5%, vol=20%)",
             price_range=(
                 min(q.close for q in realistic_quotes),
@@ -356,8 +364,9 @@ class TestSimpleBacktester:
 
         # Verify realistic final capital (not trivial)
         # Should be within reasonable range: 50K to 150K for 100K initial
-        assert Decimal("50000") <= result.final_capital <= Decimal("150000"), \
-            f"Final capital {result.final_capital} should be in realistic range"
+        assert (
+            Decimal("50000") <= result.final_capital <= Decimal("150000")
+        ), f"Final capital {result.final_capital} should be in realistic range"
 
         # Verify trades were executed
         assert len(result.trades) >= 0
@@ -462,7 +471,9 @@ class TestSimpleBacktester:
         assert result1.total_return == result2.total_return
         assert len(result1.trades) == len(result2.trades)
 
-    def test_date_filtering_with_realistic_data(self, realistic_quotes, realistic_signals, default_config):
+    def test_date_filtering_with_realistic_data(
+        self, realistic_quotes, realistic_signals, default_config
+    ):
         """Test backtest with date filtering."""
         backtester = SimpleBacktester(default_config)
 
@@ -506,9 +517,12 @@ class TestSimpleBacktester:
                 assert trade.slippage >= 0, f"Expected slippage >= 0, got {trade.slippage}"
 
                 # Verify slippage is approximately 1% of entry price
-                expected_slippage_range = trade.entry_price * Decimal("0.01") * Decimal("0.5")  # ±50% tolerance
-                assert trade.slippage <= expected_slippage_range * 2, \
-                    f"Slippage {trade.slippage} seems too high for 1% config"
+                expected_slippage_range = (
+                    trade.entry_price * Decimal("0.01") * Decimal("0.5")
+                )  # ±50% tolerance
+                assert (
+                    trade.slippage <= expected_slippage_range * 2
+                ), f"Slippage {trade.slippage} seems too high for 1% config"
 
     def test_commission_calculation_exact(self, default_config):
         """
@@ -537,8 +551,9 @@ class TestSimpleBacktester:
         if len(result.trades) > 0:
             # Each trade should have exactly $5 commission
             expected_total = Decimal("5.0") * len(result.trades)
-            assert total_commission == expected_total, \
-                f"Expected commission {expected_total}, got {total_commission}"
+            assert (
+                total_commission == expected_total
+            ), f"Expected commission {expected_total}, got {total_commission}"
 
     def test_position_size_calculation_exact(self, default_config):
         """
@@ -576,13 +591,16 @@ class TestSimpleBacktester:
 
         # Position size formula: capital * max_position_size * (confidence / 100) / price
         expected_max_position_value = config.initial_capital * config.max_position_size
-        expected_position_value = expected_max_position_value * Decimal(str(signal.confidence / 100.0))
+        expected_position_value = expected_max_position_value * Decimal(
+            str(signal.confidence / 100.0)
+        )
         expected_position_size = expected_position_value / Decimal("100.0")
 
         # Position should be approximately expected size (allowing for rounding)
         assert position_size > 0
-        assert abs(position_size - expected_position_size) <= Decimal("1"), \
-            f"Position size {position_size} should be close to {expected_position_size}"
+        assert abs(position_size - expected_position_size) <= Decimal(
+            "1"
+        ), f"Position size {position_size} should be close to {expected_position_size}"
 
     def test_contradictory_signals_handling(self, default_config):
         """
@@ -880,11 +898,14 @@ class TestEdgeCasesRobust:
         # Sharpe ratio should be negative (not None or infinity)
         if result.performance.sharpe_ratio is not None:
             assert result.performance.sharpe_ratio < 0, "Sharpe should be negative in crash"
-            assert abs(result.performance.sharpe_ratio) < 10, "Sharpe magnitude should be reasonable"
+            assert (
+                abs(result.performance.sharpe_ratio) < 10
+            ), "Sharpe magnitude should be reasonable"
 
         # Final capital should be less than initial (losses)
-        assert result.final_capital <= default_config.initial_capital, \
-            "Should have losses in crash scenario"
+        assert (
+            result.final_capital <= default_config.initial_capital
+        ), "Should have losses in crash scenario"
 
     def test_price_gap_down_scenario(self, default_config):
         """
@@ -975,8 +996,9 @@ class TestEdgeCasesRobust:
         if len(result.trades) > 0:
             expected_commission = Decimal("1000.0") * len(result.trades)
             actual_commission = sum(t.commission for t in result.trades)
-            assert actual_commission == expected_commission, \
-                f"Expected commission {expected_commission}, got {actual_commission}"
+            assert (
+                actual_commission == expected_commission
+            ), f"Expected commission {expected_commission}, got {actual_commission}"
 
     def test_signals_without_matching_market_data(self, default_config):
         """
@@ -1070,7 +1092,9 @@ class TestEdgeCasesRobust:
 
         # Volatility should be reflected in metrics (if calculated)
         # Drawdown should be significant
-        assert result.performance.max_drawdown_percentage <= 0, "Max drawdown should be negative or zero"
+        assert (
+            result.performance.max_drawdown_percentage <= 0
+        ), "Max drawdown should be negative or zero"
 
 
 if __name__ == "__main__":

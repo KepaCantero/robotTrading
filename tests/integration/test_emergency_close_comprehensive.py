@@ -48,12 +48,7 @@ class MockBroker:
         return self.positions
 
     async def place_order(
-        self,
-        symbol: str,
-        side: str,
-        quantity: Decimal,
-        order_type: str = "MARKET",
-        **kwargs
+        self, symbol: str, side: str, quantity: Decimal, order_type: str = "MARKET", **kwargs
     ):
         """Place an order."""
         if self.connection_lost:
@@ -335,9 +330,7 @@ class TestEmergencyCloserErrorHandling:
         closer = EmergencyCloser(broker)
 
         # Start first close (in background)
-        task1 = asyncio.create_task(
-            closer.close_all_positions(EmergencyTrigger.MANUAL_TRIGGER)
-        )
+        task1 = asyncio.create_task(closer.close_all_positions(EmergencyTrigger.MANUAL_TRIGGER))
 
         # Try to close again immediately
         result2 = await closer.close_all_positions(EmergencyTrigger.MANUAL_TRIGGER)

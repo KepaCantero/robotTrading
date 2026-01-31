@@ -55,6 +55,7 @@ async def mock_broker():
     - Price quotes
     - Connection state simulation
     """
+
     class MockBroker:
         def __init__(self):
             self.positions: List[Any] = []
@@ -94,12 +95,7 @@ async def mock_broker():
             }
 
         async def place_order(
-            self,
-            symbol: str,
-            side: str,
-            quantity: Decimal,
-            order_type: str = "MARKET",
-            **kwargs
+            self, symbol: str, side: str, quantity: Decimal, order_type: str = "MARKET", **kwargs
         ):
             if self.connection_lost:
                 raise ConnectionError("Broker connection lost")
@@ -144,6 +140,7 @@ def mock_position():
 
     Returns a function that creates mock positions.
     """
+
     def _create_position(
         symbol: str = "AAPL",
         quantity: Decimal = Decimal("100"),
@@ -194,6 +191,7 @@ def monitored_position_factory():
     """
     Factory for creating MonitoredPosition instances.
     """
+
     def _create_position(
         position_id: str = "test_position",
         symbol: str = "AAPL",
@@ -227,6 +225,7 @@ def trade_factory():
     """
     Factory for creating Trade instances for FIFO.
     """
+
     def _create_trade(
         trade_id: str = "test_trade",
         symbol: str = "AAPL",
@@ -331,6 +330,7 @@ def price_update_sequence():
 
     Returns a function that generates price sequences.
     """
+
     def _generate_sequence(
         start_price: float,
         steps: int,
@@ -342,7 +342,7 @@ def price_update_sequence():
 
         for _ in range(steps):
             prices.append(price)
-            price *= (1 + change_pct)
+            price *= 1 + change_pct
 
         return prices
 
@@ -354,6 +354,7 @@ def assert_position_state():
     """
     Helper for asserting position state.
     """
+
     def _assert_state(
         position: MonitoredPosition,
         status: PositionStatus,
@@ -380,6 +381,7 @@ def wait_for_condition():
 
     Useful for async tests that need to wait for state changes.
     """
+
     async def _wait(
         condition: callable,
         timeout: float = 5.0,
@@ -485,6 +487,7 @@ def assert_executed_orders():
     """
     Helper for asserting orders were executed correctly.
     """
+
     def _assert_orders(
         orders: List[Dict[str, Any]],
         expected_symbols: List[str],

@@ -22,6 +22,7 @@ from app.services.position_sizing_engine import PositionSizingEngine
 # Test Fixtures
 # =============================================================================
 
+
 @pytest.fixture
 def position_engine():
     """Create PositionSizingEngine instance."""
@@ -37,6 +38,7 @@ def position_engine_custom_multiplier():
 # =============================================================================
 # Initialization Tests
 # =============================================================================
+
 
 class TestPositionSizingEngineInitialization:
     """Test suite for PositionSizingEngine initialization."""
@@ -65,6 +67,7 @@ class TestPositionSizingEngineInitialization:
 # =============================================================================
 # Stop Loss Calculation Tests
 # =============================================================================
+
 
 class TestStopLossCalculation:
     """Test suite for stop loss price calculation."""
@@ -265,6 +268,7 @@ class TestStopLossCalculation:
 # Position Sizing from ATR Tests
 # =============================================================================
 
+
 class TestPositionSizingFromATR:
     """Test suite for ATR-based position sizing."""
 
@@ -416,6 +420,7 @@ class TestPositionSizingFromATR:
 # =============================================================================
 # Kelly Criterion Tests
 # =============================================================================
+
 
 class TestKellyCriterion:
     """Test suite for Kelly Criterion position sizing."""
@@ -631,6 +636,7 @@ class TestKellyCriterion:
 # Kelly from Backtest Tests
 # =============================================================================
 
+
 class TestKellyFromBacktest:
     """Test suite for Kelly calculation from backtest metrics."""
 
@@ -713,6 +719,7 @@ class TestKellyFromBacktest:
 # Property-Based Tests
 # =============================================================================
 
+
 class TestPositionSizingProperties:
     """Property-based tests using Hypothesis."""
 
@@ -773,7 +780,9 @@ class TestPositionSizingProperties:
         capital=st.integers(min_value=10000, max_value=1000000),
     )
     @settings(max_examples=30)
-    def test_kelly_fraction_always_reasonable(self, position_engine, win_rate, avg_win, avg_loss, capital):
+    def test_kelly_fraction_always_reasonable(
+        self, position_engine, win_rate, avg_win, avg_loss, capital
+    ):
         """Property: Kelly fraction should be within reasonable bounds."""
         result = position_engine.calculate_kelly_position_size(
             win_rate=win_rate,
@@ -814,6 +823,7 @@ class TestPositionSizingProperties:
 # =============================================================================
 # Edge Cases and Boundary Conditions
 # =============================================================================
+
 
 class TestPositionSizingEdgeCases:
     """Test suite for edge cases and boundary conditions."""
@@ -921,6 +931,7 @@ class TestPositionSizingEdgeCases:
 # =============================================================================
 # Integration Tests
 # =============================================================================
+
 
 class TestPositionSizingIntegration:
     """Integration tests for position sizing workflows."""

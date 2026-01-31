@@ -194,9 +194,7 @@ class DailyCircuitBreaker:
             ValueError: If starting_equity is less than MIN_EQUITY
         """
         if starting_equity < self.MIN_EQUITY:
-            raise ValueError(
-                f"Starting equity {starting_equity} must be >= {self.MIN_EQUITY}"
-            )
+            raise ValueError(f"Starting equity {starting_equity} must be >= {self.MIN_EQUITY}")
 
         current_date = trading_date or utc_now().date()
 

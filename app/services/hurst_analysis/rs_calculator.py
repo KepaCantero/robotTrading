@@ -9,7 +9,7 @@ Open/Closed: Extensible through HurstCalculator protocol.
 """
 
 import logging
-from typing import override
+from typing_extensions import override
 
 import numpy as np
 from numba import jit
@@ -19,23 +19,25 @@ logger = logging.getLogger(__name__)
 
 class RSMethodCalculator:
     """
-    Hurst exponent calculator using R/S (Rescaled Range) analysis.
+        Hurst exponent calculator using R/S (Rescaled Range) analysis.
 
-    This is the classic method for calculating Hurst exponent:
-    1. Calculate R/S for multiple window sizes
-    2. Perform linear regression: log(R/S) vs log(window)
-    3. Slope = Hurst exponent (H)
+    from __future__ import annotations
 
-    Uses Numba JIT compilation for 50-100x performance improvement.
+        This is the classic method for calculating Hurst exponent:
+        1. Calculate R/S for multiple window sizes
+        2. Perform linear regression: log(R/S) vs log(window)
+        3. Slope = Hurst exponent (H)
 
-    Attributes:
-        min_window: Minimum window size for analysis
-        max_window_ratio: Maximum window as ratio of series length
-        num_windows: Number of window sizes to test
+        Uses Numba JIT compilation for 50-100x performance improvement.
 
-    Example:
-        >>> calculator = RSMethodCalculator(min_window=10, num_windows=20)
-        >>> hurst, rs_values, window_sizes = calculator.calculate(series)
+        Attributes:
+            min_window: Minimum window size for analysis
+            max_window_ratio: Maximum window as ratio of series length
+            num_windows: Number of window sizes to test
+
+        Example:
+            >>> calculator = RSMethodCalculator(min_window=10, num_windows=20)
+            >>> hurst, rs_values, window_sizes = calculator.calculate(series)
     """
 
     def __init__(

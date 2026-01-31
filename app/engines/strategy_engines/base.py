@@ -344,7 +344,6 @@ class BaseStrategyEngine(BaseStrategy, ABC):
             return []
 
         try:
-
             # Obtener datos OHLCV del DataEngine
             ohlcv_data = asyncio.run(
                 self.data_engine.get_ohlcv(symbol, start_date, end_date, source=source)

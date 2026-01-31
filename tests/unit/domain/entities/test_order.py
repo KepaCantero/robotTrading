@@ -14,7 +14,7 @@ from app.domain.entities.order import (
     OrderType,
     OrderStatus,
     OrderEvent,
-    OrderFill
+    OrderFill,
 )
 
 
@@ -29,7 +29,7 @@ class TestOrderCreation:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
 
         assert order.order_id == 'order_1'
@@ -47,7 +47,7 @@ class TestOrderCreation:
             side=OrderSide.BUY,
             order_type=OrderType.LIMIT,
             quantity=Decimal('50'),
-            price=Decimal('150.00')
+            price=Decimal('150.00'),
         )
 
         assert order.price == Decimal('150.00')
@@ -61,7 +61,7 @@ class TestOrderCreation:
             side=OrderSide.SELL,
             order_type=OrderType.STOP_LOSS,
             quantity=Decimal('25'),
-            stop_price=Decimal('200.00')
+            stop_price=Decimal('200.00'),
         )
 
         assert order.stop_price == Decimal('200.00')
@@ -75,7 +75,7 @@ class TestOrderCreation:
                 symbol='AAPL',
                 side=OrderSide.BUY,
                 order_type=OrderType.MARKET,
-                quantity=Decimal('100')
+                quantity=Decimal('100'),
             )
 
     def test_create_order_with_negative_quantity_raises_error(self):
@@ -86,7 +86,7 @@ class TestOrderCreation:
                 symbol='AAPL',
                 side=OrderSide.BUY,
                 order_type=OrderType.MARKET,
-                quantity=Decimal('-100')
+                quantity=Decimal('-100'),
             )
 
     def test_create_order_with_zero_quantity_raises_error(self):
@@ -97,7 +97,7 @@ class TestOrderCreation:
                 symbol='AAPL',
                 side=OrderSide.BUY,
                 order_type=OrderType.MARKET,
-                quantity=Decimal('0')
+                quantity=Decimal('0'),
             )
 
     def test_create_order_with_negative_price_raises_error(self):
@@ -109,7 +109,7 @@ class TestOrderCreation:
                 side=OrderSide.BUY,
                 order_type=OrderType.LIMIT,
                 quantity=Decimal('100'),
-                price=Decimal('-50')
+                price=Decimal('-50'),
             )
 
     def test_create_order_with_negative_stop_price_raises_error(self):
@@ -121,7 +121,7 @@ class TestOrderCreation:
                 side=OrderSide.BUY,
                 order_type=OrderType.STOP_LOSS,
                 quantity=Decimal('100'),
-                stop_price=Decimal('-50')
+                stop_price=Decimal('-50'),
             )
 
     def test_create_order_records_create_event(self):
@@ -131,7 +131,7 @@ class TestOrderCreation:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
 
         assert len(order.event_history) == 1
@@ -151,7 +151,7 @@ class TestOrderValidation:
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
             quantity=Decimal('100'),
-            time_in_force='IOC'  # Immediate or Cancel doesn't require expiry
+            time_in_force='IOC',  # Immediate or Cancel doesn't require expiry
         )
 
         result = order.validate()
@@ -169,7 +169,7 @@ class TestOrderValidation:
             order_type=OrderType.LIMIT,
             quantity=Decimal('100'),
             price=Decimal('150'),
-            time_in_force='DAY'  # DAY orders don't require expiry
+            time_in_force='DAY',  # DAY orders don't require expiry
         )
 
         result = order.validate()
@@ -183,7 +183,7 @@ class TestOrderValidation:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.LIMIT,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
 
         result = order.validate()
@@ -199,7 +199,7 @@ class TestOrderValidation:
             symbol='AAPL',
             side=OrderSide.SELL,
             order_type=OrderType.STOP_LOSS,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
 
         result = order.validate()
@@ -215,7 +215,7 @@ class TestOrderValidation:
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
             quantity=Decimal('100'),
-            time_in_force='INVALID'
+            time_in_force='INVALID',
         )
 
         result = order.validate()
@@ -232,7 +232,7 @@ class TestOrderValidation:
             order_type=OrderType.LIMIT,
             quantity=Decimal('100'),
             price=Decimal('150'),
-            time_in_force='GTC'
+            time_in_force='GTC',
         )
 
         result = order.validate()
@@ -252,7 +252,7 @@ class TestOrderStateTransitions:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
         order.validate()
 
@@ -268,7 +268,7 @@ class TestOrderStateTransitions:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
 
         with pytest.raises(ValueError, match="Cannot submit order with status pending"):
@@ -281,7 +281,7 @@ class TestOrderStateTransitions:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
         order.validate()
         order.submit()
@@ -298,7 +298,7 @@ class TestOrderStateTransitions:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
 
         with pytest.raises(ValueError, match="Cannot acknowledge order with status pending"):
@@ -316,7 +316,7 @@ class TestOrderFilling:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
         order.validate()
         order.submit()
@@ -337,7 +337,7 @@ class TestOrderFilling:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
         order.validate()
         order.submit()
@@ -357,7 +357,7 @@ class TestOrderFilling:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
         order.validate()
         order.submit()
@@ -389,7 +389,7 @@ class TestOrderFilling:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
         order.validate()
         order.submit()
@@ -405,7 +405,7 @@ class TestOrderFilling:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
         order.validate()
         order.submit()
@@ -422,7 +422,7 @@ class TestOrderFilling:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
 
         with pytest.raises(ValueError, match="Cannot fill order with status pending"):
@@ -435,7 +435,7 @@ class TestOrderFilling:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
         order.validate()
         order.submit()
@@ -459,7 +459,7 @@ class TestOrderCancellation:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
         order.validate()
         order.submit()
@@ -476,7 +476,7 @@ class TestOrderCancellation:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
         order.validate()
         order.submit()
@@ -495,7 +495,7 @@ class TestOrderCancellation:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
         order.validate()
         order.submit()
@@ -512,7 +512,7 @@ class TestOrderCancellation:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
 
         with pytest.raises(ValueError, match="Cannot confirm cancel for order with status pending"):
@@ -530,7 +530,7 @@ class TestOrderRejection:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
 
         order.reject(reason="Insufficient capital")
@@ -545,7 +545,7 @@ class TestOrderRejection:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
         order.validate()
         order.submit()
@@ -567,7 +567,7 @@ class TestOrderSuspension:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
         order.validate()
         order.submit()
@@ -584,7 +584,7 @@ class TestOrderSuspension:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
         order.validate()
         order.submit()
@@ -602,7 +602,7 @@ class TestOrderSuspension:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
 
         with pytest.raises(ValueError, match="Cannot suspend order with status pending"):
@@ -620,7 +620,7 @@ class TestOrderExpiration:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
 
         order.expire()
@@ -634,7 +634,7 @@ class TestOrderExpiration:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
         order.validate()
         order.submit()
@@ -652,7 +652,7 @@ class TestOrderExpiration:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
         order.validate()
         order.submit()
@@ -674,7 +674,7 @@ class TestOrderUtilityMethods:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
         order.validate()
         order.submit()
@@ -690,7 +690,7 @@ class TestOrderUtilityMethods:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
         order.validate()
         order.submit()
@@ -706,7 +706,7 @@ class TestOrderUtilityMethods:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
         order.validate()
 
@@ -728,7 +728,7 @@ class TestOrderUtilityMethods:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
 
         # Non-terminal states
@@ -751,7 +751,7 @@ class TestOrderUtilityMethods:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
         order.validate()
         order.submit()
@@ -769,7 +769,7 @@ class TestOrderUtilityMethods:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
         order.validate()
         order.submit()
@@ -790,7 +790,7 @@ class TestOrderUtilityMethods:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
         order.validate()
         order.submit()
@@ -811,7 +811,7 @@ class TestOrderUtilityMethods:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
         order.validate()
         order.submit()
@@ -829,7 +829,7 @@ class TestOrderUtilityMethods:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
 
         # Age should be very small (just created)
@@ -844,7 +844,7 @@ class TestOrderUtilityMethods:
             symbol='AAPL',
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            quantity=Decimal('100')
+            quantity=Decimal('100'),
         )
 
         result = order.to_dict()
@@ -871,7 +871,7 @@ class TestOrderCallbacks:
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
             quantity=Decimal('100'),
-            on_fill=callback_mock
+            on_fill=callback_mock,
         )
         order.validate()
         order.submit()
@@ -892,7 +892,7 @@ class TestOrderCallbacks:
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
             quantity=Decimal('100'),
-            on_cancel=callback_mock
+            on_cancel=callback_mock,
         )
         order.validate()
         order.submit()
@@ -913,7 +913,7 @@ class TestOrderCallbacks:
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
             quantity=Decimal('100'),
-            on_reject=callback_mock
+            on_reject=callback_mock,
         )
 
         order.reject(reason="Test rejection")
@@ -931,7 +931,7 @@ class TestOrderFillEntity:
             fill_id='fill_1',
             quantity=Decimal('100'),
             price=Decimal('150'),
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
         )
 
         assert fill.fill_id == 'fill_1'
@@ -948,7 +948,7 @@ class TestOrderFillEntity:
             price=Decimal('151'),
             timestamp=datetime.utcnow(),
             fee=Decimal('0.75'),
-            liquidity='maker'
+            liquidity='maker',
         )
 
         assert fill.fee == Decimal('0.75')

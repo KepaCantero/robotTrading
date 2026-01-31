@@ -365,9 +365,15 @@ class TestHistoricalVaRMethodAttributes:
         result = calculator.calculate_var(sample_returns)
 
         required_fields = [
-            'var', 'var_amount', 'cvar', 'cvar_amount',
-            'confidence_level', 'time_horizon', 'method',
-            'observations', 'numba_accelerated'
+            'var',
+            'var_amount',
+            'cvar',
+            'cvar_amount',
+            'confidence_level',
+            'time_horizon',
+            'method',
+            'observations',
+            'numba_accelerated',
         ]
 
         for field in required_fields:

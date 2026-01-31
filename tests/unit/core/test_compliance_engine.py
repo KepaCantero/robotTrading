@@ -42,6 +42,7 @@ from app.core.compliance_engine import (
 # FIXTURES
 # =============================================================================
 
+
 @pytest.fixture
 def sample_price_history() -> pd.DataFrame:
     """Create sample price history for testing."""
@@ -52,13 +53,16 @@ def sample_price_history() -> pd.DataFrame:
     price = 100 + np.cumsum(np.random.randn(100) * 2)
     volume = np.random.randint(100000, 1000000, 100)
 
-    return pd.DataFrame({
-        'open': price * (1 + np.random.randn(100) * 0.01),
-        'high': price * (1 + abs(np.random.randn(100)) * 0.02),
-        'low': price * (1 - abs(np.random.randn(100)) * 0.02),
-        'close': price,
-        'volume': volume,
-    }, index=dates)
+    return pd.DataFrame(
+        {
+            'open': price * (1 + np.random.randn(100) * 0.01),
+            'high': price * (1 + abs(np.random.randn(100)) * 0.02),
+            'low': price * (1 - abs(np.random.randn(100)) * 0.02),
+            'close': price,
+            'volume': volume,
+        },
+        index=dates,
+    )
 
 
 @pytest.fixture
@@ -68,11 +72,7 @@ def sample_returns() -> pd.DataFrame:
     dates = pd.date_range(start='2024-01-01', periods=252, freq='D')
 
     returns_data = np.random.randn(252, 3) * 0.02  # 3 assets
-    returns_df = pd.DataFrame(
-        returns_data,
-        index=dates,
-        columns=['AAPL', 'MSFT', 'GOOGL']
-    )
+    returns_df = pd.DataFrame(returns_data, index=dates, columns=['AAPL', 'MSFT', 'GOOGL'])
 
     return returns_df
 
@@ -173,6 +173,7 @@ def reset_singleton():
 # TEST CLASS: SystemAvailability
 # =============================================================================
 
+
 class TestSystemAvailability:
     """Test suite for SystemAvailability class."""
 
@@ -186,8 +187,12 @@ class TestSystemAvailability:
 
         # Should have both main and compliance systems
         expected_main_systems = [
-            'backtesting_engine', 'live_trading', 'risk_engine',
-            'portfolio_engine', 'data_engine', 'context_engine'
+            'backtesting_engine',
+            'live_trading',
+            'risk_engine',
+            'portfolio_engine',
+            'data_engine',
+            'context_engine',
         ]
         for system in expected_main_systems:
             assert system in systems
@@ -245,6 +250,7 @@ class TestSystemAvailability:
 # TEST CLASS: ComplianceEngine - Initialization
 # =============================================================================
 
+
 class TestComplianceEngineInitialization:
     """Test suite for ComplianceEngine initialization."""
 
@@ -266,11 +272,7 @@ class TestComplianceEngineInitialization:
 
     def test_initialization_with_custom_parameters(self, reset_singleton):
         """Test initialization with custom parameters."""
-        engine = ComplianceEngine(
-            asset_class="crypto",
-            strict_mode=True,
-            enable_logging=False
-        )
+        engine = ComplianceEngine(asset_class="crypto", strict_mode=True, enable_logging=False)
 
         assert engine.asset_class == "crypto"
         assert engine.strict_mode is True
@@ -343,6 +345,7 @@ class TestComplianceEngineInitialization:
 # TEST CLASS: ComplianceEngine - Pre-Trade Analysis
 # =============================================================================
 
+
 class TestComplianceEnginePreTradeAnalysis:
     """Test suite for pre-trade analysis functionality."""
 
@@ -364,9 +367,7 @@ class TestComplianceEnginePreTradeAnalysis:
 
         assert isinstance(result, PreTradeAnalysis)
 
-    def test_analyze_pre_trade_with_minimal_parameters(
-        self, engine_without_logging
-    ):
+    def test_analyze_pre_trade_with_minimal_parameters(self, engine_without_logging):
         """Test pre-trade analysis with minimal required parameters."""
         engine = engine_without_logging
 
@@ -381,9 +382,7 @@ class TestComplianceEnginePreTradeAnalysis:
         assert result.can_execute is not None
         assert result.confidence >= 0
 
-    def test_analyze_pre_trade_populates_basic_fields(
-        self, engine_without_logging
-    ):
+    def test_analyze_pre_trade_populates_basic_fields(self, engine_without_logging):
         """Test that basic fields are populated in analysis."""
         engine = engine_without_logging
 
@@ -406,9 +405,7 @@ class TestComplianceEnginePreTradeAnalysis:
         """Test that systems_contributed is incremented correctly."""
         engine = engine_without_logging
 
-        with patch.object(
-            engine, '_get_subsystem', return_value=mock_harris_integrator
-        ):
+        with patch.object(engine, '_get_subsystem', return_value=mock_harris_integrator):
             result = engine.analyze_pre_trade(
                 symbol="AAPL",
                 side="BUY",
@@ -424,9 +421,7 @@ class TestComplianceEnginePreTradeAnalysis:
         """Test that Harris microstructure integration works."""
         engine = engine_without_logging
 
-        with patch.object(
-            engine, '_get_subsystem', return_value=mock_harris_integrator
-        ):
+        with patch.object(engine, '_get_subsystem', return_value=mock_harris_integrator):
             result = engine.analyze_pre_trade(
                 symbol="AAPL",
                 side="BUY",
@@ -458,9 +453,7 @@ class TestComplianceEnginePreTradeAnalysis:
                 side="BUY",
                 quantity=Decimal("100"),
                 price=Decimal("150"),
-                price_history=pd.DataFrame({
-                    'close': [100, 101, 102, 103, 104, 105]
-                }),
+                price_history=pd.DataFrame({'close': [100, 101, 102, 103, 104, 105]}),
             )
 
             # Chan regime should be detected
@@ -474,9 +467,7 @@ class TestComplianceEnginePreTradeAnalysis:
         """Test that Hull VaR calculation is integrated."""
         engine = engine_without_logging
 
-        with patch.object(
-            engine, '_get_subsystem', return_value=mock_var_calculator
-        ):
+        with patch.object(engine, '_get_subsystem', return_value=mock_var_calculator):
             result = engine.analyze_pre_trade(
                 symbol="AAPL",
                 side="BUY",
@@ -512,9 +503,7 @@ class TestComplianceEnginePreTradeAnalysis:
         if result.portfolio_var and abs(result.portfolio_var) > 0.30:
             assert result.confidence < 1.0
 
-    def test_analyze_pre_trade_all_systems_contribute(
-        self, engine_without_logging
-    ):
+    def test_analyze_pre_trade_all_systems_contribute(self, engine_without_logging):
         """Test that all available systems contribute to analysis."""
         engine = engine_without_logging
 
@@ -529,9 +518,7 @@ class TestComplianceEnginePreTradeAnalysis:
         # At minimum: data_engine, risk_engine, execution_engine should contribute
         assert result.systems_contributed >= 3
 
-    def test_analyze_pre_trade_aggregates_liquidity_metrics(
-        self, engine_without_logging
-    ):
+    def test_analyze_pre_trade_aggregates_liquidity_metrics(self, engine_without_logging):
         """Test that liquidity metrics are aggregated correctly."""
         engine = engine_without_logging
 
@@ -546,9 +533,7 @@ class TestComplianceEnginePreTradeAnalysis:
         assert result.liquidity_score >= 0
         assert result.liquidity_regime in ["LOW", "NORMAL", "HIGH"]
 
-    def test_analyze_pre_trade_aggregates_cost_metrics(
-        self, engine_without_logging
-    ):
+    def test_analyze_pre_trade_aggregates_cost_metrics(self, engine_without_logging):
         """Test that cost metrics are aggregated correctly."""
         engine = engine_without_logging
 
@@ -561,15 +546,11 @@ class TestComplianceEnginePreTradeAnalysis:
 
         # Total cost should be sum of components
         expected_total = (
-            result.market_impact_bps +
-            result.timing_cost_bps +
-            result.narang_transaction_cost_bps
+            result.market_impact_bps + result.timing_cost_bps + result.narang_transaction_cost_bps
         )
         assert result.total_cost_bps == expected_total
 
-    def test_analyze_pre_trade_with_urgency_parameter(
-        self, engine_without_logging
-    ):
+    def test_analyze_pre_trade_with_urgency_parameter(self, engine_without_logging):
         """Test that urgency parameter affects analysis."""
         engine = engine_without_logging
 
@@ -595,9 +576,7 @@ class TestComplianceEnginePreTradeAnalysis:
         assert isinstance(result_low, PreTradeAnalysis)
         assert isinstance(result_high, PreTradeAnalysis)
 
-    def test_analyze_pre_trade_sell_side(
-        self, engine_without_logging
-    ):
+    def test_analyze_pre_trade_sell_side(self, engine_without_logging):
         """Test pre-trade analysis for sell orders."""
         engine = engine_without_logging
 
@@ -616,12 +595,11 @@ class TestComplianceEnginePreTradeAnalysis:
 # TEST CLASS: ComplianceEngine - Post-Trade Analysis
 # =============================================================================
 
+
 class TestComplianceEnginePostTradeAnalysis:
     """Test suite for post-trade analysis functionality."""
 
-    def test_analyze_post_trade_returns_post_trade_analysis(
-        self, engine_without_logging
-    ):
+    def test_analyze_post_trade_returns_post_trade_analysis(self, engine_without_logging):
         """Test that analyze_post_trade returns PostTradeAnalysis object."""
         engine = engine_without_logging
 
@@ -646,9 +624,7 @@ class TestComplianceEnginePostTradeAnalysis:
         """Test that implementation shortfall is calculated."""
         engine = engine_without_logging
 
-        with patch.object(
-            engine, '_get_subsystem', return_value=mock_harris_integrator
-        ):
+        with patch.object(engine, '_get_subsystem', return_value=mock_harris_integrator):
             result = engine.analyze_post_trade(
                 order_id="order_123",
                 symbol="AAPL",
@@ -664,9 +640,7 @@ class TestComplianceEnginePostTradeAnalysis:
             # Should calculate implementation shortfall
             assert result.implementation_shortfall_bps >= 0
 
-    def test_analyze_post_trade_calculates_latency(
-        self, engine_without_logging
-    ):
+    def test_analyze_post_trade_calculates_latency(self, engine_without_logging):
         """Test that latency is calculated correctly."""
         engine = engine_without_logging
 
@@ -689,9 +663,7 @@ class TestComplianceEnginePostTradeAnalysis:
         assert result.latency_ms > 0
         assert 40 < result.latency_ms < 100  # Allow some margin
 
-    def test_analyze_post_trade_slo_tracking(
-        self, engine_without_logging
-    ):
+    def test_analyze_post_trade_slo_tracking(self, engine_without_logging):
         """Test that SLO tracking works correctly."""
         engine = engine_without_logging
 
@@ -729,9 +701,7 @@ class TestComplianceEnginePostTradeAnalysis:
         """Test that execution quality score is calculated."""
         engine = engine_without_logging
 
-        with patch.object(
-            engine, '_get_subsystem', return_value=mock_harris_integrator
-        ):
+        with patch.object(engine, '_get_subsystem', return_value=mock_harris_integrator):
             result = engine.analyze_post_trade(
                 order_id="order_123",
                 symbol="AAPL",
@@ -748,9 +718,7 @@ class TestComplianceEnginePostTradeAnalysis:
             assert result.execution_quality_score >= 0
             assert result.execution_quality_score <= 100
 
-    def test_analyze_post_trade_fallback_without_harris(
-        self, engine_without_logging
-    ):
+    def test_analyze_post_trade_fallback_without_harris(self, engine_without_logging):
         """Test fallback behavior when Harris is not available."""
         engine = engine_without_logging
 
@@ -771,15 +739,11 @@ class TestComplianceEnginePostTradeAnalysis:
             assert isinstance(result, PostTradeAnalysis)
             assert result.latency_ms > 0
 
-    def test_analyze_post_trade_with_nbbo(
-        self, engine_without_logging, mock_harris_integrator
-    ):
+    def test_analyze_post_trade_with_nbbo(self, engine_without_logging, mock_harris_integrator):
         """Test post-trade analysis with NBBO data."""
         engine = engine_without_logging
 
-        with patch.object(
-            engine, '_get_subsystem', return_value=mock_harris_integrator
-        ):
+        with patch.object(engine, '_get_subsystem', return_value=mock_harris_integrator):
             result = engine.analyze_post_trade(
                 order_id="order_123",
                 symbol="AAPL",
@@ -802,9 +766,7 @@ class TestComplianceEnginePostTradeAnalysis:
         """Test that price improvement is calculated."""
         engine = engine_without_logging
 
-        with patch.object(
-            engine, '_get_subsystem', return_value=mock_harris_integrator
-        ):
+        with patch.object(engine, '_get_subsystem', return_value=mock_harris_integrator):
             result = engine.analyze_post_trade(
                 order_id="order_123",
                 symbol="AAPL",
@@ -825,6 +787,7 @@ class TestComplianceEnginePostTradeAnalysis:
 # =============================================================================
 # TEST CLASS: ComplianceEngine - Portfolio Optimization
 # =============================================================================
+
 
 class TestComplianceEnginePortfolioOptimization:
     """Test suite for portfolio optimization functionality."""
@@ -849,9 +812,7 @@ class TestComplianceEnginePortfolioOptimization:
 
         assert isinstance(result, PortfolioOptimization)
 
-    def test_optimize_portfolio_returns_valid_weights(
-        self, engine_without_logging, sample_returns
-    ):
+    def test_optimize_portfolio_returns_valid_weights(self, engine_without_logging, sample_returns):
         """Test that optimization returns valid weights."""
         engine = engine_without_logging
 
@@ -913,9 +874,7 @@ class TestComplianceEnginePortfolioOptimization:
                 # Should attempt to use Chan's method (may fall back if imports fail)
                 assert 'AAPL' in result.weights
 
-    def test_optimize_portfolio_equal_weight_fallback(
-        self, engine_without_logging, sample_returns
-    ):
+    def test_optimize_portfolio_equal_weight_fallback(self, engine_without_logging, sample_returns):
         """Test equal weight fallback when Chan is unavailable."""
         engine = engine_without_logging
 
@@ -977,6 +936,7 @@ class TestComplianceEnginePortfolioOptimization:
 # TEST CLASS: ComplianceEngine - Kill Switch
 # =============================================================================
 
+
 class TestComplianceEngineKillSwitch:
     """Test suite for kill switch functionality (Hull Rule 13.1)."""
 
@@ -1011,9 +971,7 @@ class TestComplianceEngineKillSwitch:
         assert engine._active_orders[order_id]['symbol'] == "AAPL"
         assert engine._active_orders[order_id]['side'] == "BUY"
 
-    def test_track_order_completion_records_trade(
-        self, engine_without_logging
-    ):
+    def test_track_order_completion_records_trade(self, engine_without_logging):
         """Test that order completion is recorded correctly."""
         engine = engine_without_logging
 
@@ -1098,6 +1056,7 @@ class TestComplianceEngineKillSwitch:
 # TEST CLASS: ComplianceEngine - Helper Methods
 # =============================================================================
 
+
 class TestComplianceEngineHelpers:
     """Test suite for helper methods."""
 
@@ -1105,25 +1064,19 @@ class TestComplianceEngineHelpers:
         """Test ADV estimation with volume data."""
         engine = engine_without_logging
 
-        price_history = pd.DataFrame({
-            'volume': [1000000, 1100000, 900000, 1050000, 950000]
-        })
+        price_history = pd.DataFrame({'volume': [1000000, 1100000, 900000, 1050000, 950000]})
 
         adv = engine._estimate_adv(price_history)
 
         assert isinstance(adv, Decimal)
         assert adv > 0
 
-    def test_estimate_adv_without_volume_data(
-        self, engine_without_logging
-    ):
+    def test_estimate_adv_without_volume_data(self, engine_without_logging):
         """Test ADV estimation without volume data."""
         engine = engine_without_logging
 
         # No volume column
-        price_history = pd.DataFrame({
-            'close': [100, 101, 102, 103, 104]
-        })
+        price_history = pd.DataFrame({'close': [100, 101, 102, 103, 104]})
 
         adv = engine._estimate_adv(price_history)
 
@@ -1175,6 +1128,7 @@ class TestComplianceEngineHelpers:
 # =============================================================================
 # TEST CLASS: SystemBus
 # =============================================================================
+
 
 class TestSystemBus:
     """Test suite for SystemBus orchestration."""
@@ -1242,6 +1196,7 @@ class TestSystemBus:
 # =============================================================================
 # TEST CLASS: Convenience Functions
 # =============================================================================
+
 
 class TestConvenienceFunctions:
     """Test suite for convenience functions."""
@@ -1317,12 +1272,11 @@ class TestConvenienceFunctions:
 # TEST CLASS: Error Handling
 # =============================================================================
 
+
 class TestComplianceEngineErrorHandling:
     """Test suite for error handling."""
 
-    def test_analyze_pre_trade_handles_missing_price_history(
-        self, engine_without_logging
-    ):
+    def test_analyze_pre_trade_handles_missing_price_history(self, engine_without_logging):
         """Test pre-trade analysis handles missing price history gracefully."""
         engine = engine_without_logging
 
@@ -1338,9 +1292,7 @@ class TestComplianceEngineErrorHandling:
         assert isinstance(result, PreTradeAnalysis)
         assert result.can_execute is not None
 
-    def test_analyze_pre_trade_handles_empty_price_history(
-        self, engine_without_logging
-    ):
+    def test_analyze_pre_trade_handles_empty_price_history(self, engine_without_logging):
         """Test pre-trade analysis handles empty price history."""
         engine = engine_without_logging
 
@@ -1357,9 +1309,7 @@ class TestComplianceEngineErrorHandling:
         # Should still return valid analysis
         assert isinstance(result, PreTradeAnalysis)
 
-    def test_analyze_post_trade_handles_unknown_order_id(
-        self, engine_without_logging
-    ):
+    def test_analyze_post_trade_handles_unknown_order_id(self, engine_without_logging):
         """Test post-trade analysis handles unknown order gracefully."""
         engine = engine_without_logging
 
@@ -1370,9 +1320,7 @@ class TestComplianceEngineErrorHandling:
             execution_time=datetime.now(),
         )
 
-    def test_optimize_portfolio_handles_empty_returns(
-        self, engine_without_logging
-    ):
+    def test_optimize_portfolio_handles_empty_returns(self, engine_without_logging):
         """Test portfolio optimization handles empty returns."""
         engine = engine_without_logging
 

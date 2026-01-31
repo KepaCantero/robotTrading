@@ -26,11 +26,13 @@ if TYPE_CHECKING:
 
 class HurstCalculator(Protocol):
     """
-    Protocol for Hurst exponent calculation methods.
+        Protocol for Hurst exponent calculation methods.
 
-    Any class that implements calculate() can be used as a Hurst calculator.
-    This follows the Open/Closed Principle - new calculation methods can be
-    added without modifying existing code.
+    from __future__ import annotations
+
+        Any class that implements calculate() can be used as a Hurst calculator.
+        This follows the Open/Closed Principle - new calculation methods can be
+        added without modifying existing code.
     """
 
     def calculate(self, series: np.ndarray) -> tuple[float, list[float] | None, list[int] | None]:

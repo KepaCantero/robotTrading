@@ -400,16 +400,19 @@ async def test_polling_fallback():
     client = MockMarketauxClient()
 
     # Add mock news data
-    client.news_data.append({
-        "id": "news_1",
-        "symbol": "AAPL",
-        "headline": "AAPL earnings",
-        "sentiment": 0.7,
-        "source": "test",
-        "url": "https://example.com",
-    })
+    client.news_data.append(
+        {
+            "id": "news_1",
+            "symbol": "AAPL",
+            "headline": "AAPL earnings",
+            "sentiment": 0.7,
+            "source": "test",
+            "url": "https://example.com",
+        }
+    )
 
     signals = []
+
     def callback(symbol, sentiment):
         signals.append({"symbol": symbol, "sentiment": sentiment})
 

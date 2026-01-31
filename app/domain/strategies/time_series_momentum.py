@@ -118,11 +118,15 @@ class TimeSeriesMomentum:
         slow_ma = self._calculate_ma(prices, self._slow_period)
 
         # Calculate volatility
-        returns = np.diff(prices[-self._volatility_period:])
+        returns = np.diff(prices[-self._volatility_period :])
         volatility = np.std(returns) if len(returns) > 0 else 0
 
         # Normalize volatility
-        normalized_vol = volatility / np.mean(prices[-self._volatility_period:]) if np.mean(prices[-self._volatility_period:]) > 0 else 0
+        normalized_vol = (
+            volatility / np.mean(prices[-self._volatility_period :])
+            if np.mean(prices[-self._volatility_period :]) > 0
+            else 0
+        )
 
         # Determine trend
         current_price = float(prices[-1])

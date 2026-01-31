@@ -26,17 +26,20 @@ from typing import List
 # Test Numba Availability
 # ============================================================================
 
+
 def test_numba_mandatory_available():
     """Test that Numba is available (MANDATORY)."""
     with pytest.raises(RuntimeError) as exc_info:
         # Temporarily hide numba to test enforcement
         import sys
+
         numba_module = sys.modules.get('numba')
         if numba_module:
             del sys.modules['numba']
 
         try:
             from app.core.numba_enforcer import enforce_numba_available
+
             enforce_numba_available()
         finally:
             # Restore numba
@@ -61,8 +64,9 @@ def test_numba_version_requirement():
     minor = int(version_parts[1]) if len(version_parts) > 1 else 0
 
     # Must be >= 0.59.0
-    assert major >= 0 or (major == 0 and minor >= 59), \
-        f"Numba version {version} is insufficient. Required: >=0.59.0"
+    assert major >= 0 or (
+        major == 0 and minor >= 59
+    ), f"Numba version {version} is insufficient. Required: >=0.59.0"
 
 
 def test_numba_accelerators_available():
@@ -79,9 +83,15 @@ def test_numba_accelerators_available():
     assert NUMBA_VERSION is not None, "Numba version must be set"
 
     # Verify functions are Numba-compiled
-    assert hasattr(calculate_rsi_numba, '__compiled__') or hasattr(calculate_rsi_numba, 'signatures')
-    assert hasattr(calculate_ema_numba, '__compiled__') or hasattr(calculate_ema_numba, 'signatures')
-    assert hasattr(calculate_macd_numba, '__compiled__') or hasattr(calculate_macd_numba, 'signatures')
+    assert hasattr(calculate_rsi_numba, '__compiled__') or hasattr(
+        calculate_rsi_numba, 'signatures'
+    )
+    assert hasattr(calculate_ema_numba, '__compiled__') or hasattr(
+        calculate_ema_numba, 'signatures'
+    )
+    assert hasattr(calculate_macd_numba, '__compiled__') or hasattr(
+        calculate_macd_numba, 'signatures'
+    )
 
 
 def test_numba_metrics_available():
@@ -98,9 +108,15 @@ def test_numba_metrics_available():
     assert NUMBA_VERSION is not None, "Numba version must be set"
 
     # Verify functions are Numba-compiled
-    assert hasattr(calculate_sharpe_numba, '__compiled__') or hasattr(calculate_sharpe_numba, 'signatures')
-    assert hasattr(calculate_sortino_numba, '__compiled__') or hasattr(calculate_sortino_numba, 'signatures')
-    assert hasattr(calculate_var_numba, '__compiled__') or hasattr(calculate_var_numba, 'signatures')
+    assert hasattr(calculate_sharpe_numba, '__compiled__') or hasattr(
+        calculate_sharpe_numba, 'signatures'
+    )
+    assert hasattr(calculate_sortino_numba, '__compiled__') or hasattr(
+        calculate_sortino_numba, 'signatures'
+    )
+    assert hasattr(calculate_var_numba, '__compiled__') or hasattr(
+        calculate_var_numba, 'signatures'
+    )
 
 
 def test_numba_risk_available():
@@ -117,25 +133,46 @@ def test_numba_risk_available():
     assert NUMBA_VERSION is not None, "Numba version must be set"
 
     # Verify functions are Numba-compiled
-    assert hasattr(calculate_historical_var_numba, '__compiled__') or hasattr(calculate_historical_var_numba, 'signatures')
-    assert hasattr(calculate_correlation_matrix_numba, '__compiled__') or hasattr(calculate_correlation_matrix_numba, 'signatures')
-    assert hasattr(calculate_portfolio_volatility_numba, '__compiled__') or hasattr(calculate_portfolio_volatility_numba, 'signatures')
+    assert hasattr(calculate_historical_var_numba, '__compiled__') or hasattr(
+        calculate_historical_var_numba, 'signatures'
+    )
+    assert hasattr(calculate_correlation_matrix_numba, '__compiled__') or hasattr(
+        calculate_correlation_matrix_numba, 'signatures'
+    )
+    assert hasattr(calculate_portfolio_volatility_numba, '__compiled__') or hasattr(
+        calculate_portfolio_volatility_numba, 'signatures'
+    )
 
 
 # ============================================================================
 # Test Numba Function Correctness
 # ============================================================================
 
+
 def test_rsi_calculation_correctness():
     """Test that Numba RSI calculation produces correct results."""
     from app.core.numba_accelerators import calculate_rsi_numba
 
     # Create test data with known RSI values
-    prices = np.array([
-        44.0, 44.25, 44.50, 43.75, 44.00,
-        44.25, 44.75, 45.00, 45.25, 45.50,
-        45.00, 45.25, 45.50, 45.75, 46.00,
-    ])
+    prices = np.array(
+        [
+            44.0,
+            44.25,
+            44.50,
+            43.75,
+            44.00,
+            44.25,
+            44.75,
+            45.00,
+            45.25,
+            45.50,
+            45.00,
+            45.25,
+            45.50,
+            45.75,
+            46.00,
+        ]
+    )
 
     rsi = calculate_rsi_numba(prices, period=14)
 
@@ -148,10 +185,20 @@ def test_ema_calculation_correctness():
     """Test that Numba EMA calculation produces correct results."""
     from app.core.numba_accelerators import calculate_ema_single_numba
 
-    prices = np.array([
-        44.0, 44.25, 44.50, 43.75, 44.00,
-        44.25, 44.75, 45.00, 45.25, 45.50,
-    ])
+    prices = np.array(
+        [
+            44.0,
+            44.25,
+            44.50,
+            43.75,
+            44.00,
+            44.25,
+            44.75,
+            45.00,
+            45.25,
+            45.50,
+        ]
+    )
 
     ema = calculate_ema_single_numba(prices, period=5)
 
@@ -164,10 +211,20 @@ def test_sharpe_ratio_correctness():
     """Test that Numba Sharpe ratio calculation produces correct results."""
     from app.backtesting.numba_metrics import calculate_sharpe_numba
 
-    returns = np.array([
-        0.01, 0.02, -0.01, 0.03, 0.01,
-        -0.02, 0.01, 0.02, -0.01, 0.01,
-    ])
+    returns = np.array(
+        [
+            0.01,
+            0.02,
+            -0.01,
+            0.03,
+            0.01,
+            -0.02,
+            0.01,
+            0.02,
+            -0.01,
+            0.01,
+        ]
+    )
 
     sharpe = calculate_sharpe_numba(returns, risk_free_rate=0.02, periods_per_year=252)
 
@@ -180,11 +237,25 @@ def test_var_calculation_correctness():
     """Test that Numba VaR calculation produces correct results."""
     from app.backtesting.numba_metrics import calculate_var_numba
 
-    returns = np.array([
-        0.01, 0.02, -0.01, 0.03, 0.01,
-        -0.02, 0.01, 0.02, -0.01, 0.01,
-        -0.03, -0.02, -0.01, 0.01, 0.02,
-    ])
+    returns = np.array(
+        [
+            0.01,
+            0.02,
+            -0.01,
+            0.03,
+            0.01,
+            -0.02,
+            0.01,
+            0.02,
+            -0.01,
+            0.01,
+            -0.03,
+            -0.02,
+            -0.01,
+            0.01,
+            0.02,
+        ]
+    )
 
     var_95 = calculate_var_numba(returns, confidence_level=0.95)
 
@@ -213,8 +284,9 @@ def test_correlation_matrix_correctness():
     # Check symmetry
     for i in range(5):
         for j in range(5):
-            assert abs(corr_matrix[i, j] - corr_matrix[j, i]) < 1e-10, \
-                f"Correlation matrix should be symmetric at [{i},{j}]"
+            assert (
+                abs(corr_matrix[i, j] - corr_matrix[j, i]) < 1e-10
+            ), f"Correlation matrix should be symmetric at [{i},{j}]"
 
     # Check values are in [-1, 1]
     assert np.all(corr_matrix >= -1.0), "All correlations should be >= -1"
@@ -224,6 +296,7 @@ def test_correlation_matrix_correctness():
 # ============================================================================
 # Test Numba Performance
 # ============================================================================
+
 
 def test_rsi_performance_improvement():
     """Test that Numba RSI is significantly faster than pure Python."""
@@ -295,6 +368,7 @@ def test_correlation_performance_improvement():
 
     # Pandas version (for comparison)
     import pandas as pd
+
     df = pd.DataFrame(returns_matrix)
     start = time.time()
     corr_pandas = df.corr().values
@@ -306,13 +380,15 @@ def test_correlation_performance_improvement():
     print(f"  Pandas time: {pandas_time:.4f}s")
 
     # Both should produce similar results
-    assert np.allclose(corr_matrix, corr_pandas, atol=1e-6), \
-        "Numba and Pandas should produce similar results"
+    assert np.allclose(
+        corr_matrix, corr_pandas, atol=1e-6
+    ), "Numba and Pandas should produce similar results"
 
 
 # ============================================================================
 # Test Numba Enforcer
 # ============================================================================
+
 
 def test_numba_enforcer_startup():
     """Test that Numba enforcer works at startup."""
@@ -330,8 +406,25 @@ def test_numba_function_verification():
     from app.core.numba_enforcer import verify_numba_function
     from app.core.numba_accelerators import calculate_rsi_numba
 
-    prices = np.array([44.0, 44.25, 44.50, 43.75, 44.00, 44.25, 44.75, 45.00,
-                       45.25, 45.50, 45.00, 45.25, 45.50, 45.75, 46.00])
+    prices = np.array(
+        [
+            44.0,
+            44.25,
+            44.50,
+            43.75,
+            44.00,
+            44.25,
+            44.75,
+            45.00,
+            45.25,
+            45.50,
+            45.00,
+            45.25,
+            45.50,
+            45.75,
+            46.00,
+        ]
+    )
 
     # Should verify successfully
     result = verify_numba_function(calculate_rsi_numba, prices, 14)
@@ -341,6 +434,7 @@ def test_numba_function_verification():
 # ============================================================================
 # Integration Tests
 # ============================================================================
+
 
 def test_numba_integration_with_metrics_calculator():
     """Test that Numba functions integrate properly with metrics calculator."""

@@ -304,9 +304,7 @@ class TestRiskConfigurator:
     def test_compare_configs(self) -> None:
         """Test comparing two risk configurations."""
         configurator = RiskConfigurator()
-        comparison = configurator.compare_configs(
-            RiskTolerance.BAJO, RiskTolerance.ALTO
-        )
+        comparison = configurator.compare_configs(RiskTolerance.BAJO, RiskTolerance.ALTO)
 
         assert "tolerance1" in comparison
         assert "tolerance2" in comparison

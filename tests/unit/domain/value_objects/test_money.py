@@ -352,12 +352,15 @@ class TestMoneyUtilityMethods:
 class TestMoneyPropertyBased:
     """Property-based tests for Money operations."""
 
-    @pytest.mark.parametrize("amount1,amount2,expected", [
-        (Decimal('10'), Decimal('5'), Decimal('15')),
-        (Decimal('0.01'), Decimal('0.02'), Decimal('0.03')),
-        (Decimal('1000.50'), Decimal('999.50'), Decimal('2000.00')),
-        (Decimal('0'), Decimal('0'), Decimal('0')),
-    ])
+    @pytest.mark.parametrize(
+        "amount1,amount2,expected",
+        [
+            (Decimal('10'), Decimal('5'), Decimal('15')),
+            (Decimal('0.01'), Decimal('0.02'), Decimal('0.03')),
+            (Decimal('1000.50'), Decimal('999.50'), Decimal('2000.00')),
+            (Decimal('0'), Decimal('0'), Decimal('0')),
+        ],
+    )
     def test_addition_properties(self, amount1, amount2, expected):
         """Test addition properties with various inputs."""
         money1 = Money(amount=amount1, currency='USD')
@@ -368,11 +371,14 @@ class TestMoneyPropertyBased:
         assert result.amount == expected
         assert result.currency == 'USD'
 
-    @pytest.mark.parametrize("amount1,amount2,expected", [
-        (Decimal('10'), Decimal('5'), Decimal('5')),
-        (Decimal('100'), Decimal('50'), Decimal('50')),
-        (Decimal('1000.50'), Decimal('0.50'), Decimal('1000.00')),
-    ])
+    @pytest.mark.parametrize(
+        "amount1,amount2,expected",
+        [
+            (Decimal('10'), Decimal('5'), Decimal('5')),
+            (Decimal('100'), Decimal('50'), Decimal('50')),
+            (Decimal('1000.50'), Decimal('0.50'), Decimal('1000.00')),
+        ],
+    )
     def test_subtraction_properties(self, amount1, amount2, expected):
         """Test subtraction properties with various inputs."""
         money1 = Money(amount=amount1, currency='USD')
@@ -382,12 +388,15 @@ class TestMoneyPropertyBased:
 
         assert result.amount == expected
 
-    @pytest.mark.parametrize("amount,multiplier,expected", [
-        (Decimal('10'), 2, Decimal('20')),
-        (Decimal('100'), 0.5, Decimal('50')),
-        (Decimal('25'), 4, Decimal('100')),
-        (Decimal('100'), Decimal('1.5'), Decimal('150')),
-    ])
+    @pytest.mark.parametrize(
+        "amount,multiplier,expected",
+        [
+            (Decimal('10'), 2, Decimal('20')),
+            (Decimal('100'), 0.5, Decimal('50')),
+            (Decimal('25'), 4, Decimal('100')),
+            (Decimal('100'), Decimal('1.5'), Decimal('150')),
+        ],
+    )
     def test_multiplication_properties(self, amount, multiplier, expected):
         """Test multiplication properties with various inputs."""
         money = Money(amount=amount, currency='USD')
@@ -396,12 +405,15 @@ class TestMoneyPropertyBased:
 
         assert result.amount == expected
 
-    @pytest.mark.parametrize("amount,divisor,expected", [
-        (Decimal('100'), 2, Decimal('50')),
-        (Decimal('50'), 4, Decimal('12.5')),
-        (Decimal('100'), 5, Decimal('20')),
-        (Decimal('99'), 3, Decimal('33')),
-    ])
+    @pytest.mark.parametrize(
+        "amount,divisor,expected",
+        [
+            (Decimal('100'), 2, Decimal('50')),
+            (Decimal('50'), 4, Decimal('12.5')),
+            (Decimal('100'), 5, Decimal('20')),
+            (Decimal('99'), 3, Decimal('33')),
+        ],
+    )
     def test_division_properties(self, amount, divisor, expected):
         """Test division properties with various inputs."""
         money = Money(amount=amount, currency='USD')

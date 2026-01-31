@@ -28,6 +28,7 @@ from app.strategies.strategy_registry import (
 # TEST STRATEGIES
 # ============================================================================
 
+
 class MovingAverageStrategy(BaseStrategy):
     """Test moving average strategy."""
 
@@ -64,8 +65,8 @@ class RSIStrategy(BaseStrategy):
             return {"signal": "hold"}
 
         # Simplified RSI calculation
-        gains = [max(data[i] - data[i-1], 0) for i in range(1, len(data))]
-        losses = [max(data[i-1] - data[i], 0) for i in range(1, len(data))]
+        gains = [max(data[i] - data[i - 1], 0) for i in range(1, len(data))]
+        losses = [max(data[i - 1] - data[i], 0) for i in range(1, len(data))]
 
         avg_gain = sum(gains[-period:]) / period
         avg_loss = sum(losses[-period:]) / period
@@ -113,16 +114,13 @@ class MeanReversionStrategy(BaseStrategy):
 # TEST BASE STRATEGY
 # ============================================================================
 
+
 class TestBaseStrategy:
     """Tests for BaseStrategy."""
 
     def test_strategy_initialization(self):
         """Test strategy initialization with config."""
-        config = {
-            "name": "Test Strategy",
-            "description": "Test description",
-            "version": "2.0.0"
-        }
+        config = {"name": "Test Strategy", "description": "Test description", "version": "2.0.0"}
 
         strategy = MovingAverageStrategy(config)
 
@@ -141,10 +139,7 @@ class TestBaseStrategy:
 
     def test_strategy_repr(self):
         """Test strategy string representation."""
-        strategy = MovingAverageStrategy({
-            "name": "MA",
-            "version": "1.0"
-        })
+        strategy = MovingAverageStrategy({"name": "MA", "version": "1.0"})
 
         repr_str = repr(strategy)
         assert "MovingAverageStrategy" in repr_str
@@ -155,6 +150,7 @@ class TestBaseStrategy:
 # TEST STRATEGY CONTEXT
 # ============================================================================
 
+
 class TestStrategyContext:
     """Tests for StrategyContext."""
 
@@ -162,10 +158,7 @@ class TestStrategyContext:
     async def test_set_and_execute_strategy(self):
         """Test setting and executing a strategy."""
         context = StrategyContext()
-        strategy = MovingAverageStrategy({
-            "short_period": 5,
-            "long_period": 10
-        })
+        strategy = MovingAverageStrategy({"short_period": 5, "long_period": 10})
 
         context.set_strategy(strategy)
 
@@ -233,6 +226,7 @@ class TestStrategyContext:
 # TEST STRATEGY REGISTRY
 # ============================================================================
 
+
 class TestStrategyRegistry:
     """Tests for StrategyRegistry."""
 
@@ -245,7 +239,7 @@ class TestStrategyRegistry:
             strategy_class=MovingAverageStrategy,
             description="Short-term MA strategy",
             category="trend",
-            tags=["ma", "short"]
+            tags=["ma", "short"],
         )
 
         assert "ma_short" in registry
@@ -303,10 +297,7 @@ class TestStrategyRegistry:
 
         registry.register("ma", MovingAverageStrategy)
 
-        strategy = registry.create(
-            name="ma",
-            config={"short_period": 10, "long_period": 30}
-        )
+        strategy = registry.create(name="ma", config={"short_period": 10, "long_period": 30})
 
         assert isinstance(strategy, MovingAverageStrategy)
         assert strategy.config["short_period"] == 10
@@ -336,7 +327,7 @@ class TestStrategyRegistry:
             strategy_class=MovingAverageStrategy,
             description="MA strategy",
             category="trend",
-            tags=["ma", "crossover"]
+            tags=["ma", "crossover"],
         )
 
         metadata = registry.get_metadata("ma")
@@ -387,21 +378,9 @@ class TestStrategyRegistry:
         """Test listing strategies by tags."""
         registry = StrategyRegistry()
 
-        registry.register(
-            "ma_short",
-            MovingAverageStrategy,
-            tags=["ma", "short", "crossover"]
-        )
-        registry.register(
-            "ma_long",
-            MovingAverageStrategy,
-            tags=["ma", "long"]
-        )
-        registry.register(
-            "rsi",
-            RSIStrategy,
-            tags=["momentum", "oscillator"]
-        )
+        registry.register("ma_short", MovingAverageStrategy, tags=["ma", "short", "crossover"])
+        registry.register("ma_long", MovingAverageStrategy, tags=["ma", "long"])
+        registry.register("rsi", RSIStrategy, tags=["momentum", "oscillator"])
 
         ma_strategies = registry.list_strategies(tags=["ma"])
 
@@ -470,6 +449,7 @@ class TestStrategyRegistry:
 # TEST STRATEGY FACTORY
 # ============================================================================
 
+
 class TestStrategyFactory:
     """Tests for StrategyFactory."""
 
@@ -501,10 +481,7 @@ class TestStrategyFactory:
         registry.register("rsi", RSIStrategy)
 
         factory = StrategyFactory(registry)
-        strategies = factory.create_batch([
-            ("ma", {"short_period": 10}),
-            ("rsi", {"period": 14})
-        ])
+        strategies = factory.create_batch([("ma", {"short_period": 10}), ("rsi", {"period": 14})])
 
         assert len(strategies) == 2
         assert all(isinstance(s, BaseStrategy) for s in strategies)
@@ -526,6 +503,7 @@ class TestStrategyFactory:
 # TEST DECORATOR REGISTRATION
 # ============================================================================
 
+
 class TestDecoratorRegistration:
     """Tests for decorator registration."""
 
@@ -538,7 +516,7 @@ class TestDecoratorRegistration:
             description="Custom MA strategy",
             category="trend",
             tags=["ma", "custom"],
-            registry=registry
+            registry=registry,
         )
         class CustomMAStrategy(BaseStrategy):
             async def execute(self, data):
@@ -553,6 +531,7 @@ class TestDecoratorRegistration:
 # ============================================================================
 # TEST GLOBAL REGISTRY
 # ============================================================================
+
 
 class TestGlobalRegistry:
     """Tests for global registry."""

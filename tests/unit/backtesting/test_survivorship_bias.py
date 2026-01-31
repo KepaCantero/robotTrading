@@ -45,9 +45,7 @@ class TestSurvivorshipBiasCorrector:
         assert corrector.BANKRUPTCY_RATE == 0.01
         assert corrector.ACQUISITION_RATE == 0.015
 
-    def test_calculate_survivorship_bias(
-        self, corrector, sample_universe
-    ):
+    def test_calculate_survivorship_bias(self, corrector, sample_universe):
         """Test survivorship bias calculation."""
         backtest_start = datetime(2020, 1, 1)
         backtest_end = datetime(2023, 1, 1)
@@ -63,9 +61,7 @@ class TestSurvivorshipBiasCorrector:
         assert adjustment.total_universe_size >= adjustment.surviving_count
         assert adjustment.survivorship_bias_factor >= 1.0
 
-    def test_adjust_returns_multiplicative(
-        self, corrector, sample_returns, sample_universe
-    ):
+    def test_adjust_returns_multiplicative(self, corrector, sample_returns, sample_universe):
         """Test multiplicative return adjustment."""
         backtest_start = datetime(2020, 1, 1)
         backtest_end = datetime(2021, 1, 1)
@@ -82,9 +78,7 @@ class TestSurvivorshipBiasCorrector:
         assert len(adjusted_returns) == len(sample_returns)
         assert adjusted_returns.mean() <= sample_returns.mean()
 
-    def test_adjust_returns_additive(
-        self, corrector, sample_returns, sample_universe
-    ):
+    def test_adjust_returns_additive(self, corrector, sample_returns, sample_universe):
         """Test additive return adjustment."""
         backtest_start = datetime(2020, 1, 1)
         backtest_end = datetime(2021, 1, 1)
@@ -123,29 +117,21 @@ class TestSurvivorshipBiasCorrector:
     def test_bankruptcy_adjustment(self, corrector):
         """Test bankruptcy adjustment calculation."""
         # No bankruptcies
-        adj = corrector._calculate_bankruptcy_adjustment(
-            delisted_count=10, period_years=1.0
-        )
+        adj = corrector._calculate_bankruptcy_adjustment(delisted_count=10, period_years=1.0)
         assert adj == 1.0
 
         # With bankruptcies (should reduce adjustment)
-        adj = corrector._calculate_bankruptcy_adjustment(
-            delisted_count=10, period_years=1.0
-        )
+        adj = corrector._calculate_bankruptcy_adjustment(delisted_count=10, period_years=1.0)
         assert adj < 1.0
 
     def test_acquisition_adjustment(self, corrector):
         """Test acquisition adjustment calculation."""
         # No acquisitions
-        adj = corrector._calculate_acquisition_adjustment(
-            delisted_count=10, period_years=1.0
-        )
+        adj = corrector._calculate_acquisition_adjustment(delisted_count=10, period_years=1.0)
         assert adj == 1.0
 
         # With acquisitions (should increase adjustment)
-        adj = corrector._calculate_acquisition_adjustment(
-            delisted_count=10, period_years=1.0
-        )
+        adj = corrector._calculate_acquisition_adjustment(delisted_count=10, period_years=1.0)
         assert adj > 1.0
 
     def test_convenience_function(self, sample_returns, sample_universe):
@@ -166,9 +152,7 @@ class TestSurvivorshipBiasCorrector:
         backtest_start = datetime(2020, 1, 1)
         backtest_end = datetime(2021, 1, 1)
 
-        adjustment = corrector.calculate_survivorship_bias(
-            [], backtest_start, backtest_end
-        )
+        adjustment = corrector.calculate_survivorship_bias([], backtest_start, backtest_end)
 
         # Should return neutral adjustment
         assert adjustment.surviving_count == 0

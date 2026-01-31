@@ -140,7 +140,7 @@ class AuditTrail:
         try:
             # Check si hay cambios sin commit
             result = subprocess.run(
-                ['git', 'dif', '--quiet'], capture_output=True, check=False, timeout=5
+                ['git', 'diff', '--quiet'], capture_output=True, check=False, timeout=5
             )
             git_info['is_dirty'] = result.returncode != 0
         except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):

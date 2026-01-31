@@ -194,19 +194,13 @@ class DividendHandler:
         """
         # Find dividend payable on this date
         dividends = self._dividends.get(symbol, [])
-        payable_dividends = [
-            d for d in dividends
-            if d.payable_date == payment_date
-        ]
+        payable_dividends = [d for d in dividends if d.payable_date == payment_date]
 
         if not payable_dividends:
             return Decimal("0"), None
 
         # Sum all dividends payable
-        gross_dividend = sum(
-            d.amount_per_share * quantity
-            for d in payable_dividends
-        )
+        gross_dividend = sum(d.amount_per_share * quantity for d in payable_dividends)
 
         # Apply tax withholding
         net_dividend = gross_dividend * (Decimal("1") - self._tax_rate)
@@ -375,10 +369,7 @@ class DividendHandler:
             List of DividendPayment in range
         """
         dividends = self._dividends.get(symbol, [])
-        return [
-            d for d in dividends
-            if start_date <= d.ex_date <= end_date
-        ]
+        return [d for d in dividends if start_date <= d.ex_date <= end_date]
 
     def calculate_dividend_growth_rate(
         self,
@@ -427,8 +418,4 @@ class DividendHandler:
 
     def get_total_shares_from_reinvestment(self, symbol: str) -> Decimal:
         """Get total shares acquired from dividend reinvestment."""
-        return sum(
-            r.shares_purchased
-            for r in self._reinvestments
-            if r.symbol == symbol
-        )
+        return sum(r.shares_purchased for r in self._reinvestments if r.symbol == symbol)

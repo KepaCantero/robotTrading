@@ -36,9 +36,7 @@ class TestDependencyRules:
         """Get infrastructure layer directory."""
         return project_root / "app" / "infrastructure"
 
-    def test_domain_layer_has_no_external_dependencies(
-        self, domain_dir: Path
-    ) -> None:
+    def test_domain_layer_has_no_external_dependencies(self, domain_dir: Path) -> None:
         """
         CRITICAL: Domain layer must not depend on outer layers.
 
@@ -139,13 +137,9 @@ class TestDependencyRules:
 
         # This is a warning, not a failure (some interfaces may not be implemented yet)
         if missing_implementations:
-            print(
-                f"\nWarning: No implementations found for: {missing_implementations}"
-            )
+            print(f"\nWarning: No implementations found for: {missing_implementations}")
 
-    def test_no_circular_dependencies(
-        self, project_root: Path
-    ) -> None:
+    def test_no_circular_dependencies(self, project_root: Path) -> None:
         """
         Check for circular dependencies between layers.
 
@@ -181,8 +175,9 @@ class TestDependencyRules:
 
         # This is expected and correct - infrastructure SHOULD import domain
         # But we should verify the direction is correct
-        assert set(imports.keys()).isdisjoint(set(domain_importers)) or True, \
-            "Unexpected import patterns detected"
+        assert (
+            set(imports.keys()).isdisjoint(set(domain_importers)) or True
+        ), "Unexpected import patterns detected"
 
 
 class TestSingleResponsibility:
@@ -264,10 +259,7 @@ class TestSingleResponsibility:
 
             if len(classes) > MAX_CLASSES:
                 rel_path = py_file.relative_to(project_root)
-                pytest.fail(
-                    f"{rel_path} contains {len(classes)} classes "
-                    f"(max: {MAX_CLASSES})"
-                )
+                pytest.fail(f"{rel_path} contains {len(classes)} classes " f"(max: {MAX_CLASSES})")
 
 
 class TestInterfaceSegregation:
@@ -301,9 +293,7 @@ class TestInterfaceSegregation:
 
             # Find abstract classes
             abstract_classes = re.finditer(
-                r'class (\w+)\(ABC\):.*?(?=\nclass|\Z)',
-                content,
-                re.DOTALL
+                r'class (\w+)\(ABC\):.*?(?=\nclass|\Z)', content, re.DOTALL
             )
 
             for match in abstract_classes:
@@ -327,9 +317,7 @@ class TestDomainIndependence:
         """Get project root directory."""
         return Path(__file__).parent.parent.parent
 
-    def test_domain_uses_only_stdlib_and_primitives(
-        self, project_root: Path
-    ) -> None:
+    def test_domain_uses_only_stdlib_and_primitives(self, project_root: Path) -> None:
         """
         Domain layer should only use stdlib and primitive types.
 
@@ -363,9 +351,7 @@ class TestDomainIndependence:
                 error_msg += f"    {line}\n"
             pytest.fail(error_msg)
 
-    def test_value_objects_are_immutable(
-        self, project_root: Path
-    ) -> None:
+    def test_value_objects_are_immutable(self, project_root: Path) -> None:
         """
         Value objects should be immutable.
 
@@ -382,10 +368,7 @@ class TestDomainIndependence:
                 content = f.read()
 
             # Find dataclass definitions
-            dataclasses = re.finditer(
-                r'@dataclass(?:\([^)]*\))?\s*\nclass (\w+)',
-                content
-            )
+            dataclasses = re.finditer(r'@dataclass(?:\([^)]*\))?\s*\nclass (\w+)', content)
 
             for match in dataclasses:
                 class_name = match.group(1)
@@ -412,9 +395,7 @@ class TestCleanArchitectureMetrics:
         """Get project root directory."""
         return Path(__file__).parent.parent.parent
 
-    def test_report_architecture_metrics(
-        self, project_root: Path
-    ) -> None:
+    def test_report_architecture_metrics(self, project_root: Path) -> None:
         """
         Report architecture compliance metrics.
 
@@ -448,16 +429,16 @@ class TestCleanArchitectureMetrics:
                     large_files += 1
 
         # Print metrics
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("CLEAN ARCHITECTURE METRICS")
-        print("="*60)
+        print("=" * 60)
         print("Files by layer:")
         for layer, count in layer_counts.items():
             print(f"  {layer:20s}: {count:4d} files")
         print(f"\nTotal lines of code: {total_lines:,}")
         print(f"Files > 300 lines: {large_files}")
         print("Architecture compliance: 95% (target)")
-        print("="*60 + "\n")
+        print("=" * 60 + "\n")
 
         # This test always passes
         assert True

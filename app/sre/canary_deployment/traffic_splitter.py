@@ -140,19 +140,23 @@ class TrafficSplitter:
             db_path.parent.mkdir(parents=True, exist_ok=True)
 
             async with aiosqlite.connect(self.db_path) as db:
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS sticky_sessions (
                         session_id TEXT PRIMARY KEY,
                         route_to_canary INTEGER NOT NULL,
                         created_at TEXT NOT NULL,
                         expires_at TEXT NOT NULL
                     )
-                """)
+                """
+                )
 
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE INDEX IF NOT EXISTS idx_sticky_sessions_expires
                     ON sticky_sessions(expires_at)
-                """)
+                """
+                )
 
                 await db.commit()
 
@@ -361,10 +365,12 @@ class TrafficSplitter:
         """Clear expired sticky sessions."""
         try:
             async with aiosqlite.connect(self.db_path) as db:
-                cursor = await db.execute("""
+                cursor = await db.execute(
+                    """
                     DELETE FROM sticky_sessions
                     WHERE expires_at <= datetime('utc')
-                """)
+                """
+                )
 
                 await db.commit()
 

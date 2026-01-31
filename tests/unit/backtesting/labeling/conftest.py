@@ -9,6 +9,7 @@ import pytest
 def matplotlib_figure():
     """Fixture to manage matplotlib figures."""
     import matplotlib
+
     matplotlib.use('Agg')  # Use non-interactive backend
     import matplotlib.pyplot as plt
 

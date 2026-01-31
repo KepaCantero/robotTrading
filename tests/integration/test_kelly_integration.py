@@ -247,6 +247,7 @@ class TestKellyBacktestIntegration:
 
                 # Simulate trade outcome (60% win probability)
                 import random
+
                 random.seed(42)  # For reproducibility
 
                 if random.random() < 0.60:

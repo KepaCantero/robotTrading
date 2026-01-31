@@ -39,6 +39,7 @@ from app.domain.repositories.base_repository import AbstractRepository
 # MOCK REPOSITORIES
 # ============================================================================
 
+
 class MockOrderRepository(AbstractRepository[Order, str]):
     """Mock order repository for testing."""
 
@@ -89,6 +90,7 @@ class MockPortfolioRepository(AbstractRepository[Portfolio, str]):
 # MOCK UNIT OF WORK
 # ============================================================================
 
+
 class MockUnitOfWork(AbstractUnitOfWork):
     """Mock Unit of Work for testing."""
 
@@ -118,6 +120,7 @@ class MockUnitOfWorkFactory:
 # TEST COMMANDS
 # ============================================================================
 
+
 class TestCreateOrderCommand:
     """Tests for CreateOrderCommand."""
 
@@ -129,7 +132,7 @@ class TestCreateOrderCommand:
             price=Decimal("150.00"),
             order_type="limit",
             side="buy",
-            portfolio_id="PORT123"
+            portfolio_id="PORT123",
         )
 
         assert command.validate() is True
@@ -142,7 +145,7 @@ class TestCreateOrderCommand:
             price=Decimal("150.00"),
             order_type="limit",
             side="buy",
-            portfolio_id="PORT123"
+            portfolio_id="PORT123",
         )
 
         with pytest.raises(ValueError, match="Quantity must be positive"):
@@ -156,7 +159,7 @@ class TestCreateOrderCommand:
             price=None,
             order_type="limit",
             side="buy",
-            portfolio_id="PORT123"
+            portfolio_id="PORT123",
         )
 
         with pytest.raises(ValueError, match="Limit orders must have a price"):
@@ -170,7 +173,7 @@ class TestCreateOrderCommand:
             price=Decimal("150.00"),
             order_type="limit",
             side="invalid",
-            portfolio_id="PORT123"
+            portfolio_id="PORT123",
         )
 
         with pytest.raises(ValueError, match="Side must be"):
@@ -184,7 +187,7 @@ class TestCreateOrderCommand:
             price=Decimal("150.00"),
             order_type="limit",
             side="buy",
-            portfolio_id="PORT123"
+            portfolio_id="PORT123",
         )
 
         with pytest.raises(ValueError, match="Symbol is required"):
@@ -194,6 +197,7 @@ class TestCreateOrderCommand:
 # ============================================================================
 # TEST QUERIES
 # ============================================================================
+
 
 class TestGetOrderQuery:
     """Tests for GetOrderQuery."""
@@ -210,7 +214,7 @@ class TestGetOrderQuery:
             side=OrderSide.BUY,
             order_type=OrderType.LIMIT,
             quantity=Decimal("100"),
-            price=Decimal("150.00")
+            price=Decimal("150.00"),
         )
         await uow.orders.add(order)
 
@@ -236,6 +240,7 @@ class TestGetOrderQuery:
 # TEST ORDER APPLICATION SERVICE
 # ============================================================================
 
+
 class TestOrderApplicationService:
     """Tests for OrderApplicationService."""
 
@@ -253,9 +258,8 @@ class TestOrderApplicationService:
                 portfolio_id="PORT123",
                 capital=Capital(amount=Decimal("100000"), currency="USD"),
                 risk_parameters=RiskParameters(
-                    max_position_size=Decimal("20000"),
-                    max_portfolio_exposure=Decimal("80000")
-                )
+                    max_position_size=Decimal("20000"), max_portfolio_exposure=Decimal("80000")
+                ),
             )
             await uow.portfolios.add(portfolio)
             uow.commit()
@@ -267,7 +271,7 @@ class TestOrderApplicationService:
             price=Decimal("150.00"),
             order_type="limit",
             side="buy",
-            portfolio_id="PORT123"
+            portfolio_id="PORT123",
         )
 
         order_id = await service.create_order(command)
@@ -286,7 +290,7 @@ class TestOrderApplicationService:
             price=Decimal("150.00"),
             order_type="limit",
             side="buy",
-            portfolio_id="NONEXISTENT"
+            portfolio_id="NONEXISTENT",
         )
 
         with pytest.raises(ValueError, match="Portfolio .* not found"):
@@ -306,7 +310,7 @@ class TestOrderApplicationService:
                 order_type=OrderType.LIMIT,
                 quantity=Decimal("100"),
                 price=Decimal("150.00"),
-                status=OrderStatus.VALIDATED
+                status=OrderStatus.VALIDATED,
             )
             await uow.orders.add(order)
             uow.commit()
@@ -344,7 +348,7 @@ class TestOrderApplicationService:
                 order_type=OrderType.LIMIT,
                 quantity=Decimal("100"),
                 price=Decimal("150.00"),
-                status=OrderStatus.ACKNOWLEDGED
+                status=OrderStatus.ACKNOWLEDGED,
             )
             await uow.orders.add(order)
             uow.commit()
@@ -371,7 +375,7 @@ class TestOrderApplicationService:
                 side=OrderSide.BUY,
                 order_type=OrderType.LIMIT,
                 quantity=Decimal("100"),
-                price=Decimal("150.00")
+                price=Decimal("150.00"),
             )
             await uow.orders.add(order)
             uow.commit()
@@ -388,6 +392,7 @@ class TestOrderApplicationService:
 # TEST PORTFOLIO APPLICATION SERVICE
 # ============================================================================
 
+
 class TestPortfolioApplicationService:
     """Tests for PortfolioApplicationService."""
 
@@ -397,9 +402,7 @@ class TestPortfolioApplicationService:
         service = PortfolioApplicationService(MockUnitOfWorkFactory())
 
         portfolio_id = await service.create_portfolio(
-            portfolio_id="PORT123",
-            initial_capital=Decimal("100000"),
-            currency="USD"
+            portfolio_id="PORT123", initial_capital=Decimal("100000"), currency="USD"
         )
 
         assert portfolio_id == "PORT123"
@@ -418,19 +421,15 @@ class TestPortfolioApplicationService:
                 portfolio_id="PORT123",
                 capital=Capital(amount=Decimal("100000"), currency="USD"),
                 risk_parameters=RiskParameters(
-                    max_position_size=Decimal("20000"),
-                    max_portfolio_exposure=Decimal("80000")
-                )
+                    max_position_size=Decimal("20000"), max_portfolio_exposure=Decimal("80000")
+                ),
             )
             await uow.portfolios.add(portfolio)
             uow.commit()
 
         # Add position
         await service.add_position(
-            portfolio_id="PORT123",
-            symbol="AAPL",
-            quantity=Decimal("100"),
-            price=Decimal("150.00")
+            portfolio_id="PORT123", symbol="AAPL", quantity=Decimal("100"), price=Decimal("150.00")
         )
 
         # Verify
@@ -452,15 +451,14 @@ class TestPortfolioApplicationService:
                 portfolio_id="PORT123",
                 capital=Capital(amount=Decimal("100000"), currency="USD"),
                 risk_parameters=RiskParameters(
-                    max_position_size=Decimal("20000"),
-                    max_portfolio_exposure=Decimal("80000")
-                )
+                    max_position_size=Decimal("20000"), max_portfolio_exposure=Decimal("80000")
+                ),
             )
             position = Portfolio.Position(
                 symbol="AAPL",
                 quantity=Decimal("100"),
                 avg_price=Decimal("150.00"),
-                current_price=Decimal("150.00")
+                current_price=Decimal("150.00"),
             )
             portfolio.positions["AAPL"] = position
             await uow.portfolios.add(portfolio)
@@ -468,8 +466,7 @@ class TestPortfolioApplicationService:
 
         # Update prices
         await service.update_position_prices(
-            portfolio_id="PORT123",
-            prices={"AAPL": Decimal("155.00")}
+            portfolio_id="PORT123", prices={"AAPL": Decimal("155.00")}
         )
 
         # Verify
@@ -482,6 +479,7 @@ class TestPortfolioApplicationService:
 # ============================================================================
 # TEST SERVICE ORCHESTRATOR
 # ============================================================================
+
 
 class TestServiceOrchestrator:
     """Tests for ServiceOrchestrator."""
@@ -516,9 +514,8 @@ class TestServiceOrchestrator:
                 portfolio_id="PORT123",
                 capital=Capital(amount=Decimal("100000"), currency="USD"),
                 risk_parameters=RiskParameters(
-                    max_position_size=Decimal("20000"),
-                    max_portfolio_exposure=Decimal("80000")
-                )
+                    max_position_size=Decimal("20000"), max_portfolio_exposure=Decimal("80000")
+                ),
             )
             await uow.portfolios.add(portfolio)
             uow.commit()
@@ -534,12 +531,11 @@ class TestServiceOrchestrator:
             price=Decimal("150.00"),
             order_type="limit",
             side="buy",
-            portfolio_id="PORT123"
+            portfolio_id="PORT123",
         )
 
         order_id = await orchestrator.execute_workflow(
-            "create_and_submit_order",
-            order_command=command
+            "create_and_submit_order", order_command=command
         )
 
         assert order_id is not None

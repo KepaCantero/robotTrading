@@ -32,7 +32,15 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
+import asyncio
 from sqlalchemy import extract, select
+from sqlalchemy.exc import (
+    DataError,
+    DatabaseError,
+    IntegrityError,
+    OperationalError,
+    ProgrammingError,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db_transaction

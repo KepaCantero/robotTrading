@@ -554,9 +554,7 @@ class TestBetSizingEdgeCases:
 
     def test_negative_probabilities_clipped(self):
         """Test handling of negative probabilities (shouldn't happen but test anyway)."""
-        bet_sizing = BetSizing(
-            config=BetSizingConfig(method="probability")
-        )
+        bet_sizing = BetSizing(config=BetSizingConfig(method="probability"))
 
         # This shouldn't happen in practice, but test robustness
         predictions = np.array([1, 1, 1])

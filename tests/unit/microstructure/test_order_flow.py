@@ -114,12 +114,14 @@ class TestOrderFlowAnalyzer:
     def test_estimate_order_flow_toxicity(self, analyzer):
         """Test toxicity estimation"""
         # Create sample trade data
-        trades_df = pd.DataFrame({
-            'timestamp': pd.date_range('2024-01-01', periods=100, freq='1s'),
-            'side': np.random.choice(['BUY', 'SELL'], 100),
-            'size': np.random.randint(100, 1000, 100),
-            'price': 100 + np.random.randn(100).cumsum() * 0.1,
-        })
+        trades_df = pd.DataFrame(
+            {
+                'timestamp': pd.date_range('2024-01-01', periods=100, freq='1s'),
+                'side': np.random.choice(['BUY', 'SELL'], 100),
+                'size': np.random.randint(100, 1000, 100),
+                'price': 100 + np.random.randn(100).cumsum() * 0.1,
+            }
+        )
 
         price_changes = pd.Series(np.random.randn(100) * 0.01)
 
@@ -165,13 +167,14 @@ class TestOrderFlowAnalyzer:
             for i in range(10)
         ]
 
-        price_history = pd.DataFrame({
-            'close': [100 + i * 0.1 for i in range(100)],
-        }, index=pd.date_range('2024-01-01', periods=100, freq='1s'))
-
-        detected, confidence, explanation = analyzer.detect_informed_trading(
-            orders, price_history
+        price_history = pd.DataFrame(
+            {
+                'close': [100 + i * 0.1 for i in range(100)],
+            },
+            index=pd.date_range('2024-01-01', periods=100, freq='1s'),
         )
+
+        detected, confidence, explanation = analyzer.detect_informed_trading(orders, price_history)
 
         # Should return valid results
         assert isinstance(detected, bool)
@@ -180,18 +183,18 @@ class TestOrderFlowAnalyzer:
 
     def test_measure_adverse_selection_cost(self, analyzer):
         """Test adverse selection cost measurement"""
-        executions = pd.DataFrame({
-            'timestamp': pd.date_range('2024-01-01', periods=50, freq='1s'),
-            'side': np.random.choice(['BUY', 'SELL'], 50),
-            'price': 100 + np.random.randn(50) * 0.5,
-            'size': np.random.randint(100, 1000, 50),
-        })
+        executions = pd.DataFrame(
+            {
+                'timestamp': pd.date_range('2024-01-01', periods=50, freq='1s'),
+                'side': np.random.choice(['BUY', 'SELL'], 50),
+                'price': 100 + np.random.randn(50) * 0.5,
+                'size': np.random.randint(100, 1000, 50),
+            }
+        )
 
         subsequent_prices = pd.Series(100 + np.random.randn(50) * 0.5)
 
-        cost_metrics = analyzer.measure_adverse_selection_cost(
-            executions, subsequent_prices
-        )
+        cost_metrics = analyzer.measure_adverse_selection_cost(executions, subsequent_prices)
 
         # Should return all required metrics
         assert 'avg_adverse_cost_bps' in cost_metrics
@@ -239,9 +242,12 @@ class TestOrderFlowAnalyzer:
 
     def test_generate_order_flow_report(self, analyzer, sample_orders):
         """Test comprehensive report generation"""
-        price_history = pd.DataFrame({
-            'close': [100 + i * 0.1 for i in range(100)],
-        }, index=pd.date_range('2024-01-01', periods=100, freq='1s'))
+        price_history = pd.DataFrame(
+            {
+                'close': [100 + i * 0.1 for i in range(100)],
+            },
+            index=pd.date_range('2024-01-01', periods=100, freq='1s'),
+        )
 
         report = analyzer.generate_order_flow_report(
             current_orders=sample_orders,
@@ -293,10 +299,7 @@ class TestOrderFlowSimulator:
             base_price=100.0,
         )
 
-        informed_count = sum(
-            1 for o in orders
-            if o.trader_type == TraderType.INFORMED
-        )
+        informed_count = sum(1 for o in orders if o.trader_type == TraderType.INFORMED)
 
         # Ratio should be close to target (allow 10% tolerance)
         actual_ratio = informed_count / len(orders)
@@ -337,20 +340,25 @@ class TestOrderFlowIntegration:
         now = datetime.now()
         orders = []
         for i in range(50):
-            orders.append(Order(
-                order_id=f"order_{i}",
-                timestamp=now + timedelta(milliseconds=i * 100),
-                side=OrderSide.BUY if i % 3 == 0 else OrderSide.SELL,
-                order_type=OrderType.MARKET if i % 2 == 0 else OrderType.LIMIT,
-                price=Decimal("100.00") if i % 2 != 0 else None,
-                size=Decimal(str(1000 + i * 50)),
-                trader_type=TraderType.INFORMED if i % 5 == 0 else TraderType.UNINFORMED,
-            ))
+            orders.append(
+                Order(
+                    order_id=f"order_{i}",
+                    timestamp=now + timedelta(milliseconds=i * 100),
+                    side=OrderSide.BUY if i % 3 == 0 else OrderSide.SELL,
+                    order_type=OrderType.MARKET if i % 2 == 0 else OrderType.LIMIT,
+                    price=Decimal("100.00") if i % 2 != 0 else None,
+                    size=Decimal(str(1000 + i * 50)),
+                    trader_type=TraderType.INFORMED if i % 5 == 0 else TraderType.UNINFORMED,
+                )
+            )
 
         # Create price history
-        price_history = pd.DataFrame({
-            'close': [100 + i * 0.05 + np.random.randn() * 0.1 for i in range(100)],
-        }, index=pd.date_range('2024-01-01', periods=100, freq='1s'))
+        price_history = pd.DataFrame(
+            {
+                'close': [100 + i * 0.05 + np.random.randn() * 0.1 for i in range(100)],
+            },
+            index=pd.date_range('2024-01-01', periods=100, freq='1s'),
+        )
 
         # Generate report
         report = analyzer.generate_order_flow_report(

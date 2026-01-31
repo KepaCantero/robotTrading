@@ -93,9 +93,7 @@ class TestBonferroniCorrector:
 
         # Should have fewer significant results after correction
         sig_uncorrected = sum(1 for p in sample_p_values if p < 0.05)
-        sig_corrected = sum(
-            1 for t in result.tests if t.is_significant_corrected
-        )
+        sig_corrected = sum(1 for t in result.tests if t.is_significant_corrected)
 
         assert sig_corrected <= sig_uncorrected
 
@@ -133,9 +131,7 @@ class TestBonferroniCorrector:
             },
         ]
 
-        result = corrector.test_parameter_combinations(
-            backtest_results, metric="sharpe_ratio"
-        )
+        result = corrector.test_parameter_combinations(backtest_results, metric="sharpe_ratio")
 
         assert isinstance(result, ParameterTestResult)
         assert result.num_parameters_tested == len(backtest_results)

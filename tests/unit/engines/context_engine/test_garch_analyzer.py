@@ -45,6 +45,7 @@ def low_volatility_returns():
 def analyzer():
     """Create a GARCHAnalyzer instance for testing."""
     from app.engines.context_engine.volatility_analyzers.garch_analyzer import GARCHAnalyzer
+
     return GARCHAnalyzer()
 
 
@@ -52,6 +53,7 @@ def analyzer():
 def egarch_analyzer():
     """Create a GARCHAnalyzer with EGARCH model."""
     from app.engines.context_engine.volatility_analyzers.garch_analyzer import GARCHAnalyzer
+
     return GARCHAnalyzer(config={'model_type': 'EGARCH'})
 
 
@@ -59,6 +61,7 @@ def egarch_analyzer():
 def gjr_garch_analyzer():
     """Create a GARCHAnalyzer with GJR-GARCH model."""
     from app.engines.context_engine.volatility_analyzers.garch_analyzer import GARCHAnalyzer
+
     return GARCHAnalyzer(config={'model_type': 'GJR-GARCH'})
 
 
@@ -83,12 +86,7 @@ class TestGARCHAnalyzerInit:
         """Test custom initialization parameters."""
         from app.engines.context_engine.volatility_analyzers.garch_analyzer import GARCHAnalyzer
 
-        config = {
-            'model_type': 'EGARCH',
-            'p': 2,
-            'q': 2,
-            'dist': 't'
-        }
+        config = {'model_type': 'EGARCH', 'p': 2, 'q': 2, 'dist': 't'}
         analyzer = GARCHAnalyzer(config=config)
 
         assert analyzer.model_type == 'EGARCH'
@@ -226,7 +224,7 @@ class TestPredictVolatility:
 
         mock_forecast = MagicMock()
         # Mock forecast for horizon 5
-        mock_forecast.variance.values = np.array([[0.0004 + i*0.0001] for i in range(5)])
+        mock_forecast.variance.values = np.array([[0.0004 + i * 0.0001] for i in range(5)])
         mock_fit_result.forecast.return_value = mock_forecast
 
         mock_model.fit.return_value = mock_fit_result
@@ -324,7 +322,9 @@ class TestDetectClustering:
         assert result['persistence'] < 0.9
 
     @patch('app.engines.context_engine.volatility_analyzers.garch_analyzer.arch_model')
-    def test_detect_clustering_confidence_calculation(self, mock_arch_model, analyzer, sample_returns):
+    def test_detect_clustering_confidence_calculation(
+        self, mock_arch_model, analyzer, sample_returns
+    ):
         """Test confidence calculation in clustering detection."""
         mock_model = MagicMock()
         mock_fit_result = MagicMock()
@@ -573,7 +573,9 @@ class TestModelParameters:
     """Test model parameter handling."""
 
     @patch('app.engines.context_engine.volatility_analyzers.garch_analyzer.arch_model')
-    def test_parameters_included_in_clustering_result(self, mock_arch_model, analyzer, sample_returns):
+    def test_parameters_included_in_clustering_result(
+        self, mock_arch_model, analyzer, sample_returns
+    ):
         """Test that parameters are included in clustering detection result."""
         mock_model = MagicMock()
         mock_fit_result = MagicMock()

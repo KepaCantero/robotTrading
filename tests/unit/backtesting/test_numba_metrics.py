@@ -11,6 +11,7 @@ import time
 
 try:
     from numba import jit
+
     NUMBA_AVAILABLE = True
 except ImportError:
     NUMBA_AVAILABLE = False
@@ -303,20 +304,22 @@ class TestDrawdownAnalysis:
     def test_calculate_max_drawdown_duration_numba(self):
         """Test maximum drawdown duration calculation."""
         # Create equity curve with clear drawdown period
-        equity_curve = np.array([
-            100,  # Start
-            110,  # Peak 1
-            105,  # Drawdown
-            108,
-            107,
-            115,  # New peak - end of drawdown
-            120,  # Peak 2
-            118,  # Drawdown
-            115,
-            112,  # Bottom
-            118,  # Recovery
-            122,  # New peak - end of drawdown
-        ])
+        equity_curve = np.array(
+            [
+                100,  # Start
+                110,  # Peak 1
+                105,  # Drawdown
+                108,
+                107,
+                115,  # New peak - end of drawdown
+                120,  # Peak 2
+                118,  # Drawdown
+                115,
+                112,  # Bottom
+                118,  # Recovery
+                122,  # New peak - end of drawdown
+            ]
+        )
 
         duration = calculate_max_drawdown_duration_numba(equity_curve)
 
@@ -447,10 +450,10 @@ class TestVolatilityMetrics:
         rolling_vol = calculate_rolling_volatility_numba(returns, window, 252)
 
         # First (window-1) values should be NaN
-        assert np.isnan(rolling_vol[:window - 1]).all()
+        assert np.isnan(rolling_vol[: window - 1]).all()
 
         # Rest should be non-NaN
-        assert not np.isnan(rolling_vol[window - 1:]).any()
+        assert not np.isnan(rolling_vol[window - 1 :]).any()
 
         # All values should be non-negative
         assert (rolling_vol[~np.isnan(rolling_vol)] >= 0).all()

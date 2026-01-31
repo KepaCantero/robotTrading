@@ -13,6 +13,23 @@ import multiprocessing
 from multiprocessing import Queue
 from typing import Any, Callable
 
+# SQLAlchemy exception types for database error handling
+try:
+    from sqlalchemy.exc import (
+        DatabaseError,
+        DataError,
+        IntegrityError,
+        OperationalError,
+        ProgrammingError,
+    )
+except ImportError:
+    # Fallback if SQLAlchemy is not available
+    DatabaseError = Exception
+    DataError = Exception
+    IntegrityError = Exception
+    OperationalError = Exception
+    ProgrammingError = Exception
+
 from tenacity import (
     before_sleep_log,
     retry,

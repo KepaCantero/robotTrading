@@ -96,3 +96,4 @@ logs/staging.log
 
 # ralphex progress logs
 progress*.txt
+.ralphex/execution.log

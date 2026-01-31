@@ -20,7 +20,7 @@ class TestCapitalCreation:
             tier=CapitalTier.MEDIUM,
             currency='USD',
             max_leverage=Decimal('2'),
-            max_positions=15
+            max_positions=15,
         )
 
         assert capital.amount == Decimal('100000')
@@ -32,54 +32,32 @@ class TestCapitalCreation:
     def test_create_capital_with_negative_amount_raises_error(self):
         """Test that negative amount raises ValueError."""
         with pytest.raises(ValueError, match="Capital amount must be positive"):
-            Capital(
-                amount=Decimal('-1000'),
-                tier=CapitalTier.MICRO
-            )
+            Capital(amount=Decimal('-1000'), tier=CapitalTier.MICRO)
 
     def test_create_capital_with_zero_amount_raises_error(self):
         """Test that zero amount raises ValueError."""
         with pytest.raises(ValueError, match="Capital amount must be positive"):
-            Capital(
-                amount=Decimal('0'),
-                tier=CapitalTier.MICRO
-            )
+            Capital(amount=Decimal('0'), tier=CapitalTier.MICRO)
 
     def test_create_capital_with_negative_leverage_raises_error(self):
         """Test that negative leverage raises ValueError."""
         with pytest.raises(ValueError, match="Max leverage must be positive"):
-            Capital(
-                amount=Decimal('10000'),
-                tier=CapitalTier.SMALL,
-                max_leverage=Decimal('-1')
-            )
+            Capital(amount=Decimal('10000'), tier=CapitalTier.SMALL, max_leverage=Decimal('-1'))
 
     def test_create_capital_with_zero_leverage_raises_error(self):
         """Test that zero leverage raises ValueError."""
         with pytest.raises(ValueError, match="Max leverage must be positive"):
-            Capital(
-                amount=Decimal('10000'),
-                tier=CapitalTier.SMALL,
-                max_leverage=Decimal('0')
-            )
+            Capital(amount=Decimal('10000'), tier=CapitalTier.SMALL, max_leverage=Decimal('0'))
 
     def test_create_capital_with_negative_max_positions_raises_error(self):
         """Test that negative max_positions raises ValueError."""
         with pytest.raises(ValueError, match="Max positions must be positive"):
-            Capital(
-                amount=Decimal('10000'),
-                tier=CapitalTier.SMALL,
-                max_positions=-5
-            )
+            Capital(amount=Decimal('10000'), tier=CapitalTier.SMALL, max_positions=-5)
 
     def test_create_capital_with_zero_max_positions_raises_error(self):
         """Test that zero max_positions raises ValueError."""
         with pytest.raises(ValueError, match="Max positions must be positive"):
-            Capital(
-                amount=Decimal('10000'),
-                tier=CapitalTier.SMALL,
-                max_positions=0
-            )
+            Capital(amount=Decimal('10000'), tier=CapitalTier.SMALL, max_positions=0)
 
 
 @pytest.mark.unit
@@ -88,26 +66,15 @@ class TestCapitalImmutability:
 
     def test_capital_is_frozen(self):
         """Test that Capital dataclass is frozen (immutable)."""
-        capital = Capital(
-            amount=Decimal('100000'),
-            tier=CapitalTier.MEDIUM
-        )
+        capital = Capital(amount=Decimal('100000'), tier=CapitalTier.MEDIUM)
 
         with pytest.raises(Exception):  # FrozenInstanceError
             capital.amount = Decimal('200000')
 
     def test_capital_hash_is_consistent(self):
         """Test that Capital hash is consistent for same values."""
-        capital1 = Capital(
-            amount=Decimal('100000'),
-            tier=CapitalTier.MEDIUM,
-            currency='USD'
-        )
-        capital2 = Capital(
-            amount=Decimal('100000'),
-            tier=CapitalTier.MEDIUM,
-            currency='USD'
-        )
+        capital1 = Capital(amount=Decimal('100000'), tier=CapitalTier.MEDIUM, currency='USD')
+        capital2 = Capital(amount=Decimal('100000'), tier=CapitalTier.MEDIUM, currency='USD')
 
         assert hash(capital1) == hash(capital2)
 
@@ -118,20 +85,13 @@ class TestCapitalMethods:
 
     def test_get_tier(self):
         """Test get_tier method."""
-        capital = Capital(
-            amount=Decimal('100000'),
-            tier=CapitalTier.LARGE
-        )
+        capital = Capital(amount=Decimal('100000'), tier=CapitalTier.LARGE)
 
         assert capital.get_tier() == CapitalTier.LARGE
 
     def test_get_amount_returns_money(self):
         """Test get_amount returns Money value object."""
-        capital = Capital(
-            amount=Decimal('100000'),
-            tier=CapitalTier.MEDIUM,
-            currency='USD'
-        )
+        capital = Capital(amount=Decimal('100000'), tier=CapitalTier.MEDIUM, currency='USD')
 
         money = capital.get_amount()
 
@@ -141,9 +101,7 @@ class TestCapitalMethods:
     def test_get_max_exposure_without_leverage(self):
         """Test get_max_exposure without leverage."""
         capital = Capital(
-            amount=Decimal('100000'),
-            tier=CapitalTier.MEDIUM,
-            max_leverage=Decimal('1')
+            amount=Decimal('100000'), tier=CapitalTier.MEDIUM, max_leverage=Decimal('1')
         )
 
         max_exposure = capital.get_max_exposure()
@@ -153,9 +111,7 @@ class TestCapitalMethods:
     def test_get_max_exposure_with_leverage(self):
         """Test get_max_exposure with leverage."""
         capital = Capital(
-            amount=Decimal('100000'),
-            tier=CapitalTier.MEDIUM,
-            max_leverage=Decimal('2')
+            amount=Decimal('100000'), tier=CapitalTier.MEDIUM, max_leverage=Decimal('2')
         )
 
         max_exposure = capital.get_max_exposure()
@@ -165,9 +121,7 @@ class TestCapitalMethods:
     def test_get_max_exposure_with_fractional_leverage(self):
         """Test get_max_exposure with fractional leverage."""
         capital = Capital(
-            amount=Decimal('100000'),
-            tier=CapitalTier.SMALL,
-            max_leverage=Decimal('1.5')
+            amount=Decimal('100000'), tier=CapitalTier.SMALL, max_leverage=Decimal('1.5')
         )
 
         max_exposure = capital.get_max_exposure()
@@ -176,32 +130,20 @@ class TestCapitalMethods:
 
     def test_can_add_position_when_under_limit(self):
         """Test can_add_position returns True when under limit."""
-        capital = Capital(
-            amount=Decimal('100000'),
-            tier=CapitalTier.MEDIUM,
-            max_positions=10
-        )
+        capital = Capital(amount=Decimal('100000'), tier=CapitalTier.MEDIUM, max_positions=10)
 
         assert capital.can_add_position(current_positions=5) is True
         assert capital.can_add_position(current_positions=9) is True
 
     def test_can_add_position_when_at_limit(self):
         """Test can_add_position returns False when at limit."""
-        capital = Capital(
-            amount=Decimal('100000'),
-            tier=CapitalTier.MEDIUM,
-            max_positions=10
-        )
+        capital = Capital(amount=Decimal('100000'), tier=CapitalTier.MEDIUM, max_positions=10)
 
         assert capital.can_add_position(current_positions=10) is False
 
     def test_can_add_position_when_over_limit(self):
         """Test can_add_position returns False when over limit."""
-        capital = Capital(
-            amount=Decimal('100000'),
-            tier=CapitalTier.MEDIUM,
-            max_positions=10
-        )
+        capital = Capital(amount=Decimal('100000'), tier=CapitalTier.MEDIUM, max_positions=10)
 
         assert capital.can_add_position(current_positions=15) is False
 
@@ -210,7 +152,7 @@ class TestCapitalMethods:
         capital = Capital(
             amount=Decimal('100000'),
             tier=CapitalTier.MEDIUM,
-            enabled_strategies=['momentum', 'mean_reversion', 'pairs']
+            enabled_strategies=['momentum', 'mean_reversion', 'pairs'],
         )
 
         assert capital.is_strategy_enabled('momentum') is True
@@ -221,18 +163,14 @@ class TestCapitalMethods:
         capital = Capital(
             amount=Decimal('100000'),
             tier=CapitalTier.MEDIUM,
-            enabled_strategies=['momentum', 'mean_reversion']
+            enabled_strategies=['momentum', 'mean_reversion'],
         )
 
         assert capital.is_strategy_enabled('arbitrage') is False
 
     def test_is_strategy_enabled_with_empty_list(self):
         """Test is_strategy_enabled returns False with empty strategy list."""
-        capital = Capital(
-            amount=Decimal('100000'),
-            tier=CapitalTier.MEDIUM,
-            enabled_strategies=[]
-        )
+        capital = Capital(amount=Decimal('100000'), tier=CapitalTier.MEDIUM, enabled_strategies=[])
 
         assert capital.is_strategy_enabled('momentum') is False
 
@@ -358,62 +296,65 @@ class TestCapitalTierEnum:
 class TestCapitalPropertyBased:
     """Property-based tests for Capital operations."""
 
-    @pytest.mark.parametrize("amount,leverage,expected", [
-        (Decimal('100000'), Decimal('1'), Decimal('100000')),
-        (Decimal('100000'), Decimal('2'), Decimal('200000')),
-        (Decimal('100000'), Decimal('1.5'), Decimal('150000')),
-        (Decimal('50000'), Decimal('3'), Decimal('150000')),
-        (Decimal('1000000'), Decimal('2.5'), Decimal('2500000')),
-    ])
+    @pytest.mark.parametrize(
+        "amount,leverage,expected",
+        [
+            (Decimal('100000'), Decimal('1'), Decimal('100000')),
+            (Decimal('100000'), Decimal('2'), Decimal('200000')),
+            (Decimal('100000'), Decimal('1.5'), Decimal('150000')),
+            (Decimal('50000'), Decimal('3'), Decimal('150000')),
+            (Decimal('1000000'), Decimal('2.5'), Decimal('2500000')),
+        ],
+    )
     def test_max_exposure_calculation(self, amount, leverage, expected):
         """Test max exposure calculation with various inputs."""
-        capital = Capital(
-            amount=amount,
-            tier=CapitalTier.MEDIUM,
-            max_leverage=leverage
-        )
+        capital = Capital(amount=amount, tier=CapitalTier.MEDIUM, max_leverage=leverage)
 
         result = capital.get_max_exposure()
 
         assert result == expected
 
-    @pytest.mark.parametrize("max_positions,current_positions,expected", [
-        (5, 0, True),
-        (5, 4, True),
-        (5, 5, False),
-        (5, 6, False),
-        (10, 9, True),
-        (10, 10, False),
-        (10, 15, False),
-    ])
+    @pytest.mark.parametrize(
+        "max_positions,current_positions,expected",
+        [
+            (5, 0, True),
+            (5, 4, True),
+            (5, 5, False),
+            (5, 6, False),
+            (10, 9, True),
+            (10, 10, False),
+            (10, 15, False),
+        ],
+    )
     def test_can_add_position_various_scenarios(self, max_positions, current_positions, expected):
         """Test can_add_position with various scenarios."""
         capital = Capital(
-            amount=Decimal('100000'),
-            tier=CapitalTier.MEDIUM,
-            max_positions=max_positions
+            amount=Decimal('100000'), tier=CapitalTier.MEDIUM, max_positions=max_positions
         )
 
         result = capital.can_add_position(current_positions)
 
         assert result is expected
 
-    @pytest.mark.parametrize("amount,expected_tier", [
-        (Decimal('1000'), CapitalTier.MICRO),
-        (Decimal('10000'), CapitalTier.MICRO),
-        (Decimal('14999'), CapitalTier.MICRO),
-        (Decimal('15000'), CapitalTier.SMALL),
-        (Decimal('30000'), CapitalTier.SMALL),
-        (Decimal('49999'), CapitalTier.SMALL),
-        (Decimal('50000'), CapitalTier.MEDIUM),
-        (Decimal('100000'), CapitalTier.MEDIUM),
-        (Decimal('249999'), CapitalTier.MEDIUM),
-        (Decimal('250000'), CapitalTier.LARGE),
-        (Decimal('500000'), CapitalTier.LARGE),
-        (Decimal('999999'), CapitalTier.LARGE),
-        (Decimal('1000000'), CapitalTier.INSTITUTIONAL),
-        (Decimal('5000000'), CapitalTier.INSTITUTIONAL),
-    ])
+    @pytest.mark.parametrize(
+        "amount,expected_tier",
+        [
+            (Decimal('1000'), CapitalTier.MICRO),
+            (Decimal('10000'), CapitalTier.MICRO),
+            (Decimal('14999'), CapitalTier.MICRO),
+            (Decimal('15000'), CapitalTier.SMALL),
+            (Decimal('30000'), CapitalTier.SMALL),
+            (Decimal('49999'), CapitalTier.SMALL),
+            (Decimal('50000'), CapitalTier.MEDIUM),
+            (Decimal('100000'), CapitalTier.MEDIUM),
+            (Decimal('249999'), CapitalTier.MEDIUM),
+            (Decimal('250000'), CapitalTier.LARGE),
+            (Decimal('500000'), CapitalTier.LARGE),
+            (Decimal('999999'), CapitalTier.LARGE),
+            (Decimal('1000000'), CapitalTier.INSTITUTIONAL),
+            (Decimal('5000000'), CapitalTier.INSTITUTIONAL),
+        ],
+    )
     def test_from_amount_tier_classification(self, amount, expected_tier):
         """Test tier classification for various amounts."""
         capital = Capital.from_amount(amount)

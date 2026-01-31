@@ -181,12 +181,10 @@ class CrossSectionalMomentum:
         """
         # Filter assets with signals
         long_assets = [
-            (s, a) for s, a in momentum_assets.items()
-            if a.signal == MomentumSignal.LONG
+            (s, a) for s, a in momentum_assets.items() if a.signal == MomentumSignal.LONG
         ]
         short_assets = [
-            (s, a) for s, a in momentum_assets.items()
-            if a.signal == MomentumSignal.SHORT
+            (s, a) for s, a in momentum_assets.items() if a.signal == MomentumSignal.SHORT
         ]
 
         # Apply minimum/maximum asset constraints
@@ -241,11 +239,14 @@ class CrossSectionalMomentum:
             True if rebalancing is needed
         """
         if self._rebalance_frequency == "monthly":
-            return (current_date.year > last_rebalance.year or
-                    current_date.month > last_rebalance.month)
+            return (
+                current_date.year > last_rebalance.year or current_date.month > last_rebalance.month
+            )
         elif self._rebalance_frequency == "quarterly":
-            return (current_date.year > last_rebalance.year or
-                    (current_date.month - 1) // 3 > (last_rebalance.month - 1) // 3)
+            return (
+                current_date.year > last_rebalance.year
+                or (current_date.month - 1) // 3 > (last_rebalance.month - 1) // 3
+            )
         else:  # annual
             return current_date.year > last_rebalance.year
 

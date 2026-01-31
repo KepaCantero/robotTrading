@@ -313,7 +313,9 @@ class TestReinforcementLearningLearner:
         # All weights should be positive
         assert all(w > 0 for w in weights.values())
 
-    def test_learn_weights_with_market_context(self, learner, sample_performance, sample_market_context):
+    def test_learn_weights_with_market_context(
+        self, learner, sample_performance, sample_market_context
+    ):
         """Test learning with market context."""
         weights = learner.learn_weights(sample_performance, sample_market_context)
 
@@ -524,7 +526,9 @@ class TestEnsembleMetaLearner:
         performance = {'strategy_a': {'return': 0.1}}
 
         # Mock one learner to fail
-        with patch.object(ensemble.learners[0], 'learn_weights', side_effect=Exception("Test error")):
+        with patch.object(
+            ensemble.learners[0], 'learn_weights', side_effect=Exception("Test error")
+        ):
             # Should not raise exception
             weights = ensemble.learn_weights(performance)
 

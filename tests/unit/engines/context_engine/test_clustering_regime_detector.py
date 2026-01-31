@@ -27,14 +27,20 @@ def sample_prices() -> List[float]:
 @pytest.fixture
 def detector():
     """Create a ClusteringRegimeDetector instance for testing."""
-    from app.engines.context_engine.regime_detectors.clustering_regime_detector import ClusteringRegimeDetector
+    from app.engines.context_engine.regime_detectors.clustering_regime_detector import (
+        ClusteringRegimeDetector,
+    )
+
     return ClusteringRegimeDetector(config={'n_clusters': 3, 'method': 'kmeans'})
 
 
 @pytest.fixture
 def dbscan_detector():
     """Create a ClusteringRegimeDetector with DBSCAN for testing."""
-    from app.engines.context_engine.regime_detectors.clustering_regime_detector import ClusteringRegimeDetector
+    from app.engines.context_engine.regime_detectors.clustering_regime_detector import (
+        ClusteringRegimeDetector,
+    )
+
     return ClusteringRegimeDetector(config={'method': 'dbscan', 'min_samples': 10})
 
 
@@ -44,7 +50,9 @@ class TestClusteringRegimeDetectorInit:
 
     def test_default_initialization(self):
         """Test default initialization parameters."""
-        from app.engines.context_engine.regime_detectors.clustering_regime_detector import ClusteringRegimeDetector
+        from app.engines.context_engine.regime_detectors.clustering_regime_detector import (
+            ClusteringRegimeDetector,
+        )
 
         detector = ClusteringRegimeDetector()
 
@@ -57,7 +65,9 @@ class TestClusteringRegimeDetectorInit:
 
     def test_custom_initialization(self):
         """Test custom initialization parameters."""
-        from app.engines.context_engine.regime_detectors.clustering_regime_detector import ClusteringRegimeDetector
+        from app.engines.context_engine.regime_detectors.clustering_regime_detector import (
+            ClusteringRegimeDetector,
+        )
 
         config = {
             'method': 'dbscan',
@@ -65,7 +75,7 @@ class TestClusteringRegimeDetectorInit:
             'window_size': 50,
             'min_samples': 20,
             'use_pca': True,
-            'n_components_pca': 3
+            'n_components_pca': 3,
         }
         detector = ClusteringRegimeDetector(config=config)
 
@@ -78,17 +88,27 @@ class TestClusteringRegimeDetectorInit:
 
     def test_regime_labels_three_clusters(self):
         """Test regime labels for 3 clusters."""
-        from app.engines.context_engine.regime_detectors.clustering_regime_detector import ClusteringRegimeDetector
+        from app.engines.context_engine.regime_detectors.clustering_regime_detector import (
+            ClusteringRegimeDetector,
+        )
 
         detector = ClusteringRegimeDetector(config={'n_clusters': 3})
         assert detector.regime_labels == ['bear', 'sideways', 'bull']
 
     def test_regime_labels_custom_clusters(self):
         """Test regime labels for custom number of clusters."""
-        from app.engines.context_engine.regime_detectors.clustering_regime_detector import ClusteringRegimeDetector
+        from app.engines.context_engine.regime_detectors.clustering_regime_detector import (
+            ClusteringRegimeDetector,
+        )
 
         detector = ClusteringRegimeDetector(config={'n_clusters': 5})
-        assert detector.regime_labels == ['regime_0', 'regime_1', 'regime_2', 'regime_3', 'regime_4']
+        assert detector.regime_labels == [
+            'regime_0',
+            'regime_1',
+            'regime_2',
+            'regime_3',
+            'regime_4',
+        ]
 
 
 @pytest.mark.unit
@@ -178,7 +198,9 @@ class TestFit:
     @patch('app.engines.context_engine.regime_detectors.clustering_regime_detector.KMeans')
     def test_fit_with_pca(self, mock_kmeans, sample_prices):
         """Test fitting with PCA enabled."""
-        from app.engines.context_engine.regime_detectors.clustering_regime_detector import ClusteringRegimeDetector
+        from app.engines.context_engine.regime_detectors.clustering_regime_detector import (
+            ClusteringRegimeDetector,
+        )
 
         detector = ClusteringRegimeDetector(config={'use_pca': True, 'n_components_pca': 2})
         mock_model = MagicMock()
@@ -191,7 +213,9 @@ class TestFit:
 
     def test_fit_unknown_method(self, sample_prices):
         """Test fitting with unknown method."""
-        from app.engines.context_engine.regime_detectors.clustering_regime_detector import ClusteringRegimeDetector
+        from app.engines.context_engine.regime_detectors.clustering_regime_detector import (
+            ClusteringRegimeDetector,
+        )
 
         detector = ClusteringRegimeDetector(config={'method': 'unknown_method'})
 
@@ -323,7 +347,9 @@ class TestPropertyBasedTests:
     @pytest.mark.parametrize("n_clusters", [2, 3, 4, 5, 10])
     def test_different_n_clusters(self, n_clusters, sample_prices):
         """Test with different numbers of clusters."""
-        from app.engines.context_engine.regime_detectors.clustering_regime_detector import ClusteringRegimeDetector
+        from app.engines.context_engine.regime_detectors.clustering_regime_detector import (
+            ClusteringRegimeDetector,
+        )
 
         config = {'n_clusters': n_clusters, 'method': 'kmeans'}
         detector = ClusteringRegimeDetector(config=config)
@@ -333,7 +359,9 @@ class TestPropertyBasedTests:
     @pytest.mark.parametrize("window_size", [20, 50, 100, 200])
     def test_different_window_sizes(self, window_size, sample_prices):
         """Test with different window sizes."""
-        from app.engines.context_engine.regime_detectors.clustering_regime_detector import ClusteringRegimeDetector
+        from app.engines.context_engine.regime_detectors.clustering_regime_detector import (
+            ClusteringRegimeDetector,
+        )
 
         config = {'window_size': window_size, 'min_samples': 10}
         detector = ClusteringRegimeDetector(config=config)
@@ -343,7 +371,9 @@ class TestPropertyBasedTests:
     @pytest.mark.parametrize("method", ['kmeans', 'dbscan'])
     def test_different_methods(self, method, sample_prices):
         """Test with different clustering methods."""
-        from app.engines.context_engine.regime_detectors.clustering_regime_detector import ClusteringRegimeDetector
+        from app.engines.context_engine.regime_detectors.clustering_regime_detector import (
+            ClusteringRegimeDetector,
+        )
 
         config = {'method': method, 'min_samples': 10}
         detector = ClusteringRegimeDetector(config=config)
@@ -358,7 +388,9 @@ class TestIntegration:
     @patch('app.engines.context_engine.regime_detectors.clustering_regime_detector.KMeans')
     def test_full_workflow(self, mock_kmeans, sample_prices):
         """Test complete workflow: initialize, fit, detect."""
-        from app.engines.context_engine.regime_detectors.clustering_regime_detector import ClusteringRegimeDetector
+        from app.engines.context_engine.regime_detectors.clustering_regime_detector import (
+            ClusteringRegimeDetector,
+        )
 
         mock_model = MagicMock()
         mock_model.predict.return_value = np.array([2])  # Bull regime
@@ -381,7 +413,9 @@ class TestIntegration:
     @patch('app.engines.context_engine.regime_detectors.clustering_regime_detector.StandardScaler')
     def test_scaler_integration(self, mock_scaler, mock_kmeans, sample_prices):
         """Test that scaler is properly integrated."""
-        from app.engines.context_engine.regime_detectors.clustering_regime_detector import ClusteringRegimeDetector
+        from app.engines.context_engine.regime_detectors.clustering_regime_detector import (
+            ClusteringRegimeDetector,
+        )
 
         mock_model = MagicMock()
         mock_model.predict.return_value = np.array([1])
