@@ -473,8 +473,9 @@ class MarketImpactModel:
         # numerical methods since we have both X and sqrt(X) terms
 
         max_impact_decimal = max_impact_bps / Decimal("10000")
-        # Use sqrt for volatility as per Almgren-Chriss model (volatility_exponent = 0.5 means square root)
-        daily_vol = volatility ** self.ac_config.volatility_exponent if volatility > 0 else Decimal("0")
+        # Convert annual volatility to daily volatility using the standard formula
+        # daily_vol = annual_vol / sqrt(252) for 252 trading days per year
+        daily_vol = volatility * self.ANNUAL_TO_DAILY_VOL_FACTOR if volatility > 0 else Decimal("0")
 
         # Approximate: ignore permanent impact for initial estimate
         # max_impact ≈ η * σ * sqrt(X)

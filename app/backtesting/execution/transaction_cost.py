@@ -329,15 +329,19 @@ class TransactionCostCalculator:
             if remaining_shares <= 0:
                 break
 
-            if shares >= tier.min_shares:
-                # Calculate shares in this tier
-                max_in_tier = min(tier.max_shares, shares) if tier.max_shares else shares
-                shares_in_tier = min(remaining_shares, max_in_tier - tier.min_shares + 1)
+            # Calculate shares that fall into this tier
+            # The tier range is [tier.min_shares, tier.max_shares]
+            # We need to find how many of remaining_shares fall into this range
+            if tier.max_shares is not None:
+                shares_this_tier = min(remaining_shares, tier.max_shares - tier.min_shares + 1)
+            else:
+                # Last tier with no max
+                shares_this_tier = remaining_shares
 
-                tier_commission = Decimal(str(shares_in_tier)) * tier.rate
+            if shares_this_tier > 0:
+                tier_commission = Decimal(str(shares_this_tier)) * tier.rate
                 commission += max(tier_commission, tier.min_commission)
-
-                remaining_shares -= shares_in_tier
+                remaining_shares -= shares_this_tier
 
         return commission
 
