@@ -338,19 +338,20 @@ class SlippageModel:
 
         Args:
             volatility: Historical volatility (decimal, e.g., 0.20 for 20%)
-            vix: VIX index value (preferred)
+            vix: VIX index value (preferred, in range 10-80)
 
         Returns:
             Volatility multiplier (1.0 = normal, 2.0 = double slippage)
         """
         # Use VIX if available, otherwise use historical volatility
-        vol_measure = vix if vix is not None else volatility
-
-        if vol_measure is None:
+        # VIX is in range 10-80 (e.g., 20, 30, 50), while historical volatility is decimal (e.g., 0.20, 0.30, 0.50)
+        # Normalize historical volatility to VIX scale by multiplying by 100
+        if vix is not None:
+            vol_measure = vix
+        elif volatility is not None:
+            vol_measure = volatility * Decimal("100")  # Convert 0.20 -> 20 for VIX scale comparison
+        else:
             return Decimal("1.0")
-
-        # Note: Both VIX and historical volatility are in the same scale (percentage as decimal)
-        # e.g., 0.20 = 20% annualized volatility. No scaling needed.
 
         if vol_measure <= self.VIX_LOW_VOLATILITY:
             # Low volatility: normal slippage

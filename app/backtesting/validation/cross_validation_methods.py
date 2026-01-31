@@ -515,10 +515,11 @@ class NestedCrossValidation:
 
         # Find most frequently selected params
         from collections import Counter
+        import ast
 
         param_counts = Counter([str(p) for p in selected_params])
         best_params_str = param_counts.most_common(1)[0][0]
-        best_params = eval(best_params_str)
+        best_params = ast.literal_eval(best_params_str)
 
         result = NestedCVResult(
             timestamp=datetime.now(),

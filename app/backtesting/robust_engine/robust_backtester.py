@@ -229,6 +229,7 @@ class RobustBacktester:
         # State
         self._capital: Decimal = config.initial_capital
         self._positions: Dict[str, Decimal] = {}
+        self._cost_basis: Dict[str, Decimal] = {}  # Track cost basis per symbol for P&L calculation
         self._trades: List[Dict[str, Any]] = []
         self._current_date: Optional[date] = config.start_date
 
@@ -512,6 +513,13 @@ class RobustBacktester:
         self._capital -= Decimal(str(actual_cost))
         self._positions[symbol] = self._positions.get(symbol, Decimal("0")) + Decimal(str(shares))
 
+        # Track cost basis for P&L calculation (use average cost basis)
+        current_cost_basis = self._cost_basis.get(symbol, Decimal("0"))
+        current_shares = self._positions.get(symbol, Decimal("0")) - Decimal(str(shares))
+        new_shares = Decimal(str(shares))
+        total_cost = current_cost_basis * current_shares + Decimal(str(shares * price))
+        self._cost_basis[symbol] = total_cost / (current_shares + new_shares) if (current_shares + new_shares) > 0 else Decimal(str(price))
+
         # Record trade
         self._trades.append(
             {
@@ -549,8 +557,11 @@ class RobustBacktester:
         self._capital += Decimal(str(proceeds))
         self._positions[symbol] = Decimal("0")  # Clear entire position including fractional shares
 
-        # Calculate P&L (this is simplified - in reality you'd track cost basis)
-        pnl = proceeds - (float(shares_to_sell) * price)  # Simplified
+        # Calculate P&L using stored cost basis
+        cost_basis = self._cost_basis.get(symbol, Decimal(str(price)))
+        pnl = proceeds - (float(shares_to_sell) * float(cost_basis))
+        # Clear cost basis for this symbol
+        self._cost_basis[symbol] = Decimal("0")
 
         # Update trade
         self._trades.append(
