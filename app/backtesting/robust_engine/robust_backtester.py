@@ -466,11 +466,13 @@ class RobustBacktester:
                 else str(signal.signal_type).lower()
             )
             symbol = signal.symbol
-            price = (
-                float(signal.price)
+            # Use Decimal for price to maintain precision
+            price_input = (
+                signal.price
                 if hasattr(signal, 'price')
-                else float(market_data.get('close', 0))
+                else market_data.get('close', Decimal("0"))
             )
+            price = Decimal(str(price_input)) if not isinstance(price_input, Decimal) else price_input
         except (AttributeError, KeyError, ValueError) as e:
             logger.warning(f"Could not process signal: {e}")
             return
@@ -483,7 +485,7 @@ class RobustBacktester:
     def _execute_buy(
         self,
         symbol: str,
-        price: float,
+        price: Decimal,
         signal: Any,
     ) -> None:
         """Execute a buy order."""
@@ -493,32 +495,32 @@ class RobustBacktester:
 
         # Calculate position size (simplified)
         position_value = self._capital * Decimal("0.1")  # 10% of capital
-        shares = int(position_value / Decimal(str(price)))
+        shares = int(position_value / price)
 
         if shares <= 0:
             return
 
-        # Calculate commission
-        commission = float(self.config.commission_per_trade)
+        # Calculate commission - use Decimal for precision
+        commission = self.config.commission_per_trade
 
-        # Execute trade
-        total_cost = shares * price + commission
-        if total_cost > float(self._capital):
-            shares = int((float(self._capital) - commission) / price)
+        # Execute trade - all Decimal arithmetic
+        total_cost = Decimal(str(shares)) * price + commission
+        if total_cost > self._capital:
+            shares = int((self._capital - commission) / price)
 
         if shares <= 0:
             return
 
-        actual_cost = shares * price + commission
-        self._capital -= Decimal(str(actual_cost))
+        actual_cost = Decimal(str(shares)) * price + commission
+        self._capital -= actual_cost
         self._positions[symbol] = self._positions.get(symbol, Decimal("0")) + Decimal(str(shares))
 
         # Track cost basis for P&L calculation (use average cost basis)
         current_cost_basis = self._cost_basis.get(symbol, Decimal("0"))
         current_shares = self._positions.get(symbol, Decimal("0")) - Decimal(str(shares))
         new_shares = Decimal(str(shares))
-        total_cost = current_cost_basis * current_shares + Decimal(str(shares * price))
-        self._cost_basis[symbol] = total_cost / (current_shares + new_shares) if (current_shares + new_shares) > 0 else Decimal(str(price))
+        total_cost = current_cost_basis * current_shares + Decimal(str(shares)) * price
+        self._cost_basis[symbol] = total_cost / (current_shares + new_shares) if (current_shares + new_shares) > 0 else price
 
         # Record trade
         self._trades.append(
@@ -526,8 +528,8 @@ class RobustBacktester:
                 "symbol": symbol,
                 "side": "buy",
                 "shares": shares,
-                "price": price,
-                "commission": commission,
+                "price": float(price),  # Convert to float for JSON serialization
+                "commission": float(commission),
                 "date": self._current_date,
                 "timestamp": datetime.combine(self._current_date, datetime.min.time()),
             }
@@ -536,7 +538,7 @@ class RobustBacktester:
     def _execute_sell(
         self,
         symbol: str,
-        price: float,
+        price: Decimal,
         signal: Any,
     ) -> None:
         """Execute a sell order."""
@@ -551,15 +553,16 @@ class RobustBacktester:
 
         # Use Decimal to preserve fractional shares
         shares_to_sell = current_shares
-        commission = float(self.config.commission_per_trade)
+        commission = self.config.commission_per_trade
 
-        proceeds = float(shares_to_sell) * price - commission
-        self._capital += Decimal(str(proceeds))
+        # Calculate proceeds using Decimal arithmetic
+        proceeds = shares_to_sell * price - commission
+        self._capital += proceeds
         self._positions[symbol] = Decimal("0")  # Clear entire position including fractional shares
 
-        # Calculate P&L using stored cost basis
-        cost_basis = self._cost_basis.get(symbol, Decimal(str(price)))
-        pnl = proceeds - (float(shares_to_sell) * float(cost_basis))
+        # Calculate P&L using stored cost basis (Decimal arithmetic)
+        cost_basis = self._cost_basis.get(symbol, price)
+        pnl = proceeds - shares_to_sell * cost_basis
         # Clear cost basis for this symbol
         self._cost_basis[symbol] = Decimal("0")
 
@@ -569,9 +572,9 @@ class RobustBacktester:
                 "symbol": symbol,
                 "side": "sell",
                 "shares": float(shares_to_sell),
-                "price": price,
-                "commission": commission,
-                "pnl": pnl,
+                "price": float(price),
+                "commission": float(commission),
+                "pnl": float(pnl),
                 "date": self._current_date,
                 "timestamp": datetime.combine(self._current_date, datetime.min.time()),
             }

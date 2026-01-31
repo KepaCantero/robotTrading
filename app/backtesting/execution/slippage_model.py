@@ -576,6 +576,9 @@ class SlippageModel:
         if adv <= 0:
             return 0.5  # Unknown, assume 50%
 
+        if order_value <= 0:
+            return 0.5  # Invalid order value, assume 50%
+
         order_size_pct = float(order_value / adv)
 
         # Heuristic: fill probability decreases with order size
