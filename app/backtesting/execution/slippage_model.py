@@ -177,7 +177,6 @@ class SlippageEstimate:
         """Total impact in basis points."""
         return self.basis_points
 
-    @property
     def total_impact_dollars(self, shares: int) -> Decimal:
         """
         Calculate total slippage cost in dollars.
