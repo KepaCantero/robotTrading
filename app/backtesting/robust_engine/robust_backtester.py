@@ -393,10 +393,11 @@ class RobustBacktester:
 
             # Save checkpoint if needed
             if self.config.enable_checkpointing:
+                # Calculate days completed to determine if checkpoint is needed
+                # Checkpoint should be saved every checkpoint_frequency days
+                days_completed = chunk_idx * self.config.chunk_size_days
                 should_checkpoint = (
-                    chunk_idx
-                    % (self.config.checkpoint_frequency // self.config.chunk_size_days + 1)
-                    == 0
+                    days_completed % self.config.checkpoint_frequency == 0
                     or chunk_idx == total_chunks
                 )
 
@@ -540,22 +541,23 @@ class RobustBacktester:
         if current_shares <= 0:
             return
 
-        shares = int(current_shares)
+        # Use Decimal to preserve fractional shares
+        shares_to_sell = current_shares
         commission = float(self.config.commission_per_trade)
 
-        proceeds = shares * price - commission
+        proceeds = float(shares_to_sell) * price - commission
         self._capital += Decimal(str(proceeds))
-        self._positions[symbol] = current_shares - Decimal(str(shares))
+        self._positions[symbol] = Decimal("0")  # Clear entire position including fractional shares
 
         # Calculate P&L (this is simplified - in reality you'd track cost basis)
-        pnl = proceeds - (shares * price)  # Simplified
+        pnl = proceeds - (float(shares_to_sell) * price)  # Simplified
 
         # Update trade
         self._trades.append(
             {
                 "symbol": symbol,
                 "side": "sell",
-                "shares": shares,
+                "shares": float(shares_to_sell),
                 "price": price,
                 "commission": commission,
                 "pnl": pnl,

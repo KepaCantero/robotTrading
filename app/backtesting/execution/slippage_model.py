@@ -349,10 +349,8 @@ class SlippageModel:
         if vol_measure is None:
             return Decimal("1.0")
 
-        # Convert historical vol to VIX-like scale if needed
-        # Historical vol is typically annualized, similar to VIX
-        if volatility is not None and vix is None:
-            vol_measure = volatility * Decimal("100")  # Convert to VIX scale
+        # Note: Both VIX and historical volatility are in the same scale (percentage as decimal)
+        # e.g., 0.20 = 20% annualized volatility. No scaling needed.
 
         if vol_measure <= self.VIX_LOW_VOLATILITY:
             # Low volatility: normal slippage

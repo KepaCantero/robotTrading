@@ -237,7 +237,14 @@ class PITDatabaseClient:
         # Double-check: ensure no data on/after query_date
         # This is a critical safety check
         before_count = len(data)
-        data = data[data.index.date < query_date if hasattr(data.index, 'date') else data.index < query_date]
+        # Properly check for DatetimeIndex - isinstance check is more reliable than hasattr
+        # because .date is an accessor property on DatetimeIndex, not a direct attribute
+        if isinstance(data.index, pd.DatetimeIndex):
+            data = data[data.index.date < query_date]
+        elif hasattr(data.index, 'date'):
+            data = data[data.index.date < query_date]
+        else:
+            data = data[data.index < query_date]
         after_count = len(data)
 
         if before_count != after_count:
