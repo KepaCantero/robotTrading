@@ -49,7 +49,6 @@ from app.backtesting.validation.parameter_stability import (
     ParameterStabilityAnalyzer,
     calculate_parameter_stability,
     detect_parameter_drift_simple,
-    detect_redundant_parameters,
     filter_stable_parameters,
     rank_parameters_by_stability,
 )
