@@ -157,7 +157,12 @@ class TransactionCost:
         return self.commission + self.regulatory_fees
 
     def to_dict(self) -> Dict:
-        """Convert to dictionary for serialization."""
+        """
+        Convert to dictionary for serialization.
+
+        Returns:
+            Dictionary with all cost components as float values.
+        """
         return {
             "commission": float(self.commission),
             "sec_fee": float(self.sec_fee),

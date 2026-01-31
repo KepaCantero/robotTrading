@@ -366,9 +366,10 @@ class DividendAndSplitAdjuster:
             if not splits.empty and "date" in splits.columns:
                 splits = splits.sort_values("date")
 
-                for _, split in splits.iterrows():
-                    split_date = pd.to_datetime(split["date"])
-                    split_ratio = split["ratio"]
+                # Vectorized split adjustment
+                for i in range(len(splits)):
+                    split_date = pd.to_datetime(splits.iloc[i]["date"])
+                    split_ratio = splits.iloc[i]["ratio"]
 
                     # Find prices before this split
                     mask = adjusted_prices.index < split_date
@@ -376,15 +377,14 @@ class DividendAndSplitAdjuster:
 
             # Calculate total return index (including dividends)
             if not dividends.empty and "date" in dividends.columns:
-                # Create dividend series aligned to prices
+                # Create dividend series aligned to prices (vectorized)
+                div_dates = pd.to_datetime(dividends["date"])
+                div_amounts = dividends["amount"].values
+
+                # Create mapping for valid dates
+                valid_mask = div_dates.isin(adjusted_prices.index)
                 div_series = pd.Series(0.0, index=adjusted_prices.index)
-
-                for _, div in dividends.iterrows():
-                    div_date = pd.to_datetime(div["date"])
-                    div_amount = div["amount"]
-
-                    if div_date in div_series.index:
-                        div_series.loc[div_date] = div_amount
+                div_series.loc[div_dates[valid_mask]] = div_amounts[valid_mask]
 
                 # Calculate total return
                 price_returns = adjusted_prices.pct_change()
@@ -630,9 +630,10 @@ def create_bias_correction_pipeline(
         adjusted_data = raw_data.copy()
 
         if split_data is not None and not split_data.empty:
-            for _, split in split_data.iterrows():
-                split_date = pd.to_datetime(split["date"])
-                split_ratio = split["ratio"]
+            # Vectorized: iterate using iloc instead of iterrows
+            for i in range(len(split_data)):
+                split_date = pd.to_datetime(split_data.iloc[i]["date"])
+                split_ratio = split_data.iloc[i]["ratio"]
                 adjusted_data = adjuster.apply_stock_split(
                     adjusted_data,
                     split_date=split_date,

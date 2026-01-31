@@ -15,7 +15,7 @@ This provides more meaningful labels for ML that account for:
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -67,7 +67,7 @@ class TripleBarrierConfig:
     vol_scale: float = 1.5
     vol_window: int = 20
     numba_enabled: bool = True
-    metadata: Dict[str, any] = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
         """Validate configuration parameters."""

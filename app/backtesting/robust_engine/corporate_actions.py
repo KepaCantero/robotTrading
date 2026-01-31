@@ -598,41 +598,42 @@ class CorporateActionHandler:
 
             count = 0
 
-            for _, row in df.iterrows():
-                action_type = str(row["action_type"]).lower()
+            # Use itertuples instead of iterrows for better performance
+            for row in df.itertuples():
+                action_type = str(row.action_type).lower()
 
                 if action_type == "split":
                     self.add_split(
-                        symbol=str(row["symbol"]),
-                        split_ratio=Decimal(str(row["ratio"])),
-                        ex_date=row["ex_date"],
-                        declaration_date=row["declaration_date"],
+                        symbol=str(row.symbol),
+                        split_ratio=Decimal(str(row.ratio)),
+                        ex_date=row.ex_date,
+                        declaration_date=row.declaration_date,
                     )
                     count += 1
 
                 elif action_type in ("merger", "acquisition"):
                     # Handle optional cash column
                     cash_consideration = None
-                    if "cash" in df.columns and pd.notna(row.get("cash")):
-                        cash_consideration = Decimal(str(row["cash"]))
+                    if "cash" in df.columns and hasattr(row, "cash") and pd.notna(row.cash):
+                        cash_consideration = Decimal(str(row.cash))
 
                     self.add_merger(
-                        target=str(row["symbol"]),
-                        acquirer=str(row["target"]),
-                        exchange_ratio=Decimal(str(row["ratio"])),
-                        ex_date=row["ex_date"],
+                        target=str(row.symbol),
+                        acquirer=str(row.target),
+                        exchange_ratio=Decimal(str(row.ratio)),
+                        ex_date=row.ex_date,
                         cash_consideration=cash_consideration,
-                        declaration_date=row["declaration_date"],
+                        declaration_date=row.declaration_date,
                     )
                     count += 1
 
                 elif action_type == "spinoff":
                     self.add_spinoff(
-                        parent=str(row["symbol"]),
-                        spinoff=str(row["target"]),
-                        distribution_ratio=Decimal(str(row["ratio"])),
-                        ex_date=row["ex_date"],
-                        declaration_date=row["declaration_date"],
+                        parent=str(row.symbol),
+                        spinoff=str(row.target),
+                        distribution_ratio=Decimal(str(row.ratio)),
+                        ex_date=row.ex_date,
+                        declaration_date=row.declaration_date,
                     )
                     count += 1
 

@@ -353,15 +353,16 @@ class SurvivorshipBiasCorrector:
             df["delisting_date"] = pd.to_datetime(df["delisting_date"])
 
             delisting_list = []
-            for _, row in df.iterrows():
+            # Use itertuples instead of iterrows for better performance
+            for row in df.itertuples():
                 delisting_list.append(
                     DelistedStockInfo(
-                        symbol=row["symbol"],
-                        delisting_date=row["delisting_date"],
-                        delisting_reason=row["delisting_reason"],
-                        last_price=Decimal(str(row["last_price"])),
-                        recovery_rate=Decimal(str(row.get("recovery_rate", 0.1))),
-                        volatility_before_delisting=row.get("volatility", 0.5),
+                        symbol=row.symbol,
+                        delisting_date=row.delisting_date,
+                        delisting_reason=row.delisting_reason,
+                        last_price=Decimal(str(row.last_price)),
+                        recovery_rate=Decimal(str(getattr(row, "recovery_rate", 0.1))),
+                        volatility_before_delisting=getattr(row, "volatility", 0.5),
                     )
                 )
 
