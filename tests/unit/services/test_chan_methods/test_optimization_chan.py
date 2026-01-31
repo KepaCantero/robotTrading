@@ -31,7 +31,7 @@ class TestMeanVarianceOptimizer:
 
         returns = pd.DataFrame(
             np.random.normal(0.0005, 0.02, (n, n_assets)),
-            columns=[f'asset_{i}' for i in range(n_assets)]
+            columns=[f'asset_{i}' for i in range(n_assets)],
         )
 
         return returns
@@ -85,7 +85,7 @@ class TestMeanVarianceOptimizer:
                 'min_weight': 0.05,
                 'max_weight': 0.40,
                 'max_positions': 5,
-            }
+            },
         )
 
         assert all(result.weights >= 0.05 - 1e-4)
@@ -105,7 +105,7 @@ class TestRiskParityOptimizer:
 
         returns = pd.DataFrame(
             np.random.normal(0.0005, 0.02, (n, n_assets)),
-            columns=[f'asset_{i}' for i in range(n_assets)]
+            columns=[f'asset_{i}' for i in range(n_assets)],
         )
 
         return returns
@@ -142,7 +142,7 @@ class TestRiskParityOptimizer:
             weight_constraints={
                 'min_weight': 0.05,
                 'max_weight': 0.50,
-            }
+            },
         )
 
         assert all(result.weights >= 0.05 - 1e-4)
@@ -161,7 +161,7 @@ class TestHierarchicalRiskParityOptimizer:
 
         returns = pd.DataFrame(
             np.random.normal(0.0005, 0.02, (n, n_assets)),
-            columns=[f'asset_{i}' for i in range(n_assets)]
+            columns=[f'asset_{i}' for i in range(n_assets)],
         )
 
         return returns
@@ -207,7 +207,7 @@ class TestMaximumDiversificationOptimizer:
 
         returns = pd.DataFrame(
             np.random.normal(0.0005, 0.02, (n, n_assets)),
-            columns=[f'asset_{i}' for i in range(n_assets)]
+            columns=[f'asset_{i}' for i in range(n_assets)],
         )
 
         return returns
@@ -242,7 +242,7 @@ class TestCVaROptimizer:
 
         returns = pd.DataFrame(
             np.random.normal(0.0005, 0.02, (n, n_assets)),
-            columns=[f'asset_{i}' for i in range(n_assets)]
+            columns=[f'asset_{i}' for i in range(n_assets)],
         )
 
         return returns
@@ -288,7 +288,7 @@ class TestHighLevelFunction:
 
         returns = pd.DataFrame(
             np.random.normal(0.0005, 0.02, (n, n_assets)),
-            columns=[f'asset_{i}' for i in range(n_assets)]
+            columns=[f'asset_{i}' for i in range(n_assets)],
         )
 
         return returns

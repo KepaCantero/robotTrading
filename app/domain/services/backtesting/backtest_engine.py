@@ -285,16 +285,12 @@ class BacktestEngine:
                 return None  # Limit not hit
 
         # Calculate slippage
-        slippage = self._calculate_slippage(
-            symbol, side, quantity, current_price
-        )
+        slippage = self._calculate_slippage(symbol, side, quantity, current_price)
 
         # Calculate market impact for large orders
         market_impact = Decimal("0")
         if self._config.market_impact:
-            market_impact = self._calculate_market_impact(
-                symbol, side, quantity, current_price
-            )
+            market_impact = self._calculate_market_impact(symbol, side, quantity, current_price)
 
         # Calculate execution price
         execution_price = current_price
@@ -328,7 +324,9 @@ class BacktestEngine:
             self._cash -= total_cost
             self._positions[symbol] = self._positions.get(symbol, Decimal("0")) + quantity
         else:
-            self._cash += quantity * execution_price - commission - quantity * (slippage + market_impact)
+            self._cash += (
+                quantity * execution_price - commission - quantity * (slippage + market_impact)
+            )
             self._positions[symbol] = self._positions.get(symbol, Decimal("0")) - quantity
 
             # Clean up empty positions
@@ -433,7 +431,9 @@ class BacktestEngine:
 
         return closing_trades
 
-    def calculate_metrics(self, benchmark_returns: Optional[NDArray[np.float64]] = None) -> PerformanceMetrics:
+    def calculate_metrics(
+        self, benchmark_returns: Optional[NDArray[np.float64]] = None
+    ) -> PerformanceMetrics:
         """
         Calculate performance metrics.
 
@@ -479,10 +479,12 @@ class BacktestEngine:
         returns_array = np.array(self._returns)
 
         # Basic metrics
-        total_return = float((self.equity - self._config.initial_capital) / self._config.initial_capital)
+        total_return = float(
+            (self.equity - self._config.initial_capital) / self._config.initial_capital
+        )
 
         days = len(self._equity_curve)
-        years = max(days / 252, 1/252)  # Avoid division by zero
+        years = max(days / 252, 1 / 252)  # Avoid division by zero
         annualized_return = (1 + total_return) ** (1 / years) - 1
 
         # Volatility
@@ -491,12 +493,22 @@ class BacktestEngine:
 
         # Sharpe ratio (assuming 2% risk-free rate)
         risk_free_rate = 0.02
-        sharpe_ratio = (annualized_return - risk_free_rate) / annualized_volatility if annualized_volatility > 0 else 0.0
+        sharpe_ratio = (
+            (annualized_return - risk_free_rate) / annualized_volatility
+            if annualized_volatility > 0
+            else 0.0
+        )
 
         # Sortino ratio
         downside_returns = returns_array[returns_array < 0]
-        downside_deviation = float(np.std(downside_returns)) * np.sqrt(252) if len(downside_returns) > 0 else 0.0
-        sortino_ratio = (annualized_return - risk_free_rate) / downside_deviation if downside_deviation > 0 else 0.0
+        downside_deviation = (
+            float(np.std(downside_returns)) * np.sqrt(252) if len(downside_returns) > 0 else 0.0
+        )
+        sortino_ratio = (
+            (annualized_return - risk_free_rate) / downside_deviation
+            if downside_deviation > 0
+            else 0.0
+        )
 
         # Drawdown
         equity_values = [float(eq[1]) for eq in self._equity_curve]
@@ -518,7 +530,10 @@ class BacktestEngine:
             if trade.side == OrderSide.SELL:
                 # Find matching buy
                 for j in range(i - 1, -1, -1):
-                    if self._trades[j].side == OrderSide.BUY and self._trades[j].symbol == trade.symbol:
+                    if (
+                        self._trades[j].side == OrderSide.BUY
+                        and self._trades[j].symbol == trade.symbol
+                    ):
                         buy_price = self._trades[j].price
                         sell_price = trade.price
                         trade_return = float((sell_price - buy_price) / buy_price)
@@ -530,7 +545,9 @@ class BacktestEngine:
             winning_trades = [r for r in trade_returns if r > 0]
             losing_trades = [r for r in trade_returns if r < 0]
 
-            profit_factor = sum(winning_trades) / abs(sum(losing_trades)) if losing_trades else float('inf')
+            profit_factor = (
+                sum(winning_trades) / abs(sum(losing_trades)) if losing_trades else float('inf')
+            )
             avg_trade_return = np.mean(trade_returns)
             best_trade = max(trade_returns)
             worst_trade = min(trade_returns)
@@ -549,6 +566,7 @@ class BacktestEngine:
 
         # Skewness and kurtosis
         from scipy import stats
+
         skewness = float(stats.skew(returns_array))
         kurtosis = float(stats.kurtosis(returns_array))
 
@@ -560,13 +578,24 @@ class BacktestEngine:
         # Information ratio and tracking error (vs benchmark)
         if benchmark_returns is not None and len(benchmark_returns) == len(returns_array):
             excess_returns = returns_array - benchmark_returns
-            information_ratio = float(np.mean(excess_returns) / np.std(excess_returns)) if np.std(excess_returns) > 0 else 0.0
+            information_ratio = (
+                float(np.mean(excess_returns) / np.std(excess_returns))
+                if np.std(excess_returns) > 0
+                else 0.0
+            )
             tracking_error = float(np.std(excess_returns) * np.sqrt(252))
 
             # Alpha and Beta
             covariance_matrix = np.cov(returns_array, benchmark_returns)
-            beta = float(covariance_matrix[0, 1] / covariance_matrix[1, 1]) if covariance_matrix[1, 1] > 0 else 1.0
-            alpha = float(annualized_return - (risk_free_rate + beta * (np.mean(benchmark_returns) * 252 - risk_free_rate)))
+            beta = (
+                float(covariance_matrix[0, 1] / covariance_matrix[1, 1])
+                if covariance_matrix[1, 1] > 0
+                else 1.0
+            )
+            alpha = float(
+                annualized_return
+                - (risk_free_rate + beta * (np.mean(benchmark_returns) * 252 - risk_free_rate))
+            )
         else:
             information_ratio = 0.0
             tracking_error = 0.0

@@ -403,7 +403,11 @@ class TestBacktestingConcurrencyReal:
 
                 # VULNERABLE: Non-thread-safe append
                 vulnerable_results.append(
-                    {"worker_id": worker_id, "result": result, "trades": len(result.trades) if result else 0}
+                    {
+                        "worker_id": worker_id,
+                        "result": result,
+                        "trades": len(result.trades) if result else 0,
+                    }
                 )
 
             except Exception as e:
@@ -466,9 +470,7 @@ class TestBacktestingConcurrencyReal:
             results.append({"strategy": strategy, "success": result is not None})
 
         # Execute all concurrently
-        tasks = [
-            asyncio.create_task(execute_memory_intensive_backtest(s)) for s in strategies
-        ]
+        tasks = [asyncio.create_task(execute_memory_intensive_backtest(s)) for s in strategies]
         await asyncio.gather(*tasks)
 
         # Verify all completed
@@ -507,7 +509,11 @@ class TestBacktestingConcurrencyReal:
                 resource_a.acquire()
                 resource_b.acquire()
                 results.append(
-                    {"worker_id": worker_id, "order": "ab", "trades": len(result.trades) if result else 0}
+                    {
+                        "worker_id": worker_id,
+                        "order": "ab",
+                        "trades": len(result.trades) if result else 0,
+                    }
                 )
                 resource_b.release()
                 resource_a.release()
@@ -515,7 +521,11 @@ class TestBacktestingConcurrencyReal:
                 resource_a.acquire()
                 resource_b.acquire()
                 results.append(
-                    {"worker_id": worker_id, "order": "ba", "trades": len(result.trades) if result else 0}
+                    {
+                        "worker_id": worker_id,
+                        "order": "ba",
+                        "trades": len(result.trades) if result else 0,
+                    }
                 )
                 resource_b.release()
                 resource_a.release()
@@ -612,17 +622,13 @@ class TestBacktestingConcurrencyReal:
                     datetime(2020, 4, 10),
                 )
 
-                results.append(
-                    {"strategy_id": strategy_id, "success": True, "result": result}
-                )
+                results.append({"strategy_id": strategy_id, "success": True, "result": result})
 
             except Exception as e:
                 errors.append({"strategy_id": strategy_id, "error": str(e)})
 
         # Execute all concurrently
-        tasks = [
-            asyncio.create_task(execute_backtest_with_potential_error(i)) for i in range(8)
-        ]
+        tasks = [asyncio.create_task(execute_backtest_with_potential_error(i)) for i in range(8)]
         await asyncio.gather(*tasks, return_exceptions=True)
 
         # Verify error isolation

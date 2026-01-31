@@ -47,9 +47,10 @@ from app.core.models.input_profile import (
 
 # Configure logging
 import logging
+
 logging.basicConfig(
     level=logging.WARNING,  # Reduce noise
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
 )
 logger = logging.getLogger(__name__)
 
@@ -94,10 +95,7 @@ def create_temp_config():
             "min_return": 0.05,
             "max_drawdown": -0.20,
         },
-        "reporting": {
-            "output_directory": "/tmp/test_backtest_output",
-            "output_formats": ["json"]
-        },
+        "reporting": {"output_directory": "/tmp/test_backtest_output", "output_formats": ["json"]},
         "parallelization": {"enabled": True, "max_profiles": 4},
         "logging": {"level": "WARNING"},
     }
@@ -239,7 +237,9 @@ class TestDatabasePersistence:
 
             session = backtester.Session()
             try:
-                stored = session.query(ProfileResultDB).filter_by(profile_id="test_profile_1").first()
+                stored = (
+                    session.query(ProfileResultDB).filter_by(profile_id="test_profile_1").first()
+                )
                 assert stored is not None
                 assert stored.baseline_sharpe == 1.5
                 print("PASS: store_result_single")
@@ -286,9 +286,11 @@ class TestDatabasePersistence:
 
             session = backtester.Session()
             try:
-                count = session.query(ProfileResultDB).filter(
-                    ProfileResultDB.profile_id.like("test_profile_%")
-                ).count()
+                count = (
+                    session.query(ProfileResultDB)
+                    .filter(ProfileResultDB.profile_id.like("test_profile_%"))
+                    .count()
+                )
                 assert count == len(profiles)
                 print("PASS: batch_store_results")
             finally:
@@ -310,7 +312,9 @@ class TestParallelExecution:
             # Create mock data loader
             mock_loader = mock_market_data_factory()
 
-            with patch('app.backtesting.data_loader.DataLoader.load_market_data', side_effect=mock_loader):
+            with patch(
+                'app.backtesting.data_loader.DataLoader.load_market_data', side_effect=mock_loader
+            ):
                 profiles = [
                     InputProfile(
                         capital_initial=Decimal("100000"),
@@ -340,7 +344,9 @@ class TestFullPipeline:
 
             mock_loader = mock_market_data_factory()
 
-            with patch('app.backtesting.data_loader.DataLoader.load_market_data', side_effect=mock_loader):
+            with patch(
+                'app.backtesting.data_loader.DataLoader.load_market_data', side_effect=mock_loader
+            ):
                 profile = InputProfile(
                     capital_initial=Decimal("100000"),
                     objetivo_inversion=ObjectivoInversion.MAXIMIZAR_CAPITAL,
@@ -467,7 +473,7 @@ def run_tests(test_class=None):
     for test_cls in test_classes:
         print(f"\n{'='*60}")
         print(f"Running {test_cls.__name__}")
-        print('='*60)
+        print('=' * 60)
 
         instance = test_cls()
 
@@ -493,7 +499,7 @@ def run_tests(test_class=None):
     # Summary
     print(f"\n{'='*60}")
     print("TEST SUMMARY")
-    print('='*60)
+    print('=' * 60)
     print(f"Passed: {passed}")
     print(f"Failed: {failed}")
     print(f"Total:  {passed + failed}")
@@ -513,8 +519,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "test_class",
         nargs="?",
-        choices=["TestDatabasePersistence", "TestParallelExecution", "TestFullPipeline", "TestEdgeCases"],
-        help="Specific test class to run (runs all if not specified)"
+        choices=[
+            "TestDatabasePersistence",
+            "TestParallelExecution",
+            "TestFullPipeline",
+            "TestEdgeCases",
+        ],
+        help="Specific test class to run (runs all if not specified)",
     )
 
     args = parser.parse_args()
@@ -522,7 +533,12 @@ if __name__ == "__main__":
     # Get test class if specified
     test_class = None
     if args.test_class:
-        for cls in [TestDatabasePersistence, TestParallelExecution, TestFullPipeline, TestEdgeCases]:
+        for cls in [
+            TestDatabasePersistence,
+            TestParallelExecution,
+            TestFullPipeline,
+            TestEdgeCases,
+        ]:
             if cls.__name__ == args.test_class:
                 test_class = cls
                 break

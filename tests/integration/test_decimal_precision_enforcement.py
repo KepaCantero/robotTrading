@@ -29,7 +29,7 @@ class TestMarketDataServiceDecimalPrecision:
             ask=Decimal("150.30"),
             last=Decimal("150.28"),
             volume=Decimal("1000000"),
-            feed_type=DataFeedType.YAHOO_FINANCE
+            feed_type=DataFeedType.YAHOO_FINANCE,
         )
 
         # Verify all price fields are Decimal type
@@ -54,7 +54,7 @@ class TestMarketDataServiceDecimalPrecision:
             ask=to_decimal(150.30),  # Convert float to Decimal
             last=to_decimal(150.28),  # Convert float to Decimal
             volume=to_decimal(1000000),  # Convert int to Decimal
-            feed_type=DataFeedType.YAHOO_FINANCE
+            feed_type=DataFeedType.YAHOO_FINANCE,
         )
 
         # Verify all are Decimal type
@@ -269,7 +269,7 @@ class TestServiceBoundaryValidation:
             ask=to_decimal("150.30"),
             last=to_decimal("150.28"),
             volume=to_decimal("1000000"),
-            feed_type=DataFeedType.YAHOO_FINANCE
+            feed_type=DataFeedType.YAHOO_FINANCE,
         )
         assert isinstance(quote1.bid, Decimal)
 
@@ -280,7 +280,7 @@ class TestServiceBoundaryValidation:
             ask=to_decimal(150.30),
             last=to_decimal(150.28),
             volume=to_decimal(1000000),
-            feed_type=DataFeedType.YAHOO_FINANCE
+            feed_type=DataFeedType.YAHOO_FINANCE,
         )
         assert isinstance(quote2.bid, Decimal)
 
@@ -292,7 +292,7 @@ class TestServiceBoundaryValidation:
                 ask="150.30",
                 last="150.28",
                 volume="1000000",
-                feed_type=DataFeedType.YAHOO_FINANCE
+                feed_type=DataFeedType.YAHOO_FINANCE,
             )
 
         # Invalid: Direct float input should fail with strict=True
@@ -303,7 +303,7 @@ class TestServiceBoundaryValidation:
                 ask=150.30,
                 last=150.28,
                 volume=1000000,
-                feed_type=DataFeedType.YAHOO_FINANCE
+                feed_type=DataFeedType.YAHOO_FINANCE,
             )
 
     def test_rejects_invalid_quantities(self):
@@ -334,7 +334,7 @@ class TestHistoricalDataDecimalPrecision:
             close=Decimal("154.00"),
             volume=Decimal("1000000"),
             feed_type=DataFeedType.YAHOO_FINANCE,
-            frequency=DataFrequency.DAILY
+            frequency=DataFrequency.DAILY,
         )
 
         # Verify all OHLCV fields are Decimal
@@ -359,7 +359,7 @@ class TestHistoricalDataDecimalPrecision:
             "close": to_decimal("154.00"),  # String converted to Decimal
             "volume": to_decimal(1000000),  # Int converted to Decimal
             "feed_type": DataFeedType.YAHOO_FINANCE,
-            "frequency": DataFrequency.DAILY
+            "frequency": DataFrequency.DAILY,
         }
 
         data = HistoricalData(**data_dict)
@@ -388,7 +388,7 @@ class TestDecimalPrecisionAcceptanceCriteria:
             ask=to_decimal(150.30),
             last=to_decimal(150.28),
             volume=to_decimal(1000000),
-            feed_type=DataFeedType.YAHOO_FINANCE
+            feed_type=DataFeedType.YAHOO_FINANCE,
         )
 
         # All stored as Decimal, not float

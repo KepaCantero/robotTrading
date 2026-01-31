@@ -325,13 +325,15 @@ class TestVolatilityTargetingRebalancer:
         portfolio_value = Decimal("100000")
 
         # Covariance matrix
-        cov_matrix = np.array([
-            [0.04, 0.01, 0.008, 0.012, 0.01],
-            [0.01, 0.03, 0.006, 0.009, 0.008],
-            [0.008, 0.006, 0.02, 0.007, 0.006],
-            [0.012, 0.009, 0.007, 0.035, 0.008],
-            [0.01, 0.008, 0.006, 0.008, 0.05],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.04, 0.01, 0.008, 0.012, 0.01],
+                [0.01, 0.03, 0.006, 0.009, 0.008],
+                [0.008, 0.006, 0.02, 0.007, 0.006],
+                [0.012, 0.009, 0.007, 0.035, 0.008],
+                [0.01, 0.008, 0.006, 0.008, 0.05],
+            ]
+        )
 
         return current_weights, target_weights, portfolio_value, cov_matrix
 
@@ -409,9 +411,7 @@ class TestVolatilityTargetingRebalancer:
         current_weights, _, _, cov_matrix = sample_data
 
         # Convert to sorted array
-        weights_array = np.array([
-            current_weights[s] for s in sorted(current_weights.keys())
-        ])
+        weights_array = np.array([current_weights[s] for s in sorted(current_weights.keys())])
 
         # Calculate portfolio volatility
         portfolio_vol = np.sqrt(np.dot(weights_array, np.dot(cov_matrix, weights_array)))

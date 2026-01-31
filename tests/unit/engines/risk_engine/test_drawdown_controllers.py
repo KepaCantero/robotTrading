@@ -63,7 +63,7 @@ class TestCircuitBreakerController:
     def test_circuit_breaker_activation(self):
         """Test circuit breaker activates on severe drawdown."""
         controller = CircuitBreakerController({'threshold': 0.10})
-        
+
         equity = [100000, 90000, 80000, 70000]  # 30% drop
         result = controller.check_circuit_breaker(equity)
 
@@ -72,7 +72,7 @@ class TestCircuitBreakerController:
     def test_circuit_breaker_not_triggered(self):
         """Test circuit breaker not triggered on minor drawdown."""
         controller = CircuitBreakerController({'threshold': 0.20})
-        
+
         equity = [100000, 95000, 90000]  # 10% drop
         result = controller.check_circuit_breaker(equity)
 

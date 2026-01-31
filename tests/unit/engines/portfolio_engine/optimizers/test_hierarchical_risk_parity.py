@@ -140,7 +140,9 @@ class TestHierarchicalRiskParity:
         # HRP should be close to inverse variance for uncorrelated assets
         # But may differ slightly due to hierarchical structure
         correlation = np.corrcoef(weights, expected)[0, 1]
-        assert correlation > 0.9, "Should be correlated with inverse variance for uncorrelated assets"
+        assert (
+            correlation > 0.9
+        ), "Should be correlated with inverse variance for uncorrelated assets"
 
     def test_perfectly_correlated_assets(self):
         """Test HRP with perfectly correlated assets."""
@@ -389,8 +391,7 @@ class TestHRPOptimizer:
 
         # Non-symmetric matrix gets normalized, no error
         result = optimizer.optimize(
-            np.array([0.1, 0.2]),
-            np.array([[1, 2], [3, 4]])  # Not symmetric - will be normalized
+            np.array([0.1, 0.2]), np.array([[1, 2], [3, 4]])  # Not symmetric - will be normalized
         )
 
         # Should return HRP weights (normalized version works)

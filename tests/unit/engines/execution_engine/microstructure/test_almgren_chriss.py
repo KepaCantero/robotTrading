@@ -126,7 +126,9 @@ class TestAlmgrenChrissModel:
         assert estimate.total_cost_usd > 0
 
         # Cost should be approximately: size * price * impact
-        expected_cost = float(estimate.order_size * Decimal("150") * estimate.total_impact_bps / Decimal("10000"))
+        expected_cost = float(
+            estimate.order_size * Decimal("150") * estimate.total_impact_bps / Decimal("10000")
+        )
         assert abs(float(estimate.total_cost_usd) - expected_cost) < 1.0
 
 

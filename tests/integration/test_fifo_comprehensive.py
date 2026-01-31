@@ -304,9 +304,7 @@ class TestFIFOIntegratorComplexScenarios:
 
         # Verify asset type
         async with get_db_transaction() as session:
-            stmt = select(Transaction).where(
-                Transaction.symbol == "BTCUSD"
-            )
+            stmt = select(Transaction).where(Transaction.symbol == "BTCUSD")
             result = await session.execute(stmt)
             tx = result.scalars().first()
 
@@ -333,9 +331,7 @@ class TestFIFOIntegratorComplexScenarios:
 
         # Verify asset type
         async with get_db_transaction() as session:
-            stmt = select(Transaction).where(
-                Transaction.symbol == "EURUSD"
-            )
+            stmt = select(Transaction).where(Transaction.symbol == "EURUSD")
             result = await session.execute(stmt)
             tx = result.scalars().first()
 
@@ -433,9 +429,7 @@ class TestFIFOIntegratorErrorHandling:
 
         # Verify transaction was recorded
         async with get_db_transaction() as session:
-            stmt = select(Transaction).where(
-                Transaction.external_id == "alpaca_sell_001"
-            )
+            stmt = select(Transaction).where(Transaction.external_id == "alpaca_sell_001")
             result = await session.execute(stmt)
             tx = result.scalars().first()
 

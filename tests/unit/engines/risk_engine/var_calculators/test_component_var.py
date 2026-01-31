@@ -39,10 +39,7 @@ class TestComponentVaRCalculator:
 
     def test_calculate_component_var(self, calculator, sample_portfolio_returns, sample_weights):
         """Test component VaR calculation."""
-        result = calculator.calculate_component_var(
-            sample_portfolio_returns,
-            sample_weights
-        )
+        result = calculator.calculate_component_var(sample_portfolio_returns, sample_weights)
 
         assert 'error' not in result
         assert 'total_var' in result
@@ -50,10 +47,7 @@ class TestComponentVaRCalculator:
 
     def test_component_var_sum_to_total(self, calculator, sample_portfolio_returns, sample_weights):
         """Test that component VaRs sum to total VaR."""
-        result = calculator.calculate_component_var(
-            sample_portfolio_returns,
-            sample_weights
-        )
+        result = calculator.calculate_component_var(sample_portfolio_returns, sample_weights)
 
         if 'component_vars' in result:
             component_sum = sum(result['component_vars'].values())
@@ -62,10 +56,7 @@ class TestComponentVaRCalculator:
 
     def test_marginal_var_calculation(self, calculator, sample_portfolio_returns, sample_weights):
         """Test marginal VaR calculation."""
-        result = calculator.calculate_component_var(
-            sample_portfolio_returns,
-            sample_weights
-        )
+        result = calculator.calculate_component_var(sample_portfolio_returns, sample_weights)
 
         if 'marginal_vars' in result:
             assert len(result['marginal_vars']) == len(sample_weights)

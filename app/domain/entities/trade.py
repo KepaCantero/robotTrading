@@ -405,7 +405,11 @@ class Trade:
     def __str__(self) -> str:
         """String representation."""
         side_str = "LONG" if self.side == PositionSide.LONG else "SHORT"
-        pnl_str = f"+${self.get_net_pnl().amount:.2f}" if self.is_profitable() else f"-${abs(self.get_net_pnl().amount):.2f}"
+        pnl_str = (
+            f"+${self.get_net_pnl().amount:.2f}"
+            if self.is_profitable()
+            else f"-${abs(self.get_net_pnl().amount):.2f}"
+        )
         return (
             f"{side_str} {self.symbol} {self.quantity} @ ${self.entry_price} "
             f"→ ${self.exit_price} | {pnl_str} ({self.get_pnl_percent():.2f}%)"

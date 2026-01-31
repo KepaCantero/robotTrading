@@ -527,9 +527,7 @@ class TestEdgeCases:
     async def test_monitor_loop_handles_exception(self, memory_monitor):
         """Test that monitor loop handles exceptions gracefully."""
         # Make get_memory_usage raise exception
-        with patch.object(
-            memory_monitor, "get_memory_usage", side_effect=Exception("Test error")
-        ):
+        with patch.object(memory_monitor, "get_memory_usage", side_effect=Exception("Test error")):
             await memory_monitor.start()
 
             # Wait for one check
@@ -562,9 +560,7 @@ class TestEdgeCases:
                 assert snapshot.vms_mb == 0
 
     @pytest.mark.asyncio
-    async def test_trigger_action_handles_state_saver_error(
-        self, memory_monitor, mock_state_saver
-    ):
+    async def test_trigger_action_handles_state_saver_error(self, memory_monitor, mock_state_saver):
         """Test that trigger_action handles state saver errors."""
         memory_monitor.config.save_state_before_restart = True
         mock_state_saver.side_effect = Exception("State save error")

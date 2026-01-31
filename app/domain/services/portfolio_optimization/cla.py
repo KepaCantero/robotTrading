@@ -71,8 +71,9 @@ class EfficientFrontierCLA:
             if returns[i] <= target_return <= returns[i + 1]:
                 # Linear interpolation
                 alpha = (target_return - returns[i]) / (returns[i + 1] - returns[i])
-                weights = (1 - alpha) * self.corner_portfolios[i].weights + \
-                         alpha * self.corner_portfolios[i + 1].weights
+                weights = (1 - alpha) * self.corner_portfolios[
+                    i
+                ].weights + alpha * self.corner_portfolios[i + 1].weights
                 return weights
 
         return self.corner_portfolios[-1].weights

@@ -266,7 +266,9 @@ class TestEmergencyCloser:
         assert "shutting down" in mock_alert_callback.call_args[0][0].lower()
 
     @pytest.mark.asyncio
-    async def test_on_critical_error_critical(self, emergency_closer, mock_broker, mock_alert_callback):
+    async def test_on_critical_error_critical(
+        self, emergency_closer, mock_broker, mock_alert_callback
+    ):
         """Test handling critical error."""
         mock_broker.get_positions.return_value = []
         mock_broker.place_order.return_value = {"order_id": 12345}

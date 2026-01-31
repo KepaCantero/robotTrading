@@ -59,12 +59,7 @@ class MockBroker:
         return quote
 
     async def place_order(
-        self,
-        symbol: str,
-        side: str,
-        quantity: Decimal,
-        order_type: str = "MARKET",
-        **kwargs
+        self, symbol: str, side: str, quantity: Decimal, order_type: str = "MARKET", **kwargs
     ):
         """Place an order."""
         if self.connection_lost:
@@ -779,9 +774,7 @@ class TestPositionMonitorAuditTrail:
         audit_log = monitor.get_audit_log()
         assert any(entry["action"] == "stop_loss_triggered" for entry in audit_log)
 
-        sl_entry = next(
-            e for e in audit_log if e["action"] == "stop_loss_triggered"
-        )
+        sl_entry = next(e for e in audit_log if e["action"] == "stop_loss_triggered")
         assert sl_entry["symbol"] == "AAPL"
         assert "trigger_price" in sl_entry
 

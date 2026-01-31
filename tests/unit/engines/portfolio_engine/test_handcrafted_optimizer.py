@@ -42,13 +42,15 @@ class TestHandcraftedWeightsOptimizer:
         expected_returns = np.array([0.08, 0.10, 0.06, 0.12, 0.09])
 
         # Heterogeneous volatilities
-        cov_matrix = np.array([
-            [0.0400, 0.0080, 0.0060, 0.0100, 0.0070],
-            [0.0080, 0.0900, 0.0070, 0.0120, 0.0080],
-            [0.0060, 0.0070, 0.0250, 0.0080, 0.0060],
-            [0.0100, 0.0120, 0.0080, 0.0600, 0.0090],
-            [0.0070, 0.0080, 0.0060, 0.0090, 0.0350],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.0400, 0.0080, 0.0060, 0.0100, 0.0070],
+                [0.0080, 0.0900, 0.0070, 0.0120, 0.0080],
+                [0.0060, 0.0070, 0.0250, 0.0080, 0.0060],
+                [0.0100, 0.0120, 0.0080, 0.0600, 0.0090],
+                [0.0070, 0.0080, 0.0060, 0.0090, 0.0350],
+            ]
+        )
 
         return expected_returns, cov_matrix
 
@@ -232,10 +234,12 @@ class TestHandcraftedWeightsOptimizer:
         expected_returns = np.array([0.08, 0.10])
 
         # Different volatilities
-        cov_matrix = np.array([
-            [0.04, 0.01],
-            [0.01, 0.09],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.04, 0.01],
+                [0.01, 0.09],
+            ]
+        )
 
         result = optimizer.optimize(expected_returns, cov_matrix)
 
@@ -281,7 +285,9 @@ class TestHandcraftedWeightsOptimizer:
 
     def test_equal_weight_fallback(self, optimizer):
         """Test equal weight fallback on error."""
-        with patch.object(optimizer, '_calculate_volatilities', side_effect=Exception("Test error")):
+        with patch.object(
+            optimizer, '_calculate_volatilities', side_effect=Exception("Test error")
+        ):
             expected_returns = np.array([0.08, 0.10, 0.06])
             cov_matrix = np.eye(3) * 0.04
 
@@ -314,11 +320,13 @@ class TestHandcraftedWeightsOptimizer:
         expected_returns = np.array([0.05, 0.08, 0.06])
 
         # One asset with very low volatility
-        cov_matrix = np.array([
-            [0.0001, 0.005, 0.004],
-            [0.005, 0.04, 0.01],
-            [0.004, 0.01, 0.03],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.0001, 0.005, 0.004],
+                [0.005, 0.04, 0.01],
+                [0.004, 0.01, 0.03],
+            ]
+        )
 
         result = optimizer.optimize(expected_returns, cov_matrix)
 
@@ -332,11 +340,13 @@ class TestHandcraftedWeightsOptimizer:
         expected_returns = np.array([0.08, 0.10, 0.06])
 
         # Asset 1 has very high volatility
-        cov_matrix = np.array([
-            [0.04, 0.01, 0.008],
-            [0.01, 0.50, 0.015],
-            [0.008, 0.015, 0.03],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.04, 0.01, 0.008],
+                [0.01, 0.50, 0.015],
+                [0.008, 0.015, 0.03],
+            ]
+        )
 
         result = optimizer.optimize(expected_returns, cov_matrix)
 
@@ -350,13 +360,15 @@ class TestHandcraftedWeightsOptimizer:
         expected_returns = np.array([0.08, 0.10, 0.06, 0.12, 0.09])
 
         # Equal variances, some correlation
-        cov_matrix = np.array([
-            [0.04, 0.01, 0.01, 0.01, 0.01],
-            [0.01, 0.04, 0.01, 0.01, 0.01],
-            [0.01, 0.01, 0.04, 0.01, 0.01],
-            [0.01, 0.01, 0.01, 0.04, 0.01],
-            [0.01, 0.01, 0.01, 0.01, 0.04],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.04, 0.01, 0.01, 0.01, 0.01],
+                [0.01, 0.04, 0.01, 0.01, 0.01],
+                [0.01, 0.01, 0.04, 0.01, 0.01],
+                [0.01, 0.01, 0.01, 0.04, 0.01],
+                [0.01, 0.01, 0.01, 0.01, 0.04],
+            ]
+        )
 
         result = optimizer.optimize(expected_returns, cov_matrix)
 
@@ -542,10 +554,12 @@ class TestHandcraftedOptimizerEdgeCases:
         expected_returns = np.array([0.05, 0.08])
 
         # One asset with zero variance
-        cov_matrix = np.array([
-            [0.00, 0.00],
-            [0.00, 0.04],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.00, 0.00],
+                [0.00, 0.04],
+            ]
+        )
 
         result = optimizer.optimize(expected_returns, cov_matrix)
 
@@ -559,10 +573,12 @@ class TestHandcraftedOptimizerEdgeCases:
         expected_returns = np.array([0.08, 0.10])
 
         # Perfect correlation
-        cov_matrix = np.array([
-            [0.04, 0.04],
-            [0.04, 0.04],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.04, 0.04],
+                [0.04, 0.04],
+            ]
+        )
 
         result = optimizer.optimize(expected_returns, cov_matrix)
 
@@ -591,10 +607,12 @@ class TestHandcraftedOptimizerEdgeCases:
         expected_returns = np.array([0.08, 0.10])
 
         # Non-positive definite matrix
-        cov_matrix = np.array([
-            [0.04, -0.10],
-            [-0.10, 0.03],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.04, -0.10],
+                [-0.10, 0.03],
+            ]
+        )
 
         # Should handle error gracefully
         result = optimizer.optimize(expected_returns, cov_matrix)
@@ -606,11 +624,13 @@ class TestHandcraftedOptimizerEdgeCases:
         """Test with negative expected returns."""
         expected_returns = np.array([-0.05, 0.08, 0.06])
 
-        cov_matrix = np.array([
-            [0.04, 0.01, 0.008],
-            [0.01, 0.03, 0.006],
-            [0.008, 0.006, 0.02],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.04, 0.01, 0.008],
+                [0.01, 0.03, 0.006],
+                [0.008, 0.006, 0.02],
+            ]
+        )
 
         result = optimizer.optimize(expected_returns, cov_matrix)
 
@@ -623,12 +643,14 @@ class TestHandcraftedOptimizerEdgeCases:
         """Test with min_weight = 0 allowing zero weights."""
         expected_returns = np.array([0.08, 0.10, 0.06, 0.12])
 
-        cov_matrix = np.array([
-            [0.04, 0.01, 0.008, 0.012],
-            [0.01, 0.03, 0.006, 0.009],
-            [0.008, 0.006, 0.02, 0.007],
-            [0.012, 0.009, 0.007, 0.05],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.04, 0.01, 0.008, 0.012],
+                [0.01, 0.03, 0.006, 0.009],
+                [0.008, 0.006, 0.02, 0.007],
+                [0.012, 0.009, 0.007, 0.05],
+            ]
+        )
 
         constraints = {"min_weight": 0.0, "max_weight": 1.0}
 

@@ -38,15 +38,9 @@ class TestPutCallParity(TestGreeksCalculator):
     def test_put_call_parity_holds(self, calculator, standard_option_params):
         """Test that put-call parity holds for calculated options."""
         # Calculate call and put Greeks
-        call_greeks = calculator.calculate_all_greeks(
-            option_type='call',
-            **standard_option_params
-        )
+        call_greeks = calculator.calculate_all_greeks(option_type='call', **standard_option_params)
 
-        put_greeks = calculator.calculate_all_greeks(
-            option_type='put',
-            **standard_option_params
-        )
+        put_greeks = calculator.calculate_all_greeks(option_type='put', **standard_option_params)
 
         # Validate put-call parity
         result = calculator.validate_put_call_parity(
@@ -79,9 +73,12 @@ class TestPutCallParity(TestGreeksCalculator):
         put_greeks = calculator.calculate_all_greeks(option_type='put', **params)
 
         result = calculator.validate_put_call_parity(
-            call_greeks, put_greeks,
-            params['spot_price'], params['strike_price'],
-            params['time_to_expiry'], params['risk_free_rate'],
+            call_greeks,
+            put_greeks,
+            params['spot_price'],
+            params['strike_price'],
+            params['time_to_expiry'],
+            params['risk_free_rate'],
         )
 
         assert result['valid']
@@ -104,9 +101,12 @@ class TestPutCallParity(TestGreeksCalculator):
         put_greeks = calculator.calculate_all_greeks(option_type='put', **params)
 
         result = calculator.validate_put_call_parity(
-            call_greeks, put_greeks,
-            params['spot_price'], params['strike_price'],
-            params['time_to_expiry'], params['risk_free_rate'],
+            call_greeks,
+            put_greeks,
+            params['spot_price'],
+            params['strike_price'],
+            params['time_to_expiry'],
+            params['risk_free_rate'],
         )
 
         assert result['valid']
@@ -126,9 +126,12 @@ class TestPutCallParity(TestGreeksCalculator):
         put_greeks = calculator.calculate_all_greeks(option_type='put', **params)
 
         result = calculator.validate_put_call_parity(
-            call_greeks, put_greeks,
-            params['spot_price'], params['strike_price'],
-            params['time_to_expiry'], params['risk_free_rate'],
+            call_greeks,
+            put_greeks,
+            params['spot_price'],
+            params['strike_price'],
+            params['time_to_expiry'],
+            params['risk_free_rate'],
         )
 
         assert result['valid']
@@ -154,10 +157,7 @@ class TestImpliedVolatility(TestGreeksCalculator):
     def test_implied_volatility_convergence(self, calculator, standard_option_params):
         """Test that implied volatility calculation converges."""
         # Calculate option price first
-        greeks = calculator.calculate_all_greeks(
-            option_type='call',
-            **standard_option_params
-        )
+        greeks = calculator.calculate_all_greeks(option_type='call', **standard_option_params)
 
         market_price = greeks['option_price']
 
@@ -183,10 +183,7 @@ class TestImpliedVolatility(TestGreeksCalculator):
 
     def test_implied_volatility_put_option(self, calculator, standard_option_params):
         """Test implied volatility for put option."""
-        greeks = calculator.calculate_all_greeks(
-            option_type='put',
-            **standard_option_params
-        )
+        greeks = calculator.calculate_all_greeks(option_type='put', **standard_option_params)
 
         market_price = greeks['option_price']
 
@@ -222,9 +219,7 @@ class TestImpliedVolatility(TestGreeksCalculator):
             market_price = base_price + price_adj
 
             result = calculator.calculate_greeks_implied_values(
-                option_price=market_price,
-                option_type='call',
-                **params
+                option_price=market_price, option_type='call', **params
             )
 
             assert 'error' not in result
@@ -243,9 +238,7 @@ class TestImpliedVolatility(TestGreeksCalculator):
 
         greeks = calculator.calculate_all_greeks(option_type='call', **params)
         result = calculator.calculate_greeks_implied_values(
-            option_price=greeks['option_price'],
-            option_type='call',
-            **params
+            option_price=greeks['option_price'], option_type='call', **params
         )
 
         assert 'error' not in result
@@ -258,15 +251,9 @@ class TestGreeksMarketPriceValidation(TestGreeksCalculator):
     def test_validate_market_prices_accuracy(self, calculator, standard_option_params):
         """Test that model prices match market prices (synthetic test)."""
         # Generate synthetic "market" prices using the model
-        call_greeks = calculator.calculate_all_greeks(
-            option_type='call',
-            **standard_option_params
-        )
+        call_greeks = calculator.calculate_all_greeks(option_type='call', **standard_option_params)
 
-        put_greeks = calculator.calculate_all_greeks(
-            option_type='put',
-            **standard_option_params
-        )
+        put_greeks = calculator.calculate_all_greeks(option_type='put', **standard_option_params)
 
         market_prices = {
             'call': call_greeks['option_price'],
@@ -290,15 +277,9 @@ class TestGreeksMarketPriceValidation(TestGreeksCalculator):
     def test_validate_market_prices_with_noise(self, calculator, standard_option_params):
         """Test validation with noisy market prices."""
         # Generate base prices
-        call_greeks = calculator.calculate_all_greeks(
-            option_type='call',
-            **standard_option_params
-        )
+        call_greeks = calculator.calculate_all_greeks(option_type='call', **standard_option_params)
 
-        put_greeks = calculator.calculate_all_greeks(
-            option_type='put',
-            **standard_option_params
-        )
+        put_greeks = calculator.calculate_all_greeks(option_type='put', **standard_option_params)
 
         # Add small noise to simulate market friction
         np.random.seed(42)
@@ -321,10 +302,7 @@ class TestGreeksMarketPriceValidation(TestGreeksCalculator):
 
     def test_validate_market_prices_statistics(self, calculator, standard_option_params):
         """Test that validation statistics are calculated correctly."""
-        base_greeks = calculator.calculate_all_greeks(
-            option_type='call',
-            **standard_option_params
-        )
+        base_greeks = calculator.calculate_all_greeks(option_type='call', **standard_option_params)
 
         # Create multiple price scenarios
         market_prices = {}
@@ -352,10 +330,7 @@ class TestGreeksConsistencyValidation(TestGreeksCalculator):
 
     def test_validate_greeks_consistency_call(self, calculator, standard_option_params):
         """Test Greeks consistency for call option."""
-        greeks = calculator.calculate_all_greeks(
-            option_type='call',
-            **standard_option_params
-        )
+        greeks = calculator.calculate_all_greeks(option_type='call', **standard_option_params)
 
         result = calculator.validate_greeks_consistency(greeks)
 
@@ -365,10 +340,7 @@ class TestGreeksConsistencyValidation(TestGreeksCalculator):
 
     def test_validate_greeks_consistency_put(self, calculator, standard_option_params):
         """Test Greeks consistency for put option."""
-        greeks = calculator.calculate_all_greeks(
-            option_type='put',
-            **standard_option_params
-        )
+        greeks = calculator.calculate_all_greeks(option_type='put', **standard_option_params)
 
         result = calculator.validate_greeks_consistency(greeks)
 
@@ -531,7 +503,13 @@ class TestGreeksRiskLimits(TestGreeksCalculator):
             # Manually create violations
             result = calculator.validate_greeks_risk_limits(
                 portfolio_greeks=portfolio_greeks,
-                limits={'max_delta': 1000, 'max_gamma': 1000, 'max_theta': -10000, 'max_vega': 10000, 'max_rho': 10000},
+                limits={
+                    'max_delta': 1000,
+                    'max_gamma': 1000,
+                    'max_theta': -10000,
+                    'max_vega': 10000,
+                    'max_rho': 10000,
+                },
             )
 
             # Verify risk level is calculated

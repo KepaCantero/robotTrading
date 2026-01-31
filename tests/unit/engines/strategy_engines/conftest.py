@@ -21,6 +21,7 @@ from app.models.portfolio import Portfolio, Position
 
 # ===== Market Data Fixtures =====
 
+
 @pytest.fixture
 def sample_quote() -> Quote:
     """Create a sample market quote for testing."""
@@ -46,18 +47,20 @@ def sample_quotes_multiple() -> List[Quote]:
     quotes = []
     for i in range(50):
         price = 150 + i * 0.5
-        quotes.append(Quote(
-            symbol="AAPL",
-            timestamp=base_time - timedelta(minutes=50-i),
-            bid=Decimal(str(price - 0.02)),
-            ask=Decimal(str(price + 0.02)),
-            last=Decimal(str(price)),
-            open=Decimal(str(price - 0.5)),
-            high=Decimal(str(price + 0.3)),
-            low=Decimal(str(price - 0.3)),
-            close=Decimal(str(price)),
-            volume=Decimal("1000000"),
-        ))
+        quotes.append(
+            Quote(
+                symbol="AAPL",
+                timestamp=base_time - timedelta(minutes=50 - i),
+                bid=Decimal(str(price - 0.02)),
+                ask=Decimal(str(price + 0.02)),
+                last=Decimal(str(price)),
+                open=Decimal(str(price - 0.5)),
+                high=Decimal(str(price + 0.3)),
+                low=Decimal(str(price - 0.3)),
+                close=Decimal(str(price)),
+                volume=Decimal("1000000"),
+            )
+        )
     return quotes
 
 
@@ -103,6 +106,7 @@ def price_history_mean_reverting() -> deque:
 
 # ===== Pairs Trading Fixtures =====
 
+
 @pytest.fixture
 def cointegrated_pair_prices() -> Dict[str, deque]:
     """Create cointegrated price series for pairs trading testing."""
@@ -132,6 +136,7 @@ def cointegrated_pair_prices() -> Dict[str, deque]:
 
 
 # ===== Portfolio Fixtures =====
+
 
 @pytest.fixture
 def empty_portfolio() -> Portfolio:
@@ -170,6 +175,7 @@ def portfolio_with_positions() -> Portfolio:
 
 
 # ===== Signal Fixtures =====
+
 
 @pytest.fixture
 def sample_buy_signal() -> Signal:
@@ -216,15 +222,18 @@ def sample_sell_signal() -> Signal:
 
 # ===== Mock Engine Fixtures =====
 
+
 @pytest.fixture
 def mock_learning_engine():
     """Create a mock learning engine for testing."""
     mock_engine = Mock()
-    mock_engine.predict = Mock(return_value={
-        "confidence": 0.8,
-        "success_probability": 0.75,
-        "recommended_action": "BUY",
-    })
+    mock_engine.predict = Mock(
+        return_value={
+            "confidence": 0.8,
+            "success_probability": 0.75,
+            "recommended_action": "BUY",
+        }
+    )
     mock_engine.is_ready = Mock(return_value=True)
     return mock_engine
 
@@ -233,15 +242,19 @@ def mock_learning_engine():
 def mock_context_engine():
     """Create a mock context engine for testing."""
     mock_engine = Mock()
-    mock_engine.get_current_regime = Mock(return_value={
-        "regime": "bull",
-        "confidence": 0.8,
-        "regime_probabilities": {"bull": 0.7, "bear": 0.2, "neutral": 0.1},
-    })
-    mock_engine.get_volatility_regime = Mock(return_value={
-        "regime": "normal",
-        "percentile": 50,
-    })
+    mock_engine.get_current_regime = Mock(
+        return_value={
+            "regime": "bull",
+            "confidence": 0.8,
+            "regime_probabilities": {"bull": 0.7, "bear": 0.2, "neutral": 0.1},
+        }
+    )
+    mock_engine.get_volatility_regime = Mock(
+        return_value={
+            "regime": "normal",
+            "percentile": 50,
+        }
+    )
     return mock_engine
 
 
@@ -255,6 +268,7 @@ def mock_data_engine():
 
 
 # ===== Configuration Fixtures =====
+
 
 @pytest.fixture
 def momentum_config() -> Dict[str, Any]:
@@ -352,12 +366,13 @@ def modular_momentum_config() -> Dict[str, Any]:
 
 # ===== Utility Fixtures =====
 
+
 @pytest.fixture
 def mock_centralized_config():
     """Mock centralized configuration system."""
-    with patch('app.engines.strategy_engines.base.get_strategy_config') as mock_config, \
-         patch('app.engines.strategy_engines.base.get_trading_threshold') as mock_threshold:
-
+    with patch('app.engines.strategy_engines.base.get_strategy_config') as mock_config, patch(
+        'app.engines.strategy_engines.base.get_trading_threshold'
+    ) as mock_threshold:
         # Mock strategy config
         strategy_config = Mock()
         strategy_config.parameters = {
@@ -417,6 +432,7 @@ def mock_pandas_ta():
 
 
 # ===== Edge Case Fixtures =====
+
 
 @pytest.fixture
 def quote_with_nan():

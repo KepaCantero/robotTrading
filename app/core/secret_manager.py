@@ -219,7 +219,11 @@ class SecretValidationReport:
                 strength = (
                     "Strong"
                     if score >= 80
-                    else "Good" if score >= 60 else "Weak" if score >= 40 else "Very Weak"
+                    else "Good"
+                    if score >= 60
+                    else "Weak"
+                    if score >= 40
+                    else "Very Weak"
                 )
                 lines.append(f"  - {secret}: {score}/100 ({strength})")
 

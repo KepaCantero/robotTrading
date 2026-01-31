@@ -58,8 +58,7 @@ from app.services.profile_driven_trading.profile_strategy_mapper import (
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
@@ -77,9 +76,7 @@ def temp_config_file():
     This fixture creates a minimal but complete config file for ProfileBatchBacktester.
     """
     config = {
-        "database": {
-            "url": "sqlite:///:memory:"  # In-memory database for fast testing
-        },
+        "database": {"url": "sqlite:///:memory:"},  # In-memory database for fast testing
         "output_dir": "/tmp/test_profile_batch_results",
         "capital_tiers": {
             "bajo": 50000,
@@ -273,13 +270,13 @@ def patch_data_loader(mock_market_data):
 
     This avoids requiring actual market data downloads during testing.
     """
+
     def _load_market_data(symbol, start_date, end_date):
         # Generate 100 days of mock data
         return mock_market_data(symbol, 100)
 
     with patch(
-        'app.backtesting.data_loader.DataLoader.load_market_data',
-        side_effect=_load_market_data
+        'app.backtesting.data_loader.DataLoader.load_market_data', side_effect=_load_market_data
     ):
         yield
 
@@ -353,11 +350,7 @@ class TestDatabasePersistence:
         # Verify stored in database
         session = backtester.Session()
         try:
-            stored = (
-                session.query(ProfileResultDB)
-                .filter_by(profile_id="test_profile_1")
-                .first()
-            )
+            stored = session.query(ProfileResultDB).filter_by(profile_id="test_profile_1").first()
             assert stored is not None
             assert stored.baseline_sharpe == 1.5
             assert stored.optimized_sharpe == 1.8
@@ -464,11 +457,7 @@ class TestDatabasePersistence:
         # Verify update
         session = backtester.Session()
         try:
-            stored = (
-                session.query(ProfileResultDB)
-                .filter_by(profile_id=profile_id)
-                .first()
-            )
+            stored = session.query(ProfileResultDB).filter_by(profile_id=profile_id).first()
             assert stored.optimized_sharpe == 2.0
             assert stored.ready_for_paper_trading is True
             assert stored.recommendation == "APPROVED"
@@ -496,11 +485,7 @@ class TestDatabasePersistence:
             session.rollback()
 
             # Verify not stored
-            count = (
-                session.query(ProfileResultDB)
-                .filter_by(profile_id="rollback_test")
-                .count()
-            )
+            count = session.query(ProfileResultDB).filter_by(profile_id="rollback_test").count()
             assert count == 0
         finally:
             session.close()
@@ -516,9 +501,16 @@ class TestDatabasePersistence:
 
         # Verify required columns exist
         required_columns = [
-            'id', 'profile_id', 'objective', 'risk_tolerance', 'capital_tier',
-            'baseline_sharpe', 'optimized_sharpe', 'sharpe_improvement',
-            'ready_for_paper_trading', 'recommendation',
+            'id',
+            'profile_id',
+            'objective',
+            'risk_tolerance',
+            'capital_tier',
+            'baseline_sharpe',
+            'optimized_sharpe',
+            'sharpe_improvement',
+            'ready_for_paper_trading',
+            'recommendation',
         ]
 
         for col in required_columns:
@@ -533,7 +525,9 @@ class TestDatabasePersistence:
 class TestParallelExecution:
     """Test parallel execution with ProcessPoolExecutor."""
 
-    def test_run_parallel_with_multiple_workers(self, temp_config_file, sample_profiles, patch_data_loader):
+    def test_run_parallel_with_multiple_workers(
+        self, temp_config_file, sample_profiles, patch_data_loader
+    ):
         """Test parallel execution with multiple workers."""
         backtester = ProfileBatchBacktester(temp_config_file)
 
@@ -892,7 +886,9 @@ class TestConfigIntegration:
         if backtester.profile_config_loader is not None:
             try:
                 # Try to load parameter ranges
-                rsi_buy = backtester.profile_config_loader.get_threshold_config("rsi").get("buy_threshold", {})
+                rsi_buy = backtester.profile_config_loader.get_threshold_config("rsi").get(
+                    "buy_threshold", {}
+                )
                 assert isinstance(rsi_buy, dict)
             except Exception as e:
                 logger.warning(f"Parameter range loading failed: {e}")
@@ -991,11 +987,7 @@ class TestEdgeCasesAndErrorHandling:
         backtester = ProfileBatchBacktester(temp_config_file)
 
         # Query for non-existent strategy
-        result = backtester.get_best_strategy(
-            objective="nonexistent",
-            tier="medio",
-            risk="medio"
-        )
+        result = backtester.get_best_strategy(objective="nonexistent", tier="medio", risk="medio")
 
         # Should return empty dict
         assert result == {}

@@ -181,9 +181,7 @@ class StrategyValidator:
             ValueError: If neither sharpe_ratio nor max_drawdown provided
         """
         if sharpe_ratio is None and max_drawdown is None:
-            raise ValueError(
-                "At least one metric (sharpe_ratio or max_drawdown) must be provided"
-            )
+            raise ValueError("At least one metric (sharpe_ratio or max_drawdown) must be provided")
 
         warnings: List[str] = []
         errors: List[str] = []
@@ -200,9 +198,7 @@ class StrategyValidator:
                     "Low Sharpe ratio indicates inadequate risk-adjusted returns (Chan #8)"
                 )
             elif sharpe_ratio < Decimal("1.5"):
-                warnings.append(
-                    f"Sharpe ratio {sharpe_ratio:.2f} is marginal (>= 1.5 recommended)"
-                )
+                warnings.append(f"Sharpe ratio {sharpe_ratio:.2f} is marginal (>= 1.5 recommended)")
         else:
             warnings.append("Sharpe ratio not provided for validation")
 
@@ -253,9 +249,7 @@ class StrategyValidator:
             metadata=result_metadata,
         )
 
-    def validate_backtest_result(
-        self, backtest_result: Dict[str, Any]
-    ) -> ValidationResult:
+    def validate_backtest_result(self, backtest_result: Dict[str, Any]) -> ValidationResult:
         """
         Validate a backtest result dictionary.
 

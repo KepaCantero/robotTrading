@@ -24,6 +24,7 @@ class TestGridSearchImplementation:
     def test_grid_search_has_correct_signature(self):
         """Test that run_grid_search_backtest has the correct signature."""
         import inspect
+
         sig = inspect.signature(ComprehensiveBacktestRunner.run_grid_search_backtest)
         # Should only take 'self' as parameter
         params = list(sig.parameters.keys())
@@ -32,14 +33,16 @@ class TestGridSearchImplementation:
     @patch('app.backtesting.comprehensive_backtest_runner.TrainValTestSplitter')
     @patch('app.backtesting.comprehensive_backtest_runner.MultipleTestingCorrector')
     @patch('app.backtesting.comprehensive_backtest_runner.ModularMomentumStrategy')
-    def test_grid_search_uses_train_val_test_split(self, mock_strategy, mock_corrector, mock_splitter):
+    def test_grid_search_uses_train_val_test_split(
+        self, mock_strategy, mock_corrector, mock_splitter
+    ):
         """Test that grid search properly splits data into train/val/test."""
         # Setup mocks
         mock_splitter_instance = Mock()
         mock_splitter_instance.split_data.return_value = (
             [Mock()] * 100,  # train
-            [Mock()] * 20,   # val
-            [Mock()] * 20,   # test
+            [Mock()] * 20,  # val
+            [Mock()] * 20,  # test
         )
         mock_splitter.return_value = mock_splitter_instance
 
@@ -58,9 +61,7 @@ class TestGridSearchImplementation:
                     'end_date': '2023-12-31',
                     'initial_capital': '100000',
                 },
-                'backtests': {
-                    'grid_search': {}
-                }
+                'backtests': {'grid_search': {}},
             }
             runner.quotes = [Mock(timestamp=datetime(2020, 1, 1))] * 140
             runner.parallel_enabled = False
@@ -75,13 +76,15 @@ class TestGridSearchImplementation:
             )
 
             # Mock helper methods
-            runner._create_strategy_config = Mock(return_value={
-                'type': 'modular_momentum',
-                'preset': 'custom',
-                'modules': {},
-                'thresholds': {},
-                'presets': {'custom': {}}
-            })
+            runner._create_strategy_config = Mock(
+                return_value={
+                    'type': 'modular_momentum',
+                    'preset': 'custom',
+                    'modules': {},
+                    'thresholds': {},
+                    'presets': {'custom': {}},
+                }
+            )
             runner._run_backtest_with_quotes = Mock()
             runner._save_test_audit_and_weights = Mock()
             runner._get_strategy_name = Mock(return_value='test_strategy')
@@ -113,8 +116,12 @@ class TestGridSearchImplementation:
     def test_grid_search_static_evaluator_is_static(self):
         """Test that _evaluate_param_set_static is a static method."""
         import inspect
+
         method = getattr(ComprehensiveBacktestRunner, '_evaluate_param_set_static')
-        assert isinstance(inspect.getattr_static(ComprehensiveBacktestRunner, '_evaluate_param_set_static'), staticmethod)
+        assert isinstance(
+            inspect.getattr_static(ComprehensiveBacktestRunner, '_evaluate_param_set_static'),
+            staticmethod,
+        )
 
     def test_grid_search_generates_parameter_combinations(self):
         """Test that grid search generates all parameter combinations."""
@@ -200,6 +207,7 @@ class TestGridSearchCompliance:
         # The implementation should wrap execution in try-except
         # and log errors appropriately
         import inspect
+
         source = inspect.getsource(ComprehensiveBacktestRunner.run_grid_search_backtest)
 
         assert 'try:' in source

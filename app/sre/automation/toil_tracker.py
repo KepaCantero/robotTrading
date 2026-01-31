@@ -409,7 +409,8 @@ class ToilTracker:
 
             async with aiosqlite.connect(self.config.db_path) as db:
                 # Create toil entries table
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS toil_entries (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         service_name TEXT NOT NULL,
@@ -425,21 +426,28 @@ class ToilTracker:
                         notes TEXT,
                         created_at TEXT NOT NULL DEFAULT (datetime('utc'))
                     )
-                """)
+                """
+                )
 
                 # Create indexes
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE INDEX IF NOT EXISTS idx_toil_service_timestamp
                     ON toil_entries(service_name, timestamp)
-                    """)
-                await db.execute("""
+                    """
+                )
+                await db.execute(
+                    """
                     CREATE INDEX IF NOT EXISTS idx_toil_category
                     ON toil_entries(category)
-                    """)
-                await db.execute("""
+                    """
+                )
+                await db.execute(
+                    """
                     CREATE INDEX IF NOT EXISTS idx_toil_engineer
                     ON toil_entries(engineer)
-                    """)
+                    """
+                )
 
                 await db.commit()
 

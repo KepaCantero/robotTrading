@@ -11,7 +11,7 @@ According to Ernest Chan (Algorithmic Trading, Rule 2.2):
 """
 
 import logging
-from typing import override
+from typing_extensions import override
 
 from app.services.hurst_analysis.models import MarketRegime
 

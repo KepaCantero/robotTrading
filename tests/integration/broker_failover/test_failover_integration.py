@@ -83,9 +83,7 @@ class TestBrokerFailoverIntegration:
         return _callback, tracker
 
     @pytest.mark.asyncio
-    async def test_full_failover_lifecycle(
-        self, broker_configs, paper_adapter_1, paper_adapter_2
-    ):
+    async def test_full_failover_lifecycle(self, broker_configs, paper_adapter_1, paper_adapter_2):
         """Test complete failover lifecycle: start, fail, recover."""
         failover_events = []
 
@@ -151,9 +149,7 @@ class TestBrokerFailoverIntegration:
             symbol="AAPL", side=OrderSide.BUY, quantity=Decimal("100")
         )
 
-        await paper_adapter_2.place_order(
-            symbol="MSFT", side=OrderSide.BUY, quantity=Decimal("50")
-        )
+        await paper_adapter_2.place_order(symbol="MSFT", side=OrderSide.BUY, quantity=Decimal("50"))
 
         # Sync positions
         positions = await manager.sync_positions()

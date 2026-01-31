@@ -232,7 +232,7 @@ class TestKillSwitch:
         assert summary["losing_trades"] == 1
         assert summary["total_pnl"] == -50.0  # 500 + 250 - 800
         assert summary["daily_return_pct"] == -0.0005
-        assert summary["win_rate"] == 2/3
+        assert summary["win_rate"] == 2 / 3
         assert not summary["kill_switch_active"]
 
     def test_pnl_calculation_for_long_trades(self):

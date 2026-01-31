@@ -32,16 +32,18 @@ logger = logging.getLogger(__name__)
 
 class HurstExponentAnalyzer:
     """
-    Main orchestrator for Hurst exponent analysis.
+        Main orchestrator for Hurst exponent analysis.
 
-    Coordinates all components through dependency injection.
-    Follows the Dependency Inversion Principle - depends on abstractions
-    (protocols) rather than concrete implementations.
+    from __future__ import annotations
 
-    Example:
-        >>> analyzer = create_default_analyzer()
-        >>> result = analyzer.analyze(price_series, symbol="AAPL")
-        >>> print(f"Hurst: {result.hurst_exponent:.3f}")
+        Coordinates all components through dependency injection.
+        Follows the Dependency Inversion Principle - depends on abstractions
+        (protocols) rather than concrete implementations.
+
+        Example:
+            >>> analyzer = create_default_analyzer()
+            >>> result = analyzer.analyze(price_series, symbol="AAPL")
+            >>> print(f"Hurst: {result.hurst_exponent:.3f}")
     """
 
     def __init__(

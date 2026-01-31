@@ -220,6 +220,7 @@ class TestMarketSchedulerIntegration:
 
         # Add a future weekday as a holiday
         from datetime import datetime, timedelta
+
         # Get next weekday (Monday-Friday)
         today = date.today()
         future_date = today + timedelta(days=7)
@@ -424,9 +425,7 @@ class TestMarketSchedulerIntegration:
         # For scheduled markets, it would wait until market opens
         # We can't test full wait in unit tests, but we can verify
         # the method doesn't error
-        wait_task = asyncio.create_task(
-            scheduler.wait_until_market_open(MarketType.STOCKS_US)
-        )
+        wait_task = asyncio.create_task(scheduler.wait_until_market_open(MarketType.STOCKS_US))
 
         # Cancel after a short delay
         await asyncio.sleep(0.1)

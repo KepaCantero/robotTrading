@@ -227,9 +227,7 @@ class HierarchicalRiskParity:
             for cluster_id in np.unique(assignments):
                 if cluster_id not in clusters:
                     clusters[cluster_id] = []
-                clusters[cluster_id].extend(
-                    np.where(assignments == cluster_id)[0].tolist()
-                )
+                clusters[cluster_id].extend(np.where(assignments == cluster_id)[0].tolist())
 
         return clusters
 

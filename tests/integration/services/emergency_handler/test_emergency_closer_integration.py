@@ -370,6 +370,7 @@ class TestEmergencyCloserIntegration:
     @pytest.mark.asyncio
     async def test_broker_connection_timeout_during_close(self, alert_tracker):
         """Test handling broker timeout during position close."""
+
         # Create broker that times out
         async def timeout_place_order(symbol, side, quantity, order_type, **kwargs):
             await asyncio.sleep(35)  # Exceed 30s timeout

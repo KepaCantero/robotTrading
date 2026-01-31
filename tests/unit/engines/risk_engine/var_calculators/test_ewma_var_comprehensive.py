@@ -94,4 +94,4 @@ class TestEWMAForecasting:
 
         forecasts = result['forecasts']
         for i in range(len(forecasts) - 1):
-            assert forecasts[i+1] >= forecasts[i]
+            assert forecasts[i + 1] >= forecasts[i]

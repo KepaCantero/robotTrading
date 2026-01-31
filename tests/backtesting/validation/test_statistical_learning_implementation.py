@@ -202,7 +202,9 @@ class TestCrossSectionalConsistency:
         """Test time stability of IC."""
         checker = CrossSectionalConsistencyChecker()
 
-        result = checker.validate_time_stability(sample_signals_transposed, sample_returns_transposed)
+        result = checker.validate_time_stability(
+            sample_signals_transposed, sample_returns_transposed
+        )
 
         assert result is not None
         assert "mean_ic" in result
@@ -307,7 +309,10 @@ class TestFeatureExplosionValidator:
 
         result = validator.validate_feature_explosion(X)
 
-        assert result.explosion_level in [FeatureExplosionLevel.SAFE, FeatureExplosionLevel.MODERATE]
+        assert result.explosion_level in [
+            FeatureExplosionLevel.SAFE,
+            FeatureExplosionLevel.MODERATE,
+        ]
         assert result.n_features == n_features
         assert result.n_samples == n_samples
 
@@ -317,7 +322,10 @@ class TestFeatureExplosionValidator:
 
         result_many = validator.validate_feature_explosion(X_many)
 
-        assert result_many.explosion_level in [FeatureExplosionLevel.SEVERE, FeatureExplosionLevel.CRITICAL]
+        assert result_many.explosion_level in [
+            FeatureExplosionLevel.SEVERE,
+            FeatureExplosionLevel.CRITICAL,
+        ]
 
     def test_multicollinearity_detection(self):
         """Test multicollinearity detection."""
@@ -326,12 +334,14 @@ class TestFeatureExplosionValidator:
         # Create highly correlated features
         n_samples = 100
         base = np.random.randn(n_samples)
-        X = pd.DataFrame({
-            "feature_1": base,
-            "feature_2": base + np.random.randn(n_samples) * 0.01,  # Highly correlated
-            "feature_3": np.random.randn(n_samples),
-            "feature_4": base * 2 + np.random.randn(n_samples) * 0.01,  # Highly correlated
-        })
+        X = pd.DataFrame(
+            {
+                "feature_1": base,
+                "feature_2": base + np.random.randn(n_samples) * 0.01,  # Highly correlated
+                "feature_3": np.random.randn(n_samples),
+                "feature_4": base * 2 + np.random.randn(n_samples) * 0.01,  # Highly correlated
+            }
+        )
 
         result = validator.analyze_multicollinearity(X)
 
@@ -346,10 +356,9 @@ class TestFeatureExplosionValidator:
         # Create many features with correlation
         n_samples = 100
         base = np.random.randn(n_samples)
-        X = pd.DataFrame({
-            f"feature_{i}": base + np.random.randn(n_samples) * 0.01
-            for i in range(20)
-        })
+        X = pd.DataFrame(
+            {f"feature_{i}": base + np.random.randn(n_samples) * 0.01 for i in range(20)}
+        )
 
         result = validator.recommend_feature_reduction(X, method="correlation")
 
@@ -361,7 +370,9 @@ class TestFeatureExplosionValidator:
 class TestConvenienceFunctions:
     """Test convenience functions."""
 
-    def test_cross_sectional_consistency_function(self, sample_signals_transposed, sample_returns_transposed):
+    def test_cross_sectional_consistency_function(
+        self, sample_signals_transposed, sample_returns_transposed
+    ):
         """Test cross-sectional consistency convenience function."""
         result = validate_cross_sectional_consistency(
             sample_signals_transposed.iloc[:, 0],  # First period
@@ -423,18 +434,26 @@ class TestIntegrationScenarios:
         # np.bool_ is also acceptable
         assert isinstance(stability_result.is_stable, (bool, np.bool_))
 
-    def test_cross_sectional_feature_validation_pipeline(self, sample_signals_transposed, sample_returns_transposed):
+    def test_cross_sectional_feature_validation_pipeline(
+        self, sample_signals_transposed, sample_returns_transposed
+    ):
         """Test cross-sectional validation with feature checks."""
         # 1. Check feature explosion
         validator = FeatureExplosionValidator()
-        explosion_result = validator.validate_feature_explosion(sample_signals_transposed.T)  # Transpose for assets as rows
+        explosion_result = validator.validate_feature_explosion(
+            sample_signals_transposed.T
+        )  # Transpose for assets as rows
 
         # 2. Check IC consistency
         checker = CrossSectionalConsistencyChecker()
-        ic_result = checker.validate_ic_consistency(sample_signals_transposed, sample_returns_transposed)
+        ic_result = checker.validate_ic_consistency(
+            sample_signals_transposed, sample_returns_transposed
+        )
 
         # 3. Check time stability
-        stability_result = checker.validate_time_stability(sample_signals_transposed, sample_returns_transposed)
+        stability_result = checker.validate_time_stability(
+            sample_signals_transposed, sample_returns_transposed
+        )
 
         # Verify results
         assert isinstance(explosion_result.explosion_level, FeatureExplosionLevel)

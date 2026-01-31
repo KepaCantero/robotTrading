@@ -281,8 +281,12 @@ class BlackLittermanOptimizer:
         annual_returns = expected_returns * 252
 
         # Create covariance result (dummy means for now)
-        from app.domain.services.portfolio_optimization.covariance_calculator import CovarianceResult
-        from app.domain.services.portfolio_optimization.mean_variance_optimizer import OptimizationResult as MvoResult
+        from app.domain.services.portfolio_optimization.covariance_calculator import (
+            CovarianceResult,
+        )
+        from app.domain.services.portfolio_optimization.mean_variance_optimizer import (
+            OptimizationResult as MvoResult,
+        )
 
         # Direct optimization
         def objective(weights: np.ndarray) -> float:

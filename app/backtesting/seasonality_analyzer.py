@@ -28,7 +28,6 @@ try:
         return sm_seasonal_decompose(*args, **kwargs)
 
 except ImportError:
-
     STATSMODELS_AVAILABLE = False
 
 logger = logging.getLogger(__name__)

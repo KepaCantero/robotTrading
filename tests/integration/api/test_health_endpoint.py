@@ -62,7 +62,10 @@ class TestHealthEndpoint:
         # Broker check should be degraded when not configured
         broker_check = data["checks"]["broker"]
         assert broker_check["status"] in ["degraded", "unhealthy"]
-        assert "not configured" in broker_check["message"].lower() or "error" in broker_check["message"].lower()
+        assert (
+            "not configured" in broker_check["message"].lower()
+            or "error" in broker_check["message"].lower()
+        )
 
     def test_health_check_database(self, client: TestClient):
         """Test that database check works."""
@@ -201,6 +204,7 @@ class TestHealthIntegration:
 
         # Should be parseable as ISO format
         from datetime import datetime
+
         try:
             datetime.fromisoformat(data["timestamp"])
         except ValueError:

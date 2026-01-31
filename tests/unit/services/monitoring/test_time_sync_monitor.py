@@ -141,7 +141,9 @@ class TestTimeSyncMonitor:
 
     def test_initialization_without_ntp(self):
         """Test initialization when ntplib is not available."""
-        with patch("app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"):
+        with patch(
+            "app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"
+        ):
             monitor = TimeSyncMonitor()
 
             assert monitor._is_monitoring is False
@@ -156,7 +158,9 @@ class TestTimeSyncMonitor:
             drift_threshold_seconds=0.5,
         )
 
-        with patch("app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"):
+        with patch(
+            "app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"
+        ):
             monitor = TimeSyncMonitor(config)
 
             assert monitor.config.check_interval_seconds == 30.0
@@ -164,7 +168,9 @@ class TestTimeSyncMonitor:
 
     def test_ntp_availability_check(self):
         """Test NTP availability check."""
-        with patch("app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"):
+        with patch(
+            "app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"
+        ):
             monitor = TimeSyncMonitor()
 
             # Check that NTP availability is set correctly
@@ -174,7 +180,9 @@ class TestTimeSyncMonitor:
     @pytest.mark.asyncio
     async def test_start_stop_monitoring(self):
         """Test starting and stopping the monitoring loop."""
-        with patch("app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"):
+        with patch(
+            "app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"
+        ):
             monitor = TimeSyncMonitor()
 
             # Start monitoring
@@ -196,7 +204,9 @@ class TestTimeSyncMonitor:
     @pytest.mark.asyncio
     async def test_stop_when_not_monitoring(self):
         """Test stopping when monitor is not running."""
-        with patch("app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"):
+        with patch(
+            "app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"
+        ):
             monitor = TimeSyncMonitor()
 
             stopped = await monitor.stop()
@@ -205,7 +215,9 @@ class TestTimeSyncMonitor:
     @pytest.mark.asyncio
     async def test_check_time_drift_without_ntp(self):
         """Test checking time drift when NTP is not available."""
-        with patch("app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"):
+        with patch(
+            "app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"
+        ):
             monitor = TimeSyncMonitor()
             monitor._ntp_available = False
 
@@ -218,7 +230,9 @@ class TestTimeSyncMonitor:
     @pytest.mark.asyncio
     async def test_check_time_drift_with_ntp_success(self):
         """Test checking time drift with successful NTP response."""
-        with patch("app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"):
+        with patch(
+            "app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"
+        ):
             monitor = TimeSyncMonitor()
             monitor._ntp_available = True
 
@@ -242,7 +256,9 @@ class TestTimeSyncMonitor:
     @pytest.mark.asyncio
     async def test_check_time_drift_with_ntp_all_fail(self):
         """Test checking time drift when all NTP servers fail."""
-        with patch("app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"):
+        with patch(
+            "app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"
+        ):
             monitor = TimeSyncMonitor()
             monitor._ntp_available = True
 
@@ -268,7 +284,9 @@ class TestTimeSyncMonitor:
             on_drift_detected=callback,
         )
 
-        with patch("app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"):
+        with patch(
+            "app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"
+        ):
             monitor = TimeSyncMonitor(config)
             monitor._ntp_available = True
 
@@ -298,7 +316,9 @@ class TestTimeSyncMonitor:
             on_critical_drift=callback,
         )
 
-        with patch("app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"):
+        with patch(
+            "app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"
+        ):
             monitor = TimeSyncMonitor(config)
             monitor._ntp_available = True
 
@@ -329,7 +349,9 @@ class TestTimeSyncMonitor:
         """Test order validation when clock is synced."""
         config = TimeSyncConfig(drift_threshold_seconds=1.0)
 
-        with patch("app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"):
+        with patch(
+            "app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"
+        ):
             monitor = TimeSyncMonitor(config)
             monitor._status.drift_seconds = 0.5  # Within threshold
 
@@ -343,7 +365,9 @@ class TestTimeSyncMonitor:
         """Test order validation when clock is not synced."""
         config = TimeSyncConfig(drift_threshold_seconds=1.0)
 
-        with patch("app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"):
+        with patch(
+            "app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"
+        ):
             monitor = TimeSyncMonitor(config)
             monitor._status.drift_seconds = 2.0  # Exceeds threshold
 
@@ -354,7 +378,9 @@ class TestTimeSyncMonitor:
 
     def test_get_status(self):
         """Test getting current status."""
-        with patch("app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"):
+        with patch(
+            "app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"
+        ):
             monitor = TimeSyncMonitor()
 
             status = monitor.get_status()
@@ -364,7 +390,9 @@ class TestTimeSyncMonitor:
 
     def test_get_drift_seconds(self):
         """Test getting drift seconds."""
-        with patch("app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"):
+        with patch(
+            "app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"
+        ):
             monitor = TimeSyncMonitor()
             monitor._status.drift_seconds = 1.5
 
@@ -374,7 +402,9 @@ class TestTimeSyncMonitor:
 
     def test_is_synced(self):
         """Test checking if clock is synced."""
-        with patch("app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"):
+        with patch(
+            "app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"
+        ):
             monitor = TimeSyncMonitor()
 
             monitor._status.is_synced = True
@@ -385,7 +415,9 @@ class TestTimeSyncMonitor:
 
     def test_get_ntp_availability(self):
         """Test getting NTP availability."""
-        with patch("app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"):
+        with patch(
+            "app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"
+        ):
             monitor = TimeSyncMonitor()
 
             availability = monitor.get_ntp_availability()
@@ -394,7 +426,9 @@ class TestTimeSyncMonitor:
     @pytest.mark.asyncio
     async def test_sync_clock_without_ntp(self):
         """Test clock sync when NTP is not available."""
-        with patch("app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"):
+        with patch(
+            "app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"
+        ):
             monitor = TimeSyncMonitor()
             monitor._ntp_available = False
 
@@ -405,7 +439,9 @@ class TestTimeSyncMonitor:
     @pytest.mark.asyncio
     async def test_sync_clock_already_synced(self):
         """Test clock sync when already synced."""
-        with patch("app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"):
+        with patch(
+            "app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"
+        ):
             monitor = TimeSyncMonitor()
             monitor._ntp_available = True
 
@@ -418,7 +454,9 @@ class TestTimeSyncMonitor:
     @pytest.mark.asyncio
     async def test_force_check(self):
         """Test forcing an immediate time sync check."""
-        with patch("app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"):
+        with patch(
+            "app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"
+        ):
             monitor = TimeSyncMonitor()
 
             # Mock check_time_drift
@@ -447,7 +485,9 @@ class TestTimeSyncMonitorSingleton:
 
     def test_get_singleton(self):
         """Test getting singleton instance."""
-        with patch("app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"):
+        with patch(
+            "app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"
+        ):
             monitor1 = get_time_sync_monitor()
             monitor2 = get_time_sync_monitor()
 
@@ -455,7 +495,9 @@ class TestTimeSyncMonitorSingleton:
 
     def test_get_singleton_with_config(self):
         """Test that config is only used on first call."""
-        with patch("app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"):
+        with patch(
+            "app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"
+        ):
             config1 = TimeSyncConfig(check_interval_seconds=30.0)
             config2 = TimeSyncConfig(check_interval_seconds=60.0)
 
@@ -468,7 +510,9 @@ class TestTimeSyncMonitorSingleton:
 
     def test_reset_singleton(self):
         """Test resetting singleton."""
-        with patch("app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"):
+        with patch(
+            "app.services.monitoring.time_sync_monitor.TimeSyncMonitor._check_ntp_availability"
+        ):
             monitor1 = get_time_sync_monitor()
             reset_time_sync_monitor()
             monitor2 = get_time_sync_monitor()

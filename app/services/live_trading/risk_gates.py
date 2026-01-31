@@ -131,7 +131,9 @@ class RiskGates:
 
         # Tracking
         # Chan #15: 5% Daily Loss Circuit Breaker
-        self.start_of_day_capital = Decimal("0")  # Track starting capital for daily loss calculations
+        self.start_of_day_capital = Decimal(
+            "0"
+        )  # Track starting capital for daily loss calculations
         self.daily_pnl = Decimal("0")
         self.max_intraday_value = Decimal("0")
         self.current_drawdown = Decimal("0")
@@ -270,12 +272,11 @@ class RiskGates:
     def update_daily_pnl(self, pnl_change: Decimal) -> None:
         """
         Update daily P&L tracking.
-        
+
         Note: This method only tracks P&L. Use check_daily_loss_limit()
         to actually trigger the circuit breaker when needed (Chan #15).
         """
         self.daily_pnl += pnl_change
-
 
     def check_daily_loss_limit(self) -> bool:
         """
@@ -291,7 +292,7 @@ class RiskGates:
         # First check if circuit breaker is already active
         if self.circuit_breaker_active:
             return False
-        
+
         # Calculate daily P&L percentage
         if self.start_of_day_capital <= 0:
             logger.warning("Start of day capital not set, cannot check daily loss limit")
@@ -321,7 +322,6 @@ class RiskGates:
         self.daily_pnl = Decimal("0")
         self.max_intraday_value = capital
         logger.info(f"Start of day capital set to ${capital:,.2f}")
-
 
     async def check_daily_loss(self, daily_loss: Decimal) -> Tuple[bool, str]:
         """

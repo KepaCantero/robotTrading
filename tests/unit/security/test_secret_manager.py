@@ -35,7 +35,7 @@ class TestSecretStrengthValidation:
             name="TEST_SECRET",
             category=SecretCategory.SECURITY,
             description="Test secret",
-            min_length=32
+            min_length=32,
         )
 
         strong_secret = "Abc123!@#Xyz789$%^Def456&*()Ghi012"
@@ -50,7 +50,7 @@ class TestSecretStrengthValidation:
             name="TEST_SECRET",
             category=SecretCategory.SECURITY,
             description="Test secret",
-            min_length=8
+            min_length=8,
         )
 
         weak_secret = "password"
@@ -65,7 +65,7 @@ class TestSecretStrengthValidation:
             name="TEST_SECRET",
             category=SecretCategory.SECURITY,
             description="Test secret",
-            min_length=8
+            min_length=8,
         )
 
         short_secret = "Ab1!"
@@ -80,7 +80,7 @@ class TestSecretStrengthValidation:
             name="TEST_SECRET",
             category=SecretCategory.SECURITY,
             description="Test secret",
-            min_length=16
+            min_length=16,
         )
 
         no_variety = "abcdefghijk123456789"
@@ -99,7 +99,7 @@ class TestSecretRotationDetection:
             name="TEST_ROTATION",
             category=SecretCategory.SECURITY,
             description="Test rotation",
-            min_length=16
+            min_length=16,
         )
 
         # Set initial secret
@@ -131,7 +131,7 @@ class TestSecretRotationDetection:
             name="OLD_SECRET",
             created_at=time.time() - (100 * 86400),  # 100 days ago
             last_rotated=time.time() - (100 * 86400),
-            rotation_count=0
+            rotation_count=0,
         )
         manager._metadata["OLD_SECRET"] = metadata
 
@@ -156,7 +156,7 @@ class TestSecretValidation:
             requires_uppercase=True,
             requires_lowercase=True,
             requires_digit=True,
-            requires_special=True
+            requires_special=True,
         )
 
         os.environ["TEST_STRONG"] = "StrongSecret123!@#WithSpecialChars456$%^"
@@ -171,7 +171,7 @@ class TestSecretValidation:
             name="TEST_SHORT",
             category=SecretCategory.SECURITY,
             description="Test short",
-            min_length=32
+            min_length=32,
         )
 
         os.environ["TEST_SHORT"] = "Short"
@@ -188,7 +188,7 @@ class TestSecretValidation:
             name="TEST_NO_UPPER",
             category=SecretCategory.SECURITY,
             description="Test no upper",
-            requires_uppercase=True
+            requires_uppercase=True,
         )
 
         os.environ["TEST_NO_UPPER"] = "lowercase123!@#"
@@ -205,7 +205,7 @@ class TestSecretValidation:
             name="TEST_NO_DIGIT",
             category=SecretCategory.SECURITY,
             description="Test no digit",
-            requires_digit=True
+            requires_digit=True,
         )
 
         os.environ["TEST_NO_DIGIT"] = "NoDigitsHere!@#"
@@ -222,7 +222,7 @@ class TestSecretValidation:
             name="TEST_WEAK",
             category=SecretCategory.SECURITY,
             description="Test weak",
-            min_length=16
+            min_length=16,
         )
 
         os.environ["TEST_WEAK"] = "mypassword123456"
@@ -287,19 +287,13 @@ class TestSecretGeneration:
 
     def test_generate_secure_secret_no_special(self):
         """Test generating secret without special characters."""
-        secret = generate_secure_secret(
-            length=32,
-            include_special=False
-        )
+        secret = generate_secure_secret(length=32, include_special=False)
 
         assert not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in secret)
 
     def test_generate_secure_secret_no_lowercase(self):
         """Test generating secret without lowercase letters."""
-        secret = generate_secure_secret(
-            length=32,
-            include_lowercase=False
-        )
+        secret = generate_secure_secret(length=32, include_lowercase=False)
 
         assert not any(c.islower() for c in secret)
 
@@ -310,7 +304,7 @@ class TestSecretGeneration:
             include_uppercase=True,
             include_lowercase=False,
             include_digits=False,
-            include_special=False
+            include_special=False,
         )
 
         assert secret.isupper()
@@ -323,7 +317,7 @@ class TestSecretGeneration:
                 include_uppercase=False,
                 include_lowercase=False,
                 include_digits=False,
-                include_special=False
+                include_special=False,
             )
 
 
@@ -335,9 +329,7 @@ class TestSecretValidationReport:
         # This test requires environment setup
         # For now, test the report structure
         report = SecretValidationReport(
-            is_valid=True,
-            compliance_score=95.0,
-            strength_scores={"SECRET1": 85, "SECRET2": 90}
+            is_valid=True, compliance_score=95.0, strength_scores={"SECRET1": 85, "SECRET2": 90}
         )
 
         assert report.is_valid
@@ -352,7 +344,7 @@ class TestSecretValidationReport:
             weak_secrets=["SECRET2: Too short"],
             rotation_required=["SECRET3: 100 days ago"],
             strength_scores={"SECRET4": 45},
-            compliance_score=65.0
+            compliance_score=65.0,
         )
 
         report_str = str(report)
@@ -385,7 +377,7 @@ class TestProductionReadiness:
 
     @pytest.mark.skipif(
         os.getenv("ENVIRONMENT", "").lower() not in ["production", "prod"],
-        reason="Only runs in production"
+        reason="Only runs in production",
     )
     def test_validate_all_in_production(self):
         """Test validation in production."""

@@ -21,10 +21,7 @@ def calculator():
 @pytest.fixture
 def custom_calculator():
     """Create GreeksCalculator with custom rates."""
-    config = {
-        'risk_free_rate': 0.03,
-        'dividend_yield': 0.02
-    }
+    config = {'risk_free_rate': 0.03, 'dividend_yield': 0.02}
     return GreeksCalculator(config)
 
 
@@ -339,7 +336,9 @@ class TestThetaCalculation:
         far_result = calculator.calculate_all_greeks(**far_expiry_params)
 
         # Near expiry should have more negative theta (faster decay)
-        assert abs(near_result['primary_greeks']['theta']) > abs(far_result['primary_greeks']['theta'])
+        assert abs(near_result['primary_greeks']['theta']) > abs(
+            far_result['primary_greeks']['theta']
+        )
 
 
 @pytest.mark.unit
@@ -365,7 +364,10 @@ class TestVegaCalculation:
         call_result = calculator.calculate_all_greeks(option_type='call', **params)
         put_result = calculator.calculate_all_greeks(option_type='put', **params)
 
-        assert abs(call_result['primary_greeks']['vega'] - put_result['primary_greeks']['vega']) < 0.0001
+        assert (
+            abs(call_result['primary_greeks']['vega'] - put_result['primary_greeks']['vega'])
+            < 0.0001
+        )
 
     def test_vega_highest_for_atm(self, calculator):
         """Test that vega is highest for ATM options."""
@@ -454,7 +456,7 @@ class TestPortfolioGreeks:
                 'time_to_expiry': 0.25,
                 'volatility': 0.20,
                 'quantity': 5,
-            }
+            },
         ]
 
     def test_calculate_portfolio_greeks_success(self, calculator, sample_positions):
@@ -504,14 +506,16 @@ class TestPortfolioGreeks:
     def test_portfolio_with_invalid_position(self, calculator, sample_positions):
         """Test portfolio with one invalid position."""
         # Add invalid position
-        sample_positions.append({
-            'symbol': 'INVALID',
-            'option_type': 'call',
-            'spot_price': 100.0,
-            'strike_price': 100.0,
-            'time_to_expiry': 0,  # Invalid
-            'volatility': 0.20,
-        })
+        sample_positions.append(
+            {
+                'symbol': 'INVALID',
+                'option_type': 'call',
+                'spot_price': 100.0,
+                'strike_price': 100.0,
+                'time_to_expiry': 0,  # Invalid
+                'volatility': 0.20,
+            }
+        )
 
         result = calculator.calculate_portfolio_greeks(sample_positions)
 
@@ -665,7 +669,9 @@ class TestGreeksRiskLimits:
         }
 
         sample_portfolio_greeks['total_delta'] = 50.0
-        result = calculator.validate_greeks_risk_limits(sample_portfolio_greeks, limits=custom_limits)
+        result = calculator.validate_greeks_risk_limits(
+            sample_portfolio_greeks, limits=custom_limits
+        )
 
         assert result['within_limits'] is False
 
@@ -722,8 +728,7 @@ class TestSensitivityAnalysis:
         }
 
         result = calculator.calculate_greeks_sensitivity_analysis(
-            valid_call_params,
-            shock_scenarios=custom_scenarios
+            valid_call_params, shock_scenarios=custom_scenarios
         )
 
         assert result['scenarios_applied']['spot_shock_pct'] == 0.10

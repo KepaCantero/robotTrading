@@ -711,11 +711,13 @@ if execute_button:
                     # Show link to summary
                     st.markdown("---")
                     st.success("📄 **Backend Test Result Summary Generated**")
-                    st.markdown(f"""
+                    st.markdown(
+                        f"""
                     **Location:** `{summary_file.relative_to(project_root)}`
 
                     **To view:** Open the file in your editor or download it.
-                    """)
+                    """
+                    )
 
                     # Add download button
                     with open(summary_file, "r") as f:
@@ -839,13 +841,15 @@ if selected_module in module_info or selected_module == "all":
         info = module_info[selected_module]
 
         # Show static module info
-        st.info(f"""
+        st.info(
+            f"""
 **Description**: {info['description']}
 
 **Metrics**: {info['metrics']}
 
 **Good Indicators**: {info['indicators']}
-        """)
+        """
+        )
 
         # Count available results for this module
         if "backtest_results" in session_state and session_state.backtest_results:
@@ -1027,7 +1031,9 @@ if session_state.backtest_results:
             <h3 style="margin: 0; color: #1f77b4;">📊 Total Trades</h3>
             <h2 style="margin: 10px 0 0 0; color: #262730;">{}</h2>
         </div>
-        """.format(result.performance.total_trades),
+        """.format(
+                result.performance.total_trades
+            ),
             unsafe_allow_html=True,
         )
 
@@ -1042,7 +1048,9 @@ if session_state.backtest_results:
             <h3 style="margin: 0; color: {};">💰 Total P&L</h3>
             <h2 style="margin: 10px 0 0 0; color: {};">{}$ {:.2f}</h2>
         </div>
-        """.format(pnl_color, pnl_color, pnl_color, pnl_sign, pnl_value),
+        """.format(
+                pnl_color, pnl_color, pnl_color, pnl_sign, pnl_value
+            ),
             unsafe_allow_html=True,
         )
 
@@ -1055,7 +1063,9 @@ if session_state.backtest_results:
             <h3 style="margin: 0; color: {};">✅ Win Rate</h3>
             <h2 style="margin: 10px 0 0 0; color: {};">{:.1f}%</h2>
         </div>
-        """.format(win_color, win_color, win_color, win_rate),
+        """.format(
+                win_color, win_color, win_color, win_rate
+            ),
             unsafe_allow_html=True,
         )
 
@@ -1065,7 +1075,9 @@ if session_state.backtest_results:
         sharpe_color = (
             "#28a745"
             if sharpe and sharpe > 1
-            else "#ffc107" if sharpe and sharpe > 0 else "#dc3545"
+            else "#ffc107"
+            if sharpe and sharpe > 0
+            else "#dc3545"
         )
         sharpe_display = f"{sharpe:.2f}" if sharpe is not None else "N/A"
         st.markdown(
@@ -1074,7 +1086,9 @@ if session_state.backtest_results:
             <h3 style="margin: 0; color: {};">📈 Sharpe Ratio</h3>
             <h2 style="margin: 10px 0 0 0; color: {};">{}</h2>
         </div>
-        """.format(sharpe_color, sharpe_color, sharpe_color, sharpe_display),
+        """.format(
+                sharpe_color, sharpe_color, sharpe_color, sharpe_display
+            ),
             unsafe_allow_html=True,
         )
 
@@ -1087,7 +1101,9 @@ if session_state.backtest_results:
             <h3 style="margin: 0; color: {};">📉 Max Drawdown</h3>
             <h2 style="margin: 10px 0 0 0; color: {};">{:.2f}%</h2>
         </div>
-        """.format(dd_color, dd_color, dd_color, max_dd),
+        """.format(
+                dd_color, dd_color, dd_color, max_dd
+            ),
             unsafe_allow_html=True,
         )
 
@@ -1100,7 +1116,9 @@ if session_state.backtest_results:
             <h3 style="margin: 0; color: #6c757d;">💼 Final Capital</h3>
             <h2 style="margin: 10px 0 0 0; color: #262730;">${:,.2f}</h2>
         </div>
-        """.format(final_cap),
+        """.format(
+                final_cap
+            ),
             unsafe_allow_html=True,
         )
 

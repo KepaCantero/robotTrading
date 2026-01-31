@@ -50,10 +50,7 @@ def sample_dataframe():
     np.random.seed(42)
     n_samples = 200
 
-    X = pd.DataFrame({
-        f"feature_{i}": np.random.randn(n_samples)
-        for i in range(10)
-    })
+    X = pd.DataFrame({f"feature_{i}": np.random.randn(n_samples) for i in range(10)})
     y = pd.Series(np.random.randn(n_samples))
 
     return X, y
@@ -126,9 +123,7 @@ class TestAICCalculator:
         log_likelihood = -100
         n_params = 5
 
-        aic = AICCalculator.calculate_with_likelihood(
-            log_likelihood, n_params
-        )
+        aic = AICCalculator.calculate_with_likelihood(log_likelihood, n_params)
 
         expected = 2 * n_params - 2 * log_likelihood
         assert abs(aic - expected) < 1e-6
@@ -184,9 +179,7 @@ class TestBICCalculator:
         n_params = 5
         n_samples = 200
 
-        bic = BICCalculator.calculate_with_likelihood(
-            log_likelihood, n_params, n_samples
-        )
+        bic = BICCalculator.calculate_with_likelihood(log_likelihood, n_params, n_samples)
 
         expected = n_params * np.log(n_samples) - 2 * log_likelihood
         assert abs(bic - expected) < 1e-6
@@ -222,6 +215,7 @@ class TestAdjustedR2Calculator:
         y_pred = model.predict(X_test)
 
         from sklearn.metrics import r2_score
+
         r2 = r2_score(y_test, y_pred)
 
         adj_r2_few_params = AdjustedR2Calculator.calculate(y_test, y_pred, n_params=5)
@@ -257,7 +251,8 @@ class TestMallowCpCalculator:
         rss_subset = np.sum((y_test - y_pred_subset) ** 2)
 
         cp, p = MallowCpCalculator.calculate(
-            rss_subset, rss_full,
+            rss_subset,
+            rss_full,
             n_params_subset=5,
             n_params_full=X.shape[1] + 1,
             n_samples=len(y_test),
@@ -363,9 +358,7 @@ class TestModelSelector:
         selector = ModelSelector()
 
         with pytest.raises(ValueError, match="Unknown criterion"):
-            selector.select_best_model(
-                models, X_test, y_test, criterion="invalid"
-            )
+            selector.select_best_model(models, X_test, y_test, criterion="invalid")
 
     def test_compute_all_criteria(self, sample_regression_data):
         """Test computing all information criteria."""
@@ -378,9 +371,7 @@ class TestModelSelector:
         y_pred = model.predict(X_test)
 
         selector = ModelSelector()
-        criteria = selector.compute_information_criteria(
-            y_test, y_pred, n_params=10
-        )
+        criteria = selector.compute_information_criteria(y_test, y_pred, n_params=10)
 
         assert "aic" in criteria
         assert "bic" in criteria
@@ -417,9 +408,7 @@ class TestConvenienceFunctions:
         """Test select_model_by_aic convenience function."""
         models, X_test, y_test = fitted_models
 
-        best_name, best_model, best_result = select_model_by_aic(
-            models, X_test, y_test
-        )
+        best_name, best_model, best_result = select_model_by_aic(models, X_test, y_test)
 
         assert best_name in models.keys()
         assert isinstance(best_result, ModelCriterionResult)
@@ -428,9 +417,7 @@ class TestConvenienceFunctions:
         """Test select_model_by_bic convenience function."""
         models, X_test, y_test = fitted_models
 
-        best_name, best_model, best_result = select_model_by_bic(
-            models, X_test, y_test
-        )
+        best_name, best_model, best_result = select_model_by_bic(models, X_test, y_test)
 
         assert best_name in models.keys()
         assert isinstance(best_result, ModelCriterionResult)

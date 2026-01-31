@@ -161,7 +161,14 @@ class TestCryptoDataServiceReconnection:
 
         # Mock the API fetch
         mock_ohlcv = [
-            {"timestamp": "2024-01-01T00:00:00Z", "open": 50000, "high": 51000, "low": 49000, "close": 50500, "volume": 100}
+            {
+                "timestamp": "2024-01-01T00:00:00Z",
+                "open": 50000,
+                "high": 51000,
+                "low": 49000,
+                "close": 50500,
+                "volume": 100,
+            }
         ]
 
         with patch('asyncio.run') as mock_run:
@@ -331,6 +338,7 @@ class Test24HourOperation:
 # Helper class for mocking
 class Connector:
     """Helper for testing paper trading connector."""
+
     def __init__(self, broker_type):
         self.broker_type = broker_type
         self.reconnection_manager = MagicMock()
@@ -339,5 +347,6 @@ class Connector:
     async def connect_with_retry(self, *args, **kwargs):
         async def _connect():
             return await self.adapter.connect(*args, **kwargs)
+
         result = await self.reconnection_manager.connect_with_backoff(_connect)
         return result is not False

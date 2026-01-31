@@ -98,9 +98,7 @@ class TaxResidence:
     def has_tax_treaty_with_us(self) -> bool:
         """Check if country has tax treaty with US (reduced withholding)."""
         # Most major economies have treaties; this is simplified
-        treaty_countries = {
-            "EU", "UK", "CH", "JP", "CA", "AU"
-        }
+        treaty_countries = {"EU", "UK", "CH", "JP", "CA", "AU"}
         return self.region.value in treaty_countries
 
     def get_capital_gains_rate(self, is_long_term: bool = False) -> Decimal:
@@ -156,7 +154,7 @@ class TaxResidence:
             region=RegulatoryRegion.UNITED_STATES,
             base_currency="USD",
             capital_gains_rate_short=Decimal("0.24"),  # Short-term rates (ordinary income)
-            capital_gains_rate_long=Decimal("0.15"),    # Long-term rates
+            capital_gains_rate_long=Decimal("0.15"),  # Long-term rates
             dividend_tax_rate=Decimal("0.15"),
             applies_wash_sale_rule=True,
             regulatory_authority="SEC",

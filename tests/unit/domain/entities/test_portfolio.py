@@ -27,13 +27,11 @@ class TestPortfolioCreation:
             max_position_size=Decimal('0.10'),
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.03'),
-            take_profit_pct=Decimal('0.06')
+            take_profit_pct=Decimal('0.06'),
         )
 
         portfolio = Portfolio(
-            portfolio_id='portfolio_1',
-            capital=capital,
-            risk_parameters=risk_params
+            portfolio_id='portfolio_1', capital=capital, risk_parameters=risk_params
         )
 
         assert portfolio.portfolio_id == 'portfolio_1'
@@ -50,14 +48,11 @@ class TestPortfolioCreation:
             max_position_size=Decimal('0.10'),
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.03'),
-            take_profit_pct=Decimal('0.06')
+            take_profit_pct=Decimal('0.06'),
         )
 
         portfolio = Portfolio(
-            portfolio_id='portfolio_1',
-            capital=capital,
-            risk_parameters=risk_params,
-            currency='EUR'
+            portfolio_id='portfolio_1', capital=capital, risk_parameters=risk_params, currency='EUR'
         )
 
         assert portfolio.currency == 'EUR'
@@ -69,15 +64,11 @@ class TestPortfolioCreation:
             max_position_size=Decimal('0.10'),
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.03'),
-            take_profit_pct=Decimal('0.06')
+            take_profit_pct=Decimal('0.06'),
         )
 
         with pytest.raises(ValueError, match="Portfolio ID cannot be empty"):
-            Portfolio(
-                portfolio_id='',
-                capital=capital,
-                risk_parameters=risk_params
-            )
+            Portfolio(portfolio_id='', capital=capital, risk_parameters=risk_params)
 
     def test_create_portfolio_with_negative_capital_raises_error(self):
         """Test that negative capital raises ValueError."""
@@ -85,17 +76,13 @@ class TestPortfolioCreation:
             max_position_size=Decimal('0.10'),
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.03'),
-            take_profit_pct=Decimal('0.06')
+            take_profit_pct=Decimal('0.06'),
         )
 
         # Capital validation happens first
         with pytest.raises(ValueError, match="Capital amount must be positive"):
             capital = Capital(amount=Decimal('-100000'), tier=CapitalTier.MEDIUM)
-            Portfolio(
-                portfolio_id='portfolio_1',
-                capital=capital,
-                risk_parameters=risk_params
-            )
+            Portfolio(portfolio_id='portfolio_1', capital=capital, risk_parameters=risk_params)
 
 
 @pytest.mark.unit
@@ -109,20 +96,18 @@ class TestPortfolioPositionManagement:
             max_position_size=Decimal('20000'),  # $20,000 max position
             max_portfolio_exposure=Decimal('150000'),  # $150,000 max exposure
             stop_loss_pct=Decimal('0.03'),
-            take_profit_pct=Decimal('0.06')
+            take_profit_pct=Decimal('0.06'),
         )
 
         portfolio = Portfolio(
-            portfolio_id='portfolio_1',
-            capital=capital,
-            risk_parameters=risk_params
+            portfolio_id='portfolio_1', capital=capital, risk_parameters=risk_params
         )
 
         position = Position(
             symbol='AAPL',
             quantity=Decimal('100'),
             avg_price=Decimal('150'),
-            current_price=Decimal('150')
+            current_price=Decimal('150'),
         )
 
         # Position value: 100 * 150 = 15,000 (within $20,000 limit)
@@ -138,20 +123,18 @@ class TestPortfolioPositionManagement:
             max_position_size=Decimal('0.20'),  # 20% = $20,000
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.03'),
-            take_profit_pct=Decimal('0.06')
+            take_profit_pct=Decimal('0.06'),
         )
 
         portfolio = Portfolio(
-            portfolio_id='portfolio_1',
-            capital=capital,
-            risk_parameters=risk_params
+            portfolio_id='portfolio_1', capital=capital, risk_parameters=risk_params
         )
 
         position = Position(
             symbol='AAPL',
             quantity=Decimal('100'),
             avg_price=Decimal('150'),
-            current_price=Decimal('150')
+            current_price=Decimal('150'),
         )
 
         # Position value: 100 * 150 = 15,000 (15% of capital)
@@ -175,13 +158,11 @@ class TestPortfolioPositionManagement:
             max_position_size=Decimal('0.20'),
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.03'),
-            take_profit_pct=Decimal('0.06')
+            take_profit_pct=Decimal('0.06'),
         )
 
         portfolio = Portfolio(
-            portfolio_id='portfolio_1',
-            capital=capital,
-            risk_parameters=risk_params
+            portfolio_id='portfolio_1', capital=capital, risk_parameters=risk_params
         )
 
         initial_updated_at = portfolio.updated_at
@@ -190,7 +171,7 @@ class TestPortfolioPositionManagement:
             symbol='AAPL',
             quantity=Decimal('50'),
             avg_price=Decimal('150'),
-            current_price=Decimal('150')
+            current_price=Decimal('150'),
         )
 
         portfolio.add_position(position)
@@ -204,13 +185,11 @@ class TestPortfolioPositionManagement:
             max_position_size=Decimal('100000'),
             max_portfolio_exposure=Decimal('100000'),  # $100,000 max exposure
             stop_loss_pct=Decimal('0.03'),
-            take_profit_pct=Decimal('0.06')
+            take_profit_pct=Decimal('0.06'),
         )
 
         portfolio = Portfolio(
-            portfolio_id='portfolio_1',
-            capital=capital,
-            risk_parameters=risk_params
+            portfolio_id='portfolio_1', capital=capital, risk_parameters=risk_params
         )
 
         # Add first position worth $60,000
@@ -218,7 +197,7 @@ class TestPortfolioPositionManagement:
             symbol='AAPL',
             quantity=Decimal('400'),
             avg_price=Decimal('150'),
-            current_price=Decimal('150')
+            current_price=Decimal('150'),
         )
         portfolio.add_position(position1)
 
@@ -227,7 +206,7 @@ class TestPortfolioPositionManagement:
             symbol='MSFT',
             quantity=Decimal('100'),
             avg_price=Decimal('500'),
-            current_price=Decimal('500')
+            current_price=Decimal('500'),
         )
 
         with pytest.raises(ValueError, match="Position MSFT exceeds risk parameters"):
@@ -240,20 +219,18 @@ class TestPortfolioPositionManagement:
             max_position_size=Decimal('0.20'),
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.03'),
-            take_profit_pct=Decimal('0.06')
+            take_profit_pct=Decimal('0.06'),
         )
 
         portfolio = Portfolio(
-            portfolio_id='portfolio_1',
-            capital=capital,
-            risk_parameters=risk_params
+            portfolio_id='portfolio_1', capital=capital, risk_parameters=risk_params
         )
 
         position = Position(
             symbol='AAPL',
             quantity=Decimal('50'),
             avg_price=Decimal('150'),
-            current_price=Decimal('150')
+            current_price=Decimal('150'),
         )
         portfolio.add_position(position)
 
@@ -270,13 +247,11 @@ class TestPortfolioPositionManagement:
             max_position_size=Decimal('0.20'),
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.03'),
-            take_profit_pct=Decimal('0.06')
+            take_profit_pct=Decimal('0.06'),
         )
 
         portfolio = Portfolio(
-            portfolio_id='portfolio_1',
-            capital=capital,
-            risk_parameters=risk_params
+            portfolio_id='portfolio_1', capital=capital, risk_parameters=risk_params
         )
 
         # Should not raise error
@@ -289,20 +264,18 @@ class TestPortfolioPositionManagement:
             max_position_size=Decimal('0.20'),
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.03'),
-            take_profit_pct=Decimal('0.06')
+            take_profit_pct=Decimal('0.06'),
         )
 
         portfolio = Portfolio(
-            portfolio_id='portfolio_1',
-            capital=capital,
-            risk_parameters=risk_params
+            portfolio_id='portfolio_1', capital=capital, risk_parameters=risk_params
         )
 
         position = Position(
             symbol='AAPL',
             quantity=Decimal('50'),
             avg_price=Decimal('150'),
-            current_price=Decimal('150')
+            current_price=Decimal('150'),
         )
         portfolio.add_position(position)
 
@@ -318,13 +291,11 @@ class TestPortfolioPositionManagement:
             max_position_size=Decimal('0.20'),
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.03'),
-            take_profit_pct=Decimal('0.06')
+            take_profit_pct=Decimal('0.06'),
         )
 
         portfolio = Portfolio(
-            portfolio_id='portfolio_1',
-            capital=capital,
-            risk_parameters=risk_params
+            portfolio_id='portfolio_1', capital=capital, risk_parameters=risk_params
         )
 
         retrieved = portfolio.get_position('NONEXISTENT')
@@ -343,13 +314,11 @@ class TestPortfolioCalculations:
             max_position_size=Decimal('0.20'),
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.03'),
-            take_profit_pct=Decimal('0.06')
+            take_profit_pct=Decimal('0.06'),
         )
 
         portfolio = Portfolio(
-            portfolio_id='portfolio_1',
-            capital=capital,
-            risk_parameters=risk_params
+            portfolio_id='portfolio_1', capital=capital, risk_parameters=risk_params
         )
 
         total_value = portfolio.get_total_value()
@@ -364,13 +333,11 @@ class TestPortfolioCalculations:
             max_position_size=Decimal('0.20'),
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.03'),
-            take_profit_pct=Decimal('0.06')
+            take_profit_pct=Decimal('0.06'),
         )
 
         portfolio = Portfolio(
-            portfolio_id='portfolio_1',
-            capital=capital,
-            risk_parameters=risk_params
+            portfolio_id='portfolio_1', capital=capital, risk_parameters=risk_params
         )
 
         # Add positions
@@ -378,7 +345,7 @@ class TestPortfolioCalculations:
             symbol='AAPL',
             quantity=Decimal('50'),
             avg_price=Decimal('150'),
-            current_price=Decimal('160')  # Gained $10 per share
+            current_price=Decimal('160'),  # Gained $10 per share
         )
         portfolio.add_position(position1)
 
@@ -386,7 +353,7 @@ class TestPortfolioCalculations:
             symbol='MSFT',
             quantity=Decimal('20'),
             avg_price=Decimal('250'),
-            current_price=Decimal('240')  # Lost $10 per share
+            current_price=Decimal('240'),  # Lost $10 per share
         )
         portfolio.add_position(position2)
 
@@ -406,13 +373,11 @@ class TestPortfolioCalculations:
             max_position_size=Decimal('0.20'),
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.03'),
-            take_profit_pct=Decimal('0.06')
+            take_profit_pct=Decimal('0.06'),
         )
 
         portfolio = Portfolio(
-            portfolio_id='portfolio_1',
-            capital=capital,
-            risk_parameters=risk_params
+            portfolio_id='portfolio_1', capital=capital, risk_parameters=risk_params
         )
 
         exposure = portfolio.get_exposure()
@@ -426,20 +391,18 @@ class TestPortfolioCalculations:
             max_position_size=Decimal('0.20'),
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.03'),
-            take_profit_pct=Decimal('0.06')
+            take_profit_pct=Decimal('0.06'),
         )
 
         portfolio = Portfolio(
-            portfolio_id='portfolio_1',
-            capital=capital,
-            risk_parameters=risk_params
+            portfolio_id='portfolio_1', capital=capital, risk_parameters=risk_params
         )
 
         position1 = Position(
             symbol='AAPL',
             quantity=Decimal('50'),
             avg_price=Decimal('150'),
-            current_price=Decimal('160')
+            current_price=Decimal('160'),
         )
         portfolio.add_position(position1)
 
@@ -447,7 +410,7 @@ class TestPortfolioCalculations:
             symbol='MSFT',
             quantity=Decimal('20'),
             avg_price=Decimal('250'),
-            current_price=Decimal('240')
+            current_price=Decimal('240'),
         )
         portfolio.add_position(position2)
 
@@ -466,13 +429,11 @@ class TestPortfolioCalculations:
             max_position_size=Decimal('0.20'),
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.03'),
-            take_profit_pct=Decimal('0.06')
+            take_profit_pct=Decimal('0.06'),
         )
 
         portfolio = Portfolio(
-            portfolio_id='portfolio_1',
-            capital=capital,
-            risk_parameters=risk_params
+            portfolio_id='portfolio_1', capital=capital, risk_parameters=risk_params
         )
 
         # No positions, no additional exposure
@@ -485,20 +446,18 @@ class TestPortfolioCalculations:
             max_position_size=Decimal('0.20'),
             max_portfolio_exposure=Decimal('0.15'),  # 15% = $15,000
             stop_loss_pct=Decimal('0.03'),
-            take_profit_pct=Decimal('0.06')
+            take_profit_pct=Decimal('0.06'),
         )
 
         portfolio = Portfolio(
-            portfolio_id='portfolio_1',
-            capital=capital,
-            risk_parameters=risk_params
+            portfolio_id='portfolio_1', capital=capital, risk_parameters=risk_params
         )
 
         position = Position(
             symbol='AAPL',
             quantity=Decimal('50'),
             avg_price=Decimal('150'),
-            current_price=Decimal('160')
+            current_price=Decimal('160'),
         )
         portfolio.add_position(position)
 
@@ -521,13 +480,11 @@ class TestPortfolioStatusManagement:
             max_position_size=Decimal('0.20'),
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.03'),
-            take_profit_pct=Decimal('0.06')
+            take_profit_pct=Decimal('0.06'),
         )
 
         portfolio = Portfolio(
-            portfolio_id='portfolio_1',
-            capital=capital,
-            risk_parameters=risk_params
+            portfolio_id='portfolio_1', capital=capital, risk_parameters=risk_params
         )
 
         portfolio.freeze()
@@ -541,14 +498,14 @@ class TestPortfolioStatusManagement:
             max_position_size=Decimal('0.20'),
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.03'),
-            take_profit_pct=Decimal('0.06')
+            take_profit_pct=Decimal('0.06'),
         )
 
         portfolio = Portfolio(
             portfolio_id='portfolio_1',
             capital=capital,
             risk_parameters=risk_params,
-            status=PortfolioStatus.FROZEN
+            status=PortfolioStatus.FROZEN,
         )
 
         portfolio.unfreeze()
@@ -562,14 +519,14 @@ class TestPortfolioStatusManagement:
             max_position_size=Decimal('0.20'),
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.03'),
-            take_profit_pct=Decimal('0.06')
+            take_profit_pct=Decimal('0.06'),
         )
 
         portfolio = Portfolio(
             portfolio_id='portfolio_1',
             capital=capital,
             risk_parameters=risk_params,
-            status=PortfolioStatus.ACTIVE
+            status=PortfolioStatus.ACTIVE,
         )
 
         initial_updated_at = portfolio.updated_at
@@ -591,7 +548,7 @@ class TestPositionEntity:
             symbol='AAPL',
             quantity=Decimal('100'),
             avg_price=Decimal('150'),
-            current_price=Decimal('160')
+            current_price=Decimal('160'),
         )
 
         assert position.symbol == 'AAPL'
@@ -607,7 +564,7 @@ class TestPositionEntity:
             quantity=Decimal('1000'),
             avg_price=Decimal('1.10'),
             current_price=Decimal('1.12'),
-            currency='EUR'
+            currency='EUR',
         )
 
         assert position.currency == 'EUR'
@@ -618,7 +575,7 @@ class TestPositionEntity:
             symbol='AAPL',
             quantity=Decimal('100'),
             avg_price=Decimal('150'),
-            current_price=Decimal('160')
+            current_price=Decimal('160'),
         )
 
         value = position.get_value()
@@ -632,7 +589,7 @@ class TestPositionEntity:
             symbol='AAPL',
             quantity=Decimal('100'),
             avg_price=Decimal('150'),
-            current_price=Decimal('160')
+            current_price=Decimal('160'),
         )
 
         assert position.get_quantity() == Decimal('100')
@@ -643,7 +600,7 @@ class TestPositionEntity:
             symbol='AAPL',
             quantity=Decimal('100'),
             avg_price=Decimal('150'),
-            current_price=Decimal('160')
+            current_price=Decimal('160'),
         )
 
         assert position.get_current_price() == Decimal('160')
@@ -654,7 +611,7 @@ class TestPositionEntity:
             symbol='AAPL',
             quantity=Decimal('100'),
             avg_price=Decimal('150'),
-            current_price=Decimal('160')
+            current_price=Decimal('160'),
         )
 
         position.update_price(Decimal('170'))
@@ -667,7 +624,7 @@ class TestPositionEntity:
             symbol='AAPL',
             quantity=Decimal('100'),
             avg_price=Decimal('150'),
-            current_price=Decimal('160')
+            current_price=Decimal('160'),
         )
 
         with pytest.raises(ValueError, match="Price must be positive"):
@@ -679,7 +636,7 @@ class TestPositionEntity:
             symbol='AAPL',
             quantity=Decimal('100'),
             avg_price=Decimal('150'),
-            current_price=Decimal('160')
+            current_price=Decimal('160'),
         )
 
         with pytest.raises(ValueError, match="Price must be positive"):
@@ -691,7 +648,7 @@ class TestPositionEntity:
             symbol='AAPL',
             quantity=Decimal('100'),
             avg_price=Decimal('150'),
-            current_price=Decimal('160')
+            current_price=Decimal('160'),
         )
 
         pnl = position.get_pnl()
@@ -705,7 +662,7 @@ class TestPositionEntity:
             symbol='AAPL',
             quantity=Decimal('100'),
             avg_price=Decimal('150'),
-            current_price=Decimal('140')
+            current_price=Decimal('140'),
         )
 
         pnl = position.get_pnl()
@@ -719,7 +676,7 @@ class TestPositionEntity:
             symbol='AAPL',
             quantity=Decimal('100'),
             avg_price=Decimal('150'),
-            current_price=Decimal('150')
+            current_price=Decimal('150'),
         )
 
         pnl = position.get_pnl()
@@ -751,36 +708,36 @@ class TestPortfolioStatusEnum:
 class TestPortfolioPropertyBased:
     """Property-based tests for Portfolio operations."""
 
-    @pytest.mark.parametrize("capital_amount,position_value,max_size,expected_result", [
-        (Decimal('100000'), Decimal('5000'), Decimal('0.10'), True),   # 5% <= 10%
-        (Decimal('100000'), Decimal('10000'), Decimal('0.10'), True),  # 10% <= 10%
-        (Decimal('100000'), Decimal('15000'), Decimal('0.10'), False),  # 15% > 10%
-        (Decimal('100000'), Decimal('20000'), Decimal('0.20'), True),   # 20% <= 20%
-        (Decimal('100000'), Decimal('25000'), Decimal('0.20'), False),  # 25% > 20%
-    ])
-    def test_position_size_validation(self, capital_amount, position_value, max_size, expected_result):
+    @pytest.mark.parametrize(
+        "capital_amount,position_value,max_size,expected_result",
+        [
+            (Decimal('100000'), Decimal('5000'), Decimal('0.10'), True),  # 5% <= 10%
+            (Decimal('100000'), Decimal('10000'), Decimal('0.10'), True),  # 10% <= 10%
+            (Decimal('100000'), Decimal('15000'), Decimal('0.10'), False),  # 15% > 10%
+            (Decimal('100000'), Decimal('20000'), Decimal('0.20'), True),  # 20% <= 20%
+            (Decimal('100000'), Decimal('25000'), Decimal('0.20'), False),  # 25% > 20%
+        ],
+    )
+    def test_position_size_validation(
+        self, capital_amount, position_value, max_size, expected_result
+    ):
         """Test position size validation with various scenarios."""
         capital = Capital(amount=capital_amount, tier=CapitalTier.MEDIUM)
         risk_params = RiskParameters(
             max_position_size=max_size,
             max_portfolio_exposure=Decimal('1.5'),
             stop_loss_pct=Decimal('0.03'),
-            take_profit_pct=Decimal('0.06')
+            take_profit_pct=Decimal('0.06'),
         )
 
         portfolio = Portfolio(
-            portfolio_id='portfolio_1',
-            capital=capital,
-            risk_parameters=risk_params
+            portfolio_id='portfolio_1', capital=capital, risk_parameters=risk_params
         )
 
         # Calculate quantity based on position value and current price
         quantity = (position_value / Decimal('150')).quantize(Decimal('1'))
         position = Position(
-            symbol='AAPL',
-            quantity=quantity,
-            avg_price=Decimal('150'),
-            current_price=Decimal('150')
+            symbol='AAPL', quantity=quantity, avg_price=Decimal('150'), current_price=Decimal('150')
         )
 
         if expected_result:
@@ -790,26 +747,29 @@ class TestPortfolioPropertyBased:
             with pytest.raises(ValueError, match="Position AAPL exceeds risk parameters"):
                 portfolio.add_position(position)
 
-    @pytest.mark.parametrize("capital_amount,exposures,max_exposure,expected_result", [
-        (Decimal('100000'), [5000, 3000], Decimal('0.10'), False),  # 8% <= 10%
-        (Decimal('100000'), [5000, 6000], Decimal('0.10'), True),   # 11% > 10%
-        (Decimal('100000'), [20000, 10000], Decimal('0.30'), True),  # 30% <= 30%
-        (Decimal('100000'), [20000, 15000], Decimal('0.30'), True),  # 35% > 30%
-    ])
-    def test_portfolio_exposure_validation(self, capital_amount, exposures, max_exposure, expected_result):
+    @pytest.mark.parametrize(
+        "capital_amount,exposures,max_exposure,expected_result",
+        [
+            (Decimal('100000'), [5000, 3000], Decimal('0.10'), False),  # 8% <= 10%
+            (Decimal('100000'), [5000, 6000], Decimal('0.10'), True),  # 11% > 10%
+            (Decimal('100000'), [20000, 10000], Decimal('0.30'), True),  # 30% <= 30%
+            (Decimal('100000'), [20000, 15000], Decimal('0.30'), True),  # 35% > 30%
+        ],
+    )
+    def test_portfolio_exposure_validation(
+        self, capital_amount, exposures, max_exposure, expected_result
+    ):
         """Test portfolio exposure validation with various scenarios."""
         capital = Capital(amount=capital_amount, tier=CapitalTier.MEDIUM)
         risk_params = RiskParameters(
             max_position_size=Decimal('0.50'),
             max_portfolio_exposure=max_exposure,
             stop_loss_pct=Decimal('0.03'),
-            take_profit_pct=Decimal('0.06')
+            take_profit_pct=Decimal('0.06'),
         )
 
         portfolio = Portfolio(
-            portfolio_id='portfolio_1',
-            capital=capital,
-            risk_parameters=risk_params
+            portfolio_id='portfolio_1', capital=capital, risk_parameters=risk_params
         )
 
         # Add positions
@@ -819,47 +779,47 @@ class TestPortfolioPropertyBased:
                 symbol=f'STOCK{i}',
                 quantity=quantity,
                 avg_price=Decimal('150'),
-                current_price=Decimal('150')
+                current_price=Decimal('150'),
             )
             portfolio.add_position(position)
 
         result = portfolio.is_risk_limit_exceeded()
         assert result == expected_result
 
-    @pytest.mark.parametrize("quantity,avg_price,current_price,expected_pnl", [
-        (Decimal('100'), Decimal('150'), Decimal('160'), Decimal('1000')),
-        (Decimal('100'), Decimal('150'), Decimal('140'), Decimal('-1000')),
-        (Decimal('50'), Decimal('200'), Decimal('210'), Decimal('500')),
-        (Decimal('50'), Decimal('200'), Decimal('190'), Decimal('-500')),
-        (Decimal('200'), Decimal('100'), Decimal('100'), Decimal('0')),
-        (Decimal('1000'), Decimal('50'), Decimal('55'), Decimal('5000')),
-    ])
+    @pytest.mark.parametrize(
+        "quantity,avg_price,current_price,expected_pnl",
+        [
+            (Decimal('100'), Decimal('150'), Decimal('160'), Decimal('1000')),
+            (Decimal('100'), Decimal('150'), Decimal('140'), Decimal('-1000')),
+            (Decimal('50'), Decimal('200'), Decimal('210'), Decimal('500')),
+            (Decimal('50'), Decimal('200'), Decimal('190'), Decimal('-500')),
+            (Decimal('200'), Decimal('100'), Decimal('100'), Decimal('0')),
+            (Decimal('1000'), Decimal('50'), Decimal('55'), Decimal('5000')),
+        ],
+    )
     def test_position_pnl_calculation(self, quantity, avg_price, current_price, expected_pnl):
         """Test position P&L calculation with various scenarios."""
         position = Position(
-            symbol='TEST',
-            quantity=quantity,
-            avg_price=avg_price,
-            current_price=current_price
+            symbol='TEST', quantity=quantity, avg_price=avg_price, current_price=current_price
         )
 
         pnl = position.get_pnl()
 
         assert pnl == expected_pnl
 
-    @pytest.mark.parametrize("quantity,price,expected_value", [
-        (Decimal('100'), Decimal('150'), Decimal('15000')),
-        (Decimal('50'), Decimal('200'), Decimal('10000')),
-        (Decimal('1000'), Decimal('50'), Decimal('50000')),
-        (Decimal('0'), Decimal('100'), Decimal('0')),
-    ])
+    @pytest.mark.parametrize(
+        "quantity,price,expected_value",
+        [
+            (Decimal('100'), Decimal('150'), Decimal('15000')),
+            (Decimal('50'), Decimal('200'), Decimal('10000')),
+            (Decimal('1000'), Decimal('50'), Decimal('50000')),
+            (Decimal('0'), Decimal('100'), Decimal('0')),
+        ],
+    )
     def test_position_value_calculation(self, quantity, price, expected_value):
         """Test position value calculation with various scenarios."""
         position = Position(
-            symbol='TEST',
-            quantity=quantity,
-            avg_price=Decimal('100'),
-            current_price=price
+            symbol='TEST', quantity=quantity, avg_price=Decimal('100'), current_price=price
         )
 
         value = position.get_value()

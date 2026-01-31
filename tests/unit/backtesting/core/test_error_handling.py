@@ -71,6 +71,7 @@ class TestMutexErrorDetection:
 
     def test_is_mutex_error_in_exception_type(self) -> None:
         """Test detection in exception type name."""
+
         class MutexLockError(Exception):
             pass
 
@@ -137,9 +138,7 @@ class TestTrainingRetry:
         strategy.learning_engine = Mock()
 
         # Always fail with mutex error
-        strategy.learning_engine.train.side_effect = RuntimeError(
-            "mutex lock failed"
-        )
+        strategy.learning_engine.train.side_effect = RuntimeError("mutex lock failed")
 
         with pytest.raises(MutexError):
             train_with_retry(strategy, 'supervised')
@@ -260,6 +259,7 @@ class TestSafeExecute:
 
     def test_safe_execute_success(self) -> None:
         """Test successful execution."""
+
         def func(x: int) -> int:
             return x * 2
 
@@ -268,6 +268,7 @@ class TestSafeExecute:
 
     def test_safe_execute_with_args_and_kwargs(self) -> None:
         """Test execution with both args and kwargs."""
+
         def func(a: int, b: int, c: int = 0) -> int:
             return a + b + c
 
@@ -276,6 +277,7 @@ class TestSafeExecute:
 
     def test_safe_execute_exception_handling(self) -> None:
         """Test exception handling with default return."""
+
         def func() -> None:
             raise ValueError("Test error")
 
@@ -284,6 +286,7 @@ class TestSafeExecute:
 
     def test_safe_execute_no_default_return(self) -> None:
         """Test exception handling without default return."""
+
         def func() -> None:
             raise ValueError("Test error")
 
@@ -292,6 +295,7 @@ class TestSafeExecute:
 
     def test_safe_execute_logging(self) -> None:
         """Test error logging."""
+
         def func() -> None:
             raise ValueError("Test error")
 
@@ -302,6 +306,7 @@ class TestSafeExecute:
 
     def test_safe_execute_no_logging(self) -> None:
         """Test suppressing error logging."""
+
         def func() -> None:
             raise ValueError("Test error")
 
@@ -316,6 +321,7 @@ class TestLogAndSuppress:
 
     def test_log_and_suppress_success(self) -> None:
         """Test successful function execution."""
+
         @log_and_suppress((ValueError,), "Calculation failed")
         def calculate(x: int) -> int:
             return x * 2
@@ -325,6 +331,7 @@ class TestLogAndSuppress:
 
     def test_log_and_suppress_exception_caught(self) -> None:
         """Test exception suppression."""
+
         @log_and_suppress((ValueError,), "Calculation failed", default_return=0)
         def calculate(x: int) -> int:
             raise ValueError("Invalid input")
@@ -334,6 +341,7 @@ class TestLogAndSuppress:
 
     def test_log_and_suppress_different_exception(self) -> None:
         """Test that different exceptions are not caught."""
+
         @log_and_suppress((ValueError,), "Calculation failed")
         def calculate(x: int) -> int:
             raise TypeError("Wrong type")
@@ -343,11 +351,8 @@ class TestLogAndSuppress:
 
     def test_log_and_suppress_multiple_exception_types(self) -> None:
         """Test catching multiple exception types."""
-        @log_and_suppress(
-            (ValueError, TypeError),
-            "Calculation failed",
-            default_return=-1
-        )
+
+        @log_and_suppress((ValueError, TypeError), "Calculation failed", default_return=-1)
         def calculate(x: int) -> int:
             raise TypeError("Wrong type")
 
@@ -356,6 +361,7 @@ class TestLogAndSuppress:
 
     def test_log_and_suppress_logging(self) -> None:
         """Test that exceptions are logged."""
+
         @log_and_suppress((ValueError,), "Calculation failed", default_return=0)
         def calculate(x: int) -> int:
             raise ValueError("Invalid input")

@@ -961,7 +961,9 @@ class VaRBacktester:
                         else (
                             0 + n_10 * np.log(1 - pi_11)
                             if n_10 > 0
-                            else 0 + n_11 * np.log(pi_11) if n_11 > 0 else 0
+                            else 0 + n_11 * np.log(pi_11)
+                            if n_11 > 0
+                            else 0
                         )
                     )
                 )
@@ -976,7 +978,9 @@ class VaRBacktester:
                         else (
                             0 + n_10 * np.log(1 - pi)
                             if n_10 > 0
-                            else 0 + n_11 * np.log(pi) if n_11 > 0 else 0
+                            else 0 + n_11 * np.log(pi)
+                            if n_11 > 0
+                            else 0
                         )
                     )
                 )

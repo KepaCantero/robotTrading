@@ -266,7 +266,9 @@ class TestErrorBudgetManager:
         original_state = await budget_manager.get_current_state()
         loaded_state = await new_manager.get_current_state()
 
-        assert loaded_state.consumption.downtime_minutes == original_state.consumption.downtime_minutes
+        assert (
+            loaded_state.consumption.downtime_minutes == original_state.consumption.downtime_minutes
+        )
         assert loaded_state.consumption.error_count == original_state.consumption.error_count
 
 

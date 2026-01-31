@@ -68,10 +68,7 @@ def sample_dataframe():
     np.random.seed(42)
     n_samples = 200
 
-    X = pd.DataFrame({
-        f"feature_{i}": np.random.randn(n_samples)
-        for i in range(10)
-    })
+    X = pd.DataFrame({f"feature_{i}": np.random.randn(n_samples) for i in range(10)})
     y = pd.Series(np.random.randn(n_samples))
 
     return X, y
@@ -373,9 +370,7 @@ class TestRegularizationAnalyzer:
         X, y, _ = sample_regression_data
 
         analyzer = RegularizationAnalyzer()
-        result = analyzer.analyze_elastic_net(
-            X, y, alpha=1.0, l1_ratio=0.5
-        )
+        result = analyzer.analyze_elastic_net(X, y, alpha=1.0, l1_ratio=0.5)
 
         assert isinstance(result, RegularizationResult)
         assert result.regularization_type == RegularizationType.ELASTIC_NET
@@ -460,9 +455,7 @@ class TestOptimizeRegularization:
         """Test automatic Lasso optimization."""
         X, y, _ = sample_regression_data
 
-        result = optimize_regularization(
-            X, y, method="lasso", cv_folds=3
-        )
+        result = optimize_regularization(X, y, method="lasso", cv_folds=3)
 
         assert isinstance(result, RegularizationResult)
         assert result.regularization_type == RegularizationType.L1
@@ -472,9 +465,7 @@ class TestOptimizeRegularization:
         """Test automatic Ridge optimization."""
         X, y, _ = sample_regression_data
 
-        result = optimize_regularization(
-            X, y, method="ridge", cv_folds=3
-        )
+        result = optimize_regularization(X, y, method="ridge", cv_folds=3)
 
         assert isinstance(result, RegularizationResult)
         assert result.regularization_type == RegularizationType.L2

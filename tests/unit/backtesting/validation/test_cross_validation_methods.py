@@ -50,10 +50,7 @@ def sample_dataframe():
     np.random.seed(42)
     n_samples = 200
 
-    X = pd.DataFrame({
-        f"feature_{i}": np.random.randn(n_samples)
-        for i in range(10)
-    })
+    X = pd.DataFrame({f"feature_{i}": np.random.randn(n_samples) for i in range(10)})
     y = pd.Series(np.random.randn(n_samples))
 
     return X, y

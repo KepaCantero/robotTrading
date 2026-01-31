@@ -146,12 +146,8 @@ def generate_momentum_signals(
 
     for i in range(slow_period, len(quotes)):
         # Calculate momentum
-        fast_momentum = (
-            closes[i] - closes[i - fast_period]
-        ) / closes[i - fast_period]
-        slow_momentum = (
-            closes[i] - closes[i - slow_period]
-        ) / closes[i - slow_period]
+        fast_momentum = (closes[i] - closes[i - fast_period]) / closes[i - fast_period]
+        slow_momentum = (closes[i] - closes[i - slow_period]) / closes[i - slow_period]
 
         # Generate signal based on momentum crossover
         if fast_momentum > 0 and slow_momentum > 0:
@@ -185,9 +181,7 @@ def generate_momentum_signals(
                     source=SignalSource.TECHNICAL,
                     timestamp=quotes[i].timestamp,
                     price=quotes[i].close,
-                    strength=(
-                        SignalStrength.HIGH if strength > 75 else SignalStrength.MODERATE
-                    ),
+                    strength=(SignalStrength.HIGH if strength > 75 else SignalStrength.MODERATE),
                     confidence=confidence,
                     liquidity_score=75.0,
                     priority_score=70.0,
@@ -411,7 +405,9 @@ class TestTomasiniParameterStability:
         stable_metric = stability["stable_param"]
 
         # CV should be low (< 30% per Tomasini)
-        assert stable_metric.cv < 0.3, f"Stable parameter should have CV < 30%, got {stable_metric.cv:.2%}"
+        assert (
+            stable_metric.cv < 0.3
+        ), f"Stable parameter should have CV < 30%, got {stable_metric.cv:.2%}"
         assert bool(stable_metric.is_stable) is True
 
     def test_parameter_stability_unstable_detection(self, tomasini_config):
@@ -439,7 +435,9 @@ class TestTomasiniParameterStability:
         unstable_metric = stability["unstable_param"]
 
         # CV should be high (> 30%)
-        assert unstable_metric.cv >= 0.3, f"Unstable parameter should have CV >= 30%, got {unstable_metric.cv:.2%}"
+        assert (
+            unstable_metric.cv >= 0.3
+        ), f"Unstable parameter should have CV >= 30%, got {unstable_metric.cv:.2%}"
         assert bool(unstable_metric.is_stable) is False
 
     def test_parameter_drift_detection(self, tomasini_config):
@@ -618,9 +616,7 @@ class TestTomasiniWalkForwardFull:
         # Should calculate Tomasini score
         assert 0 <= result.tomasini_score <= 100
 
-    def test_full_validation_with_optimization(
-        self, tomasini_config, sample_data, backtest_config
-    ):
+    def test_full_validation_with_optimization(self, tomasini_config, sample_data, backtest_config):
         """Test full validation with parameter optimization."""
         validator = TomasiniWalkForwardValidator(config=tomasini_config)
 
@@ -685,9 +681,7 @@ class TestTomasiniWalkForwardFull:
 
     def test_regime_robustness_tracking(self, tomasini_config, sample_data, backtest_config):
         """Test regime-aware robustness tracking."""
-        validator = TomasiniWalkForwardValidator(
-            config={**tomasini_config, "regime_aware": True}
-        )
+        validator = TomasiniWalkForwardValidator(config={**tomasini_config, "regime_aware": True})
 
         quotes, signals = sample_data
 
@@ -704,13 +698,23 @@ class TestTomasiniWalkForwardFull:
 
         # Each window should have regime info
         for window in result.windows:
-            assert window.train_regime in ["BULL", "BEAR", "SIDEWAYS", "UNKNOWN", "INSUFFICIENT_DATA"]
-            assert window.test_regime in ["BULL", "BEAR", "SIDEWAYS", "UNKNOWN", "INSUFFICIENT_DATA"]
+            assert window.train_regime in [
+                "BULL",
+                "BEAR",
+                "SIDEWAYS",
+                "UNKNOWN",
+                "INSUFFICIENT_DATA",
+            ]
+            assert window.test_regime in [
+                "BULL",
+                "BEAR",
+                "SIDEWAYS",
+                "UNKNOWN",
+                "INSUFFICIENT_DATA",
+            ]
             assert isinstance(window.regime_change, bool)
 
-    def test_full_validation_with_optimization(
-        self, tomasini_config, sample_data, backtest_config
-    ):
+    def test_full_validation_with_optimization(self, tomasini_config, sample_data, backtest_config):
         """Test full validation with parameter optimization."""
         validator = TomasiniWalkForwardValidator(config=tomasini_config)
 
@@ -775,9 +779,7 @@ class TestTomasiniWalkForwardFull:
 
     def test_regime_robustness_tracking(self, tomasini_config, sample_data):
         """Test regime-aware robustness tracking."""
-        validator = TomasiniWalkForwardValidator(
-            config={**tomasini_config, "regime_aware": True}
-        )
+        validator = TomasiniWalkForwardValidator(config={**tomasini_config, "regime_aware": True})
 
         quotes, signals = sample_data
 
@@ -794,8 +796,20 @@ class TestTomasiniWalkForwardFull:
 
         # Each window should have regime info
         for window in result.windows:
-            assert window.train_regime in ["BULL", "BEAR", "SIDEWAYS", "UNKNOWN", "INSUFFICIENT_DATA"]
-            assert window.test_regime in ["BULL", "BEAR", "SIDEWAYS", "UNKNOWN", "INSUFFICIENT_DATA"]
+            assert window.train_regime in [
+                "BULL",
+                "BEAR",
+                "SIDEWAYS",
+                "UNKNOWN",
+                "INSUFFICIENT_DATA",
+            ]
+            assert window.test_regime in [
+                "BULL",
+                "BEAR",
+                "SIDEWAYS",
+                "UNKNOWN",
+                "INSUFFICIENT_DATA",
+            ]
             assert isinstance(window.regime_change, bool)
 
 
@@ -921,9 +935,7 @@ class TestTomasiniEdgeCases:
         assert result.passed is False
         assert result.total_windows == 0
 
-    def test_insufficient_data_for_regime_detection(
-        self, tomasini_config, backtest_config
-    ):
+    def test_insufficient_data_for_regime_detection(self, tomasini_config, backtest_config):
         """Test regime detection with insufficient data."""
         validator = TomasiniWalkForwardValidator(config=tomasini_config)
 

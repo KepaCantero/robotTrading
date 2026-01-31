@@ -391,7 +391,9 @@ class LookAheadValidator:
                 if len(future_values) > 0:
                     # Check for exact match in next few periods
                     for future_val in future_values[:5]:
-                        if not pd.isna(future_val) and np.isclose(signal_val, future_val, rtol=1e-5):
+                        if not pd.isna(future_val) and np.isclose(
+                            signal_val, future_val, rtol=1e-5
+                        ):
                             issues.append(
                                 TimingIssue(
                                     issue_type="future_value_match",
@@ -584,27 +586,33 @@ class LookAheadValidator:
         ]
 
         if result.issues:
-            lines.extend([
-                "CRITICAL ISSUES:",
-                "-" * 80,
-            ])
+            lines.extend(
+                [
+                    "CRITICAL ISSUES:",
+                    "-" * 80,
+                ]
+            )
             for i, issue in enumerate(result.issues, 1):
                 lines.append(f"  {i}. {issue}")
             lines.append("")
 
         if result.warnings:
-            lines.extend([
-                "WARNINGS:",
-                "-" * 80,
-            ])
+            lines.extend(
+                [
+                    "WARNINGS:",
+                    "-" * 80,
+                ]
+            )
             for i, warning in enumerate(result.warnings, 1):
                 lines.append(f"  {i}. {warning}")
             lines.append("")
 
-        lines.extend([
-            "=" * 80,
-            result.validation_summary,
-            "=" * 80,
-        ])
+        lines.extend(
+            [
+                "=" * 80,
+                result.validation_summary,
+                "=" * 80,
+            ]
+        )
 
         return "\n".join(lines)

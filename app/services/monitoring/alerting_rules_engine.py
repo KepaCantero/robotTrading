@@ -13,6 +13,13 @@ from typing import Dict, List, Optional
 
 import aiohttp
 from requests.exceptions import HTTPError, RequestException
+from sqlalchemy.exc import (
+    DataError,
+    DatabaseError,
+    IntegrityError,
+    OperationalError,
+    ProgrammingError,
+)
 
 logger = logging.getLogger(__name__)
 

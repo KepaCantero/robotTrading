@@ -89,11 +89,7 @@ class TestDatasetIntegrity(unittest.TestCase):
             total_trades=0,
         )
 
-        self.assertEqual(
-            len(gaps),
-            0,
-            f"Found {len(gaps)} gaps > 2 days in {len(quotes)} quotes"
-        )
+        self.assertEqual(len(gaps), 0, f"Found {len(gaps)} gaps > 2 days in {len(quotes)} quotes")
 
         # Mark as passed and save
         reporter.mark_passed("No timestamp gaps detected")
@@ -125,13 +121,15 @@ class TestDatasetIntegrity(unittest.TestCase):
             expected_value=0,
             actual_value=duplicate_count,
             passed=duplicate_count == 0,
-            reason=f"Found {duplicate_count} duplicates" if duplicate_count > 0 else "No duplicates",
+            reason=f"Found {duplicate_count} duplicates"
+            if duplicate_count > 0
+            else "No duplicates",
         )
 
         self.assertEqual(
             len(timestamps),
             len(unique_timestamps),
-            f"Duplicates: {len(timestamps)} total, {len(unique_timestamps)} unique"
+            f"Duplicates: {len(timestamps)} total, {len(unique_timestamps)} unique",
         )
 
         # Mark as passed and save
@@ -181,7 +179,9 @@ class TestDatasetIntegrity(unittest.TestCase):
             expected_value=0,
             actual_value=len(violations),
             passed=len(violations) == 0,
-            reason=f"Found {len(violations)} violations" if violations else "All OHLCV values normalized",
+            reason=f"Found {len(violations)} violations"
+            if violations
+            else "All OHLCV values normalized",
         )
 
         self.assertEqual(len(violations), 0, f"OHLCV violations: {violations}")
@@ -218,7 +218,9 @@ class TestDatasetIntegrity(unittest.TestCase):
             expected_value=0,
             actual_value=anomalous_count,
             passed=anomalous_count == 0,
-            reason=f"Found {anomalous_count} anomalous values" if anomalous_count > 0 else "All values valid",
+            reason=f"Found {anomalous_count} anomalous values"
+            if anomalous_count > 0
+            else "All values valid",
         )
 
         for quote in quotes:
@@ -337,7 +339,7 @@ class TestDatasetIntegrity(unittest.TestCase):
         days: int = 500,
         seed: int = 42,
         drift: float = 0.05,
-        volatility: float = 0.20
+        volatility: float = 0.20,
     ) -> List[Quote]:
         """
         Generate realistic OHLCV data using Geometric Brownian Motion.
@@ -392,7 +394,7 @@ class TestDatasetIntegrity(unittest.TestCase):
                 open=Decimal(str(round_price(open_price, "equity", symbol))),
                 high=Decimal(str(round_price(high_price, "equity", symbol))),
                 low=Decimal(str(round_price(low_price, "equity", symbol))),
-                close=Decimal(str(round_price(close_price, "equity", symbol)))
+                close=Decimal(str(round_price(close_price, "equity", symbol))),
             )
             quotes.append(quote)
 
@@ -457,18 +459,10 @@ class TestTechnicalIndicatorsValidation(unittest.TestCase):
         short_diff = abs(ema_short - current_price)
         long_diff = abs(ema_long - current_price)
 
-        self.assertLess(
-            short_diff,
-            long_diff,
-            "Short EMA should have less lag than long EMA"
-        )
+        self.assertLess(short_diff, long_diff, "Short EMA should have less lag than long EMA")
 
         # In uptrend, short EMA should be above long EMA
-        self.assertGreater(
-            ema_short,
-            ema_long,
-            "In uptrend, short EMA should be above long EMA"
-        )
+        self.assertGreater(ema_short, ema_long, "In uptrend, short EMA should be above long EMA")
 
     def test_macd_histogram_correctness(self):
         """Verify MACD histogram mathematical correctness."""
@@ -483,38 +477,21 @@ class TestTechnicalIndicatorsValidation(unittest.TestCase):
         # Histogram = MACD - Signal (mathematical identity)
         expected_hist = macd - signal
         self.assertAlmostEqual(
-            hist,
-            expected_hist,
-            places=4,
-            msg=f"Histogram {hist} != MACD {macd} - Signal {signal}"
+            hist, expected_hist, places=4, msg=f"Histogram {hist} != MACD {macd} - Signal {signal}"
         )
 
     def test_atr_volatility_sensitivity(self):
         """Verify ATR responds correctly to volatility changes."""
         # High volatility data
-        high_vol_prices = self.generate_price_series(
-            50,
-            volatility=0.05,
-            seed=1
-        )
+        high_vol_prices = self.generate_price_series(50, volatility=0.05, seed=1)
         atr_high = self.calculator.calculate_atr(
-            high_vol_prices,
-            high_vol_prices,
-            high_vol_prices,
-            period=14
+            high_vol_prices, high_vol_prices, high_vol_prices, period=14
         )
 
         # Low volatility data
-        low_vol_prices = self.generate_price_series(
-            50,
-            volatility=0.005,
-            seed=2
-        )
+        low_vol_prices = self.generate_price_series(50, volatility=0.005, seed=2)
         atr_low = self.calculator.calculate_atr(
-            low_vol_prices,
-            low_vol_prices,
-            low_vol_prices,
-            period=14
+            low_vol_prices, low_vol_prices, low_vol_prices, period=14
         )
 
         self.assertIsNotNone(atr_high)
@@ -523,17 +500,11 @@ class TestTechnicalIndicatorsValidation(unittest.TestCase):
         # ATR should be significantly higher for high volatility
         atr_ratio = atr_high / atr_low if atr_low > 0 else float('inf')
         self.assertGreater(
-            atr_ratio,
-            2.0,
-            f"ATR should be >2x higher for high vol (ratio: {atr_ratio:.2f})"
+            atr_ratio, 2.0, f"ATR should be >2x higher for high vol (ratio: {atr_ratio:.2f})"
         )
 
     def generate_price_series(
-        self,
-        length: int,
-        seed: int = 42,
-        trend: float = 0.0,
-        volatility: float = 0.02
+        self, length: int, seed: int = 42, trend: float = 0.0, volatility: float = 0.02
     ) -> List[float]:
         """Generate realistic price series with specified characteristics."""
         np.random.seed(seed)
@@ -637,16 +608,8 @@ class TestStrategySignalLogic(unittest.TestCase):
                 buy_ratio = buy_count / total
                 sell_ratio = sell_count / total
 
-                self.assertLess(
-                    buy_ratio,
-                    0.95,
-                    f"BUY ratio {buy_ratio:.2%} should be < 95%"
-                )
-                self.assertLess(
-                    sell_ratio,
-                    0.95,
-                    f"SELL ratio {sell_ratio:.2%} should be < 95%"
-                )
+                self.assertLess(buy_ratio, 0.95, f"BUY ratio {buy_ratio:.2%} should be < 95%")
+                self.assertLess(sell_ratio, 0.95, f"SELL ratio {sell_ratio:.2%} should be < 95%")
         else:
             # If no signals or only 1 signal, verify processing worked
             self.assertEqual(len(quotes), 100, "Should process all 100 quotes")
@@ -696,18 +659,10 @@ class TestStrategySignalLogic(unittest.TestCase):
                     duplicates.append(key)
                 seen.add(key)
 
-        self.assertEqual(
-            len(duplicates),
-            0,
-            f"Found {len(duplicates)} duplicate signals"
-        )
+        self.assertEqual(len(duplicates), 0, f"Found {len(duplicates)} duplicate signals")
 
     def generate_realistic_quotes(
-        self,
-        symbol: str,
-        days: int = 100,
-        seed: int = 42,
-        drift: float = 0.05
+        self, symbol: str, days: int = 100, seed: int = 42, drift: float = 0.05
     ) -> List[Quote]:
         """Generate realistic quotes for strategy testing."""
         np.random.seed(seed)
@@ -735,14 +690,18 @@ class TestStrategySignalLogic(unittest.TestCase):
             quote = Quote(
                 symbol=symbol,
                 timestamp=base_date + timedelta(days=i),
-                bid=Decimal(str(round_price(price - spread/2, "equity", symbol))),
-                ask=Decimal(str(round_price(price + spread/2, "equity", symbol))),
+                bid=Decimal(str(round_price(price - spread / 2, "equity", symbol))),
+                ask=Decimal(str(round_price(price + spread / 2, "equity", symbol))),
                 last=Decimal(str(round_price(price, "equity", symbol))),
                 volume=Decimal(str(volume)),
                 open=Decimal(str(round_price(open_price, "equity", symbol))),
-                high=Decimal(str(round_price(max(open_price, price) + high_low_range/2, "equity", symbol))),
-                low=Decimal(str(round_price(min(open_price, price) - high_low_range/2, "equity", symbol))),
-                close=Decimal(str(round_price(price, "equity", symbol)))
+                high=Decimal(
+                    str(round_price(max(open_price, price) + high_low_range / 2, "equity", symbol))
+                ),
+                low=Decimal(
+                    str(round_price(min(open_price, price) - high_low_range / 2, "equity", symbol))
+                ),
+                close=Decimal(str(round_price(price, "equity", symbol))),
             )
             quotes.append(quote)
 
@@ -771,14 +730,10 @@ class TestBacktestingEngineValidation(unittest.TestCase):
 
         # Signal price must be within OHLC range
         self.assertGreaterEqual(
-            signal.price,
-            quote.low,
-            f"Signal price {signal.price} < quote low {quote.low}"
+            signal.price, quote.low, f"Signal price {signal.price} < quote low {quote.low}"
         )
         self.assertLessEqual(
-            signal.price,
-            quote.high,
-            f"Signal price {signal.price} > quote high {quote.high}"
+            signal.price, quote.high, f"Signal price {signal.price} > quote high {quote.high}"
         )
 
         # Signal price should be closer to last/ask/bid than extremes
@@ -786,9 +741,7 @@ class TestBacktestingEngineValidation(unittest.TestCase):
         price_deviation = abs(signal.price - mid_price) / mid_price
 
         self.assertLess(
-            price_deviation,
-            0.02,
-            f"Price deviation {price_deviation:.2%} should be < 2%"
+            price_deviation, 0.02, f"Price deviation {price_deviation:.2%} should be < 2%"
         )
 
     def test_balance_update_mathematics(self):
@@ -805,9 +758,7 @@ class TestBacktestingEngineValidation(unittest.TestCase):
         new_balance = initial_cash - (trade_price * shares)
 
         self.assertEqual(
-            new_balance,
-            expected_balance,
-            f"Balance {new_balance} != expected {expected_balance}"
+            new_balance, expected_balance, f"Balance {new_balance} != expected {expected_balance}"
         )
 
         # Balance should never go negative
@@ -823,11 +774,7 @@ class TestBacktestingEngineValidation(unittest.TestCase):
         pnl = (sell_price - buy_price) * shares
         expected_pnl = Decimal("200")  # $20 * 10 = $200
 
-        self.assertEqual(
-            pnl,
-            expected_pnl,
-            f"PnL {pnl} != expected {expected_pnl}"
-        )
+        self.assertEqual(pnl, expected_pnl, f"PnL {pnl} != expected {expected_pnl}")
 
         # Calculate percentage return
         investment = buy_price * shares
@@ -839,7 +786,7 @@ class TestBacktestingEngineValidation(unittest.TestCase):
             float(return_pct),
             float(expected_return_pct),
             places=2,
-            msg=f"Return {return_pct}% != expected {expected_return_pct}%"
+            msg=f"Return {return_pct}% != expected {expected_return_pct}%",
         )
 
     def test_portfolio_value_consistency(self):
@@ -851,9 +798,7 @@ class TestBacktestingEngineValidation(unittest.TestCase):
         ]
 
         # Calculate position values
-        position_values = [
-            p["shares"] * p["price"] for p in positions
-        ]
+        position_values = [p["shares"] * p["price"] for p in positions]
 
         # Total portfolio value
         total_value = cash + sum(position_values)
@@ -896,11 +841,7 @@ class TestBacktestingEngineValidation(unittest.TestCase):
         commission_impact = (total_commission / gross_pnl) * 100
         expected_impact = (Decimal("2") / Decimal("1000")) * 100  # 0.2%
 
-        self.assertAlmostEqual(
-            float(commission_impact),
-            float(expected_impact),
-            places=2
-        )
+        self.assertAlmostEqual(float(commission_impact), float(expected_impact), places=2)
 
     def create_realistic_quote(self, symbol: str, price: float) -> Quote:
         """Create a realistic quote with proper OHLC relationships."""
@@ -915,9 +856,9 @@ class TestBacktestingEngineValidation(unittest.TestCase):
             last=Decimal(str(round_price(price, "equity", symbol))),
             volume=Decimal("1000000"),
             open=Decimal(str(round_price(open_price, "equity", symbol))),
-            high=Decimal(str(round_price(price + high_low_range/2, "equity", symbol))),
-            low=Decimal(str(round_price(price - high_low_range/2, "equity", symbol))),
-            close=Decimal(str(round_price(price, "equity", symbol)))
+            high=Decimal(str(round_price(price + high_low_range / 2, "equity", symbol))),
+            low=Decimal(str(round_price(price - high_low_range / 2, "equity", symbol))),
+            close=Decimal(str(round_price(price, "equity", symbol))),
         )
 
 
@@ -928,8 +869,26 @@ class TestExpectedResults(unittest.TestCase):
         """Verify Sharpe Ratio calculation with real mathematics."""
         # Daily returns (simulated)
         daily_returns = [
-            0.01, 0.02, -0.01, 0.03, 0.01, 0.015, -0.005, 0.025, 0.01, 0.02,
-            0.005, -0.015, 0.03, 0.01, 0.02, 0.025, 0.01, -0.01, 0.015, 0.02
+            0.01,
+            0.02,
+            -0.01,
+            0.03,
+            0.01,
+            0.015,
+            -0.005,
+            0.025,
+            0.01,
+            0.02,
+            0.005,
+            -0.015,
+            0.03,
+            0.01,
+            0.02,
+            0.025,
+            0.01,
+            -0.01,
+            0.015,
+            0.02,
         ]
 
         # Calculate statistics
@@ -953,19 +912,33 @@ class TestExpectedResults(unittest.TestCase):
         expected_sharpe = expected_mean / expected_std
 
         self.assertAlmostEqual(
-            sharpe,
-            expected_sharpe,
-            places=4,
-            msg=f"Sharpe {sharpe} != expected {expected_sharpe}"
+            sharpe, expected_sharpe, places=4, msg=f"Sharpe {sharpe} != expected {expected_sharpe}"
         )
 
     def test_drawdown_calculation(self):
         """Verify drawdown calculation with peak tracking."""
         # Equity curve
         equity = [
-            100000, 105000, 102000, 110000, 108000, 112000, 115000,
-            109000, 107000, 111000, 113000, 110000, 108000, 105000,
-            103000, 106000, 108000, 110000, 105000, 100000
+            100000,
+            105000,
+            102000,
+            110000,
+            108000,
+            112000,
+            115000,
+            109000,
+            107000,
+            111000,
+            113000,
+            110000,
+            108000,
+            105000,
+            103000,
+            106000,
+            108000,
+            110000,
+            105000,
+            100000,
         ]
 
         # Calculate drawdown correctly
@@ -1000,8 +973,26 @@ class TestExpectedResults(unittest.TestCase):
         """Verify win rate calculation accuracy."""
         # Trade results
         trades = [
-            100, -50, 200, -75, 150, -25, 175, -100, 125, 50,
-            -30, 80, -40, 110, -60, 90, -20, 140, -55, 105
+            100,
+            -50,
+            200,
+            -75,
+            150,
+            -25,
+            175,
+            -100,
+            125,
+            50,
+            -30,
+            80,
+            -40,
+            110,
+            -60,
+            90,
+            -20,
+            140,
+            -55,
+            105,
         ]
 
         # Calculate metrics
@@ -1057,15 +1048,13 @@ class TestExpectedResults(unittest.TestCase):
         # Calculate expected value
         expected_win_rate = 12 / 20
         expected_loss_rate = 8 / 20
-        expected_expectancy = (
-            expected_win_rate * 125.50
-        ) - (expected_loss_rate * 75.25)
+        expected_expectancy = (expected_win_rate * 125.50) - (expected_loss_rate * 75.25)
 
         self.assertAlmostEqual(
             expectancy,
             expected_expectancy,
             places=2,
-            msg=f"Expectancy {expectancy} != expected {expected_expectancy}"
+            msg=f"Expectancy {expectancy} != expected {expected_expectancy}",
         )
 
         # Verify expectancy per trade
@@ -1073,9 +1062,7 @@ class TestExpectedResults(unittest.TestCase):
         expected_profit_over_100_trades = expectancy_per_trade * 100
 
         self.assertGreater(
-            expected_profit_over_100_trades,
-            0,
-            "Should be profitable over 100 trades"
+            expected_profit_over_100_trades, 0, "Should be profitable over 100 trades"
         )
 
 

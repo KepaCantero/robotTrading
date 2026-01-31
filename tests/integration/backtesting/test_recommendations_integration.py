@@ -159,9 +159,11 @@ class TestRecommendationsIntegration:
         print(f"Universe size (with survivorship adjustment): {len(universe_symbols)}")
         print(f"Adjusted confidence (Bonferroni): {adjusted_confidence:.4f}")
         print(f"Best params: {best_result['params']}")
-        print(f"Sharpe ratios - Train: {best_result['train_sharpe']:.2f}, "
-              f"Val: {best_result['val_sharpe']:.2f}, "
-              f"Test: {best_result['test_sharpe']:.2f}")
+        print(
+            f"Sharpe ratios - Train: {best_result['train_sharpe']:.2f}, "
+            f"Val: {best_result['val_sharpe']:.2f}, "
+            f"Test: {best_result['test_sharpe']:.2f}"
+        )
         print(f"OOS validation: {'PASSED' if oos_valid else 'FAILED'}")
         print(f"Expectancy: ${expectancy:.2f} per trade")
         print(f"================================\n")

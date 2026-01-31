@@ -421,7 +421,6 @@ class ContinuousDoubleAuction:
         if order.side == "BUY":
             # Check if can match with existing sells
             while self.sell_book and self.sell_book[0].price <= order.price and order.size > 0:
-
                 best_sell = self.sell_book[0]
 
                 match_size = min(order.size, best_sell.size)
@@ -452,7 +451,6 @@ class ContinuousDoubleAuction:
         else:  # SELL
             # Check if can match with existing buys
             while self.buy_book and self.buy_book[0].price >= order.price and order.size > 0:
-
                 best_buy = self.buy_book[0]
 
                 match_size = min(order.size, best_buy.size)

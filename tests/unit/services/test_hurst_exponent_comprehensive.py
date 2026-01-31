@@ -32,6 +32,7 @@ from app.services.hurst_exponent_analyzer import (
 # Test Fixtures
 # =============================================================================
 
+
 @pytest.fixture
 def hurst_analyzer():
     """Create HurstExponentAnalyzer instance."""
@@ -71,8 +72,8 @@ def mean_reverting_series():
     series[0] = mu
 
     for i in range(1, n):
-        dx = theta * (mu - series[i-1]) * dt + sigma * np.sqrt(dt) * np.random.normal()
-        series[i] = series[i-1] + dx
+        dx = theta * (mu - series[i - 1]) * dt + sigma * np.sqrt(dt) * np.random.normal()
+        series[i] = series[i - 1] + dx
 
     return series
 
@@ -84,15 +85,18 @@ def sample_price_data():
     dates = pd.date_range(start='2020-01-01', periods=1000, freq='D')
     prices = 100 + np.cumsum(np.random.normal(0, 1, 1000))
 
-    return pd.DataFrame({
-        'timestamp': dates,
-        'close': prices,
-    })
+    return pd.DataFrame(
+        {
+            'timestamp': dates,
+            'close': prices,
+        }
+    )
 
 
 # =============================================================================
 # MarketRegime Enum Tests
 # =============================================================================
+
 
 class TestMarketRegime:
     """Test suite for MarketRegime enum."""
@@ -113,6 +117,7 @@ class TestMarketRegime:
 # StrategyRecommendation Enum Tests
 # =============================================================================
 
+
 class TestStrategyRecommendation:
     """Test suite for StrategyRecommendation enum."""
 
@@ -126,6 +131,7 @@ class TestStrategyRecommendation:
 # =============================================================================
 # HurstExponentAnalyzer Initialization Tests
 # =============================================================================
+
 
 class TestHurstAnalyzerInitialization:
     """Test suite for HurstExponentAnalyzer initialization."""
@@ -148,6 +154,7 @@ class TestHurstAnalyzerInitialization:
 # =============================================================================
 # Hurst Exponent Calculation Tests
 # =============================================================================
+
 
 class TestHurstExponentCalculation:
     """Test suite for Hurst exponent calculation."""
@@ -218,6 +225,7 @@ class TestHurstExponentCalculation:
 # Regime Classification Tests
 # =============================================================================
 
+
 class TestRegimeClassification:
     """Test suite for market regime classification."""
 
@@ -258,6 +266,7 @@ class TestRegimeClassification:
 # Strategy Recommendation Tests
 # =============================================================================
 
+
 class TestStrategyRecommendation:
     """Test suite for strategy recommendations."""
 
@@ -283,6 +292,7 @@ class TestStrategyRecommendation:
 # =============================================================================
 # Rolling Hurst Calculation Tests
 # =============================================================================
+
 
 class TestRollingHurstCalculation:
     """Test suite for rolling Hurst exponent calculation."""
@@ -335,6 +345,7 @@ class TestRollingHurstCalculation:
 # Regime Change Detection Tests
 # =============================================================================
 
+
 class TestRegimeChangeDetection:
     """Test suite for regime change detection."""
 
@@ -372,6 +383,7 @@ class TestRegimeChangeDetection:
 # Property-Based Tests
 # =============================================================================
 
+
 class TestHurstExponentProperties:
     """Property-based tests using Hypothesis."""
 
@@ -405,7 +417,10 @@ class TestHurstExponentProperties:
 
     @given(
         trend_strength=st.floats(min_value=0.1, max_value=10.0),
-        n=st.integers(min_value=500, max_value=1000, ),
+        n=st.integers(
+            min_value=500,
+            max_value=1000,
+        ),
     )
     @settings(max_examples=15)
     def test_trending_series_hurst_property(self, hurst_analyzer, trend_strength, n):
@@ -434,8 +449,8 @@ class TestHurstExponentProperties:
         series[0] = 0
 
         for i in range(1, n):
-            dx = -theta * series[i-1] * 0.1 + np.random.normal() * np.sqrt(0.1)
-            series[i] = series[i-1] + dx
+            dx = -theta * series[i - 1] * 0.1 + np.random.normal() * np.sqrt(0.1)
+            series[i] = series[i - 1] + dx
 
         result = hurst_analyzer.calculate_hurst_exponent(series)
 
@@ -447,6 +462,7 @@ class TestHurstExponentProperties:
 # =============================================================================
 # Edge Cases and Error Handling
 # =============================================================================
+
 
 class TestHurstAnalyzerEdgeCases:
     """Test suite for edge cases and error handling."""
@@ -509,6 +525,7 @@ class TestHurstAnalyzerEdgeCases:
 # Numba JIT Tests
 # =============================================================================
 
+
 class TestNumbaJITCompilation:
     """Test suite for Numba JIT compilation."""
 
@@ -550,6 +567,7 @@ class TestNumbaJITCompilation:
 # Statistical Validation Tests
 # =============================================================================
 
+
 class TestStatisticalValidation:
     """Test suite for statistical validation."""
 
@@ -579,6 +597,7 @@ class TestStatisticalValidation:
 # =============================================================================
 # Integration Tests
 # =============================================================================
+
 
 class TestHurstAnalyzerIntegration:
     """Integration tests for Hurst Exponent Analyzer."""

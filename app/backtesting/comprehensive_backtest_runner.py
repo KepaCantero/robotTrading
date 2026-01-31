@@ -66,7 +66,6 @@ from app.strategies.momentum_modular.strategy import ModularMomentumStrategy
 # Portfolio management
 
 
-
 class ComprehensiveBacktestRunner:
     """
     Sistema completo de backtesting automatizado y configurable.

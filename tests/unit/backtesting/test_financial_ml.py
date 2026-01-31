@@ -209,7 +209,11 @@ class TestFinancialMLPipeline:
 
     def test_predict_after_fit(self, sample_data):
         """Test predict after fitting."""
-        X_train, prices_train, y_train = sample_data[:150], sample_data[1][:150], sample_data[2][:150]
+        X_train, prices_train, y_train = (
+            sample_data[:150],
+            sample_data[1][:150],
+            sample_data[2][:150],
+        )
         X_test, prices_test, _ = sample_data[0][150:], sample_data[1][150:], sample_data[2][150:]
 
         pipeline = FinancialMLPipeline()
@@ -321,9 +325,7 @@ class TestApplyFinancialML:
             mock_instance.fit_predict.return_value = mock_result
             MockPipeline.return_value = mock_instance
 
-            result = apply_financial_ml(
-                X_train, prices_train, X_test, prices_test, y_test, config
-            )
+            result = apply_financial_ml(X_train, prices_train, X_test, prices_test, y_test, config)
 
             assert isinstance(result, FinancialMLResult)
             mock_instance.fit_predict.assert_called_once()
@@ -338,7 +340,9 @@ class TestCalculateLopezDePradoFeatures:
         np.random.seed(42)
         prices = pd.Series(100 + np.cumsum(np.random.randn(200) * 0.01))
 
-        X, y = calculate_lopez_de_prado_features(prices, config=FinancialMLConfig(apply_fracdiff=False))
+        X, y = calculate_lopez_de_prado_features(
+            prices, config=FinancialMLConfig(apply_fracdiff=False)
+        )
 
         assert isinstance(X, pd.DataFrame)
         assert isinstance(y, pd.Series)

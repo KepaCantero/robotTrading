@@ -33,13 +33,15 @@ def sample_returns():
     symbols = [f"STOCK{i}" for i in range(n_assets)]
 
     # Generate correlated returns using Cholesky decomposition
-    cov = np.array([
-        [0.0004, 0.0002, 0.0001, 0.00005, 0.00003],
-        [0.0002, 0.0003, 0.00015, 0.00008, 0.00004],
-        [0.0001, 0.00015, 0.00025, 0.0001, 0.00005],
-        [0.00005, 0.00008, 0.0001, 0.0002, 0.00006],
-        [0.00003, 0.00004, 0.00005, 0.00006, 0.00015],
-    ])
+    cov = np.array(
+        [
+            [0.0004, 0.0002, 0.0001, 0.00005, 0.00003],
+            [0.0002, 0.0003, 0.00015, 0.00008, 0.00004],
+            [0.0001, 0.00015, 0.00025, 0.0001, 0.00005],
+            [0.00005, 0.00008, 0.0001, 0.0002, 0.00006],
+            [0.00003, 0.00004, 0.00005, 0.00006, 0.00015],
+        ]
+    )
 
     L = np.linalg.cholesky(cov)
     random_returns = np.random.randn(100, n_assets)
@@ -131,7 +133,9 @@ class TestRiskModel:
     def test_calculate_factor_exposures(self, sample_portfolio_weights, sample_factor_loadings):
         """Test factor exposure calculation."""
         model = RiskModel({})
-        exposures = model.calculate_factor_exposures(sample_portfolio_weights, sample_factor_loadings)
+        exposures = model.calculate_factor_exposures(
+            sample_portfolio_weights, sample_factor_loadings
+        )
 
         assert len(exposures) == len(sample_factor_loadings.columns)
         assert all(isinstance(v, float) for v in exposures.values())
@@ -161,9 +165,7 @@ class TestRiskModel:
         assert abs(constrained.sum() - 1.0) < 0.01
 
         # Check that factor exposures are within limits
-        exposures = model.calculate_factor_exposures(
-            constrained.to_dict(), sample_factor_loadings
-        )
+        exposures = model.calculate_factor_exposures(constrained.to_dict(), sample_factor_loadings)
         for exposure in exposures.values():
             assert abs(exposure) <= 0.2  # Allow small tolerance
 
@@ -177,9 +179,7 @@ class TestRiskModel:
         }
         model = RiskModel(config)
 
-        is_valid, issues = model.validate_portfolio_risk(
-            sample_portfolio_weights, sample_returns
-        )
+        is_valid, issues = model.validate_portfolio_risk(sample_portfolio_weights, sample_returns)
 
         # Check that validation returns a tuple
         assert isinstance(is_valid, bool)

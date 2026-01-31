@@ -116,7 +116,8 @@ class OrderStateMachine:
     async def initialize(self):
         """Create database schema."""
         async with aiosqlite.connect(self.db_path) as db:
-            await db.execute("""
+            await db.execute(
+                """
                 CREATE TABLE IF NOT EXISTS order_wal (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     order_id TEXT NOT NULL,
@@ -131,15 +132,20 @@ class OrderStateMachine:
                     metadata TEXT,
                     created_at TEXT DEFAULT CURRENT_TIMESTAMP
                 )
-            """)
-            await db.execute("""
+            """
+            )
+            await db.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_order_id
                 ON order_wal(order_id)
-            """)
-            await db.execute("""
+            """
+            )
+            await db.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_state
                 ON order_wal(state)
-            """)
+            """
+            )
             await db.commit()
 
     async def write_state(self, log: OrderLog) -> bool:

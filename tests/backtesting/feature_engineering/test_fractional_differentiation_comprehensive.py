@@ -29,13 +29,17 @@ try:
         FractionalDifferentiationResult,
         MIN_WEIGHT_THRESHOLD,
     )
+
     MODULE_AVAILABLE = True
 except ImportError as e:
     MODULE_AVAILABLE = False
     IMPORT_ERROR = str(e)
 
 
-@pytest.mark.skipif(not MODULE_AVAILABLE, reason=f"Module not available: {IMPORT_ERROR if not MODULE_AVAILABLE else 'OK'}")
+@pytest.mark.skipif(
+    not MODULE_AVAILABLE,
+    reason=f"Module not available: {IMPORT_ERROR if not MODULE_AVAILABLE else 'OK'}",
+)
 class TestNumbaAcceleratedFunctions:
     """Test suite for Numba-accelerated core functions."""
 

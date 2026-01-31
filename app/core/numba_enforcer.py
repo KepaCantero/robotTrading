@@ -120,7 +120,6 @@ def verify_numba_function(func: Callable, *args, **kwargs) -> bool:
         RuntimeError: If function is not Numba-compiled or fails
     """
     try:
-
         # Check if function has Numba-specific attributes
         # Numba JIT functions have 'signatures' or '__compiled__' attribute
         has_signatures = hasattr(func, 'signatures')

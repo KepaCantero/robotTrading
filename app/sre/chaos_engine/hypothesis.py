@@ -181,7 +181,8 @@ class HypothesisValidator:
             db_path.parent.mkdir(parents=True, exist_ok=True)
 
             async with aiosqlite.connect(self.db_path) as db:
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS chaos_hypotheses (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         service_name TEXT NOT NULL,
@@ -204,12 +205,15 @@ class HypothesisValidator:
                         validated_at TEXT NOT NULL,
                         created_at TEXT NOT NULL DEFAULT (datetime('utc'))
                     )
-                """)
+                """
+                )
 
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE INDEX IF NOT EXISTS idx_hypotheses_service_status
                     ON chaos_hypotheses(service_name, status)
-                """)
+                """
+                )
 
                 await db.commit()
 

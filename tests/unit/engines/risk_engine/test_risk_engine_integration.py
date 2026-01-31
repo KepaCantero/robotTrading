@@ -50,7 +50,7 @@ class TestRiskEngineWorkflow:
                 'portfolio_drawdown': {
                     'current_drawdown': 0.10,
                 }
-            }
+            },
         }
 
         # Check alerts
@@ -93,13 +93,11 @@ class TestRiskEngineWorkflow:
                 'portfolio_drawdown': {
                     'current_drawdown': 0.10,
                 }
-            }
+            },
         }
 
         # 4. Generate alerts
-        alerts = risk_components['alerts'].check_thresholds(
-            risk_assessment, sample_portfolio
-        )
+        alerts = risk_components['alerts'].check_thresholds(risk_assessment, sample_portfolio)
 
         # All components should work
         assert 'severity' in limits_result

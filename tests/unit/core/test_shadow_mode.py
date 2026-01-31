@@ -157,9 +157,7 @@ class TestShadowModeExecutor:
         assert await shadow_executor.is_shadow_mode_enabled() is False
 
     @pytest.mark.asyncio
-    async def test_execute_order_shadow_basic(
-        self, shadow_executor, mock_broker
-    ):
+    async def test_execute_order_shadow_basic(self, shadow_executor, mock_broker):
         """Test basic shadow order execution."""
         result = await shadow_executor.execute_order_shadow(
             symbol="AAPL",
@@ -192,9 +190,7 @@ class TestShadowModeExecutor:
             )
 
     @pytest.mark.asyncio
-    async def test_execute_order_shadow_writes_to_wal(
-        self, shadow_executor, wal_manager
-    ):
+    async def test_execute_order_shadow_writes_to_wal(self, shadow_executor, wal_manager):
         """Test that shadow orders are written to WAL."""
         result = await shadow_executor.execute_order_shadow(
             symbol="AAPL",
@@ -376,9 +372,7 @@ class TestShadowModeExecutor:
         assert "No shadow results found" in report["errors"][0]
 
     @pytest.mark.asyncio
-    async def test_shadow_to_production_transition_with_success(
-        self, shadow_executor
-    ):
+    async def test_shadow_to_production_transition_with_success(self, shadow_executor):
         """Test successful transition validation."""
         # Create some successful shadow results
         for i in range(10):

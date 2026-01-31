@@ -148,9 +148,19 @@ class TestChanDrawdownAnalyzer:
         """Create equity curve with known drawdown."""
         # Create a pattern with clear peak and trough
         equity_values = [
-            100000, 105000, 110000, 115000, 120000,  # Peak
-            115000, 110000, 105000, 100000, 95000,   # Drawdown
-            100000, 105000, 110000,                   # Recovery
+            100000,
+            105000,
+            110000,
+            115000,
+            120000,  # Peak
+            115000,
+            110000,
+            105000,
+            100000,
+            95000,  # Drawdown
+            100000,
+            105000,
+            110000,  # Recovery
         ]
         return pd.Series(equity_values)
 

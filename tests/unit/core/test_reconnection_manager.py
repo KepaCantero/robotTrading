@@ -224,6 +224,7 @@ class TestReconnectionManager:
     @pytest.mark.asyncio
     async def test_connect_with_backoff_handles_timeout_error(self):
         """Test handling of asyncio.TimeoutError."""
+
         # Mock a function that raises TimeoutError
         async def timeout_connect():
             raise asyncio.TimeoutError("Connection timed out")
@@ -244,9 +245,7 @@ class TestReconnectionManager:
         attempt_callback = MagicMock()
         success_callback = MagicMock()
 
-        connect_func = AsyncMock(
-            side_effect=[Exception("fail"), "connection_object"]
-        )
+        connect_func = AsyncMock(side_effect=[Exception("fail"), "connection_object"])
 
         config = ReconnectionConfig(
             max_attempts=5,
@@ -290,9 +289,7 @@ class TestReconnectionManager:
         manager = ReconnectionManager("TestService")
 
         # Start connection maintenance in background
-        task = asyncio.create_task(
-            manager.maintain_connection(connect_func, reconnect_delay=0.01)
-        )
+        task = asyncio.create_task(manager.maintain_connection(connect_func, reconnect_delay=0.01))
 
         # Wait a bit for connection
         await asyncio.sleep(0.1)

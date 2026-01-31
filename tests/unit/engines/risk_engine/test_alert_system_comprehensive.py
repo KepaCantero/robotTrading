@@ -24,6 +24,7 @@ from app.models.portfolio import Portfolio
 # Test Fixtures
 # =============================================================================
 
+
 @pytest.fixture
 def alert_config():
     """Create test configuration for AlertSystem."""
@@ -98,6 +99,7 @@ def sample_risk_assessment():
 # Initialization Tests
 # =============================================================================
 
+
 class TestAlertSystemInitialization:
     """Test suite for AlertSystem initialization."""
 
@@ -131,7 +133,7 @@ class TestAlertSystemInitialization:
             'email': {
                 'smtp_server': 'smtp.example.com',
                 'from_address': 'alerts@example.com',
-            }
+            },
         }
         system = AlertSystem(config)
 
@@ -144,7 +146,7 @@ class TestAlertSystemInitialization:
             'enable_slack': True,
             'slack': {
                 'webhook_url': 'https://hooks.slack.com/test',
-            }
+            },
         }
         system = AlertSystem(config)
 
@@ -170,10 +172,13 @@ class TestAlertSystemInitialization:
 # VaR Threshold Checking Tests
 # =============================================================================
 
+
 class TestVaRThresholdChecking:
     """Test suite for Value at Risk threshold checking."""
 
-    def test_var_within_threshold_no_alert(self, alert_system, sample_risk_assessment, sample_portfolio):
+    def test_var_within_threshold_no_alert(
+        self, alert_system, sample_risk_assessment, sample_portfolio
+    ):
         """Test that VaR within threshold doesn't generate alert."""
         sample_risk_assessment['var']['var'] = 0.04  # Below 0.05 threshold
 
@@ -182,7 +187,9 @@ class TestVaRThresholdChecking:
         var_alerts = [a for a in alerts if a['type'] == 'var_breach']
         assert len(var_alerts) == 0
 
-    def test_var_exceeds_threshold_generates_alert(self, alert_system, sample_risk_assessment, sample_portfolio):
+    def test_var_exceeds_threshold_generates_alert(
+        self, alert_system, sample_risk_assessment, sample_portfolio
+    ):
         """Test that VaR exceeding threshold generates alert."""
         sample_risk_assessment['var']['var'] = 0.06  # Above 0.05 threshold
 
@@ -226,10 +233,13 @@ class TestVaRThresholdChecking:
 # Drawdown Threshold Checking Tests
 # =============================================================================
 
+
 class TestDrawdownThresholdChecking:
     """Test suite for drawdown threshold checking."""
 
-    def test_drawdown_within_threshold(self, alert_system, sample_risk_assessment, sample_portfolio):
+    def test_drawdown_within_threshold(
+        self, alert_system, sample_risk_assessment, sample_portfolio
+    ):
         """Test drawdown within threshold."""
         sample_risk_assessment['drawdown']['portfolio_drawdown']['current_drawdown'] = 0.10
 
@@ -238,7 +248,9 @@ class TestDrawdownThresholdChecking:
         drawdown_alerts = [a for a in alerts if a['type'] == 'drawdown_limit']
         assert len(drawdown_alerts) == 0
 
-    def test_drawdown_exceeds_threshold(self, alert_system, sample_risk_assessment, sample_portfolio):
+    def test_drawdown_exceeds_threshold(
+        self, alert_system, sample_risk_assessment, sample_portfolio
+    ):
         """Test drawdown exceeding threshold generates alert."""
         sample_risk_assessment['drawdown']['portfolio_drawdown']['current_drawdown'] = 0.20
 
@@ -272,6 +284,7 @@ class TestDrawdownThresholdChecking:
 # Exposure Threshold Checking Tests
 # =============================================================================
 
+
 class TestExposureThresholdChecking:
     """Test suite for exposure threshold checking."""
 
@@ -284,7 +297,9 @@ class TestExposureThresholdChecking:
         exposure_alerts = [a for a in alerts if a['type'] == 'exposure_limit']
         assert len(exposure_alerts) == 0
 
-    def test_exposure_exceeds_single_asset_limit(self, alert_system, sample_risk_assessment, sample_portfolio):
+    def test_exposure_exceeds_single_asset_limit(
+        self, alert_system, sample_risk_assessment, sample_portfolio
+    ):
         """Test single asset exposure exceeding limit."""
         sample_risk_assessment['exposure']['max_single_exposure'] = 0.25
 
@@ -308,6 +323,7 @@ class TestExposureThresholdChecking:
 # Correlation Threshold Checking Tests
 # =============================================================================
 
+
 class TestCorrelationThresholdChecking:
     """Test suite for correlation threshold checking."""
 
@@ -320,7 +336,9 @@ class TestCorrelationThresholdChecking:
         correlation_alerts = [a for a in alerts if a['type'] == 'correlation_limit']
         assert len(correlation_alerts) == 0
 
-    def test_correlation_exceeds_limit(self, alert_system, sample_risk_assessment, sample_portfolio):
+    def test_correlation_exceeds_limit(
+        self, alert_system, sample_risk_assessment, sample_portfolio
+    ):
         """Test correlation exceeding limit."""
         sample_risk_assessment['correlations']['max_correlation'] = 0.85
 
@@ -343,6 +361,7 @@ class TestCorrelationThresholdChecking:
 # Violation Checking Tests
 # =============================================================================
 
+
 class TestViolationChecking:
     """Test suite for violation checking."""
 
@@ -357,9 +376,7 @@ class TestViolationChecking:
 
     def test_single_violation(self, alert_system, sample_risk_assessment, sample_portfolio):
         """Test with single violation."""
-        sample_risk_assessment['violations'] = [
-            {'type': 'position_limit', 'severity': 'medium'}
-        ]
+        sample_risk_assessment['violations'] = [{'type': 'position_limit', 'severity': 'medium'}]
 
         alerts = alert_system.check_thresholds(sample_risk_assessment, sample_portfolio)
 
@@ -385,6 +402,7 @@ class TestViolationChecking:
 # =============================================================================
 # Alert History Tests
 # =============================================================================
+
 
 class TestAlertHistory:
     """Test suite for alert history management."""
@@ -413,7 +431,9 @@ class TestAlertHistory:
 
         assert len(system.alert_history) <= 5
 
-    def test_alert_metadata_in_history(self, alert_system, sample_risk_assessment, sample_portfolio):
+    def test_alert_metadata_in_history(
+        self, alert_system, sample_risk_assessment, sample_portfolio
+    ):
         """Test that alerts have proper metadata in history."""
         sample_risk_assessment['var']['var'] = 0.10
         alert_system.check_thresholds(sample_risk_assessment, sample_portfolio)
@@ -429,10 +449,13 @@ class TestAlertHistory:
 # Cooldown Tests
 # =============================================================================
 
+
 class TestAlertCooldown:
     """Test suite for alert cooldown/rate limiting."""
 
-    def test_identical_alerts_cooldown(self, alert_system, sample_risk_assessment, sample_portfolio):
+    def test_identical_alerts_cooldown(
+        self, alert_system, sample_risk_assessment, sample_portfolio
+    ):
         """Test that identical alerts are rate-limited."""
         sample_risk_assessment['var']['var'] = 0.10
 
@@ -463,6 +486,7 @@ class TestAlertCooldown:
 # =============================================================================
 # Send Alerts Tests
 # =============================================================================
+
 
 class TestSendAlerts:
     """Test suite for sending alerts."""
@@ -506,6 +530,7 @@ class TestSendAlerts:
 # =============================================================================
 # Edge Cases and Error Handling
 # =============================================================================
+
 
 class TestAlertSystemEdgeCases:
     """Test suite for edge cases and error handling."""
@@ -560,6 +585,7 @@ class TestAlertSystemEdgeCases:
 # =============================================================================
 # Property-Based Tests
 # =============================================================================
+
 
 class TestAlertSystemProperties:
     """Property-based tests using Hypothesis."""
@@ -646,6 +672,7 @@ class TestAlertSystemProperties:
 # =============================================================================
 # Integration Tests
 # =============================================================================
+
 
 class TestAlertSystemIntegration:
     """Integration tests for AlertSystem."""

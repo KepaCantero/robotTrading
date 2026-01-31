@@ -27,6 +27,7 @@ from app.domain.repositories.base_repository import AbstractRepository
 # TEST ENTITIES
 # ============================================================================
 
+
 class Order:
     """Test order entity."""
 
@@ -58,6 +59,7 @@ class Portfolio:
 # ============================================================================
 # IN-MEMORY REPOSITORIES
 # ============================================================================
+
 
 class InMemoryOrderRepository(AbstractRepository[Order, str]):
     """In-memory order repository."""
@@ -109,6 +111,7 @@ class InMemoryPortfolioRepository(AbstractRepository[Portfolio, str]):
 # TEST UNIT OF WORK
 # ============================================================================
 
+
 class TestUnitOfWork(GenericUnitOfWork):
     """Test Unit of Work implementation."""
 
@@ -152,6 +155,7 @@ class TestUnitOfWork(GenericUnitOfWork):
 # ============================================================================
 # TESTS
 # ============================================================================
+
 
 class TestGenericUnitOfWork:
     """Tests for GenericUnitOfWork."""

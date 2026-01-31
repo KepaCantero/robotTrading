@@ -31,7 +31,9 @@ try:
 
     HURST_AVAILABLE = True
 except ImportError as e:
-    pytest.skip(f"Hurst Exponent Analyzer not available (Numba is REQUIRED): {e}", allow_module_level=True)
+    pytest.skip(
+        f"Hurst Exponent Analyzer not available (Numba is REQUIRED): {e}", allow_module_level=True
+    )
     HURST_AVAILABLE = False
 
 
@@ -56,8 +58,8 @@ class TestHurstExponentCalculation:
         x[0] = mu
 
         for i in range(1, n):
-            dx = theta * (mu - x[i-1]) * dt + sigma * np.sqrt(dt) * np.random.randn()
-            x[i] = x[i-1] + dx
+            dx = theta * (mu - x[i - 1]) * dt + sigma * np.sqrt(dt) * np.random.randn()
+            x[i] = x[i - 1] + dx
 
         return x
 
@@ -79,7 +81,7 @@ class TestHurstExponentCalculation:
 
         for i in range(1, n):
             dx = mu * dt + sigma * np.sqrt(dt) * np.random.randn()
-            x[i] = x[i-1] * (1 + dx)
+            x[i] = x[i - 1] * (1 + dx)
 
         return x
 
@@ -100,7 +102,7 @@ class TestHurstExponentCalculation:
 
         for i in range(1, n):
             # Deterministic trend + small noise
-            x[i] = x[i-1] * (1 + trend * 0.01) + noise * np.random.randn()
+            x[i] = x[i - 1] * (1 + trend * 0.01) + noise * np.random.randn()
 
         return x
 
@@ -117,7 +119,9 @@ class TestHurstExponentCalculation:
         assert isinstance(result.strategy, StrategyRecommendation)
 
         # Log that we got a valid result
-        print(f"   Mean-reverting series H: {result.hurst_exponent:.4f}, Regime: {result.regime.value}")
+        print(
+            f"   Mean-reverting series H: {result.hurst_exponent:.4f}, Regime: {result.regime.value}"
+        )
 
     def test_random_walk_hurst(self, random_walk_series):
         """Test that random walk is analyzed correctly."""
@@ -154,10 +158,7 @@ class TestHurstExponentCalculation:
         returns = log_prices[1:] - log_prices[:-1]
 
         hurst, rs_values, window_sizes = calculate_hurst_rs_numba(
-            returns,
-            min_window=10,
-            max_window=len(returns) // 2,
-            num_windows=15
+            returns, min_window=10, max_window=len(returns) // 2, num_windows=15
         )
 
         # Validate results
@@ -263,7 +264,7 @@ class TestAnalyzerFeatures:
             max_window_ratio=0.5,
             num_windows=20,
             confidence_level=0.95,
-            use_returns=True
+            use_returns=True,
         )
 
         assert analyzer.method == "rs"
@@ -375,8 +376,8 @@ class TestRegimeChangeDetection:
         x[0] = mu
 
         for i in range(1, n):
-            dx = theta * (mu - x[i-1]) * dt + sigma * np.sqrt(dt) * np.random.randn()
-            x[i] = x[i-1] + dx
+            dx = theta * (mu - x[i - 1]) * dt + sigma * np.sqrt(dt) * np.random.randn()
+            x[i] = x[i - 1] + dx
 
         return x
 
@@ -392,7 +393,7 @@ class TestRegimeChangeDetection:
         x[0] = 100.0
 
         for i in range(1, n):
-            x[i] = x[i-1] * (1 + trend * 0.01) + noise * np.random.randn()
+            x[i] = x[i - 1] * (1 + trend * 0.01) + noise * np.random.randn()
 
         return x
 
@@ -403,7 +404,7 @@ class TestRegimeChangeDetection:
         # Analyze mean-reverting data multiple times
         now = datetime.now()
         for i in range(5):
-            timestamp = now - timedelta(days=5-i)
+            timestamp = now - timedelta(days=5 - i)
             analyzer.analyze(mean_reverting_data, symbol=symbol, timestamp=timestamp)
 
         # Now analyze trending data (regime change)
@@ -429,7 +430,7 @@ class TestRegimeChangeDetection:
         # Analyze similar mean-reverting data multiple times
         now = datetime.now()
         for i in range(10):
-            timestamp = now - timedelta(hours=10-i)
+            timestamp = now - timedelta(hours=10 - i)
             # Generate similar data with slightly different seed
             np.random.seed(42 + i)
             n = 300
@@ -441,8 +442,8 @@ class TestRegimeChangeDetection:
             x = np.zeros(n)
             x[0] = mu
             for j in range(1, n):
-                dx = theta * (mu - x[j-1]) * dt + sigma * np.sqrt(dt) * np.random.randn()
-                x[j] = x[j-1] + dx
+                dx = theta * (mu - x[j - 1]) * dt + sigma * np.sqrt(dt) * np.random.randn()
+                x[j] = x[j - 1] + dx
 
             analyzer.analyze(x, symbol=symbol, timestamp=timestamp)
 
@@ -457,7 +458,7 @@ class TestRegimeChangeDetection:
         # Analyze data multiple times
         now = datetime.now()
         for i in range(5):
-            timestamp = now - timedelta(days=5-i)
+            timestamp = now - timedelta(days=5 - i)
             analyzer.analyze(mean_reverting_data, symbol=symbol, timestamp=timestamp)
 
         # Get historical values
@@ -484,8 +485,8 @@ class TestMultipleSymbolAnalysis:
         x = np.zeros(n)
         x[0] = mu
         for i in range(1, n):
-            dx = theta * (mu - x[i-1]) * 0.01 + 0.5 * np.sqrt(0.01) * np.random.randn()
-            x[i] = x[i-1] + dx
+            dx = theta * (mu - x[i - 1]) * 0.01 + 0.5 * np.sqrt(0.01) * np.random.randn()
+            x[i] = x[i - 1] + dx
         data['AAPL'] = x
 
         # MSFT: Random walk
@@ -493,14 +494,14 @@ class TestMultipleSymbolAnalysis:
         x[0] = 100.0
         for i in range(1, n):
             dx = 0.01 * np.sqrt(0.01) * np.random.randn()
-            x[i] = x[i-1] * (1 + dx)
+            x[i] = x[i - 1] * (1 + dx)
         data['MSFT'] = x
 
         # GOOGL: Trending
         x = np.zeros(n)
         x[0] = 100.0
         for i in range(1, n):
-            x[i] = x[i-1] * (1 + 0.05 * 0.01) + 0.02 * np.random.randn()
+            x[i] = x[i - 1] * (1 + 0.05 * 0.01) + 0.02 * np.random.randn()
         data['GOOGL'] = x
 
         return data

@@ -12,6 +12,7 @@ import os
 # Add project root to Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../..')))
 
+
 def run_tests():
     """Run the strategy engine tests."""
     import pytest
@@ -24,7 +25,8 @@ def run_tests():
         test_dir,
         "-v",
         "--tb=short",
-        "-p", "no:cacheprovider",
+        "-p",
+        "no:cacheprovider",
         "--markers=unit",
         "-x",  # Stop on first failure
     ]
@@ -35,6 +37,7 @@ def run_tests():
 
     exit_code = pytest.main(args)
     return exit_code
+
 
 if __name__ == "__main__":
     sys.exit(run_tests())

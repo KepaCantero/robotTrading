@@ -12,7 +12,7 @@ because failed companies are systematically excluded from historical data.
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +103,16 @@ class UniverseManager:
 
         Returns:
             List of symbols that were active during the period
+
+        Raises:
+            ValueError: If start_date is not before end_date
         """
+        # Validate date range (CC-006: Explicit error handling)
+        if start_date >= end_date:
+            raise ValueError(
+                f"start_date must be before end_date: start_date={start_date}, end_date={end_date}"
+            )
+
         symbols = []
 
         # Always include survivors
@@ -113,41 +122,53 @@ class UniverseManager:
         if include_delisted:
             for entry in self.universe["delisted"]:
                 symbol, name, delist_date, reason = entry
-                delist_dt = datetime.strptime(delist_date, "%Y-%m-%d")
-                if start_date < delist_dt < end_date:
-                    symbols.append(symbol)
-                    logger.debug(
-                        f"Including delisted {symbol} ({name}) - "
-                        f"delisted {delist_date} due to {reason}"
-                    )
+                try:
+                    delist_dt = datetime.strptime(delist_date, "%Y-%m-%d")
+                    if start_date < delist_dt < end_date:
+                        symbols.append(symbol)
+                        logger.debug(
+                            f"Including delisted {symbol} ({name}) - "
+                            f"delisted {delist_date} due to {reason}"
+                        )
+                except ValueError as e:
+                    logger.error(f"Failed to parse delist_date '{delist_date}' for {symbol}: {e}")
+                    raise
 
         # Add spun off if active during period
         if include_spun_off:
             for entry in self.universe["spun_off"]:
                 symbol, name, acquire_date, acquirer = entry
-                acquire_dt = datetime.strptime(acquire_date, "%Y-%m-%d")
-                if start_date < acquire_dt < end_date:
-                    symbols.append(symbol)
-                    logger.debug(
-                        f"Including acquired {symbol} ({name}) - "
-                        f"acquired {acquire_date} by {acquirer}"
-                    )
+                try:
+                    acquire_dt = datetime.strptime(acquire_date, "%Y-%m-%d")
+                    if start_date < acquire_dt < end_date:
+                        symbols.append(symbol)
+                        logger.debug(
+                            f"Including acquired {symbol} ({name}) - "
+                            f"acquired {acquire_date} by {acquirer}"
+                        )
+                except ValueError as e:
+                    logger.error(f"Failed to parse acquire_date '{acquire_date}' for {symbol}: {e}")
+                    raise
 
         # Add penny stocks if requested
         if include_penny_stocks:
             for entry in self.universe["penny_stocks"]:
                 symbol = entry[0]
-                period_start = datetime.strptime(entry[2], "%Y-%m-%d")
-                period_end = datetime.strptime(entry[3], "%Y-%m-%d")
+                try:
+                    period_start = datetime.strptime(entry[2], "%Y-%m-%d")
+                    period_end = datetime.strptime(entry[3], "%Y-%m-%d")
 
-                # Check if penny stock period overlaps with backtest period
-                if period_start <= end_date and period_end >= start_date:
-                    if symbol not in symbols:  # Avoid duplicates
-                        symbols.append(symbol)
-                        logger.debug(
-                            f"Including penny stock period for {symbol} "
-                            f"({entry[4]}: {period_start.date()} to {period_end.date()})"
-                        )
+                    # Check if penny stock period overlaps with backtest period
+                    if period_start <= end_date and period_end >= start_date:
+                        if symbol not in symbols:  # Avoid duplicates
+                            symbols.append(symbol)
+                            logger.debug(
+                                f"Including penny stock period for {symbol} "
+                                f"({entry[4]}: {period_start.date()} to {period_end.date()})"
+                            )
+                except ValueError as e:
+                    logger.error(f"Failed to parse penny stock dates for {symbol}: {e}")
+                    raise
 
         logger.info(
             f"Universe includes {len(symbols)} symbols for period "
@@ -174,7 +195,16 @@ class UniverseManager:
 
         Returns:
             Filtered list of symbols
+
+        Raises:
+            ValueError: If min_market_cap or max_market_cap is negative
         """
+        # Validate market cap values (CC-006: Explicit error handling)
+        if min_market_cap is not None and min_market_cap < 0:
+            raise ValueError(f"min_market_cap must be >= 0: {min_market_cap}")
+        if max_market_cap is not None and max_market_cap < 0:
+            raise ValueError(f"max_market_cap must be >= 0: {max_market_cap}")
+
         # Simplified market cap data (in billions of USD)
         # In production, this would load from a data provider
         market_caps = {
@@ -234,7 +264,18 @@ class UniverseManager:
 
         Returns:
             Dictionary with bias metrics
+
+        Raises:
+            ValueError: If survivor_returns and full_universe_returns have different lengths
         """
+        # Validate input lists have same length (CC-006: Explicit error handling)
+        if len(survivor_returns) != len(full_universe_returns):
+            raise ValueError(
+                f"survivor_returns and full_universe_returns must have same length: "
+                f"len(survivor_returns)={len(survivor_returns)}, "
+                f"len(full_universe_returns)={len(full_universe_returns)}"
+            )
+
         if not survivor_returns or not full_universe_returns:
             return {"bias_detected": False}
 
@@ -319,7 +360,7 @@ class UniverseManager:
 
         return sectors
 
-    def get_universe_statistics(self, start_date: datetime, end_date: datetime) -> Dict[str, any]:
+    def get_universe_statistics(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
         """
         Get statistics about the backtesting universe.
 

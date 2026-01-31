@@ -173,7 +173,9 @@ class EnsembleVoting:
 
             # Build vote dictionary
             strategy_votes = {
-                s.symbol if s.symbol else self._infer_strategy(s): (
+                s.symbol
+                if s.symbol
+                else self._infer_strategy(s): (
                     s.signal_type if isinstance(s.signal_type, str) else s.signal_type.value
                 )
                 for s in signals

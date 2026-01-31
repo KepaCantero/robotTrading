@@ -48,7 +48,7 @@ def test_spain_tax_engine_integration():
     dividends = {
         "DE": Decimal("2000"),  # German stocks (0% withholding)
         "US": Decimal("1500"),  # US stocks (15% withholding)
-        "UK": Decimal("800"),   # UK stocks (15% withholding)
+        "UK": Decimal("800"),  # UK stocks (15% withholding)
     }
 
     total_dividends = sum(dividends.values())
@@ -148,8 +148,9 @@ def test_spain_tax_engine_integration():
 
     print("Progressive tax brackets:")
     for bracket in engine.get_tax_brackets():
-        print(f"  Bracket {bracket['bracket']}: {bracket['rate']:.0%} "
-              f"({bracket['description']})")
+        print(
+            f"  Bracket {bracket['bracket']}: {bracket['rate']:.0%} " f"({bracket['description']})"
+        )
 
     print("\nKey differences from US:")
     print("  - No distinction between long-term and short-term gains")

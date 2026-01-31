@@ -70,10 +70,7 @@ class RiskCalculator:
             RiskMetrics object with calculated metrics
         """
         # Get position values
-        position_values = [
-            pos.get_value().amount
-            for pos in portfolio.get_open_positions()
-        ]
+        position_values = [pos.get_value().amount for pos in portfolio.get_open_positions()]
         total_value = portfolio.get_total_value().amount
 
         if total_value == 0 or not position_values:
@@ -139,11 +136,17 @@ class RiskCalculator:
         position_value = position.get_value().amount
 
         # Position as percentage of portfolio
-        position_pct = (position_value / portfolio_value * Decimal("100")) if portfolio_value > 0 else Decimal("0")
+        position_pct = (
+            (position_value / portfolio_value * Decimal("100"))
+            if portfolio_value > 0
+            else Decimal("0")
+        )
 
         # Position risk (simplified - uses unrealized P&L as proxy)
         unrealized_pnl = position.get_unrealized_pnl().amount
-        risk_amount = abs(unrealized_pnl) if unrealized_pnl < 0 else position_value * Decimal("0.05")
+        risk_amount = (
+            abs(unrealized_pnl) if unrealized_pnl < 0 else position_value * Decimal("0.05")
+        )
 
         return {
             "position_value": position_value,
@@ -224,7 +227,7 @@ class RiskCalculator:
             return Decimal("999")  # Infinite Sortino (no downside)
 
         downside_arr = np.array([float(r - target_return) for r in downside_returns])
-        downside_deviation = Decimal(str(np.sqrt(np.mean(downside_arr ** 2))))
+        downside_deviation = Decimal(str(np.sqrt(np.mean(downside_arr**2))))
 
         if downside_deviation == 0:
             return Decimal("999")
@@ -298,7 +301,7 @@ class RiskCalculator:
         hhi = Decimal("0")
         for position in positions:
             weight = position.get_value().amount / total_value
-            hhi += weight ** 2
+            hhi += weight**2
 
         return hhi
 

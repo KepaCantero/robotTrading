@@ -29,22 +29,26 @@ class TestLookAheadBiasCorrector:
     def sample_signals(self):
         """Create sample signals DataFrame."""
         dates = pd.date_range(start="2020-01-01", periods=100, freq="D")
-        return pd.DataFrame({
-            "timestamp": dates,
-            "signal": np.random.randn(100),
-            "ma_20": np.random.randn(100),
-            "rsi": np.random.rand(100) * 100,
-        })
+        return pd.DataFrame(
+            {
+                "timestamp": dates,
+                "signal": np.random.randn(100),
+                "ma_20": np.random.randn(100),
+                "rsi": np.random.rand(100) * 100,
+            }
+        )
 
     @pytest.fixture
     def sample_market_data(self):
         """Create sample market data DataFrame."""
         dates = pd.date_range(start="2020-01-01", periods=100, freq="D")
-        return pd.DataFrame({
-            "timestamp": dates,
-            "close": 100 + np.random.randn(100).cumsum(),
-            "volume": np.random.randint(1000, 10000, 100),
-        })
+        return pd.DataFrame(
+            {
+                "timestamp": dates,
+                "close": 100 + np.random.randn(100).cumsum(),
+                "volume": np.random.randint(1000, 10000, 100),
+            }
+        )
 
     def test_initialization(self, corrector):
         """Test corrector initialization."""
@@ -68,10 +72,12 @@ class TestLookAheadBiasCorrector:
         """Test detection of forward filling bias."""
         # Create data with suspicious forward filling
         dates = pd.date_range(start="2020-01-01", periods=100, freq="D")
-        signals = pd.DataFrame({
-            "timestamp": dates,
-            "indicator": [50] * 80 + [51, 52, 53, 54, 55] * 4,  # Many repeated values
-        })
+        signals = pd.DataFrame(
+            {
+                "timestamp": dates,
+                "indicator": [50] * 80 + [51, 52, 53, 54, 55] * 4,  # Many repeated values
+            }
+        )
 
         result = corrector.validate_no_lookahead(
             signals=signals,
@@ -85,11 +91,13 @@ class TestLookAheadBiasCorrector:
     def test_detects_insufficient_nan_in_indicators(self, corrector):
         """Test detection of insufficient NaN values in indicators."""
         dates = pd.date_range(start="2020-01-01", periods=100, freq="D")
-        signals = pd.DataFrame({
-            "timestamp": dates,
-            # No NaN values - suspicious for MA-type indicators
-            "ma_20": np.random.randn(100),
-        })
+        signals = pd.DataFrame(
+            {
+                "timestamp": dates,
+                # No NaN values - suspicious for MA-type indicators
+                "ma_20": np.random.randn(100),
+            }
+        )
 
         result = corrector.validate_no_lookahead(
             signals=signals,
@@ -126,13 +134,15 @@ class TestDividendAndSplitAdjuster:
     def sample_prices(self):
         """Create sample price data."""
         dates = pd.date_range(start="2020-01-01", periods=100, freq="D")
-        return pd.DataFrame({
-            "date": dates,
-            "open": 100 + np.random.randn(100).cumsum(),
-            "high": 102 + np.random.randn(100).cumsum(),
-            "low": 98 + np.random.randn(100).cumsum(),
-            "close": 100 + np.random.randn(100).cumsum(),
-        })
+        return pd.DataFrame(
+            {
+                "date": dates,
+                "open": 100 + np.random.randn(100).cumsum(),
+                "high": 102 + np.random.randn(100).cumsum(),
+                "low": 98 + np.random.randn(100).cumsum(),
+                "close": 100 + np.random.randn(100).cumsum(),
+            }
+        )
 
     def test_initialization(self, adjuster):
         """Test adjuster initialization."""
@@ -167,10 +177,12 @@ class TestDividendAndSplitAdjuster:
         adjuster = DividendAndSplitAdjuster(adjustment_method="forwards")
 
         dates = pd.date_range(start="2020-01-01", periods=50, freq="D")
-        prices = pd.DataFrame({
-            "date": dates,
-            "close": np.linspace(100, 110, 50),
-        })
+        prices = pd.DataFrame(
+            {
+                "date": dates,
+                "close": np.linspace(100, 110, 50),
+            }
+        )
 
         split_date = datetime(2020, 1, 20)
         split_ratio = 0.5
@@ -201,18 +213,22 @@ class TestDividendAndSplitAdjuster:
         """Test reconstruction of adjusted prices."""
         raw_prices = pd.Series(
             [100, 101, 102, 103, 104, 105],
-            index=pd.date_range(start="2020-01-01", periods=6, freq="D")
+            index=pd.date_range(start="2020-01-01", periods=6, freq="D"),
         )
 
-        dividends = pd.DataFrame({
-            "date": [datetime(2020, 1, 3), datetime(2020, 1, 5)],
-            "amount": [0.5, 1.0],
-        })
+        dividends = pd.DataFrame(
+            {
+                "date": [datetime(2020, 1, 3), datetime(2020, 1, 5)],
+                "amount": [0.5, 1.0],
+            }
+        )
 
-        splits = pd.DataFrame({
-            "date": [datetime(2020, 1, 4)],
-            "ratio": [0.5],
-        })
+        splits = pd.DataFrame(
+            {
+                "date": [datetime(2020, 1, 4)],
+                "ratio": [0.5],
+            }
+        )
 
         adjusted = adjuster.reconstruct_adjusted_prices(raw_prices, dividends, splits)
 
@@ -238,28 +254,30 @@ class TestBacktestValidator:
     def sample_signals(self):
         """Create sample signals."""
         dates = pd.date_range(start="2020-01-01", periods=100, freq="D")
-        return pd.DataFrame({
-            "timestamp": dates,
-            "signal": np.random.randn(100),
-        })
+        return pd.DataFrame(
+            {
+                "timestamp": dates,
+                "signal": np.random.randn(100),
+            }
+        )
 
     @pytest.fixture
     def sample_market_data(self):
         """Create sample market data."""
         dates = pd.date_range(start="2020-01-01", periods=100, freq="D")
-        return pd.DataFrame({
-            "timestamp": dates,
-            "close": 100 + np.random.randn(100).cumsum(),
-        })
+        return pd.DataFrame(
+            {
+                "timestamp": dates,
+                "close": 100 + np.random.randn(100).cumsum(),
+            }
+        )
 
     def test_initialization(self, validator):
         """Test validator initialization."""
         assert validator.min_samples == 50
         assert validator.confidence_level == 0.95
 
-    def test_validate_backtest(
-        self, validator, sample_returns, sample_signals, sample_market_data
-    ):
+    def test_validate_backtest(self, validator, sample_returns, sample_signals, sample_market_data):
         """Test comprehensive backtest validation."""
         result = validator.validate_backtest(
             returns=sample_returns,
@@ -289,10 +307,12 @@ class TestBacktestValidator:
         result = validator.validate_backtest(
             returns=short_returns,
             signals=pd.DataFrame({"timestamp": pd.date_range(start="2020-01-01", periods=10)}),
-            market_data=pd.DataFrame({
-                "timestamp": pd.date_range(start="2020-01-01", periods=10),
-                "close": 100 + np.random.randn(10).cumsum(),
-            }),
+            market_data=pd.DataFrame(
+                {
+                    "timestamp": pd.date_range(start="2020-01-01", periods=10),
+                    "close": 100 + np.random.randn(10).cumsum(),
+                }
+            ),
         )
 
         assert isinstance(result, BiasDetectionResult)
@@ -306,30 +326,36 @@ class TestBiasCorrectionPipeline:
     def sample_raw_data(self):
         """Create sample raw data."""
         dates = pd.date_range(start="2020-01-01", periods=100, freq="D")
-        return pd.DataFrame({
-            "date": dates,
-            "symbol": ["AAPL"] * 100,
-            "open": 100 + np.random.randn(100).cumsum(),
-            "high": 102 + np.random.randn(100).cumsum(),
-            "low": 98 + np.random.randn(100).cumsum(),
-            "close": 100 + np.random.randn(100).cumsum(),
-        })
+        return pd.DataFrame(
+            {
+                "date": dates,
+                "symbol": ["AAPL"] * 100,
+                "open": 100 + np.random.randn(100).cumsum(),
+                "high": 102 + np.random.randn(100).cumsum(),
+                "low": 98 + np.random.randn(100).cumsum(),
+                "close": 100 + np.random.randn(100).cumsum(),
+            }
+        )
 
     @pytest.fixture
     def sample_dividends(self):
         """Create sample dividend data."""
-        return pd.DataFrame({
-            "date": [datetime(2020, 1, 15), datetime(2020, 2, 15)],
-            "amount": [0.5, 0.6],
-        })
+        return pd.DataFrame(
+            {
+                "date": [datetime(2020, 1, 15), datetime(2020, 2, 15)],
+                "amount": [0.5, 0.6],
+            }
+        )
 
     @pytest.fixture
     def sample_splits(self):
         """Create sample split data."""
-        return pd.DataFrame({
-            "date": [datetime(2020, 2, 1)],
-            "ratio": [0.5],
-        })
+        return pd.DataFrame(
+            {
+                "date": [datetime(2020, 2, 1)],
+                "ratio": [0.5],
+            }
+        )
 
     def test_pipeline_with_all_data(self, sample_raw_data, sample_dividends, sample_splits):
         """Test pipeline with dividends and splits."""
@@ -448,20 +474,26 @@ class TestIntegration:
         np.random.seed(42)
         dates = pd.date_range(start="2019-01-01", periods=252, freq="D")  # 1 year of data
 
-        raw_data = pd.DataFrame({
-            "date": dates,
-            "close": 100 + np.random.randn(252).cumsum(),
-        })
+        raw_data = pd.DataFrame(
+            {
+                "date": dates,
+                "close": 100 + np.random.randn(252).cumsum(),
+            }
+        )
 
-        dividends = pd.DataFrame({
-            "date": [datetime(2019, 3, 15), datetime(2019, 6, 15), datetime(2019, 9, 15)],
-            "amount": [0.5, 0.6, 0.7],
-        })
+        dividends = pd.DataFrame(
+            {
+                "date": [datetime(2019, 3, 15), datetime(2019, 6, 15), datetime(2019, 9, 15)],
+                "amount": [0.5, 0.6, 0.7],
+            }
+        )
 
-        splits = pd.DataFrame({
-            "date": [datetime(2019, 6, 1)],
-            "ratio": [0.5],
-        })
+        splits = pd.DataFrame(
+            {
+                "date": [datetime(2019, 6, 1)],
+                "ratio": [0.5],
+            }
+        )
 
         # Apply corrections
         corrected_data = create_bias_correction_pipeline(
@@ -472,10 +504,12 @@ class TestIntegration:
 
         # Validate
         validator = BacktestValidator()
-        signals = pd.DataFrame({
-            "timestamp": dates,
-            "signal": np.random.randn(252),
-        })
+        signals = pd.DataFrame(
+            {
+                "timestamp": dates,
+                "signal": np.random.randn(252),
+            }
+        )
 
         result = validator.validate_backtest(
             returns=corrected_data["close"].pct_change().dropna(),

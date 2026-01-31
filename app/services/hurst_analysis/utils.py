@@ -18,13 +18,15 @@ logger = logging.getLogger(__name__)
 
 def to_numpy_array(series: pd.Series | np.ndarray | list[float]) -> np.ndarray:
     """
-    Convert input to numpy array.
+        Convert input to numpy array.
 
-    Args:
-        series: Input time series
+    from __future__ import annotations
 
-    Returns:
-        Numpy array
+        Args:
+            series: Input time series
+
+        Returns:
+            Numpy array
     """
     if isinstance(series, pd.Series):
         return series.values

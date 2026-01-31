@@ -101,9 +101,7 @@ class TestBollingerBandsIndicator:
             current_price = Decimal(str(valid_result.iloc[-1]["lower"] - 1))
 
             # Check for buy signal
-            is_buy = indicator.is_mean_reversion_buy(
-                current_price, valid_result, lookback=1
-            )
+            is_buy = indicator.is_mean_reversion_buy(current_price, valid_result, lookback=1)
 
             assert isinstance(is_buy, bool)
 
@@ -117,9 +115,7 @@ class TestBollingerBandsIndicator:
             current_price = Decimal(str(valid_result.iloc[-1]["upper"] + 1))
 
             # Check for sell signal
-            is_sell = indicator.is_mean_reversion_sell(
-                current_price, valid_result, lookback=1
-            )
+            is_sell = indicator.is_mean_reversion_sell(current_price, valid_result, lookback=1)
 
             assert isinstance(is_sell, bool)
 

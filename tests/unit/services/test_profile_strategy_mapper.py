@@ -612,7 +612,9 @@ class TestConvenienceFunctions:
 
     def test_create_profile_mapper(self, mock_config_files):
         """Test create_profile_mapper convenience function."""
-        with patch("app.services.profile_driven_trading.profile_strategy_mapper.ProfileStrategyMapper"):
+        with patch(
+            "app.services.profile_driven_trading.profile_strategy_mapper.ProfileStrategyMapper"
+        ):
             mapper = create_profile_mapper(
                 investment_profiles_path=mock_config_files["profiles"],
                 learning_params_path=mock_config_files["learning"],

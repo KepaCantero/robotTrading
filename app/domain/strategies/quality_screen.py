@@ -180,11 +180,7 @@ class QualityMetrics:
             earnings_score += 0.1
 
         # Weighted score
-        overall = (
-            0.5 * profit_score
-            + 0.3 * health_score
-            + 0.2 * earnings_score
-        )
+        overall = 0.5 * profit_score + 0.3 * health_score + 0.2 * earnings_score
 
         return min(1.0, overall)
 
@@ -364,15 +360,16 @@ class QualityInvesting:
         # Using multiple value metrics
         pb_score = 1.0 / (1.0 + metrics.price_to_book)  # Cheaper = higher score
         pe_score = 1.0 / (1.0 + metrics.price_to_earnings) if metrics.price_to_earnings > 0 else 0
-        ev_score = 1.0 / (1.0 + metrics.enterprise_value_to_ebitda) if metrics.enterprise_value_to_ebitda > 0 else 0
+        ev_score = (
+            1.0 / (1.0 + metrics.enterprise_value_to_ebitda)
+            if metrics.enterprise_value_to_ebitda > 0
+            else 0
+        )
 
         value = (pb_score + pe_score + ev_score) / 3.0
 
         # Weighted composite
-        composite = (
-            self._quality_weight * quality
-            + self._value_weight * value
-        )
+        composite = self._quality_weight * quality + self._value_weight * value
 
         return composite
 
@@ -439,16 +436,13 @@ class QualityInvesting:
 
         # Calculate portfolio metrics
         portfolio_quality = sum(
-            quality_metrics[s].overall_quality_score * w
-            for s, w in weights.items()
+            quality_metrics[s].overall_quality_score * w for s, w in weights.items()
         )
         portfolio_profitability = sum(
-            quality_metrics[s].profitability_score * w
-            for s, w in weights.items()
+            quality_metrics[s].profitability_score * w for s, w in weights.items()
         )
         portfolio_health = sum(
-            quality_metrics[s].financial_health_score * w
-            for s, w in weights.items()
+            quality_metrics[s].financial_health_score * w for s, w in weights.items()
         )
 
         return QualityPortfolio(

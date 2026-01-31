@@ -20,7 +20,13 @@ from app.engines.risk_engine.var_calculators.ewma_var import EWMAVaRCalculator
 class TestPropertyBasedVaR:
     """Property-based tests for VaR calculations."""
 
-    @given(lists(floats(min_value=-0.5, max_value=0.5, allow_nan=False, allow_infinity=False), min_size=50, max_size=500))
+    @given(
+        lists(
+            floats(min_value=-0.5, max_value=0.5, allow_nan=False, allow_infinity=False),
+            min_size=50,
+            max_size=500,
+        )
+    )
     @settings(max_examples=50, deadline=500)
     def test_var_is_always_negative_or_zero(self, returns_list):
         """Test that VaR is always negative or zero (loss)."""
@@ -34,7 +40,13 @@ class TestPropertyBasedVaR:
         if 'error' not in result:
             assert result['var'] <= 0
 
-    @given(lists(floats(min_value=-0.5, max_value=0.5, allow_nan=False, allow_infinity=False), min_size=100, max_size=1000))
+    @given(
+        lists(
+            floats(min_value=-0.5, max_value=0.5, allow_nan=False, allow_infinity=False),
+            min_size=100,
+            max_size=1000,
+        )
+    )
     @settings(max_examples=30)
     def test_cvar_more_negative_than_var(self, returns_list):
         """Test that CVaR is always more negative than VaR."""
@@ -44,7 +56,13 @@ class TestPropertyBasedVaR:
         if 'error' not in result and 'cvar' in result:
             assert result['cvar'] <= result['var']
 
-    @given(lists(floats(min_value=-0.2, max_value=0.2, allow_nan=False, allow_infinity=False), min_size=50, max_size=500))
+    @given(
+        lists(
+            floats(min_value=-0.2, max_value=0.2, allow_nan=False, allow_infinity=False),
+            min_size=50,
+            max_size=500,
+        )
+    )
     @settings(max_examples=30)
     def test_higher_confidence_more_negative_var(self, returns_list):
         """Test that higher confidence level gives more negative VaR."""
@@ -62,7 +80,13 @@ class TestPropertyBasedVaR:
 class TestPropertyBasedPercentile:
     """Property-based tests for percentile calculation."""
 
-    @given(lists(floats(min_value=-100, max_value=100, allow_nan=False, allow_infinity=False), min_size=10, max_size=1000))
+    @given(
+        lists(
+            floats(min_value=-100, max_value=100, allow_nan=False, allow_infinity=False),
+            min_size=10,
+            max_size=1000,
+        )
+    )
     @settings(max_examples=50)
     def test_percentile_in_range(self, data_list):
         """Test that percentile is within data range."""
@@ -76,7 +100,13 @@ class TestPropertyBasedPercentile:
         if len(data) > 0:
             assert np.min(data) <= percentile_50 <= np.max(data)
 
-    @given(lists(floats(min_value=-100, max_value=100, allow_nan=False, allow_infinity=False), min_size=10, max_size=100))
+    @given(
+        lists(
+            floats(min_value=-100, max_value=100, allow_nan=False, allow_infinity=False),
+            min_size=10,
+            max_size=100,
+        )
+    )
     @settings(max_examples=30)
     def test_percentile_monotonic(self, data_list):
         """Test that higher percentiles give higher values."""
@@ -92,7 +122,13 @@ class TestPropertyBasedPercentile:
 class TestPropertyBasedEWMA:
     """Property-based tests for EWMA calculations."""
 
-    @given(lists(floats(min_value=-0.2, max_value=0.2, allow_nan=False, allow_infinity=False), min_size=50, max_size=500))
+    @given(
+        lists(
+            floats(min_value=-0.2, max_value=0.2, allow_nan=False, allow_infinity=False),
+            min_size=50,
+            max_size=500,
+        )
+    )
     @settings(max_examples=30)
     def test_ewma_variance_positive(self, returns_list):
         """Test that EWMA variance is always positive."""
@@ -101,7 +137,13 @@ class TestPropertyBasedEWMA:
 
         assert variance >= 0
 
-    @given(lists(floats(min_value=-0.2, max_value=0.2, allow_nan=False, allow_infinity=False), min_size=50, max_size=500))
+    @given(
+        lists(
+            floats(min_value=-0.2, max_value=0.2, allow_nan=False, allow_infinity=False),
+            min_size=50,
+            max_size=500,
+        )
+    )
     @settings(max_examples=30)
     def test_ewma_volatility_positive(self, returns_list):
         """Test that EWMA volatility is always positive."""

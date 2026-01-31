@@ -55,10 +55,7 @@ class TestTrainValTestSplitter:
 
         # Create 100 mock quotes
         base_time = datetime(2024, 1, 1)
-        quotes = [
-            MockQuote(timestamp=base_time + timedelta(days=i))
-            for i in range(100)
-        ]
+        quotes = [MockQuote(timestamp=base_time + timedelta(days=i)) for i in range(100)]
 
         train, val, test = splitter.split_data(quotes)
 
@@ -72,16 +69,11 @@ class TestTrainValTestSplitter:
         splitter = TrainValTestSplitter()
 
         base_time = datetime(2024, 1, 1)
-        quotes = [
-            MockQuote(timestamp=base_time + timedelta(days=i))
-            for i in range(100)
-        ]
+        quotes = [MockQuote(timestamp=base_time + timedelta(days=i)) for i in range(100)]
 
         # Filter to only include first 50 days
         train, val, test = splitter.split_data(
-            quotes,
-            start_date=datetime(2024, 1, 1),
-            end_date=datetime(2024, 2, 10)  # ~40 days
+            quotes, start_date=datetime(2024, 1, 1), end_date=datetime(2024, 2, 10)  # ~40 days
         )
 
         # Should have fewer quotes
@@ -100,10 +92,7 @@ class TestTrainValTestSplitter:
         splitter = TrainValTestSplitter()
 
         base_time = datetime(2024, 1, 1)
-        quotes = [
-            MockQuote(timestamp=base_time + timedelta(days=i))
-            for i in range(100)
-        ]
+        quotes = [MockQuote(timestamp=base_time + timedelta(days=i)) for i in range(100)]
 
         train, val, test = splitter.split_data(quotes)
 
@@ -195,10 +184,7 @@ class TestWalkForwardSplit:
 
         # Create 1000 mock quotes
         base_time = datetime(2024, 1, 1)
-        quotes = [
-            MockQuote(timestamp=base_time + timedelta(days=i))
-            for i in range(1000)
-        ]
+        quotes = [MockQuote(timestamp=base_time + timedelta(days=i)) for i in range(1000)]
 
         # Use smaller window for testing
         splits = splitter.walk_forward_split(quotes, window_size=100, step_size=50)
@@ -219,10 +205,7 @@ class TestWalkForwardSplit:
 
         # Create 1000 mock quotes
         base_time = datetime(2024, 1, 1)
-        quotes = [
-            MockQuote(timestamp=base_time + timedelta(days=i))
-            for i in range(1000)
-        ]
+        quotes = [MockQuote(timestamp=base_time + timedelta(days=i)) for i in range(1000)]
 
         # Use default window_size=252, step_size=63
         splits = splitter.walk_forward_split(quotes)
@@ -236,10 +219,7 @@ class TestWalkForwardSplit:
 
         # Create only 500 bars (less than 3 * 252 = 756 minimum)
         base_time = datetime(2024, 1, 1)
-        quotes = [
-            MockQuote(timestamp=base_time + timedelta(days=i))
-            for i in range(500)
-        ]
+        quotes = [MockQuote(timestamp=base_time + timedelta(days=i)) for i in range(500)]
 
         splits = splitter.walk_forward_split(quotes)
 
@@ -251,10 +231,7 @@ class TestWalkForwardSplit:
         splitter = TrainValTestSplitter()
 
         base_time = datetime(2024, 1, 1)
-        quotes = [
-            MockQuote(timestamp=base_time + timedelta(days=i), close=i)
-            for i in range(1000)
-        ]
+        quotes = [MockQuote(timestamp=base_time + timedelta(days=i), close=i) for i in range(1000)]
 
         splits = splitter.walk_forward_split(quotes, window_size=100, step_size=100)
 
@@ -361,10 +338,7 @@ class TestIntegrationScenarios:
 
         # Create 1000 mock quotes
         base_time = datetime(2024, 1, 1)
-        quotes = [
-            MockQuote(timestamp=base_time + timedelta(days=i))
-            for i in range(1000)
-        ]
+        quotes = [MockQuote(timestamp=base_time + timedelta(days=i)) for i in range(1000)]
 
         # Split data
         train, val, test = splitter.split_data(quotes)
@@ -375,9 +349,7 @@ class TestIntegrationScenarios:
         test_sharpe = 1.1
 
         # Validate OOS performance
-        result = validate_out_of_sample_performance(
-            train_sharpe, val_sharpe, test_sharpe
-        )
+        result = validate_out_of_sample_performance(train_sharpe, val_sharpe, test_sharpe)
 
         assert result is True
         assert len(train) == 700
@@ -390,10 +362,7 @@ class TestIntegrationScenarios:
 
         # Create 1000 mock quotes
         base_time = datetime(2024, 1, 1)
-        quotes = [
-            MockQuote(timestamp=base_time + timedelta(days=i))
-            for i in range(1000)
-        ]
+        quotes = [MockQuote(timestamp=base_time + timedelta(days=i)) for i in range(1000)]
 
         train, val, test = splitter.split_data(quotes)
 
@@ -415,10 +384,7 @@ class TestIntegrationScenarios:
 
         # Create 1000 mock quotes
         base_time = datetime(2024, 1, 1)
-        quotes = [
-            MockQuote(timestamp=base_time + timedelta(days=i))
-            for i in range(1000)
-        ]
+        quotes = [MockQuote(timestamp=base_time + timedelta(days=i)) for i in range(1000)]
 
         # Perform walk-forward split
         splits = splitter.walk_forward_split(quotes, window_size=200, step_size=100)
@@ -436,10 +402,7 @@ class TestIntegrationScenarios:
         """Test that different split ratios all work correctly."""
         # Create 1000 mock quotes
         base_time = datetime(2024, 1, 1)
-        quotes = [
-            MockQuote(timestamp=base_time + timedelta(days=i))
-            for i in range(1000)
-        ]
+        quotes = [MockQuote(timestamp=base_time + timedelta(days=i)) for i in range(1000)]
 
         # Test various split configurations
         configs = [

@@ -322,12 +322,16 @@ class ReportTemplates:
             if value is not None:
                 # formatter is a callable lambda function from metric_definitions
                 formatted = formatter(value)  # pylint: disable=not-callable
-                rows.append("""
+                rows.append(
+                    """
                 <tr>
                     <td>{label}</td>
                     <td class="number">{formatted}</td>
                 </tr>
-                """.format(label=label, formatted=formatted))
+                """.format(
+                        label=label, formatted=formatted
+                    )
+                )
 
         html += "".join(rows)
         html += """
@@ -364,12 +368,16 @@ class ReportTemplates:
             if value is not None:
                 # formatter is a callable lambda function from risk_definitions
                 formatted = formatter(value)  # pylint: disable=not-callable
-                rows.append("""
+                rows.append(
+                    """
                 <tr>
                     <td>{label}</td>
                     <td class="number">{formatted}</td>
                 </tr>
-                """.format(label=label, formatted=formatted))
+                """.format(
+                        label=label, formatted=formatted
+                    )
+                )
 
         html += "".join(rows)
         html += """
@@ -399,7 +407,8 @@ class ReportTemplates:
         for asset, weight in sorted_allocation:
             weight_pct = weight * 100
             bar_width = weight_pct * 2
-            rows.append("""
+            rows.append(
+                """
             <tr>
                 <td><strong>{asset}</strong></td>
                 <td class="number">{weight_pct:.1f}%</td>
@@ -407,7 +416,10 @@ class ReportTemplates:
                     <div class="allocation-bar" style="width: {bar_width}px;"></div>
                 </td>
             </tr>
-            """.format(asset=asset, weight_pct=weight_pct, bar_width=bar_width))
+            """.format(
+                    asset=asset, weight_pct=weight_pct, bar_width=bar_width
+                )
+            )
 
         html += "".join(rows)
         html += """

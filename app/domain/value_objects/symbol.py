@@ -69,9 +69,10 @@ class Symbol:
     @property
     def is_us_equity(self) -> bool:
         """Check if this is a US equity."""
-        return (
-            self.asset_class == AssetClass.EQUITY
-            and self.exchange in (Exchange.NYSE, Exchange.NASDAQ, Exchange.AMEX)
+        return self.asset_class == AssetClass.EQUITY and self.exchange in (
+            Exchange.NYSE,
+            Exchange.NASDAQ,
+            Exchange.AMEX,
         )
 
     @property

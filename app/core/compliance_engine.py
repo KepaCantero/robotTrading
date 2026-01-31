@@ -31,6 +31,7 @@ Version: 2.0 - THE ONLY ENGINE
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import sys
 from datetime import datetime
@@ -39,6 +40,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
+from pydantic import BaseModel, Field, field_validator
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
@@ -54,12 +56,118 @@ logger = logging.getLogger(__name__)
 
 
 # =============================================================================
+# COMPLIANCE CONFIGURATION
+# =============================================================================
+
+
+class ComplianceConfig(BaseModel):
+    """
+    Configuration for compliance engine thresholds and limits.
+
+    All trading-related thresholds are centralized here for easy adjustment
+    and validation. This addresses GAP-CFG-002: Hardcoded thresholds.
+    """
+
+    # Position Limits (Chan Rule 1)
+    max_position_ratio: float = Field(
+        default=0.10,
+        ge=0.01,
+        le=1.0,
+        description="Maximum position size as ratio of portfolio value",
+    )
+
+    # Drawdown Limits (Chan Rule 1)
+    max_drawdown_ratio: float = Field(
+        default=0.25,
+        ge=0.01,
+        le=1.0,
+        description="Maximum drawdown as ratio of peak portfolio value",
+    )
+
+    # Leverage Limits
+    max_leverage_ratio: float = Field(
+        default=2.0,
+        ge=1.0,
+        le=10.0,
+        description="Maximum gross leverage ratio",
+    )
+
+    # Kill Switch (Hull Rule 13.1)
+    kill_switch_threshold: float = Field(
+        default=-0.05,
+        ge=-1.0,
+        le=0.0,
+        description="Daily loss threshold that triggers trading halt (negative)",
+    )
+
+    # Data Quality
+    min_data_quality_score: float = Field(
+        default=80.0,
+        ge=0.0,
+        le=100.0,
+        description="Minimum data quality score to allow trading",
+    )
+
+    max_data_age_days: float = Field(
+        default=1.0,
+        ge=0.0,
+        description="Maximum age of price data in days",
+    )
+
+    # Portfolio VaR
+    max_portfolio_volatility: float = Field(
+        default=0.30,
+        ge=0.0,
+        le=1.0,
+        description="Maximum annualized portfolio volatility",
+    )
+
+    # Hull VaR
+    max_daily_var_95: float = Field(
+        default=0.05,
+        ge=0.0,
+        le=1.0,
+        description="Maximum 1-day 95% VaR",
+    )
+
+    # SLO Thresholds
+    slo_latency_ms: float = Field(
+        default=100.0,
+        ge=1.0,
+        description="Maximum acceptable latency in milliseconds",
+    )
+
+    # Data Quality Deductions
+    data_quality_nan_penalty: float = Field(
+        default=15.0,
+        ge=0.0,
+        le=100.0,
+        description="Quality score deduction for NaN values",
+    )
+
+    data_quality_stale_penalty: float = Field(
+        default=20.0,
+        ge=0.0,
+        le=100.0,
+        description="Quality score deduction for stale data",
+    )
+
+    @field_validator("kill_switch_threshold")
+    @classmethod
+    def kill_switch_must_be_negative(cls, v: float) -> float:
+        """Kill switch threshold must be negative (loss)."""
+        if v > 0:
+            raise ValueError("Kill switch threshold must be negative (representing a loss)")
+        return v
+
+
+# =============================================================================
 # SYSTEMS AVAILABILITY TRACKING
 # =============================================================================
 
 
 class SystemAvailability:
-    """Track availability of all 12 compliance systems."""
+    """Track availability of all 17 systems (8 main + 12 compliance, with overlap)."""
 
     def __init__(self, enable_logging: bool = False):
         """
@@ -626,15 +734,16 @@ class SystemBus:
             position_value = float(price * quantity)
             position_ratio = position_value / portfolio_value if portfolio_value > 0 else 0
 
-            # Check if position exceeds 10% of portfolio (Chan Rule 1)
-            position_limit_ok = position_ratio <= 0.10
+            # Use configured max position ratio (addresses GAP-CFG-002)
+            position_limit_ok = position_ratio <= self.config.max_position_ratio
             result.position_limit_ok = position_limit_ok
 
             if not position_limit_ok:
                 result.can_execute = False
                 result.confidence *= 0.3
+                max_pct = self.config.max_position_ratio * 100
                 result.reasons.append(
-                    f"Position limit exceeded: {position_ratio:.1%} of portfolio > 10% limit (Chan Rule 1)"
+                    f"Position limit exceeded: {position_ratio:.1%} of portfolio > {max_pct:.0f}% limit (Chan Rule 1)"
                 )
 
             # ========== 2. DRAWDOWN LIMIT CHECK (Chan Rule 1) ==========
@@ -644,15 +753,16 @@ class SystemBus:
             else:
                 current_drawdown = 0.0
 
-            # Check if drawdown exceeds 25% (Chan Rule 1)
-            drawdown_limit_ok = current_drawdown <= 0.25
+            # Use configured max drawdown ratio (addresses GAP-CFG-002)
+            drawdown_limit_ok = current_drawdown <= self.config.max_drawdown_ratio
             result.drawdown_limit_ok = drawdown_limit_ok
 
             if not drawdown_limit_ok:
                 result.can_execute = False
                 result.confidence *= 0.2
+                max_dd_pct = self.config.max_drawdown_ratio * 100
                 result.reasons.append(
-                    f"Drawdown limit exceeded: {current_drawdown:.1%} > 25% limit (Chan Rule 1)"
+                    f"Drawdown limit exceeded: {current_drawdown:.1%} > {max_dd_pct:.0f}% limit (Chan Rule 1)"
                 )
 
             # ========== 3. LEVERAGE RATIO CHECK ==========
@@ -671,19 +781,24 @@ class SystemBus:
 
             result.leverage_ratio = leverage_ratio
 
-            # Check if leverage exceeds 2.0
-            leverage_ok = leverage_ratio <= 2.0
+            # Use configured max leverage ratio (addresses GAP-CFG-002)
+            leverage_ok = leverage_ratio <= self.config.max_leverage_ratio
             if not leverage_ok:
                 result.can_execute = False
                 result.confidence *= 0.4
-                result.reasons.append(f"Leverage too high: {leverage_ratio:.2f}x > 2.0x limit")
+                result.reasons.append(
+                    f"Leverage too high: {leverage_ratio:.2f}x > {self.config.max_leverage_ratio}x limit"
+                )
 
             # ========== 4. DATA QUALITY CHECK ==========
+            # Note: Need access to engine.config from SystemBus handler
+            # For now, use the config from engine reference
+            engine = self.engine
             if price_history is not None:
                 # Check for NaN values
                 has_nan = price_history.isnull().any().any()
 
-                # Check if data is stale (last update > 1 day ago)
+                # Use configured max data age (addresses GAP-CFG-002)
                 if 'timestamp' in price_history.columns:
                     last_timestamp = pd.to_datetime(price_history['timestamp'].iloc[-1])
                     data_age = (datetime.now() - last_timestamp).total_seconds() / 86400  # days
@@ -694,25 +809,26 @@ class SystemBus:
                 else:
                     data_age = 0
 
-                data_is_stale = data_age > 1.0
+                data_is_stale = data_age > engine.config.max_data_age_days
 
-                # Calculate data quality score
+                # Use configured quality penalties (addresses GAP-CFG-002)
                 quality_deductions = 0
                 if has_nan:
-                    quality_deductions += 15
+                    quality_deductions += engine.config.data_quality_nan_penalty
                     result.reasons.append("Price history contains NaN values")
                 if data_is_stale:
-                    quality_deductions += 20
+                    quality_deductions += engine.config.data_quality_stale_penalty
                     result.reasons.append(f"Data is stale: {data_age:.1f} days old")
 
                 result.data_quality_score = max(0, 100 - quality_deductions)
 
-                # Block trade if data quality < 80%
-                if result.data_quality_score < 80:
+                # Use configured min quality threshold (addresses GAP-CFG-002)
+                if result.data_quality_score < engine.config.min_data_quality_score:
                     result.can_execute = False
                     result.confidence *= 0.5
                     result.reasons.append(
-                        f"Data quality too low: {result.data_quality_score:.0f}% < 80% threshold"
+                        f"Data quality too low: {result.data_quality_score:.0f}% < "
+                        f"{engine.config.min_data_quality_score:.0f}% threshold"
                     )
             else:
                 # No price history available
@@ -730,8 +846,8 @@ class SystemBus:
                     if len(returns) > 0:
                         result.portfolio_var = float(returns.std() * (252**0.5))
 
-                        # Risk limit check
-                        if abs(result.portfolio_var) > 0.30:  # 30% annual volatility threshold
+                        # Use configured max portfolio volatility (addresses GAP-CFG-002)
+                        if abs(result.portfolio_var) > engine.config.max_portfolio_volatility:
                             result.confidence -= 0.15
                             result.reasons.append(
                                 f"High portfolio volatility: {result.portfolio_var:.2%}"
@@ -776,8 +892,9 @@ class SystemBus:
                 # result.hull_greeks_delta = ...
                 # result.hull_greeks_gamma = ...
 
-                # Risk limit check
-                if abs(result.hull_var_1d_95) > 0.05:  # 5% daily VaR threshold
+                # Use configured max daily VaR (addresses GAP-CFG-002)
+                engine = self.engine
+                if abs(result.hull_var_1d_95) > engine.config.max_daily_var_95:
                     result.confidence -= 0.1
                     result.reasons.append(f"High daily VaR: {result.hull_var_1d_95:.2%}")
 
@@ -1230,6 +1347,7 @@ class ComplianceEngine:
         asset_class: str = "equity",
         strict_mode: bool = False,
         enable_logging: bool = True,
+        config: Optional[ComplianceConfig] = None,
     ):
         """
         Initialize THE Compliance Engine.
@@ -1238,6 +1356,7 @@ class ComplianceEngine:
             asset_class: Asset class (equity, etf, forex, crypto, futures)
             strict_mode: If True, enforce all compliance checks strictly
             enable_logging: Enable detailed logging
+            config: Optional configuration object for thresholds and limits
         """
         # Avoid re-initialization
         if hasattr(self, '_initialized'):
@@ -1247,6 +1366,9 @@ class ComplianceEngine:
         self.asset_class = asset_class
         self.enable_logging = enable_logging
         self.strict_mode = strict_mode
+
+        # Configuration with defaults (addresses GAP-CFG-002)
+        self.config = config or ComplianceConfig()
 
         # Second: Initialize SystemAvailability (may use enable_logging)
         self.availability = SystemAvailability(enable_logging=self.enable_logging)
@@ -1294,11 +1416,11 @@ class ComplianceEngine:
         """
         Check if kill switch is triggered (Hull Rule 13.1).
 
-        Kill switch activates when daily loss exceeds 5% of starting capital.
+        Kill switch activates when daily loss exceeds configured threshold.
         This is a CRITICAL safety mechanism to prevent catastrophic losses.
 
         Returns:
-            True if trading should be halted (daily loss > 5%), False otherwise
+            True if trading should be halted (daily loss > threshold), False otherwise
         """
         if not self._daily_pnl_tracking:
             return False
@@ -1306,9 +1428,12 @@ class ComplianceEngine:
         total_pnl = sum(t.get('pnl', 0) for t in self._daily_pnl_tracking)
         daily_return_pct = total_pnl / self._starting_capital if self._starting_capital > 0 else 0
 
-        if daily_return_pct <= -0.05:  # -5% threshold
+        # Use configured threshold (addresses GAP-CFG-002)
+        if daily_return_pct <= self.config.kill_switch_threshold:
+            threshold_pct = abs(self.config.kill_switch_threshold)
             logger.critical(
-                f"KILL SWITCH TRIGGERED: Daily loss {daily_return_pct:.2%} exceeds 5% threshold. "
+                f"KILL SWITCH TRIGGERED: Daily loss {daily_return_pct:.2%} exceeds "
+                f"{threshold_pct:.1%} threshold. "
                 f"Total P&L: ${total_pnl:,.2f}, Starting Capital: ${self._starting_capital:,.2f}"
             )
             return True
@@ -1658,15 +1783,18 @@ class ComplianceEngine:
         # CRITICAL: Check kill switch FIRST (Hull Rule 13.1)
         if self.check_kill_switch():
             # Kill switch is active - block all trading
+            threshold_pct = abs(self.config.kill_switch_threshold)
             if self.enable_logging:
                 logger.critical(
                     f"TRADE BLOCKED by kill switch: {symbol} {side} {quantity}. "
-                    f"Daily loss exceeded 5% threshold."
+                    f"Daily loss exceeded {threshold_pct:.1%} threshold."
                 )
             return PreTradeAnalysis(
                 can_execute=False,
                 confidence=0.0,
-                reasons=["KILL SWITCH ACTIVE: Daily loss exceeded 5% threshold - trading halted"],
+                reasons=[
+                    f"KILL SWITCH ACTIVE: Daily loss exceeded {threshold_pct:.1%} threshold - trading halted"
+                ],
             )
 
         # Use SystemBus to coordinate ALL 17 systems
@@ -1751,7 +1879,7 @@ class ComplianceEngine:
                     price_improvement_bps=harris_analysis.price_improvement_bps,
                     latency_ms=latency_ms,
                     fill_rate=100.0,  # Will be updated when partial fills occur
-                    slo_met=latency_ms < 100,  # SLO: 100ms threshold
+                    slo_met=latency_ms < self.engine.config.slo_latency_ms,  # Use configured SLO
                 )
 
             except Exception as e:
@@ -1765,7 +1893,7 @@ class ComplianceEngine:
             quantity=quantity,
             execution_price=execution_price,
             latency_ms=latency_ms,
-            slo_met=latency_ms < 100,
+            slo_met=latency_ms < self.config.slo_latency_ms,
         )
 
     # ==========================================================================
@@ -1879,8 +2007,8 @@ class ComplianceEngine:
         # Calculate latency
         latency_ms = (execution_time - order["submission_time"]).total_seconds() * 1000
 
-        # Check SLO
-        slo_met = latency_ms < 100  # 100ms threshold
+        # Check SLO (use configured threshold, addresses GAP-CFG-002)
+        slo_met = latency_ms < self.config.slo_latency_ms
 
         # Record completion
         self._completed_trades.append(
@@ -1954,14 +2082,29 @@ def get_compliance_engine(
     asset_class: str = "equity",
     strict_mode: bool = False,
     enable_logging: bool = True,
+    config: Optional[ComplianceConfig] = None,
 ) -> ComplianceEngine:
     """
     Get THE ONLY Compliance Engine instance.
 
     This is the SINGLE ENTRY POINT for all trading operations.
 
+    Args:
+        asset_class: Asset class (equity, etf, forex, crypto, futures)
+        strict_mode: If True, enforce all compliance checks strictly
+        enable_logging: Enable detailed logging
+        config: Optional configuration object for thresholds and limits
+
     Example:
+        # Use default configuration
         engine = get_compliance_engine()
+
+        # Use custom configuration
+        custom_config = ComplianceConfig(
+            max_position_ratio=0.15,
+            kill_switch_threshold=-0.03,
+        )
+        engine = get_compliance_engine(config=custom_config)
 
         # Pre-trade
         analysis = engine.analyze_pre_trade(
@@ -1979,6 +2122,7 @@ def get_compliance_engine(
         asset_class=asset_class,
         strict_mode=strict_mode,
         enable_logging=enable_logging,
+        config=config,
     )
 
 

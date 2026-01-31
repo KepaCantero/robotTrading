@@ -56,12 +56,7 @@ class MockBroker:
         return quote
 
     async def place_order(
-        self,
-        symbol: str,
-        side: str,
-        quantity: Decimal,
-        order_type: str = "MARKET",
-        **kwargs
+        self, symbol: str, side: str, quantity: Decimal, order_type: str = "MARKET", **kwargs
     ):
         """Place an order."""
         if self.latency_ms > 0:
@@ -285,6 +280,7 @@ class TestPositionMonitorLoad:
             for symbol in symbols:
                 # Random price between 95 and 105
                 import random
+
                 broker.current_prices[symbol] = 95.0 + random.random() * 10.0
 
             # Wait for monitor to check
@@ -362,10 +358,7 @@ class TestEmergencyCloseLoad:
 
         # Try to trigger multiple concurrent closes
         # Only one should succeed
-        tasks = [
-            closer.close_all_positions(EmergencyTrigger.MANUAL_TRIGGER)
-            for _ in range(5)
-        ]
+        tasks = [closer.close_all_positions(EmergencyTrigger.MANUAL_TRIGGER) for _ in range(5)]
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -450,7 +443,9 @@ class TestSystemMemoryStability:
 
         # Check for memory leaks
         # Memory increase should be minimal (less than 200MB over 1 minute)
-        assert memory_increase < 200, f"Potential memory leak detected: {memory_increase:.2f} MB increase"
+        assert (
+            memory_increase < 200
+        ), f"Potential memory leak detected: {memory_increase:.2f} MB increase"
 
     async def test_memory_with_position_add_remove(self):
         """Test memory when adding and removing positions."""
@@ -489,7 +484,9 @@ class TestSystemMemoryStability:
             if cycle % 10 == 0:
                 current_memory = get_memory_usage()
                 memory_increase = current_memory - start_memory
-                print(f"Cycle {cycle}: Memory = {current_memory:.2f} MB (+{memory_increase:.2f} MB)")
+                print(
+                    f"Cycle {cycle}: Memory = {current_memory:.2f} MB (+{memory_increase:.2f} MB)"
+                )
 
         end_memory = get_memory_usage()
         memory_increase = end_memory - start_memory

@@ -281,7 +281,8 @@ class AlertFatiguePreventer:
             db_path.parent.mkdir(parents=True, exist_ok=True)
 
             async with aiosqlite.connect(self.config.db_path) as db:
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS alerts (
                         id TEXT PRIMARY KEY,
                         service_name TEXT NOT NULL,
@@ -297,9 +298,11 @@ class AlertFatiguePreventer:
                         suppressed INTEGER NOT NULL DEFAULT 0,
                         created_at TEXT NOT NULL DEFAULT (datetime('utc'))
                     )
-                """)
+                """
+                )
 
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS alert_groups (
                         group_id TEXT PRIMARY KEY,
                         service_name TEXT NOT NULL,
@@ -310,18 +313,22 @@ class AlertFatiguePreventer:
                         alert_count INTEGER NOT NULL,
                         severity_counts TEXT
                     )
-                """)
+                """
+                )
 
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS suppression_cache (
                         fingerprint TEXT PRIMARY KEY,
                         suppressed_at TEXT NOT NULL,
                         expires_at TEXT NOT NULL,
                         suppression_count INTEGER NOT NULL DEFAULT 1
                     )
-                """)
+                """
+                )
 
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS false_positives (
                         fingerprint TEXT PRIMARY KEY,
                         service_name TEXT NOT NULL,
@@ -330,18 +337,23 @@ class AlertFatiguePreventer:
                         is_false_positive INTEGER NOT NULL DEFAULT 0,
                         created_at TEXT NOT NULL DEFAULT (datetime('utc'))
                     )
-                """)
+                """
+                )
 
                 # Indexes
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE INDEX IF NOT EXISTS idx_alerts_service_timestamp
                     ON alerts(service_name, timestamp)
-                """)
+                """
+                )
 
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE INDEX IF NOT EXISTS idx_suppression_cache_expires
                     ON suppression_cache(expires_at)
-                """)
+                """
+                )
 
                 await db.commit()
 
@@ -353,11 +365,13 @@ class AlertFatiguePreventer:
         """Load suppression cache from database."""
         try:
             async with aiosqlite.connect(self.config.db_path) as db:
-                cursor = await db.execute("""
+                cursor = await db.execute(
+                    """
                     SELECT fingerprint, suppressed_at, expires_at
                     FROM suppression_cache
                     WHERE expires_at > datetime('utc')
-                """)
+                """
+                )
 
                 rows = await cursor.fetchall()
 
@@ -373,11 +387,13 @@ class AlertFatiguePreventer:
         """Load false positive cache from database."""
         try:
             async with aiosqlite.connect(self.config.db_path) as db:
-                cursor = await db.execute("""
+                cursor = await db.execute(
+                    """
                     SELECT fingerprint, suppression_count
                     FROM false_positives
                     WHERE is_false_positive = 1
-                """)
+                """
+                )
 
                 rows = await cursor.fetchall()
 
@@ -405,10 +421,12 @@ class AlertFatiguePreventer:
                 )
 
                 # Clean up expired suppressions
-                await db.execute("""
+                await db.execute(
+                    """
                     DELETE FROM suppression_cache
                     WHERE expires_at < datetime('utc')
-                """)
+                """
+                )
 
                 await db.commit()
 

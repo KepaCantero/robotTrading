@@ -121,9 +121,9 @@ class BaseLearningEngine(ABC):
         self._feature_explosion_threshold = config.get("feature_explosion_threshold", 0.1)
 
         # Learning curve tracking (Hastie)
-        self._learning_curve_data: List[Tuple[int, float, float]] = (
-            []
-        )  # (n_samples, train_score, val_score)
+        self._learning_curve_data: List[
+            Tuple[int, float, float]
+        ] = []  # (n_samples, train_score, val_score)
 
         # Crear directorio de modelos si no existe
         os.makedirs(

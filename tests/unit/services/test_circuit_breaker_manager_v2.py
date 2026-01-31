@@ -104,7 +104,7 @@ def generate_realistic_quotes(
         if crash_idx > 0:
             prices[crash_idx] = prices[crash_idx - 1] * (1 + crash_magnitude)
         else:
-            prices[crash_idx] *= (1 + crash_magnitude)
+            prices[crash_idx] *= 1 + crash_magnitude
 
     # Inject gap if specified
     if gap_day is not None and 0 < gap_day < days:
@@ -118,13 +118,13 @@ def generate_realistic_quotes(
         # Generate intraday movement
         daily_range = close * np.random.uniform(0.005, 0.02)
 
-        open_price = close + np.random.uniform(-daily_range/2, daily_range/2)
-        high = max(open_price, close) + np.random.uniform(0, daily_range/2)
-        low = min(open_price, close) - np.random.uniform(0, daily_range/2)
+        open_price = close + np.random.uniform(-daily_range / 2, daily_range / 2)
+        high = max(open_price, close) + np.random.uniform(0, daily_range / 2)
+        low = min(open_price, close) - np.random.uniform(0, daily_range / 2)
 
         # Volume correlated with volatility
         if i > 0:
-            daily_return = abs((close - prices[i-1]) / prices[i-1])
+            daily_return = abs((close - prices[i - 1]) / prices[i - 1])
             vol_mult = 1 + daily_return * 10
         else:
             vol_mult = 1.0
@@ -135,7 +135,7 @@ def generate_realistic_quotes(
         if i == 0:
             change_pct = Decimal("0.0")
         else:
-            change_pct = Decimal(str((close - prices[i-1]) / prices[i-1]))
+            change_pct = Decimal(str((close - prices[i - 1]) / prices[i - 1]))
 
         quote = Quote(
             symbol=symbol,
@@ -426,9 +426,7 @@ class TestCircuitBreakerTriggers:
     async def test_level_1_trigger_with_realistic_data(self):
         """Test Level 1 circuit breaker (7% drop) with GBM data."""
         # Generate data with 8% drop on day 20
-        quotes = generate_realistic_quotes(
-            "SPY", days=50, crash_day=20, crash_magnitude=-0.08
-        )
+        quotes = generate_realistic_quotes("SPY", days=50, crash_day=20, crash_magnitude=-0.08)
 
         mock_broker = MockBroker()
         mock_data = MockDataService({"SPY": quotes})
@@ -460,9 +458,7 @@ class TestCircuitBreakerTriggers:
     @pytest.mark.asyncio
     async def test_level_2_trigger_with_realistic_data(self):
         """Test Level 2 circuit breaker (13% drop) with GBM data."""
-        quotes = generate_realistic_quotes(
-            "SPY", days=50, crash_day=20, crash_magnitude=-0.14
-        )
+        quotes = generate_realistic_quotes("SPY", days=50, crash_day=20, crash_magnitude=-0.14)
 
         mock_broker = MockBroker()
         mock_data = MockDataService({"SPY": quotes})
@@ -488,9 +484,7 @@ class TestCircuitBreakerTriggers:
     @pytest.mark.asyncio
     async def test_level_3_trigger_with_realistic_data(self):
         """Test Level 3 circuit breaker (20% drop) with GBM data."""
-        quotes = generate_realistic_quotes(
-            "SPY", days=50, crash_day=20, crash_magnitude=-0.22
-        )
+        quotes = generate_realistic_quotes("SPY", days=50, crash_day=20, crash_magnitude=-0.22)
 
         mock_broker = MockBroker()
         mock_data = MockDataService({"SPY": quotes})
@@ -515,9 +509,7 @@ class TestCircuitBreakerTriggers:
     @pytest.mark.asyncio
     async def test_normal_market_no_trigger(self):
         """Test normal market movement (no circuit breaker)."""
-        quotes = generate_realistic_quotes(
-            "SPY", days=50, drift=0.05, volatility=0.15
-        )
+        quotes = generate_realistic_quotes("SPY", days=50, drift=0.05, volatility=0.15)
 
         mock_broker = MockBroker()
         mock_data = MockDataService({"SPY": quotes})
@@ -531,8 +523,9 @@ class TestCircuitBreakerTriggers:
         # Check first 20 quotes (all normal movement)
         for i in range(20):
             quote = quotes[i]
-            assert quote.change_percent > Decimal("-0.05"), \
-                f"Quote {i} has abnormal drop: {quote.change_percent}"
+            assert quote.change_percent > Decimal(
+                "-0.05"
+            ), f"Quote {i} has abnormal drop: {quote.change_percent}"
 
         await manager._check_market_wide_halt()
 
@@ -599,9 +592,7 @@ class TestCircuitBreakerEdgeCases:
     async def test_overnight_gap_scenario(self):
         """Test overnight gap down scenario."""
         # Normal market then 12% gap down overnight
-        quotes = generate_realistic_quotes(
-            "SPY", days=21, gap_day=20, gap_magnitude=-0.12
-        )
+        quotes = generate_realistic_quotes("SPY", days=21, gap_day=20, gap_magnitude=-0.12)
 
         gap_quote = quotes[20]
         assert gap_quote.change_percent <= Decimal("-0.10")
@@ -625,9 +616,7 @@ class TestCircuitBreakerEdgeCases:
     @pytest.mark.asyncio
     async def test_extreme_vix_scenario(self):
         """Test extreme VIX level (panic scenario)."""
-        vix_quotes = generate_vix_quotes(
-            days=30, spike_day=15, spike_level=65.0
-        )
+        vix_quotes = generate_vix_quotes(days=30, spike_day=15, spike_level=65.0)
 
         mock_broker = MockBroker()
         spy_quotes = generate_realistic_quotes("SPY", days=30)
@@ -702,9 +691,7 @@ class TestCircuitBreakerEdgeCases:
     async def test_recovery_scenario(self):
         """Test market recovery after circuit breaker."""
         # Crash then recovery
-        quotes = generate_realistic_quotes(
-            "SPY", days=10, crash_day=3, crash_magnitude=-0.08
-        )
+        quotes = generate_realistic_quotes("SPY", days=10, crash_day=3, crash_magnitude=-0.08)
 
         mock_broker = MockBroker()
         mock_data = MockDataService({"SPY": quotes})
@@ -809,10 +796,7 @@ class TestCircuitBreakerEdgeCases:
         mock_broker = MockBroker()
         mock_broker.positions = [type('obj', (object,), {'symbol': 'AAPL'})()]
 
-        mock_data = MockDataService({
-            "SPY": spy_quotes,
-            "AAPL": [aapl_halted]
-        })
+        mock_data = MockDataService({"SPY": spy_quotes, "AAPL": [aapl_halted]})
 
         manager = CircuitBreakerManager(
             broker=mock_broker,

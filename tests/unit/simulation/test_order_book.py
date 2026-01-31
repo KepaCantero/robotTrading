@@ -388,23 +388,27 @@ class TestLimitOrderBook:
         )
 
         # Add orders to create spread
-        book.submit_order(Order(
-            order_id="buy_001",
-            symbol="AAPL",
-            side=OrderSide.BUY,
-            order_type=OrderType.LIMIT,
-            quantity=Decimal("500"),
-            price=Decimal("149.50"),
-        ))
+        book.submit_order(
+            Order(
+                order_id="buy_001",
+                symbol="AAPL",
+                side=OrderSide.BUY,
+                order_type=OrderType.LIMIT,
+                quantity=Decimal("500"),
+                price=Decimal("149.50"),
+            )
+        )
 
-        book.submit_order(Order(
-            order_id="sell_001",
-            symbol="AAPL",
-            side=OrderSide.SELL,
-            order_type=OrderType.LIMIT,
-            quantity=Decimal("500"),
-            price=Decimal("150.50"),
-        ))
+        book.submit_order(
+            Order(
+                order_id="sell_001",
+                symbol="AAPL",
+                side=OrderSide.SELL,
+                order_type=OrderType.LIMIT,
+                quantity=Decimal("500"),
+                price=Decimal("150.50"),
+            )
+        )
 
         metrics = book.get_liquidity_metrics()
 

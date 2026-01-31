@@ -366,11 +366,7 @@ class TestJSONEncoding:
 
     def test_encode_json_complex(self):
         """Test encoding of complex JSON."""
-        data = {
-            "user": "test",
-            "values": [1, 2, 3],
-            "nested": {"key": "value"}
-        }
+        data = {"user": "test", "values": [1, 2, 3], "nested": {"key": "value"}}
 
         result = safe_json_dumps(data)
 
@@ -430,10 +426,9 @@ class TestContentSecurityPolicy:
 
     def test_csp_custom_directives(self):
         """Test custom CSP directives."""
-        csp = ContentSecurityPolicy({
-            "script-src": "'self' https://cdn.example.com",
-            "img-src": "'self' data: https:"
-        })
+        csp = ContentSecurityPolicy(
+            {"script-src": "'self' https://cdn.example.com", "img-src": "'self' data: https:"}
+        )
 
         header = csp.get_header_value()
 

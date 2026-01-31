@@ -183,12 +183,14 @@ class TestRoundDecimal:
     def test_round_down(self):
         """Test rounding with ROUND_DOWN."""
         from decimal import ROUND_DOWN
+
         result = round_decimal("100.459", 2, rounding=ROUND_DOWN)
         assert result == Decimal("100.45")
 
     def test_round_up(self):
         """Test rounding with ROUND_UP."""
         from decimal import ROUND_UP
+
         result = round_decimal("100.451", 2, rounding=ROUND_UP)
         assert result == Decimal("100.46")
 

@@ -26,15 +26,14 @@ from app.models.portfolio import Portfolio
 
 # ===== Concrete Implementation for Testing =====
 
+
 class ConcreteStrategyEngine(BaseStrategyEngine):
     """Concrete implementation of BaseStrategyEngine for testing."""
 
     def get_strategy_type(self) -> str:
         return "test_strategy"
 
-    def extract_features(
-        self, market_data: Quote, historical_data: List = None
-    ) -> Dict[str, Any]:
+    def extract_features(self, market_data: Quote, historical_data: List = None) -> Dict[str, Any]:
         return {
             "timestamp": market_data.timestamp,
             "symbol": market_data.symbol,
@@ -44,22 +43,25 @@ class ConcreteStrategyEngine(BaseStrategyEngine):
     def _generate_signals_impl(self, market_data: Quote) -> List[Signal]:
         # Simple implementation: generate a BUY signal if price > 100
         if float(market_data.close) > 100:
-            return [Signal(
-                symbol=market_data.symbol,
-                signal_type=SignalType.BUY,
-                strength=SignalStrength.MODERATE,
-                confidence=60.0,
-                liquidity_score=70.0,
-                priority_score=64.0,
-                source=SignalSource.MOMENTUM,
-                price=market_data.close,
-                volume=Decimal("100"),
-                timestamp=market_data.timestamp,
-            )]
+            return [
+                Signal(
+                    symbol=market_data.symbol,
+                    signal_type=SignalType.BUY,
+                    strength=SignalStrength.MODERATE,
+                    confidence=60.0,
+                    liquidity_score=70.0,
+                    priority_score=64.0,
+                    source=SignalSource.MOMENTUM,
+                    price=market_data.close,
+                    volume=Decimal("100"),
+                    timestamp=market_data.timestamp,
+                )
+            ]
         return []
 
 
 # ===== Initialization Tests =====
+
 
 @pytest.mark.unit
 class TestBaseStrategyEngineInitialization:
@@ -147,6 +149,7 @@ class TestBaseStrategyEngineInitialization:
 
 
 # ===== Learning Engine Integration Tests =====
+
 
 @pytest.mark.unit
 class TestLearningEngineIntegration:
@@ -277,6 +280,7 @@ class TestLearningEngineIntegration:
 
 # ===== Callback Tests =====
 
+
 @pytest.mark.unit
 class TestCallbacks:
     """Test suite for callback registration and triggering."""
@@ -381,6 +385,7 @@ class TestCallbacks:
 
 # ===== Ensemble Weight Tests =====
 
+
 @pytest.mark.unit
 class TestEnsembleWeights:
     """Test suite for ensemble weight management."""
@@ -432,6 +437,7 @@ class TestEnsembleWeights:
 
 
 # ===== Context/Data Engine Integration Tests =====
+
 
 @pytest.mark.unit
 class TestContextDataEngineIntegration:
@@ -503,6 +509,7 @@ class TestContextDataEngineIntegration:
 
 
 # ===== Signal Generation Tests =====
+
 
 @pytest.mark.unit
 class TestSignalGeneration:
@@ -593,6 +600,7 @@ class TestSignalGeneration:
 
 # ===== Metrics Tests =====
 
+
 @pytest.mark.unit
 class TestMetrics:
     """Test suite for metrics tracking."""
@@ -631,6 +639,7 @@ class TestMetrics:
 
 
 # ===== Status Tests =====
+
 
 @pytest.mark.unit
 class TestStatus:
@@ -680,6 +689,7 @@ class TestStatus:
 
 # ===== Abstract Method Enforcement Tests =====
 
+
 @pytest.mark.unit
 class TestAbstractMethods:
     """Test suite for abstract method enforcement."""
@@ -692,6 +702,7 @@ class TestAbstractMethods:
 
 
 # ===== Repr Tests =====
+
 
 @pytest.mark.unit
 class TestRepr:
@@ -718,6 +729,7 @@ class TestRepr:
 
 
 # ===== Edge Case Tests =====
+
 
 @pytest.mark.unit
 class TestEdgeCases:

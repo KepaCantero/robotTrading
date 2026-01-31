@@ -65,13 +65,9 @@ class TestHalfLifeCalculator:
         assert calculator.min_samples == 30
         assert calculator.confidence_level == 0.95
 
-    def test_calculate_half_life_mean_reverting(
-        self, calculator, mean_reverting_series
-    ):
+    def test_calculate_half_life_mean_reverting(self, calculator, mean_reverting_series):
         """Test half-life calculation for mean-reverting series."""
-        result = calculator.calculate_half_life(
-            mean_reverting_series, data_frequency="D"
-        )
+        result = calculator.calculate_half_life(mean_reverting_series, data_frequency="D")
 
         # Check result structure
         assert isinstance(result, HalfLifeResult)
@@ -82,9 +78,7 @@ class TestHalfLifeCalculator:
 
     def test_calculate_half_life_trending(self, calculator, trending_series):
         """Test half-life calculation for trending series."""
-        result = calculator.calculate_half_life(
-            trending_series, data_frequency="D"
-        )
+        result = calculator.calculate_half_life(trending_series, data_frequency="D")
 
         # Should detect non-mean-reverting
         assert isinstance(result, HalfLifeResult)

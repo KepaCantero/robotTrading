@@ -13,6 +13,13 @@ from typing import Dict, List, Optional
 
 import aiohttp
 from requests.exceptions import HTTPError, RequestException
+from sqlalchemy.exc import (
+    DataError,
+    DatabaseError,
+    IntegrityError,
+    OperationalError,
+    ProgrammingError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -113,8 +120,7 @@ class MetricsExporter:
             ) as resp:
                 if resp.status in (200, 201, 204):
                     logger.info(
-                        f"✅ Pushed metrics to PushGateway "
-                        f"(job={job_name}, instance={instance})"
+                        f"✅ Pushed metrics to PushGateway " f"(job={job_name}, instance={instance})"
                     )
                     self.export_history.append(
                         {

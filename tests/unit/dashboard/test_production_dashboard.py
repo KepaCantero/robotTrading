@@ -80,7 +80,7 @@ def generate_realistic_prices(
         if crash_day > 0:
             prices[crash_day] = prices[crash_day - 1] * (1 + crash_magnitude)
         else:
-            prices[crash_day] *= (1 + crash_magnitude)
+            prices[crash_day] *= 1 + crash_magnitude
 
     return prices
 
@@ -99,7 +99,10 @@ def create_realistic_portfolio(
     prices_dict = {}
     for symbol in symbols:
         prices = generate_realistic_prices(
-            days=10, seed=seed + hash(symbol) % 1000, crash_day=crash_day, crash_magnitude=crash_magnitude
+            days=10,
+            seed=seed + hash(symbol) % 1000,
+            crash_day=crash_day,
+            crash_magnitude=crash_magnitude,
         )
         prices_dict[symbol] = {
             "current": Decimal(str(round(prices[-1], 2))),
@@ -114,17 +117,19 @@ def create_realistic_portfolio(
         market_price = data["current"]
         unrealized_pnl = (market_price - avg_price) * qty
 
-        positions.append(Position(
-            symbol=symbol,
-            asset_class=AssetClass.EQUITY,
-            quantity=qty,
-            avg_price=avg_price,
-            market_price=market_price,
-            unrealized_pnl=unrealized_pnl,
-            realized_pnl=Decimal("0"),
-            currency="USD",
-            broker="test",
-        ))
+        positions.append(
+            Position(
+                symbol=symbol,
+                asset_class=AssetClass.EQUITY,
+                quantity=qty,
+                avg_price=avg_price,
+                market_price=market_price,
+                unrealized_pnl=unrealized_pnl,
+                realized_pnl=Decimal("0"),
+                currency="USD",
+                broker="test",
+            )
+        )
 
     # Calculate total positions value
     positions_value = sum(p.market_price * p.quantity for p in positions)
@@ -365,9 +370,7 @@ class TestDashboardEdgeCases:
     async def test_market_crash_metrics(self, dashboard):
         """Test dashboard metrics during market crash (20%+ drop)."""
         # Create portfolio with severe crash
-        crash_portfolio = create_realistic_portfolio(
-            crash_day=3, crash_magnitude=-0.25
-        )
+        crash_portfolio = create_realistic_portfolio(crash_day=3, crash_magnitude=-0.25)
         dashboard.portfolio_service._portfolio = crash_portfolio
 
         metrics = await dashboard.get_metrics()
@@ -391,17 +394,19 @@ class TestDashboardEdgeCases:
             market_price = Decimal(str(round(prices[-1], 2)))
             unrealized_pnl = (market_price - avg_price) * qty
 
-            positions.append(Position(
-                symbol=symbol,
-                asset_class=AssetClass.EQUITY,
-                quantity=qty,
-                avg_price=avg_price,
-                market_price=market_price,
-                unrealized_pnl=unrealized_pnl,
-                realized_pnl=Decimal("0"),
-                currency="USD",
-                broker="test",
-            ))
+            positions.append(
+                Position(
+                    symbol=symbol,
+                    asset_class=AssetClass.EQUITY,
+                    quantity=qty,
+                    avg_price=avg_price,
+                    market_price=market_price,
+                    unrealized_pnl=unrealized_pnl,
+                    realized_pnl=Decimal("0"),
+                    currency="USD",
+                    broker="test",
+                )
+            )
 
         portfolio = Portfolio(
             portfolio_id="test_portfolio",
@@ -582,7 +587,9 @@ class TestSystemMetrics:
         assert metrics.rejects_today >= 0
 
         # Fills + rejects should not exceed orders
-        assert (metrics.fills_today + metrics.rejects_today) <= metrics.orders_today + 100  # Allow some margin
+        assert (
+            metrics.fills_today + metrics.rejects_today
+        ) <= metrics.orders_today + 100  # Allow some margin
 
     @pytest.mark.asyncio
     async def test_var_metrics(self, dashboard):
@@ -642,7 +649,7 @@ class TestHistoricalData:
         timestamps = [point.timestamp for point in data]
         # Timestamps should be in ascending order
         for i in range(1, len(timestamps)):
-            assert timestamps[i] >= timestamps[i-1]
+            assert timestamps[i] >= timestamps[i - 1]
 
 
 # ============================================================================

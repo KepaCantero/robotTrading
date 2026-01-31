@@ -149,9 +149,7 @@ class TestInputSanitization:
         with pytest.raises(InputValidationError, match="must be 2-dimensional"):
             optimizer.sanitize_inputs(returns)
 
-    def test_too_few_assets_after_sanitization_raises_error(
-        self, optimizer
-    ) -> None:
+    def test_too_few_assets_after_sanitization_raises_error(self, optimizer) -> None:
         """Test that having too few assets after sanitization raises error."""
         returns = np.random.randn(300, 2) * 0.01
         returns[:, 0] = np.nan  # Remove first asset
@@ -187,9 +185,7 @@ class TestCovarianceCalculation:
 
         assert np.allclose(cov_matrix, cov_matrix.T)
 
-    def test_covariance_matrix_positive_definite(
-        self, optimizer, returns
-    ) -> None:
+    def test_covariance_matrix_positive_definite(self, optimizer, returns) -> None:
         """Test that covariance matrix is positive semi-definite."""
         cov_matrix = optimizer.calculate_covariance_matrix(returns)
 
@@ -201,9 +197,7 @@ class TestCovarianceCalculation:
 
     def test_covariance_without_shrinkage(self, optimizer, returns) -> None:
         """Test covariance calculation without shrinkage."""
-        cov_matrix = optimizer.calculate_covariance_matrix(
-            returns, use_shrinkage=False
-        )
+        cov_matrix = optimizer.calculate_covariance_matrix(returns, use_shrinkage=False)
 
         assert cov_matrix.shape == (5, 5)
 
@@ -334,9 +328,7 @@ class TestMaxSharpePortfolio:
         assert result.method == OptimizationMethod.MAX_SHARPE
         assert len(result.weights) == 5
 
-    def test_max_sharpe_portfolio_constraints(
-        self, optimizer, sample_data
-    ) -> None:
+    def test_max_sharpe_portfolio_constraints(self, optimizer, sample_data) -> None:
         """Test that max Sharpe portfolio satisfies constraints."""
         expected_returns, cov_matrix = sample_data
         result = optimizer.max_sharpe_portfolio(expected_returns, cov_matrix)
@@ -454,9 +446,7 @@ class TestEfficientFrontier:
     def test_efficient_frontier_calculation(self, optimizer, sample_data) -> None:
         """Test efficient frontier calculation with 20+ points (Rule 71)."""
         expected_returns, cov_matrix = sample_data
-        frontier = optimizer.calculate_efficient_frontier(
-            expected_returns, cov_matrix, n_points=20
-        )
+        frontier = optimizer.calculate_efficient_frontier(expected_returns, cov_matrix, n_points=20)
 
         assert isinstance(frontier, EfficientFrontier)
         assert len(frontier.points) >= 20
@@ -466,9 +456,7 @@ class TestEfficientFrontier:
     def test_efficient_frontier_max_sharpe(self, optimizer, sample_data) -> None:
         """Test that max Sharpe portfolio is identified correctly."""
         expected_returns, cov_matrix = sample_data
-        frontier = optimizer.calculate_efficient_frontier(
-            expected_returns, cov_matrix, n_points=20
-        )
+        frontier = optimizer.calculate_efficient_frontier(expected_returns, cov_matrix, n_points=20)
 
         max_sharpe = frontier.max_sharpe_portfolio
 
@@ -479,9 +467,7 @@ class TestEfficientFrontier:
     def test_efficient_frontier_min_variance(self, optimizer, sample_data) -> None:
         """Test that min variance portfolio is identified correctly."""
         expected_returns, cov_matrix = sample_data
-        frontier = optimizer.calculate_efficient_frontier(
-            expected_returns, cov_matrix, n_points=20
-        )
+        frontier = optimizer.calculate_efficient_frontier(expected_returns, cov_matrix, n_points=20)
 
         min_var = frontier.min_variance_portfolio
 
@@ -553,9 +539,7 @@ class TestRiskParityFallback:
         assert result.method == OptimizationMethod.RISK_PARITY
         assert len(result.weights) == 5
 
-    def test_risk_parity_weights_inverse_volatility(
-        self, optimizer, sample_data
-    ) -> None:
+    def test_risk_parity_weights_inverse_volatility(self, optimizer, sample_data) -> None:
         """Test that risk parity uses inverse volatility weights."""
         expected_returns, cov_matrix = sample_data
 

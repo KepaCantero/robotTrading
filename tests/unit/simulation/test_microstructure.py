@@ -125,24 +125,28 @@ class TestOrderFlowAnalyzer:
 
         # Add buy flow
         for _ in range(3):
-            analyzer.add_order(Order(
-                order_id=f"buy_{_}",
-                symbol="AAPL",
-                side=OrderSide.BUY,
-                order_type=OrderType.LIMIT,
-                quantity=Decimal("200"),
-                price=Decimal("150.00"),
-            ))
+            analyzer.add_order(
+                Order(
+                    order_id=f"buy_{_}",
+                    symbol="AAPL",
+                    side=OrderSide.BUY,
+                    order_type=OrderType.LIMIT,
+                    quantity=Decimal("200"),
+                    price=Decimal("150.00"),
+                )
+            )
 
         # Add sell flow
-        analyzer.add_order(Order(
-            order_id="sell_001",
-            symbol="AAPL",
-            side=OrderSide.SELL,
-            order_type=OrderType.LIMIT,
-            quantity=Decimal("100"),
-            price=Decimal("150.00"),
-        ))
+        analyzer.add_order(
+            Order(
+                order_id="sell_001",
+                symbol="AAPL",
+                side=OrderSide.SELL,
+                order_type=OrderType.LIMIT,
+                quantity=Decimal("100"),
+                price=Decimal("150.00"),
+            )
+        )
 
         imbalance = analyzer.calculate_order_imbalance()
 
@@ -157,14 +161,16 @@ class TestOrderFlowAnalyzer:
 
         # Add orders with price information
         for i in range(10):
-            analyzer.add_order(Order(
-                order_id=f"order_{i}",
-                symbol="AAPL",
-                side=OrderSide.BUY if i % 2 == 0 else OrderSide.SELL,
-                order_type=OrderType.LIMIT,
-                quantity=Decimal("100"),
-                price=Decimal(f"150.{i:02d}"),
-            ))
+            analyzer.add_order(
+                Order(
+                    order_id=f"order_{i}",
+                    symbol="AAPL",
+                    side=OrderSide.BUY if i % 2 == 0 else OrderSide.SELL,
+                    order_type=OrderType.LIMIT,
+                    quantity=Decimal("100"),
+                    price=Decimal(f"150.{i:02d}"),
+                )
+            )
 
         toxicity = analyzer.calculate_flow_toxicity()
 
@@ -176,24 +182,28 @@ class TestOrderFlowAnalyzer:
 
         # Add strong buy pressure
         for _ in range(10):
-            analyzer.add_order(Order(
-                order_id=f"buy_{_}",
-                symbol="AAPL",
-                side=OrderSide.BUY,
-                order_type=OrderType.LIMIT,
-                quantity=Decimal("500"),
-                price=Decimal("150.00"),
-            ))
+            analyzer.add_order(
+                Order(
+                    order_id=f"buy_{_}",
+                    symbol="AAPL",
+                    side=OrderSide.BUY,
+                    order_type=OrderType.LIMIT,
+                    quantity=Decimal("500"),
+                    price=Decimal("150.00"),
+                )
+            )
 
         # Add small sell pressure
-        analyzer.add_order(Order(
-            order_id="sell_001",
-            symbol="AAPL",
-            side=OrderSide.SELL,
-            order_type=OrderType.LIMIT,
-            quantity=Decimal("100"),
-            price=Decimal("150.00"),
-        ))
+        analyzer.add_order(
+            Order(
+                order_id="sell_001",
+                symbol="AAPL",
+                side=OrderSide.SELL,
+                order_type=OrderType.LIMIT,
+                quantity=Decimal("100"),
+                price=Decimal("150.00"),
+            )
+        )
 
         # High toxicity scenario
         is_informed = analyzer.detect_informed_trading()
@@ -426,14 +436,16 @@ class TestMarketMicrostructureAnalyzer:
 
         # Add some data
         for _ in range(5):
-            analyzer.update(order=Order(
-                order_id=f"order_{_}",
-                symbol="AAPL",
-                side=OrderSide.BUY if _ % 2 == 0 else OrderSide.SELL,
-                order_type=OrderType.LIMIT,
-                quantity=Decimal("100"),
-                price=Decimal("150.00"),
-            ))
+            analyzer.update(
+                order=Order(
+                    order_id=f"order_{_}",
+                    symbol="AAPL",
+                    side=OrderSide.BUY if _ % 2 == 0 else OrderSide.SELL,
+                    order_type=OrderType.LIMIT,
+                    quantity=Decimal("100"),
+                    price=Decimal("150.00"),
+                )
+            )
 
         metrics = analyzer.get_comprehensive_metrics()
 
@@ -459,22 +471,28 @@ class TestCreateMarketMicrostructureAnalyzer:
         assert isinstance(analyzer, MarketMicrostructureAnalyzer)
 
 
-@pytest.mark.parametrize("regime", [
-    LiquidityRegime.HIGH,
-    LiquidityRegime.NORMAL,
-    LiquidityRegime.LOW,
-    LiquidityRegime.DRY,
-])
+@pytest.mark.parametrize(
+    "regime",
+    [
+        LiquidityRegime.HIGH,
+        LiquidityRegime.NORMAL,
+        LiquidityRegime.LOW,
+        LiquidityRegime.DRY,
+    ],
+)
 def test_liquidity_regimes(regime):
     """Test that all liquidity regimes are valid."""
     assert isinstance(regime, LiquidityRegime)
 
 
-@pytest.mark.parametrize("direction", [
-    OrderFlowDirection.BUY_PRESSURE,
-    OrderFlowDirection.SELL_PRESSURE,
-    OrderFlowDirection.BALANCED,
-])
+@pytest.mark.parametrize(
+    "direction",
+    [
+        OrderFlowDirection.BUY_PRESSURE,
+        OrderFlowDirection.SELL_PRESSURE,
+        OrderFlowDirection.BALANCED,
+    ],
+)
 def test_flow_directions(direction):
     """Test that all flow directions are valid."""
     assert isinstance(direction, OrderFlowDirection)

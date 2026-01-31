@@ -605,8 +605,7 @@ class TestFIFOIntegration:
 
         # All should normalize to same internal symbol
         internal_symbols = [
-            symbol_mapper.map_broker_to_internal(symbol, broker)
-            for symbol, broker in transactions
+            symbol_mapper.map_broker_to_internal(symbol, broker) for symbol, broker in transactions
         ]
 
         # All should be "BTC"

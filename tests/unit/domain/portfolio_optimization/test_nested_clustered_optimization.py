@@ -195,12 +195,14 @@ class TestKMeansClustering:
         """Sample covariance matrix for testing."""
         # 4 assets with different correlation structures
         # Assets 0,1 highly correlated; Assets 2,3 highly correlated
-        cov = np.array([
-            [0.04, 0.035, 0.005, 0.005],
-            [0.035, 0.036, 0.006, 0.006],
-            [0.005, 0.006, 0.0225, 0.02],
-            [0.005, 0.006, 0.02, 0.025],
-        ])
+        cov = np.array(
+            [
+                [0.04, 0.035, 0.005, 0.005],
+                [0.035, 0.036, 0.006, 0.006],
+                [0.005, 0.006, 0.0225, 0.02],
+                [0.005, 0.006, 0.02, 0.025],
+            ]
+        )
         return cov
 
     def test_kmeans_clusters_assets(self, sample_covariance):
@@ -249,14 +251,16 @@ class TestDBSCANClustering:
     def sample_covariance(self):
         """Sample covariance matrix for testing."""
         # 6 assets: 2 distinct groups + 1 outlier
-        cov = np.array([
-            [0.04, 0.035, 0.002, 0.002, 0.002, 0.002],
-            [0.035, 0.036, 0.002, 0.002, 0.002, 0.002],
-            [0.002, 0.002, 0.0225, 0.02, 0.002, 0.002],
-            [0.002, 0.002, 0.02, 0.025, 0.002, 0.002],
-            [0.002, 0.002, 0.002, 0.002, 0.01, 0.003],
-            [0.002, 0.002, 0.002, 0.002, 0.003, 0.01],
-        ])
+        cov = np.array(
+            [
+                [0.04, 0.035, 0.002, 0.002, 0.002, 0.002],
+                [0.035, 0.036, 0.002, 0.002, 0.002, 0.002],
+                [0.002, 0.002, 0.0225, 0.02, 0.002, 0.002],
+                [0.002, 0.002, 0.02, 0.025, 0.002, 0.002],
+                [0.002, 0.002, 0.002, 0.002, 0.01, 0.003],
+                [0.002, 0.002, 0.002, 0.002, 0.003, 0.01],
+            ]
+        )
         return cov
 
     def test_dbscan_identifies_clusters(self, sample_covariance):
@@ -315,12 +319,14 @@ class TestWithinClusterOptimization:
     def sample_data(self):
         """Sample returns and covariance for 4 assets."""
         expected_returns = np.array([0.08, 0.10, 0.12, 0.09])
-        cov_matrix = np.array([
-            [0.010, 0.005, 0.003, 0.004],
-            [0.005, 0.020, 0.006, 0.005],
-            [0.003, 0.006, 0.015, 0.007],
-            [0.004, 0.005, 0.007, 0.018],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.010, 0.005, 0.003, 0.004],
+                [0.005, 0.020, 0.006, 0.005],
+                [0.003, 0.006, 0.015, 0.007],
+                [0.004, 0.005, 0.007, 0.018],
+            ]
+        )
         return expected_returns, cov_matrix
 
     def test_optimize_two_assets(self, sample_data):
@@ -331,9 +337,7 @@ class TestWithinClusterOptimization:
         # Cluster with assets 0 and 1
         cluster_mask = np.array([True, True, False, False])
 
-        weights = nco._optimize_within_cluster(
-            expected_returns, cov_matrix, cluster_mask
-        )
+        weights = nco._optimize_within_cluster(expected_returns, cov_matrix, cluster_mask)
 
         # Only assets in cluster should have non-zero weights
         assert weights[0] > 0 or weights[1] > 0
@@ -352,9 +356,7 @@ class TestWithinClusterOptimization:
         # Cluster with only 1 asset (below min_cluster_size)
         cluster_mask = np.array([True, False, False, False])
 
-        weights = nco._optimize_within_cluster(
-            expected_returns, cov_matrix, cluster_mask
-        )
+        weights = nco._optimize_within_cluster(expected_returns, cov_matrix, cluster_mask)
 
         # Should fall back to equal weight (100% to single asset)
         assert weights[0] == 1.0
@@ -369,9 +371,7 @@ class TestWithinClusterOptimization:
 
         cluster_mask = np.array([True, True, True, False])
 
-        weights = nco._optimize_within_cluster(
-            expected_returns, cov_matrix, cluster_mask
-        )
+        weights = nco._optimize_within_cluster(expected_returns, cov_matrix, cluster_mask)
 
         # All weights should be non-negative
         assert np.all(weights >= 0)
@@ -384,9 +384,7 @@ class TestWithinClusterOptimization:
 
         cluster_mask = np.array([True, True, True, True])
 
-        weights = nco._optimize_within_cluster(
-            expected_returns, cov_matrix, cluster_mask
-        )
+        weights = nco._optimize_within_cluster(expected_returns, cov_matrix, cluster_mask)
 
         # No single weight should exceed max
         assert np.all(weights <= config.max_weight_single_asset)
@@ -400,14 +398,16 @@ class TestClusterAllocation:
     def sample_data(self):
         """Sample data with 3 clusters."""
         expected_returns = np.array([0.08, 0.10, 0.12, 0.09, 0.11, 0.07])
-        cov_matrix = np.array([
-            [0.010, 0.008, 0.002, 0.002, 0.002, 0.002],
-            [0.008, 0.020, 0.002, 0.002, 0.002, 0.002],
-            [0.002, 0.002, 0.015, 0.012, 0.002, 0.002],
-            [0.002, 0.002, 0.012, 0.018, 0.002, 0.002],
-            [0.002, 0.002, 0.002, 0.002, 0.025, 0.02],
-            [0.002, 0.002, 0.002, 0.002, 0.02, 0.022],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.010, 0.008, 0.002, 0.002, 0.002, 0.002],
+                [0.008, 0.020, 0.002, 0.002, 0.002, 0.002],
+                [0.002, 0.002, 0.015, 0.012, 0.002, 0.002],
+                [0.002, 0.002, 0.012, 0.018, 0.002, 0.002],
+                [0.002, 0.002, 0.002, 0.002, 0.025, 0.02],
+                [0.002, 0.002, 0.002, 0.002, 0.02, 0.022],
+            ]
+        )
         # Clusters: [0,1], [2,3], [4,5]
         cluster_labels = np.array([0, 0, 1, 1, 2, 2])
         return expected_returns, cov_matrix, cluster_labels
@@ -417,9 +417,7 @@ class TestClusterAllocation:
         expected_returns, cov_matrix, cluster_labels = sample_data
         nco = NestedClusteredOptimization()
 
-        cluster_weights = nco._allocate_clusters(
-            expected_returns, cov_matrix, cluster_labels
-        )
+        cluster_weights = nco._allocate_clusters(expected_returns, cov_matrix, cluster_labels)
 
         # Should have 3 cluster weights
         assert len(cluster_weights) == 3
@@ -435,9 +433,7 @@ class TestClusterAllocation:
         expected_returns, cov_matrix, cluster_labels = sample_data
         nco = NestedClusteredOptimization()
 
-        cluster_weights = nco._allocate_clusters(
-            expected_returns, cov_matrix, cluster_labels
-        )
+        cluster_weights = nco._allocate_clusters(expected_returns, cov_matrix, cluster_labels)
 
         # Compute cluster volatilities
         cluster_vols = []
@@ -462,9 +458,7 @@ class TestClusterAllocation:
 
         nco = NestedClusteredOptimization()
 
-        cluster_weights = nco._allocate_clusters(
-            expected_returns, cov_matrix, cluster_labels
-        )
+        cluster_weights = nco._allocate_clusters(expected_returns, cov_matrix, cluster_labels)
 
         # Should handle noise gracefully
         assert len(cluster_weights) >= 1
@@ -484,16 +478,18 @@ class TestFullNCO:
         # Cluster 2: Assets 3-5 (highly correlated)
         expected_returns = np.array([0.08, 0.10, 0.09, 0.12, 0.11, 0.13])
 
-        cov_matrix = np.array([
-            # Cluster 1
-            [0.010, 0.008, 0.007, 0.002, 0.002, 0.002],
-            [0.008, 0.020, 0.009, 0.002, 0.002, 0.002],
-            [0.007, 0.009, 0.015, 0.002, 0.002, 0.002],
-            # Cluster 2
-            [0.002, 0.002, 0.002, 0.025, 0.022, 0.021],
-            [0.002, 0.002, 0.002, 0.022, 0.030, 0.023],
-            [0.002, 0.002, 0.002, 0.021, 0.023, 0.028],
-        ])
+        cov_matrix = np.array(
+            [
+                # Cluster 1
+                [0.010, 0.008, 0.007, 0.002, 0.002, 0.002],
+                [0.008, 0.020, 0.009, 0.002, 0.002, 0.002],
+                [0.007, 0.009, 0.015, 0.002, 0.002, 0.002],
+                # Cluster 2
+                [0.002, 0.002, 0.002, 0.025, 0.022, 0.021],
+                [0.002, 0.002, 0.002, 0.022, 0.030, 0.023],
+                [0.002, 0.002, 0.002, 0.021, 0.023, 0.028],
+            ]
+        )
 
         return expected_returns, cov_matrix
 
@@ -671,11 +667,13 @@ class TestConvenienceFunction:
     def test_compute_nco_weights_basic(self):
         """Test basic usage of convenience function."""
         expected_returns = np.array([0.08, 0.10, 0.12])
-        cov_matrix = np.array([
-            [0.01, 0.005, 0.003],
-            [0.005, 0.02, 0.006],
-            [0.003, 0.006, 0.015],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.01, 0.005, 0.003],
+                [0.005, 0.02, 0.006],
+                [0.003, 0.006, 0.015],
+            ]
+        )
 
         weights = compute_nco_weights(
             expected_returns,
@@ -714,9 +712,7 @@ class TestInputValidation:
         """Valid test data."""
         return (
             np.array([0.08, 0.10, 0.12]),
-            np.array([[0.01, 0.005, 0.003],
-                     [0.005, 0.02, 0.006],
-                     [0.003, 0.006, 0.015]])
+            np.array([[0.01, 0.005, 0.003], [0.005, 0.02, 0.006], [0.003, 0.006, 0.015]]),
         )
 
     def test_invalid_returns_ndim(self, valid_data):
@@ -762,11 +758,7 @@ class TestInputValidation:
     def test_list_input_conversion(self, valid_data):
         """Test that list inputs are converted to numpy arrays."""
         expected_returns = [0.08, 0.10, 0.12]
-        cov_matrix = [
-            [0.01, 0.005, 0.003],
-            [0.005, 0.02, 0.006],
-            [0.003, 0.006, 0.015]
-        ]
+        cov_matrix = [[0.01, 0.005, 0.003], [0.005, 0.02, 0.006], [0.003, 0.006, 0.015]]
 
         nco = NestedClusteredOptimization()
 
@@ -784,11 +776,13 @@ class TestEdgeCases:
         """Test with perfectly correlated assets."""
         expected_returns = np.array([0.08, 0.10, 0.12])
         # All assets perfectly correlated
-        cov_matrix = np.array([
-            [0.01, 0.01, 0.01],
-            [0.01, 0.02, 0.014],
-            [0.01, 0.014, 0.018],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.01, 0.01, 0.01],
+                [0.01, 0.02, 0.014],
+                [0.01, 0.014, 0.018],
+            ]
+        )
 
         nco = NestedClusteredOptimization()
         result = nco.get_weights(expected_returns, cov_matrix)
@@ -846,11 +840,13 @@ class TestEdgeCases:
     def test_zero_variance_asset(self):
         """Test handling of zero variance asset."""
         expected_returns = np.array([0.08, 0.10, 0.12])
-        cov_matrix = np.array([
-            [0.01, 0.005, 0.003],
-            [0.005, 0.00, 0.00],  # Zero variance
-            [0.003, 0.00, 0.015],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.01, 0.005, 0.003],
+                [0.005, 0.00, 0.00],  # Zero variance
+                [0.003, 0.00, 0.015],
+            ]
+        )
 
         nco = NestedClusteredOptimization()
         result = nco.get_weights(expected_returns, cov_matrix)
@@ -871,11 +867,13 @@ class TestGetDistanceMatrix:
     def test_distance_matrix_after_clustering(self):
         """Test that distance matrix is available after clustering."""
         expected_returns = np.array([0.08, 0.10, 0.12])
-        cov_matrix = np.array([
-            [0.01, 0.005, 0.003],
-            [0.005, 0.02, 0.006],
-            [0.003, 0.006, 0.015],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.01, 0.005, 0.003],
+                [0.005, 0.02, 0.006],
+                [0.003, 0.006, 0.015],
+            ]
+        )
 
         nco = NestedClusteredOptimization()
         nco.get_weights(expected_returns, cov_matrix)

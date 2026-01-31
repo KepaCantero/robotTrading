@@ -91,9 +91,7 @@ class TestBarrierLabeling:
     @pytest.fixture
     def volatile_price_data(self):
         """Create volatile price data for testing."""
-        return np.array(
-            [100.0, 95.0, 105.0, 98.0, 102.0, 97.0, 103.0, 96.0, 104.0, 99.0, 101.0]
-        )
+        return np.array([100.0, 95.0, 105.0, 98.0, 102.0, 97.0, 103.0, 96.0, 104.0, 99.0, 101.0])
 
     def test_upper_barrier_hit(self, simple_price_data):
         """Test labeling when upper barrier is hit first."""
@@ -131,9 +129,7 @@ class TestBarrierLabeling:
     def test_barrier_labels_with_timing(self, simple_price_data):
         """Test barrier labeling with timing information."""
         events = np.array([0])
-        labels, timing = get_barrier_labels_with_timing(
-            simple_price_data, events, 1.02, 0.99, 10
-        )
+        labels, timing = get_barrier_labels_with_timing(simple_price_data, events, 1.02, 0.99, 10)
 
         assert len(labels) == 1
         assert len(timing) == 1
@@ -183,7 +179,9 @@ class TestDynamicBarriers:
     def test_fixed_barriers(self, price_series, event_series):
         """Test fixed barrier calculation (no volatility scaling)."""
         config = TripleBarrierConfig(upper_barrier_pct=0.02, lower_barrier_pct=-0.01)
-        upper, lower = calculate_dynamic_barriers(price_series, event_series, config, vol_scaling=False)
+        upper, lower = calculate_dynamic_barriers(
+            price_series, event_series, config, vol_scaling=False
+        )
 
         assert len(upper) == len(event_series)
         assert len(lower) == len(event_series)
@@ -193,7 +191,9 @@ class TestDynamicBarriers:
     def test_dynamic_barriers_with_vol_scaling(self, price_series, event_series):
         """Test dynamic barrier calculation with volatility scaling."""
         config = TripleBarrierConfig(upper_barrier_pct=0.02, lower_barrier_pct=-0.01, vol_window=10)
-        upper, lower = calculate_dynamic_barriers(price_series, event_series, config, vol_scaling=True)
+        upper, lower = calculate_dynamic_barriers(
+            price_series, event_series, config, vol_scaling=True
+        )
 
         assert len(upper) == len(event_series)
         assert len(lower) == len(event_series)
@@ -204,7 +204,9 @@ class TestDynamicBarriers:
     def test_barrier_correlation_with_volatility(self, price_series, event_series):
         """Test that barriers correlate with volatility."""
         config = TripleBarrierConfig(vol_window=10)
-        upper, lower = calculate_dynamic_barriers(price_series, event_series, config, vol_scaling=True)
+        upper, lower = calculate_dynamic_barriers(
+            price_series, event_series, config, vol_scaling=True
+        )
 
         # Calculate returns and volatility
         returns = price_series.pct_change().dropna()

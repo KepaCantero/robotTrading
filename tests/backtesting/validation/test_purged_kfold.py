@@ -216,9 +216,7 @@ class TestPurgedKFold(unittest.TestCase):
         """Test error when samples are insufficient."""
         X_small = np.random.randn(50, 10)
 
-        purged_cv = PurgedKFold(
-            n_splits=5, min_train_samples=252, min_test_samples=20
-        )
+        purged_cv = PurgedKFold(n_splits=5, min_train_samples=252, min_test_samples=20)
 
         with self.assertRaises(ValueError):
             list(purged_cv.split(X_small))
@@ -251,10 +249,7 @@ class TestPurgedKFold(unittest.TestCase):
 
     def test_with_pandas_dataframe(self):
         """Test with pandas DataFrame."""
-        X_df = pd.DataFrame(
-            self.X,
-            index=pd.date_range('2020-01-01', periods=self.n_samples)
-        )
+        X_df = pd.DataFrame(self.X, index=pd.date_range('2020-01-01', periods=self.n_samples))
 
         purged_cv = PurgedKFold(n_splits=5)
         splits = purged_cv.split(X_df)
@@ -298,7 +293,7 @@ class TestPurgedTimeSeriesSplit(unittest.TestCase):
 
         # Training sizes should be non-decreasing (expanding window)
         for i in range(1, len(train_sizes)):
-            self.assertGreaterEqual(train_sizes[i], train_sizes[i-1])
+            self.assertGreaterEqual(train_sizes[i], train_sizes[i - 1])
 
     def test_fixed_window(self):
         """Test fixed window behavior."""
@@ -391,8 +386,11 @@ class TestCrossValidateWithPurging(unittest.TestCase):
         from sklearn.metrics import f1_score
 
         results = cross_validate_with_purging(
-            clf, X, y, n_splits=3,
-            scoring=lambda y_true, y_pred: f1_score(y_true, y_pred, average='weighted')
+            clf,
+            X,
+            y,
+            n_splits=3,
+            scoring=lambda y_true, y_pred: f1_score(y_true, y_pred, average='weighted'),
         )
 
         # Should have test scores
@@ -407,8 +405,7 @@ class TestCrossValidateWithPurging(unittest.TestCase):
         clf = RandomForestClassifier(n_estimators=10, random_state=42)
 
         results = cross_validate_with_purging(
-            clf, X, y, n_splits=3,
-            fit_params={'sample_weight': np.ones(500)}
+            clf, X, y, n_splits=3, fit_params={'sample_weight': np.ones(500)}
         )
 
         # Should complete without error
@@ -468,11 +465,7 @@ class TestEdgeCases(unittest.TestCase):
         X = np.random.randn(100, 5)
 
         purged_cv = PurgedKFold(
-            n_splits=3,
-            purge_pct=0.01,
-            embargo_pct=0.01,
-            min_train_samples=20,
-            min_test_samples=5
+            n_splits=3, purge_pct=0.01, embargo_pct=0.01, min_train_samples=20, min_test_samples=5
         )
 
         splits = purged_cv.split(X)
@@ -484,11 +477,7 @@ class TestEdgeCases(unittest.TestCase):
         """Test with large purge and embargo percentages."""
         X = np.random.randn(1000, 10)
 
-        purged_cv = PurgedKFold(
-            n_splits=3,
-            purge_pct=0.20,
-            embargo_pct=0.15
-        )
+        purged_cv = PurgedKFold(n_splits=3, purge_pct=0.20, embargo_pct=0.15)
 
         splits = purged_cv.split(X)
 
@@ -518,7 +507,7 @@ class TestSyntheticData(unittest.TestCase):
         n = 500
         X = np.zeros((n, 1))
         for i in range(1, n):
-            X[i] = 0.7 * X[i-1] + np.random.randn()
+            X[i] = 0.7 * X[i - 1] + np.random.randn()
 
         purged_cv = PurgedKFold(n_splits=5, purge_pct=0.05, embargo_pct=0.02)
         splits = purged_cv.split(X)

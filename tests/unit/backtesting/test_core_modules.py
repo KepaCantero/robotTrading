@@ -61,11 +61,13 @@ class TestBoundedResults:
     def test_extend_results(self):
         """Test extending with multiple results."""
         results = BoundedResults(maxlen=10)
-        results.extend([
-            {'test': 'value1'},
-            {'test': 'value2'},
-            {'test': 'value3'},
-        ])
+        results.extend(
+            [
+                {'test': 'value1'},
+                {'test': 'value2'},
+                {'test': 'value3'},
+            ]
+        )
         assert len(results) == 3
 
     def test_get_latest(self):
@@ -102,7 +104,8 @@ class TestBacktestConfigLoader:
     def test_load_from_valid_file(self, tmp_path):
         """Test loading from valid YAML file."""
         config_file = tmp_path / "test_config.yaml"
-        config_file.write_text("""
+        config_file.write_text(
+            """
 backtest:
   initial_capital: 100000
   commission_per_trade: 1.0
@@ -112,7 +115,8 @@ backtest:
 input:
   start_date: "2023-01-01"
   end_date: "2023-12-31"
-""")
+"""
+        )
 
         loader = BacktestConfigLoader(str(config_file))
         assert loader.raw_config is not None
@@ -121,12 +125,14 @@ input:
     def test_get_backtest_config(self, tmp_path):
         """Test getting BacktestConfig object."""
         config_file = tmp_path / "test_config.yaml"
-        config_file.write_text("""
+        config_file.write_text(
+            """
 backtest:
   initial_capital: 100000
   commission_per_trade: 1.0
   slippage: 0.1
-""")
+"""
+        )
 
         loader = BacktestConfigLoader(str(config_file))
         config = loader.get_backtest_config()
@@ -143,7 +149,8 @@ backtest:
     def test_get_sections(self, tmp_path):
         """Test getting configuration sections."""
         config_file = tmp_path / "test_config.yaml"
-        config_file.write_text("""
+        config_file.write_text(
+            """
 strategy:
   name: test_strategy
   enabled: true
@@ -151,7 +158,8 @@ strategy:
 execution:
   parallel: true
   max_workers: 4
-""")
+"""
+        )
 
         loader = BacktestConfigLoader(str(config_file))
 
@@ -197,11 +205,13 @@ class TestBacktestExecutor:
 
         # Test parallel executor
         from app.backtesting.core.executor import ParallelBacktestExecutor
+
         executor = BacktestExecutorFactory.create(config, executor_type='parallel')
         assert isinstance(executor, ParallelBacktestExecutor)
 
         # Test process pool executor
         from app.backtesting.core.executor import ProcessPoolBacktestExecutor
+
         executor = BacktestExecutorFactory.create(config, executor_type='process', max_workers=4)
         assert isinstance(executor, ProcessPoolBacktestExecutor)
 
@@ -276,6 +286,7 @@ class TestBacktestOrchestrator:
 
         # Mock executor that returns a result
         from unittest.mock import Mock
+
         mock_executor = Mock()
         mock_result = Mock()
         mock_result.final_capital = Decimal('110000')
@@ -296,7 +307,8 @@ class TestBacktestRunnerFacade:
     def test_initialization(self, tmp_path):
         """Test facade initialization."""
         config_file = tmp_path / "test_config.yaml"
-        config_file.write_text("""
+        config_file.write_text(
+            """
 backtest:
   initial_capital: 100000
 
@@ -306,7 +318,8 @@ input:
 
 reporting:
   output_directory: "/tmp/test_reports"
-""")
+"""
+        )
 
         facade = BacktestRunnerFacade(str(config_file))
         assert facade.backtest_config is not None
@@ -315,7 +328,8 @@ reporting:
     def test_create_backtest_runner_factory(self, tmp_path):
         """Test factory function."""
         config_file = tmp_path / "test_config.yaml"
-        config_file.write_text("""
+        config_file.write_text(
+            """
 backtest:
   initial_capital: 100000
 
@@ -325,7 +339,8 @@ input:
 
 reporting:
   output_directory: "/tmp/test_reports"
-""")
+"""
+        )
 
         facade = create_backtest_runner(str(config_file))
         assert isinstance(facade, BacktestRunnerFacade)
@@ -333,7 +348,8 @@ reporting:
     def test_clear_results(self, tmp_path):
         """Test clearing results."""
         config_file = tmp_path / "test_config.yaml"
-        config_file.write_text("""
+        config_file.write_text(
+            """
 backtest:
   initial_capital: 100000
 
@@ -343,7 +359,8 @@ input:
 
 reporting:
   output_directory: "/tmp/test_reports"
-""")
+"""
+        )
 
         facade = BacktestRunnerFacade(str(config_file))
         facade.results.add({'test': 'value'})

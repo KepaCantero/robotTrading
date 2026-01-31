@@ -15,10 +15,10 @@ class HorizonCategory(str, Enum):
     """Investment horizon categories for classification."""
 
     VERY_SHORT_TERM = "very_short_term"  # < 6 months
-    SHORT_TERM = "short_term"            # 6-12 months
-    MEDIUM_TERM = "medium_term"          # 1-3 years
-    LONG_TERM = "long_term"              # 3-10 years
-    VERY_LONG_TERM = "very_long_term"    # > 10 years
+    SHORT_TERM = "short_term"  # 6-12 months
+    MEDIUM_TERM = "medium_term"  # 1-3 years
+    LONG_TERM = "long_term"  # 3-10 years
+    VERY_LONG_TERM = "very_long_term"  # > 10 years
 
 
 @dataclass(frozen=True)

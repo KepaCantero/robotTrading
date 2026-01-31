@@ -5,7 +5,12 @@ This module contains domain services for portfolio optimization
 following modern portfolio theory and advanced methods.
 """
 
-from .black_litterman import BlackLittermanOptimizer, BlackLittermanResult, View, create_relative_view
+from .black_litterman import (
+    BlackLittermanOptimizer,
+    BlackLittermanResult,
+    View,
+    create_relative_view,
+)
 from .cla import CriticalLineAlgorithm, CornerPortfolio, EfficientFrontierCLA, compute_turnover
 from .covariance_calculator import CovarianceCalculator, CovarianceResult
 from .denoise_correlation import CorrelationDenoiser, DenoisedResult

@@ -55,10 +55,13 @@ class TestLiquidityAnalyzer:
     @pytest.fixture
     def sample_price_history(self):
         """Create sample price history"""
-        return pd.DataFrame({
-            'close': [100 + i * 0.01 + np.random.randn() * 0.05 for i in range(100)],
-            'volume': [1000000 + np.random.randint(-100000, 100000) for _ in range(100)],
-        }, index=pd.date_range('2024-01-01', periods=100, freq='1min'))
+        return pd.DataFrame(
+            {
+                'close': [100 + i * 0.01 + np.random.randn() * 0.05 for i in range(100)],
+                'volume': [1000000 + np.random.randint(-100000, 100000) for _ in range(100)],
+            },
+            index=pd.date_range('2024-01-01', periods=100, freq='1min'),
+        )
 
     def test_measure_market_depth(self, analyzer, sample_order_book):
         """Test market depth measurement"""
@@ -147,9 +150,12 @@ class TestLiquidityAnalyzer:
         """Test market resilience measurement"""
         # Create price history with shock
         prices = [100.0] * 50 + [102.0] * 50  # Shock at period 50
-        price_history = pd.DataFrame({
-            'close': prices,
-        }, index=pd.date_range('2024-01-01', periods=100, freq='1s'))
+        price_history = pd.DataFrame(
+            {
+                'close': prices,
+            },
+            index=pd.date_range('2024-01-01', periods=100, freq='1s'),
+        )
 
         shock_times = [price_history.index[50]]
 
@@ -178,9 +184,7 @@ class TestLiquidityAnalyzer:
         assert risk.risk_level in ['LOW', 'MEDIUM', 'HIGH']
         assert isinstance(risk.recommendations, list)
 
-    def test_calculate_liquidity_metrics(
-        self, analyzer, sample_order_book, sample_price_history
-    ):
+    def test_calculate_liquidity_metrics(self, analyzer, sample_order_book, sample_price_history):
         """Test comprehensive liquidity metrics calculation"""
         metrics = analyzer.calculate_liquidity_metrics(
             symbol='AAPL',
@@ -212,9 +216,7 @@ class TestLiquidityAnalyzer:
         # Should return valid trend
         assert trend in ['IMPROVING', 'STABLE', 'DETERIORATING', 'UNKNOWN']
 
-    def test_generate_liquidity_report(
-        self, analyzer, sample_order_book, sample_price_history
-    ):
+    def test_generate_liquidity_report(self, analyzer, sample_order_book, sample_price_history):
         """Test comprehensive liquidity report generation"""
         report = analyzer.generate_liquidity_report(
             symbol='AAPL',
@@ -301,9 +303,9 @@ class TestSpreadDecomposition:
 
         # Components should sum to approximately total
         component_sum = (
-            decomposition.order_processing_bps +
-            decomposition.inventory_holding_bps +
-            decomposition.adverse_selection_bps
+            decomposition.order_processing_bps
+            + decomposition.inventory_holding_bps
+            + decomposition.adverse_selection_bps
         )
 
         assert abs(component_sum - decomposition.total_spread_bps) < 0.1
@@ -367,19 +369,20 @@ class TestLiquidityIntegration:
         # Create realistic order book
         order_book = {
             'bids': [
-                (Decimal(f"{100 - i*0.01:.2f}"), Decimal(str((i+1)*1000)))
-                for i in range(10)
+                (Decimal(f"{100 - i*0.01:.2f}"), Decimal(str((i + 1) * 1000))) for i in range(10)
             ],
             'asks': [
-                (Decimal(f"{100 + i*0.01:.2f}"), Decimal(str((i+1)*1000)))
-                for i in range(10)
+                (Decimal(f"{100 + i*0.01:.2f}"), Decimal(str((i + 1) * 1000))) for i in range(10)
             ],
         }
 
         # Create price history
-        price_history = pd.DataFrame({
-            'close': [100 + np.random.randn() * 0.1 for _ in range(100)],
-        }, index=pd.date_range('2024-01-01', periods=100, freq='1min'))
+        price_history = pd.DataFrame(
+            {
+                'close': [100 + np.random.randn() * 0.1 for _ in range(100)],
+            },
+            index=pd.date_range('2024-01-01', periods=100, freq='1min'),
+        )
 
         # Generate report
         report = analyzer.generate_liquidity_report(

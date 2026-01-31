@@ -10,7 +10,7 @@ Open/Closed: Extensible through HurstCalculator protocol.
 """
 
 import logging
-from typing import override
+from typing_extensions import override
 
 import numpy as np
 from numba import jit
@@ -20,18 +20,20 @@ logger = logging.getLogger(__name__)
 
 class VarianceMethodCalculator:
     """
-    Hurst exponent calculator using variance of residuals method.
+        Hurst exponent calculator using variance of residuals method.
 
-    This method uses the scaling property of variance with time lag:
-    Var(x(t+lag) - x(t)) ~ lag^(2H)
+    from __future__ import annotations
 
-    BEFORE: Python loops - ~1500ms for 10K data points
-    AFTER: Numba JIT - ~15-30ms for 10K data points
-    SPEEDUP: 50-100x
+        This method uses the scaling property of variance with time lag:
+        Var(x(t+lag) - x(t)) ~ lag^(2H)
 
-    Example:
-        >>> calculator = VarianceMethodCalculator()
-        >>> hurst, _, _ = calculator.calculate(series)
+        BEFORE: Python loops - ~1500ms for 10K data points
+        AFTER: Numba JIT - ~15-30ms for 10K data points
+        SPEEDUP: 50-100x
+
+        Example:
+            >>> calculator = VarianceMethodCalculator()
+            >>> hurst, _, _ = calculator.calculate(series)
     """
 
     def __init__(self) -> None:

@@ -113,9 +113,7 @@ class CovarianceCalculator:
 
         n_obs = returns_array.shape[0]
         if n_obs < self._min_observations:
-            raise ValueError(
-                f"Insufficient observations: {n_obs} < {self._min_observations}"
-            )
+            raise ValueError(f"Insufficient observations: {n_obs} < {self._min_observations}")
 
         # Calculate means
         means = np.mean(returns_array, axis=0)
@@ -165,9 +163,7 @@ class CovarianceCalculator:
 
         # Calculate structured estimator (constant correlation)
         n_assets = len(result.symbols)
-        mean_corr = np.mean(result.correlation_matrix[
-            np.triu_indices(n_assets, k=1)
-        ])
+        mean_corr = np.mean(result.correlation_matrix[np.triu_indices(n_assets, k=1)])
 
         # Create constant correlation matrix
         constant_corr = np.full((n_assets, n_assets), mean_corr)
@@ -178,10 +174,7 @@ class CovarianceCalculator:
         structured_cov = constant_corr * std_matrix
 
         # Shrink: combine sample and structured
-        shrunk_cov = (
-            (1 - shrinkage) * result.covariance_matrix
-            + shrinkage * structured_cov
-        )
+        shrunk_cov = (1 - shrinkage) * result.covariance_matrix + shrinkage * structured_cov
 
         # Update correlation matrix
         shrunk_corr = self._covariance_to_correlation(shrunk_cov)
@@ -218,9 +211,7 @@ class CovarianceCalculator:
         # Calculate exponential weights
         n_obs = returns_array.shape[0]
         alpha = 2 / (span + 1)
-        weights = np.array([
-            (1 - alpha) ** (n_obs - 1 - i) for i in range(n_obs)
-        ])
+        weights = np.array([(1 - alpha) ** (n_obs - 1 - i) for i in range(n_obs)])
         weights = weights / weights.sum()  # Normalize
 
         # Calculate weighted means

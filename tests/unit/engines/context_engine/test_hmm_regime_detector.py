@@ -52,6 +52,7 @@ def bear_market_prices() -> List[float]:
 def detector():
     """Create an HMMRegimeDetector instance for testing."""
     from app.engines.context_engine.regime_detectors.hmm_regime_detector import HMMRegimeDetector
+
     return HMMRegimeDetector(config={'n_regimes': 3})
 
 
@@ -59,6 +60,7 @@ def detector():
 def two_regime_detector():
     """Create an HMMRegimeDetector with 2 regimes."""
     from app.engines.context_engine.regime_detectors.hmm_regime_detector import HMMRegimeDetector
+
     return HMMRegimeDetector(config={'n_regimes': 2})
 
 
@@ -68,7 +70,9 @@ class TestHMMRegimeDetectorInit:
 
     def test_default_initialization(self):
         """Test default initialization parameters."""
-        from app.engines.context_engine.regime_detectors.hmm_regime_detector import HMMRegimeDetector
+        from app.engines.context_engine.regime_detectors.hmm_regime_detector import (
+            HMMRegimeDetector,
+        )
 
         detector = HMMRegimeDetector()
 
@@ -80,14 +84,11 @@ class TestHMMRegimeDetectorInit:
 
     def test_custom_initialization(self):
         """Test custom initialization parameters."""
-        from app.engines.context_engine.regime_detectors.hmm_regime_detector import HMMRegimeDetector
+        from app.engines.context_engine.regime_detectors.hmm_regime_detector import (
+            HMMRegimeDetector,
+        )
 
-        config = {
-            'n_regimes': 4,
-            'n_features': 3,
-            'window_size': 150,
-            'min_samples': 100
-        }
+        config = {'n_regimes': 4, 'n_features': 3, 'window_size': 150, 'min_samples': 100}
         detector = HMMRegimeDetector(config=config)
 
         assert detector.n_regimes == 4
@@ -97,17 +98,27 @@ class TestHMMRegimeDetectorInit:
 
     def test_regime_labels_three_regimes(self):
         """Test regime labels for 3 regimes."""
-        from app.engines.context_engine.regime_detectors.hmm_regime_detector import HMMRegimeDetector
+        from app.engines.context_engine.regime_detectors.hmm_regime_detector import (
+            HMMRegimeDetector,
+        )
 
         detector = HMMRegimeDetector(config={'n_regimes': 3})
         assert detector.regime_labels == ['bear', 'sideways', 'bull']
 
     def test_regime_labels_custom_regimes(self):
         """Test regime labels for custom number of regimes."""
-        from app.engines.context_engine.regime_detectors.hmm_regime_detector import HMMRegimeDetector
+        from app.engines.context_engine.regime_detectors.hmm_regime_detector import (
+            HMMRegimeDetector,
+        )
 
         detector = HMMRegimeDetector(config={'n_regimes': 5})
-        assert detector.regime_labels == ['regime_0', 'regime_1', 'regime_2', 'regime_3', 'regime_4']
+        assert detector.regime_labels == [
+            'regime_0',
+            'regime_1',
+            'regime_2',
+            'regime_3',
+            'regime_4',
+        ]
 
 
 @pytest.mark.unit
@@ -177,7 +188,9 @@ class TestFit:
     @patch('app.engines.context_engine.regime_detectors.hmm_regime_detector.hmm.GaussianHMM')
     def test_fit_with_custom_parameters(self, mock_hmm, sample_prices):
         """Test fitting with custom HMM parameters."""
-        from app.engines.context_engine.regime_detectors.hmm_regime_detector import HMMRegimeDetector
+        from app.engines.context_engine.regime_detectors.hmm_regime_detector import (
+            HMMRegimeDetector,
+        )
 
         detector = HMMRegimeDetector(config={'n_regimes': 4, 'window_size': 150})
         mock_model = MagicMock()
@@ -215,7 +228,10 @@ class TestDetect:
         """Test basic regime detection."""
         mock_model = MagicMock()
         mock_model.predict.return_value = np.array([0, 1, 2, 1, 1])  # Various states
-        mock_model.score_samples.return_value = (np.array([-1.0, -2.0, -3.0]), np.array([[0.1, 0.2, 0.7]]))
+        mock_model.score_samples.return_value = (
+            np.array([-1.0, -2.0, -3.0]),
+            np.array([[0.1, 0.2, 0.7]]),
+        )
         mock_hmm.return_value = mock_model
 
         result = detector.detect(sample_prices)
@@ -297,9 +313,7 @@ class TestGetTransitionMatrix:
     def test_get_transition_matrix_with_model(self, mock_hmm, detector, sample_prices):
         """Test getting transition matrix when model is trained."""
         mock_model = MagicMock()
-        expected_matrix = np.array([[0.9, 0.05, 0.05],
-                                    [0.1, 0.8, 0.1],
-                                    [0.05, 0.05, 0.9]])
+        expected_matrix = np.array([[0.9, 0.05, 0.05], [0.1, 0.8, 0.1], [0.05, 0.05, 0.9]])
         mock_model.transmat_ = expected_matrix
         mock_hmm.return_value = mock_model
 
@@ -319,9 +333,7 @@ class TestGetTransitionMatrix:
     def test_transition_matrix_properties(self, mock_hmm, detector, sample_prices):
         """Test that transition matrix has valid properties."""
         mock_model = MagicMock()
-        mock_model.transmat_ = np.array([[0.8, 0.1, 0.1],
-                                         [0.2, 0.6, 0.2],
-                                         [0.1, 0.1, 0.8]])
+        mock_model.transmat_ = np.array([[0.8, 0.1, 0.1], [0.2, 0.6, 0.2], [0.1, 0.1, 0.8]])
         mock_hmm.return_value = mock_model
 
         detector.fit(sample_prices)
@@ -343,9 +355,7 @@ class TestGetRegimeMeans:
     def test_get_regime_means_with_model(self, mock_hmm, detector, sample_prices):
         """Test getting regime means when model is trained."""
         mock_model = MagicMock()
-        expected_means = np.array([[-0.005, 0.02],
-                                   [0.001, 0.015],
-                                   [0.005, 0.025]])
+        expected_means = np.array([[-0.005, 0.02], [0.001, 0.015], [0.005, 0.025]])
         mock_model.means_ = expected_means
         mock_hmm.return_value = mock_model
 
@@ -444,7 +454,9 @@ class TestPropertyBasedTests:
     @pytest.mark.parametrize("n_regimes", [2, 3, 4, 5])
     def test_different_n_regimes(self, n_regimes, sample_prices):
         """Test with different numbers of regimes."""
-        from app.engines.context_engine.regime_detectors.hmm_regime_detector import HMMRegimeDetector
+        from app.engines.context_engine.regime_detectors.hmm_regime_detector import (
+            HMMRegimeDetector,
+        )
 
         detector = HMMRegimeDetector(config={'n_regimes': n_regimes})
 
@@ -453,7 +465,9 @@ class TestPropertyBasedTests:
     @pytest.mark.parametrize("window_size", [50, 100, 150, 200])
     def test_different_window_sizes(self, window_size, sample_prices):
         """Test with different window sizes."""
-        from app.engines.context_engine.regime_detectors.hmm_regime_detector import HMMRegimeDetector
+        from app.engines.context_engine.regime_detectors.hmm_regime_detector import (
+            HMMRegimeDetector,
+        )
 
         detector = HMMRegimeDetector(config={'window_size': window_size, 'min_samples': 30})
 
@@ -462,7 +476,9 @@ class TestPropertyBasedTests:
     @pytest.mark.parametrize("min_samples", [30, 50, 100, 150])
     def test_different_min_samples(self, min_samples, sample_prices):
         """Test with different min_samples values."""
-        from app.engines.context_engine.regime_detectors.hmm_regime_detector import HMMRegimeDetector
+        from app.engines.context_engine.regime_detectors.hmm_regime_detector import (
+            HMMRegimeDetector,
+        )
 
         detector = HMMRegimeDetector(config={'min_samples': min_samples})
 
@@ -476,11 +492,16 @@ class TestIntegration:
     @patch('app.engines.context_engine.regime_detectors.hmm_regime_detector.hmm.GaussianHMM')
     def test_full_workflow(self, mock_hmm, sample_prices):
         """Test complete workflow: initialize, fit, detect, get properties."""
-        from app.engines.context_engine.regime_detectors.hmm_regime_detector import HMMRegimeDetector
+        from app.engines.context_engine.regime_detectors.hmm_regime_detector import (
+            HMMRegimeDetector,
+        )
 
         mock_model = MagicMock()
         mock_model.predict.return_value = np.array([1, 1, 2])
-        mock_model.score_samples.return_value = (np.array([-1.0, -2.0, -3.0]), np.array([[0.1, 0.7, 0.2]]))
+        mock_model.score_samples.return_value = (
+            np.array([-1.0, -2.0, -3.0]),
+            np.array([[0.1, 0.7, 0.2]]),
+        )
         mock_model.transmat_ = np.eye(3)
         mock_model.means_ = np.zeros((3, 2))
         mock_hmm.return_value = mock_model
@@ -507,7 +528,9 @@ class TestIntegration:
     @patch('app.engines.context_engine.regime_detectors.hmm_regime_detector.hmm.GaussianHMM')
     def test_different_market_conditions(self, mock_hmm, trending_prices, bear_market_prices):
         """Test detection under different market conditions."""
-        from app.engines.context_engine.regime_detectors.hmm_regime_detector import HMMRegimeDetector
+        from app.engines.context_engine.regime_detectors.hmm_regime_detector import (
+            HMMRegimeDetector,
+        )
 
         mock_model = MagicMock()
         mock_model.predict.return_value = np.array([2])  # Bull for trending

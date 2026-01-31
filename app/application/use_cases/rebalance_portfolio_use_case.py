@@ -3,10 +3,22 @@ Rebalance Portfolio Use Case - Rebalance an existing portfolio
 """
 
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Protocol
 
 from app.domain.entities.portfolio import Portfolio
-from app.domain.portfolio_optimization.base_optimizer import BasePortfolioOptimizer
+
+
+class BasePortfolioOptimizer(Protocol):
+    """
+    Protocol for portfolio optimizers.
+
+    This protocol defines the interface for portfolio optimization
+    implementations that can be injected into the use case.
+    """
+
+    def optimize(self, returns, **kwargs):
+        """Optimize portfolio weights based on returns."""
+        ...
 
 
 class RebalancePortfolioUseCase:
@@ -55,8 +67,34 @@ class RebalancePortfolioUseCase:
         return self._generate_rebalance_orders(current_weights, target_weights)
 
     def _get_current_weights(self, portfolio: Portfolio) -> Dict[str, Decimal]:
-        """Get current portfolio weights."""
-        return {}
+        """
+        Get current portfolio weights.
+
+        Calculates the weight of each position as a percentage of total
+        portfolio value (positions + cash).
+
+        Args:
+            portfolio: Portfolio to calculate weights for
+
+        Returns:
+            Dictionary mapping symbols to their current weights (as Decimals)
+        """
+        weights: Dict[str, Decimal] = {}
+
+        # Get total portfolio value (cash + positions)
+        total_value = portfolio.get_total_value().amount
+
+        # Avoid division by zero
+        if total_value == 0:
+            return weights
+
+        # Calculate weight for each position
+        for symbol, position in portfolio.positions.items():
+            position_value = position.get_value().amount
+            weight = position_value / total_value
+            weights[symbol] = weight
+
+        return weights
 
     def _needs_rebalance(
         self,
@@ -64,13 +102,76 @@ class RebalancePortfolioUseCase:
         target: Dict[str, Decimal],
         threshold: Decimal,
     ) -> bool:
-        """Check if rebalancing is needed."""
-        return True
+        """
+        Check if rebalancing is needed.
+
+        Compares current weights against target weights and returns True
+        if any asset deviates beyond the threshold.
+
+        Args:
+            current: Current portfolio weights by symbol
+            target: Target weights by symbol
+            threshold: Rebalance threshold (e.g., 0.05 for 5%)
+
+        Returns:
+            True if rebalancing is needed, False otherwise
+        """
+        # Get all unique symbols from both current and target
+        all_symbols = set(current.keys()) | set(target.keys())
+
+        for symbol in all_symbols:
+            current_weight = current.get(symbol, Decimal("0"))
+            target_weight = target.get(symbol, Decimal("0"))
+
+            # Calculate absolute difference
+            diff = abs(current_weight - target_weight)
+
+            # Rebalance if difference exceeds threshold
+            if diff > threshold:
+                return True
+
+        return False
 
     def _generate_rebalance_orders(
         self,
         current: Dict[str, Decimal],
         target: Dict[str, Decimal],
     ) -> List[str]:
-        """Generate rebalancing orders."""
-        return ["Rebalance executed"]
+        """
+        Generate rebalancing orders.
+
+        Creates a list of buy/sell orders to adjust current weights
+        to target weights. Orders are returned as descriptive strings.
+
+        Args:
+            current: Current portfolio weights by symbol
+            target: Target weights by symbol
+
+        Returns:
+            List of rebalancing actions as descriptive strings
+        """
+        orders: List[str] = []
+
+        # Get all unique symbols from both current and target
+        all_symbols = set(current.keys()) | set(target.keys())
+
+        for symbol in all_symbols:
+            current_weight = current.get(symbol, Decimal("0"))
+            target_weight = target.get(symbol, Decimal("0"))
+
+            # Calculate weight difference
+            diff = target_weight - current_weight
+
+            # Generate order if there's a meaningful difference
+            # Using small epsilon to avoid noise
+            epsilon = Decimal("0.0001")
+            if abs(diff) > epsilon:
+                if diff > 0:
+                    # Need to buy/increase position
+                    action = f"BUY {symbol}: increase weight by {diff:.4f} to reach target {target_weight:.4f}"
+                else:
+                    # Need to sell/decrease position
+                    action = f"SELL {symbol}: decrease weight by {abs(diff):.4f} to reach target {target_weight:.4f}"
+                orders.append(action)
+
+        return orders

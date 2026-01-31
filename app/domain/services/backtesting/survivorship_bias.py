@@ -229,16 +229,18 @@ class SurvivorshipBiasCorrector:
 
         # Adjust returns from delisting date onwards
         adjusted_returns = returns.copy()
-        delisting_idx = adjusted_returns.index.get_loc(
-            pd.Timestamp(delisting.delisting_date)
-        ) if pd.Timestamp(delisting.delisting_date) in adjusted_returns.index else None
+        delisting_idx = (
+            adjusted_returns.index.get_loc(pd.Timestamp(delisting.delisting_date))
+            if pd.Timestamp(delisting.delisting_date) in adjusted_returns.index
+            else None
+        )
 
         if delisting_idx is not None:
             # Apply delisting return
             adjusted_returns.iloc[delisting_idx] = adjustment_factor
             # Set future returns to NaN (stock no longer trades)
             if delisting_idx + 1 < len(adjusted_returns):
-                adjusted_returns.iloc[delisting_idx + 1:] = np.nan
+                adjusted_returns.iloc[delisting_idx + 1 :] = np.nan
 
         return adjusted_returns
 
@@ -358,14 +360,16 @@ class SurvivorshipBiasCorrector:
             spinoff_ratio: Ratio of new shares per old share
         """
         # Add spinoff action for parent
-        self.add_corporate_action(CorporateAction(
-            symbol=parent_symbol,
-            action_date=spinoff_date,
-            action_type=CorporateActionType.SPINOFF,
-            ratio=spinoff_ratio,
-            new_symbol=spinoff_symbol,
-            description=f"Spinoff of {spinoff_symbol}",
-        ))
+        self.add_corporate_action(
+            CorporateAction(
+                symbol=parent_symbol,
+                action_date=spinoff_date,
+                action_type=CorporateActionType.SPINOFF,
+                ratio=spinoff_ratio,
+                new_symbol=spinoff_symbol,
+                description=f"Spinoff of {spinoff_symbol}",
+            )
+        )
 
         # Note: In a full implementation, we would also add
         # the spinoff company as a new tradable security

@@ -131,11 +131,7 @@ class TaxCalculator:
             Aggregated TaxLiability for the period
         """
         # Filter trades by date
-        period_trades = [
-            t
-            for t in trades
-            if t.exit_date and start_date <= t.exit_date <= end_date
-        ]
+        period_trades = [t for t in trades if t.exit_date and start_date <= t.exit_date <= end_date]
 
         # Calculate totals
         total_short_gains = Decimal("0")

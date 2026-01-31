@@ -598,4 +598,3 @@ class SlippageModel:
             return 0.5
         else:
             return 0.2
-

@@ -627,7 +627,9 @@ class TestWalkForwardEdgeCasesRobust:
         validator = WalkForwardValidator(config=relaxed_config)
 
         # Use stable data that might produce consistent results
-        stable_quotes = generate_realistic_quotes(days=6 * 252, seed=123, drift=0.02, volatility=0.10)
+        stable_quotes = generate_realistic_quotes(
+            days=6 * 252, seed=123, drift=0.02, volatility=0.10
+        )
         stable_signals = generate_sma_crossover_signals(stable_quotes)
 
         result = validator.validate_strategy(
@@ -653,7 +655,9 @@ class TestWalkForwardEdgeCasesRobust:
         validator = WalkForwardValidator(config=relaxed_config)
 
         # Use volatile data that might produce poor OOS results
-        volatile_quotes = generate_realistic_quotes(days=6 * 252, seed=456, drift=0.0, volatility=0.40)
+        volatile_quotes = generate_realistic_quotes(
+            days=6 * 252, seed=456, drift=0.0, volatility=0.40
+        )
         volatile_signals = generate_sma_crossover_signals(volatile_quotes)
 
         result = validator.validate_strategy(
@@ -706,7 +710,9 @@ class TestWalkForwardEdgeCasesRobust:
         validator = WalkForwardValidator(config=relaxed_config)
 
         # Use highly volatile data with regime changes
-        collapse_quotes = generate_realistic_quotes(days=6 * 252, seed=999, drift=-0.05, volatility=0.50)
+        collapse_quotes = generate_realistic_quotes(
+            days=6 * 252, seed=999, drift=-0.05, volatility=0.50
+        )
         collapse_signals = generate_sma_crossover_signals(collapse_quotes)
 
         result = validator.validate_strategy(
@@ -733,7 +739,9 @@ class TestWalkForwardEdgeCasesRobust:
         validator = WalkForwardValidator(config=relaxed_config)
 
         # Use sideways/choppy market data
-        sideways_quotes = generate_realistic_quotes(days=6 * 252, seed=555, drift=0.0, volatility=0.15)
+        sideways_quotes = generate_realistic_quotes(
+            days=6 * 252, seed=555, drift=0.0, volatility=0.15
+        )
         sideways_signals = generate_sma_crossover_signals(sideways_quotes)
 
         result = validator.validate_strategy(
@@ -763,7 +771,9 @@ class TestWalkForwardEdgeCasesRobust:
         validator = WalkForwardValidator(config=relaxed_config)
 
         # Use declining market data
-        declining_quotes = generate_realistic_quotes(days=6 * 252, seed=777, drift=-0.10, volatility=0.25)
+        declining_quotes = generate_realistic_quotes(
+            days=6 * 252, seed=777, drift=-0.10, volatility=0.25
+        )
         declining_signals = generate_sma_crossover_signals(declining_quotes)
 
         result = validator.validate_strategy(
@@ -792,7 +802,9 @@ class TestWalkForwardEdgeCasesRobust:
         validator = WalkForwardValidator(config=relaxed_config)
 
         # Use strongly declining market
-        crash_quotes = generate_realistic_quotes(days=6 * 252, seed=888, drift=-0.20, volatility=0.30)
+        crash_quotes = generate_realistic_quotes(
+            days=6 * 252, seed=888, drift=-0.20, volatility=0.30
+        )
         crash_signals = generate_sma_crossover_signals(crash_quotes)
 
         result = validator.validate_strategy(

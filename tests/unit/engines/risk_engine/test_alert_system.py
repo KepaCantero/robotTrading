@@ -179,7 +179,7 @@ class TestDrawdownThresholds:
                     'global_circuit_breaker_active': True,
                     'global_circuit_breaker_reason': 'Market crash',
                     'global_circuit_breaker_timestamp': datetime.utcnow().isoformat(),
-                }
+                },
             }
         }
 
@@ -201,7 +201,7 @@ class TestExposureThresholds:
                 'violations': [],
                 'leverage': {
                     'leverage': 0.8,  # Below 1.0 limit
-                }
+                },
             }
         }
 
@@ -222,7 +222,7 @@ class TestExposureThresholds:
                 ],
                 'leverage': {
                     'leverage': 0.8,
-                }
+                },
             }
         }
 
@@ -238,7 +238,7 @@ class TestExposureThresholds:
                 'violations': [],
                 'leverage': {
                     'leverage': 1.5,  # Above 1.0 limit
-                }
+                },
             }
         }
 
@@ -298,9 +298,7 @@ class TestViolationCounting:
             'exposure': {
                 'violations': [{'type': 'v1'}, {'type': 'v2'}, {'type': 'v3'}, {'type': 'v4'}]
             },
-            'correlations': {
-                'violations': [{'type': 'v5'}, {'type': 'v6'}]
-            }
+            'correlations': {'violations': [{'type': 'v5'}, {'type': 'v6'}]},
         }
 
         alerts = alert_system.check_thresholds(risk_assessment, mock_portfolio)
@@ -312,12 +310,8 @@ class TestViolationCounting:
     def test_below_violation_threshold(self, alert_system, mock_portfolio):
         """Test violations below threshold don't trigger alert."""
         risk_assessment = {
-            'exposure': {
-                'violations': [{'type': 'v1'}, {'type': 'v2'}]
-            },
-            'correlations': {
-                'violations': []
-            }
+            'exposure': {'violations': [{'type': 'v1'}, {'type': 'v2'}]},
+            'correlations': {'violations': []},
         }
 
         alerts = alert_system.check_thresholds(risk_assessment, mock_portfolio)
@@ -344,7 +338,7 @@ class TestCooldownFiltering:
                 'portfolio_drawdown': {
                     'current_drawdown': 0.20,  # Critical
                 }
-            }
+            },
         }
 
         alerts = alert_system.check_thresholds(risk_assessment, mock_portfolio)
@@ -522,9 +516,7 @@ class TestErrorHandling:
 
     def test_invalid_risk_assessment(self, alert_system, mock_portfolio):
         """Test handling of invalid risk assessment."""
-        risk_assessment = {
-            'invalid_key': 'value'
-        }
+        risk_assessment = {'invalid_key': 'value'}
 
         alerts = alert_system.check_thresholds(risk_assessment, mock_portfolio)
 

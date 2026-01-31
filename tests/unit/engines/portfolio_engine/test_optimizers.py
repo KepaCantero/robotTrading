@@ -45,13 +45,15 @@ class TestMarkowitzOptimizer:
         expected_returns = np.array([0.08, 0.10, 0.06, 0.12, 0.09])
 
         # Covariance matrix (positive definite)
-        cov_matrix = np.array([
-            [0.0400, 0.0120, 0.0080, 0.0150, 0.0100],
-            [0.0120, 0.0350, 0.0100, 0.0180, 0.0120],
-            [0.0080, 0.0100, 0.0300, 0.0120, 0.0090],
-            [0.0150, 0.0180, 0.0120, 0.0500, 0.0140],
-            [0.0100, 0.0120, 0.0090, 0.0140, 0.0380],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.0400, 0.0120, 0.0080, 0.0150, 0.0100],
+                [0.0120, 0.0350, 0.0100, 0.0180, 0.0120],
+                [0.0080, 0.0100, 0.0300, 0.0120, 0.0090],
+                [0.0150, 0.0180, 0.0120, 0.0500, 0.0140],
+                [0.0100, 0.0120, 0.0090, 0.0140, 0.0380],
+            ]
+        )
 
         return expected_returns, cov_matrix
 
@@ -110,10 +112,12 @@ class TestMarkowitzOptimizer:
     def test_two_asset_optimization(self, optimizer):
         """Test optimization with two assets."""
         expected_returns = np.array([0.10, 0.08])
-        cov_matrix = np.array([
-            [0.04, 0.01],
-            [0.01, 0.03],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.04, 0.01],
+                [0.01, 0.03],
+            ]
+        )
 
         result = optimizer.optimize(expected_returns, cov_matrix)
         weights = list(result["weights"].values())
@@ -129,11 +133,13 @@ class TestMarkowitzOptimizer:
         expected_returns = np.array([0.08, 0.10, 0.09])
 
         # High correlation covariance matrix
-        cov_matrix = np.array([
-            [0.04, 0.035, 0.036],
-            [0.035, 0.05, 0.042],
-            [0.036, 0.042, 0.045],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.04, 0.035, 0.036],
+                [0.035, 0.05, 0.042],
+                [0.036, 0.042, 0.045],
+            ]
+        )
 
         result = optimizer.optimize(expected_returns, cov_matrix)
 
@@ -147,10 +153,12 @@ class TestMarkowitzOptimizer:
         expected_returns = np.array([0.08, 0.10])
 
         # Perfectly correlated (but still valid covariance)
-        cov_matrix = np.array([
-            [0.04, 0.04],
-            [0.04, 0.04],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.04, 0.04],
+                [0.04, 0.04],
+            ]
+        )
 
         result = optimizer.optimize(expected_returns, cov_matrix)
 
@@ -175,10 +183,12 @@ class TestMarkowitzOptimizer:
         expected_returns = np.array([0.05, 0.08])
 
         # One asset with zero volatility
-        cov_matrix = np.array([
-            [0.00, 0.00],
-            [0.00, 0.04],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.00, 0.00],
+                [0.00, 0.04],
+            ]
+        )
 
         result = optimizer.optimize(expected_returns, cov_matrix)
 
@@ -231,13 +241,15 @@ class TestRiskParityOptimizer:
         expected_returns = np.array([0.08, 0.10, 0.06, 0.12, 0.09])
 
         # Heterogeneous volatilities to test risk parity
-        cov_matrix = np.array([
-            [0.0400, 0.0080, 0.0060, 0.0100, 0.0070],
-            [0.0080, 0.0900, 0.0070, 0.0120, 0.0080],
-            [0.0060, 0.0070, 0.0250, 0.0080, 0.0060],
-            [0.0100, 0.0120, 0.0080, 0.0600, 0.0090],
-            [0.0070, 0.0080, 0.0060, 0.0090, 0.0350],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.0400, 0.0080, 0.0060, 0.0100, 0.0070],
+                [0.0080, 0.0900, 0.0070, 0.0120, 0.0080],
+                [0.0060, 0.0070, 0.0250, 0.0080, 0.0060],
+                [0.0100, 0.0120, 0.0080, 0.0600, 0.0090],
+                [0.0070, 0.0080, 0.0060, 0.0090, 0.0350],
+            ]
+        )
 
         return expected_returns, cov_matrix
 
@@ -288,10 +300,12 @@ class TestRiskParityOptimizer:
         expected_returns = np.array([0.08, 0.10])
 
         # Different volatilities
-        cov_matrix = np.array([
-            [0.04, 0.01],
-            [0.01, 0.09],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.04, 0.01],
+                [0.01, 0.09],
+            ]
+        )
 
         result = optimizer.optimize(expected_returns, cov_matrix)
 
@@ -343,9 +357,7 @@ class TestRiskParityOptimizer:
         first_weights = results[0]["weights"]
         for result in results[1:]:
             for asset in first_weights:
-                assert result["weights"][asset] == pytest.approx(
-                    first_weights[asset], abs=1e-6
-                )
+                assert result["weights"][asset] == pytest.approx(first_weights[asset], abs=1e-6)
 
     def test_risk_contributions_calculation(self, optimizer, sample_data):
         """Test risk contributions are correctly calculated."""
@@ -368,11 +380,13 @@ class TestRiskParityOptimizer:
         expected_returns = np.array([0.08, 0.10, 0.09])
 
         # High correlation
-        cov_matrix = np.array([
-            [0.04, 0.035, 0.036],
-            [0.035, 0.09, 0.045],
-            [0.036, 0.045, 0.06],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.04, 0.035, 0.036],
+                [0.035, 0.09, 0.045],
+                [0.036, 0.045, 0.06],
+            ]
+        )
 
         result = optimizer.optimize(expected_returns, cov_matrix)
 
@@ -390,11 +404,13 @@ class TestRiskParityOptimizer:
         expected_returns = np.array([0.05, 0.08, 0.06])
 
         # One asset with very low variance
-        cov_matrix = np.array([
-            [0.0001, 0.005, 0.004],
-            [0.005, 0.04, 0.01],
-            [0.004, 0.01, 0.03],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.0001, 0.005, 0.004],
+                [0.005, 0.04, 0.01],
+                [0.004, 0.01, 0.03],
+            ]
+        )
 
         result = optimizer.optimize(expected_returns, cov_matrix)
 
@@ -419,13 +435,15 @@ class TestBlackLittermanOptimizer:
         """Create sample data for Black-Litterman."""
         expected_returns = np.array([0.08, 0.10, 0.06, 0.12, 0.09])
 
-        cov_matrix = np.array([
-            [0.0400, 0.0120, 0.0080, 0.0150, 0.0100],
-            [0.0120, 0.0350, 0.0100, 0.0180, 0.0120],
-            [0.0080, 0.0100, 0.0300, 0.0120, 0.0090],
-            [0.0150, 0.0180, 0.0120, 0.0500, 0.0140],
-            [0.0100, 0.0120, 0.0090, 0.0140, 0.0380],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.0400, 0.0120, 0.0080, 0.0150, 0.0100],
+                [0.0120, 0.0350, 0.0100, 0.0180, 0.0120],
+                [0.0080, 0.0100, 0.0300, 0.0120, 0.0090],
+                [0.0150, 0.0180, 0.0120, 0.0500, 0.0140],
+                [0.0100, 0.0120, 0.0090, 0.0140, 0.0380],
+            ]
+        )
 
         return expected_returns, cov_matrix
 
@@ -599,13 +617,15 @@ class TestKellyCriterionOptimizer:
         """Create sample data for Kelly optimization."""
         expected_returns = np.array([0.08, 0.10, 0.06, 0.12, 0.09])
 
-        cov_matrix = np.array([
-            [0.0400, 0.0120, 0.0080, 0.0150, 0.0100],
-            [0.0120, 0.0350, 0.0100, 0.0180, 0.0120],
-            [0.0080, 0.0100, 0.0300, 0.0120, 0.0090],
-            [0.0150, 0.0180, 0.0120, 0.0500, 0.0140],
-            [0.0100, 0.0120, 0.0090, 0.0140, 0.0380],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.0400, 0.0120, 0.0080, 0.0150, 0.0100],
+                [0.0120, 0.0350, 0.0100, 0.0180, 0.0120],
+                [0.0080, 0.0100, 0.0300, 0.0120, 0.0090],
+                [0.0150, 0.0180, 0.0120, 0.0500, 0.0140],
+                [0.0100, 0.0120, 0.0090, 0.0140, 0.0380],
+            ]
+        )
 
         return expected_returns, cov_matrix
 
@@ -763,11 +783,13 @@ class TestOptimizerEdgeCases:
         """Create sample data."""
         return (
             np.array([0.08, 0.10, 0.06]),
-            np.array([
-                [0.04, 0.01, 0.008],
-                [0.01, 0.03, 0.006],
-                [0.008, 0.006, 0.02],
-            ]),
+            np.array(
+                [
+                    [0.04, 0.01, 0.008],
+                    [0.01, 0.03, 0.006],
+                    [0.008, 0.006, 0.02],
+                ]
+            ),
         )
 
     def test_empty_universe(self):
@@ -815,11 +837,16 @@ class TestOptimizerEdgeCases:
         expected_returns = np.array([0.08, 0.10, 0.06])
 
         # Nearly singular matrix (highly correlated assets)
-        cov_matrix = np.array([
-            [1.0, 0.99, 0.99],
-            [0.99, 1.0, 0.99],
-            [0.99, 0.99, 1.0],
-        ]) * 0.04
+        cov_matrix = (
+            np.array(
+                [
+                    [1.0, 0.99, 0.99],
+                    [0.99, 1.0, 0.99],
+                    [0.99, 0.99, 1.0],
+                ]
+            )
+            * 0.04
+        )
 
         optimizer = MarkowitzOptimizer({})
         result = optimizer.optimize(expected_returns, cov_matrix)
@@ -842,13 +869,15 @@ class TestOptimizerEdgeCases:
     def test_all_equal_returns(self):
         """Test when all assets have equal expected returns."""
         expected_returns = np.array([0.08] * 5)
-        cov_matrix = np.array([
-            [0.04, 0.01, 0.008, 0.012, 0.01],
-            [0.01, 0.03, 0.007, 0.01, 0.009],
-            [0.008, 0.007, 0.025, 0.009, 0.008],
-            [0.012, 0.01, 0.009, 0.035, 0.011],
-            [0.01, 0.009, 0.008, 0.011, 0.03],
-        ])
+        cov_matrix = np.array(
+            [
+                [0.04, 0.01, 0.008, 0.012, 0.01],
+                [0.01, 0.03, 0.007, 0.01, 0.009],
+                [0.008, 0.007, 0.025, 0.009, 0.008],
+                [0.012, 0.01, 0.009, 0.035, 0.011],
+                [0.01, 0.009, 0.008, 0.011, 0.03],
+            ]
+        )
 
         optimizer = MarkowitzOptimizer({})
         result = optimizer.optimize(expected_returns, cov_matrix)

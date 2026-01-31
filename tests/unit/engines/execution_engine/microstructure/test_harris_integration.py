@@ -62,14 +62,16 @@ def sample_price_history() -> pd.DataFrame:
     returns = np.random.normal(0, 0.0001, n)
     prices = 150 * np.exp(np.cumsum(returns))
 
-    return pd.DataFrame({
-        "timestamp": dates,
-        "open": prices * (1 + np.random.uniform(-0.0001, 0.0001, n)),
-        "high": prices * (1 + np.random.uniform(0, 0.0005, n)),
-        "low": prices * (1 + np.random.uniform(-0.0005, 0, n)),
-        "close": prices,
-        "volume": np.random.randint(100, 10000, n),
-    })
+    return pd.DataFrame(
+        {
+            "timestamp": dates,
+            "open": prices * (1 + np.random.uniform(-0.0001, 0.0001, n)),
+            "high": prices * (1 + np.random.uniform(0, 0.0005, n)),
+            "low": prices * (1 + np.random.uniform(-0.0005, 0, n)),
+            "close": prices,
+            "volume": np.random.randint(100, 10000, n),
+        }
+    )
 
 
 @pytest.fixture
@@ -156,12 +158,14 @@ class TestRule62_BidAskBounce:
         for i in range(n):
             last_prices.append(bid if i % 2 == 0 else ask)
 
-        df = pd.DataFrame({
-            "timestamp": dates,
-            "bid": bid,
-            "ask": ask,
-            "close": last_prices,
-        })
+        df = pd.DataFrame(
+            {
+                "timestamp": dates,
+                "bid": bid,
+                "ask": ask,
+                "close": last_prices,
+            }
+        )
 
         # Remove bounce
         cleaned = harris_integrator.remove_bid_ask_bounce(df)
@@ -352,6 +356,7 @@ class TestRule610_ExecutionQuality:
 
     def test_evaluate_execution_quality(self, harris_integrator):
         """Test execution quality evaluation."""
+
         # Create mock executions
         class MockExecution:
             def __init__(self, symbol, side, price):
@@ -364,9 +369,7 @@ class TestRule610_ExecutionQuality:
             MockExecution("AAPL", "BUY", Decimal("150.01")),
         ]
 
-        nbbo = {
-            "AAPL": (Decimal("149.99"), Decimal("150.02"))
-        }
+        nbbo = {"AAPL": (Decimal("149.99"), Decimal("150.02"))}
 
         result = harris_integrator.evaluate_execution_quality(
             executions=executions,

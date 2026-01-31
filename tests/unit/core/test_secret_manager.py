@@ -119,7 +119,7 @@ class TestSecretValidation:
             min_length=20,
             requires_uppercase=False,
             requires_lowercase=False,
-            requires_digit=False
+            requires_digit=False,
         )
 
         with patch.dict(os.environ, {'VALID_SECRET': 'a' * 30}):
@@ -134,7 +134,7 @@ class TestSecretValidation:
             category=SecretCategory.API_KEY,
             description="Short API key",
             required_in_production=True,
-            min_length=32
+            min_length=32,
         )
 
         with patch.dict(os.environ, {'SHORT_SECRET': 'short'}):
@@ -153,7 +153,7 @@ class TestSecretValidation:
             min_length=8,
             requires_uppercase=False,
             requires_lowercase=False,
-            requires_digit=False
+            requires_digit=False,
         )
 
         # Weak pattern should return False (warning)
@@ -166,11 +166,14 @@ class TestSecretValidation:
         manager = SecretManager()
 
         # Mock required secrets
-        with patch.dict(os.environ, {
-            'SECRET_KEY': 'a' * 40,
-            'DB_PASSWORD': 'secure_password_123',
-            'ALPACA_API_KEY': 'alpaca_key_' + 'a' * 20,
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                'SECRET_KEY': 'a' * 40,
+                'DB_PASSWORD': 'secure_password_123',
+                'ALPACA_API_KEY': 'alpaca_key_' + 'a' * 20,
+            },
+        ):
             report = manager.validate_all()
 
             assert isinstance(report, SecretValidationReport)
@@ -185,13 +188,16 @@ class TestConnectionStrings:
 
     def test_postgresql_connection_string(self):
         """Test building PostgreSQL connection string."""
-        with patch.dict(os.environ, {
-            'DB_HOST': 'localhost',
-            'DB_PORT': '5432',
-            'DB_USER': 'trader',
-            'DB_PASSWORD': 'secure_pass',
-            'DB_NAME': 'trading_db',
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                'DB_HOST': 'localhost',
+                'DB_PORT': '5432',
+                'DB_USER': 'trader',
+                'DB_PASSWORD': 'secure_pass',
+                'DB_NAME': 'trading_db',
+            },
+        ):
             manager = SecretManager()
             conn_str = manager.get_connection_string('postgresql')
 
@@ -202,12 +208,15 @@ class TestConnectionStrings:
 
     def test_redis_connection_string_with_password(self):
         """Test building Redis connection string with password."""
-        with patch.dict(os.environ, {
-            'REDIS_HOST': 'localhost',
-            'REDIS_PORT': '6379',
-            'REDIS_DB': '0',
-            'REDIS_PASSWORD': 'redis_pass',
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                'REDIS_HOST': 'localhost',
+                'REDIS_PORT': '6379',
+                'REDIS_DB': '0',
+                'REDIS_PASSWORD': 'redis_pass',
+            },
+        ):
             manager = SecretManager()
             conn_str = manager.get_connection_string('redis')
 
@@ -215,12 +224,15 @@ class TestConnectionStrings:
 
     def test_redis_connection_string_without_password(self):
         """Test building Redis connection string without password."""
-        with patch.dict(os.environ, {
-            'REDIS_HOST': 'localhost',
-            'REDIS_PORT': '6379',
-            'REDIS_DB': '0',
-            'REDIS_PASSWORD': '',  # Empty password
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                'REDIS_HOST': 'localhost',
+                'REDIS_PORT': '6379',
+                'REDIS_DB': '0',
+                'REDIS_PASSWORD': '',  # Empty password
+            },
+        ):
             manager = SecretManager()
             conn_str = manager.get_connection_string('redis')
 
@@ -228,13 +240,16 @@ class TestConnectionStrings:
 
     def test_questdb_connection_string(self):
         """Test building QuestDB connection string."""
-        with patch.dict(os.environ, {
-            'QUESTDB_HOST': 'localhost',
-            'QUESTDB_PORT': '9009',
-            'QUESTDB_USER': 'admin',
-            'QUESTDB_PASSWORD': 'quest_pass',
-            'QUESTDB_DATABASE': 'qdb',
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                'QUESTDB_HOST': 'localhost',
+                'QUESTDB_PORT': '9009',
+                'QUESTDB_USER': 'admin',
+                'QUESTDB_PASSWORD': 'quest_pass',
+                'QUESTDB_DATABASE': 'qdb',
+            },
+        ):
             manager = SecretManager()
             conn_str = manager.get_connection_string('questdb')
 
@@ -242,12 +257,16 @@ class TestConnectionStrings:
 
     def test_postgresql_missing_password_raises_error(self):
         """Test that missing DB password raises error."""
-        with patch.dict(os.environ, {
-            'DB_HOST': 'localhost',
-            'DB_PORT': '5432',
-            'DB_USER': 'trader',
-            'DB_NAME': 'trading_db',
-        }, clear=True):
+        with patch.dict(
+            os.environ,
+            {
+                'DB_HOST': 'localhost',
+                'DB_PORT': '5432',
+                'DB_USER': 'trader',
+                'DB_NAME': 'trading_db',
+            },
+            clear=True,
+        ):
             manager = SecretManager()
             with pytest.raises(SecretNotConfiguredError):
                 manager.get_connection_string('postgresql')
@@ -278,15 +297,19 @@ class TestConvenienceFunctions:
         """Test get_connection_string convenience function."""
         # Clear cache to ensure fresh values
         import app.core.secret_manager as sm_module
+
         sm_module._secret_manager.clear_cache()
 
-        with patch.dict(os.environ, {
-            'DB_HOST': 'localhost',
-            'DB_PORT': '5432',
-            'DB_USER': 'user',
-            'DB_PASSWORD': 'pass',
-            'DB_NAME': 'db',
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                'DB_HOST': 'localhost',
+                'DB_PORT': '5432',
+                'DB_USER': 'user',
+                'DB_PASSWORD': 'pass',
+                'DB_NAME': 'db',
+            },
+        ):
             conn_str = get_connection_string('postgresql')
             # Check that connection string is built correctly
             assert 'postgresql://user:pass@localhost:5432/db' == conn_str
@@ -314,10 +337,13 @@ class TestConvenienceFunctions:
 
     def test_validate_secrets_configured_function(self):
         """Test validate_secrets_configured convenience function."""
-        with patch.dict(os.environ, {
-            'SECRET_KEY': 'a' * 40,
-            'DB_PASSWORD': 'secure_password',
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                'SECRET_KEY': 'a' * 40,
+                'DB_PASSWORD': 'secure_password',
+            },
+        ):
             report = validate_secrets_configured()
 
             assert isinstance(report, SecretValidationReport)
@@ -332,14 +358,23 @@ class TestRule28Compliance:
         """Verify no hardcoded secrets in SecretManager."""
         # Read the source code
         import inspect
+
         source = inspect.getsource(SecretManager)
 
         # Check for common hardcoded secret patterns
         hardcoded_patterns = [
-            'password = "', 'secret = "', 'api_key = "',
-            "password = '", "secret = '", "api_key = '",
-            '="password"', '="secret"', '="changeme"',
-            "='password'", "='secret'", "='changeme'",
+            'password = "',
+            'secret = "',
+            'api_key = "',
+            "password = '",
+            "secret = '",
+            "api_key = '",
+            '="password"',
+            '="secret"',
+            '="changeme"',
+            "='password'",
+            "='secret'",
+            "='changeme'",
         ]
 
         found = []
@@ -379,6 +414,7 @@ class TestRule28Compliance:
         """Verify connection strings don't contain hardcoded credentials."""
         # Read the source code
         import inspect
+
         source = inspect.getsource(SecretManager.get_connection_string)
 
         # Should not contain hardcoded credentials
@@ -389,19 +425,22 @@ class TestRule28Compliance:
         manager = SecretManager()
 
         # Mock all secrets as valid
-        with patch.dict(os.environ, {
-            'SECRET_KEY': 'a' * 40,
-            'ALPACA_API_KEY': 'key_' + 'a' * 30,
-            'ALPACA_SECRET_KEY': 'secret_' + 'a' * 30,
-            'POLYGON_API_KEY': 'polygon_' + 'a' * 30,
-            'ALPHA_VANTAGE_API_KEY': 'av_' + 'a' * 30,
-            'DB_PASSWORD': 'secure_password_123',
-            'QUESTDB_PASSWORD': 'quest_pass',
-            'REDIS_PASSWORD': 'redis_pass',
-            'SMTP_PASSWORD': 'smtp_pass',
-            'TELEGRAM_BOT_TOKEN': 'bot_' + 'a' * 30,
-            'NEWS_API_KEY': 'news_' + 'a' * 30,
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                'SECRET_KEY': 'a' * 40,
+                'ALPACA_API_KEY': 'key_' + 'a' * 30,
+                'ALPACA_SECRET_KEY': 'secret_' + 'a' * 30,
+                'POLYGON_API_KEY': 'polygon_' + 'a' * 30,
+                'ALPHA_VANTAGE_API_KEY': 'av_' + 'a' * 30,
+                'DB_PASSWORD': 'secure_password_123',
+                'QUESTDB_PASSWORD': 'quest_pass',
+                'REDIS_PASSWORD': 'redis_pass',
+                'SMTP_PASSWORD': 'smtp_pass',
+                'TELEGRAM_BOT_TOKEN': 'bot_' + 'a' * 30,
+                'NEWS_API_KEY': 'news_' + 'a' * 30,
+            },
+        ):
             report = manager.validate_all()
 
             # Should have high compliance

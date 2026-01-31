@@ -29,13 +29,17 @@ try:
         get_barrier_events,
         plot_triple_barrier,
     )
+
     MODULE_AVAILABLE = True
 except ImportError as e:
     MODULE_AVAILABLE = False
     IMPORT_ERROR = str(e)
 
 
-@pytest.mark.skipif(not MODULE_AVAILABLE, reason=f"Module not available: {IMPORT_ERROR if not MODULE_AVAILABLE else 'OK'}")
+@pytest.mark.skipif(
+    not MODULE_AVAILABLE,
+    reason=f"Module not available: {IMPORT_ERROR if not MODULE_AVAILABLE else 'OK'}",
+)
 class TestTripleBarrierConfig:
     """Test suite for TripleBarrierConfig dataclass."""
 
@@ -105,9 +109,7 @@ class TestTripleBarrierConfig:
 
     def test_metadata_dict(self):
         """Test metadata dictionary initialization."""
-        config = TripleBarrierConfig(
-            metadata={'key': 'value', 'number': 42}
-        )
+        config = TripleBarrierConfig(metadata={'key': 'value', 'number': 42})
 
         assert config.metadata == {'key': 'value', 'number': 42}
 

@@ -268,7 +268,7 @@ class VolatilityAdjustedSlippage(SlippageModel):
         # Volume impact
         if volume and volume > 0:
             volume_ratio = float(quantity) / float(volume)
-            slippage_pct *= (1 + volume_ratio)
+            slippage_pct *= 1 + volume_ratio
 
         slippage_amount = price * Decimal(str(slippage_pct))
 
