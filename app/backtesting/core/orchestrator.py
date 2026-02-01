@@ -9,9 +9,13 @@ import logging
 from collections import deque
 from decimal import Decimal
 from threading import Lock
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from app.backtesting.models import BacktestConfig, BacktestResult
+
+# Forward reference for type hints
+if TYPE_CHECKING:
+    from app.backtesting.core.executor import BacktestExecutor
 
 logger = logging.getLogger(__name__)
 
