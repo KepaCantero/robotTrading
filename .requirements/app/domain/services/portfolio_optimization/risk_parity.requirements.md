@@ -35,21 +35,21 @@ class RiskParityResult:
 ### `RiskParityOptimizer.__init__(risk_free_rate, min_weight, max_weight) -> None`
 **Pre:** risk_free_rate >= 0, min_weight >= 0, max_weight <= 1.0, min_weight <= max_weight
 **Post:** Optimizer configured with bounds and parameters
-**Raises:** None (initialization only)
+**Raises:** ValueError if bounds invalid
 **Retry:** ❌ No
 **Side Effects:** None (initialization only)
 
 ### `optimize(cov_matrix, symbols, risk_budget) -> RiskParityResult`
 **Pre:** cov_matrix must be square, symmetric, and positive semidefinite; risk_budget sums to 1.0 (if provided)
 **Post:** Returns weights that equalize risk contributions per risk_budget
-**Raises:** Returns inverse volatility weights if optimization fails
+**Raises:** ValueError if covariance matrix invalid
 **Retry:** ❌ No
 **Side Effects:** None (pure computation)
 
 ### `inverse_volatility(cov_matrix, symbols) -> RiskParityResult`
 **Pre:** cov_matrix must have positive diagonal elements
 **Post:** Returns weights proportional to 1/σ_i (simple risk parity)
-**Raises:** ZeroDivisionError if any variance is zero
+**Raises:** ValueError if all assets have zero variance
 **Retry:** ❌ No
 **Side Effects:** None (pure computation)
 
@@ -63,14 +63,14 @@ class RiskParityResult:
 ### `diversified_risk_parity(cov_matrix, symbols, kappa) -> RiskParityResult`
 **Pre:** cov_matrix must be PSD; kappa > 0
 **Post:** Returns DRP weights maximizing diversification while maintaining parity
-**Raises:** Returns inverse volatility weights if optimization fails
+**Raises:** ValueError if covariance matrix invalid
 **Retry:** ❌ No
 **Side Effects:** None (pure computation)
 
 ### `get_diversification_ratio(weights, cov_matrix) -> float`
 **Pre:** weights sum to 1.0; cov_matrix is valid
 **Post:** Returns DR = (Σ w_i σ_i) / σ_p (>1 indicates diversification benefit)
-**Raises:** Returns 1.0 if portfolio_vol == 0
+**Raises:** None (returns 1.0 if portfolio_vol == 0)
 **Retry:** ❌ No
 **Side Effects:** None (pure computation)
 
@@ -84,13 +84,14 @@ class RiskParityResult:
 ---
 
 ## Acceptance Criteria
-- [ ] **AC-001:** Covariance matrix validated before optimization (PSD check, symmetry)
-- [ ] **AC-002:** Zero variance asset handling (no ZeroDivisionError)
-- [ ] **AC-003:** Optimization failures logged with context
-- [ ] **AC-004:** All public methods have complete type hints
-- [ ] **AC-005:** NumPy 2.0 compatibility
-- [ ] **AC-006:** All functions have docstrings following Google style
-- [ ] **AC-007:** Risk contribution calculation verified (RC_i = w_i * (Σw)_i / σ_p)
+- [x] **AC-001:** Covariance matrix validated before optimization (PSD check, symmetry) ✅ FIXED
+- [x] **AC-002:** Zero variance asset handling (no ZeroDivisionError) ✅ FIXED
+- [x] **AC-003:** Optimization failures logged with context ✅ FIXED
+- [x] **AC-004:** All public methods have complete type hints ✅ OK
+- [x] **AC-005:** NumPy 2.0 compatibility ✅ OK
+- [x] **AC-006:** All functions have docstrings following Google style ✅ OK
+- [x] **AC-007:** Risk contribution calculation verified (RC_i = w_i * (Σw)_i / σ_p) ✅ OK
+- [x] **AC-008:** Magic numbers documented as constants ✅ FIXED
 
 ---
 
@@ -102,9 +103,9 @@ class RiskParityResult:
 
 | Rule | Source | Requirement | Current Status |
 |------|--------|-------------|----------------|
-| PSD validation | BASE_RULES.md (TRD-001) | Validate covariance matrix is positive semidefinite | ❌ GAP - No validation |
-| Input sanitization | BASE_RULES.md (TRD-015) | Remove NaN, zero variance assets | ❌ GAP - No sanitization |
-| Error logging | BASE_RULES.md (LOG-004) | Log optimization failures | ❌ GAP - No logging |
+| PSD validation | BASE_RULES.md (TRD-001) | Validate covariance matrix is positive semidefinite | ✅ FIXED - validate_covariance_matrix() |
+| Input sanitization | BASE_RULES.md (TRD-015) | Remove NaN, zero variance assets | ✅ FIXED - sanitize_covariance_matrix() |
+| Error logging | BASE_RULES.md (LOG-004) | Log optimization failures | ✅ FIXED - log_optimization_failure() |
 | Type hints coverage | BASE_RULES.md (TYP-001) | 100% type hints on public functions | ✅ OK - Complete |
 | Docstring coverage | BASE_RULES.md (CC-001) | All functions documented | ✅ OK - Complete |
 | Domain layer purity | BASE_RULES.md (ARCH-002) | No infrastructure imports | ✅ OK - Only numpy/scipy |
@@ -113,6 +114,7 @@ class RiskParityResult:
 | Diversification ratio | Qian & Maas (2010) | DR = (Σ w_i σ_i) / σ_p | ✅ OK - Implemented |
 | Cluster-based RP | Advanced RP | Two-level risk parity | ✅ OK - Implemented |
 | NumPy 2.0 compat | BASE_RULES.md (TYP-002) | No deprecated np aliases | ✅ OK - Modern types |
+| Magic numbers | BASE_RULES.md (CC-001) | Document constants | ✅ FIXED - Constants defined |
 
 **NOTE:** This analysis references BASE_RULES.md for universal rules and Qian & Maas (2010) for Risk Parity rules.
 
@@ -120,7 +122,7 @@ class RiskParityResult:
 
 ## Dependencies
 - **External:** `numpy`, `scipy` (optimize), `dataclasses` (std)
-- **Internal:** None (domain service)
+- **Internal:** `app.domain.services.portfolio_optimization._validation`
 
 ---
 
@@ -146,11 +148,12 @@ class RiskParityResult:
 - **Equal Risk Contribution:** All RC_i should be approximately equal for true risk parity
 - **Diversification Ratio:** DR > 1 indicates diversification benefit
 - **Cluster-Based RP:** Two-level allocation (within clusters + across clusters)
-- **Fallback Behavior:** Optimization failures return inverse volatility weights (no logging)
 - **Qian & Maas Reference:** "Risk Parity Portfolios" (2010) - Equal risk contribution principle
 - **Trading Convention:** Assumes daily covariance (annualization if needed)
+- **Constants:** DEFAULT_RISK_FREE_RATE, DEFAULT_MIN_WEIGHT, DEFAULT_MAX_WEIGHT, etc.
 
 ---
 
 **File Reference:** `app/domain/services/portfolio_optimization/risk_parity.py`
 **Last Audited:** 2026-02-01
+**Last Fixed:** 2026-02-01 (GAPs: PSD validation, error logging, magic numbers)

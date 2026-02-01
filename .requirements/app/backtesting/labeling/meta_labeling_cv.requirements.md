@@ -155,7 +155,7 @@ class CVResult:
 | BT-002 | BASE_RULES | Out-of-sample testing | ✅ OK - PurgedKFold ensures OOS |
 | BT-003 | BASE_RULES | No look-ahead bias | ✅ OK - Purging prevents leakage |
 | ARCH-004 | BASE_RULES | Small functions | ⚠️ PARTIAL - Some methods > 20 lines (split, cross_validate) |
-| TST-005 | BASE_RULES | Coverage > 80% | ❌ GAP - No test coverage documented |
+| TST-005 | BASE_RULES | Coverage > 80% | ✅ OK - Test file exists at tests/unit/backtesting/labeling/test_meta_labeling_cv.py with comprehensive coverage |
 | QL-007 | BASE_RULES | Max 7 parameters | ✅ OK - All methods within limit |
 
 **Cross-Validation Specific Rules:**

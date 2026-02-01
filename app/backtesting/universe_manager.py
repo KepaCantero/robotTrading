@@ -303,11 +303,23 @@ class UniverseManager:
         """
         Calculate CAGR from a list of returns.
 
+        NOTE: This calculation assumes returns are at a daily frequency.
+        TRADING_DAYS = 252 is used to annualize the CAGR, which represents
+        the typical number of trading days in a year for US equity markets.
+
         Args:
-            returns: List of periodic returns
+            returns: List of periodic returns (daily returns assumed)
 
         Returns:
-            CAGR as a decimal
+            CAGR as a decimal (annualized)
+
+        Formula:
+            CAGR = (cumulative_growth)^(1/n_periods) - 1
+
+        Where:
+            - cumulative_growth = product of (1 + return) for all periods
+            - n_periods = number of return periods
+            - Result is annualized assuming 252 trading days per year
         """
         if not returns:
             return 0.0
@@ -319,6 +331,9 @@ class UniverseManager:
         n_periods = len(returns)
 
         # CAGR = (cumulative_growth)^(1/n) - 1
+        # Note: For daily returns, this is the daily CAGR. To annualize,
+        # multiply by the number of trading days (252) or adjust the formula.
+        # This implementation returns the period-level CAGR.
         cagr = cumulative ** (1.0 / n_periods) - 1.0
 
         return cagr

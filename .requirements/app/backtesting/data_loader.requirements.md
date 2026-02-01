@@ -126,7 +126,7 @@ class Quote(BaseModel):
 | FMT-001 | 01-formatting-style.md | Line length ≤ 100 characters | ⚠️ GAP - Some lines exceed 100 chars |
 | FMT-006 | 01-formatting-style.md | Use f-strings not .format() | ✅ OK |
 | TYP-001 | 02-type-hints.md | All functions have type hints | ✅ OK |
-| TYP-003 | 02-type-hints.md | No Any without justification | ❌ GAP - current_price_func uses Any |
+| TYP-003 | 02-type-hints.md | No Any without justification | ✅ FIXED - All functions have specific types |
 | ARCH-004 | 05-architecture.md | Functions < 20 lines (ideally) | ⚠️ NOT APPLIED - Some long functions |
 | LOG-004 | 09-logging-observability.md | Log exceptions with stack traces | ✅ OK |
 | LOG-005 | 09-logging-observability.md | Never log sensitive data | ✅ OK |

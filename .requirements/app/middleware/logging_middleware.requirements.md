@@ -117,7 +117,7 @@ This module does not define Pydantic models or dataclasses. It uses Starlette's 
 | LOG-001 | BASE_RULES.md | Structured logging with JSON format | ✅ OK - Uses LogService enum with metadata dict |
 | LOG-002 | BASE_RULES.md | Include correlation IDs in logs | ✅ OK - request_id in all metadata |
 | LOG-003 | BASE_RULES.md | Appropriate log levels (info/error) | ✅ OK - info for normal, error for exceptions |
-| LOG-004 | BASE_RULES.md | Log exceptions with stack traces | ⚠️ PARTIAL - Logs error_message but no stack trace |
+| LOG-004 | BASE_RULES.md | Log exceptions with stack traces | ✅ FIXED - 2026-02-02 - Added exc_info=True to all error logging calls and updated CentralizedLogger |
 | LOG-005 | BASE_RULES.md | No sensitive data in logs | ✅ OK - No passwords/tokens logged |
 | LOG-006 | BASE_RULES.md | Add execution time for operations | ✅ OK - duration_ms calculated and logged |
 | ASYNC-001 | BASE_RULES.md | Use async def | ✅ OK - dispatch is async |

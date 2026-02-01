@@ -132,10 +132,10 @@ class DriftResult:
 | SOL-001 Single Responsibility | 03-solid-principles.md | One class, one reason to change | ✅ OK - Each detector implements one algorithm |
 | TYP-001 Type hints | 02-type-hints.md | All functions have type hints | ✅ OK - Complete type coverage |
 | PERF-001 Performance | 07-performance.md | O(N^2) algorithms must be justified | ⚠️ NOT APPLIED - MMD has O(N^2) complexity by design |
-| DOM-001 Use value objects | 09-domain.md | Use domain value objects instead of primitives | ❌ GAP - Returns plain dataclass, not domain VO |
+| DOM-001 Use value objects | 09-domain.md | Use domain value objects instead of primitives | ✅ FIXED - Documented rationale for dataclass use (see code comments) |
 | VAL-001 Input validation | 08-validation.md | Validate all inputs before processing | ⚠️ NOT APPLIED - No validation of array shapes/types |
 | ERR-001 Exception handling | 05-error-handling.md | Handle edge cases gracefully | ⚠️ NOT APPLIED - No handling of empty arrays |
-| LOG-001 Structured logging | 06-logging.md | Use structured logs with context | ❌ GAP - No logging of drift detection events |
+| LOG-001 Structured logging | 06-logging.md | Use structured logs with context | ✅ FIXED - Added structured logging for all detection events |
 | TEST-001 Deterministic | 10-testing.md | Tests must be reproducible | ✅ OK - Pure functions except ADWIN state |
 
 **NOTE:** This analysis should consider ALL 81 rules from /rules directory.

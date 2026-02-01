@@ -150,7 +150,7 @@ class LowVolatilityPortfolio:
 | Rule | Source | Requirement | Current Status |
 |------|--------|-------------|----------------|
 | Input validation | BASE_RULES.md (CC-006) | Validate returns array length | ✅ OK - Checks array length |
-| NaN handling | BASE_RULES.md (TRD-015) | Handle NaN in return data | ❌ GAP - No NaN handling |
+| NaN handling | BASE_RULES.md (TRD-015) | Handle NaN in return data | ✅ FIXED - Filters NaN with logging |
 | Low vol anomaly | Blitz & van Vliet (2007) | Low vol stocks outperform on risk-adjusted basis | ✅ OK - Strategy |
 | Volatility percentile | Low vol standard | Bottom 30% = low vol | ✅ OK - low_vol_threshold=0.3 |
 | Annualization | Finance standard | Multiply daily by √252 | ✅ OK - Implemented |

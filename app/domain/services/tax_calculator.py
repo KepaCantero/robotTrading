@@ -9,6 +9,7 @@ Reference: Rule 05-architecture.md
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from datetime import datetime, timedelta
@@ -17,6 +18,10 @@ from typing import List, Optional
 from app.domain.entities.trade import Trade, ExitReason
 from app.domain.entities.position import Position
 from app.domain.value_objects.tax_residence import TaxResidence
+
+
+# Structured logging for tax calculations (TRD-004, LOG-001)
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -84,6 +89,21 @@ class TaxCalculator:
 
         # Determine if short or long term
         is_long_term = self._is_long_term(trade)
+        holding_period = (trade.exit_date - trade.entry_date).days if trade.exit_date else 0
+
+        # Log tax calculation inputs (TRD-004, LOG-001)
+        logger.debug(
+            "Calculating trade tax",
+            extra={
+                "trade_id": str(trade.id),
+                "symbol": trade.symbol,
+                "gross_profit": str(gross_profit),
+                "holding_period_days": holding_period,
+                "is_long_term": is_long_term,
+                "entry_date": trade.entry_date.isoformat(),
+                "exit_date": trade.exit_date.isoformat() if trade.exit_date else None,
+            }
+        )
 
         # Apply appropriate tax rate
         if is_long_term:
@@ -100,6 +120,24 @@ class TaxCalculator:
             long_term_tax = Decimal("0")
 
         total_tax = short_term_tax + long_term_tax
+
+        # Log tax calculation results (TRD-004, LOG-001)
+        logger.info(
+            "Trade tax calculated",
+            extra={
+                "trade_id": str(trade.id),
+                "symbol": trade.symbol,
+                "gross_profit": str(gross_profit),
+                "taxable_profit": str(profit),
+                "tax_amount": str(total_tax),
+                "effective_rate": str(tax_rate),
+                "short_term_gains": str(short_term_gains),
+                "long_term_gains": str(long_term_gains),
+                "short_term_tax": str(short_term_tax),
+                "long_term_tax": str(long_term_tax),
+                "net_profit": str(gross_profit - total_tax),
+            }
+        )
 
         return TaxLiability(
             gross_profit=gross_profit,
@@ -130,6 +168,16 @@ class TaxCalculator:
         Returns:
             Aggregated TaxLiability for the period
         """
+        # Log period tax calculation start (TRD-004, LOG-001)
+        logger.debug(
+            "Calculating period tax",
+            extra={
+                "start_date": start_date.isoformat(),
+                "end_date": end_date.isoformat(),
+                "total_trades": len(trades),
+            }
+        )
+
         # Filter trades by date
         period_trades = [t for t in trades if t.exit_date and start_date <= t.exit_date <= end_date]
 
@@ -151,6 +199,24 @@ class TaxCalculator:
         total_gross = total_short_gains + total_long_gains
         total_tax = short_tax + long_tax
         total_net = total_gross - total_tax
+
+        # Log period tax calculation results (TRD-004, LOG-001)
+        logger.info(
+            "Period tax calculated",
+            extra={
+                "start_date": start_date.isoformat(),
+                "end_date": end_date.isoformat(),
+                "period_trades_count": len(period_trades),
+                "gross_profit": str(total_gross),
+                "taxable_profit": str(total_gross),
+                "tax_amount": str(total_tax),
+                "short_term_gains": str(total_short_gains),
+                "long_term_gains": str(total_long_gains),
+                "short_term_tax": str(short_tax),
+                "long_term_tax": str(long_tax),
+                "net_profit": str(total_net),
+            }
+        )
 
         return TaxLiability(
             gross_profit=total_gross,
@@ -180,7 +246,20 @@ class TaxCalculator:
             Tax amount
         """
         withholding_rate = self._tax_residence.get_withholding_tax_rate(source_region)
-        return dividend_amount * withholding_rate
+        tax_amount = dividend_amount * withholding_rate
+
+        # Log dividend tax calculation (TRD-004, LOG-001)
+        logger.info(
+            "Dividend tax calculated",
+            extra={
+                "dividend_amount": str(dividend_amount),
+                "source_region": source_region,
+                "withholding_rate": str(withholding_rate),
+                "tax_amount": str(tax_amount),
+            }
+        )
+
+        return tax_amount
 
     def create_tax_lots_from_position(
         self,
@@ -222,6 +301,16 @@ class TaxCalculator:
         Returns:
             List of symbols recommended for harvesting
         """
+        # Log tax-loss harvesting analysis start (TRD-004, LOG-001)
+        logger.debug(
+            "Analyzing tax-loss harvesting opportunities",
+            extra={
+                "open_positions_count": len(open_positions),
+                "symbols_with_prices": len(current_prices),
+                "applies_wash_sale_rule": self._tax_residence.applies_wash_sale_rule,
+            }
+        )
+
         harvest_candidates = []
 
         for position in open_positions:
@@ -238,9 +327,39 @@ class TaxCalculator:
                     holding_days = position.get_age_days()
                     if holding_days >= 30:  # 30-day wash sale period
                         harvest_candidates.append(position.symbol)
+
+                        # Log harvest candidate (TRD-004, LOG-001)
+                        logger.debug(
+                            "Tax-loss harvest candidate identified",
+                            extra={
+                                "symbol": position.symbol,
+                                "unrealized_loss": str(unrealized_pnl),
+                                "holding_days": holding_days,
+                                "wash_sale_eligible": True,
+                            }
+                        )
                 else:
                     # No wash sale restriction, recommend harvest
                     harvest_candidates.append(position.symbol)
+
+                    # Log harvest candidate (TRD-004, LOG-001)
+                    logger.debug(
+                        "Tax-loss harvest candidate identified",
+                        extra={
+                            "symbol": position.symbol,
+                            "unrealized_loss": str(unrealized_pnl),
+                            "wash_sale_eligible": False,
+                        }
+                    )
+
+        # Log tax-loss harvesting results (TRD-004, LOG-001)
+        logger.info(
+            "Tax-loss harvesting analysis complete",
+            extra={
+                "candidates_count": len(harvest_candidates),
+                "candidates": harvest_candidates,
+            }
+        )
 
         return harvest_candidates
 
@@ -261,6 +380,16 @@ class TaxCalculator:
         Returns:
             Estimated tax liability
         """
+        # Log year-end tax estimation start (TRD-004, LOG-001)
+        logger.debug(
+            "Estimating year-end tax liability",
+            extra={
+                "year_trades_count": len(year_trades),
+                "open_positions_count": len(open_positions),
+                "symbols_with_prices": len(current_prices),
+            }
+        )
+
         # Realized gains/losses from closed trades
         realized_tax = self.calculate_period_tax(
             year_trades,
@@ -280,6 +409,18 @@ class TaxCalculator:
         unrealized_tax = unrealized_gains * self._tax_residence.capital_gains_rate_short
 
         total_tax = realized_tax.tax_amount + unrealized_tax
+
+        # Log year-end tax estimation results (TRD-004, LOG-001)
+        logger.info(
+            "Year-end tax estimated",
+            extra={
+                "realized_tax_amount": str(realized_tax.tax_amount),
+                "unrealized_gains": str(unrealized_gains),
+                "unrealized_tax": str(unrealized_tax),
+                "total_estimated_tax": str(total_tax),
+                "conservative_assumption": "short-term_rate_for_unrealized",
+            }
+        )
 
         return TaxLiability(
             gross_profit=realized_tax.gross_profit + unrealized_gains,

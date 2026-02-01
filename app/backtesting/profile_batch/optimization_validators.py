@@ -15,8 +15,9 @@ Responsibilities:
 from __future__ import annotations
 
 import logging
+import uuid
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Union
 
 import numpy as np
 import pandas as pd
@@ -27,6 +28,11 @@ from app.core.config.profile_config_loader import ProfileConfigLoader
 from app.core.models.input_profile import InputProfile
 
 logger = logging.getLogger(__name__)
+
+# Type aliases for better type safety
+ConfigDict = Dict[str, Any]
+MetricsDict = Dict[str, Union[float, int, str, bool, None]]
+ValidationResultDict = Dict[str, Any]  # Contains 'passed' bool and validation metrics
 
 
 class WalkForwardValidator:
@@ -56,8 +62,8 @@ class WalkForwardValidator:
         self.profile_config_loader = profile_config_loader
 
     def validate(
-        self, profile: InputProfile, config: Dict[str, Any], params: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, profile: InputProfile, config: ConfigDict, params: Dict[str, Any]
+    ) -> ValidationResultDict:
         """
         Run walk-forward validation.
 
@@ -142,8 +148,8 @@ class WalkForwardValidator:
         }
 
     def _run_backtest_with_params(
-        self, profile: InputProfile, config: Dict[str, Any], params: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, profile: InputProfile, config: ConfigDict, params: Dict[str, Any]
+    ) -> MetricsDict:
         """Run backtest with specific parameters."""
         updated_config = config.copy()
         updated_config["strategy"].update(params)
@@ -163,7 +169,7 @@ class WalkForwardValidator:
             if temp_config_path.exists():
                 temp_config_path.unlink()
 
-    def _get_empty_metrics(self) -> Dict[str, Any]:
+    def _get_empty_metrics(self) -> MetricsDict:
         """Return empty metrics dict."""
         return {
             "sharpe_ratio": 0.0,
@@ -201,8 +207,8 @@ class MonteCarloSimulator:
         self.profile_config_loader = profile_config_loader
 
     def simulate(
-        self, profile: InputProfile, config: Dict[str, Any], params: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, profile: InputProfile, config: ConfigDict, params: Dict[str, Any]
+    ) -> ValidationResultDict:
         """
         Run Monte Carlo simulation.
 
@@ -261,11 +267,9 @@ class MonteCarloSimulator:
         }
 
     def _run_backtest_with_params(
-        self, profile: InputProfile, config: Dict[str, Any], params: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, profile: InputProfile, config: ConfigDict, params: Dict[str, Any]
+    ) -> MetricsDict:
         """Run backtest with specific parameters."""
-        import uuid
-
         updated_config = config.copy()
         updated_config["strategy"].update(params)
 
@@ -284,7 +288,7 @@ class MonteCarloSimulator:
             if temp_config_path.exists():
                 temp_config_path.unlink()
 
-    def _get_empty_metrics(self) -> Dict[str, Any]:
+    def _get_empty_metrics(self) -> MetricsDict:
         """Return empty metrics dict."""
         return {
             "sharpe_ratio": 0.0,
@@ -322,8 +326,8 @@ class OutOfSampleValidator:
         self.profile_config_loader = profile_config_loader
 
     def validate(
-        self, profile: InputProfile, config: Dict[str, Any], params: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, profile: InputProfile, config: ConfigDict, params: Dict[str, Any]
+    ) -> ValidationResultDict:
         """
         Run out-of-sample validation.
 
@@ -384,11 +388,9 @@ class OutOfSampleValidator:
             return {"passed": False, "error": str(e)}
 
     def _run_backtest_with_params(
-        self, profile: InputProfile, config: Dict[str, Any], params: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, profile: InputProfile, config: ConfigDict, params: Dict[str, Any]
+    ) -> MetricsDict:
         """Run backtest with specific parameters."""
-        import uuid
-
         updated_config = config.copy()
         updated_config["strategy"].update(params)
 
@@ -407,7 +409,7 @@ class OutOfSampleValidator:
             if temp_config_path.exists():
                 temp_config_path.unlink()
 
-    def _get_empty_metrics(self) -> Dict[str, Any]:
+    def _get_empty_metrics(self) -> MetricsDict:
         """Return empty metrics dict."""
         return {
             "sharpe_ratio": 0.0,

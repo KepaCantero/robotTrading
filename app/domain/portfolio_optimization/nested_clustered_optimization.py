@@ -552,122 +552,140 @@ class NestedClusteredOptimization:
             >>> result = nco.get_weights(returns, cov)
             >>> print(result.weights)
         """
-        # Input validation
-        expected_returns = np.asarray(expected_returns, dtype=np.float64)
-        cov_matrix = np.asarray(cov_matrix, dtype=np.float64)
+        try:
+            # Input validation
+            expected_returns = np.asarray(expected_returns, dtype=np.float64)
+            cov_matrix = np.asarray(cov_matrix, dtype=np.float64)
 
-        if expected_returns.ndim != 1:
-            raise ValueError(f"expected_returns must be 1D, got shape {expected_returns.shape}")
+            if expected_returns.ndim != 1:
+                raise ValueError(f"expected_returns must be 1D, got shape {expected_returns.shape}")
 
-        if cov_matrix.ndim != 2:
-            raise ValueError(f"cov_matrix must be 2D, got shape {cov_matrix.shape}")
+            if cov_matrix.ndim != 2:
+                raise ValueError(f"cov_matrix must be 2D, got shape {cov_matrix.shape}")
 
-        n_assets = len(expected_returns)
+            n_assets = len(expected_returns)
 
-        if cov_matrix.shape != (n_assets, n_assets):
-            raise ValueError(
-                f"cov_matrix shape {cov_matrix.shape} incompatible with "
-                f"expected_returns length {n_assets}"
+            if cov_matrix.shape != (n_assets, n_assets):
+                raise ValueError(
+                    f"cov_matrix shape {cov_matrix.shape} incompatible with "
+                    f"expected_returns length {n_assets}"
+                )
+
+            if n_assets < 2:
+                raise ValueError("Need at least 2 assets for optimization")
+
+            # Step 1: Cluster assets
+            logger.info("Step 1: Clustering assets...")
+            cluster_labels = self._cluster_assets(cov_matrix)
+
+            # Handle DBSCAN noise (label -1) - treat as separate clusters
+            valid_labels = cluster_labels.copy()
+            noise_mask = cluster_labels == -1
+
+            if np.any(noise_mask):
+                # Assign noise points to unique clusters
+                n_noise: int = np.sum(noise_mask)
+                max_label = cluster_labels.max()
+                valid_labels[noise_mask] = np.arange(max_label + 1, max_label + 1 + n_noise)
+                logger.info(f"Assigned {n_noise} noise points to separate clusters")
+
+            unique_clusters = np.unique(valid_labels)
+            n_clusters = len(unique_clusters)
+
+            logger.info(f"Step 1 complete: {n_clusters} clusters identified")
+
+            # Step 2: Optimize within each cluster
+            logger.info("Step 2: Optimizing within clusters...")
+            within_cluster_weights: dict[int, NDArray[np.float64]] = {}
+
+            for cluster_id in unique_clusters:
+                cluster_mask = valid_labels == cluster_id
+                cluster_weights = self._optimize_within_cluster(
+                    expected_returns, cov_matrix, cluster_mask
+                )
+
+                # Normalize weights within cluster
+                cluster_sum = cluster_weights.sum()
+                if cluster_sum > 0:
+                    cluster_weights = cluster_weights / cluster_sum
+
+                within_cluster_weights[int(cluster_id)] = cluster_weights[cluster_mask]
+
+            logger.info("Step 2 complete: Within-cluster optimization finished")
+
+            # Step 3: Allocate across clusters
+            logger.info("Step 3: Allocating across clusters...")
+            cluster_allocations = self._allocate_clusters(
+                expected_returns, cov_matrix, valid_labels
             )
 
-        if n_assets < 2:
-            raise ValueError("Need at least 2 assets for optimization")
+            # Combine within-cluster and cross-cluster weights
+            final_weights = np.zeros(n_assets, dtype=np.float64)
 
-        # Step 1: Cluster assets
-        logger.info("Step 1: Clustering assets...")
-        cluster_labels = self._cluster_assets(cov_matrix)
+            for i, cluster_id in enumerate(unique_clusters):
+                cluster_mask = valid_labels == cluster_id
+                cluster_allocation = cluster_allocations[i]
 
-        # Handle DBSCAN noise (label -1) - treat as separate clusters
-        valid_labels = cluster_labels.copy()
-        noise_mask = cluster_labels == -1
+                # Get normalized within-cluster weights
+                if int(cluster_id) in within_cluster_weights:
+                    within_weights = within_cluster_weights[int(cluster_id)]
+                    final_weights[cluster_mask] = within_weights * cluster_allocation
 
-        if np.any(noise_mask):
-            # Assign noise points to unique clusters
-            n_noise: int = np.sum(noise_mask)
-            max_label = cluster_labels.max()
-            valid_labels[noise_mask] = np.arange(max_label + 1, max_label + 1 + n_noise)
-            logger.info(f"Assigned {n_noise} noise points to separate clusters")
+            # Ensure weights sum to 1
+            total_weight = final_weights.sum()
+            if total_weight > 0:
+                final_weights = final_weights / total_weight
+            else:
+                logger.warning("Total weight is zero. Using equal weights.")
+                final_weights = np.ones(n_assets) / n_assets
 
-        unique_clusters = np.unique(valid_labels)
-        n_clusters = len(unique_clusters)
+            logger.info("Step 3 complete: Final weights computed")
 
-        logger.info(f"Step 1 complete: {n_clusters} clusters identified")
+            # Compute portfolio metrics
+            portfolio_return = float(final_weights @ expected_returns)
+            portfolio_variance = float(final_weights @ cov_matrix @ final_weights)
+            portfolio_risk = np.sqrt(portfolio_variance)
 
-        # Step 2: Optimize within each cluster
-        logger.info("Step 2: Optimizing within clusters...")
-        within_cluster_weights: dict[int, NDArray[np.float64]] = {}
+            if portfolio_risk > 0:
+                sharpe_ratio = (
+                    (portfolio_return - self.config.risk_free_rate) / portfolio_risk
+                )
+            else:
+                sharpe_ratio = 0.0
+                logger.warning("Portfolio risk is zero. Setting Sharpe ratio to 0.")
 
-        for cluster_id in unique_clusters:
-            cluster_mask = valid_labels == cluster_id
-            cluster_weights = self._optimize_within_cluster(
-                expected_returns, cov_matrix, cluster_mask
+            # Check convergence (basic check: all weights should be non-negative and sum to 1)
+            converged = bool(
+                np.all(final_weights >= 0) and np.abs(final_weights.sum() - 1.0) < 1e-6
             )
 
-            # Normalize weights within cluster
-            cluster_sum = cluster_weights.sum()
-            if cluster_sum > 0:
-                cluster_weights = cluster_weights / cluster_sum
+            logger.info(
+                f"NCO complete: Return={portfolio_return:.4f}, "
+                f"Risk={portfolio_risk:.4f}, Sharpe={sharpe_ratio:.4f}"
+            )
 
-            within_cluster_weights[int(cluster_id)] = cluster_weights[cluster_mask]
+            return NCOResult(
+                weights=final_weights,
+                cluster_labels=cluster_labels,
+                n_clusters=n_clusters,
+                expected_return=portfolio_return,
+                expected_risk=portfolio_risk,
+                sharpe_ratio=sharpe_ratio,
+                cluster_weights=cluster_allocations,
+                within_cluster_weights=within_cluster_weights,
+                converged=converged,
+            )
 
-        logger.info("Step 2 complete: Within-cluster optimization finished")
-
-        # Step 3: Allocate across clusters
-        logger.info("Step 3: Allocating across clusters...")
-        cluster_allocations = self._allocate_clusters(expected_returns, cov_matrix, valid_labels)
-
-        # Combine within-cluster and cross-cluster weights
-        final_weights = np.zeros(n_assets, dtype=np.float64)
-
-        for i, cluster_id in enumerate(unique_clusters):
-            cluster_mask = valid_labels == cluster_id
-            cluster_allocation = cluster_allocations[i]
-
-            # Get normalized within-cluster weights
-            if int(cluster_id) in within_cluster_weights:
-                within_weights = within_cluster_weights[int(cluster_id)]
-                final_weights[cluster_mask] = within_weights * cluster_allocation
-
-        # Ensure weights sum to 1
-        total_weight = final_weights.sum()
-        if total_weight > 0:
-            final_weights = final_weights / total_weight
-        else:
-            logger.warning("Total weight is zero. Using equal weights.")
-            final_weights = np.ones(n_assets) / n_assets
-
-        logger.info("Step 3 complete: Final weights computed")
-
-        # Compute portfolio metrics
-        portfolio_return = float(final_weights @ expected_returns)
-        portfolio_variance = float(final_weights @ cov_matrix @ final_weights)
-        portfolio_risk = np.sqrt(portfolio_variance)
-
-        if portfolio_risk > 0:
-            sharpe_ratio = (portfolio_return - self.config.risk_free_rate) / portfolio_risk
-        else:
-            sharpe_ratio = 0.0
-            logger.warning("Portfolio risk is zero. Setting Sharpe ratio to 0.")
-
-        # Check convergence (basic check: all weights should be non-negative and sum to 1)
-        converged = bool(np.all(final_weights >= 0) and np.abs(final_weights.sum() - 1.0) < 1e-6)
-
-        logger.info(
-            f"NCO complete: Return={portfolio_return:.4f}, "
-            f"Risk={portfolio_risk:.4f}, Sharpe={sharpe_ratio:.4f}"
-        )
-
-        return NCOResult(
-            weights=final_weights,
-            cluster_labels=cluster_labels,
-            n_clusters=n_clusters,
-            expected_return=portfolio_return,
-            expected_risk=portfolio_risk,
-            sharpe_ratio=sharpe_ratio,
-            cluster_weights=cluster_allocations,
-            within_cluster_weights=within_cluster_weights,
-            converged=converged,
-        )
+        except Exception as e:
+            logger.error(
+                f"NCO optimization failed: {e}",
+                exc_info=True,
+                extra={
+                    "n_assets": len(expected_returns) if hasattr(expected_returns, "__len__") else None,
+                    "cov_shape": cov_matrix.shape if hasattr(cov_matrix, "shape") else None,
+                },
+            )
+            raise
 
     def get_distance_matrix(self) -> NDArray[np.float64] | None:
         """

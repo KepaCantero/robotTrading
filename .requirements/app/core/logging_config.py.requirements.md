@@ -63,12 +63,12 @@ def setup_file_logging(
 
 | Rule | Source | Requirement | Current Status |
 |------|--------|-------------|----------------|
-| LOG-001 | BASE_RULES.md | Structured logging (JSON format) | ❌ GAP - Using text format, not JSON |
-| LOG-002 | BASE_RULES.md | Include correlation IDs | ❌ GAP - No correlation ID support |
+| LOG-001 | BASE_RULES.md | Structured logging (JSON format) | ✅ FIXED - 2026-02-01 - Added JSONFormatter class with LOG_JSON env var |
+| LOG-002 | BASE_RULES.md | Include correlation IDs | ✅ FIXED - 2026-02-01 - Added ContextVar for correlation ID tracking |
 | LOG-003 | BASE_RULES.md | Appropriate log levels | ✅ OK |
 | LOG-004 | BASE_RULES.md | Log exceptions with stack traces | ✅ OK - Formatters include function/line info |
 | LOG-005 | BASE_RULES.md | No sensitive data in logs | ⚠️ NOT ENFORCED - No sanitization |
-| LOG-006 | BASE_RULES.md | Add timing info for operations | ❌ GAP - No timing field in formatters |
+| LOG-006 | BASE_RULES.md | Add timing info for operations | ✅ FIXED - 2026-02-01 - Added TimedFormatter with timing fields |
 | LOG-007 | BASE_RULES.md | Implement health check endpoints | ⚠️ NOT APPLIED - This is config module |
 
 ### Logging-Specific Rules

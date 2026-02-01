@@ -10,6 +10,7 @@ Paper: Balakrishnan, D., et al. (2018). "Machine Learning for Statistical Arbitr
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
@@ -17,6 +18,8 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from scipy import stats
+
+logger = logging.getLogger(__name__)
 
 
 class ReversionState(str, Enum):
@@ -135,33 +138,81 @@ class StatisticalArbitrage:
         Returns:
             ZScoreSignal with trading recommendation
         """
-        if len(prices) < self._lookback + 1:
-            # Not enough data
+        # Input validation - check for empty prices
+        if len(prices) == 0:
+            logger.warning(f"Empty prices array for symbol {symbol}")
             return ZScoreSignal(
                 symbol=symbol,
                 z_score=0.0,
                 state=ReversionState.NEUTRAL,
                 confidence=0.0,
-                expected_reversion_target=float(prices[-1]) if len(prices) > 0 else 0.0,
+                expected_reversion_target=0.0,
+            )
+
+        # Handle NaN and inf values
+        valid_mask = ~np.isnan(prices) & ~np.isinf(prices) & (prices > 0)
+        prices_clean = prices[valid_mask]
+
+        if len(prices_clean) < len(prices):
+            n_filtered = len(prices) - len(prices_clean)
+            logger.warning(f"Filtered out {n_filtered} NaN/inf/non-positive values from prices for {symbol}")
+
+        if len(prices_clean) < self._lookback + 1:
+            # Not enough data
+            logger.warning(f"Insufficient data points for {symbol}: {len(prices_clean)} < {self._lookback + 1}")
+            return ZScoreSignal(
+                symbol=symbol,
+                z_score=0.0,
+                state=ReversionState.NEUTRAL,
+                confidence=0.0,
+                expected_reversion_target=float(prices_clean[-1]) if len(prices_clean) > 0 else 0.0,
             )
 
         # Calculate rolling statistics
-        window_prices = prices[-self._lookback:]
-        mean = float(np.mean(window_prices))
-        std = float(np.std(window_prices))
-        current_price = float(prices[-1])
+        window_prices = prices_clean[-self._lookback:]
 
-        if std < 1e-10:
+        # Validate window prices
+        if len(window_prices) == 0:
+            logger.warning(f"Empty window prices for {symbol}")
             return ZScoreSignal(
                 symbol=symbol,
                 z_score=0.0,
                 state=ReversionState.NEUTRAL,
                 confidence=0.0,
-                expected_reversion_target=current_price,
+                expected_reversion_target=float(prices_clean[-1]) if len(prices_clean) > 0 else 0.0,
+            )
+
+        mean = float(np.mean(window_prices))
+        std = float(np.std(window_prices))
+        current_price = float(prices_clean[-1])
+
+        # Validate calculated values
+        if not np.isfinite(mean) or not np.isfinite(std) or not np.isfinite(current_price):
+            logger.warning(f"Non-finite values for {symbol}: mean={mean}, std={std}, price={current_price}")
+            return ZScoreSignal(
+                symbol=symbol,
+                z_score=0.0,
+                state=ReversionState.NEUTRAL,
+                confidence=0.0,
+                expected_reversion_target=float(prices_clean[-1]),
+            )
+
+        if std < 1e-10 or current_price <= 0:
+            return ZScoreSignal(
+                symbol=symbol,
+                z_score=0.0,
+                state=ReversionState.NEUTRAL,
+                confidence=0.0,
+                expected_reversion_target=current_price if current_price > 0 else mean,
             )
 
         # Calculate Z-score
         z_score = (current_price - mean) / std
+
+        # Validate z_score
+        if not np.isfinite(z_score):
+            logger.warning(f"Non-finite z_score for {symbol}, using 0")
+            z_score = 0.0
 
         # Determine state and signal
         if z_score > self._entry_threshold:
@@ -177,8 +228,12 @@ class StatisticalArbitrage:
             confidence = 0.0
             target = mean
 
+        # Validate target
+        if not np.isfinite(target) or target <= 0:
+            target = mean
+
         # Calculate risk levels
-        atr = self._calculate_atr(prices[-20:]) if len(prices) >= 20 else std * 2
+        atr = self._calculate_atr(prices_clean[-20:]) if len(prices_clean) >= 20 else std * 2
 
         if state == ReversionState.OVERBOUGHT:
             stop_loss = current_price * (1 + 0.02)  # 2% above

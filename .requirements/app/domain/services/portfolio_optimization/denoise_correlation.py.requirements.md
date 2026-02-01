@@ -1,165 +1,156 @@
-# denoise_correlation.py.requirements.md
+# denoise_correlation.py
 
 ## Purpose
-Implements López de Prado's correlation matrix de-noising using Random Matrix Theory (RMT) to remove noise from correlation matrices for robust portfolio optimization.
+Implements López de Prado's correlation matrix de-noising using Random Matrix Theory (RMT) to remove noise from correlation matrices per "Machine Learning for Asset Managers" (2019).
 
 ---
 
 ## Type Definitions / Data Classes
 
-### DenoisedResult Class
+### DenoisedResult (dataclass)
 ```python
-@dataclass
-class DenoisedResult:
-    original_corr: np.ndarray         # REQUIRED - Original correlation matrix (N, N)
-    denoised_corr: np.ndarray         # REQUIRED - De-noised correlation matrix (N, N)
-    denoised_cov: np.ndarray          # OPTIONAL - De-noised covariance matrix (N, N), may be None
-    eigenvalues: np.ndarray           # REQUIRED - Eigenvalues of original matrix (N,)
-    denoised_eigenvalues: np.ndarray  # REQUIRED - Eigenvalues after de-noising (N,)
-    symbols: List[str]                # REQUIRED - Asset symbols/tickers
+original_corr: np.ndarray                # Original correlation matrix (N, N)
+denoised_corr: np.ndarray                # De-noised correlation matrix (N, N)
+denoised_cov: Optional[np.ndarray]       # De-noised covariance matrix (N, N)
+eigenvalues: np.ndarray                  # Eigenvalues of original matrix (N,)
+denoised_eigenvalues: np.ndarray         # Eigenvalues after de-noising (N,)
+symbols: List[str]                       # Asset symbols/tickers
 ```
 
-**Validation Rules:**
-- `original_corr`, `denoised_corr`, `eigenvalues`, `denoised_eigenvalues` must have same shape (N, N) or (N,)
-- `denoised_cov` may be None if only correlation de-noising performed
-- All eigenvalues must be real (not complex)
-- Diagonal of correlation matrices must equal 1.0
-- Matrices must be symmetric
+**Properties:**
+- noise_ratio: Ratio of noise eigenvalues to signal eigenvalues
 
-**Property Methods:**
-- `noise_ratio: float` - Ratio of noise eigenvalues to total eigenvalues (0 to 1)
+### CorrelationDenoiser (class)
+```python
+_method: str                             # De-noising method
+_min_obs_ratio: float                    # Minimum T/n ratio for RMT validity
+```
+
+**Methods:**
+- denoise_correlation()
+- denoise_correlation_with_std()
+- fit_kde()
+- get_number_of_signal_factors()
+- shrink_to_constant_correlation()
 
 ---
 
 ## Function Signatures (Contracts)
 
-### `CorrelationDenoiser.__init__(method: str, min_observation_ratio: float) -> None`
-**Pre:** method must be "spectral", "shrinkage", or "constant_corr"; min_observation_ratio >= 2.0
-**Post:** CorrelationDenoiser instance initialized with validated parameters
+### `CorrelationDenoiser.__init__(method, min_observation_ratio)`
+**Pre:** method in ['spectral', 'shrinkage', 'constant_corr'], min_observation_ratio >= 2.0
+**Post:** Denoiser initialized with validated parameters
 **Raises:** ValueError if parameters invalid
 **Retry:** No
 **Side Effects:** None
 
-### `denoise_correlation(corr_matrix: np.ndarray, n_observations: int, symbols: Optional[List[str]]) -> DenoisedResult`
-**Pre:** corr_matrix is symmetric (N, N) with diagonal = 1.0; n_observations >= min_observation_ratio
-**Post:** Returns DenoisedResult with noise eigenvalues replaced by their average
+### `denoise_correlation(corr_matrix, n_observations, symbols) -> DenoisedResult`
+**Pre:** corr_matrix is (N, N) square, n_observations >= min_obs_ratio * N
+**Post:** Returns DenoisedResult with de-noised correlation matrix
 **Raises:** ValueError if matrix invalid or observations insufficient
 **Retry:** No
-**Side Effects:** None (pure function)
+**Side Effects:** Logs de-noising process
 
-### `denoise_correlation_with_std(cov_matrix: np.ndarray, n_observations: int, symbols: Optional[List[str]]) -> DenoisedResult`
-**Pre:** cov_matrix is positive semi-definite (N, N); n_observations >= min_observation_ratio
-**Post:** Returns DenoisedResult with denoised covariance matrix
-**Raises:** ValueError if matrix invalid or cannot convert to correlation
+### `denoise_correlation_with_std(cov_matrix, n_observations, symbols) -> DenoisedResult`
+**Pre:** cov_matrix is (N, N) PSD, no zero-variance assets
+**Post:** Returns DenoisedResult with de-noised covariance matrix
+**Raises:** ValueError if matrix invalid or has zero variance
+**Retry:** No
+**Side Effects:** Logs de-noising process
+
+### `_calculate_max_random_eigenvalue(q, n_assets) -> float`
+**Pre:** q > 0 (T/n ratio), n_assets > 0
+**Post:** Returns Marchenko-Pastur upper bound: σ * (1 + 1/√q)²
+**Raises:** None
 **Retry:** No
 **Side Effects:** None
 
-### `_calculate_max_random_eigenvalue(q: float, n_assets: int) -> float`
-**Pre:** q > 0 (T/n ratio), n_assets >= 2
-**Post:** Returns maximum eigenvalue threshold for random component (Marchenko-Pastur)
-**Raises:** ValueError if q <= 0
-**Retry:** No
-**Side Effects:** None
-
-### `_calculate_min_random_eigenvalue(q: float) -> float`
-**Pre:** q > 0
-**Post:** Returns minimum eigenvalue threshold for random component
-**Raises:** ValueError if q <= 0
-**Retry:** No
-**Side Effects:** None
-
-### `fit_kde(eigenvalues: np.ndarray) -> Tuple[np.ndarray, np.ndarray]`
-**Pre:** eigenvalues is 1D array with length >= 2
+### `fit_kde(eigenvalues) -> Tuple[NDArray, NDArray]`
+**Pre:** eigenvalues length >= 2
 **Post:** Returns (eigenvalue_grid, pdf_values) for visualization
-**Raises:** ImportError if scipy not available
+**Raises:** ValueError if insufficient eigenvalues, ImportError if scipy unavailable
 **Retry:** No
 **Side Effects:** None
 
-### `get_number_of_signal_factors(corr_matrix: np.ndarray, n_observations: int) -> int`
-**Pre:** corr_matrix is valid correlation matrix; n_observations > 0
-**Post:** Returns count of eigenvalues above random threshold
-**Raises:** ValueError if inputs invalid
+### `get_number_of_signal_factors(corr_matrix, n_observations) -> int`
+**Pre:** corr_matrix is (N, N) square
+**Post:** Returns count of eigenvalues > max_random_eigenvalue
+**Raises:** ValueError if matrix not square
 **Retry:** No
 **Side Effects:** None
 
-### `shrink_to_constant_correlation(corr_matrix: np.ndarray, shrinkage: Optional[float]) -> np.ndarray`
-**Pre:** corr_matrix is valid correlation matrix; shrinkage in [0, 1] if provided
-**Post:** Returns shrunk correlation matrix (weighted average with constant correlation)
-**Raises:** ValueError if matrix invalid
+### `shrink_to_constant_correlation(corr_matrix, shrinkage) -> NDArray`
+**Pre:** corr_matrix is (N, N)
+**Post:** Returns shrunk correlation matrix
+**Raises:** ValueError if shrinkage not in [0, 1]
 **Retry:** No
 **Side Effects:** None
 
 ---
 
 ## Acceptance Criteria
-- [ ] AC-RMT-001: De-noised correlation matrix has diagonal elements exactly 1.0
-- [ ] AC-RMT-002: De-noised correlation matrix is symmetric (difference < 1e-10)
-- [ ] AC-RMT-003: Number of signal factors <= number of assets
-- [ ] AC-RMT-004: Noise ratio in [0, 1] (0 = all signal, 1 = all noise)
-- [ ] AC-RMT-005: Marchenko-Pastur lambda_max > 0 for valid q factor
-- [ ] AC-RMT-006: All eigenvalues are real (not complex)
-- [ ] AC-RMT-007: De-noised eigenvalues >= 0 (no negative eigenvalues)
-- [ ] AC-RMT-008: shrink_to_constant_correlation preserves diagonal = 1.0
+- [ ] RMT validity check: T/n >= 2.0 (DEFAULT_MIN_OBSERVATION_RATIO)
+- [ ] Marchenko-Pastur upper bound: λ_max = σ * (1 + 1/√q)²
+- [ ] Signal eigenvalues: λ > λ_max
+- [ ] Noise eigenvalues replaced with average: λ_noise = mean(λ_noise)
+- [ ] De-noised matrix reconstructed: E' = V * diag(λ') * V.T
+- [ ] Diagonal set to exactly 1.0 for correlation matrix
+- [ ] Result is symmetric: (M + M.T) / 2
+- [ ] Result is PSD: diagonal >= 1.0
+- [ ] Complex eigenvalues handled (use real parts)
+- [ ] Covariance de-noising preserves standard deviations
+- [ ] Shrinkage to constant correlation available
+- [ ] KDE fitting for visualization
+- [ ] Signal factor counting
+- [ ] Structured logging (LOG-001)
 
 ---
 
 ## Critical Rules (MUST NOT BREAK)
 
-**Reglas universales:** Ver `../../../BASE_RULES.md` (96 rules)
+**Reglas universales:** Ver `../../../BASE_RULES.md` (12 categories with 96 rules)
 
 ### Reglas ESPECÍFICAS de este archivo:
 
 | Rule | Source | Requirement | Current Status |
 |------|--------|-------------|----------------|
-| TRD-001 | BASE_RULES | Covariance matrix must be positive semi-definite | ✅ OK - _is_positive_semi_definite check |
-| TRD-007 | BASE_RULES | Document TRADING_DAYS = 252 for annualization | ⚠️ NOT APPLIED - Not relevant (no annualization) |
-| ARCH-004 | BASE_RULES | Functions < 20 lines (ideally) | ✅ OK - Most functions compact |
-| TYP-001 | BASE_RULES | 100% type coverage | ✅ OK - All functions typed |
-| LOG-004 | BASE_RULES | Log exceptions with stack traces | ❌ GAP - No logging in current implementation |
-| FMT-007 | BASE_RULES | No mutable defaults | ✅ OK - Uses None for optional mutable |
-| TST-005 | BASE_RULES | Coverage > 80% | ⚠️ NOT APPLIED - Tests not yet written |
-
-### López de Prado RMT-Specific Rules:
-
-| Rule | Requirement | Current Status |
-|------|-------------|----------------|
-| RMT-001 | T/n ratio >= 2 for RMT validity | ✅ OK - min_observation_ratio=2.0 enforced |
-| RMT-002 | Use Marchenko-Pastur law for eigenvalue threshold | ✅ OK - _calculate_max_random_eigenvalue |
-| RMT-003 | Replace noise eigenvalues with their average | ✅ OK - Lines 118-121 |
-| RMT-004 | Ensure diagonal = 1.0 after reconstruction | ✅ OK - Line 129 |
-| RMT-005 | Symmetrize matrix after reconstruction | ✅ OK - Line 132 |
-| RMT-006 | Signal eigenvalues > max_random_eigenvalue | ✅ OK - Line 114 |
+| TRD-001 | BASE_RULES | Covariance PSD validation | ✅ OK - Assumes PSD input, ensures PSD output |
+| ARCH-001 | BASE_RULES | Domain layer purity | ✅ OK - No infrastructure imports |
+| LOG-001 | BASE_RULES | Structured logging | ✅ OK - All steps logged with context |
+| TYP-001 | BASE_RULES | Type hints | ✅ OK - Full type coverage |
+| SOL-001 | BASE_RULES | Single Responsibility | ✅ OK - Each method has single purpose |
+| CC-007 | BASE_RULES | Small functions | ✅ OK - Most methods < 30 lines |
 
 ---
 
 ## Dependencies
-- **External:** numpy, scipy (optimize, spatial.distance)
-- **Internal:** None (standalone domain service)
+- **External:** numpy, scipy (optimize, spatial, stats), logging
+- **Internal:** app.domain.services.portfolio_optimization._validation
 
 ---
 
 ## Required Tests
-- **tests/domain/services/portfolio_optimization/test_denoise_correlation.py:**
-  - Test denoise_correlation with valid correlation matrix
-  - Test denoise_correlation_with_std converts to/from covariance
-  - Test Marchenko-Pastur eigenvalue threshold calculation
-  - Test signal vs noise eigenvalue separation
-  - Test that diagonal remains 1.0 after de-noising
-  - Test that matrix remains symmetric after de-noising
-  - Test with edge case: all eigenvalues are noise (q factor very small)
-  - Test with edge case: all eigenvalues are signal (perfect correlation)
-  - Test shrink_to_constant_correlation with various shrinkage values
-  - Test get_number_of_signal_factors returns correct count
-  - Test fit_kde returns valid PDF for visualization
-  - Test error handling: invalid correlation matrix (non-symmetric)
-  - Test error handling: insufficient observations (n < min_observation_ratio)
-  - Test noise_ratio property calculation
+- **test_denoise_correlation.py:**
+  - Correlation to distance conversion
+  - Max random eigenvalue calculation (Marchenko-Pastur)
+  - Min random eigenvalue calculation
+  - Signal vs noise eigenvalue separation
+  - Noise eigenvalue replacement with average
+  - De-noised matrix reconstruction
+  - Diagonal set to 1.0
+  - Symmetry enforcement
+  - PSD enforcement
+  - Complex eigenvalue handling
+  - Covariance de-noising with std preservation
+  - Zero variance asset detection
+  - Insufficient observations error
+  - KDE fitting
+  - Signal factor counting
+  - Constant correlation shrinkage
+  - DenoisedResult.noise_ratio property
+  - Configuration validation
 
 ---
 
 ## Notes
-- López de Prado's RMT method is critical for robust portfolio optimization
-- Marchenko-Pastur law requires T (observations) >= 2n (assets) for validity
-- The q factor (T/n) controls the eigenvalue threshold; smaller q = stricter threshold
-- De-noising is most beneficial when n_assets is large relative to n_observations
-- Consider adding logging for production use (noise_ratio, signal_count, etc.)
+RMT de-noising separates signal from noise by identifying eigenvalues that exceed theoretical random matrix bounds (Marchenko-Pastur law). Critical for robust portfolio optimization when N (assets) approaches T (observations).

@@ -9,6 +9,7 @@ Reference: Rule 03-lopez-de-prado-advances-financial-ml.md
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
@@ -18,6 +19,23 @@ from scipy.optimize import minimize
 from scipy.spatial.distance import squareform
 
 from app.domain.services.portfolio_optimization.hrp import HierarchicalRiskParity
+from app.domain.services.portfolio_optimization._validation import (
+    validate_covariance_matrix,
+    sanitize_covariance_matrix,
+    log_optimization_failure,
+)
+
+
+logger = logging.getLogger(__name__)
+
+
+# NCO default parameters and constants
+DEFAULT_MIN_CLUSTER_SIZE = 2  # Minimum assets per cluster
+DEFAULT_OPTIMIZATION_METHOD = "sharpe"  # Default optimization method
+HIGH_CORRELATION_THRESHOLD = 0.7  # Threshold for highly correlated assets
+MEDIUM_CORRELATION_THRESHOLD = 0.5  # Threshold for medium correlated assets
+DEFAULT_OPTIMIZATION_TOLERANCE = 1e-9  # Optimization tolerance
+DEFAULT_NEG_INF_RETURN = -np.inf  # Negative infinity return
 
 
 @dataclass
@@ -55,16 +73,25 @@ class NestedClusteredOptimizer:
 
     def __init__(
         self,
-        min_cluster_size: int = 2,
-        optimization_method: str = "sharpe",  # sharpe, min_variance
+        min_cluster_size: int = DEFAULT_MIN_CLUSTER_SIZE,
+        optimization_method: str = DEFAULT_OPTIMIZATION_METHOD,
     ):
         """
         Initialize NCO optimizer.
 
         Args:
             min_cluster_size: Minimum assets per cluster
-            optimization_method: Optimization method within clusters
+            optimization_method: Optimization method within clusters (sharpe, min_variance)
         """
+        if min_cluster_size < 2:
+            raise ValueError(f"min_cluster_size must be at least 2, got {min_cluster_size}")
+
+        if optimization_method not in ["sharpe", "min_variance"]:
+            raise ValueError(
+                f"optimization_method must be 'sharpe' or 'min_variance', "
+                f"got {optimization_method}"
+            )
+
         self._min_cluster_size = min_cluster_size
         self._optimization_method = optimization_method
 
@@ -86,9 +113,46 @@ class NestedClusteredOptimizer:
 
         Returns:
             NCOResult with optimal weights
+
+        Raises:
+            ValueError: If covariance matrix validation fails
         """
+        # Validate covariance matrix
+        is_valid, validated_cov, error_msg = validate_covariance_matrix(
+            cov_matrix,
+            check_psd=True,
+            check_symmetry=True,
+            enforce_psd=True,
+        )
+
+        if not is_valid:
+            raise ValueError(f"Invalid covariance matrix: {error_msg}")
+
+        # Sanitize: remove zero variance assets
+        try:
+            sanitized_cov, valid_indices = sanitize_covariance_matrix(
+                validated_cov,
+                enforce_psd=False,  # Already enforced
+            )
+        except ValueError as e:
+            log_optimization_failure(
+                "nco.sanitize_covariance",
+                e,
+                {"original_shape": cov_matrix.shape},
+            )
+            raise
+
+        cov_matrix = sanitized_cov
         n_assets = cov_matrix.shape[0]
-        symbols = symbols or [f"Asset_{i}" for i in range(n_assets)]
+
+        # Filter symbols and expected returns
+        if symbols is not None:
+            symbols = [symbols[i] for i in valid_indices]
+        else:
+            symbols = [f"Asset_{i}" for i in range(n_assets)]
+
+        if expected_returns is not None:
+            expected_returns = expected_returns[valid_indices]
 
         # Step 1: Hierarchical clustering
         corr_matrix = self._cov_to_corr(cov_matrix)
@@ -98,6 +162,8 @@ class NestedClusteredOptimizer:
         # Determine number of clusters
         if n_clusters is None:
             n_clusters = self._optimal_n_clusters(n_assets, cov_matrix)
+
+        n_clusters = max(2, min(n_clusters, n_assets // self._min_cluster_size))
 
         # Get cluster assignments
         assignments = fcluster(hierarchy, n_clusters, criterion="maxclust")
@@ -110,20 +176,29 @@ class NestedClusteredOptimizer:
             indices = np.where(assignments == cluster_id)[0]
 
             if len(indices) < self._min_cluster_size:
-                # Skip small clusters or use equal weight
+                # Small cluster: use equal weight
                 cluster_weights[cluster_id] = np.ones(len(indices)) / len(indices)
             else:
                 # Extract cluster covariance
                 cluster_cov = cov_matrix[np.ix_(indices, indices)]
                 cluster_ret = expected_returns[indices] if expected_returns is not None else None
 
-                # Optimize within cluster
-                if self._optimization_method == "sharpe" and cluster_ret is not None:
-                    w = self._maximize_sharpe(cluster_cov, cluster_ret)
-                else:
-                    w = self._minimize_variance(cluster_cov)
+                try:
+                    # Optimize within cluster
+                    if self._optimization_method == "sharpe" and cluster_ret is not None:
+                        w = self._maximize_sharpe(cluster_cov, cluster_ret)
+                    else:
+                        w = self._minimize_variance(cluster_cov)
 
-                cluster_weights[cluster_id] = w
+                    cluster_weights[cluster_id] = w
+                except Exception as e:
+                    log_optimization_failure(
+                        f"nco.cluster_{cluster_id}_optimization",
+                        e,
+                        {"cluster_size": len(indices), "method": self._optimization_method},
+                    )
+                    # Fallback to equal weights
+                    cluster_weights[cluster_id] = np.ones(len(indices)) / len(indices)
 
             # Calculate cluster variance for allocation
             cluster_vars[cluster_id] = self._calculate_cluster_variance(
@@ -173,6 +248,11 @@ class NestedClusteredOptimizer:
         Determine optimal number of clusters.
 
         Heuristic: cluster size between 2 and sqrt(n)
+
+        Uses correlation-based heuristic:
+        - High correlation (>0.7): fewer clusters (n/10)
+        - Medium correlation (>0.5): moderate clusters (n/5)
+        - Low correlation: more clusters (n/3)
         """
         max_clusters = n_assets // self._min_cluster_size
         min_clusters = 2
@@ -181,9 +261,9 @@ class NestedClusteredOptimizer:
         # More correlated assets = fewer clusters
         avg_corr = np.mean(self._cov_to_corr(cov_matrix)[np.triu_indices(n_assets, k=1)])
 
-        if avg_corr > 0.7:
+        if avg_corr > HIGH_CORRELATION_THRESHOLD:
             return max(min_clusters, int(n_assets / 10))
-        elif avg_corr > 0.5:
+        elif avg_corr > MEDIUM_CORRELATION_THRESHOLD:
             return max(min_clusters, int(n_assets / 5))
         else:
             return max(min_clusters, int(n_assets / 3))
@@ -214,7 +294,7 @@ class NestedClusteredOptimizer:
             portfolio_std = np.sqrt(portfolio_var)
 
             if portfolio_std == 0:
-                return -np.inf
+                return DEFAULT_NEG_INF_RETURN
 
             sharpe = (portfolio_return - risk_free_rate) / portfolio_std
             return -sharpe
@@ -301,7 +381,13 @@ class NestedClusteredOptimizer:
             Dictionary of cluster_id -> allocation weight
         """
         # Inverse variance allocation
-        inv_var = {k: 1.0 / v for k, v in cluster_vars.items()}
+        inv_var = {k: 1.0 / v for k, v in cluster_vars.items() if v > 0}
+
+        if not inv_var:
+            # All clusters have zero variance, use equal allocation
+            n_clusters = len(cluster_vars)
+            return {k: 1.0 / n_clusters for k in cluster_vars.keys()}
+
         total_inv_var = sum(inv_var.values())
 
         allocation = {k: v / total_inv_var for k, v in inv_var.items()}
@@ -329,7 +415,19 @@ def get_nco_with_multiple_n(
     Returns:
         Dictionary mapping n_clusters to NCOResult
     """
-    n_assets = cov_matrix.shape[0]
+    # Validate covariance matrix
+    is_valid, validated_cov, error_msg = validate_covariance_matrix(
+        cov_matrix,
+        check_psd=True,
+        check_symmetry=True,
+        enforce_psd=True,
+    )
+
+    if not is_valid:
+        logger.error(f"Invalid covariance matrix: {error_msg}")
+        return {}
+
+    n_assets = validated_cov.shape[0]
 
     if n_clusters_range is None:
         # Try range from 2 to n/2
@@ -341,14 +439,19 @@ def get_nco_with_multiple_n(
     for n in n_clusters_range:
         try:
             result = nco.optimize(
-                cov_matrix=cov_matrix,
+                cov_matrix=validated_cov,
                 expected_returns=expected_returns,
                 symbols=symbols,
                 n_clusters=n,
             )
             results[n] = result
-        except Exception:
-            # Skip failed optimizations
+        except Exception as e:
+            log_optimization_failure(
+                f"get_nco_with_multiple_n.n_clusters_{n}",
+                e,
+                {"n_clusters": n, "n_assets": n_assets},
+            )
+            # Continue with next n
             continue
 
     return results

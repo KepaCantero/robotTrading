@@ -11,6 +11,7 @@ Paper: López de Prado, M. (2016). "Building Diversified Portfolios
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
@@ -18,6 +19,23 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 from scipy.cluster.hierarchy import linkage, leaves_list, cophenet
 from scipy.spatial.distance import squareform
+
+from app.domain.services.portfolio_optimization._validation import (
+    validate_covariance_matrix,
+    sanitize_covariance_matrix,
+    log_optimization_failure,
+    MIN_VARIANCE_THRESHOLD,
+)
+
+
+logger = logging.getLogger(__name__)
+
+
+# HRP default parameters
+DEFAULT_LINKAGE_METHOD = "ward"  # Default linkage method
+DEFAULT_DISTANCE_METRIC = "euclidean"  # Default distance metric
+MIN_CLUSTER_SIZE = 2  # Minimum assets per cluster
+GOOD_COPHENETIC_CORR = 0.7  # Threshold for good dendrogram quality
 
 
 @dataclass
@@ -85,8 +103,8 @@ class HierarchicalRiskParity:
 
     def __init__(
         self,
-        linkage_method: str = "ward",  # ward, single, complete, average
-        distance_metric: str = "euclidean",  # euclidean, correlation
+        linkage_method: str = DEFAULT_LINKAGE_METHOD,
+        distance_metric: str = DEFAULT_DISTANCE_METRIC,
     ):
         """
         Initialize HRP optimizer.
@@ -95,6 +113,18 @@ class HierarchicalRiskParity:
             linkage_method: Linkage method for hierarchical clustering
             distance_metric: Distance metric for clustering
         """
+        valid_linkage = ["ward", "single", "complete", "average"]
+        if linkage_method not in valid_linkage:
+            raise ValueError(
+                f"linkage_method must be one of {valid_linkage}, got {linkage_method}"
+            )
+
+        valid_distance = ["euclidean", "correlation"]
+        if distance_metric not in valid_distance:
+            raise ValueError(
+                f"distance_metric must be one of {valid_distance}, got {distance_metric}"
+            )
+
         self._linkage_method = linkage_method
         self._distance_metric = distance_metric
 
@@ -112,19 +142,61 @@ class HierarchicalRiskParity:
 
         Returns:
             HRPResult with optimal weights and hierarchy
+
+        Raises:
+            ValueError: If covariance matrix validation fails
         """
+        # Validate covariance matrix
+        is_valid, validated_cov, error_msg = validate_covariance_matrix(
+            cov_matrix,
+            check_psd=True,
+            check_symmetry=True,
+            enforce_psd=True,
+        )
+
+        if not is_valid:
+            raise ValueError(f"Invalid covariance matrix: {error_msg}")
+
+        # Sanitize: remove zero variance assets
+        try:
+            sanitized_cov, valid_indices = sanitize_covariance_matrix(
+                validated_cov,
+                enforce_psd=False,  # Already enforced
+            )
+        except ValueError as e:
+            log_optimization_failure(
+                "hrp.sanitize_covariance",
+                e,
+                {"original_shape": cov_matrix.shape},
+            )
+            raise
+
+        cov_matrix = sanitized_cov
         n_assets = cov_matrix.shape[0]
-        symbols = symbols or [f"Asset_{i}" for i in range(n_assets)]
+
+        # Filter symbols
+        if symbols is not None:
+            symbols = [symbols[i] for i in valid_indices]
+        else:
+            symbols = [f"Asset_{i}" for i in range(n_assets)]
 
         # Step 1: Compute distance matrix from correlation
         corr_matrix = self._cov_to_corr(cov_matrix)
         distance = self._correlation_to_distance(corr_matrix)
 
         # Step 2: Hierarchical clustering
-        hierarchy = linkage(
-            squareform(distance),
-            method=self._linkage_method,
-        )
+        try:
+            hierarchy = linkage(
+                squareform(distance),
+                method=self._linkage_method,
+            )
+        except Exception as e:
+            log_optimization_failure(
+                "hrp.linkage",
+                e,
+                {"n_assets": n_assets, "linkage_method": self._linkage_method},
+            )
+            raise ValueError(f"Hierarchical clustering failed: {e}")
 
         # Step 3: Get dendrogram order
         order = leaves_list(hierarchy)
@@ -134,6 +206,13 @@ class HierarchicalRiskParity:
 
         # Step 5: Calculate quality metric
         cophenetic_corr = cophenet(hierarchy, squareform(distance))[0]
+
+        # Warn if cophenetic correlation is low
+        if cophenetic_corr < GOOD_COPHENETIC_CORR:
+            logger.warning(
+                f"Low cophenetic correlation: {cophenetic_corr:.3f} "
+                f"< {GOOD_COPHENETIC_CORR}. Dendrogram may not preserve distances well."
+            )
 
         # Step 6: Extract clusters (at 2-cluster level for simplicity)
         clusters = self._extract_clusters(hierarchy, symbols)
@@ -150,6 +229,11 @@ class HierarchicalRiskParity:
     def _cov_to_corr(self, cov_matrix: np.ndarray) -> np.ndarray:
         """Convert covariance to correlation."""
         std_devs = np.sqrt(np.diag(cov_matrix))
+
+        # Handle zero variance
+        if np.any(std_devs < MIN_VARIANCE_THRESHOLD):
+            logger.warning("Zero variance detected in covariance matrix")
+
         corr = cov_matrix / np.outer(std_devs, std_devs)
         np.fill_diagonal(corr, 1.0)
         return corr
@@ -262,11 +346,19 @@ class HierarchicalRiskParity:
         left_indices = list(range(mid))
         right_indices = list(range(mid, n_assets))
 
+        if not left_indices or not right_indices:
+            # Cannot bisect single asset
+            return weights
+
         var_left = self._get_cluster_variance(cov_matrix, left_indices, weights[left_indices])
         var_right = self._get_cluster_variance(cov_matrix, right_indices, weights[right_indices])
 
         # Allocate based on inverse variance
-        total_inv_var = 1.0 / var_left + 1.0 / var_right
+        if var_left + var_right < MIN_VARIANCE_THRESHOLD:
+            # Both have near-zero variance, use equal allocation
+            total_inv_var = 2.0
+        else:
+            total_inv_var = 1.0 / var_left + 1.0 / var_right
 
         weights[left_indices] *= (1.0 / var_left) / total_inv_var / np.sum(weights[left_indices])
         weights[right_indices] *= (1.0 / var_right) / total_inv_var / np.sum(weights[right_indices])
@@ -288,12 +380,16 @@ class HierarchicalRiskParity:
         sub_weights = weights[indices]
 
         # Normalize weights
-        sub_weights = sub_weights / sub_weights.sum()
+        weight_sum = sub_weights.sum()
+        if weight_sum < MIN_VARIANCE_THRESHOLD:
+            return 1.0
+
+        sub_weights = sub_weights / weight_sum
 
         # Calculate variance
         variance = float(sub_weights @ sub_cov @ sub_weights)
 
-        return variance
+        return max(variance, MIN_VARIANCE_THRESHOLD)
 
     def _extract_clusters(
         self,
@@ -336,8 +432,19 @@ class HierarchicalRiskParity:
         Returns:
             Tuple of (linkage_matrix, leaf_order)
         """
+        # Validate covariance matrix
+        is_valid, validated_cov, error_msg = validate_covariance_matrix(
+            cov_matrix,
+            check_psd=True,
+            check_symmetry=True,
+            enforce_psd=True,
+        )
+
+        if not is_valid:
+            raise ValueError(f"Invalid covariance matrix: {error_msg}")
+
         # Compute correlation distance
-        corr = self._cov_to_corr(cov_matrix)
+        corr = self._cov_to_corr(validated_cov)
         distance = self._correlation_to_distance(corr)
 
         # Hierarchical clustering
@@ -363,8 +470,19 @@ def inverse_variance_weights(cov_matrix: np.ndarray) -> np.ndarray:
 
     Returns:
         Inverse variance weights
+
+    Raises:
+        ValueError: If all assets have zero variance
     """
     variances = np.diag(cov_matrix)
+
+    # Check for zero variance
+    if np.all(variances < MIN_VARIANCE_THRESHOLD):
+        raise ValueError("All assets have zero variance")
+
+    # Replace near-zero variance with small positive value
+    variances = np.maximum(variances, MIN_VARIANCE_THRESHOLD)
+
     inv_var = 1.0 / variances
     weights = inv_var / inv_var.sum()
     return weights

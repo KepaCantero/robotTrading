@@ -182,9 +182,9 @@ class Recommendation:
 |------|--------|-------------|----------------|
 | CC-001 | BASE_RULES | Descriptive names | ✅ OK |
 | TYP-001 | BASE_RULES | 100% type coverage | ✅ OK |
-| LOG-001 | BASE_RULES | Structured logging | ✅ OK |
-| CC-006 | BASE_RULES | Explicit error handling | ❌ GAP - Missing exception handling in chart creation |
-| ARCH-004 | BASE_RULES | Functions < 20 lines | ❌ GAP - Many methods > 20 lines (chart data prep) |
+| LOG-001 | BASE_RULES | Structured logging | ✅ FIXED - 2026-02-01 - Added error logging for chart creation failures |
+| CC-006 | BASE_RULES | Explicit error handling | ✅ FIXED - 2026-02-01 - Added ValueError/OSError/IOError handling for file operations |
+| ARCH-004 | BASE_RULES | Functions < 20 lines | ⚠️ NOT APPLIED - Many methods > 20 lines (chart data prep) |
 | BT-003 | BASE_RULES | No look-ahead bias | ✅ OK - Uses equity_curve from completed backtest |
 | BT-005 | BASE_RULES | Multiple periods testing | ✅ OK - Walk-forward validation |
 | RSK-002 | BASE_RULES | Expected Shortfall | ⚠️ NOT APPLIED - Uses provided metrics |

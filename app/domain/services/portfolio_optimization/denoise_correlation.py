@@ -9,6 +9,7 @@ Reference: Rule 03-lopez-de-prado-advances-financial-ml.md
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import List, Optional, Tuple
@@ -17,28 +18,49 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.spatial.distance import squareform
 
+from app.domain.services.portfolio_optimization._validation import (
+    is_square_matrix,
+    is_symmetric,
+    log_optimization_failure,
+)
+
+
+logger = logging.getLogger(__name__)
+
+
+# RMT de-noising default parameters
+DEFAULT_METHOD = "spectral"  # Default de-noising method
+DEFAULT_MIN_OBSERVATION_RATIO = 2.0  # Minimum T/n ratio for RMT validity
+DEFAULT_SIGMA = 1.0  # Standard deviation for standardized returns
+DEFAULT_KDE_GRID_POINTS = 1000  # Number of points for KDE grid
+DEFAULT_SHRINKAGE_MAX = 0.5  # Maximum default shrinkage
+DEFAULT_SHRINKAGE_ASSET_FACTOR = 0.01  # Shrinkage per 100 assets
+DEFAULT_EPSILON = 1e-10  # Small epsilon for numerical stability
+
 
 @dataclass
 class DenoisedResult:
     """Result of correlation matrix de-noising."""
 
-    original_corr: np.ndarray  # Original correlation matrix
-    denoised_corr: np.ndarray  # De-noised correlation matrix
-    denoised_cov: np.ndarray  # De-noised covariance matrix
-    eigenvalues: np.ndarray  # Eigenvalues of original matrix
-    denoised_eigenvalues: np.ndarray  # Eigenvalues after de-noising
-    symbols: List[str]  # Asset symbols
+    original_corr: np.ndarray  # Original correlation matrix (N, N)
+    denoised_corr: np.ndarray  # De-noised correlation matrix (N, N)
+    denoised_cov: Optional[np.ndarray]  # De-noised covariance matrix (N, N)
+    eigenvalues: np.ndarray  # Eigenvalues of original matrix (N,)
+    denoised_eigenvalues: np.ndarray  # Eigenvalues after de-noising (N,)
+    symbols: List[str]  # Asset symbols/tickers
 
     @property
     def noise_ratio(self) -> float:
         """Get ratio of noise eigenvalues to signal eigenvalues."""
-        # Count eigenvalues above vs below max theoretical random eigenvalue
         n = len(self.eigenvalues)
+        if n == 0:
+            return 0.0
+
+        # Calculate q factor (T/n where T=observations, n=assets)
         q_factor = self._calculate_q_factor()
 
         # Max theoretical eigenvalue for random matrix
-        sigma = 1.0  # Assumes standardized returns
-        max_random = sigma * (1 + 1 / q_factor + 2 / q_factor * np.sqrt(1))
+        max_random = self._calculate_max_random_eigenvalue(q_factor, n)
 
         signal_count = np.sum(self.eigenvalues > max_random)
         noise_count = n - signal_count
@@ -48,7 +70,12 @@ class DenoisedResult:
     def _calculate_q_factor(self) -> float:
         """Calculate q factor (T/n where T=observations, n=assets)."""
         # Simplified - assumes default values
-        return 4.0  # Default T/n ratio
+        return DEFAULT_MIN_OBSERVATION_RATIO * 2.0  # Default T/n = 4.0
+
+    def _calculate_max_random_eigenvalue(self, q: float, n_assets: int) -> float:
+        """Calculate maximum theoretical random eigenvalue (Marchenko-Pastur)."""
+        sigma = DEFAULT_SIGMA
+        return sigma * (1 + 1 / np.sqrt(q)) ** 2
 
 
 class CorrelationDenoiser:
@@ -66,16 +93,28 @@ class CorrelationDenoiser:
 
     def __init__(
         self,
-        method: str = "spectral",  # spectral, shrinkage, constant_corr
-        min_observation_ratio: float = 2.0,  # T/n >= 2 for RMT
+        method: str = DEFAULT_METHOD,
+        min_observation_ratio: float = DEFAULT_MIN_OBSERVATION_RATIO,
     ):
         """
         Initialize de-noiser.
 
         Args:
-            method: De-noising method
+            method: De-noising method (spectral, shrinkage, constant_corr)
             min_observation_ratio: Minimum T/n ratio for RMT validity
         """
+        valid_methods = ["spectral", "shrinkage", "constant_corr"]
+        if method not in valid_methods:
+            raise ValueError(
+                f"method must be one of {valid_methods}, got {method}"
+            )
+
+        if min_observation_ratio < 2.0:
+            raise ValueError(
+                f"min_observation_ratio must be >= 2.0 for RMT validity, "
+                f"got {min_observation_ratio}"
+            )
+
         self._method = method
         self._min_obs_ratio = min_observation_ratio
 
@@ -95,12 +134,47 @@ class CorrelationDenoiser:
 
         Returns:
             DenoisedResult with de-noised matrices
+
+        Raises:
+            ValueError: If matrix is invalid or observations insufficient
         """
+        # Validate input matrix
+        if not is_square_matrix(corr_matrix):
+            raise ValueError(
+                f"Correlation matrix must be square, got shape {corr_matrix.shape}"
+            )
+
+        if not is_symmetric(corr_matrix):
+            logger.warning("Correlation matrix is not symmetric, symmetrizing...")
+            corr_matrix = (corr_matrix + corr_matrix.T) / 2
+
         n_assets = corr_matrix.shape[0]
         q = n_observations / n_assets
 
+        if q < self._min_obs_ratio:
+            raise ValueError(
+                f"Insufficient observations for RMT: T/n = {q:.2f} "
+                f"< {self._min_obs_ratio}. Need at least {self._min_obs_ratio * n_assets:.0f} "
+                f"observations for {n_assets} assets."
+            )
+
         # Eigenvalue decomposition
-        eigenvalues, eigenvectors = np.linalg.eigh(corr_matrix)
+        try:
+            eigenvalues, eigenvectors = np.linalg.eigh(corr_matrix)
+        except np.linalg.LinAlgError as e:
+            log_optimization_failure(
+                "denoise_correlation.eigh",
+                e,
+                {"n_assets": n_assets, "n_observations": n_observations},
+            )
+            raise ValueError(f"Eigenvalue decomposition failed: {e}")
+
+        # Check for complex eigenvalues (should not happen for symmetric matrix)
+        if np.any(np.abs(eigenvalues.imag) > 1e-10):
+            logger.warning("Complex eigenvalues detected, using real parts")
+            eigenvalues = eigenvalues.real
+
+        eigenvalues = eigenvalues.real
 
         # Sort eigenvalues and eigenvectors
         idx = np.argsort(eigenvalues)[::-1]
@@ -131,6 +205,9 @@ class CorrelationDenoiser:
         # Make sure it's symmetric
         denoised_corr = (denoised_corr + denoised_corr.T) / 2
 
+        # Ensure PSD (clip negative values on diagonal)
+        np.fill_diagonal(denoised_corr, np.maximum(np.diag(denoised_corr), 1.0))
+
         return DenoisedResult(
             original_corr=corr_matrix,
             denoised_corr=denoised_corr,
@@ -158,9 +235,25 @@ class CorrelationDenoiser:
 
         Returns:
             DenoisedResult with de-noised covariance
+
+        Raises:
+            ValueError: If matrix is invalid or observations insufficient
         """
+        # Validate covariance matrix
+        if not is_square_matrix(cov_matrix):
+            raise ValueError(
+                f"Covariance matrix must be square, got shape {cov_matrix.shape}"
+            )
+
         # Extract standard deviations
         std_devs = np.sqrt(np.diag(cov_matrix))
+
+        # Check for zero variance
+        if np.any(std_devs < DEFAULT_EPSILON):
+            raise ValueError(
+                "Covariance matrix has zero variance assets. "
+                "Remove zero variance assets before de-noising."
+            )
 
         # Convert to correlation
         corr_matrix = cov_matrix / np.outer(std_devs, std_devs)
@@ -193,13 +286,10 @@ class CorrelationDenoiser:
             Maximum eigenvalue for random component
         """
         # For correlation matrix, sigma = 1
-        sigma = 1.0
+        sigma = DEFAULT_SIGMA
 
         # Marchenko-Pastur upper bound
         lambda_max = sigma * (1 + 1 / np.sqrt(q)) ** 2
-
-        # Alternative formula (López de Prado)
-        # lambda_max = sigma * (1 + 1/q + 2/q * np.sqrt(1))
 
         return lambda_max
 
@@ -213,13 +303,12 @@ class CorrelationDenoiser:
         Returns:
             Minimum eigenvalue for random component
         """
-        sigma = 1.0
-        lambda_min = sigma * (1 + 1 / np.sqrt(q)) ** 2
+        sigma = DEFAULT_SIGMA
 
         # Marchenko-Pastur lower bound
         lambda_min = sigma * (1 - 1 / np.sqrt(q)) ** 2
 
-        return max(lambda_min, 0)
+        return max(lambda_min, DEFAULT_EPSILON)
 
     def fit_kde(
         self,
@@ -235,11 +324,24 @@ class CorrelationDenoiser:
 
         Returns:
             Tuple of (eigenvalue_grid, pdf_values)
+
+        Raises:
+            ImportError: If scipy is not available
         """
-        from scipy.stats import gaussian_kde
+        try:
+            from scipy.stats import gaussian_kde
+        except ImportError:
+            raise ImportError("scipy is required for KDE fitting")
+
+        if len(eigenvalues) < 2:
+            raise ValueError(f"Need at least 2 eigenvalues for KDE, got {len(eigenvalues)}")
 
         kde = gaussian_kde(eigenvalues)
-        grid = np.linspace(eigenvalues.min() * 0.9, eigenvalues.max() * 1.1, 1000)
+        grid = np.linspace(
+            eigenvalues.min() * 0.9,
+            eigenvalues.max() * 1.1,
+            DEFAULT_KDE_GRID_POINTS,
+        )
         pdf = kde(grid)
 
         return grid, pdf
@@ -259,6 +361,10 @@ class CorrelationDenoiser:
         Returns:
             Estimated number of signal factors
         """
+        # Validate matrix
+        if not is_square_matrix(corr_matrix):
+            raise ValueError(f"Correlation matrix must be square, got shape {corr_matrix.shape}")
+
         eigenvalues = np.linalg.eigvalsh(corr_matrix)
         q = n_observations / corr_matrix.shape[0]
 
@@ -295,9 +401,17 @@ class CorrelationDenoiser:
 
         if shrinkage is None:
             # Simple heuristic: more assets = more shrinkage
-            shrinkage = min(n / 100, 0.5)
+            shrinkage = min(n * DEFAULT_SHRINKAGE_ASSET_FACTOR, DEFAULT_SHRINKAGE_MAX)
+
+        # Validate shrinkage
+        if not (0.0 <= shrinkage <= 1.0):
+            raise ValueError(f"shrinkage must be in [0, 1], got {shrinkage}")
 
         # Shrink
         shrunk = (1 - shrinkage) * corr_matrix + shrinkage * constant_corr
+
+        # Ensure symmetry and diagonal
+        shrunk = (shrunk + shrunk.T) / 2
+        np.fill_diagonal(shrunk, 1.0)
 
         return shrunk

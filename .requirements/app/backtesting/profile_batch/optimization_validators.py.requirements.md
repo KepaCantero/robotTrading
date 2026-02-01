@@ -1,7 +1,7 @@
 # optimization_validators.py
 
 ## Purpose
-Provides validation components for the optimization pipeline including walk-forward validation, Monte Carlo simulation, and out-of-sample validation to ensure strategy robustness and prevent overfitting.
+Provides validation components for the optimization pipeline including walk-forward validation, Monte Carlo simulation, and out-of-sample validation.
 
 ---
 
@@ -11,77 +11,150 @@ Provides validation components for the optimization pipeline including walk-forw
 ```python
 class WalkForwardValidator:
     output_dir: Path                          # REQUIRED - Directory for temporary files
-    validation_config: Dict[str, Any]          # REQUIRED - Validation configuration parameters
+    validation_config: Dict[str, Any]         # REQUIRED - Validation configuration
     profile_config_loader: ProfileConfigLoader | None  # OPTIONAL - Profile config loader
 ```
 
 **Validation Rules:**
-- `output_dir` must exist or be creatable
-- `validation_config` must contain "walk_forward" key with n_windows and train_percentage
-- Minimum 365 days of data required for validation
+- `validation_config` must contain "walk_forward" section with n_windows and train_percentage
+- `profile_config_loader` can be None
 
 ### MonteCarloSimulator Class
 ```python
 class MonteCarloSimulator:
     output_dir: Path                          # REQUIRED - Directory for temporary files
-    validation_config: Dict[str, Any]          # REQUIRED - Validation configuration parameters
+    validation_config: Dict[str, Any]         # REQUIRED - Validation configuration
     profile_config_loader: ProfileConfigLoader | None  # OPTIONAL - Profile config loader
 ```
 
 **Validation Rules:**
-- `n_simulations` must be >= 100 (default: 1000)
-- `min_profitable_pct` must be between 0 and 1 (default: 0.95)
-- Returns empty dict if backtest fails
+- `validation_config` must contain "monte_carlo" section with n_simulations and min_profitable_pct
+- `profile_config_loader` can be None
 
 ### OutOfSampleValidator Class
 ```python
 class OutOfSampleValidator:
     output_dir: Path                          # REQUIRED - Directory for temporary files
-    validation_config: Dict[str, Any]          # REQUIRED - Validation configuration parameters
+    validation_config: Dict[str, Any]         # REQUIRED - Validation configuration
     profile_config_loader: ProfileConfigLoader | None  # OPTIONAL - Profile config loader
 ```
 
 **Validation Rules:**
-- `train_percentage` must be between 0.5 and 0.9 (default: 0.7)
-- `min_oos_sharpe` must be >= 0 (default: 0.5)
-- `max_performance_decay` must be between 0 and 1 (default: 0.3)
+- `validation_config` must contain "out_of_sample" section with train_percentage, min_oos_sharpe, max_performance_decay
+- `profile_config_loader` can be None
+
+### Type Aliases
+```python
+ConfigDict = Dict[str, Any]                              # Configuration dictionary
+MetricsDict = Dict[str, Union[float, int, str, bool, None]]  # Metrics dictionary
+ValidationResultDict = Dict[str, Any]                    # Contains 'passed' bool and validation metrics
+```
 
 ---
 
 ## Function Signatures (Contracts)
 
-### `WalkForwardValidator.validate(profile, config, params) -> Dict[str, Any]`
-**Pre:** profile must be valid InputProfile, config must have start/end dates, params must be valid strategy parameters
-**Post:** Returns dict with 'passed' bool and validation metrics including avg_sharpe, std_sharpe, n_windows
-**Raises:** ValueError, TypeError, KeyError, AttributeError for invalid inputs
-**Retry:** ❌ No
-**Side Effects:** Creates temporary YAML files, runs multiple backtests, writes logs
+### `WalkForwardValidator.__init__(output_dir, validation_config, profile_config_loader) -> None`
+**Pre:** output_dir must be valid path
+**Post:** WalkForwardValidator initialized
+**Raises:** No
+**Retry:** No
+**Side Effects:** None (stores references)
 
-### `MonteCarloSimulator.simulate(profile, config, params) -> Dict[str, Any]`
-**Pre:** profile must be valid, config valid, backtest must return trade data or returns_series
-**Post:** Returns dict with 'passed' bool and simulation metrics including profitable_pct, avg_return, std_return
-**Raises:** ValueError, TypeError, KeyError, AttributeError, IndexError for invalid inputs
-**Retry:** ❌ No
-**Side Effects:** Runs backtest, performs bootstrap sampling, writes logs
+### `WalkForwardValidator.validate(profile, config, params) -> ValidationResultDict`
+**Pre:** profile valid, config has start_date/end_date, total_days >= 365
+**Post:** Returns validation results with passed bool and metrics
+**Raises:** No (returns {"passed": False, "error": "..."} on failure)
+**Retry:** No
+**Side Effects:** Creates temp config files, runs backtests, cleans up in finally
 
-### `OutOfSampleValidator.validate(profile, config, params) -> Dict[str, Any]`
-**Pre:** profile valid, config has start/end dates with sufficient range, params valid
-**Post:** Returns dict with 'passed' bool, train_sharpe, oos_sharpe, sharpe_decay
-**Raises:** ValueError, TypeError, KeyError, AttributeError for invalid inputs
-**Retry:** ❌ No
-**Side Effects:** Runs train/test backtests, creates temp YAML files, writes logs
+### `WalkForwardValidator._run_backtest_with_params(profile, config, params) -> MetricsDict`
+**Pre:** profile valid, config valid
+**Post:** Returns backtest metrics
+**Raises:** No (returns empty metrics on failure)
+**Retry:** No
+**Side Effects:** Creates temp config file, runs backtest, cleans up in finally
+
+### `WalkForwardValidator._get_empty_metrics() -> MetricsDict`
+**Pre:** None
+**Post:** Returns empty metrics dict
+**Raises:** No
+**Retry:** No
+**Side Effects:** None
+
+### `MonteCarloSimulator.__init__(output_dir, validation_config, profile_config_loader) -> None`
+**Pre:** output_dir must be valid path
+**Post:** MonteCarloSimulator initialized
+**Raises:** No
+**Retry:** No
+**Side Effects:** None (stores references)
+
+### `MonteCarloSimulator.simulate(profile, config, params) -> ValidationResultDict`
+**Pre:** profile valid, config valid
+**Post:** Returns simulation results with passed bool and metrics
+**Raises:** No (returns {"passed": False, "error": "..."} on failure)
+**Retry:** No
+**Side Effects:** Gets backtest results, runs bootstrap simulation
+
+### `MonteCarloSimulator._run_backtest_with_params(profile, config, params) -> MetricsDict`
+**Pre:** profile valid, config valid
+**Post:** Returns backtest metrics
+**Raises:** No (returns empty metrics on failure)
+**Retry:** No
+**Side Effects:** Creates temp config file, runs backtest, cleans up in finally
+
+### `MonteCarloSimulator._get_empty_metrics() -> MetricsDict`
+**Pre:** None
+**Post:** Returns empty metrics dict
+**Raises:** No
+**Retry:** No
+**Side Effects:** None
+
+### `OutOfSampleValidator.__init__(output_dir, validation_config, profile_config_loader) -> None`
+**Pre:** output_dir must be valid path
+**Post:** OutOfSampleValidator initialized
+**Raises:** No
+**Retry:** No
+**Side Effects:** None (stores references)
+
+### `OutOfSampleValidator.validate(profile, config, params) -> ValidationResultDict`
+**Pre:** profile valid, config has start_date/end_date
+**Post:** Returns validation results with passed bool and metrics
+**Raises:** No (returns {"passed": False, "error": "..."} on failure)
+**Retry:** No
+**Side Effects:** Creates temp config files, runs train and OOS backtests, cleans up in finally
+
+### `OutOfSampleValidator._run_backtest_with_params(profile, config, params) -> MetricsDict`
+**Pre:** profile valid, config valid
+**Post:** Returns backtest metrics
+**Raises:** No (returns empty metrics on failure)
+**Retry:** No
+**Side Effects:** Creates temp config file, runs backtest, cleans up in finally
+
+### `OutOfSampleValidator._get_empty_metrics() -> MetricsDict`
+**Pre:** None
+**Post:** Returns empty metrics dict
+**Raises:** No
+**Retry:** No
+**Side Effects:** None
 
 ---
 
 ## Acceptance Criteria
-- [ ] Walk-forward validation requires minimum 365 days of data (auto-fails if insufficient)
-- [ ] Monte Carlo simulation returns profitable_pct >= 0.95 for passing strategies
-- [ ] Out-of-sample validation requires oos_sharpe >= 0.5 and sharpe_decay <= 0.3
-- [ ] All validators create temporary config files with unique UUIDs
-- [ ] All validators clean up temporary files after execution
-- [ ] All validators return consistent dict structure with 'passed' key
-- [ ] Failed validations return error message in 'error' key
-- [ ] All backtest errors are caught and logged without crashing
+- [ ] WalkForwardValidator.validate() returns {"passed": False, "error": "Insufficient data"} if total_days < 365
+- [ ] WalkForwardValidator.validate() calculates rolling windows correctly
+- [ ] WalkForwardValidator.validate() passes if avg_sharpe >= 0.5
+- [ ] WalkForwardValidator.validate() cleans up temp config files
+- [ ] MonteCarloSimulator.simulate() uses bootstrapping with replacement
+- [ ] MonteCarloSimulator.simulate() returns {"passed": False, "error": "..."} if no trade data
+- [ ] MonteCarloSimulator.simulate() passes if profitable_pct >= min_profitable_pct
+- [ ] MonteCarloSimulator.simulate() generates synthetic returns if returns_series missing
+- [ ] OutOfSampleValidator.validate() splits data at train_percentage
+- [ ] OutOfSampleValidator.validate() passes if oos_sharpe >= min_oos_sharpe AND sharpe_decay <= max_performance_decay AND oos_sharpe > 0
+- [ ] OutOfSampleValidator.validate() returns {"passed": False, "error": "..."} on exception
+- [ ] All validators clean up temp files in finally blocks
+- [ ] All validators return empty metrics on backtest failure
+- [ ] All validators use uuid for temp config file names
 
 ---
 
@@ -93,22 +166,23 @@ class OutOfSampleValidator:
 
 | Rule | Source | Requirement | Current Status |
 |------|--------|-------------|----------------|
-| SEC-001 | BASE_RULES.md | No hardcoded secrets | ✅ OK - No secrets in validators |
-| LOG-004 | BASE_RULES.md | Log exceptions with stack traces | ✅ OK - All exceptions logged with exc_info=True |
-| BT-001 | BASE_RULES.md | Walk-forward validation required | ✅ OK - Implemented in WalkForwardValidator |
-| BT-002 | BASE_RULES.md | Out-of-sample testing required | ✅ OK - Implemented in OutOfSampleValidator |
-| BT-005 | BASE_RULES.md | Test across different market regimes | ⚠️ PARTIAL - Walk-forward covers regimes but no explicit regime detection |
-| TYP-001 | BASE_RULES.md | 100% type coverage | ❌ GAP - Missing return type hints for private methods |
-| CC-001 | BASE_RULES.md | Descriptive names | ✅ OK - Clear naming throughout |
+| FMT-007 | BASE_RULES.md | No mutable defaults | ✅ OK - No mutable defaults |
+| LOG-004 | BASE_RULES.md | Log exceptions with stack traces | ✅ OK - exc_info=True used |
+| TYP-001 | BASE_RULES.md | 100% type coverage | ✅ OK - All functions have type hints |
+| CC-001 | BASE_RULES.md | Descriptive names | ✅ OK - Clear naming |
 | CC-006 | BASE_RULES.md | Explicit error handling | ✅ OK - Specific exceptions caught |
-| TRD-004 | BASE_RULES.md | Audit trail logging | ⚠️ PARTIAL - Logging present but not structured as audit trail |
+| ARCH-001 | BASE_RULES.md | Layered architecture | ✅ OK - Infrastructure layer |
+| SOL-001 | BASE_RULES.md | Single Responsibility | ✅ OK - Each validator has single responsibility |
+| BT-001 | BASE_RULES.md | Walk-forward validation | ✅ OK - WalkForwardValidator implements |
+| BT-002 | BASE_RULES.md | Out-of-sample testing | ✅ OK - OutOfSampleValidator implements |
+| LOG-003 | BASE_RULES.md | Appropriate logging levels | ✅ OK - Uses info, error appropriately |
 
 **NOTE:** This analysis should consider ALL 96 rules from BASE_RULES.md.
 
 ---
 
 ## Dependencies
-- **External:** numpy, pandas, yaml, uuid, logging, pathlib
+- **External:** numpy, pandas, yaml, logging, uuid, pathlib, typing
 - **Internal:**
   - `app.backtesting.comprehensive_backtest_runner.ComprehensiveBacktestRunner`
   - `app.core.config.profile_config_loader.ProfileConfigLoader`
@@ -118,24 +192,34 @@ class OutOfSampleValidator:
 
 ## Required Tests
 - **tests/backtesting/profile_batch/test_optimization_validators.py:**
-  - Test WalkForwardValidator.validate() with sufficient data (365+ days)
-  - Test WalkForwardValidator.validate() with insufficient data (<365 days) - should fail
-  - Test WalkForwardValidator.validate() creates and cleans up temp files
-  - Test MonteCarloSimulator.simulate() with valid backtest results
-  - Test MonteCarloSimulator.simulate() with no trade data - should fail gracefully
-  - Test MonteCarloSimulator.simulate() bootstrap sampling accuracy
-  - Test OutOfSampleValidator.validate() with valid train/test split
-  - Test OutOfSampleValidator.validate() with performance decay > threshold
-  - Test OutOfSampleValidator.validate() with low OOS Sharpe - should fail
-  - Test all validators handle exceptions and return error dict
-  - Test _run_backtest_with_params() temp file cleanup
-  - Test _get_empty_metrics() returns correct structure
+  - Test WalkForwardValidator.validate() with insufficient data (< 365 days)
+  - Test WalkForwardValidator.validate() calculates correct window sizes
+  - Test WalkForwardValidator.validate() passes when avg_sharpe >= 0.5
+  - Test WalkForwardValidator.validate() fails when avg_sharpe < 0.5
+  - Test WalkForwardValidator.validate() handles window failures gracefully
+  - Test WalkForwardValidator.validate() cleans up temp files
+  - Test MonteCarloSimulator.simulate() with valid returns_series
+  - Test MonteCarloSimulator.simulate() with missing returns_series (synthetic generation)
+  - Test MonteCarloSimulator.simulate() with no trade data
+  - Test MonteCarloSimulator.simulate() passes when profitable_pct >= threshold
+  - Test MonteCarloSimulator.simulate() uses bootstrapping with replacement
+  - Test MonteCarloSimulator.simulate() cleans up temp files
+  - Test OutOfSampleValidator.validate() splits data correctly
+  - Test OutOfSampleValidator.validate() passes all three conditions
+  - Test OutOfSampleValidator.validate() fails on low oos_sharpe
+  - Test OutOfSampleValidator.validate() fails on high sharpe_decay
+  - Test OutOfSampleValidator.validate() calculates sharpe_decay correctly
+  - Test OutOfSampleValidator.validate() cleans up temp files
+  - Test all _get_empty_metrics() return all required fields
 
 ---
 
 ## Notes
-- All three validators are independent and can be used in any combination
-- Each validator runs its own backtests with temporary config files
-- UUID hex is used for temp file naming to avoid collisions
-- Missing `uuid` import in WalkForwardValidator._run_backtest_with_params() (line 151)
-- All validators use the same _get_empty_metrics() structure for consistency
+- Walk-forward validation default: n_windows=5, train_percentage=0.6
+- Monte Carlo default: n_simulations=1000, min_profitable_pct=0.95
+- Out-of-sample default: train_percentage=0.7, min_oos_sharpe=0.5, max_performance_decay=0.3
+- All validators use uuid for temp config file names to avoid conflicts
+- Temp files are cleaned up in finally blocks regardless of success/failure
+- Monte Carlo uses bootstrapping with np.random.choice(replace=True)
+- Sharpe decay calculated as (train_sharpe - oos_sharpe) / train_sharpe when train_sharpe > 0
+- All validators return {"passed": False, "error": "..."} on failure for error handling

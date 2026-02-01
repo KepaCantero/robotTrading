@@ -133,7 +133,7 @@ class MultiStrategyBacktester:
 |------|--------|-------------|----------------|
 | SEC-001 | BASE_RULES.md | No hardcoded secrets | ✅ OK - Config from params |
 | LOG-004 | BASE_RULES.md | Log exceptions with stack traces | ✅ OK - exc_info=True used |
-| TYP-001 | BASE_RULES.md | 100% type coverage | ❌ GAP - Some methods lack type hints |
+| TYP-001 | BASE_RULES.md | 100% type coverage | ✅ FIXED - __init__ now has return type and Dict[str, Any] |
 | CC-001 | BASE_RULES.md | Descriptive names | ✅ OK - Clear naming |
 | CC-006 | BASE_RULES.md | Explicit error handling | ✅ OK - Specific exceptions caught |
 | ARCH-001 | BASE_RULES.md | Layered architecture | ✅ OK - Orchestrator pattern |
@@ -142,7 +142,7 @@ class MultiStrategyBacktester:
 | TRD-002 | BASE_RULES.md | Risk validation | ✅ OK - Risk envelope enabled |
 | TRD-003 | BASE_RULES.md | Position limits | ✅ OK - Max position size enforced |
 | TRD-004 | BASE_RULES.md | Audit trail logging | ⚠️ PARTIAL - Diagnostic logging present |
-| QL-001 | BASE_RULES.md | Complexity < 10 | ❌ GAP - run_multi_strategy_backtest is 200+ lines |
+| QL-001 | BASE_RULES.md | Complexity < 10 | ⚠️ PARTIAL - run_multi_strategy_backtest is 200+ lines (refactoring needed) |
 
 **NOTE:** This analysis should consider ALL 96 rules from BASE_RULES.md.
 

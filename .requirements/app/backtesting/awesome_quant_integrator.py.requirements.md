@@ -1,7 +1,7 @@
 # awesome_quant_integrator.py
 
 ## Purpose
-Integrates AWESOME-QUANT libraries (quantstats, empyrical, pyfolio) for advanced financial metrics. Provides unified interface with fallback implementation when libraries unavailable.
+Integration module for AWESOME-QUANT libraries (quantstats, empyrical, pyfolio) providing comprehensive financial metrics with fallback implementations.
 
 ---
 
@@ -10,187 +10,115 @@ Integrates AWESOME-QUANT libraries (quantstats, empyrical, pyfolio) for advanced
 ### AwesomeQuantIntegrator Class
 ```python
 class AwesomeQuantIntegrator:
-    risk_free_rate: float                    # REQUIRED - Risk-free rate for calculations (default: 2%)
+    risk_free_rate: float  # REQUIRED - Risk-free rate for Sharpe/Sortino calculations (default: 0.02)
 ```
 
 **Validation Rules:**
-- `risk_free_rate` must be positive (typically 0.0 to 0.1)
-- Used in Sharpe, Sortino, alpha, and omega calculations
-
-### Library Availability Flags
-```python
-QUANTSTATS_AVAILABLE: bool = False          # Set at import based on quantstats availability
-EMPYRICAL_AVAILABLE: bool = False           # Set at import based on empyrical availability
-PYFOLIO_AVAILABLE: bool = False             # Set at import based on pyfolio availability
-```
-
-**Validation Rules:**
-- Set via try/except at import time
-- Graceful degradation if libraries unavailable
+- `risk_free_rate` must be non-negative
+- Module-level flags track library availability: `QUANTSTATS_AVAILABLE`, `EMPYRICAL_AVAILABLE`, `PYFOLIO_AVAILABLE`
 
 ---
 
 ## Function Signatures (Contracts)
 
-### `AwesomeQuantIntegrator.calculate_quantstats_metrics(returns, benchmark_returns) -> Dict[str, float]`
-**Pre:** returns must be pandas Series of returns, benchmark_returns optional Series
-**Post:** Returns dict with 20+ quantstats metrics (return, sharpe, sortino, calmar, drawdown, etc.)
-**Raises:** Returns empty dict on errors
-**Retry:** ❌ No
-**Side Effects:** None (calculations only)
+### `calculate_quantstats_metrics(returns: pd.Series, benchmark_returns: Optional[pd.Series] = None) -> Dict[str, float]`
+**Pre:** returns is non-empty Series of returns; benchmark_returns same length if provided
+**Post:** Returns dict with 20+ metrics (sharpe, sortino, calmar, drawdowns, etc.) or empty dict on error
+**Raises:** ValueError, TypeError, KeyError, AttributeError (logged, returns {})
+**Retry:** No
+**Side Effects:** Logs metrics count; uses fallback if quantstats unavailable
 
-### `AwesomeQuantIntegrator.calculate_empyrical_metrics(returns, benchmark_returns) -> Dict[str, float]`
-**Pre:** returns must be pandas Series, benchmark_returns optional
-**Post:** Returns dict with empyrical metrics (total_return, sharpe, sortino, omega, etc.)
-**Raises:** Returns empty dict on errors
-**Retry:** ❌ No
-**Side Effects:** None (calculations only)
+### `calculate_empyrical_metrics(returns: pd.Series, benchmark_returns: Optional[pd.Series] = None) -> Dict[str, float]`
+**Pre:** returns is non-empty Series
+**Post:** Returns dict with 16+ empyrical metrics or empty dict on error
+**Raises:** ValueError, TypeError, KeyError, AttributeError, IndexError (logged, returns {})
+**Retry:** No
+**Side Effects:** Logs metrics count; uses fallback if empyrical unavailable
 
-### `AwesomeQuantIntegrator.calculate_pyfolio_metrics(returns, positions, transactions) -> Dict[str, Any]`
-**Pre:** returns must be pandas Series, positions/transactions optional DataFrames
-**Post:** Returns dict with pyfolio-style metrics
-**Raises:** Returns empty dict on errors
-**Retry:** ❌ No
-**Side Effects:** None (calculations only)
+### `calculate_pyfolio_metrics(returns: pd.Series, positions: Optional[pd.DataFrame] = None, transactions: Optional[pd.DataFrame] = None) -> Dict[str, Any]`
+**Pre:** returns is non-empty Series
+**Post:** Returns dict with basic metrics (no pyfolio dependency) or empty dict on error
+**Raises:** ValueError, TypeError, KeyError, AttributeError (logged, returns {})
+**Retry:** No
+**Side Effects:** Always calculates (no pyfolio import check)
 
-### `AwesomeQuantIntegrator.calculate_all_awesome_quant_metrics(returns, benchmark_returns, positions, transactions) -> Dict[str, Dict[str, float]]`
-**Pre:** returns must be valid pandas Series
-**Post:** Returns dict with 'quantstats', 'empyrical', 'pyfolio' keys
-**Raises:** None (graceful degradation)
-**Retry:** ❌ No
-**Side Effects:** None (calculations only)
+### `calculate_all_awesome_quant_metrics(...) -> Dict[str, Dict[str, float]]`
+**Pre:** returns is non-empty Series
+**Post:** Returns nested dict with keys "quantstats", "empyrical", "pyfolio"
+**Raises:** Exceptions from individual methods (logged)
+**Retry:** No
+**Side Effects:** Logs total metrics count
 
-### `AwesomeQuantIntegrator.get_unified_metrics(returns, benchmark_returns) -> Dict[str, float]`
-**Pre:** returns must be valid pandas Series
-**Post:** Returns unified dict with priority: quantstats > empyrical > pyfolio
-**Raises:** None (returns empty dict on errors)
-**Retry:** ❌ No
-**Side Effects:** None (calculations only)
+### `get_unified_metrics(returns: pd.Series, benchmark_returns: Optional[pd.Series] = None) -> Dict[str, float]`
+**Pre:** returns is non-empty Series
+**Post:** Returns unified metrics dict (priority: quantstats > empyrical > pyfolio)
+**Raises:** Exceptions from individual methods (logged)
+**Retry:** No
+**Side Effects:** Logs unified metrics count
 
-### `AwesomeQuantIntegrator.is_available(library) -> bool`
-**Pre:** library must be one of ['quantstats', 'empyrical', 'pyfolio']
-**Post:** Returns True if library is available
-**Raises:** None (returns False for invalid library names)
-**Retry:** ❌ No
-**Side Effects:** None (lookup only)
-
-### `AwesomeQuantIntegrator.get_available_libraries() -> list`
-**Pre:** None
-**Post:** Returns list of available library names
+### `is_available(library: str) -> bool`
+**Pre:** library is "quantstats", "empyrical", or "pyfolio"
+**Post:** Returns True if library imported successfully
 **Raises:** None
-**Retry:** ❌ No
-**Side Effects:** None (lookup only)
+**Retry:** No
+**Side Effects:** None
 
-### `AwesomeQuantIntegrator._calculate_fallback_metrics(returns, benchmark_returns) -> Dict[str, float]`
-**Pre:** returns must be pandas Series
-**Post:** Returns dict with basic financial metrics calculated using numpy/pandas
-**Raises:** Returns empty dict on errors
-**Retry:** ❌ No
-**Side Effects:** None (calculations only)
+### `_calculate_fallback_metrics(returns: pd.Series, benchmark_returns: Optional[pd.Series] = None) -> Dict[str, float]`
+**Pre:** returns is non-empty Series
+**Post:** Returns 25+ numpy/scipy calculated metrics or empty dict on error
+**Raises:** ValueError, TypeError, KeyError, AttributeError (logged, returns {})
+**Retry:** No
+**Side Effects:** Comprehensive fallback when AWESOME-QUANT libraries unavailable
 
 ---
 
 ## Acceptance Criteria
-- [ ] calculate_quantstats_metrics() returns 20+ metrics when quantstats available
-- [ ] calculate_quantstats_metrics() uses fallback when quantstats unavailable
-- [ ] calculate_empyrical_metrics() returns 15+ metrics when empyrical available
-- [ ] calculate_empyrical_metrics() uses fallback when empyrical unavailable
-- [ ] calculate_pyfolio_metrics() returns basic metrics (no pyfolio dependency required)
-- [ ] calculate_all_awesome_quant_metrics() returns all three metric dicts
-- [ ] get_unified_metrics() prioritizes quantstats over empyrical over pyfolio
-- [ ] get_unified_metrics() doesn't duplicate metric keys
-- [ ] is_available() correctly reports library availability
-- [ ] get_available_libraries() returns list of available libraries
-- [ ] _calculate_fallback_metrics() implements all key metrics with numpy/pandas
-- [ ] _calculate_fallback_metrics() calculates Sharpe ratio correctly
-- [ ] _calculate_fallback_metrics() calculates Sortino ratio correctly
-- [ ] _calculate_fallback_metrics() calculates Calmar ratio correctly
-- [ ] _calculate_fallback_metrics() calculates Omega ratio correctly
-- [ ] All metric functions handle empty returns gracefully
-- [ ] All metric functions handle division by zero gracefully
-- [ ] Benchmark comparisons only performed when benchmark_returns provided
-- [ ] All metric values are floats (not numpy types)
+- [ ] All library imports wrapped in try/except with availability flags
+- [ ] Fallback implementation provides 25+ metrics when libraries unavailable
+- [ ] All metric calculation functions return empty dict on error (not None)
+- [ ] Warning logged when no AWESOME-QUANT libraries available
+- [ ] Type hints present on all public methods
+- [ ] All functions handle empty returns Series gracefully
 
 ---
 
 ## Critical Rules (MUST NOT BREAK)
 
-**Reglas universales:** Ver `../../BASE_RULES.md` (96+ rules)
+**Reglas universales:** Ver `../../BASE_RULES.md` (12 categories with 50+ critical rules)
 
 ### Reglas ESPECÍFICAS de este archivo:
 
 | Rule | Source | Requirement | Current Status |
 |------|--------|-------------|----------------|
-| SEC-001 | BASE_RULES.md | No hardcoded secrets | ✅ OK - No secrets |
-| LOG-004 | BASE_RULES.md | Log exceptions with stack traces | ✅ OK - exc_info=True used |
-| TYP-001 | BASE_RULES.md | 100% type coverage | ✅ OK - Complete type hints |
-| CC-001 | BASE_RULES.md | Descriptive names | ✅ OK - Clear naming |
-| CC-006 | BASE_RULES.md | Explicit error handling | ✅ OK - Specific exceptions caught |
-| ARCH-001 | BASE_RULES.md | Layered architecture | ✅ OK - Infrastructure component |
-| PERF-001 | BASE_RULES.md | List comprehensions | ✅ OK - Used throughout |
-| QL-001 | BASE_RULES.md | Complexity < 10 | ✅ OK - Methods are focused |
-| TRD-001 | BASE_RULES.md | Trading-specific rules | ✅ OK - Financial metrics |
+| TYP-001 | 02-type-hints.md | 100% type coverage on all functions | ✅ OK - All methods have type hints |
+| LOG-004 | 09-logging-observability.md | Log exceptions with stack traces | ✅ OK - All error handlers use exc_info=True |
+| LOG-005 | 09-logging-observability.md | No sensitive data in logs | ✅ OK - Only metric values logged |
+| CC-001 | 05-architecture.md | Descriptive names | ⚠️ NOT APPLIED - Some generic names like `metrics` |
+| TST-005 | 06-testing.md | Coverage > 80% | ❌ GAP - No test file found |
 
-**NOTE:** This analysis should consider ALL 96 rules from BASE_RULES.md.
+**NOTE:** This analysis should consider ALL 81 rules from /rules directory.
 
 ---
 
 ## Dependencies
-- **External:**
-  - **Optional (with fallback):** quantstats, empyrical, pyfolio
-  - **Required:** pandas, numpy, logging, typing
-- **Internal:** None
+- **External:** quantstats (optional), empyrical (optional), pyfolio (optional), numpy, pandas
+- **Internal:** None (standalone metrics module)
 
 ---
 
 ## Required Tests
-- **tests/backtesting/test_awesome_quant_integrator.py:**
-  - Test __init__() sets risk_free_rate correctly
-  - Test __init__() logs available libraries
-  - Test __init__() logs warning when no libraries available
-  - Test calculate_quantstats_metrics() with quantstats available
-  - Test calculate_quantstats_metrics() uses fallback when quantstats unavailable
-  - Test calculate_quantstats_metrics() includes benchmark metrics when provided
-  - Test calculate_empyrical_metrics() with empyrical available
-  - Test calculate_empyrical_metrics() uses fallback when empyrical unavailable
-  - Test calculate_pyfolio_metrics() returns correct metrics
-  - Test calculate_all_awesome_quant_metrics() returns all three dicts
-  - Test calculate_all_awesome_quant_metrics() logs total metric count
-  - Test get_unified_metrics() prioritizes quantstats
-  - Test get_unified_metrics() doesn't duplicate keys
-  - Test get_unified_metrics() includes empyrical-only metrics
-  - Test get_unified_metrics() includes pyfolio-only metrics
-  - Test is_available() returns True for available libraries
-  - Test is_available() returns False for unavailable libraries
-  - Test get_available_libraries() returns correct list
-  - Test _calculate_fallback_metrics() calculates total_return correctly
-  - Test _calculate_fallback_metrics() calculates sharpe_ratio correctly
-  - Test _calculate_fallback_metrics() calculates sortino_ratio correctly
-  - Test _calculate_fallback_metrics() calculates calmar_ratio correctly
-  - Test _calculate_fallback_metrics() calculates omega_ratio correctly
-  - Test _calculate_fallback_metrics() calculates var_95 correctly
-  - Test _calculate_fallback_metrics() calculates cvar_95 correctly
-  - Test _calculate_fallback_metrics() handles division by zero
-  - Test _calculate_fallback_metrics() calculates alpha/beta with benchmark
-  - Test all functions handle empty returns gracefully
-  - Test all metric values are Python floats (not numpy types)
+- **tests/unit/backtesting/test_awesome_quant_integrator.py:**
+  - Test quantstats metrics calculation with/without library
+  - Test empyrical metrics calculation with/without library
+  - Test pyfolio metrics calculation
+  - Test fallback metrics when no libraries available
+  - Test unified metrics merging logic
+  - Test library availability checks
+  - Test error handling (empty returns, NaN values)
+  - Test benchmark_returns parameter handling
 
 ---
 
 ## Notes
-- AWESOME-QUANT libraries are optional (graceful degradation)
-- Fallback implementation provides all key metrics using numpy/pandas
-- Priority order for unified metrics: quantstats > empyrical > pyfolio
-- Lines 220-221: Comment says pyfolio is REQUIRED but it's optional with fallback
-- Fallback implementation is comprehensive (150+ lines)
-- Uses annualization factor of 252 trading days (line 392, 416)
-- Risk-free rate converted to daily: rf/252 (lines 231, 416)
-- Downside volatility calculated from negative returns only
-- Omega ratio threshold uses risk-free rate
-- Benchmark metrics (alpha, beta, information_ratio) only when benchmark provided
-- Covariance calculated with np.cov() for beta calculation
-- All metric functions return empty dict on errors (fail-safe)
-- Logging at INFO level for successful calculations
-- Logging at ERROR level with exc_info=True for failures
-- Type hints use Optional for benchmark_returns
-- Comment on line 328 says "all REQUIRED" but libraries are actually optional
+- **Critical Design:** Module provides graceful degradation - works even if all AWESOME-QUANT libraries missing
+- **Performance Note:** Fallback implementation uses pure numpy/pandas for basic metrics

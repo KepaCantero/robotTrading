@@ -41,6 +41,13 @@ class BacktestResultsProcessor:
             result: Backtest result to add
         """
         self.results.append(result)
+        logger.debug(
+            "Added backtest result to processor",
+            extra={
+                "total_results": len(self.results),
+                "result_return": str(result.total_return_pct),
+            }
+        )
 
     def add_results(self, results: List[BacktestResultValue]) -> None:
         """
@@ -50,6 +57,13 @@ class BacktestResultsProcessor:
             results: List of backtest results to add
         """
         self.results.extend(results)
+        logger.info(
+            "Added multiple backtest results to processor",
+            extra={
+                "results_added": len(results),
+                "total_results": len(self.results),
+            }
+        )
 
     def clear(self) -> None:
         """Clear all stored results."""
@@ -63,6 +77,7 @@ class BacktestResultsProcessor:
             Summary statistics dictionary or None if no results
         """
         if not self.results:
+            logger.debug("Summary statistics requested but no results available")
             return None
 
         # Extract metrics
@@ -106,6 +121,13 @@ class BacktestResultsProcessor:
                 'max': float(np.max([float(wr) for wr in win_rates])),
             }
 
+        logger.info(
+            "Calculated summary statistics",
+            extra={
+                "total_runs": len(self.results),
+                "mean_return": float(summary['returns']['mean']),
+            }
+        )
         return summary
 
     def get_best_result(self, metric: str = 'total_return_pct') -> Optional[BacktestResultValue]:

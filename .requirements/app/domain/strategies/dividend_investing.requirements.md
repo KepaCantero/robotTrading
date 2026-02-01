@@ -143,7 +143,7 @@ class DividendPortfolio:
 
 | Rule | Source | Requirement | Current Status |
 |------|--------|-------------|----------------|
-| Input validation | BASE_RULES.md (CC-006) | Validate dividend metrics range | ❌ GAP - No validation |
+| Input validation | BASE_RULES.md (CC-006) | Validate dividend metrics range | ✅ FIXED - Full validation with NaN/inf handling |
 | Yield screening | Dividend standard | 2-6% ideal yield range | ✅ OK - min/max_yield |
 | Payout ratio screening | Arnott & Asness (2003) | < 80% payout ratio | ✅ OK - max_payout_ratio |
 | Dividend aristocrat | S&P standard | 25+ years of increases | ✅ OK - Implemented |

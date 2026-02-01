@@ -52,6 +52,46 @@ except ImportError as e:
 
 
 # ============================================================================
+# VALIDATION FUNCTIONS - Pre-Numba checks
+# ============================================================================
+
+
+def validate_numeric_array(arr: np.ndarray, min_length: int = 1, name: str = "array") -> None:
+    """
+    Validate input array for numba metrics functions.
+
+    This function performs pre-computation validation that cannot be done
+    inside JIT-compiled numba functions.
+
+    Args:
+        arr: Array to validate
+        min_length: Minimum required length
+        name: Name of the array for error messages
+
+    Raises:
+        TypeError: If arr is not a numpy array
+        ValueError: If arr doesn't meet requirements (wrong shape, contains NaN/Inf, etc.)
+    """
+    if not isinstance(arr, np.ndarray):
+        raise TypeError(f"{name} must be a numpy array, got {type(arr)}")
+
+    if arr.ndim != 1:
+        raise ValueError(f"{name} must be 1-dimensional, got {arr.ndim} dimensions")
+
+    if len(arr) < min_length:
+        raise ValueError(f"{name} must have at least {min_length} elements, got {len(arr)}")
+
+    if not np.issubdtype(arr.dtype, np.number):
+        raise TypeError(f"{name} must be numeric type, got {arr.dtype}")
+
+    if np.any(np.isnan(arr)):
+        raise ValueError(f"{name} contains NaN values")
+
+    if np.any(np.isinf(arr)):
+        raise ValueError(f"{name} contains Inf values")
+
+
+# ============================================================================
 # HELPER FUNCTIONS - Numba Optimized
 # ============================================================================
 
@@ -104,16 +144,33 @@ def calculate_returns_numba(prices: np.ndarray) -> np.ndarray:
     SPEEDUP: 50-100x
 
     Args:
-        prices: Array of prices
+        prices: Array of prices (must be 1D array of floats with length >= 2)
 
     Returns:
-        Array of returns
+        Array of returns (length = len(prices) - 1)
+
+    Validation (pre-computation):
+        - prices must be a 1D numpy array
+        - prices must have at least 2 elements
+        - prices must be of float type (or compatible numeric type)
+        - prices must not contain NaN or Inf values
+
+    Note: This is a JIT-compiled function and cannot perform runtime validation.
+    Validation should be done by the caller before invoking this function.
     """
     n = len(prices)
+    if n < 2:
+        # Return empty array if insufficient data
+        return np.empty(0)
+
     returns = np.empty(n - 1)
 
     for i in range(n - 1):
-        returns[i] = (prices[i + 1] - prices[i]) / prices[i]
+        # Handle zero prices gracefully to avoid division by zero
+        if prices[i] == 0.0:
+            returns[i] = np.inf if prices[i + 1] > 0 else np.nan
+        else:
+            returns[i] = (prices[i + 1] - prices[i]) / prices[i]
 
     return returns
 
@@ -128,19 +185,28 @@ def calculate_cumulative_returns_numba(returns: np.ndarray) -> np.ndarray:
     SPEEDUP: 35-100x
 
     Args:
-        returns: Array of returns
+        returns: Array of returns (must be 1D array of floats)
 
     Returns:
-        Array of cumulative returns
+        Array of cumulative returns (length = len(returns))
+
+    Validation (pre-computation):
+        - returns must be a 1D numpy array
+        - returns must be of float or compatible numeric type
+        - returns must not contain NaN values (Inf values are handled)
+
+    Note: This is a JIT-compiled function. Use validate_numeric_array() before calling.
     """
     n = len(returns)
-    cumulative = np.empty(n + 1)
-    cumulative[0] = 1.0
+    cumulative = np.empty(n)
 
+    # Calculate cumulative returns: (1+r1)(1+r2)...(1+rn) - 1
+    cumulative_wealth = 1.0
     for i in range(n):
-        cumulative[i + 1] = cumulative[i] * (1.0 + returns[i])
+        cumulative_wealth = cumulative_wealth * (1.0 + returns[i])
+        cumulative[i] = cumulative_wealth - 1.0
 
-    return cumulative[1:]
+    return cumulative
 
 
 @jit(nopython=True, cache=False)
@@ -203,12 +269,19 @@ def calculate_sharpe_numba(
     SPEEDUP: 40-100x
 
     Args:
-        returns: Array of returns
-        risk_free_rate: Annual risk-free rate
+        returns: Array of returns (must be 1D array of floats)
+        risk_free_rate: Annual risk-free rate (decimal, e.g., 0.02 for 2%)
         periods_per_year: Number of periods per year (252 for daily, 12 for monthly)
 
     Returns:
-        Sharpe Ratio
+        Sharpe Ratio (annualized)
+
+    Validation (pre-computation):
+        - returns must be a 1D numpy array with at least 2 elements
+        - risk_free_rate must be a finite float
+        - periods_per_year must be positive (typically 252 for daily returns)
+
+    Note: This is a JIT-compiled function. Use validate_numeric_array() before calling.
     """
     if len(returns) == 0:
         return np.nan
@@ -678,9 +751,15 @@ def calculate_information_ratio_numba(returns: np.ndarray, benchmark_returns: np
     # Calculate excess returns
     excess_returns = returns - benchmark_returns
 
-    # Calculate tracking error
-    mean_excess = np.mean(excess_returns)
-    tracking_error = np.std(excess_returns, ddof=1)
+    # Calculate mean excess return
+    n = len(excess_returns)
+    mean_excess = 0.0
+    for i in range(n):
+        mean_excess += excess_returns[i]
+    mean_excess /= n
+
+    # Calculate tracking error using sample std helper
+    tracking_error = sample_std_numba(excess_returns)
 
     if tracking_error == 0:
         return 0.0

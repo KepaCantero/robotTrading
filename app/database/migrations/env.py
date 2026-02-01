@@ -6,11 +6,13 @@ It provides the database connection and metadata for migration generation.
 """
 
 import asyncio
+import logging
 import os
 import sys
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
@@ -22,6 +24,9 @@ from app.core.config import get_settings
 
 # Import Base and metadata from app.database
 from app.database import Base
+
+# Configure logger for migration operations
+logger = logging.getLogger(__name__)
 
 # Alembic Config object
 config = context.config
@@ -60,50 +65,139 @@ def run_migrations_offline() -> None:
 
     Calls to context.execute() here emit the given string to the script output.
     """
-    url = config.get_main_option("sqlalchemy.url")
-    context.configure(
-        url=url,
-        target_metadata=target_metadata,
-        literal_binds=True,
-        dialect_opts={"paramstyle": "named"},
-        # Support both SQLite and PostgreSQL
-        render_as_batch=True,  # Required for SQLite support
-    )
+    try:
+        logger.info("Starting offline migration")
+        url = config.get_main_option("sqlalchemy.url")
 
-    with context.begin_transaction():
-        context.run_migrations()
+        if not url:
+            logger.error("Database URL not configured for offline migration")
+            raise ValueError("sqlalchemy.url is not configured in Alembic config")
+
+        logger.info(f"Offline migration URL: {url[:20]}...")  # Log only partial URL for security
+        context.configure(
+            url=url,
+            target_metadata=target_metadata,
+            literal_binds=True,
+            dialect_opts={"paramstyle": "named"},
+            # Support both SQLite and PostgreSQL
+            render_as_batch=True,  # Required for SQLite support
+        )
+
+        with context.begin_transaction():
+            context.run_migrations()
+
+        logger.info("Offline migration completed successfully")
+
+    except Exception as e:
+        logger.error(
+            "Offline migration failed",
+            exc_info=True,
+            extra={"error_type": type(e).__name__, "error_message": str(e)}
+        )
+        raise
 
 
 def do_run_migrations(connection):
     """Run migrations with the given connection."""
-    context.configure(
-        connection=connection,
-        target_metadata=target_metadata,
-        # Support both SQLite and PostgreSQL
-        render_as_batch=True,  # Required for SQLite support
-    )
+    try:
+        logger.info("Configuring migration context")
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+            # Support both SQLite and PostgreSQL
+            render_as_batch=True,  # Required for SQLite support
+        )
 
-    with context.begin_transaction():
-        context.run_migrations()
+        logger.info("Running database migrations")
+        with context.begin_transaction():
+            context.run_migrations()
+
+        logger.info("Database migrations completed successfully")
+
+    except SQLAlchemyError as e:
+        logger.error(
+            "Database migration failed with SQLAlchemy error",
+            exc_info=True,
+            extra={
+                "error_type": type(e).__name__,
+                "error_message": str(e)
+            }
+        )
+        raise
+    except Exception as e:
+        logger.error(
+            "Unexpected error during migration execution",
+            exc_info=True,
+            extra={
+                "error_type": type(e).__name__,
+                "error_message": str(e)
+            }
+        )
+        raise
 
 
 async def run_async_migrations():
     """Run migrations in async mode."""
-    configuration = config.get_section(config.config_ini_section)
-    configuration["sqlalchemy.url"] = config.get_main_option("sqlalchemy.url")
+    connectable = None
+    try:
+        logger.info("Starting async migrations")
+        configuration = config.get_section(config.config_ini_section)
+        configuration["sqlalchemy.url"] = config.get_main_option("sqlalchemy.url")
 
-    # For async migrations, we need to convert the URL to sync format temporarily
-    # because Alembic's migration operations are synchronous
-    connectable = async_engine_from_config(
-        configuration,
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+        logger.info("Creating async database engine for migrations")
+        # For async migrations, we need to convert the URL to sync format temporarily
+        # because Alembic's migration operations are synchronous
+        connectable = async_engine_from_config(
+            configuration,
+            prefix="sqlalchemy.",
+            poolclass=pool.NullPool,
+        )
 
-    async with connectable.connect() as connection:
-        await connection.run_sync(do_run_migrations)
+        logger.info("Establishing async connection")
+        async with connectable.connect() as connection:
+            logger.info("Running migrations in async mode")
+            await connection.run_sync(do_run_migrations)
 
-    await connectable.dispose()
+        logger.info("Async migrations completed successfully")
+
+    except SQLAlchemyError as e:
+        logger.error(
+            "Async migration failed with database error",
+            exc_info=True,
+            extra={
+                "error_type": type(e).__name__,
+                "error_message": str(e)
+            }
+        )
+        raise
+    except asyncio.TimeoutError as e:
+        logger.error(
+            "Async migration timed out",
+            exc_info=True,
+            extra={"error_message": str(e)}
+        )
+        raise
+    except Exception as e:
+        logger.error(
+            "Unexpected error during async migration",
+            exc_info=True,
+            extra={
+                "error_type": type(e).__name__,
+                "error_message": str(e)
+            }
+        )
+        raise
+    finally:
+        if connectable is not None:
+            try:
+                logger.info("Disposing async engine")
+                await connectable.dispose()
+            except Exception as e:
+                logger.error(
+                    "Error disposing async engine",
+                    exc_info=True,
+                    extra={"error_message": str(e)}
+                )
 
 
 def run_migrations_online() -> None:
@@ -113,23 +207,54 @@ def run_migrations_online() -> None:
     In this scenario we need to create an Engine and associate a connection
     with the context.
     """
-    # Check if using async driver
-    db_url = config.get_main_option("sqlalchemy.url")
-    is_async = "asyncpg" in db_url or "aiosqlite" in db_url
+    try:
+        logger.info("Starting online migration")
+        # Check if using async driver
+        db_url = config.get_main_option("sqlalchemy.url")
+        is_async = "asyncpg" in db_url or "aiosqlite" in db_url
 
-    if is_async:
-        # Run async migrations
-        asyncio.run(run_async_migrations())
-    else:
-        # Run sync migrations
-        connectable = engine_from_config(
-            config.get_section(config.config_ini_section),
-            prefix="sqlalchemy.",
-            poolclass=pool.NullPool,
+        if is_async:
+            logger.info("Detected async driver, running async migrations")
+            # Run async migrations
+            asyncio.run(run_async_migrations())
+        else:
+            logger.info("Detected sync driver, running sync migrations")
+            # Run sync migrations
+            connectable = engine_from_config(
+                config.get_section(config.config_ini_section),
+                prefix="sqlalchemy.",
+                poolclass=pool.NullPool,
+            )
+
+            logger.info("Establishing sync database connection")
+            with connectable.connect() as connection:
+                do_run_migrations(connection)
+
+            logger.info("Disposing sync engine")
+            connectable.dispose()
+
+        logger.info("Online migration completed successfully")
+
+    except SQLAlchemyError as e:
+        logger.error(
+            "Online migration failed with database error",
+            exc_info=True,
+            extra={
+                "error_type": type(e).__name__,
+                "error_message": str(e)
+            }
         )
-
-        with connectable.connect() as connection:
-            do_run_migrations(connection)
+        raise
+    except Exception as e:
+        logger.error(
+            "Unexpected error during online migration",
+            exc_info=True,
+            extra={
+                "error_type": type(e).__name__,
+                "error_message": str(e)
+            }
+        )
+        raise
 
 
 if context.is_offline_mode():

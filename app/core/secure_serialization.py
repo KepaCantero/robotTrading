@@ -270,9 +270,12 @@ def sign_and_dump(data: Any, secret_key: Union[str, bytes] = None) -> str:
         # Base64 encode for safe transport (ASCII-only)
         return base64.b64encode(combined).decode('ascii')
 
-    except (ValueError, TypeError, KeyError, AttributeError) as e:
+    except (ValueError, TypeError) as e:
         logger.error(f"Failed to serialize data: {e}")
-        raise ValueError(f"Failed to serialize data: {e}")
+        raise ValueError(f"Failed to serialize data: {e}") from e
+    except (AttributeError, KeyError) as e:
+        logger.error(f"Data structure error during serialization: {e}")
+        raise ValueError(f"Invalid data structure for serialization: {e}") from e
 
 
 def verify_and_load(signed_data: str, secret_key: Union[str, bytes] = None) -> Any:
@@ -334,9 +337,15 @@ def verify_and_load(signed_data: str, secret_key: Union[str, bytes] = None) -> A
         else:
             raise ValueError(f"Unknown format type: {format_type}")
 
-    except (ValueError, KeyError) as e:
+    except ValueError as e:
+        # Re-raise ValueError with context (includes signature errors, parsing errors)
         logger.error(f"Failed to verify and load data: {e}")
         raise
-    except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
-        logger.error(f"Unexpected error verifying and loading data: {e}")
-        raise ValueError(f"Failed to verify and load data: {e}")
+    except (KeyError, AttributeError) as e:
+        # Specific errors for data structure issues
+        logger.error(f"Data structure error during deserialization: {e}")
+        raise ValueError(f"Invalid data structure during deserialization: {e}") from e
+    except (TypeError, IndexError) as e:
+        # Specific errors for format/binary issues
+        logger.error(f"Format error during deserialization: {e}")
+        raise ValueError(f"Invalid signed data format: {e}") from e

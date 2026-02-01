@@ -11,10 +11,29 @@ Paper: Markowitz, H. (1956). "The Optimization of a Quadratic Function
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
+
+from app.domain.services.portfolio_optimization._validation import (
+    TRADING_DAYS,
+    validate_covariance_matrix,
+    log_optimization_failure,
+)
+
+
+logger = logging.getLogger(__name__)
+
+
+# CLA default parameters
+DEFAULT_MIN_WEIGHT = 0.0  # Minimum weight per asset
+DEFAULT_MAX_WEIGHT = 1.0  # Maximum weight per asset
+DEFAULT_FRONTIER_POINTS = 10  # Number of frontier points
+DEFAULT_LAMBDA_VAL = 0.0  # Default Lagrange multiplier
+DEFAULT_WEIGHT_TOLERANCE = 1e-10  # Tolerance for considering weight as zero
+DEFAULT_TURNOVER_COEFFICIENT = 0.5  # Coefficient for turnover calculation
 
 
 @dataclass
@@ -26,7 +45,7 @@ class CornerPortfolio:
     variance: float  # Portfolio variance
     lambda_val: float  # Lagrange multiplier for return constraint
     in_assets: List[int]  # Assets with positive weights
-    out_assets: List[int]  # Assets with zero weights (at bounds)
+    out_assets: List[int]  # Assets at bounds (zero weight)
     symbols: List[str]  # Asset symbols
 
     @property
@@ -81,7 +100,7 @@ class EfficientFrontierCLA:
     def get_max_sharpe_portfolio(
         self,
         risk_free_rate: float,
-    ) -> CornerPortfolio:
+    ) -> Optional[CornerPortfolio]:
         """
         Get maximum Sharpe ratio portfolio.
 
@@ -120,8 +139,8 @@ class CriticalLineAlgorithm:
 
     def __init__(
         self,
-        min_weight: float = 0.0,
-        max_weight: float = 1.0,
+        min_weight: float = DEFAULT_MIN_WEIGHT,
+        max_weight: float = DEFAULT_MAX_WEIGHT,
         allow_short: bool = False,
     ):
         """
@@ -132,6 +151,13 @@ class CriticalLineAlgorithm:
             max_weight: Maximum weight per asset
             allow_short: Whether to allow short positions
         """
+        if min_weight < (-1.0 if allow_short else 0.0):
+            raise ValueError(f"min_weight out of range, got {min_weight}")
+        if max_weight > 1.0:
+            raise ValueError(f"max_weight cannot exceed 1.0, got {max_weight}")
+        if min_weight > max_weight:
+            raise ValueError(f"Min weight {min_weight} > max weight {max_weight}")
+
         self._min_weight = -1.0 if allow_short else 0.0
         self._max_weight = max_weight
 
@@ -151,19 +177,39 @@ class CriticalLineAlgorithm:
 
         Returns:
             EfficientFrontierCLA with corner portfolios
+
+        Raises:
+            ValueError: If inputs are invalid
         """
+        # Validate covariance matrix
+        is_valid, validated_cov, error_msg = validate_covariance_matrix(
+            cov_matrix,
+            check_psd=True,
+            check_symmetry=True,
+            enforce_psd=True,
+        )
+
+        if not is_valid:
+            raise ValueError(f"Invalid covariance matrix: {error_msg}")
+
+        cov_matrix = validated_cov
         n_assets = len(expected_returns)
         symbols = symbols or [f"Asset_{i}" for i in range(n_assets)]
-
-        # Simplified CLA implementation
-        # In production, use full CLA with turning points
 
         # Generate corner portfolios at different return levels
         corner_portfolios = []
 
         # Min variance portfolio
-        min_var_result = self._solve_min_variance(cov_matrix, symbols)
-        corner_portfolios.append(min_var_result)
+        try:
+            min_var_result = self._solve_min_variance(cov_matrix, symbols)
+            corner_portfolios.append(min_var_result)
+        except Exception as e:
+            log_optimization_failure(
+                "cla.min_variance",
+                e,
+                {"n_assets": n_assets},
+            )
+            raise ValueError(f"Failed to compute minimum variance portfolio: {e}")
 
         # Max return portfolio (single asset with highest return)
         max_return_idx = np.argmax(expected_returns)
@@ -173,7 +219,7 @@ class CriticalLineAlgorithm:
             weights=max_return_weights,
             expected_return=float(expected_returns[max_return_idx]),
             variance=float(cov_matrix[max_return_idx, max_return_idx]),
-            lambda_val=0.0,
+            lambda_val=DEFAULT_LAMBDA_VAL,
             in_assets=[max_return_idx],
             out_assets=list(set(range(n_assets)) - {max_return_idx}),
             symbols=symbols,
@@ -181,19 +227,22 @@ class CriticalLineAlgorithm:
         corner_portfolios.append(max_return_cp)
 
         # Intermediate portfolios
-        n_points = 10
         for target_return in np.linspace(
             min_var_result.expected_return,
             float(expected_returns[max_return_idx]),
-            n_points,
+            DEFAULT_FRONTIER_POINTS,
         ):
-            result = self._solve_target_return(
-                expected_returns,
-                cov_matrix,
-                target_return,
-                symbols,
-            )
-            corner_portfolios.append(result)
+            try:
+                result = self._solve_target_return(
+                    expected_returns,
+                    cov_matrix,
+                    target_return,
+                    symbols,
+                )
+                corner_portfolios.append(result)
+            except Exception as e:
+                logger.debug(f"Skipping target return {target_return}: {e}")
+                pass
 
         return EfficientFrontierCLA(
             corner_portfolios=corner_portfolios,
@@ -209,10 +258,18 @@ class CriticalLineAlgorithm:
         """Solve minimum variance portfolio."""
         n_assets = len(symbols)
 
-        # Analytical solution for unconstrained case
-        inv_cov = np.linalg.inv(cov_matrix)
-        ones = np.ones(n_assets)
-        weights = inv_cov @ ones / (ones @ inv_cov @ ones)
+        try:
+            # Analytical solution for unconstrained case
+            inv_cov = np.linalg.inv(cov_matrix)
+            ones = np.ones(n_assets)
+            weights = inv_cov @ ones / (ones @ inv_cov @ ones)
+        except np.linalg.LinAlgError as e:
+            log_optimization_failure(
+                "cla.min_variance.matrix_inv",
+                e,
+                {"n_assets": n_assets},
+            )
+            raise ValueError(f"Cannot invert covariance matrix: {e}")
 
         # Apply bounds if needed
         weights = np.clip(weights, self._min_weight, self._max_weight)
@@ -225,9 +282,9 @@ class CriticalLineAlgorithm:
             weights=weights,
             expected_return=mean_return,
             variance=variance,
-            lambda_val=0.0,
-            in_assets=list(np.where(weights > 1e-10)[0]),
-            out_assets=list(np.where(weights <= 1e-10)[0]),
+            lambda_val=DEFAULT_LAMBDA_VAL,
+            in_assets=list(np.where(weights > DEFAULT_WEIGHT_TOLERANCE)[0]),
+            out_assets=list(np.where(weights <= DEFAULT_WEIGHT_TOLERANCE)[0]),
             symbols=symbols,
         )
 
@@ -262,6 +319,13 @@ class CriticalLineAlgorithm:
             constraints=constraints,
         )
 
+        if not result.success:
+            log_optimization_failure(
+                "cla.target_return",
+                Exception(result.message),
+                {"target_return": target_return, "status": result.status},
+            )
+
         weights = result.x if result.success else x0
         variance = float(weights @ cov_matrix @ weights)
 
@@ -269,9 +333,9 @@ class CriticalLineAlgorithm:
             weights=weights,
             expected_return=target_return,
             variance=variance,
-            lambda_val=0.0,
-            in_assets=list(np.where(weights > 1e-10)[0]),
-            out_assets=list(np.where(weights <= 1e-10)[0]),
+            lambda_val=DEFAULT_LAMBDA_VAL,
+            in_assets=list(np.where(weights > DEFAULT_WEIGHT_TOLERANCE)[0]),
+            out_assets=list(np.where(weights <= DEFAULT_WEIGHT_TOLERANCE)[0]),
             symbols=symbols,
         )
 
@@ -292,4 +356,4 @@ def compute_turnover(
     Returns:
         Turnover (0-1)
     """
-    return float(0.5 * np.sum(np.abs(new_weights - old_weights)))
+    return float(DEFAULT_TURNOVER_COEFFICIENT * np.sum(np.abs(new_weights - old_weights)))

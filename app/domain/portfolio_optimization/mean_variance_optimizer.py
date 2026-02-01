@@ -433,7 +433,8 @@ class MeanVarianceOptimizer:
         except ImportError as e:
             logger.error(
                 f"scikit-learn not available for shrinkage: {e}. "
-                "Falling back to sample covariance."
+                "Falling back to sample covariance.",
+                exc_info=True,
             )
             return np.cov(returns, rowvar=False) * 252
 
@@ -1171,7 +1172,14 @@ class MeanVarianceOptimizer:
             return result
 
         except Exception as e:
-            logger.error(f"Optimization pipeline failed: {e}")
+            logger.error(
+                f"Optimization pipeline failed: {e}",
+                exc_info=True,
+                extra={
+                    "returns_shape": returns.shape if hasattr(returns, "shape") else None,
+                    "method": method.value if isinstance(method, Enum) else str(method),
+                },
+            )
             # Return equal weights as last resort
             n_assets = returns.shape[1]
             equal_weights = np.ones(n_assets) / n_assets

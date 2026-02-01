@@ -30,6 +30,12 @@ class PortfolioOptimization:
 
 ## Function Signatures (Contracts)
 
+### `__post_init__() -> None` (Dataclass validation)
+**Pre:** weights is provided at construction
+**Post:** Weights are non-empty and sum to 1.0 (±0.01 tolerance)
+**Raises:** ValueError if validation fails
+**Side Effects:** None (validation only)
+
 ### `get_weight_summary() -> Dict[str, str]`
 **Pre:** None
 **Post:** Returns dict of symbol -> formatted weight (4 decimal places)
@@ -75,15 +81,15 @@ class PortfolioOptimization:
 ---
 
 ## Acceptance Criteria
-- [ ] **AC-001:** weights dict must be non-empty
-- [ ] **AC-002:** weights must sum to approximately 1.0 (portfolio constraint)
-- [ ] **AC-003:** expected_return is annualized return
-- [ ] **AC-004:** expected_risk is annualized standard deviation
-- [ ] **AC-005:** sharpe_ratio = (return - rf) / risk
-- [ ] **AC-006:** Efficient portfolio has sharpe_ratio >= 1.0
-- [ ] **AC-007:** Diversified portfolio has max position <= 30%
-- [ ] **AC-008:** var_95 is 95% Value at Risk
-- [ ] **AC-009:** All public methods have complete type hints
+- [x] **AC-001:** weights dict must be non-empty (validated in __post_init__)
+- [x] **AC-002:** weights must sum to approximately 1.0 (±0.01 tolerance) (validated in __post_init__)
+- [x] **AC-003:** expected_return is annualized return (documented in docstring)
+- [x] **AC-004:** expected_risk is annualized standard deviation (documented in docstring)
+- [x] **AC-005:** sharpe_ratio = (return - rf) / risk (documented in docstring)
+- [x] **AC-006:** Efficient portfolio has sharpe_ratio >= 1.0 (is_efficient method)
+- [x] **AC-007:** Diversified portfolio has max position <= 30% (is_diversified method)
+- [x] **AC-008:** var_95 is 95% Value at Risk (Hull risk metric)
+- [x] **AC-009:** All public methods have complete type hints
 
 ---
 
@@ -95,7 +101,7 @@ class PortfolioOptimization:
 
 | Rule | Source | Requirement | Current Status |
 |------|--------|-------------|----------------|
-| Weights sum to 1 | Portfolio constraint | Σweights = 1.0 | ❌ GAP - No validation |
+| Weights sum to 1 | Portfolio constraint | Σweights = 1.0 (±0.01) | ✅ FIXED - 2026-02-01 - Added __post_init__ validation with tolerance |
 | Expected return | Markowitz (1952) | E[R] = Σ(wᵢ × Rᵢ) | ✅ OK - Provided |
 | Expected risk | Markowitz (1952) | σ = √(w'Σw) | ✅ OK - Provided |
 | Sharpe ratio | Sharpe (1966) | (E[R] - rf) / σ | ✅ OK - Provided |

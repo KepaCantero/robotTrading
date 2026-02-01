@@ -132,6 +132,7 @@ class CentralizedLogger:
         duration: Optional[float] = None,
         operation: Optional[str] = None,
         error_message: Optional[str] = None,
+        exc_info: bool = False,
     ) -> None:
         """Log a message with structured data."""
         log_entry = self._create_log_entry(
@@ -143,15 +144,15 @@ class CentralizedLogger:
         log_message = json.dumps(log_entry.to_dict())
 
         if level == LogLevel.DEBUG:
-            logger.debug(log_message)
+            logger.debug(log_message, exc_info=exc_info)
         elif level == LogLevel.INFO:
-            logger.info(log_message)
+            logger.info(log_message, exc_info=exc_info)
         elif level == LogLevel.WARNING:
-            logger.warning(log_message)
+            logger.warning(log_message, exc_info=exc_info)
         elif level == LogLevel.ERROR:
-            logger.error(log_message)
+            logger.error(log_message, exc_info=exc_info)
         elif level == LogLevel.CRITICAL:
-            logger.critical(log_message)
+            logger.critical(log_message, exc_info=exc_info)
 
     def debug(
         self,
@@ -186,9 +187,10 @@ class CentralizedLogger:
         message: str,
         metadata: Optional[Dict[str, Any]] = None,
         error_message: Optional[str] = None,
+        exc_info: bool = False,
     ) -> None:
         """Log error message."""
-        self.log(LogLevel.ERROR, service, message, metadata, error_message=error_message)
+        self.log(LogLevel.ERROR, service, message, metadata, error_message=error_message, exc_info=exc_info)
 
     def critical(
         self,
@@ -196,9 +198,10 @@ class CentralizedLogger:
         message: str,
         metadata: Optional[Dict[str, Any]] = None,
         error_message: Optional[str] = None,
+        exc_info: bool = False,
     ) -> None:
         """Log critical message."""
-        self.log(LogLevel.CRITICAL, service, message, metadata, error_message=error_message)
+        self.log(LogLevel.CRITICAL, service, message, metadata, error_message=error_message, exc_info=exc_info)
 
     def log_performance(
         self,

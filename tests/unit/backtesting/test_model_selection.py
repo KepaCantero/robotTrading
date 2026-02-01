@@ -99,8 +99,11 @@ class TestAICCalculator:
         n_params = X.shape[1] + 1  # features + intercept
         aic = AICCalculator.calculate(y_test, y_pred, n_params)
 
+        # AIC is a comparative metric; can be negative when model fit is very good
+        # (when RSS/n < 1, ln(RSS/n) is negative)
         assert isinstance(aic, float)
-        assert aic > 0
+        # AIC should be a finite number (not inf or nan)
+        assert np.isfinite(aic)
 
     def test_aic_with_different_n_params(self, sample_regression_data):
         """Test AIC with different numbers of parameters."""
@@ -145,8 +148,11 @@ class TestBICCalculator:
         n_params = X.shape[1] + 1
         bic = BICCalculator.calculate(y_test, y_pred, n_params)
 
+        # BIC is a comparative metric; can be negative when model fit is very good
+        # (when RSS/n < 1, ln(RSS/n) is negative)
         assert isinstance(bic, float)
-        assert bic > 0
+        # BIC should be a finite number (not inf or nan)
+        assert np.isfinite(bic)
 
     def test_bic_stronger_penalty_than_aic(self, sample_regression_data):
         """Test that BIC has stronger complexity penalty than AIC."""
@@ -310,8 +316,9 @@ class TestModelSelector:
         assert result.n_params > 0
         assert result.n_samples == len(y_test)
         assert -np.inf < result.r2 <= 1
-        assert result.aic > 0
-        assert result.bic > 0
+        # AIC and BIC can be negative for good models; check finiteness instead
+        assert np.isfinite(result.aic)
+        assert np.isfinite(result.bic)
 
     def test_compare_models(self, fitted_models):
         """Test comparing multiple models."""

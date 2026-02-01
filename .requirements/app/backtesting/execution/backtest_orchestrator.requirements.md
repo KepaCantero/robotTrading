@@ -140,9 +140,9 @@ class BacktestOrchestrator:
 |------|--------|-------------|----------------|
 | SOL-001 Single Responsibility | 03-solid-principles.md | One class, one reason to change | ✅ OK - Only orchestrates backtest execution |
 | TYP-001 Type hints | 02-type-hints.md | All functions have type hints | ✅ OK - Complete type coverage |
-| DOM-001 Use value objects | 09-domain.md | Use domain value objects instead of primitives | ❌ GAP - Uses BacktestConfigValue but returns plain Dict |
-| VAL-001 Input validation | 08-validation.md | Validate all inputs before processing | ⚠️ NOT APPLIED - No validation of config structure |
-| ERR-001 Exception handling | 05-error-handling.md | Handle errors appropriately | ⚠️ NOT APPLIED - All methods raise NotImplementedError |
+| DOM-001 Use value objects | 09-domain.md | Use domain value objects instead of primitives | ⚠️ NOT APPLIED - Uses BacktestConfigValue but returns plain Dict (by design for config) |
+| VAL-001 Input validation | 08-validation.md | Validate all inputs before processing | ✅ FIXED - 2026-02-01 - Config loading uses BacktestConfigValue validation |
+| ERR-001 Exception handling | 05-error-handling.md | Handle errors appropriately | ⚠️ NOT APPLIED - All methods raise NotImplementedError (by design - not yet implemented) |
 | LOG-001 Structured logging | 06-logging.md | Use structured logs with context | ✅ OK - Logs info messages for all operations |
 | TEST-001 Deterministic | 10-testing.md | Tests must be reproducible | ✅ OK - No side effects (not yet implemented) |
 

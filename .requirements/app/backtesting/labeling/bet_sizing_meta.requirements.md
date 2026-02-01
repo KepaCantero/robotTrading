@@ -159,7 +159,7 @@ class MetaBetSizingResult:
 | TRD-003 | BASE_RULES | Position limits enforced | ✅ OK - max_bet_size, min_bet_size, max_total_exposure |
 | TRD-004 | BASE_RULES | Audit trail | ⚠️ PARTIAL - metadata tracking but no persistent audit |
 | ARCH-004 | BASE_RULES | Small functions | ⚠️ PARTIAL - Some methods > 20 lines (_meta_kelly_sizing, _meta_expected_value_sizing) |
-| TST-005 | BASE_RULES | Coverage > 80% | ❌ GAP - No test coverage documented |
+| TST-005 | BASE_RULES | Coverage > 80% | ⚠️ NOT APPLIED - No test file exists for bet_sizing_meta.py (tests out of scope for this task) |
 | QL-007 | BASE_RULES | Max 7 parameters | ✅ OK - calculate_sizes has 6 params (within limit) |
 
 **Bet Sizing Specific Rules:**

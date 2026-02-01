@@ -14,6 +14,21 @@ This file contains only JIT-compiled functions with standard numpy array inputs.
 
 ## Function Signatures (Contracts)
 
+### `validate_numeric_array(arr: np.ndarray, min_length: int = 1, name: str = "array") -> None`
+**Pre:** None
+**Post:** Validates array or raises exception
+**Raises:** TypeError if not numpy array, ValueError for shape/content issues
+**Retry:** No
+**Side Effects:** None
+
+**Validation Checks:**
+- isinstance(arr, np.ndarray)
+- arr.ndim == 1 (1-dimensional)
+- len(arr) >= min_length
+- np.issubdtype(arr.dtype, np.number)
+- No NaN values
+- No Inf values
+
 ### `sample_std_numba(values: np.ndarray) -> float`
 **Pre:** values is 1D numpy array with length >= 2
 **Post:** Returns sample standard deviation (ddof=1) of values
@@ -153,7 +168,7 @@ This file contains only JIT-compiled functions with standard numpy array inputs.
 | ERR-001 Exception handling | 05-error-handling.md | Catch specific exceptions | ⚠️ NOT APPLIED - Uses broad Exception on import (line 41) |
 | LOG-001 Structured logging | 06-logging.md | Use structured logs with context | ✅ OK - Logs module load info |
 | TYP-001 Type hints | 02-type-hints.md | All functions have type hints | ✅ OK - Complete type coverage |
-| VAL-001 Input validation | 08-validation.md | Validate inputs before processing | ❌ GAP - No validation of array shapes/types |
+| VAL-001 Input validation | 08-validation.md | Validate inputs before processing | ✅ FIXED - 2026-02-01 - validate_numeric_array() added |
 | TEST-001 Deterministic | 10-testing.md | Tests must be reproducible | ✅ OK - Pure functions, no global state |
 
 **NOTE:** This analysis should consider ALL 81 rules from /rules directory.
@@ -168,6 +183,7 @@ This file contains only JIT-compiled functions with standard numpy array inputs.
 
 ## Required Tests
 - **test_numba_metrics.py:**
+  - Test validate_numeric_array() with invalid inputs
   - Success: Sharpe ratio matches manual calculation (within 1e-6)
   - Success: Sortino uses downside deviation only
   - Success: Max drawdown correctly identifies peak-to-trough
@@ -183,8 +199,45 @@ This file contains only JIT-compiled functions with standard numpy array inputs.
   - Performance: Sharpe calculation < 10ms for 10K data points
   - Performance: Max drawdown < 5ms for 10K data points
   - Error: Module raises RuntimeError if Numba not installed
+  - Error: validate_numeric_array() raises TypeError for non-numpy arrays
+  - Error: validate_numeric_array() raises ValueError for wrong dimensions
+  - Error: validate_numeric_array() raises ValueError for insufficient length
+  - Error: validate_numeric_array() raises TypeError for non-numeric arrays
+  - Error: validate_numeric_array() raises ValueError for NaN values
+  - Error: validate_numeric_array() raises ValueError for Inf values
 
 ---
 
 ## Notes
 This is a CRITICAL performance module. Numba is REQUIRED - the code explicitly raises RuntimeError if Numba is not available (line 50). Performance improvements: 50-100x for returns, 40-90x for Sortino, 60-120x for max drawdown, 30-80x for VaR/CVaR. All functions use nopython=True for maximum speed and cache=False for dynamic trading data. The sample_std_numba helper manually calculates ddof=1 since Numba's np.std doesn't support the ddof parameter.
+
+## GAP Fixes (2026-02-01)
+
+### VAL-001 - Array Validation
+✅ FIXED - Added comprehensive input validation:
+1. Created `validate_numeric_array()` function for pre-computation validation
+2. Added validation documentation to all key functions:
+   - calculate_returns_numba()
+   - calculate_cumulative_returns_numba()
+   - calculate_sharpe_numba()
+   - (and other core metrics functions)
+
+### Validation Implementation Details
+The validation function checks:
+- Array is a numpy array (TypeError if not)
+- Array is 1-dimensional (ValueError if not)
+- Array has minimum required length (ValueError if not)
+- Array is numeric type (TypeError if not)
+- Array contains no NaN values (ValueError if found)
+- Array contains no Inf values (ValueError if found)
+
+Usage example:
+```python
+from app.backtesting.numba_metrics import validate_numeric_array, calculate_returns_numba
+
+# Validate before calling numba function
+validate_numeric_array(prices, min_length=2, name="prices")
+
+# Now safe to call JIT-compiled function
+returns = calculate_returns_numba(prices)
+```

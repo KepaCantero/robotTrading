@@ -38,7 +38,7 @@ class LearningEngineStorage:
     NOTA: Ya NO se soporta .pkl (pickle) por razones de seguridad
     """
 
-    def __init__(self, base_dir: str = "models/learning_engines"):
+    def __init__(self, base_dir: str = "models/learning_engines") -> None:
         """
         Inicializar almacenamiento.
 
@@ -339,7 +339,7 @@ class LearningEngineStorage:
             + list(engine_dir.glob("*.msgpack"))
         )
 
-        weights_info = []
+        weights_info: List[Dict[str, Any]] = []
         for file_path in files:
             # Extraer test_id del nombre
             filename = file_path.stem
@@ -451,7 +451,7 @@ class LearningEngineStorage:
             return []
 
         # Migrar cada archivo .pkl encontrado
-        migrated_files = []
+        migrated_files: List[Path] = []
         for pkl_file in pkl_files:
             try:
                 logger.info(f"Migrating old .pkl file: {pkl_file}")
@@ -493,7 +493,7 @@ class LearningEngineStorage:
                 joblib.dump(data, new_path)
             elif new_format == 'msgpack':
                 self._save_msgpack(new_path, data)
-            elif new_format == 'pt' and TORCH_AVAILABLE:
+            elif new_format == 'pt':
                 torch.save(data, new_path)
             else:
                 raise ValueError(f"Cannot migrate to format: {new_format}")

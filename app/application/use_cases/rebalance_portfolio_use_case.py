@@ -18,9 +18,7 @@ class BasePortfolioOptimizer(Protocol):
     implementations that can be injected into the use case.
     """
 
-    def optimize(
-        self, returns: pd.DataFrame, **kwargs: Any
-    ) -> Dict[str, float]:
+    def optimize(self, returns: pd.DataFrame, **kwargs: Any) -> Dict[str, float]:
         """
         Optimize portfolio weights based on returns.
 

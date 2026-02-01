@@ -129,7 +129,7 @@ class Order:
     fills: List[OrderFill] = field(default_factory=list)
     rejection_reason: Optional[str] = None
     expiry_time: Optional[datetime] = None
-    time_in_force: str = "GTC"  # GTC, IOC, FOK, DAY
+    time_in_force: str = "DAY"  # GTC, IOC, FOK, DAY
 
     # Event tracking
     event_history: List[Dict[str, Any]] = field(default_factory=list)
@@ -193,27 +193,32 @@ class Order:
                 OrderStatus.VALIDATED,
                 OrderStatus.REJECTED,
                 OrderStatus.CANCELLED,
+                OrderStatus.EXPIRED,
             ],
             OrderStatus.VALIDATED: [
                 OrderStatus.SUBMITTED,
                 OrderStatus.REJECTED,
                 OrderStatus.CANCELLED,
+                OrderStatus.EXPIRED,
             ],
             OrderStatus.SUBMITTED: [
                 OrderStatus.ACKNOWLEDGED,
                 OrderStatus.REJECTED,
                 OrderStatus.CANCEL_PENDING,
+                OrderStatus.EXPIRED,
             ],
             OrderStatus.ACKNOWLEDGED: [
                 OrderStatus.PARTIALLY_FILLED,
                 OrderStatus.FILLED,
                 OrderStatus.CANCEL_PENDING,
                 OrderStatus.SUSPENDED,
+                OrderStatus.EXPIRED,
             ],
             OrderStatus.PARTIALLY_FILLED: [
                 OrderStatus.PARTIALLY_FILLED,
                 OrderStatus.FILLED,
                 OrderStatus.CANCEL_PENDING,
+                OrderStatus.EXPIRED,
             ],
             OrderStatus.FILLED: [],  # Terminal state
             OrderStatus.CANCEL_PENDING: [OrderStatus.CANCELLED, OrderStatus.ACKNOWLEDGED],
@@ -488,7 +493,8 @@ class Order:
         Raises:
             ValueError: If order is not in a valid state for expiration
         """
-        if self.status in (OrderStatus.FILLED, OrderStatus.CANCELLED, OrderStatus.REJECTED):
+        # Terminal states cannot expire
+        if self.status in (OrderStatus.FILLED, OrderStatus.CANCELLED, OrderStatus.REJECTED, OrderStatus.EXPIRED):
             raise ValueError(
                 f"Cannot expire order with status {self.status.value}. "
                 f"Order is already in a terminal state."

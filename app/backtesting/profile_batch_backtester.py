@@ -48,7 +48,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 from uuid import uuid4
 
 import numpy as np
@@ -91,6 +91,15 @@ from app.services.profile_driven_trading.profile_strategy_mapper import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Type aliases for better type safety
+ConfigDict = Dict[str, Any]
+MetricsDict = Dict[str, Union[float, int, str, bool, None]]
+ParameterDict = Dict[str, Any]
+OptimizationHistoryEntry = Dict[str, Any]
+ValidationResultDict = Dict[str, Any]
+PerStrategyResultsDict = Dict[str, Dict[str, Any]]
+
 # SQLAlchemy Base
 Base = declarative_base()
 
@@ -136,7 +145,7 @@ class ProfileResultDB(Base):
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> ConfigDict:
         """Convert to dictionary."""
         return {
             "profile_id": self.profile_id,
@@ -200,13 +209,13 @@ class OptimizedStrategy:
     """Result of optimization pipeline."""
 
     profile_id: str
-    baseline_metrics: Dict[str, Any]
-    optimized_metrics: Dict[str, Any]
-    best_parameters: Dict[str, Any]
-    optimization_history: List[Dict[str, Any]]
-    walk_forward_results: Optional[Dict[str, Any]]
-    monte_carlo_results: Optional[Dict[str, Any]]
-    out_of_sample_results: Optional[Dict[str, Any]]
+    baseline_metrics: MetricsDict
+    optimized_metrics: MetricsDict
+    best_parameters: ParameterDict
+    optimization_history: List[OptimizationHistoryEntry]
+    walk_forward_results: Optional[ValidationResultDict]
+    monte_carlo_results: Optional[ValidationResultDict]
+    out_of_sample_results: Optional[ValidationResultDict]
     comparison: BaselineOptimizationComparison
     ready_for_paper_trading: bool
     recommendation: str
@@ -218,9 +227,9 @@ class ProfileResult:
 
     profile_id: str
     profile: InputProfile
-    baseline_results: Dict[str, Any]
-    optimization_results: Dict[str, Any]
-    best_parameters: Dict[str, Any]
+    baseline_results: MetricsDict
+    optimization_results: MetricsDict
+    best_parameters: ParameterDict
     improvement_metrics: Dict[str, float]
     comparison: BaselineOptimizationComparison
     ready_for_paper_trading: bool
@@ -230,8 +239,8 @@ class ProfileResult:
     strategy_mapping: Optional[StrategyMapping] = None
     enabled_strategies: List[str] = field(default_factory=list)
     learning_engines: List[str] = field(default_factory=list)
-    ensemble_config: Dict[str, Any] = field(default_factory=dict)
-    per_strategy_results: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    ensemble_config: ConfigDict = field(default_factory=dict)
+    per_strategy_results: PerStrategyResultsDict = field(default_factory=dict)
 
 
 # ============================================================================
@@ -311,7 +320,7 @@ class ProfileBatchBacktester:
         self._validate_configurations()
         logger.info(f"ProfileBatchBacktester initialized with config: {config_path}")
 
-    def _load_config(self) -> Dict[str, Any]:
+    def _load_config(self) -> ConfigDict:
         """Load configuration from YAML file."""
         with open(self.config_path) as f:
             return yaml.safe_load(f)
@@ -802,7 +811,7 @@ class ProfileBatchBacktester:
         backtester = ProfileBatchBacktester(config_path)
         return backtester.run_single_profile(profile)
 
-    def _create_profile_config(self, profile: InputProfile) -> Dict[str, Any]:
+    def _create_profile_config(self, profile: InputProfile) -> ConfigDict:
         """
         Create backtest configuration for a profile using ProfileStrategyMapper.
         This method now integrates with ProfileStrategyMapper to get comprehensive
@@ -935,8 +944,8 @@ class ProfileBatchBacktester:
         return config
 
     def _run_baseline(
-        self, profile: InputProfile, config: Dict[str, Any], multi_strategy: bool = False
-    ) -> Dict[str, Any]:
+        self, profile: InputProfile, config: ConfigDict, multi_strategy: bool = False
+    ) -> MetricsDict:
         """
         Run baseline backtest with default parameters.
         Args:
@@ -1009,8 +1018,8 @@ class ProfileBatchBacktester:
     def _run_optimization_pipeline(
         self,
         profile: InputProfile,
-        config: Dict[str, Any],
-        baseline_metrics: Optional[Dict[str, Any]] = None,
+        config: ConfigDict,
+        baseline_metrics: Optional[MetricsDict] = None,
         multi_strategy: bool = False,
     ) -> OptimizedStrategy:
         """
@@ -1088,8 +1097,8 @@ class ProfileBatchBacktester:
         )
 
     def _run_bayesian_optimization(
-        self, profile: InputProfile, config: Dict[str, Any], multi_strategy: bool = False
-    ) -> Dict[str, Any]:
+        self, profile: InputProfile, config: ConfigDict, multi_strategy: bool = False
+    ) -> MetricsDict:
         """
         Run Bayesian optimization using Optuna.
         Args:
@@ -1194,10 +1203,10 @@ class ProfileBatchBacktester:
     def _run_backtest_with_params(
         self,
         profile: InputProfile,
-        config: Dict[str, Any],
-        params: Dict[str, Any],
+        config: ConfigDict,
+        params: ParameterDict,
         multi_strategy: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> MetricsDict:
         """
         Run backtest with specific parameters.
         Args:
@@ -1255,10 +1264,10 @@ class ProfileBatchBacktester:
     def _run_walk_forward(
         self,
         profile: InputProfile,
-        config: Dict[str, Any],
-        params: Dict[str, Any],
+        config: ConfigDict,
+        params: ParameterDict,
         multi_strategy: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> ValidationResultDict:
         """
         Run walk-forward validation.
         Walk-forward validation tests the robustness of a strategy by:
@@ -1465,10 +1474,10 @@ class ProfileBatchBacktester:
     def _run_monte_carlo(
         self,
         profile: InputProfile,
-        config: Dict[str, Any],
-        params: Dict[str, Any],
+        config: ConfigDict,
+        params: ParameterDict,
         multi_strategy: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> ValidationResultDict:
         """
         Run Monte Carlo simulation using bootstrapping from actual returns.
         This method performs proper Monte Carlo validation by:
@@ -1579,10 +1588,10 @@ class ProfileBatchBacktester:
     def _run_out_of_sample(
         self,
         profile: InputProfile,
-        config: Dict[str, Any],
-        params: Dict[str, Any],
+        config: ConfigDict,
+        params: ParameterDict,
         multi_strategy: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> ValidationResultDict:
         """
         Run out-of-sample validation.
         Out-of-sample validation tests strategy performance on completely
@@ -1705,7 +1714,7 @@ class ProfileBatchBacktester:
             }
 
     def _generate_comparison(
-        self, baseline: Dict[str, Any], optimized: Dict[str, Any], optuna_results: Dict[str, Any]
+        self, baseline: MetricsDict, optimized: MetricsDict, optuna_results: ParameterDict
     ) -> BaselineOptimizationComparison:
         """
         Generate baseline vs optimization comparison.
@@ -1767,7 +1776,7 @@ class ProfileBatchBacktester:
             reason=reason,
         )
 
-    def _calculate_parameter_importance(self, history: List[Dict[str, Any]]) -> Dict[str, float]:
+    def _calculate_parameter_importance(self, history: List[OptimizationHistoryEntry]) -> Dict[str, float]:
         """Calculate parameter importance from optimization history."""
         if not history:
             return {}
@@ -1856,8 +1865,8 @@ class ProfileBatchBacktester:
             return f"NEUTRAL - {comparison.reason}"
 
     def _safe_extract_first_result(
-        self, results: Optional[List[Dict[str, Any]]], context: str
-    ) -> Dict[str, Any]:
+        self, results: Optional[List[MetricsDict]], context: str
+    ) -> MetricsDict:
         """
         Safely extract the first result from a list of backtest results.
         This helper method validates the results list before accessing the first
@@ -1906,7 +1915,7 @@ class ProfileBatchBacktester:
         logger.debug(f"Successfully extracted result for {context}")
         return result
 
-    def _get_empty_metrics(self) -> Dict[str, Any]:
+    def _get_empty_metrics(self) -> MetricsDict:
         """Return empty metrics dict."""
         return {
             "sharpe_ratio": 0.0,
@@ -1965,7 +1974,7 @@ class ProfileBatchBacktester:
         finally:
             session.close()
 
-    def get_best_strategy(self, objective: str, tier: str, risk: str) -> Dict[str, Any]:
+    def get_best_strategy(self, objective: str, tier: str, risk: str) -> ConfigDict:
         """
         Get best strategy for specific objective, tier, and risk.
         Args:
@@ -2090,7 +2099,7 @@ class ProfileBatchBacktester:
         logger.info(f"Results exported to {output_path}")
         return output_path
 
-    def _result_to_dict(self, result: ProfileResult) -> Dict[str, Any]:
+    def _result_to_dict(self, result: ProfileResult) -> ConfigDict:
         """Convert ProfileResult to dictionary."""
         return {
             "profile_id": result.profile_id,
@@ -2380,8 +2389,8 @@ class ProfileBatchBacktester:
         self.log_fallback_summary()
 
     def _aggregate_multi_strategy_results(
-        self, results: List[Dict[str, Any]], profile: InputProfile
-    ) -> Dict[str, Any]:
+        self, results: List[MetricsDict], profile: InputProfile
+    ) -> MetricsDict:
         """
         Aggregate multi-strategy backtest results into combined metrics.
         Args:
@@ -2477,8 +2486,8 @@ class ProfileBatchBacktester:
         self,
         profile: InputProfile,
         strategy_mapping: Optional[StrategyMapping],
-        per_strategy_signals: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        per_strategy_signals: PerStrategyResultsDict,
+    ) -> MetricsDict:
         """
         Apply ensemble voting logic to combine strategy signals.
         Args:

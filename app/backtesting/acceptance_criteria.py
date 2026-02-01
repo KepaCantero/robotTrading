@@ -138,9 +138,15 @@ class AcceptanceCriteria:
         Returns:
             AcceptanceReport with verdict and details
         """
+        strategy_name = backtest_result.strategy_name or "unknown"
         perf = backtest_result.performance
+
         if not perf:
-            return self._create_invalid_report(backtest_result.strategy_name or "unknown")
+            logger.error(
+                "Cannot validate strategy: performance data is None",
+                extra={"strategy": strategy_name}
+            )
+            return self._create_invalid_report(strategy_name)
 
         criteria_results = []
         rejection_results = []
@@ -244,6 +250,17 @@ class AcceptanceCriteria:
         # Determine verdict
         verdict, warnings, recommendations = self._determine_verdict(
             criteria_results, rejection_results, score
+        )
+
+        logger.info(
+            "Strategy acceptance validation completed",
+            extra={
+                "strategy": strategy_name,
+                "verdict": verdict.value,
+                "score": score,
+                "sharpe_ratio": sharpe,
+                "max_drawdown": max_dd,
+            }
         )
 
         return AcceptanceReport(

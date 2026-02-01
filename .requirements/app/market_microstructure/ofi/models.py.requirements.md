@@ -187,9 +187,10 @@ No standalone functions in this module.
 | CFG-003 | BASE_RULES | Validate all configuration values | ✅ OK - Field validators with constraints |
 | CFG-004 | BASE_RULES | Extra="forbid" to catch typos | ✅ OK - All models have extra="forbid" |
 | TYP-001 | BASE_RULES | 100% type coverage | ✅ OK - All fields typed |
+| TYP-002 | BASE_RULES | Modern syntax (X \| None) | ✅ OK - Uses Optional[type] |
 | SEC-007 | BASE_RULES | Input validation at boundaries | ✅ OK - Pydantic validates on init |
-| CC-006 | BASE_RULES | Explicit error handling | ⚠️ NOT APPLIED - Pydantic raises ValidationError |
-| ARCH-006 | BASE_RULES | Value objects immutable | ⚠️ NOT APPLIED - dataclass mutable, BaseModel immutable |
+| CC-006 | BASE_RULES | Explicit error handling | ✅ OK - Pydantic raises ValidationError |
+| ARCH-006 | BASE_RULES | Value objects immutable | ❌ GAP - dataclass mutable, BaseModel immutable |
 
 ---
 

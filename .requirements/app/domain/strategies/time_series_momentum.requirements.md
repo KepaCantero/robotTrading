@@ -113,7 +113,7 @@ class TimeSeriesSignal:
 | Rule | Source | Requirement | Current Status |
 |------|--------|-------------|----------------|
 | Input validation | BASE_RULES.md (CC-006) | Validate prices array length | ✅ OK - Checks slow_period |
-| NaN handling | BASE_RULES.md (TRD-015) | Handle NaN in price data | ❌ GAP - No NaN handling |
+| NaN handling | BASE_RULES.md (TRD-015) | Handle NaN in price data | ✅ FIXED - Filters NaN/inf with logging |
 | Position bounds | BASE_RULES.md (TRD-003) | Position size in [-1, 1] | ✅ OK - Clamped |
 | Stop loss | BASE_RULES.md (RSK-004) | Implement stop loss for risk control | ✅ OK - 2% stop |
 | Type hints coverage | BASE_RULES.md (TYP-001) | 100% type hints on public functions | ✅ OK - Complete |

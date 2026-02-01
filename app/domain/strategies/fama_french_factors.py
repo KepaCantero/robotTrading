@@ -12,6 +12,7 @@ Papers:
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
@@ -19,6 +20,8 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 from scipy import stats
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -154,11 +157,77 @@ class FamaFrenchModel:
         Returns:
             FactorModelResult with estimated loadings
         """
+        # Input validation - check array length
+        if len(asset_returns) < 2:
+            logger.warning("Insufficient observations for factor model estimation (need at least 2)")
+            # Return default result
+            n_params = 4 if self._model_type == "3factor" else 5
+            factor_names = ["alpha", "market", "smb", "hml"] + (["umd"] if self._model_type == "4factor" else [])
+            return FactorModelResult(
+                loadings=FactorLoadings(
+                    market_beta=1.0,
+                    smb_beta=0.0,
+                    hml_beta=0.0,
+                    umd_beta=0.0,
+                    alpha=0.0,
+                ),
+                r_squared=0.0,
+                p_values={name: 1.0 for name in factor_names},
+                t_stats={name: 0.0 for name in factor_names},
+                standard_errors={name: 1.0 for name in factor_names},
+                n_obs=len(asset_returns),
+            )
+
+        # Handle NaN values in asset returns
+        valid_mask = ~np.isnan(asset_returns) & ~np.isinf(asset_returns)
+        asset_returns_clean = asset_returns[valid_mask]
+
+        if len(asset_returns_clean) < 2:
+            logger.warning("Insufficient valid observations after filtering NaN/inf")
+            n_params = 4 if self._model_type == "3factor" else 5
+            factor_names = ["alpha", "market", "smb", "hml"] + (["umd"] if self._model_type == "4factor" else [])
+            return FactorModelResult(
+                loadings=FactorLoadings(
+                    market_beta=1.0,
+                    smb_beta=0.0,
+                    hml_beta=0.0,
+                    umd_beta=0.0,
+                    alpha=0.0,
+                ),
+                r_squared=0.0,
+                p_values={name: 1.0 for name in factor_names},
+                t_stats={name: 0.0 for name in factor_names},
+                standard_errors={name: 1.0 for name in factor_names},
+                n_obs=len(asset_returns_clean),
+            )
+
+        # Log if we filtered values
+        if len(asset_returns_clean) < len(asset_returns):
+            n_filtered = len(asset_returns) - len(asset_returns_clean)
+            logger.warning(f"Filtered out {n_filtered} NaN/inf values from asset_returns")
+
+        # Validate factor returns
+        if not all(np.isfinite([
+            factor_returns.market_return,
+            factor_returns.smb_return,
+            factor_returns.hml_return,
+            factor_returns.umd_return,
+        ])):
+            logger.warning("Factor returns contain NaN or inf values")
+            # Replace with zeros
+            factor_returns = FactorReturns(
+                market_return=np.nan_to_num(factor_returns.market_return),
+                smb_return=np.nan_to_num(factor_returns.smb_return),
+                hml_return=np.nan_to_num(factor_returns.hml_return),
+                umd_return=np.nan_to_num(factor_returns.umd_return),
+                risk_free_rate=np.nan_to_num(factor_returns.risk_free_rate),
+            )
+
         # Build factor matrix
         if self._model_type == "4factor":
             X = np.column_stack(
                 [
-                    np.ones(len(asset_returns)),  # Intercept (alpha)
+                    np.ones(len(asset_returns_clean)),  # Intercept (alpha)
                     factor_returns.market_return,
                     factor_returns.smb_return,
                     factor_returns.hml_return,
@@ -169,7 +238,7 @@ class FamaFrenchModel:
         else:  # 3factor
             X = np.column_stack(
                 [
-                    np.ones(len(asset_returns)),
+                    np.ones(len(asset_returns_clean)),
                     factor_returns.market_return,
                     factor_returns.smb_return,
                     factor_returns.hml_return,
@@ -178,10 +247,9 @@ class FamaFrenchModel:
             factor_names = ["alpha", "market", "smb", "hml"]
 
         # Add constant to factor returns for intercept
-        y = asset_returns
+        y = asset_returns_clean
 
         # OLS regression
-        result = stats.linregress(X, y)
         # Note: scipy linregress doesn't support multiple regression directly
         # Use numpy's lstsq for proper multivariate regression
 
@@ -196,15 +264,22 @@ class FamaFrenchModel:
         # R-squared
         ss_tot = np.sum((y - np.mean(y)) ** 2)
         ss_res = np.sum(residuals**2)
-        r_squared = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0
+        r_squared = 1 - (ss_res / ss_tot) if ss_tot > 1e-10 else 0
 
         # Standard errors (simplified)
-        mse = ss_res / (n_obs - n_params)
-        var_covar = mse * np.linalg.inv(X.T @ X) if n_obs > n_params else np.eye(n_params)
-        std_errors = np.sqrt(np.diag(var_covar))
+        mse = ss_res / (n_obs - n_params) if n_obs > n_params else 0
+        if n_obs > n_params:
+            try:
+                var_covar = mse * np.linalg.inv(X.T @ X)
+                std_errors = np.sqrt(np.diag(var_covar))
+            except np.linalg.LinAlgError:
+                logger.warning("Singular matrix in variance-covariance calculation")
+                std_errors = np.ones(n_params)
+        else:
+            std_errors = np.ones(n_params)
 
-        # T-statistics
-        t_stats = betas / std_errors
+        # T-statistics (handle division by zero)
+        t_stats = np.divide(betas, std_errors, out=np.zeros_like(betas), where=std_errors != 0)
 
         # P-values (two-tailed)
         p_values = 2 * (1 - stats.t.cdf(np.abs(t_stats), n_obs - n_params))

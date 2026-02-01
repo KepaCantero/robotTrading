@@ -121,8 +121,8 @@ class AuditTrail:
                 ['git', 'rev-parse', 'HEAD'], capture_output=True, text=True, check=True, timeout=5
             )
             git_info['commit_hash'] = result.stdout.strip()
-        except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
-            pass
+        except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired) as e:
+            logger.debug(f"Error getting git commit hash: {e}", exc_info=True)
 
         try:
             # Branch
@@ -134,8 +134,8 @@ class AuditTrail:
                 timeout=5,
             )
             git_info['branch'] = result.stdout.strip()
-        except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
-            pass
+        except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired) as e:
+            logger.debug(f"Error getting git branch: {e}", exc_info=True)
 
         try:
             # Check si hay cambios sin commit
@@ -143,8 +143,9 @@ class AuditTrail:
                 ['git', 'diff', '--quiet'], capture_output=True, check=False, timeout=5
             )
             git_info['is_dirty'] = result.returncode != 0
-        except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
+        except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired) as e:
             git_info['is_dirty'] = True  # Asumir dirty si no se puede verificar
+            logger.debug(f"Error checking git dirty state: {e}", exc_info=True)
 
         return git_info
 

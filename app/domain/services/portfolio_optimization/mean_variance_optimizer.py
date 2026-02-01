@@ -8,6 +8,7 @@ Reference: Rule 48-papers-markowitz (Markowitz Portfolio Selection)
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
@@ -19,6 +20,22 @@ from app.domain.services.portfolio_optimization.covariance_calculator import (
     CovarianceCalculator,
     CovarianceResult,
 )
+from app.domain.services.portfolio_optimization._validation import (
+    TRADING_DAYS,
+    validate_covariance_matrix,
+    log_optimization_failure,
+)
+
+
+logger = logging.getLogger(__name__)
+
+
+# Mean-Variance Optimization default parameters
+DEFAULT_RISK_FREE_RATE = 0.02  # Annual risk-free rate
+DEFAULT_MIN_WEIGHT = 0.0  # Minimum weight per asset (no short)
+DEFAULT_MAX_WEIGHT = 1.0  # Maximum weight per asset
+DEFAULT_OPTIMIZATION_TOLERANCE = 1e-9  # Optimization ftol
+DEFAULT_EFFICIENT_FRONTIER_POINTS = 20  # Number of frontier points
 
 
 @dataclass
@@ -26,8 +43,8 @@ class OptimizationResult:
     """Result of portfolio optimization."""
 
     weights: np.ndarray  # Optimal weights
-    expected_return: float  # Expected portfolio return
-    expected_risk: float  # Expected portfolio risk (std dev)
+    expected_return: float  # Expected portfolio return (annualized)
+    expected_risk: float  # Expected portfolio risk (std dev, annualized)
     sharpe_ratio: float  # Sharpe ratio
     symbols: List[str]  # Asset symbols
 
@@ -60,8 +77,8 @@ class OptimizationResult:
 class EfficientFrontier:
     """Efficient frontier points."""
 
-    returns: np.ndarray  # Portfolio returns
-    risks: np.ndarray  # Portfolio risks (std dev)
+    returns: np.ndarray  # Portfolio returns (annualized)
+    risks: np.ndarray  # Portfolio risks (std dev, annualized)
     weights_list: List[np.ndarray]  # Weight sets for each point
     sharpe_ratios: np.ndarray  # Sharpe ratios
 
@@ -91,9 +108,9 @@ class MeanVarianceOptimizer:
 
     def __init__(
         self,
-        risk_free_rate: float = 0.02,
-        min_weight: float = 0.0,
-        max_weight: float = 1.0,
+        risk_free_rate: float = DEFAULT_RISK_FREE_RATE,
+        min_weight: float = DEFAULT_MIN_WEIGHT,
+        max_weight: float = DEFAULT_MAX_WEIGHT,
         allow_short: bool = False,
     ):
         """
@@ -105,6 +122,15 @@ class MeanVarianceOptimizer:
             max_weight: Maximum weight per asset
             allow_short: Whether to allow short positions
         """
+        if risk_free_rate < 0:
+            raise ValueError(f"Risk-free rate cannot be negative, got {risk_free_rate}")
+        if max_weight > 1.0:
+            raise ValueError(f"Max weight cannot exceed 1.0, got {max_weight}")
+        if min_weight < (-1.0 if allow_short else 0.0):
+            raise ValueError(f"Min weight out of range, got {min_weight}")
+        if min_weight > max_weight:
+            raise ValueError(f"Min weight {min_weight} > max weight {max_weight}")
+
         self._risk_free_rate = risk_free_rate
         self._min_weight = -1.0 if allow_short else 0.0
         self._max_weight = max_weight
@@ -124,18 +150,36 @@ class MeanVarianceOptimizer:
 
         Returns:
             OptimizationResult with optimal weights
+
+        Raises:
+            ValueError: If optimization fails
         """
+        # Validate covariance matrix
+        is_valid, validated_cov, error_msg = validate_covariance_matrix(
+            cov_result.covariance_matrix,
+            check_psd=True,
+            check_symmetry=True,
+            enforce_psd=True,
+        )
+
+        if not is_valid:
+            raise ValueError(f"Invalid covariance matrix: {error_msg}")
+
+        cov_matrix = validated_cov
         n_assets = len(cov_result.symbols)
 
         # Objective: negative Sharpe ratio (for minimization)
         def objective(weights: np.ndarray) -> float:
             portfolio_return = float(weights @ cov_result.means)
-            portfolio_var = float(weights @ cov_result.covariance_matrix @ weights)
+            portfolio_var = float(weights @ cov_matrix @ weights)
             portfolio_std = np.sqrt(portfolio_var)
 
             # Annualize (assuming daily returns)
-            annual_return = portfolio_return * 252
-            annual_std = portfolio_std * np.sqrt(252)
+            annual_return = portfolio_return * TRADING_DAYS
+            annual_std = portfolio_std * np.sqrt(TRADING_DAYS)
+
+            if annual_std < 1e-10:
+                return -1e6  # Poor Sharpe for zero volatility
 
             sharpe = (annual_return - self._risk_free_rate) / annual_std
             return -sharpe  # Minimize negative Sharpe = maximize Sharpe
@@ -158,19 +202,35 @@ class MeanVarianceOptimizer:
             method="SLSQP",
             bounds=bounds,
             constraints=constraints,
-            options={"ftol": 1e-9},
+            options={"ftol": DEFAULT_OPTIMIZATION_TOLERANCE},
         )
+
+        # Log if not converged
+        if not result.success:
+            log_optimization_failure(
+                "maximize_sharpe",
+                Exception(result.message),
+                {
+                    "n_assets": n_assets,
+                    "symbols": cov_result.symbols[:5],  # First 5 symbols
+                    "status": result.status,
+                },
+            )
 
         # Extract results
         weights = result.x
         expected_return = float(weights @ cov_result.means)
-        expected_var = float(weights @ cov_result.covariance_matrix @ weights)
+        expected_var = float(weights @ cov_matrix @ weights)
         expected_risk = np.sqrt(expected_var)
 
         # Annualize
-        annual_return = expected_return * 252
-        annual_risk = expected_risk * np.sqrt(252)
-        sharpe = (annual_return - self._risk_free_rate) / annual_risk
+        annual_return = expected_return * TRADING_DAYS
+        annual_risk = expected_risk * np.sqrt(TRADING_DAYS)
+
+        if annual_risk < 1e-10:
+            sharpe = 0.0
+        else:
+            sharpe = (annual_return - self._risk_free_rate) / annual_risk
 
         return OptimizationResult(
             weights=weights,
@@ -198,11 +258,23 @@ class MeanVarianceOptimizer:
         Returns:
             OptimizationResult with minimum variance weights
         """
+        # Validate covariance matrix
+        is_valid, validated_cov, error_msg = validate_covariance_matrix(
+            cov_result.covariance_matrix,
+            check_psd=True,
+            check_symmetry=True,
+            enforce_psd=True,
+        )
+
+        if not is_valid:
+            raise ValueError(f"Invalid covariance matrix: {error_msg}")
+
+        cov_matrix = validated_cov
         n_assets = len(cov_result.symbols)
 
         # Objective: portfolio variance
         def objective(weights: np.ndarray) -> float:
-            return float(weights @ cov_result.covariance_matrix @ weights)
+            return float(weights @ cov_matrix @ weights)
 
         # Constraints
         constraints = [
@@ -224,16 +296,28 @@ class MeanVarianceOptimizer:
             constraints=constraints,
         )
 
+        # Log if not converged
+        if not result.success:
+            log_optimization_failure(
+                "minimize_variance",
+                Exception(result.message),
+                {"n_assets": n_assets, "status": result.status},
+            )
+
         # Extract results
         weights = result.x
         expected_return = float(weights @ cov_result.means)
-        expected_var = float(weights @ cov_result.covariance_matrix @ weights)
+        expected_var = float(weights @ cov_matrix @ weights)
         expected_risk = np.sqrt(expected_var)
 
         # Annualize
-        annual_return = expected_return * 252
-        annual_risk = expected_risk * np.sqrt(252)
-        sharpe = (annual_return - self._risk_free_rate) / annual_risk
+        annual_return = expected_return * TRADING_DAYS
+        annual_risk = expected_risk * np.sqrt(TRADING_DAYS)
+
+        if annual_risk < 1e-10:
+            sharpe = 0.0
+        else:
+            sharpe = (annual_return - self._risk_free_rate) / annual_risk
 
         return OptimizationResult(
             weights=weights,
@@ -263,12 +347,24 @@ class MeanVarianceOptimizer:
         Returns:
             OptimizationResult with optimal weights
         """
+        # Validate covariance matrix
+        is_valid, validated_cov, error_msg = validate_covariance_matrix(
+            cov_result.covariance_matrix,
+            check_psd=True,
+            check_symmetry=True,
+            enforce_psd=True,
+        )
+
+        if not is_valid:
+            raise ValueError(f"Invalid covariance matrix: {error_msg}")
+
+        cov_matrix = validated_cov
         n_assets = len(cov_result.symbols)
-        target_daily = target_return / 252  # Convert to daily
+        target_daily = target_return / TRADING_DAYS  # Convert to daily
 
         # Objective: portfolio variance
         def objective(weights: np.ndarray) -> float:
-            return float(weights @ cov_result.covariance_matrix @ weights)
+            return float(weights @ cov_matrix @ weights)
 
         # Constraints
         constraints = [
@@ -294,16 +390,28 @@ class MeanVarianceOptimizer:
             constraints=constraints,
         )
 
+        # Log if not converged
+        if not result.success:
+            log_optimization_failure(
+                "target_return",
+                Exception(result.message),
+                {"target_return": target_return, "status": result.status},
+            )
+
         # Extract results
         weights = result.x
         expected_return = float(weights @ cov_result.means)
-        expected_var = float(weights @ cov_result.covariance_matrix @ weights)
+        expected_var = float(weights @ cov_matrix @ weights)
         expected_risk = np.sqrt(expected_var)
 
         # Annualize
-        annual_return = expected_return * 252
-        annual_risk = expected_risk * np.sqrt(252)
-        sharpe = (annual_return - self._risk_free_rate) / annual_risk
+        annual_return = expected_return * TRADING_DAYS
+        annual_risk = expected_risk * np.sqrt(TRADING_DAYS)
+
+        if annual_risk < 1e-10:
+            sharpe = 0.0
+        else:
+            sharpe = (annual_return - self._risk_free_rate) / annual_risk
 
         return OptimizationResult(
             weights=weights,
@@ -318,7 +426,7 @@ class MeanVarianceOptimizer:
     def compute_efficient_frontier(
         self,
         cov_result: CovarianceResult,
-        n_points: int = 20,
+        n_points: int = DEFAULT_EFFICIENT_FRONTIER_POINTS,
     ) -> EfficientFrontier:
         """
         Compute efficient frontier.
@@ -332,13 +440,16 @@ class MeanVarianceOptimizer:
         Returns:
             EfficientFrontier with return/risk points
         """
+        if n_points < 2:
+            raise ValueError(f"n_points must be at least 2, got {n_points}")
+
         # Get return bounds
         min_var_result = self.minimize_variance(cov_result)
         min_return = min_var_result.expected_return
 
         # Find max return (max weight in highest-return asset)
         max_return_idx = np.argmax(cov_result.means)
-        max_return = float(cov_result.means[max_return_idx]) * 252
+        max_return = float(cov_result.means[max_return_idx]) * TRADING_DAYS
 
         # Generate target returns
         target_returns = np.linspace(min_return, max_return, n_points)
@@ -356,8 +467,9 @@ class MeanVarianceOptimizer:
                     risks.append(result.expected_risk)
                     weights_list.append(result.weights)
                     sharpe_ratios.append(result.sharpe_ratio)
-            except Exception:
+            except Exception as e:
                 # Skip infeasible targets
+                logger.debug(f"Skipping target return {target}: {e}")
                 pass
 
         return EfficientFrontier(
@@ -381,12 +493,23 @@ class MeanVarianceOptimizer:
 
         Returns:
             OptimizationResult with GMV weights
+
+        Raises:
+            ValueError: If matrix inversion fails
         """
         cov_matrix = cov_result.covariance_matrix
         n_assets = len(cov_result.symbols)
 
-        # Inverse covariance
-        inv_cov = np.linalg.inv(cov_matrix)
+        try:
+            # Inverse covariance
+            inv_cov = np.linalg.inv(cov_matrix)
+        except np.linalg.LinAlgError as e:
+            log_optimization_failure(
+                "get_global_minimum_variance",
+                e,
+                {"n_assets": n_assets},
+            )
+            raise ValueError(f"Cannot invert covariance matrix: {e}")
 
         # GMV weights (analytical)
         ones = np.ones(n_assets)
@@ -394,13 +517,17 @@ class MeanVarianceOptimizer:
 
         # Calculate metrics
         expected_return = float(weights @ cov_result.means)
-        expected_var = float(weights @ cov_result.covariance_matrix @ weights)
+        expected_var = float(weights @ cov_matrix @ weights)
         expected_risk = np.sqrt(expected_var)
 
         # Annualize
-        annual_return = expected_return * 252
-        annual_risk = expected_risk * np.sqrt(252)
-        sharpe = (annual_return - self._risk_free_rate) / annual_risk
+        annual_return = expected_return * TRADING_DAYS
+        annual_risk = expected_risk * np.sqrt(TRADING_DAYS)
+
+        if annual_risk < 1e-10:
+            sharpe = 0.0
+        else:
+            sharpe = (annual_return - self._risk_free_rate) / annual_risk
 
         return OptimizationResult(
             weights=weights,

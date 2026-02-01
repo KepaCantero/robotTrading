@@ -12,6 +12,7 @@ Paper: Jegadeesh, N., & Titman, S. (1993). "Returns to Buying Winners
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
@@ -19,6 +20,8 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 
 class MomentumSignal(str, Enum):
@@ -124,24 +127,74 @@ class CrossSectionalMomentum:
         Returns:
             Dictionary of symbol -> MomentumAsset
         """
+        # Input validation
+        if returns is None or returns.empty:
+            logger.warning("Empty or None returns DataFrame provided")
+            return {}
+
+        if returns.shape[1] < 2:
+            logger.warning(f"Insufficient columns in returns DataFrame: {returns.shape[1]} < 2")
+            return {}
+
+        # Handle NaN values - count and log them
+        nan_count = returns.isna().sum().sum()
+        if nan_count > 0:
+            logger.warning(f"Found {nan_count} NaN values in returns DataFrame")
+
         # Calculate cumulative returns over lookback period
         lookback_periods = self._lookback_months * 21  # Approx trading days per month
 
         # Ensure we have enough data
         if returns.shape[1] < lookback_periods:
             lookback_periods = returns.shape[1] - 1
+            logger.warning(f"Adjusting lookback to {lookback_periods} periods due to insufficient data")
+
+        if lookback_periods < 1:
+            logger.warning("Not enough data for momentum calculation")
+            return {}
 
         # Calculate momentum (cumulative return over lookback)
-        momentum = (1 + returns.iloc[:, -lookback_periods:]).prod(axis=1) - 1
+        # Use forward-fill for NaN values, then back-fill as fallback
+        returns_clean = returns.ffill(axis=1).bfill(axis=1)
+
+        # Check for remaining NaN or inf values
+        if returns_clean.isna().any().any():
+            logger.warning("Still have NaN values after forward/backward fill")
+            # Replace remaining NaN with 0
+            returns_clean = returns_clean.fillna(0)
+
+        # Check for inf values
+        if np.isinf(returns_clean.values).any():
+            logger.warning("Found inf values in returns, replacing with 0")
+            returns_clean = returns_clean.replace([np.inf, -np.inf], 0)
+
+        try:
+            momentum = (1 + returns_clean.iloc[:, -lookback_periods:]).prod(axis=1) - 1
+        except Exception as e:
+            logger.error(f"Error calculating momentum: {e}")
+            return {}
+
+        # Handle NaN or inf in momentum
+        momentum = momentum.replace([np.inf, -np.inf], np.nan).fillna(0)
 
         # Rank assets by momentum
-        ranks = momentum.rank(ascending=False)
-        percentiles = ranks / len(ranks)
+        try:
+            ranks = momentum.rank(ascending=False)
+            percentiles = ranks / len(ranks)
+        except Exception as e:
+            logger.error(f"Error ranking assets: {e}")
+            return {}
 
         # Determine signals
         assets = {}
-        for symbol in returns.index:
+        for symbol in returns_clean.index:
             mom_score = float(momentum[symbol])
+
+            # Validate momentum score
+            if not np.isfinite(mom_score):
+                logger.warning(f"Non-finite momentum score for {symbol}, using 0")
+                mom_score = 0.0
+
             rank = int(ranks[symbol])
             percentile = float(percentiles[symbol])
 

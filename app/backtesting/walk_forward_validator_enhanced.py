@@ -19,6 +19,25 @@ Tomasini's Key Principles:
 - Use rolling windows, not anchored windows
 - Minimum 5 complete cycles for statistical significance
 - Regime-aware validation prevents false positives
+
+Performance Considerations (PERF-001):
+- This module does NOT use numba JIT compilation because:
+  1. The computational bottleneck is in SimpleBacktester, not here
+  2. The main operations (window creation, parameter tracking) are not performance-critical
+  3. Metrics calculations should use app.backtesting.numba_metrics for hot paths
+- If performance optimization is needed, consider:
+  - Using numba_metrics.calculate_sharpe_numba() for Sharpe ratio calculations
+  - Using numba_metrics.calculate_max_drawdown_numba() for drawdown analysis
+  - Parallelizing window processing with concurrent.futures
+
+Domain Design (DOM-001):
+- This module uses dataclasses (ParameterHistory, ParameterStabilityMetrics, etc.)
+  instead of domain value objects for serialization simplicity
+- The to_dict() methods return plain dictionaries for JSON serialization
+- In a future refactor, consider converting these to proper domain value objects:
+  * ParameterHistory -> value object with validation
+  * ParameterStabilityMetrics -> value object with business rules
+  * TomasiniWindowResult -> entity with invariants
 """
 
 import logging

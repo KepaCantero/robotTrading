@@ -117,8 +117,8 @@ class MomentumMetrics:
 
 | Rule | Source | Requirement | Current Status |
 |------|--------|-------------|----------------|
-| Input validation | BASE_RULES.md (CC-006) | Validate returns DataFrame structure | ⚠️ PARTIAL - Checks shape but not content |
-| NaN handling | BASE_RULES.md (TRD-015) | Handle NaN in return data | ❌ GAP - No NaN handling |
+| Input validation | BASE_RULES.md (CC-006) | Validate returns DataFrame structure | ✅ FIXED - Full validation with NaN/inf handling |
+| NaN handling | BASE_RULES.md (TRD-015) | Handle NaN in return data | ✅ FIXED - Forward/backward fill + validation |
 | Weight constraints | BASE_RULES.md (TRD-003) | Sum of weights <= 1.0 | ✅ OK - Cash remainder |
 | Type hints coverage | BASE_RULES.md (TYP-001) | 100% type hints on public functions | ✅ OK - Complete |
 | Docstring coverage | BASE_RULES.md (CC-001) | All functions documented | ✅ OK - Complete |

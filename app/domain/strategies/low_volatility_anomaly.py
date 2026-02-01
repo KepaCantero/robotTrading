@@ -12,12 +12,15 @@ Paper: Blitz, D., & van Vliet, P. (2007). "The Volatility Effect"
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
 class VolatilityCategory(str, Enum):
@@ -161,41 +164,116 @@ class LowVolatilityAnomaly:
         Returns:
             VolatilityMetrics with calculated values
         """
+        # Input validation
+        if len(returns) == 0:
+            logger.warning("Empty returns array provided to calculate_volatility_metrics")
+            return VolatilityMetrics(
+                symbol="",
+                daily_volatility=0.0,
+                annualized_volatility=0.0,
+                beta=1.0,
+                idiosyncratic_volatility=0.0,
+                downside_deviation=0.0,
+                max_drawdown=0.0,
+                sharpe_ratio=0.0,
+                sortino_ratio=0.0,
+                percentile_rank=0.0,
+            )
+
+        # Handle NaN values - filter them out
+        valid_mask = ~np.isnan(returns)
+        returns_clean = returns[valid_mask]
+
+        if len(returns_clean) == 0:
+            logger.warning("All returns are NaN")
+            return VolatilityMetrics(
+                symbol="",
+                daily_volatility=0.0,
+                annualized_volatility=0.0,
+                beta=1.0,
+                idiosyncratic_volatility=0.0,
+                downside_deviation=0.0,
+                max_drawdown=0.0,
+                sharpe_ratio=0.0,
+                sortino_ratio=0.0,
+                percentile_rank=0.0,
+            )
+
+        # Log if we filtered NaN values
+        if len(returns_clean) < len(returns):
+            n_nan = len(returns) - len(returns_clean)
+            logger.warning(f"Filtered out {n_nan} NaN values from returns array")
+
+        # Clean market returns
+        if len(market_returns) > 0:
+            valid_market_mask = ~np.isnan(market_returns)
+            market_returns_clean = market_returns[valid_market_mask]
+
+            if len(market_returns_clean) == 0:
+                logger.warning("All market returns are NaN, using default beta=1.0")
+                market_returns_clean = np.array([0.0])  # Dummy value
+        else:
+            market_returns_clean = market_returns
+
         # Daily volatility
-        daily_vol = float(np.std(returns))
+        daily_vol = float(np.std(returns_clean))
 
         # Annualized volatility (assuming 252 trading days)
         annual_vol = daily_vol * np.sqrt(252)
 
         # Beta calculation
-        if len(returns) == len(market_returns) and len(returns) > 1:
-            covariance = np.cov(returns, market_returns)[0, 1]
-            market_variance = np.var(market_returns)
-            beta = float(covariance / market_variance) if market_variance > 0 else 1.0
+        if len(returns_clean) == len(market_returns_clean) and len(returns_clean) > 1:
+            # Remove any paired NaN values
+            combined_valid = ~np.isnan(returns_clean) & ~np.isnan(market_returns_clean)
+            returns_for_beta = returns_clean[combined_valid]
+            market_for_beta = market_returns_clean[combined_valid]
+
+            if len(returns_for_beta) > 1:
+                covariance = np.cov(returns_for_beta, market_for_beta)[0, 1]
+                market_variance = np.var(market_for_beta)
+                beta = float(covariance / market_variance) if market_variance > 1e-10 else 1.0
+            else:
+                beta = 1.0
         else:
             beta = 1.0
 
         # Idiosyncratic volatility
-        idiosyncratic_vol = (
-            float(np.std(returns - beta * market_returns)) if len(returns) > 0 else annual_vol
-        )
+        if len(returns_clean) == len(market_returns_clean) and len(returns_clean) > 0:
+            # Align arrays for calculation
+            min_len = min(len(returns_clean), len(market_returns_clean))
+            returns_aligned = returns_clean[:min_len]
+            market_aligned = market_returns_clean[:min_len]
+
+            # Filter NaN from aligned arrays
+            valid_aligned = ~np.isnan(returns_aligned) & ~np.isnan(market_aligned) & ~np.isinf(returns_aligned) & ~np.isinf(market_aligned)
+            if np.any(valid_aligned):
+                residual = returns_aligned[valid_aligned] - beta * market_aligned[valid_aligned]
+                idiosyncratic_vol = float(np.std(residual)) if len(residual) > 0 else annual_vol
+            else:
+                idiosyncratic_vol = annual_vol
+        else:
+            idiosyncratic_vol = annual_vol
 
         # Downside deviation (only negative returns)
-        negative_returns = returns[returns < 0]
+        negative_returns = returns_clean[returns_clean < 0]
         downside_dev = float(np.std(negative_returns)) if len(negative_returns) > 0 else 0.0
 
         # Max drawdown
-        cumulative = np.cumprod(1 + returns)
+        cumulative = np.cumprod(1 + returns_clean)
         running_max = np.maximum.accumulate(cumulative)
         drawdown = (cumulative - running_max) / running_max
+        # Filter inf/nan from drawdown
+        drawdown = drawdown[np.isfinite(drawdown)]
         max_dd = float(np.min(drawdown)) if len(drawdown) > 0 else 0.0
 
         # Sharpe ratio
-        excess_returns = np.mean(returns) * 252 - risk_free_rate
-        sharpe = float(excess_returns / annual_vol) if annual_vol > 0 else 0.0
+        mean_return = float(np.mean(returns_clean))
+        excess_returns = mean_return * 252 - risk_free_rate
+        sharpe = float(excess_returns / annual_vol) if annual_vol > 1e-10 else 0.0
 
         # Sortino ratio
-        sortino = float(excess_returns / (downside_dev * np.sqrt(252))) if downside_dev > 0 else 0.0
+        annualized_downside = downside_dev * np.sqrt(252)
+        sortino = float(excess_returns / annualized_downside) if annualized_downside > 1e-10 else 0.0
 
         return VolatilityMetrics(
             symbol="",  # Will be set by caller

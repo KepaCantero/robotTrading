@@ -36,7 +36,7 @@ class CovarianceResult:
 ### `CovarianceCalculator.__init__(min_observations, shrinkage) -> None`
 **Pre:** min_observations >= 2; shrinkage in [0, 1] or None
 **Post:** Calculator configured with parameters
-**Raises:** None (initialization only)
+**Raises:** ValueError if parameters invalid
 **Retry:** ❌ No
 **Side Effects:** None (initialization only)
 
@@ -50,20 +50,20 @@ class CovarianceResult:
 ### `calculate_shrinkage_covariance(returns, shrinkage) -> CovarianceResult`
 **Pre:** returns has at least 2 assets; shrinkage in [0, 1] or None for auto
 **Post:** Returns CovarianceResult with Ledoit-Wolf shrunk covariance
-**Raises:** ValueError if insufficient data
+**Raises:** ValueError if insufficient data or shrinkage invalid
 **Retry:** ❌ No
 **Side Effects:** None (pure computation)
 
 ### `calculate_exponential_covariance(returns, span) -> CovarianceResult`
 **Pre:** returns has at least 2 assets; span > 0
 **Post:** Returns EWMA covariance matrix (recent observations weighted more)
-**Raises:** ValueError if insufficient data
+**Raises:** ValueError if insufficient data or span invalid
 **Retry:** ❌ No
 **Side Effects:** None (pure computation)
 
 ### `get_positive_semidefinite_covariance(cov_matrix) -> np.ndarray`
 **Pre:** cov_matrix is square
-**Post:** Returns PSD matrix (negative eigenvalues clipped to 0)
+**Post:** Returns PSD matrix (negative eigenvalues clipped to tolerance)
 **Raises:** None
 **Retry:** ❌ No
 **Side Effects:** None (pure computation)
@@ -85,14 +85,15 @@ class CovarianceResult:
 ---
 
 ## Acceptance Criteria
-- [ ] **AC-001:** Input validation - minimum observations check before calculation
-- [ ] **AC-002:** PSD validation - ensure result covariance is positive semidefinite
-- [ ] **AC-003:** Zero variance handling - assets with σ=0 are removed or handled
-- [ ] **AC-004:** NaN handling - missing data cleaned before calculation
-- [ ] **AC-005:** All public methods have complete type hints
-- [ ] **AC-006:** NumPy 2.0 compatibility
-- [ ] **AC-007:** All functions have docstrings following Google style
-- [ ] **AC-008:** Shrinkage parameter validation (0-1 range)
+- [x] **AC-001:** Input validation - minimum observations check before calculation ✅ OK
+- [x] **AC-002:** PSD validation - ensure result covariance is positive semidefinite ✅ FIXED
+- [x] **AC-003:** Zero variance handling - assets with σ=0 are removed or handled ✅ FIXED
+- [x] **AC-004:** NaN handling - missing data cleaned before calculation ✅ FIXED
+- [x] **AC-005:** All public methods have complete type hints ✅ OK
+- [x] **AC-006:** NumPy 2.0 compatibility ✅ OK
+- [x] **AC-007:** All functions have docstrings following Google style ✅ OK
+- [x] **AC-008:** Shrinkage parameter validation (0-1 range) ✅ OK
+- [x] **AC-009:** Magic numbers documented as constants ✅ FIXED
 
 ---
 
@@ -105,9 +106,9 @@ class CovarianceResult:
 | Rule | Source | Requirement | Current Status |
 |------|--------|-------------|----------------|
 | Input validation | BASE_RULES.md (CC-006) | Validate minimum observations >= 252 | ✅ OK - MIN_OBSERVATIONS check |
-| PSD enforcement | BASE_RULES.md (TRD-001) | Ensure covariance is positive semidefinite | ✅ OK - get_positive_semidefinite_covariance |
-| Zero variance handling | BASE_RULES.md (TRD-015) | Remove or handle σ=0 assets | ❌ GAP - No handling in main methods |
-| NaN handling | BASE_RULES.md (TRD-015) | Clean missing data before calculation | ❌ GAP - No NaN handling |
+| PSD enforcement | BASE_RULES.md (TRD-001) | Ensure covariance is positive semidefinite | ✅ FIXED - enforce_positive_semidefinite() |
+| Zero variance handling | BASE_RULES.md (TRD-015) | Remove or handle σ=0 assets | ✅ FIXED - _sanitize_returns() |
+| NaN handling | BASE_RULES.md (TRD-015) | Clean missing data before calculation | ✅ FIXED - _sanitize_returns() |
 | Type hints coverage | BASE_RULES.md (TYP-001) | 100% type hints on public functions | ✅ OK - Complete |
 | Docstring coverage | BASE_RULES.md (CC-001) | All functions documented | ✅ OK - Complete |
 | Domain layer purity | BASE_RULES.md (ARCH-002) | No infrastructure imports | ✅ OK - Only numpy |
@@ -117,6 +118,7 @@ class CovarianceResult:
 | Risk contribution formula | Qian & Maas (2010) | RC_i = w_i * (Σw)_i / σ_p | ✅ OK - Implemented |
 | Effective number of bets | Diversification metric | N* = (w'Σw) / σ²_avg | ✅ OK - Implemented |
 | NumPy 2.0 compat | BASE_RULES.md (TYP-002) | No deprecated np aliases | ✅ OK - Modern types |
+| Magic numbers | BASE_RULES.md (CC-001) | Document TRADING_DAYS = 252 | ✅ FIXED - Constants in _validation.py |
 
 **NOTE:** This analysis references BASE_RULES.md for universal rules and Markowitz/Ledoit-Wolf for covariance estimation rules.
 
@@ -124,7 +126,7 @@ class CovarianceResult:
 
 ## Dependencies
 - **External:** `numpy`, `dataclasses` (std), `decimal` (std)
-- **Internal:** None (domain service)
+- **Internal:** `app.domain.services.portfolio_optimization._validation`
 
 ---
 
@@ -148,11 +150,11 @@ class CovarianceResult:
 
 ## Notes
 - **Critical:** Covariance matrix must be positive semidefinite for portfolio optimization
-- **MIN_OBSERVATIONS:** Default 252 trading days (1 year of daily data)
+- **MIN_OBSERVATIONS:** Default 252 trading days (1 year of daily data) - TRADING_DAYS constant
 - **Sample Covariance:** Uses ddof=1 (unbiased estimator)
 - **Ledoit-Wolf Shrinkage:** Reduces estimation error by combining with constant correlation model
-- **EWMA:** Span parameter controls decay (default 60 days ~ quarterly)
-- **PSD Enforcement:** Eigenvalue decomposition with negative eigenvalues clipped to 0
+- **EWMA:** Span parameter controls decay (default 60 days ~ quarterly) - DEFAULT_EWMA_SPAN constant
+- **PSD Enforcement:** Eigenvalue decomposition with negative eigenvalues clipped to tolerance
 - **Risk Contribution:** Measures each asset's contribution to portfolio volatility
 - **Effective Number of Bets:** Diversification metric - how many independent positions
 - **Trading Convention:** Assumes daily returns (annualization if needed ×252)
@@ -162,3 +164,4 @@ class CovarianceResult:
 
 **File Reference:** `app/domain/services/portfolio_optimization/covariance_calculator.py`
 **Last Audited:** 2026-02-01
+**Last Fixed:** 2026-02-01 (GAPs: PSD enforcement, NaN sanitization, magic numbers)

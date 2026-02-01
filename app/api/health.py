@@ -66,10 +66,12 @@ class HealthChecker:
             Dict with status: "healthy", "degraded", or "unhealthy"
         """
         if not self._db_path:
+            logger.warning("Database health check: database not configured")
             return {"status": "degraded", "message": "Database not configured"}
 
         try:
             if not os.path.exists(self._db_path):
+                logger.error(f"Database health check: file not found at {self._db_path}")
                 return {
                     "status": "unhealthy",
                     "message": f"Database file not found: {self._db_path}",
@@ -78,6 +80,7 @@ class HealthChecker:
             # Check file size (should be > 0)
             file_size: int = os.path.getsize(self._db_path)
             if file_size == 0:
+                logger.error(f"Database health check: file is empty at {self._db_path}")
                 return {"status": "unhealthy", "message": "Database file is empty"}
 
             # Try to connect (basic check)
@@ -89,13 +92,16 @@ class HealthChecker:
             tables = cursor.fetchall()
             conn.close()
 
-            return {
+            result = {
                 "status": "healthy",
                 "message": f"Database OK ({len(tables)} tables)",
                 "file_size_mb": round(file_size / (1024 * 1024), 2),
             }
+            logger.info(f"Database health check: {result['message']}, size={result['file_size_mb']}MB")
+            return result
 
         except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
+            logger.error(f"Database health check failed: {str(e)}")
             return {"status": "unhealthy", "message": f"Database error: {str(e)}"}
 
     async def check_broker(self) -> Dict[str, Any]:
@@ -106,6 +112,7 @@ class HealthChecker:
             Dict with status
         """
         if not self._broker:
+            logger.warning("Broker health check: broker not configured")
             return {"status": "degraded", "message": "Broker not configured"}
 
         try:
@@ -113,16 +120,21 @@ class HealthChecker:
             account = await asyncio.wait_for(self._broker.get_account_info(), timeout=5.0)
 
             if account:
-                return {
+                result = {
                     "status": "healthy",
                     "message": f"Broker connected: {type(self._broker).__name__}",
                 }
+                logger.info(f"Broker health check: {result['message']}")
+                return result
             else:
+                logger.warning("Broker health check: broker returned no account info")
                 return {"status": "degraded", "message": "Broker returned no account info"}
 
         except asyncio.TimeoutError:
+            logger.error("Broker health check: connection timeout after 5s")
             return {"status": "unhealthy", "message": "Broker connection timeout"}
         except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            logger.error(f"Broker health check failed: {str(e)}")
             return {"status": "unhealthy", "message": f"Broker error: {str(e)}"}
 
     def check_memory(self) -> Dict[str, Any]:
@@ -152,15 +164,28 @@ class HealthChecker:
             else:
                 status = "healthy"
 
-            return {
+            result = {
                 "status": status,
                 "memory_mb": round(memory_mb, 2),
                 "memory_percent": round(memory_percent, 2),
                 "available_mb": round(psutil.virtual_memory().available / (1024 * 1024), 2),
             }
 
+            # Log based on status
+            if status == "unhealthy":
+                logger.error(f"Memory health check: {status} - {result['memory_mb']:.1f}MB used ({result['memory_percent']:.1f}%)")
+            elif status == "degraded":
+                logger.warning(f"Memory health check: {status} - {result['memory_mb']:.1f}MB used ({result['memory_percent']:.1f}%)")
+            else:
+                logger.info(f"Memory health check: {status} - {result['memory_mb']:.1f}MB used ({result['memory_percent']:.1f}%)")
+
+            return result
+
+        except ImportError:
+            logger.warning("Memory health check: psutil not installed")
             return {"status": "degraded", "message": "psutil not installed"}
         except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            logger.error(f"Memory health check failed: {str(e)}")
             return {"status": "degraded", "message": f"Memory check error: {str(e)}"}
 
     async def check_positions(self) -> Dict[str, Any]:
@@ -171,6 +196,7 @@ class HealthChecker:
             Dict with position count and status
         """
         if not self._broker:
+            logger.warning("Positions health check: broker not configured")
             return {"status": "degraded", "message": "Broker not configured", "count": 0}
 
         try:
@@ -178,9 +204,12 @@ class HealthChecker:
 
             count: int = len(positions) if positions else 0
 
-            return {"status": "healthy", "count": count, "message": f"{count} open positions"}
+            result = {"status": "healthy", "count": count, "message": f"{count} open positions"}
+            logger.info(f"Positions health check: {result['message']}")
+            return result
 
         except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            logger.error(f"Positions health check failed: {str(e)}")
             return {"status": "degraded", "message": f"Position check error: {str(e)}", "count": 0}
 
     async def run_all_checks(self) -> Dict[str, Any]:
@@ -210,7 +239,19 @@ class HealthChecker:
         # Calculate uptime
         uptime: float = (datetime.now() - self.start_time).total_seconds()
 
-        return {"status": overall_status, "checks": checks, "uptime_seconds": uptime}
+        result = {"status": overall_status, "checks": checks, "uptime_seconds": uptime}
+
+        # Log overall status
+        logger.info(
+            f"Overall health check: {overall_status.upper()} - "
+            f"uptime={uptime:.0f}s, "
+            f"database={checks['database']['status']}, "
+            f"broker={checks['broker']['status']}, "
+            f"memory={checks['memory']['status']}, "
+            f"positions={checks['positions']['status']}"
+        )
+
+        return result
 
 
 # Global health checker instance

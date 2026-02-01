@@ -167,7 +167,7 @@ class CoveredCallPortfolio:
 
 | Rule | Source | Requirement | Current Status |
 |------|--------|-------------|----------------|
-| Input validation | BASE_RULES.md (CC-006) | Validate option data ranges | ❌ GAP - No validation |
+| Input validation | BASE_RULES.md (CC-006) | Validate option data ranges | ✅ FIXED - Full validation with logging |
 | Stock ownership | Covered call | Must own 100 shares per contract | ✅ OK - stock_quantity |
 | Target OTM | Kissell & Posament (2017) | 5-10% OTM for income focus | ✅ OK - target_otm=0.05 |
 | DTE range | Options standard | 30-45 DTE optimal | ✅ OK - min/max_dte |

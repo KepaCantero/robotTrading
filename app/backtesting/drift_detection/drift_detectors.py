@@ -19,6 +19,13 @@ from scipy.stats import ks_2samp
 
 logger = logging.getLogger(__name__)
 
+# Design Note: DOM-001 - DriftResult is a plain dataclass (not a domain Value Object)
+# Rationale: Drift detection is a cross-cutting utility concern used across multiple
+# bounded contexts (backtesting, monitoring, live trading). Converting to a domain
+# VO would create unnecessary coupling. The dataclass provides type safety and
+# immutability (frozen=True would be used but we need mutability for __post_init__)
+# while remaining framework-agnostic.
+
 
 class DriftType(Enum):
     """Types of drift to detect."""
@@ -73,8 +80,7 @@ class KSDriftDetector:
         statistic, p_value = ks_2samp(reference, current)
 
         drift_detected = p_value < self.significance_level
-
-        return DriftResult(
+        result = DriftResult(
             drift_detected=drift_detected,
             drift_type=DriftType.FEATURE_DRIFT,
             p_value=p_value,
@@ -82,6 +88,39 @@ class KSDriftDetector:
             threshold=self.significance_level,
             confidence=1 - p_value,
         )
+
+        # Structured logging for drift detection event (LOG-001)
+        logger.info(
+            "drift_detection_complete",
+            extra={
+                "drift_type": DriftType.FEATURE_DRIFT.value,
+                "detector": "KSDriftDetector",
+                "drift_detected": drift_detected,
+                "p_value": float(p_value),
+                "statistic": float(statistic),
+                "threshold": self.significance_level,
+                "confidence": float(1 - p_value),
+                "reference_size": len(reference),
+                "current_size": len(current),
+                "reference_mean": float(np.mean(reference)),
+                "current_mean": float(np.mean(current)),
+            }
+        )
+
+        if drift_detected:
+            logger.warning(
+                "drift_detected",
+                extra={
+                    "drift_type": DriftType.FEATURE_DRIFT.value,
+                    "detector": "KSDriftDetector",
+                    "p_value": float(p_value),
+                    "statistic": float(statistic),
+                    "threshold": self.significance_level,
+                    "severity": "high" if p_value < 0.01 else "moderate" if p_value < 0.05 else "low",
+                }
+            )
+
+        return result
 
 
 class PSIDriftDetector:
@@ -116,13 +155,44 @@ class PSIDriftDetector:
         psi_value = self._calculate_psi(reference, current)
         drift_detected = psi_value > self.threshold
 
-        return DriftResult(
+        result = DriftResult(
             drift_detected=drift_detected,
             drift_type=DriftType.FEATURE_DRIFT,
             statistic=psi_value,
             threshold=self.threshold,
             details={'n_bins': self.n_bins},
         )
+
+        # Structured logging for drift detection event (LOG-001)
+        logger.info(
+            "drift_detection_complete",
+            extra={
+                "drift_type": DriftType.FEATURE_DRIFT.value,
+                "detector": "PSIDriftDetector",
+                "drift_detected": drift_detected,
+                "psi_value": float(psi_value),
+                "threshold": self.threshold,
+                "n_bins": self.n_bins,
+                "reference_size": len(reference),
+                "current_size": len(current),
+                "severity": "high" if psi_value > 0.5 else "moderate" if psi_value > 0.25 else "low",
+            }
+        )
+
+        if drift_detected:
+            logger.warning(
+                "drift_detected",
+                extra={
+                    "drift_type": DriftType.FEATURE_DRIFT.value,
+                    "detector": "PSIDriftDetector",
+                    "psi_value": float(psi_value),
+                    "threshold": self.threshold,
+                    "n_bins": self.n_bins,
+                    "severity": "high" if psi_value > 0.5 else "moderate" if psi_value > 0.25 else "low",
+                }
+            )
+
+        return result
 
     def _calculate_psi(self, reference: np.ndarray, current: np.ndarray) -> float:
         """
@@ -188,6 +258,15 @@ class ADWINDriftDetector:
         self.window.append(new_value)
 
         if len(self.window) < self.max_window_size // 2:
+            # Log when window is warming up
+            logger.debug(
+                "adwin_warming_up",
+                extra={
+                    "detector": "ADWINDriftDetector",
+                    "current_window_size": len(self.window),
+                    "required_size": self.max_window_size // 2,
+                }
+            )
             return None
 
         # Check for change point
@@ -198,10 +277,38 @@ class ADWINDriftDetector:
             for _ in range(change_point):
                 self.window.popleft()
 
-            return DriftResult(
+            result = DriftResult(
                 drift_detected=True,
                 drift_type=DriftType.CONCEPT_DRIFT,
                 details={'change_point': change_point, 'window_size': len(self.window)},
+            )
+
+            # Structured logging for drift detection event (LOG-001)
+            logger.warning(
+                "drift_detected",
+                extra={
+                    "drift_type": DriftType.CONCEPT_DRIFT.value,
+                    "detector": "ADWINDriftDetector",
+                    "change_point": change_point,
+                    "window_size": len(self.window),
+                    "delta": self.delta,
+                    "new_value": float(new_value),
+                }
+            )
+
+            return result
+
+        # Log periodic monitoring for streaming detector
+        if len(self.window) % 100 == 0:
+            logger.info(
+                "adwin_monitoring",
+                extra={
+                    "detector": "ADWINDriftDetector",
+                    "window_size": len(self.window),
+                    "delta": self.delta,
+                    "window_mean": float(np.mean(list(self.window))),
+                    "window_std": float(np.std(list(self.window))),
+                }
             )
 
         return None
@@ -266,12 +373,43 @@ class MMDDriftDetector:
         mmd_value = self._calculate_mmd(reference, current)
         drift_detected = mmd_value > self.threshold
 
-        return DriftResult(
+        result = DriftResult(
             drift_detected=drift_detected,
             drift_type=DriftType.FEATURE_DRIFT,
             statistic=mmd_value,
             threshold=self.threshold,
         )
+
+        # Structured logging for drift detection event (LOG-001)
+        logger.info(
+            "drift_detection_complete",
+            extra={
+                "drift_type": DriftType.FEATURE_DRIFT.value,
+                "detector": "MMDDriftDetector",
+                "drift_detected": drift_detected,
+                "mmd_value": float(mmd_value),
+                "threshold": self.threshold,
+                "gamma": self.gamma,
+                "reference_size": len(reference),
+                "current_size": len(current),
+                "reference_mean": float(np.mean(reference)),
+                "current_mean": float(np.mean(current)),
+            }
+        )
+
+        if drift_detected:
+            logger.warning(
+                "drift_detected",
+                extra={
+                    "drift_type": DriftType.FEATURE_DRIFT.value,
+                    "detector": "MMDDriftDetector",
+                    "mmd_value": float(mmd_value),
+                    "threshold": self.threshold,
+                    "gamma": self.gamma,
+                }
+            )
+
+        return result
 
     def _calculate_mmd(self, reference: np.ndarray, current: np.ndarray) -> float:
         """

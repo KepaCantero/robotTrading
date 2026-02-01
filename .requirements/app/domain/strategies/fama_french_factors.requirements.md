@@ -120,7 +120,7 @@ class FactorTiming:
 
 | Rule | Source | Requirement | Current Status |
 |------|--------|-------------|----------------|
-| Input validation | BASE_RULES.md (CC-006) | Validate returns array length | ❌ GAP - No validation |
+| Input validation | BASE_RULES.md (CC-006) | Validate returns array length | ✅ FIXED - Added full validation with NaN/inf handling |
 | 3-factor model | Fama & French (1993) | R = α + β_mkt*MKT + β_smb*SMB + β_hml*HML | ✅ OK - Implemented |
 | 4-factor model | Carhart (1997) | + β_umd*UMD | ✅ OK - Implemented |
 | OLS regression | Econometrics | β = (X'X)^(-1)X'y | ✅ OK - np.linalg.lstsq |

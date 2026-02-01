@@ -63,9 +63,10 @@ class InputProfileRouter:
             ValueError: If profile validation fails
         """
         logger.info(
-            f"Routing profile: objetivo={profile.objetivo_inversion.value}, "
-            f"risk={profile.risk_tolerance.value}, "
-            f"capital={profile.capital_initial}"
+            "Routing profile",
+            objetivo=profile.objetivo_inversion.value,
+            risk=profile.risk_tolerance.value,
+            capital=str(profile.capital_initial),
         )
 
         # Select strategy type based on investment objective
@@ -91,9 +92,10 @@ class InputProfileRouter:
         )
 
         logger.info(
-            f"Generated configuration: strategy={strategy_type.value}, "
-            f"max_drawdown={risk_config.max_drawdown}, "
-            f"leverage={'allowed' if risk_config.leverage_allowed else 'not allowed'}"
+            "Generated configuration",
+            strategy=strategy_type.value,
+            max_drawdown=str(risk_config.max_drawdown),
+            leverage="allowed" if risk_config.leverage_allowed else "not allowed",
         )
 
         return config
@@ -135,7 +137,11 @@ class InputProfileRouter:
             )
 
         strategy = strategies[objetivo]
-        logger.debug(f"Mapped objetivo {objetivo.value} -> strategy {strategy.value}")
+        logger.debug(
+            "Mapped objetivo to strategy",
+            objetivo=objetivo.value,
+            strategy=strategy.value,
+        )
 
         return strategy
 
@@ -218,8 +224,10 @@ class InputProfileRouter:
 
         config = configs[tolerance]
         logger.debug(
-            f"Mapped risk tolerance {tolerance.value} -> "
-            f"max_dd={config.max_drawdown}, leverage={config.leverage_allowed}"
+            "Mapped risk tolerance",
+            tolerance=tolerance.value,
+            max_dd=str(config.max_drawdown),
+            leverage=config.leverage_allowed,
         )
 
         return config
@@ -261,8 +269,9 @@ class InputProfileRouter:
         )
 
         logger.debug(
-            f"Created tax config: country={tax_residence.country_code}, "
-            f"long_term_advantage={config.has_long_term_advantage}"
+            "Created tax config",
+            country=tax_residence.country_code,
+            prefer_long_term=config.prefer_long_term,
         )
 
         return config
@@ -346,6 +355,6 @@ class InputProfileRouter:
         is_valid = len(warnings) == 0
 
         if not is_valid:
-            logger.warning(f"Configuration validation warnings: {warnings}")
+            logger.warning("Configuration validation warnings", warnings=warnings)
 
         return is_valid, warnings

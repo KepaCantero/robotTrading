@@ -5,10 +5,8 @@ Create Portfolio Use Case - Create a new portfolio
 from decimal import Decimal
 from typing import Optional
 
-from app.domain.entities.portfolio import Portfolio, PortfolioStatus
+from app.domain.entities.portfolio import Portfolio
 from app.domain.factories import TradingEntityFactory
-from app.domain.value_objects.capital import Capital
-from app.domain.value_objects.risk_parameters import RiskParameters
 
 
 class CreatePortfolioUseCase:

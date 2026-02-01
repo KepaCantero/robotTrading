@@ -8,7 +8,7 @@ import logging
 from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 
@@ -40,13 +40,13 @@ class MultiStrategyBacktester:
         self,
         allocation_manager: MultiStrategyAllocationManager,
         strategies: Dict[str, BaseStrategy],
-        config_params: Dict,
+        config_params: Dict[str, Any],
         portfolio_config_manager: Optional[PortfolioConfigManager] = None,
         enable_diagnostics: bool = True,
         early_abort_loss_pct: Optional[Decimal] = None,  # Abort if loss > X% in first 2 years
         enable_dynamic_reallocation: bool = True,
         reallocation_frequency_days: int = 30,
-    ):
+    ) -> None:
         """
         Initialize multi-strategy backtester.
 

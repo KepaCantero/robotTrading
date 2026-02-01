@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 
 import yaml
 
@@ -23,6 +23,11 @@ from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestR
 from app.core.models.input_profile import InputProfile
 
 logger = logging.getLogger(__name__)
+
+# Type aliases for better type safety
+ConfigDict = Dict[str, Any]
+MetricsDict = Dict[str, Union[float, int, str, bool, None]]
+PerStrategyDict = Dict[str, MetricsDict]
 
 
 class BaselineBacktestExecutor:
@@ -44,8 +49,8 @@ class BaselineBacktestExecutor:
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
     def run_baseline(
-        self, profile: InputProfile, config: Dict[str, Any], multi_strategy: bool = False
-    ) -> Dict[str, Any]:
+        self, profile: InputProfile, config: ConfigDict, multi_strategy: bool = False
+    ) -> MetricsDict:
         """
         Run baseline backtest with default parameters.
 
@@ -85,7 +90,7 @@ class BaselineBacktestExecutor:
 
     def _run_single_strategy_baseline(
         self, runner: ComprehensiveBacktestRunner, profile: InputProfile
-    ) -> Dict[str, Any]:
+    ) -> MetricsDict:
         """Run single strategy baseline backtest."""
         baseline_results_list = runner.run_baseline_backtest()
 
@@ -101,7 +106,7 @@ class BaselineBacktestExecutor:
 
     def _run_multi_strategy_baseline(
         self, runner: ComprehensiveBacktestRunner, profile: InputProfile
-    ) -> Dict[str, Any]:
+    ) -> MetricsDict:
         """Run multi-strategy baseline backtest."""
         logger.info("Executing multi-strategy baseline backtest")
         multi_strategy_results = runner.run_multi_strategy_backtest()
@@ -138,7 +143,7 @@ class BaselineBacktestExecutor:
 
     def aggregate_multi_strategy_results(
         self, results: List[Dict[str, Any]], profile: InputProfile
-    ) -> Dict[str, Any]:
+    ) -> MetricsDict:
         """
         Aggregate multi-strategy backtest results into combined metrics.
 
@@ -242,7 +247,7 @@ class BaselineBacktestExecutor:
 
     def _safe_extract_first_result(
         self, results: List[Dict[str, Any]] | None, context: str
-    ) -> Dict[str, Any]:
+    ) -> MetricsDict:
         """
         Safely extract the first result from a list of backtest results.
 
@@ -284,7 +289,7 @@ class BaselineBacktestExecutor:
         logger.debug(f"Successfully extracted result for {context}")
         return result
 
-    def _get_empty_metrics(self) -> Dict[str, Any]:
+    def _get_empty_metrics(self) -> MetricsDict:
         """Return empty metrics dict."""
         return {
             "sharpe_ratio": 0.0,

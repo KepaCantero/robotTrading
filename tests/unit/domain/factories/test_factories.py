@@ -187,7 +187,40 @@ class TestTradingEntityFactory:
             symbol="AAPL", quantity=Decimal("-50"), entry_price=Decimal("150.00")
         )
 
-        assert position.quantity == Decimal("-50")
+        # Factory converts negative quantity to positive with SHORT side
+        assert position.quantity == Decimal("50")
+        assert position.side.value == "short"
+
+    def test_create_position_with_explicit_short_side(self):
+        """Test creating a short position with explicit side parameter."""
+        factory = TradingEntityFactory()
+
+        position = factory.create_position(
+            symbol="AAPL", quantity=Decimal("50"), entry_price=Decimal("150.00"), side="short"
+        )
+
+        assert position.quantity == Decimal("50")
+        assert position.side.value == "short"
+
+    def test_create_position_with_explicit_long_side(self):
+        """Test creating a long position with explicit side parameter."""
+        factory = TradingEntityFactory()
+
+        position = factory.create_position(
+            symbol="AAPL", quantity=Decimal("100"), entry_price=Decimal("150.00"), side="long"
+        )
+
+        assert position.quantity == Decimal("100")
+        assert position.side.value == "long"
+
+    def test_create_position_validates_side(self):
+        """Test that factory validates side parameter."""
+        factory = TradingEntityFactory()
+
+        with pytest.raises(ValueError, match="Side must be"):
+            factory.create_position(
+                symbol="AAPL", quantity=Decimal("100"), entry_price=Decimal("150.00"), side="invalid"
+            )
 
 
 # ============================================================================

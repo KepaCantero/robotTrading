@@ -11,7 +11,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
@@ -33,11 +33,11 @@ except ImportError:
     # Create a wrapper that adapts yfinance to match yahoo_fin interface
     def yahoo_fin_get_data(
         ticker: str,
-        start_date: str = None,
-        end_date: str = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
         index_as_date: bool = True,
         interval: str = "1d",
-    ):
+    ) -> pd.DataFrame:
         """
         Fallback function using yfinance when yahoo_fin is not available.
 
@@ -486,7 +486,7 @@ class DataLoader:
 
         return quotes
 
-    def save_to_csv(self, data: List[Quote], filename: str):
+    def save_to_csv(self, data: List[Quote], filename: str) -> None:
         """
         Save quotes to CSV file.
 

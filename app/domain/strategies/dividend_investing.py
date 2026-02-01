@@ -13,12 +13,15 @@ Paper: Arnott, R.D., & Asness, C.S. (2003). "Surprise! Higher Dividends = Higher
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
 class DividendSignal(str, Enum):
@@ -64,43 +67,50 @@ class DividendMetrics:
         """
         score = 0.0
 
+        # Validate inputs and handle NaN/inf
+        payout_ratio = self.payout_ratio if np.isfinite(self.payout_ratio) and self.payout_ratio >= 0 else 1.0
+        fcf_payout = self.free_cash_payout_ratio if np.isfinite(self.free_cash_payout_ratio) and self.free_cash_payout_ratio >= 0 else 1.0
+        growth_years = self.dividend_growth_years if np.isfinite(self.dividend_growth_years) and self.dividend_growth_years >= 0 else 0
+        roe = self.return_on_equity if np.isfinite(self.return_on_equity) else 0.0
+        debt_to_equity = self.debt_to_equity if np.isfinite(self.debt_to_equity) and self.debt_to_equity >= 0 else 2.0
+
         # Payout ratio (ideal: 40-60%)
-        if 0.4 <= self.payout_ratio <= 0.6:
+        if 0.4 <= payout_ratio <= 0.6:
             score += 0.3
-        elif 0.3 <= self.payout_ratio <= 0.7:
+        elif 0.3 <= payout_ratio <= 0.7:
             score += 0.2
-        elif self.payout_ratio < 0.8:
+        elif payout_ratio < 0.8:
             score += 0.1
 
         # FCF payout ratio (ideal: < 70%)
-        if self.free_cash_payout_ratio < 0.5:
+        if fcf_payout < 0.5:
             score += 0.3
-        elif self.free_cash_payout_ratio < 0.7:
+        elif fcf_payout < 0.7:
             score += 0.2
-        elif self.free_cash_payout_ratio < 0.85:
+        elif fcf_payout < 0.85:
             score += 0.1
 
         # Dividend growth consistency
-        if self.dividend_growth_years >= 25:
+        if growth_years >= 25:
             score += 0.2
-        elif self.dividend_growth_years >= 10:
+        elif growth_years >= 10:
             score += 0.15
-        elif self.dividend_growth_years >= 5:
+        elif growth_years >= 5:
             score += 0.1
 
         # Earnings quality (ROE)
-        if self.return_on_equity > 0.15:
+        if roe > 0.15:
             score += 0.1
-        elif self.return_on_equity > 0.10:
+        elif roe > 0.10:
             score += 0.05
 
         # Financial health (D/E)
-        if self.debt_to_equity < 0.5:
+        if debt_to_equity < 0.5:
             score += 0.1
-        elif self.debt_to_equity < 1.0:
+        elif debt_to_equity < 1.0:
             score += 0.05
 
-        return min(1.0, score)
+        return min(1.0, max(0.0, score))
 
     @property
     def dividend_attractiveness_score(self) -> float:
@@ -111,26 +121,30 @@ class DividendMetrics:
         """
         score = 0.0
 
+        # Validate inputs and handle NaN/inf
+        dividend_yield = self.dividend_yield if np.isfinite(self.dividend_yield) and self.dividend_yield >= 0 else 0.0
+        growth_rate = self.dividend_growth_rate if np.isfinite(self.dividend_growth_rate) else 0.0
+
         # Dividend yield (2-6% ideal)
-        if 0.03 <= self.dividend_yield <= 0.06:
+        if 0.03 <= dividend_yield <= 0.06:
             score += 0.4
-        elif 0.02 <= self.dividend_yield <= 0.08:
+        elif 0.02 <= dividend_yield <= 0.08:
             score += 0.3
-        elif self.dividend_yield > 0.01:
+        elif dividend_yield > 0.01:
             score += 0.2
 
         # Dividend growth
-        if self.dividend_growth_rate > 0.10:
+        if growth_rate > 0.10:
             score += 0.3
-        elif self.dividend_growth_rate > 0.05:
+        elif growth_rate > 0.05:
             score += 0.2
-        elif self.dividend_growth_rate > 0.02:
+        elif growth_rate > 0.02:
             score += 0.1
 
         # Sustainability
         score += self.dividend_sustainability_score * 0.3
 
-        return min(1.0, score)
+        return min(1.0, max(0.0, score))
 
 
 @dataclass
@@ -219,6 +233,17 @@ class DividendInvesting:
 
     def _passes_screen(self, metrics: DividendMetrics) -> bool:
         """Check if stock passes dividend screen."""
+        # Validate metrics first
+        if not all([
+            np.isfinite(metrics.dividend_yield) and metrics.dividend_yield >= 0,
+            np.isfinite(metrics.payout_ratio) and metrics.payout_ratio >= 0,
+            np.isfinite(metrics.dividend_years) and metrics.dividend_years >= 0,
+            np.isfinite(metrics.dividend_sustainability_score) and 0 <= metrics.dividend_sustainability_score <= 1,
+            np.isfinite(metrics.dividend_growth_rate),
+        ]):
+            logger.warning(f"Invalid dividend metrics for {metrics.symbol}")
+            return False
+
         # Yield requirements
         if metrics.dividend_yield < self._min_yield or metrics.dividend_yield > self._max_yield:
             return False
@@ -446,6 +471,14 @@ class DividendInvesting:
         Returns:
             DividendSignal with action
         """
+        # Input validation
+        if not np.isfinite(current_price) or current_price <= 0:
+            logger.warning(f"Invalid current_price: {current_price}")
+            return DividendSignal.AVOID
+
+        if fair_value < 0 or not np.isfinite(fair_value):
+            fair_value = 0.0
+
         # Check if passes screen
         if not self._passes_screen(metrics):
             return DividendSignal.AVOID
@@ -453,18 +486,29 @@ class DividendInvesting:
         # Calculate attractiveness score
         score = metrics.dividend_attractiveness_score
 
+        # Validate score
+        if not np.isfinite(score):
+            score = 0.0
+
         # Valuation check
         if fair_value > 0:
-            valuation_ratio = current_price / fair_value
+            valuation_ratio = current_price / fair_value if np.isfinite(current_price / fair_value) else 1.0
         else:
             valuation_ratio = 1.0
+
+        # Validate valuation ratio
+        if not np.isfinite(valuation_ratio):
+            valuation_ratio = 1.0
+
+        # Validate payout ratio
+        payout_ratio = metrics.payout_ratio if np.isfinite(metrics.payout_ratio) else 1.0
 
         # Generate signal
         if score > 0.7 and valuation_ratio < 0.9:
             return DividendSignal.BUY
         elif score > 0.5 and valuation_ratio < 1.0:
             return DividendSignal.BUY
-        elif score < 0.3 or metrics.payout_ratio > 0.9:
+        elif score < 0.3 or payout_ratio > 0.9:
             # Risk of dividend cut
             return DividendSignal.SELL
         elif valuation_ratio > 1.2:

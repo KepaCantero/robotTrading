@@ -3,6 +3,33 @@ Configuration Loader for Meta-Analyzer
 
 Loads and manages YAML configuration for all meta-analysis components.
 Provides configuration access throughout the backtesting analysis pipeline.
+
+Design Note: Plain Dict Return Type
+------------------------------------
+This class intentionally returns Dict[str, Any] instead of value objects.
+This is a deliberate design choice for the following reasons:
+
+1. **Configuration is not a domain entity**: Configuration data represents
+   external settings/parameters, not domain concepts like Money, Portfolio, or Order.
+
+2. **Dynamic structure requirements**: The meta-analyzer configuration needs
+   to support arbitrary nested structures (metric_thresholds.sharpe_ratio.excellent)
+   that would require excessive boilerplate with value objects.
+
+3. **Read-only access pattern**: This class provides read-only access to loaded
+   configuration. All mutation happens through YAML file edits, not through
+   the API, reducing the need for value object encapsulation.
+
+4. **Downstream conversion**: When configuration values are used in domain
+   operations, they ARE converted to value objects (e.g., Decimal for monetary
+   values) by the consuming classes (BacktestConfig, strategies, etc.).
+
+5. **Compatibility**: Many existing components expect dict-based configuration
+   for compatibility with YAML serialization/deserialization.
+
+See: BacktestConfigLoader (core/config_loader.py) for an example where
+configuration IS converted to a typed value object (BacktestConfig) with
+proper Decimal validation.
 """
 
 import logging
