@@ -8,6 +8,7 @@ from decimal import Decimal
 from typing import Dict, List, Optional
 
 from app.domain.entities.order import Order, OrderSide, OrderType, OrderStatus
+from app.models.market_data import Quote
 from app.models.signal import Signal, SignalType
 from app.strategies.base import BaseStrategy
 
@@ -28,20 +29,23 @@ class ExecuteStrategyUseCase:
 
     def execute(
         self,
-        symbol: str,
+        market_data: Quote,
         strategy_type: str,
-        parameters: Optional[Dict] = None,
+        parameters: Optional[Dict[str, any]] = None,
     ) -> List[Order]:
         """
         Execute the use case - run strategy and generate orders.
 
         Args:
-            symbol: Trading symbol
+            market_data: Market data quote for signal generation
             strategy_type: Type of strategy to execute
             parameters: Strategy parameters
 
         Returns:
             List of generated orders
+
+        Raises:
+            ValueError: If parameter application fails
         """
         if not self._strategy:
             logger.warning("No strategy configured, returning empty orders")
@@ -54,13 +58,14 @@ class ExecuteStrategyUseCase:
                 logger.debug(f"Applied parameters to strategy: {parameters}")
             except Exception as e:
                 logger.error(f"Failed to apply strategy parameters: {e}")
+                raise ValueError(f"Invalid strategy parameters: {e}") from e
 
         # Execute strategy and generate signals
         try:
-            signals = self._strategy.generate_signals(symbol)
-            logger.info(f"Generated {len(signals)} signals for {symbol}")
+            signals = self._strategy.generate_signals(market_data)
+            logger.info(f"Generated {len(signals)} signals for {market_data.symbol}")
         except Exception as e:
-            logger.error(f"Failed to generate signals for {symbol}: {e}")
+            logger.error(f"Failed to generate signals for {market_data.symbol}: {e}")
             return []
 
         # Convert signals to orders
