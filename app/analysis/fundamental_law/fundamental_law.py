@@ -29,6 +29,7 @@ import pandas as pd
 
 from app.analysis.fundamental_law.breadth_calculator import BreadthCalculator
 from app.analysis.fundamental_law.ic_calculator import ICCalculator
+from app.analysis.fundamental_law.models import FundamentalLawComponents, StrategyAnalysis
 from app.core.decimal_utils import to_decimal
 
 logger = logging.getLogger(__name__)

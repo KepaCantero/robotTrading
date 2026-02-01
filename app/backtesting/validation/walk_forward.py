@@ -194,6 +194,9 @@ class WalkForwardValidator:
 
         Returns:
             List of (train_data, test_data) tuples
+
+        Raises:
+            ValueError: If insufficient data to generate any windows
         """
         windows = []
 
@@ -201,6 +204,16 @@ class WalkForwardValidator:
         train_days = self.config.train_period_months * 21  # ~21 trading days/month
         test_days = self.config.test_period_months * 21
         step_days = self.config.step_months * 21
+
+        # Check if we have enough data for at least one window
+        min_required = train_days + test_days
+        if len(data) < min_required:
+            raise ValueError(
+                f"Insufficient data: need at least {min_required} rows "
+                f"({self.config.train_period_months} months train + "
+                f"{self.config.test_period_months} months test), "
+                f"got {len(data)} rows"
+            )
 
         # Generate windows
         start_idx = 0

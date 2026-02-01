@@ -25,7 +25,7 @@ class ReversionState(str, Enum):
     OVERBOUGHT = "overbought"  # Price above mean, expect decline
     OVERSOLD = "oversold"  # Price below mean, expect rise
     NEUTRAL = "neutral"
-    MEAN CROSSING = "mean_crossing"  # Price crossing mean
+    MEAN_CROSSING = "mean_crossing"  # Price crossing mean
 
 
 @dataclass
