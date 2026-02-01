@@ -23,6 +23,9 @@ from app.domain.entities.position import Position
 class RiskMetrics:
     """Risk metrics for a portfolio or position."""
 
+    # Portfolio value for percentage calculations
+    portfolio_value: Decimal  # Total portfolio value used for VaR calculations
+
     # Value at Risk metrics
     var_95: Decimal  # Value at Risk at 95% confidence
     var_99: Decimal  # Value at Risk at 99% confidence
@@ -75,6 +78,7 @@ class RiskCalculator:
 
         if total_value == 0 or not position_values:
             return RiskMetrics(
+                portfolio_value=Decimal("0"),
                 var_95=Decimal("0"),
                 var_99=Decimal("0"),
                 daily_volatility=Decimal("0"),
@@ -107,6 +111,7 @@ class RiskCalculator:
         utilisation = self._calculate_risk_utilisation(portfolio)
 
         return RiskMetrics(
+            portfolio_value=total_value,
             var_95=var_95,
             var_99=var_99,
             daily_volatility=daily_vol,
@@ -413,9 +418,16 @@ class RiskCalculator:
         else:
             util_level = "High utilisation"
 
+        # Calculate VaR as percentage of portfolio value
+        var_95_percentage = (
+            (metrics.var_95 / metrics.portfolio_value * 100)
+            if metrics.portfolio_value > 0
+            else Decimal("0")
+        )
+
         return {
             "volatility_level": vol_level,
             "concentration_level": conc_level,
             "utilisation_level": util_level,
-            "var_95_pct": f"{metrics.var_95:.1f}",
+            "var_95_pct": f"{var_95_percentage:.1f}%",
         }
