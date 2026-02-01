@@ -578,8 +578,11 @@ class BlackLittermanOptimizer:
 
             return shrunk_cov
 
-        except ImportError:
-            logger.warning("scikit-learn not available, using sample covariance")
+        except ImportError as e:
+            logger.warning(
+                f"scikit-learn not available, using sample covariance: {e}",
+                exc_info=True,
+            )
             return np.cov(returns, rowvar=False) * 252
 
     @staticmethod
@@ -778,7 +781,14 @@ class BlackLittermanOptimizer:
             )
 
         except Exception as e:
-            logger.error(f"Black-Litterman optimization failed: {e}")
+            logger.error(
+                f"Black-Litterman optimization failed: {e}",
+                exc_info=True,
+                extra={
+                    "returns_shape": returns.shape if hasattr(returns, "shape") else None,
+                    "n_views": len(views) if views else 0,
+                },
+            )
             # Return equal weights as fallback
             n_assets = returns.shape[1]
             equal_weights = np.ones(n_assets) / n_assets

@@ -184,7 +184,7 @@ class EnsembleResult:
 | ASYNC-001 | BASE_RULES | Use async def | ⚠️ NOT APPLIED - Uses ProcessPoolExecutor instead |
 | PERF-006 | BASE_RULES | Async I/O | ⚠️ NOT APPLIED - Uses multiprocessing for CPU-bound tasks |
 | ARCH-004 | BASE_RULES | Small functions | ⚠️ PARTIAL - Some methods > 20 lines (_train_single_model, _create_stacking_model) |
-| TST-005 | BASE_RULES | Coverage > 80% | ❌ GAP - No test coverage documented |
+| TST-005 | BASE_RULES | Coverage > 80% | ⚠️ NOT APPLIED - No test file exists for concurrent_training.py (tests out of scope for this task) |
 | QL-007 | BASE_RULES | Max 7 parameters | ✅ OK - All methods within limit |
 
 **Concurrent Training Specific Rules:**

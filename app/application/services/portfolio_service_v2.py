@@ -10,6 +10,7 @@ This version demonstrates proper dependency injection following SOLID principles
 Reference: Rule 03-solid-principles.md, Rule 05-architecture.md
 """
 
+import logging
 from decimal import Decimal
 from typing import Dict, List, Optional
 
@@ -17,6 +18,8 @@ from app.core.di_container import DIContainer
 from app.domain.entities.portfolio import Portfolio
 from app.domain.factories import AbstractEntityFactory
 from app.domain.repositories import PortfolioRepository
+
+logger = logging.getLogger(__name__)
 
 
 class PortfolioServiceV2:
@@ -71,8 +74,13 @@ class PortfolioServiceV2:
         try:
             return await self._repository.get(portfolio_id)
         except Exception as e:
-            # Log error but don't crash
-            print(f"Error getting portfolio: {e}")
+            # Log error with stack trace but don't crash
+            logger.error(
+                "Error getting portfolio",
+                portfolio_id=portfolio_id,
+                error=str(e),
+                exc_info=True,  # Includes stack trace
+            )
             return None
 
     async def create_portfolio(

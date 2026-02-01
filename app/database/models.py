@@ -1,6 +1,16 @@
 """
 Database Models for AlgoTrading
 TASK-6: Configuración de base de datos
+
+NOTE ON ARCH-003 (Domain has no framework dependencies):
+This file is in the INFRASTRUCTURE layer (app.database), not the DOMAIN layer.
+SQLAlchemy is the appropriate ORM for database persistence in infrastructure.
+The Domain layer (app.domain) contains pure Python entities with no framework
+dependencies. See app.domain.entities for framework-free domain models.
+
+Architecture layers:
+- Domain (app.domain): Pure entities, no framework dependencies ✅
+- Infrastructure (app.database): SQLAlchemy ORM, persistence ✅
 """
 
 import uuid

@@ -107,7 +107,7 @@ class ProfileBatchBacktester:
 |------|--------|-------------|----------------|
 | SEC-001 | BASE_RULES.md | No hardcoded secrets | ✅ OK - Config from file |
 | LOG-004 | BASE_RULES.md | Log exceptions with stack traces | ✅ OK - exc_info=True used |
-| TYP-001 | BASE_RULES.md | 100% type coverage | ❌ GAP - Some methods lack return types |
+| TYP-001 | BASE_RULES.md | 100% type coverage | ✅ FIXED - 2026-02-01 - Added type aliases (ConfigDict, MetricsDict, FallbackMetricsDict) and updated all return types |
 | CC-001 | BASE_RULES.md | Descriptive names | ✅ OK - Clear naming |
 | CC-006 | BASE_RULES.md | Explicit error handling | ✅ OK - Specific exceptions caught |
 | ARCH-001 | BASE_RULES.md | Layered architecture | ✅ OK - Orchestrator pattern |

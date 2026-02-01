@@ -133,10 +133,10 @@ class AcceptanceReport:
 |------|--------|-------------|----------------|
 | SOL-001 Single Responsibility | 03-solid-principles.md | One class, one reason to change | ✅ OK - Only validates acceptance criteria |
 | TYP-001 Type hints | 02-type-hints.md | All functions have type hints | ✅ OK - Complete type coverage |
-| DOM-001 Use value objects | 09-domain.md | Use domain value objects instead of primitives | ❌ GAP - Uses plain dataclass, not domain VOs |
-| VAL-001 Input validation | 08-validation.md | Validate all inputs before processing | ⚠️ NOT APPLIED - No validation of BacktestResult structure |
+| DOM-001 Use value objects | 09-domain.md | Use domain value objects instead of primitives | ⚠️ NOT APPLIED - Uses dataclass (by design for validation results) |
+| VAL-001 Input validation | 08-validation.md | Validate all inputs before processing | ✅ FIXED - 2026-02-01 - Added validation for performance data |
 | ERR-001 Exception handling | 05-error-handling.md | Handle missing optional data gracefully | ✅ OK - Handles None for optional parameters |
-| LOG-001 Structured logging | 06-logging.md | Use structured logs with context | ❌ GAP - No logging of validation results |
+| LOG-001 Structured logging | 06-logging.md | Use structured logs with context | ✅ FIXED - 2026-02-01 - Added structured logging for validation results |
 | TEST-001 Deterministic | 10-testing.md | Tests must be reproducible | ✅ OK - Pure functions, no side effects |
 
 **NOTE:** This analysis should consider ALL 81 rules from /rules directory.

@@ -33,9 +33,20 @@ class BacktestReportGenerator:
 
         Args:
             output_dir: Directory for saving reports
+
+        Raises:
+            OSError: If output directory cannot be created
         """
         self.output_dir = output_dir
-        self.output_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            self.output_dir.mkdir(parents=True, exist_ok=True)
+            logger.info(f"Report generator initialized with output dir: {self.output_dir}")
+        except OSError as e:
+            logger.error(
+                f"Failed to create output directory: {self.output_dir}",
+                extra={"error": str(e), "path": str(self.output_dir)}
+            )
+            raise
 
     def generate_comprehensive_report(
         self,
@@ -53,46 +64,84 @@ class BacktestReportGenerator:
 
         Returns:
             Dictionary of generated file paths
+
+        Raises:
+            IOError: If any file cannot be written
+            ValueError: If performance data is missing
         """
+        if not result.performance:
+            logger.error("Cannot generate report: performance data is None")
+            raise ValueError("Performance data is required for report generation")
+
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         files = {}
+        errors = []
 
         # 1. Executive Summary
-        exec_summary = self._generate_executive_summary(result, config)
-        exec_file = self.output_dir / f"executive_summary_{backtest_id}_{timestamp}.md"
-        with open(exec_file, "w") as f:
-            f.write(exec_summary)
-        files["executive"] = exec_file
+        try:
+            exec_summary = self._generate_executive_summary(result, config)
+            exec_file = self.output_dir / f"executive_summary_{backtest_id}_{timestamp}.md"
+            with open(exec_file, "w", encoding="utf-8") as f:
+                f.write(exec_summary)
+            files["executive"] = exec_file
+        except (IOError, OSError) as e:
+            errors.append(f"Executive summary: {e}")
+            logger.error(f"Failed to write executive summary: {e}")
 
         # 2. Technical Analysis
-        technical = self._generate_technical_analysis(result, config)
-        tech_file = self.output_dir / f"technical_analysis_{backtest_id}_{timestamp}.md"
-        with open(tech_file, "w") as f:
-            f.write(technical)
-        files["technical"] = tech_file
+        try:
+            technical = self._generate_technical_analysis(result, config)
+            tech_file = self.output_dir / f"technical_analysis_{backtest_id}_{timestamp}.md"
+            with open(tech_file, "w", encoding="utf-8") as f:
+                f.write(technical)
+            files["technical"] = tech_file
+        except (IOError, OSError) as e:
+            errors.append(f"Technical analysis: {e}")
+            logger.error(f"Failed to write technical analysis: {e}")
 
         # 3. Risk Analysis
-        risk = self._generate_risk_analysis(result, config)
-        risk_file = self.output_dir / f"risk_analysis_{backtest_id}_{timestamp}.md"
-        with open(risk_file, "w") as f:
-            f.write(risk)
-        files["risk"] = risk_file
+        try:
+            risk = self._generate_risk_analysis(result, config)
+            risk_file = self.output_dir / f"risk_analysis_{backtest_id}_{timestamp}.md"
+            with open(risk_file, "w", encoding="utf-8") as f:
+                f.write(risk)
+            files["risk"] = risk_file
+        except (IOError, OSError) as e:
+            errors.append(f"Risk analysis: {e}")
+            logger.error(f"Failed to write risk analysis: {e}")
 
         # 4. Performance Metrics (JSON)
-        metrics = self._extract_detailed_metrics(result, config)
-        metrics_file = self.output_dir / f"metrics_{backtest_id}_{timestamp}.json"
-        with open(metrics_file, "w") as f:
-            json.dump(metrics, f, indent=2)
-        files["metrics"] = metrics_file
+        try:
+            metrics = self._extract_detailed_metrics(result, config)
+            metrics_file = self.output_dir / f"metrics_{backtest_id}_{timestamp}.json"
+            with open(metrics_file, "w", encoding="utf-8") as f:
+                json.dump(metrics, f, indent=2)
+            files["metrics"] = metrics_file
+        except (IOError, OSError, TypeError) as e:
+            errors.append(f"Metrics: {e}")
+            logger.error(f"Failed to write metrics file: {e}")
 
         # 5. Recommendations
-        recommendations = self._generate_recommendations(result, config, metrics)
-        rec_file = self.output_dir / f"recommendations_{backtest_id}_{timestamp}.md"
-        with open(rec_file, "w") as f:
-            f.write(recommendations)
-        files["recommendations"] = rec_file
+        try:
+            recommendations = self._generate_recommendations(result, config, metrics)
+            rec_file = self.output_dir / f"recommendations_{backtest_id}_{timestamp}.md"
+            with open(rec_file, "w", encoding="utf-8") as f:
+                f.write(recommendations)
+            files["recommendations"] = rec_file
+        except (IOError, OSError) as e:
+            errors.append(f"Recommendations: {e}")
+            logger.error(f"Failed to write recommendations: {e}")
 
-        logger.info(f"Generated comprehensive report for {backtest_id}")
+        if errors:
+            logger.warning(
+                f"Report generation completed with {len(errors)} errors",
+                extra={"backtest_id": backtest_id, "errors": errors}
+            )
+
+        logger.info(
+            f"Generated comprehensive report for {backtest_id}",
+            extra={"files_generated": len(files), "timestamp": timestamp}
+        )
         return files
 
     def _generate_executive_summary(self, result: BacktestResult, config: BacktestConfig) -> str:

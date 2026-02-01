@@ -112,18 +112,18 @@ class Capital:
 ---
 
 ## Acceptance Criteria
-- [ ] **AC-001:** amount must be positive (> 0)
-- [ ] **AC-002:** max_leverage must be positive (> 0)
-- [ ] **AC-003:** max_positions must be positive (> 0)
-- [ ] **AC-004:** Value object is immutable (frozen=True)
-- [ ] **AC-005:** MICRO tier: < $15k, 5 positions, 1x leverage
-- [ ] **AC-006:** SMALL tier: < $50k, 8 positions, 1.5x leverage
-- [ ] **AC-007:** MEDIUM tier: < $250k, 15 positions, 2x leverage
-- [ ] **AC-008:** LARGE tier: < $1M, 20 positions, 2.5x leverage
-- [ ] **AC-009:** INSTITUTIONAL tier: >= $1M, 50 positions, 3x leverage
-- [ ] **AC-010:** get_max_exposure() = amount × max_leverage
-- [ ] **AC-011:** can_add_position() returns True when current_positions < max_positions
-- [ ] **AC-012:** All public methods have complete type hints
+- [x] **AC-001:** amount must be positive (> 0)
+- [x] **AC-002:** max_leverage must be positive (> 0)
+- [x] **AC-003:** max_positions must be positive (> 0)
+- [x] **AC-004:** Value object is immutable (frozen=True)
+- [x] **AC-005:** MICRO tier: < $15k, 5 positions, 1x leverage
+- [x] **AC-006:** SMALL tier: < $50k, 8 positions, 1.5x leverage
+- [x] **AC-007:** MEDIUM tier: < $250k, 15 positions, 2x leverage
+- [x] **AC-008:** LARGE tier: < $1M, 20 positions, 2.5x leverage
+- [x] **AC-009:** INSTITUTIONAL tier: >= $1M, 50 positions, 3x leverage
+- [x] **AC-010:** get_max_exposure() = amount × max_leverage
+- [x] **AC-011:** can_add_position() returns True when current_positions < max_positions
+- [x] **AC-012:** All public methods have complete type hints
 
 ---
 

@@ -6,65 +6,91 @@ Generates comprehensive, auditable backtest reports with executive summary, tech
 ---
 
 ## Type Definitions / Data Classes
-No custom dataclasses defined - uses standard library types and BacktestResult from models.
+
+### BacktestReportGenerator Class
+```python
+class BacktestReportGenerator:
+    output_dir: Path                    # REQUIRED - Directory for saving reports
+```
+
+**Validation Rules:**
+- `output_dir` must be writable
+- Creates directory if not exists using `mkdir(parents=True, exist_ok=True)`
+- Raises `OSError` if directory creation fails
 
 ---
 
 ## Function Signatures (Contracts)
 
-### `generate_comprehensive_report(result, config, backtest_id) -> Dict[str, Path]`
-**Pre:** result has valid performance metrics, config has strategy_name
-**Post:** Returns dict with file paths to generated reports (executive, technical, risk, metrics, recommendations)
-**Raises:** OSError if output_dir not writable
-**Retry:** No
-**Side Effects:** Creates 5 files in output_dir (markdown + JSON)
+### `__init__(output_dir: Path) -> None`
+**Pre:** output_dir is valid path or can be created
+**Post:** Output directory exists and is writable
+**Raises:** OSError if directory cannot be created
+**Retry:** ❌ No
+**Side Effects:** Creates filesystem directory, logs initialization
 
-### `_generate_executive_summary(result, config) -> str`
+### `generate_comprehensive_report(result: BacktestResult, config: BacktestConfig, backtest_id: str) -> Dict[str, Path]`
 **Pre:** result.performance is not None
-**Post:** Returns markdown-formatted executive summary with performance overview
-**Raises:** ValueError if performance data missing
-**Retry:** No
-**Side Effects:** None (string generation)
+**Post:** Creates 5 report files and returns dict with paths
+**Raises:** ValueError if performance data is None, IOError if file write fails
+**Retry:** ❌ No
+**Side Effects:** Writes to filesystem (5 files: executive.md, technical.md, risk.md, metrics.json, recommendations.md)
 
-### `_generate_technical_analysis(result, config) -> str`
-**Pre:** result has equity_curve and performance data
-**Post:** Returns markdown with detailed technical metrics and analysis
-**Raises:** ValueError if required fields missing
-**Retry:** No
-**Side Effects:** None (string generation)
+### `_generate_executive_summary(result: BacktestResult, config: BacktestConfig) -> str`
+**Pre:** result.performance exists
+**Post:** Returns formatted markdown string with executive summary
+**Raises:** None (returns string on error)
+**Retry:** ❌ No
+**Side Effects:** None
 
-### `_generate_risk_analysis(result, config) -> str`
-**Pre:** result.performance has risk metrics
-**Post:** Returns markdown with VaR, drawdown, volatility analysis
-**Raises:** ValueError if performance data missing
-**Retry:** No
-**Side Effects:** None (string generation)
+### `_generate_technical_analysis(result: BacktestResult, config: BacktestConfig) -> str`
+**Pre:** result.performance exists
+**Post:** Returns formatted markdown with technical metrics
+**Raises:** None
+**Retry:** ❌ No
+**Side Effects:** None
 
-### `_generate_recommendations(result, config, metrics) -> str`
-**Pre:** metrics dict contains key performance indicators
+### `_generate_risk_analysis(result: BacktestResult, config: BacktestConfig) -> str`
+**Pre:** result.performance exists
+**Post:** Returns formatted markdown with risk analysis
+**Raises:** None
+**Retry:** ❌ No
+**Side Effects:** None
+
+### `_generate_recommendations(result: BacktestResult, config: BacktestConfig, metrics: Dict[str, Any]) -> str`
+**Pre:** result has valid performance data
 **Post:** Returns markdown with prioritized recommendations
-**Raises:** None (returns empty recommendations on error)
-**Retry:** No
-**Side Effects:** None (string generation)
+**Raises:** None
+**Retry:** ❌ No
+**Side Effects:** None
 
-### `_extract_detailed_metrics(result, config) -> Dict[str, Any]`
-**Pre:** result has complete performance data
-**Post:** Returns dict with all metrics serializable to JSON
-**Raises:** TypeError if non-serializable data present
-**Retry:** No
-**Side Effects:** None (dict construction)
+### `_calculate_cagr(result: BacktestResult) -> float`
+**Pre:** result has valid start_date, end_date, final_capital, initial_capital
+**Post:** Returns Compound Annual Growth Rate as percentage
+**Raises:** None (returns 0.0 on invalid data)
+**Retry:** ❌ No
+**Side Effects:** None
+
+### `_calculate_kelly(perf: PerformanceMetrics) -> float`
+**Pre:** perf has win_rate, avg_win, avg_loss
+**Post:** Returns Kelly Criterion percentage
+**Raises:** None (returns 0.0 on invalid data)
+**Retry:** ❌ No
+**Side Effects:** None
 
 ---
 
 ## Acceptance Criteria
-- [ ] Generates 5 report files: executive summary (MD), technical analysis (MD), risk analysis (MD), metrics (JSON), recommendations (MD)
-- [ ] Executive summary includes performance assessment (Excellent/Good/Marginal/Poor)
-- [ ] Technical analysis includes CAGR, Kelly criterion, trade statistics
-- [ ] Risk analysis includes VaR 95%, VaR 99%, drawdown duration
-- [ ] Recommendations are prioritized (HIGH/MEDIUM/LOW)
-- [ ] JSON metrics file contains all performance data in serializable format
-- [ ] All files use timestamp in filename for uniqueness
-- [ ] Critical issues identification includes negative returns, low win rate, high drawdown
+- [ ] All functions have complete type hints (TYP-001)
+- [ ] No hardcoded secrets or sensitive data (SEC-001)
+- [ ] All file operations use context managers (FMT-008)
+- [ ] Error logging for all exceptions with context (LOG-004)
+- [ ] Performance data validation before report generation (TRD-005)
+- [ ] CAGR calculation uses correct formula: (final/initial)^(1/years) - 1
+- [ ] Kelly Criterion handles division by zero (avg_loss <= 0)
+- [ ] Report files are created with UTF-8 encoding
+- [ ] Metrics JSON is serializable (all values convertible to float/int/str)
+- [ ] File naming includes timestamp for uniqueness
 
 ---
 
@@ -76,22 +102,55 @@ No custom dataclasses defined - uses standard library types and BacktestResult f
 
 | Rule | Source | Requirement | Current Status |
 |------|--------|-------------|----------------|
-| CC-001 | BASE_RULES | Descriptive names | ✅ OK |
-| TYP-001 | BASE_RULES | 100% type coverage | ✅ OK |
-| LOG-001 | BASE_RULES | Structured logging | ⚠️ NOT APPLIED - Uses basic logging |
-| CC-002 | BASE_RULES | DRY - No duplication | ⚠️ NOT APPLIED - String formatting repeated |
-| CC-006 | BASE_RULES | Explicit error handling | ❌ GAP - Missing exception handling in file operations |
-| ARCH-004 | BASE_RULES | Functions < 20 lines | ❌ GAP - Many functions exceed 20 lines (template strings) |
-| BT-004 | BASE_RULES | Realistic costs in reports | ✅ OK - Includes commission/slippage from config |
-| RSK-001 | BASE_RULES | VaR calculation | ✅ OK - Calculates VaR 95% and 99% |
-| TRD-004 | BASE_RULES | Audit trail | ✅ OK - Reports provide audit trail |
+| TYP-001 | BASE_RULES.md | 100% type coverage on all functions | ✅ OK |
+| TYP-003 | BASE_RULES.md | No Any without justification | ❌ GAP - Uses `Dict[str, Any]` in `_extract_detailed_metrics` |
+| LOG-004 | BASE_RULES.md | Log exceptions with stack traces | ✅ OK |
+| LOG-006 | BASE_RULES.md | Add execution time for operations | ❌ GAP - Missing timing logs |
+| SEC-001 | BASE_RULES.md | No hardcoded secrets | ✅ OK |
+| FMT-008 | BASE_RULES.md | Context managers for file operations | ✅ OK |
+| CC-001 | BASE_RULES.md | Descriptive names | ✅ OK |
+| CC-006 | BASE_RULES.md | Explicit error handling | ✅ OK |
+| CC-007 | BASE_RULES.md | Functions < 50 lines | ⚠️ NOT APPLIED - Template generation inherently long |
+| TRD-004 | BASE_RULES.md | Audit trail | ✅ OK - Reports provide audit trail |
+| TRD-005 | BASE_RULES.md | Price/performance validation | ✅ OK |
+| BT-004 | BASE_RULES.md | Realistic costs in reports | ✅ OK |
 
-**NOTE:** Several helper methods are placeholders (`_analyze_trade_distribution`, `_analyze_market_conditions`) indicating incomplete implementation.
+**GAP Violations Found:**
+
+1. **TYP-003** (P1 - High): Uses `Any` type in `_extract_detailed_metrics` return
+   - **Location**: Line 508: `def _extract_detailed_metrics(...) -> Dict[str, Any]`
+   - **Fix**: Define specific schema:
+   ```python
+   def _extract_detailed_metrics(...) -> Dict[str, float | str | None | Dict[str, float | None]]:
+   ```
+
+2. **LOG-006** (P2 - Medium): Missing execution time logging
+   - **Location**: `generate_comprehensive_report` method
+   - **Fix**: Add timing:
+   ```python
+   import time
+   start = time.time()
+   # ... generate reports ...
+   logger.info(f"Report generation completed in {time.time() - start:.2f}s")
+   ```
+
+3. **CRITICAL BUG** (P0): CAGR calculation error on line 428
+   - **Current**: `((result.final_capital / result.final_capital) ** (1 / years) - 1) * 100`
+   - **Issue**: Divides by itself, always returns 0
+   - **Fix**: Should be `result.initial_capital` in denominator
+   ```python
+   ((result.final_capital / result.initial_capital) ** (1 / years) - 1) * 100
+   ```
+
+4. **Incomplete Implementation** (P1): Placeholder methods
+   - **Methods**: `_analyze_trade_distribution`, `_analyze_market_conditions`, `_analyze_trade_risks`, `_analyze_stop_losses`, `_analyze_position_sizing`, `_analyze_correlations`
+   - **Issue**: Return static placeholder strings
+   - **Fix**: Implement actual analysis or document as TODO
 
 ---
 
 ## Dependencies
-- **External:** json, logging, datetime, pathlib, typing (stdlib)
+- **External:** pathlib, json, logging, datetime, typing (stdlib)
 - **Internal:**
   - `app.backtesting.models.BacktestConfig`
   - `app.backtesting.models.BacktestResult`
@@ -100,19 +159,23 @@ No custom dataclasses defined - uses standard library types and BacktestResult f
 ---
 
 ## Required Tests
-- **tests/backtesting/test_report_generator.py:**
-  - Test comprehensive report generation creates all 5 files
-  - Test executive summary with positive returns
-  - Test executive summary with negative returns
-  - Test technical analysis includes CAGR calculation
-  - Test Kelly criterion calculation with win/loss data
-  - Test risk analysis VaR calculations
-  - Test recommendations prioritization (HIGH/MEDIUM/LOW)
-  - Test JSON metrics file is valid and complete
-  - Test file timestamp uniqueness
-  - Test critical issues identification
+- **tests/unit/backtesting/test_report_generator.py:**
+  - Test successful report generation with valid data (5 files created)
+  - Test error handling when performance data is None (raises ValueError)
+  - Test CAGR calculation with various date ranges
+  - Test CAGR calculation bug fix (final/initial not final/final)
+  - Test Kelly Criterion with edge cases (zero loss, zero win rate)
+  - Test file creation and write permissions
+  - Test JSON serialization of metrics
+  - Test encoding (UTF-8) for international characters
+  - Test recommendation generation for different performance scenarios
+  - Test file naming includes timestamp
+  - Test logging includes structured context
 
 ---
 
 ## Notes
-Several analysis methods are placeholders and return static text. Implement actual analysis for production use.
+- **Critical Bug**: Line 428 has CAGR calculation bug - uses `result.final_capital / result.final_capital` instead of `result.final_capital / result.initial_capital`
+- **Placeholder Methods**: Several analysis methods return placeholder strings indicating incomplete implementation
+- **Metric Extraction**: `_extract_detailed_metrics` properly handles Optional fields with None checks
+- **Report Format**: Generates markdown (.md) for human-readable reports and JSON for machine-readable metrics

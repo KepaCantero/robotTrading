@@ -48,28 +48,28 @@ class EfficientFrontierCLA:
 ### `CriticalLineAlgorithm.__init__(min_weight, max_weight, allow_short) -> None`
 **Pre:** min_weight >= -1.0 (if allow_short), min_weight >= 0 otherwise; max_weight <= 1.0
 **Post:** Optimizer configured with bounds
-**Raises:** None (initialization only)
+**Raises:** ValueError if bounds invalid
 **Retry:** ❌ No
 **Side Effects:** None (initialization only)
 
 ### `compute_efficient_frontier(expected_returns, cov_matrix, symbols) -> EfficientFrontierCLA`
 **Pre:** cov_matrix must be square, symmetric, and positive semidefinite; expected_returns length = n_assets
 **Post:** Returns efficient frontier with corner portfolios
-**Raises:** LinAlgError if covariance matrix is singular (not handled)
+**Raises:** ValueError if covariance matrix invalid or matrix inversion fails (logged)
 **Retry:** ❌ No
 **Side Effects:** None (pure computation)
 
 ### `_solve_min_variance(cov_matrix, symbols) -> CornerPortfolio` (private)
 **Pre:** cov_matrix must be invertible
 **Post:** Returns minimum variance portfolio (analytical solution)
-**Raises:** LinAlgError if covariance matrix is singular
+**Raises:** ValueError if covariance matrix is singular (logged)
 **Retry:** ❌ No
 **Side Effects:** None (pure computation)
 
 ### `_solve_target_return(expected_returns, cov_matrix, target_return, symbols) -> CornerPortfolio` (private)
 **Pre:** cov_matrix valid; target_return achievable within bounds
 **Post:** Returns portfolio minimizing variance for target return
-**Raises:** Returns equal weights if optimization fails
+**Raises:** Logs error if optimization fails
 **Retry:** ❌ No
 **Side Effects:** None (pure computation)
 
@@ -97,13 +97,14 @@ class EfficientFrontierCLA:
 ---
 
 ## Acceptance Criteria
-- [ ] **AC-001:** Covariance matrix validated before inversion (PSD check, condition number)
-- [ ] **AC-002:** Matrix inversion errors logged with context
-- [ ] **AC-003:** Edge case handling: singular covariance, infeasible target return
-- [ ] **AC-004:** All public methods have complete type hints
-- [ ] **AC-005:** NumPy 2.0 compatibility
-- [ ] **AC-006:** All functions have docstrings following Google style
-- [ ] **AC-007:** Corner portfolio ordering verified (monotonic return increase)
+- [x] **AC-001:** Covariance matrix validated before inversion (PSD check, condition number) ✅ FIXED
+- [x] **AC-002:** Matrix inversion errors logged with context ✅ FIXED
+- [x] **AC-003:** Edge case handling: singular covariance, infeasible target return ✅ FIXED
+- [x] **AC-004:** All public methods have complete type hints ✅ OK
+- [x] **AC-005:** NumPy 2.0 compatibility ✅ OK
+- [x] **AC-006:** All functions have docstrings following Google style ✅ OK
+- [x] **AC-007:** Corner portfolio ordering verified (monotonic return increase) ✅ OK
+- [x] **AC-008:** Magic numbers documented as constants ✅ FIXED
 
 ---
 
@@ -115,9 +116,9 @@ class EfficientFrontierCLA:
 
 | Rule | Source | Requirement | Current Status |
 |------|--------|-------------|----------------|
-| PSD validation | BASE_RULES.md (TRD-001) | Validate covariance matrix is positive semidefinite | ❌ GAP - No validation |
-| Matrix inversion error handling | BASE_RULES.md (LOG-004) | Log LinAlgError from np.linalg.inv | ❌ GAP - No error handling |
-| Input sanitization | BASE_RULES.md (TRD-015) | Remove NaN, zero variance assets | ❌ GAP - No sanitization |
+| PSD validation | BASE_RULES.md (TRD-001) | Validate covariance matrix is positive semidefinite | ✅ FIXED - validate_covariance_matrix() |
+| Matrix inversion error handling | BASE_RULES.md (LOG-004) | Log LinAlgError from np.linalg.inv | ✅ FIXED - log_optimization_failure() |
+| Input sanitization | BASE_RULES.md (TRD-015) | Remove NaN, zero variance assets | ⚠️ NOT APPLIED - Depends on validated input |
 | Type hints coverage | BASE_RULES.md (TYP-001) | 100% type hints on public functions | ✅ OK - Complete |
 | Docstring coverage | BASE_RULES.md (CC-001) | All functions documented | ✅ OK - Complete |
 | Domain layer purity | BASE_RULES.md (ARCH-002) | No infrastructure imports | ✅ OK - Only numpy/scipy |
@@ -126,6 +127,7 @@ class EfficientFrontierCLA:
 | Min variance analytical solution | Markowitz | w = Σ^(-1) * 1 / (1' * Σ^(-1) * 1) | ✅ OK - Implemented |
 | Turnover calculation | Trading standard | 0.5 × Σ|w_new - w_old| | ✅ OK - Implemented |
 | NumPy 2.0 compat | BASE_RULES.md (TYP-002) | No deprecated np aliases | ✅ OK - Modern types |
+| Magic numbers | BASE_RULES.md (CC-001) | Document constants | ✅ FIXED - Constants defined |
 
 **NOTE:** This analysis references BASE_RULES.md for universal rules and Markowitz (1956) for CLA rules.
 
@@ -133,7 +135,7 @@ class EfficientFrontierCLA:
 
 ## Dependencies
 - **External:** `numpy`, `scipy` (optimize), `dataclasses` (std)
-- **Internal:** None (domain service)
+- **Internal:** `app.domain.services.portfolio_optimization._validation`
 
 ---
 
@@ -161,9 +163,10 @@ class EfficientFrontierCLA:
 - **Analytical Solution:** Minimum variance has closed-form: w = Σ^(-1) * 1 / (1' * Σ^(-1) * 1)
 - **Linear Interpolation:** Used between corner portfolios for continuous frontier
 - **Turnover:** Measures portfolio change; high turnover = high transaction costs
-- **Fallback Behavior:** Optimization failures return equal weights (no logging)
+- **Constants:** DEFAULT_MIN_WEIGHT, DEFAULT_MAX_WEIGHT, DEFAULT_FRONTIER_POINTS, etc.
 
 ---
 
 **File Reference:** `app/domain/services/portfolio_optimization/cla.py`
 **Last Audited:** 2026-02-01
+**Last Fixed:** 2026-02-01 (GAPs: PSD validation, error logging, magic numbers)

@@ -150,7 +150,7 @@ class MeanReversionMetrics:
 | Rule | Source | Requirement | Current Status |
 |------|--------|-------------|----------------|
 | Input validation | BASE_RULES.md (CC-006) | Validate prices array length | ✅ OK - Checks lookback |
-| NaN handling | BASE_RULES.md (TRD-015) | Handle NaN in price data | ❌ GAP - No NaN handling |
+| NaN handling | BASE_RULES.md (TRD-015) | Handle NaN in price data | ✅ FIXED - Filters NaN/inf with logging |
 | Z-score calculation | Stats standard | (price - mean) / std | ✅ OK - Implemented |
 | Half-life OU process | Mean reversion | HL = ln(2) / θ | ✅ OK - Implemented |
 | ADF stationarity test | Stats standard | Augmented Dickey-Fuller | ✅ OK - With fallback |

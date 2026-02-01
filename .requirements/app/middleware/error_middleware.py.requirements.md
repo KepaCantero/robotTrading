@@ -1,308 +1,263 @@
 # error_middleware.py
 
 ## Purpose
-FastAPI middleware stack providing unified error handling, request logging, security headers, rate limiting, and health check routing for production-ready API with comprehensive observability.
+Unified error handling middleware for FastAPI - provides request context, logging, security headers, rate limiting, and error responses.
 
 ---
 
 ## Type Definitions / Data Classes
 
-### ErrorHandlingMiddleware (Class)
+### ErrorHandlingMiddleware Class
 ```python
 class ErrorHandlingMiddleware(BaseHTTPMiddleware):
-    app: Any                          # REQUIRED - FastAPI application instance
-    enable_request_logging: bool       # REQUIRED - Default: True, enables request logging
-    logger: logging.Logger            # REQUIRED - Module logger instance
+    enable_request_logging: bool              # REQUIRED - Enable request logging
+    logger: logging.Logger                    # REQUIRED - Logger instance
 ```
 
-**Configuration Rules:**
-- enable_request_logging controls whether requests are logged
-- Must be initialized with FastAPI app instance
-
-### RequestContextMiddleware (Class)
+### RequestContextMiddleware Class
 ```python
 class RequestContextMiddleware(BaseHTTPMiddleware):
-    app: Any                          # REQUIRED - FastAPI application instance
+    # No instance variables - adds context to requests
 ```
 
-**Configuration Rules:**
-- Adds request.request_id (UUID) to all requests
-- Adds request.start_time (timestamp) to all requests
-
-### SecurityHeadersMiddleware (Class)
+### SecurityHeadersMiddleware Class
 ```python
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
-    app: Any                          # REQUIRED - FastAPI application instance
-    enable_cors: bool                 # REQUIRED - Default: True, enables CORS headers
+    enable_cors: bool                         # REQUIRED - Enable CORS headers
 ```
 
-**Security Headers Applied:**
-```python
-X-Content-Type-Options: nosnif
-X-Frame-Options: DENY
-X-XSS-Protection: 1; mode=block
-Strict-Transport-Security: max-age=31536000; includeSubDomains
-Referrer-Policy: strict-origin-when-cross-origin
-Access-Control-Allow-Origin: *              # If enable_cors=True
-Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
-Access-Control-Allow-Headers: Content-Type, Authorization
-```
-
-### RateLimitingMiddleware (Class)
+### RateLimitingMiddleware Class
 ```python
 class RateLimitingMiddleware(BaseHTTPMiddleware):
-    app: Any                          # REQUIRED - FastAPI application instance
-    requests_per_minute: int          # REQUIRED - Default: 60
-    request_counts: Dict[str, List[float]]  # Runtime state - IP -> timestamps
-    logger: logging.Logger            # REQUIRED - Module logger instance
+    requests_per_minute: int                  # REQUIRED - Rate limit threshold
+    request_counts: Dict[str, List[float]]    # PRIVATE - IP -> timestamps
+    logger: logging.Logger                    # REQUIRED - Logger instance
 ```
 
-**Rate Limiting Rules:**
-- Tracks requests by client IP address
-- Cleans entries older than 60 seconds
-- Returns 429 status with Retry-After header when limit exceeded
-- JSON error response with code "RATE_LIMIT_EXCEEDED"
-
-### HealthCheckMiddleware (Class)
+### HealthCheckMiddleware Class
 ```python
 class HealthCheckMiddleware(BaseHTTPMiddleware):
-    app: Any                          # REQUIRED - FastAPI application instance
+    # No instance variables - skips processing for health endpoints
 ```
-
-**Health Check Paths:**
-- `/health` - Bypass middleware
-- `/healthz` - Bypass middleware (Kubernetes standard)
-- `/ready` - Bypass middleware (readiness probe)
-- `/live` - Bypass middleware (liveness probe)
 
 ---
 
 ## Function Signatures (Contracts)
 
-### `ErrorHandlingMiddleware.dispatch(request: Request, call_next: Callable) -> Response`
-**Pre:** Request has valid structure
-**Post:** Response includes X-Request-ID and X-Process-Time headers
-**Raises:** No (exceptions caught and handled)
+### `ErrorHandlingMiddleware.__init__(self, app, enable_request_logging: bool = True) -> None`
+**Pre:** app is valid FastAPI app
+**Post:** Middleware initialized
+**Raises:** None
 **Retry:** No
-**Side Effects:** Logs request start/completion/error, generates UUID, measures processing time
+**Side Effects:** None
 
-### `ErrorHandlingMiddleware._log_request_start(request: Request) -> None`
-**Pre:** request.request_id must be set
-**Post:** Logs request metadata at INFO level
-**Raises:** No
-**Retry:** No
-**Side Effects:** Writes to centralized_logger
-
-**Logged Metadata:**
-```python
-{
-    "request_id": str,
-    "method": str,
-    "path": str,
-    "query_params": Dict[str, str],
-    "client_ip": str,
-    "user_agent": str,
-    "content_type": str,
-    "content_length": str
-}
-```
-
-### `ErrorHandlingMiddleware._log_request_completion(request: Request, response: Response, process_time: float) -> None`
-**Pre:** request.request_id must be set, response must have status_code
-**Post:** Logs completion at appropriate level (INFO/WARNING/ERROR)
-**Raises:** No
-**Retry:** No
-**Side Effects:** Writes to centralized_logger
-
-**Log Level Logic:**
-- ERROR if status_code >= 500
-- WARNING if status_code >= 400 OR process_time > 5.0 seconds
-- INFO otherwise
-
-### `ErrorHandlingMiddleware._log_request_error(request: Request, exc: Exception, process_time: float) -> None`
-**Pre:** request.request_id must be set, exc must be Exception instance
-**Post:** Logs error at ERROR level with exception details
-**Raises:** No
-**Retry:** No
-**Side Effects:** Writes to centralized_logger with exception message
-
-**Logged Metadata:**
-```python
-{
-    "request_id": str,
-    "method": str,
-    "path": str,
-    "process_time": float,
-    "exception_type": str,
-    "exception_message": str
-}
-```
-
-### `ErrorHandlingMiddleware._handle_exception(request: Request, exc: Exception) -> JSONResponse`
-**Pre:** request.request_id must be set
-**Post:** Returns JSONResponse from error_handler
-**Raises:** No (wraps exception in response)
-**Retry:** No
-**Side Effects:** Adds request context to exception.details if present
-
-### `RequestContextMiddleware.dispatch(request: Request, call_next: Callable) -> Response`
+### `async ErrorHandlingMiddleware.dispatch(self, request: Request, call_next: Callable) -> Response`
 **Pre:** None
-**Post:** Response includes X-Request-ID header
+**Post:** Request processed with error handling
+**Raises:** No (all exceptions caught)
+**Retry:** No
+**Side Effects:** Logging, adding headers
+
+**Flow:**
+1. Generate unique request ID (UUID)
+2. Record start time
+3. Log request start (if enabled)
+4. Process request
+5. Calculate processing time
+6. Log request completion (if enabled)
+7. Add X-Request-ID and X-Process-Time headers
+8. Catch ValueError, TypeError, KeyError, AttributeError
+9. Log errors and handle exceptions
+
+### `async ErrorHandlingMiddleware._log_request_start(self, request: Request) -> None`
+**Pre:** request has request_id attribute
+**Post:** Request logged with metadata
 **Raises:** No
 **Retry:** No
-**Side Effects:** Sets request.request_id and request.start_time attributes
+**Side Effects:** Logging via centralized_logger
 
-### `SecurityHeadersMiddleware.dispatch(request: Request, call_next: Callable) -> Response`
+**Metadata Logged:**
+- request_id
+- method
+- path
+- query_params
+- client_ip
+- user_agent
+- content_type
+- content_length
+
+### `async ErrorHandlingMiddleware._log_request_completion(self, request: Request, response: Response, process_time: float) -> None`
+**Pre:** request has request_id
+**Post:** Request completion logged with appropriate level
+**Raises:** No
+**Retry:** No
+**Side Effects:** Logging via centralized_logger
+
+**Log Levels:**
+- ERROR: status_code >= 500
+- WARNING: status_code >= 400 OR process_time > 5s
+- INFO: otherwise
+
+### `async ErrorHandlingMiddleware._log_request_error(self, request: Request, exc: Exception, process_time: float) -> None`
+**Pre:** request has request_id
+**Post:** Error logged with exception details
+**Raises:** No
+**Retry:** No
+**Side Effects:** Logging via centralized_logger
+
+### `async ErrorHandlingMiddleware._handle_exception(self, request: Request, exc: Exception) -> JSONResponse`
 **Pre:** None
-**Post:** Response includes all security headers
+**Post:** Returns error response
 **Raises:** No
 **Retry:** No
-**Side Effects:** Adds security headers to response
+**Side Effects:** Updates exception details with request context
 
-### `RateLimitingMiddleware.dispatch(request: Request, call_next: Callable) -> Response`
-**Pre:** request.client must have host attribute
-**Post:** Returns response or 429 if rate limit exceeded
+### `async RequestContextMiddleware.dispatch(self, request: Request, call_next: Callable) -> Response`
+**Pre:** None
+**Post:** Request processed with context added
 **Raises:** No
 **Retry:** No
-**Side Effects:** Cleans old entries, records request, logs rate limit warnings
+**Side Effects:** Adds request_id, start_time to request
 
-### `RateLimitingMiddleware._cleanup_old_entries(current_time: float) -> None`
-**Pre:** current_time must be valid timestamp
-**Post:** Removes request timestamps older than 60 seconds
+### `SecurityHeadersMiddleware.__init__(self, app, enable_cors: bool = True) -> None`
+**Pre:** app is valid FastAPI app
+**Post:** Middleware initialized
+**Raises:** None
+**Retry:** No
+**Side Effects:** None
+
+### `async SecurityHeadersMiddleware.dispatch(self, request: Request, call_next: Callable) -> Response`
+**Pre:** None
+**Post:** Security headers added to response
 **Raises:** No
 **Retry:** No
-**Side Effects:** Mutates request_counts dict
+**Side Effects:** Modifies response headers
 
-### `RateLimitingMiddleware._is_rate_limited(client_ip: str, current_time: float) -> bool`
-**Pre:** client_ip must be valid IP string
+**Headers Added:**
+- X-Content-Type-Options: nosniff
+- X-Frame-Options: DENY
+- X-XSS-Protection: 1; mode=block
+- Strict-Transport-Security: max-age=31536000; includeSubDomains
+- Referrer-Policy: strict-origin-when-cross-origin
+- Access-Control-Allow-Origin: * (if enable_cors)
+- Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+- Access-Control-Allow-Headers: Content-Type, Authorization
+
+### `RateLimitingMiddleware.__init__(self, app, requests_per_minute: int = 60) -> None`
+**Pre:** app is valid FastAPI app, requests_per_minute > 0
+**Post:** Middleware initialized
+**Raises:** None
+**Retry:** No
+**Side Effects:** None
+
+### `async RateLimitingMiddleware.dispatch(self, request: Request, call_next: Callable) -> Response`
+**Pre:** None
+**Post:** Request processed with rate limiting
+**Raises:** No
+**Retry:** No
+**Side Effects:** Updates request_counts, logs rate limit violations
+
+**Returns:**
+- 429 if rate limit exceeded with Retry-After header
+- Normal response otherwise
+
+### `RateLimitingMiddleware._cleanup_old_entries(self, current_time: float) -> None`
+**Pre:** current_time is Unix timestamp
+**Post:** Old entries (> 60s) removed from request_counts
+**Raises:** No
+**Retry:** No
+**Side Effects:** Modifies request_counts dict
+
+### `RateLimitingMiddleware._is_rate_limited(self, client_ip: str, current_time: float) -> bool`
+**Pre:** None
 **Post:** Returns True if client exceeded rate limit
 **Raises:** No
 **Retry:** No
 **Side Effects:** None
 
-### `RateLimitingMiddleware._record_request(client_ip: str, current_time: float) -> None`
-**Pre:** client_ip must be valid IP string
-**Post:** Appends timestamp to client's request list
-**Raises:** No
-**Retry:** No
-**Side Effects:** Mutates request_counts dict
-
-### `HealthCheckMiddleware.dispatch(request: Request, call_next: Callable) -> Response`
+### `RateLimitingMiddleware._record_request(self, client_ip: str, current_time: float) -> None`
 **Pre:** None
-**Post:** Returns response normally or bypasses for health paths
+**Post:** Request timestamp recorded for client
 **Raises:** No
 **Retry:** No
-**Side Effects:** None (pass-through for health endpoints)
+**Side Effects:** Modifies request_counts dict
+
+### `async HealthCheckMiddleware.dispatch(self, request: Request, call_next: Callable) -> Response`
+**Pre:** None
+**Post:** Request processed (skipped for health endpoints)
+**Raises:** No
+**Retry:** No
+**Side Effects:** None
+
+**Health Endpoints:**
+- /health
+- /healthz
+- /ready
+- /live
 
 ---
 
 ## Acceptance Criteria
-- [ ] AC-MID-001: ErrorHandlingMiddleware generates unique UUID for each request
-- [ ] AC-MID-002: ErrorHandlingMiddleware adds X-Request-ID and X-Process-Time headers
-- [ ] AC-MID-003: ErrorHandlingMiddleware logs request start at INFO level
-- [ ] AC-MID-004: ErrorHandlingMiddleware logs completion with appropriate level (INFO/WARNING/ERROR)
-- [ ] AC-MID-005: ErrorHandlingMiddleware logs errors at ERROR level with exception details
-- [ ] AC-MID-006: ErrorHandlingMiddleware catches ValueError, TypeError, KeyError, AttributeError
-- [ ] AC-MID-007: RequestContextMiddleware sets request.request_id if not present
-- [ ] AC-MID-008: RequestContextMiddleware sets request.start_time
-- [ ] AC-MID-009: SecurityHeadersMiddleware adds all 6 security headers
-- [ ] AC-MID-010: SecurityHeadersMiddleware adds CORS headers when enabled
-- [ ] AC-MID-011: RateLimitingMiddleware returns 429 when limit exceeded
-- [ ] AC-MID-012: RateLimitingMiddleware cleans entries older than 60 seconds
-- [ ] AC-MID-013: RateLimitingMiddleware includes Retry-After header in 429 response
-- [ ] AC-MID-014: HealthCheckMiddleware bypasses processing for /health, /healthz, /ready, /live
-- [ ] AC-MID-015: All middleware uses centralized_logger for structured logging
+- [ ] All requests get unique X-Request-ID header
+- [ ] All requests get X-Process-Time header
+- [ ] Request logging includes all metadata
+- [ ] Error logging includes exception details
+- [ ] Security headers added to all responses
+- [ ] CORS can be enabled/disabled
+- [ ] Rate limiting blocks excessive requests
+- [ ] Rate limiting returns 429 with Retry-After
+- [ ] Health check endpoints bypass rate limiting
+- [ ] Request context added to exceptions
 
 ---
 
 ## Critical Rules (MUST NOT BREAK)
 
-**Reglas universales:** Ver `../../../BASE_RULES.md` (96+ critical rules)
+**Reglas universales:** Ver `../../CRITICAL_RULES.md` (12 categories with 50+ critical rules)
 
 ### Reglas ESPECÍFICAS de este archivo:
 
 | Rule | Source | Requirement | Current Status |
 |------|--------|-------------|----------------|
-| ASYNC-001 | BASE_RULES | Use async def for middleware dispatch | ✅ OK |
-| ASYNC-002 | BASE_RULES | Await async call_next | ✅ OK |
-| ASYNC-005 | BASE_RULES | Timeouts for external calls | ⚠️ GAP - No timeout on call_next |
-| LOG-001 | BASE_RULES | Structured logging with centralized_logger | ✅ OK |
-| LOG-002 | BASE_RULES | Context in logs (request_id, etc) | ✅ OK |
-| LOG-003 | BASE_RULES | Appropriate log levels | ✅ OK |
-| LOG-004 | BASE_RULES | Error logging with stack traces | ⚠️ PARTIAL - Logs exc but no stack trace |
-| SEC-005 | BASE_RULES | Audit logging - all requests logged | ✅ OK |
-| SEC-006 | BASE_RULES | Rate limiting implemented | ✅ OK |
-| SEC-007 | BASE_RULES | Input validation - errors caught | ✅ OK |
-| CC-006 | BASE_RULES | Explicit error handling | ✅ OK |
-| ARCH-005 | BASE_RULES | Early returns for health checks | ✅ OK |
-
-### Security-Specific Rules
-
-| Rule | Source | Requirement | Current Status |
-|------|--------|-------------|----------------|
-| SEC-003 | BASE_RULES | Security headers present | ✅ OK |
-| SEC-009 | BASE_RULES | CORS handling | ✅ OK |
-| SEC-001 | BASE_RULES | No hardcoded secrets | ✅ OK (no secrets here) |
-
-**NOTE:** This analysis considers all 96 rules from BASE_RULES.md
+| Security Headers | CRITICAL_RULES.md | All security headers present | ✅ OK |
+| CORS Configuration | BASE_RULES.md | CORS configurable | ✅ OK |
+| Rate Limiting | CRITICAL_RULES.md | Rate limit enforced | ✅ OK |
+| Error Handling | BASE_RULES.md | All exceptions caught | ✅ OK |
+| Logging | BASE_RULES.md | All requests logged | ✅ OK |
+| Request ID | CRITICAL_RULES.md | Unique ID per request | ✅ OK |
+| Type Hints | BASE_RULES.md | All functions typed | ✅ OK |
+| Timeout Handling | CRITICAL_RULES.md | Slow requests logged | ✅ OK (> 5s) |
 
 ---
 
 ## Dependencies
-- **External:**
-  - `fastapi.Request` (Request object)
-  - `fastapi.Response` (Response object)
-  - `fastapi.responses.JSONResponse` (JSON response builder)
-  - `starlette.middleware.base.BaseHTTPMiddleware` (Base middleware class)
-  - `logging` (stdlib)
-  - `time` (stdlib)
-  - `uuid` (stdlib)
-  - `typing` (stdlib)
+- **External:** logging, time, uuid, typing, fastapi, starlette
 - **Internal:**
-  - `app.exceptions.error_handler.error_handler` (Global error handler)
-  - `app.services.centralized_logging.LogLevel` (Log level enum)
-  - `app.services.centralized_logging.LogService` (Service enum)
-  - `app.services.centralized_logging.centralized_logger` (Logger instance)
+  - app.exceptions.error_handler.error_handler
+  - app.services.centralized_logging.LogLevel, LogService, centralized_logger
 
 ---
 
 ## Required Tests
-- **tests/middleware/test_error_middleware.py:**
-  - Test ErrorHandlingMiddleware generates unique request_id
-  - Test ErrorHandlingMiddleware adds X-Request-ID header to response
-  - Test ErrorHandlingMiddleware adds X-Process-Time header to response
-  - Test ErrorHandlingMiddleware logs request start with metadata
-  - Test ErrorHandlingMiddleware logs request completion at INFO (200 OK)
-  - Test ErrorHandlingMiddleware logs at WARNING for 4xx status
-  - Test ErrorHandlingMiddleware logs at ERROR for 5xx status
-  - Test ErrorHandlingMiddleware logs at WARNING for slow requests (> 5s)
-  - Test ErrorHandlingMiddleware catches ValueError and returns error response
-  - Test ErrorHandlingMiddleware catches TypeError and returns error response
-  - Test ErrorHandlingMiddleware logs exceptions with details
-  - Test ErrorHandlingMiddleware adds request context to exception.details
-  - Test RequestContextMiddleware sets request.request_id if missing
-  - Test RequestContextMiddleware sets request.start_time
-  - Test SecurityHeadersMiddleware adds X-Content-Type-Options
-  - Test SecurityHeadersMiddleware adds X-Frame-Options
-  - Test SecurityHeadersMiddleware adds X-XSS-Protection
-  - Test SecurityHeadersMiddleware adds Strict-Transport-Security
-  - Test SecurityHeadersMiddleware adds Referrer-Policy
-  - Test SecurityHeadersMiddleware adds CORS headers when enable_cors=True
-  - Test SecurityHeadersMiddleware skips CORS when enable_cors=False
-  - Test RateLimitingMiddleware allows requests under limit
-  - Test RateLimitingMiddleware returns 429 when limit exceeded
-  - Test RateLimitingMiddleware includes Retry-After header in 429 response
-  - Test RateLimitingMiddleware cleans old entries (> 60s)
-  - Test RateLimitingMiddleware logs warning when limit exceeded
-  - Test RateLimitingMiddleware tracks by client IP
-  - Test HealthCheckMiddleware bypasses /health endpoint
-  - Test HealthCheckMiddleware bypasses /healthz endpoint
-  - Test HealthCheckMiddleware bypasses /ready endpoint
-  - Test HealthCheckMiddleware bypasses /live endpoint
-  - Test HealthCheckMiddleware processes non-health endpoints normally
-  - Test middleware chain order (error -> context -> security -> rate limit -> health)
+- **test_error_middleware.py:**
+  - Test request ID generation
+  - Test process time calculation
+  - Test request start logging
+  - Test request completion logging
+  - Test request error logging
+  - Test exception handling
+  - Test security headers added
+  - Test CORS enabled/disabled
+  - Test rate limiting enforcement
+  - Test rate limiting cleanup
+  - Test health check bypass
+  - Test 429 response with Retry-After
 
 ---
 
 ## Notes
-Implements comprehensive middleware stack for production FastAPI application. TASK-4: Sistema de manejo de errores unificado. All middleware uses async/await properly. Centralized logging via LogService ensures consistent log format across all middleware. Rate limiting is in-memory (suitable for single-instance deployment; use Redis for distributed). Security headers follow OWASP recommendations. Health check paths follow Kubernetes and cloud provider standards.
+- CRITICAL: This is production middleware for security and monitoring
+- All middleware should be lightweight (< 10ms overhead)
+- Rate limiting is in-memory (resets on restart)
+- CORS headers allow all origins by default (configure for production)
+- Request context middleware ensures request_id always available

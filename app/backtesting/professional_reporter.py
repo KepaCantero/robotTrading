@@ -105,11 +105,17 @@ class ProfessionalReporter:
 
         Returns:
             ReportSection with executive summary
+
+        Raises:
+            ValueError: If performance data is missing or invalid
         """
         perf = backtest_result.performance
         if not perf:
-            content = "No performance data available"
-            return ReportSection(title="Executive Summary", content=content)
+            logger.error(
+                "Cannot generate executive summary: performance data is None",
+                extra={"strategy": backtest_result.strategy_name}
+            )
+            raise ValueError("Performance data is required for executive summary generation")
 
         # Extract key metrics
         total_return = float(backtest_result.total_return)
@@ -153,6 +159,15 @@ class ProfessionalReporter:
 {self._generate_capital_recommendation(sharpe, max_dd, profit_factor)}
 """
 
+        try:
+            chart_data = self._prepare_equity_chart_data(backtest_result, benchmark_return)
+        except (KeyError, TypeError, ValueError) as e:
+            logger.warning(
+                "Failed to prepare equity chart data",
+                extra={"strategy": backtest_result.strategy_name, "error": str(e)}
+            )
+            chart_data = {"dates": [], "strategy": [], "benchmark": []}
+
         return ReportSection(
             title="Executive Summary",
             content=content,
@@ -160,7 +175,7 @@ class ProfessionalReporter:
                 {
                     "type": "equity_curve",
                     "title": "Equity Curve vs Benchmark",
-                    "data": self._prepare_equity_chart_data(backtest_result, benchmark_return),
+                    "data": chart_data,
                 }
             ],
         )

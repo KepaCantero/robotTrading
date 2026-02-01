@@ -67,6 +67,12 @@ BACKTEST_UNIVERSE: Dict[str, List]  # Contains survivors, delisted, spun_off, pe
 **Retry:** ❌ No
 **Side Effects:** None
 
+**IMPORTANT:** TRD-007 - TRADING_DAYS Documentation
+- This function assumes daily return frequency
+- TRADING_DAYS = 252 represents typical US equity market trading days per year
+- The formula returns period-level CAGR; to annualize daily returns, multiply by 252
+- ✅ FIXED - 2026-02-01 - TRADING_DAYS constant now documented in function docstring
+
 ---
 
 ### `UniverseManager.get_sector_diversification(symbols: List[str]) -> Dict[str, List[str]]`
@@ -122,7 +128,7 @@ BACKTEST_UNIVERSE: Dict[str, List]  # Contains survivors, delisted, spun_off, pe
 | TYP-003 | BASE_RULES.md | No Any without justification | ✅ FIXED - 2026-02-01: Proper Any type with justification |
 | BT-002 | BASE_RULES.md | Out-of-sample testing | ✅ OK - Includes delisted companies for realism |
 | BT-003 | BASE_RULES.md | No look-ahead bias | ✅ OK - Filters by date range only |
-| TRD-007 | BASE_RULES.md | Annualization (TRADING_DAYS) | ❌ GAP - CAGR calculation doesn't document TRADING_DAYS=252 |
+| TRD-007 | BASE_RULES.md | Annualization (TRADING_DAYS) | ✅ FIXED - 2026-02-01: Documented TRADING_DAYS=252 in CAGR calculation docstring |
 
 **NOTE:** This analysis considers ALL 96+ rules from BASE_RULES.md.
 
@@ -205,3 +211,19 @@ This module addresses a critical backtesting bias identified in academic literat
 - ✅ Python syntax compilation: Passed
 - ✅ Module import: Successful
 - ✅ All existing tests: Passed (12/12)
+
+### ✅ GAP-TRD-007: Missing TRADING_DAYS Documentation - FIXED
+**Summary:** Added comprehensive documentation for TRADING_DAYS=252 constant in CAGR calculation.
+
+**Changes Made:**
+1. **`_calculate_cagr_from_returns()` method:**
+   - Added detailed docstring explaining TRADING_DAYS = 252
+   - Documented that this represents typical US equity market trading days per year
+   - Explained that the formula assumes daily return frequency
+   - Clarified annualization: multiply daily returns by 252 for annual CAGR
+
+**Documentation Added:**
+- TRADING_DAYS = 252 represents typical US equity market trading days per year
+- The function assumes daily return frequency
+- To annualize daily returns, multiply by 252
+- Industry standard for US equity markets

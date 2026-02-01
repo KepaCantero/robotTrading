@@ -77,7 +77,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             # Calculate duration
             duration = (time.time() - start_time) * 1000
 
-            # Log error
+            # Log error with stack trace (LOG-004)
             centralized_logger.error(
                 LogService.FASTAPI,
                 f"Request failed: {request.method} {request.url.path}",
@@ -89,6 +89,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                     "error_type": type(e).__name__,
                 },
                 error_message=str(e),
+                exc_info=True,  # LOG-004: Include stack trace
             )
 
             raise
@@ -228,6 +229,7 @@ def log_trading_performance(operation: str):
                     f"{operation} failed",
                     metadata={"duration_ms": duration, "error_type": type(e).__name__},
                     error_message=str(e),
+                    exc_info=True,  # LOG-004: Include stack trace
                 )
                 raise
 
@@ -258,6 +260,7 @@ def log_portfolio_performance(operation: str):
                     f"{operation} failed",
                     metadata={"duration_ms": duration, "error_type": type(e).__name__},
                     error_message=str(e),
+                    exc_info=True,  # LOG-004: Include stack trace
                 )
                 raise
 
@@ -288,6 +291,7 @@ def log_market_data_performance(operation: str):
                     f"{operation} failed",
                     metadata={"duration_ms": duration, "error_type": type(e).__name__},
                     error_message=str(e),
+                    exc_info=True,  # LOG-004: Include stack trace
                 )
                 raise
 
@@ -318,6 +322,7 @@ def log_fastapi_performance(operation: str):
                     f"{operation} failed",
                     metadata={"duration_ms": duration, "error_type": type(e).__name__},
                     error_message=str(e),
+                    exc_info=True,  # LOG-004: Include stack trace
                 )
                 raise
 

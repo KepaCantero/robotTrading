@@ -70,13 +70,13 @@ target_metadata: MetaData           # SQLAlchemy MetaData from app.database.Base
 | Rule | Source | Requirement | Current Status |
 |------|--------|-------------|----------------|
 | CFG-002 | BASE_RULES.md | Environment variables for deployment | ✅ OK - ALEMBIC_DB_URL supported |
-| CFG-003 | BASE_RULES.md | Configuration validation | ⚠️ CHECK - Settings validation happens via get_settings() |
+| CFG-003 | BASE_RULES.md | Configuration validation | ✅ FIXED - Added URL validation with error logging |
 | ASYNC-001 | BASE_RULES.md | Use async def for async functions | ✅ OK - run_async_migrations() properly async |
 | ASYNC-002 | BASE_RULES.md | Await async calls | ✅ OK - Properly awaits connection.run_sync() |
 | ASYNC-003 | BASE_RULES.md | Async context managers | ✅ OK - Uses async with for connection |
 | ARCH-005 | BASE_RULES.md | Early returns | ⚠️ N/A - Linear control flow, no nesting |
-| CC-006 | BASE_RULES.md | Explicit error handling | ❌ GAP - No try/except for DB errors |
-| LOG-004 | BASE_RULES.md | Error logging with stack traces | ❌ GAP - No logging on migration failures |
+| CC-006 | BASE_RULES.md | Explicit error handling | ✅ FIXED - Added try/except for all DB operations (2026-02-01) |
+| LOG-004 | BASE_RULES.md | Error logging with stack traces | ✅ FIXED - Added logging with exc_info=True for all failures (2026-02-01) |
 | LOG-007 | BASE_RULES.md | Health checks | ⚠️ N/A - Alembic handles connection checks |
 | FMT-008 | BASE_RULES.md | Context managers for resources | ✅ OK - Uses with statements for connections |
 
@@ -132,3 +132,37 @@ target_metadata: MetaData           # SQLAlchemy MetaData from app.database.Base
 - The async migration support is critical for production PostgreSQL with asyncpg driver
 - Batch mode (`render_as_batch=True`) is required for SQLite but also works with PostgreSQL
 - Connection pooling is disabled (`poolclass=pool.NullPool`) during migrations to avoid connection leaks
+- **Error Handling (CC-006):** All migration functions now have try/except blocks with specific exception handling for SQLAlchemyError and generic Exception
+- **Logging (LOG-004):** Comprehensive logging added with exc_info=True for stack traces and structured logging with error_type and error_message fields
+- **Configuration Validation (CFG-003):** Added URL validation in run_migrations_offline() with proper error logging
+
+---
+
+## GAP Fixes Applied (2026-02-01)
+
+### CC-006: Explicit Error Handling - FIXED ✅
+**Changes:**
+- Added try/except blocks to all migration functions: `run_migrations_offline()`, `do_run_migrations()`, `run_async_migrations()`, `run_migrations_online()`
+- Specific handling for `SQLAlchemyError` to catch database-specific errors
+- Separate exception handling for `asyncio.TimeoutError` in async migrations
+- Generic Exception catch as fallback for unexpected errors
+- All exceptions are re-raised after logging to preserve Alembic's error propagation behavior
+- Added URL validation in `run_migrations_offline()` with descriptive error message
+
+### LOG-004: Error Logging with Stack Traces - FIXED ✅
+**Changes:**
+- Added `logger` instance from `logging.getLogger(__name__)`
+- Added `import logging` to imports
+- Added `from sqlalchemy.exc import SQLAlchemyError` for specific error type handling
+- All error logs use `exc_info=True` to capture stack traces
+- Structured logging with `extra` parameter including:
+  - `error_type`: The exception class name
+  - `error_message`: The exception message
+- Added info-level logging for migration progress tracking:
+  - "Starting offline/online/async migration"
+  - "Creating async database engine for migrations"
+  - "Establishing async/sync connection"
+  - "Running migrations"
+  - "Disposing engine"
+  - "Migration completed successfully"
+- Security consideration: Only partial URL logged (first 20 chars) to avoid exposing credentials

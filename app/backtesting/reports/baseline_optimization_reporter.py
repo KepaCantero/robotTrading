@@ -245,14 +245,36 @@ class BaselineOptimizationReporter:
         Args:
             html: HTML content
             output_path: Path to save report
+
+        Raises:
+            OSError: If directory cannot be created or file cannot be written
+            ValueError: If html is empty
         """
+        if not html:
+            logger.error("Cannot save empty HTML report")
+            raise ValueError("HTML content is required for saving report")
+
         output_path = Path(output_path)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(output_path, "w", encoding="utf-8") as f:
-            f.write(html)
+        try:
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            logger.error(
+                f"Failed to create output directory: {output_path.parent}",
+                extra={"error": str(e), "path": str(output_path.parent)}
+            )
+            raise
 
-        logger.info(f"Report saved to: {output_path}")
+        try:
+            with open(output_path, "w", encoding="utf-8") as f:
+                f.write(html)
+            logger.info(f"Report saved to: {output_path}")
+        except (IOError, OSError) as e:
+            logger.error(
+                f"Failed to write report to file: {output_path}",
+                extra={"error": str(e), "path": str(output_path)}
+            )
+            raise
 
     def generate_pdf(self, html: str, output_path: Optional[str] = None) -> bytes:
         """
@@ -616,10 +638,15 @@ class BaselineOptimizationReporter:
     def _create_equity_chart(self, equity_curve: List, name: str, color: str) -> Dict[str, Any]:
         """Create equity chart for single strategy."""
         if not equity_curve:
+            logger.warning(f"Empty equity curve for {name}")
             return {"data": [], "layout": {}}
 
-        dates = [point[0] if isinstance(point, tuple) else point for point in equity_curve]
-        values = [point[1] if isinstance(point, tuple) else point for point in equity_curve]
+        try:
+            dates = [point[0] if isinstance(point, tuple) else point for point in equity_curve]
+            values = [point[1] if isinstance(point, tuple) else point for point in equity_curve]
+        except (IndexError, TypeError) as e:
+            logger.error(f"Failed to extract chart data for {name}: {e}")
+            return {"data": [], "layout": {}}
 
         return {
             "data": [
@@ -645,26 +672,35 @@ class BaselineOptimizationReporter:
     ) -> Dict[str, Any]:
         """Create dual equity chart overlay."""
         if not baseline_curve or not optimized_curve:
+            logger.warning("Empty curve data for dual equity chart")
             return {"data": [], "layout": {}}
 
-        baseline_dates = [
-            point[0] if isinstance(point, tuple) else point for point in baseline_curve
-        ]
-        baseline_values = [
-            point[1] if isinstance(point, tuple) else point for point in baseline_curve
-        ]
+        try:
+            baseline_dates = [
+                point[0] if isinstance(point, tuple) else point for point in baseline_curve
+            ]
+            baseline_values = [
+                point[1] if isinstance(point, tuple) else point for point in baseline_curve
+            ]
 
-        optimized_dates = [
-            point[0] if isinstance(point, tuple) else point for point in optimized_curve
-        ]
-        optimized_values = [
-            point[1] if isinstance(point, tuple) else point for point in optimized_curve
-        ]
+            optimized_dates = [
+                point[0] if isinstance(point, tuple) else point for point in optimized_curve
+            ]
+            optimized_values = [
+                point[1] if isinstance(point, tuple) else point for point in optimized_curve
+            ]
+        except (IndexError, TypeError) as e:
+            logger.error(f"Failed to extract dual chart data: {e}")
+            return {"data": [], "layout": {}}
 
         # Normalize to same starting value
         if baseline_values and optimized_values:
-            baseline_norm = [v / baseline_values[0] * 100000 for v in baseline_values]
-            optimized_norm = [v / optimized_values[0] * 100000 for v in optimized_values]
+            try:
+                baseline_norm = [v / baseline_values[0] * 100000 for v in baseline_values]
+                optimized_norm = [v / optimized_values[0] * 100000 for v in optimized_values]
+            except (ZeroDivisionError, TypeError) as e:
+                logger.error(f"Failed to normalize chart data: {e}")
+                return {"data": [], "layout": {}}
         else:
             baseline_norm = baseline_values
             optimized_norm = optimized_values

@@ -13,6 +13,9 @@ import multiprocessing
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from typing import Any, Callable, Dict, List, Optional
 
+# Type alias for task functions
+TaskFunction = Callable[[Dict[str, Any]], Dict[str, Any]]
+
 logger = logging.getLogger(__name__)
 
 # Determinar número óptimo de workers
@@ -44,7 +47,7 @@ class ParallelExecutor:
         )
 
     def run_parallel(
-        self, tasks: List[Dict[str, Any]], task_function: Callable, task_name: str = "task"
+        self, tasks: List[Dict[str, Any]], task_function: TaskFunction, task_name: str = "task"
     ) -> List[Dict[str, Any]]:
         """
         Ejecutar múltiples tareas en paralelo.
@@ -96,7 +99,7 @@ class ParallelExecutor:
         return results
 
     def run_monte_carlo_parallel(
-        self, num_simulations: int, simulation_function: Callable, **simulation_kwargs
+        self, num_simulations: int, simulation_function: TaskFunction, **simulation_kwargs
     ) -> List[Dict[str, Any]]:
         """
         Ejecutar simulaciones Monte Carlo en paralelo.
@@ -124,7 +127,7 @@ class ParallelExecutor:
         )
 
     def run_grid_search_parallel(
-        self, parameter_combinations: List[Dict[str, Any]], combination_function: Callable
+        self, parameter_combinations: List[Dict[str, Any]], combination_function: TaskFunction
     ) -> List[Dict[str, Any]]:
         """
         Ejecutar combinaciones de Grid Search en paralelo.
@@ -151,7 +154,7 @@ class ParallelExecutor:
         )
 
     def run_learning_engines_parallel(
-        self, engines: List[str], engine_function: Callable, **engine_kwargs
+        self, engines: List[str], engine_function: TaskFunction, **engine_kwargs
     ) -> List[Dict[str, Any]]:
         """
         Ejecutar tests de learning engines en paralelo.

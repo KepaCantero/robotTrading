@@ -10,12 +10,15 @@ Paper: Kissell, M., & Posament, S. (2017). "Options Trading and Hedging"
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
 class CallSignal(str, Enum):
@@ -178,18 +181,45 @@ class CoveredCallStrategy:
         Returns:
             Best option to sell, or None if none suitable
         """
-        # Filter by expiration
-        valid_calls = [
-            opt
-            for opt in available_calls
-            if self._min_dte <= opt.days_to_expiration <= self._max_dte
-        ]
+        # Input validation
+        if not np.isfinite(stock_price) or stock_price <= 0:
+            logger.warning(f"Invalid stock_price: {stock_price}")
+            return None
+
+        if stock_quantity <= 0:
+            logger.warning(f"Invalid stock_quantity: {stock_quantity}")
+            return None
+
+        if not available_calls:
+            logger.warning("No available calls provided")
+            return None
+
+        # Filter by expiration and validate option data
+        valid_calls = []
+        for opt in available_calls:
+            # Validate option data
+            if not all([
+                np.isfinite(opt.strike) and opt.strike > 0,
+                np.isfinite(opt.days_to_expiration) and opt.days_to_expiration >= 0,
+                np.isfinite(opt.mid_price) and opt.mid_price >= 0,
+                np.isfinite(opt.delta) and opt.delta >= 0 and opt.delta <= 1,
+                np.isfinite(opt.implied_volatility) and opt.implied_volatility >= 0,
+            ]):
+                logger.warning(f"Invalid option data for {opt.symbol}, skipping")
+                continue
+
+            if self._min_dte <= opt.days_to_expiration <= self._max_dte:
+                valid_calls.append(opt)
 
         if not valid_calls:
+            logger.warning("No valid calls within DTE range")
             return None
 
         # Calculate target strike (OTM)
         target_strike = stock_price * (1 + self._target_otm)
+
+        if not np.isfinite(target_strike) or target_strike <= 0:
+            target_strike = stock_price * 1.05  # Fallback
 
         # Find closest strike to target
         best_call = None
@@ -197,16 +227,27 @@ class CoveredCallStrategy:
 
         for call in valid_calls:
             # Check premium threshold
-            premium_pct = call.mid_price / stock_price
+            if stock_price > 0:
+                premium_pct = call.mid_price / stock_price
+            else:
+                continue
+
             if premium_pct < self._min_premium:
                 continue
 
             # Calculate score (prefer closest to target strike with good premium)
-            strike_distance = abs(call.strike - target_strike) / stock_price
+            if stock_price > 0:
+                strike_distance = abs(call.strike - target_strike) / stock_price
+            else:
+                continue
+
             premium_score = premium_pct  # Higher premium better
 
             # Combined score (prefer near target with good premium)
             score = premium_score - strike_distance
+
+            if not np.isfinite(score):
+                continue
 
             if score > best_score:
                 best_score = score
@@ -336,6 +377,19 @@ class CoveredCallStrategy:
         Returns:
             Number of shares (in lots of 100)
         """
+        # Input validation
+        if not np.isfinite(capital) or capital <= 0:
+            logger.warning(f"Invalid capital: {capital}")
+            return 100  # Minimum
+
+        if not np.isfinite(stock_price) or stock_price <= 0:
+            logger.warning(f"Invalid stock_price: {stock_price}")
+            return 100  # Minimum
+
+        if not np.isfinite(max_position_pct) or max_position_pct <= 0 or max_position_pct > 1:
+            logger.warning(f"Invalid max_position_pct: {max_position_pct}, using 0.05")
+            max_position_pct = 0.05
+
         max_investment = capital * max_position_pct
         max_shares = int(max_investment / stock_price)
 
@@ -359,6 +413,23 @@ class CoveredCallStrategy:
         Returns:
             Annualized return (0-1)
         """
+        # Input validation
+        if not np.isfinite(covered_position.call_premium_received) or covered_position.call_premium_received < 0:
+            logger.warning("Invalid premium received")
+            return 0.0
+
+        if not np.isfinite(covered_position.stock_cost_basis) or covered_position.stock_cost_basis <= 0:
+            logger.warning("Invalid stock cost basis")
+            return 0.0
+
+        if covered_position.stock_quantity <= 0:
+            logger.warning("Invalid stock quantity")
+            return 0.0
+
+        if not np.isfinite(days_to_expiration) or days_to_expiration < 0:
+            logger.warning("Invalid days to expiration")
+            return 0.0
+
         # Premium income
         premium = covered_position.call_premium_received
 
@@ -372,7 +443,11 @@ class CoveredCallStrategy:
         days = max(1, days_to_expiration)
         annual_return = (premium / investment) * (365 / days)
 
-        return min(1.0, annual_return)
+        # Validate and clamp
+        if not np.isfinite(annual_return):
+            return 0.0
+
+        return min(1.0, max(0.0, annual_return))
 
     def create_covered_call_position(
         self,

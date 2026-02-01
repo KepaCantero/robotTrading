@@ -19,6 +19,8 @@ class PortfolioOptimization:
 
     This is a domain entity that contains the results of portfolio
     optimization combining multiple methodologies (Chan, Narang, Hull).
+
+    Invariant: weights must sum to approximately 1.0 (portfolio constraint).
     """
 
     weights: Dict[str, Decimal]
@@ -34,6 +36,29 @@ class PortfolioOptimization:
 
     # Hull - Risk metrics
     var_95: Optional[float] = None
+
+    def __post_init__(self) -> None:
+        """
+        Validate portfolio weights sum to approximately 1.0.
+
+        Raises:
+            ValueError: If weights are empty or don't sum to 1.0 (±0.01 tolerance).
+
+        This enforces the fundamental portfolio constraint that all weights
+        must sum to 100% of the portfolio allocation.
+        """
+        if not self.weights:
+            raise ValueError("Portfolio weights cannot be empty")
+
+        total_weight = sum(self.weights.values())
+
+        # Allow small tolerance for floating point arithmetic
+        tolerance = Decimal("0.01")
+        if abs(total_weight - Decimal("1.0")) > tolerance:
+            raise ValueError(
+                f"Portfolio weights must sum to 1.0 (±{tolerance}), "
+                f"got {total_weight:.4f}"
+            )
 
     def get_weight_summary(self) -> Dict[str, str]:
         """Get a formatted summary of portfolio weights."""

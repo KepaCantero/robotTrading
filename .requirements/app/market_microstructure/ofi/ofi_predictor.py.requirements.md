@@ -100,9 +100,10 @@ class OFIPredictor:
 | TRD-001 | BASE_RULES | Validate covariance matrix positive semidefinite | ✅ OK - Not applicable |
 | ML-001 | sklearn | Validate input arrays before fitting | ✅ OK - Checks in train_model |
 | TYP-001 | BASE_RULES | 100% type coverage | ✅ OK - All functions typed |
-| LOG-004 | BASE_RULES | Log exceptions with stack traces | ✅ OK - Logs training/prediction failures |
+| LOG-001 | BASE_RULES | Structured logging with context | ❌ GAP - Uses f-strings instead of extra dict |
+| LOG-004 | BASE_RULES | Log exceptions with stack traces | ❌ GAP - Missing exc_info=True |
 | SEC-007 | BASE_RULES | Input validation at boundaries | ✅ OK - Validates array lengths |
-| CC-006 | BASE_RULES | Explicit error handling | ⚠️ NOT APPLIED - Uses try/except, returns defaults |
+| CC-006 | BASE_RULES | Explicit error handling | ❌ GAP - Generic Exception catching |
 | ARCH-001 | BASE_RULES | Domain layer purity | ✅ OK - No infrastructure imports |
 
 ---

@@ -33,9 +33,9 @@ except ImportError:
             if obj is None:
                 return self
             if self.default_factory is not None:
-                if self.default_factory == list:
+                if self.default_factory is list:
                     return []
-                elif self.default_factory == dict:
+                elif self.default_factory is dict:
                     return {}
                 return self.default_factory()
             return self.default

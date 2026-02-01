@@ -8,7 +8,7 @@ import logging
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import yaml
 
@@ -25,6 +25,7 @@ class YAMLConfigUpdater:
     - Soporte para tier-specific overrides
     - Historial de cambios
     - Validación de YAML antes y después
+    - Validación de parámetros de entrada (GAP fix)
     """
 
     def __init__(self, config_dir: Path = Path("config"), backup_dir: Optional[Path] = None):
@@ -44,6 +45,116 @@ class YAMLConfigUpdater:
         logger.info(
             f"YAMLConfigUpdater initialized: config_dir={self.config_dir}, backup_dir={self.backup_dir}"
         )
+
+    def _validate_optimized_params(
+        self, params: Dict[str, Any], param_type: str = "general"
+    ) -> bool:
+        """
+        Validate optimized parameters before applying to configuration.
+
+        GAP FIX: Adds validation for input parameters to prevent invalid values
+        from being written to configuration files.
+
+        Args:
+            params: Parameters to validate
+            param_type: Type of parameters (filter, detector, strategy, learning, general)
+
+        Returns:
+            True if validation passes
+
+        Raises:
+            ValueError: If validation fails
+            TypeError: If params is not a dict
+        """
+        # Input validation
+        if not isinstance(params, dict):
+            raise TypeError(
+                f"optimized_params must be a dict, got {type(params).__name__}"
+            )
+
+        if not params:
+            logger.warning("Empty optimized_params dict provided")
+            return False
+
+        # Common validation rules for numeric values
+        numeric_ranges = {
+            # Exposure values (0-1 or 0-100)
+            "exposure": (0, 1),
+            "max_exposure": (0, 1),
+            "min_exposure": (0, 1),
+            # Percentage values (0-1 or 0-100)
+            "threshold": (0, 1),
+            "confidence_threshold": (0, 1),
+            # Count/size values (positive)
+            "position_size": (0, None),
+            "max_positions": (1, None),
+            "lookback": (1, None),
+            "lookback_days": (1, None),
+            "window": (1, None),
+            # Ratios
+            "risk_reward_ratio": (0, None),
+            "sharpe_ratio": (None, None),
+        }
+
+        # Validate each parameter
+        for key, value in params.items():
+            key_lower = key.lower()
+
+            # Check for None values
+            if value is None:
+                raise ValueError(f"Parameter '{key}' cannot be None")
+
+            # Type-specific validation based on param_type
+            if param_type == "filter":
+                # Filters typically have numeric thresholds
+                if "threshold" in key_lower or "level" in key_lower:
+                    if not isinstance(value, (int, float)):
+                        raise TypeError(
+                            f"Filter threshold '{key}' must be numeric, got {type(value).__name__}"
+                        )
+                    # Check if value is in reasonable range for percentages (0-1 or 0-100)
+                    if isinstance(value, (int, float)) and (value < 0 or value > 100):
+                        logger.warning(
+                            f"Filter threshold '{key}'={value} is outside typical range [0, 100]"
+                        )
+
+            elif param_type == "detector":
+                # Detectors have various parameters
+                if "period" in key_lower or "window" in key_lower:
+                    if not isinstance(value, int) or value < 1:
+                        raise ValueError(
+                            f"Detector parameter '{key}' must be a positive integer, got {value}"
+                        )
+
+            elif param_type == "strategy":
+                # Strategy parameters
+                if "exposure" in key_lower:
+                    if not isinstance(value, (int, float)) or not (0 <= value <= 1):
+                        raise ValueError(
+                            f"Strategy exposure '{key}' must be between 0 and 1, got {value}"
+                        )
+
+            # General numeric validation
+            if isinstance(value, (int, float)):
+                # Check against known ranges
+                for range_key, (min_val, max_val) in numeric_ranges.items():
+                    if range_key in key_lower:
+                        if min_val is not None and value < min_val:
+                            raise ValueError(
+                                f"Parameter '{key}'={value} is below minimum {min_val}"
+                            )
+                        if max_val is not None and value > max_val:
+                            raise ValueError(
+                                f"Parameter '{key}'={value} exceeds maximum {max_val}"
+                            )
+
+            # Warn about unexpected types
+            if not isinstance(value, (int, float, bool, str, list, dict, type(None))):
+                logger.warning(
+                    f"Parameter '{key}' has unexpected type: {type(value).__name__}"
+                )
+
+        return True
 
     # ========================================================================
     # UPDATE METHODS
@@ -68,6 +179,18 @@ class YAMLConfigUpdater:
         Returns:
             True si se actualizó correctamente
         """
+        # Input validation
+        if not filter_name or not isinstance(filter_name, str):
+            logger.error(f"Invalid filter_name: {filter_name}")
+            return False
+
+        # GAP FIX: Validate optimized_params
+        try:
+            self._validate_optimized_params(optimized_params, param_type="filter")
+        except (ValueError, TypeError) as e:
+            logger.error(f"Parameter validation failed for filter '{filter_name}': {e}")
+            return False
+
         config_file = self.config_dir / "momentum_filters.yaml"
 
         if not config_file.exists():
@@ -152,6 +275,18 @@ class YAMLConfigUpdater:
         Returns:
             True si se actualizó correctamente
         """
+        # Input validation
+        if not detector_name or not isinstance(detector_name, str):
+            logger.error(f"Invalid detector_name: {detector_name}")
+            return False
+
+        # GAP FIX: Validate optimized_params
+        try:
+            self._validate_optimized_params(optimized_params, param_type="detector")
+        except (ValueError, TypeError) as e:
+            logger.error(f"Parameter validation failed for detector '{detector_name}': {e}")
+            return False
+
         config_file = self.config_dir / "market_detectors.yaml"
 
         if not config_file.exists():
@@ -216,6 +351,18 @@ class YAMLConfigUpdater:
         Returns:
             True si se actualizó correctamente
         """
+        # Input validation
+        if not strategy_name or not isinstance(strategy_name, str):
+            logger.error(f"Invalid strategy_name: {strategy_name}")
+            return False
+
+        # GAP FIX: Validate optimized_params
+        try:
+            self._validate_optimized_params(optimized_params, param_type="strategy")
+        except (ValueError, TypeError) as e:
+            logger.error(f"Parameter validation failed for strategy '{strategy_name}': {e}")
+            return False
+
         config_file = self.config_dir / "strategy_defaults.yaml"
 
         if not config_file.exists():
@@ -280,6 +427,18 @@ class YAMLConfigUpdater:
         Returns:
             True si se actualizó correctamente
         """
+        # Input validation
+        if not section or not isinstance(section, str):
+            logger.error(f"Invalid section: {section}")
+            return False
+
+        # GAP FIX: Validate optimized_params
+        try:
+            self._validate_optimized_params(optimized_params, param_type="learning")
+        except (ValueError, TypeError) as e:
+            logger.error(f"Parameter validation failed for learning section '{section}': {e}")
+            return False
+
         config_file = self.config_dir / "learning_parameters.yaml"
 
         if not config_file.exists():

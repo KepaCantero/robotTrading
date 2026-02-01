@@ -173,7 +173,7 @@ class TradingPair:
 | Type hints coverage | BASE_RULES.md (TYP-001) | 100% type hints on public functions | ✅ OK - Complete |
 | Docstring coverage | BASE_RULES.md (CC-001) | All functions documented | ✅ OK - Complete |
 | Domain layer purity | BASE_RULES.md (ARCH-002) | No infrastructure imports | ⚠️ PARTIAL - statsmodels is external lib |
-| NaN handling | BASE_RULES.md (TRD-015) | Handle NaN in price data | ❌ GAP - No NaN handling |
+| NaN handling | BASE_RULES.md (TRD-015) | Handle NaN in price data | ✅ FIXED - Filters NaN/inf with logging |
 | NumPy 2.0 compat | BASE_RULES.md (TYP-002) | No deprecated np aliases | ✅ OK - Modern types |
 
 **NOTE:** This analysis references BASE_RULES.md for universal rules and Gatev et al. (2006) for pairs trading rules.

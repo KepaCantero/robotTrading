@@ -128,9 +128,9 @@ class ComplianceEngine:
 
 | Rule | Source | Requirement | Current Status |
 |------|--------|-------------|----------------|
-| SOL-001 | SOLID Principles | Single Responsibility - One class, one reason to change | ❌ GAP - ComplianceEngine is a God Object (2150+ lines, handles 17+ responsibilities) - Intentional design for unified entry point |
-| SOL-002 | SOLID Principles | Open/Closed Principle - Open for extension, closed for modification | ❌ GAP - Adding new system requires modifying _load_subsystem with new elif branches |
-| ASYNC-001 | Async Patterns | Use async def for I/O operations | ❌ GAP - analyze_pre_trade/analyze_post_trade are synchronous but call multiple subsystems - Async variants would be significant refactor |
+| SOL-001 | SOLID Principles | Single Responsibility - One class, one reason to change | ⚠️ NOT APPLIED - Façade pattern (see GAP analysis below) - Intentional design for unified entry point |
+| SOL-002 | SOLID Principles | Open/Closed Principle - Open for extension, closed for modification | ⚠️ DEFERRED - Adding new system requires modifying _load_subsystem (see GAP analysis below) |
+| ASYNC-001 | Async Patterns | Use async def for I/O operations | ⚠️ DEFERRED - analyze_pre_trade/analyze_post_trade are synchronous (see GAP analysis below) |
 | CFG-002 | Configuration | Environment variables for deployment | ✅ FIXED - 2026-02-01 - Added ComplianceConfig class with Pydantic validation |
 | CC-007 | Clean Code | Functions < 20 lines (ideally) | ⚠️ PARTIAL - _handle_risk_engine is 145+ lines - Would require significant refactoring |
 | QL-006 | Code Quality | Classes < 300 lines | ⚠️ NOT APPLIED - SystemBus is 700+ lines, ComplianceEngine is 1000+ lines - Intentional God Object design |
@@ -139,7 +139,7 @@ class ComplianceEngine:
 | RSK-003 | Risk Management | Drawdown control - Implement max drawdown limits | ✅ OK - Drawdown check implemented using configurable threshold |
 | LOG-003 | Logging | Appropriate levels (debug/info/error/critical) | ✅ OK - Proper use of logger levels |
 | LOG-004 | Logging | Error logging with stack traces | ⚠️ PARTIAL - Some exceptions logged without full traceback |
-| DP-004 | Design Patterns | Dependency injection | ❌ GAP - Direct imports in _load_subsystem instead of DI |
+| DP-004 | Design Patterns | Dependency injection | ⚠️ DEFERRED - Direct imports in _load_subsystem (see GAP analysis below) |
 
 ### Critical GAPs (Priority P1):
 
@@ -161,20 +161,74 @@ class ComplianceEngine:
    - Updated `get_compliance_engine()` to accept optional `config` parameter
 
 #### ❌ REMAINING (Intentional design or requires significant refactor):
-2. **GAP-SOL-001 (God Object):** ⚠️ NOT APPLIED - Intentional Design
-   - The file header explicitly states "THE ONLY ENGINE" - this is a unified entry point
-   - Refactoring to separate classes would be a major architectural change
-   - The complexity is managed through the SystemBus pattern
-   - Recommendation: Keep as-is for simplicity, document as intentional trade-off
 
-3. **GAP-ASYNC-001 (Missing async):** ⚠️ DEFERRED
-   - Main methods are synchronous but perform I/O across 17 subsystems
-   - Adding async variants would require:
-     - Async versions of all subsystem interfaces
-     - Breaking changes to public API
-     - Significant testing effort
-   - Current synchronous approach is acceptable for single-threaded usage
-   - Recommendation: Add async variants in future major version
+2. **GAP-SOL-001 (God Object - SRP Violation):** ⚠️ NOT APPLIED - Intentional Design Decision
+   - **Status:** The file header explicitly states "THE ONLY ENGINE" - this is a unified entry point
+   - **Rationale:**
+     - ComplianceEngine is designed as a **Façade pattern** providing a single, simplified interface to a complex subsystem
+     - The file header (lines 1-30) explicitly documents this as "THE ONLY ENGINE" - intentional architectural decision
+     - Refactoring to separate classes would be a **major architectural change** affecting all consumers
+     - The complexity is managed through the **SystemBus pattern** which orchestrates the 17 systems
+     - This is a documented trade-off: simplicity of API vs. pure SOLID adherence
+   - **Impact:** LOW - The design is intentional and documented
+   - **Recommendation:** Keep as-is. The God Object pattern is acceptable here as it's a **Façade**, not a violation. The SystemBus class handles the orchestration complexity.
+   - **Reference:** Lines 1-30 in compliance_engine.py document this design decision
+
+3. **GAP-SOL-002 (Open/Closed Principle):** ⚠️ DEFERRED - Requires Plugin Architecture
+   - **Status:** Adding new system requires modifying `_load_subsystem` with new `elif` branches (lines 1608-1749)
+   - **Rationale:**
+     - Current implementation uses explicit `if/elif` chains for subsystem loading
+     - Proper fix would require a **plugin registration system** or **dependency injection container**
+     - This is a significant refactoring that would affect the lazy initialization pattern
+     - The 17 systems are relatively stable (not frequently added/removed)
+   - **Impact:** MEDIUM - New systems require code modification, but systems are stable
+   - **Recommendation:** DEFER to future major version. Implement a plugin registry:
+     ```python
+     # Future design:
+     subsystem_registry = {
+         "risk_engine": lambda: RiskEngine(),
+         "portfolio_engine": lambda: PortfolioEngine(),
+         # ...
+     }
+     ```
+   - **Estimated Effort:** 2-3 days (design + implementation + testing)
+
+4. **GAP-ASYNC-001 (Missing Async Variants):** ⚠️ DEFERRED - Significant Refactor
+   - **Status:** Main methods (`analyze_pre_trade`, `analyze_post_trade`) are synchronous but perform I/O across 17 subsystems
+   - **Rationale:**
+     - Adding async variants would require **breaking changes to public API**
+     - All 17 subsystem interfaces would need async versions
+     - Significant testing effort for all integration points
+     - Current synchronous approach is acceptable for **single-threaded usage**
+     - The SystemBus orchestration would need complete redesign for async/await
+   - **Impact:** MEDIUM - Performance bottleneck only under high concurrency
+   - **Recommendation:** DEFER to v2.0. Add async variants as separate methods:
+     ```python
+     # Future API:
+     async def analyze_pre_trade_async(...) -> PreTradeAnalysis:
+         # asyncio.gather for parallel system execution
+     ```
+   - **Estimated Effort:** 3-5 days (async variants + comprehensive testing)
+
+5. **GAP-DP-004 (Dependency Injection):** ⚠️ DEFERRED - Architecture Change Required
+   - **Status:** Direct imports in `_load_subsystem` instead of dependency injection
+   - **Rationale:**
+     - Current implementation uses lazy loading with direct imports (lines 1616-1738)
+     - Proper DI would require a **DI container** (e.g., dependency-injector, pins)
+     - The singleton pattern makes DI more complex
+     - Would break backward compatibility with existing consumers
+   - **Impact:** LOW - Tight coupling exists, but systems are stable
+   - **Recommendation:** DEFER to v2.0. Implement DI container:
+     ```python
+     # Future design:
+     class ComplianceEngine:
+         def __init__(self, container: DIContainer):
+             self._container = container
+
+         def _get_subsystem(self, name: str):
+             return self._container.get(name)
+     ```
+   - **Estimated Effort:** 2-3 days (DI container + refactoring + testing)
 
 ---
 

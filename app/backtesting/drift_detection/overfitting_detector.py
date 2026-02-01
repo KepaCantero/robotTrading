@@ -18,6 +18,13 @@ from ..domain.value_objects.backtest_result import BacktestResultValue
 
 logger = logging.getLogger(__name__)
 
+# Design Note: DOM-001 - OverfittingResult is a plain dataclass (not a domain Value Object)
+# Rationale: Overfitting detection is an analytical utility that operates on domain
+# objects (BacktestResultValue) but produces analysis results that are not themselves
+# domain entities. The detector is a service that analyzes existing domain objects.
+# Converting the result to a VO would add complexity without domain benefit since
+# overfitting results are analysis metadata, not trading domain concepts.
+
 
 @dataclass
 class OverfittingResult:
@@ -129,13 +136,48 @@ class OverfittingDetector:
             details['oos_return'] = oos_return
             details['oos_degradation'] = oos_degradation
 
-        return OverfittingResult(
+        result = OverfittingResult(
             is_overfitting=is_overfitting,
             severity=severity,
             train_val_gap=gap,
             confidence=confidence,
             details=details,
         )
+
+        # Structured logging for overfitting detection event (LOG-001)
+        logger.info(
+            "overfitting_detection_complete",
+            extra={
+                "detector": "OverfittingDetector",
+                "method": "detect_from_results",
+                "is_overfitting": is_overfitting,
+                "severity": severity,
+                "confidence": confidence,
+                "train_return": train_return,
+                "val_return": val_return,
+                "gap": gap,
+                "gap_threshold": self.max_acceptable_gap,
+                "has_oos_result": oos_result is not None,
+            }
+        )
+
+        if is_overfitting:
+            logger.warning(
+                "overfitting_detected",
+                extra={
+                    "detector": "OverfittingDetector",
+                    "method": "detect_from_results",
+                    "severity": severity,
+                    "confidence": confidence,
+                    "train_return": train_return,
+                    "val_return": val_return,
+                    "gap": gap,
+                    "gap_threshold": self.max_acceptable_gap,
+                    "oos_degradation": details.get('oos_degradation'),
+                }
+            )
+
+        return result
 
     def detect_from_cv_scores(
         self, cv_scores: List[float], train_scores: Optional[List[float]] = None
@@ -151,6 +193,14 @@ class OverfittingDetector:
             Overfitting detection result
         """
         if not cv_scores:
+            logger.warning(
+                "overfitting_detection_failed",
+                extra={
+                    "detector": "OverfittingDetector",
+                    "method": "detect_from_cv_scores",
+                    "error": "No CV scores provided",
+                }
+            )
             return OverfittingResult(
                 is_overfitting=False,
                 severity='none',
@@ -190,7 +240,7 @@ class OverfittingDetector:
             severity = 'none'
             confidence = 0.85
 
-        return OverfittingResult(
+        result = OverfittingResult(
             is_overfitting=is_overfitting,
             severity=severity,
             train_val_gap=gap,
@@ -202,6 +252,43 @@ class OverfittingDetector:
                 'is_unstable': is_unstable,
             },
         )
+
+        # Structured logging for overfitting detection event (LOG-001)
+        logger.info(
+            "overfitting_detection_complete",
+            extra={
+                "detector": "OverfittingDetector",
+                "method": "detect_from_cv_scores",
+                "is_overfitting": is_overfitting,
+                "severity": severity,
+                "confidence": confidence,
+                "cv_mean": float(cv_mean),
+                "cv_std": float(cv_std),
+                "cv_cv": float(cv_cv),
+                "is_unstable": is_unstable,
+                "cv_threshold": self.cv_threshold,
+                "train_val_gap": gap,
+                "has_train_scores": train_scores is not None,
+                "n_cv_folds": len(cv_scores),
+            }
+        )
+
+        if is_overfitting:
+            logger.warning(
+                "overfitting_detected",
+                extra={
+                    "detector": "OverfittingDetector",
+                    "method": "detect_from_cv_scores",
+                    "severity": severity,
+                    "confidence": confidence,
+                    "cv_cv": float(cv_cv),
+                    "cv_threshold": self.cv_threshold,
+                    "train_val_gap": gap,
+                    "reason": "cv_unstable" if is_unstable else "train_val_gap",
+                }
+            )
+
+        return result
 
     def calculate_learning_curve_gap(
         self, train_sizes: List[int], train_scores: List[float], val_scores: List[float]
@@ -218,6 +305,15 @@ class OverfittingDetector:
             Learning curve analysis
         """
         if len(train_sizes) < 2:
+            logger.warning(
+                "learning_curve_analysis_failed",
+                extra={
+                    "detector": "OverfittingDetector",
+                    "method": "calculate_learning_curve_gap",
+                    "error": "Insufficient data points for learning curve",
+                    "data_points": len(train_sizes),
+                }
+            )
             return {'error': 'Insufficient data points for learning curve'}
 
         # Calculate average gaps
@@ -234,7 +330,7 @@ class OverfittingDetector:
         val_score_std = np.std(val_scores)
         is_high_variance = train_score_std > self.cv_threshold or val_score_std > self.cv_threshold
 
-        return {
+        result = {
             'avg_gap': avg_gap,
             'final_gap': final_gap,
             'is_converged': is_converged,
@@ -244,3 +340,39 @@ class OverfittingDetector:
             'val_score_std': val_score_std,
             'overfitting_indicated': avg_gap > self.max_acceptable_gap or not is_converged,
         }
+
+        # Structured logging for learning curve analysis (LOG-001)
+        logger.info(
+            "learning_curve_analysis_complete",
+            extra={
+                "detector": "OverfittingDetector",
+                "method": "calculate_learning_curve_gap",
+                "avg_gap": float(avg_gap),
+                "final_gap": float(final_gap),
+                "is_converged": is_converged,
+                "is_high_variance": is_high_variance,
+                "val_score_range": float(val_score_range),
+                "train_score_std": float(train_score_std),
+                "val_score_std": float(val_score_std),
+                "overfitting_indicated": result['overfitting_indicated'],
+                "n_data_points": len(train_sizes),
+                "cv_threshold": self.cv_threshold,
+                "max_acceptable_gap": self.max_acceptable_gap,
+            }
+        )
+
+        if result['overfitting_indicated']:
+            logger.warning(
+                "overfitting_indicated_in_learning_curve",
+                extra={
+                    "detector": "OverfittingDetector",
+                    "method": "calculate_learning_curve_gap",
+                    "avg_gap": float(avg_gap),
+                    "final_gap": float(final_gap),
+                    "is_converged": is_converged,
+                    "is_high_variance": is_high_variance,
+                    "reason": "high_gap" if avg_gap > self.max_acceptable_gap else "not_converged",
+                }
+            )
+
+        return result

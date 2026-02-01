@@ -27,35 +27,35 @@ class AuditTrail:
 **Pre:** config_path must exist and be readable file
 **Post:** Returns 64-character SHA256 hex string
 **Raises:** FileNotFoundError if config_path doesn't exist
-**Retry:** ❌ No
+**Retry:** No
 **Side Effects:** Reads config file, runs git subprocesses, logs hash generation
 
 ### `AuditTrail.save_audit_record(config_path, hash_value, metadata, result_path) -> None`
 **Pre:** All parameters must be valid strings or dicts
 **Post:** Appends JSONL record to log_file
 **Raises:** OSError, IOError for file write failures
-**Retry:** ❌ No
+**Retry:** No
 **Side Effects:** Writes single line JSON to log file (async version uses aiofiles)
 
 ### `AuditTrail.save_audit_record_sync(config_path, hash_value, metadata, result_path) -> None`
 **Pre:** All parameters must be valid strings or dicts
 **Post:** Appends JSONL record to log_file synchronously
 **Raises:** OSError, IOError for file write failures
-**Retry:** ❌ No
+**Retry:** No
 **Side Effects:** Writes single line JSON to log file
 
 ### `AuditTrail.verify_reproducibility(target_hash) -> Dict[str, Any]`
 **Pre:** target_hash must be valid 64-char hex string
 **Post:** Returns dict with 'reproducible' bool and detailed status
 **Raises:** None (returns dict with error info if hash not found)
-**Retry:** ❌ No
+**Retry:** No
 **Side Effects:** Reads log file, runs git subprocesses, no writes
 
 ### `AuditTrail.list_audit_records(limit, filter_by_config) -> List[Dict[str, Any]]`
 **Pre:** limit must be positive int or None, filter_by_config must be string or None
 **Post:** Returns list of audit records sorted by timestamp (newest first)
 **Raises:** None (returns empty list on errors)
-**Retry:** ❌ No
+**Retry:** No
 **Side Effects:** Reads and parses log file
 
 ---
@@ -85,16 +85,28 @@ class AuditTrail:
 
 | Rule | Source | Requirement | Current Status |
 |------|--------|-------------|----------------|
-| SEC-001 | BASE_RULES.md | No hardcoded secrets | ✅ OK - No secrets |
-| LOG-004 | BASE_RULES.md | Log exceptions with stack traces | ❌ GAP - Git subprocess errors logged without exc_info |
-| TYP-001 | BASE_RULES.md | 100% type coverage | ❌ GAP - Missing return type on _get_code_version |
-| CC-001 | BASE_RULES.md | Descriptive names | ✅ OK - Clear naming |
-| CC-006 | BASE_RULES.md | Explicit error handling | ✅ OK - Specific exceptions caught |
-| ASYNC-001 | BASE_RULES.md | Use async def | ✅ OK - save_audit_record is async |
-| ASYNC-003 | BASE_RULES.md | Async context managers | ✅ OK - async with aiofiles.open |
-| SEC-010 | BASE_RULES.md | aiofiles REQUIRED | ✅ OK - Comment states REQUIRED |
-| QL-001 | BASE_RULES.md | Complexity < 10 | ✅ OK - Simple methods |
-| TRD-004 | BASE_RULES.md | Audit trail logging | ✅ OK - Core purpose of file |
+| SEC-001 | BASE_RULES.md | No hardcoded secrets | OK - No secrets |
+| LOG-004 | BASE_RULES.md | Log exceptions with stack traces | OK - Git subprocess errors logged with exc_info=True |
+| TYP-001 | BASE_RULES.md | 100% type coverage | OK - _get_code_version has return type: -> str |
+| CC-001 | BASE_RULES.md | Descriptive names | OK - Clear naming |
+| CC-006 | BASE_RULES.md | Explicit error handling | OK - Specific exceptions caught |
+| ASYNC-001 | BASE_RULES.md | Use async def | OK - save_audit_record is async |
+| ASYNC-003 | BASE_RULES.md | Async context managers | OK - async with aiofiles.open |
+| SEC-010 | BASE_RULES.md | aiofiles REQUIRED | OK - Comment states REQUIRED |
+| QL-001 | BASE_RULES.md | Complexity < 10 | OK - Simple methods |
+| TRD-004 | BASE_RULES.md | Audit trail logging | OK - Core purpose of file |
+
+**GAPS Identified:**
+
+1. **P0 - None found**
+
+2. **P1 - Typo in git command:**
+   - Line 143: `'git', 'dif', '--quiet'` should be `'git', 'diff', '--quiet'` (missing 'f')
+   - This causes the dirty state check to always fail silently
+
+3. **P2 - Minor issues:**
+   - Hash includes timestamp making same config non-reproducible across time
+   - Could consider making timestamp optional for better reproducibility
 
 **NOTE:** This analysis should consider ALL 96 rules from BASE_RULES.md.
 

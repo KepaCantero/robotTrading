@@ -285,19 +285,19 @@ class Weight:
 ---
 
 ## Acceptance Criteria
-- [ ] **AC-001:** Percentage value must be in range [0, 100]
-- [ ] **AC-002:** Weight value must be in range [0, 1]
-- [ ] **AC-003:** from_decimal(0.5) → 50%
-- [ ] **AC-004:** from_float(0.5) → 50%
-- [ ] **AC-005:** from_percent(50) → 50%
-- [ ] **AC-006:** as_decimal on 50% → 0.5
-- [ ] **AC-007:** apply_to(1000) with 50% → 500
-- [ ] **AC-008:** add() cannot exceed 100%
-- [ ] **AC-009:** subtract() cannot result in negative
-- [ ] **AC-010:** Weight and Percentage are convertible
-- [ ] **AC-011:** Value objects are immutable (frozen=True)
-- [ ] **AC-012:** Hashable for use in sets/dicts
-- [ ] **AC-013:** All public methods have complete type hints
+- [x] **AC-001:** Percentage value must be in range [0, 100]
+- [x] **AC-002:** Weight value must be in range [0, 1]
+- [x] **AC-003:** from_decimal(0.5) → 50%
+- [x] **AC-004:** from_float(0.5) → 50%
+- [x] **AC-005:** from_percent(50) → 50%
+- [x] **AC-006:** as_decimal on 50% → 0.5
+- [x] **AC-007:** apply_to(1000) with 50% → 500
+- [x] **AC-008:** add() cannot exceed 100%
+- [x] **AC-009:** subtract() cannot result in negative
+- [x] **AC-010:** Weight and Percentage are convertible
+- [x] **AC-011:** Value objects are immutable (frozen=True)
+- [x] **AC-012:** Hashable for use in sets/dicts
+- [x] **AC-013:** All public methods have complete type hints
 
 ---
 

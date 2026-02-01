@@ -16,7 +16,7 @@ from __future__ import annotations
 import logging
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 
 import yaml
 
@@ -31,6 +31,11 @@ from app.services.profile_driven_trading.profile_strategy_mapper import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Type aliases for better type safety
+ConfigDict = Dict[str, Any]
+MetricsDict = Dict[str, Union[float, int, str, bool, None]]
+StrategyConfigDict = Dict[str, Any]
 
 
 class ProfileGenerator:
@@ -60,7 +65,7 @@ class ProfileGenerator:
             logger.warning(f"Failed to initialize ProfileStrategyMapper: {e}")
             self.profile_mapper = None
 
-    def _load_config(self) -> Dict[str, Any]:
+    def _load_config(self) -> ConfigDict:
         """Load configuration from YAML file."""
         with open(self.config_path) as f:
             return yaml.safe_load(f)
@@ -180,7 +185,7 @@ class ProfileGenerator:
             tier_map = {"small": "bajo", "medium": "medio", "large": "alto"}
             return tier_map.get(profile.capital_flag, "medio")
 
-    def create_profile_config(self, profile: InputProfile, output_dir: Path) -> Dict[str, Any]:
+    def create_profile_config(self, profile: InputProfile, output_dir: Path) -> ConfigDict:
         """
         Create backtest configuration for a profile.
 

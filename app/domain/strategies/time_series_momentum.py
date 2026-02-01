@@ -11,6 +11,7 @@ Paper: Moskowitz, O., & Grinblatt, M. (1999). "Do Industries Explain
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
@@ -18,6 +19,8 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from scipy import stats
+
+logger = logging.getLogger(__name__)
 
 
 class TrendState(str, Enum):
@@ -104,8 +107,27 @@ class TimeSeriesMomentum:
         Returns:
             TimeSeriesSignal with trading recommendation
         """
-        if len(prices) < self._slow_period + 1:
+        # Input validation - check for empty or invalid prices
+        if len(prices) == 0:
+            logger.warning(f"Empty prices array for symbol {symbol}")
+            return TimeSeriesSignal(
+                symbol=symbol,
+                state=TrendState.NEUTRAL,
+                strength=0.0,
+                position_size=0.0,
+            )
+
+        # Handle NaN and inf values
+        valid_mask = ~np.isnan(prices) & ~np.isinf(prices) & (prices > 0)
+        prices_clean = prices[valid_mask]
+
+        if len(prices_clean) < len(prices):
+            n_filtered = len(prices) - len(prices_clean)
+            logger.warning(f"Filtered out {n_filtered} NaN/inf/non-positive values from prices for {symbol}")
+
+        if len(prices_clean) < self._slow_period + 1:
             # Not enough data
+            logger.warning(f"Insufficient data points for {symbol}: {len(prices_clean)} < {self._slow_period + 1}")
             return TimeSeriesSignal(
                 symbol=symbol,
                 state=TrendState.NEUTRAL,
@@ -114,22 +136,51 @@ class TimeSeriesMomentum:
             )
 
         # Calculate moving averages
-        fast_ma = self._calculate_ma(prices, self._fast_period)
-        slow_ma = self._calculate_ma(prices, self._slow_period)
+        fast_ma = self._calculate_ma(prices_clean, self._fast_period)
+        slow_ma = self._calculate_ma(prices_clean, self._slow_period)
+
+        # Validate MA values
+        if not (np.isfinite(fast_ma) and np.isfinite(slow_ma) and fast_ma > 0 and slow_ma > 0):
+            logger.warning(f"Invalid moving averages for {symbol}: fast_ma={fast_ma}, slow_ma={slow_ma}")
+            return TimeSeriesSignal(
+                symbol=symbol,
+                state=TrendState.NEUTRAL,
+                strength=0.0,
+                position_size=0.0,
+            )
 
         # Calculate volatility
-        returns = np.diff(prices[-self._volatility_period :])
+        returns = np.diff(prices_clean[-self._volatility_period :])
         volatility = np.std(returns) if len(returns) > 0 else 0
 
+        # Handle invalid volatility
+        if not np.isfinite(volatility) or volatility < 0:
+            volatility = 0
+            logger.warning(f"Invalid volatility for {symbol}, using 0")
+
         # Normalize volatility
-        normalized_vol = (
-            volatility / np.mean(prices[-self._volatility_period :])
-            if np.mean(prices[-self._volatility_period :]) > 0
-            else 0
-        )
+        price_mean = np.mean(prices_clean[-self._volatility_period :])
+        if price_mean > 0 and np.isfinite(price_mean):
+            normalized_vol = volatility / price_mean
+        else:
+            normalized_vol = 0
+            logger.warning(f"Invalid price mean for {symbol}, using normalized_vol=0")
+
+        # Validate normalized_vol
+        if not np.isfinite(normalized_vol):
+            normalized_vol = 0
 
         # Determine trend
-        current_price = float(prices[-1])
+        current_price = float(prices_clean[-1])
+
+        if not np.isfinite(current_price) or current_price <= 0:
+            logger.warning(f"Invalid current price for {symbol}: {current_price}")
+            return TimeSeriesSignal(
+                symbol=symbol,
+                state=TrendState.NEUTRAL,
+                strength=0.0,
+                position_size=0.0,
+            )
 
         if fast_ma > slow_ma and normalized_vol > self._volatility_threshold / 100:
             # Uptrend with sufficient volatility
@@ -141,7 +192,7 @@ class TimeSeriesMomentum:
             state = TrendState.UPTREND
 
             # Calculate stop loss and take profit
-            atr = self._calculate_atr(prices[-20:]) if len(prices) >= 20 else None
+            atr = self._calculate_atr(prices_clean[-20:]) if len(prices_clean) >= 20 else None
             stop_loss = current_price * (1 - 0.02) if atr else None  # 2% stop
             take_profit = current_price * (1 + 0.06) if atr else None  # 6% target
 
@@ -163,7 +214,7 @@ class TimeSeriesMomentum:
 
             state = TrendState.DOWNTREND
 
-            atr = self._calculate_atr(prices[-20:]) if len(prices) >= 20 else None
+            atr = self._calculate_atr(prices_clean[-20:]) if len(prices_clean) >= 20 else None
             stop_loss = current_price * (1 + 0.02) if atr else None
             take_profit = current_price * (1 - 0.06) if atr else None
 

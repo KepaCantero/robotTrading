@@ -138,7 +138,7 @@ class BacktestMetaAnalyzer:
                         data['file_type'] = 'json'
                         return data
             except (ValueError, TypeError, KeyError, AttributeError) as e:
-                logger.debug(f"Error cargando {file_path}: {e}")
+                logger.debug(f"Error cargando {file_path}: {e}", exc_info=True)
             return None
 
         tasks = [load_file(f) for f in files]
@@ -161,7 +161,7 @@ class BacktestMetaAnalyzer:
                     record['file_type'] = 'csv'
                 return records
             except (ValueError, TypeError, KeyError, AttributeError) as e:
-                logger.debug(f"Error cargando {file_path}: {e}")
+                logger.debug(f"Error cargando {file_path}: {e}", exc_info=True)
             return None
 
         tasks = [load_file(f) for f in files]
@@ -597,14 +597,14 @@ class BacktestMetaAnalyzer:
         logger.info(f"🚀 Iniciando análisis paralelo (max_workers={max_workers})...")
 
         # Tareas I/O-bound (asyncio)
-        async def load_data():
+        async def load_data() -> None:
             await self.load_results()
 
         # Tareas CPU-bound (ThreadPoolExecutor)
-        def analyze_cpu():
+        def analyze_cpu() -> Dict[str, Any]:
             return self.analyze_performance()
 
-        def cluster_cpu():
+        def cluster_cpu() -> Dict[str, Any]:
             if include_clustering:
                 return self.detect_clusters(n_clusters=n_clusters)
             return {}

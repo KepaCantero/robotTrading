@@ -10,6 +10,7 @@ Paper: Gatev, E., et al. (2006). "Pairs Trading: Performance of a Relative-Value
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
@@ -17,6 +18,8 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from scipy import stats
+
+logger = logging.getLogger(__name__)
 
 
 class PairSignal(str, Enum):
@@ -205,48 +208,117 @@ class PairsTrading:
             CointegrationResult with test results
         """
         try:
+            # Input validation
+            if len(prices_a) < 10 or len(prices_b) < 10:
+                logger.warning("Insufficient data for cointegration test")
+                return CointegrationResult(
+                    is_cointegrated=False,
+                    test_statistic=0.0,
+                    p_value=1.0,
+                    critical_value=0.0,
+                    hedge_ratio=1.0,
+                    half_life=float('inf'),
+                    confidence=0.0,
+                )
+
+            # Handle NaN and inf values
+            valid_mask_a = ~np.isnan(prices_a) & ~np.isinf(prices_a) & (prices_a > 0)
+            valid_mask_b = ~np.isnan(prices_b) & ~np.isinf(prices_b) & (prices_b > 0)
+
+            prices_a_clean = prices_a[valid_mask_a]
+            prices_b_clean = prices_b[valid_mask_b]
+
+            if len(prices_a_clean) < 10 or len(prices_b_clean) < 10:
+                logger.warning("Insufficient valid data after filtering NaN/inf")
+                return CointegrationResult(
+                    is_cointegrated=False,
+                    test_statistic=0.0,
+                    p_value=1.0,
+                    critical_value=0.0,
+                    hedge_ratio=1.0,
+                    half_life=float('inf'),
+                    confidence=0.0,
+                )
+
             # Ensure same length
-            min_len = min(len(prices_a), len(prices_b))
-            prices_a = prices_a[-min_len:]
-            prices_b = prices_b[-min_len:]
+            min_len = min(len(prices_a_clean), len(prices_b_clean))
+            prices_a_clean = prices_a_clean[-min_len:]
+            prices_b_clean = prices_b_clean[-min_len:]
 
             # Use log prices
-            log_a = np.log(prices_a)
-            log_b = np.log(prices_b)
+            try:
+                log_a = np.log(prices_a_clean)
+                log_b = np.log(prices_b_clean)
+            except Exception as e:
+                logger.warning(f"Error calculating log prices: {e}")
+                return self._simple_cointegration_test(prices_a_clean, prices_b_clean)
+
+            # Validate log prices
+            if not (np.all(np.isfinite(log_a)) and np.all(np.isfinite(log_b))):
+                logger.warning("Non-finite log prices, using simple test")
+                return self._simple_cointegration_test(prices_a_clean, prices_b_clean)
 
             # Step 1: Estimate hedge ratio (beta) via OLS
             # Regression: log_a = alpha + beta * log_b + epsilon
-            beta, alpha = np.polyfit(log_b, log_a, 1)
-            hedge_ratio = float(beta)
+            try:
+                beta, alpha = np.polyfit(log_b, log_a, 1)
+                hedge_ratio = float(beta)
 
-            # Calculate spread (residuals)
-            spread = log_a - (alpha + beta * log_b)
+                # Validate hedge ratio
+                if not np.isfinite(hedge_ratio):
+                    hedge_ratio = 1.0
+
+                # Calculate spread (residuals)
+                spread = log_a - (alpha + beta * log_b)
+
+                # Validate spread
+                if not np.all(np.isfinite(spread)):
+                    logger.warning("Non-finite spread values")
+                    return self._simple_cointegration_test(prices_a_clean, prices_b_clean)
+
+            except Exception as e:
+                logger.warning(f"Error in OLS regression: {e}")
+                return self._simple_cointegration_test(prices_a_clean, prices_b_clean)
 
             # Step 2: Test spread for stationarity (ADF test)
             from statsmodels.tsa.stattools import adfuller
 
-            adf_result = adfuller(spread, maxlag=1)
-            test_statistic = float(adf_result[0])
-            p_value = float(adf_result[1])
-            critical_value = float(adf_result[4]['5%'])
+            try:
+                adf_result = adfuller(spread, maxlag=1)
+                test_statistic = float(adf_result[0])
+                p_value = float(adf_result[1])
+                critical_value = float(adf_result[4]['5%'])
 
-            is_cointegrated = test_statistic < critical_value and p_value < 0.05
+                # Validate results
+                if not (np.isfinite(test_statistic) and np.isfinite(p_value) and np.isfinite(critical_value)):
+                    logger.warning("Non-finite ADF test results")
+                    return self._simple_cointegration_test(prices_a_clean, prices_b_clean)
 
-            # Calculate half-life of spread
-            half_life = self._calculate_half_life(spread)
+                is_cointegrated = test_statistic < critical_value and p_value < 0.05
 
-            # Confidence based on p-value
-            confidence = max(0.0, 1.0 - p_value * 10)  # Rough scaling
+                # Calculate half-life of spread
+                half_life = self._calculate_half_life(spread)
 
-            return CointegrationResult(
-                is_cointegrated=is_cointegrated,
-                test_statistic=test_statistic,
-                p_value=p_value,
-                critical_value=critical_value,
-                hedge_ratio=hedge_ratio,
-                half_life=half_life,
-                confidence=confidence,
-            )
+                # Validate half-life
+                if not np.isfinite(half_life) or half_life <= 0:
+                    half_life = float('inf')
+
+                # Confidence based on p-value
+                confidence = max(0.0, min(1.0, 1.0 - p_value))
+
+                return CointegrationResult(
+                    is_cointegrated=is_cointegrated,
+                    test_statistic=test_statistic,
+                    p_value=p_value,
+                    critical_value=critical_value,
+                    hedge_ratio=hedge_ratio,
+                    half_life=half_life,
+                    confidence=confidence,
+                )
+
+            except Exception as e:
+                logger.warning(f"Error in ADF test: {e}")
+                return self._simple_cointegration_test(prices_a_clean, prices_b_clean)
 
         except Exception:
             # Fallback: simple correlation-based test
@@ -267,40 +339,114 @@ class PairsTrading:
         Returns:
             CointegrationResult with test results
         """
+        # Input validation
+        if len(prices_a) < 10 or len(prices_b) < 10:
+            return CointegrationResult(
+                is_cointegrated=False,
+                test_statistic=0.0,
+                p_value=1.0,
+                critical_value=0.7,
+                hedge_ratio=1.0,
+                half_life=float('inf'),
+                confidence=0.0,
+            )
+
         # Ensure same length
         min_len = min(len(prices_a), len(prices_b))
         prices_a = prices_a[-min_len:]
         prices_b = prices_b[-min_len:]
 
+        # Handle NaN and inf
+        valid_mask = ~np.isnan(prices_a) & ~np.isinf(prices_a) & (prices_a > 0) & \
+                     ~np.isnan(prices_b) & ~np.isinf(prices_b) & (prices_b > 0)
+
+        prices_a_clean = prices_a[valid_mask]
+        prices_b_clean = prices_b[valid_mask]
+
+        if len(prices_a_clean) < 10:
+            return CointegrationResult(
+                is_cointegrated=False,
+                test_statistic=0.0,
+                p_value=1.0,
+                critical_value=0.7,
+                hedge_ratio=1.0,
+                half_life=float('inf'),
+                confidence=0.0,
+            )
+
         # Calculate returns
-        returns_a = np.diff(np.log(prices_a))
-        returns_b = np.diff(np.log(prices_b))
+        try:
+            returns_a = np.diff(np.log(prices_a_clean))
+            returns_b = np.diff(np.log(prices_b_clean))
+        except Exception as e:
+            logger.warning(f"Error calculating log returns: {e}")
+            return CointegrationResult(
+                is_cointegrated=False,
+                test_statistic=0.0,
+                p_value=1.0,
+                critical_value=0.7,
+                hedge_ratio=1.0,
+                half_life=float('inf'),
+                confidence=0.0,
+            )
+
+        # Validate returns
+        if not (np.all(np.isfinite(returns_a)) and np.all(np.isfinite(returns_b))):
+            return CointegrationResult(
+                is_cointegrated=False,
+                test_statistic=0.0,
+                p_value=1.0,
+                critical_value=0.7,
+                hedge_ratio=1.0,
+                half_life=float('inf'),
+                confidence=0.0,
+            )
 
         # Correlation of returns
-        correlation = np.corrcoef(returns_a, returns_b)[0, 1]
+        try:
+            correlation = np.corrcoef(returns_a, returns_b)[0, 1]
+
+            # Validate correlation
+            if not np.isfinite(correlation):
+                correlation = 0.0
+        except Exception as e:
+            logger.warning(f"Error calculating correlation: {e}")
+            correlation = 0.0
 
         # Simple hedge ratio from volatility ratio
         std_a = np.std(returns_a)
         std_b = np.std(returns_b)
-        hedge_ratio = std_a / std_b if std_b > 0 else 1.0
+        hedge_ratio = std_a / std_b if std_b > 1e-10 else 1.0
+
+        # Validate hedge_ratio
+        if not np.isfinite(hedge_ratio):
+            hedge_ratio = 1.0
 
         # Calculate spread
-        spread = prices_a - hedge_ratio * prices_b
+        spread = prices_a_clean - hedge_ratio * prices_b_clean
+
+        # Validate spread
+        if not np.all(np.isfinite(spread)):
+            spread = prices_a_clean - prices_b_clean  # Fallback to simple difference
 
         # Calculate half-life
         half_life = self._calculate_half_life(spread)
+
+        # Validate half_life
+        if not np.isfinite(half_life) or half_life <= 0:
+            half_life = float('inf')
 
         # Simple cointegration criterion
         is_cointegrated = correlation > 0.7 and half_life < self._max_half_life
 
         return CointegrationResult(
             is_cointegrated=is_cointegrated,
-            test_statistic=correlation,
-            p_value=1.0 - correlation,  # Rough approximation
+            test_statistic=correlation if np.isfinite(correlation) else 0.0,
+            p_value=1.0 - correlation if np.isfinite(correlation) else 1.0,  # Rough approximation
             critical_value=0.7,
             hedge_ratio=hedge_ratio,
             half_life=half_life,
-            confidence=correlation if correlation > 0 else 0.0,
+            confidence=max(0.0, correlation) if np.isfinite(correlation) else 0.0,
         )
 
     def _calculate_half_life(self, spread: np.ndarray) -> float:

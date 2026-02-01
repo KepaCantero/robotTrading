@@ -4,7 +4,7 @@ Execute Strategy Use Case - Execute a trading strategy
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from app.domain.entities.order import Order, OrderSide, OrderStatus, OrderType
 from app.models.market_data import Quote
@@ -21,7 +21,7 @@ class ExecuteStrategyUseCase:
     This use case orchestrates strategy execution and order generation.
     """
 
-    def __init__(self, strategy: Optional[BaseStrategy] = None):
+    def __init__(self, strategy: BaseStrategy | None = None) -> None:
         """Initialize use case with optional strategy."""
         self._strategy = strategy
 
@@ -29,8 +29,8 @@ class ExecuteStrategyUseCase:
         self,
         market_data: Quote,
         strategy_type: str,
-        parameters: Optional[Dict[str, Any]] = None,
-    ) -> List[Order]:
+        parameters: dict[str, Any] | None = None,
+    ) -> list[Order]:
         """
         Execute the use case - run strategy and generate orders.
 
@@ -54,16 +54,22 @@ class ExecuteStrategyUseCase:
             try:
                 self._strategy.update_parameters(parameters)
                 logger.debug(f"Applied parameters to strategy: {parameters}")
-            except Exception as e:
-                logger.error(f"Failed to apply strategy parameters: {e}")
+            except (TypeError, KeyError, ValueError) as e:
+                logger.error(
+                    f"Failed to apply strategy parameters: {e}",
+                    exc_info=True
+                )
                 raise ValueError(f"Invalid strategy parameters: {e}") from e
 
         # Execute strategy and generate signals
         try:
             signals = self._strategy.generate_signals(market_data)
             logger.info(f"Generated {len(signals)} signals for {market_data.symbol}")
-        except Exception as e:
-            logger.error(f"Failed to generate signals for {market_data.symbol}: {e}")
+        except (AttributeError, ValueError, TypeError) as e:
+            logger.error(
+                f"Failed to generate signals for {market_data.symbol}: {e}",
+                exc_info=True
+            )
             return []
 
         # Convert signals to orders
@@ -74,9 +80,9 @@ class ExecuteStrategyUseCase:
 
     def _convert_signals_to_orders(
         self,
-        signals: List[Signal],
+        signals: list[Signal],
         strategy_type: str,
-    ) -> List[Order]:
+    ) -> list[Order]:
         """
         Convert trading signals to orders.
 
@@ -113,8 +119,11 @@ class ExecuteStrategyUseCase:
                         f"{signal.signal_type.value} @ {signal.price}"
                     )
 
-            except Exception as e:
-                logger.error(f"Failed to convert signal {signal.signal_id} to order: {e}")
+            except (ValueError, TypeError, AttributeError) as e:
+                logger.error(
+                    f"Failed to convert signal {signal.signal_id} to order: {e}",
+                    exc_info=True
+                )
                 continue
 
         return orders
@@ -123,7 +132,7 @@ class ExecuteStrategyUseCase:
         self,
         signal: Signal,
         strategy_type: str,
-    ) -> Optional[Order]:
+    ) -> Order | None:
         """
         Convert a single signal to an order.
 
@@ -173,7 +182,7 @@ class ExecuteStrategyUseCase:
 
         return order
 
-    def validate_strategy_config(self, config: Dict) -> bool:
+    def validate_strategy_config(self, config: dict) -> bool:
         """
         Validate strategy configuration.
 

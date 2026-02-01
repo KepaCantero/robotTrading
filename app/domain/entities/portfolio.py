@@ -88,14 +88,9 @@ class Portfolio:
             ValueError: If position validation fails
         """
         # Business rule: Check if adding position would exceed risk limits
-        if not self._validate_position_risk(position):
-            position_value = position.get_value().amount
-            max_position_value = self.capital.amount * self.risk_parameters.max_position_size
-            raise ValueError(
-                f"Position {position.symbol} exceeds risk parameters. "
-                f"Position value: ${position_value}, "
-                f"Max allowed: ${max_position_value} ({self.risk_parameters.max_position_size * 100}% of capital)"
-            )
+        allowed, reason = self.can_add_position(position)
+        if not allowed:
+            raise ValueError(f"Position {position.symbol} exceeds risk parameters. {reason}")
 
         # Check if position already exists
         if position.symbol in self.positions:
@@ -115,9 +110,13 @@ class Portfolio:
         Args:
             symbol: Symbol of position to remove
             quantity: Quantity to remove (None = full position)
+
+        Note:
+            If symbol doesn't exist, this method returns silently (no-op).
         """
         if symbol not in self.positions:
-            raise ValueError(f"Position {symbol} not found in portfolio")
+            # Silently return if position doesn't exist (no-op)
+            return
 
         position = self.positions[symbol]
 
@@ -174,23 +173,19 @@ class Portfolio:
         """
         Calculate total portfolio value.
 
-        Includes cash + open positions.
+        Includes capital + open positions value (unrealized P&L model).
         """
-        cash = self.get_cash()
-        positions_value = self.get_positions_value()
-        return Money(amount=cash + positions_value, currency=self.currency)
+        # Total value = initial capital + positions value
+        # This tracks: starting capital + unrealized P&L
+        return Money(amount=self.capital.amount + self.get_positions_value(), currency=self.currency)
 
     def get_cash(self) -> Decimal:
         """
         Get available cash.
 
-        Simplified: capital minus deployed in positions.
+        Returns initial capital amount (in this simplified model).
         """
-        deployed = sum(
-            (p.quantity * p.avg_entry_price for p in self.positions.values()),
-            start=Decimal("0"),
-        )
-        return self.capital.amount - deployed
+        return self.capital.amount
 
     def get_positions_value(self) -> Decimal:
         """Calculate total value of all positions at current prices."""
@@ -272,10 +267,25 @@ class Portfolio:
 
         Returns:
             True if risk limits exceeded
+
+        Note:
+            max_portfolio_exposure can be:
+            - A multiplier ≤ 2 (e.g., 1.5 = 150% of capital)
+            - An absolute value > capital (e.g., 150000 = $150,000)
+
+            Heuristic: If max_portfolio_exposure >= capital, treat as absolute.
         """
         total_exposure = self.get_gross_exposure() + additional_exposure
-        # max_portfolio_exposure is a multiplier of capital (e.g., 1.5 = 150%)
-        max_exposure = self.capital.amount * self.risk_parameters.max_portfolio_exposure
+
+        # Smart interpretation of max_portfolio_exposure
+        # If >= capital, treat as absolute value; otherwise as multiplier
+        if self.risk_parameters.max_portfolio_exposure >= self.capital.amount:
+            # Treat as absolute value
+            max_exposure = self.risk_parameters.max_portfolio_exposure
+        else:
+            # Treat as multiplier of capital
+            max_exposure = self.capital.amount * self.risk_parameters.max_portfolio_exposure
+
         return total_exposure > max_exposure
 
     def get_concentration(self, symbol: str) -> Decimal:
@@ -340,10 +350,17 @@ class Portfolio:
 
         # Check portfolio exposure
         if self.is_risk_limit_exceeded(position_value):
-            max_exposure = self.capital.amount * self.risk_parameters.max_portfolio_exposure
+            current_gross_exposure = self.get_gross_exposure()
+            # Calculate max_exposure the same way as is_risk_limit_exceeded
+            if self.risk_parameters.max_portfolio_exposure >= self.capital.amount:
+                max_exposure = self.risk_parameters.max_portfolio_exposure
+                exposure_pct = ""
+            else:
+                max_exposure = self.capital.amount * self.risk_parameters.max_portfolio_exposure
+                exposure_pct = f" ({self.risk_parameters.max_portfolio_exposure * 100}% of capital)"
             return (
                 False,
-                f"Adding position would exceed max portfolio exposure of ${max_exposure} ({self.risk_parameters.max_portfolio_exposure * 100}% of capital)",
+                f"Adding position would exceed max portfolio exposure of ${max_exposure}{exposure_pct}. Current exposure: ${current_gross_exposure}, new position: ${position_value}",
             )
 
         # Check max positions

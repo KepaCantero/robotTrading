@@ -460,52 +460,84 @@ class OFICalculator:
             OFIStatistics object or None if insufficient data
         """
         if len(ofi_history) < 5:
+            logger.debug(
+                "Insufficient OFI history for statistics calculation",
+                extra={
+                    "symbol": symbol,
+                    "history_length": len(ofi_history),
+                    "minimum_required": 5,
+                },
+            )
             return None
 
-        ofi_array = np.array(ofi_history)
+        try:
+            ofi_array = np.array(ofi_history)
 
-        # Basic statistics
-        mean_ofi = float(np.mean(ofi_array))
-        std_ofi = float(np.std(ofi_array))
-        max_ofi = float(np.max(ofi_array))
-        min_ofi = float(np.min(ofi_array))
-        median_ofi = float(np.median(ofi_array))
+            # Basic statistics
+            mean_ofi = float(np.mean(ofi_array))
+            std_ofi = float(np.std(ofi_array))
+            max_ofi = float(np.max(ofi_array))
+            min_ofi = float(np.min(ofi_array))
+            median_ofi = float(np.median(ofi_array))
 
-        # Higher moments
-        from scipy.stats import kurtosis, skew
+            # Higher moments
+            from scipy.stats import kurtosis, skew
 
-        skewness = float(skew(ofi_array))
-        kurt = float(kurtosis(ofi_array))
+            skewness = float(skew(ofi_array))
+            kurt = float(kurtosis(ofi_array))
 
-        # Autocorrelation at lag 1
-        if len(ofi_history) > 10:
-            autocorr_1 = float(np.corrcoef(ofi_array[:-1], ofi_array[1:])[0, 1])
-            if np.isnan(autocorr_1):
+            # Autocorrelation at lag 1
+            if len(ofi_history) > 10:
+                autocorr_1 = float(np.corrcoef(ofi_array[:-1], ofi_array[1:])[0, 1])
+                if np.isnan(autocorr_1):
+                    autocorr_1 = 0.0
+            else:
                 autocorr_1 = 0.0
-        else:
-            autocorr_1 = 0.0
 
-        # Predictive power (correlation with future returns)
-        predictive_power = 0.0
-        if returns_history and len(returns_history) == len(ofi_history):
-            returns_array = np.array(returns_history)
-            corr = np.corrcoef(ofi_array, returns_array)[0, 1]
-            predictive_power = float(corr) if not np.isnan(corr) else 0.0
+            # Predictive power (correlation with future returns)
+            predictive_power = 0.0
+            if returns_history and len(returns_history) == len(ofi_history):
+                returns_array = np.array(returns_history)
+                corr = np.corrcoef(ofi_array, returns_array)[0, 1]
+                predictive_power = float(corr) if not np.isnan(corr) else 0.0
 
-        return OFIStatistics(
-            symbol=symbol,
-            period_start=period_start or datetime.utcnow(),
-            period_end=period_end or datetime.utcnow(),
-            mean_ofi=mean_ofi,
-            std_ofi=std_ofi,
-            max_ofi=max_ofi,
-            min_ofi=min_ofi,
-            median_ofi=median_ofi,
-            skewness=skewness,
-            kurtosis=kurt,
-            autocorr_1=autocorr_1,
-            predictive_power=predictive_power,
-        )
+            logger.info(
+                "OFI statistics calculated successfully",
+                extra={
+                    "symbol": symbol,
+                    "mean_ofi": mean_ofi,
+                    "std_ofi": std_ofi,
+                    "history_length": len(ofi_history),
+                },
+            )
+
+            return OFIStatistics(
+                symbol=symbol,
+                period_start=period_start or datetime.utcnow(),
+                period_end=period_end or datetime.utcnow(),
+                mean_ofi=mean_ofi,
+                std_ofi=std_ofi,
+                max_ofi=max_ofi,
+                min_ofi=min_ofi,
+                median_ofi=median_ofi,
+                skewness=skewness,
+                kurtosis=kurt,
+                autocorr_1=autocorr_1,
+                predictive_power=predictive_power,
+            )
+
+        except Exception as e:
+            logger.error(
+                "Failed to calculate OFI statistics",
+                exc_info=True,
+                extra={
+                    "symbol": symbol,
+                    "history_length": len(ofi_history),
+                    "returns_length": len(returns_history) if returns_history else 0,
+                    "error_type": type(e).__name__,
+                },
+            )
+            return None
 
     def get_cofi_tracker(self, symbol: str, start_time: datetime) -> CumulativeOFI:
         """

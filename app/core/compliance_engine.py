@@ -3,6 +3,17 @@ THE Compliance Engine - UNIFIED SINGLE ENGINE
 =============================================
 
 This is the ONLY engine that should be used in the entire system.
+
+TIMEOUT HANDLING (ASYNC-005):
+This module is a synchronous façade that orchestrates 17 subsystems.
+Timeout handling is delegated to individual subsystems:
+- HarrisIntegrator: Handles its own timeouts for market data calls
+- AlphaModel: Computational (no external I/O)
+- RegimeDetector: Computational (no external I/O)
+- Other subsystems: Handle their own timeouts as appropriate
+
+When async refactoring is implemented (ASYNC-001), timeout parameters
+will be added at the façade level using asyncio.wait_for().
 It integrates:
 - ALL existing functionality that was being used
 - ALL 12 compliance rule systems
@@ -497,6 +508,11 @@ class SystemBus:
         """
         Execute pre-trade analysis through ALL systems in optimal order.
 
+        NOTE: Timeout handling is delegated to individual subsystems.
+        Each subsystem handler is responsible for its own timeout logic.
+        When async refactoring is implemented (ASYNC-001), timeouts will be
+        added at this level using asyncio.wait_for().
+
         Args:
             symbol: Trading symbol
             side: BUY or SELL
@@ -686,7 +702,12 @@ class SystemBus:
         urgency,
         signal_time,
     ) -> bool:
-        """Handle Ernest Chan analysis."""
+        """
+        Handle Ernest Chan analysis.
+
+        NOTE: RegimeDetector.detect_regimes() is computational (no external I/O).
+        Timeout handling is delegated to the RegimeDetector subsystem if needed.
+        """
         try:
             if price_history is not None:
                 regime_result = subsystem["regime"].detect_regimes(price_history)
@@ -935,7 +956,12 @@ class SystemBus:
         urgency,
         signal_time,
     ) -> bool:
-        """Handle Narang analysis."""
+        """
+        Handle Narang analysis.
+
+        NOTE: AlphaModel.generate_alpha() is computational (no external I/O).
+        Timeout handling is delegated to the AlphaModel subsystem if needed.
+        """
         try:
             if price_history is not None:
                 alpha_signal = subsystem["alpha"].generate_alpha(
@@ -1019,7 +1045,12 @@ class SystemBus:
         urgency,
         signal_time,
     ) -> bool:
-        """Handle Harris microstructure analysis."""
+        """
+        Handle Harris microstructure analysis.
+
+        NOTE: HarrisIntegrator.pre_trade_check() may involve external market data calls.
+        Timeout handling is delegated to the HarrisIntegrator subsystem.
+        """
         try:
             harris_check = subsystem.pre_trade_check(
                 symbol=symbol,

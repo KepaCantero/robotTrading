@@ -319,7 +319,7 @@ class PositionState(Base):
 
 | Rule | Source | Requirement | Current Status |
 |------|--------|-------------|----------------|
-| ARCH-003 | BASE_RULES.md | Domain has no framework dependencies | ❌ GAP - This is infrastructure layer, OK to have SQLAlchemy |
+| ARCH-003 | BASE_RULES.md | Domain has no framework dependencies | ✅ FIXED - 2026-02-01 - Documented: Infrastructure layer uses SQLAlchemy appropriately |
 | FMT-007 | BASE_RULES.md | No mutable defaults | ⚠️ CHECK - Verify `default=dict` not `default={}` used |
 | SEC-010 | BASE_RULES.md | Encryption at rest for sensitive data | ⚠️ CHECK - APIKey.key_hash must be hashed, never plaintext |
 | TRD-004 | BASE_RULES.md | Audit trail for trading operations | ✅ OK - Trade model logs all executions |

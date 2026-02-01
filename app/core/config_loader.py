@@ -5,8 +5,10 @@ Carga configuraciones desde archivos YAML con validación y fallback a valores p
 """
 
 import logging
+import os
+import threading
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
 import yaml
 
@@ -22,6 +24,8 @@ class YAMLConfigLoader:
     - Fallback a valores por defecto si el archivo no existe
     - Soporte para anidación de claves con notación de puntos
     - Logging de configuración cargada
+    - Thread-safe cache with locking
+    - Configuration value validation
     """
 
     def __init__(self, config_dir: Optional[Path] = None):
@@ -29,10 +33,22 @@ class YAMLConfigLoader:
         Inicializa el cargador de configuración.
 
         Args:
-            config_dir: Directorio de configuración. Por defecto: config/
+            config_dir: Directorio de configuración. Por defecto: config/ o desde CONFIG_DIR env var
         """
-        self.config_dir = config_dir or Path("config")
+        # CFG-002: Use environment variable for config directory
+        env_config_dir = os.getenv("CONFIG_DIR")
+        if env_config_dir:
+            self.config_dir = Path(env_config_dir)
+        else:
+            self.config_dir = config_dir or Path("config")
+
         self._cache: Dict[str, Any] = {}
+        # CFG-CACHE-001: Thread-safe cache with lock
+        self._cache_lock = threading.RLock()
+
+        # Validate config_dir exists
+        if not self.config_dir.exists():
+            logger.warning(f"Config directory does not exist: {self.config_dir}")
 
     def load(self, filename: str, use_cache: bool = True) -> Dict[str, Any]:
         """
@@ -49,11 +65,19 @@ class YAMLConfigLoader:
             FileNotFoundError: Si el archivo no existe y no hay fallback
             yaml.YAMLError: Si el archivo tiene formato inválido
         """
+        # Validate filename input
+        if not filename or not isinstance(filename, str):
+            logger.error(f"Invalid filename: {filename}")
+            return {}
+
         cache_key = filename
 
-        if use_cache and cache_key in self._cache:
-            logger.debug(f"Loading {filename} from cache")
-            return self._cache[cache_key]
+        # CFG-CACHE-001: Thread-safe cache access with lock
+        if use_cache:
+            with self._cache_lock:
+                if cache_key in self._cache:
+                    logger.debug(f"Loading {filename} from cache")
+                    return self._cache[cache_key]
 
         config_path = self.config_dir / filename
 
@@ -65,12 +89,22 @@ class YAMLConfigLoader:
             with open(config_path, "r") as f:
                 config = yaml.safe_load(f) or {}
 
-            self._cache[cache_key] = config
+            # CFG-003: Validate configuration values after loading
+            config = self._validate_config(config, filename)
+
+            # CFG-CACHE-001: Thread-safe cache update
+            if use_cache:
+                with self._cache_lock:
+                    self._cache[cache_key] = config
+
             logger.info(f"Loaded config from {config_path}")
             return config
 
         except yaml.YAMLError as e:
             logger.error(f"Error parsing YAML from {config_path}: {e}")
+            return {}
+        except (OSError, IOError) as e:
+            logger.error(f"Error reading file {config_path}: {e}")
             return {}
 
     def get_nested(
@@ -178,8 +212,104 @@ class YAMLConfigLoader:
 
     def clear_cache(self) -> None:
         """Limpia la caché de configuraciones."""
-        self._cache.clear()
+        # CFG-CACHE-001: Thread-safe cache clear
+        with self._cache_lock:
+            self._cache.clear()
         logger.debug("Config cache cleared")
+
+    def _validate_config(self, config: Dict[str, Any], filename: str) -> Dict[str, Any]:
+        """
+        Validate configuration values after loading.
+
+        CFG-003: Validates configuration values to ensure data integrity
+        and prevent invalid values from being used.
+
+        Args:
+            config: Configuration dictionary to validate
+            filename: Name of the config file (for context in error messages)
+
+        Returns:
+            Validated configuration dictionary
+        """
+        if not isinstance(config, dict):
+            logger.error(f"Invalid config type in {filename}: expected dict, got {type(config)}")
+            return {}
+
+        # CFG-SEC-001: Check for potential sensitive data patterns
+        sensitive_keys = ["password", "secret", "api_key", "token", "private_key"]
+        for key in config.keys():
+            key_lower = str(key).lower()
+            if any(sensitive in key_lower for sensitive in sensitive_keys):
+                logger.warning(
+                    f"CFG-SEC-001: Potential sensitive data key '{key}' found in {filename}. "
+                    "Ensure secrets are loaded from environment variables."
+                )
+
+        # Validate common configuration value types
+        validation_rules = {
+            # Max exposure: must be between 0 and 1
+            "max_strategy_exposure": lambda v: isinstance(v, (int, float)) and 0 <= v <= 1,
+            "min_strategy_exposure": lambda v: isinstance(v, (int, float)) and 0 <= v <= 1,
+            # Lookback days: must be positive integer
+            "lookback_max_days": lambda v: isinstance(v, int) and v > 0,
+            "lookback_min_days": lambda v: isinstance(v, int) and v >= 0,
+            # Thresholds: must be numeric
+            "threshold": lambda v: isinstance(v, (int, float)),
+            "enabled": lambda v: isinstance(v, bool),
+            # Tier validation
+            "tier": lambda v: v in ["micro", "small", "medium", "large"],
+        }
+
+        # Recursively validate nested config
+        return self._validate_dict_values(config, validation_rules, filename)
+
+    def _validate_dict_values(
+        self,
+        config: Dict[str, Any],
+        validation_rules: Dict[str, Any],
+        filename: str,
+        path: str = "",
+    ) -> Dict[str, Any]:
+        """
+        Recursively validate dictionary values against rules.
+
+        Args:
+            config: Configuration to validate
+            validation_rules: Rules to apply
+            filename: Config file name for error messages
+            path: Current path in nested structure
+
+        Returns:
+            Validated configuration
+        """
+        validated_config = {}
+
+        for key, value in config.items():
+            current_path = f"{path}.{key}" if path else key
+
+            # Check if key matches any validation rule
+            for rule_key, rule_func in validation_rules.items():
+                if rule_key in key.lower():
+                    try:
+                        if not rule_func(value):
+                            logger.warning(
+                                f"CFG-003: Invalid value for '{current_path}' in {filename}: "
+                                f"got {value} ({type(value).__name__})"
+                            )
+                    except Exception as e:
+                        logger.warning(
+                            f"CFG-003: Validation error for '{current_path}' in {filename}: {e}"
+                        )
+
+            # Recursively validate nested dictionaries
+            if isinstance(value, dict):
+                validated_config[key] = self._validate_dict_values(
+                    value, validation_rules, filename, current_path
+                )
+            else:
+                validated_config[key] = value
+
+        return validated_config
 
 
 # Singleton instance for easy access

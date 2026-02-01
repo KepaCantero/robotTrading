@@ -119,12 +119,15 @@ class OFICalculator:
 |------|--------|-------------|----------------|
 | TRD-001 | BASE_RULES | Validate covariance matrix positive semidefinite | ✅ OK - Not applicable (no covariance) |
 | TRD-002 | BASE_RULES | Validate orders before execution | ✅ OK - Validation in calculate_ofi |
+| TRD-005 | BASE_RULES | Price validation | ❌ GAP - mid_price checked for zero but not negative/NaN |
 | ARCH-001 | BASE_RULES | Layered architecture dependencies inward | ✅ OK - Only imports from models |
-| CC-006 | BASE_RULES | Explicit error handling | ⚠️ NOT APPLIED - Uses validation returns, not exceptions |
+| CC-006 | BASE_RULES | Explicit error handling | ✅ OK - Uses validation returns, logs exceptions |
 | TYP-001 | BASE_RULES | 100% type coverage | ✅ OK - All functions typed |
-| LOG-004 | BASE_RULES | Log exceptions with stack traces | ❌ GAP - Missing exception logging in calculate_ofi_statistics |
+| LOG-001 | BASE_RULES | Structured logging | ✅ OK - Uses logger with extra dict |
+| LOG-004 | BASE_RULES | Log exceptions with stack traces | ✅ OK - exc_info=True in exception handler |
 | SEC-007 | BASE_RULES | Input validation at boundaries | ✅ OK - Validates OrderBookSnapshot |
-| PERF-004 | BASE_RULES | Profile before optimizing | ⚠️ NOT APPLIED - No identified bottlenecks |
+| QL-002 | BASE_RULES | No dead code | ⚠️ PARTIAL - scipy.signal imported but may be unused |
+| PERF-001 | BASE_RULES | Use numpy for operations | ✅ OK - Uses np.mean, np.std, np.corrcoef |
 
 ---
 

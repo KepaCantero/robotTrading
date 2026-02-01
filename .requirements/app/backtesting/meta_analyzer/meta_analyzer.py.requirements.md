@@ -32,42 +32,42 @@ class BacktestMetaAnalyzer:
 **Pre:** None (path optional, uses self.data_dir if None)
 **Post:** Returns count of loaded files, updates self.results and self.df_results
 **Raises:** None (returns 0 on errors)
-**Retry:** ❌ No
+**Retry:** No
 **Side Effects:** Reads JSON and CSV files, updates shared state thread-safely
 
 ### `BacktestMetaAnalyzer.analyze_performance() -> Dict[str, Any]`
 **Pre:** df_results must be loaded (non-empty)
 **Post:** Returns dict with summary_stats, correlations, best/worst performers
 **Raises:** None (returns empty dict if no results)
-**Retry:** ❌ No
+**Retry:** No
 **Side Effects:** Updates self.analysis_results, performs vectorized computations
 
 ### `BacktestMetaAnalyzer.detect_clusters(n_clusters, features) -> Dict[str, Any]`
 **Pre:** sklearn must be available, df_results must be loaded
 **Post:** Returns dict with cluster assignments and characteristics
 **Raises:** None (returns empty dict if sklearn unavailable or insufficient data)
-**Retry:** ❌ No
+**Retry:** No
 **Side Effects:** Updates df_results with 'cluster' column
 
 ### `BacktestMetaAnalyzer.suggest_optimal_combinations(top_n, criteria) -> List[Dict[str, Any]]`
 **Pre:** df_results must be loaded
 **Post:** Returns list of top_n result dicts sorted by composite score
 **Raises:** None (returns empty list if no results)
-**Retry:** ❌ No
+**Retry:** No
 **Side Effects:** None (read-only operation)
 
 ### `BacktestMetaAnalyzer.export_report(output_path, format) -> str`
 **Pre:** analysis_results must be populated (run analyze_performance first)
 **Post:** Returns path to exported file, generates visualizations if enabled
 **Raises:** None (returns empty string on errors)
-**Retry:** ❌ No
+**Retry:** No
 **Side Effects:** Writes JSON/CSV file, generates PNG plots if enabled
 
 ### `BacktestMetaAnalyzer.run_parallel_analysis(max_workers, include_clustering, n_clusters) -> Dict[str, Any]`
 **Pre:** data_dir must contain valid files
 **Post:** Returns dict with performance, clustering, suggestions
 **Raises:** None (logs errors, continues with partial results)
-**Retry:** ❌ No
+**Retry:** No
 **Side Effects:** Loads data, runs CPU-bound tasks in parallel
 
 ---
@@ -99,16 +99,28 @@ class BacktestMetaAnalyzer:
 
 | Rule | Source | Requirement | Current Status |
 |------|--------|-------------|----------------|
-| SEC-001 | BASE_RULES.md | No hardcoded secrets | ✅ OK - No secrets |
-| LOG-004 | BASE_RULES.md | Log exceptions with stack traces | ⚠️ PARTIAL - Some errors lack exc_info |
-| TYP-001 | BASE_RULES.md | 100% type coverage | ❌ GAP - Missing type hints in some methods |
-| CC-001 | BASE_RULES.md | Descriptive names | ✅ OK - Clear naming |
-| CC-006 | BASE_RULES.md | Explicit error handling | ✅ OK - Specific exceptions caught |
-| ASYNC-001 | BASE_RULES.md | Use async def | ✅ OK - load_results is async |
-| PERF-002 | BASE_RULES.md | Generators for large data | ⚠️ PARTIAL - Uses pandas, not generators |
-| PERF-006 | BASE_RULES.md | Async I/O | ✅ OK - Async file loading |
-| ARCH-001 | BASE_RULES.md | Layered architecture | ✅ OK - Infrastructure component |
-| QL-001 | BASE_RULES.md | Complexity < 10 | ⚠️ PARTIAL - Some methods are complex |
+| SEC-001 | BASE_RULES.md | No hardcoded secrets | OK - No secrets |
+| LOG-004 | BASE_RULES.md | Log exceptions with stack traces | OK - All errors logged with exc_info=True |
+| TYP-001 | BASE_RULES.md | 100% type coverage | OK - All methods have type hints |
+| CC-001 | BASE_RULES.md | Descriptive names | OK - Clear naming |
+| CC-006 | BASE_RULES.md | Explicit error handling | OK - Specific exceptions caught |
+| ASYNC-001 | BASE_RULES.md | Use async def | OK - load_results is async |
+| PERF-002 | BASE_RULES.md | Generators for large data | PARTIAL - Uses pandas, not generators |
+| PERF-006 | BASE_RULES.md | Async I/O | OK - Async file loading |
+| ARCH-001 | BASE_RULES.md | Layered architecture | OK - Infrastructure component |
+| QL-001 | BASE_RULES.md | Complexity < 10 | PARTIAL - Some methods are complex |
+
+**GAPS Identified:**
+
+1. **P0 - None found**
+
+2. **P1 - Missing dependency validation at init:**
+   - The class accepts `enable_visualizations=True` but doesn't validate matplotlib availability until runtime
+   - Should validate at __init__ or document clearly that visualization errors are silently skipped
+
+3. **P2 - Minor code quality issues:**
+   - suggest_optimal_combinations is ~50 lines (exceeds ideal of <20)
+   - Magic numbers for default criteria weights (0.4, 0.3, 0.2, -0.1)
 
 **NOTE:** This analysis should consider ALL 96 rules from BASE_RULES.md.
 
@@ -162,5 +174,3 @@ class BacktestMetaAnalyzer:
 - Visualizations: Sharpe distribution, Sharpe vs PnL scatter, correlation heatmap
 - All async methods use asyncio.gather for parallel execution
 - run_parallel_analysis() mixes I/O-bound (async) and CPU-bound (ThreadPoolExecutor)
-- Line 143: 'git dif' typo in audit_trail.py (not this file, but related)
-- Line 580: catches asyncio.TimeoutError but method is not async

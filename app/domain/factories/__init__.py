@@ -32,6 +32,7 @@ from typing import Any, Callable, Dict, List, Optional, Type, TypeVar
 
 from ..entities.order import Order, OrderSide, OrderStatus, OrderType
 from ..entities.portfolio import Portfolio, PortfolioStatus, Position
+from ..entities.position import PositionSide
 from ..value_objects.capital import Capital
 from ..value_objects.money import Money
 from ..value_objects.risk_parameters import RiskParameters
@@ -239,16 +240,23 @@ class TradingEntityFactory(AbstractEntityFactory):
         return portfolio
 
     def create_position(  # type: ignore[override]
-        self, symbol: str, quantity: Decimal, entry_price: Decimal, currency: str = "USD", **kwargs
+        self,
+        symbol: str,
+        quantity: Decimal,
+        entry_price: Decimal,
+        currency: str = "USD",
+        side: Optional[str] = None,
+        **kwargs,
     ) -> Position:
         """
         Create a Position entity.
 
         Args:
             symbol: Position symbol
-            quantity: Position quantity (can be negative for short positions)
+            quantity: Position quantity (positive, side determines long/short)
             entry_price: Average entry price
             currency: Position currency
+            side: Position side ('long' or 'short', auto-detected if not specified)
             **kwargs: Additional position attributes
 
         Returns:
@@ -256,6 +264,13 @@ class TradingEntityFactory(AbstractEntityFactory):
 
         Raises:
             ValueError: If parameters are invalid
+
+        Note:
+            This method automatically determines the position side based on quantity sign:
+            - Negative quantity -> short position (with positive quantity stored)
+            - Positive quantity -> long position
+            This provides backward compatibility with code that uses negative quantities
+            for short positions while correctly using the PositionSide enum.
         """
         if not symbol:
             raise ValueError("Symbol is required")
@@ -264,16 +279,34 @@ class TradingEntityFactory(AbstractEntityFactory):
         if entry_price <= 0:
             raise ValueError("Entry price must be positive")
 
+        # Auto-detect side from quantity if not explicitly provided
+        # This maintains backward compatibility while properly setting the PositionSide enum
+        if side is None:
+            if quantity < 0:
+                # Negative quantity means short - convert to positive and set side
+                position_side = PositionSide.SHORT
+                quantity = abs(quantity)
+            else:
+                position_side = PositionSide.LONG
+        else:
+            # Use explicit side parameter
+            if side.lower() not in ('long', 'short'):
+                raise ValueError("Side must be 'long' or 'short'")
+            position_side = PositionSide[side.upper()]
+            # Ensure quantity is positive regardless of side
+            quantity = abs(quantity)
+
         position = Position(
             symbol=symbol.upper(),
             quantity=quantity,
             avg_price=entry_price,
             current_price=entry_price,
+            side=position_side,
             currency=currency,
             **kwargs,
         )
 
-        logger.debug(f"Created position {symbol} with quantity {quantity}")
+        logger.debug(f"Created {position_side.value} position {symbol} with quantity {quantity}")
         return position
 
     def _generate_order_id(self, symbol: str) -> str:

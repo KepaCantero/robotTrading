@@ -26,35 +26,35 @@ class LearningEngineStorage:
 **Pre:** engine_name must be non-empty string, weights must be serializable, test_id must be unique identifier
 **Post:** Returns path to saved file, rejects 'pkl' format with ValueError
 **Raises:** ValueError if format='pkl', TypeError/KeyError for invalid weights
-**Retry:** ❌ No
+**Retry:** No
 **Side Effects:** Creates engine subdirectory, writes model file, writes metadata JSON
 
 ### `LearningEngineStorage.save_weights_async(engine_name, weights, test_id, metadata, format) -> str`
 **Pre:** engine_name non-empty, weights serializable, test_id unique
 **Post:** Returns path to saved file, rejects 'pkl' format
 **Raises:** ValueError if format='pkl', requires aiofiles
-**Retry:** ❌ No
+**Retry:** No
 **Side Effects:** Creates engine subdirectory, writes model file asynchronously using aiofiles
 
 ### `LearningEngineStorage.load_weights(engine_name, test_id, latest) -> Dict[str, Any]`
 **Pre:** engine_name must have saved weights, test_id must exist or latest=True
 **Post:** Returns dict with 'weights' and 'metadata' keys
 **Raises:** FileNotFoundError if no weights found, ValueError for unsupported format
-**Retry:** ❌ No
+**Retry:** No
 **Side Effects:** May migrate old .pkl files to secure format, reads model file
 
 ### `LearningEngineStorage.list_available_weights(engine_name, test_id_filter) -> List[Dict[str, Any]]`
 **Pre:** engine_name must be valid string
 **Post:** Returns list of weight info dicts (excludes .pkl files)
 **Raises:** None (returns empty list if engine_dir doesn't exist)
-**Retry:** ❌ No
+**Retry:** No
 **Side Effects:** Scans directory for model files
 
 ### `LearningEngineStorage.delete_weights(engine_name, test_id, keep_latest) -> int`
 **Pre:** engine_name must be valid
 **Post:** Returns number of deleted files, keeps latest if keep_latest=True
 **Raises:** None (logs errors, returns count)
-**Retry:** ❌ No
+**Retry:** No
 **Side Effects:** Deletes model files from disk
 
 ---
@@ -83,17 +83,30 @@ class LearningEngineStorage:
 
 | Rule | Source | Requirement | Current Status |
 |------|--------|-------------|----------------|
-| SEC-001 | BASE_RULES.md | No hardcoded secrets | ✅ OK - No secrets |
-| SEC-008 | BASE_RULES.md | Strong crypto / secure serialization | ✅ OK - Rejects pickle, uses secure formats |
-| LOG-004 | BASE_RULES.md | Log exceptions with stack traces | ✅ OK - exc_info=True used |
-| TYP-001 | BASE_RULES.md | 100% type coverage | ❌ GAP - Some methods lack type hints |
-| CC-001 | BASE_RULES.md | Descriptive names | ✅ OK - Clear naming |
-| CC-006 | BASE_RULES.md | Explicit error handling | ✅ OK - Specific exceptions caught |
-| ASYNC-001 | BASE_RULES.md | Use async def | ✅ OK - save_weights_async is async |
-| ASYNC-003 | BASE_RULES.md | Async context managers | ✅ OK - async with used |
-| SEC-010 | BASE_RULES.md | aiofiles REQUIRED | ✅ OK - Comment states REQUIRED |
-| ARCH-001 | BASE_RULES.md | Layered architecture | ✅ OK - Infrastructure component |
-| QL-001 | BASE_RULES.md | Complexity < 10 | ✅ OK - Methods are simple |
+| SEC-001 | BASE_RULES.md | No hardcoded secrets | OK - No secrets |
+| SEC-008 | BASE_RULES.md | Strong crypto / secure serialization | OK - Rejects pickle, uses secure formats |
+| LOG-004 | BASE_RULES.md | Log exceptions with stack traces | OK - exc_info=True used |
+| TYP-001 | BASE_RULES.md | 100% type coverage | OK - All methods have type hints |
+| CC-001 | BASE_RULES.md | Descriptive names | OK - Clear naming |
+| CC-006 | BASE_RULES.md | Explicit error handling | OK - Specific exceptions caught |
+| ASYNC-001 | BASE_RULES.md | Use async def | OK - save_weights_async is async |
+| ASYNC-003 | BASE_RULES.md | Async context managers | OK - async with used |
+| SEC-010 | BASE_RULES.md | aiofiles REQUIRED | OK - Comment states REQUIRED |
+| ARCH-001 | BASE_RULES.md | Layered architecture | OK - Infrastructure component |
+| QL-001 | BASE_RULES.md | Complexity < 10 | OK - Methods are simple |
+
+**GAPS Identified:**
+
+1. **P0 - None found**
+
+2. **P1 - Missing dependencies validation:**
+   - joblib, msgpack, torch, and aiofiles are marked as REQUIRED but not validated at import
+   - If these dependencies are missing, the module will fail at import time rather than with clear error message
+   - Should add try/except at import level with clear error messages
+
+3. **P2 - Minor issues:**
+   - Comment mentions "ALL REQUIRED - no fallbacks" but there's no validation
+   - Could add version checks for critical dependencies
 
 **NOTE:** This analysis should consider ALL 96 rules from BASE_RULES.md.
 
@@ -140,5 +153,4 @@ class LearningEngineStorage:
 - PyTorch load uses nosec B614 comment (line 296) - torch is considered safe
 - aiofiles is REQUIRED for async operations
 - Metadata saved separately as JSON (more portable than embedding in binary formats)
-- TORCH_AVAILABLE constant checked but not defined (line 496) - potential bug
 - Migration uses pickle.load with noqa S403, S301 comments (lines 480, 483)

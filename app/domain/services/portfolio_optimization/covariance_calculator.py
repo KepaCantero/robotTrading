@@ -9,11 +9,28 @@ Reference: Rule 48-papers-markowitz (Markowitz Portfolio Selection)
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
+
+from app.domain.services.portfolio_optimization._validation import (
+    TRADING_DAYS,
+    is_positive_semidefinite,
+    enforce_positive_semidefinite,
+    MIN_VARIANCE_THRESHOLD,
+)
+
+
+logger = logging.getLogger(__name__)
+
+
+# Covariance estimation default parameters
+MIN_OBSERVATIONS = TRADING_DAYS  # 252 trading days = 1 year of data
+DEFAULT_EWMA_SPAN = 60  # Default span for exponential weighting (~quarterly)
+DEFAULT_SHRINKAGE_INTENSITY = 0.1  # Default Ledoit-Wolf shrinkage
 
 
 @dataclass
@@ -59,15 +76,16 @@ class CovarianceCalculator:
 
     Provides pure domain logic for:
     - Sample covariance estimation
-    - Shrinkage estimators
+    - Shrinkage estimators (Ledoit-Wolf)
     - Exponential weighted covariance
     - Correlation matrix calculation
+    - PSD enforcement
 
     Reference: Markowitz Portfolio Selection (paper 48)
     """
 
     # Default minimum observation period (252 trading days = 1 year)
-    MIN_OBSERVATIONS = 252
+    MIN_OBSERVATIONS = MIN_OBSERVATIONS
 
     def __init__(
         self,
@@ -82,6 +100,12 @@ class CovarianceCalculator:
             shrinkage: Shrinkage intensity (0-1). None = no shrinkage.
                         Recommended: 0.1 for Ledoit-Wolf
         """
+        if min_observations < 2:
+            raise ValueError(f"min_observations must be at least 2, got {min_observations}")
+
+        if shrinkage is not None and not (0.0 <= shrinkage <= 1.0):
+            raise ValueError(f"shrinkage must be in [0, 1], got {shrinkage}")
+
         self._min_observations = min_observations
         self._shrinkage = shrinkage
 
@@ -99,7 +123,7 @@ class CovarianceCalculator:
             CovarianceResult with matrices and statistics
 
         Raises:
-            ValueError: If insufficient data
+            ValueError: If insufficient data or assets
         """
         # Validate input
         symbols = list(returns.keys())
@@ -108,18 +132,23 @@ class CovarianceCalculator:
         if n_assets < 2:
             raise ValueError("Need at least 2 assets for covariance calculation")
 
-        # Convert to numpy array
-        returns_array = self._dict_to_array(returns, symbols)
+        # Convert to numpy array and sanitize
+        returns_array, valid_symbols, valid_indices = self._sanitize_returns(returns, symbols)
 
         n_obs = returns_array.shape[0]
         if n_obs < self._min_observations:
-            raise ValueError(f"Insufficient observations: {n_obs} < {self._min_observations}")
+            raise ValueError(
+                f"Insufficient observations: {n_obs} < {self._min_observations}"
+            )
 
         # Calculate means
         means = np.mean(returns_array, axis=0)
 
-        # Calculate covariance matrix (sample covariance)
+        # Calculate covariance matrix (sample covariance, ddof=1)
         cov_matrix = np.cov(returns_array, rowvar=False, ddof=1)
+
+        # Sanitize covariance matrix (remove NaN, enforce PSD)
+        cov_matrix = self._sanitize_covariance_matrix(cov_matrix)
 
         # Calculate correlation matrix
         std_devs = np.sqrt(np.diag(cov_matrix))
@@ -130,7 +159,7 @@ class CovarianceCalculator:
             correlation_matrix=corr_matrix,
             std_devs=std_devs,
             means=means,
-            symbols=symbols,
+            symbols=valid_symbols,
         )
 
     def calculate_shrinkage_covariance(
@@ -150,6 +179,9 @@ class CovarianceCalculator:
 
         Returns:
             CovarianceResult with shrunk covariance matrix
+
+        Raises:
+            ValueError: If insufficient data
         """
         # Get sample covariance
         result = self.calculate_sample_covariance(returns)
@@ -160,6 +192,8 @@ class CovarianceCalculator:
                 result.correlation_matrix,
                 len(returns[result.symbols[0]]),
             )
+        elif not (0.0 <= shrinkage <= 1.0):
+            raise ValueError(f"shrinkage must be in [0, 1], got {shrinkage}")
 
         # Calculate structured estimator (constant correlation)
         n_assets = len(result.symbols)
@@ -190,7 +224,7 @@ class CovarianceCalculator:
     def calculate_exponential_covariance(
         self,
         returns: Dict[str, List[Decimal]],
-        span: int = 60,
+        span: int = DEFAULT_EWMA_SPAN,
     ) -> CovarianceResult:
         """
         Calculate exponential-weighted covariance matrix.
@@ -204,9 +238,17 @@ class CovarianceCalculator:
 
         Returns:
             CovarianceResult with EWMA covariance matrix
+
+        Raises:
+            ValueError: If insufficient data or invalid span
         """
+        if span <= 0:
+            raise ValueError(f"span must be positive, got {span}")
+
         symbols = list(returns.keys())
-        returns_array = self._dict_to_array(returns, symbols)
+
+        # Sanitize returns
+        returns_array, valid_symbols, valid_indices = self._sanitize_returns(returns, symbols)
 
         # Calculate exponential weights
         n_obs = returns_array.shape[0]
@@ -219,16 +261,20 @@ class CovarianceCalculator:
 
         # Calculate weighted covariance
         centered = returns_array - weighted_means
-        weighted_cov = np.zeros((len(symbols), len(symbols)))
+        n_valid_assets = returns_array.shape[1]
+        weighted_cov = np.zeros((n_valid_assets, n_valid_assets))
 
-        for i in range(len(symbols)):
-            for j in range(i, len(symbols)):
+        for i in range(n_valid_assets):
+            for j in range(i, n_valid_assets):
                 cov = np.average(
                     centered[:, i] * centered[:, j],
                     weights=weights,
                 )
                 weighted_cov[i, j] = cov
                 weighted_cov[j, i] = cov
+
+        # Sanitize covariance matrix
+        weighted_cov = self._sanitize_covariance_matrix(weighted_cov)
 
         # Calculate correlation
         std_devs = np.sqrt(np.diag(weighted_cov))
@@ -239,7 +285,7 @@ class CovarianceCalculator:
             correlation_matrix=corr_matrix,
             std_devs=std_devs,
             means=weighted_means,
-            symbols=symbols,
+            symbols=valid_symbols,
         )
 
     def get_positive_semidefinite_covariance(
@@ -257,43 +303,92 @@ class CovarianceCalculator:
         Returns:
             PSD covariance matrix
         """
-        # Eigenvalue decomposition
-        eigenvalues, eigenvectors = np.linalg.eigh(cov_matrix)
-
-        # Clip negative eigenvalues
-        eigenvalues = np.maximum(eigenvalues, 0)
-
-        # Reconstruct matrix
-        psd_matrix = eigenvectors @ np.diag(eigenvalues) @ eigenvectors.T
-
-        return psd_matrix
+        return enforce_positive_semidefinite(cov_matrix)
 
     # ==========================================================================
     # Private Helper Methods
     # ==========================================================================
 
-    def _dict_to_array(
+    def _sanitize_returns(
         self,
         returns: Dict[str, List[Decimal]],
         symbols: List[str],
-    ) -> np.ndarray:
-        """Convert returns dictionary to numpy array."""
+    ) -> Tuple[np.ndarray, List[str], List[int]]:
+        """
+        Sanitize returns data by removing NaN and zero-variance assets.
+
+        Args:
+            returns: Dictionary of symbol -> return series
+            symbols: List of all symbols
+
+        Returns:
+            Tuple of (cleaned_array, valid_symbols, valid_indices)
+        """
         # Find minimum length
         min_len = min(len(returns[s]) for s in symbols)
 
-        # Build array
+        if min_len < 2:
+            raise ValueError("Need at least 2 observations per asset")
+
+        # Build array and find valid assets
         arrays = []
-        for symbol in symbols:
+        valid_indices = []
+        valid_symbols = []
+
+        for i, symbol in enumerate(symbols):
             series = returns[symbol][-min_len:]  # Take most recent
             # Convert to float
             float_series = [float(r) for r in series]
-            arrays.append(float_series)
 
-        return np.column_stack(arrays)
+            # Check for NaN and zero variance
+            if np.any(np.isnan(float_series)):
+                logger.warning(f"Asset {symbol} contains NaN, skipping")
+                continue
+
+            if np.var(float_series) < MIN_VARIANCE_THRESHOLD:
+                logger.warning(f"Asset {symbol} has zero variance, skipping")
+                continue
+
+            arrays.append(float_series)
+            valid_indices.append(i)
+            valid_symbols.append(symbol)
+
+        if len(arrays) < 2:
+            raise ValueError(
+                "Need at least 2 valid assets after sanitization. "
+                "Check for NaN or zero variance assets."
+            )
+
+        return np.column_stack(arrays), valid_symbols, valid_indices
+
+    def _sanitize_covariance_matrix(self, cov_matrix: np.ndarray) -> np.ndarray:
+        """
+        Sanitize covariance matrix by removing NaN and enforcing PSD.
+
+        Args:
+            cov_matrix: Input covariance matrix
+
+        Returns:
+            Sanitized covariance matrix
+        """
+        # Replace any NaN with 0
+        cov_matrix = np.nan_to_num(cov_matrix, nan=0.0)
+
+        # Ensure PSD
+        if not is_positive_semidefinite(cov_matrix):
+            logger.warning("Covariance matrix is not PSD, enforcing PSD")
+            cov_matrix = enforce_positive_semidefinite(cov_matrix)
+
+        return cov_matrix
 
     def _covariance_to_correlation(self, cov_matrix: np.ndarray) -> np.ndarray:
         """Convert covariance matrix to correlation matrix."""
         std_devs = np.sqrt(np.diag(cov_matrix))
+
+        # Handle zero standard deviation
+        if np.any(std_devs < MIN_VARIANCE_THRESHOLD):
+            logger.warning("Zero standard deviation in correlation calculation")
+
         corr_matrix = cov_matrix / np.outer(std_devs, std_devs)
         # Ensure diagonal is exactly 1.0
         np.fill_diagonal(corr_matrix, 1.0)
@@ -360,6 +455,10 @@ class CovarianceCalculator:
         portfolio_var = weights @ cov_matrix @ weights
         portfolio_std = np.sqrt(portfolio_var)
 
+        if portfolio_std < MIN_VARIANCE_THRESHOLD:
+            logger.warning("Portfolio volatility near zero, risk contribution undefined")
+            return np.zeros_like(weights)
+
         marginal_contrib = cov_matrix @ weights
         contrib = weights * marginal_contrib / portfolio_std
 
@@ -391,6 +490,6 @@ class CovarianceCalculator:
 
         # Effective number of bets
         # N* = (w'Σw) / (σ²_avg)
-        enb = portfolio_var / avg_var if avg_var > 0 else 0
+        enb = portfolio_var / avg_var if avg_var > MIN_VARIANCE_THRESHOLD else 0
 
         return float(enb)

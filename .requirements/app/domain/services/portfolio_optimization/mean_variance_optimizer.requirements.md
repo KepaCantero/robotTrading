@@ -53,21 +53,21 @@ class EfficientFrontier:
 ### `maximize_sharpe(cov_result: CovarianceResult) -> OptimizationResult`
 **Pre:** cov_result.covariance_matrix must be positive semidefinite, cov_result.means length == n_assets
 **Post:** Returns portfolio with maximum Sharpe ratio (weights sum to 1.0)
-**Raises:** ValueError if optimization fails to converge
+**Raises:** ValueError if optimization fails to converge (logged)
 **Retry:** ❌ No
 **Side Effects:** None (pure computation)
 
 ### `minimize_variance(cov_result: CovarianceResult) -> OptimizationResult`
 **Pre:** cov_result.covariance_matrix must be positive semidefinite
 **Post:** Returns minimum variance portfolio (weights sum to 1.0)
-**Raises:** ValueError if optimization fails to converge
+**Raises:** ValueError if optimization fails to converge (logged)
 **Retry:** ❌ No
 **Side Effects:** None (pure computation)
 
 ### `target_return(cov_result: CovarianceResult, target_return: float) -> OptimizationResult`
 **Pre:** cov_result valid, target_return achievable within bounds
 **Post:** Returns portfolio with minimum variance for target return
-**Raises:** ValueError if target_return is infeasible
+**Raises:** ValueError if target_return is infeasible (logged)
 **Retry:** ❌ No
 **Side Effects:** None (pure computation)
 
@@ -81,20 +81,20 @@ class EfficientFrontier:
 ### `get_global_minimum_variance(cov_result: CovarianceResult) -> OptimizationResult`
 **Pre:** cov_result.covariance_matrix must be invertible
 **Post:** Returns analytical GMV portfolio
-**Raises:** np.linalg.LinAlgError if covariance matrix is singular
+**Raises:** ValueError if covariance matrix is singular (logged)
 **Retry:** ❌ No
 **Side Effects:** None (pure computation)
 
 ---
 
 ## Acceptance Criteria
-- [ ] **AC-001:** All public methods have complete type hints (parameters + return types)
-- [ ] **AC-002:** No hardcoded numeric constants (252, √252 should be documented as TRADING_DAYS)
-- [ ] **AC-003:** Optimization failures (converged=False) are logged with context
-- [ ] **AC-004:** Covariance matrix positive semidefinite validation before optimization
-- [ ] **AC-005:** Edge case handling: empty symbols, single asset, singular covariance matrix
-- [ ] **AC-006:** NumPy 2.0 compatibility (no deprecated np aliases)
-- [ ] **AC-007:** All functions have docstrings following Google style
+- [x] **AC-001:** All public methods have complete type hints (parameters + return types) ✅ OK
+- [x] **AC-002:** No hardcoded numeric constants (252, √252 should be documented as TRADING_DAYS) ✅ FIXED
+- [x] **AC-003:** Optimization failures (converged=False) are logged with context ✅ FIXED
+- [x] **AC-004:** Covariance matrix positive semidefinite validation before optimization ✅ FIXED
+- [x] **AC-005:** Edge case handling: empty symbols, single asset, singular covariance matrix ✅ OK
+- [x] **AC-006:** NumPy 2.0 compatibility (no deprecated np aliases) ✅ OK
+- [x] **AC-007:** All functions have docstrings following Google style ✅ OK
 
 ---
 
@@ -109,9 +109,9 @@ class EfficientFrontier:
 | Type hints coverage | 02-type-hints.md | 100% type hints on public functions | ✅ OK - All methods typed |
 | Docstring coverage | 00-checklist.md | All public functions documented | ✅ OK - Complete docstrings |
 | NumPy 2.0 compat | 02-type-hints.md | No `np.int`, `np.float` aliases | ✅ OK - Uses `float`, `int` |
-| Input validation | 05-architecture.md | Validate covariance matrix properties | ❌ GAP - No PSD check |
-| Error logging | 09-logging-observability.md | Log optimization failures | ❌ GAP - No logging on converge=False |
-| No magic numbers | 05-architecture.md | Document TRADING_DAYS = 252 | ❌ GAP - 252 hardcoded |
+| Input validation | 05-architecture.md | Validate covariance matrix properties | ✅ FIXED - validate_covariance_matrix() |
+| Error logging | 09-logging-observability.md | Log optimization failures | ✅ FIXED - log_optimization_failure() |
+| No magic numbers | 05-architecture.md | Document TRADING_DAYS = 252 | ✅ FIXED - Constants in _validation.py |
 | Testing coverage | 06-testing.md | >80% coverage with edge cases | ⚠️ NOT APPLIED - Tests needed |
 | Domain layer purity | 05-architecture.md | No infrastructure imports | ✅ OK - Only numpy/scipy |
 
@@ -121,7 +121,7 @@ class EfficientFrontier:
 
 ## Dependencies
 - **External:** `numpy`, `scipy` (optimize), `dataclasses` (std)
-- **Internal:** `app.domain.services.portfolio_optimization.covariance_calculator`
+- **Internal:** `app.domain.services.portfolio_optimization.covariance_calculator`, `app.domain.services.portfolio_optimization._validation`
 
 ---
 
@@ -140,6 +140,12 @@ class EfficientFrontier:
 
 ## Notes
 - **Critical:** Covariance matrix must be positive semidefinite for optimization to succeed
-- **Trading Convention:** Assumes 252 trading days/year for annualization
-- **Numerical Stability:** Uses SLSQP optimizer with ftol=1e-9 for precision
+- **Trading Convention:** TRADING_DAYS = 252 for annualization
+- **Numerical Stability:** Uses SLSQP optimizer with DEFAULT_OPTIMIZATION_TOLERANCE
 - **Markowitz Reference:** Based on "Portfolio Selection" (1952) - see rules/trading/papers/48-papers-markowitz-portfolio-selection.md
+
+---
+
+**File Reference:** `app/domain/services/portfolio_optimization/mean_variance_optimizer.py`
+**Last Audited:** 2026-02-01
+**Last Fixed:** 2026-02-01 (GAPs: PSD validation, error logging, magic numbers)

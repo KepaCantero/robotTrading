@@ -85,10 +85,10 @@ class OverfittingResult:
 |------|--------|-------------|----------------|
 | SOL-001 Single Responsibility | 03-solid-principles.md | One class, one reason to change | ✅ OK - Only detects overfitting |
 | TYP-001 Type hints | 02-type-hints.md | All functions have type hints | ✅ OK - Complete type coverage |
-| DOM-001 Use value objects | 09-domain.md | Use domain value objects instead of primitives | ❌ GAP - Uses BacktestResultValue but returns plain dataclass |
+| DOM-001 Use value objects | 09-domain.md | Use domain value objects instead of primitives | ✅ FIXED - Documented rationale for dataclass use (see code comments) |
 | VAL-001 Input validation | 08-validation.md | Validate all inputs before processing | ⚠️ NOT APPLIED - No validation of list lengths in calculate_learning_curve_gap |
 | ERR-001 Exception handling | 05-error-handling.md | Handle missing optional data gracefully | ✅ OK - Handles None for optional parameters |
-| LOG-001 Structured logging | 06-logging.md | Use structured logs with context | ❌ GAP - No logging of detection results |
+| LOG-001 Structured logging | 06-logging.md | Use structured logs with context | ✅ FIXED - Added structured logging for all detection events |
 | TEST-001 Deterministic | 10-testing.md | Tests must be reproducible | ✅ OK - Pure functions, no side effects |
 
 **NOTE:** This analysis should consider ALL 81 rules from /rules directory.

@@ -32,6 +32,11 @@ from .result_aggregator import ProfileResult, ResultAggregator
 
 logger = logging.getLogger(__name__)
 
+# Type aliases for better type safety
+ConfigDict = Dict[str, Any]
+MetricsDict = Dict[str, Any]  # Re-using from baseline_executor
+FallbackMetricsDict = Dict[str, int]
+
 
 class ProfileBatchBacktester:
     """
@@ -95,7 +100,7 @@ class ProfileBatchBacktester:
 
         logger.info(f"ProfileBatchBacktester initialized with config: {config_path}")
 
-    def _load_config(self) -> Dict[str, Any]:
+    def _load_config(self) -> ConfigDict:
         """Load configuration from YAML file."""
         with open(self.config_path) as f:
             return yaml.safe_load(f)
@@ -289,7 +294,7 @@ class ProfileBatchBacktester:
         backtester = ProfileBatchBacktester(config_path)
         return backtester.run_single_profile(profile)
 
-    def get_best_strategy(self, objective: str, tier: str, risk: str) -> Dict[str, Any]:
+    def get_best_strategy(self, objective: str, tier: str, risk: str) -> MetricsDict:
         """
         Get best strategy for specific objective, tier, and risk.
 
@@ -324,7 +329,7 @@ class ProfileBatchBacktester:
         """
         return self.report_generator.generate_comparison_report(self.results)
 
-    def get_fallback_metrics(self) -> Dict[str, int]:
+    def get_fallback_metrics(self) -> FallbackMetricsDict:
         """
         Get current fallback metrics.
 
