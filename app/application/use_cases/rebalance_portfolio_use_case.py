@@ -3,7 +3,9 @@ Rebalance Portfolio Use Case - Rebalance an existing portfolio
 """
 
 from decimal import Decimal
-from typing import Dict, List, Optional, Protocol
+from typing import Any, Dict, List, Optional, Protocol
+
+import pandas as pd
 
 from app.domain.entities.portfolio import Portfolio
 
@@ -16,8 +18,19 @@ class BasePortfolioOptimizer(Protocol):
     implementations that can be injected into the use case.
     """
 
-    def optimize(self, returns, **kwargs):
-        """Optimize portfolio weights based on returns."""
+    def optimize(
+        self, returns: pd.DataFrame, **kwargs: Any
+    ) -> Dict[str, float]:
+        """
+        Optimize portfolio weights based on returns.
+
+        Args:
+            returns: DataFrame of asset returns
+            **kwargs: Additional optimization parameters
+
+        Returns:
+            Dictionary mapping asset names to optimal weights
+        """
         ...
 
 

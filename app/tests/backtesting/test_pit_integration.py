@@ -222,8 +222,9 @@ class TestPITDatabaseClient:
 
         # Verify data after query_date is filtered out
         if len(result) > 0:
-            # Filter is applied by implementation - data on query_date may be included
-            pass
+            # All returned data should be on or before the query date
+            future_dates = result.index[result.index > pd.Timestamp(query_date)]
+            assert len(future_dates) == 0, f"Found {len(future_dates)} dates after query date {query_date}"
 
     def test_get_ohlcv_as_of_with_corporate_actions(
         self, pit_client, mock_pit_db, sample_market_data

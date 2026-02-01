@@ -8,8 +8,7 @@ the flow of data to and from entities.
 from .analyze_backtest_results_use_case import AnalyzeBacktestResultsUseCase
 from .create_portfolio_use_case import CreatePortfolioUseCase  # noqa: F401
 from .execute_strategy_use_case import ExecuteStrategyUseCase  # noqa: F401
-
-# from .rebalance_portfolio_use_case import RebalancePortfolioUseCase  # noqa: F401  # TODO: Fix import issue
+from .rebalance_portfolio_use_case import RebalancePortfolioUseCase  # noqa: F401
 from .run_backtest_use_case import RunBacktestUseCase
 from .select_strategy import (
     SelectStrategyUseCase,
@@ -24,7 +23,7 @@ __all__ = [
     'AnalyzeBacktestResultsUseCase',
     'CreatePortfolioUseCase',
     'ExecuteStrategyUseCase',
-    # 'RebalancePortfolioUseCase',  # TODO: Fix import issue
+    'RebalancePortfolioUseCase',
     'SelectStrategyUseCase',
     'StrategySelector',
     'StrategyConfiguration',
