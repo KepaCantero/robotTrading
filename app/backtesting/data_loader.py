@@ -453,14 +453,18 @@ class DataLoader:
         )
 
         # Get high/low/open with fallbacks to close
+        # Note: Using row.get() with default values - if high/low/open missing, fall back to close
         highs = df.apply(
-            lambda row: Decimal(str(row.get("high", row.get("High", closes.iloc[name])))), axis=1
+            lambda row: Decimal(str(row.get("high", row.get("High", row.get("close", row.get("Close", 100)))))),
+            axis=1
         )
         lows = df.apply(
-            lambda row: Decimal(str(row.get("low", row.get("Low", closes.iloc[name])))), axis=1
+            lambda row: Decimal(str(row.get("low", row.get("Low", row.get("close", row.get("Close", 100)))))),
+            axis=1
         )
         opens = df.apply(
-            lambda row: Decimal(str(row.get("open", row.get("Open", closes.iloc[name])))), axis=1
+            lambda row: Decimal(str(row.get("open", row.get("Open", row.get("close", row.get("Close", 100)))))),
+            axis=1
         )
 
         # Create quotes list using list comprehension (much faster than iterrows)

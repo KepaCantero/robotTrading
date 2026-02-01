@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import numpy as np
 
@@ -417,5 +417,5 @@ class RiskCalculator:
             "volatility_level": vol_level,
             "concentration_level": conc_level,
             "utilisation_level": util_level,
-            "var_95_pct": f"{(metrics.var_95 / portfolio.get_total_value().amount * 100) if portfolio.get_total_value().amount > 0 else 0:.1f}%",
+            "var_95_pct": f"{metrics.var_95:.1f}",
         }
