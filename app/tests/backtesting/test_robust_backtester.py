@@ -1045,7 +1045,7 @@ class TestRobustBacktester:
         """Test executing a buy order."""
         backtester = RobustBacktester(sample_config)
 
-        backtester._execute_buy("AAPL", 150.0, None)
+        backtester._execute_buy("AAPL", Decimal("150.0"), None)
 
         assert "AAPL" in backtester._positions
         assert backtester._positions["AAPL"] > 0
@@ -1056,12 +1056,12 @@ class TestRobustBacktester:
         backtester = RobustBacktester(sample_config)
 
         # First buy
-        backtester._execute_buy("AAPL", 150.0, None)
+        backtester._execute_buy("AAPL", Decimal("150.0"), None)
         initial_capital = backtester._capital
         initial_shares = backtester._positions["AAPL"]
 
         # Then sell
-        backtester._execute_sell("AAPL", 155.0, None)
+        backtester._execute_sell("AAPL", Decimal("155.0"), None)
 
         assert backtester._positions["AAPL"] < initial_shares
         assert backtester._capital > initial_capital

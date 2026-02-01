@@ -212,7 +212,8 @@ class TestPITDatabaseClient:
         # Return full sample data (includes data after query_date)
         # The implementation filters this and returns a DataFrame
         mock_pit_db.get_data_as_of_date.return_value = sample_market_data
-        mock_pit_db.apply_corporate_actions.return_value = sample_market_data
+        # apply_corporate_actions should return the filtered data it receives (passthrough)
+        mock_pit_db.apply_corporate_actions.side_effect = lambda symbol, data, as_of_date: data
 
         result = pit_client.get_ohlcv_as_of('AAPL', query_date, lookback_days=252)
 
@@ -255,7 +256,8 @@ class TestPITDatabaseClient:
         """Test cache hit for OHLCV query."""
         query_date = date(2020, 1, 20)
         mock_pit_db.get_data_as_of_date.return_value = sample_market_data
-        mock_pit_db.apply_corporate_actions.return_value = sample_market_data
+        # apply_corporate_actions should return the filtered data it receives (passthrough)
+        mock_pit_db.apply_corporate_actions.side_effect = lambda symbol, data, as_of_date: data
 
         # First call - cache miss
         result1 = pit_client.get_ohlcv_as_of('AAPL', query_date)
