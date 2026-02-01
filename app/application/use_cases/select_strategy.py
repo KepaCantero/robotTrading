@@ -33,18 +33,10 @@ MarketData = Union[pd.DataFrame, Any]
 
 from ...backtesting.validation.models import WalkForwardConfig
 from ...backtesting.validation.walk_forward import WalkForwardValidator
-from ...core.models.input_profile import (
-    InputProfile,
-    ObjectivoInversion,
-    RiskTolerance,
-)
-from ...optimization.parameter.bayesian_optimizer import BayesianOptimizer
+from ...core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 from ...optimization.parameter.base_optimizer import OptimizationConfig
-from ...optimization.parameter.models import (
-    ParameterGrid,
-    ParameterRange,
-    ParameterType,
-)
+from ...optimization.parameter.bayesian_optimizer import BayesianOptimizer
+from ...optimization.parameter.models import ParameterGrid, ParameterRange, ParameterType
 from ...services.profile_driven_trading.profile_strategy_mapper import (
     ProfileStrategyMapper,
     StrategyMapping,
@@ -605,12 +597,18 @@ class StrategySelector:
         import asyncio
 
         try:
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
+            # If we're already in an async context, we can't use asyncio.run()
+            # Create a task and let the caller handle it
+            raise RuntimeError(
+                "Cannot run async optimization from within an async context. "
+                "Use 'await' instead."
+            )
         except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+            # No running loop, safe to use asyncio.run()
+            pass
 
-        result = loop.run_until_complete(optimizer.optimize(objective, param_grid))
+        result = asyncio.run(optimizer.optimize(objective, param_grid))
 
         return result.best_params, {"trials": len(result.all_trials)}
 
