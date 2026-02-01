@@ -34,22 +34,21 @@ import numpy as np
 # ============================================================================
 
 # CRITICAL: Numba is REQUIRED for this module
+logger = logging.getLogger(__name__)
+
 try:
     from numba import jit, njit, prange
+    from numba import __version__ as numba_version
 
-    HAS_NUMBA = True
+    NUMBA_AVAILABLE = True
+    NUMBA_VERSION = numba_version
 except ImportError as e:
-    HAS_NUMBA = False
-    jit = None
-    njit = None
-    prange = None
     error_message = (
-        "CRITICAL: numba is REQUIRED for numba_metrics module. " "Install with: pip install numba"
+        "CRITICAL: numba is REQUIRED for numba_metrics module. "
+        "Install with: pip install numba"
     )
     logger.error(error_message)
     raise RuntimeError(error_message) from e
-
-logger = logging.getLogger(__name__)
 
 
 # ============================================================================
@@ -298,14 +297,8 @@ def calculate_var_numba(returns: np.ndarray, confidence_level: float = 0.95) -> 
     if n < 2:
         return np.nan
 
-    # Sort returns (using simple bubble sort for numba compatibility)
-    sorted_returns = returns.copy()
-    for i in range(n):
-        for j in range(i + 1, n):
-            if sorted_returns[i] > sorted_returns[j]:
-                temp = sorted_returns[i]
-                sorted_returns[i] = sorted_returns[j]
-                sorted_returns[j] = temp
+    # Sort returns using Numba-compatible np.sort
+    sorted_returns = np.sort(returns.copy())
 
     # Calculate VaR at confidence level
     index = int((1.0 - confidence_level) * n)
@@ -335,14 +328,8 @@ def calculate_cvar_numba(returns: np.ndarray, confidence_level: float = 0.95) ->
     if n < 2:
         return np.nan
 
-    # Sort returns
-    sorted_returns = returns.copy()
-    for i in range(n):
-        for j in range(i + 1, n):
-            if sorted_returns[i] > sorted_returns[j]:
-                temp = sorted_returns[i]
-                sorted_returns[i] = sorted_returns[j]
-                sorted_returns[j] = temp
+    # Sort returns using Numba-compatible np.sort
+    sorted_returns = np.sort(returns.copy())
 
     # Calculate VaR threshold
     var_index = int((1.0 - confidence_level) * n)
@@ -797,9 +784,9 @@ def get_numba_metrics_info() -> dict:
         Dictionary with Numba status and optimized functions
     """
     return {
-        "numba_available": NUMBA_AVAILABLE,
+        "numba_available": bool(NUMBA_AVAILABLE),
         "numba_version": NUMBA_VERSION,
-        "jit_enabled": NUMBA_AVAILABLE,
+        "jit_enabled": bool(NUMBA_AVAILABLE),
         "functions_optimized": len(
             [
                 calculate_returns_numba,

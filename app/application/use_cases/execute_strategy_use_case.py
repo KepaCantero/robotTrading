@@ -4,14 +4,12 @@ Execute Strategy Use Case - Execute a trading strategy
 
 import logging
 from datetime import datetime
-from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
-from app.domain.entities.order import Order, OrderSide, OrderType, OrderStatus
+from app.domain.entities.order import Order, OrderSide, OrderStatus, OrderType
 from app.models.market_data import Quote
 from app.models.signal import Signal, SignalType
 from app.strategies.base import BaseStrategy
-
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +29,7 @@ class ExecuteStrategyUseCase:
         self,
         market_data: Quote,
         strategy_type: str,
-        parameters: Optional[Dict[str, any]] = None,
+        parameters: Optional[Dict[str, Any]] = None,
     ) -> List[Order]:
         """
         Execute the use case - run strategy and generate orders.
