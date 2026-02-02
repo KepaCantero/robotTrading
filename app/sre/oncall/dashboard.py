@@ -20,6 +20,7 @@ Domain Model (Cosmic Python - Rule 16):
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -356,7 +357,7 @@ class OncallDashboard:
                         INSERT OR REPLACE INTO dashboard_cache (key, value, updated_at)
                         VALUES ('status', ?, ?)
                     """,
-                        (str(self._current_status.to_dict()), datetime.utcnow().isoformat()),
+                        (json.dumps(self._current_status.to_dict()), datetime.utcnow().isoformat()),
                     )
 
                 # Save metrics
@@ -366,7 +367,10 @@ class OncallDashboard:
                         INSERT OR REPLACE INTO dashboard_cache (key, value, updated_at)
                         VALUES ('metrics', ?, ?)
                     """,
-                        (str(self._current_metrics.to_dict()), datetime.utcnow().isoformat()),
+                        (
+                            json.dumps(self._current_metrics.to_dict()),
+                            datetime.utcnow().isoformat(),
+                        ),
                     )
 
                 # Save status history
@@ -376,7 +380,7 @@ class OncallDashboard:
                         INSERT INTO status_history (status_data, created_at)
                         VALUES (?, ?)
                     """,
-                        (str(self._current_status.to_dict()), datetime.utcnow().isoformat()),
+                        (json.dumps(self._current_status.to_dict()), datetime.utcnow().isoformat()),
                     )
 
                 # Save metrics history
@@ -386,7 +390,10 @@ class OncallDashboard:
                         INSERT INTO metrics_history (metrics_data, created_at)
                         VALUES (?, ?)
                     """,
-                        (str(self._current_metrics.to_dict()), datetime.utcnow().isoformat()),
+                        (
+                            json.dumps(self._current_metrics.to_dict()),
+                            datetime.utcnow().isoformat(),
+                        ),
                     )
 
                 await db.commit()
@@ -581,13 +588,13 @@ class OncallDashboard:
                 rows = await cursor.fetchall()
                 return [
                     {
-                        "data": eval(row[0]),
+                        "data": json.loads(row[0]),
                         "timestamp": row[1],
                     }
                     for row in rows
                 ]
 
-        except (aiosqlite.Error, ValueError) as e:
+        except (aiosqlite.Error, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Error getting status history: {e}")
             return []
 
@@ -621,13 +628,13 @@ class OncallDashboard:
                 rows = await cursor.fetchall()
                 return [
                     {
-                        "data": eval(row[0]),
+                        "data": json.loads(row[0]),
                         "timestamp": row[1],
                     }
                     for row in rows
                 ]
 
-        except (aiosqlite.Error, ValueError) as e:
+        except (aiosqlite.Error, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Error getting metrics history: {e}")
             return []
 

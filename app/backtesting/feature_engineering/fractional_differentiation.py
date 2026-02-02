@@ -553,7 +553,7 @@ class FractionalDifferentiation:
             try:
                 adf_result = adfuller(diff_mid_clean, maxlag=1)
                 p_value = adf_result[1]
-            except:
+            except (ValueError, TypeError, np.linalg.LinAlgError):
                 p_value = 1.0
 
             metadata['test_history'].append(
@@ -594,7 +594,7 @@ class FractionalDifferentiation:
             try:
                 adf_result = adfuller(diff_clean, maxlag=1)
                 p_value = adf_result[1]
-            except:
+            except (ValueError, TypeError, np.linalg.LinAlgError):
                 p_value = 1.0
 
             metadata['test_history'].append(
@@ -681,7 +681,7 @@ class FractionalDifferentiation:
                 adf_stat = adf_result[0]
                 p_value = adf_result[1]
                 adf_result[4]
-            except:
+            except (ValueError, TypeError, np.linalg.LinAlgError):
                 adf_stat, p_value = np.nan, 1.0
 
             # Memory metrics
