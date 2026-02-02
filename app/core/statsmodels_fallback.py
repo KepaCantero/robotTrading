@@ -930,7 +930,7 @@ def pacf(x, nlags=40, method="ywunbiased", alpha=None):
                 rhs = np.array(acf[1 : k + 1])
                 phi_k = np.linalg.solve(toeplitz, rhs)[-1]
                 pacf_values[k] = phi_k
-            except:
+            except (ValueError, TypeError, np.linalg.LinAlgError):
                 pacf_values[k] = acf[k]  # Fallback to ACF
 
     return pacf_values

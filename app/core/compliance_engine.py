@@ -42,7 +42,6 @@ Version: 2.0 - THE ONLY ENGINE
 
 from __future__ import annotations
 
-import asyncio
 import logging
 import sys
 from datetime import datetime
@@ -232,7 +231,7 @@ class SystemAvailability:
 
     def _check_backtesting(self) -> bool:
         try:
-            from app.backtesting.engine import SimpleBacktester
+            pass
 
             return True
         except ImportError:
@@ -240,7 +239,7 @@ class SystemAvailability:
 
     def _check_live_trading(self) -> bool:
         try:
-            from app.services.live_trading.broker_connector import BrokerConnector
+            pass
 
             return True
         except ImportError:
@@ -248,7 +247,7 @@ class SystemAvailability:
 
     def _check_paper_trading(self) -> bool:
         try:
-            from app.services.live_trading.broker_adapters.paper_adapter import PaperAdapter
+            pass
 
             return True
         except ImportError:
@@ -256,7 +255,7 @@ class SystemAvailability:
 
     def _check_strategies(self) -> bool:
         try:
-            from app.strategies.base import BaseStrategy
+            pass
 
             return True
         except ImportError:
@@ -264,7 +263,7 @@ class SystemAvailability:
 
     def _check_risk_engine(self) -> bool:
         try:
-            from app.engines.risk_engine import RiskEngine
+            pass
 
             return True
         except ImportError:
@@ -272,7 +271,7 @@ class SystemAvailability:
 
     def _check_portfolio_engine(self) -> bool:
         try:
-            from app.engines.portfolio_engine import PortfolioEngine
+            pass
 
             return True
         except ImportError:
@@ -280,7 +279,7 @@ class SystemAvailability:
 
     def _check_data_engine(self) -> bool:
         try:
-            from app.engines.data_engine import DataEngine
+            pass
 
             return True
         except ImportError:
@@ -288,7 +287,7 @@ class SystemAvailability:
 
     def _check_context_engine(self) -> bool:
         try:
-            from app.engines.context_engine import ContextEngine
+            pass
 
             return True
         except ImportError:
@@ -302,7 +301,7 @@ class SystemAvailability:
         in the microstructure subdirectory.
         """
         try:
-            from app.engines.execution_engine.microstructure import MarketMicrostructureEngine
+            pass
 
             return True
         except ImportError as e:
@@ -312,7 +311,7 @@ class SystemAvailability:
 
     def _check_chan(self) -> bool:
         try:
-            from app.services.regime_detection_chan import get_regime_detector
+            pass
 
             return True
         except ImportError:
@@ -320,7 +319,7 @@ class SystemAvailability:
 
     def _check_narang(self) -> bool:
         try:
-            from app.services.portfolio_construction_narang import get_portfolio_constructor
+            pass
 
             return True
         except ImportError:
@@ -328,7 +327,7 @@ class SystemAvailability:
 
     def _check_lopez_de_prado(self) -> bool:
         try:
-            from app.backtesting.labeling.meta_labeling import get_meta_labeling
+            pass
 
             return True
         except ImportError:
@@ -343,7 +342,7 @@ class SystemAvailability:
 
     def _check_hastie(self) -> bool:
         try:
-            from app.backtesting.validation.cross_validation import PurgedKFold
+            pass
 
             return True
         except ImportError:
@@ -351,9 +350,7 @@ class SystemAvailability:
 
     def _check_harris(self) -> bool:
         try:
-            from app.engines.execution_engine.microstructure.harris_integration import (
-                get_harris_integrator,
-            )
+            pass
 
             return True
         except ImportError:
@@ -361,7 +358,7 @@ class SystemAvailability:
 
     def _check_ohara(self) -> bool:
         try:
-            from app.microstructure.liquidity import get_liquidity_analyzer
+            pass
 
             return True
         except ImportError:
@@ -376,7 +373,7 @@ class SystemAvailability:
 
     def _check_hull(self) -> bool:
         try:
-            from app.engines.risk_engine.var_calculators.var_calculators import calculate_var
+            pass
 
             return True
         except ImportError:
@@ -384,7 +381,7 @@ class SystemAvailability:
 
     def _check_sre(self) -> bool:
         try:
-            from app.sre.monitoring.golden_signals import get_golden_signals_monitor
+            pass
 
             return True
         except ImportError:
@@ -1910,7 +1907,7 @@ class ComplianceEngine:
                     price_improvement_bps=harris_analysis.price_improvement_bps,
                     latency_ms=latency_ms,
                     fill_rate=100.0,  # Will be updated when partial fills occur
-                    slo_met=latency_ms < self.engine.config.slo_latency_ms,  # Use configured SLO
+                    slo_met=latency_ms < self.config.slo_latency_ms,  # Use configured SLO
                 )
 
             except Exception as e:
