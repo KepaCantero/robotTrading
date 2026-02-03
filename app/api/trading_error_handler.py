@@ -3,13 +3,19 @@ Trading Error Handler API
 TASK-14: Unificación de Error Handling
 
 API endpoints para gestionar el manejo unificado de errores del trading.
+
+GAP Fixes:
+- API-002: Added structured logging with correlation IDs
+- API-004: TODO: Test coverage requires creating test files
+- API-005: FIXED - Added security decorators (rate_limit, require_auth, audit_log)
 """
 
 import logging
+import traceback
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Request
 from pydantic import BaseModel, Field
 from requests.exceptions import HTTPError, RequestException
 
@@ -22,6 +28,9 @@ from app.services.trading_error_handler import (
     reset_circuit_breaker,
     trading_error_handler,
 )
+
+from . import audit_logger, get_correlation_id
+from .security import rate_limit, require_auth, audit_log
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -79,13 +88,26 @@ class CircuitBreakerResetRequest(BaseModel):
     response_model=ErrorHandlingResponse,
     status_code=status.HTTP_200_OK,
 )
-async def handle_error_endpoint(request: ErrorHandlingRequest):
+async def handle_error_endpoint(
+    request: ErrorHandlingRequest,
+    http_request: Request,
+):
     """
     Handle a trading error with unified processing.
 
     This endpoint processes errors according to configured rules and takes
     appropriate actions (retry, circuit breaker, alerts, etc.).
     """
+    correlation_id = get_correlation_id()
+    logger.info(
+        "Handling trading error",
+        extra={
+            "correlation_id": correlation_id,
+            "error_message": request.error_message,
+            "error_type": request.error_type,
+            "context": request.context.value,
+        },
+    )
     try:
         # Create a mock error for demonstration
         # In real implementation, this would be the actual error
@@ -104,10 +126,36 @@ async def handle_error_endpoint(request: ErrorHandlingRequest):
             metadata=request.metadata,
         )
 
+        audit_logger.log_action(
+            action="error_handled",
+            method=http_request.method,
+            path=http_request.url.path,
+            details={
+                "error_type": request.error_type,
+                "context": request.context.value,
+                "operation_id": request.operation_id,
+            },
+        )
+
         return ErrorHandlingResponse(**result)
 
     except (ValueError, TypeError, KeyError, AttributeError) as e:
-        logger.error(f"Error in handle_error_endpoint: {e}")
+        logger.error(
+            f"Error in handle_error_endpoint: {e}",
+            extra={
+                "correlation_id": correlation_id,
+                "error_type": type(e).__name__,
+                "error": str(e),
+                "stack_trace": traceback.format_exc(),
+            },
+        )
+        audit_logger.log_error(
+            method=http_request.method,
+            path=http_request.url.path,
+            error_type=type(e).__name__,
+            error_message=str(e),
+            stack_trace=traceback.format_exc(),
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to handle error: {str(e)}",
@@ -183,6 +231,9 @@ async def get_circuit_breaker_status_endpoint():
 
 
 @router.post("/circuit-breakers/reset", status_code=status.HTTP_200_OK)
+@rate_limit(max_requests=10, window_seconds=60)
+@require_auth(roles=["admin"])
+@audit_log("circuit_breaker_reset", log_args=True)
 async def reset_circuit_breaker_endpoint(request: CircuitBreakerResetRequest):
     """
     Reset a circuit breaker for a specific context.

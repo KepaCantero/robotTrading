@@ -12,7 +12,7 @@ from decimal import Decimal
 from typing import Any, Dict
 
 
-@dataclass
+@dataclass(frozen=True)
 class PostTradeAnalysis:
     """
     Complete post-trade analysis from ALL systems.
@@ -42,6 +42,45 @@ class PostTradeAnalysis:
     latency_ms: float = 0.0
     fill_rate: float = 100.0
     slo_met: bool = True
+
+    def __post_init__(self) -> None:
+        """Validate all trading-critical fields."""
+        # Validate order_id
+        if not self.order_id or not isinstance(self.order_id, str):
+            raise ValueError("order_id must be a non-empty string")
+
+        # Validate symbol
+        if not self.symbol or not isinstance(self.symbol, str):
+            raise ValueError("symbol must be a non-empty string")
+
+        # Validate side
+        valid_sides = {"BUY", "SELL", "buy", "sell"}
+        if self.side not in valid_sides:
+            raise ValueError(f"side must be one of {valid_sides}, got: {self.side}")
+
+        # Validate quantity
+        if not isinstance(self.quantity, Decimal):
+            raise ValueError("quantity must be a Decimal")
+        if self.quantity <= 0:
+            raise ValueError(f"quantity must be positive, got: {self.quantity}")
+
+        # Validate execution_price
+        if not isinstance(self.execution_price, Decimal):
+            raise ValueError("execution_price must be a Decimal")
+        if self.execution_price <= 0:
+            raise ValueError(f"execution_price must be positive, got: {self.execution_price}")
+
+        # Validate scores are in valid ranges
+        if not 0.0 <= self.execution_quality_score <= 100.0:
+            raise ValueError(
+                f"execution_quality_score must be between 0 and 100, got: {self.execution_quality_score}"
+            )
+
+        if not 0.0 <= self.fill_rate <= 100.0:
+            raise ValueError(f"fill_rate must be between 0 and 100, got: {self.fill_rate}")
+
+        if self.latency_ms < 0:
+            raise ValueError(f"latency_ms must be non-negative, got: {self.latency_ms}")
 
     def get_cost_summary(self) -> Dict[str, float]:
         """Get a summary of all execution costs."""

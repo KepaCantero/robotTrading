@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -72,7 +71,7 @@ class ICCalculator:
         forecasts: pd.Series,
         returns: pd.Series,
         method: str = "pearson",
-    ) -> "ICMetrics":
+    ) -> "ICMetrics":  # noqa: F821
         """
         Calculate Information Coefficient and related metrics.
 
@@ -176,8 +175,8 @@ class ICCalculator:
         self,
         forecasts: pd.Series,
         returns: pd.Series,
-        periods: List[int] = [1, 5, 10, 20],
-    ) -> List[Decimal]:
+        periods: list[int] = [1, 5, 10, 20],
+    ) -> list[Decimal]:
         """
         Calculate IC over different forward return horizons.
 
@@ -240,8 +239,12 @@ class ICCalculator:
                         f"{len(aligned_forecasts)} observations"
                     )
                     ic_values.append(Decimal("0"))
-            except ValueError as e:
-                logger.warning(f"Could not calculate IC for period {period}: {e}")
+            except ValueError:
+                logger.error(
+                    f"Could not calculate IC for period {period}",
+                    exc_info=True,
+                    extra={"period": period, "aligned_observations": len(aligned_forecasts)},
+                )
                 ic_values.append(Decimal("0"))
 
         return ic_values
@@ -250,7 +253,7 @@ class ICCalculator:
         self,
         ic: float,
         n_observations: int,
-    ) -> Tuple[float, bool]:
+    ) -> tuple[float, bool]:
         """
         Test if IC is statistically significant.
 
@@ -298,7 +301,7 @@ class ICCalculator:
         ic: float,
         n: int,
         confidence: float = 0.95,
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         """
         Calculate confidence interval for IC using Fisher's z-transformation.
 
@@ -420,7 +423,7 @@ class ICCalculator:
         index = forecasts.index[window - 1 :]
         return pd.Series(rolling_ic_values, index=index)
 
-    def _get_zero_ic_metrics(self) -> "ICMetrics":
+    def _get_zero_ic_metrics(self) -> "ICMetrics":  # noqa: F821
         """
         Return zero IC metrics for edge cases.
 

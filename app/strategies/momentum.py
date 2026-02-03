@@ -13,7 +13,7 @@ from __future__ import annotations
 import logging
 from collections import deque
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from app.core.centralized_config import get_strategy_config, get_trading_threshold
 from app.models.market_data import Quote
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 class MomentumStrategy(BaseStrategy):
     """Estrategia de momentum basada en RSI, EMA y volumen."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]) -> None:
         """
         Inicializar estrategia de momentum.
 
@@ -155,7 +155,7 @@ class MomentumStrategy(BaseStrategy):
 
         logger.info(f"MomentumStrategy initialized: {self.name}")
 
-    def get_required_parameters(self) -> List[str]:
+    def get_required_parameters(self) -> list[str]:
         """
         Obtener parámetros requeridos para la estrategia.
 
@@ -170,7 +170,7 @@ class MomentumStrategy(BaseStrategy):
             "max_position_size",
         ]
 
-    def generate_signals(self, market_data: Quote) -> List[Signal]:
+    def generate_signals(self, market_data: Quote) -> list[Signal]:
         """
         Generar señales de trading basadas en momentum con indicadores reales.
 
@@ -212,14 +212,14 @@ class MomentumStrategy(BaseStrategy):
             if atr is not None:
                 self.atr_history.append(atr)
 
-            # Sólo generar señales si tenemos suficiente histórico
+            # Only generate signals if we have sufficient history
             if rsi is None or ema is None:
-                # Log why signals are not generated (insufficient history) - INFO level so we can see it
+                # Log why signals are not generated (insufficient history) - DEBUG level for diagnostics
                 if self.current_bar_index % 50 == 0:  # Log every 50th bar
-                    logger.info(
-                        f"MOMENTUM {market_data.symbol}: ⚠️ Skipping - insufficient history "
+                    logger.debug(
+                        f"MOMENTUM {market_data.symbol}: Skipping - insufficient history "
                         f"(RSI={rsi}, EMA={ema}, bars={self.current_bar_index}). "
-                        f"Need at least 14 bars for RSI and {self.ema_period if hasattr(self, 'ema_period') else 20} for EMA"
+                        f"Need at least {self.rsi_period} bars for RSI and {self.ema_period} for EMA"
                     )
                 return []
 
@@ -251,7 +251,7 @@ class MomentumStrategy(BaseStrategy):
                     if stoch_result[0] is not None and stoch_result[1] is not None:
                         stoch_rsi_k, stoch_rsi_d = stoch_result
                         logger.debug(
-                            f"MOMENTUM {market_data.symbol}: Stochastic RSI calculated using pandas_ta: "
+                            f"MOMENTUM {market_data.symbol}: Stochastic RSI calculated: "
                             f"K={stoch_rsi_k:.2f}, D={stoch_rsi_d:.2f}"
                         )
 
@@ -262,22 +262,13 @@ class MomentumStrategy(BaseStrategy):
 
             # Log diagnostic info BEFORE checking conditions (INFO level for visibility)
 
-            # Log ALL candidates (every bar) to track what's being evaluated
+            # Log ALL candidates (every bar) to track what's being evaluated - DEBUG for detailed diagnostics
             logger.debug(
-                f"🔍 MOMENTUM CANDIDATE {market_data.symbol}: "
+                f"MOMENTUM CANDIDATE {market_data.symbol}: "
                 f"RSI={rsi:.2f}, price={current_price:.2f}, EMA={ema:.2f}, "
                 f"volume_ratio={volume_ratio:.2f}, ROC={roc_safe:.2f}, OBV={obv_trend}, "
                 f"ATR_filter={atr_filter_passed}, cooldown={cooldown_active}, bar_index={self.current_bar_index}"
             )
-
-            # More frequent logging (every 10 bars) for INFO level
-            if self.current_bar_index % 10 == 0:
-                logger.info(
-                    f"🔍 MOMENTUM {market_data.symbol}: "
-                    f"RSI={rsi:.2f}, price={current_price:.2f}, EMA={ema:.2f}, "
-                    f"volume_ratio={volume_ratio:.2f}, ROC={roc_safe:.2f}, OBV={obv_trend}, "
-                    f"ATR_filter={atr_filter_passed}"
-                )
 
             if not cooldown_active:
                 # IMPROVEMENT: Apply Stochastic RSI filter to reduce false signals
@@ -305,8 +296,8 @@ class MomentumStrategy(BaseStrategy):
                         self.last_signal_bar_index = self.current_bar_index
                         self.last_signal_type = "buy"
                         logger.info(
-                            f"✅ MOMENTUM Generated BUY signal for {market_data.symbol}: "
-                            f"RSI={rsi:.2f}, EMA={ema:.2f}, price={current_price:.2f}, "
+                            f"MOMENTUM BUY signal generated for {market_data.symbol}: "
+                            f"RSI={rsi:.2f}, price={current_price:.2f}, EMA={ema:.2f}, "
                             f"volume_ratio={volume_ratio:.2f}, ROC={roc_safe:.2f}, OBV={obv_trend}"
                         )
                     elif sell_condition and not buy_condition:
@@ -319,15 +310,15 @@ class MomentumStrategy(BaseStrategy):
                         self.last_signal_bar_index = self.current_bar_index
                         self.last_signal_type = "sell"
                         logger.info(
-                            f"✅ MOMENTUM Generated SELL signal for {market_data.symbol}: "
-                            f"RSI={rsi:.2f}, EMA={ema:.2f}, price={current_price:.2f}, "
+                            f"MOMENTUM SELL signal generated for {market_data.symbol}: "
+                            f"RSI={rsi:.2f}, price={current_price:.2f}, EMA={ema:.2f}, "
                             f"volume_ratio={volume_ratio:.2f}, ROC={roc_safe:.2f}, OBV={obv_trend}"
                         )
                     elif buy_condition and sell_condition:
                         # If both conditions are met, log warning and choose based on RSI
                         logger.warning(
-                            f"⚠️ MOMENTUM {market_data.symbol}: Both BUY and SELL conditions met! "
-                            f"RSI={rsi:.2f}. Choosing based on RSI."
+                            f"MOMENTUM {market_data.symbol}: Both BUY and SELL conditions met - "
+                            f"RSI={rsi:.2f}. Choosing based on RSI zone."
                         )
                         # Prioritize based on RSI: if RSI < 45, prefer BUY; if RSI > 55, prefer SELL
                         current_atr = self.atr_history[-1] if self.atr_history else None
@@ -347,7 +338,7 @@ class MomentumStrategy(BaseStrategy):
                             self.last_signal_type = "sell"
                         # If 45 <= RSI <= 55, don't generate any signal (neutral zone)
                 else:
-                    # Log filter rejections
+                    # Log filter rejections - DEBUG for diagnostics
                     current_atr = self.atr_history[-1] if self.atr_history else None
                     current_price = market_data.close or market_data.last
                     filter_failed = []
@@ -362,42 +353,42 @@ class MomentumStrategy(BaseStrategy):
                         filter_failed.append(f"StochRSI filter (K={k_str}, D={d_str})")
 
                     logger.debug(
-                        f"❌ MOMENTUM CANDIDATE REJECTED {market_data.symbol}: "
+                        f"MOMENTUM candidate rejected {market_data.symbol}: "
                         f"{', '.join(filter_failed)}"
                     )
             else:
-                # Log ALL cooldown rejections
+                # Log cooldown rejections - DEBUG for diagnostics
                 logger.debug(
-                    f"❌ MOMENTUM CANDIDATE REJECTED {market_data.symbol}: "
+                    f"MOMENTUM candidate rejected {market_data.symbol}: "
                     f"Cooldown active (last_signal_bar={self.last_signal_bar_index}, "
                     f"current_bar={self.current_bar_index}, cooldown_bars={self.cooldown_bars})"
                 )
 
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(
-                f"MOMENTUM Error generating signals for {market_data.symbol}: {e}", exc_info=True
+                f"MOMENTUM error generating signals for {market_data.symbol}: {e}", exc_info=True
             )
 
         # TASK-SC-5: Process signals through Signal Scoring Engine
         # NOTE: Cooldown is managed internally by the strategy's cooldown logic
         # Don't apply additional cooldown from scoring engine for backtesting
         if raw_signals:
-            logger.info(
-                f"🔍 MOMENTUM: {len(raw_signals)} raw signals generated for {market_data.symbol}, "
-                "processing through signal scoring engine..."
+            logger.debug(
+                f"MOMENTUM: {len(raw_signals)} raw signal(s) for {market_data.symbol}, "
+                "processing through scoring engine"
             )
             # In backtesting, we want to evaluate all signals without cooldown
             # But we still want scoring and ranking
             processed_signals = self.signal_scoring_engine.process_signals(
                 raw_signals, apply_cooldown=False
             )
-            logger.info(
-                f"🔍 MOMENTUM: {len(processed_signals)} signals after scoring (from {len(raw_signals)} raw) "
+            logger.debug(
+                f"MOMENTUM: {len(processed_signals)} signal(s) after scoring (from {len(raw_signals)} raw) "
                 f"for {market_data.symbol}"
             )
             if len(processed_signals) < len(raw_signals):
                 logger.info(
-                    f"⚠️ MOMENTUM: {len(raw_signals) - len(processed_signals)} signals filtered by scoring engine "
+                    f"MOMENTUM: {len(raw_signals) - len(processed_signals)} signal(s) filtered by scoring engine "
                     f"for {market_data.symbol}"
                 )
             return processed_signals
@@ -422,22 +413,22 @@ class MomentumStrategy(BaseStrategy):
                 # First check if position exists
                 existing_position = self._get_existing_position(portfolio, signal.symbol)
                 if not existing_position:
-                    logger.info(
-                        f"⚠️ MOMENTUM risk_check REJECTED SELL {signal.symbol}: "
+                    logger.debug(
+                        f"MOMENTUM risk_check rejected SELL {signal.symbol}: "
                         "No position exists to sell"
                     )
                     return False
                 # Now calculate sell quantity and verify we have enough
                 sell_quantity = self.get_position_size(signal, portfolio)
                 if sell_quantity <= 0:
-                    logger.info(
-                        f"⚠️ MOMENTUM risk_check REJECTED SELL {signal.symbol}: "
+                    logger.debug(
+                        f"MOMENTUM risk_check rejected SELL {signal.symbol}: "
                         f"Position size too small ({sell_quantity:.6f})"
                     )
                     return False
                 if existing_position.quantity < sell_quantity:
-                    logger.info(
-                        f"⚠️ MOMENTUM risk_check REJECTED SELL {signal.symbol}: "
+                    logger.debug(
+                        f"MOMENTUM risk_check rejected SELL {signal.symbol}: "
                         f"Insufficient position (need={sell_quantity:.6f}, have={existing_position.quantity:.6f})"
                     )
                     return False
@@ -447,17 +438,16 @@ class MomentumStrategy(BaseStrategy):
                 # For BUY, calculate position size and verify cash
                 position_size = self.get_position_size(signal, portfolio)
                 if position_size <= 0:
-                    logger.info(
-                        f"⚠️ MOMENTUM risk_check REJECTED BUY {signal.symbol}: "
+                    logger.debug(
+                        f"MOMENTUM risk_check rejected BUY {signal.symbol}: "
                         f"Position size too small ({position_size:.6f})"
                     )
                     return False
                 required_cash = signal.price * position_size
                 if required_cash > portfolio.cash:
-                    logger.info(
-                        f"⚠️ MOMENTUM risk_check REJECTED BUY {signal.symbol}: "
-                        f"Insufficient cash (required=${required_cash:.2f} > available=${portfolio.cash:.2f}, "
-                        f"position_size={position_size:.6f})"
+                    logger.debug(
+                        f"MOMENTUM risk_check rejected BUY {signal.symbol}: "
+                        f"Insufficient cash (required=${required_cash:.2f} > available=${portfolio.cash:.2f})"
                     )
                     return False
             else:
@@ -486,35 +476,35 @@ class MomentumStrategy(BaseStrategy):
                     invested_after / total_value_after if total_value_after > 0 else Decimal("0")
                 )
 
-                logger.info(
-                    f"🔍 MOMENTUM risk_check BUY {signal.symbol}: "
+                logger.debug(
+                    f"MOMENTUM risk_check BUY {signal.symbol}: "
                     f"current_exposure={total_exposure:.2%}, exposure_after={exposure_after:.2%}, "
                     f"max={max_exposure:.2%}, cash=${portfolio.cash:.2f}, "
                     f"position_size={position_size:.6f}, position_value=${estimated_position_value:.2f}"
                 )
             else:
                 # For SELL, exposure should decrease
-                logger.info(
-                    f"🔍 MOMENTUM risk_check SELL {signal.symbol}: "
+                logger.debug(
+                    f"MOMENTUM risk_check SELL {signal.symbol}: "
                     f"current_exposure={total_exposure:.2%}, max={max_exposure:.2%}, "
                     f"cash=${portfolio.cash:.2f}, sell_quantity={position_size:.6f}"
                 )
 
             if total_exposure > max_exposure:
-                logger.info(
-                    f"⚠️ MOMENTUM risk_check REJECTED {signal.signal_type} {signal.symbol}: "
+                logger.debug(
+                    f"MOMENTUM risk_check rejected {signal.signal_type} {signal.symbol}: "
                     f"Total exposure too high ({total_exposure:.2%} > {max_exposure:.2%})"
                 )
                 return False
 
             logger.debug(
-                f"✅ MOMENTUM risk_check PASSED {signal.signal_type} {signal.symbol}: "
+                f"MOMENTUM risk_check passed {signal.signal_type} {signal.symbol}: "
                 f"position_size={position_size:.6f}, cash=${portfolio.cash:.2f}, exposure={total_exposure:.2%}"
             )
             return True
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-            logger.error(f"❌ MOMENTUM risk_check ERROR for {signal.symbol}: {e}", exc_info=True)
+            logger.error(f"MOMENTUM risk_check error for {signal.symbol}: {e}", exc_info=True)
             return False
 
     # REFACTORED: Methods removed - use TechnicalIndicatorCalculator instead
@@ -540,7 +530,7 @@ class MomentumStrategy(BaseStrategy):
             return market_data.volume / Decimal(str(avg_volume))
         return Decimal("1")
 
-    def _calculate_obv_trend_from_value(self, obv: Optional[float]) -> Optional[str]:
+    def _calculate_obv_trend_from_value(self, obv: float | None) -> str | None:
         """
         Calculate OBV trend from OBV value.
 
@@ -557,7 +547,7 @@ class MomentumStrategy(BaseStrategy):
         # This is a simplified version - in production, compare multiple OBV values
         return "rising" if obv > 0 else "falling"
 
-    def _calculate_obv_trend(self, lookback: int = 10) -> Optional[str]:
+    def _calculate_obv_trend(self, lookback: int = 10) -> str | None:
         """
         TASK-IND-OBV-1: Calcular tendencia de OBV.
 
@@ -621,7 +611,7 @@ class MomentumStrategy(BaseStrategy):
         # Si han pasado menos barras que cooldown_bars, el cooldown está activo
         if bars_since_last_signal < self.cooldown_bars:
             logger.debug(
-                f"Cooldown active: {bars_since_last_signal}/{self.cooldown_bars} bars since last signal"
+                f"MOMENTUM: Cooldown active ({bars_since_last_signal}/{self.cooldown_bars} bars since last signal)"
             )
             return True
 
@@ -632,8 +622,8 @@ class MomentumStrategy(BaseStrategy):
         rsi: float,
         ema: float,
         volume_ratio: Decimal,
-        roc: Optional[float],
-        obv_trend: Optional[str],
+        roc: float | None,
+        obv_trend: str | None,
         market_data: Quote,
     ) -> bool:
         """
@@ -659,7 +649,7 @@ class MomentumStrategy(BaseStrategy):
         # NEVER generate BUY when RSI > 70 (that's overbought - should be SELL)
         if rsi >= 70:  # Overbought - should NOT generate BUY
             logger.debug(
-                f"MOMENTUM {market_data.symbol}: BUY signal rejected - RSI too high ({rsi:.2f} >= 70)"
+                f"MOMENTUM {market_data.symbol}: BUY rejected - RSI overbought ({rsi:.2f} >= 70)"
             )
             return False
 
@@ -702,8 +692,8 @@ class MomentumStrategy(BaseStrategy):
         rsi: float,
         ema: float,
         volume_ratio: Decimal,
-        roc: Optional[float],
-        obv_trend: Optional[str],
+        roc: float | None,
+        obv_trend: str | None,
         market_data: Quote,
     ) -> bool:
         """
@@ -729,7 +719,7 @@ class MomentumStrategy(BaseStrategy):
         # NEVER generate SELL when RSI < 30 (that's oversold - should be BUY)
         if rsi <= 30:  # Oversold - should NOT generate SELL
             logger.debug(
-                f"MOMENTUM {market_data.symbol}: SELL signal rejected - RSI too low ({rsi:.2f} <= 30)"
+                f"MOMENTUM {market_data.symbol}: SELL rejected - RSI oversold ({rsi:.2f} <= 30)"
             )
             return False
 
@@ -761,8 +751,8 @@ class MomentumStrategy(BaseStrategy):
         rsi: float,
         ema: float,
         volume_ratio: Decimal,
-        roc: Optional[float],
-        atr: Optional[float] = None,
+        roc: float | None,
+        atr: float | None = None,
     ) -> Signal:
         """
         Crear señal de compra con metadata completa.
@@ -814,8 +804,8 @@ class MomentumStrategy(BaseStrategy):
         rsi: float,
         ema: float,
         volume_ratio: Decimal,
-        roc: Optional[float],
-        atr: Optional[float] = None,
+        roc: float | None,
+        atr: float | None = None,
     ) -> Signal:
         """
         Crear señal de venta con metadata completa.
@@ -899,7 +889,7 @@ class MomentumStrategy(BaseStrategy):
 
     # REFACTORED: _calculate_atr removed - use TechnicalIndicatorCalculator.calculate_atr()
 
-    def _passes_atr_filter(self, current_price: Optional[Decimal] = None) -> bool:
+    def _passes_atr_filter(self, current_price: Decimal | None = None) -> bool:
         """
         Check if current market passes ATR volatility filter.
 
@@ -928,7 +918,7 @@ class MomentumStrategy(BaseStrategy):
     # REFACTORED: _calculate_stochastic_rsi removed - use TechnicalIndicatorCalculator.calculate_stochastic_rsi()
 
     def _should_generate_signal(
-        self, stoch_rsi: Optional[float], stoch_rsi_signal: Optional[float]
+        self, stoch_rsi: float | None, stoch_rsi_signal: float | None
     ) -> bool:
         """
         TASK-IND-STOCH-2: Determinar si se debe generar señal basado en Stochastic RSI.
@@ -965,8 +955,8 @@ class MomentumStrategy(BaseStrategy):
         signal_type: str,
         rsi: float,
         volume_ratio: Decimal,
-        roc: Optional[float],
-        atr: Optional[float],
+        roc: float | None,
+        atr: float | None,
     ) -> str:
         """
         Formatear razón de señal de manera segura sin formatos condicionales en f-strings.

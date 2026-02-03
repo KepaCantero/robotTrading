@@ -12,7 +12,7 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 
-@dataclass
+@dataclass(frozen=True)
 class PreTradeAnalysis:
     """
     Complete pre-trade analysis from ALL 17 systems (8 main + 12 compliance).

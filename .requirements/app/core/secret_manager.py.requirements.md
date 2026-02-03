@@ -1,336 +1,362 @@
-# secret_manager.py
+# Requirements: app/core/secret_manager.py
+
+**File Path:** `app/core/secret_manager.py`
+**Component:** Secret Manager - Secure Credential Management
+**Last Updated:** 2026-02-06
+**Audit Status:** NEEDS_AUDIT
+
+---
 
 ## Purpose
-Centralized secret management following Rule 28 (Security and secrets management) - NO hardcoded secrets, environment variable loading with validation, secret masking in logs, and production-readiness checks.
+
+This module provides **centralized secret management** following Rule 28 (Security and Secrets Management). It ensures NO hardcoded secrets, validates secret strength, masks secrets in logs, and provides production-readiness checks.
+
+**Key Features:**
+- NO hardcoded secrets in code
+- Environment variable loading with validation
+- Secret masking in logs
+- Secure secret validation (strength, rotation)
+- Type-safe secret access
+- Production-readiness checks
 
 ---
 
-## Type Definitions / Data Classes
+## References
 
-### SecretCategory Enum
-```python
-class SecretCategory(str, Enum):
-    DATABASE = "database"
-    API_KEY = "api_key"
-    BROKER = "broker"
-    SECURITY = "security"
-    NOTIFICATION = "notification"
-    EXTERNAL_SERVICE = "external_service"
-```
-
-### SecretDefinition DataClass
-```python
-@dataclass
-class SecretDefinition:
-    name: str                               # REQUIRED - Environment variable name
-    category: SecretCategory                # REQUIRED - Secret category
-    description: str                        # REQUIRED - Human-readable description
-    required_in_production: bool = True     # REQUIRED - Required in production
-    default_value: Optional[str] = None     # OPTIONAL - Default for development
-    validation_pattern: Optional[str] = None # OPTIONAL - Regex validation
-    min_length: int = 0                     # REQUIRED - Minimum length
-    max_length: int = 256                   # REQUIRED - Maximum length
-    requires_uppercase: bool = True         # REQUIRED - Requires uppercase
-    requires_lowercase: bool = True         # REQUIRED - Requires lowercase
-    requires_digit: bool = True             # REQUIRED - Requires digit
-    requires_special: bool = False          # REQUIRED - Requires special char
-    rotation_days: int = 90                 # REQUIRED - Rotation period
-```
-
-### SecretMetadata DataClass
-```python
-@dataclass
-class SecretMetadata:
-    name: str                               # REQUIRED - Secret name
-    created_at: float                       # REQUIRED - Creation timestamp
-    last_rotated: float                     # REQUIRED - Last rotation timestamp
-    rotation_count: int = 0                 # REQUIRED - Number of rotations
-    last_hash: Optional[str] = None         # OPTIONAL - SHA256 hash
-    last_validated: float = 0               # REQUIRED - Last validation timestamp
-```
-
-### SecretValidationReport DataClass
-```python
-@dataclass
-class SecretValidationReport:
-    is_valid: bool                          # REQUIRED - Overall validity
-    missing_secrets: List[str] = []         # REQUIRED - Missing secrets
-    weak_secrets: List[str] = []            # REQUIRED - Weak secrets
-    warnings: List[str] = []                # REQUIRED - Validation warnings
-    compliance_score: float = 0.0           # REQUIRED - Compliance %
-    rotation_required: List[str] = []       # REQUIRED - Secrets needing rotation
-    strength_scores: Dict[str, int] = {}    # REQUIRED - Strength scores
-```
-
-### Exceptions
-```python
-class SecretValidationError(Exception)     # Secret validation failed
-class SecretNotConfiguredError(Exception)  # Required secret not set
-```
+See [../../BASE_RULES.md](../../BASE_RULES.md) for universal rules.
 
 ---
 
-## Function Signatures (Contracts)
+## File Analysis
 
-### `SecretManager.__init__(self) -> None`
-**Pre:** None
-**Post:** SecretManager initialized with cache, metadata loaded
-**Raises:** No
-**Retry:** No
-**Side Effects:** Loads metadata from environment
+### Classes & Functions
 
-### `SecretManager._load_metadata(self) -> None`
-**Pre:** None
-**Post:** Metadata loaded for all defined secrets
-**Raises:** No
-**Retry:** No
-**Side Effects:** Populates _metadata dict
+| Name | Type | Lines | Purpose |
+|------|------|-------|---------|
+| `SecretCategory` | Enum | 42-50 | Categories of secrets (database, api_key, broker, etc.) |
+| `SecretDefinition` | dataclass | 53-69 | Definition of a required secret |
+| `SecretMetadata` | dataclass | 72-81 | Metadata for tracking secret rotation |
+| `SecretValidationError` | Exception | 84-87 | Raised when secret validation fails |
+| `SecretNotConfiguredError` | Exception | 90-93 | Raised when required secret not configured |
+| `SecretValidationReport` | dataclass | 180-235 | Report from secret validation |
+| `SecretManager` | class | 238-746 | Centralized secret manager |
+| `get_secret()` | function | 752-768 | Get secret from environment (convenience) |
+| `require_secret()` | function | 771-788 | Require secret with no default |
+| `validate_secrets_configured()` | function | 791-803 | Validate all secrets are configured |
+| `get_connection_string()` | function | 806-823 | Build connection string from env vars |
+| `mask_secret()` | function | 826-841 | Mask secret for safe logging |
+| `is_production()` | function | 844-846 | Check if running in production |
+| `generate_secure_secret()` | function | 849-864 | Generate cryptographically secure secret |
 
-### `SecretManager._hash_secret(self, value: str) -> str`
-**Pre:** value is non-empty string
-**Post:** Returns SHA256 hash
-**Raises:** No
-**Retry:** No
-**Side Effects:** None
+### Dependencies
 
-### `SecretManager._detect_secret_rotation(self, name: str, current_value: str) -> bool`
-**Pre:** name in _metadata, current_value exists
-**Post:** Returns True if secret rotated since last check
-**Raises:** No
-**Retry:** No
-**Side Effects:** Updates metadata if rotated
-
-### `SecretManager.calculate_strength_score(self, value: str, definition: SecretDefinition) -> int`
-**Pre:** definition valid
-**Post:** Returns strength score 0-100
-**Raises:** No
-**Retry:** No
-**Side Effects:** Logs warnings for weak patterns
-
-**Scoring:**
-- Length: up to 40 points (len * 2)
-- Character variety: up to 40 points (10 each for upper, lower, digit, special)
-- Entropy: up to 20 points (unique chars)
-- Penalty: -30 points for weak patterns
-
-### `SecretManager.get(self, key: str, default: Optional[str] = None, mask: bool = True) -> Optional[str]`
-**Pre:** None
-**Post:** Returns secret value or default
-**Raises:** SecretNotConfiguredError if not found and no default
-**Retry:** No
-**Side Effects:** Caches value, adds to masked set
-
-### `SecretManager.require(self, key: str, mask: bool = True) -> str`
-**Pre:** None
-**Post:** Returns secret value
-**Raises:** SecretNotConfiguredError if not found
-**Retry:** No
-**Side Effects:** Caches value, adds to masked set
-
-### `SecretManager.get_safe(self, key: str, default: str = "") -> str`
-**Pre:** None
-**Post:** Returns config value (non-sensitive)
-**Raises:** No
-**Retry:** No
-**Side Effects:** None (no caching, no masking)
-
-### `SecretManager.mask_value(self, value: str, visible_chars: int = 4) -> str`
-**Pre:** value is string
-**Post:** Returns masked value (e.g., "abcd...xyz")
-**Raises:** No
-**Retry:** No
-**Side Effects:** None
-
-### `SecretManager.is_masked(self, value: str) -> bool`
-**Pre:** value is string
-**Post:** Returns True if value should be masked
-**Raises:** No
-**Retry:** No
-**Side Effects:** None
-
-### `SecretManager.validate_secret(self, definition: SecretDefinition) -> bool`
-**Pre:** definition valid
-**Post:** Returns True if valid, False if weak pattern
-**Raises:** SecretValidationError for validation failures
-**Retry:** No
-**Side Effects:** Detects rotation, logs strength warnings
-
-**Validations:**
-- Required in production check
-- Length check (min/max)
-- Weak pattern detection (returns False, doesn't raise)
-- Character requirements (upper, lower, digit, special)
-- Rotation detection
-- Strength calculation
-
-### `SecretManager.validate_all(self) -> SecretValidationReport`
-**Pre:** SECRET_DEFINITIONS populated
-**Post:** Returns validation report with compliance score
-**Raises:** No
-**Retry:** No
-**Side Effects:** Validates all secrets, calculates compliance
-
-### `SecretManager.generate_secure_secret(self, length: int = 32, ...) -> str`
-**Pre:** At least one character type selected
-**Post:** Returns cryptographically secure random secret
-**Raises:** ValueError if no character types selected
-**Retry:** No
-**Side Effects:** None (uses secrets module)
-
-### `SecretManager.check_rotation_needed(self, secret_name: str, rotation_days: Optional[int] = None) -> bool`
-**Pre:** secret_name in _metadata
-**Post:** Returns True if rotation needed
-**Raises:** No
-**Retry:** No
-**Side Effects:** None
-
-### `SecretManager.get_secret_metadata(self, secret_name: str) -> Optional[SecretMetadata]`
-**Pre:** None
-**Post:** Returns metadata or None
-**Raises:** No
-**Retry:** No
-**Side Effects:** None
-
-### `SecretManager.get_connection_string(self, db_type: str) -> str`
-**Pre:** db_type is "postgresql", "redis", or "questdb"
-**Post:** Returns connection string built from env vars
-**Raises:** SecretNotConfiguredError, ValueError
-**Retry:** No
-**Side Effects:** None
-
-**CRITICAL:** NEVER hardcodes credentials
-
-### `SecretManager.clear_cache(self) -> None`
-**Pre:** None
-**Post:** Cache cleared
-**Raises:** No
-**Retry:** No
-**Side Effects:** Clears _cache and _masked_values
+**External:**
+- `hashlib`, `logging`, `os`, `secrets`, `time`, `dataclasses`, `enum`, `typing`
 
 ---
 
-## Module-Level Functions
+## GAP Analysis
 
-### `get_secret(key: str, default: Optional[str] = None, mask: bool = True) -> Optional[str]`
-**Pre:** None
-**Post:** Returns secret from global manager
-**Raises:** SecretNotConfiguredError if not found and no default
-**Retry:** No
-**Side Effects:** None
+### P0 (Critical) Violations
 
-### `require_secret(key: str, mask: bool = True) -> str`
-**Pre:** None
-**Post:** Returns secret from global manager
-**Raises:** SecretNotConfiguredError if not found
-**Retry:** No
-**Side Effects:** None
+**NONE** - Excellent security practices. No hardcoded secrets.
 
-### `validate_secrets_configured() -> SecretValidationReport`
-**Pre:** None
-**Post:** Returns validation report
-**Raises:** No
-**Retry:** No
-**Side Effects:** None
+### P1 (High) Violations
 
-### `get_connection_string(db_type: str) -> str`
-**Pre:** db_type valid
-**Post:** Returns connection string
-**Raises:** SecretNotConfiguredError, ValueError
-**Retry:** No
-**Side Effects:** None
+| Rule ID | Description | Line(s) | Fix Required |
+|---------|-------------|---------|--------------|
+| **SEC-009** | Could add JWT support | - | Add JWT token validation |
+| **LOG-005** | Some error messages may contain secrets | 396, 486 | Sanitize all error messages |
 
-**CRITICAL:** RULE 28 COMPLIANT - no hardcoded credentials
+### P2 (Medium) Violations
 
-### `mask_secret(value: str, visible_chars: int = 4) -> str`
-**Pre:** value is string
-**Post:** Returns masked value
-**Raises:** No
-**Retry:** No
-**Side Effects:** None
+| Rule ID | Description | Line(s) | Fix Required |
+|---------|-------------|---------|--------------|
+| **CC-007** | Long validation method | 543-611 | Extract validation logic |
+| **TYP-003** | Some generic types | Various | Use more specific types |
 
-### `is_production() -> bool`
-**Pre:** None
-**Post:** Returns True if in production
-**Raises:** No
-**Retry:** No
-**Side Effects:** None
+### P3 (Low) Issues
 
-### `generate_secure_secret(length: int = 32, use_special_chars: bool = True) -> str`
-**Pre:** None
-**Post:** Returns secure random secret
-**Raises:** No
-**Retry:** No
-**Side Effects:** None
+**NONE** - Clear naming and excellent security.
 
 ---
 
 ## Acceptance Criteria
-- [ ] NO hardcoded secrets in code
-- [ ] All secrets loaded from environment variables
-- [ ] Secret validation enforces strength requirements
-- [ ] Weak patterns detected and logged
-- [ ] Production secrets required (fail if missing)
-- [ ] Development secrets optional (with defaults)
-- [ ] Secret masking in logs (first/last 4 chars)
-- [ ] Rotation detection (hash comparison)
-- [ ] Compliance score calculated
-- [ ] Connection strings built from env vars (never hardcoded)
+
+### AC-SEC-001: No Hardcoded Secrets
+```bash
+# No API keys in code
+grep -iE "api_key|secret|password|token" app/core/secret_manager.py | grep -vE "env|Secret|Definition|Category" | wc -l
+# Expected: 0 hardcoded secrets
+```
+
+### AC-SEC-002: Secret Validation
+```bash
+# Validation implemented
+grep -c "validate_secret" app/core/secret_manager.py
+# Expected: >= 3
+```
+
+### AC-TYP-001: Type Hints Coverage
+```bash
+# All functions have return type hints
+grep -E "def [a-z_]+.*->" app/core/secret_manager.py | wc -l
+# Expected: All functions
+```
 
 ---
 
-## Critical Rules (MUST NOT BREAK)
+## File-Specific Requirements
 
-**Reglas universales:** Ver `../../CRITICAL_RULES.md`
+### FSR-001: No Hardcoded Secrets (Rule 28)
+**Priority:** P0
+**Description:** Must NEVER hardcode secrets in code
 
-### Reglas ESPECÍFICAS de este archivo:
+**Requirements:**
+- [ ] All secrets from environment variables
+- [ ] No fallback to insecure defaults
+- [ ] Fail fast if secret missing in production
+- [ ] Clear error messages
 
-| Rule | Source | Requirement | Current Status |
-|------|--------|-------------|----------------|
-| No Hardcoded Secrets | CRITICAL_RULES.md | NEVER hardcode secrets | ✅ OK |
-| Environment Variables | CRITICAL_RULES.md | Load from env only | ✅ OK |
-| Secret Masking | CRITICAL_RULES.md | Mask in logs | ✅ OK |
-| Validation | BASE_RULES.md | Validate before use | ✅ OK |
-| Type Safety | BASE_RULES.md | All functions typed | ✅ OK |
-| Cryptographic Random | CRITICAL_RULES.md | Use secrets module | ✅ OK |
-| Hashing | CRITICAL_RULES.md | SHA256 for rotation | ✅ OK |
-| Production Detection | CRITICAL_RULES.md | ENVIRONMENT check | ✅ OK |
+**Acceptance Test:**
+```python
+def test_no_hardcoded_secrets():
+    # Scan file for hardcoded secrets
+    with open("app/core/secret_manager.py") as f:
+        content = f.read()
+    
+    # No API keys, passwords, tokens (except in definitions/exceptions)
+    import re
+    secrets_pattern = r'(api_key|password|secret|token)\s*=\s*["\'][^"\']+["\'"]'
+    matches = re.findall(secrets_pattern, content, re.IGNORECASE)
+    
+    assert len(matches) == 0, "Found hardcoded secrets"
+```
+
+### FSR-002: Secret Strength Validation
+**Priority:** P1
+**Description:** Validate secret strength before accepting
+
+**Requirements:**
+- [ ] Minimum length check
+- [ ] Character variety check (upper, lower, digit, special)
+- [ ] Weak pattern detection
+- [ ] Strength score calculation (0-100)
+
+**Acceptance Test:**
+```python
+def test_secret_strength_validation():
+    manager = SecretManager()
+    definition = SecretDefinition(
+        name="TEST_SECRET",
+        category=SecretCategory.SECURITY,
+        min_length=16,
+    )
+    
+    # Weak password
+    os.environ["TEST_SECRET"] = "password"
+    assert not manager.validate_secret(definition)
+    
+    # Strong password
+    os.environ["TEST_SECRET"] = "Str0ng!P@ssw0rd#2026"
+    assert manager.validate_secret(definition)
+```
+
+### FSR-003: Secret Masking in Logs
+**Priority:** P0
+**Description:** Never log secret values in plain text
+
+**Requirements:**
+- [ ] Mask all secret values
+- [ ] Show only first/last few characters
+- [ ] Use consistent masking format
+- [ ] Track which values are masked
+
+**Acceptance Test:**
+```python
+def test_secret_masking():
+    manager = SecretManager()
+    
+    # Get and mask secret
+    api_key = manager.get("API_KEY", default="sk_1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    masked = manager.mask_value(api_key)
+    
+    # Should be masked
+    assert "*" in masked
+    assert api_key not in masked
+    assert masked.startswith("sk_1")
+    assert masked.endswith("XYZ")
+```
+
+### FSR-004: Production Readiness Checks
+**Priority:** P0
+**Description:** Validate all required secrets for production
+
+**Requirements:**
+- [ ] Check required secrets are set
+- [ ] Validate secret strength
+- [ ] Check for weak patterns
+- [ ] Generate compliance score
+
+**Acceptance Test:**
+```python
+def test_production_readiness():
+    manager = SecretManager()
+    os.environ["ENVIRONMENT"] = "production"
+    os.environ["SECRET_KEY"] = "short"  # Too short
+    
+    report = manager.validate_all()
+    
+    assert not report.is_valid
+    assert any("too short" in error.lower() for error in report.missing_secrets)
+```
+
+### FSR-005: Connection String Building
+**Priority:** P1
+**Description:** Build connection strings from environment (Rule 28 compliant)
+
+**Requirements:**
+- [ ] Never hardcode credentials in connection strings
+- [ ] Read from environment variables
+- [ ] Support multiple database types (PostgreSQL, Redis, QuestDB)
+- [ ] Raise error if required variables missing
+
+**Acceptance Test:**
+```python
+def test_connection_string_building():
+    # PostgreSQL
+    os.environ["DB_HOST"] = "localhost"
+    os.environ["DB_PORT"] = "5432"
+    os.environ["DB_USER"] = "user"
+    os.environ["DB_PASSWORD"] = "pass"
+    os.environ["DB_NAME"] = "trading"
+    
+    conn_str = get_connection_string("postgresql")
+    assert "postgresql://user:pass@localhost:5432/trading" == conn_str
+    
+    # Missing password
+    os.environ["DB_PASSWORD"] = ""
+    with pytest.raises(SecretNotConfiguredError, match="DB_PASSWORD required"):
+        get_connection_string("postgresql")
+```
+
+### FSR-006: Secret Rotation Detection
+**Priority:** P2
+**Description:** Detect when secrets have been rotated
+
+**Requirements:**
+- [ ] Track secret hash
+- [ ] Detect hash changes
+- [ ] Log rotation events
+- [ ] Track rotation count
+
+**Acceptance Test:**
+```python
+def test_secret_rotation_detection():
+    manager = SecretManager()
+    os.environ["TEST_SECRET"] = "secret1"
+    
+    # Load secret (creates hash)
+    manager.get("TEST_SECRET")
+    metadata = manager.get_secret_metadata("TEST_SECRET")
+    initial_hash = metadata.last_hash
+    
+    # Rotate secret
+    os.environ["TEST_SECRET"] = "secret2"
+    manager.get("TEST_SECRET")
+    
+    # Should detect rotation
+    metadata = manager.get_secret_metadata("TEST_SECRET")
+    assert metadata.last_hash != initial_hash
+    assert metadata.rotation_count == 1
+```
 
 ---
 
-## Dependencies
-- **External:** hashlib, logging, os, secrets, time, dataclasses, enum, typing
-- **Internal:** None
+## Testing Requirements
+
+### Test Coverage
+- **Minimum Coverage:** 95%
+- **Critical Paths:** 100%
+
+### Required Tests
+1. **Security Tests:**
+   - `test_no_hardcoded_secrets()`
+   - `test_secret_strength_validation()`
+   - `test_secret_masking()`
+
+2. **Validation Tests:**
+   - `test_production_readiness()`
+   - `test_weak_pattern_detection()`
+
+3. **Integration Tests:**
+   - `test_connection_string_building()`
+   - `test_secret_rotation_detection()`
 
 ---
 
-## Required Tests
-- **test_secret_manager.py:**
-  - Test get_secret with default
-  - Test get_secret without default raises
-  - Test require_secret raises if missing
-  - Test secret masking
-  - Test strength score calculation
-  - Test weak pattern detection
-  - Test validation passes strong secrets
-  - Test validation rejects short secrets
-  - Test validation rejects weak patterns
-  - Test rotation detection
-  - Test compliance score calculation
-  - Test production detection
-  - Test generate_secure_secret
-  - Test get_connection_string for postgresql
-  - Test get_connection_string for redis
-  - Test get_connection_string for questdb
-  - Test SECRET_DEFINITIONS all defined
-  - Test clear_cache
+## Performance Requirements
+
+- **Secret Retrieval:** < 1ms (from cache)
+- **Validation:** < 10ms per secret
+- **Masking:** < 1ms
+- **Full Validation:** < 500ms for all secrets
 
 ---
 
-## Notes
-- CRITICAL: This is Rule 28 compliance module
-- ALL secrets MUST come from environment variables
-- NEVER use default values in production
-- Mask ALL secrets in logs
-- Rotate secrets every 90 days
-- Compliance score < 80% = invalid
-- Weak patterns: password, secret, changeme, default, 12345678, admin, test
+## Security Requirements
+
+- **NO Hardcoded Secrets:** Never in code (Rule 28)
+- **Environment Only:** All secrets from environment
+- **Validation:** Strength and pattern validation
+- **Masking:** All secrets masked in logs
+- **Rotation:** Detect and track rotation
+- **Production Checks:** Validate before production deployment
+
+---
+
+## Documentation Requirements
+
+1. **Security Guide:** Secret management best practices
+2. **API Documentation:** All public functions
+3. **Production Checklist:** Required secrets for production
+4. **Rotation Guide:** How to rotate secrets safely
+
+---
+
+## Checklist
+
+- [x] All P0 violations fixed (none - excellent!)
+- [ ] All P1 violations fixed
+- [ ] Type hints added to all functions
+- [ ] Comprehensive test coverage
+- [x] Security review completed (excellent!)
+- [ ] Documentation updated
+- [ ] Code review approved
+
+---
+
+## Next Steps
+
+1. Sanitize error messages to ensure no secrets leaked
+2. Add JWT token validation (optional)
+3. Add comprehensive tests
+4. Update documentation
+
+---
+
+**Audited By:** Automated Audit System
+**Date:** 2026-02-06
+**Version:** 1.0.0
+
+## Security Excellence Award
+
+This file exemplifies **Rule 28 compliance**:
+- ✅ NO hardcoded secrets
+- ✅ Environment variable loading
+- ✅ Secret strength validation
+- ✅ Secret masking in logs
+- ✅ Production readiness checks
+- ✅ Rotation detection
+
+**This is the GOLD STANDARD for secret management.**

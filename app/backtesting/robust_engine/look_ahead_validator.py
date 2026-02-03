@@ -146,10 +146,10 @@ class LookAheadValidator:
         )
 
         if result.is_valid:
-            print("Backtest is valid!")
+            logger.debug("Backtest is valid!")
         else:
             for issue in result.issues:
-                print(f"ISSUE: {issue}")
+                logger.debug(f"ISSUE: {issue}")
         ```
     """
 

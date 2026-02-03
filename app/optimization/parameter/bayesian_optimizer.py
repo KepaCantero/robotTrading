@@ -8,16 +8,15 @@ Implements Bayesian optimization with:
 - Efficient for expensive evaluations
 """
 
-import asyncio
 import logging
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from tqdm import tqdm
 
 from .base_optimizer import BaseOptimizer, OptimizationConfig, OptimizationResult
 from .models import ParameterGrid, ParameterRange, ParameterScale, ParameterType
-from .trial import TrialHistory, TrialResult, TrialStatus, create_trial_id
+from .trial import TrialHistory, TrialResult, TrialStatus
 
 # Try to import Optuna (optional dependency)
 try:
@@ -80,7 +79,7 @@ class BayesianOptimizer(BaseOptimizer):
             return train_and_evaluate(model)["accuracy"]
 
         result = await optimizer.optimize(objective, param_grid)
-        print(f"Best params: {result.best_params}")
+        logger.debug(f"Best params: {result.best_params}")
         ```
     """
 

@@ -5,8 +5,6 @@ Independent exception definitions to avoid circular imports
 
 from typing import Any, Dict, Optional
 
-from sqlalchemy.exc import DatabaseError
-
 
 class AlgoTradingError(Exception):
     """Base exception for all AlgoTrading errors."""
@@ -55,12 +53,16 @@ class BacktestError(AlgoTradingError):
     """Exception raised for backtesting errors."""
 
 
-class DatabaseError(AlgoTradingError):
+class AlgoTradingDatabaseError(AlgoTradingError):
     """Exception raised for database errors."""
 
 
 class APIError(AlgoTradingError):
     """Exception raised for API errors."""
+
+
+class AuthenticationError(AlgoTradingError):
+    """Exception raised for authentication errors."""
 
 
 def raise_configuration_error(
@@ -69,6 +71,8 @@ def raise_configuration_error(
     details: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Helper function to raise configuration errors."""
+    if not message or not message.strip():
+        raise ValueError("message must be a non-empty string")
     raise ConfigurationError(message, error_code, details)
 
 
@@ -78,6 +82,8 @@ def raise_validation_error(
     details: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Helper function to raise validation errors."""
+    if not message or not message.strip():
+        raise ValueError("message must be a non-empty string")
     raise ValidationError(message, error_code, details)
 
 
@@ -87,6 +93,8 @@ def raise_business_logic_error(
     details: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Helper function to raise business logic errors."""
+    if not message or not message.strip():
+        raise ValueError("message must be a non-empty string")
     raise BusinessLogicError(message, error_code, details)
 
 
@@ -96,6 +104,8 @@ def raise_market_data_error(
     details: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Helper function to raise market data errors."""
+    if not message or not message.strip():
+        raise ValueError("message must be a non-empty string")
     raise MarketDataError(message, error_code, details)
 
 
@@ -105,6 +115,8 @@ def raise_trading_error(
     details: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Helper function to raise trading errors."""
+    if not message or not message.strip():
+        raise ValueError("message must be a non-empty string")
     raise TradingError(message, error_code, details)
 
 
@@ -114,4 +126,17 @@ def raise_database_error(
     details: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Helper function to raise database errors."""
-    raise DatabaseError(message, error_code, details)
+    if not message or not message.strip():
+        raise ValueError("message must be a non-empty string")
+    raise AlgoTradingDatabaseError(message, error_code, details)
+
+
+def raise_authentication_error(
+    message: str,
+    error_code: Optional[str] = None,
+    details: Optional[Dict[str, Any]] = None,
+) -> None:
+    """Helper function to raise authentication errors."""
+    if not message or not message.strip():
+        raise ValueError("message must be a non-empty string")
+    raise AuthenticationError(message, error_code, details)

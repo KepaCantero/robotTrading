@@ -11,6 +11,10 @@ Compliance Integration (2026-01-28): Added THE ONLY Compliance Engine.
 USE ComplianceEngine FOR EVERYTHING.
 """
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 # Basic utilities - always import these
 from app.core.config_loader import (
     YAMLConfigLoader,
@@ -45,9 +49,10 @@ try:
     )
 
     _compliance_engine_available = True
-except ImportError:
+except ImportError as e:
     # Import error - likely due to NumPy/matplotlib compatibility issues
     # Set these to None to prevent import errors when only using other core modules
+    logger.error("Failed to import ComplianceEngine", exc_info=True)
     ComplianceEngine = None  # type: ignore
     PreTradeAnalysis = None  # type: ignore
     PostTradeAnalysis = None  # type: ignore
@@ -68,8 +73,9 @@ try:
     )
 
     _compliance_integration_available = True
-except ImportError:
+except ImportError as e:
     # Import error - likely due to NumPy/matplotlib compatibility issues
+    logger.error("Failed to import ComplianceIntegrationEngine (legacy)", exc_info=True)
     ComplianceIntegrationEngineDeprecated = None  # type: ignore
     get_compliance_integration_engine_deprecated = None  # type: ignore
     quick_pre_trade_check = None  # type: ignore

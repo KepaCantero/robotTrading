@@ -187,8 +187,8 @@ class AlphaModel(ABC):
                     signal = self.generate_alpha(symbol, market_data[symbol], timestamp)
                     if signal and signal.confidence >= self.min_confidence:
                         signals.append(signal)
-                except Exception as e:
-                    logger.error(f"Error generating alpha for {symbol}: {e}")
+                except (ValueError, TypeError, KeyError) as e:
+                    logger.error("Error generating alpha", symbol=symbol, error=str(e), exc_info=True)
         return signals
 
     def analyze_alpha_decay(
@@ -618,8 +618,8 @@ class MultiFactorAlphaModel(AlphaModel):
                 signal = model.generate_alpha(symbol, market_data, timestamp)
                 if signal:
                     signals.append(signal)
-            except Exception as e:
-                logger.error(f"Error in sub-model {model.name}: {e}")
+            except (ValueError, TypeError, KeyError, IndexError, AttributeError) as e:
+                logger.error("Error in sub-model", model_name=model.name, error=str(e), exc_info=True)
 
         if not signals:
             return None

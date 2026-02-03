@@ -5,14 +5,16 @@ This module implements various ensemble voting mechanisms to combine
 signals from multiple trading strategies into a single decision.
 """
 
+import logging
 from collections import Counter
-from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 import numpy as np
 
 from app.ensemble.models import EnsembleConfig, EnsembleMethod, EnsembleSignal
 from app.models.signal import Signal, SignalType
+
+logger = logging.getLogger(__name__)
 
 
 class EnsembleVoting:
@@ -55,9 +57,12 @@ class EnsembleVoting:
             self.strategy_weights = config.strategy_weights or self._initialize_weights()
 
             # Track historical performance for weighted voting
-            self.performance_history: Dict[str, List[float]] = {s: [] for s in self.strategies}
+            self.performance_history: Dict[str, List[float]] = {
+                s: [] for s in self.strategies
+            }
 
         except (TypeError, AttributeError) as e:
+            logger.error("Invalid ensemble configuration", exc_info=True)
             raise ValueError(f"Invalid ensemble configuration: {e}") from e
 
     def combine_signals(self, signals: List[Signal]) -> Optional[EnsembleSignal]:
@@ -107,7 +112,8 @@ class EnsembleVoting:
             else:
                 raise ValueError(f"Unsupported ensemble method: {self.method}")
 
-        except Exception as e:
+        except Exception:
+            logger.error("Signal combination failed", exc_info=True)
             return None
 
     def _initialize_weights(self) -> Dict[str, float]:
@@ -148,6 +154,7 @@ class EnsembleVoting:
             return float(agreement)
 
         except Exception:
+            logger.error("Calculation failed", exc_info=True)
             return 0.0
 
     def _majority_voting(self, signals: List[Signal], agreement: float) -> EnsembleSignal:
@@ -172,14 +179,7 @@ class EnsembleVoting:
             avg_confidence = sum(s.confidence for s in signals) / len(signals)
 
             # Build vote dictionary
-            strategy_votes = {
-                s.symbol
-                if s.symbol
-                else self._infer_strategy(s): (
-                    s.signal_type if isinstance(s.signal_type, str) else s.signal_type.value
-                )
-                for s in signals
-            }
+            strategy_votes = self._build_strategy_votes(signals)
 
             # Get symbol from first signal
             symbol = signals[0].symbol if signals else "UNKNOWN"
@@ -196,6 +196,7 @@ class EnsembleVoting:
             )
 
         except Exception as e:
+            logger.error("Majority voting failed", exc_info=True)
             raise RuntimeError(f"Majority voting failed: {e}") from e
 
     def _weighted_voting(self, signals: List[Signal], agreement: float) -> EnsembleSignal:
@@ -228,25 +229,19 @@ class EnsembleVoting:
             winning_type = max(signal_scores, key=signal_scores.get)
 
             # Calculate weighted confidence
-            weighted_confidence = sum(
-                s.confidence * self.strategy_weights.get(strategy, 0.0)
-                for s, strategy in zip(signals, self.strategies)
-            )
+            weighted_confidence = self._calculate_weighted_confidence(signals)
 
             # Build vote dictionary
-            strategy_votes = {
-                self._infer_strategy(s): (
-                    s.signal_type if isinstance(s.signal_type, str) else s.signal_type.value
-                )
-                for s in signals
-            }
+            strategy_votes = self._build_strategy_votes(signals)
 
             # Get symbol from first signal
             symbol = signals[0].symbol if signals else "UNKNOWN"
 
             return EnsembleSignal(
                 symbol=symbol,
-                signal_type=winning_type if isinstance(winning_type, str) else winning_type.value,
+                signal_type=(
+                    winning_type if isinstance(winning_type, str) else winning_type.value
+                ),
                 confidence=weighted_confidence,
                 agreement=agreement,
                 strategy_votes=strategy_votes,
@@ -254,6 +249,7 @@ class EnsembleVoting:
             )
 
         except Exception as e:
+            logger.error("Weighted voting failed", exc_info=True)
             raise RuntimeError(f"Weighted voting failed: {e}") from e
 
     def _soft_voting(self, signals: List[Signal], agreement: float) -> EnsembleSignal:
@@ -292,19 +288,16 @@ class EnsembleVoting:
             max_confidence = avg_confidence_by_type[winning_type]
 
             # Build vote dictionary
-            strategy_votes = {
-                self._infer_strategy(s): (
-                    s.signal_type if isinstance(s.signal_type, str) else s.signal_type.value
-                )
-                for s in signals
-            }
+            strategy_votes = self._build_strategy_votes(signals)
 
             # Get symbol from first signal
             symbol = signals[0].symbol if signals else "UNKNOWN"
 
             return EnsembleSignal(
                 symbol=symbol,
-                signal_type=winning_type if isinstance(winning_type, str) else winning_type.value,
+                signal_type=(
+                    winning_type if isinstance(winning_type, str) else winning_type.value
+                ),
                 confidence=max_confidence,
                 agreement=agreement,
                 strategy_votes=strategy_votes,
@@ -312,6 +305,7 @@ class EnsembleVoting:
             )
 
         except Exception as e:
+            logger.error("Soft voting failed", exc_info=True)
             raise RuntimeError(f"Soft voting failed: {e}") from e
 
     def _rank_averaging(self, signals: List[Signal], agreement: float) -> EnsembleSignal:
@@ -355,19 +349,16 @@ class EnsembleVoting:
             confidence = 100.0 * (1 - best_avg_rank / len(signals))
 
             # Build vote dictionary
-            strategy_votes = {
-                self._infer_strategy(s): (
-                    s.signal_type if isinstance(s.signal_type, str) else s.signal_type.value
-                )
-                for s in signals
-            }
+            strategy_votes = self._build_strategy_votes(signals)
 
             # Get symbol from first signal
             symbol = signals[0].symbol if signals else "UNKNOWN"
 
             return EnsembleSignal(
                 symbol=symbol,
-                signal_type=winning_type if isinstance(winning_type, str) else winning_type.value,
+                signal_type=(
+                    winning_type if isinstance(winning_type, str) else winning_type.value
+                ),
                 confidence=confidence,
                 agreement=agreement,
                 strategy_votes=strategy_votes,
@@ -375,6 +366,7 @@ class EnsembleVoting:
             )
 
         except Exception as e:
+            logger.error("Rank averaging failed", exc_info=True)
             raise RuntimeError(f"Rank averaging failed: {e}") from e
 
     def _performance_weighted(self, signals: List[Signal], agreement: float) -> EnsembleSignal:
@@ -409,26 +401,22 @@ class EnsembleVoting:
             # Get winning signal type
             winning_type = max(signal_scores, key=signal_scores.get)
 
-            # Calculate weighted confidence
-            weighted_confidence = sum(
-                s.confidence * perf_weights.get(strategy, 0.0)
-                for s, strategy in zip(signals, self.strategies)
+            # Calculate weighted confidence using performance weights
+            weighted_confidence = self._calculate_weighted_confidence_with_weights(
+                signals, perf_weights
             )
 
             # Build vote dictionary
-            strategy_votes = {
-                self._infer_strategy(s): (
-                    s.signal_type if isinstance(s.signal_type, str) else s.signal_type.value
-                )
-                for s in signals
-            }
+            strategy_votes = self._build_strategy_votes(signals)
 
             # Get symbol from first signal
             symbol = signals[0].symbol if signals else "UNKNOWN"
 
             return EnsembleSignal(
                 symbol=symbol,
-                signal_type=winning_type if isinstance(winning_type, str) else winning_type.value,
+                signal_type=(
+                    winning_type if isinstance(winning_type, str) else winning_type.value
+                ),
                 confidence=weighted_confidence,
                 agreement=agreement,
                 strategy_votes=strategy_votes,
@@ -436,6 +424,7 @@ class EnsembleVoting:
             )
 
         except Exception as e:
+            logger.error("Performance-weighted voting failed", exc_info=True)
             raise RuntimeError(f"Performance-weighted voting failed: {e}") from e
 
     def _confidence_weighted(self, signals: List[Signal], agreement: float) -> EnsembleSignal:
@@ -473,24 +462,21 @@ class EnsembleVoting:
             winning_type = max(signal_scores, key=signal_scores.get)
 
             # Calculate weighted confidence
-            weighted_confidence = sum(
-                s.confidence * (s.confidence / total_confidence) for s in signals
+            weighted_confidence = self._calculate_confidence_weighted_confidence(
+                signals, total_confidence
             )
 
             # Build vote dictionary
-            strategy_votes = {
-                self._infer_strategy(s): (
-                    s.signal_type if isinstance(s.signal_type, str) else s.signal_type.value
-                )
-                for s in signals
-            }
+            strategy_votes = self._build_strategy_votes(signals)
 
             # Get symbol from first signal
             symbol = signals[0].symbol if signals else "UNKNOWN"
 
             return EnsembleSignal(
                 symbol=symbol,
-                signal_type=winning_type if isinstance(winning_type, str) else winning_type.value,
+                signal_type=(
+                    winning_type if isinstance(winning_type, str) else winning_type.value
+                ),
                 confidence=weighted_confidence,
                 agreement=agreement,
                 strategy_votes=strategy_votes,
@@ -498,6 +484,7 @@ class EnsembleVoting:
             )
 
         except Exception as e:
+            logger.error("Confidence-weighted voting failed", exc_info=True)
             raise RuntimeError(f"Confidence-weighted voting failed: {e}") from e
 
     def _calculate_performance_weights(self) -> Dict[str, float]:
@@ -531,6 +518,7 @@ class EnsembleVoting:
             return {k: v / total for k, v in weights.items()}
 
         except Exception:
+            logger.error("Performance weight calculation failed", exc_info=True)
             return self._initialize_weights()
 
     def update_performance(self, strategy: str, performance: float) -> None:
@@ -612,6 +600,73 @@ class EnsembleVoting:
         # Fallback: use signal source
         return "unknown"
 
+    def _build_strategy_votes(self, signals: List[Signal]) -> Dict[str, str]:
+        """Build strategy votes dictionary from signals.
+
+        Args:
+            signals: List of signals
+
+        Returns:
+            Dictionary mapping strategy/source to signal type
+        """
+        strategy_votes = {}
+        for signal in signals:
+            strategy = signal.symbol if signal.symbol else self._infer_strategy(signal)
+            signal_type_str = (
+                signal.signal_type
+                if isinstance(signal.signal_type, str)
+                else signal.signal_type.value
+            )
+            strategy_votes[strategy] = signal_type_str
+        return strategy_votes
+
+    def _calculate_weighted_confidence(self, signals: List[Signal]) -> float:
+        """Calculate weighted confidence using strategy weights.
+
+        Args:
+            signals: List of signals
+
+        Returns:
+            Weighted confidence score
+        """
+        return sum(
+            s.confidence * self.strategy_weights.get(strategy, 0.0)
+            for s, strategy in zip(signals, self.strategies)
+        )
+
+    def _calculate_weighted_confidence_with_weights(
+        self, signals: List[Signal], weights: Dict[str, float]
+    ) -> float:
+        """Calculate weighted confidence using provided weights.
+
+        Args:
+            signals: List of signals
+            weights: Strategy weights to use
+
+        Returns:
+            Weighted confidence score
+        """
+        return sum(
+            s.confidence * weights.get(strategy, 0.0)
+            for s, strategy in zip(signals, self.strategies)
+        )
+
+    def _calculate_confidence_weighted_confidence(
+        self, signals: List[Signal], total_confidence: float
+    ) -> float:
+        """Calculate confidence-weighted confidence score.
+
+        Args:
+            signals: List of signals
+            total_confidence: Sum of all signal confidences
+
+        Returns:
+            Weighted confidence score
+        """
+        return sum(
+            s.confidence * (s.confidence / total_confidence) for s in signals
+        )
+
     def calculate_disagreement(self, signals: List[Signal]) -> float:
         """Calculate disagreement level among signals.
 
@@ -660,6 +715,7 @@ class EnsembleVoting:
             return 0.0
 
         except Exception:
+            logger.error("Calculation failed", exc_info=True)
             return 0.0
 
     def get_voting_summary(self, signals: List[Signal]) -> Dict[str, Any]:
@@ -696,6 +752,7 @@ class EnsembleVoting:
             }
 
         except Exception:
+            logger.error("Voting summary calculation failed", exc_info=True)
             return {
                 "total_signals": len(signals) if signals else 0,
                 "agreement": 0.0,

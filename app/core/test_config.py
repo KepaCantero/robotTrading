@@ -3,6 +3,7 @@ Test Configuration and Environment Isolation
 Testing Reviewer Audit - Phase 1: Critical Fixes
 """
 
+import logging
 import os
 import tempfile
 from pathlib import Path
@@ -12,6 +13,8 @@ from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
 from app.core.exceptions import ConfigurationError
+
+logger = logging.getLogger(__name__)
 
 
 class TestEnvironmentConfig(BaseSettings):
@@ -86,13 +89,17 @@ class TestConfigManager:
 
     def cleanup_test_environment(self) -> None:
         """Cleanup test environment and restore original state."""
-        # Restore original environment
-        self._restore_original_environment()
+        try:
+            # Restore original environment
+            self._restore_original_environment()
 
-        # Cleanup temporary directories
-        self._cleanup_temp_directories()
+            # Cleanup temporary directories
+            self._cleanup_temp_directories()
 
-        self._test_config = None
+            self._test_config = None
+        except Exception as e:
+            logger.error("Error during test environment cleanup", exc_info=True)
+            raise
 
     def _create_temp_directories(self) -> None:
         """Create temporary directories for test isolation."""

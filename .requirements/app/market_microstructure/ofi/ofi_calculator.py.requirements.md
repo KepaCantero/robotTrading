@@ -109,6 +109,16 @@ class OFICalculator:
 
 ---
 
+
+## Audit Status
+
+| **Audit Status** | **PASSED** |
+| **Last Audit Date** | 2026-02-05T12:00:00Z |
+| **Auditor** | Claude Code (Ralphex Audit v2.0) |
+| **GAPs Found** | 0 P0, 0 P1, 0 P2, 2 P3 |
+| **Notes** | All critical rules verified. scipy.signal import may be unused (P3). See Critical Rules section for details. |
+
+
 ## Critical Rules (MUST NOT BREAK)
 
 **Reglas universales:** Ver `../../BASE_RULES.md` (96+ rules across 14 categories)
@@ -119,7 +129,7 @@ class OFICalculator:
 |------|--------|-------------|----------------|
 | TRD-001 | BASE_RULES | Validate covariance matrix positive semidefinite | ✅ OK - Not applicable (no covariance) |
 | TRD-002 | BASE_RULES | Validate orders before execution | ✅ OK - Validation in calculate_ofi |
-| TRD-005 | BASE_RULES | Price validation | ❌ GAP - mid_price checked for zero but not negative/NaN |
+| TRD-005 | BASE_RULES | Price validation | ✅ FIXED - Added _validate_price() with negative/zero/NaN checks |
 | ARCH-001 | BASE_RULES | Layered architecture dependencies inward | ✅ OK - Only imports from models |
 | CC-006 | BASE_RULES | Explicit error handling | ✅ OK - Uses validation returns, logs exceptions |
 | TYP-001 | BASE_RULES | 100% type coverage | ✅ OK - All functions typed |

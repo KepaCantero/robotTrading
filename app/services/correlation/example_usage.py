@@ -5,6 +5,8 @@ This example demonstrates how to use the CorrelationAnalyzer
 to calculate real correlation from historical prices.
 """
 
+import logging
+
 import asyncio
 from decimal import Decimal
 
@@ -35,16 +37,16 @@ async def example_basic_usage():
     symbols = ["AAPL", "MSFT", "GOOGL", "TSLA"]
     correlation_matrix = await analyzer.calculate_correlation_matrix(symbols)
 
-    print("Correlation Matrix:")
-    print(correlation_matrix)
+    logger.debug("Correlation Matrix:")
+    logger.debug(correlation_matrix)
 
     # Get pairwise correlation
     correlation = await analyzer.get_correlation("AAPL", "MSFT")
-    print(f"\nAAPL-MSFT Correlation: {correlation:.3f}")
+    logger.debug(f"\nAAPL-MSFT Correlation: {correlation:.3f}")
 
     # Get statistics
     stats = analyzer.get_statistics()
-    print(f"\nStatistics: {stats}")
+    logger.debug(f"\nStatistics: {stats}")
 
 
 async def example_with_background_updates():
@@ -63,7 +65,7 @@ async def example_with_background_updates():
     # Correlation is now automatically updated in background
     # Get correlation quickly from cache
     correlation = await analyzer.get_correlation("AAPL", "MSFT")
-    print(f"Correlation (from cache): {correlation:.3f}")
+    logger.debug(f"Correlation (from cache): {correlation:.3f}")
 
     # Later, stop background updates
     await analyzer.stop_background_updates()
@@ -116,8 +118,8 @@ def example_with_portfolio_risk_manager():
     # Assess portfolio risk (uses real correlation from analyzer)
     risk_assessment = risk_manager.assess_portfolio_risk(portfolio)
 
-    print(f"Risk Level: {risk_assessment['risk_level']}")
-    print(f"Correlations: {risk_assessment['risk_metrics']['correlations']}")
+    logger.debug(f"Risk Level: {risk_assessment['risk_level']}")
+    logger.debug(f"Correlations: {risk_assessment['risk_metrics']['correlations']}")
 
     # Check for correlation violations
     correlation_violations = [
@@ -125,9 +127,9 @@ def example_with_portfolio_risk_manager():
     ]
 
     if correlation_violations:
-        print("High correlations detected:")
+        logger.debug("High correlations detected:")
         for violation in correlation_violations:
-            print(f"  {violation['pair']}: {violation['current_value']:.3f}")
+            logger.debug(f"  {violation['pair']}: {violation['current_value']:.3f}")
 
 
 async def example_fallback_behavior():
@@ -148,32 +150,32 @@ async def example_fallback_behavior():
 
     # Try to get correlation (will use fallback if real data unavailable)
     correlation = await analyzer.get_correlation("AAPL", "MSFT")
-    print(f"AAPL-MSFT Correlation: {correlation:.3f}")  # Should be 0.5 (same sector)
+    logger.debug(f"AAPL-MSFT Correlation: {correlation:.3f}")  # Should be 0.5 (same sector)
 
     correlation = await analyzer.get_correlation("AAPL", "JNJ")
-    print(f"AAPL-JNJ Correlation: {correlation:.3f}")  # Should be 0.3 (same market)
+    logger.debug(f"AAPL-JNJ Correlation: {correlation:.3f}")  # Should be 0.3 (same market)
 
 
 async def main():
     """Run all examples."""
-    print("=" * 60)
-    print("Example 1: Basic Usage")
-    print("=" * 60)
+    logger.debug("=" * 60)
+    logger.debug("Example 1: Basic Usage")
+    logger.debug("=" * 60)
     await example_basic_usage()
 
-    print("\n" + "=" * 60)
-    print("Example 2: Background Updates")
-    print("=" * 60)
+    logger.debug("\n" + "=" * 60)
+    logger.debug("Example 2: Background Updates")
+    logger.debug("=" * 60)
     await example_with_background_updates()
 
-    print("\n" + "=" * 60)
-    print("Example 3: Portfolio Risk Manager Integration")
-    print("=" * 60)
+    logger.debug("\n" + "=" * 60)
+    logger.debug("Example 3: Portfolio Risk Manager Integration")
+    logger.debug("=" * 60)
     example_with_portfolio_risk_manager()
 
-    print("\n" + "=" * 60)
-    print("Example 4: Fallback Behavior")
-    print("=" * 60)
+    logger.debug("\n" + "=" * 60)
+    logger.debug("Example 4: Fallback Behavior")
+    logger.debug("=" * 60)
     await example_fallback_behavior()
 
 

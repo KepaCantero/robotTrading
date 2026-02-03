@@ -9,11 +9,14 @@ Implements Tomasini's order state machine methodology from "Trading Systems":
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class OrderSide(Enum):
@@ -147,7 +150,7 @@ class Order:
     on_cancel: Optional[Callable[[], None]] = None
     on_reject: Optional[Callable[[str], None]] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate order invariants."""
         if not self.order_id:
             raise ValueError("Order ID cannot be empty")
@@ -171,7 +174,7 @@ class Order:
         """
         event_record = {
             "event": event.value,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "status": self.status.value,
             "data": data or {},
         }
@@ -294,7 +297,7 @@ class Order:
             )
 
         self._transition_to(OrderStatus.SUBMITTED, OrderEvent.SUBMIT)
-        self.submitted_at = datetime.utcnow()
+        self.submitted_at = datetime.now(timezone.utc)
 
     def acknowledge(self, broker_order_id: Optional[str] = None) -> None:
         """
@@ -360,7 +363,7 @@ class Order:
             fill_id=f"{self.order_id}_fill_{len(self.fills) + 1}",
             quantity=qty_to_fill,
             price=fill_price,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             fee=fee,
             liquidity=liquidity,
         )
@@ -375,7 +378,7 @@ class Order:
         # Update status
         if self.filled_quantity == self.quantity:
             self._transition_to(OrderStatus.FILLED, OrderEvent.FILL)
-            self.filled_at = datetime.utcnow()
+            self.filled_at = datetime.now(timezone.utc)
         else:
             self._transition_to(OrderStatus.PARTIALLY_FILLED, OrderEvent.PARTIAL_FILL)
 
@@ -385,7 +388,7 @@ class Order:
                 self.on_fill(fill)
             except Exception:
                 # Log but don't raise - callbacks should be robust
-                pass
+                logger.error("Error in on_fill callback for order %s", self.order_id, exc_info=True)
 
     def request_cancel(self) -> None:
         """
@@ -421,14 +424,16 @@ class Order:
             )
 
         self._transition_to(OrderStatus.CANCELLED, OrderEvent.CANCEL_CONFIRM)
-        self.cancelled_at = datetime.utcnow()
+        self.cancelled_at = datetime.now(timezone.utc)
 
         # Trigger callback
         if self.on_cancel:
             try:
                 self.on_cancel()
             except Exception:
-                pass
+                logger.error(
+                    "Error in on_cancel callback for order %s", self.order_id, exc_info=True
+                )
 
     def reject(self, reason: str) -> None:
         """
@@ -454,7 +459,9 @@ class Order:
             try:
                 self.on_reject(reason)
             except Exception:
-                pass
+                logger.error(
+                    "Error in on_reject callback for order %s", self.order_id, exc_info=True
+                )
 
     def suspend(self) -> None:
         """
@@ -494,7 +501,12 @@ class Order:
             ValueError: If order is not in a valid state for expiration
         """
         # Terminal states cannot expire
-        if self.status in (OrderStatus.FILLED, OrderStatus.CANCELLED, OrderStatus.REJECTED, OrderStatus.EXPIRED):
+        if self.status in (
+            OrderStatus.FILLED,
+            OrderStatus.CANCELLED,
+            OrderStatus.REJECTED,
+            OrderStatus.EXPIRED,
+        ):
             raise ValueError(
                 f"Cannot expire order with status {self.status.value}. "
                 f"Order is already in a terminal state."
@@ -524,7 +536,7 @@ class Order:
 
         old_status = self.status
         self.status = new_status
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(timezone.utc)
 
         self._record_event(
             event, {"old_status": old_status.value, "new_status": new_status.value, **(data or {})}
@@ -580,7 +592,7 @@ class Order:
 
     def get_age_seconds(self) -> float:
         """Get order age in seconds."""
-        return (datetime.utcnow() - self.created_at).total_seconds()
+        return (datetime.now(timezone.utc) - self.created_at).total_seconds()
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert order to dictionary representation."""

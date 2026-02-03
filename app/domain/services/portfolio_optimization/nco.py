@@ -117,7 +117,33 @@ class NestedClusteredOptimizer:
         Raises:
             ValueError: If covariance matrix validation fails
         """
-        # Validate covariance matrix
+        # Step 1: Validate and preprocess inputs
+        cov_matrix, expected_returns, symbols = self._validate_optimization_inputs(
+            cov_matrix, expected_returns, symbols
+        )
+
+        # Step 2: Preprocess covariance and create clusters
+        n_assets, cov_matrix, n_clusters, assignments = self._preprocess_covariance_matrix(
+            cov_matrix, n_clusters
+        )
+
+        # Step 3: Optimize within each cluster
+        cluster_weights, cluster_vars = self._optimize_within_clusters(
+            cov_matrix, expected_returns, n_clusters, assignments
+        )
+
+        # Step 4: Allocate across clusters and combine weights
+        return self._postprocess_optimization_results(
+            cluster_weights, cluster_vars, n_clusters, assignments, n_assets, symbols
+        )
+
+    def _validate_optimization_inputs(
+        self,
+        cov_matrix: np.ndarray,
+        expected_returns: Optional[np.ndarray],
+        symbols: Optional[List[str]],
+    ) -> Tuple[np.ndarray, Optional[np.ndarray], List[str]]:
+        """Validate and sanitize optimization inputs."""
         is_valid, validated_cov, error_msg = validate_covariance_matrix(
             cov_matrix,
             check_psd=True,
@@ -128,11 +154,10 @@ class NestedClusteredOptimizer:
         if not is_valid:
             raise ValueError(f"Invalid covariance matrix: {error_msg}")
 
-        # Sanitize: remove zero variance assets
         try:
             sanitized_cov, valid_indices = sanitize_covariance_matrix(
                 validated_cov,
-                enforce_psd=False,  # Already enforced
+                enforce_psd=False,
             )
         except ValueError as e:
             log_optimization_failure(
@@ -142,10 +167,8 @@ class NestedClusteredOptimizer:
             )
             raise
 
-        cov_matrix = sanitized_cov
-        n_assets = cov_matrix.shape[0]
+        n_assets = sanitized_cov.shape[0]
 
-        # Filter symbols and expected returns
         if symbols is not None:
             symbols = [symbols[i] for i in valid_indices]
         else:
@@ -154,21 +177,36 @@ class NestedClusteredOptimizer:
         if expected_returns is not None:
             expected_returns = expected_returns[valid_indices]
 
-        # Step 1: Hierarchical clustering
+        return sanitized_cov, expected_returns, symbols
+
+    def _preprocess_covariance_matrix(
+        self,
+        cov_matrix: np.ndarray,
+        n_clusters: Optional[int],
+    ) -> Tuple[int, np.ndarray, int, np.ndarray]:
+        """Preprocess covariance matrix and create hierarchical clusters."""
+        n_assets = cov_matrix.shape[0]
+
         corr_matrix = self._cov_to_corr(cov_matrix)
         distance = self._correlation_to_distance(corr_matrix)
         hierarchy = linkage(squareform(distance), method="ward")
 
-        # Determine number of clusters
         if n_clusters is None:
             n_clusters = self._optimal_n_clusters(n_assets, cov_matrix)
 
         n_clusters = max(2, min(n_clusters, n_assets // self._min_cluster_size))
-
-        # Get cluster assignments
         assignments = fcluster(hierarchy, n_clusters, criterion="maxclust")
 
-        # Step 2: Optimize within each cluster
+        return n_assets, cov_matrix, n_clusters, assignments
+
+    def _optimize_within_clusters(
+        self,
+        cov_matrix: np.ndarray,
+        expected_returns: Optional[np.ndarray],
+        n_clusters: int,
+        assignments: np.ndarray,
+    ) -> Tuple[Dict[int, np.ndarray], Dict[int, float]]:
+        """Optimize weights within each cluster."""
         cluster_weights = {}
         cluster_vars = {}
 
@@ -176,20 +214,16 @@ class NestedClusteredOptimizer:
             indices = np.where(assignments == cluster_id)[0]
 
             if len(indices) < self._min_cluster_size:
-                # Small cluster: use equal weight
                 cluster_weights[cluster_id] = np.ones(len(indices)) / len(indices)
             else:
-                # Extract cluster covariance
                 cluster_cov = cov_matrix[np.ix_(indices, indices)]
                 cluster_ret = expected_returns[indices] if expected_returns is not None else None
 
                 try:
-                    # Optimize within cluster
                     if self._optimization_method == "sharpe" and cluster_ret is not None:
                         w = self._maximize_sharpe(cluster_cov, cluster_ret)
                     else:
                         w = self._minimize_variance(cluster_cov)
-
                     cluster_weights[cluster_id] = w
                 except Exception as e:
                     log_optimization_failure(
@@ -197,26 +231,31 @@ class NestedClusteredOptimizer:
                         e,
                         {"cluster_size": len(indices), "method": self._optimization_method},
                     )
-                    # Fallback to equal weights
                     cluster_weights[cluster_id] = np.ones(len(indices)) / len(indices)
 
-            # Calculate cluster variance for allocation
             cluster_vars[cluster_id] = self._calculate_cluster_variance(
                 cov_matrix, indices, cluster_weights[cluster_id]
             )
 
-        # Step 3: Allocate across clusters (inverse variance)
-        cluster_allocation = self._allocate_across_clusters(cluster_vars)
+        return cluster_weights, cluster_vars
 
-        # Step 4: Combine intra-cluster and inter-cluster weights
+    def _postprocess_optimization_results(
+        self,
+        cluster_weights: Dict[int, np.ndarray],
+        cluster_vars: Dict[int, float],
+        n_clusters: int,
+        assignments: np.ndarray,
+        n_assets: int,
+        symbols: List[str],
+    ) -> NCOResult:
+        """Allocate across clusters and combine with intra-cluster weights."""
+        cluster_allocation = self._allocate_across_clusters(cluster_vars)
         final_weights = np.zeros(n_assets)
 
         for cluster_id in range(1, n_clusters + 1):
             indices = np.where(assignments == cluster_id)[0]
             intra_weights = cluster_weights[cluster_id]
             inter_weight = cluster_allocation[cluster_id]
-
-            # Combine: final = inter_allocation * intra_weights
             final_weights[indices] = intra_weights * inter_weight
 
         return NCOResult(
@@ -286,8 +325,26 @@ class NestedClusteredOptimizer:
             Optimal weights
         """
         n_assets = len(expected_returns)
+        objective = self._setup_sharpe_objective(cov_matrix, expected_returns, risk_free_rate)
+        constraints, bounds, x0 = self._setup_optimization_constraints(n_assets)
 
-        # Objective: negative Sharpe
+        result = minimize(
+            objective,
+            x0,
+            method="SLSQP",
+            bounds=bounds,
+            constraints=constraints,
+        )
+
+        return result.x if result.success else x0
+
+    def _setup_sharpe_objective(
+        self,
+        cov_matrix: np.ndarray,
+        expected_returns: np.ndarray,
+        risk_free_rate: float,
+    ):
+        """Setup objective function for Sharpe maximization."""
         def objective(weights: np.ndarray) -> float:
             portfolio_return = float(weights @ expected_returns)
             portfolio_var = float(weights @ cov_matrix @ weights)
@@ -299,26 +356,17 @@ class NestedClusteredOptimizer:
             sharpe = (portfolio_return - risk_free_rate) / portfolio_std
             return -sharpe
 
-        # Constraints
-        constraints = [
-            {"type": "eq", "fun": lambda w: np.sum(w) - 1.0},
-        ]
+        return objective
 
-        # Bounds (no short selling within cluster)
+    def _setup_optimization_constraints(
+        self,
+        n_assets: int,
+    ) -> Tuple[list, list, np.ndarray]:
+        """Setup constraints, bounds, and initial guess for optimization."""
+        constraints = [{"type": "eq", "fun": lambda w: np.sum(w) - 1.0}]
         bounds = [(0.0, 1.0) for _ in range(n_assets)]
-
-        # Initial guess (equal weight)
         x0 = np.ones(n_assets) / n_assets
-
-        result = minimize(
-            objective,
-            x0,
-            method="SLSQP",
-            bounds=bounds,
-            constraints=constraints,
-        )
-
-        return result.x if result.success else x0
+        return constraints, bounds, x0
 
     def _minimize_variance(self, cov_matrix: np.ndarray) -> np.ndarray:
         """
@@ -332,20 +380,10 @@ class NestedClusteredOptimizer:
         """
         n_assets = cov_matrix.shape[0]
 
-        # Objective: portfolio variance
         def objective(weights: np.ndarray) -> float:
             return float(weights @ cov_matrix @ weights)
 
-        # Constraints
-        constraints = [
-            {"type": "eq", "fun": lambda w: np.sum(w) - 1.0},
-        ]
-
-        # Bounds
-        bounds = [(0.0, 1.0) for _ in range(n_assets)]
-
-        # Initial guess
-        x0 = np.ones(n_assets) / n_assets
+        constraints, bounds, x0 = self._setup_optimization_constraints(n_assets)
 
         result = minimize(
             objective,

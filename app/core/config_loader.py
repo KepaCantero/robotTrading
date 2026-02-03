@@ -1,39 +1,39 @@
 """
 YAML Configuration Loader
 
-Carga configuraciones desde archivos YAML con validación y fallback a valores por defecto.
+Loads configurations from YAML files with validation and fallback to default values.
 """
 
-import logging
 import os
 import threading
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
 
+import structlog
 import yaml
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 
 class YAMLConfigLoader:
     """
-    Cargador de configuraciones YAML con validación y soporte para defaults.
+    YAML configuration loader with validation and support for defaults.
 
     Features:
-    - Carga segura de YAML (yaml.safe_load)
-    - Fallback a valores por defecto si el archivo no existe
-    - Soporte para anidación de claves con notación de puntos
-    - Logging de configuración cargada
+    - Safe YAML loading (yaml.safe_load)
+    - Fallback to default values if file does not exist
+    - Support for key nesting with dot notation
+    - Logging of loaded configuration
     - Thread-safe cache with locking
     - Configuration value validation
     """
 
     def __init__(self, config_dir: Optional[Path] = None):
         """
-        Inicializa el cargador de configuración.
+        Initialize the configuration loader.
 
         Args:
-            config_dir: Directorio de configuración. Por defecto: config/ o desde CONFIG_DIR env var
+            config_dir: Configuration directory. Default: config/ or from CONFIG_DIR env var
         """
         # CFG-002: Use environment variable for config directory
         env_config_dir = os.getenv("CONFIG_DIR")
@@ -48,26 +48,34 @@ class YAMLConfigLoader:
 
         # Validate config_dir exists
         if not self.config_dir.exists():
-            logger.warning(f"Config directory does not exist: {self.config_dir}")
+            logger.warning(
+                "config_directory_not_found",
+                config_dir=str(self.config_dir),
+                message="Config directory does not exist",
+            )
 
     def load(self, filename: str, use_cache: bool = True) -> Dict[str, Any]:
         """
-        Carga un archivo YAML desde el directorio de configuración.
+        Load a YAML file from the configuration directory.
 
         Args:
-            filename: Nombre del archivo YAML (ej: "strategy_stock_allocator.yaml")
-            use_cache: Si True, usa caché para archivos ya cargados
+            filename: Name of YAML file (e.g., "strategy_stock_allocator.yaml")
+            use_cache: If True, uses cache for already loaded files
 
         Returns:
-            Diccionario con el contenido del YAML
+            Dictionary with YAML content
 
         Raises:
-            FileNotFoundError: Si el archivo no existe y no hay fallback
-            yaml.YAMLError: Si el archivo tiene formato inválido
+            FileNotFoundError: If file does not exist and no fallback
+            yaml.YAMLError: If file has invalid format
         """
         # Validate filename input
         if not filename or not isinstance(filename, str):
-            logger.error(f"Invalid filename: {filename}")
+            logger.error(
+                "invalid_filename",
+                filename=filename,
+                message="Invalid filename provided",
+            )
             return {}
 
         cache_key = filename
@@ -76,13 +84,21 @@ class YAMLConfigLoader:
         if use_cache:
             with self._cache_lock:
                 if cache_key in self._cache:
-                    logger.debug(f"Loading {filename} from cache")
+                    logger.debug(
+                        "loading_from_cache",
+                        filename=filename,
+                        cache_key=cache_key,
+                    )
                     return self._cache[cache_key]
 
         config_path = self.config_dir / filename
 
         if not config_path.exists():
-            logger.warning(f"Config file not found: {config_path}")
+            logger.warning(
+                "config_file_not_found",
+                config_path=str(config_path),
+                filename=filename,
+            )
             return {}
 
         try:
@@ -97,14 +113,29 @@ class YAMLConfigLoader:
                 with self._cache_lock:
                     self._cache[cache_key] = config
 
-            logger.info(f"Loaded config from {config_path}")
+            logger.info(
+                "config_loaded",
+                config_path=str(config_path),
+                filename=filename,
+                config_keys=list(config.keys()) if config else [],
+            )
             return config
 
         except yaml.YAMLError as e:
-            logger.error(f"Error parsing YAML from {config_path}: {e}")
+            logger.error(
+                "yaml_parse_error",
+                config_path=str(config_path),
+                error=str(e),
+                error_type=type(e).__name__,
+            )
             return {}
         except (OSError, IOError) as e:
-            logger.error(f"Error reading file {config_path}: {e}")
+            logger.error(
+                "file_read_error",
+                config_path=str(config_path),
+                error=str(e),
+                error_type=type(e).__name__,
+            )
             return {}
 
     def get_nested(
@@ -115,16 +146,16 @@ class YAMLConfigLoader:
         separator: str = ".",
     ) -> Any:
         """
-        Obtiene un valor anidado usando notación de puntos.
+        Get a nested value using dot notation.
 
         Args:
-            config: Diccionario de configuración
-            key_path: Ruta de la clave (ej: "data_validation.lookback_max_days")
-            default: Valor por defecto si la clave no existe
-            separator: Separador de claves (por defecto: ".")
+            config: Configuration dictionary
+            key_path: Key path (e.g., "data_validation.lookback_max_days")
+            default: Default value if key does not exist
+            separator: Key separator (default: ".")
 
         Returns:
-            Valor de la clave o default si no existe
+            Key value or default if not found
 
         Examples:
             >>> loader.get_nested(config, "data_validation.lookback_max_days", 126)
@@ -149,14 +180,14 @@ class YAMLConfigLoader:
         tier: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
-        Carga configuración con overrides por capital tier.
+        Load configuration with tier-specific overrides.
 
         Args:
-            filename: Nombre del archivo YAML
+            filename: Name of YAML file
             tier: Capital tier ("micro", "small", "medium", "large")
 
         Returns:
-            Diccionario con configuración base + overrides del tier
+            Dictionary with base configuration + tier overrides
 
         Examples:
             >>> loader.load_with_tier_override("strategy_stock_allocator.yaml", "micro")
@@ -173,20 +204,24 @@ class YAMLConfigLoader:
 
             # Apply tier overrides recursively
             config = self._apply_overrides(config, tier_overrides)
-            logger.info(f"Applied {tier} tier overrides to config")
+            logger.info(
+                "tier_overrides_applied",
+                tier=tier,
+                override_keys=list(tier_overrides.keys()),
+            )
 
         return config
 
     def _apply_overrides(self, base: Dict[str, Any], overrides: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Aplica overrides recursivamente a la configuración base.
+        Recursively apply overrides to base configuration.
 
         Args:
-            base: Configuración base
-            overrides: Overrides a aplicar
+            base: Base configuration
+            overrides: Overrides to apply
 
         Returns:
-            Configuración con overrides aplicados
+            Configuration with overrides applied
         """
         result = base.copy()
 
@@ -200,22 +235,22 @@ class YAMLConfigLoader:
 
     def get_strategy_stock_allocator_config(self, tier: Optional[str] = None) -> Dict[str, Any]:
         """
-        Carga la configuración del Strategy Stock Allocator.
+        Load the Strategy Stock Allocator configuration.
 
         Args:
-            tier: Capital tier para aplicar overrides
+            tier: Capital tier for applying overrides
 
         Returns:
-            Configuración completa del Strategy Stock Allocator
+            Complete Strategy Stock Allocator configuration
         """
         return self.load_with_tier_override("strategy_stock_allocator.yaml", tier)
 
     def clear_cache(self) -> None:
-        """Limpia la caché de configuraciones."""
+        """Clear the configuration cache."""
         # CFG-CACHE-001: Thread-safe cache clear
         with self._cache_lock:
             self._cache.clear()
-        logger.debug("Config cache cleared")
+        logger.debug("config_cache_cleared")
 
     def _validate_config(self, config: Dict[str, Any], filename: str) -> Dict[str, Any]:
         """
@@ -232,7 +267,12 @@ class YAMLConfigLoader:
             Validated configuration dictionary
         """
         if not isinstance(config, dict):
-            logger.error(f"Invalid config type in {filename}: expected dict, got {type(config)}")
+            logger.error(
+                "invalid_config_type",
+                filename=filename,
+                expected_type="dict",
+                actual_type=type(config).__name__,
+            )
             return {}
 
         # CFG-SEC-001: Check for potential sensitive data patterns
@@ -241,8 +281,10 @@ class YAMLConfigLoader:
             key_lower = str(key).lower()
             if any(sensitive in key_lower for sensitive in sensitive_keys):
                 logger.warning(
-                    f"CFG-SEC-001: Potential sensitive data key '{key}' found in {filename}. "
-                    "Ensure secrets are loaded from environment variables."
+                    "potential_sensitive_data_key",
+                    filename=filename,
+                    key=key,
+                    message="CFG-SEC-001: Potential sensitive data key found. Ensure secrets are loaded from environment variables.",
                 )
 
         # Validate common configuration value types
@@ -293,12 +335,22 @@ class YAMLConfigLoader:
                     try:
                         if not rule_func(value):
                             logger.warning(
-                                f"CFG-003: Invalid value for '{current_path}' in {filename}: "
-                                f"got {value} ({type(value).__name__})"
+                                "invalid_config_value",
+                                filename=filename,
+                                key=current_path,
+                                value=value,
+                                value_type=type(value).__name__,
+                                rule=rule_key,
+                                message="CFG-003: Invalid configuration value",
                             )
                     except Exception as e:
                         logger.warning(
-                            f"CFG-003: Validation error for '{current_path}' in {filename}: {e}"
+                            "config_validation_error",
+                            filename=filename,
+                            key=current_path,
+                            error=str(e),
+                            rule=rule_key,
+                            message="CFG-003: Configuration validation error",
                         )
 
             # Recursively validate nested dictionaries
@@ -318,10 +370,10 @@ _default_loader: Optional[YAMLConfigLoader] = None
 
 def get_config_loader() -> YAMLConfigLoader:
     """
-    Obtiene la instancia singleton del cargador de configuración.
+    Get the singleton instance of the configuration loader.
 
     Returns:
-        Instancia de YAMLConfigLoader
+        YAMLConfigLoader instance
     """
     global _default_loader
     if _default_loader is None:
@@ -333,13 +385,13 @@ def load_strategy_stock_allocator_config(
     tier: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
-    Función de conveniencia para cargar la configuración del Strategy Stock Allocator.
+    Convenience function to load the Strategy Stock Allocator configuration.
 
     Args:
-        tier: Capital tier para aplicar overrides
+        tier: Capital tier for applying overrides
 
     Returns:
-        Configuración completa del Strategy Stock Allocator
+        Complete Strategy Stock Allocator configuration
     """
     return get_config_loader().get_strategy_stock_allocator_config(tier)
 
@@ -348,13 +400,13 @@ def load_momentum_filters_config(
     tier: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
-    Función de conveniencia para cargar la configuración de Momentum Filters.
+    Convenience function to load the Momentum Filters configuration.
 
     Args:
-        tier: Capital tier para aplicar overrides
+        tier: Capital tier for applying overrides
 
     Returns:
-        Configuración completa de Momentum Filters
+        Complete Momentum Filters configuration
     """
     return get_config_loader().load_with_tier_override("momentum_filters.yaml", tier)
 
@@ -363,13 +415,13 @@ def load_market_detectors_config(
     tier: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
-    Función de conveniencia para cargar la configuración de Market Detectors.
+    Convenience function to load the Market Detectors configuration.
 
     Args:
-        tier: Capital tier para aplicar overrides
+        tier: Capital tier for applying overrides
 
     Returns:
-        Configuración completa de Market Detectors
+        Complete Market Detectors configuration
     """
     return get_config_loader().load_with_tier_override("market_detectors.yaml", tier)
 
@@ -378,13 +430,13 @@ def load_strategy_defaults_config(
     tier: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
-    Función de conveniencia para cargar la configuración de Strategy Defaults.
+    Convenience function to load the Strategy Defaults configuration.
 
     Args:
-        tier: Capital tier para aplicar overrides
+        tier: Capital tier for applying overrides
 
     Returns:
-        Configuración completa de Strategy Defaults
+        Complete Strategy Defaults configuration
     """
     return get_config_loader().load_with_tier_override("strategy_defaults.yaml", tier)
 
@@ -393,13 +445,13 @@ def load_learning_parameters_config(
     tier: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
-    Función de conveniencia para cargar la configuración de Learning Parameters.
+    Convenience function to load the Learning Parameters configuration.
 
     Args:
-        tier: Capital tier para aplicar overrides
+        tier: Capital tier for applying overrides
 
     Returns:
-        Configuración completa de Learning Parameters
+        Complete Learning Parameters configuration
     """
     return get_config_loader().load_with_tier_override("learning_parameters.yaml", tier)
 
@@ -410,22 +462,22 @@ def get_filter_config(
     preset: str = "balanced",
 ) -> Dict[str, Any]:
     """
-    Obtiene la configuración de un filtro específico desde momentum_filters.yaml.
+    Get the configuration of a specific filter from momentum_filters.yaml.
 
     Args:
-        filter_name: Nombre del filtro (ej: "rsi_filter", "momentum_filter")
-        tier: Capital tier para aplicar overrides
-        preset: Preset a usar ("conservative", "balanced", "aggressive")
+        filter_name: Name of the filter (e.g., "rsi_filter", "momentum_filter")
+        tier: Capital tier for applying overrides
+        preset: Preset to use ("conservative", "balanced", "aggressive")
 
     Returns:
-        Configuración del filtro con thresholds del preset
+        Filter configuration with preset thresholds
     """
     config = load_momentum_filters_config(tier)
 
-    # Obtener configuración específica del filtro
+    # Get specific filter configuration
     filter_config = config.get(filter_name, {})
 
-    # Añadir thresholds del preset
+    # Add preset thresholds
     thresholds = filter_config.get("thresholds", {})
     preset_thresholds = thresholds.get(preset, thresholds.get("balanced", {}))
 
@@ -440,14 +492,14 @@ def get_detector_config(
     tier: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
-    Obtiene la configuración de un detector específico desde market_detectors.yaml.
+    Get the configuration of a specific detector from market_detectors.yaml.
 
     Args:
-        detector_name: Nombre del detector (ej: "trend_detector", "volatility_detector")
-        tier: Capital tier para aplicar overrides
+        detector_name: Name of the detector (e.g., "trend_detector", "volatility_detector")
+        tier: Capital tier for applying overrides
 
     Returns:
-        Configuración del detector
+        Detector configuration
     """
     config = load_market_detectors_config(tier)
     return config.get(detector_name, {})
@@ -458,14 +510,14 @@ def get_strategy_config(
     tier: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
-    Obtiene la configuración de una estrategia específica desde strategy_defaults.yaml.
+    Get the configuration of a specific strategy from strategy_defaults.yaml.
 
     Args:
-        strategy_name: Nombre de la estrategia (ej: "momentum_strategy", "mean_reversion_strategy")
-        tier: Capital tier para aplicar overrides
+        strategy_name: Name of the strategy (e.g., "momentum_strategy", "mean_reversion_strategy")
+        tier: Capital tier for applying overrides
 
     Returns:
-        Configuración de la estrategia
+        Strategy configuration
     """
     config = load_strategy_defaults_config(tier)
     return config.get(strategy_name, {})

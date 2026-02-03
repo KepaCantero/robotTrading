@@ -6,13 +6,17 @@ module, ensuring type safety and validation.
 """
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import List, Optional, Tuple
-
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+
+# Custom exception types for data model validation
+class ModelValidationError(ValueError):
+    """Raised when data model validation fails."""
+    pass
 
 
 class OFIHorizon(str, Enum):
@@ -32,7 +36,7 @@ class OrderSide(str, Enum):
     ASK = "ask"
 
 
-@dataclass
+@dataclass(frozen=True)
 class OrderBookSnapshot:
     """
     Order book snapshot at a point in time.
@@ -55,25 +59,25 @@ class OrderBookSnapshot:
 
     symbol: str
     timestamp: datetime
-    bids: List[Tuple[Decimal, int]]
-    asks: List[Tuple[Decimal, int]]
+    bids: list[tuple[Decimal, int]]
+    asks: list[tuple[Decimal, int]]
 
     @property
-    def best_bid(self) -> Optional[Decimal]:
+    def best_bid(self) -> Decimal | None:
         """Get best (highest) bid price."""
         if not self.bids:
             return None
         return max(price for price, _ in self.bids)
 
     @property
-    def best_ask(self) -> Optional[Decimal]:
+    def best_ask(self) -> Decimal | None:
         """Get best (lowest) ask price."""
         if not self.asks:
             return None
         return min(price for price, _ in self.asks)
 
     @property
-    def mid_price(self) -> Optional[Decimal]:
+    def mid_price(self) -> Decimal | None:
         """Calculate mid price."""
         best_bid = self.best_bid
         best_ask = self.best_ask
@@ -97,7 +101,7 @@ class OrderBookSnapshot:
         return self.bid_volume + self.ask_volume
 
     @property
-    def spread(self) -> Optional[Decimal]:
+    def spread(self) -> Decimal | None:
         """Calculate bid-ask spread."""
         best_bid = self.best_bid
         best_ask = self.best_ask
@@ -106,7 +110,7 @@ class OrderBookSnapshot:
         return best_ask - best_bid
 
     @property
-    def spread_bps(self) -> Optional[float]:
+    def spread_bps(self) -> float | None:
         """Calculate bid-ask spread in basis points."""
         mid_price = self.mid_price
         spread = self.spread
@@ -115,7 +119,7 @@ class OrderBookSnapshot:
         return float(spread / mid_price * 10000)
 
     @property
-    def depth_imbalance(self) -> Optional[float]:
+    def depth_imbalance(self) -> float | None:
         """
         Calculate depth imbalance.
 
@@ -143,7 +147,7 @@ class OrderBookSnapshot:
         }
 
 
-@dataclass
+@dataclass(frozen=True)
 class TickData:
     """
     Tick-level trade or quote data.
@@ -173,8 +177,8 @@ class TickData:
     price: Decimal
     quantity: int
     side: OrderSide
-    is_market_buy: Optional[bool] = None
-    is_market_sell: Optional[bool] = None
+    is_market_buy: bool | None = None
+    is_market_sell: bool | None = None
 
     @property
     def notional_value(self) -> Decimal:
@@ -373,14 +377,14 @@ class OFISignal(BaseModel):
     )
 
     symbol: str = Field(..., description="Trading symbol")
-    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Signal time")
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), description="Signal time")
     action: str = Field(..., description="Action (BUY/SELL/HOLD)")
     ofi_value: float = Field(..., ge=-1.0, le=1.0, description="OFI value")
     ofi_threshold_used: float = Field(..., description="Threshold used for signal")
     confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence")
     expected_horizon: str = Field(..., description="Expected horizon")
     reasoning: str = Field(..., description="Signal reasoning")
-    prediction: Optional[OFIPrediction] = Field(default=None, description="Associated prediction")
+    prediction: OFIPrediction | None = Field(default=None, description="Associated prediction")
 
     @field_validator("action")
     @classmethod
@@ -412,7 +416,7 @@ class OFISignal(BaseModel):
         return result
 
 
-@dataclass
+@dataclass(frozen=True)
 class CumulativeOFI:
     """
     Cumulative OFI (COFI) tracker.
@@ -431,8 +435,8 @@ class CumulativeOFI:
         std_cofi: Standard deviation of COFI
 
     Example:
-        >>> cofi_tracker = CumulativeOFI('AAPL')
-        >>> cofi_tracker.update(0.15, datetime.now())
+        >>> cofi_tracker = CumulativeOFI('AAPL', datetime.now())
+        >>> cofi_tracker = cofi_tracker.update(0.15, datetime.now())
         >>> print(f"Current COFI: {cofi_tracker.current_cofi}")
         >>> print(f"Z-score: {cofi_tracker.z_score}")
     """
@@ -440,7 +444,7 @@ class CumulativeOFI:
     symbol: str
     start_time: datetime
     current_cofi: float = 0.0
-    history: List[Tuple[datetime, float]] = None
+    history: tuple[tuple[datetime, float], ...] = ()
     max_cofi: float = 0.0
     min_cofi: float = 0.0
     mean_cofi: float = 0.0
@@ -448,30 +452,48 @@ class CumulativeOFI:
 
     def __post_init__(self):
         """Initialize history if not provided."""
-        if self.history is None:
-            self.history = []
+        # Convert to tuple if list was passed for frozen dataclass
+        if isinstance(self.history, list):
+            object.__setattr__(self, 'history', tuple(self.history))
 
-    def update(self, ofi_value: float, timestamp: datetime) -> None:
+    def update(self, ofi_value: float, timestamp: datetime) -> "CumulativeOFI":
         """
         Update COFI with new OFI value.
 
         Args:
             ofi_value: New OFI value to add
             timestamp: Timestamp of this update
+
+        Returns:
+            New CumulativeOFI instance with updated values
         """
-        self.current_cofi += ofi_value
-        self.history.append((timestamp, self.current_cofi))
+        new_cofi = self.current_cofi + ofi_value
+        new_history = self.history + ((timestamp, new_cofi),)
 
         # Update statistics
-        self.max_cofi = max(self.max_cofi, self.current_cofi)
-        self.min_cofi = min(self.min_cofi, self.current_cofi)
+        new_max = max(self.max_cofi, new_cofi)
+        new_min = min(self.min_cofi, new_cofi)
 
-        if len(self.history) > 1:
-            cofi_values = [v for _, v in self.history]
-            self.mean_cofi = float(np.mean(cofi_values))
-            self.std_cofi = float(np.std(cofi_values))
+        if len(new_history) > 1:
+            cofi_values = [v for _, v in new_history]
+            new_mean = float(np.mean(cofi_values))
+            new_std = float(np.std(cofi_values))
+        else:
+            new_mean = self.mean_cofi
+            new_std = self.std_cofi
 
-    def z_score(self) -> Optional[float]:
+        return CumulativeOFI(
+            symbol=self.symbol,
+            start_time=self.start_time,
+            current_cofi=new_cofi,
+            history=new_history,
+            max_cofi=new_max,
+            min_cofi=new_min,
+            mean_cofi=new_mean,
+            std_cofi=new_std,
+        )
+
+    def z_score(self) -> float | None:
         """
         Calculate z-score of current COFI.
 
@@ -491,15 +513,26 @@ class CumulativeOFI:
         z = self.z_score()
         return z is not None and z < -threshold
 
-    def reset(self, new_start_time: datetime) -> None:
-        """Reset COFI tracking."""
-        self.start_time = new_start_time
-        self.current_cofi = 0.0
-        self.history = []
-        self.max_cofi = 0.0
-        self.min_cofi = 0.0
-        self.mean_cofi = 0.0
-        self.std_cofi = 0.0
+    def reset(self, new_start_time: datetime) -> "CumulativeOFI":
+        """
+        Reset COFI tracking.
+
+        Args:
+            new_start_time: New start time for tracking
+
+        Returns:
+            New CumulativeOFI instance with reset values
+        """
+        return CumulativeOFI(
+            symbol=self.symbol,
+            start_time=new_start_time,
+            current_cofi=0.0,
+            history=(),
+            max_cofi=0.0,
+            min_cofi=0.0,
+            mean_cofi=0.0,
+            std_cofi=0.0,
+        )
 
     def to_dict(self) -> dict:
         """Convert to dictionary representation."""

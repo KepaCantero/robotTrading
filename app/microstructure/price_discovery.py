@@ -22,7 +22,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -216,7 +215,7 @@ class PriceDiscoveryMetrics:
     discovery_quality_score: float
     efficiency_level: MarketEfficiency
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             'timestamp': self.timestamp.isoformat(),
@@ -252,7 +251,7 @@ class EfficientPriceEstimate:
     confidence_interval: Tuple[Decimal, Decimal]
     estimation_method: str
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             'timestamp': self.timestamp.isoformat(),
@@ -286,7 +285,7 @@ class InformationFlowMetrics:
     flow_persistence: float
     information_decay_rate: float
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             'timestamp': self.timestamp.isoformat(),
@@ -316,7 +315,7 @@ class MarketIntegrationMetrics:
     lead_lag_relationship: float
     price_convergence_rate: float
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             'timestamp': self.timestamp.isoformat(),
@@ -348,7 +347,7 @@ class PriceDiscoveryAnalyzer:
         """
         self.lookback_periods = lookback_periods
         self.min_observations = min_observations
-        self._historical_errors: List[float] = []
+        self._historical_errors: list[float] = []
 
     def estimate_efficient_price_roll(
         self,
@@ -453,7 +452,7 @@ class PriceDiscoveryAnalyzer:
     def measure_price_adjustment_speed(
         self,
         price_history: pd.DataFrame,
-        event_times: List[datetime],
+        event_times: list[datetime],
         adjustment_window_seconds: int = 300,
     ) -> float:
         """
@@ -522,7 +521,7 @@ class PriceDiscoveryAnalyzer:
         self,
         observed_prices: pd.Series,
         fundamental_value: float,
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         """
         Calculate pricing error (deviation from fundamental value)
 
@@ -795,8 +794,8 @@ class PriceDiscoveryAnalyzer:
         self,
         symbol: str,
         price_history: pd.DataFrame,
-        trade_data: Optional[pd.DataFrame] = None,
-    ) -> Dict:
+        trade_data: pd.DataFrame | None = None,
+    ) -> dict:
         """
         Generate comprehensive price discovery report
 
@@ -886,7 +885,7 @@ class PriceDiscoveryAnalyzer:
         efficiency_level: MarketEfficiency,
         quality_score: float,
         information_share: float,
-    ) -> List[str]:
+    ) -> list[str]:
         """Generate recommendations based on price discovery analysis"""
         recommendations = []
 
@@ -927,12 +926,12 @@ class PriceDiscoveryMonitor:
             efficiency_threshold: Threshold for discovery quality alert
         """
         self.efficiency_threshold = efficiency_threshold
-        self._historical_scores: List[Tuple[datetime, float]] = []
+        self._historical_scores: list[tuple[datetime, float]] = []
 
     def check_discovery_quality(
         self,
         current_score: float,
-    ) -> Optional[Dict]:
+    ) -> dict | None:
         """
         Check if discovery quality alert should be triggered
 
@@ -981,8 +980,8 @@ class PriceDiscoveryMonitor:
 
 
 # Singleton instances
-_price_discovery_analyzer: Optional[PriceDiscoveryAnalyzer] = None
-_price_discovery_monitor: Optional[PriceDiscoveryMonitor] = None
+_price_discovery_analyzer: PriceDiscoveryAnalyzer | None = None
+_price_discovery_monitor: PriceDiscoveryMonitor | None = None
 
 
 def get_price_discovery_analyzer(

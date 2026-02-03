@@ -129,9 +129,9 @@ class RealisticExecutionModel:
         result = await model.execute_order(order, snapshot)
 
         if result.is_fully_filled:
-            print(f"Filled {result.total_filled_shares} shares")
-            print(f"Average price: ${result.avg_fill_price}")
-            print(f"Total cost: ${result.total_cost:.2f}")
+            logger.debug(f"Filled {result.total_filled_shares} shares")
+            logger.debug(f"Average price: ${result.avg_fill_price}")
+            logger.debug(f"Total cost: ${result.total_cost:.2f}")
         ```
 
     **Cost Components:**

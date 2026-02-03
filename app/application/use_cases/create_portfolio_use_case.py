@@ -41,7 +41,38 @@ class CreatePortfolioUseCase:
 
         Returns:
             Created Portfolio entity
+
+        Raises:
+            ValueError: If any input validation fails
         """
+        # Validate portfolio_id
+        if not portfolio_id or not isinstance(portfolio_id, str) or not portfolio_id.strip():
+            raise ValueError("portfolio_id must be a non-empty string")
+
+        # Validate initial_capital
+        if not isinstance(initial_capital, Decimal):
+            raise ValueError("initial_capital must be a Decimal")
+        if initial_capital <= 0:
+            raise ValueError("initial_capital must be positive (> 0)")
+
+        # Validate currency (ISO 4217: 3-letter uppercase code)
+        if not currency or not isinstance(currency, str):
+            raise ValueError("currency must be a string")
+        if len(currency) != 3 or not currency.isupper() or not currency.isalpha():
+            raise ValueError("currency must be a valid ISO 4217 code (3 uppercase letters)")
+
+        # Validate max_position_size_pct
+        if not isinstance(max_position_size_pct, Decimal):
+            raise ValueError("max_position_size_pct must be a Decimal")
+        if max_position_size_pct <= 0 or max_position_size_pct > 1:
+            raise ValueError("max_position_size_pct must be in range (0, 1]")
+
+        # Validate max_portfolio_exposure_pct
+        if not isinstance(max_portfolio_exposure_pct, Decimal):
+            raise ValueError("max_portfolio_exposure_pct must be a Decimal")
+        if max_portfolio_exposure_pct <= 0 or max_portfolio_exposure_pct > 1:
+            raise ValueError("max_portfolio_exposure_pct must be in range (0, 1]")
+
         return self._factory.create_portfolio(
             portfolio_id=portfolio_id,
             initial_capital=initial_capital,

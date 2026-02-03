@@ -159,7 +159,7 @@ def print_banner():
 ║                                                                        ║
 ╚══════════════════════════════════════════════════════════════════════╝
     """
-    print(banner)
+    logger.debug(banner)
 
 
 def print_info(session: PaperTradingSession):
@@ -183,7 +183,7 @@ def print_info(session: PaperTradingSession):
 ║  Docs:         http://{settings.api_host}:{settings.api_port}/docs<{35} ║
 ╚══════════════════════════════════════════════════════════════════════╝
     """
-    print(info)
+    logger.debug(info)
 
 
 def print_next_steps():
@@ -225,7 +225,7 @@ def print_next_steps():
 ║                                                                        ║
 ╚══════════════════════════════════════════════════════════════════════╝
     """
-    print(steps)
+    logger.debug(steps)
 
 
 async def main_async(args):

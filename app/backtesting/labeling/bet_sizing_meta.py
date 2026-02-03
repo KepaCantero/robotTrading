@@ -56,6 +56,31 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
+# Custom exceptions for bet sizing (CC-006: Specific exception types)
+class BetSizingError(Exception):
+    """Base exception for bet sizing errors."""
+
+    pass
+
+
+class InvalidConfigurationError(BetSizingError):
+    """Raised when bet sizing configuration is invalid."""
+
+    pass
+
+
+class ModelPredictionError(BetSizingError):
+    """Raised when model prediction fails."""
+
+    pass
+
+
+class ExposureLimitError(BetSizingError):
+    """Raised when exposure limits are violated."""
+
+    pass
+
+
 @dataclass
 class MetaBetSizingConfig:
     """Configuration for meta-labeling bet sizing."""
@@ -96,16 +121,30 @@ class MetaBetSizingConfig:
             "risk_parity",
         ]
         if self.method not in valid_methods:
-            raise ValueError(f"method must be one of {valid_methods}")
+            raise InvalidConfigurationError(
+                f"Invalid bet sizing method: {self.method}. Must be one of {valid_methods}"
+            )
 
         if self.confidence_threshold < 0 or self.confidence_threshold > 1:
-            raise ValueError("confidence_threshold must be between 0 and 1")
+            raise InvalidConfigurationError(
+                f"confidence_threshold must be between 0 and 1, got {self.confidence_threshold}"
+            )
 
         if self.high_confidence_threshold <= self.confidence_threshold:
-            raise ValueError("high_confidence_threshold must be > confidence_threshold")
+            raise InvalidConfigurationError(
+                f"high_confidence_threshold ({self.high_confidence_threshold}) "
+                f"must be > confidence_threshold ({self.confidence_threshold})"
+            )
 
         if self.max_bet_size < 0 or self.max_bet_size > 1:
-            raise ValueError("max_bet_size must be between 0 and 1")
+            raise InvalidConfigurationError(
+                f"max_bet_size must be between 0 and 1, got {self.max_bet_size}"
+            )
+
+        if self.kelly_fraction <= 0 or self.kelly_fraction > 1:
+            raise InvalidConfigurationError(
+                f"kelly_fraction must be in (0, 1], got {self.kelly_fraction}"
+            )
 
 
 @dataclass
@@ -201,12 +240,26 @@ class MetaLabelingBetSizing:
             ... )
             >>> positions = result.bet_sizes * capital
         """
+        # TRD-004: Audit logging for bet sizing decisions
+        logger.info(
+            "Calculating bet sizes",
+            extra={
+                "method": self.config.method,
+                "n_signals": len(X),
+                "max_bet_size": self.config.max_bet_size,
+                "confidence_threshold": self.config.confidence_threshold,
+            },
+        )
+
         # Convert to numpy array
         if isinstance(X, pd.DataFrame):
             X = X.values
 
         # Step 1: Get primary model predictions
-        primary_predictions = primary_model.predict(X)
+        try:
+            primary_predictions = primary_model.predict(X)
+        except Exception as e:
+            raise ModelPredictionError(f"Primary model prediction failed: {e}") from e
 
         # Step 2: Get primary model probabilities
         if hasattr(primary_model, "predict_proba"):
@@ -222,15 +275,18 @@ class MetaLabelingBetSizing:
         X_meta = np.column_stack([X, primary_predictions, primary_proba])
 
         # Step 4: Get meta-model probabilities
-        if hasattr(meta_model, "predict_proba"):
-            meta_proba_raw = meta_model.predict_proba(X_meta)
-            if meta_proba_raw.shape[1] == 2:
-                meta_probabilities = meta_proba_raw[:, 1]
+        try:
+            if hasattr(meta_model, "predict_proba"):
+                meta_proba_raw = meta_model.predict_proba(X_meta)
+                if meta_proba_raw.shape[1] == 2:
+                    meta_probabilities = meta_proba_raw[:, 1]
+                else:
+                    meta_probabilities = meta_proba_raw.max(axis=1)
             else:
-                meta_probabilities = meta_proba_raw.max(axis=1)
-        else:
-            meta_predictions = meta_model.predict(X_meta)
-            meta_probabilities = meta_predictions.astype(float)
+                meta_predictions = meta_model.predict(X_meta)
+                meta_probabilities = meta_predictions.astype(float)
+        except Exception as e:
+            raise ModelPredictionError(f"Meta-model prediction failed: {e}") from e
 
         # Step 5: Calculate bet sizes based on method
         if self.config.method == "meta_kelly":
@@ -248,7 +304,7 @@ class MetaLabelingBetSizing:
                 primary_predictions, meta_probabilities, volatilities
             )
         else:
-            raise ValueError(f"Unknown method: {self.config.method}")
+            raise InvalidConfigurationError(f"Unknown method: {self.config.method}")
 
         # Step 6: Apply volatility adjustment
         if self.config.adjust_for_volatility and volatilities is not None:
@@ -276,6 +332,19 @@ class MetaLabelingBetSizing:
                 self.config.default_win_amount,
             )
 
+        # TRD-004: Log bet sizing results
+        n_trades = int((bet_sizes > 0).sum())
+        logger.info(
+            "Bet sizing calculation complete",
+            extra={
+                "n_signals": len(X),
+                "n_trades": n_trades,
+                "avg_bet_size": float(np.mean(bet_sizes)),
+                "total_exposure": float(np.abs(bet_sizes).sum()),
+                "avg_meta_probability": float(np.mean(meta_probabilities)),
+            },
+        )
+
         return MetaBetSizingResult(
             bet_sizes=bet_sizes,
             primary_predictions=primary_predictions,
@@ -290,6 +359,50 @@ class MetaLabelingBetSizing:
                 "total_exposure": float(np.abs(bet_sizes).sum()),
             },
         )
+
+    # ========== Helper Methods (ARCH-004: Extract helper methods) ==========
+
+    def _filter_active_signals(
+        self, primary_predictions: np.ndarray, meta_probabilities: np.ndarray
+    ) -> np.ndarray:
+        """
+        Filter active signals based on primary predictions and confidence threshold.
+
+        Args:
+            primary_predictions: Primary model predictions
+            meta_probabilities: Meta-model probabilities
+
+        Returns:
+            Boolean mask of active signals
+        """
+        return (primary_predictions != 0) & (meta_probabilities >= self.config.confidence_threshold)
+
+    def _compute_kelly_fraction(self, meta_probabilities: np.ndarray) -> np.ndarray:
+        """
+        Compute Kelly criterion fractions (vectorized).
+
+        Args:
+            meta_probabilities: Meta-model probabilities
+
+        Returns:
+            Kelly fractions (can be negative)
+        """
+        return 2 * meta_probabilities - 1
+
+    def _clip_positive_fractional_kelly(self, kelly: np.ndarray) -> np.ndarray:
+        """
+        Clip Kelly to positive values and apply fractional Kelly.
+
+        Args:
+            kelly: Raw Kelly fractions
+
+        Returns:
+            Adjusted Kelly fractions (non-negative)
+        """
+        kelly = np.clip(kelly, 0, None)
+        return kelly * self.config.kelly_fraction
+
+    # ========== Sizing Methods (PERF-001: Vectorized operations) ==========
 
     def _meta_kelly_sizing(
         self,
@@ -311,24 +424,15 @@ class MetaLabelingBetSizing:
         """
         bet_sizes = np.zeros(len(meta_probabilities))
 
-        for i, (pred, meta_prob) in enumerate(zip(primary_predictions, meta_probabilities)):
-            # Only size positions when primary model has a signal
-            if pred == 0:
-                continue
+        # PERF-001: Vectorized operation
+        active_mask = self._filter_active_signals(primary_predictions, meta_probabilities)
 
-            # Only take trades where meta-model has sufficient confidence
-            if meta_prob < self.config.confidence_threshold:
-                continue
-
-            # Kelly criterion with even odds: f = 2p - 1
-            kelly = 2 * meta_prob - 1
-
-            # Only bet if positive expected value
-            if kelly > 0:
-                # Apply fractional Kelly for safety
-                kelly = kelly * self.config.kelly_fraction
-
-                bet_sizes[i] = max(0, kelly)
+        # Compute Kelly for active signals
+        if active_mask.any():
+            active_proba = meta_probabilities[active_mask]
+            kelly = self._compute_kelly_fraction(active_proba)
+            kelly = self._clip_positive_fractional_kelly(kelly)
+            bet_sizes[active_mask] = kelly
 
         return bet_sizes
 
@@ -353,32 +457,39 @@ class MetaLabelingBetSizing:
         """
         bet_sizes = np.zeros(len(meta_probabilities))
 
-        for i, (pred, meta_prob) in enumerate(zip(primary_predictions, meta_probabilities)):
-            if pred == 0:
-                continue
+        # PERF-001: Vectorized operation
+        active_mask = self._filter_active_signals(primary_predictions, meta_probabilities)
 
-            if meta_prob < self.config.confidence_threshold:
-                continue
-
-            # Get expected return
-            if expected_returns is not None and i < len(expected_returns):
-                exp_ret = expected_returns[i]
+        if active_mask.any():
+            # Get expected returns for active signals
+            if expected_returns is not None:
+                exp_ret = np.where(
+                    active_mask,
+                    expected_returns,
+                    self.config.default_win_amount,
+                )
             else:
-                exp_ret = self.config.default_win_amount
+                exp_ret = np.full(len(meta_probabilities), self.config.default_win_amount)
 
-            # Assume loss is half of expected return
-            win_amount = abs(exp_ret)
-            loss_amount = abs(exp_ret) * 0.5
+            # Calculate win and loss amounts
+            win_amount = np.abs(exp_ret)
+            loss_amount = win_amount * 0.5
 
-            # Calculate expected value
-            p = meta_prob
+            # Vectorized EV calculation
+            p = meta_probabilities
             q = 1 - p
             ev = p * win_amount - q * loss_amount
 
             # Normalize to [0, 1]
-            if win_amount + loss_amount > 0:
-                normalized_ev = max(0, ev / (win_amount + loss_amount))
-                bet_sizes[i] = normalized_ev
+            total_amount = win_amount + loss_amount
+            normalized_ev = np.where(
+                total_amount > 0,
+                np.clip(ev / total_amount, 0, None),
+                0,
+            )
+
+            # Apply only to active signals
+            bet_sizes = np.where(active_mask, normalized_ev, 0)
 
         return bet_sizes
 
@@ -403,28 +514,25 @@ class MetaLabelingBetSizing:
         """
         bet_sizes = np.zeros(len(meta_probabilities))
 
-        for i, (pred, meta_prob) in enumerate(zip(primary_predictions, meta_probabilities)):
-            if pred == 0:
-                continue
+        # PERF-001: Vectorized operation
+        active_mask = self._filter_active_signals(primary_predictions, meta_probabilities)
 
-            # Low confidence: no trade
-            if meta_prob < self.config.confidence_threshold:
-                bet_sizes[i] = 0.0
+        if active_mask.any():
+            prob = meta_probabilities
+            low_threshold = self.config.confidence_threshold
+            high_threshold = self.config.high_confidence_threshold
 
-            # Medium confidence: linear scaling
-            elif meta_prob < self.config.high_confidence_threshold:
-                # Scale from 0 to 0.5
-                norm_prob = (meta_prob - self.config.confidence_threshold) / (
-                    self.config.high_confidence_threshold - self.config.confidence_threshold
-                )
-                bet_sizes[i] = norm_prob * 0.5
+            # Medium confidence: linear scaling from 0 to 0.5
+            medium_mask = (prob >= low_threshold) & (prob < high_threshold) & active_mask
+            if medium_mask.any():
+                norm_prob = (prob[medium_mask] - low_threshold) / (high_threshold - low_threshold)
+                bet_sizes[medium_mask] = norm_prob * 0.5
 
             # High confidence: scale from 0.5 to max_bet_size
-            else:
-                norm_prob = (meta_prob - self.config.high_confidence_threshold) / (
-                    1.0 - self.config.high_confidence_threshold
-                )
-                bet_sizes[i] = 0.5 + norm_prob * (self.config.max_bet_size - 0.5)
+            high_mask = (prob >= high_threshold) & active_mask
+            if high_mask.any():
+                norm_prob = (prob[high_mask] - high_threshold) / (1.0 - high_threshold)
+                bet_sizes[high_mask] = 0.5 + norm_prob * (self.config.max_bet_size - 0.5)
 
         return bet_sizes
 
@@ -562,12 +670,29 @@ class MetaLabelingBetSizing:
         return bet_sizes
 
     def _apply_exposure_limit(self, bet_sizes: np.ndarray) -> np.ndarray:
-        """Apply portfolio exposure limit."""
+        """
+        Apply portfolio exposure limit with validation (TRD-001).
+
+        Raises ExposureLimitError if exposure cannot be properly limited.
+        """
         total_exposure = bet_sizes.sum()
 
         if total_exposure > self.config.max_total_exposure:
+            if total_exposure <= 0:
+                raise ExposureLimitError(
+                    f"Invalid total exposure: {total_exposure}. "
+                    f"Cannot scale to max_total_exposure ({self.config.max_total_exposure})"
+                )
+
             scale_factor = self.config.max_total_exposure / total_exposure
             bet_sizes = bet_sizes * scale_factor
+
+            # Validate after scaling
+            new_exposure = bet_sizes.sum()
+            if new_exposure > self.config.max_total_exposure * 1.001:  # Small tolerance for floating point
+                raise ExposureLimitError(
+                    f"Failed to limit exposure: {new_exposure} > {self.config.max_total_exposure}"
+                )
 
         return bet_sizes
 
@@ -576,20 +701,25 @@ class MetaLabelingBetSizing:
         meta_probabilities: np.ndarray,
     ) -> np.ndarray:
         """
-        Calculate confidence levels for each prediction.
+        Calculate confidence levels for each prediction (vectorized).
 
         Returns:
             Array of confidence levels: 0 (low), 1 (medium), 2 (high)
         """
+        # PERF-001: Vectorized operation
         confidence_levels = np.zeros(len(meta_probabilities), dtype=int)
 
-        for i, prob in enumerate(meta_probabilities):
-            if prob < self.config.confidence_threshold:
-                confidence_levels[i] = 0  # Low
-            elif prob < self.config.high_confidence_threshold:
-                confidence_levels[i] = 1  # Medium
-            else:
-                confidence_levels[i] = 2  # High
+        # Medium confidence
+        medium_mask = (
+            meta_probabilities >= self.config.confidence_threshold
+        ) & (meta_probabilities < self.config.high_confidence_threshold)
+        confidence_levels[medium_mask] = 1
+
+        # High confidence
+        high_mask = meta_probabilities >= self.config.high_confidence_threshold
+        confidence_levels[high_mask] = 2
+
+        # Low confidence is default (0)
 
         return confidence_levels
 

@@ -1,109 +1,292 @@
-# messaging.py
+# messaging.py Requirements
 
-## Purpose
-Message bus implementation with Redis pub/sub, ZeroMQ fallback, and in-memory fallback for trading system communication.
+**File:** `app/core/messaging.py`  
+**Purpose:** Messaging system for inter-module communication  
+**Audit Status:** NEEDS_AUDIT
 
 ---
 
-## Type Definitions / Data Classes
+## References
+- **BASE_RULES:** See ../../BASE_RULES.md for universal rules
+- **Related Files:**
+  - `app/core/secure_serialization.py` (sign_and_dump, verify_and_load)
+  - All modules that use pub/sub messaging
 
-⚠️ **CRITICAL:** This file uses standard types only (no Pydantic models or dataclasses).
+---
 
-### MessageBus Configuration
+## Purpose & Scope
+
+This module provides a unified message bus for inter-module communication using Redis pub/sub for most cases, ZeroMQ for high-frequency data, and falling back to in-memory message passing if dependencies are unavailable.
+
+**Critical for Production:** Enables real-time communication between trading components without tight coupling.
+
+---
+
+## Classes & Functions
+
+### Classes
+
+| Class | Purpose | Methods |
+|-------|---------|---------|
+| `MessageBus` | Unified message bus | `publish()`, `subscribe()`, `close()` |
+
+### Functions
+
+| Function | Purpose | Return Type |
+|----------|---------|-------------|
+| `get_message_bus()` | Get or create global message bus | `MessageBus` |
+
+---
+
+## File-Specific Requirements
+
+### MSG-001: Redis Fallback
+**Priority:** P1 (High - Availability)
+
+**Requirement:** System must fall back to in-memory messaging if Redis unavailable.
+
+**Acceptance Criteria:**
 ```python
-class MessageBus:
-    redis_host: str                    # REQUIRED - Redis server host
-    redis_port: int                    # REQUIRED - Redis server port
-    use_zmq: bool                      # REQUIRED - Enable ZeroMQ fallback
-    zmq_port: int                      # REQUIRED - ZeroMQ port
-    fallback_in_memory: bool           # REQUIRED - Enable in-memory fallback
+# Redis connection fails
+bus = MessageBus(redis_host="invalid")
+# Should fall back to in-memory
+assert bus.redis_client is None
+# Publish/subscribe should still work
+assert bus.publish("test", {"data": "test"}) == True
 ```
 
----
-
-## Function Signatures (Contracts)
-
-### `__init__(redis_host: str, redis_port: int, use_zmq: bool, zmq_port: int, fallback_in_memory: bool)`
-**Pre:** Valid host and port values
-**Post:** MessageBus initialized with specified transports
-**Raises:** ConnectionError if all transports fail
-**Retry:** No
-**Side Effects:** Initializes Redis, ZeroMQ, in-memory transports
-
-### `publish(channel: str, message: Any) -> None`
-**Pre:** channel is non-empty string
-**Post:** message published to all subscribers
-**Raises:** ConnectionError if all transports fail
-**Retry:** ✅ Yes (falls back through transports)
-**Side Effects:** Message queued for delivery
-
-### `subscribe(channel: str, callback: Callable[[Any], None]) -> None`
-**Pre:** channel is non-empty string, callback is callable
-**Post:** callback invoked for messages on channel
-**Raises:** ConnectionError if all transports fail
-**Retry:** ✅ Yes (falls back through transports)
-**Side Effects:** Adds subscription to transport
-
-### `unsubscribe(channel: str, callback: Callable[[Any], None]) -> None`
-**Pre:** channel and callback previously subscribed
-**Post:** callback removed from subscriptions
-**Raises:** KeyError if subscription not found
-**Retry:** No
-**Side Effects:** Removes subscription
-
-### `close() -> None`
-**Pre:** None
-**Post:** All connections closed
-**Raises:** None
-**Retry:** No
-**Side Effects:** Closes Redis, ZeroMQ connections
+**Check:** Fallback logic works
 
 ---
 
-## Acceptance Criteria
-- [ ] Redis pub/sub is primary transport
-- [ ] ZeroMQ fallback when Redis unavailable
-- [ ] In-memory fallback when both external transports fail
-- [ ] Graceful degradation through transport hierarchy
-- [ ] Thread-safe publish/subscribe operations
-- [ ] Connection error raised only if all transports fail
-- [ ] Proper cleanup in close()
-- [ ] Callbacks invoked on message receipt
+### MSG-002: ZeroMQ High-Frequency
+**Priority:** P2 (Medium - Performance)
+
+**Requirement:** High-frequency channels (market-ticks, signals) should use ZeroMQ when enabled.
+
+**Acceptance Criteria:**
+```python
+bus = MessageBus(use_zmq=True)
+# High-frequency channels should use ZMQ
+bus.publish("market-ticks", {"price": 100.0})
+# Should publish to ZMQ socket
+```
+
+**Check:** ZeroMQ used for high-freq channels
 
 ---
 
-## Critical Rules (MUST NOT BREAK)
+### MSG-003: Secure Serialization
+**Priority:** P0 (Critical - Security)
 
-**Reglas universales:** Ver `../../BASE_RULES.md` (96+ rules organized by priority)
+**Requirement:** All messages must use JSON+HMAC signing, not pickle.
 
-### Reglas ESPECÍFICAS de este archivo:
+**Acceptance Criteria:**
+```python
+# Must use sign_and_dump, not pickle
+# This is enforced in the code
+```
 
-| Rule | Source | Requirement | Current Status |
-|------|--------|-------------|----------------|
-| ASYNC-001 | BASE_RULES.md | Use async def | ⚠️ PARTIAL - May need async publish/subscribe |
-| ASYNC-005 | BASE_RULES.md | Timeouts for external calls | ⚠️ GAP - No timeout configuration |
-| CC-006 | BASE_RULES.md | Explicit error handling | ✅ OK - ConnectionError raised |
-| LOG-004 | BASE_RULES.md | Error logging with stack traces | ⚠️ GAP - Should log transport failures |
+**Check:** sign_and_dump/verify_and_load used
+
+---
+
+### MSG-004: Thread-Safe Subscription
+**Priority:** P1 (High - Concurrent access)
+
+**Requirement:** Subscriptions must run in separate threads to avoid blocking.
+
+**Acceptance Criteria:**
+```python
+bus = MessageBus()
+def callback(msg):
+    pass
+thread = bus.subscribe("test", callback)
+assert thread is not None  # Thread returned
+assert thread.is_alive()  # Thread running
+```
+
+**Check:** Threading used correctly
+
+---
+
+### MSG-005: In-Memory Callbacks
+**Priority:** P2 (Medium - Fallback behavior)
+
+**Requirement:** In-memory fallback must call registered callbacks synchronously.
+
+**Acceptance Criteria:**
+```python
+bus = MessageBus()  # Redis unavailable
+messages = []
+def callback(msg):
+    messages.append(msg)
+bus.subscribe("test", callback)
+bus.publish("test", {"data": "test"})
+assert len(messages) == 1  # Callback invoked
+```
+
+**Check:** In-memory callbacks work
+
+---
+
+### MSG-006: Connection Cleanup
+**Priority:** P1 (High - Resource management)
+
+**Requirement:** All connections must be properly closed on cleanup.
+
+**Acceptance Criteria:**
+```python
+bus = MessageBus()
+bus.close()
+# All connections should be closed
+# No resource leaks
+```
+
+**Check:** close() method cleans up
+
+---
+
+### MSG-007: Error Handling
+**Priority:** P1 (High - Robustness)
+
+**Requirement:** Publish failures should be logged but not crash.
+
+**Acceptance Criteria:**
+```python
+bus = MessageBus()
+# Publish with invalid data should log error, not crash
+result = bus.publish("test", "invalid")
+# Should return False, log error
+```
+
+**Check:** Error handling in publish()
+
+---
+
+### MSG-008: Global Instance Management
+**Priority:** P2 (Medium - Singleton pattern)
+
+**Requirement:** Global message bus should be singleton (same instance returned).
+
+**Acceptance Criteria:**
+```python
+bus1 = get_message_bus()
+bus2 = get_message_bus()
+assert bus1 is bus2  # Same instance
+```
+
+**Check:** Singleton pattern works
+
+---
+
+## BASE_RULES Compliance
+
+### Critical Rules (P0)
+- **SEC-005:** Audit logging ✅ (all operations logged)
+- **CC-006:** Explicit error handling ✅
+
+### High Priority (P1)
+- **TYP-001:** Type hints present ✅
+- **CC-001:** Descriptive names ✅
+- **LOG-002:** Context in logs ✅
+
+### Medium Priority (P2)
+- **QL-001:** Complexity reasonable ✅
+- **CC-007:** Small methods ✅
+
+---
+
+## Known Issues & Technical Debt
+
+### Issues
+1. **No message persistence** - Messages lost if no subscribers
+2. **No message ordering** - No guarantee of message order
+3. **No backpressure** - No flow control for slow consumers
+
+### Technical Debt
+1. **Add message queue** - For message persistence
+2. **Add message ordering** - Sequence numbers or timestamps
+3. **Add backpressure** - Flow control for high-throughput scenarios
+
+---
+
+## Testing Requirements
+
+### Unit Tests
+- [ ] Test Redis fallback
+- [ ] Test ZeroMQ high-frequency
+- [ ] Test secure serialization
+- [ ] Test thread-safe subscriptions
+- [ ] Test in-memory callbacks
+- [ ] Test connection cleanup
+- [ ] Test error handling
+- [ ] Test global instance
+
+### Integration Tests
+- [ ] Test with real Redis
+- [ ] Test with real ZeroMQ
+- [ ] Test high-throughput scenarios
+- [ ] Test message delivery guarantees
+
+---
+
+## Security Considerations
+
+1. **No pickle** ✅ (uses JSON+HMAC)
+2. **Message signing** ✅ (HMAC signatures)
+3. **No injection** ✅ (structured data)
+
+---
+
+## Performance Considerations
+
+1. **Redis pub/sub** - High throughput ✅
+2. **ZeroMQ** - Very high throughput ✅
+3. **In-memory** - Fast but no persistence ✅
 
 ---
 
 ## Dependencies
-- **External:** redis, zmq (optional)
-- **Internal:** None
+
+**External:**
+- `redis` (optional, for pub/sub)
+- `zmq` (optional, for high-frequency)
+- `logging` (stdlib)
+- `threading` (stdlib)
+- `typing` (stdlib)
+
+**Internal:**
+- `app.core.secure_serialization` (sign_and_dump, verify_and_load)
 
 ---
 
-## Required Tests
-- **tests/core/test_messaging.py:**
-  - Test Redis publish/subscribe
-  - Test ZeroMQ fallback when Redis unavailable
-  - Test in-memory fallback when both external fail
-  - Test connection error when all transports fail
-  - Test unsubscribe removes subscription
-  - Test close() cleans up connections
-  - Test thread-safe concurrent operations
+## Migration Notes
+
+**From direct calls:**
+1. Identify inter-module communication
+2. Replace with pub/sub messaging
+3. Add message handlers
+4. Test message delivery
+
+**To messaging system:**
+1. Import get_message_bus()
+2. Use publish() for sending
+3. Use subscribe() for receiving
+4. Handle async message processing
 
 ---
 
-## Notes
-Multi-transport fallback ensures resilience. Consider async/await for better performance with high message throughput.
+## Changelog
+
+### Version 1.0.0 (Initial)
+- Redis pub/sub messaging
+- ZeroMQ high-frequency support
+- In-memory fallback
+- Secure serialization
+- Thread-safe subscriptions
+
+---
+
+**Last Updated:** 2026-02-06  
+**Next Review:** After production deployment

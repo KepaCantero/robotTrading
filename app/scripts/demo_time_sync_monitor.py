@@ -31,38 +31,38 @@ logger = logging.getLogger(__name__)
 
 async def demo_basic_monitoring():
     """Demonstrate basic monitoring functionality."""
-    print("\n" + "=" * 60)
-    print("DEMO: Basic Time Sync Monitoring")
-    print("=" * 60 + "\n")
+    logger.debug("\n" + "=" * 60)
+    logger.debug("DEMO: Basic Time Sync Monitoring")
+    logger.debug("=" * 60 + "\n")
 
     # Get monitor instance
     monitor = get_time_sync_monitor()
 
     # Check NTP availability
-    print(f"NTP Available: {monitor.get_ntp_availability()}")
+    logger.debug(f"NTP Available: {monitor.get_ntp_availability()}")
 
     # Perform a force check
-    print("\nPerforming force check...")
+    logger.debug("\nPerforming force check...")
     result = await monitor.force_check()
 
-    print(f"Drift: {result['drift_seconds']:.3f} seconds")
-    print(f"Is Synced: {result['is_synced']}")
-    print(f"Threshold: {result['threshold']} seconds")
-    print(f"NTP Server: {result['ntp_server']}")
-    print(f"Local Time: {result['local_time']}")
-    print(f"NTP Time: {result['ntp_time']}")
+    logger.debug(f"Drift: {result['drift_seconds']:.3f} seconds")
+    logger.debug(f"Is Synced: {result['is_synced']}")
+    logger.debug(f"Threshold: {result['threshold']} seconds")
+    logger.debug(f"NTP Server: {result['ntp_server']}")
+    logger.debug(f"Local Time: {result['local_time']}")
+    logger.debug(f"NTP Time: {result['ntp_time']}")
 
     # Get status
     status = monitor.get_status()
-    print(f"\nTotal Checks: {status.checks_total}")
-    print(f"Failed Checks: {status.checks_failed}")
+    logger.debug(f"\nTotal Checks: {status.checks_total}")
+    logger.debug(f"Failed Checks: {status.checks_failed}")
 
 
 async def demo_monitoring_with_callbacks():
     """Demonstrate monitoring with callbacks."""
-    print("\n" + "=" * 60)
-    print("DEMO: Monitoring with Callbacks")
-    print("=" * 60 + "\n")
+    logger.debug("\n" + "=" * 60)
+    logger.debug("DEMO: Monitoring with Callbacks")
+    logger.debug("=" * 60 + "\n")
 
     # Create callbacks
     drift_detected_count = [0]
@@ -88,7 +88,7 @@ async def demo_monitoring_with_callbacks():
     monitor = TimeSyncMonitor(config)
 
     # Start monitoring
-    print("Starting monitoring for 6 seconds...")
+    logger.debug("Starting monitoring for 6 seconds...")
     await monitor.start()
 
     # Let it run for a few cycles
@@ -97,15 +97,15 @@ async def demo_monitoring_with_callbacks():
     # Stop monitoring
     await monitor.stop()
 
-    print(f"\nDrift detected callbacks: {drift_detected_count[0]}")
-    print(f"Critical drift callbacks: {critical_drift_count[0]}")
+    logger.debug(f"\nDrift detected callbacks: {drift_detected_count[0]}")
+    logger.debug(f"Critical drift callbacks: {critical_drift_count[0]}")
 
 
 async def demo_order_validation():
     """Demonstrate order validation."""
-    print("\n" + "=" * 60)
-    print("DEMO: Order Validation")
-    print("=" * 60 + "\n")
+    logger.debug("\n" + "=" * 60)
+    logger.debug("DEMO: Order Validation")
+    logger.debug("=" * 60 + "\n")
 
     monitor = get_time_sync_monitor()
 
@@ -116,30 +116,30 @@ async def demo_order_validation():
         {"symbol": "MSFT", "quantity": 75, "side": "sell", "price": 300.0},
     ]
 
-    print(f"Clock is synced: {monitor.is_synced()}")
-    print(f"Current drift: {monitor.get_drift_seconds():.3f}s")
+    logger.debug(f"Clock is synced: {monitor.is_synced()}")
+    logger.debug(f"Current drift: {monitor.get_drift_seconds():.3f}s")
 
-    print("\nValidating orders:")
+    logger.debug("\nValidating orders:")
     for order in orders:
         is_valid = await monitor.validate_order_timestamp(order)
         status = "✓ VALID" if is_valid else "✗ REJECTED"
-        print(f"  {order['symbol']}: {status}")
+        logger.debug(f"  {order['symbol']}: {status}")
 
     # Get final status
     status = monitor.get_status()
-    print(f"\nStatus: {status.to_dict()}")
+    logger.debug(f"\nStatus: {status.to_dict()}")
 
 
 async def demo_metrics_collection():
     """Demonstrate metrics collection."""
-    print("\n" + "=" * 60)
-    print("DEMO: Metrics Collection")
-    print("=" * 60 + "\n")
+    logger.debug("\n" + "=" * 60)
+    logger.debug("DEMO: Metrics Collection")
+    logger.debug("=" * 60 + "\n")
 
     monitor = get_time_sync_monitor()
 
     # Perform multiple checks
-    print("Performing 5 time sync checks...")
+    logger.debug("Performing 5 time sync checks...")
     for i in range(5):
         await monitor.check_time_drift()
         await asyncio.sleep(0.5)
@@ -147,47 +147,47 @@ async def demo_metrics_collection():
     # Get status
     status = monitor.get_status()
 
-    print("\nMetrics:")
-    print(f"  Total Checks: {status.checks_total}")
-    print(f"  Failed Checks: {status.checks_failed}")
-    print(f"  Current Drift: {status.drift_seconds:.3f}s")
-    print(f"  Is Synced: {status.is_synced}")
-    print(f"  Last Check: {status.last_check}")
-    print(f"  NTP Server: {status.ntp_server}")
+    logger.debug("\nMetrics:")
+    logger.debug(f"  Total Checks: {status.checks_total}")
+    logger.debug(f"  Failed Checks: {status.checks_failed}")
+    logger.debug(f"  Current Drift: {status.drift_seconds:.3f}s")
+    logger.debug(f"  Is Synced: {status.is_synced}")
+    logger.debug(f"  Last Check: {status.last_check}")
+    logger.debug(f"  NTP Server: {status.ntp_server}")
 
 
 async def demo_clock_sync():
     """Demonstrate clock synchronization (if available)."""
-    print("\n" + "=" * 60)
-    print("DEMO: Clock Synchronization")
-    print("=" * 60 + "\n")
+    logger.debug("\n" + "=" * 60)
+    logger.debug("DEMO: Clock Synchronization")
+    logger.debug("=" * 60 + "\n")
 
     monitor = get_time_sync_monitor()
 
     if not monitor.get_ntp_availability():
-        print("NTP not available - skipping clock sync demo")
+        logger.debug("NTP not available - skipping clock sync demo")
         return
 
-    print("Attempting to sync system clock...")
-    print("Note: This requires root privileges and may not work in all environments\n")
+    logger.debug("Attempting to sync system clock...")
+    logger.debug("Note: This requires root privileges and may not work in all environments\n")
 
     result = await monitor.sync_clock()
 
     if result:
-        print("✓ Clock sync successful")
+        logger.debug("✓ Clock sync successful")
     else:
-        print("✗ Clock sync failed (may require root privileges)")
+        logger.debug("✗ Clock sync failed (may require root privileges)")
 
     # Check drift after sync attempt
     drift = await monitor.check_time_drift()
-    print(f"\nCurrent drift: {drift:.3f}s")
+    logger.debug(f"\nCurrent drift: {drift:.3f}s")
 
 
 async def main():
     """Run all demos."""
-    print("\n" + "=" * 60)
-    print("Time Sync Monitor Demo - Phase 2.7")
-    print("=" * 60)
+    logger.debug("\n" + "=" * 60)
+    logger.debug("Time Sync Monitor Demo - Phase 2.7")
+    logger.debug("=" * 60)
 
     try:
         # Run demos
@@ -197,12 +197,12 @@ async def main():
         await demo_monitoring_with_callbacks()
         await demo_clock_sync()
 
-        print("\n" + "=" * 60)
-        print("Demo completed successfully!")
-        print("=" * 60 + "\n")
+        logger.debug("\n" + "=" * 60)
+        logger.debug("Demo completed successfully!")
+        logger.debug("=" * 60 + "\n")
 
     except KeyboardInterrupt:
-        print("\nDemo interrupted by user")
+        logger.debug("\nDemo interrupted by user")
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"Demo error: {e}", exc_info=True)
 

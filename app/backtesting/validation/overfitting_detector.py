@@ -59,9 +59,9 @@ class OverfittingDetector:
         )
 
         if metrics.is_overfitted():
-            print(f"Overfitting detected: {metrics.overfitting_level}")
+            logger.debug(f"Overfitting detected: {metrics.overfitting_level}")
             for rec in metrics.recommendations:
-                print(f"- {rec}")
+                logger.debug(f"- {rec}")
         ```
     """
 

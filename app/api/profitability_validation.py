@@ -3,15 +3,21 @@ API endpoints para validación de rentabilidad de estrategias.
 
 Este módulo proporciona endpoints REST para validar que las estrategias
 generen rentabilidad neta positiva después de todos los costos operativos.
+
+GAP Fixes:
+- API-002: Added structured logging with correlation IDs
+- API-004: TODO: Test coverage requires creating test files
 """
 
 from __future__ import annotations
 
+import asyncio
 import logging
+import traceback
 from decimal import Decimal
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 from requests.exceptions import HTTPError, RequestException
 
@@ -27,6 +33,8 @@ from app.models.profitability_validation import (
 )
 from app.services.profitability_validation_service import ProfitabilityValidationService
 
+from . import audit_logger, get_correlation_id
+
 logger = logging.getLogger(__name__)
 
 # Crear router
@@ -39,6 +47,7 @@ profitability_service = ProfitabilityValidationService()
 @router.post("/validate", response_model=ValidationResponse)
 async def validate_strategy_profitability(
     request: ValidationRequest,
+    http_request: Request,
 ) -> ValidationResponse:
     """
     Validar rentabilidad de una estrategia específica.
@@ -49,6 +58,7 @@ async def validate_strategy_profitability(
 
     Args:
         request: Datos de la estrategia y trades para validación
+        http_request: FastAPI Request object
 
     Returns:
         ValidationResponse: Resultado completo de la validación
@@ -56,9 +66,12 @@ async def validate_strategy_profitability(
     Raises:
         HTTPException: Si hay errores en la validación
     """
+    correlation_id = get_correlation_id()
+    logger.info(
+        f"Validating profitability for strategy: {request.strategy_name}",
+        extra={"correlation_id": correlation_id, "strategy_name": request.strategy_name},
+    )
     try:
-        logger.info(f"Validating profitability for strategy: {request.strategy_name}")
-
         # Validar datos de entrada
         if not request.trades_data:
             raise HTTPException(
@@ -72,19 +85,71 @@ async def validate_strategy_profitability(
         if request.period_start >= request.period_end:
             raise HTTPException(status_code=400, detail="Period start must be before period end")
 
-        # Ejecutar validación
-        result = profitability_service.validate_strategy_profitability(request)
+        # Ejecutar validación con timeout
+        result = await asyncio.wait_for(
+            profitability_service.validate_strategy_profitability(request),
+            timeout=30.0,  # API-010: Add timeout configuration
+        )
+
+        audit_logger.log_action(
+            action="profitability_validated",
+            method=http_request.method,
+            path=http_request.url.path,
+            details={
+                "strategy_name": request.strategy_name,
+                "validation_status": result.validation.status.value,
+                "is_profitable": result.validation.is_profitable,
+            },
+        )
 
         logger.info(
-            f"Validation completed for {request.strategy_name}: {result.validation.status.value}"
+            f"Validation completed for {request.strategy_name}: {result.validation.status.value}",
+            extra={"correlation_id": correlation_id, "status": result.validation.status.value},
         )
 
         return result
 
+    except asyncio.TimeoutError as e:
+        logger.error(
+            f"Timeout validating profitability for {request.strategy_name}",
+            extra={
+                "correlation_id": correlation_id,
+                "strategy_name": request.strategy_name,
+                "error": str(e),
+                "stack_trace": traceback.format_exc(),
+            },
+        )
+        audit_logger.log_error(
+            method=http_request.method,
+            path=http_request.url.path,
+            error_type="TimeoutError",
+            error_message=str(e),
+            stack_trace=traceback.format_exc(),
+        )
+        raise HTTPException(
+            status_code=504,
+            detail=f"Timeout during profitability validation: {str(e)}",
+        )
     except HTTPException:
         raise
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-        logger.error(f"Error validating strategy profitability: {str(e)}")
+        logger.error(
+            f"Error validating strategy profitability: {str(e)}",
+            extra={
+                "correlation_id": correlation_id,
+                "strategy_name": request.strategy_name,
+                "error_type": type(e).__name__,
+                "error": str(e),
+                "stack_trace": traceback.format_exc(),
+            },
+        )
+        audit_logger.log_error(
+            method=http_request.method,
+            path=http_request.url.path,
+            error_type=type(e).__name__,
+            error_message=str(e),
+            stack_trace=traceback.format_exc(),
+        )
         raise HTTPException(
             status_code=500,
             detail=f"Internal error during profitability validation: {str(e)}",

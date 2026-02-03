@@ -502,30 +502,30 @@ class SensitivityAnalyzer:
 
     def print_sensitivity_report(self, report: SensitivityReport) -> None:
         """Print human-readable sensitivity analysis report."""
-        print("\n" + "=" * 80)
-        print("SENSITIVITY ANALYSIS REPORT")
-        print("=" * 80)
-        print(f"Analysis Date: {report.analysis_date.isoformat()}")
-        print(f"Overall Robustness Score: {report.overall_robustness_score:.1f}/100")
-        print(f"\nTotal Parameters Analyzed: {len(report.parameter_results)}")
-        print(f"  - Robust (elasticity < 0.5): {len(report.robust_parameters)}")
-        print(f"  - Normal (0.5 ≤ elasticity < 2.0): {len(report.normal_parameters)}")
-        print(f"  - Critical (elasticity ≥ 2.0): {len(report.critical_parameters)}")
+        logger.debug("\n" + "=" * 80)
+        logger.debug("SENSITIVITY ANALYSIS REPORT")
+        logger.debug("=" * 80)
+        logger.debug(f"Analysis Date: {report.analysis_date.isoformat()}")
+        logger.debug(f"Overall Robustness Score: {report.overall_robustness_score:.1f}/100")
+        logger.debug(f"\nTotal Parameters Analyzed: {len(report.parameter_results)}")
+        logger.debug(f"  - Robust (elasticity < 0.5): {len(report.robust_parameters)}")
+        logger.debug(f"  - Normal (0.5 ≤ elasticity < 2.0): {len(report.normal_parameters)}")
+        logger.debug(f"  - Critical (elasticity ≥ 2.0): {len(report.critical_parameters)}")
 
-        print("\n" + "-" * 80)
-        print("PARAMETER DETAILS")
-        print("-" * 80)
+        logger.debug("\n" + "-" * 80)
+        logger.debug("PARAMETER DETAILS")
+        logger.debug("-" * 80)
 
         for param_name, result in sorted(report.parameter_results.items()):
-            print(f"\n{param_name}:")
-            print(f"  Base Value: {result.base_value}")
-            print(f"  Optimal Value: {result.optimal_value}")
-            print(f"  Elasticity Score: {result.elasticity_score:.4f}")
-            print(f"  Sensitivity Level: {result.sensitivity_level}")
-            print(f"  Plateau Width: {result.plateau_width:.2%}")
+            logger.debug(f"\n{param_name}:")
+            logger.debug(f"  Base Value: {result.base_value}")
+            logger.debug(f"  Optimal Value: {result.optimal_value}")
+            logger.debug(f"  Elasticity Score: {result.elasticity_score:.4f}")
+            logger.debug(f"  Sensitivity Level: {result.sensitivity_level}")
+            logger.debug(f"  Plateau Width: {result.plateau_width:.2%}")
             if result.confidence_interval_95[1] > result.confidence_interval_95[0]:
                 print(
                     f"  95% CI: [{result.confidence_interval_95[0]:.4f}, {result.confidence_interval_95[1]:.4f}]"
                 )
 
-        print("\n" + "=" * 80)
+        logger.debug("\n" + "=" * 80)

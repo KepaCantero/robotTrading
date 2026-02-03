@@ -62,7 +62,7 @@ class RegimeDetector:
             as_of_date=date.today()
         )
 
-        print(current_regime.description())
+        logger.debug(current_regime.description())
 
         # Get regime history
         history = detector.detect_regime_history(

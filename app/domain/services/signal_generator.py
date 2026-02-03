@@ -9,7 +9,7 @@ Reference: Rule 05-architecture.md, Rule 03-solid-principles.md
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
@@ -33,7 +33,7 @@ class SignalStrength(str, Enum):
     VERY_STRONG = "very_strong"
 
 
-@dataclass
+@dataclass(frozen=True)
 class Signal:
     """
     Trading signal for a symbol.
@@ -50,12 +50,7 @@ class Signal:
     take_profit: Optional[Decimal] = None
     quantity: Optional[Decimal] = None
     reason: str = ""
-    metadata: Dict[str, Any] = None
-
-    def __post_init__(self):
-        """Initialize defaults."""
-        if self.metadata is None:
-            self.metadata = {}
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
     @property
     def is_buy(self) -> bool:

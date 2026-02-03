@@ -12,6 +12,8 @@ Create Date: 2026-01-27
 
 """
 
+import logging
+
 from typing import Sequence, Union
 
 import sqlalchemy as sa
@@ -35,8 +37,8 @@ def upgrade() -> None:
 
     if not is_postgresql:
         # Skip this migration on SQLite
-        print("WARNING: FIFO tax tracking migration requires PostgreSQL.")
-        print("         Skipping migration on SQLite database.")
+        logger.debug("WARNING: FIFO tax tracking migration requires PostgreSQL.")
+        logger.debug("         Skipping migration on SQLite database.")
         return
 
     # ==========================================================================

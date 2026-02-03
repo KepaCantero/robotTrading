@@ -13,7 +13,7 @@ import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import Optional
 
 from app.domain.entities.trade import Trade, ExitReason
 from app.domain.entities.position import Position
@@ -153,7 +153,7 @@ class TaxCalculator:
 
     def calculate_period_tax(
         self,
-        trades: List[Trade],
+        trades: list[Trade],
         start_date: datetime,
         end_date: datetime,
     ) -> TaxLiability:
@@ -264,7 +264,7 @@ class TaxCalculator:
     def create_tax_lots_from_position(
         self,
         position: Position,
-    ) -> List[TaxLot]:
+    ) -> list[TaxLot]:
         """
         Create tax lots from a position.
 
@@ -288,9 +288,9 @@ class TaxCalculator:
 
     def optimize_tax_loss_harvesting(
         self,
-        open_positions: List[Position],
-        current_prices: Dict[str, Decimal],
-    ) -> List[str]:
+        open_positions: list[Position],
+        current_prices: dict[str, Decimal],
+    ) -> list[str]:
         """
         Identify positions for tax-loss harvesting.
 
@@ -366,8 +366,8 @@ class TaxCalculator:
     def estimate_year_end_tax(
         self,
         year_trades: List[Trade],
-        open_positions: List[Position],
-        current_prices: Dict[str, Decimal],
+        open_positions: list[Position],
+        current_prices: dict[str, Decimal],
     ) -> TaxLiability:
         """
         Estimate year-end tax liability including unrealized gains.

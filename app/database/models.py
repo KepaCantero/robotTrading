@@ -77,11 +77,11 @@ class APIKey(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     key_hash: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
-    permissions: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    permissions: Mapped[dict] = mapped_column(JSON, nullable=False, default=lambda: {})
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     last_used: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
@@ -104,7 +104,7 @@ class Portfolio(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -165,6 +165,7 @@ class Asset(Base):
         Index("idx_assets_asset_class", "asset_class"),
         Index("idx_assets_exchange", "exchange"),
         Index("idx_assets_currency", "currency"),
+        CheckConstraint("currency ~ '^[A-Z]{3}$'", name="ck_assets_currency_iso"),
     )
 
 
@@ -175,10 +176,10 @@ class Position(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     portfolio_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("portfolios.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("portfolios.id", ondelete="CASCADE"), nullable=False
     )
     asset_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("assets.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("assets.id", ondelete="CASCADE"), nullable=False
     )
     quantity: Mapped[Decimal] = mapped_column(Numeric(15, 8), nullable=False)
     average_price: Mapped[Decimal] = mapped_column(Numeric(15, 4), nullable=False)
@@ -212,12 +213,12 @@ class Trade(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     portfolio_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("portfolios.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("portfolios.id", ondelete="CASCADE"), nullable=False
     )
     asset_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("assets.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("assets.id", ondelete="CASCADE"), nullable=False
     )
-    order_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)
+    order_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, unique=True, index=True)
     side: Mapped[str] = mapped_column(String(4), nullable=False)  # BUY, SELL
     quantity: Mapped[Decimal] = mapped_column(Numeric(15, 8), nullable=False)
     price: Mapped[Decimal] = mapped_column(Numeric(15, 4), nullable=False)
@@ -255,7 +256,7 @@ class MarketData(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     asset_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("assets.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("assets.id", ondelete="CASCADE"), nullable=False
     )
     timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)
     open_price: Mapped[Decimal] = mapped_column(Numeric(15, 4), nullable=False)
@@ -280,6 +281,8 @@ class MarketData(Base):
         CheckConstraint("close_price > 0", name="ck_market_data_close_positive"),
         CheckConstraint("volume >= 0", name="ck_market_data_volume_nonnegative"),
         CheckConstraint("high_price >= low_price", name="ck_market_data_high_ge_low"),
+        CheckConstraint("close_price >= low_price", name="ck_market_data_close_ge_low"),
+        CheckConstraint("close_price <= high_price", name="ck_market_data_close_le_high"),
     )
 
 
@@ -290,7 +293,7 @@ class Signal(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     asset_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("assets.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("assets.id", ondelete="CASCADE"), nullable=False
     )
     strategy_name: Mapped[str] = mapped_column(String(100), nullable=False)
     signal_type: Mapped[str] = mapped_column(String(10), nullable=False)  # BUY, SELL, HOLD
@@ -298,7 +301,7 @@ class Signal(Base):
     confidence: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)  # 0-100
     price: Mapped[Decimal] = mapped_column(Numeric(15, 4), nullable=False)
     volume: Mapped[Optional[Decimal]] = mapped_column(Numeric(15, 8), nullable=True)
-    meta_data: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    meta_data: Mapped[dict] = mapped_column(JSON, nullable=False, default=lambda: {})
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships
@@ -323,7 +326,7 @@ class Backtest(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     portfolio_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("portfolios.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("portfolios.id", ondelete="CASCADE"), nullable=False
     )
     strategy_name: Mapped[str] = mapped_column(String(100), nullable=False)
     start_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
@@ -335,8 +338,8 @@ class Backtest(Base):
     max_drawdown: Mapped[Optional[Decimal]] = mapped_column(Numeric(8, 4), nullable=True)
     win_rate: Mapped[Optional[Decimal]] = mapped_column(Numeric(5, 2), nullable=True)  # Percentage
     total_trades: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    parameters: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
-    results: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    parameters: Mapped[dict] = mapped_column(JSON, nullable=False, default=lambda: {})
+    results: Mapped[dict] = mapped_column(JSON, nullable=False, default=lambda: {})
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default="COMPLETED"
     )  # RUNNING, COMPLETED, FAILED
@@ -365,7 +368,7 @@ class RiskMetrics(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     portfolio_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("portfolios.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("portfolios.id", ondelete="CASCADE"), nullable=False
     )
     calculation_date: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)
     var_95: Mapped[Optional[Decimal]] = mapped_column(

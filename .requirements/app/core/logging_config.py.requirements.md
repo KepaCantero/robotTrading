@@ -1,120 +1,298 @@
-# logging_config.py
+# logging_config.py Requirements
+
+**File Path:** `app/core/logging_config.py`  
+**Last Updated:** 2025-02-06  
+**Audit Status:** NEEDS_AUDIT
 
 ## Purpose
-Centralized logging configuration with file rotation, separation by log level, and module-specific loggers for production trading systems.
 
----
+Centralized logging configuration with file rotation, correlation ID tracking, sensitive data filtering, JSON format support, and timing information.
 
-## Type Definitions / Data Classes
+## Type Definitions
 
-⚠️ **CRITICAL:** This file uses standard types only (no Pydantic models or dataclasses).
-
-### Configuration Parameters
+### Classes
 ```python
-def setup_file_logging(
-    log_dir: str = "logs",              # REQUIRED - Directory for log files
-    root_level: int = logging.INFO,     # REQUIRED - Minimum level for root logger
-    file_level: int = logging.WARNING,  # REQUIRED - Minimum level for file handlers
-    console_level: Optional[int] = logging.INFO,  # None disables console in production
-) -> None
+class SensitiveDataFilter(logging.Filter):
+    """Filter to redact sensitive data from log messages."""
+    REDACTED: str = "***REDACTED***"
+
+class JSONFormatter(logging.Formatter):
+    """JSON formatter for structured logging."""
+
+class TimedFormatter(logging.Formatter):
+    """Enhanced text formatter with timing information."""
 ```
 
----
+## Function Signatures
 
-## Function Signatures (Contracts)
+### Core Functions
+```python
+def get_logger(name: str) -> logging.Logger:
+    """Get a logger instance with the given name."""
+    
+def get_correlation_id() -> str:
+    """Get or generate correlation ID for current context."""
+    
+def set_correlation_id(cid: str) -> None:
+    """Set correlation ID for current context."""
+```
 
-### `setup_file_logging(log_dir: str, root_level: int, file_level: int, console_level: Optional[int]) -> None`
-**Pre:** log_dir must be creatable, levels must be valid logging constants
-**Post:** Creates 3 rotating file handlers (all.log, warnings.log, errors.log) + optional console handler
-**Raises:** OSError if log_dir cannot be created
-**Retry:** ❌ No
-**Side Effects:** Creates log files, modifies root logger handlers, clears existing handlers
-
-### `setup_module_loggers() -> None`
-**Pre:** None
-**Post:** Creates module-specific error loggers for strategies, backtesting, services, api, core
-**Raises:** OSError if logs/ directory cannot be created
-**Retry:** ❌ No
-**Side Effects:** Creates rotating file handlers for each module
-
----
+### Setup Functions
+```python
+def setup_file_logging(
+    log_dir: str = "logs",
+    root_level: int = logging.INFO,
+    file_level: int = logging.WARNING,
+    console_level: Optional[int] = logging.INFO,
+    use_json: bool = False,
+) -> None:
+    """Configure logging to write all warnings and errors to files."""
+    
+def setup_module_loggers(use_json: bool = False) -> None:
+    """Configure specific loggers for important modules."""
+```
 
 ## Acceptance Criteria
-- [ ] Log directory is created with parents=True if it doesn't exist
-- [ ] Warnings and errors are written to SEPARATE files (warnings.log, errors.log)
-- [ ] All logs (INFO+) are written to all.log
-- [ ] RotatingFileHandler uses 10MB max size with 10-20 backups
-- [ ] Console logging is DISABLED in production (ENVIRONMENT=production)
-- [ ] Error logs include full path: %(pathname)s
-- [ ] Warning logs include function name and line number
-- [ ] Module-specific loggers are created for all 5 important modules
-- [ ] Existing handlers are cleared before adding new ones (prevents duplicates)
-- [ ] UTF-8 encoding is used for all log files
-- [ ] Known warnings are suppressed (pydantic, pandas deprecations)
-- [ ] Warnings are shown only once per unique message
 
----
+### AC-LOG-001: JSON Structured Logging
+```bash
+# Test: JSON format produces valid JSON
+python -c "
+import logging
+import json
+from app.core.logging_config import setup_file_logging, get_logger
+setup_file_logging(use_json=True)
+logger = get_logger('test')
+# Check that JSON formatter is used
+import io
+import sys
+handler = logging.StreamHandler(io.StringIO())
+handler.setFormatter(JSONFormatter())
+logging.getLogger('test').addHandler(handler)
+logger.info('test message')
+# Verify JSON output
+"
+```
 
-## Critical Rules (MUST NOT BREAK)
+### AC-LOG-002: Correlation ID Tracking
+```bash
+# Test: Correlation ID is consistent across logs
+python -c "
+from app.core.logging_config import get_correlation_id, set_correlation_id
+set_correlation_id('test-123')
+assert get_correlation_id() == 'test-123'
+assert get_correlation_id() == 'test-123'  # Consistent
+"
+```
 
-**Reglas universales:** Ver `../../BASE_RULES.md` (96+ rules organized by priority)
+### AC-LOG-003: Sensitive Data Redaction
+```bash
+# Test: Sensitive data is redacted from logs
+python -c "
+from app.core.logging_config import SensitiveDataFilter
+import logging
+f = SensitiveDataFilter()
+record = logging.LogRecord(
+    'test', logging.INFO, 'test.py', 1,
+    'password=secret123', (), None
+)
+f.filter(record)
+assert '***REDACTED***' in record.msg
+assert 'secret123' not in record.msg
+"
+```
 
-### Reglas ESPECÍFICAS de este archivo:
+### AC-LOG-004: Timing Information
+```bash
+# Test: Timing information included in logs
+python -c "
+from app.core.logging_config import TimedFormatter
+import logging
+formatter = TimedFormatter()
+record = logging.LogRecord(
+    'test', logging.INFO, 'test.py', 1,
+    'test message', (), None
+)
+formatted = formatter.format(record)
+assert 'elapsed_ms' in formatted or 'delta_ms' in formatted
+"
+```
 
-| Rule | Source | Requirement | Current Status |
-|------|--------|-------------|----------------|
-| LOG-001 | BASE_RULES.md | Structured logging (JSON format) | ✅ FIXED - 2026-02-01 - Added JSONFormatter class with LOG_JSON env var |
-| LOG-002 | BASE_RULES.md | Include correlation IDs | ✅ FIXED - 2026-02-01 - Added ContextVar for correlation ID tracking |
-| LOG-003 | BASE_RULES.md | Appropriate log levels | ✅ OK |
-| LOG-004 | BASE_RULES.md | Log exceptions with stack traces | ✅ OK - Formatters include function/line info |
-| LOG-005 | BASE_RULES.md | No sensitive data in logs | ⚠️ NOT ENFORCED - No sanitization |
-| LOG-006 | BASE_RULES.md | Add timing info for operations | ✅ FIXED - 2026-02-01 - Added TimedFormatter with timing fields |
-| LOG-007 | BASE_RULES.md | Implement health check endpoints | ⚠️ NOT APPLIED - This is config module |
+## Critical Rules
 
-### Logging-Specific Rules
+### Rule LOG-001: Structured Logging
+**Priority:** P1  
+**Description:** Support JSON format for structured logging when `LOG_JSON=true` or `use_json=True`.
 
-| Rule | Requirement | Current Status |
-|------|-------------|----------------|
-| LOG-ROTATE-001 | RotatingFileHandler must prevent unlimited disk usage | ✅ OK - 10MB max, 10-20 backups |
-| LOG-PROD-001 | Production must disable console logging | ✅ OK - Checks ENVIRONMENT var |
-| LOG-ENC-001 | UTF-8 encoding for international characters | ✅ OK |
-| LOG-INIT-001 | Logging configured on module import | ✅ OK - Auto-initializes at import |
-| LOG-CLR-001 | Clear existing handlers before setup | ✅ OK - handlers.clear() called |
-| LOG-SEP-001 | Separate files by severity (INFO, WARNING, ERROR) | ✅ OK |
+### Rule LOG-002: Correlation ID
+**Priority:** P0  
+**Description:** All log entries must include correlation ID for request tracing across async operations.
 
----
+### Rule LOG-003: File Rotation
+**Priority:** P0  
+**Description:** Use `RotatingFileHandler` with 10MB max size and appropriate backup count.
+
+### Rule LOG-004: Error Logging
+**Priority:** P0  
+**Description:** All errors and warnings MUST be written to log files, not just console.
+
+### Rule LOG-005: Sensitive Data Sanitization
+**Priority:** P0  
+**Description:** Sensitive data (passwords, tokens, API keys) must be redacted from all logs.
+
+### Rule LOG-006: Timing Information
+**Priority:** P2  
+**Description:** Include timing information (elapsed_ms, delta_ms) in log messages for performance analysis.
 
 ## Dependencies
-- **External:** None (standard library only)
-- **Internal:** None (pure infrastructure module)
-- **Standard Library:** `logging`, `logging.handlers.RotatingFileHandler`, `os`, `sys`, `warnings`, `pathlib.Path`
 
----
+### Internal Dependencies
+None (pure logging module)
+
+### External Dependencies
+```python
+import logging
+import os
+import re
+import sys
+import time
+import uuid
+import warnings
+from contextvars import ContextVar
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
+from typing import Any, Dict, Optional, Pattern
+```
 
 ## Required Tests
-- **tests/core/test_logging_config.py:**
-  - Test log directory creation if it doesn't exist
-  - Test all.log receives INFO+ messages
-  - Test warnings.log receives only WARNING+ messages
-  - Test errors.log receives only ERROR+ messages
-  - Test RotatingFileHandler rotates at 10MB
-  - Test console logging disabled when ENVIRONMENT=production
-  - Test console logging enabled when ENVIRONMENT!=production
-  - Test existing handlers are cleared on setup
-  - Test module-specific loggers are created for all 5 modules
-  - Test UTF-8 encoding handles international characters
-  - Test warning formatters include funcName and lineno
-  - Test error formatters include pathname
-  - Test known warnings are suppressed (pydantic, pandas)
-  - Test warnings.simplefilter("once") shows unique warnings once
-  - Edge case: Log directory with no write permissions
-  - Edge case: Log file already exists (appends, doesn't overwrite)
 
----
+### Unit Tests (app/tests/core/test_logging_config.py)
+```python
+def test_get_logger():
+    """Test getting logger instance."""
+    
+def test_get_correlation_id():
+    """Test correlation ID generation."""
+    
+def test_set_correlation_id():
+    """Test setting correlation ID."""
+    
+def test_correlation_id_consistency():
+    """Test correlation ID is consistent within context."""
+    
+def test_sensitive_data_filter_password():
+    """Test password redaction."""
+    
+def test_sensitive_data_filter_token():
+    """Test token redaction."""
+    
+def test_sensitive_data_filter_api_key():
+    """Test API key redaction."""
+    
+def test_sensitive_data_filter_dict():
+    """Test redaction in dictionary values."""
+    
+def test_sensitive_data_filter_record_dict():
+    """Test redaction in LogRecord.__dict__."""
+    
+def test_json_formatter():
+    """Test JSON formatter produces valid JSON."""
+    
+def test_json_formatter_includes_correlation_id():
+    """Test JSON formatter includes correlation ID."""
+    
+def test_json_formatter_includes_timing():
+    """Test JSON formatter includes timing_ms."""
+    
+def test_timed_formatter():
+    """Test timed formatter includes timing info."""
+    
+def test_timed_formatter_includes_correlation_id():
+    """Test timed formatter includes correlation ID."""
+    
+def test_setup_file_logging():
+    """Test file logging setup."""
+    
+def test_setup_file_logging_json():
+    """Test file logging with JSON format."""
+    
+def test_setup_file_logging_no_console():
+    """Test file logging without console output."""
+    
+def test_setup_module_loggers():
+    """Test module logger setup."""
+    
+def test_warnings_filtering():
+    """Test warnings are filtered appropriately."""
+```
 
-## Notes
-- **Initialization:** Logging is configured automatically on module import - may cause side effects if imported in tests.
-- **Structured Logging:** Currently using text format. Consider migrating to structlog for JSON logging (LOG-001 GAP).
-- **Correlation IDs:** No support for request tracing. Add filter to inject correlation IDs for async operations.
-- **Disk Space:** With 3 files x 10MB x 20 backups = 600MB max per log type. Monitor disk usage in production.
-- **Warning Suppression:** Specific warnings are hardcoded. May need to expand list as dependencies evolve.
+## File-Specific Rules
+
+### Rule LOG-FS-001: Init on Import
+**Priority:** P2  
+**Description:** Logging is configured automatically on module import. No manual setup required.
+
+### Rule LOG-FS-002: Environment-Based Config
+**Priority:** P0  
+**Description:** Console logging disabled in production, JSON logging controlled by `LOG_JSON` env var.
+
+### Rule LOG-FS-003: Duplicate Handler Prevention
+**Priority:** P1  
+**Description:** Clear existing handlers before adding new ones to prevent duplicate logging.
+
+### Rule LOG-FS-004: Sensitive Patterns
+**Priority:** P0  
+**Description:** Comprehensive regex patterns for detecting sensitive data in log messages.
+
+## Sensitive Data Patterns
+
+### Patterns Detected
+```python
+_SENSITIVE_PATTERNS = {
+    "password": re.compile(r"password['\"]?\s*[:=]\s*['\"]?[\w\-]+", re.IGNORECASE),
+    "token": re.compile(r"token['\"]?\s*[:=]\s*['\"]?[\w\-\.]+", re.IGNORECASE),
+    "api_key": re.compile(r"api[_-]?key['\"]?\s*[:=]\s*['\"]?[\w\-]+", re.IGNORECASE),
+    "api_secret": re.compile(r"api[_-]?secret['\"]?\s*[:=]\s*['\"]?[\w\-]+", re.IGNORECASE),
+    "secret": re.compile(r"secret['\"]?\s*[:=]\s*['\"]?[\w\-]+", re.IGNORECASE),
+    "authorization": re.compile(r"authorization['\"]?\s*[:=]\s*['\"]?[Bb]earer\s+[\w\-\.]+", re.IGNORECASE),
+    "bearer": re.compile(r"[Bb]earer\s+[\w\-\.]+", re.IGNORECASE),
+    "credit_card": re.compile(r"\b(?:\d[ -]*?){13,16}\b"),
+    "ssn": re.compile(r"\b\d{3}[-.]?\d{2}[-.]?\d{4}\b"),
+}
+```
+
+### Fields Redacted
+```python
+_SENSITIVE_FIELDS = frozenset({
+    "password", "passwd", "pwd",
+    "token", "access_token", "refresh_token", "auth_token",
+    "api_key", "apikey", "api-key", "api.key",
+    "api_secret", "apisecret", "api-secret",
+    "secret", "secret_key", "secretkey",
+    "authorization", "auth_header",
+    "bearer",
+    "credit_card", "creditcard", "cc_number",
+    "ssn", "social_security",
+    "private_key", "privatekey",
+})
+```
+
+## References
+
+- **BASE_RULES.md:** See ../../BASE_RULES.md for universal rules
+  - LOG-001: Structured logging
+  - LOG-002: Correlation ID
+  - LOG-004: Error logging
+  - LOG-005: Sensitive data sanitization
+  - SEC-005: Audit logging
+- **Related Files:**
+  - `app/core/audit.py` - Audit logging module
+
+## Changelog
+
+### 2025-02-06
+- Initial requirements documentation created
+- Documented sensitive data filtering
+- Documented correlation ID tracking
+- Documented JSON structured logging
+- Audit Status: NEEDS_AUDIT

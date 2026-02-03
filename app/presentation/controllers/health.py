@@ -159,7 +159,6 @@ class HealthChecker:
                 "available_mb": round(psutil.virtual_memory().available / (1024 * 1024), 2),
             }
 
-            return {"status": "degraded", "message": "psutil not installed"}
         except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             return {"status": "degraded", "message": f"Memory check error: {str(e)}"}
 

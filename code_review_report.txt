@@ -1,0 +1,2745 @@
+================================================================================
+CODE REVIEW AND QA REPORT - STEP 5
+================================================================================
+
+📊 SUMMARY:
+   Files reviewed: 21
+   Total lines of code: 1688
+   Total issues found: 2822
+   Average issues per file: 134.38
+
+📈 ISSUE BREAKDOWN:
+   missing_type_hints: 2355
+   missing_docstring: 463
+   syntax_error: 4
+
+🎯 QUALITY SCORE: 0.0/100
+   Issues per 1000 lines: 1671.80
+
+DETAILED RESULTS:
+
+
+app/__init__.py
+  Line 27: Function 'get_di_container' missing return type hint
+
+app/analysis/fundamental_law/breadth_calculator.py
+  Line 68: Function '__init__' missing return type hint
+
+app/analysis/fundamental_law/fundamental_law.py
+  Line 64: Function '__init__' missing return type hint
+
+app/analysis/fundamental_law/ic_calculator.py
+  Line 56: Function '__init__' missing return type hint
+
+app/analysis/vectorization/benchmark.py
+  Line 110: Function 'sum_non_vectorized' missing docstring
+  Line 117: Function 'sum_vectorized' missing docstring
+  Line 170: Function 'ewm_non_vectorized' missing docstring
+  Line 180: Function 'ewm_vectorized' missing docstring
+  Line 230: Function 'rolling_non_vectorized' missing docstring
+
+app/analysis/vectorization/vectorization_auditor.py
+  Line 245: Function '__init__' missing docstring
+  Line 249: Function 'visit_For' missing docstring
+  Line 398: Function 'visit_Call' missing docstring
+  Line 443: Function 'visit_Call' missing docstring
+  Line 491: Function 'visit_ListComp' missing docstring
+
+app/api/__init__.py
+  Line 60: Function '__init__' missing return type hint
+
+app/api/assets.py
+  Line 53: Function '_apply_rate_limit' missing return type hint
+
+app/api/security.py
+  Line 48: Function '__init__' missing return type hint
+  Line 189: Function 'rate_limit' missing return type hint
+  Line 212: Function 'decorator' missing docstring
+  Line 419: Function 'require_auth' missing return type hint
+  Line 444: Function 'decorator' missing docstring
+
+app/api/trading_error_handler.py
+  Line 114: Class 'MockError' missing docstring
+  Line 115: Function '__init__' missing docstring
+  Line 115: Function '__init__' missing return type hint
+
+app/api/utils.py
+  Line 168: Function 'decorator' missing docstring
+  Line 207: Function 'decorator' missing docstring
+  Line 266: Function 'decorator' missing docstring
+
+app/application/services/__init__.py
+  Line 206: Function '__init__' missing return type hint
+  Line 296: Function '__init__' missing docstring
+  Line 296: Function '__init__' missing return type hint
+  Line 307: Function '__init__' missing docstring
+  Line 307: Function '__init__' missing return type hint
+
+app/application/services/risk_configurator.py
+  Line 110: Function '__init__' missing return type hint
+
+app/application/services/tax_optimizer.py
+  Line 98: Function '__init__' missing return type hint
+
+app/application/use_cases/analyze_backtest_results_use_case.py
+  Line 28: Function '__init__' missing return type hint
+
+app/application/use_cases/create_portfolio_use_case.py
+  Line 20: Function '__init__' missing return type hint
+
+app/application/use_cases/rebalance_portfolio_use_case.py
+  Line 46: Function '__init__' missing return type hint
+
+app/application/use_cases/run_backtest_use_case.py
+  Line 33: Function '__init__' missing return type hint
+
+app/application/use_cases/select_strategy.py
+  Line 132: Function 'get_degradation_summary' missing docstring
+  Line 135: Function 'os_performance' missing docstring
+  Line 138: Function 'is_performance' missing docstring
+  Line 310: Function '__init__' missing return type hint
+  Line 1374: Function '__init__' missing return type hint
+
+app/backtesting/acceptance_criteria.py
+  Line 70: Function '__init__' missing return type hint
+
+app/backtesting/advanced_metrics.py
+  Line 27: Function '__init__' missing return type hint
+
+app/backtesting/advanced_visualizations.py
+  Line 66: Function '__init__' missing return type hint
+
+app/backtesting/awesome_quant_integrator.py
+  Line 165: Function '__init__' missing return type hint
+
+app/backtesting/bias_correctors.py
+  Line 84: Function '__init__' missing return type hint
+  Line 227: Function '__init__' missing return type hint
+  Line 416: Function '__init__' missing return type hint
+
+app/backtesting/capital_scale_analyzer.py
+  Line 87: Function '__init__' missing return type hint
+
+app/backtesting/chan_metrics.py
+  Line 118: Function '__init__' missing return type hint
+  Line 351: Function '__init__' missing return type hint
+  Line 590: Function '__init__' missing return type hint
+
+app/backtesting/clustering_analyzer.py
+  Line 30: Function '__init__' missing return type hint
+
+app/backtesting/comprehensive_backtest_runner.py
+  Line 102: Function '__init__' missing return type hint
+  Line 2510: Function '_create_input_profile_from_config' missing return type hint
+
+app/backtesting/config_loader.py
+  Line 260: Function '__init__' missing return type hint
+
+app/backtesting/core/config_loader.py
+  Line 34: Function '__init__' missing return type hint
+
+app/backtesting/core/error_handling.py
+  Line 473: Function 'decorator' missing docstring
+  Line 474: Function 'wrapper' missing docstring
+
+app/backtesting/core/facade.py
+  Line 57: Function '__init__' missing return type hint
+
+app/backtesting/core/orchestrator.py
+  Line 64: Function '__init__' missing return type hint
+  Line 151: Function '__init__' missing return type hint
+  Line 242: Function 'get_metric' missing docstring
+  Line 282: Function '__init__' missing return type hint
+
+app/backtesting/cost_calculator.py
+  Line 89: Function '__init__' missing return type hint
+
+app/backtesting/data_split.py
+  Line 22: Function '__init__' missing return type hint
+  Line 70: Function '__init__' missing return type hint
+  Line 299: Function '__init__' missing return type hint
+
+app/backtesting/drift_detection/drift_detectors.py
+  Line 60: Function '__init__' missing return type hint
+  Line 133: Function '__init__' missing return type hint
+  Line 236: Function '__init__' missing return type hint
+  Line 351: Function '__init__' missing return type hint
+
+app/backtesting/drift_detection/overfitting_detector.py
+  Line 40: Function '__post_init__' missing docstring
+  Line 40: Function '__post_init__' missing return type hint
+  Line 58: Function '__init__' missing return type hint
+
+app/backtesting/engine.py
+  Line 63: Function '__init__' missing return type hint
+
+app/backtesting/ensemble_methods.py
+  Line 161: Function '__init__' missing return type hint
+  Line 318: Function '__init__' missing return type hint
+  Line 396: Function 'staged_predict' missing return type hint
+  Line 462: Function '__init__' missing return type hint
+  Line 613: Function '__init__' missing return type hint
+
+app/backtesting/execution/backtest_config_loader.py
+  Line 231: Function '__init__' missing return type hint
+
+app/backtesting/execution/backtest_orchestrator.py
+  Line 39: Function '__init__' missing return type hint
+
+app/backtesting/execution/backtest_results_processor.py
+  Line 32: Function '__init__' missing return type hint
+
+app/backtesting/execution/execution_model.py
+  Line 151: Function '__init__' missing return type hint
+
+app/backtesting/execution/market_impact.py
+  Line 201: Function '__init__' missing return type hint
+
+app/backtesting/execution/models.py
+  Line 28: Function '__init__' missing docstring
+  Line 28: Function '__init__' missing return type hint
+  Line 36: Function 'model_dump' missing return type hint
+  Line 51: Function 'field_validator' missing return type hint
+  Line 54: Function 'decorator' missing docstring
+
+app/backtesting/execution/order_fill_simulator.py
+  Line 124: Function '__init__' missing return type hint
+
+app/backtesting/execution/slippage_model.py
+  Line 253: Function '__init__' missing return type hint
+
+app/backtesting/execution/transaction_cost.py
+  Line 236: Function '__init__' missing return type hint
+
+app/backtesting/execution_engine.py
+  Line 90: Function '__init__' missing return type hint
+
+app/backtesting/feature_engineering/feature_importance.py
+  Line 71: Function '__post_init__' missing return type hint
+  Line 169: Function '__init__' missing return type hint
+  Line 234: Function '__init__' missing return type hint
+  Line 366: Function '__init__' missing return type hint
+  Line 463: Function '__init__' missing return type hint
+
+app/backtesting/feature_engineering/feature_importance_uniqueness.py
+  Line 84: Function '__post_init__' missing return type hint
+  Line 151: Function '__init__' missing return type hint
+  Line 304: Function '__init__' missing return type hint
+  Line 401: Function '__init__' missing return type hint
+  Line 537: Function '__init__' missing return type hint
+
+app/backtesting/feature_engineering/fractional_differentiation.py
+  Line 33: Function 'adfuller' missing docstring
+  Line 33: Function 'adfuller' missing return type hint
+  Line 256: Function '__init__' missing return type hint
+  Line 724: Function '__init__' missing return type hint
+  Line 759: Function 'fit' missing return type hint
+
+app/backtesting/financial_ml.py
+  Line 161: Function '__init__' missing return type hint
+
+app/backtesting/insight_generator.py
+  Line 28: Function '__init__' missing return type hint
+
+app/backtesting/labeling/bet_sizing.py
+  Line 71: Function '__post_init__' missing return type hint
+  Line 137: Function '__init__' missing return type hint
+
+app/backtesting/labeling/bet_sizing_meta.py
+  Line 114: Function '__post_init__' missing return type hint
+  Line 205: Function '__init__' missing return type hint
+
+app/backtesting/labeling/concurrent_training.py
+  Line 113: Function '__post_init__' missing return type hint
+  Line 202: Function '__init__' missing return type hint
+  Line 735: Function '__init__' missing return type hint
+
+app/backtesting/labeling/meta_labeling.py
+  Line 87: Function '__post_init__' missing return type hint
+  Line 164: Function '__init__' missing return type hint
+
+app/backtesting/labeling/meta_labeling_cv.py
+  Line 84: Function '__post_init__' missing return type hint
+  Line 152: Function '__init__' missing return type hint
+  Line 355: Function '__init__' missing return type hint
+  Line 616: Function '__init__' missing return type hint
+
+app/backtesting/labeling/triple_barrier.py
+  Line 72: Function '__post_init__' missing return type hint
+  Line 338: Function '__init__' missing return type hint
+
+app/backtesting/liquidity_validator.py
+  Line 34: Function '__post_init__' missing return type hint
+  Line 65: Function '__init__' missing return type hint
+
+app/backtesting/lopez_de_prado_metrics.py
+  Line 164: Function '__init__' missing return type hint
+  Line 330: Function '_recursive_bisection' missing docstring
+  Line 516: Function '__init__' missing return type hint
+  Line 749: Function '__init__' missing return type hint
+  Line 877: Function '__init__' missing return type hint
+
+app/backtesting/meta_analyzer/audit_trail.py
+  Line 32: Function '__init__' missing return type hint
+
+app/backtesting/meta_analyzer/meta_analyzer.py
+  Line 54: Function '__init__' missing return type hint
+  Line 604: Function 'analyze_cpu' missing docstring
+  Line 607: Function 'cluster_cpu' missing docstring
+
+app/backtesting/metrics.py
+  Line 53: Function '_ensure_empyrical' missing return type hint
+  Line 69: Function '__init__' missing return type hint
+  Line 951: Function '__init__' missing return type hint
+
+app/backtesting/model_selection.py
+  Line 453: Function '__init__' missing return type hint
+
+app/backtesting/parallel_executor.py
+  Line 33: Function '__init__' missing return type hint
+
+app/backtesting/point_in_time_database.py
+  Line 77: Function '__init__' missing return type hint
+  Line 433: Function '_cache_snapshot' missing return type hint
+
+app/backtesting/professional_reporter.py
+  Line 93: Function '__init__' missing return type hint
+
+app/backtesting/profile_batch/baseline_executor.py
+  Line 41: Function '__init__' missing return type hint
+
+app/backtesting/profile_batch/bayesian_optimizer.py
+  Line 36: Function '__init__' missing return type hint
+
+app/backtesting/profile_batch/optimization_pipeline.py
+  Line 80: Function '__init__' missing return type hint
+
+app/backtesting/profile_batch/optimization_validators.py
+  Line 46: Function '__init__' missing return type hint
+  Line 191: Function '__init__' missing return type hint
+  Line 310: Function '__init__' missing return type hint
+
+app/backtesting/profile_batch/orchestrator.py
+  Line 59: Function '__init__' missing return type hint
+
+app/backtesting/profile_batch/profile_generator.py
+  Line 50: Function '__init__' missing return type hint
+
+app/backtesting/profile_batch/report_generator.py
+  Line 39: Function '__init__' missing return type hint
+
+app/backtesting/profile_batch/result_aggregator.py
+  Line 144: Function '__init__' missing return type hint
+
+app/backtesting/profile_batch_backtester.py
+  Line 124: Function '__init__' missing return type hint
+
+app/backtesting/profile_batch_backtester_refactored.py
+  Line 124: Function '__init__' missing return type hint
+
+app/backtesting/realistic_data_generator.py
+  Line 121: Function '__init__' missing return type hint
+
+app/backtesting/regime_analyzer.py
+  Line 30: Function '__init__' missing return type hint
+
+app/backtesting/reports/baseline_optimization_reporter.py
+  Line 95: Function '__init__' missing return type hint
+
+app/backtesting/robust_engine/corporate_actions.py
+  Line 93: Function '__init__' missing return type hint
+  Line 611: Function '_generate_and_load_actions' missing return type hint
+
+app/backtesting/robust_engine/dividend_handler.py
+  Line 77: Function '__init__' missing return type hint
+
+app/backtesting/robust_engine/models.py
+  Line 97: Function '__post_init__' missing return type hint
+  Line 121: Function '__post_init__' missing return type hint
+  Line 141: Function '__post_init__' missing return type hint
+  Line 161: Function '__post_init__' missing return type hint
+
+app/backtesting/robust_engine/performance_tracker.py
+  Line 224: Function '__init__' missing return type hint
+
+app/backtesting/robust_engine/robust_backtester.py
+  Line 110: Function '__post_init__' missing return type hint
+  Line 183: Function '__init__' missing return type hint
+
+app/backtesting/robust_engine/survivorship_adjuster.py
+  Line 106: Function '__init__' missing return type hint
+
+app/backtesting/robustness_tester.py
+  Line 132: Function '__init__' missing return type hint
+
+app/backtesting/seasonality_analyzer.py
+  Line 27: Function 'seasonal_decompose' missing docstring
+  Line 27: Function 'seasonal_decompose' missing return type hint
+  Line 39: Function '__init__' missing return type hint
+
+app/backtesting/services/batch_execution_service.py
+  Line 36: Function '__init__' missing return type hint
+
+app/backtesting/services/database_service.py
+  Line 50: Function '__init__' missing return type hint
+
+app/backtesting/services/equity_tracker.py
+  Line 35: Function '__init__' missing return type hint
+
+app/backtesting/services/exit_monitor.py
+  Line 35: Function '__init__' missing return type hint
+
+app/backtesting/services/metrics_service.py
+  Line 41: Function '__init__' missing return type hint
+
+app/backtesting/services/performance_calculator.py
+  Line 34: Function '__init__' missing return type hint
+
+app/backtesting/services/pnl_calculator.py
+  Line 33: Function '__init__' missing return type hint
+
+app/backtesting/services/position_manager.py
+  Line 31: Function '__init__' missing return type hint
+
+app/backtesting/services/profile_generation_service.py
+  Line 39: Function '__init__' missing return type hint
+
+app/backtesting/services/report_generation_service.py
+  Line 39: Function '__init__' missing return type hint
+
+app/backtesting/services/signal_processor.py
+  Line 38: Function '__init__' missing return type hint
+
+app/backtesting/services/trade_executor.py
+  Line 42: Function '__init__' missing return type hint
+
+app/backtesting/signal_diagnostic_logger.py
+  Line 21: Function '__init__' missing docstring
+  Line 21: Function '__init__' missing return type hint
+
+app/backtesting/survivorship_bias_corrector.py
+  Line 84: Function '__init__' missing return type hint
+
+app/backtesting/test_summary.py
+  Line 219: Function '__init__' missing return type hint
+
+app/backtesting/universe_manager.py
+  Line 76: Function '__init__' missing return type hint
+
+app/backtesting/validation/bias_variance_analysis.py
+  Line 166: Function '__init__' missing return type hint
+
+app/backtesting/validation/bonferroni_correction.py
+  Line 89: Function '__init__' missing return type hint
+
+app/backtesting/validation/cross_sectional_consistency.py
+  Line 119: Function '__init__' missing return type hint
+
+app/backtesting/validation/cross_validation.py
+  Line 57: Function '__post_init__' missing return type hint
+  Line 123: Function '__init__' missing return type hint
+  Line 465: Function '__init__' missing return type hint
+
+app/backtesting/validation/cross_validation_methods.py
+  Line 135: Function '__init__' missing return type hint
+  Line 208: Function '__init__' missing return type hint
+  Line 259: Function '__init__' missing return type hint
+  Line 335: Function '__init__' missing return type hint
+  Line 428: Function '__init__' missing return type hint
+
+app/backtesting/validation/feature_explosion_validator.py
+  Line 118: Function '__init__' missing return type hint
+
+app/backtesting/validation/overfitting_detector.py
+  Line 73: Function '__init__' missing return type hint
+
+app/backtesting/validation/parameter_stability.py
+  Line 68: Function '__init__' missing return type hint
+
+app/backtesting/validation/purged_kfold.py
+  Line 55: Function '__post_init__' missing return type hint
+  Line 118: Function '__init__' missing return type hint
+  Line 666: Function '__init__' missing return type hint
+
+app/backtesting/validation/regime_detector.py
+  Line 78: Function '__init__' missing return type hint
+
+app/backtesting/validation/strategy_validator.py
+  Line 108: Function '__init__' missing return type hint
+
+app/backtesting/validation/walk_forward.py
+  Line 76: Function '__init__' missing return type hint
+  Line 504: Function '__init__' missing return type hint
+
+app/backtesting/validation/walk_forward_validator_enhanced.py
+  Line 331: Function '__init__' missing return type hint
+
+app/backtesting/walk_forward_validator.py
+  Line 168: Function 'oos_total_return' missing docstring
+  Line 172: Function 'oos_sharpe_ratio' missing docstring
+  Line 176: Function 'oos_max_drawdown' missing docstring
+  Line 226: Function '__init__' missing return type hint
+  Line 557: Function '__init__' missing return type hint
+
+app/backtesting/walk_forward_validator_enhanced.py
+  Line 331: Function '__init__' missing return type hint
+
+app/core/audit.py
+  Line 81: Function '__init__' missing docstring
+  Line 81: Function '__init__' missing return type hint
+  Line 91: Function '_setup_audit_logger' missing return type hint
+  Line 324: Function 'log' missing return type hint
+  Line 424: Function 'log_trade' missing return type hint
+
+app/core/auth.py
+  Line 81: Function '__init__' missing docstring
+  Line 81: Function '__init__' missing return type hint
+  Line 137: Function '__init__' missing return type hint
+  Line 320: Function '__init__' missing return type hint
+  Line 509: Function '__init__' missing return type hint
+
+app/core/centralized_config.py
+  Line 187: Function 'validate_percentage' missing docstring
+  Line 187: Function 'validate_percentage' missing return type hint
+  Line 207: Function 'validate_percentage_limits' missing return type hint
+  Line 215: Function 'validate_stop_loss' missing docstring
+  Line 215: Function 'validate_stop_loss' missing return type hint
+
+app/core/compliance/service_registry.py
+  Line 271: Function '_create_regime_detector' missing docstring
+  Line 278: Function '_create_vwap_executor' missing docstring
+  Line 285: Function '_create_twap_executor' missing docstring
+  Line 292: Function '_create_is_executor' missing docstring
+  Line 299: Function '_create_pov_executor' missing docstring
+
+app/core/compliance_engine.py
+  Line 182: Function '__init__' missing return type hint
+  Line 198: Function '_check_all_systems' missing return type hint
+  Line 232: Function '_check_backtesting' missing docstring
+  Line 240: Function '_check_live_trading' missing docstring
+  Line 248: Function '_check_paper_trading' missing docstring
+
+app/core/compliance_integration.py
+  Line 86: Function '__init__' missing return type hint
+
+app/core/config/profile_config_loader.py
+  Line 38: Function '__init__' missing return type hint
+
+app/core/config/strategy_config_loader.py
+  Line 56: Function '__init__' missing return type hint
+  Line 454: Function 'reload_config' missing return type hint
+  Line 503: Function 'reload_strategy_config' missing return type hint
+
+app/core/config.py
+  Line 171: Function 'validate_log_level' missing return type hint
+  Line 229: Function 'parse_cors_origins' missing return type hint
+  Line 237: Function 'parse_cors_methods' missing return type hint
+  Line 245: Function 'parse_cors_headers' missing return type hint
+  Line 253: Function 'parse_celery_content' missing return type hint
+
+app/core/config_loader.py
+  Line 31: Function '__init__' missing return type hint
+
+app/core/config_validator.py
+  Line 52: Function 'validate_test_size' missing docstring
+  Line 59: Function 'validate_cv_folds' missing docstring
+  Line 68: Function 'validate_worker_multiplier' missing docstring
+  Line 75: Function 'validate_positive_thresholds' missing docstring
+  Line 82: Function 'validate_drawdown' missing docstring
+
+app/core/contracts.py
+  Line 26: Function '__init__' missing docstring
+  Line 26: Function '__init__' missing return type hint
+  Line 36: Function '__init__' missing docstring
+  Line 36: Function '__init__' missing return type hint
+  Line 43: Function '__init__' missing docstring
+
+app/core/di_container.py
+  Line 182: Function 'get_portfolio_service' missing return type hint
+  Line 222: Function 'get_signal_scorer_service' missing return type hint
+
+app/core/environment_config.py
+  Line 64: Function 'validate_port' missing docstring
+  Line 64: Function 'validate_port' missing return type hint
+  Line 75: Function 'validate_pool_size' missing docstring
+  Line 75: Function 'validate_pool_size' missing return type hint
+  Line 130: Function 'validate_port' missing docstring
+
+app/core/exceptions.py
+  Line 12: Function '__init__' missing docstring
+  Line 12: Function '__init__' missing return type hint
+
+app/core/interfaces/broker_base.py
+  Line 78: Function '__post_init__' missing return type hint
+  Line 116: Function '__post_init__' missing docstring
+  Line 116: Function '__post_init__' missing return type hint
+  Line 135: Function '__post_init__' missing docstring
+  Line 135: Function '__post_init__' missing return type hint
+
+app/core/logging_config.py
+  Line 285: Function '__init__' missing docstring
+  Line 341: Function '__init__' missing docstring
+
+app/core/messaging.py
+  Line 47: Function '__init__' missing docstring
+  Line 47: Function '__init__' missing return type hint
+  Line 164: Function '_run' missing docstring
+  Line 164: Function '_run' missing return type hint
+  Line 194: Function '_run' missing docstring
+
+app/core/models/input_profile.py
+  Line 200: Function 'validate_capital' missing return type hint
+  Line 213: Function 'validate_objetivo' missing return type hint
+  Line 232: Function 'validate_horizon' missing return type hint
+  Line 243: Function 'validate_risk_tolerance' missing return type hint
+  Line 306: Function '__init__' missing return type hint
+
+app/core/models/investment_profile.py
+  Line 128: Function 'validate_capital_tier' missing return type hint
+  Line 142: Function 'validate_objetivo' missing return type hint
+  Line 156: Function 'validate_risk_tolerance' missing return type hint
+  Line 199: Function '__init__' missing return type hint
+
+app/core/numba_enforcer.py
+  Line 223: Function '_ensure_enforcement' missing return type hint
+  Line 272: Function 'wrapper' missing docstring
+  Line 272: Function 'wrapper' missing return type hint
+
+app/core/rate_limit_governor.py
+  Line 97: Function '__init__' missing docstring
+  Line 97: Function '__init__' missing return type hint
+  Line 222: Function '__init__' missing docstring
+  Line 222: Function '__init__' missing return type hint
+  Line 364: Function '__init__' missing docstring
+
+app/core/reconnection_manager.py
+  Line 71: Function '__init__' missing return type hint
+
+app/core/secret_manager.py
+  Line 267: Function '__init__' missing docstring
+  Line 267: Function '__init__' missing return type hint
+  Line 274: Function '_load_metadata' missing return type hint
+  Line 742: Function 'clear_cache' missing return type hint
+
+app/core/shadow_mode.py
+  Line 100: Function '__post_init__' missing return type hint
+  Line 196: Function '__init__' missing return type hint
+  Line 846: Function '__init__' missing return type hint
+
+app/core/statsmodels_fallback.py
+  Line 24: Function '_log_fallback_warning' missing return type hint
+  Line 300: Class 'CointResult' missing docstring
+  Line 301: Function '__init__' missing docstring
+  Line 301: Function '__init__' missing return type hint
+  Line 306: Function '__repr__' missing docstring
+
+app/core/symbol_mapper.py
+  Line 116: Function '__post_init__' missing return type hint
+  Line 571: Function '__init__' missing return type hint
+  Line 1054: Function '__init__' missing docstring
+  Line 1054: Function '__init__' missing return type hint
+
+app/core/test_config.py
+  Line 54: Function 'validate_ports' missing docstring
+  Line 54: Function 'validate_ports' missing return type hint
+  Line 69: Function '__init__' missing docstring
+  Line 69: Function '__init__' missing return type hint
+
+app/core/timezone_utils.py
+  Line 335: Function 'get_db_timestamp_default' missing return type hint
+  Line 352: Function 'get_db_timestamp_onupdate' missing return type hint
+
+app/core/yaml_config_updater.py
+  Line 31: Function '__init__' missing return type hint
+
+app/dashboard/advanced_dashboard.py
+  Line 179: Function 'render_metric_card' missing return type hint
+  Line 368: Function 'main' missing return type hint
+  Line 977: Function 'has_valid_metrics' missing docstring
+  Line 977: Function 'has_valid_metrics' missing return type hint
+  Line 1254: Function 'check_valid_before_after' missing docstring
+
+app/dashboard/comprehensive_data_loader.py
+  Line 21: Function '__init__' missing return type hint
+
+app/dashboard/data_loader.py
+  Line 18: Function '__init__' missing return type hint
+
+app/dashboard/main.py
+  Line 1186: Function 'style_row' missing docstring
+  Line 1186: Function 'style_row' missing return type hint
+  Line 1246: Function 'style_comparison' missing docstring
+  Line 1246: Function 'style_comparison' missing return type hint
+
+app/dashboard/meta_dashboard.py
+  Line 47: Function '__init__' missing return type hint
+
+app/dashboard/objectives_dashboard.py
+  Line 143: Function 'render_objective_card' missing return type hint
+  Line 236: Function 'show_objectives_summary' missing return type hint
+  Line 303: Function 'show_test_type_results' missing return type hint
+  Line 322: Function 'show_best_strategies' missing return type hint
+  Line 376: Function 'show_objective_comparison' missing return type hint
+
+app/dashboard/production_dashboard.py
+  Line 67: Class 'Config' missing docstring
+  Line 85: Class 'Config' missing docstring
+  Line 111: Class 'Config' missing docstring
+  Line 129: Function '__init__' missing return type hint
+
+app/dashboard/report_generator.py
+  Line 194: Function 'update_summary_index' missing return type hint
+
+app/data/feeds.py
+  Line 31: Function '__init__' missing docstring
+  Line 31: Function '__init__' missing return type hint
+  Line 104: Function '__init__' missing docstring
+  Line 104: Function '__init__' missing return type hint
+  Line 241: Function '__init__' missing docstring
+
+app/data/real_market_data.py
+  Line 101: Function '__init__' missing return type hint
+  Line 293: Function '_save_to_cache' missing return type hint
+  Line 522: Function 'clear_cache' missing return type hint
+
+app/database/__init__.py
+  Line 37: Function '__init__' missing docstring
+  Line 37: Function '__init__' missing return type hint
+  Line 150: Function 'set_sqlite_pragma' missing return type hint
+  Line 160: Function 'receive_checkout' missing return type hint
+  Line 165: Function 'receive_checkin' missing return type hint
+
+app/database/migrations/env.py
+  Line 100: Function 'do_run_migrations' missing return type hint
+
+app/database/models.py
+  Line 453: Function '__repr__' missing docstring
+  Line 453: Function '__repr__' missing return type hint
+
+app/database/repositories.py
+  Line 49: Function '__init__' missing docstring
+  Line 49: Function '__init__' missing return type hint
+
+app/domain/entities/backtest.py
+  Line 69: Function '__post_init__' missing return type hint
+
+app/domain/entities/portfolio.py
+  Line 71: Function '__post_init__' missing return type hint
+
+app/domain/entities/position.py
+  Line 75: Function '__init__' missing return type hint
+
+app/domain/entities/trade.py
+  Line 96: Function '__post_init__' missing return type hint
+
+app/domain/factories/__init__.py
+  Line 341: Function '__init__' missing return type hint
+  Line 464: Function '__init__' missing return type hint
+  Line 604: Function '__init__' missing return type hint
+  Line 696: Function '__init__' missing return type hint
+
+app/domain/models/input_profile.py
+  Line 72: Function '__post_init__' missing return type hint
+
+app/domain/portfolio_optimization/mean_variance_optimizer.py
+  Line 721: Function 'portfolio_variance' missing docstring
+  Line 806: Function 'regularized_variance' missing docstring
+  Line 974: Function 'portfolio_variance' missing docstring
+
+app/domain/repositories/base_repository.py
+  Line 385: Function '__init__' missing return type hint
+  Line 458: Function '__init__' missing docstring
+  Line 458: Function '__init__' missing return type hint
+  Line 466: Function '__init__' missing docstring
+  Line 466: Function '__init__' missing return type hint
+
+app/domain/repositories/unit_of_work.py
+  Line 90: Function '__exit__' missing return type hint
+  Line 181: Function '__init__' missing return type hint
+  Line 187: Function '__enter__' missing return type hint
+  Line 192: Function '__exit__' missing return type hint
+  Line 388: Function '__init__' missing docstring
+
+app/domain/services/backtesting/backtest_engine.py
+  Line 174: Function '__init__' missing return type hint
+
+app/domain/services/backtesting/dividend_handler.py
+  Line 89: Function '__init__' missing return type hint
+
+app/domain/services/backtesting/market_impact.py
+  Line 49: Function '__post_init__' missing return type hint
+  Line 139: Function '__init__' missing return type hint
+  Line 216: Function '__init__' missing return type hint
+  Line 293: Function '__init__' missing return type hint
+  Line 352: Function '__init__' missing return type hint
+
+app/domain/services/backtesting/slippage.py
+  Line 107: Function '__init__' missing return type hint
+  Line 166: Function '__init__' missing return type hint
+  Line 224: Function '__init__' missing return type hint
+  Line 304: Function '__init__' missing return type hint
+  Line 399: Function '__init__' missing return type hint
+
+app/domain/services/backtesting/survivorship_bias.py
+  Line 140: Function '__init__' missing return type hint
+
+app/domain/services/backtesting/transaction_costs.py
+  Line 116: Function '__init__' missing return type hint
+  Line 201: Function '__init__' missing return type hint
+  Line 325: Function '__init__' missing return type hint
+  Line 419: Function '__init__' missing return type hint
+
+app/domain/services/portfolio_optimization/black_litterman.py
+  Line 53: Function '__post_init__' missing return type hint
+  Line 103: Function '__init__' missing return type hint
+  Line 402: Function 'objective' missing docstring
+
+app/domain/services/portfolio_optimization/cla.py
+  Line 140: Function '__init__' missing return type hint
+  Line 303: Function 'objective' missing docstring
+
+app/domain/services/portfolio_optimization/covariance_calculator.py
+  Line 90: Function '__init__' missing return type hint
+
+app/domain/services/portfolio_optimization/denoise_correlation.py
+  Line 93: Function '__init__' missing return type hint
+
+app/domain/services/portfolio_optimization/hrp.py
+  Line 103: Function '__init__' missing return type hint
+
+app/domain/services/portfolio_optimization/mean_variance_optimizer.py
+  Line 109: Function '__init__' missing return type hint
+  Line 172: Function 'objective' missing docstring
+  Line 276: Function 'objective' missing docstring
+  Line 366: Function 'objective' missing docstring
+
+app/domain/services/portfolio_optimization/nco.py
+  Line 74: Function '__init__' missing return type hint
+  Line 341: Function '_setup_sharpe_objective' missing return type hint
+  Line 348: Function 'objective' missing docstring
+  Line 383: Function 'objective' missing docstring
+
+app/domain/services/portfolio_optimization/risk_parity.py
+  Line 79: Function '__init__' missing return type hint
+  Line 178: Function 'objective' missing docstring
+  Line 395: Function 'objective' missing docstring
+
+app/domain/services/risk_calculator.py
+  Line 56: Function '__init__' missing return type hint
+
+app/domain/services/signal_generator.py
+  Line 100: Function '__init__' missing return type hint
+
+app/domain/services/tax_calculator.py
+  Line 68: Function '__init__' missing return type hint
+
+app/domain/strategies/covered_call.py
+  Line 137: Function '__init__' missing return type hint
+
+app/domain/strategies/cross_sectional_momentum.py
+  Line 87: Function '__init__' missing return type hint
+  Line 317: Function '__str__' missing docstring
+
+app/domain/strategies/dividend_investing.py
+  Line 183: Function '__init__' missing return type hint
+
+app/domain/strategies/fama_french_factors.py
+  Line 128: Function '__init__' missing return type hint
+
+app/domain/strategies/low_volatility_anomaly.py
+  Line 123: Function '__init__' missing return type hint
+
+app/domain/strategies/pairs_trading.py
+  Line 114: Function '__init__' missing return type hint
+
+app/domain/strategies/quality_screen.py
+  Line 246: Function '__init__' missing return type hint
+
+app/domain/strategies/statistical_arbitrage.py
+  Line 96: Function '__init__' missing return type hint
+
+app/domain/strategies/time_series_momentum.py
+  Line 71: Function '__init__' missing return type hint
+
+app/domain/value_objects/backtest_config.py
+  Line 58: Function '__post_init__' missing return type hint
+
+app/domain/value_objects/backtest_result.py
+  Line 63: Function '__post_init__' missing return type hint
+
+app/domain/value_objects/capital.py
+  Line 43: Function '__post_init__' missing return type hint
+
+app/domain/value_objects/investment_horizon.py
+  Line 34: Function '__post_init__' missing return type hint
+
+app/domain/value_objects/money.py
+  Line 27: Function '__post_init__' missing return type hint
+
+app/domain/value_objects/percentage.py
+  Line 26: Function '__post_init__' missing return type hint
+  Line 172: Function '__post_init__' missing return type hint
+
+app/domain/value_objects/risk_parameters.py
+  Line 31: Function '__post_init__' missing return type hint
+
+app/domain/value_objects/symbol.py
+  Line 61: Function '__post_init__' missing return type hint
+
+app/domain/value_objects/tax_residence.py
+  Line 64: Function '__post_init__' missing return type hint
+
+app/engines/context_engine/context_engine.py
+  Line 43: Function '__init__' missing return type hint
+
+app/engines/context_engine/correlation_analyzers/correlation_network_analyzer.py
+  Line 20: Function '__init__' missing docstring
+  Line 20: Function '__init__' missing return type hint
+
+app/engines/context_engine/correlation_analyzers/dcc_garch_analyzer.py
+  Line 19: Function '__init__' missing docstring
+  Line 19: Function '__init__' missing return type hint
+
+app/engines/context_engine/correlation_analyzers/rolling_correlation_analyzer.py
+  Line 19: Function '__init__' missing docstring
+  Line 19: Function '__init__' missing return type hint
+
+app/engines/context_engine/regime_detectors/clustering_regime_detector.py
+  Line 27: Function '__init__' missing return type hint
+
+app/engines/context_engine/regime_detectors/correlation_regime_detector.py
+  Line 18: Function '__init__' missing return type hint
+
+app/engines/context_engine/regime_detectors/hmm_regime_detector.py
+  Line 40: Function '__init__' missing docstring
+  Line 40: Function '__init__' missing return type hint
+  Line 54: Function 'fit' missing return type hint
+  Line 65: Function 'predict' missing return type hint
+  Line 69: Function 'score_samples' missing return type hint
+
+app/engines/context_engine/volatility_analyzers/garch_analyzer.py
+  Line 38: Function '__init__' missing return type hint
+  Line 54: Function 'fit' missing return type hint
+  Line 107: Function '__init__' missing return type hint
+  Line 119: Function 'forecast' missing return type hint
+  Line 140: Function '__init__' missing return type hint
+
+app/engines/context_engine/volatility_analyzers/structural_change_detector.py
+  Line 36: Function '__init__' missing return type hint
+
+app/engines/context_engine/volatility_analyzers/volatility_regime_detector.py
+  Line 23: Function '__init__' missing return type hint
+
+app/engines/data_engine/cache/distributed_cache.py
+  Line 71: Function '__init__' missing return type hint
+
+app/engines/data_engine/config_loader.py
+  Line 20: Function '__init__' missing return type hint
+
+app/engines/data_engine/data_engine.py
+  Line 48: Function '__init__' missing return type hint
+
+app/engines/data_engine/normalizers/corporate_actions_handler.py
+  Line 22: Function '__init__' missing return type hint
+
+app/engines/data_engine/normalizers/price_normalizer.py
+  Line 22: Function '__init__' missing return type hint
+  Line 104: Function 'get_split_date' missing docstring
+  Line 143: Function 'get_dividend_date' missing docstring
+
+app/engines/data_engine/normalizers/symbol_normalizer.py
+  Line 21: Function '__init__' missing return type hint
+
+app/engines/data_engine/normalizers/timestamp_normalizer.py
+  Line 23: Function '__init__' missing return type hint
+
+app/engines/data_engine/normalizers/unified_normalizer.py
+  Line 28: Function '__init__' missing return type hint
+
+app/engines/data_engine/sources/base_source.py
+  Line 19: Function '__init__' missing return type hint
+
+app/engines/data_engine/sources/fundamental_sources.py
+  Line 31: Function '__init__' missing return type hint
+  Line 186: Function '__init__' missing return type hint
+
+app/engines/data_engine/sources/ohlcv_sources.py
+  Line 31: Function '__init__' missing return type hint
+  Line 135: Function '__init__' missing return type hint
+  Line 269: Function '__init__' missing return type hint
+  Line 393: Function '__init__' missing return type hint
+
+app/engines/data_engine/sources/options_sources.py
+  Line 32: Function '__init__' missing return type hint
+
+app/engines/data_engine/sources/sentiment_sources.py
+  Line 46: Function '__init__' missing return type hint
+  Line 205: Function '__init__' missing return type hint
+  Line 385: Function '__init__' missing return type hint
+
+app/engines/data_engine/streaming/websocket_streaming.py
+  Line 31: Function '__init__' missing return type hint
+
+app/engines/data_engine/validators/data_cleaning_pipeline.py
+  Line 30: Function '__init__' missing return type hint
+
+app/engines/data_engine/validators/gap_interpolator.py
+  Line 27: Function '__init__' missing return type hint
+
+app/engines/data_engine/validators/outlier_detector.py
+  Line 30: Function '__init__' missing return type hint
+
+app/engines/data_engine/validators/quality_validator.py
+  Line 27: Function '__init__' missing return type hint
+
+app/engines/data_engine/versioning/data_lineage.py
+  Line 27: Function '__init__' missing return type hint
+
+app/engines/data_engine/versioning/schema_versioner.py
+  Line 23: Function '__init__' missing return type hint
+
+app/engines/data_engine/versioning/version_manager.py
+  Line 27: Function '__init__' missing return type hint
+
+app/engines/event_engine/tomasini_event_queue.py
+  Line 94: Function '__post_init__' missing return type hint
+  Line 148: Function '__init__' missing return type hint
+  Line 458: Function '__init__' missing return type hint
+
+app/engines/execution_engine/microstructure/adverse_selection_detector.py
+  Line 85: Function '__init__' missing return type hint
+  Line 246: Function '__init__' missing return type hint
+  Line 378: Function '__init__' missing return type hint
+
+app/engines/execution_engine/microstructure/almgren_chriss_model.py
+  Line 124: Function '__init__' missing return type hint
+
+app/engines/execution_engine/microstructure/bid_ask_bounce_removal.py
+  Line 40: Function '__init__' missing return type hint
+
+app/engines/execution_engine/microstructure/dark_pool_router.py
+  Line 79: Function '__init__' missing return type hint
+
+app/engines/execution_engine/microstructure/harris_integration.py
+  Line 121: Function '__init__' missing return type hint
+
+app/engines/execution_engine/microstructure/market_quality_metrics.py
+  Line 78: Function '__init__' missing return type hint
+
+app/engines/execution_engine/microstructure/microstructure_engine.py
+  Line 135: Function '__init__' missing return type hint
+
+app/engines/execution_engine/microstructure/order_book_analyzer.py
+  Line 117: Function '__init__' missing return type hint
+
+app/engines/execution_engine/microstructure/tick_size_constraints.py
+  Line 96: Function '__init__' missing return type hint
+
+app/engines/portfolio_engine/__init__.py
+  Line 33: Function '__init__' missing return type hint
+  Line 74: Function '__init__' missing return type hint
+
+app/engines/portfolio_engine/meta_learners/meta_learners.py
+  Line 27: Function '__init__' missing return type hint
+  Line 79: Function '__init__' missing return type hint
+  Line 234: Function '__init__' missing return type hint
+  Line 251: Class 'AllocationNetwork' missing docstring
+  Line 252: Function '__init__' missing docstring
+
+app/engines/portfolio_engine/optimizers/__init__.py
+  Line 98: Function '__init__' missing return type hint
+
+app/engines/portfolio_engine/optimizers/base.py
+  Line 26: Function '__init__' missing return type hint
+  Line 89: Function '__init__' missing return type hint
+  Line 121: Function '__init__' missing return type hint
+  Line 157: Function '__init__' missing return type hint
+  Line 187: Function '__init__' missing return type hint
+
+app/engines/portfolio_engine/optimizers/handcrafted_optimizer.py
+  Line 42: Function '__init__' missing return type hint
+
+app/engines/portfolio_engine/optimizers/hierarchical_risk_parity.py
+  Line 545: Function '__init__' missing return type hint
+
+app/engines/portfolio_engine/rebalancers/rebalancers.py
+  Line 25: Function '__init__' missing return type hint
+  Line 87: Function '__init__' missing return type hint
+  Line 172: Function '__init__' missing return type hint
+  Line 261: Function '__init__' missing return type hint
+  Line 358: Function '__init__' missing return type hint
+
+app/engines/portfolio_engine/stability_validator.py
+  Line 129: Function '__init__' missing return type hint
+  Line 473: Function '__init__' missing return type hint
+
+app/engines/risk_engine/__init__.py
+  Line 69: Function 'assess_portfolio_risk' missing docstring
+  Line 69: Function 'assess_portfolio_risk' missing return type hint
+  Line 135: Function '__init__' missing return type hint
+  Line 172: Function '__init__' missing return type hint
+
+app/engines/risk_engine/alert_system.py
+  Line 37: Function '__init__' missing return type hint
+  Line 82: Function '__init__' missing return type hint
+
+app/engines/risk_engine/correlation_analyzers/correlation_analyzers.py
+  Line 26: Function '__init__' missing return type hint
+  Line 60: Function '__init__' missing return type hint
+
+app/engines/risk_engine/drawdown_controllers/drawdown_controllers.py
+  Line 250: Function '__init__' missing return type hint
+  Line 287: Function '__init__' missing return type hint
+  Line 350: Function '__init__' missing return type hint
+  Line 419: Function '__init__' missing return type hint
+
+app/engines/risk_engine/exposure_managers/exposure_managers.py
+  Line 24: Function '__init__' missing return type hint
+  Line 55: Function '__init__' missing return type hint
+
+app/engines/risk_engine/greeks_calculator.py
+  Line 40: Function '__init__' missing return type hint
+
+app/engines/risk_engine/risk_attribution/risk_attribution.py
+  Line 24: Function '__init__' missing return type hint
+  Line 55: Function '__init__' missing return type hint
+
+app/engines/risk_engine/risk_limits_enforcer.py
+  Line 40: Function '__init__' missing return type hint
+
+app/engines/risk_engine/stress_testers/advanced_stress_scenarios.py
+  Line 32: Function '__init__' missing return type hint
+  Line 308: Function '__init__' missing return type hint
+  Line 472: Function '__init__' missing return type hint
+  Line 689: Function '__init__' missing return type hint
+
+app/engines/risk_engine/stress_testers/comprehensive_scenarios.py
+  Line 39: Function '__init__' missing return type hint
+
+app/engines/risk_engine/stress_testers/correlation_stress.py
+  Line 37: Function '__init__' missing return type hint
+
+app/engines/risk_engine/stress_testers/portfolio_variance_stress.py
+  Line 35: Function '__init__' missing return type hint
+
+app/engines/risk_engine/stress_testers/stress_testers.py
+  Line 26: Function '__init__' missing return type hint
+  Line 57: Function '__init__' missing return type hint
+
+app/engines/risk_engine/var_calculators/component_var.py
+  Line 41: Function '__init__' missing return type hint
+
+app/engines/risk_engine/var_calculators/ewma_var.py
+  Line 40: Function '__init__' missing return type hint
+
+app/engines/risk_engine/var_calculators/var_calculators.py
+  Line 223: Function '__init__' missing return type hint
+  Line 460: Function '__init__' missing return type hint
+  Line 735: Function '__init__' missing return type hint
+
+app/engines/strategy_engines/arbitrage_engine.py
+  Line 53: Function '__init__' missing return type hint
+
+app/engines/strategy_engines/base.py
+  Line 36: Function '__init__' missing return type hint
+
+app/engines/strategy_engines/breakout_engine.py
+  Line 44: Function '__init__' missing return type hint
+
+app/engines/strategy_engines/ensemble.py
+  Line 41: Function '__init__' missing return type hint
+  Line 215: Function '__init__' missing return type hint
+  Line 405: Function '__init__' missing return type hint
+  Line 614: Function '__init__' missing return type hint
+
+app/engines/strategy_engines/mean_reversion_engine.py
+  Line 37: Function '__init__' missing return type hint
+
+app/engines/strategy_engines/modular_momentum_engine.py
+  Line 49: Function '__init__' missing return type hint
+
+app/engines/strategy_engines/momentum_engine.py
+  Line 38: Function '__init__' missing return type hint
+
+app/engines/strategy_engines/pairs_engine.py
+  Line 44: Function '__init__' missing return type hint
+
+app/engines/strategy_engines/trend_following_engine.py
+  Line 42: Function '__init__' missing return type hint
+
+app/ensemble/correlation_analyzer.py
+  Line 35: Function '__init__' missing return type hint
+
+app/ensemble/ensemble.py
+  Line 41: Function '__init__' missing return type hint
+
+app/ensemble/pareto.py
+  Line 39: Function '__init__' missing return type hint
+
+app/ensemble/strategy_combiner.py
+  Line 43: Function '__init__' missing return type hint
+
+app/exceptions/error_handler.py
+  Line 33: Function '__init__' missing docstring
+  Line 33: Function '__init__' missing return type hint
+
+app/exceptions/trading_exceptions.py
+  Line 38: Function '__init__' missing docstring
+  Line 38: Function '__init__' missing return type hint
+  Line 70: Function '__init__' missing docstring
+  Line 70: Function '__init__' missing return type hint
+  Line 94: Function '__init__' missing docstring
+
+app/infrastructure/external/backtest_presenter_impl.py
+  Line 30: Function '__init__' missing return type hint
+
+app/infrastructure/persistence/file_backtest_repository.py
+  Line 37: Function '__init__' missing return type hint
+
+app/infrastructure/persistence/in_memory_backtest_repository.py
+  Line 27: Function '__init__' missing return type hint
+
+app/maestro/phase_1/absolute_return_optimizer.py
+  Line 27: Function '__init__' missing return type hint
+  Line 95: Function '__init__' missing return type hint
+  Line 151: Function '__init__' missing return type hint
+  Line 276: Function '__init__' missing return type hint
+
+app/maestro/phase_1/capital_tier_selector.py
+  Line 201: Function '__init__' missing return type hint
+  Line 270: Function '__init__' missing return type hint
+
+app/maestro/phase_1/models.py
+  Line 69: Class 'Config' missing docstring
+  Line 117: Class 'Config' missing docstring
+
+app/main.py
+  Line 106: Function 'get_app_settings' missing return type hint
+
+app/market_microstructure/ofi/models.py
+  Line 453: Function '__post_init__' missing return type hint
+
+app/market_microstructure/ofi/ofi_calculator.py
+  Line 102: Function '__init__' missing return type hint
+
+app/market_microstructure/ofi/ofi_predictor.py
+  Line 77: Function '__init__' missing return type hint
+
+app/market_microstructure/ofi/ofi_signals.py
+  Line 65: Function '__init__' missing return type hint
+
+app/market_microstructure/ofi/tick_processor.py
+  Line 236: Function '__init__' missing return type hint
+
+app/microstructure/liquidity.py
+  Line 186: Function '__init__' missing return type hint
+  Line 871: Function '__init__' missing return type hint
+
+app/microstructure/models.py
+  Line 274: Function '__init__' missing return type hint
+  Line 494: Function '__init__' missing return type hint
+  Line 627: Function '__init__' missing return type hint
+  Line 712: Function '__init__' missing return type hint
+  Line 778: Function '__init__' missing return type hint
+
+app/microstructure/order_flow.py
+  Line 75: Function '__post_init__' missing docstring
+  Line 75: Function '__post_init__' missing return type hint
+  Line 105: Function '__post_init__' missing docstring
+  Line 105: Function '__post_init__' missing return type hint
+  Line 178: Function '__init__' missing return type hint
+
+app/microstructure/price_discovery.py
+  Line 35: Function 'coint' missing docstring
+  Line 35: Function 'coint' missing return type hint
+  Line 38: Function 'adfuller' missing docstring
+  Line 38: Function 'adfuller' missing return type hint
+  Line 46: Function 'coint' missing return type hint
+
+app/microstructure/trading_mechanisms.py
+  Line 76: Function '__lt__' missing return type hint
+  Line 214: Function '__init__' missing return type hint
+  Line 393: Function '__init__' missing return type hint
+  Line 591: Function '__init__' missing return type hint
+  Line 756: Function '__init__' missing return type hint
+
+app/middleware/error_middleware.py
+  Line 22: Function '__init__' missing docstring
+  Line 22: Function '__init__' missing return type hint
+  Line 192: Function '__init__' missing docstring
+  Line 192: Function '__init__' missing return type hint
+  Line 219: Function '__init__' missing docstring
+
+app/middleware/logging_middleware.py
+  Line 24: Function '__init__' missing docstring
+  Line 24: Function '__init__' missing return type hint
+  Line 210: Function 'log_trading_performance' missing return type hint
+  Line 213: Function 'decorator' missing docstring
+  Line 213: Function 'decorator' missing return type hint
+
+app/middleware/rate_limit.py
+  Line 107: Function '__init__' missing docstring
+  Line 107: Function '__init__' missing return type hint
+  Line 216: Function '__init__' missing docstring
+  Line 216: Function '__init__' missing return type hint
+  Line 282: Function '__init__' missing docstring
+
+app/mocks/__init__.py
+  Line 35: Function '__init__' missing docstring
+  Line 35: Function '__init__' missing return type hint
+  Line 315: Function '__init__' missing docstring
+  Line 315: Function '__init__' missing return type hint
+
+app/models/assets.py
+  Line 90: Function 'validate_symbol' missing return type hint
+  Line 98: Function 'validate_name' missing return type hint
+  Line 157: Function '__init__' missing docstring
+  Line 157: Function '__init__' missing return type hint
+  Line 161: Function '_update_statistics' missing return type hint
+
+app/models/cost_analysis.py
+  Line 64: Function 'validate_total_cost' missing return type hint
+  Line 100: Function 'validate_cost_percentage' missing return type hint
+  Line 181: Function 'validate_total_costs' missing return type hint
+  Line 226: Function 'validate_net_profit' missing return type hint
+  Line 249: Function 'validate_cost_impact_ratio' missing return type hint
+
+app/models/momentum.py
+  Line 88: Function 'validate_symbol' missing return type hint
+  Line 96: Function 'validate_direction' missing return type hint
+  Line 290: Function 'validate_symbol' missing return type hint
+  Line 375: Function 'validate_name' missing return type hint
+  Line 383: Function 'validate_description' missing return type hint
+
+app/models/optimization.py
+  Line 44: Function 'validate_values' missing docstring
+  Line 44: Function 'validate_values' missing return type hint
+  Line 59: Function 'validate_current_value' missing docstring
+  Line 59: Function 'validate_current_value' missing return type hint
+  Line 91: Function 'validate_test_period' missing docstring
+
+app/models/portfolio.py
+  Line 223: Function 'validate_cash' missing return type hint
+  Line 327: Function 'should_close' missing return type hint
+  Line 331: Function 'reset' missing return type hint
+  Line 338: Function 'record_error' missing return type hint
+  Line 347: Function 'record_success' missing return type hint
+
+app/models/profitability_validation.py
+  Line 74: Function 'validate_positive_amount' missing docstring
+  Line 74: Function 'validate_positive_amount' missing return type hint
+  Line 96: Function 'validate_percentage' missing docstring
+  Line 96: Function 'validate_percentage' missing return type hint
+  Line 103: Function 'validate_ratio' missing docstring
+
+app/models/signal.py
+  Line 211: Function '__init__' missing return type hint
+  Line 466: Function '__init__' missing return type hint
+  Line 530: Function 'clear_signals' missing return type hint
+
+app/models/slippage_analysis.py
+  Line 49: Function 'validate_slippage_value' missing return type hint
+  Line 67: Function 'validate_volatility' missing return type hint
+  Line 85: Function 'validate_spread' missing return type hint
+  Line 101: Function 'validate_market_cap_ratio' missing return type hint
+  Line 136: Function 'validate_total_slippage' missing return type hint
+
+app/optimization/grid_search_optimizer.py
+  Line 39: Function '__init__' missing docstring
+  Line 39: Function '__init__' missing return type hint
+
+app/optimization/momentum_auto_optimizer.py
+  Line 32: Function '__init__' missing docstring
+  Line 32: Function '__init__' missing return type hint
+  Line 144: Function 'objective' missing docstring
+
+app/optimization/multi_strategy_optimizer.py
+  Line 37: Function '__init__' missing return type hint
+
+app/optimization/multi_strategy_optimizer_v2.py
+  Line 33: Function '__init__' missing docstring
+  Line 33: Function '__init__' missing return type hint
+
+app/optimization/parameter/base_optimizer.py
+  Line 61: Function '__post_init__' missing return type hint
+  Line 260: Function '__init__' missing return type hint
+
+app/optimization/parameter/bayesian_optimizer.py
+  Line 86: Function '__init__' missing return type hint
+  Line 160: Function 'optuna_objective' missing docstring
+  Line 160: Function 'optuna_objective' missing return type hint
+  Line 171: Function 'callback' missing docstring
+  Line 171: Function 'callback' missing return type hint
+
+app/optimization/parameter/grid_search.py
+  Line 67: Function '__init__' missing return type hint
+  Line 465: Function '__init__' missing return type hint
+
+app/optimization/parameter/models.py
+  Line 91: Function '__post_init__' missing return type hint
+  Line 319: Function '__post_init__' missing return type hint
+  Line 408: Function 'parse_enum' missing return type hint
+
+app/optimization/parameter/multi_objective.py
+  Line 87: Function '__post_init__' missing return type hint
+  Line 377: Function '__init__' missing return type hint
+  Line 420: Function 'combined_objective' missing docstring
+  Line 420: Function 'combined_objective' missing return type hint
+  Line 553: Function '__init__' missing return type hint
+
+app/optimization/parameter/random_search.py
+  Line 71: Function '__init__' missing return type hint
+  Line 371: Function '__init__' missing return type hint
+
+app/optimization/parameter/trial.py
+  Line 37: Function '__post_init__' missing return type hint
+  Line 111: Function '__post_init__' missing return type hint
+  Line 427: Function '__init__' missing docstring
+  Line 427: Function '__init__' missing return type hint
+
+app/optimization/parameter_stability_metrics.py
+  Line 120: Function '__init__' missing return type hint
+
+app/optimization/robustness_scorer.py
+  Line 149: Function '__init__' missing return type hint
+
+app/optimization/sensitivity_analyzer.py
+  Line 103: Function '__init__' missing return type hint
+
+app/portfolio/multi_asset/allocation.py
+  Line 155: Function '__init__' missing return type hint
+
+app/portfolio/multi_asset/asset_class.py
+  Line 162: Function '__post_init__' missing return type hint
+  Line 493: Function '__post_init__' missing return type hint
+
+app/portfolio/multi_asset/multi_asset_portfolio.py
+  Line 183: Function '__init__' missing return type hint
+
+app/portfolio/multi_asset/rebalancer.py
+  Line 211: Function '__init__' missing return type hint
+
+app/presentation/controllers/assets.py
+  Line 243: Syntax error: unmatched ')'
+
+app/presentation/controllers/portfolio_analytics.py
+  Line 321: Syntax error: expected 'except' or 'finally' block
+
+app/presentation/controllers/signals.py
+  Line 373: Syntax error: unterminated f-string literal (detected at line 373)
+
+app/presentation/controllers/trading_error_handler.py
+  Line 20: Syntax error: invalid syntax
+
+app/providers/paper_trading.py
+  Line 26: Function '__init__' missing return type hint
+
+app/scripts/demo_time_sync_monitor.py
+  Line 71: Function 'on_drift' missing docstring
+  Line 71: Function 'on_drift' missing return type hint
+  Line 75: Function 'on_critical' missing docstring
+  Line 75: Function 'on_critical' missing return type hint
+
+app/scripts/start_paper_trading.py
+  Line 40: Function 'setup_logging' missing return type hint
+  Line 150: Function 'print_banner' missing return type hint
+  Line 165: Function 'print_info' missing return type hint
+  Line 189: Function 'print_next_steps' missing return type hint
+  Line 283: Function 'main' missing return type hint
+
+app/security/csrf_protection.py
+  Line 40: Function '__init__' missing return type hint
+  Line 205: Function '__init__' missing return type hint
+  Line 308: Function '__init__' missing return type hint
+
+app/security/input_validation.py
+  Line 96: Function '__init__' missing docstring
+  Line 96: Function '__init__' missing return type hint
+  Line 739: Function '__init__' missing return type hint
+  Line 753: Function '_cleanup_old_requests' missing return type hint
+  Line 833: Function 'reset_limit' missing return type hint
+
+app/security/output_encoding.py
+  Line 603: Function '__init__' missing return type hint
+  Line 630: Function 'add_directive' missing return type hint
+  Line 640: Function 'remove_directive' missing return type hint
+
+app/security/secrets_manager.py
+  Line 60: Function '__init__' missing docstring
+  Line 60: Function '__init__' missing return type hint
+  Line 136: Function '__init__' missing return type hint
+  Line 548: Function '_log_audit_event' missing return type hint
+  Line 599: Function 'clear_audit_log' missing return type hint
+
+app/security/security_headers.py
+  Line 40: Function '__init__' missing return type hint
+  Line 87: Function '_add_security_headers' missing return type hint
+  Line 171: Function '__init__' missing return type hint
+  Line 205: Function 'add_directive' missing return type hint
+  Line 218: Function 'remove_directive' missing return type hint
+
+app/services/absolute_return_optimizer.py
+  Line 652: Function '__init__' missing return type hint
+
+app/services/advanced_risk_manager.py
+  Line 31: Function '__init__' missing return type hint
+  Line 122: Function '__init__' missing return type hint
+  Line 198: Function '__init__' missing return type hint
+  Line 264: Function '__init__' missing return type hint
+  Line 322: Function '__init__' missing return type hint
+
+app/services/alerting_system/alert_manager.py
+  Line 32: Function '__init__' missing return type hint
+
+app/services/alerting_system/alert_rule_engine.py
+  Line 41: Function '__init__' missing return type hint
+
+app/services/alerting_system/alerting_orchestrator.py
+  Line 91: Function '__init__' missing return type hint
+
+app/services/alerting_system/metrics_driven_alerter.py
+  Line 44: Function 'add_evaluation' missing return type hint
+  Line 60: Function 'reset' missing return type hint
+  Line 98: Function '__init__' missing return type hint
+
+app/services/alerting_system/notification_channels.py
+  Line 375: Function '__init__' missing return type hint
+
+app/services/asset_identification.py
+  Line 29: Function '__init__' missing docstring
+  Line 29: Function '__init__' missing return type hint
+  Line 37: Function '_initialize_default_universes' missing return type hint
+
+app/services/awesome_quant/alphalens_analyzer.py
+  Line 30: Function '__init__' missing return type hint
+
+app/services/awesome_quant/finrl_integrator.py
+  Line 69: Function '__init__' missing return type hint
+
+app/services/awesome_quant/qlib_connector.py
+  Line 29: Function '__init__' missing return type hint
+
+app/services/awesome_quant/talib_wrapper.py
+  Line 28: Function '__init__' missing return type hint
+
+app/services/backtest_orchestration/backtest_orchestrator.py
+  Line 40: Function '__init__' missing return type hint
+  Line 48: Function '_get_backtest_engine' missing return type hint
+  Line 53: Function '_get_data_loader' missing return type hint
+
+app/services/backtesting_orchestration/backtest_orchestrator.py
+  Line 73: Class 'Config' missing docstring
+  Line 91: Function '__init__' missing return type hint
+
+app/services/backup/database_backup.py
+  Line 118: Function '__init__' missing return type hint
+
+app/services/broker_failover/manager.py
+  Line 85: Function '__init__' missing return type hint
+
+app/services/capacity_fade_validation/analyzers.py
+  Line 27: Function '__init__' missing return type hint
+  Line 94: Function '__init__' missing return type hint
+  Line 163: Function '__init__' missing return type hint
+
+app/services/capacity_fade_validation/capacity_fade_validator.py
+  Line 40: Function '__init__' missing return type hint
+
+app/services/capital_tier_strategy_selector.py
+  Line 262: Function '__init__' missing return type hint
+
+app/services/capital_viability_gate.py
+  Line 230: Function 'log_viability_check' missing return type hint
+
+app/services/centralized_logging.py
+  Line 66: Function '__init__' missing docstring
+  Line 66: Function '__init__' missing return type hint
+  Line 224: Function 'performance_timer' missing return type hint
+  Line 284: Function 'log_performance' missing return type hint
+  Line 287: Function 'decorator' missing docstring
+
+app/services/circuit_breaker/daily_circuit_breaker.py
+  Line 155: Function '__init__' missing return type hint
+
+app/services/circuit_breaker_manager.py
+  Line 41: Function '__init__' missing return type hint
+
+app/services/circuit_breaker_manager_v2.py
+  Line 137: Function '__init__' missing return type hint
+
+app/services/compliance/manager.py
+  Line 154: Function '__init__' missing return type hint
+
+app/services/compliance/order_pattern_analyzer.py
+  Line 130: Function '__init__' missing return type hint
+
+app/services/compliance/pdt_tracker.py
+  Line 125: Function '__init__' missing return type hint
+
+app/services/compliance/wash_sale_tracker.py
+  Line 118: Function '__init__' missing return type hint
+
+app/services/configuration_persistence/configuration_persistence.py
+  Line 35: Function '__init__' missing return type hint
+
+app/services/configuration_persistence/configuration_repository.py
+  Line 39: Function '__init__' missing return type hint
+
+app/services/corporate_actions/handler.py
+  Line 81: Function '__post_init__' missing return type hint
+  Line 126: Function '__init__' missing return type hint
+
+app/services/correlation/analyzer.py
+  Line 66: Function '__init__' missing return type hint
+
+app/services/correlation/example_usage.py
+  Line 74: Function 'example_with_portfolio_risk_manager' missing return type hint
+
+app/services/cost_analysis_service.py
+  Line 89: Function '__init__' missing return type hint
+
+app/services/country_diversification_validator.py
+  Line 20: Function '__init__' missing return type hint
+
+app/services/crypto_data_service.py
+  Line 133: Function '__init__' missing return type hint
+
+app/services/currency_hedging_engine.py
+  Line 54: Function '__init__' missing return type hint
+
+app/services/data_validation_service.py
+  Line 66: Function '__init__' missing return type hint
+
+app/services/deploy_decision_orchestrator/deploy_decision_orchestrator.py
+  Line 62: Function '__init__' missing return type hint
+
+app/services/deployment/deploy_decision_orchestrator.py
+  Line 57: Function '__init__' missing return type hint
+
+app/services/deployment_decision/deployment_decision_orchestrator.py
+  Line 63: Function '__post_init__' missing return type hint
+  Line 86: Function '__init__' missing return type hint
+
+app/services/dynamic_capital_reallocation.py
+  Line 25: Function '__init__' missing docstring
+  Line 25: Function '__init__' missing return type hint
+  Line 89: Function '__init__' missing return type hint
+
+app/services/emergency_handler/emergency_closer.py
+  Line 81: Function '__init__' missing return type hint
+
+app/services/error_handling/error_handler.py
+  Line 31: Function '__init__' missing docstring
+  Line 31: Function '__init__' missing return type hint
+  Line 42: Function '__init__' missing docstring
+  Line 42: Function '__init__' missing return type hint
+  Line 49: Function '__init__' missing docstring
+
+app/services/execution_algorithms.py
+  Line 107: Function '__init__' missing return type hint
+  Line 352: Function '__init__' missing return type hint
+  Line 486: Function '__init__' missing return type hint
+  Line 765: Function '__init__' missing return type hint
+
+app/services/execution_cost_analyzer.py
+  Line 31: Function '__init__' missing return type hint
+  Line 54: Function 'add_trade_slippage' missing return type hint
+  Line 302: Function 'log_trade_decision' missing return type hint
+
+app/services/execution_narang.py
+  Line 146: Function '__init__' missing docstring
+  Line 146: Function '__init__' missing return type hint
+  Line 227: Function '__init__' missing docstring
+  Line 227: Function '__init__' missing return type hint
+  Line 415: Function '__init__' missing docstring
+
+app/services/external_integrations/dagster_orchestrator.py
+  Line 71: Function '__init__' missing return type hint
+
+app/services/external_integrations/health_check_manager.py
+  Line 42: Function '__init__' missing return type hint
+  Line 64: Function '__init__' missing return type hint
+
+app/services/external_integrations/mlflow_tracker.py
+  Line 64: Function '__init__' missing return type hint
+
+app/services/external_integrations/questdb_connector.py
+  Line 60: Function '__init__' missing return type hint
+
+app/services/external_integrations/retry_manager.py
+  Line 22: Function '__init__' missing return type hint
+  Line 50: Function '__init__' missing return type hint
+
+app/services/external_integrations/zipline_integrator.py
+  Line 73: Function '__init__' missing return type hint
+
+app/services/factor_models.py
+  Line 86: Function '__init__' missing return type hint
+  Line 344: Function '__init__' missing return type hint
+  Line 504: Function '__init__' missing return type hint
+  Line 637: Function 'objective' missing docstring
+  Line 637: Function 'objective' missing return type hint
+
+app/services/fifo/fifo_integrator.py
+  Line 117: Function '__init__' missing return type hint
+
+app/services/fifo/modelo_721_generator.py
+  Line 170: Function '__init__' missing return type hint
+
+app/services/fill_ratio_tracker.py
+  Line 21: Function '__init__' missing docstring
+  Line 21: Function '__init__' missing return type hint
+  Line 46: Function '__init__' missing docstring
+  Line 46: Function '__init__' missing return type hint
+
+app/services/forex_data_service.py
+  Line 76: Function '__init__' missing return type hint
+
+app/services/forex_risk/hedging_engine.py
+  Line 279: Function '__init__' missing return type hint
+  Line 623: Function 'score' missing docstring
+
+app/services/forex_risk/tracker.py
+  Line 168: Function '__init__' missing return type hint
+
+app/services/half_life_calculator.py
+  Line 82: Function '__init__' missing return type hint
+
+app/services/hurst_exponent_analyzer.py
+  Line 644: Function '__init__' missing return type hint
+
+app/services/knowledge_graph/graph_builder.py
+  Line 22: Function '__init__' missing return type hint
+
+app/services/live_trading/account_synchronizer.py
+  Line 52: Function '__post_init__' missing docstring
+  Line 52: Function '__post_init__' missing return type hint
+  Line 69: Function '__init__' missing return type hint
+
+app/services/live_trading/alert_to_trade_mapper.py
+  Line 113: Function '__init__' missing return type hint
+
+app/services/live_trading/broker_adapters/alpaca_adapter.py
+  Line 42: Function '__init__' missing return type hint
+
+app/services/live_trading/broker_adapters/alpaca_client.py
+  Line 32: Function '__init__' missing return type hint
+
+app/services/live_trading/broker_adapters/alpaca_error_handler.py
+  Line 157: Function '__init__' missing return type hint
+  Line 241: Function '__init__' missing return type hint
+  Line 277: Function '__init__' missing return type hint
+  Line 335: Function '__init__' missing return type hint
+
+app/services/live_trading/broker_adapters/ib_adapter.py
+  Line 87: Function '__init__' missing return type hint
+  Line 668: Function 'on_ticker_update' missing docstring
+  Line 668: Function 'on_ticker_update' missing return type hint
+  Line 709: Function '__del__' missing return type hint
+  Line 739: Function '__init__' missing return type hint
+
+app/services/live_trading/broker_adapters/paper_adapter.py
+  Line 33: Function '__init__' missing return type hint
+
+app/services/live_trading/broker_connector.py
+  Line 127: Function '__init__' missing return type hint
+
+app/services/live_trading/order_manager.py
+  Line 68: Function '__init__' missing return type hint
+
+app/services/live_trading/order_persistence.py
+  Line 47: Function 'default' missing docstring
+  Line 47: Function 'default' missing return type hint
+  Line 94: Function '__init__' missing return type hint
+  Line 108: Function '_get_connection' missing return type hint
+
+app/services/live_trading/risk_gates.py
+  Line 43: Function '__lt__' missing docstring
+  Line 43: Function '__lt__' missing return type hint
+  Line 49: Function '__le__' missing docstring
+  Line 49: Function '__le__' missing return type hint
+  Line 55: Function '__gt__' missing docstring
+
+app/services/live_trading/trade_persistence.py
+  Line 199: Function '__init__' missing return type hint
+
+app/services/live_trading/trading_audit_trail.py
+  Line 131: Function '__init__' missing return type hint
+  Line 351: Function '__init__' missing return type hint
+
+app/services/live_trading/trading_bridge_orchestrator.py
+  Line 99: Function '__init__' missing return type hint
+
+app/services/market_data_service.py
+  Line 33: Function '__init__' missing docstring
+  Line 33: Function '__init__' missing return type hint
+  Line 48: Function '_initialize_default_feeds' missing return type hint
+
+app/services/market_universe_loader.py
+  Line 52: Function '__init__' missing docstring
+  Line 52: Function '__init__' missing return type hint
+  Line 142: Function '__init__' missing return type hint
+  Line 177: Function 'record_success' missing return type hint
+  Line 190: Function 'record_failure' missing return type hint
+
+app/services/market_universe_orchestrator.py
+  Line 37: Function '__init__' missing return type hint
+
+app/services/metrics_database/metrics_collector.py
+  Line 33: Function '__init__' missing return type hint
+
+app/services/metrics_database/metrics_query_engine.py
+  Line 30: Function '__init__' missing return type hint
+
+app/services/metrics_database/models.py
+  Line 347: Function '__post_init__' missing return type hint
+
+app/services/metrics_database/questdb_connector.py
+  Line 42: Function '__init__' missing return type hint
+
+app/services/module_parametrizer/module_parametrizer.py
+  Line 52: Function '__init__' missing return type hint
+
+app/services/momentum_analysis.py
+  Line 45: Function '__init__' missing return type hint
+  Line 56: Function '_initialize_default_strategies' missing return type hint
+
+app/services/monitoring/alerting_rules_engine.py
+  Line 129: Function '__init__' missing return type hint
+
+app/services/monitoring/memory_monitor.py
+  Line 82: Function '__init__' missing return type hint
+
+app/services/monitoring/metrics_exporter.py
+  Line 39: Function '__init__' missing return type hint
+
+app/services/monitoring/prometheus_collector.py
+  Line 29: Function '__init__' missing return type hint
+  Line 97: Function '__init__' missing return type hint
+
+app/services/monitoring/time_sync_monitor.py
+  Line 92: Function '__init__' missing return type hint
+
+app/services/multi_market_orchestrator.py
+  Line 174: Function '__init__' missing return type hint
+  Line 313: Function '_cleanup_sentiment_cache' missing return type hint
+
+app/services/multi_strategy_allocation.py
+  Line 29: Function '__init__' missing return type hint
+  Line 128: Function '__init__' missing return type hint
+  Line 240: Function '__init__' missing return type hint
+
+app/services/multi_timeframe_service.py
+  Line 21: Function '__init__' missing docstring
+  Line 21: Function '__init__' missing return type hint
+  Line 26: Function '__repr__' missing docstring
+  Line 26: Function '__repr__' missing return type hint
+  Line 40: Function '__init__' missing return type hint
+
+app/services/news_processor/event_handler.py
+  Line 99: Function '__init__' missing return type hint
+
+app/services/opportunity_cost_validator.py
+  Line 293: Function 'log_opportunity_cost_decision' missing return type hint
+
+app/services/optimization_chan.py
+  Line 85: Function '__init__' missing return type hint
+  Line 260: Function '__init__' missing return type hint
+  Line 428: Function '__init__' missing return type hint
+  Line 636: Function '__init__' missing return type hint
+  Line 758: Function '__init__' missing return type hint
+
+app/services/paper_trading_service.py
+  Line 44: Function '__init__' missing docstring
+  Line 44: Function '__init__' missing return type hint
+
+app/services/parameter_optimization_service.py
+  Line 41: Function '__post_init__' missing docstring
+  Line 41: Function '__post_init__' missing return type hint
+  Line 49: Function '__init__' missing return type hint
+
+app/services/parameter_preset_manager.py
+  Line 26: Function '__init__' missing docstring
+  Line 26: Function '__init__' missing return type hint
+
+app/services/parametrization/module_parametrizer.py
+  Line 142: Function '__init__' missing return type hint
+
+app/services/performance_tracker.py
+  Line 17: Function '__init__' missing docstring
+  Line 17: Function '__init__' missing return type hint
+  Line 47: Function '__init__' missing docstring
+  Line 47: Function '__init__' missing return type hint
+
+app/services/portfolio_analytics_service.py
+  Line 36: Function '__init__' missing return type hint
+
+app/services/portfolio_builder.py
+  Line 31: Function '__init__' missing return type hint
+
+app/services/portfolio_config_manager.py
+  Line 23: Function '__init__' missing return type hint
+  Line 78: Function '__init__' missing return type hint
+
+app/services/portfolio_construction/allocation_manager.py
+  Line 52: Function '__init__' missing return type hint
+
+app/services/portfolio_construction/allocation_recommender.py
+  Line 41: Function '__init__' missing return type hint
+
+app/services/portfolio_construction/portfolio_constructor.py
+  Line 51: Function '__init__' missing return type hint
+
+app/services/portfolio_construction/rebalancing_engine.py
+  Line 65: Function '__init__' missing return type hint
+
+app/services/portfolio_construction_narang.py
+  Line 174: Function '__init__' missing docstring
+  Line 174: Function '__init__' missing return type hint
+  Line 401: Function 'objective' missing docstring
+  Line 401: Function 'objective' missing return type hint
+  Line 470: Function 'objective' missing docstring
+
+app/services/portfolio_constructor/portfolio_constructor.py
+  Line 100: Function '__init__' missing return type hint
+
+app/services/portfolio_rebalancer.py
+  Line 24: Function '__init__' missing return type hint
+  Line 64: Function '__init__' missing return type hint
+  Line 154: Function '__init__' missing return type hint
+
+app/services/portfolio_risk_manager.py
+  Line 58: Function '__init__' missing return type hint
+
+app/services/portfolio_service.py
+  Line 37: Function '__init__' missing return type hint
+
+app/services/position_builder/large_position_builder.py
+  Line 58: Function '__init__' missing return type hint
+  Line 162: Function '__init__' missing return type hint
+
+app/services/position_monitor/position_monitor.py
+  Line 333: Function '__init__' missing return type hint
+
+app/services/position_monitor/stop_executor.py
+  Line 89: Function '__init__' missing return type hint
+
+app/services/position_sizing_engine.py
+  Line 44: Function '__init__' missing return type hint
+  Line 446: Function '__init__' missing return type hint
+  Line 742: Function '__init__' missing return type hint
+
+app/services/profile_driven_trading/models.py
+  Line 137: Function 'add_signal' missing return type hint
+
+app/services/profile_driven_trading/orchestrator.py
+  Line 68: Function '__init__' missing return type hint
+  Line 108: Function '_get_profile_generator' missing return type hint
+  Line 117: Function '_get_market_universe_orchestrator' missing return type hint
+  Line 126: Function '_get_stock_allocator' missing return type hint
+  Line 135: Function '_get_rl_engine' missing return type hint
+
+app/services/profile_driven_trading/profile_strategy_mapper.py
+  Line 174: Function '__init__' missing return type hint
+
+app/services/profile_driven_trading/signal_integrator.py
+  Line 29: Function '__init__' missing return type hint
+
+app/services/profile_driven_trading/workflow_manager.py
+  Line 25: Function '__init__' missing docstring
+  Line 25: Function '__init__' missing return type hint
+  Line 57: Function '__init__' missing return type hint
+  Line 236: Function 'reset_state' missing return type hint
+
+app/services/profile_generator/models.py
+  Line 98: Function '__post_init__' missing return type hint
+
+app/services/profile_generator/profile_generator.py
+  Line 51: Function '__init__' missing return type hint
+
+app/services/profitability_validation_service.py
+  Line 35: Function '__init__' missing docstring
+  Line 35: Function '__init__' missing return type hint
+  Line 239: Function '__init__' missing docstring
+  Line 239: Function '__init__' missing return type hint
+  Line 358: Function '__init__' missing docstring
+
+app/services/rate_limiting/token_bucket.py
+  Line 175: Function '__init__' missing return type hint
+  Line 536: Function '__init__' missing return type hint
+
+app/services/regime_detection_chan.py
+  Line 59: Function '__init__' missing docstring
+  Line 59: Function '__init__' missing return type hint
+  Line 77: Function 'fit' missing return type hint
+  Line 88: Function 'predict' missing return type hint
+  Line 92: Function 'score_samples' missing return type hint
+
+app/services/reporting/quantstats_integration.py
+  Line 37: Function '__init__' missing return type hint
+
+app/services/reporting/report_templates.py
+  Line 186: Function '__init__' missing return type hint
+
+app/services/reporting/reporting_generator.py
+  Line 44: Function '__init__' missing return type hint
+
+app/services/reporting/reporting_orchestrator.py
+  Line 30: Function '__init__' missing return type hint
+
+app/services/reporting_generator/delivery_manager.py
+  Line 130: Function '__init__' missing return type hint
+
+app/services/reporting_generator/html_template_engine.py
+  Line 63: Function '__post_init__' missing return type hint
+  Line 114: Function '__init__' missing return type hint
+
+app/services/reporting_generator/pyfolio_integrator.py
+  Line 220: Function '__init__' missing return type hint
+
+app/services/reporting_generator/quantstats_integrator.py
+  Line 27: Function '__init__' missing return type hint
+  Line 71: Function '__init__' missing return type hint
+  Line 138: Function '__init__' missing return type hint
+
+app/services/reporting_generator/reporting_generator.py
+  Line 53: Function '__init__' missing return type hint
+
+app/services/reporting_generator/visualization_generator.py
+  Line 87: Function '__init__' missing return type hint
+
+app/services/risk_envelope_validator.py
+  Line 28: Function '__init__' missing return type hint
+
+app/services/risk_management_chan.py
+  Line 87: Function '__init__' missing return type hint
+  Line 298: Function '__init__' missing return type hint
+  Line 553: Function '__init__' missing return type hint
+  Line 672: Function '__init__' missing return type hint
+
+app/services/risk_models_narang.py
+  Line 117: Function '__init__' missing docstring
+  Line 117: Function '__init__' missing return type hint
+  Line 484: Function '__init__' missing docstring
+  Line 484: Function '__init__' missing return type hint
+  Line 562: Function '__init__' missing docstring
+
+app/services/risk_scaling/drawdown_monitor.py
+  Line 44: Function '__init__' missing return type hint
+
+app/services/risk_scaling/limit_adjuster.py
+  Line 96: Function '__init__' missing return type hint
+
+app/services/risk_scaling/loss_monitor.py
+  Line 59: Function '__init__' missing return type hint
+
+app/services/risk_scaling/risk_adjustment_calculator.py
+  Line 59: Function '__init__' missing return type hint
+
+app/services/risk_scaling/risk_scaling_application.py
+  Line 29: Function '__init__' missing return type hint
+
+app/services/risk_scaling/risk_scaling_monitor.py
+  Line 50: Function '__init__' missing return type hint
+
+app/services/risk_scaling/risk_scaling_orchestrator.py
+  Line 64: Function '__init__' missing return type hint
+
+app/services/risk_scaling/sharpe_ratio_monitor.py
+  Line 41: Function '__init__' missing return type hint
+
+app/services/risk_scaling/volatility_monitor.py
+  Line 63: Function '__init__' missing return type hint
+
+app/services/risk_scaling_application/limit_adjuster.py
+  Line 58: Function '__init__' missing return type hint
+
+app/services/risk_scaling_application/realtime_monitor.py
+  Line 92: Function '__init__' missing return type hint
+
+app/services/risk_scaling_application/risk_adjustment_calculator.py
+  Line 72: Function '__init__' missing return type hint
+
+app/services/risk_scaling_application/risk_scaling_applicator.py
+  Line 50: Function '__init__' missing return type hint
+
+app/services/scheduling/market_scheduler.py
+  Line 147: Function '__init__' missing return type hint
+
+app/services/sector_diversification_validator.py
+  Line 20: Function '__init__' missing return type hint
+
+app/services/signal_evaluation_engine.py
+  Line 29: Function '__init__' missing return type hint
+
+app/services/signal_execution_engine.py
+  Line 32: Function '__init__' missing return type hint
+
+app/services/signal_scorer.py
+  Line 41: Function '__init__' missing return type hint
+
+app/services/signal_scoring_engine.py
+  Line 25: Function '__init__' missing return type hint
+  Line 101: Function '__init__' missing docstring
+  Line 101: Function '__init__' missing return type hint
+  Line 210: Function '__init__' missing return type hint
+  Line 254: Function 'priority_key' missing docstring
+
+app/services/slippage_analysis_service.py
+  Line 31: Function '__init__' missing docstring
+  Line 31: Function '__init__' missing return type hint
+  Line 199: Function '__init__' missing docstring
+  Line 199: Function '__init__' missing return type hint
+  Line 402: Function '_add_to_history' missing return type hint
+
+app/services/smart_order_routing/broker_negotiation_engine.py
+  Line 54: Function '__init__' missing return type hint
+
+app/services/smart_order_routing/execution_cost_monitor.py
+  Line 39: Function '__init__' missing return type hint
+  Line 314: Function '_check_cost_overrun' missing return type hint
+
+app/services/smart_order_routing/market_impact_estimator.py
+  Line 56: Function '__init__' missing return type hint
+
+app/services/smart_order_routing/models.py
+  Line 299: Function 'log_cost_overrun_alert' missing return type hint
+
+app/services/smart_order_routing/order_splitting_optimizer.py
+  Line 42: Function '__init__' missing return type hint
+
+app/services/smart_order_routing/smart_order_router.py
+  Line 53: Function '__init__' missing return type hint
+
+app/services/stationarity_analyzer.py
+  Line 92: Function '__init__' missing return type hint
+  Line 607: Function '__init__' missing return type hint
+
+app/services/strategy_recommendation/strategy_ranker.py
+  Line 43: Function '__init__' missing return type hint
+
+app/services/strategy_recommendation/strategy_recommender.py
+  Line 42: Function '__init__' missing return type hint
+
+app/services/strategy_recommendation/strategy_scorer.py
+  Line 56: Function '__init__' missing return type hint
+
+app/services/strategy_recommender/strategy_recommender.py
+  Line 84: Function '__init__' missing return type hint
+
+app/services/strategy_stock_allocation/allocators.py
+  Line 123: Function 'objective' missing docstring
+  Line 123: Function 'objective' missing return type hint
+
+app/services/strategy_stock_allocation/calculators.py
+  Line 28: Function 'OLS' missing docstring
+  Line 28: Function 'OLS' missing return type hint
+  Line 35: Function 'adfuller' missing docstring
+  Line 35: Function 'adfuller' missing return type hint
+  Line 38: Function 'kpss' missing docstring
+
+app/services/strategy_stock_allocation/scorers.py
+  Line 31: Function 'OLS' missing docstring
+  Line 31: Function 'OLS' missing return type hint
+  Line 39: Function 'adfuller' missing docstring
+  Line 39: Function 'adfuller' missing return type hint
+
+app/services/strategy_stock_allocator/algorithms.py
+  Line 31: Function '__init__' missing return type hint
+  Line 94: Function '__init__' missing return type hint
+  Line 171: Function '__init__' missing return type hint
+  Line 249: Function '__init__' missing return type hint
+
+app/services/strategy_stock_allocator/domain_models.py
+  Line 151: Function '__init__' missing return type hint
+
+app/services/strategy_stock_allocator.py
+  Line 39: Function 'OLS' missing docstring
+  Line 39: Function 'OLS' missing return type hint
+  Line 99: Function '__init__' missing return type hint
+  Line 1418: Function 'objective' missing docstring
+  Line 1418: Function 'objective' missing return type hint
+
+app/services/synthetic_data/gan_generator.py
+  Line 51: Function '__post_init__' missing return type hint
+  Line 66: Function '__init__' missing return type hint
+  Line 319: Function '__init__' missing return type hint
+
+app/services/task_queue/persistent_queue.py
+  Line 221: Function '__init__' missing return type hint
+
+app/services/tax_efficiency/capital_gain_tracker.py
+  Line 77: Function '__init__' missing return type hint
+
+app/services/tax_efficiency/engines/base.py
+  Line 26: Function '__init__' missing return type hint
+  Line 123: Function '__repr__' missing docstring
+
+app/services/tax_efficiency/engines/spain_tax_engine.py
+  Line 55: Function '__init__' missing return type hint
+  Line 396: Function '__repr__' missing docstring
+
+app/services/tax_efficiency/tax_loss_harvester.py
+  Line 68: Function '__init__' missing return type hint
+
+app/services/tax_efficiency/tax_optimized_builder.py
+  Line 43: Function '__init__' missing return type hint
+
+app/services/tax_efficiency/wash_sale_detector.py
+  Line 67: Function '__init__' missing return type hint
+
+app/services/trading_error_handler.py
+  Line 71: Function '__init__' missing docstring
+  Line 71: Function '__init__' missing return type hint
+
+app/services/trailing_stop_manager.py
+  Line 22: Function '__init__' missing return type hint
+
+app/services/transaction_costs.py
+  Line 180: Function '__init__' missing docstring
+  Line 180: Function '__init__' missing return type hint
+  Line 592: Function '__init__' missing docstring
+  Line 592: Function '__init__' missing return type hint
+  Line 605: Function '__init__' missing docstring
+
+app/services/validation_engine/validation_engine.py
+  Line 40: Function '__init__' missing return type hint
+  Line 49: Function '_get_capital_viability_validator' missing return type hint
+  Line 54: Function '_get_expensive_module_gate' missing return type hint
+  Line 59: Function '_get_learning_capital_gate' missing return type hint
+
+app/services/validation_orchestration/validation_engine.py
+  Line 121: Function '__init__' missing return type hint
+
+app/services/value_signal_enhancer.py
+  Line 122: Function '__init__' missing return type hint
+
+app/services/var_position_limiter.py
+  Line 55: Function '__post_init__' missing docstring
+  Line 55: Function '__post_init__' missing return type hint
+  Line 87: Function '__init__' missing return type hint
+  Line 467: Function '_get_positions' missing return type hint
+
+app/services/xai/explainer.py
+  Line 20: Function '__init__' missing return type hint
+  Line 152: Function '__init__' missing return type hint
+  Line 257: Function '__init__' missing return type hint
+
+app/services/xai/models.py
+  Line 37: Class 'Config' missing docstring
+  Line 82: Class 'Config' missing docstring
+  Line 109: Class 'Config' missing docstring
+  Line 145: Class 'Config' missing docstring
+  Line 211: Class 'Config' missing docstring
+
+app/simulation/exchange.py
+  Line 152: Function '__init__' missing return type hint
+  Line 329: Function '__init__' missing return type hint
+  Line 573: Function '__init__' missing return type hint
+
+app/simulation/market_mechanics.py
+  Line 171: Function '__init__' missing return type hint
+  Line 546: Function '__init__' missing return type hint
+  Line 688: Function '__init__' missing return type hint
+
+app/simulation/microstructure.py
+  Line 221: Function '__init__' missing return type hint
+  Line 412: Function '__init__' missing return type hint
+  Line 598: Function '__init__' missing return type hint
+  Line 797: Function '__init__' missing return type hint
+
+app/simulation/order_book.py
+  Line 316: Function '__init__' missing return type hint
+
+app/simulation/trading_costs.py
+  Line 157: Function '__init__' missing return type hint
+  Line 252: Function '__init__' missing return type hint
+  Line 345: Function '__init__' missing return type hint
+  Line 447: Function '__init__' missing return type hint
+
+app/sre/alert_fatigue_prevention/alert_fatigue_preventer.py
+  Line 233: Function '__init__' missing return type hint
+
+app/sre/automation/toil_tracker.py
+  Line 92: Function '__post_init__' missing return type hint
+  Line 285: Function '__init__' missing return type hint
+
+app/sre/canary_deployment/canary_analyzer.py
+  Line 123: Function '__init__' missing return type hint
+
+app/sre/canary_deployment/canary_deployment.py
+  Line 212: Function '__init__' missing return type hint
+
+app/sre/canary_deployment/traffic_splitter.py
+  Line 105: Function '__init__' missing return type hint
+
+app/sre/chaos_engine/blast_radius.py
+  Line 115: Function '__init__' missing return type hint
+
+app/sre/chaos_engine/chaos_orchestrator.py
+  Line 146: Function '__init__' missing return type hint
+
+app/sre/chaos_engine/failure_injectors.py
+  Line 72: Function '__init__' missing docstring
+  Line 72: Function '__init__' missing return type hint
+  Line 109: Function '__init__' missing docstring
+  Line 109: Function '__init__' missing return type hint
+  Line 235: Function '__init__' missing docstring
+
+app/sre/chaos_engine/game_days.py
+  Line 207: Function '__init__' missing return type hint
+
+app/sre/chaos_engine/hypothesis.py
+  Line 150: Function '__init__' missing return type hint
+
+app/sre/chaos_engine/stress_tester.py
+  Line 214: Function '__init__' missing return type hint
+
+app/sre/data_integrity/sanity_layer.py
+  Line 72: Function '__post_init__' missing docstring
+  Line 72: Function '__post_init__' missing return type hint
+  Line 94: Function '__init__' missing return type hint
+  Line 420: Function '__init__' missing return type hint
+
+app/sre/dead_mans_switch/dead_mans_switch.py
+  Line 169: Function '__init__' missing return type hint
+
+app/sre/dead_mans_switch/external_monitor.py
+  Line 117: Function '__init__' missing return type hint
+
+app/sre/error_budgets/budget_alerts.py
+  Line 151: Function '__init__' missing return type hint
+
+app/sre/error_budgets/development_gates.py
+  Line 135: Function '__init__' missing return type hint
+
+app/sre/error_budgets/error_budget_manager.py
+  Line 246: Function '__init__' missing return type hint
+
+app/sre/error_budgets/integration.py
+  Line 52: Function '__init__' missing return type hint
+  Line 159: Function 'on_slo_violation' missing docstring
+  Line 159: Function 'on_slo_violation' missing return type hint
+  Line 162: Function 'on_slo_resolved' missing docstring
+  Line 162: Function 'on_slo_resolved' missing return type hint
+
+app/sre/error_budgets/slo_tracker.py
+  Line 219: Function '__init__' missing return type hint
+
+app/sre/monitoring/golden_signals.py
+  Line 266: Function '__post_init__' missing return type hint
+  Line 311: Function '__init__' missing return type hint
+  Line 364: Function '__init__' missing return type hint
+  Line 423: Function '__init__' missing return type hint
+
+app/sre/monitoring/trading_metrics.py
+  Line 347: Function '__init__' missing return type hint
+
+app/sre/oncall/dashboard.py
+  Line 169: Function '__init__' missing return type hint
+
+app/sre/oncall/escalation.py
+  Line 119: Function '__post_init__' missing return type hint
+  Line 204: Function '__post_init__' missing return type hint
+  Line 337: Function '__init__' missing return type hint
+
+app/sre/oncall/handoff.py
+  Line 176: Function '__post_init__' missing return type hint
+  Line 434: Function '__init__' missing return type hint
+
+app/sre/oncall/rotation.py
+  Line 113: Function '__post_init__' missing return type hint
+  Line 241: Function '__post_init__' missing return type hint
+  Line 312: Function '__init__' missing return type hint
+
+app/sre/reconciliation/boot_reconciler.py
+  Line 70: Function '__init__' missing return type hint
+
+app/sre/state_machine/wal_persistence.py
+  Line 103: Function '__init__' missing return type hint
+  Line 293: Function '__init__' missing return type hint
+
+app/strategies/alpha_models.py
+  Line 152: Function '__init__' missing docstring
+  Line 152: Function '__init__' missing return type hint
+  Line 474: Function '__init__' missing docstring
+  Line 474: Function '__init__' missing return type hint
+  Line 534: Function '__init__' missing docstring
+
+app/strategies/carver_robust_rules.py
+  Line 48: Function '__init__' missing return type hint
+  Line 523: Function '_get_existing_position' missing return type hint
+
+app/strategies/config_loader.py
+  Line 22: Function '__init__' missing return type hint
+
+app/strategies/covered_calls/covered_call_strategy.py
+  Line 68: Function '__init__' missing return type hint
+
+app/strategies/covered_calls/greeks_calculator.py
+  Line 50: Function '__init__' missing return type hint
+  Line 457: Function '__init__' missing return type hint
+
+app/strategies/covered_calls/models.py
+  Line 195: Function '__post_init__' missing return type hint
+
+app/strategies/covered_calls/option_screener.py
+  Line 49: Function '__init__' missing return type hint
+
+app/strategies/covered_calls/position_manager.py
+  Line 52: Function '__init__' missing return type hint
+
+app/strategies/covered_calls/roll_analyzer.py
+  Line 50: Function '__init__' missing return type hint
+
+app/strategies/crypto_momentum/crypto_indicators.py
+  Line 44: Function '__init__' missing return type hint
+
+app/strategies/crypto_momentum/crypto_momentum_strategy.py
+  Line 78: Function '__init__' missing return type hint
+
+app/strategies/crypto_momentum/crypto_portfolio.py
+  Line 47: Function '__init__' missing return type hint
+
+app/strategies/crypto_momentum/crypto_screener.py
+  Line 78: Function '__init__' missing return type hint
+
+app/strategies/dividend/dividend_analyzer.py
+  Line 52: Function '__post_init__' missing return type hint
+  Line 90: Function '__init__' missing return type hint
+
+app/strategies/dividend/dividend_portfolio_constructor.py
+  Line 115: Function '__init__' missing return type hint
+
+app/strategies/dividend/dividend_screener.py
+  Line 46: Function '__init__' missing return type hint
+
+app/strategies/dividend/dividend_strategy.py
+  Line 74: Function '__init__' missing return type hint
+
+app/strategies/execution_engine.py
+  Line 28: Function '__init__' missing return type hint
+
+app/strategies/factory.py
+  Line 19: Function '__init__' missing return type hint
+
+app/strategies/fx_intermarket/correlation_analyzer.py
+  Line 68: Function '__init__' missing return type hint
+
+app/strategies/indicators/bollinger_bands.py
+  Line 83: Function '__init__' missing return type hint
+
+app/strategies/low_volatility/low_beta_screener.py
+  Line 65: Function '__init__' missing return type hint
+
+app/strategies/low_volatility/low_volatility_strategy.py
+  Line 81: Function '__init__' missing return type hint
+
+app/strategies/low_volatility/portfolio_constructor.py
+  Line 116: Function '__init__' missing return type hint
+  Line 299: Function 'portfolio_variance' missing docstring
+  Line 299: Function 'portfolio_variance' missing return type hint
+
+app/strategies/low_volatility/volatility_calculator.py
+  Line 67: Function '__init__' missing return type hint
+  Line 564: Function 'portfolio_variance' missing docstring
+  Line 564: Function 'portfolio_variance' missing return type hint
+
+app/strategies/mean_reversion.py
+  Line 559: Function '_get_existing_position' missing return type hint
+
+app/strategies/momentum.py
+  Line 854: Function '_get_existing_position' missing return type hint
+
+app/strategies/momentum_modular/automated_backtest.py
+  Line 29: Function '__init__' missing docstring
+  Line 29: Function '__init__' missing return type hint
+  Line 196: Function '__init__' missing return type hint
+  Line 431: Function '_create_strategy_with_modules' missing return type hint
+  Line 573: Function 'run_automated_backtest' missing return type hint
+
+app/strategies/momentum_modular/learning/base_learning_engine.py
+  Line 100: Function '__init__' missing return type hint
+
+app/strategies/momentum_modular/learning/deep_learning_engine.py
+  Line 72: Function '__init__' missing return type hint
+  Line 184: Function '__init__' missing docstring
+  Line 184: Function '__init__' missing return type hint
+  Line 209: Function '__len__' missing docstring
+  Line 209: Function '__len__' missing return type hint
+
+app/strategies/momentum_modular/learning/drift_detector.py
+  Line 220: Function '__init__' missing return type hint
+  Line 368: Function '__init__' missing return type hint
+  Line 519: Function '__init__' missing return type hint
+  Line 774: Function '__init__' missing return type hint
+  Line 1017: Function '__init__' missing return type hint
+
+app/strategies/momentum_modular/learning/feature_extractor.py
+  Line 26: Function '__init__' missing return type hint
+
+app/strategies/momentum_modular/learning/feature_importance.py
+  Line 244: Function '__init__' missing return type hint
+  Line 488: Function '__init__' missing return type hint
+  Line 609: Function 'attention_hook' missing docstring
+  Line 609: Function 'attention_hook' missing return type hint
+  Line 650: Function '__init__' missing return type hint
+
+app/strategies/momentum_modular/learning/hyperparameter_tuner.py
+  Line 42: Function '__init__' missing return type hint
+  Line 135: Function '__init__' missing return type hint
+  Line 222: Function '__init__' missing return type hint
+  Line 289: Function 'objective' missing return type hint
+  Line 425: Function '__init__' missing return type hint
+
+app/strategies/momentum_modular/learning/learning_updater.py
+  Line 113: Function '__init__' missing return type hint
+
+app/strategies/momentum_modular/learning/multitask_learning.py
+  Line 38: Function '__init__' missing return type hint
+  Line 82: Function '__init__' missing return type hint
+  Line 129: Function '__init__' missing return type hint
+  Line 201: Function '__init__' missing return type hint
+  Line 310: Function '__init__' missing return type hint
+
+app/strategies/momentum_modular/learning/regularization.py
+  Line 180: Function '__init__' missing return type hint
+  Line 318: Function '__init__' missing return type hint
+  Line 448: Function '__init__' missing return type hint
+  Line 586: Function '__init__' missing return type hint
+  Line 687: Function '__init__' missing return type hint
+
+app/strategies/momentum_modular/learning/reinforcement_learning_engine.py
+  Line 36: Function '__init__' missing return type hint
+  Line 74: Function 'reset' missing return type hint
+  Line 181: Function '_execute_buy' missing return type hint
+  Line 201: Function '_execute_sell' missing return type hint
+  Line 216: Function '_adjust_stop_loss' missing return type hint
+
+app/strategies/momentum_modular/learning/supervised_learning_engine.py
+  Line 58: Function '__init__' missing return type hint
+  Line 338: Function '_train_random_forest' missing return type hint
+  Line 357: Function '_train_xgboost' missing return type hint
+  Line 375: Function '_train_lightgbm' missing return type hint
+  Line 407: Class 'LightGBMWrapper' missing docstring
+
+app/strategies/momentum_modular/learning/training_data_preparator.py
+  Line 43: Function '__init__' missing return type hint
+  Line 791: Function 'get_attr' missing docstring
+  Line 791: Function 'get_attr' missing return type hint
+
+app/strategies/momentum_modular/learning/transfer_learning.py
+  Line 58: Function '__init__' missing return type hint
+  Line 448: Function '__init__' missing return type hint
+  Line 685: Function '__init__' missing return type hint
+  Line 794: Function 'distillation_loss' missing docstring
+  Line 794: Function 'distillation_loss' missing return type hint
+
+app/strategies/momentum_modular/learning/transformer_engine.py
+  Line 65: Function '__init__' missing return type hint
+  Line 243: Function '__init__' missing docstring
+  Line 243: Function '__init__' missing return type hint
+  Line 286: Function 'forward' missing docstring
+  Line 286: Function 'forward' missing return type hint
+
+app/strategies/momentum_modular/modules/base_filter.py
+  Line 22: Function '__init__' missing return type hint
+
+app/strategies/momentum_modular/modules/filters/atr_filter.py
+  Line 20: Function '__init__' missing return type hint
+
+app/strategies/momentum_modular/modules/filters/ema_filter.py
+  Line 23: Function '__init__' missing return type hint
+
+app/strategies/momentum_modular/modules/filters/momentum_filter.py
+  Line 20: Function '__init__' missing return type hint
+
+app/strategies/momentum_modular/modules/filters/rsi_filter.py
+  Line 56: Function '__init__' missing return type hint
+
+app/strategies/momentum_modular/modules/filters/stoch_rsi_filter.py
+  Line 27: Function '__init__' missing return type hint
+
+app/strategies/momentum_modular/modules/filters/volume_filter.py
+  Line 20: Function '__init__' missing return type hint
+
+app/strategies/momentum_modular/modules/market_analyzer.py
+  Line 26: Function '__init__' missing return type hint
+
+app/strategies/momentum_modular/modules/market_detectors/base_detector.py
+  Line 22: Function '__init__' missing return type hint
+
+app/strategies/momentum_modular/modules/market_detectors/range_detector.py
+  Line 28: Function '__init__' missing return type hint
+
+app/strategies/momentum_modular/modules/market_detectors/trend_detector.py
+  Line 29: Function '__init__' missing return type hint
+
+app/strategies/momentum_modular/modules/market_detectors/volatility_detector.py
+  Line 22: Function '__init__' missing return type hint
+
+app/strategies/momentum_modular/modules/performance_tracker.py
+  Line 24: Function '__init__' missing return type hint
+  Line 226: Function '__init__' missing return type hint
+
+app/strategies/momentum_modular/optimization/hyperparameter_optimizer.py
+  Line 33: Function '__init__' missing return type hint
+
+app/strategies/momentum_modular/strategy.py
+  Line 38: Function '__init__' missing docstring
+  Line 38: Function '__init__' missing return type hint
+  Line 43: Function 'warning' missing return type hint
+  Line 68: Function '__init__' missing return type hint
+  Line 937: Function '_build_basic_sequence' missing return type hint
+
+app/strategies/multi_factor/factor_calculator.py
+  Line 44: Function '__init__' missing return type hint
+
+app/strategies/multi_factor/factor_models.py
+  Line 66: Function '__init__' missing return type hint
+  Line 125: Function '__init__' missing docstring
+  Line 125: Function '__init__' missing return type hint
+  Line 170: Function '__init__' missing docstring
+  Line 170: Function '__init__' missing return type hint
+
+app/strategies/multi_factor/multi_factor_strategy.py
+  Line 88: Function '__init__' missing return type hint
+
+app/strategies/multi_factor/portfolio_constructor.py
+  Line 53: Function '__init__' missing return type hint
+  Line 318: Function 'objective' missing docstring
+  Line 318: Function 'objective' missing return type hint
+  Line 342: Function 'sector_constraint' missing docstring
+  Line 342: Function 'sector_constraint' missing return type hint
+
+app/strategies/pairs_trading.py
+  Line 909: Function '_get_existing_position' missing return type hint
+
+app/strategies/registry.py
+  Line 21: Function '__init__' missing return type hint
+
+app/strategies/strategy_logger.py
+  Line 23: Function '__init__' missing return type hint
+
+app/strategies/strategy_registry.py
+  Line 73: Function '__init__' missing return type hint
+  Line 142: Function '__repr__' missing docstring
+  Line 173: Function '__init__' missing return type hint
+  Line 325: Function '__init__' missing return type hint
+  Line 612: Function '__repr__' missing docstring
+
+app/system/verify_system_integrity.py
+  Line 38: Function '__init__' missing return type hint
+  Line 720: Function 'main' missing return type hint
+
+app/tax/database/fifo_schema.py
+  Line 474: Function '__init__' missing docstring
+  Line 474: Function '__init__' missing return type hint
+  Line 630: Function '__init__' missing docstring
+  Line 630: Function '__init__' missing return type hint
+
+app/tax/exporters/modelo_721_exporter.py
+  Line 94: Function '__init__' missing return type hint
+
+app/tests/analysis/test_fundamental_law.py
+  Line 41: Function 'sample_forecasts' missing return type hint
+  Line 52: Function 'sample_returns' missing return type hint
+  Line 66: Function 'sample_benchmark_returns' missing return type hint
+  Line 77: Function 'sample_portfolio_returns' missing return type hint
+  Line 88: Function 'sample_correlation_matrix' missing return type hint
+
+app/tests/backtesting/test_execution_model.py
+  Line 194: Function 'test_initialization' missing return type hint
+  Line 199: Function 'test_calculate_commission_buy' missing return type hint
+  Line 208: Function 'test_calculate_commission_sell' missing return type hint
+  Line 217: Function 'test_calculate_commission_minimum' missing return type hint
+  Line 226: Function 'test_calculate_sec_fee_calculation' missing return type hint
+
+app/tests/backtesting/test_pit_integration.py
+  Line 50: Function 'mock_pit_db' missing return type hint
+  Line 57: Function 'pit_client' missing return type hint
+  Line 63: Function 'pit_client_no_cache' missing return type hint
+  Line 69: Function 'sample_market_data' missing return type hint
+  Line 88: Function 'sample_signals' missing return type hint
+
+app/tests/backtesting/test_robust_backtester.py
+  Line 58: Function 'sample_config' missing return type hint
+  Line 72: Function 'sample_market_data' missing return type hint
+  Line 98: Function 'sample_signals' missing return type hint
+  Line 102: Class 'Signal' missing docstring
+  Line 103: Function '__init__' missing docstring
+
+app/tests/backtesting/test_validation.py
+  Line 198: Function 'test_walk_forward_config_creation' missing return type hint
+  Line 211: Function 'test_walk_forward_config_defaults' missing return type hint
+  Line 219: Function 'test_period_result_creation' missing return type hint
+  Line 232: Function 'test_overfitting_level_enum' missing return type hint
+  Line 239: Function 'test_stability_level_enum' missing return type hint
+
+app/tests/ensemble/test_ensemble.py
+  Line 116: Function 'test_objective_config_creation' missing return type hint
+  Line 128: Function 'test_objective_config_weights_validation' missing return type hint
+  Line 136: Function 'test_objective_config_negative_weights' missing return type hint
+  Line 147: Function 'test_objective_config_mismatch_objectives_weights' missing return type hint
+  Line 165: Function 'test_pareto_solution_creation' missing return type hint
+
+app/tests/market_microstructure/test_ofi.py
+  Line 40: Function 'sample_order_book' missing return type hint
+  Line 59: Function 'balanced_order_book' missing return type hint
+  Line 70: Function 'buy_pressure_book' missing return type hint
+  Line 81: Function 'sell_pressure_book' missing return type hint
+  Line 92: Function 'sample_tick_data' missing return type hint
+
+app/tests/optimization/test_parameter_optimization.py
+  Line 218: Function 'objective' missing docstring
+  Line 229: Function 'objective' missing docstring
+  Line 241: Function 'objective' missing docstring
+  Line 256: Function 'test_categorical_parameter' missing return type hint
+  Line 268: Function 'test_continuous_parameter' missing return type hint
+
+app/tests/portfolio/test_multi_asset.py
+  Line 60: Function 'equity_asset_class' missing return type hint
+  Line 76: Function 'bond_asset_class' missing return type hint
+  Line 92: Function 'crypto_asset_class' missing return type hint
+  Line 108: Function 'asset_classes' missing return type hint
+  Line 118: Function 'sample_market_data' missing return type hint
+
+app/tests/strategies/test_covered_calls_strategy.py
+  Line 37: Function 'valid_config' missing return type hint
+  Line 55: Function 'covered_config' missing return type hint
+  Line 61: Function 'base_date' missing return type hint
+  Line 68: Function 'sample_call_option' missing return type hint
+  Line 87: Function 'otm_call_option' missing return type hint
+
+app/tests/strategies/test_crypto_momentum_strategy.py
+  Line 46: Function 'sample_btc_asset' missing return type hint
+  Line 65: Function 'sample_eth_asset' missing return type hint
+  Line 84: Function 'sample_altcoin_asset' missing return type hint
+  Line 103: Function 'sample_small_cap_asset' missing return type hint
+  Line 122: Function 'sample_on_chain_metrics' missing return type hint
+
+app/tests/strategies/test_dividend_strategy.py
+  Line 48: Function 'valid_config' missing return type hint
+  Line 65: Function 'dividend_config' missing return type hint
+  Line 71: Function 'sample_dividend_data' missing return type hint
+  Line 92: Function 'sample_dividend_profile' missing return type hint
+  Line 115: Function 'dividend_stock' missing return type hint
+
+app/tests/strategies/test_low_volatility_strategy.py
+  Line 46: Function 'valid_config' missing return type hint
+  Line 62: Function 'low_vol_config' missing return type hint
+  Line 68: Function 'sample_volatility_metrics' missing return type hint
+  Line 89: Function 'sample_low_vol_profile' missing return type hint
+  Line 111: Function 'low_vol_stock' missing return type hint
+
+app/tests/strategies/test_multi_factor_strategy.py
+  Line 48: Function 'sample_factor_config' missing return type hint
+  Line 124: Function 'sample_quote' missing return type hint
+  Line 169: Function 'test_create_default_config' missing return type hint
+  Line 178: Function 'test_create_custom_config' missing return type hint
+  Line 186: Function 'test_validate_weights_sum_valid' missing return type hint
+
+app/trading_compliance/__init__.py
+  Line 80: Function '__init__' missing return type hint
+  Line 311: Function '__init__' missing return type hint
+  Line 548: Function '__init__' missing return type hint

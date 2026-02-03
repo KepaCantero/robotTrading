@@ -1,251 +1,305 @@
-# tier_mapper.py
+# tier_mapper.py Requirements
 
-## Purpose
-Unified tier mapping system for algorithmic trading. Provides centralized, consistent mapping between different tier naming conventions (capital_flag, YAML, Spanish) used across the system.
+**File:** `app/core/tier_mapper.py`  
+**Purpose:** Unified Tier Mapping System  
+**Audit Status:** NEEDS_AUDIT
 
 ---
 
-## Type Definitions / Data Classes
+## References
+- **BASE_RULES:** See ../../BASE_RULES.md for universal rules
+- **Related Files:**
+  - `app/core/config/strategy_config_loader.py` (get_strategy_config)
+  - Investment profile modules
+  - Risk configuration modules
 
-### TierSystem Enum
+---
+
+## Purpose & Scope
+
+This module provides a centralized, consistent mapping between different tier naming conventions used across the algorithmic trading system:
+
+1. **InputProfile.capital_flag:** "small", "medium", "large" (English, 3 tiers)
+2. **investment_profiles.yaml:** "micro", "small", "medium", "large" (English, 4 tiers)
+3. **Config expectations:** "bajo", "medio", "alto" (Spanish, 3 tiers)
+
+**Critical for Production:** Ensures consistency across different parts of the system and prevents configuration errors.
+
+---
+
+## Classes & Functions
+
+### Classes
+
+| Class | Purpose | Methods/Attributes |
+|-------|---------|-------------------|
+| `TierSystem` | Enum of tier systems | CAPITAL_FLAG, YAML, SPANISH, STANDARD |
+| `TierMapper` | Centralized tier mapping | Conversion methods, validation, capital-based tier determination |
+
+### Functions
+
+| Function | Purpose | Return Type |
+|----------|---------|-------------|
+| `get_tier()` | Get tier from capital | `str` |
+| `normalize_tier()` | Normalize tier to system | `str` |
+| `map_profile_tier_to_config()` | Map capital_flag to config format | `str` |
+| `validate_tier_mapping()` | Validate tier consistency | `Tuple[bool, list[str]]` |
+
+---
+
+## File-Specific Requirements
+
+### TIER-001: Capital-Based Tier Determination
+**Priority:** P0 (Critical - Correct risk limits)
+
+**Requirement:** Tier must be determined from capital amount using 4-tier system.
+
+**Acceptance Criteria:**
 ```python
-class TierSystem(str, Enum):
-    CAPITAL_FLAG = "capital_flag"    # InputProfile.capital_flag: small, medium, large
-    YAML = "yaml"                    # investment_profiles.yaml: micro, small, medium, large
-    SPANISH = "spanish"              # Config expectations: bajo, medio, alto
-    STANDARD = "standard"            # Internal standard: micro, small, medium, large
+# Micro tier: < €15k
+assert TierMapper.get_tier_from_capital(Decimal("10000")) == "micro"
+
+# Small tier: €15k - €50k
+assert TierMapper.get_tier_from_capital(Decimal("30000")) == "small"
+
+# Medium tier: €50k - €250k
+assert TierMapper.get_tier_from_capital(Decimal("100000")) == "medium"
+
+# Large tier: >= €250k
+assert TierMapper.get_tier_from_capital(Decimal("500000")) == "large"
 ```
 
-### TierThresholds Dict
+**Check:** Tier boundaries are correct
+
+---
+
+### TIER-002: System Conversion Accuracy
+**Priority:** P0 (Critical - Configuration consistency)
+
+**Requirement:** Conversions between tier systems must be accurate and bidirectional.
+
+**Acceptance Criteria:**
 ```python
-THRESHOLDS: Dict[str, Decimal] = {
-    "micro": Decimal("0")            # < €15k
-    "small": Decimal("15000")        # €15k - €50k
-    "medium": Decimal("50000")       # €50k - €250k
-    "large": Decimal("250000")       # >= €250k
-}
+# Spanish to YAML
+assert TierMapper.to_spanish("micro") == "bajo"
+assert TierMapper.to_spanish("small") == "bajo"
+assert TierMapper.to_spanish("medium") == "medio"
+assert TierMapper.to_spanish("large") == "alto"
+
+# YAML to Spanish (reverse)
+assert TierMapper.to_yaml_tier("bajo", TierSystem.SPANISH) in ["micro", "small"]
 ```
 
-**Validation Rules:**
-- Thresholds loaded from config/capital_tiers.yaml
-- Fallback to hardcoded values if config unavailable (with error)
-- Thresholds must be in ascending order
-- All thresholds are positive Decimal values
+**Check:** Conversion mappings are correct
 
 ---
 
-## Function Signatures (Contracts)
+### TIER-003: Capital Flag Mapping
+**Priority:** P0 (Critical - InputProfile compatibility)
 
-### `TierMapper._load_thresholds_from_config(cls) -> None`
-**Pre:** config module available
-**Post:** Thresholds loaded from config or raise error
-**Raises:** FileNotFoundError, ValueError, KeyError, TypeError
-**Retry:** No
-**Side Effects:** Updates cls.THRESHOLDS, logs result
+**Requirement:** Capital flag (3-tier) must map correctly to config systems.
 
-### `TierMapper.get_thresholds(cls) -> Dict[str, Decimal]`
-**Pre:** None
-**Post:** Returns thresholds dict (excluding "loaded" key)
-**Raises:** No (loads from config if needed)
-**Retry:** No
-**Side Effects:** Calls _load_thresholds_from_config if needed
+**Acceptance Criteria:**
+```python
+# Capital flag uses 3-tier system
+assert TierMapper.get_capital_flag_tier(Decimal("30000")) == "small"  # < €50k
+assert TierMapper.get_capital_flag_tier(Decimal("100000")) == "medium"  # €50k-€250k
+assert TierMapper.get_capital_flag_tier(Decimal("500000")) == "large"  # >= €250k
+```
 
-### `TierMapper.get_tier_from_capital(cls, capital: Decimal) -> str`
-**Pre:** capital >= 0
-**Post:** Returns tier: "micro", "small", "medium", or "large"
-**Raises:** FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError
-**Retry:** No
-**Side Effects:** Loads config, logs result
-
-**Capital ranges:**
-- micro: < €15k
-- small: €15k - €50k
-- medium: €50k - €250k
-- large: >= €250k
-
-### `TierMapper.get_capital_flag_tier(cls, capital: Decimal) -> str`
-**Pre:** capital >= 0
-**Post:** Returns tier: "small", "medium", or "large"
-**Raises:** No
-**Retry:** No
-**Side Effects:** None
-
-**Capital ranges (3-tier system):**
-- small: < €50k
-- medium: €50k - €250k
-- large: >= €250k
-
-### `TierMapper.to_yaml_tier(cls, tier: str, source_system: Optional[TierSystem] = None) -> str`
-**Pre:** tier is valid in source system
-**Post:** Returns tier in YAML format (4-tier)
-**Raises:** ValueError if invalid or conversion not possible
-**Retry:** No
-**Side Effects:** Auto-detects source system if None
-
-### `TierMapper.to_spanish(cls, tier: str, source_system: Optional[TierSystem] = None) -> str`
-**Pre:** tier is valid in source system
-**Post:** Returns tier in Spanish format (bajo, medio, alto)
-**Raises:** ValueError if invalid or conversion not possible
-**Retry:** No
-**Side Effects:** Auto-detects source system if None
-
-**YAML to Spanish mapping:**
-- micro -> bajo
-- small -> bajo
-- medium -> medio
-- large -> alto
-
-### `TierMapper.to_capital_flag(cls, tier: str, source_system: Optional[TierSystem] = None) -> str`
-**Pre:** tier is valid in source system
-**Post:** Returns tier in capital_flag format (3-tier)
-**Raises:** ValueError if invalid or conversion not possible
-**Retry:** No
-**Side Effects:** Auto-detects source system if None
-
-### `TierMapper.detect_system(cls, tier: str) -> TierSystem`
-**Pre:** tier is non-empty
-**Post:** Returns detected TierSystem
-**Raises:** ValueError if tier not recognized
-**Retry:** No
-**Side Effects:** None
-
-**Detection priority:**
-- "bajo", "medio", "alto" -> SPANISH
-- "micro" -> YAML
-- "small", "medium", "large" -> CAPITAL_FLAG (preferred)
-
-### `TierMapper.is_valid_tier(cls, tier: str, system: Optional[TierSystem] = None) -> bool`
-**Pre:** tier is non-empty
-**Post:** Returns True if tier valid
-**Raises:** No
-**Retry:** No
-**Side Effects:** None
-
-### `TierMapper.list_all_valid_tiers(cls) -> Dict[str, Tuple[str, ...]]`
-**Pre:** None
-**Post:** Returns dict of system -> valid tiers
-**Raises:** No
-**Retry:** No
-**Side Effects:** None
-
-### `TierMapper.validate_consistency(cls) -> Tuple[bool, List[str]]`
-**Pre:** None
-**Post:** Returns (is_valid, list_of_warnings)
-**Raises:** No
-**Retry:** No
-**Side Effects:** Checks bidirectional mappings, threshold ordering
+**Check:** Capital flag logic matches InputProfile
 
 ---
 
-## Module Functions
+### TIER-004: Config Integration
+**Priority:** P1 (High - Configuration consistency)
 
-### `get_tier(capital: Decimal, system: TierSystem = TierSystem.YAML) -> str`
-**Pre:** capital >= 0
-**Post:** Returns tier in requested system
-**Raises:** No (propagates from TierMapper)
-**Retry:** No
-**Side Effects:** None
+**Requirement:** Tier thresholds must be loaded from centralized config.
 
-### `normalize_tier(tier: str, target_system: TierSystem = TierSystem.YAML) -> str`
-**Pre:** tier is valid
-**Post:** Returns normalized tier
-**Raises:** ValueError if tier invalid
-**Retry:** No
-**Side Effects:** Auto-detects source system
+**Acceptance Criteria:**
+```python
+# Should use config/capital_tiers.yaml if available
+config = get_strategy_config()
+tier = config.get_tier_from_capital(Decimal("100000"))
+assert tier in ["micro", "small", "medium", "large", "institutional"]
+```
 
-### `map_profile_tier_to_config(capital_flag: str, target_format: str = "yaml") -> str`
-**Pre:** capital_flag valid, target_format in ["yaml", "spanish"]
-**Post:** Returns tier in target format
-**Raises:** No (logs warning for unknown format)
-**Retry:** No
-**Side Effects:** Logs warning for unknown format
-
-### `validate_tier_mapping() -> Tuple[bool, List[str]]`
-**Pre:** None
-**Post:** Returns validation result
-**Raises:** No
-**Side Effects:** Logs results
+**Check:** Config loading works
 
 ---
 
-## Acceptance Criteria
-- [ ] Tier detection auto-detects system
-- [ ] Capital thresholds loaded from config (required)
-- [ ] Fallback to hardcoded thresholds with error if config fails
-- [ ] Three tier systems supported: capital_flag (3), YAML (4), Spanish (3)
-- [ ] Bidirectional mapping between all systems
-- [ ] Consistency validation on module import
-- [ ] Warnings logged for mapping inconsistencies
-- [ ] Threshold ordering validated
-- [ ] Institutional tier mapped to large for backward compatibility
+### TIER-005: Validation Consistency
+**Priority:** P1 (High - Data integrity)
+
+**Requirement:** Tier mappings must be internally consistent.
+
+**Acceptance Criteria:**
+```python
+is_valid, warnings = TierMapper.validate_consistency()
+assert is_valid == True
+assert len(warnings) == 0
+```
+
+**Check:** Validation catches inconsistencies
 
 ---
 
-## Critical Rules (MUST NOT BREAK)
+### TIER-006: Auto-Detection
+**Priority:** P2 (Medium - Developer experience)
 
-**Reglas universales:** Ver `../../BASE_RULES.md` (96+ rules organized by priority)
+**Requirement:** Tier system should be auto-detected from tier name.
 
-### Reglas ESPECÍFICAS de este archivo:
+**Acceptance Criteria:**
+```python
+assert TierMapper.detect_system("bajo") == TierSystem.SPANISH
+assert TierMapper.detect_system("micro") == TierSystem.YAML
+assert TierMapper.detect_system("small") == TierSystem.CAPITAL_FLAG
+```
 
-| Rule | Source | Requirement | Current Status |
-|------|--------|-------------|----------------|
-| RSK-003 | BASE_RULES.md | Drawdown control | ✅ OK - Tier limits |
-| TRD-003 | BASE_RULES.md | Position limits | ✅ OK - Max position size |
-| CC-006 | BASE_RULES.md | Explicit error handling | ✅ OK - ValueError for invalid tiers |
-| CFG-003 | BASE_RULES.md | Validation | ✅ OK - Input validation |
-| CFG-002 | BASE_RULES.md | Environment variables | ✅ OK - Config from YAML |
-| LOG-004 | BASE_RULES.md | Error logging | ⚠️ PARTIAL - Errors logged but no stack traces |
-| TYP-001 | BASE_RULES.md | Type coverage | ✅ OK - All functions typed |
-| TYP-002 | BASE_RULES.md | Modern syntax | ✅ OK - Uses Dict, Optional, Tuple |
+**Check:** Detection works for all tiers
 
-**GAPS IDENTIFIED:**
-1. **LOG-004 Partial**: Error logging exists but lacks explicit stack traces (`exc_info=True` missing in some error logs)
-2. **CFG-002 Risk**: Config loading has fallback to hardcoded values instead of failing fast in production
+---
+
+### TIER-007: Error Handling
+**Priority:** P1 (High - Robustness)
+
+**Requirement:** Invalid tier names must raise clear errors.
+
+**Acceptance Criteria:**
+```python
+try:
+    TierMapper.detect_system("invalid")
+    assert False, "Should raise ValueError"
+except ValueError as e:
+    assert "not recognized" in str(e)
+```
+
+**Check:** Error messages are informative
+
+---
+
+### TIER-008: Bidirectional Consistency
+**Priority:** P1 (High - Data integrity)
+
+**Requirement:** Round-trip conversions must preserve tier meaning.
+
+**Acceptance Criteria:**
+```python
+# Spanish -> YAML -> Spanish should preserve meaning
+original = "medio"
+yaml = TierMapper.to_yaml_tier(original, TierSystem.SPANISH)
+back = TierMapper.to_spanish(yaml, TierSystem.YAML)
+assert back == original
+```
+
+**Check:** Bidirectional mappings are consistent
+
+---
+
+## BASE_RULES Compliance
+
+### Critical Rules (P0)
+- **CC-006:** Explicit error handling ✅
+- **CFG-002:** Environment variables used ✅ (via config)
+
+### High Priority (P1)
+- **TYP-001:** Type hints present ✅
+- **CC-001:** Descriptive names ✅
+- **LOG-002:** Context in logs ✅
+
+### Medium Priority (P2)
+- **QL-001:** Complexity reasonable ✅
+- **CC-007:** Small methods ✅
+
+---
+
+## Known Issues & Technical Debt
+
+### Issues
+1. **Hardcoded thresholds** - Should be entirely in config
+2. **No institutional tier** - 5-tier system not fully supported
+3. **Config coupling** - Tight coupling to strategy_config_loader
+
+### Technical Debt
+1. **Move all thresholds to config** - Remove hardcoded values
+2. **Add 5-tier support** - Support micro, small, medium, large, institutional
+3. **Decouple from config** - Make config optional with better defaults
+
+---
+
+## Testing Requirements
+
+### Unit Tests
+- [ ] Test capital-based tier determination
+- [ ] Test system conversion accuracy
+- [ ] Test capital flag mapping
+- [ ] Test auto-detection
+- [ ] Test error handling
+- [ ] Test bidirectional consistency
+- [ ] Test validation consistency
+
+### Integration Tests
+- [ ] Test with actual config files
+- [ ] Test with InputProfile
+- [ ] Test with investment_profiles.yaml
+
+---
+
+## Security Considerations
+
+1. **No injection attacks** ✅ (enum validation)
+2. **No sensitive data** ✅ (tier names only)
+3. **Input validation** ✅ (tier validation)
+
+---
+
+## Performance Considerations
+
+1. **Config loading** - Cached after first load ✅
+2. **Mapping lookups** - O(1) dict lookups ✅
+3. **Validation overhead** - Minimal ✅
 
 ---
 
 ## Dependencies
-- **External:** logging, decimal, enum, typing
-- **Internal:** app.core.config.strategy_config_loader (get_strategy_config)
+
+**External:**
+- `logging` (stdlib)
+- `decimal` (stdlib)
+- `enum` (stdlib)
+- `typing` (stdlib)
+
+**Internal:**
+- `app.core.config.strategy_config_loader` (get_strategy_config)
 
 ---
 
-## Required Tests
-- **tests/core/test_tier_mapper.py:**
-  - Test get_tier_from_capital() for all thresholds
-  - Test get_capital_flag_tier() for 3-tier system
-  - Test to_yaml_tier() conversion from all systems
-  - Test to_spanish() conversion from all systems
-  - Test to_capital_flag() conversion from all systems
-  - Test detect_system() for all tier names
-  - Test is_valid_tier() for valid/invalid tiers
-  - Test list_all_valid_tiers() returns all systems
-  - Test validate_consistency() checks mappings
-  - Test normalize_tier() auto-detection
-  - Test map_profile_tier_to_config() conversion
-  - Test get_tier() with different systems
-  - Test config loading failure handling
-  - Test threshold ordering validation
-  - Test institutional -> large mapping
+## Migration Notes
+
+**From unmapped tiers:**
+1. Identify all tier usage
+2. Replace with TierMapper methods
+3. Update config files
+4. Test tier conversions
+
+**To tier-mapped code:**
+1. Import TierMapper
+2. Use get_tier() for capital-based tiers
+3. Use normalize_tier() for conversions
+4. Validate tier consistency
 
 ---
 
-## Notes
-- **PROBLEM:** System uses 3 different tier systems:
-  1. InputProfile.capital_flag: "small", "medium", "large" (3 tiers)
-  2. investment_profiles.yaml: "micro", "small", "medium", "large" (4 tiers)
-  3. Config expectations: "bajo", "medio", "alto" (Spanish, 3 tiers)
-- **SOLUTION:** Unified mapping between all systems with validation
-- **Capital thresholds (EUR):**
-  - micro: < €15k
-  - small: €15k - €50k
-  - medium: €50k - €250k
-  - large: >= €250k
-- **Spanish mapping:**
-  - bajo (low): micro, small
-  - medio (medium): medium
-  - alto (high): large
-- **Capital flag mapping (3-tier):**
-  - small: < €50k
-  - medium: €50k - €250k
-  - large: >= €250k
+## Changelog
+
+### Version 1.0.0 (Initial)
+- Unified tier mapping
+- Multi-system support
+- Capital-based tier determination
+- Bidirectional conversion
+- Validation and consistency checking
+
+---
+
+**Last Updated:** 2026-02-06  
+**Next Review:** After 5-tier system implementation

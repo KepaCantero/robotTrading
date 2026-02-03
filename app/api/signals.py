@@ -2,43 +2,47 @@
 Signal Management API Endpoints
 
 FastAPI endpoints for signal scoring, evaluation, and management.
+
+GAP Fixes:
+- API-002: Added structured logging with correlation IDs
+- API-009: Added audit logging for signal operations
+- API-005: TODO: Rate limiting requires JWT infrastructure
 """
 
 from __future__ import annotations
 
 import asyncio
 import logging
+import traceback
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from pydantic import BaseModel
 
+from app.core.di_container import get_signal_scorer_service as di_get_signal_scorer_service
 from app.models.signal import MarketData, Signal, SignalType
-from app.providers.paper_trading import PaperTradingPortfolioProvider
-from app.services.portfolio_service import PortfolioService
 from app.services.signal_scorer import SignalScorerService
+
+from . import audit_logger, get_correlation_id
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/signals", tags=["signals"])
 
-# Global signal scorer service instance
-_signal_scorer_service: Optional[SignalScorerService] = None
-
 
 def get_signal_scorer_service() -> SignalScorerService:
-    """Get signal scorer service instance."""
-    global _signal_scorer_service
+    """
+    Get signal scorer service instance from DI container.
 
-    if _signal_scorer_service is None:
-        portfolio_provider = PaperTradingPortfolioProvider()
-        portfolio_service = PortfolioService(portfolio_provider)
-        _signal_scorer_service = SignalScorerService(portfolio_service)
-        logger.info("SignalScorerService singleton initialized")
+    This is a FastAPI dependency function that delegates to the DI container.
+    The service is instantiated as a singleton with proper dependency injection.
 
-    return _signal_scorer_service
+    Returns:
+        SignalScorerService: Singleton instance of the signal scorer service
+    """
+    return di_get_signal_scorer_service()
 
 
 class MarketDataRequest(BaseModel):
@@ -84,6 +88,7 @@ class SignalStatisticsResponse(BaseModel):
 @router.post("/evaluate", response_model=SignalResponse)
 async def evaluate_signal(
     request: SignalEvaluationRequest,
+    http_request: Request,
     service: SignalScorerService = Depends(get_signal_scorer_service),
 ) -> SignalResponse:
     """
@@ -91,6 +96,7 @@ async def evaluate_signal(
 
     Args:
         request: Signal evaluation request containing symbol, signal type, and market data
+        http_request: FastAPI Request object
         service: Signal scorer service dependency
 
     Returns:
@@ -99,6 +105,15 @@ async def evaluate_signal(
     Raises:
         HTTPException: If signal type is invalid or evaluation fails
     """
+    correlation_id = get_correlation_id()
+    logger.info(
+        "Evaluating signal",
+        extra={
+            "correlation_id": correlation_id,
+            "symbol": request.symbol,
+            "signal_type": request.signal_type,
+        },
+    )
     try:
         # Convert request to MarketData
         market_data = MarketData(
@@ -115,29 +130,94 @@ async def evaluate_signal(
         try:
             signal_type = SignalType(request.signal_type.lower())
         except ValueError:
+            logger.warning(
+                "Invalid signal type requested",
+                extra={
+                    "correlation_id": correlation_id,
+                    "signal_type": request.signal_type,
+                },
+            )
             raise HTTPException(
                 status_code=400, detail=f"Invalid signal type: {request.signal_type}"
             )
 
-        # Evaluate signal
-        signal = await service.evaluate_signal(
-            request.symbol, signal_type, market_data, request.metadata
+        # Evaluate signal with timeout
+        signal = await asyncio.wait_for(
+            service.evaluate_signal(
+                request.symbol, signal_type, market_data, request.metadata
+            ),
+            timeout=10.0,  # API-010: Add timeout configuration
         )
 
         if signal:
+            audit_logger.log_action(
+                action="signal_accepted",
+                method=http_request.method,
+                path=http_request.url.path,
+                details={
+                    "symbol": request.symbol,
+                    "signal_type": request.signal_type,
+                    "signal_score": getattr(signal, 'score', None),
+                },
+            )
             return SignalResponse(
                 success=True,
                 signal=signal,
                 message=f"Signal evaluated successfully for {request.symbol}",
             )
         else:
+            audit_logger.log_action(
+                action="signal_rejected",
+                method=http_request.method,
+                path=http_request.url.path,
+                details={
+                    "symbol": request.symbol,
+                    "signal_type": request.signal_type,
+                    "reason": "Below minimum thresholds",
+                },
+            )
             return SignalResponse(
                 success=False,
                 signal=None,
                 message=f"Signal for {request.symbol} does not meet minimum thresholds",
             )
 
+    except asyncio.TimeoutError as e:
+        logger.error(
+            "Timeout evaluating signal",
+            extra={
+                "correlation_id": correlation_id,
+                "symbol": request.symbol,
+                "error": str(e),
+                "stack_trace": traceback.format_exc(),
+            },
+        )
+        audit_logger.log_error(
+            method=http_request.method,
+            path=http_request.url.path,
+            error_type="TimeoutError",
+            error_message=str(e),
+            stack_trace=traceback.format_exc(),
+        )
+        raise HTTPException(status_code=504, detail=f"Timeout evaluating signal: {str(e)}")
     except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
+        logger.error(
+            "Error evaluating signal",
+            extra={
+                "correlation_id": correlation_id,
+                "symbol": request.symbol,
+                "error_type": type(e).__name__,
+                "error": str(e),
+                "stack_trace": traceback.format_exc(),
+            },
+        )
+        audit_logger.log_error(
+            method=http_request.method,
+            path=http_request.url.path,
+            error_type=type(e).__name__,
+            error_message=str(e),
+            stack_trace=traceback.format_exc(),
+        )
         raise HTTPException(status_code=500, detail=f"Error evaluating signal: {str(e)}")
 
 

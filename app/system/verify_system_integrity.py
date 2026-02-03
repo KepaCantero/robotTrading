@@ -631,9 +631,9 @@ class SystemIntegrityValidator:
 
     def _print_summary(self) -> None:
         """Imprimir resumen visual de validación."""
-        print("\n" + "=" * 80)
-        print("📊 SYSTEM INTEGRITY VALIDATION SUMMARY")
-        print("=" * 80)
+        logger.debug("\n" + "=" * 80)
+        logger.debug("📊 SYSTEM INTEGRITY VALIDATION SUMMARY")
+        logger.debug("=" * 80)
 
         checks = self.validation_results["checks"]
 
@@ -649,26 +649,26 @@ class SystemIntegrityValidator:
             else:
                 emoji = "❓"
 
-            print(f"{emoji} {check_name.upper()}: {status.upper()}")
+            logger.debug(f"{emoji} {check_name.upper()}: {status.upper()}")
 
             # Mostrar errores si los hay
             errors = check_result.get("errors", [])
             if errors:
                 for error in errors:
-                    print(f"   └─ Error: {error}")
+                    logger.debug(f"   └─ Error: {error}")
 
         # Estado general
         overall = self.validation_results["overall_status"]
         if overall == "ok":
-            print(f"\n🎉 OVERALL STATUS: ✅ {overall.upper()}")
+            logger.debug(f"\n🎉 OVERALL STATUS: ✅ {overall.upper()}")
         elif overall == "warning":
-            print(f"\n⚠️  OVERALL STATUS: {overall.upper()}")
+            logger.debug(f"\n⚠️  OVERALL STATUS: {overall.upper()}")
         elif overall == "error":
-            print(f"\n❌ OVERALL STATUS: {overall.upper()}")
+            logger.debug(f"\n❌ OVERALL STATUS: {overall.upper()}")
         else:
-            print(f"\n❓ OVERALL STATUS: {overall.upper()}")
+            logger.debug(f"\n❓ OVERALL STATUS: {overall.upper()}")
 
-        print("=" * 80 + "\n")
+        logger.debug("=" * 80 + "\n")
 
     def _write_dashboard_state(self) -> None:
         """Escribir dashboard state JSON con resultados de validación."""

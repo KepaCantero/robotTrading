@@ -5,8 +5,9 @@ This module implements various methods for combining trading strategies
 into a portfolio with optimal weight allocations.
 """
 
+import logging
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
@@ -16,6 +17,8 @@ from app.ensemble.models import (
     StrategyAllocation,
 )
 from app.models.portfolio import MarketRegime
+
+logger = logging.getLogger(__name__)
 
 
 class StrategyCombiner:
@@ -80,6 +83,7 @@ class StrategyCombiner:
             self.returns_history: Dict[str, List[float]] = {s: [] for s in strategies}
 
         except (TypeError, AttributeError) as e:
+            logger.error("StrategyCombiner initialization failed", exc_info=True)
             raise ValueError(f"Invalid parameters: {e}") from e
 
     def calculate_allocation(
@@ -143,6 +147,7 @@ class StrategyCombiner:
             return allocations
 
         except Exception as e:
+            logger.error("Allocation calculation failed", exc_info=True)
             raise RuntimeError(f"Allocation calculation failed: {e}") from e
 
     def _initialize_allocation(self) -> Dict[str, Decimal]:
@@ -227,6 +232,7 @@ class StrategyCombiner:
             return {strategy: float(weights[i]) for i, strategy in enumerate(self.strategies)}
 
         except Exception:
+            logger.error("Mean-variance allocation failed", exc_info=True)
             return self._equal_weight_allocation()
 
     def _risk_parity_allocation(self, returns_data: Dict[str, np.ndarray]) -> Dict[str, float]:
@@ -261,6 +267,7 @@ class StrategyCombiner:
             return {strategy: float(weights[i]) for i, strategy in enumerate(self.strategies)}
 
         except Exception:
+            logger.error("Risk parity allocation failed", exc_info=True)
             return self._equal_weight_allocation()
 
     def _regime_dependent_allocation(
@@ -303,6 +310,7 @@ class StrategyCombiner:
             return adjusted_weights
 
         except Exception:
+            logger.error("Regime-dependent allocation failed", exc_info=True)
             return self._equal_weight_allocation()
 
     def _get_regime_adjustments(self, regime: MarketRegime) -> Dict[str, float]:
@@ -376,8 +384,6 @@ class StrategyCombiner:
             Dictionary of HRP weights
         """
         try:
-            n = len(self.strategies)
-
             # Calculate correlation matrix
             returns_matrix = np.column_stack([returns_data[s] for s in self.strategies])
             corr_matrix = np.corrcoef(returns_matrix, rowvar=False)
@@ -395,6 +401,7 @@ class StrategyCombiner:
             return {strategy: float(weights[i]) for i, strategy in enumerate(self.strategies)}
 
         except Exception:
+            logger.error("HRP allocation failed", exc_info=True)
             return self._equal_weight_allocation()
 
     def _black_litterman_allocation(self, returns_data: Dict[str, np.ndarray]) -> Dict[str, float]:
@@ -435,6 +442,7 @@ class StrategyCombiner:
             return {strategy: float(weights[i]) for i, strategy in enumerate(self.strategies)}
 
         except Exception:
+            logger.error("Black-Litterman allocation failed", exc_info=True)
             return self._equal_weight_allocation()
 
     def _apply_weight_constraints(self, weights: Dict[str, float]) -> Dict[str, float]:
@@ -523,6 +531,7 @@ class StrategyCombiner:
             )
 
         except Exception as e:
+            logger.error("Portfolio metrics calculation failed", exc_info=True)
             raise RuntimeError(f"Portfolio metrics calculation failed: {e}") from e
 
     def _calculate_diversification_ratio(
@@ -565,6 +574,7 @@ class StrategyCombiner:
             return Decimal(str(weighted_avg_vol / portfolio_vol))
 
         except Exception:
+            logger.error("Diversification ratio calculation failed", exc_info=True)
             return Decimal("1.0")
 
     def _calculate_effective_number_strategies(self, weights: np.ndarray) -> float:
@@ -592,6 +602,7 @@ class StrategyCombiner:
             return float(effective_n)
 
         except Exception:
+            logger.error("Effective number of strategies calculation failed", exc_info=True)
             return 1.0
 
     def _calculate_mean_correlation(
@@ -632,6 +643,7 @@ class StrategyCombiner:
             return Decimal(str(mean_corr))
 
         except Exception:
+            logger.error("Mean correlation calculation failed", exc_info=True)
             return Decimal("0")
 
     def needs_rebalancing(self, allocation: List[StrategyAllocation]) -> bool:
@@ -697,4 +709,5 @@ class StrategyCombiner:
             }
 
         except Exception:
+            logger.error("Allocation summary calculation failed", exc_info=True)
             return {}

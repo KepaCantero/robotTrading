@@ -8,10 +8,13 @@ Provides comprehensive financial metrics using AWESOME-QUANT libraries:
 """
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, TypedDict, Union
 
 import numpy as np
 import pandas as pd
+
+# Trading days constant - Annual trading days (NYSE convention)
+TRADING_DAYS = 252  # Number of trading days per year for US equity markets
 
 # Try to import quantstats with fallback
 try:
@@ -42,6 +45,119 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+
+# ============================================================================
+# TYPED DICT DEFINITIONS
+# ============================================================================
+
+class QuantstatsMetrics(TypedDict):
+    """Metrics from quantstats library."""
+    return_pct: float
+    cagr: float
+    sharpe: float
+    sortino: float
+    calmar: float
+    max_drawdown: float
+    avg_drawdown: float
+    underwater: float
+    volatility: float
+    var_95: float
+    cvar_95: float
+    win_rate: float
+    best_day: float
+    worst_day: float
+    avg_win: float
+    avg_loss: float
+    profit_factor: float
+    payoff_ratio: float
+    recovery_factor: float
+    beta: Optional[float]
+    alpha: Optional[float]
+    correlation: Optional[float]
+
+
+class EmpyricalMetrics(TypedDict, total=False):
+    """Metrics from empyrical library."""
+    total_return: float
+    annual_return: float
+    cumulative_returns: float
+    volatility: float
+    downside_volatility: float
+    max_drawdown: float
+    avg_drawdown: float
+    sharpe_ratio: float
+    sortino_ratio: float
+    calmar_ratio: float
+    omega_ratio: float
+    win_rate: float
+    var_95: float
+    cvar_95: float
+    skewness: float
+    kurtosis: float
+    alpha: Optional[float]
+    beta: Optional[float]
+    information_ratio: Optional[float]
+
+
+class PyfolioMetrics(TypedDict, total=False):
+    """Metrics from pyfolio library."""
+    total_return: float
+    annual_return: float
+    volatility: float
+    sharpe_ratio: float
+    sortino_ratio: float
+    max_drawdown: float
+    avg_drawdown: float
+    win_rate: float
+    best_return: float
+    worst_return: float
+    avg_positive_return: float
+    avg_negative_return: float
+    skewness: float
+    kurtosis: float
+    var_95: float
+    cvar_95: float
+
+
+class AwesomeQuantMetricsDict(TypedDict, total=False):
+    """Container for all AWESOME-QUANT metrics."""
+    quantstats: Dict[str, float]
+    empyrical: Dict[str, float]
+    pyfolio: PyfolioMetrics
+
+
+class FallbackMetrics(TypedDict, total=False):
+    """Fallback metrics when AWESOME-QUANT libraries are unavailable."""
+    total_return: float
+    annual_return: float
+    cumulative_returns: float
+    volatility: float
+    downside_volatility: float
+    max_drawdown: float
+    avg_drawdown: float
+    sharpe_ratio: float
+    sortino_ratio: float
+    calmar_ratio: float
+    omega_ratio: float
+    win_rate: float
+    var_95: float
+    cvar_95: float
+    skewness: float
+    kurtosis: float
+    best_day: Optional[float]
+    worst_day: Optional[float]
+    avg_win: Optional[float]
+    avg_loss: Optional[float]
+    profit_factor: Optional[float]
+    return_pct: Optional[float]
+    beta: Optional[float]
+    alpha: Optional[float]
+    information_ratio: Optional[float]
+
+
+# ============================================================================
+# AWESOME-QUANT INTEGRATOR
+# ============================================================================
 
 class AwesomeQuantIntegrator:
     """Integrate AWESOME-QUANT libraries for advanced metrics and analysis."""
@@ -205,7 +321,7 @@ class AwesomeQuantIntegrator:
         returns: pd.Series,
         positions: Optional[pd.DataFrame] = None,
         transactions: Optional[pd.DataFrame] = None,
-    ) -> Dict[str, Any]:
+    ) -> PyfolioMetrics:
         """
         Calculate portfolio metrics using pyfolio.
 
@@ -224,18 +340,18 @@ class AwesomeQuantIntegrator:
 
             # Basic metrics
             metrics["total_return"] = float((1 + returns).prod() - 1)
-            metrics["annual_return"] = float(returns.mean() * 252)
-            metrics["volatility"] = float(returns.std() * np.sqrt(252))
+            metrics["annual_return"] = float(returns.mean() * TRADING_DAYS)
+            metrics["volatility"] = float(returns.std() * np.sqrt(TRADING_DAYS))
 
             # Sharpe and Sortino
-            excess_returns = returns - (self.risk_free_rate / 252)
+            excess_returns = returns - (self.risk_free_rate / TRADING_DAYS)
             metrics["sharpe_ratio"] = float(
-                excess_returns.mean() / excess_returns.std() * np.sqrt(252)
+                excess_returns.mean() / excess_returns.std() * np.sqrt(TRADING_DAYS)
             )
 
             downside = returns[returns < 0]
             downside_std = downside.std() if len(downside) > 0 else returns.std()
-            metrics["sortino_ratio"] = float(excess_returns.mean() / downside_std * np.sqrt(252))
+            metrics["sortino_ratio"] = float(excess_returns.mean() / downside_std * np.sqrt(TRADING_DAYS))
 
             # Drawdown
             cumulative = (1 + returns).cumprod()
@@ -280,7 +396,7 @@ class AwesomeQuantIntegrator:
         benchmark_returns: Optional[pd.Series] = None,
         positions: Optional[pd.DataFrame] = None,
         transactions: Optional[pd.DataFrame] = None,
-    ) -> Dict[str, Dict[str, float]]:
+    ) -> AwesomeQuantMetricsDict:
         """
         Calculate all available AWESOME-QUANT metrics.
 
@@ -371,7 +487,7 @@ class AwesomeQuantIntegrator:
 
     def _calculate_fallback_metrics(
         self, returns: pd.Series, benchmark_returns: Optional[pd.Series] = None
-    ) -> Dict[str, float]:
+    ) -> FallbackMetrics:
         """
         Calculate financial metrics using fallback numpy/scipy implementations.
 
@@ -389,16 +505,16 @@ class AwesomeQuantIntegrator:
 
             # Basic return metrics
             metrics["total_return"] = float((1 + returns).prod() - 1)
-            metrics["annual_return"] = float(returns.mean() * 252)
+            metrics["annual_return"] = float(returns.mean() * TRADING_DAYS)
             metrics["cumulative_returns"] = float((1 + returns).cumprod().iloc[-1] - 1)
 
             # Volatility metrics
-            metrics["volatility"] = float(returns.std() * np.sqrt(252))
+            metrics["volatility"] = float(returns.std() * np.sqrt(TRADING_DAYS))
 
             # Downside volatility
             negative_returns = returns[returns < 0]
             if len(negative_returns) > 0:
-                metrics["downside_volatility"] = float(negative_returns.std() * np.sqrt(252))
+                metrics["downside_volatility"] = float(negative_returns.std() * np.sqrt(TRADING_DAYS))
             else:
                 metrics["downside_volatility"] = 0.0
 
@@ -412,9 +528,9 @@ class AwesomeQuantIntegrator:
             )
 
             # Sharpe and Sortino ratios
-            excess_returns = returns - (self.risk_free_rate / 252)
-            annual_excess_return = excess_returns.mean() * 252
-            annual_volatility = returns.std() * np.sqrt(252)
+            excess_returns = returns - (self.risk_free_rate / TRADING_DAYS)
+            annual_excess_return = excess_returns.mean() * TRADING_DAYS
+            annual_volatility = returns.std() * np.sqrt(TRADING_DAYS)
 
             if annual_volatility > 0:
                 metrics["sharpe_ratio"] = float(annual_excess_return / annual_volatility)
@@ -423,7 +539,7 @@ class AwesomeQuantIntegrator:
 
             # Sortino ratio (using downside deviation)
             if len(negative_returns) > 0:
-                downside_std = negative_returns.std() * np.sqrt(252)
+                downside_std = negative_returns.std() * np.sqrt(TRADING_DAYS)
                 if downside_std > 0:
                     metrics["sortino_ratio"] = float(annual_excess_return / downside_std)
                 else:
@@ -440,7 +556,7 @@ class AwesomeQuantIntegrator:
                 metrics["calmar_ratio"] = 0.0
 
             # Omega ratio (simplified version)
-            threshold = self.risk_free_rate / 252
+            threshold = self.risk_free_rate / TRADING_DAYS
             gains = returns[returns > threshold] - threshold
             losses = threshold - returns[returns <= threshold]
             if losses.sum() > 0:
@@ -496,7 +612,7 @@ class AwesomeQuantIntegrator:
                 if benchmark_variance > 0:
                     metrics["beta"] = float(covariance / benchmark_variance)
                     # Alpha = Annual Return - (Beta * Benchmark Annual Return + Risk Free)
-                    benchmark_annual_return = benchmark_returns.mean() * 252
+                    benchmark_annual_return = benchmark_returns.mean() * TRADING_DAYS
                     metrics["alpha"] = float(
                         metrics["annual_return"]
                         - (metrics["beta"] * benchmark_annual_return + self.risk_free_rate)
@@ -509,7 +625,7 @@ class AwesomeQuantIntegrator:
                 excess_returns = returns - benchmark_returns
                 if excess_returns.std() > 0:
                     metrics["information_ratio"] = float(
-                        (excess_returns.mean() * 252) / (excess_returns.std() * np.sqrt(252))
+                        (excess_returns.mean() * TRADING_DAYS) / (excess_returns.std() * np.sqrt(TRADING_DAYS))
                     )
                 else:
                     metrics["information_ratio"] = 0.0

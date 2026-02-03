@@ -16,12 +16,10 @@ Reference: Rule 11-lopez-de-prado-advances-in-financial-machine-learning.md
 from __future__ import annotations
 
 from dataclasses import dataclass
-from decimal import Decimal
 from datetime import date, timedelta
+from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional, Tuple
-
-import pandas as pd
 
 
 class DividendType(str, Enum):

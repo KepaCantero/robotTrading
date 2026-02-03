@@ -113,7 +113,18 @@ class ReportGenerator:
         with open(output_path, "w") as f:
             f.write(html)
 
-        logger.info(f"Comparison report generated: {output_path}")
+        logger.info(
+            "Comparison report generated",
+            extra={
+                "operation": "generate_comparison_report",
+                "output_path": str(output_path),
+                "total_profiles": len(results_list),
+                "ready_count": ready_count,
+                "avg_sharpe_improvement": float(avg_sharpe_imp),
+                "avg_return_improvement": float(avg_return_imp),
+                "optimization_recommendation_pct": float(optimization_rec_pct),
+            }
+        )
 
         return html
 
@@ -196,7 +207,18 @@ class ReportGenerator:
         with open(summary_path, "w") as f:
             json.dump(summary, f, indent=2, default=str)
 
-        logger.info(f"Batch summary saved: {summary_path}")
+        logger.info(
+            "Batch summary saved",
+            extra={
+                "operation": "generate_batch_summary",
+                "output_path": str(summary_path),
+                "total_profiles": len(results),
+                "ready_for_paper_trading": summary["ready_for_paper_trading"],
+                "rejected": summary["rejected"],
+                "avg_sharpe_improvement": summary["average_improvements"]["sharpe"],
+                "avg_return_improvement": summary["average_improvements"]["return"],
+            }
+        )
 
     def export_results(self, results: Dict[str, Any], format: str = "json") -> Path:
         """
@@ -218,6 +240,14 @@ class ReportGenerator:
         elif format == "excel":
             return self._export_excel(results, timestamp)
         else:
+            logger.error(
+                "Unsupported export format requested",
+                extra={
+                    "operation": "export_results",
+                    "requested_format": format,
+                    "supported_formats": ["json", "csv", "excel"],
+                }
+            )
             raise ValueError(f"Unsupported format: {format}")
 
     def _export_json(self, results: Dict[str, Any], timestamp: str) -> Path:
@@ -229,7 +259,15 @@ class ReportGenerator:
         with open(output_path, "w") as f:
             json.dump(data, f, indent=2, default=str)
 
-        logger.info(f"Results exported to {output_path}")
+        logger.info(
+            "Results exported to JSON",
+            extra={
+                "operation": "export_json",
+                "output_path": str(output_path),
+                "format": "json",
+                "results_count": len(results),
+            }
+        )
         return output_path
 
     def _export_csv(self, results: Dict[str, Any], timestamp: str) -> Path:
@@ -255,7 +293,16 @@ class ReportGenerator:
         df = pd.DataFrame(rows)
         df.to_csv(output_path, index=False)
 
-        logger.info(f"Results exported to {output_path}")
+        logger.info(
+            "Results exported to CSV",
+            extra={
+                "operation": "export_csv",
+                "output_path": str(output_path),
+                "format": "csv",
+                "results_count": len(results),
+                "rows_exported": len(rows),
+            }
+        )
         return output_path
 
     def _export_excel(self, results: Dict[str, Any], timestamp: str) -> Path:
@@ -292,7 +339,16 @@ class ReportGenerator:
                         writer, sheet_name=objective.value[:31], index=False
                     )
 
-        logger.info(f"Results exported to {output_path}")
+        logger.info(
+            "Results exported to Excel",
+            extra={
+                "operation": "export_excel",
+                "output_path": str(output_path),
+                "format": "excel",
+                "results_count": len(results),
+                "sheets_created": 1 + len([o for o in ObjectivoInversion if any(r.profile.objetivo_inversion == o for r in results.values())]),
+            }
+        )
         return output_path
 
     def _result_to_dict(self, result: Any) -> Dict[str, Any]:
@@ -313,150 +369,18 @@ class ReportGenerator:
         }
 
     def _get_html_template(self) -> str:
-        """Get HTML template for reports."""
-        return """
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Profile Batch Backtesting Report</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
-        .container { max-width: 1400px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
-        h2 { color: #34495e; margin-top: 30px; }
-        .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 20px 0; }
-        .metric-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .metric-card h3 { margin: 0 0 10px 0; font-size: 14px; opacity: 0.9; }
-        .metric-card .value { font-size: 28px; font-weight: bold; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background: #34495e; color: white; font-weight: 600; }
-        tr:hover { background: #f5f5f5; }
-        .improvement-positive { color: #27ae60; font-weight: bold; }
-        .improvement-negative { color: #e74c3c; font-weight: bold; }
-        .recommendation { padding: 15px; border-radius: 8px; margin: 20px 0; font-weight: bold; }
-        .recommendation.approved { background: #d4edda; color: #155724; border: 2px solid #c3e6cb; }
-        .recommendation.rejected { background: #f8d7da; color: #721c24; border: 2px solid #f5c6cb; }
-        .parameter-bar { height: 20px; background: #ecf0f1; border-radius: 10px; overflow: hidden; }
-        .parameter-fill { height: 100%; background: linear-gradient(90deg, #3498db, #2ecc71); transition: width 0.3s; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Profile Batch Backtesting Report</h1>
-        <p><strong>Generated:</strong> {{ timestamp }}</p>
-        <p><strong>Total Profiles:</strong> {{ total_profiles }}</p>
-
-        <div class="summary">
-            <div class="metric-card">
-                <h3>Profiles Ready</h3>
-                <div class="value">{{ ready_count }}</div>
-            </div>
-            <div class="metric-card">
-                <h3>Avg Sharpe Improvement</h3>
-                <div class="value">{{ avg_sharpe_improvement }}%</div>
-            </div>
-            <div class="metric-card">
-                <h3>Avg Return Improvement</h3>
-                <div class="value">{{ avg_return_improvement }}%</div>
-            </div>
-            <div class="metric-card">
-                <h3>Optimization Recommended</h3>
-                <div class="value">{{ optimization_pct }}%</div>
-            </div>
-        </div>
-
-        <h2>Baseline vs Optimized Comparison</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Profile</th>
-                    <th>Baseline Sharpe</th>
-                    <th>Optimized Sharpe</th>
-                    <th>Improvement</th>
-                    <th>Baseline Return</th>
-                    <th>Optimized Return</th>
-                    <th>Improvement</th>
-                    <th>Recommendation</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for result in results %}
-                <tr>
-                    <td>{{ result.profile_id }}</td>
-                    <td>{{ "%.2f"|format(result.baseline_results.get('sharpe_ratio', 0)) }}</td>
-                    <td>{{ "%.2f"|format(result.optimization_results.get('sharpe_ratio', 0)) }}</td>
-                    <td class="{% if result.improvement_metrics.get('sharpe_improvement', 0) > 0 %}improvement-positive{% else %}improvement-negative{% endif %}">
-                        {{ "%+.1f"|format(result.improvement_metrics.get('sharpe_improvement', 0)) }}%
-                    </td>
-                    <td>{{ "%.2f"|format(result.baseline_results.get('return_pct', 0)) }}%</td>
-                    <td>{{ "%.2f"|format(result.optimization_results.get('return_pct', 0)) }}%</td>
-                    <td class="{% if result.improvement_metrics.get('return_improvement', 0) > 0 %}improvement-positive{% else %}improvement-negative{% endif %}">
-                        {{ "%+.1f"|format(result.improvement_metrics.get('return_improvement', 0)) }}%
-                    </td>
-                    <td>
-                        {% if result.ready_for_paper_trading %}
-                        <span class="recommendation approved">APPROVED</span>
-                        {% else %}
-                        <span class="recommendation rejected">REJECTED</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        {% if parameter_importance %}
-        <h2>Parameter Importance Analysis</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Parameter</th>
-                    <th>Importance</th>
-                    <th>Visual</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for param, importance in parameter_importance.items() %}
-                <tr>
-                    <td>{{ param }}</td>
-                    <td>{{ "%.3f"|format(importance) }}</td>
-                    <td>
-                        <div class="parameter-bar">
-                            <div class="parameter-fill" style="width: {{ (importance * 100)|int }}%"></div>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% endif %}
-
-        <h2>Best Strategies by Objective</h2>
-        {% for objective in best_strategies %}
-        <h3>{{ objective.objective|upper }}</h3>
-        <table>
-            <tr>
-                <th>Risk Tolerance</th>
-                <th>Capital Tier</th>
-                <th>Best Sharpe</th>
-                <th>Best Return</th>
-                <th>Improvement</th>
-            </tr>
-            {% for tier_result in objective.results %}
-            <tr>
-                <td>{{ tier_result.risk_tolerance }}</td>
-                <td>{{ tier_result.capital_tier }}</td>
-                <td>{{ "%.2f"|format(tier_result.optimized_sharpe or 0) }}</td>
-                <td>{{ "%.2f"|format(tier_result.optimized_return or 0) }}%</td>
-                <td class="{% if tier_result.sharpe_improvement > 0 %}improvement-positive{% else %}improvement-negative{% endif %}">
-                    {{ "%+.1f"|format(tier_result.sharpe_improvement) }}%
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
-        {% endfor %}
-    </div>
-</body>
-</html>
         """
+        Get HTML template for reports.
+
+        Reads the template from an external file to follow CC-007 (Small functions).
+        The template file is located in the templates subdirectory.
+
+        Returns:
+            HTML template string for rendering comparison reports.
+
+        Raises:
+            FileNotFoundError: If the template file does not exist.
+            IOError: If the template file cannot be read.
+        """
+        template_path = Path(__file__).parent / "templates" / "comparison_report.html"
+        return template_path.read_text()

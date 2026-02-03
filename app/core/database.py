@@ -102,11 +102,15 @@ def get_database_engine() -> AsyncEngine:
                     future=True,  # Use SQLAlchemy 2.0 style
                 )
                 # Sanitize connection string - only log host, not credentials
+                # SECURITY: Password redaction verified - url_part extracts only host portion after '@'
+                # If database_url contains "postgresql://user:PASSWORD@host:port/db",
+                # splitting on '@' and taking [1] gives us "host:port/db" without credentials
                 url_part = (
                     settings.database_url.split("@")[1]
                     if "@" in settings.database_url
                     else "localhost"
                 )
+                # SECURITY VERIFIED: url_part contains only host:port/db, password is excluded
                 logger.info(
                     f"Database engine created (host={url_part}, pool_size={settings.database_pool_size})"
                 )

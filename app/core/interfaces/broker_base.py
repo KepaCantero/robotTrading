@@ -15,6 +15,8 @@ Author: SRE Feedback Integration
 Date: 2025-01-25
 """
 
+import logging
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
@@ -458,7 +460,7 @@ class IBroker(ABC):
         Example:
             ```python
             async def on_ticker(ticker: Ticker):
-                print(f"{ticker.symbol}: {ticker.last}")
+                logger.debug(f"{ticker.symbol}: {ticker.last}")
 
             await broker.start_ticker_stream(["BTC", "ETH"], on_ticker)
             ```

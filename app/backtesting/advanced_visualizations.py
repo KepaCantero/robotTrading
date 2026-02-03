@@ -13,10 +13,13 @@ Provides:
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Dict, Optional, TYPE_CHECKING, Tuple
 
 import numpy as np
 import pandas as pd
+
+if TYPE_CHECKING:
+    from matplotlib.figure import Figure
 
 # Optional dependencies with graceful fallbacks
 try:
@@ -89,7 +92,7 @@ class AdvancedVisualizer:
         threshold: float = 0.3,
         figsize: Tuple[int, int] = (14, 10),
         output_file: Optional[str] = None,
-    ) -> Optional[Any]:
+    ) -> "Optional[Figure]":
         """
         Plot correlation network using networkx.
 
@@ -174,6 +177,7 @@ class AdvancedVisualizer:
 
         except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.error(f"Error plotting correlation network: {e}", exc_info=True)
+            return None
 
     def plot_parallel_coordinates(
         self,
@@ -203,6 +207,7 @@ class AdvancedVisualizer:
             numeric_data = data.select_dtypes(include=[np.number]).copy()
             if numeric_data.empty:
                 logger.warning("No numeric columns for parallel coordinates")
+                return None
 
             # Limit columns
             if len(numeric_data.columns) > max_cols:
@@ -239,6 +244,7 @@ class AdvancedVisualizer:
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error plotting parallel coordinates: {e}", exc_info=True)
+            return None
 
     def plot_3d_scatter(
         self,
@@ -274,6 +280,7 @@ class AdvancedVisualizer:
             # Validate columns
             if x_col not in data.columns or y_col not in data.columns or z_col not in data.columns:
                 logger.warning(f"Missing required columns: {x_col}, {y_col}, {z_col}")
+                return None
 
             # Create 3D scatter
             fig = go.Figure()
@@ -330,13 +337,14 @@ class AdvancedVisualizer:
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error plotting 3D scatter: {e}", exc_info=True)
+            return None
 
     def plot_underwater_drawdown(
         self,
         equity_curve: pd.Series,
         figsize: Tuple[int, int] = (14, 6),
         output_file: Optional[str] = None,
-    ) -> Optional[Any]:
+    ) -> "Optional[Figure]":
         """
         Plot underwater (drawdown) chart.
 
@@ -398,6 +406,7 @@ class AdvancedVisualizer:
 
         except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.error(f"Error plotting underwater drawdown: {e}", exc_info=True)
+            return None
 
     def plot_rolling_metrics(
         self,
@@ -405,7 +414,7 @@ class AdvancedVisualizer:
         window: int = 252,
         figsize: Tuple[int, int] = (14, 8),
         output_file: Optional[str] = None,
-    ) -> Optional[Any]:
+    ) -> "Optional[Figure]":
         """
         Plot rolling metrics (returns, sharpe, volatility).
 
@@ -428,6 +437,7 @@ class AdvancedVisualizer:
             returns = equity_curve.pct_change().dropna()
             if len(returns) < window:
                 logger.warning(f"Not enough data for {window}-day rolling window")
+                return None
 
             # Calculate rolling metrics
             rolling_mean = returns.rolling(window).mean() * 252 * 100  # Annualized %
@@ -481,6 +491,7 @@ class AdvancedVisualizer:
 
         except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.error(f"Error plotting rolling metrics: {e}", exc_info=True)
+            return None
 
     def plot_regime_performance(
         self,
@@ -489,7 +500,7 @@ class AdvancedVisualizer:
         regime_names: Optional[Dict[int, str]] = None,
         figsize: Tuple[int, int] = (12, 6),
         output_file: Optional[str] = None,
-    ) -> Optional[Any]:
+    ) -> "Optional[Figure]":
         """
         Plot performance by regime.
 
@@ -511,6 +522,7 @@ class AdvancedVisualizer:
         try:
             if len(returns) != len(regime_labels):
                 logger.warning("returns and regime_labels must have same length")
+                return None
 
             # Default regime names
             if regime_names is None:
@@ -598,13 +610,14 @@ class AdvancedVisualizer:
 
         except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.error(f"Error plotting regime performance: {e}", exc_info=True)
+            return None
 
     def plot_seasonality_heatmap(
         self,
         returns: pd.Series,
         figsize: Tuple[int, int] = (14, 8),
         output_file: Optional[str] = None,
-    ) -> Optional[Any]:
+    ) -> "Optional[Figure]":
         """
         Plot seasonality heatmap (monthly returns by year).
 
@@ -625,6 +638,7 @@ class AdvancedVisualizer:
             # Ensure datetime index
             if not isinstance(returns.index, pd.DatetimeIndex):
                 logger.warning("returns index must be DatetimeIndex")
+                return None
 
             # Group by year and month
             monthly_returns = returns.resample("ME").sum()  # Month-end returns
@@ -684,6 +698,7 @@ class AdvancedVisualizer:
 
         except (RuntimeError, ValueError, TypeError, KeyError) as e:
             logger.error(f"Error plotting seasonality heatmap: {e}", exc_info=True)
+            return None
 
     def generate_interactive_dashboard(
         self,
@@ -747,6 +762,7 @@ class AdvancedVisualizer:
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error generating dashboard: {e}", exc_info=True)
+            return None
 
 
 # Export availability constants for tests

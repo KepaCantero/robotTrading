@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Any, Dict, List
+from typing import Any
 
 from app.core.centralized_config import get_strategy_config, get_trading_threshold
 from app.models.market_data import Quote
@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 class MeanReversionStrategy(BaseStrategy):
     """Estrategia de reversión a la media basada en Z-score."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]) -> None:
         """
         Inicializar estrategia de reversión a la media.
 
@@ -102,7 +102,7 @@ class MeanReversionStrategy(BaseStrategy):
             f"⚠️ CRITICAL: z_score_threshold={self.z_score_threshold} (target: 1.0, config loaded: {config_value})"
         )
 
-    def get_required_parameters(self) -> List[str]:
+    def get_required_parameters(self) -> list[str]:
         """
         Obtener parámetros requeridos para la estrategia.
 
@@ -117,7 +117,7 @@ class MeanReversionStrategy(BaseStrategy):
             "max_position_size",
         ]
 
-    def generate_signals(self, market_data: Quote) -> List[Signal]:
+    def generate_signals(self, market_data: Quote) -> list[Signal]:
         """
         Generar señales de trading basadas en reversión a la media.
 

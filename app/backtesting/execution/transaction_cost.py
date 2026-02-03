@@ -42,7 +42,7 @@ class CommissionType(str, Enum):
     HYBRID = "hybrid"  # Combination with minimum
 
 
-@dataclass
+@dataclass(frozen=True)
 class FeeConfig:
     """
     Configuration for a single regulatory fee.
@@ -66,7 +66,7 @@ class FeeConfig:
     description: str = ""
 
 
-@dataclass
+@dataclass(frozen=True)
 class CommissionTier:
     """
     Single tier in tiered commission structure.
@@ -120,7 +120,7 @@ US_EQUITY_FEES: Dict[str, FeeConfig] = {
 }
 
 
-@dataclass
+@dataclass(frozen=True)
 class TransactionCost:
     """
     Complete breakdown of transaction costs.
@@ -175,7 +175,7 @@ class TransactionCost:
         }
 
 
-@dataclass
+@dataclass(frozen=True)
 class CostConfig:
     """
     Configuration for transaction cost calculator.
@@ -230,7 +230,7 @@ class TransactionCostCalculator:
             shares=100,
             price=Decimal("150.00"),
         )
-        print(f"Total cost: ${cost.total_cost:.2f}")
+        logger.debug(f"Total cost: ${cost.total_cost:.2f}")
     """
 
     def __init__(self, config: Optional[CostConfig] = None):

@@ -7,9 +7,12 @@ from datetime import datetime
 from typing import Any, Dict
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+
+# API-009 FIX: Import AuditMiddleware for request/response logging with correlation IDs
+from app.api import AuditMiddleware
 
 # ============================================================================
 # CRITICAL: Enforce Numba availability BEFORE any other imports
@@ -21,7 +24,7 @@ try:
     enforce_numba_available()  # Will raise RuntimeError if Numba not available
 except RuntimeError as e:
     # Log the error and exit immediately
-    print(str(e), file=sys.stderr)
+    logger.debug(str(e), file=sys.stderr)
     sys.exit(1)
 
 import asyncio
@@ -29,6 +32,18 @@ import asyncio
 from app.api.assets import router as assets_router
 from app.api.capa2_endpoints import router as capa2_router
 from app.api.cost_analysis import router as cost_analysis_router
+from app.api.error_handler import (
+    attribute_error_handler,
+    generic_exception_handler,
+    http_exception_handler,
+    index_error_handler,
+    key_error_handler,
+    pydantic_validation_exception_handler,
+    starlette_http_exception_handler,
+    type_error_handler,
+    validation_exception_handler,
+    value_error_handler,
+)
 from app.api.health import router as health_router
 from app.api.live_trading import router as live_trading_router
 from app.api.market_data import router as market_data_router
@@ -41,6 +56,14 @@ from app.api.signals import router as signals_router
 from app.api.trading_error_handler import router as trading_error_handler_router
 from app.core.config import get_settings
 from app.core.database import close_database, init_database
+
+# API-006 FIX: Import authentication and security middleware
+from app.api.middleware import (
+    AuthMiddleware,
+    CorrelationIdMiddleware,
+    RequestLoggingMiddleware,
+    SecurityHeadersMiddleware,
+)
 
 # AlgoTrading MVP - Main FastAPI Application
 #
@@ -144,6 +167,62 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# API-009 FIX: Add AuditMiddleware for request/response logging with correlation IDs
+# This middleware logs all API requests and responses with:
+# - Correlation IDs for request tracking
+# - Request duration in milliseconds
+# - Error logging with stack traces
+# - Client identification
+app.add_middleware(AuditMiddleware)
+
+# API-006 FIX: Add authentication and security middleware
+# These middleware provide:
+# - Authentication for sensitive operations (deployment, strategies, optimization)
+# - Correlation ID tracking for all requests
+# - Security headers for all responses
+# - Request logging for debugging and monitoring
+app.add_middleware(CorrelationIdMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RequestLoggingMiddleware)
+# Note: AuthMiddleware is added last (executed first) to check auth before other middleware
+# Authentication is enabled in production, can be disabled via environment variable
+app.add_middleware(
+    AuthMiddleware,
+    require_auth=not get_app_settings().debug,  # Require auth in production only
+    debug_mode=get_app_settings().debug,
+)
+
+# ============================================================================
+# API-008: Comprehensive Exception Handlers with Error Logging
+# ============================================================================
+# These handlers provide centralized error logging with full context including:
+# - Correlation IDs for request tracking
+# - Stack traces for debugging
+# - Request context (method, path, params)
+# - Proper error responses to clients
+
+from fastapi.exceptions import RequestValidationError
+from pydantic import ValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+# HTTP Exceptions (4xx, 5xx)
+app.add_exception_handler(HTTPException, http_exception_handler)
+app.add_exception_handler(StarletteHTTPException, starlette_http_exception_handler)
+
+# Validation Errors
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(ValidationError, pydantic_validation_exception_handler)
+
+# Common Python Exceptions with specific handlers
+app.add_exception_handler(ValueError, value_error_handler)
+app.add_exception_handler(KeyError, key_error_handler)
+app.add_exception_handler(TypeError, type_error_handler)
+app.add_exception_handler(AttributeError, attribute_error_handler)
+app.add_exception_handler(IndexError, index_error_handler)
+
+# Generic catch-all for unhandled exceptions
+app.add_exception_handler(Exception, generic_exception_handler)
 
 # Include API routers
 app.include_router(health_router)

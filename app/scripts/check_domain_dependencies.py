@@ -8,6 +8,8 @@ It's part of FASE 1.5 - Separar domain de infrastructure.
 Run: python app/scripts/check_domain_dependencies.py
 """
 
+import logging
+
 import ast
 import os
 import sys
@@ -52,7 +54,7 @@ def get_imports_from_file(file_path: Path) -> List[str]:
                 if node.module:
                     imports.append(node.module)
     except (SyntaxError, UnicodeDecodeError) as e:
-        print(f"Warning: Could not parse {file_path}: {e}")
+        logger.debug(f"Warning: Could not parse {file_path}: {e}")
 
     return imports
 
@@ -88,7 +90,7 @@ def check_domain_directory() -> bool:
     domain_path = base_path / "app" / "domain"
 
     if not domain_path.exists():
-        print(f"Error: {domain_path} does not exist")
+        logger.debug(f"Error: {domain_path} does not exist")
         return False
 
     all_violations = []
@@ -101,33 +103,33 @@ def check_domain_directory() -> bool:
         all_violations.extend(violations)
 
     if all_violations:
-        print("\n❌ FOUND INFRASTRUCTURE DEPENDENCIES IN DOMAIN LAYER:\n")
+        logger.debug("\n❌ FOUND INFRASTRUCTURE DEPENDENCIES IN DOMAIN LAYER:\n")
         for file_path, imp in all_violations:
-            print(f"  {file_path}: imports {imp}")
-        print(f"\nTotal violations: {len(all_violations)}")
+            logger.debug(f"  {file_path}: imports {imp}")
+        logger.debug(f"\nTotal violations: {len(all_violations)}")
         return False
     else:
-        print("✅ No infrastructure dependencies found in domain layer!")
+        logger.debug("✅ No infrastructure dependencies found in domain layer!")
         return True
 
 
 def main() -> int:
     """Main entry point."""
-    print("=" * 70)
-    print("Domain-Infrastructure Separation Checker")
-    print("=" * 70)
-    print()
+    logger.debug("=" * 70)
+    logger.debug("Domain-Infrastructure Separation Checker")
+    logger.debug("=" * 70)
+    logger.debug()
 
     success = check_domain_directory()
 
-    print()
-    print("=" * 70)
+    logger.debug()
+    logger.debug("=" * 70)
 
     if success:
-        print("✅ Domain layer is clean - no infrastructure dependencies!")
+        logger.debug("✅ Domain layer is clean - no infrastructure dependencies!")
         return 0
     else:
-        print("❌ Found infrastructure dependencies in domain layer")
+        logger.debug("❌ Found infrastructure dependencies in domain layer")
         return 1
 
 

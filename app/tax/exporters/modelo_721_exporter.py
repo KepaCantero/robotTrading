@@ -581,8 +581,8 @@ async def generate_modelo_721_export(
             format="coinpanda"
         )
 
-        print(f"Export generated: {csv_path}")
-        print("Import into Coinpanda/Koinly for final filing")
+        logger.debug(f"Export generated: {csv_path}")
+        logger.debug("Import into Coinpanda/Koinly for final filing")
 
     Args:
         fifo_db_path: Path to FIFO database

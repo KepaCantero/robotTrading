@@ -41,6 +41,12 @@ Example:
     >>>
     >>> # Ensemble predictions
     >>> ensemble_pred = results.ensemble_predict(X_test)
+
+Note on ASYNC-001 (NOT APPLIED):
+    This module uses ProcessPoolExecutor for true parallelism across CPU cores,
+    which is appropriate for CPU-bound ML model training. Async/await would not
+    provide benefits here since the training operations are CPU-bound, not I/O-bound.
+    ProcessPoolExecutor correctly utilizes multiprocessing to avoid Python's GIL.
 """
 
 from __future__ import annotations
@@ -55,6 +61,25 @@ import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
+
+
+# Custom exceptions for concurrent training (CC-006: Specific exception types)
+class ConcurrentTrainingError(Exception):
+    """Base exception for concurrent training errors."""
+
+    pass
+
+
+class ModelTrainingError(ConcurrentTrainingError):
+    """Raised when a model fails to train."""
+
+    pass
+
+
+class EnsembleError(ConcurrentTrainingError):
+    """Raised when ensemble creation fails."""
+
+    pass
 
 
 @dataclass
@@ -183,6 +208,76 @@ class ConcurrentModelTrainer:
         """
         self.config = config or ConcurrentTrainingConfig()
 
+    # ========== Helper Methods (ARCH-004: Extract helper methods) ==========
+
+    def _convert_to_numpy(
+        self, X: Union[pd.DataFrame, np.ndarray], y: Union[pd.Series, np.ndarray]
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Convert pandas objects to numpy arrays.
+
+        Args:
+            X: Feature matrix
+            y: Target labels
+
+        Returns:
+            Tuple of (X_array, y_array)
+        """
+        if isinstance(X, pd.DataFrame):
+            X = X.values
+        if isinstance(y, pd.Series):
+            y = y.values
+        return X, y
+
+    def _calculate_uniqueness_weights(
+        self,
+        events: Optional[pd.Series],
+        labels: Optional[pd.DataFrame],
+        X: np.ndarray,
+    ) -> Optional[np.ndarray]:
+        """
+        Calculate uniqueness weights if events and labels are provided.
+
+        Args:
+            events: Event timestamps
+            labels: DataFrame with label timing
+            X: Feature matrix (for price series)
+
+        Returns:
+            Uniqueness weights or None
+        """
+        if not self.config.use_uniqueness_weights or events is None or labels is None:
+            return None
+
+        from .triple_barrier import calculate_sample_weights_uniqueness
+
+        price_series = pd.Series(range(len(X)))
+        return calculate_sample_weights_uniqueness(
+            events, labels, price_series
+        ).values
+
+    def _combine_sample_weights(
+        self,
+        sample_weights: Optional[np.ndarray],
+        uniqueness_weights: Optional[np.ndarray],
+    ) -> Optional[np.ndarray]:
+        """
+        Combine sample weights with uniqueness weights.
+
+        Args:
+            sample_weights: Original sample weights
+            uniqueness_weights: Uniqueness weights
+
+        Returns:
+            Combined weights or None
+        """
+        if uniqueness_weights is not None and sample_weights is not None:
+            return sample_weights * uniqueness_weights
+        elif uniqueness_weights is not None:
+            return uniqueness_weights
+        else:
+            return sample_weights
+
     def train_models_concurrent(
         self,
         models: Dict[str, Any],
@@ -215,22 +310,11 @@ class ConcurrentModelTrainer:
             ...     models, X, y, events, labels
             ... )
         """
-        # Convert to numpy arrays
-        if isinstance(X, pd.DataFrame):
-            X = X.values
-        if isinstance(y, pd.Series):
-            y = y.values
+        # Convert to numpy arrays (ARCH-004: Use helper method)
+        X, y = self._convert_to_numpy(X, y)
 
-        # Calculate uniqueness weights if needed
-        if self.config.use_uniqueness_weights and events is not None and labels is not None:
-            from .triple_barrier import calculate_sample_weights_uniqueness
-
-            price_series = pd.Series(range(len(X)))
-            uniqueness_weights = calculate_sample_weights_uniqueness(
-                events, labels, price_series
-            ).values
-        else:
-            uniqueness_weights = None
+        # Calculate uniqueness weights (ARCH-004: Use helper method)
+        uniqueness_weights = self._calculate_uniqueness_weights(events, labels, X)
 
         # Train models concurrently
         model_results = []
@@ -264,11 +348,15 @@ class ConcurrentModelTrainer:
                     result = future.result()
                     model_results.append(result)
                     logger.info(f"Model {model_name} completed: score={result.score:.4f}")
-                except Exception as e:
-                    logger.error(f"Model {model_name} failed: {e}")
+                except Exception:
+                    # LOG-004: Add exc_info=True for stack traces
+                    logger.error(
+                        f"Model {model_name} failed to train",
+                        exc_info=True,
+                    )
 
         if not model_results:
-            raise RuntimeError("All models failed to train")
+            raise ModelTrainingError("All models failed to train")
 
         # Create ensemble
         ensemble_result = self._create_ensemble(model_results, X, y, events, labels)
@@ -293,13 +381,8 @@ class ConcurrentModelTrainer:
 
         start_time = time.time()
 
-        # Combine sample weights with uniqueness weights
-        if uniqueness_weights is not None and sample_weights is not None:
-            combined_weights = sample_weights * uniqueness_weights
-        elif uniqueness_weights is not None:
-            combined_weights = uniqueness_weights
-        else:
-            combined_weights = sample_weights
+        # Combine sample weights with uniqueness weights (ARCH-004: Use helper method)
+        combined_weights = self._combine_sample_weights(sample_weights, uniqueness_weights)
 
         # Train model
         if combined_weights is not None:
@@ -367,13 +450,10 @@ class ConcurrentModelTrainer:
         Returns:
             EnsembleResult
         """
-        # Select best models if requested
-        if self.config.select_best_models:
-            model_results = sorted(model_results, key=lambda x: x.score, reverse=True)[
-                : self.config.top_n_models
-            ]
+        # Select best models if requested (ARCH-004: Use helper method)
+        model_results = self._select_best_models(model_results)
 
-        # Calculate ensemble weights
+        # Calculate ensemble weights (ARCH-004: Use helper method)
         ensemble_weights = self._calculate_ensemble_weights(model_results, X, y)
 
         # Generate ensemble predictions
@@ -400,6 +480,22 @@ class ConcurrentModelTrainer:
             },
         )
 
+    def _select_best_models(self, model_results: List[ModelResult]) -> List[ModelResult]:
+        """
+        Select best models if configured (ARCH-004: Extract helper method).
+
+        Args:
+            model_results: Results from individual models
+
+        Returns:
+            Filtered model results
+        """
+        if self.config.select_best_models:
+            return sorted(model_results, key=lambda x: x.score, reverse=True)[
+                : self.config.top_n_models
+            ]
+        return model_results
+
     def _calculate_ensemble_weights(
         self,
         model_results: List[ModelResult],
@@ -407,7 +503,7 @@ class ConcurrentModelTrainer:
         y: np.ndarray,
     ) -> Dict[str, float]:
         """
-        Calculate ensemble weights for each model.
+        Calculate ensemble weights for each model (ARCH-004: Extract helper method).
 
         Args:
             model_results: Results from individual models
@@ -459,7 +555,58 @@ class ConcurrentModelTrainer:
         weights: Dict[str, float],
     ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
         """
-        Generate ensemble predictions.
+        Generate ensemble predictions (ARCH-004: Split into smaller methods).
+
+        Args:
+            model_results: Results from individual models
+            X: Feature matrix
+            weights: Model weights
+
+        Returns:
+            Tuple of (predictions, probabilities)
+        """
+        if self.config.ensemble_method == "voting":
+            return self._voting_predict(model_results, X, weights)
+        else:
+            return self._weighted_predict(model_results, X, weights)
+
+    def _voting_predict(
+        self,
+        model_results: List[ModelResult],
+        X: np.ndarray,
+        weights: Dict[str, float],
+    ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+        """
+        Generate ensemble predictions using majority voting (ARCH-004: Helper method).
+
+        Args:
+            model_results: Results from individual models
+            X: Feature matrix
+            weights: Model weights (unused for voting, kept for interface)
+
+        Returns:
+            Tuple of (predictions, None)
+        """
+        # Majority voting
+        predictions_list = []
+        for result in model_results:
+            pred = result.model.predict(X)
+            predictions_list.append(pred)
+
+        predictions = np.array(
+            [np.bincount(preds.astype(int)).argmax() for preds in zip(*predictions_list)]
+        )
+
+        return predictions, None
+
+    def _weighted_predict(
+        self,
+        model_results: List[ModelResult],
+        X: np.ndarray,
+        weights: Dict[str, float],
+    ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+        """
+        Generate ensemble predictions using weighted average (ARCH-004: Helper method).
 
         Args:
             model_results: Results from individual models
@@ -470,45 +617,29 @@ class ConcurrentModelTrainer:
             Tuple of (predictions, probabilities)
         """
         n_samples = len(X)
+        weighted_pred = np.zeros(n_samples)
+        weighted_proba = np.zeros(n_samples)
 
-        if self.config.ensemble_method == "voting":
-            # Majority voting
-            predictions_list = []
-            for result in model_results:
-                pred = result.model.predict(X)
-                predictions_list.append(pred)
+        total_weight = 0.0
+        for result in model_results:
+            weight = weights.get(result.model_name, 0.0)
+            pred = result.model.predict(X)
+            weighted_pred += weight * pred
 
-            predictions = np.array(
-                [np.bincount(preds.astype(int)).argmax() for preds in zip(*predictions_list)]
-            )
+            if result.probabilities is not None:
+                proba = result.model.predict_proba(X)
+                if proba.shape[1] == 2:
+                    weighted_proba += weight * proba[:, 1]
 
-            probabilities = None
+            total_weight += weight
 
-        else:
-            # Weighted average
-            weighted_pred = np.zeros(n_samples)
-            weighted_proba = np.zeros(n_samples)
+        if total_weight > 0:
+            weighted_pred /= total_weight
+            weighted_proba /= total_weight
 
-            total_weight = 0.0
-            for result in model_results:
-                weight = weights.get(result.model_name, 0.0)
-                pred = result.model.predict(X)
-                weighted_pred += weight * pred
-
-                if result.probabilities is not None:
-                    proba = result.model.predict_proba(X)
-                    if proba.shape[1] == 2:
-                        weighted_proba += weight * proba[:, 1]
-
-                total_weight += weight
-
-            if total_weight > 0:
-                weighted_pred /= total_weight
-                weighted_proba /= total_weight
-
-            # Convert to binary predictions
-            predictions = (weighted_pred >= 0.5).astype(int)
-            probabilities = weighted_proba if total_weight > 0 else None
+        # Convert to binary predictions
+        predictions = (weighted_pred >= 0.5).astype(int)
+        probabilities = weighted_proba if total_weight > 0 else None
 
         return predictions, probabilities
 
@@ -605,6 +736,35 @@ class SequentialModelTrainer:
         """Initialize SequentialModelTrainer."""
         self.config = config or ConcurrentTrainingConfig()
 
+    # ========== Helper Methods (ARCH-004: Extract helper methods) ==========
+
+    def _convert_to_numpy(
+        self, X: Union[pd.DataFrame, np.ndarray], y: Union[pd.Series, np.ndarray]
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """Convert pandas objects to numpy arrays."""
+        if isinstance(X, pd.DataFrame):
+            X = X.values
+        if isinstance(y, pd.Series):
+            y = y.values
+        return X, y
+
+    def _get_feature_importance(self, model: Any) -> Dict[str, float]:
+        """Extract feature importance from model if available."""
+        feature_importance = {}
+        if hasattr(model, "feature_importances_"):
+            importances = model.feature_importances_
+            for i, imp in enumerate(importances):
+                feature_importance[f"feature_{i}"] = float(imp)
+        return feature_importance
+
+    def _get_probabilities(self, model: Any, X: np.ndarray) -> Optional[np.ndarray]:
+        """Get probabilities from model if available."""
+        if hasattr(model, "predict_proba"):
+            probabilities = model.predict_proba(X)
+            if probabilities.shape[1] == 2:
+                return probabilities[:, 1]
+        return None
+
     def train_models_sequential(
         self,
         models: Dict[str, Any],
@@ -626,11 +786,8 @@ class SequentialModelTrainer:
         Returns:
             EnsembleResult
         """
-        # Convert to numpy arrays
-        if isinstance(X, pd.DataFrame):
-            X = X.values
-        if isinstance(y, pd.Series):
-            y = y.values
+        # Convert to numpy arrays (ARCH-004: Use helper method)
+        X, y = self._convert_to_numpy(X, y)
 
         model_results = []
         used_indices = set()
@@ -657,12 +814,11 @@ class SequentialModelTrainer:
             # Calculate score
             score = np.mean(predictions[train_indices] == y_train)
 
-            # Get probabilities
-            probabilities = None
-            if hasattr(model, "predict_proba"):
-                probabilities = model.predict_proba(X)
-                if probabilities.shape[1] == 2:
-                    probabilities = probabilities[:, 1]
+            # Get probabilities (ARCH-004: Use helper method)
+            probabilities = self._get_probabilities(model, X)
+
+            # Get feature importance (ARCH-004: Use helper method)
+            feature_importance = self._get_feature_importance(model)
 
             result = ModelResult(
                 model_name=model_name,
@@ -671,6 +827,7 @@ class SequentialModelTrainer:
                 probabilities=probabilities,
                 score=score,
                 training_time=0.0,
+                feature_importance=feature_importance,
             )
 
             model_results.append(result)
@@ -683,7 +840,7 @@ class SequentialModelTrainer:
 
         # Create ensemble
         if not model_results:
-            raise RuntimeError("All models failed to train")
+            raise ModelTrainingError("All models failed to train")
 
         ensemble_result = self._create_ensemble(model_results, X, y)
 

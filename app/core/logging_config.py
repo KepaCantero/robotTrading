@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import sys
 import time
 import uuid
@@ -7,7 +8,7 @@ import warnings
 from contextvars import ContextVar
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Pattern
 
 """
 Logging Configuration Module
@@ -17,8 +18,26 @@ This prevents loss of important diagnostic information.
 
 LOG-001: Structured logging with JSON format support
 LOG-002: Correlation ID tracking for request tracing
+LOG-005: Sensitive data sanitization in logs
 LOG-006: Timing information for operations
 """
+
+
+def get_logger(name: str) -> logging.Logger:
+    """
+    Get a logger instance with the given name.
+
+    This is a convenience wrapper around logging.getLogger that ensures
+    consistent logger creation across the application.
+
+    Args:
+        name: The name for the logger (typically __name__ of the calling module)
+
+    Returns:
+        A logger instance with the specified name
+    """
+    return logging.getLogger(name)
+
 
 # LOG-002: Context variable for correlation ID tracking
 _correlation_id: ContextVar[Optional[str]] = ContextVar("correlation_id", default=None)
@@ -48,6 +67,210 @@ def set_correlation_id(cid: str) -> None:
         cid: Correlation ID to set
     """
     _correlation_id.set(cid)
+
+
+# LOG-005: Patterns for detecting sensitive data in logs
+_SENSITIVE_PATTERNS: Dict[str, Pattern[str]] = {
+    "password": re.compile(r"password['\"]?\s*[:=]\s*['\"]?[\w\-]+", re.IGNORECASE),
+    "token": re.compile(r"token['\"]?\s*[:=]\s*['\"]?[\w\-\.]+", re.IGNORECASE),
+    "api_key": re.compile(r"api[_-]?key['\"]?\s*[:=]\s*['\"]?[\w\-]+", re.IGNORECASE),
+    "api_secret": re.compile(r"api[_-]?secret['\"]?\s*[:=]\s*['\"]?[\w\-]+", re.IGNORECASE),
+    "secret": re.compile(r"secret['\"]?\s*[:=]\s*['\"]?[\w\-]+", re.IGNORECASE),
+    "authorization": re.compile(r"authorization['\"]?\s*[:=]\s*['\"]?[Bb]earer\s+[\w\-\.]+", re.IGNORECASE),
+    "bearer": re.compile(r"[Bb]earer\s+[\w\-\.]+", re.IGNORECASE),
+    "credit_card": re.compile(r"\b(?:\d[ -]*?){13,16}\b"),
+    "ssn": re.compile(r"\b\d{3}[-.]?\d{2}[-.]?\d{4}\b"),
+}
+
+# Sensitive field names to redact in structured logging
+_SENSITIVE_FIELDS: frozenset[str] = frozenset({
+    "password", "passwd", "pwd",
+    "token", "access_token", "refresh_token", "auth_token",
+    "api_key", "apikey", "api-key", "api.key",
+    "api_secret", "apisecret", "api-secret",
+    "secret", "secret_key", "secretkey",
+    "authorization", "auth_header",
+    "bearer",
+    "credit_card", "creditcard", "cc_number",
+    "ssn", "social_security",
+    "private_key", "privatekey",
+})
+
+
+class SensitiveDataFilter(logging.Filter):
+    """
+    Filter to redact sensitive data from log messages.
+
+    LOG-005: Prevents sensitive data (passwords, tokens, API keys) from being logged.
+
+    This filter:
+    1. Redacts common sensitive field values in structured logs
+    2. Uses regex patterns to detect potential sensitive data patterns
+    3. Applies to all log handlers to ensure comprehensive coverage
+
+    Example:
+        >>> filter = SensitiveDataFilter()
+        >>> logger.addFilter(filter)
+        >>> logger.info("User logged in with password=secret123")
+        # Logs: "User logged in with password=***REDACTED***"
+    """
+
+    #: Redaction placeholder used to replace sensitive values
+    REDACTED: str = "***REDACTED***"
+
+    def __init__(self) -> None:
+        """Initialize the sensitive data filter."""
+        super().__init__()
+        self._patterns = _SENSITIVE_PATTERNS
+        self._sensitive_fields = _SENSITIVE_FIELDS
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        """
+        Filter and redact sensitive data from the log record.
+
+        Args:
+            record: The log record to filter
+
+        Returns:
+            True (always allows the record through, just modifies it)
+        """
+        # Redact sensitive data from the message
+        record.msg = self._redact_message(str(record.msg))
+
+        # Redact sensitive data from the formatted message if already set
+        if hasattr(record, "getMessage"):
+            try:
+                original_message = record.getMessage()
+                if original_message != str(record.msg):
+                    # If the formatted message differs, update it
+                    record.args = ()  # Clear args to prevent double formatting
+            except Exception:
+                pass
+
+        # Redact sensitive data from extra fields (kwargs passed to log call)
+        if hasattr(record, "extra_fields"):
+            record.extra_fields = self._redact_dict(record.extra_fields)
+
+        # For JSON formatters, also sanitize the record's __dict__
+        self._sanitize_record_dict(record)
+
+        return True
+
+    def _redact_message(self, message: str) -> str:
+        """
+        Redact sensitive patterns from a message string.
+
+        Args:
+            message: The message to sanitize
+
+        Returns:
+            The sanitized message with sensitive data redacted
+        """
+        redacted = message
+
+        # Apply all regex patterns
+        for pattern_name, pattern in self._patterns.items():
+            redacted = pattern.sub(f"{pattern_name.upper()}={self.REDACTED}", redacted)
+
+        return redacted
+
+    def _redact_dict(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Redact sensitive values from a dictionary.
+
+        Args:
+            data: Dictionary to sanitize
+
+        Returns:
+            Dictionary with sensitive values redacted
+        """
+        if not isinstance(data, dict):
+            return data
+
+        redacted = {}
+        for key, value in data.items():
+            key_lower = key.lower().replace("-", "_").replace(".", "")
+
+            # Check if this is a sensitive field
+            if any(
+                sensitive in key_lower
+                for sensitive in [
+                    "password", "passwd", "pwd",
+                    "token", "access_token", "refresh_token",
+                    "api_key", "apikey", "api_key",
+                    "api_secret", "apisecret",
+                    "secret", "secret_key",
+                    "authorization", "bearer",
+                    "credit_card", "cc_number",
+                    "ssn", "social_security",
+                    "private_key",
+                ]
+            ):
+                redacted[key] = self.REDACTED
+            elif isinstance(value, dict):
+                redacted[key] = self._redact_dict(value)
+            elif isinstance(value, (list, tuple)):
+                # Handle sequences
+                redacted[key] = type(value)(
+                    self._redact_dict(item) if isinstance(item, dict) else item
+                    for item in value
+                )
+            else:
+                # For string values, also apply pattern redaction
+                if isinstance(value, str):
+                    redacted[key] = self._redact_message(value)
+                else:
+                    redacted[key] = value
+
+        return redacted
+
+    def _sanitize_record_dict(self, record: logging.LogRecord) -> None:
+        """
+        Sanitize the record's __dict__ to remove sensitive data.
+
+        This handles extra parameters passed to log calls like:
+            logger.info("Message", password="secret123")
+
+        Args:
+            record: The log record to sanitize
+        """
+        for key in list(record.__dict__.keys()):
+            if key.startswith("_") or key in {
+                "name", "msg", "args", "asctime", "created", "filename",
+                "funcName", "levelname", "lineno", "module", "msecs",
+                "message", "pathname", "process", "processName",
+                "relativeCreated", "thread", "threadName", "exc_info",
+                "exc_text", "stack_info", "levelname", "levelno",
+                "pathname", "filename", "module", "lineno", "funcName",
+                "created", "msecs", "relativeCreated", "thread", "threadName",
+                "processName", "process", "message", "asctime",
+                "correlation_id", "elapsed_ms", "delta_ms",
+            }:
+                continue
+
+            value = record.__dict__[key]
+            key_lower = key.lower().replace("-", "_").replace(".", "")
+
+            # Check if this is a sensitive field
+            if any(
+                sensitive in key_lower
+                for sensitive in [
+                    "password", "passwd", "pwd",
+                    "token", "access_token", "refresh_token",
+                    "api_key", "apikey",
+                    "api_secret", "apisecret",
+                    "secret", "secret_key",
+                    "authorization", "bearer",
+                    "credit_card", "cc_number",
+                    "ssn", "social_security",
+                    "private_key",
+                ]
+            ):
+                record.__dict__[key] = self.REDACTED
+            elif isinstance(value, str):
+                record.__dict__[key] = self._redact_message(value)
+            elif isinstance(value, dict):
+                record.__dict__[key] = self._redact_dict(value)
 
 
 class JSONFormatter(logging.Formatter):
@@ -189,6 +412,9 @@ def setup_file_logging(
     # Remove existing handlers to avoid duplicates
     root_logger.handlers.clear()
 
+    # LOG-005: Create sensitive data filter for all handlers
+    sensitive_filter = SensitiveDataFilter()
+
     # Determine formatter based on use_json flag
     # LOG-001: Support JSON structured logging
     if use_json:
@@ -223,6 +449,7 @@ def setup_file_logging(
     )
     all_handler.setLevel(logging.INFO)
     all_handler.setFormatter(all_formatter)
+    all_handler.addFilter(sensitive_filter)  # LOG-005: Add sensitive data filter
     root_logger.addHandler(all_handler)
 
     # Handler for WARNINGS and above
@@ -231,6 +458,7 @@ def setup_file_logging(
     )
     warning_handler.setLevel(logging.WARNING)
     warning_handler.setFormatter(warning_formatter)
+    warning_handler.addFilter(sensitive_filter)  # LOG-005: Add sensitive data filter
     root_logger.addHandler(warning_handler)
 
     # Handler for ERRORS and CRITICAL only
@@ -242,6 +470,7 @@ def setup_file_logging(
     )
     error_handler.setLevel(logging.ERROR)
     error_handler.setFormatter(error_formatter)
+    error_handler.addFilter(sensitive_filter)  # LOG-005: Add sensitive data filter
     root_logger.addHandler(error_handler)
 
     # Console handler (optional, for development)
@@ -249,6 +478,7 @@ def setup_file_logging(
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setLevel(console_level)
         console_handler.setFormatter(console_formatter)
+        console_handler.addFilter(sensitive_filter)  # LOG-005: Add sensitive data filter
         root_logger.addHandler(console_handler)
 
     # Log that logging is configured
@@ -275,6 +505,9 @@ def setup_module_loggers() -> None:
         "app.core",
     ]
 
+    # LOG-005: Create sensitive data filter for module handlers
+    sensitive_filter = SensitiveDataFilter()
+
     for module_name in important_modules:
         logger = logging.getLogger(module_name)
 
@@ -289,6 +522,7 @@ def setup_module_loggers() -> None:
             datefmt='%Y-%m-%d %H:%M:%S',
         )
         handler.setFormatter(formatter)
+        handler.addFilter(sensitive_filter)  # LOG-005: Add sensitive data filter
         logger.addHandler(handler)
         logger.setLevel(logging.WARNING)  # Only warnings and above for these
 
@@ -324,6 +558,9 @@ def setup_module_loggers(use_json: bool = False) -> None:
             datefmt='%Y-%m-%d %H:%M:%S',
         )
 
+    # LOG-005: Create sensitive data filter for module handlers
+    sensitive_filter = SensitiveDataFilter()
+
     for module_name in important_modules:
         logger = logging.getLogger(module_name)
 
@@ -334,6 +571,7 @@ def setup_module_loggers(use_json: bool = False) -> None:
         )
         handler.setLevel(logging.WARNING)  # WARNING and above
         handler.setFormatter(formatter)
+        handler.addFilter(sensitive_filter)  # LOG-005: Add sensitive data filter
         logger.addHandler(handler)
         logger.setLevel(logging.WARNING)  # Only warnings and above for these
 

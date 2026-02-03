@@ -66,7 +66,10 @@ class Percentage:
 
     def add(self, other: Percentage) -> Percentage:
         """Add two percentages."""
-        return Percentage(value=self.value + other.value)
+        result = self.value + other.value
+        if result > 100:
+            raise ValueError("Percentage cannot exceed 100")
+        return Percentage(value=result)
 
     def subtract(self, other: Percentage) -> Percentage:
         """Subtract two percentages."""

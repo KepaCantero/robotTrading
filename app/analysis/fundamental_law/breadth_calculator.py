@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -74,7 +73,7 @@ class BreadthCalculator:
         self,
         n_assets: int,
         rebalance_frequency: str,
-        asset_correlation: Optional[pd.DataFrame] = None,
+        asset_correlation: pd.DataFrame | None = None,
     ) -> "BreadthMetrics":
         """
         Calculate annual breadth from trading parameters.
@@ -379,7 +378,7 @@ class BreadthCalculator:
     def decompose_breadth(
         self,
         returns: pd.DataFrame,
-        positions: Optional[pd.DataFrame] = None,
+        positions: pd.DataFrame | None = None,
     ) -> dict:
         """
         Decompose breadth into its components.

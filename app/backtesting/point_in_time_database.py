@@ -33,7 +33,7 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class HistoricalConstituent:
     """A stock that was part of the universe at a historical date."""
 
@@ -45,7 +45,7 @@ class HistoricalConstituent:
     sector: Optional[str]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PITDataSnapshot:
     """Point-in-time snapshot of market data."""
 
@@ -55,7 +55,7 @@ class PITDataSnapshot:
     data_coverage: Dict[str, int]  # symbol -> days of history available
 
 
-@dataclass
+@dataclass(frozen=True)
 class CorporateAction:
     """Corporate action that affects historical data."""
 

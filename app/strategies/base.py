@@ -7,20 +7,23 @@ permitiendo hot-swapping y gestión dinámica de estrategias.
 
 from __future__ import annotations
 
+import logging
 from abc import ABC, abstractmethod
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import ROUND_HALF_UP, Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
 from app.models.signal import Signal, SignalType
 
+logger = logging.getLogger(__name__)
+
 
 class BaseStrategy(ABC):
     """Clase base abstracta para todas las estrategias de trading."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]) -> None:
         """
         Inicializar estrategia con configuración.
 
@@ -32,10 +35,20 @@ class BaseStrategy(ABC):
         self.description = config.get("description", "")
         self.version = config.get("version", "1.0.0")
         self.is_active = False
-        self.created_at = datetime.utcnow()
+        self.created_at = datetime.now(timezone.utc)
+
+        logger.info(
+            "Strategy initialized",
+            extra={
+                "strategy_name": self.name,
+                "strategy_class": self.__class__.__name__,
+                "version": self.version,
+                "is_active": self.is_active,
+            }
+        )
 
     @abstractmethod
-    def generate_signals(self, market_data: Quote) -> List[Signal]:
+    def generate_signals(self, market_data: Quote) -> list[Signal]:
         """
         Genera señales de trading basadas en datos del mercado.
 
@@ -59,7 +72,7 @@ class BaseStrategy(ABC):
             True si la señal pasa el risk check, False en caso contrario
         """
 
-    def get_parameters(self) -> Dict[str, Any]:
+    def get_parameters(self) -> dict[str, Any]:
         """
         Obtener parámetros actuales de la estrategia.
 
@@ -68,14 +81,25 @@ class BaseStrategy(ABC):
         """
         return self.config.copy()
 
-    def update_parameters(self, params: Dict[str, Any]) -> None:
+    def update_parameters(self, params: dict[str, Any]) -> None:
         """
         Actualizar parámetros dinámicamente.
 
         Args:
             params: Nuevos parámetros a aplicar
         """
+        old_config = self.config.copy()
         self.config.update(params)
+
+        logger.info(
+            "Strategy parameters updated",
+            extra={
+                "strategy_name": self.name,
+                "updated_params": list(params.keys()),
+                "old_config": old_config,
+                "new_config": self.config,
+            }
+        )
 
     def validate_config(self) -> bool:
         """
@@ -85,10 +109,32 @@ class BaseStrategy(ABC):
             True si la configuración es válida, False en caso contrario
         """
         required_params = self.get_required_parameters()
-        return all(param in self.config for param in required_params)
+        is_valid = all(param in self.config for param in required_params)
+
+        if not is_valid:
+            missing_params = [p for p in required_params if p not in self.config]
+            logger.warning(
+                "Strategy configuration validation failed",
+                extra={
+                    "strategy_name": self.name,
+                    "missing_params": missing_params,
+                    "required_params": required_params,
+                    "is_valid": is_valid,
+                }
+            )
+        else:
+            logger.debug(
+                "Strategy configuration validated",
+                extra={
+                    "strategy_name": self.name,
+                    "is_valid": is_valid,
+                }
+            )
+
+        return is_valid
 
     @abstractmethod
-    def get_required_parameters(self) -> List[str]:
+    def get_required_parameters(self) -> list[str]:
         """
         Obtener parámetros requeridos para la estrategia.
 
@@ -145,7 +191,7 @@ class BaseStrategy(ABC):
                 # No hay posición, no podemos vender
                 return Decimal("0")
 
-    def get_stop_loss_price(self, signal: Signal) -> Optional[Decimal]:
+    def get_stop_loss_price(self, signal: Signal) -> Decimal | None:
         """
         TASK-IND-2: Calcular precio de stop loss dinámico basado en ATR.
 
@@ -185,7 +231,7 @@ class BaseStrategy(ABC):
 
         return None
 
-    def get_take_profit_price(self, signal: Signal) -> Optional[Decimal]:
+    def get_take_profit_price(self, signal: Signal) -> Decimal | None:
         """
         Calcular precio de take profit.
 

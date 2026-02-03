@@ -79,7 +79,6 @@ class CSRFTokenManager:
         """
         timestamp = int(time.time())
         random_bytes = secrets.token_bytes(self.token_length)
-        user_id.encode() if user_id else b""
 
         # Create token payload
         payload = f"{timestamp}:{random_bytes.hex()}:{user_id}".encode()

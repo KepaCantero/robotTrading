@@ -8,7 +8,7 @@ profit/loss, and trade metadata.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
 from typing import Optional
@@ -91,7 +91,7 @@ class Trade:
     # Metadata
     strategy_name: Optional[str] = None
     notes: Optional[str] = None
-    tags: list[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=lambda: [])
 
     def __post_init__(self):
         """Validate trade invariants."""
@@ -170,13 +170,13 @@ class Trade:
     def get_holding_period_days(self) -> int:
         """Get holding period in days."""
         if self.exit_date is None:
-            return (datetime.utcnow() - self.entry_date).days
+            return (datetime.now(timezone.utc) - self.entry_date).days
         return (self.exit_date - self.entry_date).days
 
     def get_holding_period_hours(self) -> float:
         """Get holding period in hours."""
         if self.exit_date is None:
-            delta = datetime.utcnow() - self.entry_date
+            delta = datetime.now(timezone.utc) - self.entry_date
         else:
             delta = self.exit_date - self.entry_date
         return delta.total_seconds() / 3600
@@ -329,7 +329,7 @@ class Trade:
             quantity=quantity,
             entry_price=entry_price,
             exit_price=exit_price,
-            entry_date=entry_date or datetime.utcnow(),
+            entry_date=entry_date or datetime.now(timezone.utc),
             exit_date=exit_date,
             stop_loss=stop_loss,
             take_profit=take_profit,
@@ -361,7 +361,7 @@ class Trade:
             quantity=quantity,
             entry_price=entry_price,
             exit_price=exit_price,
-            entry_date=entry_date or datetime.utcnow(),
+            entry_date=entry_date or datetime.now(timezone.utc),
             exit_date=exit_date,
             stop_loss=stop_loss,
             take_profit=take_profit,

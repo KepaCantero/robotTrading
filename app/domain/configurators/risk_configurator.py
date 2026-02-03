@@ -42,7 +42,7 @@ class RiskConfigurator:
     Usage:
         configurator = RiskConfigurator()
         config = configurator.configure(RiskTolerance.MEDIO)
-        print(config.max_drawdown)  # Decimal('0.25')
+        logger.debug(config.max_drawdown)  # Decimal('0.25')
     """
 
     def configure(self, tolerance: RiskTolerance) -> RiskConfig:

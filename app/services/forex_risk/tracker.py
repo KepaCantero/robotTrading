@@ -140,7 +140,7 @@ class ForexRiskTracker:
     Example:
         tracker = ForexRiskTracker(base_currency="EUR", forex_service=forex_fetcher)
         report = await tracker.generate_report(portfolio)
-        print(f"Unhedged USD exposure: {report.total_unhedged_eur}")
+        logger.debug(f"Unhedged USD exposure: {report.total_unhedged_eur}")
     """
 
     # Currency symbol suffixes for auto-detection

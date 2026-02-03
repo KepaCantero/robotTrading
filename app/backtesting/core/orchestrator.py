@@ -298,6 +298,17 @@ class BacktestOrchestrator:
         self.results = BoundedResults(maxlen=max_results)
         self._execution_count = 0
 
+        logger.info(
+            "Backtest orchestrator initialized",
+            extra={
+                "operation": "orchestrator_init",
+                "initial_capital": float(config.initial_capital),
+                "commission": float(config.commission),
+                "max_results": max_results,
+                "executor_type": type(executor).__name__ if executor else None,
+            }
+        )
+
     def run_all(self, quotes: List[Any], strategies: List[Any], **kwargs) -> OrchestrationResult:
         """
         Run all backtests with given quotes and strategies.
@@ -311,26 +322,84 @@ class BacktestOrchestrator:
             OrchestrationResult with all results
         """
         all_results = []
+        successful_count = 0
+        failed_count = 0
+
+        logger.info(
+            "Starting batch backtest execution",
+            extra={
+                "operation": "run_all",
+                "strategies_count": len(strategies),
+                "quotes_count": len(quotes),
+            }
+        )
 
         for strategy in strategies:
             try:
                 result = self._run_single(quotes, strategy, **kwargs)
                 all_results.append(result)
                 self.results.add(self._result_to_dict(result))
+                successful_count += 1
             except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-                logger.error(f"Error executing backtest: {e}", exc_info=True)
+                failed_count += 1
+                logger.error(
+                    "Error executing backtest",
+                    extra={
+                        "operation": "run_single",
+                        "strategy_name": getattr(strategy, 'name', 'unknown'),
+                        "strategy_class": type(strategy).__name__,
+                        "error_type": type(e).__name__,
+                        "error_message": str(e),
+                    },
+                    exc_info=True
+                )
+
+        logger.info(
+            "Batch backtest execution completed",
+            extra={
+                "operation": "run_all_completed",
+                "total_strategies": len(strategies),
+                "successful": successful_count,
+                "failed": failed_count,
+            }
+        )
 
         return OrchestrationResult(results=all_results, config=self.config)
 
     def _run_single(self, quotes: List[Any], strategy: Any, **kwargs) -> BacktestResult:
         """Run single backtest."""
+        strategy_name = getattr(strategy, 'name', 'unknown')
+
+        logger.debug(
+            "Executing single backtest",
+            extra={
+                "operation": "run_single_start",
+                "strategy_name": strategy_name,
+                "strategy_class": type(strategy).__name__,
+                "execution_count": self._execution_count + 1,
+            }
+        )
+
         if self.executor is None:
             from app.backtesting.core.executor import BacktestExecutorFactory
 
             self.executor = BacktestExecutorFactory.create(self.config)
 
         self._execution_count += 1
-        return self.executor.execute(quotes, strategy, **kwargs)
+        result = self.executor.execute(quotes, strategy, **kwargs)
+
+        logger.debug(
+            "Single backtest completed",
+            extra={
+                "operation": "run_single_complete",
+                "strategy_name": strategy_name,
+                "final_capital": float(result.final_capital),
+                "total_return": float(result.total_return),
+                "execution_count": self._execution_count,
+            }
+        )
+
+        return result
 
     @staticmethod
     def _result_to_dict(result: BacktestResult) -> Dict[str, Any]:

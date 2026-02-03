@@ -2144,7 +2144,7 @@ def get_compliance_engine(
         )
 
         if analysis.can_execute:
-            print(f"Execute: {analysis.algorithm} @ {analysis.limit_price}")
+            logger.debug(f"Execute: {analysis.algorithm} @ {analysis.limit_price}")
     """
     return ComplianceEngine(
         asset_class=asset_class,
@@ -2211,12 +2211,12 @@ if __name__ == "__main__":
 
     engine = get_compliance_engine()
 
-    print("\n" + "=" * 80)
-    print("COMPLIANCE ENGINE - THE ONLY ENGINE")
-    print("=" * 80)
+    logger.debug("\n" + "=" * 80)
+    logger.debug("COMPLIANCE ENGINE - THE ONLY ENGINE")
+    logger.debug("=" * 80)
 
     status = engine.get_system_status()
     print(
         f"Systems: {status['availability']['available_systems']}/{status['availability']['total_systems']}"
     )
-    print("=" * 80)
+    logger.debug("=" * 80)

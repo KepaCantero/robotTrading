@@ -458,18 +458,18 @@ class ParameterStabilityMetrics:
 
     def print_stability_report(self, report: StabilityReport) -> None:
         """Print human-readable stability analysis report."""
-        print("\n" + "=" * 80)
-        print("PARAMETER STABILITY REPORT")
-        print("=" * 80)
-        print(f"Analysis Date: {report.analysis_date.isoformat()}")
-        print(f"Overall Stability Score: {report.overall_stability_score:.1f}/100")
-        print(f"\nTotal Parameters Analyzed: {len(report.parameter_results)}")
-        print(f"  - Stable: {len(report.stable_parameters)}")
-        print(f"  - Unstable: {len(report.unstable_parameters)}")
+        logger.debug("\n" + "=" * 80)
+        logger.debug("PARAMETER STABILITY REPORT")
+        logger.debug("=" * 80)
+        logger.debug(f"Analysis Date: {report.analysis_date.isoformat()}")
+        logger.debug(f"Overall Stability Score: {report.overall_stability_score:.1f}/100")
+        logger.debug(f"\nTotal Parameters Analyzed: {len(report.parameter_results)}")
+        logger.debug(f"  - Stable: {len(report.stable_parameters)}")
+        logger.debug(f"  - Unstable: {len(report.unstable_parameters)}")
 
-        print("\n" + "-" * 80)
-        print("PARAMETER RANKINGS (by stability)")
-        print("-" * 80)
+        logger.debug("\n" + "-" * 80)
+        logger.debug("PARAMETER RANKINGS (by stability)")
+        logger.debug("-" * 80)
 
         rankings = self.rank_parameters_by_stability(report)
         for rank, (param_name, score) in enumerate(rankings, 1):
@@ -482,10 +482,10 @@ class ParameterStabilityMetrics:
 
         recommendations = self.recommend_parameter_simplification(report)
         if recommendations:
-            print("\n" + "-" * 80)
-            print("RECOMMENDATIONS")
-            print("-" * 80)
+            logger.debug("\n" + "-" * 80)
+            logger.debug("RECOMMENDATIONS")
+            logger.debug("-" * 80)
             for param_name, recommendation in recommendations.items():
-                print(f"{param_name}: {recommendation}")
+                logger.debug(f"{param_name}: {recommendation}")
 
-        print("\n" + "=" * 80)
+        logger.debug("\n" + "=" * 80)

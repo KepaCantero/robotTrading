@@ -15,10 +15,10 @@ Reference: Rule 11-lopez-de-prado-advances-in-financial-machine-learning.md
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
-from datetime import date, datetime
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd

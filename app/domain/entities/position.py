@@ -8,7 +8,7 @@ profit/loss calculations, and risk metrics.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
 from typing import Optional
@@ -29,6 +29,10 @@ class PositionStatus(str, Enum):
     OPEN = "open"
     CLOSED = "closed"
     PENDING = "pending"
+
+
+# Maximum position size to prevent unlimited position growth
+MAX_POSITION_SIZE = Decimal("1000000")
 
 
 @dataclass
@@ -114,7 +118,7 @@ class Position:
         if avg_price is not None:
             avg_entry_price = avg_price
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         if created_at is None:
             created_at = now
         if updated_at is None:
@@ -155,6 +159,10 @@ class Position:
             raise ValueError("Current price cannot be negative")
         if self.current_price == 0:
             raise ValueError("Price cannot be zero")
+        if self.stop_loss is not None and self.stop_loss <= 0:
+            raise ValueError("Stop loss must be positive when set")
+        if self.take_profit is not None and self.take_profit <= 0:
+            raise ValueError("Take profit must be positive when set")
 
     @property
     def avg_price(self) -> Decimal:
@@ -266,7 +274,7 @@ class Position:
             raise ValueError("Price must be positive")
 
         self.current_price = new_price
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(timezone.utc)
 
         # Update max/min
         if new_price > self.max_price:
@@ -283,20 +291,27 @@ class Position:
             price: Price per share
 
         Raises:
-            ValueError: If quantity or price is negative
+            ValueError: If quantity or price is negative, or position size exceeds limit
         """
         if quantity < 0:
             raise ValueError("Quantity cannot be negative")
         if price < 0:
             raise ValueError("Price cannot be negative")
 
+        # Calculate new total quantity
+        total_quantity = self.quantity + quantity
+        if total_quantity > MAX_POSITION_SIZE:
+            raise ValueError(
+                f"Position size cannot exceed {MAX_POSITION_SIZE}. "
+                f"Current: {self.quantity}, Adding: {quantity}, Total would be: {total_quantity}"
+            )
+
         # Calculate new average price
         total_cost = (self.quantity * self.avg_entry_price) + (quantity * price)
-        total_quantity = self.quantity + quantity
 
         self.quantity = total_quantity
         self.avg_entry_price = total_cost / total_quantity if total_quantity > 0 else Decimal("0")
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(timezone.utc)
 
     def remove_shares(self, quantity: Decimal, price: Decimal) -> None:
         """
@@ -319,9 +334,9 @@ class Position:
 
         if self.quantity == 0:
             self.status = PositionStatus.CLOSED
-            self.exit_date = datetime.utcnow()
+            self.exit_date = datetime.now(timezone.utc)
 
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(timezone.utc)
 
     # Domain behaviors - risk checks
     def is_stop_loss_hit(self) -> bool:
@@ -365,7 +380,9 @@ class Position:
     # Domain behaviors - position info
     def get_age_days(self) -> int:
         """Get position age in days."""
-        end_date = self.exit_date if self.status == PositionStatus.CLOSED else datetime.utcnow()
+        end_date = (
+            self.exit_date if self.status == PositionStatus.CLOSED else datetime.now(timezone.utc)
+        )
         return (end_date - self.entry_date).days
 
     def is_open(self) -> bool:
@@ -396,7 +413,7 @@ class Position:
         """Create a new long position."""
         return cls(
             symbol=symbol,
-            entry_date=datetime.utcnow(),
+            entry_date=datetime.now(timezone.utc),
             side=PositionSide.LONG,
             quantity=quantity,
             avg_entry_price=entry_price,
@@ -420,7 +437,7 @@ class Position:
         """Create a new short position."""
         return cls(
             symbol=symbol,
-            entry_date=datetime.utcnow(),
+            entry_date=datetime.now(timezone.utc),
             side=PositionSide.SHORT,
             quantity=quantity,
             avg_entry_price=entry_price,

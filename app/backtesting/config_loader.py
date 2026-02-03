@@ -34,11 +34,224 @@ proper Decimal validation.
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 import yaml
 
 logger = logging.getLogger(__name__)
+
+
+class MetricThresholdConfig(BaseModel):
+    """Configuration for metric thresholds."""
+
+    excellent: float = Field(gt=0)
+    good: float = Field(gt=0)
+    warning: float
+    critical: float
+
+    model_config = ConfigDict(extra="forbid")
+
+    @field_validator("excellent", "good")
+    @classmethod
+    def validate_positive_thresholds(cls, v: float, info) -> float:
+        """Validate that excellent/good thresholds are positive."""
+        if v <= 0:
+            raise ValueError(f"{info.field_name} must be positive")
+        return v
+
+
+class RollingWindowsConfig(BaseModel):
+    """Configuration for rolling windows."""
+
+    sharpe_calculation_days: int = Field(gt=0, default=252)
+    volatility_window_days: int = Field(gt=0, default=20)
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class SeasonalityConfig(BaseModel):
+    """Configuration for seasonality analysis."""
+
+    min_history_months: int = Field(gt=0, default=60)
+    min_history_days: int = Field(gt=0, default=1260)
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class RegimeDetectionConfig(BaseModel):
+    """Configuration for regime detection."""
+
+    enabled: bool = True
+    n_regimes: int = Field(gt=0, default=3)
+    volatility_window: int = Field(gt=0, default=20)
+    min_data_points: int = Field(gt=0, default=252)
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class AnalysisConfig(BaseModel):
+    """Configuration for analysis settings."""
+
+    rolling_windows: RollingWindowsConfig = Field(default_factory=RollingWindowsConfig)
+    seasonality: SeasonalityConfig = Field(default_factory=SeasonalityConfig)
+    regime_detection: RegimeDetectionConfig = Field(default_factory=RegimeDetectionConfig)
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class StaticPlotsConfig(BaseModel):
+    """Configuration for static plots."""
+
+    enabled: bool = True
+    dpi: int = Field(gt=0, default=300)
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class InteractiveConfig(BaseModel):
+    """Configuration for interactive plots."""
+
+    enabled: bool = True
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class VisualizationConfig(BaseModel):
+    """Configuration for visualization."""
+
+    static_plots: StaticPlotsConfig = Field(default_factory=StaticPlotsConfig)
+    interactive: InteractiveConfig = Field(default_factory=InteractiveConfig)
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class ReportingConfig(BaseModel):
+    """Configuration for reporting."""
+
+    include_sections: Dict[str, bool] = Field(
+        default_factory=lambda: {
+            "performance_summary": True,
+            "statistical_insights": True,
+            "risk_warnings": True,
+            "recommendations": True,
+        }
+    )
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class LoggingConfig(BaseModel):
+    """Configuration for logging."""
+
+    level: str = "INFO"
+
+    model_config = ConfigDict(extra="forbid")
+
+    @field_validator("level")
+    @classmethod
+    def validate_logging_level(cls, v: str) -> str:
+        """Validate logging level."""
+        valid_levels = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
+        if v.upper() not in valid_levels:
+            raise ValueError(f"Invalid logging level: {v}")
+        return v.upper()
+
+
+class AdvancedConfig(BaseModel):
+    """Configuration for advanced settings."""
+
+    random_state: int = Field(default=42)
+    logging: LoggingConfig = Field(default_factory=LoggingConfig)
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class MetaAnalyzerConfig(BaseModel):
+    """
+    Main configuration model for meta-analyzer.
+
+    Uses Pydantic for validation and extra='forbid' to prevent
+    unknown configuration keys.
+    """
+
+    metric_thresholds: Dict[str, MetricThresholdConfig] = Field(
+        default_factory=lambda: {
+            "sharpe_ratio": MetricThresholdConfig(
+                excellent=2.0, good=1.0, warning=0.5, critical=-0.5
+            ),
+            "max_drawdown": MetricThresholdConfig(
+                excellent=-0.05, good=-0.10, warning=-0.20, critical=-0.50
+            ),
+            "win_rate": MetricThresholdConfig(
+                excellent=0.60, good=0.50, warning=0.40, critical=0.25
+            ),
+            "profit_factor": MetricThresholdConfig(
+                excellent=2.5, good=1.5, warning=1.0, critical=0.5
+            ),
+        }
+    )
+    analysis: AnalysisConfig = Field(default_factory=AnalysisConfig)
+    visualization: VisualizationConfig = Field(default_factory=VisualizationConfig)
+    reporting: ReportingConfig = Field(default_factory=ReportingConfig)
+    advanced: AdvancedConfig = Field(default_factory=AdvancedConfig)
+
+    model_config = ConfigDict(extra="forbid")
+
+    def validate_config(self) -> List[str]:
+        """
+        Validate configuration values and return list of errors.
+
+        Returns:
+            Empty list if valid, list of error messages otherwise
+        """
+        errors = []
+
+        try:
+            # Validate metric thresholds
+            for metric_name, threshold in self.metric_thresholds.items():
+                if threshold.warning <= threshold.critical:
+                    errors.append(
+                        f"{metric_name}: warning threshold ({threshold.warning}) "
+                        f"must be greater than critical ({threshold.critical})"
+                    )
+                if threshold.good <= threshold.warning:
+                    errors.append(
+                        f"{metric_name}: good threshold ({threshold.good}) "
+                        f"must be greater than warning ({threshold.warning})"
+                    )
+                if threshold.excellent <= threshold.good:
+                    errors.append(
+                        f"{metric_name}: excellent threshold ({threshold.excellent}) "
+                        f"must be greater than good ({threshold.good})"
+                    )
+
+            # Validate analysis config
+            if self.analysis.rolling_windows.sharpe_calculation_days < 50:
+                errors.append("sharpe_calculation_days must be at least 50")
+            if self.analysis.rolling_windows.volatility_window_days < 5:
+                errors.append("volatility_window_days must be at least 5")
+            if self.analysis.seasonality.min_history_days < 252:
+                errors.append("min_history_days must be at least 252 (1 year)")
+            if self.analysis.regime_detection.n_regimes < 2:
+                errors.append("n_regimes must be at least 2")
+            if self.analysis.regime_detection.min_data_points < 100:
+                errors.append("min_data_points must be at least 100")
+
+            # Validate visualization config
+            if self.visualization.static_plots.dpi < 72:
+                errors.append("DPI must be at least 72")
+
+            # Validate logging config
+            if self.advanced.logging.level not in {
+                "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"
+            }:
+                errors.append(f"Invalid logging level: {self.advanced.logging.level}")
+
+        except Exception as e:
+            errors.append(f"Validation error: {e}")
+
+        return errors
 
 
 class ConfigLoader:
@@ -52,80 +265,36 @@ class ConfigLoader:
             config_path: Path to config YAML file. If None, uses default location.
         """
         self.config_path = Path(config_path or "config/meta_analyzer_config.yaml")
-        self.config: Dict[str, Any] = {}
+        self._pydantic_config: Optional[MetaAnalyzerConfig] = None
         self._load_config()
 
     def _load_config(self) -> None:
         """Load configuration from YAML file."""
         if not self.config_path.exists():
             logger.warning(f"Config file not found: {self.config_path}. Using defaults.")
-            self.config = self._get_default_config()
+            self._pydantic_config = MetaAnalyzerConfig()
             return
 
         try:
             with open(self.config_path, "r") as f:
                 loaded = yaml.safe_load(f)
-                self.config = loaded or {}
+                if loaded:
+                    self._pydantic_config = MetaAnalyzerConfig(**loaded)
+                else:
+                    self._pydantic_config = MetaAnalyzerConfig()
                 logger.info(f"Loaded configuration from {self.config_path}")
         except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Error loading config file: {e}. Using defaults.", exc_info=True)
-            self.config = self._get_default_config()
+            self._pydantic_config = MetaAnalyzerConfig()
+        except Exception as e:
+            logger.error(f"Unexpected error loading config: {e}. Using defaults.", exc_info=True)
+            self._pydantic_config = MetaAnalyzerConfig()
 
     @staticmethod
     def _get_default_config() -> Dict[str, Any]:
         """Return default configuration when file not available."""
-        return {
-            "metric_thresholds": {
-                "sharpe_ratio": {
-                    "excellent": 2.0,
-                    "good": 1.0,
-                    "warning": 0.5,
-                    "critical": -0.5,
-                },
-                "max_drawdown": {"warning": -0.20, "critical": -0.50},
-                "win_rate": {
-                    "excellent": 0.60,
-                    "good": 0.50,
-                    "warning": 0.40,
-                    "critical": 0.25,
-                },
-                "profit_factor": {
-                    "excellent": 2.5,
-                    "good": 1.5,
-                    "warning": 1.0,
-                    "critical": 0.5,
-                },
-            },
-            "analysis": {
-                "rolling_windows": {
-                    "sharpe_calculation_days": 252,
-                    "volatility_window_days": 20,
-                },
-                "seasonality": {
-                    "min_history_months": 60,
-                    "min_history_days": 1260,
-                },
-                "regime_detection": {
-                    "enabled": True,
-                    "n_regimes": 3,
-                    "volatility_window": 20,
-                    "min_data_points": 252,
-                },
-            },
-            "visualization": {
-                "static_plots": {"enabled": True, "dpi": 300},
-                "interactive": {"enabled": True},
-            },
-            "reporting": {
-                "include_sections": {
-                    "performance_summary": True,
-                    "statistical_insights": True,
-                    "risk_warnings": True,
-                    "recommendations": True,
-                }
-            },
-            "advanced": {"random_state": 42, "logging": {"level": "INFO"}},
-        }
+        default = MetaAnalyzerConfig()
+        return default.model_dump()
 
     def get(self, key: str, default: Any = None) -> Any:
         """
@@ -138,8 +307,11 @@ class ConfigLoader:
         Returns:
             Configuration value or default
         """
+        if self._pydantic_config is None:
+            return default
+
         keys = key.split(".")
-        value = self.config
+        value = self._pydantic_config.model_dump()
 
         for k in keys:
             if isinstance(value, dict):
@@ -161,7 +333,9 @@ class ConfigLoader:
         Returns:
             Configuration section as dictionary
         """
-        return self.config.get(section, {})
+        if self._pydantic_config is None:
+            return {}
+        return self._pydantic_config.model_dump().get(section, {})
 
     def get_metric_thresholds(self, metric: str) -> Dict[str, float]:
         """
@@ -173,7 +347,12 @@ class ConfigLoader:
         Returns:
             Dictionary with threshold levels
         """
-        return self.get_section("metric_thresholds").get(metric, {})
+        section = self.get_section("metric_thresholds")
+        metric_config = section.get(metric, {})
+        if isinstance(metric_config, dict):
+            return metric_config
+        # Handle Pydantic model
+        return getattr(metric_config, "model_dump", lambda: metric_config)()
 
     def get_analysis_config(self) -> Dict[str, Any]:
         """Get analysis configuration section."""
@@ -243,12 +422,26 @@ class ConfigLoader:
 
     def to_dict(self) -> Dict[str, Any]:
         """Get entire configuration as dictionary."""
-        return self.config.copy()
+        if self._pydantic_config is None:
+            return {}
+        return self._pydantic_config.model_dump()
 
     def reload(self) -> None:
         """Reload configuration from file."""
         self._load_config()
         logger.info("Configuration reloaded")
+
+    def validate_config(self) -> List[str]:
+        """
+        Validate configuration and return list of errors.
+
+        Returns:
+            Empty list if valid, list of error messages otherwise
+        """
+        if self._pydantic_config is None:
+            return ["Configuration not loaded"]
+
+        return self._pydantic_config.validate_config()
 
 
 # Global configuration instance

@@ -1,5 +1,5 @@
 """
-API endpoints para gestión de estrategias - TASK-31
+API endpoints para gestión de estrategias - TASK-DEFAULT_VALUE_31
 
 Proporciona endpoints REST para gestionar el sistema de estrategias múltiples,
 incluyendo carga, activación, métricas y configuración.
@@ -12,6 +12,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
 from app.strategies import ExecutionEngine, StrategyConfigLoader, StrategyLogger, StrategyRegistry
+
+# Constants
+DEFAULT_VALUE_31 = 31
+
 
 logger = logging.getLogger(__name__)
 

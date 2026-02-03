@@ -30,8 +30,8 @@ try:
     import matplotlib.pyplot as plt
 
     HAS_MATPLOTLIB = True
-except (ImportError, Exception):
-    # Matplotlib may fail due to numpy version incompatibility
+except ImportError:
+    # Matplotlib not installed
     HAS_MATPLOTLIB = False
     plt = None
 
@@ -792,7 +792,39 @@ def calculate_sample_weights_uniqueness(
     # Convert events to numpy indices for faster processing
     event_indices = np.arange(n_samples)
 
-    # Build label end times
+    # Build label end times (ARCH-004: Extract to helper method)
+    label_ends = _build_label_end_indices(events, labels, price_series, n_samples)
+
+    # Build uniqueness array (ARCH-004: Extract to helper method)
+    uniqueness = _calculate_uniqueness_from_overlaps(event_indices, label_ends, n_samples)
+
+    # Sample weights are proportional to uniqueness
+    weights = uniqueness.copy()
+
+    # Normalize to sum to n_samples (so average weight is 1.0)
+    if weights.sum() > 0:
+        weights = weights * n_samples / weights.sum()
+
+    return pd.Series(weights, index=events.index)
+
+
+# ========== Helper Functions (ARCH-004: Extract helper methods) ==========
+
+def _build_label_end_indices(
+    events: pd.Series, labels: pd.DataFrame, price_series: pd.Series, n_samples: int
+) -> np.ndarray:
+    """
+    Build label end indices for uniqueness calculation (ARCH-004: Helper function).
+
+    Args:
+        events: Event timestamps
+        labels: DataFrame with 'bars_to_barrier' column
+        price_series: Price series for index lookup
+        n_samples: Number of samples
+
+    Returns:
+        Array of label end indices
+    """
     label_ends = np.zeros(n_samples, dtype=np.int64)
     for i, (event_time, bars) in enumerate(zip(events, labels["bars_to_barrier"])):
         # Find the index of the event in the price series
@@ -800,8 +832,23 @@ def calculate_sample_weights_uniqueness(
             price_series.index.get_loc(event_time) if event_time in price_series.index else i
         )
         label_ends[i] = event_idx + int(bars)
+    return label_ends
 
-    # Build uniqueness array
+
+def _calculate_uniqueness_from_overlaps(
+    event_indices: np.ndarray, label_ends: np.ndarray, n_samples: int
+) -> np.ndarray:
+    """
+    Calculate uniqueness from sample overlaps (ARCH-004: Helper function).
+
+    Args:
+        event_indices: Array of event start indices
+        label_ends: Array of label end indices
+        n_samples: Number of samples
+
+    Returns:
+        Array of uniqueness values
+    """
     uniqueness = np.zeros(n_samples)
 
     for i in range(n_samples):
@@ -813,35 +860,56 @@ def calculate_sample_weights_uniqueness(
         t1_start = event_indices[i]
         t1_end = label_ends[i]
 
-        concurrent_samples = []
-        for j in range(n_samples):
-            if i == j:
-                continue
-
-            t2_start = event_indices[j]
-            t2_end = label_ends[j]
-
-            # Check for overlap using time intervals
-            if t2_start < t1_end and t2_end > t1_start:
-                concurrent_samples.append(j)
+        # Find concurrent samples (ARCH-004: Extract to helper function)
+        concurrent_count = _count_concurrent_samples(i, t1_start, t1_end, event_indices, label_ends, n_samples)
 
         # Calculate uniqueness
         # If a sample has c concurrent samples, and the overlap covers
         # a fraction of the sample, the uniqueness is reduced
-        if len(concurrent_samples) == 0:
+        if concurrent_count == 0:
             uniqueness[i] = 1.0
         else:
             # Average uniqueness is 1 / (1 + average concurrency)
-            uniqueness[i] = 1.0 / (1.0 + len(concurrent_samples))
+            uniqueness[i] = 1.0 / (1.0 + concurrent_count)
 
-    # Sample weights are proportional to uniqueness
-    weights = uniqueness.copy()
+    return uniqueness
 
-    # Normalize to sum to n_samples (so average weight is 1.0)
-    if weights.sum() > 0:
-        weights = weights * n_samples / weights.sum()
 
-    return pd.Series(weights, index=events.index)
+def _count_concurrent_samples(
+    i: int,
+    t1_start: int,
+    t1_end: int,
+    event_indices: np.ndarray,
+    label_ends: np.ndarray,
+    n_samples: int,
+) -> int:
+    """
+    Count concurrent samples for a given sample (ARCH-004: Helper function).
+
+    Args:
+        i: Index of the sample
+        t1_start: Start time of sample i
+        t1_end: End time of sample i
+        event_indices: Array of event start indices
+        label_ends: Array of label end indices
+        n_samples: Number of samples
+
+    Returns:
+        Number of concurrent samples
+    """
+    concurrent_count = 0
+    for j in range(n_samples):
+        if i == j:
+            continue
+
+        t2_start = event_indices[j]
+        t2_end = label_ends[j]
+
+        # Check for overlap using time intervals
+        if t2_start < t1_end and t2_end > t1_start:
+            concurrent_count += 1
+
+    return concurrent_count
 
 
 def calculate_sample_weights_td(

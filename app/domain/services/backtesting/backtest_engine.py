@@ -19,21 +19,17 @@ Reference: López de Prado (2018) "Advances in Financial Machine Learning"
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import date, datetime
 from decimal import Decimal
-from datetime import datetime, date
 from enum import Enum
 from typing import (
-    Any,
-    Callable,
     Dict,
     List,
     Optional,
     Tuple,
-    Union,
 )
 
 import numpy as np
-import pandas as pd
 from numpy.typing import NDArray
 
 

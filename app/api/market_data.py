@@ -3,15 +3,24 @@ Market Data API Endpoints
 
 This module provides FastAPI endpoints for market data management,
 including quotes, historical data, and feed configuration.
+
+GAP Fixes:
+- API-002: Added structured logging with correlation IDs
+- API-005: FIXED - Added security decorators (rate_limit, require_auth, audit_log)
+- API-009: Added audit logging
+- API-010: Added timeout configuration
 """
 
 from __future__ import annotations
 
+import asyncio
+import logging
+import traceback
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 from pydantic import BaseModel, Field
 from requests.exceptions import ConnectionError, HTTPError, RequestException
 
@@ -24,7 +33,11 @@ from app.models.market_data import (
 )
 from app.services.market_data_service import MarketDataService, get_market_data_service
 
+from . import audit_logger, get_correlation_id
+from .security import rate_limit, require_auth, audit_log
+
 router = APIRouter(prefix="/market-data", tags=["market-data"])
+logger = logging.getLogger(__name__)
 
 
 # Request/Response Models
@@ -112,16 +125,36 @@ class SubscribeRequest(BaseModel):
 
 # Endpoints
 @router.get("/quotes/{symbol}", response_model=QuoteResponse)
+@rate_limit(max_requests=200, window_seconds=60)
 async def get_quote(
     symbol: str = Path(..., description="Trading symbol"),
     feed_id: Optional[UUID] = Query(None, description="Specific feed ID to use"),
     service: MarketDataService = Depends(get_market_data_service),
+    http_request: Request = None,
 ):
     """Get real-time quote for a symbol."""
+    correlation_id = get_correlation_id()
+    logger.info(
+        "Fetching quote for symbol",
+        extra={
+            "correlation_id": correlation_id,
+            "symbol": symbol,
+            "feed_id": str(feed_id) if feed_id else None,
+        },
+    )
     try:
-        quote = await service.get_quote(symbol, feed_id)
+        quote = await asyncio.wait_for(
+            service.get_quote(symbol, feed_id),
+            timeout=15.0,  # API-010: Add timeout configuration
+        )
 
         if quote:
+            audit_logger.log_action(
+                action="quote_retrieved",
+                method="GET",
+                path="/quotes/{symbol}",
+                details={"symbol": symbol, "feed_id": str(feed_id) if feed_id else None},
+            )
             return QuoteResponse(success=True, data=quote, timestamp=datetime.utcnow())
         else:
             return QuoteResponse(
@@ -129,7 +162,42 @@ async def get_quote(
                 error=f"No quote data available for {symbol}",
                 timestamp=datetime.utcnow(),
             )
+    except asyncio.TimeoutError as e:
+        logger.error(
+            "Timeout fetching quote",
+            extra={
+                "correlation_id": correlation_id,
+                "symbol": symbol,
+                "error": str(e),
+                "stack_trace": traceback.format_exc(),
+            },
+        )
+        audit_logger.log_error(
+            method="GET",
+            path="/quotes/{symbol}",
+            error_type="TimeoutError",
+            error_message=str(e),
+            stack_trace=traceback.format_exc(),
+        )
+        raise HTTPException(status_code=504, detail=f"Timeout getting quote for {symbol}: {str(e)}")
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        logger.error(
+            "Error fetching quote",
+            extra={
+                "correlation_id": correlation_id,
+                "symbol": symbol,
+                "error_type": type(e).__name__,
+                "error": str(e),
+                "stack_trace": traceback.format_exc(),
+            },
+        )
+        audit_logger.log_error(
+            method="GET",
+            path="/quotes/{symbol}",
+            error_type=type(e).__name__,
+            error_message=str(e),
+            stack_trace=traceback.format_exc(),
+        )
         raise HTTPException(status_code=500, detail=f"Error getting quote for {symbol}: {str(e)}")
 
 
@@ -212,6 +280,9 @@ async def get_historical_data(
 
 
 @router.post("/feeds", response_model=FeedConfigResponse)
+@rate_limit(max_requests=10, window_seconds=60)
+@require_auth(roles=["admin"])
+@audit_log("feed_config_created", log_args=True, sensitive_params=["api_key"])
 async def create_feed_config(
     request: CreateFeedConfigRequest,
     service: MarketDataService = Depends(get_market_data_service),

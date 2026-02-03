@@ -281,21 +281,7 @@ class RobustBacktester:
             market_data = self._convert_to_dataframe(market_data)
 
         # Perform look-ahead bias validation if enabled
-        if self.config.enable_look_ahead_validation and signals is not None:
-            logger.info("Performing look-ahead bias validation...")
-            self._validation_result = self._validate_backtest_data(
-                signals=signals,
-                market_data=market_data,
-            )
-
-            if not self._validation_result.is_valid:
-                error_msg = (
-                    f"Look-ahead bias validation failed. "
-                    f"Issues: {self._validation_result.issues}"
-                )
-                logger.error(error_msg)
-                if self.config.validation_strict_mode:
-                    raise ValueError(error_msg)
+        await self._perform_validation_if_enabled(signals, market_data)
 
         # Apply survivorship correction if enabled
         if self.config.enable_survivorship_correction:
@@ -313,28 +299,13 @@ class RobustBacktester:
         performance = self.performance_tracker.calculate_metrics()
 
         # Build result
-        result = RobustBacktestResult(
-            config=self.config,
-            performance=performance,
-            equity_curve=self.performance_tracker.equity_curve,
-            trades=self._trades,
-            yearly_breakdown=self.performance_tracker.get_yearly_breakdown(),
-            rolling_metrics=self.performance_tracker.get_rolling_metrics(),
-            dividend_tracker=self.dividend_handler,
-            checkpoints_used=self._checkpoint_count,
-            total_duration_seconds=(
-                (datetime.utcnow() - self._start_time).total_seconds() if self._start_time else 0.0
-            ),
-        )
+        result = self._build_backtest_result(performance)
 
         # Save final checkpoint
         if self.config.enable_checkpointing:
             self._save_checkpoint(is_final=True)
 
-        logger.info(
-            f"Backtest completed: {performance.total_return:.2%} total return, "
-            f"{performance.cagr:.2%} CAGR, {performance.sharpe_ratio:.2f} Sharpe"
-        )
+        self._log_completion_summary(performance)
 
         return result
 
@@ -350,6 +321,83 @@ class RobustBacktester:
             risk_free_rate=self.config.risk_free_rate,
         )
         self.dividend_handler.reset()
+
+    async def _perform_validation_if_enabled(
+        self,
+        signals: Optional[List[Any]],
+        market_data: pd.DataFrame,
+    ) -> None:
+        """
+        Perform look-ahead bias validation if enabled.
+
+        Args:
+            signals: Optional pre-generated signals
+            market_data: Market data DataFrame
+
+        Raises:
+            ValueError: Validation fails and strict_mode is enabled
+        """
+        if not self.config.enable_look_ahead_validation or signals is None:
+            return
+
+        logger.info("Performing look-ahead bias validation...")
+        self._validation_result = self._validate_backtest_data(
+            signals=signals,
+            market_data=market_data,
+        )
+
+        if not self._validation_result.is_valid:
+            error_msg = (
+                f"Look-ahead bias validation failed. "
+                f"Issues: {self._validation_result.issues}"
+            )
+            logger.error(error_msg)
+            if self.config.validation_strict_mode:
+                raise ValueError(error_msg)
+
+    def _build_backtest_result(
+        self,
+        performance: PerformanceMetrics,
+    ) -> RobustBacktestResult:
+        """
+        Build RobustBacktestResult from performance metrics.
+
+        Args:
+            performance: Calculated performance metrics
+
+        Returns:
+            RobustBacktestResult with all results
+        """
+        return RobustBacktestResult(
+            config=self.config,
+            performance=performance,
+            equity_curve=self.performance_tracker.equity_curve,
+            trades=self._trades,
+            yearly_breakdown=self.performance_tracker.get_yearly_breakdown(),
+            rolling_metrics=self.performance_tracker.get_rolling_metrics(),
+            dividend_tracker=self.dividend_handler,
+            checkpoints_used=self._checkpoint_count,
+            total_duration_seconds=(
+                (datetime.utcnow() - self._start_time).total_seconds()
+                if self._start_time
+                else 0.0
+            ),
+        )
+
+    def _log_completion_summary(
+        self,
+        performance: PerformanceMetrics,
+    ) -> None:
+        """
+        Log backtest completion summary.
+
+        Args:
+            performance: Calculated performance metrics
+        """
+        logger.info(
+            f"Backtest completed: {performance.total_return:.2%} total return, "
+            f"{performance.cagr:.2%} CAGR, {performance.sharpe_ratio:.2f} Sharpe"
+        )
 
     async def _process_backtest_chunks(
         self,
@@ -372,42 +420,83 @@ class RobustBacktester:
         logger.info(f"Processing backtest in {total_chunks} chunks")
 
         for chunk_idx, chunk in enumerate(chunks, 1):
-            chunk_start = datetime.utcnow()
-
-            logger.info(
-                f"Processing chunk {chunk_idx}/{total_chunks}: "
-                f"{chunk.index[0].date()} to {chunk.index[-1].date()}"
-            )
-
-            # Process this chunk
-            await self._process_chunk(
-                strategy=strategy,
+            await self._process_single_chunk(
+                chunk_idx=chunk_idx,
+                total_chunks=total_chunks,
                 chunk=chunk,
+                strategy=strategy,
                 signals=signals,
             )
 
-            # Update progress
-            self._update_progress(
-                chunk_idx=chunk_idx,
-                total_chunks=total_chunks,
-                chunk_end_date=chunk.index[-1].date(),
-            )
+    async def _process_single_chunk(
+        self,
+        chunk_idx: int,
+        total_chunks: int,
+        chunk: pd.DataFrame,
+        strategy: Any,
+        signals: Optional[List[Any]],
+    ) -> None:
+        """
+        Process a single chunk with progress tracking and checkpointing.
 
-            # Save checkpoint if needed
-            if self.config.enable_checkpointing:
-                # Calculate days completed to determine if checkpoint is needed
-                # Checkpoint should be saved every checkpoint_frequency days
-                days_completed = chunk_idx * self.config.chunk_size_days
-                should_checkpoint = (
-                    days_completed % self.config.checkpoint_frequency == 0
-                    or chunk_idx == total_chunks
-                )
+        Args:
+            chunk_idx: Current chunk index (1-based)
+            total_chunks: Total number of chunks
+            chunk: Data chunk to process
+            strategy: Trading strategy
+            signals: Optional pre-generated signals
+        """
+        chunk_start = datetime.utcnow()
 
-                if should_checkpoint:
-                    self._save_checkpoint()
+        logger.info(
+            f"Processing chunk {chunk_idx}/{total_chunks}: "
+            f"{chunk.index[0].date()} to {chunk.index[-1].date()}"
+        )
 
-            chunk_duration = (datetime.utcnow() - chunk_start).total_seconds()
-            logger.info(f"Chunk {chunk_idx}/{total_chunks} completed in {chunk_duration:.1f}s")
+        # Process this chunk
+        await self._process_chunk(
+            strategy=strategy,
+            chunk=chunk,
+            signals=signals,
+        )
+
+        # Update progress
+        self._update_progress(
+            chunk_idx=chunk_idx,
+            total_chunks=total_chunks,
+            chunk_end_date=chunk.index[-1].date(),
+        )
+
+        # Save checkpoint if needed
+        await self._save_checkpoint_if_needed(chunk_idx, total_chunks)
+
+        chunk_duration = (datetime.utcnow() - chunk_start).total_seconds()
+        logger.info(f"Chunk {chunk_idx}/{total_chunks} completed in {chunk_duration:.1f}s")
+
+    async def _save_checkpoint_if_needed(
+        self,
+        chunk_idx: int,
+        total_chunks: int,
+    ) -> None:
+        """
+        Save checkpoint if conditions are met.
+
+        Args:
+            chunk_idx: Current chunk index (1-based)
+            total_chunks: Total number of chunks
+        """
+        if not self.config.enable_checkpointing:
+            return
+
+        # Calculate days completed to determine if checkpoint is needed
+        days_completed = chunk_idx * self.config.chunk_size_days
+        should_checkpoint = (
+            days_completed % self.config.checkpoint_frequency == 0
+            or chunk_idx == total_chunks
+        )
+
+        if should_checkpoint:
+            self._save_checkpoint()
 
     async def _process_chunk(
         self,
@@ -432,20 +521,49 @@ class RobustBacktester:
             # Check for corporate actions
             self._process_corporate_actions(current_date)
 
-            # Process signals or generate from strategy
-            if signals is not None:
-                # Use pre-generated signals
-                chunk_signals = [s for s in signals if s.timestamp.date() == current_date]
-                for signal in chunk_signals:
-                    await self._process_signal(signal, row)
-            elif hasattr(strategy, 'generate_signals'):
-                # Generate signals from strategy
-                chunk_signals = strategy.generate_signals(chunk.loc[:idx])
-                for signal in chunk_signals:
-                    await self._process_signal(signal, row)
+            # Process signals for this date
+            await self._process_signals_for_date(
+                strategy=strategy,
+                chunk=chunk,
+                idx=idx,
+                row=row,
+                signals=signals,
+                current_date=current_date,
+            )
 
             # Update tracker
             self.performance_tracker.update(current_date, self._capital)
+
+    async def _process_signals_for_date(
+        self,
+        strategy: Any,
+        chunk: pd.DataFrame,
+        idx: Any,
+        row: Any,
+        signals: Optional[List[Any]],
+        current_date: date,
+    ) -> None:
+        """
+        Process all signals for a specific date.
+
+        Args:
+            strategy: Trading strategy
+            chunk: Data chunk
+            idx: Current row index
+            row: Current row data
+            signals: Optional pre-generated signals
+            current_date: Current date being processed
+        """
+        if signals is not None:
+            # Use pre-generated signals
+            chunk_signals = [s for s in signals if s.timestamp.date() == current_date]
+            for signal in chunk_signals:
+                await self._process_signal(signal, row)
+        elif hasattr(strategy, 'generate_signals'):
+            # Generate signals from strategy
+            chunk_signals = strategy.generate_signals(chunk.loc[:idx])
+            for signal in chunk_signals:
+                await self._process_signal(signal, row)
 
     async def _process_signal(
         self,

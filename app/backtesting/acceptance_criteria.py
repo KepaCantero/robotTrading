@@ -15,63 +15,36 @@ REJECTION CRITERIA:
 """
 
 import logging
-from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
 from typing import List, Optional
 
 from app.backtesting.models import BacktestResult
+# Import models for backward compatibility (they're now in acceptance/models.py)
+from app.backtesting.acceptance.models import (
+    VerdictStatus,
+    CriterionResult,
+    AcceptanceReport,
+)
+from app.backtesting.acceptance import (
+    SharpeValidator,
+    DrawdownValidator,
+    ProfitFactorValidator,
+    MonteCarloValidator,
+    BenchmarkComparisonValidator,
+    RejectionCriteriaChecker,
+    ScoringService,
+    VerdictDeterminer,
+)
 
 logger = logging.getLogger(__name__)
 
-
-class VerdictStatus(str, Enum):
-    """Strategy verdict status."""
-
-    APPROVED = "APPROVED"
-    REVISION = "REVISION"
-    REJECTED = "REJECTED"
-
-
-@dataclass
-class CriterionResult:
-    """Result of a single criterion check."""
-
-    name: str
-    passed: bool
-    value: float
-    threshold: float
-    description: str
-
-
-@dataclass
-class AcceptanceReport:
-    """Complete acceptance criteria report."""
-
-    strategy_name: str
-    timestamp: datetime
-    verdict: VerdictStatus
-    overall_score: float  # 0-100
-
-    # Criterion results
-    basic_criteria: List[CriterionResult] = field(default_factory=list)
-    advanced_criteria: List[CriterionResult] = field(default_factory=list)
-    rejection_criteria: List[CriterionResult] = field(default_factory=list)
-
-    # Benchmark comparison
-    beats_benchmark: bool = False
-    excess_return: float = 0.0
-
-    # Warnings and recommendations
-    warnings: List[str] = field(default_factory=list)
-    recommendations: List[str] = field(default_factory=list)
-
-    # Detailed metrics
-    sharpe_ratio: Optional[float] = None
-    max_drawdown: Optional[float] = None
-    profit_factor: Optional[float] = None
-    commission_impact: Optional[float] = None
-    monte_carlo_p5: Optional[float] = None
+# Re-export models for backward compatibility
+__all__ = [
+    "AcceptanceCriteria",
+    "VerdictStatus",
+    "CriterionResult",
+    "AcceptanceReport",
+]
 
 
 class AcceptanceCriteria:
@@ -79,6 +52,7 @@ class AcceptanceCriteria:
     Acceptance Criteria Validator (Req #17).
 
     Validates strategy viability based on institutional standards.
+    Uses service layer pattern for Single Responsibility Principle (SOL-001).
     """
 
     # APPROVAL THRESHOLDS (Req #17)
@@ -93,13 +67,6 @@ class AcceptanceCriteria:
     MAX_FAILED_REGIMES = 2
     NEGATIVE_EQUIITY_YEARS_THRESHOLD = 2
 
-    # SCORING WEIGHTS
-    SHARPE_WEIGHT = 0.25
-    DRAWDOWN_WEIGHT = 0.20
-    PROFIT_FACTOR_WEIGHT = 0.20
-    MONTE_CARLO_WEIGHT = 0.15
-    BENCHMARK_WEIGHT = 0.20
-
     def __init__(
         self,
         min_sharpe: float = MIN_SHARPE_OOS,
@@ -107,13 +74,41 @@ class AcceptanceCriteria:
         min_profit_factor: float = MIN_PROFIT_FACTOR,
         min_monte_carlo_p5: float = MIN_MONTE_CARLO_P5,
         min_excess_return: float = MIN_EXCESS_RETURN_VS_BENCHMARK,
+        # Injected validator services (for testing/customization)
+        sharpe_validator: Optional[SharpeValidator] = None,
+        drawdown_validator: Optional[DrawdownValidator] = None,
+        profit_factor_validator: Optional[ProfitFactorValidator] = None,
+        monte_carlo_validator: Optional[MonteCarloValidator] = None,
+        benchmark_validator: Optional[BenchmarkComparisonValidator] = None,
+        rejection_checker: Optional[RejectionCriteriaChecker] = None,
+        scoring_service: Optional[ScoringService] = None,
+        verdict_determiner: Optional[VerdictDeterminer] = None,
     ):
-        """Initialize acceptance criteria with custom thresholds."""
+        """Initialize acceptance criteria with custom thresholds and validators."""
+        # Store thresholds for backward compatibility
         self.min_sharpe = min_sharpe
         self.max_drawdown = max_drawdown
         self.min_profit_factor = min_profit_factor
         self.min_monte_carlo_p5 = min_monte_carlo_p5
         self.min_excess_return = min_excess_return
+
+        # Initialize validator services (dependency injection with defaults)
+        self._sharpe_validator = sharpe_validator or SharpeValidator(min_sharpe=min_sharpe)
+        self._drawdown_validator = drawdown_validator or DrawdownValidator(
+            max_drawdown_threshold=max_drawdown
+        )
+        self._profit_factor_validator = profit_factor_validator or ProfitFactorValidator(
+            min_profit_factor=min_profit_factor
+        )
+        self._monte_carlo_validator = monte_carlo_validator or MonteCarloValidator(
+            min_monte_carlo_p5=min_monte_carlo_p5
+        )
+        self._benchmark_validator = benchmark_validator or BenchmarkComparisonValidator(
+            min_excess_return=min_excess_return
+        )
+        self._rejection_checker = rejection_checker or RejectionCriteriaChecker()
+        self._scoring_service = scoring_service or ScoringService()
+        self._verdict_determiner = verdict_determiner or VerdictDeterminer()
 
     def validate_strategy(
         self,
@@ -126,6 +121,8 @@ class AcceptanceCriteria:
     ) -> AcceptanceReport:
         """
         Validate strategy against all acceptance criteria (Req #17).
+
+        Delegates validation to specialized validator services (SOL-001).
 
         Args:
             backtest_result: Complete backtest result
@@ -148,139 +145,130 @@ class AcceptanceCriteria:
             )
             return self._create_invalid_report(strategy_name)
 
-        criteria_results = []
-        rejection_results = []
-
-        # Basic criteria (Req #17)
-        sharpe = float(perf.sharpe_ratio or 0)
-        max_dd = float(perf.max_drawdown_percentage or 0)
-        profit_factor = float(perf.profit_factor or 0)
-
-        sharpe_result = CriterionResult(
-            name="Sharpe Ratio (OOS)",
-            passed=sharpe >= self.min_sharpe,
-            value=sharpe,
-            threshold=self.min_sharpe,
-            description=f"Sharpe Ratio must be > {self.min_sharpe}",
+        # Extract metrics
+        metrics = self._extract_metrics(backtest_result, perf)
+        # Validate all criteria
+        validation = self._perform_validation(
+            metrics, benchmark_return, monte_carlo_p5_return,
+            commission_impact, failed_regimes, equity_curve_last_years
         )
-        criteria_results.append(sharpe_result)
+        # Log and return report
+        self._log_validation(strategy_name, validation)
+        return self._create_report(backtest_result, validation)
 
-        dd_result = CriterionResult(
-            name="Max Drawdown",
-            passed=max_dd >= self.max_drawdown,  # Less negative is better
-            value=max_dd,
-            threshold=self.max_drawdown,
-            description=f"Max Drawdown must be < {abs(self.max_drawdown) * 100}%",
+    def _extract_metrics(self, backtest_result: BacktestResult, perf) -> dict:
+        """Extract metrics from backtest result."""
+        return {
+            "sharpe": float(perf.sharpe_ratio or 0),
+            "max_dd": float(perf.max_drawdown_percentage or 0),
+            "profit_factor": float(perf.profit_factor or 0),
+            "strategy_return": float(backtest_result.total_return),
+        }
+
+    def _perform_validation(self, metrics: dict, benchmark_return: float,
+                           monte_carlo_p5_return: Optional[float],
+                           commission_impact: Optional[float],
+                           failed_regimes: Optional[int],
+                           equity_curve_last_years: Optional[List[float]]) -> dict:
+        """Perform all validation steps."""
+        criteria_results = self._validate_basic_criteria(
+            metrics["sharpe"], metrics["max_dd"], metrics["profit_factor"],
+            monte_carlo_p5_return, metrics["strategy_return"], benchmark_return
         )
-        criteria_results.append(dd_result)
-
-        pf_result = CriterionResult(
-            name="Profit Factor",
-            passed=profit_factor >= self.min_profit_factor,
-            value=profit_factor,
-            threshold=self.min_profit_factor,
-            description=f"Profit Factor must be > {self.min_profit_factor}",
+        rejection_results = self._rejection_checker.check_all(
+            commission_impact=commission_impact,
+            failed_regimes=failed_regimes,
+            equity_curve_last_years=equity_curve_last_years,
         )
-        criteria_results.append(pf_result)
-
-        # Monte Carlo criterion (Req #17)
-        mc_p5_result = CriterionResult(
-            name="Monte Carlo P5 Return",
-            passed=(monte_carlo_p5_return or 0) >= self.min_monte_carlo_p5,
-            value=monte_carlo_p5_return or 0,
-            threshold=self.min_monte_carlo_p5,
-            description="Monte Carlo 5th percentile must be > -20%",
-        )
-        criteria_results.append(mc_p5_result)
-
-        # Benchmark comparison (Req #17)
-        strategy_return = float(backtest_result.total_return)
-        excess_return = strategy_return - benchmark_return
-
-        beats_benchmark_result = CriterionResult(
-            name="Excess Return vs Benchmark",
-            passed=excess_return >= self.min_excess_return,
-            value=excess_return,
-            threshold=self.min_excess_return,
-            description=f"Must outperform benchmark by > {self.min_excess_return * 100}%",
-        )
-        criteria_results.append(beats_benchmark_result)
-
-        # Rejection criteria (Req #17)
-        if commission_impact is not None:
-            commission_result = CriterionResult(
-                name="Commission Impact",
-                passed=commission_impact <= self.MAX_COMMISSION_IMPACT,
-                value=commission_impact,
-                threshold=self.MAX_COMMISSION_IMPACT,
-                description=f"Commissions must be < {self.MAX_COMMISSION_IMPACT * 100}% of gross profit",
-            )
-            rejection_results.append(commission_result)
-
-        if failed_regimes is not None:
-            regime_result = CriterionResult(
-                name="Failed Market Regimes",
-                passed=failed_regimes <= self.MAX_FAILED_REGIMES,
-                value=failed_regimes,
-                threshold=self.MAX_FAILED_REGIMES,
-                description=f"Must not fail in > {self.MAX_FAILED_REGIMES} market regimes",
-            )
-            rejection_results.append(regime_result)
-
-        # Check for flat/negative equity curve in last 2 years
-        equity_warning = False
-        if equity_curve_last_years and len(equity_curve_last_years) >= 2:
-            # Compare end to start
-            equity_change = equity_curve_last_years[-1] - equity_curve_last_years[0]
-            equity_warning = equity_change <= 0
-
-        if equity_warning:
-            equity_result = CriterionResult(
-                name="Equity Curve Trend (Last 2 Years)",
-                passed=not equity_warning,
-                value=equity_curve_last_years[-1] - equity_curve_last_years[0],
-                threshold=0,
-                description="Equity curve must be positive in last 2 years",
-            )
-            rejection_results.append(equity_result)
-
-        # Calculate overall score
-        score = self._calculate_score(criteria_results)
-
-        # Determine verdict
-        verdict, warnings, recommendations = self._determine_verdict(
+        score = self._scoring_service.calculate_score(criteria_results)
+        verdict, warnings, recommendations = self._verdict_determiner.determine_verdict(
             criteria_results, rejection_results, score
         )
+        excess_return = self._benchmark_validator.get_excess_return(
+            metrics["strategy_return"], benchmark_return
+        )
+        return {
+            "criteria_results": criteria_results,
+            "rejection_results": rejection_results,
+            "score": score,
+            "verdict": verdict,
+            "warnings": warnings,
+            "recommendations": recommendations,
+            "excess_return": excess_return,
+        }
 
+    def _log_validation(self, strategy_name: str, validation: dict) -> None:
+        """Log validation results."""
         logger.info(
             "Strategy acceptance validation completed",
             extra={
                 "strategy": strategy_name,
-                "verdict": verdict.value,
-                "score": score,
-                "sharpe_ratio": sharpe,
-                "max_drawdown": max_dd,
+                "verdict": validation["verdict"].value,
+                "score": validation["score"],
             }
         )
 
+    def _create_report(self, backtest_result: BacktestResult, validation: dict) -> AcceptanceReport:
+        """Create acceptance report from validation results."""
+        perf = backtest_result.performance
         return AcceptanceReport(
             strategy_name=backtest_result.strategy_name or "unknown",
             timestamp=datetime.now(),
-            verdict=verdict,
-            overall_score=score,
-            basic_criteria=criteria_results,
+            verdict=validation["verdict"],
+            overall_score=validation["score"],
+            basic_criteria=validation["criteria_results"],
             advanced_criteria=[],
-            rejection_criteria=rejection_results,
-            beats_benchmark=excess_return >= self.min_excess_return,
-            excess_return=excess_return,
-            warnings=warnings,
-            recommendations=recommendations,
-            sharpe_ratio=sharpe,
-            max_drawdown=max_dd,
-            profit_factor=profit_factor,
-            commission_impact=commission_impact,
-            monte_carlo_p5=monte_carlo_p5_return,
+            rejection_criteria=validation["rejection_results"],
+            beats_benchmark=validation["excess_return"] >= self.min_excess_return,
+            excess_return=validation["excess_return"],
+            warnings=validation["warnings"],
+            recommendations=validation["recommendations"],
+            sharpe_ratio=float(perf.sharpe_ratio or 0) if perf else None,
+            max_drawdown=float(perf.max_drawdown_percentage or 0) if perf else None,
+            profit_factor=float(perf.profit_factor or 0) if perf else None,
         )
+
+    def _validate_basic_criteria(
+        self,
+        sharpe: float,
+        max_dd: float,
+        profit_factor: float,
+        monte_carlo_p5_return: Optional[float],
+        strategy_return: float,
+        benchmark_return: float,
+    ) -> List[CriterionResult]:
+        """
+        Validate all basic criteria using validator services.
+
+        Args:
+            sharpe: Sharpe Ratio value
+            max_dd: Maximum drawdown value
+            profit_factor: Profit Factor value
+            monte_carlo_p5_return: Monte Carlo P5 return value
+            strategy_return: Strategy total return
+            benchmark_return: Benchmark total return
+
+        Returns:
+            List of CriterionResult for all basic criteria
+        """
+        results: List[CriterionResult] = []
+
+        # Validate Sharpe Ratio
+        results.append(self._sharpe_validator.validate(sharpe))
+
+        # Validate Max Drawdown
+        results.append(self._drawdown_validator.validate(max_dd))
+
+        # Validate Profit Factor
+        results.append(self._profit_factor_validator.validate(profit_factor))
+
+        # Validate Monte Carlo P5
+        results.append(self._monte_carlo_validator.validate(monte_carlo_p5_return))
+
+        # Validate Benchmark Comparison
+        results.append(self._benchmark_validator.validate(strategy_return, benchmark_return))
+
+        return results
 
     def _create_invalid_report(self, strategy_name: str) -> AcceptanceReport:
         """Create report for invalid backtest result."""
@@ -292,56 +280,6 @@ class AcceptanceCriteria:
             warnings=["Invalid backtest result - no performance data"],
             recommendations=["Run a valid backtest before evaluation"],
         )
-
-    def _calculate_score(self, criteria: List[CriterionResult]) -> float:
-        """Calculate overall score (0-100) based on criteria."""
-        if not criteria:
-            return 0.0
-
-        score = 0.0
-
-        for criterion in criteria:
-            if criterion.passed:
-                score += 20.0  # Each criterion is worth 20 points
-
-        return min(100.0, score)
-
-    def _determine_verdict(
-        self,
-        criteria: List[CriterionResult],
-        rejection: List[CriterionResult],
-        score: float,
-    ) -> tuple[VerdictStatus, List[str], List[str]]:
-        """Determine verdict based on criteria and rejection factors."""
-        warnings = []
-        recommendations = []
-
-        # Check rejection criteria first (Req #17)
-        rejected = False
-        for crit in rejection:
-            if not crit.passed:
-                rejected = True
-                warnings.append(f"REJECTED: {crit.description}")
-
-        if rejected:
-            return VerdictStatus.REJECTED, warnings, recommendations
-
-        # Check if all basic criteria passed
-        all_passed = all(c.passed for c in criteria)
-
-        if all_passed:
-            verdict = VerdictStatus.APPROVED
-            recommendations.append("Strategy meets all acceptance criteria")
-        elif score >= 60.0:
-            verdict = VerdictStatus.REVISION
-            warnings.append("Strategy partially meets criteria - review recommended")
-            recommendations.extend([f"Improve {c.name}" for c in criteria if not c.passed])
-        else:
-            verdict = VerdictStatus.REJECTED
-            warnings.append("Strategy fails too many criteria")
-            recommendations.extend([f"Address {c.name}" for c in criteria if not c.passed])
-
-        return verdict, warnings, recommendations
 
     def generate_summary_markdown(self, report: AcceptanceReport) -> str:
         """Generate markdown summary of acceptance report."""

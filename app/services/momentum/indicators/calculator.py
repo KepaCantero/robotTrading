@@ -376,6 +376,58 @@ class TechnicalIndicatorCalculator:
             raise
 
     @staticmethod
+    def calculate_obv(prices: List[float], volumes: List[float]) -> Optional[float]:
+        """
+        Calculate On-Balance Volume (OBV) indicator.
+
+        OBV is a cumulative indicator that adds volume on up days and
+        subtracts volume on down days. It's used to confirm price trends.
+
+        Formula:
+            - If price > previous_price: OBV = previous_OBV + volume
+            - If price < previous_price: OBV = previous_OBV - volume
+            - If price == previous_price: OBV = previous_OBV
+
+        Args:
+            prices: List of price values
+            volumes: List of volume values (must match prices length)
+
+        Returns:
+            OBV value or None if insufficient data
+
+        Raises:
+            ValueError: If lists are empty or have different lengths
+        """
+        if len(prices) != len(volumes):
+            raise ValueError(
+                f"OBV: prices and volumes must have same length: "
+                f"{len(prices)} != {len(volumes)}"
+            )
+
+        if len(prices) < 2:
+            logger.debug(f"OBV: Insufficient data ({len(prices)} < 2)")
+            return None
+
+        try:
+            obv_values: List[float] = [0.0]
+
+            for i in range(1, len(prices)):
+                if prices[i] > prices[i - 1]:
+                    obv_values.append(obv_values[-1] + volumes[i])
+                elif prices[i] < prices[i - 1]:
+                    obv_values.append(obv_values[-1] - volumes[i])
+                else:
+                    obv_values.append(obv_values[-1])
+
+            obv_value = obv_values[-1]
+            logger.debug(f"OBV calculated: {obv_value:.2f} from {len(prices)} prices")
+            return round(obv_value, 2)
+
+        except (ValueError, TypeError, IndexError) as e:
+            logger.error(f"OBV calculation error: {e}")
+            raise
+
+    @staticmethod
     def calculate_volume_sma(self, volumes: List[Decimal], period: int = 20) -> Optional[Decimal]:
         """
         Calculate Volume Simple Moving Average using pandas.rolling() library.

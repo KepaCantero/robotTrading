@@ -14,12 +14,11 @@ from typing import Any, Dict, Optional
 
 from fastapi import APIRouter
 from pydantic import BaseModel
-from sqlalchemy.exc import (
-    DatabaseError,
-    DataError,
-    IntegrityError,
-    OperationalError,
-    ProgrammingError,
+
+from app.infrastructure.health import (
+    DatabaseHealthCheckerFactory,
+    DatabaseHealthCheckerProtocol,
+    SQLiteDatabaseHealthChecker,
 )
 
 logger = logging.getLogger(__name__)
@@ -41,22 +40,35 @@ class HealthChecker:
     Performs health checks on all critical system components.
     """
 
-    def __init__(self) -> None:
-        """Initialize the health checker."""
+    def __init__(
+        self,
+        db_health_checker: Optional[DatabaseHealthCheckerProtocol] = None,
+    ) -> None:
+        """
+        Initialize the health checker.
+
+        Args:
+            db_health_checker: Optional database health checker from infrastructure layer
+        """
         self.start_time: datetime = datetime.now()
-        self._db_path: Optional[str] = None
+        self._db_health_checker: Optional[DatabaseHealthCheckerProtocol] = db_health_checker
         self._broker: Optional[Any] = None
 
-    def set_dependencies(self, db_path: Optional[str] = None, broker: Optional[Any] = None) -> None:
+    def set_dependencies(
+        self,
+        db_path: Optional[str] = None,
+        broker: Optional[Any] = None,
+    ) -> None:
         """
         Set dependencies for health checks.
 
         Args:
-            db_path: Optional database file path
+            db_path: Optional database file path (creates checker if not set)
             broker: Optional broker instance for connectivity checks
         """
-        self._db_path = db_path
         self._broker = broker
+        if db_path and not self._db_health_checker:
+            self._db_health_checker = DatabaseHealthCheckerFactory.create_sqlite_checker(db_path)
 
     async def check_database(self) -> Dict[str, Any]:
         """
@@ -65,42 +77,15 @@ class HealthChecker:
         Returns:
             Dict with status: "healthy", "degraded", or "unhealthy"
         """
-        if not self._db_path:
-            logger.warning("Database health check: database not configured")
+        if self._db_health_checker is None:
+            logger.warning("Database health check: database checker not configured")
             return {"status": "degraded", "message": "Database not configured"}
 
         try:
-            if not os.path.exists(self._db_path):
-                logger.error(f"Database health check: file not found at {self._db_path}")
-                return {
-                    "status": "unhealthy",
-                    "message": f"Database file not found: {self._db_path}",
-                }
-
-            # Check file size (should be > 0)
-            file_size: int = os.path.getsize(self._db_path)
-            if file_size == 0:
-                logger.error(f"Database health check: file is empty at {self._db_path}")
-                return {"status": "unhealthy", "message": "Database file is empty"}
-
-            # Try to connect (basic check)
-            import sqlite3
-
-            conn = sqlite3.connect(self._db_path, timeout=5)
-            cursor = conn.cursor()
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
-            tables = cursor.fetchall()
-            conn.close()
-
-            result = {
-                "status": "healthy",
-                "message": f"Database OK ({len(tables)} tables)",
-                "file_size_mb": round(file_size / (1024 * 1024), 2),
-            }
-            logger.info(f"Database health check: {result['message']}, size={result['file_size_mb']}MB")
+            result = self._db_health_checker.check_health()
+            logger.info(f"Database health check: {result.get('message', 'No message')}")
             return result
-
-        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
+        except Exception as e:
             logger.error(f"Database health check failed: {str(e)}")
             return {"status": "unhealthy", "message": f"Database error: {str(e)}"}
 
@@ -133,7 +118,7 @@ class HealthChecker:
         except asyncio.TimeoutError:
             logger.error("Broker health check: connection timeout after 5s")
             return {"status": "unhealthy", "message": "Broker connection timeout"}
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except Exception as e:
             logger.error(f"Broker health check failed: {str(e)}")
             return {"status": "unhealthy", "message": f"Broker error: {str(e)}"}
 
@@ -184,7 +169,7 @@ class HealthChecker:
         except ImportError:
             logger.warning("Memory health check: psutil not installed")
             return {"status": "degraded", "message": "psutil not installed"}
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except Exception as e:
             logger.error(f"Memory health check failed: {str(e)}")
             return {"status": "degraded", "message": f"Memory check error: {str(e)}"}
 
@@ -208,7 +193,7 @@ class HealthChecker:
             logger.info(f"Positions health check: {result['message']}")
             return result
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except Exception as e:
             logger.error(f"Positions health check failed: {str(e)}")
             return {"status": "degraded", "message": f"Position check error: {str(e)}", "count": 0}
 

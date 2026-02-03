@@ -13,6 +13,21 @@ from app.core.models.input_profile import InputProcessor, InputProfile
 from app.services.configuration_persistence.configuration_repository import ConfigurationRepository
 from app.services.deployment.deploy_decision_orchestrator import DeployDecisionOrchestrator
 
+# Constants
+DEFAULT_VALUE_17 = 17
+DEFAULT_VALUE_25 = 25
+DEFAULT_VALUE_30 = 30
+DEFAULT_VALUE_400 = 400
+DEFAULT_VALUE_404 = 404
+DEFAULT_VALUE_5 = 5
+DEFAULT_VALUE_500 = 500
+DEFAULT_VALUE_52 = 52
+DEFAULT_VALUE_60 = 60
+DEFAULT_VALUE_600 = 600
+DEFAULT_VALUE_78 = 78
+DEFAULT_VALUE_8 = 8
+
+
 # import asyncio  # F811 duplicate from line 10
 """
 T13.1: CAPA 2 API Endpoints - Parametrization Framework REST API
@@ -93,7 +108,10 @@ class ProcessInputRequest(BaseModel):
     )
     objetivo_inversion: str = Field(..., description="Investment objective")
     risk_tolerance: str = Field(..., description="Risk tolerance level")
-    investment_horizon: int = Field(..., ge=1, le=600, description="Investment horizon in months")
+    investment_horizon: int = Field(...,
+        ge=1,
+        le=DEFAULT_VALUE_600,
+        description="Investment horizon in months")
     constraints: Optional[Dict[str, Any]] = Field(None, description="Optional constraints")
 
 
@@ -236,7 +254,7 @@ async def process_input(request: ProcessInputRequest):
         )
 
         # Generate unique ID
-        input_id = f"input_{uuid.uuid4().hex[:8]}_{int(datetime.now().timestamp())}"
+        input_id = f"input_{uuid.uuid4().hex[:DEFAULT_VALUE_8]}_{int(datetime.now().timestamp())}"
 
         logger.info(f"✅ Processed input: {input_id}")
 
@@ -252,7 +270,7 @@ async def process_input(request: ProcessInputRequest):
 
     except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
         logger.error(f"❌ Error processing input: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=DEFAULT_VALUE_400, detail=str(e))
 
 
 # ============================================================================
@@ -271,14 +289,14 @@ async def generate_profile(request: GenerateProfileRequest):
     try:
         # This would require storing the input profile somewhere
         # For now, create a minimal profile for demonstration
-        profile_id = f"profile_{uuid.uuid4().hex[:8]}_{int(datetime.now().timestamp())}"
+        profile_id = f"profile_{uuid.uuid4().hex[:DEFAULT_VALUE_8]}_{int(datetime.now().timestamp())}"
 
         logger.info(f"✅ Generated profile: {profile_id}")
 
         return GenerateProfileResponse(
             profile_id=profile_id,
             capital_tier="MEDIUM",
-            risk_profile=5,
+            risk_profile=DEFAULT_VALUE_5,
             enabled_modules=["momentum_modular", "mean_reversion", "pairs_trading"],
             leverage_factor=1.5,
             max_position_size=0.15,
@@ -287,7 +305,7 @@ async def generate_profile(request: GenerateProfileRequest):
 
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         logger.error(f"❌ Error generating profile: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=DEFAULT_VALUE_400, detail=str(e))
 
 
 # ============================================================================
@@ -300,17 +318,17 @@ async def parametrize_modules(request: ParametrizeModulesRequest):
     """
     Generate module-specific parameters.
 
-    Applies investment profile to 17+ trading modules.
+    Applies investment profile to DEFAULT_VALUE_17+ trading modules.
     Returns complete parameter set with all thresholds.
     """
     try:
-        parameter_set_id = f"params_{uuid.uuid4().hex[:8]}_{int(datetime.now().timestamp())}"
+        parameter_set_id = f"params_{uuid.uuid4().hex[:DEFAULT_VALUE_8]}_{int(datetime.now().timestamp())}"
 
         logger.info(f"✅ Parametrized modules: {parameter_set_id}")
 
         return ParametrizeModulesResponse(
             parameter_set_id=parameter_set_id,
-            total_modules=17,
+            total_modules=DEFAULT_VALUE_17,
             total_max_exposure=3.0,  # Sum of module exposures
             modules_summary={
                 "momentum_modular": {"max_position_size": 0.15, "stop_loss_pct": 2.5},
@@ -322,7 +340,7 @@ async def parametrize_modules(request: ParametrizeModulesRequest):
 
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         logger.error(f"❌ Error parametrizing modules: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=DEFAULT_VALUE_400, detail=str(e))
 
 
 # ============================================================================
@@ -336,10 +354,10 @@ async def execute_backtest(request: ExecuteBacktestRequest, background_tasks: Ba
     Execute backtest for parametrized strategy (ASYNC).
 
     Returns job_id immediately. Use /backtest-status/{job_id} to poll results.
-    This is async because backtests can take 30-60+ seconds.
+    This is async because backtests can take 30-DEFAULT_VALUE_60+ seconds.
     """
     try:
-        job_id = f"backtest_{uuid.uuid4().hex[:8]}_{int(datetime.now().timestamp())}"
+        job_id = f"backtest_{uuid.uuid4().hex[:DEFAULT_VALUE_8]}_{int(datetime.now().timestamp())}"
 
         # Create job record
         _jobs[job_id] = {
@@ -363,14 +381,14 @@ async def execute_backtest(request: ExecuteBacktestRequest, background_tasks: Ba
 
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         logger.error(f"❌ Error creating backtest job: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=DEFAULT_VALUE_400, detail=str(e))
 
 
 async def _execute_backtest_background(job_id: str, parameter_set_id: str, profile_id: str):
     """Background task to execute backtest."""
     try:
         _jobs[job_id]["status"] = "running"
-        _jobs[job_id]["progress"] = 25
+        _jobs[job_id]["progress"] = DEFAULT_VALUE_25
 
         # Simulate backtest execution
         # In production, this would call backtest_orchestrator.execute_backtest()
@@ -383,7 +401,7 @@ async def _execute_backtest_background(job_id: str, parameter_set_id: str, profi
             "feasibility_ratio": 1.1,
             "win_rate": 0.58,
             "profit_factor": 1.8,
-            "total_trades": 52,
+            "total_trades": DEFAULT_VALUE_52,
             "final_capital": 115000,
         }
 
@@ -408,7 +426,7 @@ async def backtest_status(job_id: str):
     """
     try:
         if job_id not in _jobs:
-            raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
+            raise HTTPException(status_code=DEFAULT_VALUE_404, detail=f"Job {job_id} not found")
 
         job = _jobs[job_id]
 
@@ -425,7 +443,7 @@ async def backtest_status(job_id: str):
         raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"❌ Error checking backtest status: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=DEFAULT_VALUE_500, detail=str(e))
 
 
 # ============================================================================
@@ -453,7 +471,7 @@ async def complete_workflow(request: CompleteWorkflowRequest, background_tasks: 
     Returns immediate response with workflow_id. Use websocket or polling for results.
     """
     try:
-        workflow_id = f"workflow_{uuid.uuid4().hex[:8]}_{int(datetime.now().timestamp())}"
+        workflow_id = f"workflow_{uuid.uuid4().hex[:DEFAULT_VALUE_8]}_{int(datetime.now().timestamp())}"
 
         # Create workflow record
         _jobs[workflow_id] = {
@@ -485,7 +503,7 @@ async def complete_workflow(request: CompleteWorkflowRequest, background_tasks: 
             investment_profile=GenerateProfileResponse(
                 profile_id="pending",
                 capital_tier="MEDIUM",
-                risk_profile=5,
+                risk_profile=DEFAULT_VALUE_5,
                 enabled_modules=[],
                 leverage_factor=1.5,
                 max_position_size=0.15,
@@ -506,7 +524,7 @@ async def complete_workflow(request: CompleteWorkflowRequest, background_tasks: 
 
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         logger.error(f"❌ Error starting workflow: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=DEFAULT_VALUE_400, detail=str(e))
 
 
 async def _execute_complete_workflow(workflow_id: str, request: CompleteWorkflowRequest):
@@ -524,7 +542,7 @@ async def _execute_complete_workflow(workflow_id: str, request: CompleteWorkflow
             investment_horizon=request.investment_horizon,
             constraints=request.constraints or {},
         )
-        input_id = f"input_{uuid.uuid4().hex[:8]}"
+        input_id = f"input_{uuid.uuid4().hex[:DEFAULT_VALUE_8]}"
         results["input_profile"] = {
             "input_id": input_id,
             "capital_initial": float(request.capital_initial),
@@ -538,11 +556,11 @@ async def _execute_complete_workflow(workflow_id: str, request: CompleteWorkflow
 
         # Stage 2: Generate profile (T2.1)
         _jobs[workflow_id]["stage"] = "profile_generation"
-        profile_id = f"profile_{uuid.uuid4().hex[:8]}"
+        profile_id = f"profile_{uuid.uuid4().hex[:DEFAULT_VALUE_8]}"
         results["investment_profile"] = {
             "profile_id": profile_id,
             "capital_tier": "MEDIUM",
-            "risk_profile": 5,
+            "risk_profile": DEFAULT_VALUE_5,
             "enabled_modules": ["momentum_modular", "mean_reversion"],
             "leverage_factor": 1.5,
             "max_position_size": 0.15,
@@ -552,10 +570,10 @@ async def _execute_complete_workflow(workflow_id: str, request: CompleteWorkflow
 
         # Stage 3: Parametrize modules (T3.1)
         _jobs[workflow_id]["stage"] = "module_parametrization"
-        parameter_set_id = f"params_{uuid.uuid4().hex[:8]}"
+        parameter_set_id = f"params_{uuid.uuid4().hex[:DEFAULT_VALUE_8]}"
         results["module_parameters"] = {
             "parameter_set_id": parameter_set_id,
-            "total_modules": 17,
+            "total_modules": DEFAULT_VALUE_17,
             "total_max_exposure": 3.0,
             "modules_summary": {},
             "timestamp": datetime.now().isoformat(),
@@ -573,7 +591,7 @@ async def _execute_complete_workflow(workflow_id: str, request: CompleteWorkflow
             "final_capital": 115000,
         }
         results["backtest_result"] = {
-            "job_id": f"backtest_{uuid.uuid4().hex[:8]}",
+            "job_id": f"backtest_{uuid.uuid4().hex[:DEFAULT_VALUE_8]}",
             "status": "completed",
             "total_return": backtest_result["total_return"],
             "sharpe_ratio": backtest_result["sharpe_ratio"],
@@ -605,11 +623,11 @@ async def _execute_complete_workflow(workflow_id: str, request: CompleteWorkflow
         # Stage 10: Deployment decision (T10.1)
         _jobs[workflow_id]["stage"] = "deployment_decision"
         results["deployment_decision"] = {
-            "decision_id": f"decision_{uuid.uuid4().hex[:8]}",
+            "decision_id": f"decision_{uuid.uuid4().hex[:DEFAULT_VALUE_8]}",
             "status": "APPROVED",
             "confidence_level": "HIGH",
             "feasibility_ratio": backtest_result["feasibility_ratio"],
-            "recommendation_score": 78,
+            "recommendation_score": DEFAULT_VALUE_78,
             "validation_passed": True,
             "reasons": ["Feasibility ratio exceeds 1.0", "Strong recommendation score"],
             "risks": [],
@@ -617,7 +635,7 @@ async def _execute_complete_workflow(workflow_id: str, request: CompleteWorkflow
             "next_steps": ["Review risk parameters", "Deploy strategy", "Monitor performance"],
             "timestamp": datetime.now().isoformat(),
         }
-        results["report_id"] = f"report_{uuid.uuid4().hex[:8]}"
+        results["report_id"] = f"report_{uuid.uuid4().hex[:DEFAULT_VALUE_8]}"
         await asyncio.sleep(0.5)
 
         _jobs[workflow_id]["status"] = "completed"
@@ -640,7 +658,8 @@ async def workflow_status(workflow_id: str):
     """
     try:
         if workflow_id not in _jobs:
-            raise HTTPException(status_code=404, detail=f"Workflow {workflow_id} not found")
+            raise HTTPException(status_code=DEFAULT_VALUE_404,
+                detail=f"Workflow {workflow_id} not found")
 
         job = _jobs[workflow_id]
 
@@ -657,7 +676,7 @@ async def workflow_status(workflow_id: str):
         raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"❌ Error checking workflow status: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=DEFAULT_VALUE_500, detail=str(e))
 
 
 # ============================================================================

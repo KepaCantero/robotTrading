@@ -1,224 +1,290 @@
-# shadow_mode.py
+# Requirements: app/core/shadow_mode.py
+
+**File Path:** `app/core/shadow_mode.py`
+**Component:** Shadow Mode - Safe Production Testing
+**Last Updated:** 2026-02-06
+**Audit Status:** NEEDS_AUDIT
+
+---
 
 ## Purpose
-Implements Shadow Mode for safe production testing - intercepts real API calls and simulates execution without actual trades.
+
+This module implements **Shadow Mode**, a critical SRE component that allows testing trading strategies with the REAL API without executing actual trades. This is different from paper trading - it intercepts execution calls while using real broker APIs.
+
+**Key Features:**
+- Real API interception without execution
+- WAL (Write-Ahead Log) integration for crash recovery
+- Data Sanity Layer validation
+- Shadow vs Real comparison metrics
+- Comprehensive audit trails
 
 ---
 
-## Type Definitions / Data Classes
+## References
 
-### ShadowModeType Enum
-```python
-class ShadowModeType(str, Enum):
-    DRY_RUN = "dry_run"      # Validate only, don't execute
-    SHADOW = "shadow"        # Record to WAL, simulate execution
-    PRODUCTION = "production"  # Real execution
-```
-
-### ShadowModeConfig DataClass
-```python
-@dataclass
-class ShadowModeConfig:
-    enabled: bool = False                              # REQUIRED - Is shadow mode active
-    shadow_type: ShadowModeType = ShadowModeType.DRY_RUN  # REQUIRED - Execution type
-    fill_simulation_model: str = "realistic"           # REQUIRED - Simulation model
-    slippage_bps: int = 5                              # REQUIRED - Default slippage (>= 0)
-    fill_delay_ms: int = 100                           # REQUIRED - Fill delay (>= 0)
-    partial_fill_probability: float = 0.1              # REQUIRED - Range [0, 1]
-    rejection_probability: float = 0.01                # REQUIRED - Range [0, 1]
-    enable_comparison: bool = True                     # REQUIRED - Track comparisons
-    comparison_window_minutes: int = 60                # REQUIRED - Time window
-    max_shadow_orders_per_day: int = 1000              # REQUIRED - Safety limit
-    audit_log_path: Optional[str] = None               # OPTIONAL - Audit log file
-```
-
-**Validation Rules:**
-- slippage_bps >= 0
-- fill_delay_ms >= 0
-- 0 <= partial_fill_probability <= 1
-- 0 <= rejection_probability <= 1
-
-### ShadowExecutionResult DataClass
-```python
-@dataclass
-class ShadowExecutionResult:
-    order_id: str                                      # REQUIRED - Original order ID
-    shadow_order_id: str                               # REQUIRED - Shadow order ID
-    symbol: str                                        # REQUIRED - Trading symbol
-    side: str                                          # REQUIRED - BUY or SELL
-    quantity: Decimal                                  # REQUIRED - Order quantity
-    requested_price: Optional[Decimal]                 # OPTIONAL - Limit price
-    simulated_fill_price: Optional[Decimal]            # OPTIONAL - Simulated fill
-    simulated_fill_quantity: Decimal                   # REQUIRED - Filled quantity
-    status: str                                        # REQUIRED - Execution status
-    execution_time_ms: int                             # REQUIRED - Execution time
-    slippage_bps: Optional[int] = None                 # OPTIONAL - Applied slippage
-    was_rejected: bool = False                         # REQUIRED - Rejection flag
-    rejection_reason: Optional[str] = None             # OPTIONAL - Rejection reason
-    was_partial_fill: bool = False                     # REQUIRED - Partial fill flag
-    wal_recorded: bool = True                          # REQUIRED - WAL write success
-    timestamp: datetime                                # REQUIRED - Execution time
-    metadata: Dict[str, Any]                           # REQUIRED - Additional data
-```
-
-### ShadowRealComparison DataClass
-```python
-@dataclass
-class ShadowRealComparison:
-    symbol: str                                        # REQUIRED - Trading symbol
-    shadow_order_id: str                               # REQUIRED - Shadow order ID
-    real_order_id: Optional[str]                       # OPTIONAL - Real order ID
-    shadow_price: Optional[Decimal]                    # OPTIONAL - Shadow fill price
-    real_price: Optional[Decimal]                      # OPTIONAL - Real fill price
-    shadow_fill_time_ms: int                           # REQUIRED - Shadow fill time
-    real_fill_time_ms: Optional[int]                   # OPTIONAL - Real fill time
-    price_difference_bps: Optional[int]                # OPTIONAL - Price diff in bps
-    timing_difference_ms: Optional[int]                # OPTIONAL - Timing diff in ms
-    shadow_status: str                                 # REQUIRED - Shadow status
-    real_status: Optional[str]                         # OPTIONAL - Real status
-    timestamp: datetime                                # REQUIRED - Comparison time
-```
+See [../../BASE_RULES.md](../../BASE_RULES.md) for universal rules.
 
 ---
 
-## Function Signatures (Contracts)
+## File Analysis
 
-### `ShadowModeExecutor.__init__(broker_client: Any, wal_manager: OrderStateMachine, sanity_layer: Optional[DataSanityLayer] = None, config: Optional[ShadowModeConfig] = None) -> None`
-**Pre:** broker_client implements get_live_ticker, wal_manager initialized
-**Post:** Executor initialized with tracking structures
-**Raises:** ValueError if config validation fails
-**Retry:** No
-**Side Effects:** None
+### Classes & Functions
 
-### `async execute_order_shadow(symbol: str, side: str, quantity: Decimal, price: Optional[Decimal] = None, order_type: str = "MARKET", metadata: Optional[Dict[str, Any]] = None) -> ShadowExecutionResult`
-**Pre:** Shadow mode enabled, symbol valid, quantity > 0
-**Post:** Order written to WAL, simulated fill executed, result tracked
-**Raises:** ValueError if validation fails, RuntimeError if disabled
-**Retry:** No
-**Side Effects:** WAL writes, logging, tracking updates
+| Name | Type | Lines | Purpose |
+|------|------|-------|---------|
+| `ShadowModeType` | Enum | 76-81 | Shadow mode types (dry_run, shadow, production) |
+| `ShadowModeConfig` | dataclass | 84-109 | Configuration for shadow mode execution |
+| `ShadowExecutionResult` | dataclass | 112-156 | Result of shadow mode execution |
+| `ShadowRealComparison` | dataclass | 159-174 | Comparison between shadow and real execution |
+| `ShadowModeExecutor` | class | 177-835 | Main shadow mode executor |
+| `ShadowModeAwareBroker` | class | 838-903 | Broker wrapper integrating shadow mode |
+| `detect_shadow_mode_from_env()` | function | 906-940 | Load shadow config from environment |
 
-**CRITICAL FLOW:**
-1. Validate order for shadow mode
-2. Check daily limits
-3. Validate price with Data Sanity Layer
-4. Write SUBMITTING to WAL (BEFORE execution)
-5. Simulate fill
-6. Write ACK_RECEIVED to WAL
-7. Write final state to WAL
-8. Track result
-9. Log with SHADOW prefix
-10. Write to audit log if configured
+### Dependencies
 
-### `async validate_order_for_shadow(symbol: str, side: str, quantity: Decimal, price: Optional[Decimal], order_type: str) -> None`
-**Pre:** All parameters provided
-**Post:** Validation passes or raises ValueError
-**Raises:** ValueError if validation fails
-**Retry:** No
-**Side Effects:** None
+**Internal:**
+- `app.core.interfaces.broker_base.Order`
+- `app.sre.data_integrity.sanity_layer.DataSanityLayer`
+- `app.sre.state_machine.wal_persistence.OrderLog, OrderState, OrderStateMachine`
 
-### `async simulate_fill(shadow_order_id: str, symbol: str, side: str, quantity: Decimal, price: Optional[Decimal], order_type: str) -> ShadowExecutionResult`
-**Pre:** Order validated, broker available for market data
-**Post:** Fill simulated with realistic behavior
-**Raises:** ValueError if LIMIT order missing price
-**Retry:** No
-**Side Effects:** Async delay, random number generation
+**External:**
+- `asyncio`, `logging`, `uuid`, `dataclasses`, `datetime`, `decimal`, `enum`, `typing`
 
-### `async shadow_to_production_transition(validation_period_minutes: int = 60) -> Dict[str, Any]`
-**Pre:** Shadow mode has results to validate
-**Post:** Transition report generated with validation results
-**Raises:** None (returns report with errors)
-**Retry:** No
-**Side Effects:** Logging, WAL reads
+---
 
-**CRITICAL VALIDATIONS:**
-1. Success rate >= 95%
-2. WAL consistency (pending orders <= 10% of recent)
-3. No critical errors
-4. Shadow vs real price difference <= 50 bps
+## GAP Analysis
 
-### `async compare_shadow_vs_real(limit: int = 100) -> List[ShadowRealComparison]`
-**Pre:** enable_comparison is True
-**Post:** Comparisons generated and tracked
-**Raises:** None
-**Retry:** No
-**Side Effects:** Updates comparisons list
+### P0 (Critical) Violations
 
-### `async get_shadow_statistics(minutes: int = 60) -> Dict[str, Any]`
-**Pre:** None
-**Post:** Statistics returned for time window
-**Raises:** None
-**Retry:** No
-**Side Effects:** None
+| Rule ID | Description | Line(s) | Fix Required |
+|---------|-------------|---------|--------------|
+| **TYP-001** | Missing type hints for some parameters | Various | Add type hints for parameters like `broker_client: Any` |
+| **ARCH-001** | Direct dependency on concrete implementations | 198-202 | Should depend on IBroker interface, not `Any` |
+| **CC-006** | Generic exception handling without specific types | 388-412 | Catch specific exceptions instead of broad ones |
 
-### `detect_shadow_mode_from_env() -> ShadowModeConfig`
-**Pre:** Environment variables set (optional)
-**Post:** Config created from env vars with defaults
-**Raises:** ValueError if SHADOW_MODE_TYPE invalid
-**Retry:** No
-**Side Effects:** Logging if enabled
+### P1 (High) Violations
+
+| Rule ID | Description | Line(s) | Fix Required |
+|---------|-------------|---------|--------------|
+| **TYP-003** | Using `Any` type without justification | 198, 848 | Use proper Protocol or interface types |
+| **LOG-005** | Sensitive data logging (order details) | 278-285 | Mask sensitive fields in logs |
+| **SEC-005** | Audit logging incomplete | 810-830 | Ensure all shadow executions are logged |
+
+### P2 (Medium) Violations
+
+| Rule ID | Description | Line(s) | Fix Required |
+|---------|-------------|---------|--------------|
+| **CC-007** | Long functions (>20 lines) | 234-413 | Break down `execute_order_shadow` |
+| **ARCH-004** | Some functions could be smaller | 457-577 | Extract simulation logic |
+| **QL-007** | High parameter count (7 params) | 234-242 | Use parameter object pattern |
+
+### P3 (Low) Issues
+
+| Rule ID | Description | Line(s) | Fix Required |
+|---------|-------------|---------|--------------|
+| **CC-001** | Some variable names could be more descriptive | Various | Minor naming improvements |
 
 ---
 
 ## Acceptance Criteria
-- [ ] Shadow mode intercepts place_order calls
-- [ ] All shadow orders written to WAL with SUBMITTING → ACK_RECEIVED → FILLED/REJECTED
-- [ ] Daily order limits enforced
-- [ ] Price validation via Data Sanity Layer
-- [ ] Audit logging with SHADOW prefix
-- [ ] Shadow vs real comparison tracking
-- [ ] Safe transition validation to production
-- [ ] Comprehensive error handling with WAL writes
+
+### AC-ARCH-001: Domain Layer Purity
+```bash
+# Verify no infrastructure imports in domain (N/A - this is infrastructure layer)
+```
+
+### AC-TYP-001: Type Hints Coverage
+```bash
+# All functions have return type hints
+grep -E "def [a-z_]+.*->" app/core/shadow_mode.py | wc -l
+# Expected: All public functions typed
+```
+
+### AC-SEC-001: No Hardcoded Secrets
+```bash
+# No API keys in code
+grep -iE "api_key|secret|password|token" app/core/shadow_mode.py | grep -vE "os.environ|getenv|Secret" | wc -l
+# Expected: 0 hardcoded secrets
+```
+
+### AC-LOG-001: Error Logging
+```bash
+# All exceptions logged
+grep -c "logger.error" app/core/shadow_mode.py
+# Expected: >= exception handlers
+```
 
 ---
 
-## Critical Rules (MUST NOT BREAK)
+## File-Specific Requirements
 
-**Reglas universales:** Ver `../../CRITICAL_RULES.md` (12 categories with 50+ critical rules)
+### FSR-001: Shadow Mode Safety
+**Priority:** P0
+**Description:** Shadow mode must NEVER execute real trades
 
-### Reglas ESPECÍFICAS de este archivo:
+**Requirements:**
+- [ ] Interceptor must verify shadow mode is enabled before execution
+- [ ] All shadow orders must be tagged with `SHADOW_` prefix
+- [ ] WAL integration must mirror real execution exactly
+- [ ] Audit trail must be immutable
 
-| Rule | Source | Requirement | Current Status |
-|------|--------|-------------|----------------|
-| Shadow Mode Safety | CRITICAL_RULES.md | Shadow orders NEVER execute on real broker | ✅ OK |
-| WAL Integration | CRITICAL_RULES.md | All shadow orders written to WAL | ✅ OK |
-| Audit Trail | CRITICAL_RULES.md | SHADOW prefix in all logs | ✅ OK |
-| Error Handling | BASE_RULES.md | All async operations catch exceptions | ✅ OK |
-| Type Hints | BASE_RULES.md | All functions have type hints | ✅ OK |
-| Validation | BASE_RULES.md | Input validation before operations | ✅ OK |
-| Daily Limits | CRITICAL_RULES.md | Max orders per day enforced | ✅ OK |
-| DataClass Validation | BASE_RULES.md | __post_init__ validates config | ✅ OK |
-| Async Safety | CRITICAL_RULES.md | Locking for shared state | ✅ OK |
-| Decimal Precision | CRITICAL_RULES.md | Financial calculations use Decimal | ✅ OK |
+**Acceptance Test:**
+```python
+async def test_shadow_mode_never_executes_real_trades():
+    config = ShadowModeConfig(enabled=True)
+    executor = ShadowModeExecutor(broker=real_broker, wal=wal, config=config)
+    result = await executor.execute_order_shadow(symbol="AAPL", side="BUY", quantity=100)
+    assert result.shadow_order_id.startswith("SHADOW_")
+    assert not real_broker.was_called()
+```
+
+### FSR-002: WAL Integration
+**Priority:** P0
+**Description:** Shadow mode must write to WAL exactly like real execution
+
+**Requirements:**
+- [ ] Order state transitions: SUBMITTING → ACK_RECEIVED → FILLED/REJECTED
+- [ ] All metadata must include `shadow_mode: True` flag
+- [ ] WAL recovery must distinguish shadow from real orders
+
+**Acceptance Test:**
+```python
+async def test_shadow_wal_integration():
+    result = await executor.execute_order_shadow(...)
+    wal_logs = await wal.get_logs(result.shadow_order_id)
+    assert any(log.state == OrderState.SUBMITTING for log in wal_logs)
+    assert any(log.state == OrderState.ACK_RECEIVED for log in wal_logs)
+    assert log.metadata.get("shadow_mode") == True
+```
+
+### FSR-003: Price Validation
+**Priority:** P1
+**Description:** Shadow mode must validate prices with Data Sanity Layer
+
+**Requirements:**
+- [ ] Prices must be validated before execution
+- [ ] Stale price warnings must be logged
+- [ ] Failed validation must prevent execution
+
+**Acceptance Test:**
+```python
+async def test_shadow_price_validation():
+    validation = SanityCheckResult.FAIL, "Price is stale"
+    with pytest.raises(ValueError, match="Price validation failed"):
+        await executor.execute_order_shadow(..., price=stale_price)
+```
+
+### FSR-004: Shadow vs Real Comparison
+**Priority:** P2
+**Description:** Track performance differences between shadow and real execution
+
+**Requirements:**
+- [ ] Track price differences in basis points
+- [ ] Track timing differences in milliseconds
+- [ ] Alert if differences exceed thresholds
+
+**Acceptance Test:**
+```python
+async def test_shadow_real_comparison():
+    comparisons = await executor.compare_shadow_vs_real()
+    for comp in comparisons:
+        if comp.price_difference_bps:
+            assert abs(comp.price_difference_bps) <= 50  # 50 bps threshold
+```
+
+### FSR-005: Audit Logging
+**Priority:** P1
+**Description:** All shadow executions must be logged to audit trail
+
+**Requirements:**
+- [ ] JSON-formatted log entries
+- [ ] Include order details, timestamps, and results
+- [ ] Atomic writes to prevent data loss
+
+**Acceptance Test:**
+```python
+async def test_shadow_audit_log():
+    result = await executor.execute_order_shadow(...)
+    with open(audit_log_path) as f:
+        log_entry = json.loads(f.readlines()[-1])
+        assert log_entry["type"] == "SHADOW_EXECUTION"
+        assert log_entry["data"]["shadow_order_id"] == result.shadow_order_id
+```
 
 ---
 
-## Dependencies
-- **External:** asyncio, logging, uuid, decimal, datetime, dataclasses, enum, random, aiofiles
-- **Internal:**
-  - app.core.interfaces.broker_base.Order
-  - app.sre.data_integrity.sanity_layer.DataSanityLayer, SanityCheckResult
-  - app.sre.state_machine.wal_persistence.OrderLog, OrderState, OrderStateMachine
+## Testing Requirements
+
+### Test Coverage
+- **Minimum Coverage:** 90%
+- **Critical Paths:** 100%
+
+### Required Tests
+1. **Unit Tests:**
+   - `test_shadow_mode_config_validation()`
+   - `test_shadow_order_id_generation()`
+   - `test_fill_simulation_models()`
+
+2. **Integration Tests:**
+   - `test_shadow_wal_integration()`
+   - `test_shadow_sanity_layer_integration()`
+   - `test_shadow_broker_interception()`
+
+3. **Safety Tests:**
+   - `test_shadow_mode_never_executes_real_trades()`
+   - `test_shadow_daily_limit_enforcement()`
+   - `test_shadow_to_production_transition_validation()`
 
 ---
 
-## Required Tests
-- **test_shadow_mode.py:**
-  - Test shadow order execution flow
-  - Test WAL state transitions
-  - Test daily limit enforcement
-  - Test price validation integration
-  - Test fill simulation (instant, realistic, slippage)
-  - Test partial fills and rejections
-  - Test shadow vs real comparison
-  - Test transition validation
-  - Test statistics calculation
-  - Test audit logging
-  - Test environment variable detection
+## Performance Requirements
+
+- **Order Latency:** Shadow execution should complete within 200ms
+- **WAL Write:** Must complete within 50ms
+- **Comparison:** Should not add more than 10ms overhead
 
 ---
 
-## Notes
-- CRITICAL: This is production safety infrastructure
-- Shadow mode is DIFFERENT from paper trading (real API, simulated execution)
-- WAL integration enables crash recovery testing
-- All shadow operations logged with SHADOW prefix
+## Security Requirements
+
+- **No Real Execution:** Shadow mode must be physically incapable of executing real trades
+- **Audit Trail:** All shadow orders must be logged with `SHADOW_` prefix
+- **Access Control:** Shadow mode configuration must require authentication
+- **Secret Management:** No hardcoded credentials (Rule 28 compliant)
+
+---
+
+## Documentation Requirements
+
+1. **Architecture Diagram:** Show Shadow Mode integration points
+2. **API Documentation:** Document all public methods
+3. **Runbook:** Troubleshooting guide for shadow mode issues
+4. **Transition Guide:** How to safely transition from shadow to production
+
+---
+
+## Checklist
+
+- [ ] All P0 violations fixed
+- [ ] All P1 violations fixed or documented
+- [ ] Type hints added to all functions
+- [ ] Comprehensive test coverage
+- [ ] Security review completed
+- [ ] Documentation updated
+- [ ] Code review approved
+
+---
+
+## Next Steps
+
+1. Fix P0 violations (type hints, interface dependencies)
+2. Add comprehensive tests
+3. Complete security review
+4. Update documentation
+5. Final code review
+
+---
+
+**Audited By:** Automated Audit System
+**Date:** 2026-02-06
+**Version:** 1.0.0

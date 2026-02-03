@@ -3,18 +3,26 @@ Portfolio Analytics API Endpoints
 
 This module provides FastAPI endpoints for portfolio analytics including
 performance metrics, risk analysis, and portfolio management features.
+
+GAP Fixes:
+- API-005: FIXED - Added security decorators (rate_limit, require_auth, audit_log)
 """
 
 from __future__ import annotations
 
 import asyncio
+import logging
+import traceback
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel, Field
+
+from . import audit_logger, get_correlation_id
+from .security import rate_limit, require_auth, audit_log
 
 from app.models.portfolio_analytics import (
     ExtendedPortfolio,
@@ -32,6 +40,7 @@ from app.services.portfolio_analytics_service import (
 )
 
 router = APIRouter(prefix="/portfolio-analytics", tags=["Portfolio Analytics"])
+logger = logging.getLogger(__name__)
 
 
 # Request/Response Models
@@ -187,28 +196,107 @@ def _get_mock_portfolio(portfolio_id: UUID) -> ExtendedPortfolio:
 
 
 @router.post("/performance-metrics", response_model=PerformanceMetricsResponse)
+@rate_limit(max_requests=50, window_seconds=60)
+@require_auth()
+@audit_log("performance_metrics_calculated", log_args=True)
 async def calculate_performance_metrics(
     request: PerformanceMetricsRequest,
+    http_request: Request,
     analytics_service: PortfolioAnalyticsService = Depends(get_portfolio_analytics_service),
 ):
     """Calculate performance metrics for a portfolio."""
+    correlation_id = get_correlation_id()
+    logger.info(
+        "Calculating performance metrics",
+        extra={
+            "correlation_id": correlation_id,
+            "portfolio_id": str(request.portfolio_id),
+            "period": request.period.value,
+        },
+    )
     try:
         # Get portfolio data (mock for now)
         portfolio = _get_mock_portfolio(request.portfolio_id)
 
-        # Calculate performance metrics
-        metrics = await analytics_service.calculate_performance_metrics(
-            portfolio=portfolio,
-            period=request.period,
-            start_date=request.start_date,
-            end_date=request.end_date,
+        # Calculate performance metrics with timeout
+        metrics = await asyncio.wait_for(
+            analytics_service.calculate_performance_metrics(
+                portfolio=portfolio,
+                period=request.period,
+                start_date=request.start_date,
+                end_date=request.end_date,
+            ),
+            timeout=30.0,  # API-010: Add timeout configuration
+        )
+
+        audit_logger.log_action(
+            action="calculated_performance_metrics",
+            method=http_request.method,
+            path=http_request.url.path,
+            details={"portfolio_id": str(request.portfolio_id), "period": request.period.value},
         )
 
         return PerformanceMetricsResponse(success=True, data=metrics)
 
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except asyncio.TimeoutError as e:
+        logger.error(
+            "Timeout calculating performance metrics",
+            extra={
+                "correlation_id": correlation_id,
+                "portfolio_id": str(request.portfolio_id),
+                "error": str(e),
+                "stack_trace": traceback.format_exc(),
+            },
+        )
+        audit_logger.log_error(
+            method=http_request.method,
+            path=http_request.url.path,
+            error_type="TimeoutError",
+            error_message=str(e),
+            stack_trace=traceback.format_exc(),
+        )
+        return PerformanceMetricsResponse(
+            success=False, error=f"Timeout calculating performance metrics: {str(e)}"
+        )
+    except (ConnectionError, OSError) as e:
+        logger.error(
+            "Connection error calculating performance metrics",
+            extra={
+                "correlation_id": correlation_id,
+                "portfolio_id": str(request.portfolio_id),
+                "error": str(e),
+                "stack_trace": traceback.format_exc(),
+            },
+        )
+        audit_logger.log_error(
+            method=http_request.method,
+            path=http_request.url.path,
+            error_type=type(e).__name__,
+            error_message=str(e),
+            stack_trace=traceback.format_exc(),
+        )
         return PerformanceMetricsResponse(
             success=False, error=f"Failed to calculate performance metrics: {str(e)}"
+        )
+    except Exception as e:
+        logger.error(
+            "Unexpected error calculating performance metrics",
+            extra={
+                "correlation_id": correlation_id,
+                "portfolio_id": str(request.portfolio_id),
+                "error": str(e),
+                "stack_trace": traceback.format_exc(),
+            },
+        )
+        audit_logger.log_error(
+            method=http_request.method,
+            path=http_request.url.path,
+            error_type=type(e).__name__,
+            error_message=str(e),
+            stack_trace=traceback.format_exc(),
+        )
+        return PerformanceMetricsResponse(
+            success=False, error=f"Unexpected error: {str(e)}"
         )
 
 
@@ -300,6 +388,9 @@ async def get_portfolio_allocation(
 
 
 @router.post("/rebalance", response_model=RebalanceResponse)
+@rate_limit(max_requests=30, window_seconds=60)
+@require_auth(roles=["admin", "trader"])
+@audit_log("rebalance_recommendation_generated", log_args=True)
 async def get_rebalance_recommendation(
     request: RebalanceRequest,
     analytics_service: PortfolioAnalyticsService = Depends(get_portfolio_analytics_service),

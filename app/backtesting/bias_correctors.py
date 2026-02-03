@@ -169,7 +169,7 @@ class LookAheadBiasCorrector:
             )
 
         except (ValueError, TypeError, KeyError) as e:
-            logger.error(f"Error detecting look-ahead bias: {e}")
+            logger.error(f"Error detecting look-ahead bias: {e}", exc_info=True)
             return BiasDetectionResult(
                 has_lookahead_bias=False,
                 lookahead_bias_severity=0.0,
@@ -294,7 +294,7 @@ class DividendAndSplitAdjuster:
             return prices
 
         except (ValueError, TypeError, KeyError) as e:
-            logger.error(f"Error applying stock split: {e}")
+            logger.error(f"Error applying stock split: {e}", exc_info=True)
             return prices
 
     def calculate_total_return(
@@ -334,7 +334,7 @@ class DividendAndSplitAdjuster:
             return total_returns
 
         except (ValueError, TypeError) as e:
-            logger.error(f"Error calculating total return: {e}")
+            logger.error(f"Error calculating total return: {e}", exc_info=True)
             return prices.pct_change()
 
     def reconstruct_adjusted_prices(
@@ -397,7 +397,7 @@ class DividendAndSplitAdjuster:
             return adjusted_prices
 
         except (ValueError, TypeError, KeyError) as e:
-            logger.error(f"Error reconstructing adjusted prices: {e}")
+            logger.error(f"Error reconstructing adjusted prices: {e}", exc_info=True)
             return raw_prices
 
 
@@ -521,7 +521,7 @@ class BacktestValidator:
             )
 
         except (ValueError, TypeError) as e:
-            logger.error(f"Error in backtest validation: {e}")
+            logger.error(f"Error in backtest validation: {e}", exc_info=True)
             return BiasDetectionResult(
                 has_lookahead_bias=False,
                 lookahead_bias_severity=0.0,
@@ -660,5 +660,5 @@ def create_bias_correction_pipeline(
         return adjusted_data
 
     except Exception as e:
-        logger.error(f"Error in bias correction pipeline: {e}")
+        logger.error(f"Error in bias correction pipeline: {e}", exc_info=True)
         return raw_data

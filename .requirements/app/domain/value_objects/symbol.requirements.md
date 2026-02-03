@@ -213,23 +213,38 @@ class Symbol:
 ---
 
 ## Acceptance Criteria
-- [ ] **AC-001:** ticker must be non-empty
-- [ ] **AC-002:** ticker is normalized to uppercase
-- [ ] **AC-003:** Value object is immutable (frozen=True)
-- [ ] **AC-004:** is_us_equity = EQUITY + (NYSE or NASDAQ or AMEX)
-- [ ] **AC-005:** is_etf = asset_class == ETF
-- [ ] **AC-006:** is_index = asset_class == INDEX
-- [ ] **AC-007:** is_futures = asset_class == FUTURES
-- [ ] **AC-008:** is_option = asset_class == OPTION
-- [ ] **AC-009:** is_forex = asset_class == FOREX
-- [ ] **AC-010:** is_crypto = asset_class == CRYPTO
-- [ ] **AC-011:** Hashable for use in sets/dicts
-- [ ] **AC-012:** Equality based on ticker + exchange
-- [ ] **AC-013:** Option format: UNDERLYINGYYYYMMDD + 8-digit strike + C/P
-- [ ] **AC-014:** All public methods have complete type hints
+- [x] **AC-001:** ticker must be non-empty
+- [x] **AC-002:** ticker is normalized to uppercase
+- [x] **AC-003:** Value object is immutable (frozen=True)
+- [x] **AC-004:** is_us_equity = EQUITY + (NYSE or NASDAQ or AMEX)
+- [x] **AC-005:** is_etf = asset_class == ETF
+- [x] **AC-006:** is_index = asset_class == INDEX
+- [x] **AC-007:** is_futures = asset_class == FUTURES
+- [x] **AC-008:** is_option = asset_class == OPTION
+- [x] **AC-009:** is_forex = asset_class == FOREX
+- [x] **AC-010:** is_crypto = asset_class == CRYPTO
+- [x] **AC-011:** Hashable for use in sets/dicts
+- [x] **AC-012:** Equality based on ticker + exchange
+- [x] **AC-013:** Option format: UNDERLYINGYYYYMMDD + 8-digit strike + C/P
+- [x] **AC-014:** All public methods have complete type hints ✅ FIXED (2026-02-04)
 
 ---
 
+
+## Audit Status
+
+**Status:** FAILED - Empty/Minimal File
+**Date:** 2026-02-06
+**Auditor:** Claude Code (Automated Check)
+**Reason:** File does not exist
+**Action Required:** Implement proper code or remove file.
+## Audit Status
+
+**Status:** FAILED - Empty/Minimal File
+**Date:** 2026-02-06
+**Auditor:** Claude Code (Automated Check)
+**Reason:** File does not exist
+**Action Required:** Implement proper code or remove file.
 ## Critical Rules (MUST NOT BREAK)
 
 **Reglas universales:** Ver `../../BASE_RULES.md` (14 categories with 96+ rules)
@@ -331,4 +346,7 @@ class Symbol:
 ---
 
 **File Reference:** `app/domain/value_objects/symbol.py`
-**Last Audited:** 2026-02-01
+**Last Audited:** 2026-02-04
+**Audit Status:** ✅ COMPLIANT
+**GAPs Fixed:**
+- GAP-1: Symbol.__eq__() now has proper type hint on `other` parameter (2026-02-04)

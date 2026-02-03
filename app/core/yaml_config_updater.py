@@ -240,8 +240,12 @@ class YAMLConfigUpdater:
             self._validate_yaml(config)
 
             # Guardar
-            with open(config_file, "w") as f:
+            # YAML-FS-002: Atomic write - write to temp file then rename
+            temp_file = config_file.with_suffix(".tmp")
+            with open(temp_file, "w") as f:
                 yaml.safe_dump(config, f, default_flow_style=False, sort_keys=False)
+            # Atomic rename (overwrites target if exists)
+            temp_file.replace(config_file)
 
             # Registrar cambio
             self._register_change(
@@ -320,8 +324,12 @@ class YAMLConfigUpdater:
 
             self._validate_yaml(config)
 
-            with open(config_file, "w") as f:
+            # YAML-FS-002: Atomic write - write to temp file then rename
+            temp_file = config_file.with_suffix(".tmp")
+            with open(temp_file, "w") as f:
                 yaml.safe_dump(config, f, default_flow_style=False, sort_keys=False)
+            # Atomic rename (overwrites target if exists)
+            temp_file.replace(config_file)
 
             self._register_change(
                 file=str(config_file), section=detector_name, params=optimized_params, tier=tier
@@ -396,8 +404,12 @@ class YAMLConfigUpdater:
 
             self._validate_yaml(config)
 
-            with open(config_file, "w") as f:
+            # YAML-FS-002: Atomic write - write to temp file then rename
+            temp_file = config_file.with_suffix(".tmp")
+            with open(temp_file, "w") as f:
                 yaml.safe_dump(config, f, default_flow_style=False, sort_keys=False)
+            # Atomic rename (overwrites target if exists)
+            temp_file.replace(config_file)
 
             self._register_change(
                 file=str(config_file), section=strategy_name, params=optimized_params, tier=tier
@@ -474,8 +486,12 @@ class YAMLConfigUpdater:
 
             self._validate_yaml(config)
 
-            with open(config_file, "w") as f:
+            # YAML-FS-002: Atomic write - write to temp file then rename
+            temp_file = config_file.with_suffix(".tmp")
+            with open(temp_file, "w") as f:
                 yaml.safe_dump(config, f, default_flow_style=False, sort_keys=False)
+            # Atomic rename (overwrites target if exists)
+            temp_file.replace(config_file)
 
             self._register_change(
                 file=str(config_file), section=section, params=optimized_params, tier=tier
@@ -578,7 +594,7 @@ class YAMLConfigUpdater:
         Returns:
             Ruta del backup creado
         """
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
         backup_name = f"{file_path.stem}_{timestamp}.yaml"
         backup_path = self.backup_dir / backup_name
 

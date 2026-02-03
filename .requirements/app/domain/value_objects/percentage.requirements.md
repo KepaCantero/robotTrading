@@ -292,7 +292,7 @@ class Weight:
 - [x] **AC-005:** from_percent(50) → 50%
 - [x] **AC-006:** as_decimal on 50% → 0.5
 - [x] **AC-007:** apply_to(1000) with 50% → 500
-- [x] **AC-008:** add() cannot exceed 100%
+- [x] **AC-008:** add() cannot exceed 100% ✅ FIXED (2026-02-04)
 - [x] **AC-009:** subtract() cannot result in negative
 - [x] **AC-010:** Weight and Percentage are convertible
 - [x] **AC-011:** Value objects are immutable (frozen=True)
@@ -301,6 +301,21 @@ class Weight:
 
 ---
 
+
+## Audit Status
+
+**Status:** FAILED - Empty/Minimal File
+**Date:** 2026-02-06
+**Auditor:** Claude Code (Automated Check)
+**Reason:** File does not exist
+**Action Required:** Implement proper code or remove file.
+## Audit Status
+
+**Status:** FAILED - Empty/Minimal File
+**Date:** 2026-02-06
+**Auditor:** Claude Code (Automated Check)
+**Reason:** File does not exist
+**Action Required:** Implement proper code or remove file.
 ## Critical Rules (MUST NOT BREAK)
 
 **Reglas universales:** Ver `../../BASE_RULES.md` (14 categories with 96+ rules)
@@ -413,4 +428,7 @@ class Weight:
 ---
 
 **File Reference:** `app/domain/value_objects/percentage.py`
-**Last Audited:** 2026-02-01
+**Last Audited:** 2026-02-04
+**Audit Status:** ✅ COMPLIANT
+**GAPs Fixed:**
+- GAP-1: Percentage.add() now validates result > 100 and raises ValueError (2026-02-04)

@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -30,7 +29,6 @@ import pandas as pd
 from app.analysis.fundamental_law.breadth_calculator import BreadthCalculator
 from app.analysis.fundamental_law.ic_calculator import ICCalculator
 from app.analysis.fundamental_law.models import FundamentalLawComponents, StrategyAnalysis
-from app.core.decimal_utils import to_decimal
 
 logger = logging.getLogger(__name__)
 
@@ -195,7 +193,6 @@ class FundamentalLawCalculator:
 
         # Step 3: Calculate Breadth
         # Estimate from the data
-        n_periods = len(returns)
         n_assets = 1  # Default to single asset if not specified
 
         # Estimate rebalancing frequency from data
@@ -500,7 +497,7 @@ class FundamentalLawCalculator:
         breadth_assessment: str,
         ir_assessment: str,
         tc_assessment: str,
-    ) -> List[str]:
+    ) -> list[str]:
         """Generate actionable improvement suggestions."""
         suggestions = []
 

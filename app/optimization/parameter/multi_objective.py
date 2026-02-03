@@ -14,9 +14,9 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 
-from .base_optimizer import BaseOptimizer, OptimizationConfig, OptimizationResult
+from .base_optimizer import OptimizationConfig, OptimizationResult
 from .models import ParameterGrid
-from .trial import TrialHistory, TrialResult, TrialStatus, create_trial_id
+from .trial import TrialHistory
 
 logger = logging.getLogger(__name__)
 

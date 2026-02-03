@@ -10,7 +10,7 @@ Generates professional reports including:
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, TypedDict, Union
 
 from app.backtesting.acceptance_criteria import AcceptanceReport
 from app.backtesting.capital_scale_analyzer import CapitalScaleAnalysisReport
@@ -20,13 +20,38 @@ from app.backtesting.walk_forward_validator import ValidationWindow
 logger = logging.getLogger(__name__)
 
 
+# ============================================================================
+# TYPED DICT DEFINITIONS
+# ============================================================================
+
+class ChartDataDict(TypedDict, total=False):
+    """TypedDict for chart data."""
+    dates: List[str]
+    strategy: List[float]
+    benchmark: List[float]
+
+
+class ChartDict(TypedDict, total=False):
+    """TypedDict for chart information."""
+    type: str
+    title: str
+    data: ChartDataDict
+
+
+class ReportSectionCharts(TypedDict):
+    """TypedDict for report section charts."""
+    type: str
+    title: str
+    data: ChartDataDict
+
+
 @dataclass
 class ReportSection:
     """A section of the report."""
 
     title: str
     content: str
-    charts: List[Dict[str, Any]] = field(default_factory=list)
+    charts: List[ChartDict] = field(default_factory=list)
 
 
 @dataclass
@@ -166,17 +191,17 @@ class ProfessionalReporter:
                 "Failed to prepare equity chart data",
                 extra={"strategy": backtest_result.strategy_name, "error": str(e)}
             )
-            chart_data = {"dates": [], "strategy": [], "benchmark": []}
+            chart_data = ChartDataDict(dates=[], strategy=[], benchmark=[])
 
         return ReportSection(
             title="Executive Summary",
             content=content,
             charts=[
-                {
-                    "type": "equity_curve",
-                    "title": "Equity Curve vs Benchmark",
-                    "data": chart_data,
-                }
+                ChartDict(
+                    type="equity_curve",
+                    title="Equity Curve vs Benchmark",
+                    data=chart_data,
+                )
             ],
         )
 
@@ -378,10 +403,10 @@ class ProfessionalReporter:
 
     def _prepare_equity_chart_data(
         self, result: BacktestResult, benchmark_return: float
-    ) -> Dict[str, Any]:
+    ) -> ChartDataDict:
         """Prepare equity curve chart data."""
         if not result.equity_curve:
-            return {"dates": [], "strategy": [], "benchmark": []}
+            return ChartDataDict(dates=[], strategy=[], benchmark=[])
 
         dates = [d.isoformat() for d, _ in result.equity_curve]
         strategy_values = [float(v) for _, v in result.equity_curve]
@@ -393,11 +418,11 @@ class ProfessionalReporter:
             for i in range(len(strategy_values))
         ]
 
-        return {
-            "dates": dates,
-            "strategy": strategy_values,
-            "benchmark": benchmark_values,
-        }
+        return ChartDataDict(
+            dates=dates,
+            strategy=strategy_values,
+            benchmark=benchmark_values,
+        )
 
     def export_to_html(self, report: ProfessionalReport) -> str:
         """Export report to HTML (Req #16)."""

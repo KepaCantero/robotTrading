@@ -101,23 +101,81 @@ class SimulatorConfig:
 
 ---
 
+## Audit Status
+
+| **Audit Status** | **FAILED** |
+| **Last Audit Date** | 2026-02-05T00:00:00Z |
+| **Auditor** | Claude Code (Ralphex Audit v2.0) |
+| **GAPs Found** | 1 P0, 0 P1, 1 P2, 0 P3 |
+| **Notes** | Missing error logging for order rejections. Otherwise solid implementation. |
+
+## GAP Details
+
+### P0 (Critical) - 1 gap
+
+#### GAP-P0-001: Missing Error Logging for Order Rejections (LOG-004 violation)
+**Rule:** LOG-004 from BASE_RULES.md - "Error logging: Log exceptions with stack traces"
+**Current State:** Order rejections only logged in warnings list, not in error logs
+**Impact:** Production debugging - rejected orders not properly tracked in audit trail
+**Location:** Lines 170-182, 229-234, 248-254, 291-295 (all `_create_rejected_result` calls)
+**Evidence:**
+```python
+if not market_snapshot.is_market_open:
+    return self._create_rejected_result(
+        order,
+        FillReason.MARKET_CLOSED,
+        "Market is closed",
+    )
+# No logger.error() call before returning rejected result
+```
+**Acceptance Criteria:**
+- [ ] Add `logger.error()` before each `_create_rejected_result()` call
+- [ ] Include order_id, symbol, side, quantity, reason in error logs
+- [ ] Add structured logging for audit trail
+
+### P2 (Medium) - 1 gap
+
+#### GAP-P2-001: Missing fee_details in Partial Fill Reconstruction (TRD-006 partial violation)
+**Rule:** TRD-006 from BASE_RULES.md - "Transaction costs: Include costs in backtesting"
+**Current State:** Partial fill TransactionCost reconstruction missing fee_details
+**Impact:** Cost breakdown incomplete for partial fills
+**Location:** Lines 300-307
+**Evidence:**
+```python
+transaction_cost = TransactionCost(
+    commission=transaction_cost.commission * fill_ratio,
+    sec_fee=transaction_cost.sec_fee * fill_ratio,
+    finra_taf=transaction_cost.finra_taf * fill_ratio,
+    exchange_fee=transaction_cost.exchange_fee * fill_ratio,
+    platform_fee=transaction_cost.platform_fee * fill_ratio,
+    total_cost=transaction_cost.total_cost * fill_ratio,
+)  # Missing: fee_details parameter
+```
+**Acceptance Criteria:**
+- [ ] Add `fee_details=transaction_cost.fee_details` to TransactionCost constructor
+- [ ] Scale fee_details values by fill_ratio
+- [ ] Add test for partial fill cost breakdown
+
+---
+
 ## Critical Rules (MUST NOT BREAK)
 
-**Reglas universales:** Ver `../../../BASE_RULES.md` (12 categories with 50+ critical rules)
+**Reglas universales:** Ver `../../../BASE_RULES.md` (96+ rules across 14 categories)
 
 ### Reglas ESPECÍFICAS de este archivo:
 
-| Rule | Source | Requirement | Current Status |
-|------|--------|-------------|----------------|
-| TYP-001 | BASE_RULES | 100% type coverage | ✅ OK |
-| ASYNC-001 | BASE_RULES | Use async def | ✅ OK - simulate_fill is async |
-| ASYNC-002 | BASE_RULES | Await async calls | ❌ GAP - No async calls to await |
-| CC-006 | BASE_RULES | Explicit error handling | ✅ OK - ValueError for invalid inputs |
-| EXE-001 | BASE_RULES | Order validation | ✅ OK - Calls order.validate() |
-| EXE-002 | BASE_RULES | Execution timing | ⚠️ NOT APPLIED - Simulation only |
-| LOG-004 | BASE_RULES | Error logging | ⚠️ NOT APPLIED - No logging on errors |
-| DP-004 | BASE_RULES | Dependency injection | ✅ OK - All models injected via constructor |
-| ARCH-006 | BASE_RULES | Value objects immutable | ❌ GAP - dataclass not frozen |
+| Rule ID | Source | Requirement | Current Status | Gap ID |
+|---------|--------|-------------|----------------|---------|
+| TYP-001 | BASE_RULES | 100% type coverage | ✅ OK | |
+| ASYNC-001 | BASE_RULES | Use async def | ✅ FIXED - Removed unnecessary async | |
+| ASYNC-002 | BASE_RULES | Await async calls | ✅ FIXED - No async calls needed | |
+| CC-006 | BASE_RULES | Explicit error handling | ✅ OK - ValueError for invalid inputs | |
+| EXE-001 | BASE_RULES | Order validation | ✅ OK - Calls order.validate() | |
+| EXE-002 | BASE_RULES | Execution timing | ⚠️ NOT APPLIED - Simulation only | |
+| LOG-004 | BASE_RULES | Error logging | ❌ GAP | GAP-P0-001 |
+| DP-004 | BASE_RULES | Dependency injection | ✅ OK - All models injected via constructor | |
+| ARCH-006 | BASE_RULES | Value objects immutable | ✅ FIXED - Config dataclasses frozen=True |
+| TRD-006 | BASE_RULES | Transaction costs | ⚠️ PARTIAL | GAP-P2-001 |
 
 ---
 
@@ -146,6 +204,7 @@ class SimulatorConfig:
   - Test fill sequence across multiple time periods
   - Test warning generation for large orders
   - Test proper scaling of costs for partial fills
+  - Test error logging for all rejection scenarios
 
 ---
 
@@ -153,4 +212,5 @@ class SimulatorConfig:
 - Simulator combines three execution cost models: transaction costs, slippage, and market impact
 - Implements realistic order rejection based on liquidity constraints
 - Supports partial fills with proper cost scaling
-- All async functions for future integration with async execution framework
+- Proper dependency injection via constructor
+- **CRITICAL:** GAP-P0-001 must be fixed for production audit trail

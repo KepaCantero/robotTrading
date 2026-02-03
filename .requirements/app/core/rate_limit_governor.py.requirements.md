@@ -1,107 +1,298 @@
-# rate_limit_governor.py
+# rate_limit_governor.py Requirements
 
-## Purpose
-Rate limiting implementation for API calls and trading operations to prevent exceeding broker limits and system overload.
+**File:** `app/core/rate_limit_governor.py`  
+**Purpose:** Rate Limit Governor - Token Bucket Algorithm + WebSocket First Strategy  
+**Author:** SRE Feedback Integration  
+**Date:** 2025-01-25  
+**Audit Status:** NEEDS_AUDIT
 
 ---
 
-## Type Definitions / Data Classes
+## References
+- **BASE_RULES:** See ../../BASE_RULES.md for universal rules
+- **Related Files:**
+  - `app/core/interfaces/broker_base.py` (BrokerType interface)
+  - Trading system rate limiting strategies
 
-⚠️ **CRITICAL:** This file uses thread-safe rate limiting with sliding window.
+---
 
-### Rate Limit Configuration
+## Purpose & Scope
+
+This module implements a critical rate limiting system to prevent IP bans from crypto brokers (Binance, Kraken, etc.). It combines:
+
+1. **Token Bucket Algorithm** - Guarantees never exceeding X requests/second
+2. **WebSocket First Strategy** - Uses WebSocket for real-time data (no REST rate limits)
+3. **Adaptive Rate Limiting** - Adjusts dynamically based on broker responses
+
+**Critical for Production:** Prevents 24-hour IP bans from rate limit violations.
+
+---
+
+## Classes & Functions
+
+### Classes
+
+| Class | Purpose | Methods |
+|-------|---------|---------|
+| `RateLimitConfig` | Configuration for rate limiting | `max_requests_per_second`, `burst_capacity`, `refill_rate`, `broker_limits` |
+| `TokenBucketState` | Token bucket state tracking | `tokens`, `last_refill`, `capacity`, statistics |
+| `TokenBucketAlgorithm` | Token bucket implementation | `acquire()`, `_refill()`, `_calculate_wait_time()`, `get_stats()` |
+| `WebSocketFirstStrategy` | WebSocket-first data fetching | `get_ticker()`, `subscribe_ticker()`, `start_websocket()`, `stop_websocket()` |
+| `AdaptiveRateLimiter` | Adaptive rate adjustment | `record_response()`, `_adjust_for_429()`, `_consider_increase()` |
+| `RateLimitGovernor` | Main governor component | `acquire_token()`, `get_ticker()`, `subscribe_ticker()`, `record_response()`, `get_stats()` |
+
+### Functions
+
+| Function | Purpose | Return Type |
+|----------|---------|-------------|
+| `rate_limit(governor)` | Decorator for async rate limiting | `Callable` |
+
+---
+
+## File-Specific Requirements
+
+### RLG-001: Critical Rate Limit Safety
+**Priority:** P0 (Critical - Prevents IP bans)
+
+**Requirement:** Token Bucket Algorithm must guarantee rate limits are never exceeded.
+
+**Acceptance Criteria:**
 ```python
-class RateLimit(BaseModel):
-    requests_per_minute: int = Field(default=120, ge=1)
-    requests_per_second: int = Field(default=2, ge=1)
-    burst_size: int = Field(default=10, ge=1)
-    
-class RateLimitGovernor:
-    _limits: Dict[str, RateLimit]         # REQUIRED - Per-endpoint limits
-    _timestamps: Dict[str, Deque[float]]   # REQUIRED - Request timestamps
-    _lock: threading.RLock                 # REQUIRED - Thread safety
+# Token bucket never allows exceeding configured rate
+governor = RateLimitGovernor('binance', RateLimitConfig(max_requests_per_second=20))
+# 20 requests in 1 second should succeed
+# 21st request should wait or timeout
 ```
 
----
-
-## Function Signatures (Contracts)
-
-### `register_endpoint(endpoint: str, limit: RateLimit) -> None`
-**Pre:** endpoint is non-empty string
-**Post:** Endpoint registered with rate limit
-**Raises:** ValueError if endpoint already registered
-**Retry:** No
-**Side Effects:** Stores limit in _limits
-
-### `can_proceed(endpoint: str) -> bool`
-**Pre:** endpoint registered
-**Post:** Returns True if within limits, False otherwise
-**Raises:** KeyError if endpoint not registered
-**Retry:** No
-**Side Effects:** Updates timestamps for current time
-
-### `wait_if_needed(endpoint: str) -> None`
-**Pre:** endpoint registered
-**Post:** Blocks until rate limit allows request
-**Raises:** KeyError if endpoint not registered
-**Retry:** No
-**Side Effects:** Sleeps if needed, updates timestamps
-
-### `get_reset_time(endpoint: str) -> float`
-**Pre:** endpoint registered
-**Post:** Returns Unix timestamp when oldest request expires
-**Raises:** KeyError if endpoint not registered
-**Retry:** No
-**Side Effects:** None
+**Check:** Manual review of token bucket logic
 
 ---
 
-## Acceptance Criteria
-- [ ] SEC-006: Rate limiting implemented for APIs
-- [ ] Thread-safe with RLock
-- [ ] Sliding window algorithm (not token bucket)
-- [ ] Per-endpoint rate limits
-- [ ] can_proceed() non-blocking check
-- [ ] wait_if_needed() blocking wait
-- [ ] get_reset_time() returns valid timestamp
-- [ ] Old timestamps pruned from deque
+### RLG-002: WebSocket Fallback Graceful Degradation
+**Priority:** P0 (Critical - System reliability)
+
+**Requirement:** If WebSocket fails, system must fall back to REST with rate limiting without crashing.
+
+**Acceptance Criteria:**
+```python
+# WebSocket connection failure falls back to REST
+try:
+    await governor.start_websocket(url)
+except (ConnectionError, TimeoutError):
+    # System continues with REST + rate limiting
+    assert governor.is_websocket_connected() == False
+```
+
+**Check:** Exception handling in WebSocket methods
 
 ---
 
-## Critical Rules (MUST NOT BREAK)
+### RLG-003: Adaptive Rate Limiting on 429 Responses
+**Priority:** P1 (High - Prevents bans)
 
-**Reglas universales:** Ver `../../BASE_RULES.md` (96+ rules organized by priority)
+**Requirement:** Upon receiving HTTP 429, automatically reduce rate limit by 50%.
 
-### Reglas ESPECÍFICAS de este archivo:
+**Acceptance Criteria:**
+```python
+old_rate = governor.adaptive_limiter.current_rate
+await governor.record_response(429)
+new_rate = governor.adaptive_limiter.current_rate
+assert new_rate < old_rate  # Rate reduced
+```
 
-| Rule | Source | Requirement | Current Status |
-|------|--------|-------------|----------------|
-| SEC-006 | BASE_RULES.md | Rate limiting | ✅ OK |
-| ASYNC-004 | BASE_RULES.md | No blocking in async | ⚠️ GAP - wait_if_needed blocks |
-| CC-006 | BASE_RULES.md | Explicit error handling | ✅ OK |
-| CFG-003 | BASE_RULES.md | Validation | ✅ OK |
+**Check:** Test adaptive limiter behavior
+
+---
+
+### RLG-004: Broker-Specific Rate Limits
+**Priority:** P1 (High - Correct limits per broker)
+
+**Requirement:** Apply correct rate limits for each broker (Binance: 20/s, Kraken: 10/s, etc.).
+
+**Acceptance Criteria:**
+```python
+governor_binance = RateLimitGovernor('binance')
+assert governor_binance.config.max_requests_per_second == 20
+
+governor_kraken = RateLimitGovernor('kraken')
+assert governor_kraken.config.max_requests_per_second == 10
+```
+
+**Check:** Verify broker_limits dictionary
+
+---
+
+### RLG-005: Async Safety with Token Bucket
+**Priority:** P0 (Critical - Race conditions)
+
+**Requirement:** Token bucket must use async locks to prevent race conditions in concurrent requests.
+
+**Acceptance Criteria:**
+```python
+# Multiple concurrent requests should not exceed rate limit
+tasks = [governor.acquire_token() for _ in range(100)]
+await asyncio.gather(*tasks)
+# Total requests should respect rate limit
+```
+
+**Check:** Verify `asyncio.Lock()` usage
+
+---
+
+### RLG-006: WebSocket Data Freshness
+**Priority:** P1 (High - Data quality)
+
+**Requirement:** WebSocket data must be fresh (< 1 second old) or fall back to REST.
+
+**Acceptance Criteria:**
+```python
+# Stale WebSocket data should trigger REST fallback
+# Data older than 1 second is considered stale
+```
+
+**Check:** Time validation in `get_ticker()`
+
+---
+
+### RLG-007: Rate Limit Statistics Tracking
+**Priority:** P2 (Medium - Monitoring)
+
+**Requirement:** Track rate limit statistics (blocked requests, utilization, etc.).
+
+**Acceptance Criteria:**
+```python
+stats = governor.get_stats()
+assert 'token_bucket' in stats
+assert 'utilization_pct' in stats['token_bucket']
+```
+
+**Check:** Verify statistics collection
+
+---
+
+### RLG-008: Decorator Usability
+**Priority:** P2 (Medium - Developer experience)
+
+**Requirement:** `@rate_limit` decorator must be easy to apply to async functions.
+
+**Acceptance Criteria:**
+```python
+@rate_limit(governor)
+async def fetch_price(symbol: str) -> Decimal:
+    # Automatically rate limited
+    pass
+```
+
+**Check:** Manual test of decorator
+
+---
+
+## BASE_RULES Compliance
+
+### Critical Rules (P0)
+- **LOG-004:** All exceptions logged with stack traces ✅ (uses logger.error with exc_info)
+- **ASYNC-001:** Async functions properly marked ✅
+- **ASYNC-003:** Async context managers used ✅
+- **CC-006:** Explicit error handling ✅ (RateLimitError raised)
+
+### High Priority (P1)
+- **LOG-002:** Context in logs ✅ (broker_name, rate info)
+- **LOG-003:** Appropriate log levels ✅
+- **PERF-006:** Async I/O used ✅
+
+### Medium Priority (P2)
+- **TYP-001:** Type hints present ✅
+- **CC-001:** Descriptive names ✅
+- **QL-001:** Complexity reasonable ✅
+
+---
+
+## Known Issues & Technical Debt
+
+### Issues
+1. **No circuit breaker** for repeated rate limit violations
+2. **Hardcoded broker limits** should be in configuration file
+3. **Missing distributed locking** for multi-instance deployments
+
+### Technical Debt
+1. Consider implementing **exponential backoff** after 429 responses
+2. Add **metrics export** (Prometheus) for rate limit monitoring
+3. Implement **request prioritization** for critical operations
+
+---
+
+## Testing Requirements
+
+### Unit Tests
+- [ ] Test token bucket acquire/release
+- [ ] Test WebSocket fallback to REST
+- [ ] Test adaptive rate limiting on 429
+- [ ] Test broker-specific rate limits
+- [ ] Test concurrent request safety
+
+### Integration Tests
+- [ ] Test with real Binance WebSocket
+- [ ] Test rate limit governor under load
+- [ ] Test WebSocket reconnection logic
+
+---
+
+## Security Considerations
+
+1. **No secrets in code** ✅ (uses environment variables)
+2. **WebSocket URL validation** - should validate URLs before connecting
+3. **Rate limit bypass prevention** - ensure decorator cannot be bypassed
+
+---
+
+## Performance Considerations
+
+1. **Token bucket operations** should be O(1) ✅
+2. **WebSocket overhead** minimal compared to REST polling
+3. **Lock contention** minimal under high concurrency
 
 ---
 
 ## Dependencies
-- **External:** threading, collections, time, pydantic
-- **Internal:** None
+
+**External:**
+- `asyncio` (stdlib)
+- `logging` (stdlib)
+- `dataclasses` (stdlib)
+- `decimal` (stdlib)
+- `enum` (stdlib)
+- `aiohttp` (optional, for WebSocket)
+- `typing` (stdlib)
+
+**Internal:**
+- None (standalone module)
 
 ---
 
-## Required Tests
-- **tests/core/test_rate_limit_governor.py:**
-  - Test register_endpoint() stores limit
-  - Test can_proceed() returns True when under limit
-  - Test can_proceed() returns False when over limit
-  - Test wait_if_needed() blocks until allowed
-  - Test get_reset_time() returns correct timestamp
-  - Test thread-safe concurrent access
-  - Test old timestamps pruned from deque
-  - Test ValueError for duplicate endpoint
-  - Test KeyError for unknown endpoint
+## Migration Notes
+
+**From old rate limiting:**
+1. Replace direct API calls with `@rate_limit` decorator
+2. Configure broker-specific rate limits
+3. Enable WebSocket for real-time data
+
+**To new rate limiting:**
+1. Setup WebSocket connections
+2. Configure adaptive rate limiting
+3. Monitor rate limit statistics
 
 ---
 
-## Notes
-CRITICAL for broker API compliance. Most brokers enforce rate limits (e.g., 120 requests/minute). Exceeding limits results in temporary bans or account suspension.
+## Changelog
+
+### Version 1.0.0 (2025-01-25)
+- Initial implementation
+- Token Bucket Algorithm
+- WebSocket First Strategy
+- Adaptive Rate Limiting
+- Multi-broker support
+
+---
+
+**Last Updated:** 2026-02-06  
+**Next Review:** After production deployment

@@ -31,7 +31,7 @@ Example:
 
     # Create manager
     async def on_failover(from_broker: str, to_broker: str):
-        print(f"Failed over from {from_broker} to {to_broker}")
+        logger.debug(f"Failed over from {from_broker} to {to_broker}")
 
     manager = BrokerFailoverManager(
         brokers=brokers,
@@ -49,6 +49,8 @@ Example:
         quantity=Decimal("100"),
     )
 """
+
+import logging
 
 from .manager import (
     BrokerConfig,

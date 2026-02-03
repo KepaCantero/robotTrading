@@ -7,13 +7,11 @@ Implements random parameter sampling from parameter space with:
 - More efficient than grid for high dimensions
 """
 
-import asyncio
 import logging
 import random
 from datetime import datetime
-from decimal import Decimal
 from math import exp, log
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List
 
 from tqdm import tqdm
 
@@ -66,7 +64,7 @@ class RandomSearchOptimizer(BaseOptimizer):
             return train_and_evaluate(params)["validation_accuracy"]
 
         result = await optimizer.optimize(objective, param_grid)
-        print(f"Best params: {result.best_params}")
+        logger.debug(f"Best params: {result.best_params}")
         ```
     """
 
