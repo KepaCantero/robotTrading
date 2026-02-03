@@ -10,13 +10,16 @@ Paper: Artzner, et al. (1999). "Coherent Measures of Risk"
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
-from decimal import Decimal
 from datetime import datetime, timedelta
+from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
 class RiskLimitType(str, Enum):
@@ -113,17 +116,35 @@ class RiskConfigurator:
         self,
         risk_tolerance: str,  # "BAJO", "MEDIO", "ALTO"
         capital: Decimal,
-    ) -> Dict[RiskLimitType, Decimal]:
+    ) -> dict[RiskLimitType, Decimal]:
         """
         Configure risk limits based on risk tolerance.
 
         Args:
-            risk_tolerance: Risk tolerance level
+            risk_tolerance: Risk tolerance level (BAJO, MEDIO, ALTO)
             capital: Total capital
 
         Returns:
             Dictionary of risk limits
+
+        Raises:
+            ValueError: If risk_tolerance is invalid or capital is non-positive
         """
+        if capital <= 0:
+            raise ValueError("capital must be positive")
+
+        valid_tolerances = {"BAJO", "MEDIO", "ALTO"}
+        if risk_tolerance not in valid_tolerances:
+            raise ValueError(
+                f"risk_tolerance must be one of {valid_tolerances}, got '{risk_tolerance}'"
+            )
+
+        logger.info(
+            "Configuring risk limits",
+            risk_tolerance=risk_tolerance,
+            capital=str(capital),
+        )
+
         if risk_tolerance == "BAJO":
             return {
                 RiskLimitType.MAX_DRAWDOWN: Decimal("0.15"),  # 15%
@@ -144,7 +165,7 @@ class RiskConfigurator:
                 RiskLimitType.MAX_LEVERAGE: Decimal("1.5"),  # 1.5x
                 RiskLimitType.CONCENTRATION_LIMIT: Decimal("0.30"),  # 30%
             }
-        else:  # ALTO
+        else:  # risk_tolerance == "ALTO" (validated above)
             return {
                 RiskLimitType.MAX_DRAWDOWN: Decimal("0.40"),  # 40%
                 RiskLimitType.MAX_VOLATILITY: Decimal("0.50"),  # 50%
@@ -155,11 +176,15 @@ class RiskConfigurator:
                 RiskLimitType.CONCENTRATION_LIMIT: Decimal("0.40"),  # 40%
             }
 
+        logger.debug("Risk limits configured successfully")
+        # Note: unreachable code due to validation above, but kept for safety
+        return {}
+
     def calculate_var(
         self,
         returns: np.ndarray,
         capital: Decimal,
-        confidence_levels: List[float] = [0.95, 0.99],
+        confidence_levels: list[float] = [0.95, 0.99],
     ) -> VaRResult:
         """
         Calculate Value at Risk using historical simulation.
@@ -228,7 +253,7 @@ class RiskConfigurator:
         capital: Decimal,
         confidence: float,
         n_bootstrap: int = 1000,
-    ) -> Tuple[Decimal, Decimal]:
+    ) -> tuple[Decimal, Decimal]:
         """
         Calculate confidence interval for VaR using bootstrap.
 
@@ -331,9 +356,9 @@ class RiskConfigurator:
 
     def check_risk_limits(
         self,
-        current_values: Dict[RiskLimitType, Decimal],
-        risk_limits: Dict[RiskLimitType, Decimal],
-    ) -> List[RiskLimit]:
+        current_values: dict[RiskLimitType, Decimal],
+        risk_limits: dict[RiskLimitType, Decimal],
+    ) -> list[RiskLimit]:
         """
         Check if current risk values are within limits.
 
@@ -374,8 +399,8 @@ class RiskConfigurator:
     def allocate_risk_budget(
         self,
         total_risk_budget: Decimal,  # Target portfolio volatility
-        asset_class_volatilities: Dict[str, float],
-        correlations: Optional[Dict[Tuple[str, str], float]] = None,
+        asset_class_volatilities: dict[str, float],
+        correlations: Optional[dict[tuple[str, str], float]] = None,
     ) -> RiskBudget:
         """
         Allocate risk budget across asset classes.
@@ -418,7 +443,7 @@ class RiskConfigurator:
             concentration_risk=concentration_risk,
         )
 
-    def _initialize_stress_scenarios(self) -> Dict[StressTestScenario, Dict[str, float]]:
+    def _initialize_stress_scenarios(self) -> dict[StressTestScenario, dict[str, float]]:
         """Initialize standard stress test scenarios."""
         return {
             StressTestScenario.MARKET_CRASH: {
@@ -449,7 +474,7 @@ class RiskConfigurator:
     def run_stress_test(
         self,
         portfolio_value: Decimal,
-        portfolio_positions: Dict[str, Decimal],  # symbol -> weight
+        portfolio_positions: dict[str, Decimal],  # symbol -> weight
         scenario: StressTestScenario,
     ) -> Decimal:
         """

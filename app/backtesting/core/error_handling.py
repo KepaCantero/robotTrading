@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 import multiprocessing
 from multiprocessing import Queue
-from typing import Any, Callable
+from typing import Callable, Protocol, TypeVar
 
 # SQLAlchemy exception types for database error handling
 try:
@@ -39,6 +39,31 @@ from tenacity import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+class LearningEngineProtocol(Protocol):
+    """Protocol for learning engines with training capability."""
+
+    def train(self) -> None:
+        """Train the model."""
+        ...
+
+
+class StrategyProtocol(Protocol):
+    """Protocol for strategies with learning engines."""
+
+    @property
+    def learning_engine(self) -> LearningEngineProtocol | None:
+        """Get the learning engine."""
+        ...
+
+    @property
+    def __module__(self) -> str:
+        """Module name for subprocess imports."""
+        ...
+
+
+T = TypeVar('T')
 
 
 class MutexError(Exception):
@@ -73,6 +98,30 @@ class SubprocessTimeoutError(TrainingError):
     """
 
     pass
+
+
+class BacktestResultError(Exception):
+    """
+    Error raised when backtest result is invalid or unexpected.
+
+    This error is raised when:
+    - Result type is not BacktestResult
+    - Result structure is malformed
+    - Required fields are missing
+    """
+
+    def __init__(self, message: str, test_type: str = "", test_name: str = "") -> None:
+        """
+        Initialize BacktestResultError.
+
+        Args:
+            message: Error message
+            test_type: Type of test that failed
+            test_name: Name of test that failed
+        """
+        super().__init__(message)
+        self.test_type = test_type
+        self.test_name = test_name
 
 
 def is_mutex_error(exception: Exception) -> bool:
@@ -128,7 +177,7 @@ def is_mutex_error(exception: Exception) -> bool:
     reraise=True,
 )
 def train_with_retry(
-    strategy: Any,
+    strategy: StrategyProtocol,
     engine_type: str,
     use_subprocess: bool = False,
     timeout: int = 300,
@@ -164,11 +213,23 @@ def train_with_retry(
 
     try:
         if not strategy.learning_engine:
-            logger.warning(f"Learning engine not initialized for {engine_type}")
+            logger.warning(
+                "Learning engine not initialized",
+                extra={
+                    'engine_type': engine_type,
+                    'strategy_module': strategy.__module__,
+                },
+            )
             return False
 
         # Attempt training in-process
-        logger.info(f"Training {engine_type} learning engine (in-process)")
+        logger.info(
+            "Training learning engine in-process",
+            extra={
+                'engine_type': engine_type,
+                'training_mode': 'in_process',
+            },
+        )
         strategy.learning_engine.train()
         return True
 
@@ -176,11 +237,20 @@ def train_with_retry(
         if is_mutex_error(e):
             # Convert to MutexError for tenacity retry
             raise MutexError(f"Mutex detected: {e}") from e
+        logger.error(
+            "Training failed",
+            extra={
+                'engine_type': engine_type,
+                'error_type': type(e).__name__,
+                'error_message': str(e),
+            },
+            exc_info=True,
+        )
         raise TrainingError(f"Training failed: {e}") from e
 
 
 def _train_in_subprocess(
-    strategy: Any,
+    strategy: StrategyProtocol,
     engine_type: str,
     timeout: int = 300,
 ) -> bool:
@@ -205,7 +275,14 @@ def _train_in_subprocess(
         ...     timeout=600  # 10 minutes
         ... )
     """
-    logger.info(f"🔄 Training {engine_type} in isolated subprocess " f"(timeout: {timeout}s)")
+    logger.info(
+        "Training in isolated subprocess",
+        extra={
+            'engine_type': engine_type,
+            'timeout_seconds': timeout,
+            'training_mode': 'subprocess',
+        },
+    )
 
     # Use multiprocessing for safe subprocess spawning
     # 'spawn' context creates fresh Python process
@@ -224,9 +301,13 @@ def _train_in_subprocess(
             # Re-import the strategy module in the subprocess
             importlib.import_module(strategy.__module__)
 
-            # Create new strategy instance in subprocess
-            # (pickled config would need to be passed if needed)
-            logger.info(f"Training {engine_type} in subprocess")
+            logger.info(
+                "Training in subprocess",
+                extra={
+                    'engine_type': engine_type,
+                    'process': 'subprocess',
+                },
+            )
 
             # Get learning engine and train
             # Note: This assumes learning_engine is already initialized
@@ -238,7 +319,15 @@ def _train_in_subprocess(
                 queue.put((False, 'Learning engine not available in subprocess'))
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"Subprocess training error: {e}", exc_info=True)
+            logger.error(
+                "Subprocess training error",
+                extra={
+                    'engine_type': engine_type,
+                    'error_type': type(e).__name__,
+                    'error_message': str(e),
+                },
+                exc_info=True,
+            )
             queue.put((False, str(e)))
 
     # Start training process
@@ -250,7 +339,14 @@ def _train_in_subprocess(
 
         if p.is_alive():
             # Process timed out
-            logger.error(f"❌ Training timeout after {timeout}s - terminating process")
+            logger.error(
+                "Training timeout - terminating process",
+                extra={
+                    'engine_type': engine_type,
+                    'timeout_seconds': timeout,
+                },
+                exc_info=True,
+            )
             p.terminate()
             p.join(timeout=5)
             if p.is_alive():
@@ -262,20 +358,47 @@ def _train_in_subprocess(
         if not result_queue.empty():
             success, message = result_queue.get()
             if success:
-                logger.info(f"✅ Subprocess training succeeded: {message}")
+                logger.info(
+                    "Subprocess training succeeded",
+                    extra={
+                        'engine_type': engine_type,
+                        'message': message,
+                    },
+                )
                 return True
             else:
-                logger.error(f"❌ Subprocess training failed: {message}")
+                logger.error(
+                    "Subprocess training failed",
+                    extra={
+                        'engine_type': engine_type,
+                        'error_message': message,
+                    },
+                    exc_info=True,
+                )
                 return False
         else:
-            logger.error("❌ Subprocess training failed: no result in queue")
+            logger.error(
+                "Subprocess training failed: no result in queue",
+                extra={
+                    'engine_type': engine_type,
+                },
+                exc_info=True,
+            )
             return False
 
     except SubprocessTimeoutError:
         # Re-raise timeout errors
         raise
     except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
-        logger.error(f"❌ Subprocess training exception: {e}")
+        logger.error(
+            "Subprocess training exception",
+            extra={
+                'engine_type': engine_type,
+                'error_type': type(e).__name__,
+                'error_message': str(e),
+            },
+            exc_info=True,
+        )
         if p.is_alive():
             p.terminate()
             p.join()
@@ -283,12 +406,12 @@ def _train_in_subprocess(
 
 
 def safe_execute(
-    func: Callable[..., Any],
-    *args: Any,
-    default_return: Any = None,
+    func: Callable[..., T],
+    *args: T,
+    default_return: T | None = None,
     log_errors: bool = True,
-    **kwargs: Any,
-) -> Any:
+    **kwargs: T,
+) -> T | None:
     """
     Safely execute a function with error handling.
 
@@ -316,15 +439,23 @@ def safe_execute(
         return func(*args, **kwargs)
     except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
         if log_errors:
-            logger.error(f"Error in {func.__name__}: {e}", exc_info=True)
+            logger.error(
+                "Error executing function",
+                extra={
+                    'function_name': func.__name__,
+                    'error_type': type(e).__name__,
+                    'error_message': str(e),
+                },
+                exc_info=True,
+            )
         return default_return
 
 
 def log_and_suppress(
     exception_types: tuple[type[Exception], ...] = (Exception,),
     message: str = "Error suppressed",
-    default_return: Any = None,
-) -> Callable[..., Any]:
+    default_return: T | None = None,
+) -> Callable[[Callable[..., T]], Callable[..., T | None]]:
     """
     Decorator to log and suppress exceptions.
 
@@ -339,12 +470,19 @@ def log_and_suppress(
         ...     return complex_risk_calculation(data)
     """
 
-    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
+    def decorator(func: Callable[..., T]) -> Callable[..., T | None]:
+        def wrapper(*args: T, **kwargs: T) -> T | None:
             try:
                 return func(*args, **kwargs)
             except exception_types as e:
-                logger.warning(f"{message}: {e}")
+                logger.warning(
+                    message,
+                    extra={
+                        'function_name': func.__name__,
+                        'error_type': type(e).__name__,
+                        'error_message': str(e),
+                    },
+                )
                 return default_return
 
         return wrapper

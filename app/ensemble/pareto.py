@@ -5,13 +5,16 @@ This module implements NSGA-II (Non-dominated Sorting Genetic Algorithm II)
 for finding optimal strategy weight allocations across multiple objectives.
 """
 
+import logging
 import random
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
 from app.ensemble.models import ObjectiveConfig, OptimizationObjective, ParetoSolution
+
+logger = logging.getLogger(__name__)
 
 
 class ParetoFrontOptimizer:
@@ -77,6 +80,7 @@ class ParetoFrontOptimizer:
             self.random = random.Random()
 
         except (TypeError, AttributeError) as e:
+            logger.error("ParetoFrontOptimizer initialization failed", exc_info=True)
             raise ValueError(f"Invalid parameters: {e}") from e
 
     def optimize(
@@ -150,6 +154,7 @@ class ParetoFrontOptimizer:
                         break
 
                 except Exception as e:
+                    logger.error(f"Error in generation {generation}", exc_info=True)
                     raise RuntimeError(f"Error in generation {generation}: {e}") from e
 
             # Final sort and return Pareto front
@@ -158,6 +163,7 @@ class ParetoFrontOptimizer:
             return fronts[0] if fronts else []
 
         except Exception as e:
+            logger.error("Optimization failed", exc_info=True)
             raise RuntimeError(f"Optimization failed: {e}") from e
 
     def _validate_optimization_data(
@@ -334,6 +340,7 @@ class ParetoFrontOptimizer:
             return float(annualized_return)
 
         except Exception:
+            logger.error("Portfolio return calculation failed", exc_info=True)
             return 0.0
 
     def _calculate_portfolio_risk(
@@ -364,6 +371,7 @@ class ParetoFrontOptimizer:
             return float(volatility)
 
         except Exception:
+            logger.error("Portfolio risk calculation failed", exc_info=True)
             return 0.0
 
     def _calculate_downside_risk(
@@ -398,6 +406,7 @@ class ParetoFrontOptimizer:
             return float(downside_deviation)
 
         except Exception:
+            logger.error("Downside risk calculation failed", exc_info=True)
             return 0.0
 
     def _calculate_max_drawdown(
@@ -434,6 +443,7 @@ class ParetoFrontOptimizer:
             return float(abs(np.min(drawdown)))
 
         except Exception:
+            logger.error("Max drawdown calculation failed", exc_info=True)
             return 0.0
 
     def _calculate_diversification_ratio(
@@ -473,6 +483,7 @@ class ParetoFrontOptimizer:
             return weighted_avg_vol / portfolio_vol
 
         except Exception:
+            logger.error("Diversification ratio calculation failed", exc_info=True)
             return 1.0
 
     def _calculate_metrics(
@@ -515,6 +526,7 @@ class ParetoFrontOptimizer:
             )
 
         except Exception:
+            logger.error("Metrics calculation failed", exc_info=True)
             pass
 
         return metrics
@@ -526,6 +538,7 @@ class ParetoFrontOptimizer:
 
             return float(skew(returns))
         except Exception:
+            logger.error("Skewness calculation failed", exc_info=True)
             return 0.0
 
     def _calculate_kurtosis(self, returns: np.ndarray) -> float:
@@ -535,6 +548,7 @@ class ParetoFrontOptimizer:
 
             return float(kurtosis(returns, fisher=False))
         except Exception:
+            logger.error("Kurtosis calculation failed", exc_info=True)
             return 0.0
 
     def _non_dominated_sort(self, population: List[ParetoSolution]) -> List[List[ParetoSolution]]:

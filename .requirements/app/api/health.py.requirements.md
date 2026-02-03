@@ -19,16 +19,16 @@ class HealthCheckResponse(BaseModel):
 ### HealthChecker Class
 ```python
 class HealthChecker:
-    start_time: datetime           # REQUIRED - Application start time
-    _db_path: Optional[str]        # OPTIONAL - Database file path
-    _broker: Optional[Any]         # OPTIONAL - Broker instance for connectivity
+    start_time: datetime                      # REQUIRED - Application start time
+    _db_health_checker: Optional[DatabaseHealthCheckerProtocol]  # OPTIONAL - Database health checker from infrastructure layer
+    _broker: Optional[Any]                    # OPTIONAL - Broker instance for connectivity
 ```
 
 ---
 
 ## Function Signatures (Contracts)
 
-### `__init__(self) -> None`
+### `__init__(self, db_health_checker: Optional[DatabaseHealthCheckerProtocol] = None) -> None`
 **Pre:** None
 **Post:** HealthChecker initialized with start_time set
 **Raises:** None
@@ -40,20 +40,21 @@ class HealthChecker:
 **Post:** Dependencies set for health checks
 **Raises:** None
 **Retry:** No
-**Side Effects:** Updates instance variables
+**Side Effects:** Creates database health checker via factory if db_path provided and checker not set
 
 ### `async check_database(self) -> Dict[str, Any]`
 **Pre:** None
 **Post:** Returns dict with status ("healthy", "degraded", "unhealthy")
 **Raises:** No (catches exceptions and returns in status)
 **Retry:** No
-**Side Effects:** Opens SQLite connection for validation
+**Side Effects:** Delegates to infrastructure layer database health checker
 
 **Checks:**
-- Database file exists
-- File size > 0
-- Can connect and query tables
-- Returns table count
+- Database health checker configured
+- Delegates to infrastructure layer for actual checks
+- Returns table count and file size
+
+**Architecture Note:** Database logic moved to infrastructure layer (app/infrastructure/health/)
 
 ### `async check_broker(self) -> Dict[str, Any]`
 **Pre:** None
@@ -133,16 +134,26 @@ class HealthChecker:
 ---
 
 ## Acceptance Criteria
-- [ ] Health check endpoint responds within 5 seconds
-- [ ] All health checks handle missing dependencies gracefully
-- [ ] Database check validates file exists and is readable
-- [ ] Broker check uses timeout to prevent hanging
-- [ ] Memory check uses psutil with fallback if missing
-- [ ] Overall status calculated correctly from individual checks
-- [ ] Uptime tracked from application start
+- [x] Health check endpoint responds within 5 seconds
+- [x] All health checks handle missing dependencies gracefully
+- [x] Database check validates file exists and is readable (delegated to infrastructure)
+- [x] Broker check uses timeout to prevent hanging
+- [x] Memory check uses psutil with fallback if missing
+- [x] Overall status calculated correctly from individual checks
+- [x] Uptime tracked from application start
+- [x] Database logic extracted to infrastructure layer (ARCH-001 fixed)
 - [ ] Returns HTTP 503 for unhealthy status (TO BE IMPLEMENTED)
 
 ---
+
+## Audit Status
+
+| **Audit Status** | **FAILED** |
+| **Last Audit Date** | 2026-02-04T11:59:31Z |
+| **Auditor** | Claude Code (Ralphex Audit) |
+| **GAPs Found** | 1 P0, 0 P1, 0 P2, 0 P3 |
+| **Notes** | All BASE_RULES verified. See Critical Rules section for details. |
+
 
 ## Critical Rules (MUST NOT BREAK)
 
@@ -152,10 +163,12 @@ class HealthChecker:
 
 | Rule | Source | Requirement | Current Status |
 |------|--------|-------------|----------------|
+| ARCH-001 | CRITICAL_RULES.md | Layered Architecture - API should not contain infrastructure logic | ✅ FIXED - 2026-02-03 - Database logic moved to infrastructure layer |
+| ARCH-003 | CRITICAL_RULES.md | Framework Dependencies isolated | ✅ FIXED - 2026-02-03 - SQLite isolated in infrastructure |
 | Timeout Protection | CRITICAL_RULES.md | All external calls must have timeout | ✅ OK (5s timeout) |
 | Error Handling | BASE_RULES.md | Specific exceptions caught | ✅ OK |
 | Type Hints | BASE_RULES.md | All functions typed | ✅ OK |
-| Logging | BASE_RULES.md | All checks logged | ✅ FIXED - 2026-02-01 - All health checks now log with context |
+| Logging | BASE_RULES.md | All checks logged | ✅ OK - All health checks log with context |
 | Validation | BASE_RULES.md | Input validation | ✅ OK |
 | HTTP Status Codes | CRITICAL_RULES.md | 503 for unhealthy | ⚠️ PARTIAL - Status calculated but not returned |
 | Singleton Pattern | BASE_RULES.md | Global instance management | ✅ OK |
@@ -164,8 +177,10 @@ class HealthChecker:
 ---
 
 ## Dependencies
-- **External:** asyncio, logging, os, datetime, typing, fastapi, pydantic, sqlalchemy, sqlite3, psutil (optional)
-- **Internal:** None
+- **External:** asyncio, logging, os, datetime, typing, fastapi, pydantic, psutil (optional)
+- **Internal Infrastructure:** app.infrastructure.health (DatabaseHealthCheckerFactory, DatabaseHealthCheckerProtocol, SQLiteDatabaseHealthChecker)
+
+**Refactoring Note:** As of 2026-02-03, sqlite3 and sqlalchemy imports removed from API layer. Database logic now isolated in infrastructure layer.
 
 ---
 
@@ -192,3 +207,18 @@ class HealthChecker:
 - Missing dependencies should return "degraded" not crash
 - HTTP status code 503 should be returned for unhealthy status (currently not implemented)
 - psutil is optional (degraded response if missing)
+- **REFACTORED 2026-02-03:** Database logic moved to infrastructure layer (app/infrastructure/health/database_health_checker.py) to fix ARCH-001 violation
+
+---
+
+## Changelog
+
+### 2026-02-03 - Architecture Refactoring (ARCH-001 Fix)
+- **Removed:** Direct sqlite3 import and database queries from API layer
+- **Removed:** sqlalchemy exception imports (no longer needed in API layer)
+- **Added:** Dependency injection for DatabaseHealthCheckerProtocol
+- **Modified:** `__init__()` now accepts optional `db_health_checker` parameter
+- **Modified:** `check_database()` now delegates to infrastructure layer
+- **Modified:** `set_dependencies()` creates checker via factory if needed
+- **Fixed:** Exception handling in `check_memory()` and `check_positions()` (removed incorrect asyncio exception types)
+- **Result:** API layer now clean - no database coupling, follows clean architecture principles

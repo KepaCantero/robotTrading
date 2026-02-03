@@ -7,14 +7,18 @@ and results. It contains pure business logic without infrastructure concerns.
 
 from __future__ import annotations
 
+import dataclasses
+import logging
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
 from typing import Optional
 
 from ..value_objects.backtest_config import BacktestConfigValue
 from ..value_objects.backtest_result import BacktestResultValue
+
+logger = logging.getLogger(__name__)
 
 
 class BacktestStatus(Enum):
@@ -42,13 +46,15 @@ class BacktestType(Enum):
     REGIME_TEST = "regime_test"
 
 
-@dataclass
+@dataclass(frozen=True)
 class Backtest:
     """
     Backtest entity representing a backtesting operation.
 
     This is a pure domain entity that maintains business rules
     and invariants for backtesting operations.
+
+    State transitions are managed through factory methods that return new instances.
     """
 
     backtest_id: str
@@ -56,7 +62,7 @@ class Backtest:
     status: BacktestStatus = BacktestStatus.PENDING
     result: Optional[BacktestResultValue] = None
     error_message: Optional[str] = None
-    created_at: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
 
@@ -67,45 +73,127 @@ class Backtest:
         if not self.config:
             raise ValueError("Backtest configuration is required")
 
-    def start(self) -> None:
-        """Mark backtest as started."""
+    def start(self) -> "Backtest":
+        """
+        Mark backtest as started.
+
+        Returns:
+            New Backtest instance with RUNNING status
+
+        Raises:
+            ValueError: If backtest is not in PENDING status
+        """
         if self.status != BacktestStatus.PENDING:
             raise ValueError(f"Cannot start backtest with status {self.status}")
-        self.status = BacktestStatus.RUNNING
-        self.started_at = datetime.utcnow()
 
-    def complete(self, result: BacktestResultValue) -> None:
+        logger.info(
+            "Starting backtest",
+            extra={
+                "backtest_id": self.backtest_id,
+                "previous_status": self.status.value,
+                "new_status": BacktestStatus.RUNNING.value,
+            },
+        )
+
+        return dataclasses.replace(
+            self,
+            status=BacktestStatus.RUNNING,
+            started_at=datetime.now(timezone.utc),
+        )
+
+    def complete(self, result: BacktestResultValue) -> "Backtest":
         """
         Mark backtest as completed with results.
 
         Args:
             result: Backtest results
+
+        Returns:
+            New Backtest instance with COMPLETED status and results
+
+        Raises:
+            ValueError: If backtest is not in RUNNING status
         """
         if self.status != BacktestStatus.RUNNING:
             raise ValueError(f"Cannot complete backtest with status {self.status}")
-        self.status = BacktestStatus.COMPLETED
-        self.result = result
-        self.completed_at = datetime.utcnow()
 
-    def fail(self, error_message: str) -> None:
+        logger.info(
+            "Completing backtest",
+            extra={
+                "backtest_id": self.backtest_id,
+                "previous_status": self.status.value,
+                "new_status": BacktestStatus.COMPLETED.value,
+                "sharpe_ratio": str(result.sharpe_ratio) if result.sharpe_ratio else None,
+            },
+        )
+
+        return dataclasses.replace(
+            self,
+            status=BacktestStatus.COMPLETED,
+            result=result,
+            completed_at=datetime.now(timezone.utc),
+        )
+
+    def fail(self, error_message: str) -> "Backtest":
         """
         Mark backtest as failed.
 
         Args:
             error_message: Error description
+
+        Returns:
+            New Backtest instance with FAILED status
+
+        Raises:
+            ValueError: If backtest is already COMPLETED
         """
         if self.status == BacktestStatus.COMPLETED:
             raise ValueError("Cannot fail a completed backtest")
-        self.status = BacktestStatus.FAILED
-        self.error_message = error_message
-        self.completed_at = datetime.utcnow()
 
-    def cancel(self) -> None:
-        """Cancel backtest."""
+        logger.warning(
+            "Backtest failed",
+            extra={
+                "backtest_id": self.backtest_id,
+                "previous_status": self.status.value,
+                "new_status": BacktestStatus.FAILED.value,
+                "error_message": error_message,
+            },
+        )
+
+        return dataclasses.replace(
+            self,
+            status=BacktestStatus.FAILED,
+            error_message=error_message,
+            completed_at=datetime.now(timezone.utc),
+        )
+
+    def cancel(self) -> "Backtest":
+        """
+        Cancel backtest.
+
+        Returns:
+            New Backtest instance with CANCELLED status
+
+        Raises:
+            ValueError: If backtest is already COMPLETED or FAILED
+        """
         if self.status in (BacktestStatus.COMPLETED, BacktestStatus.FAILED):
             raise ValueError(f"Cannot cancel backtest with status {self.status}")
-        self.status = BacktestStatus.CANCELLED
-        self.completed_at = datetime.utcnow()
+
+        logger.info(
+            "Cancelling backtest",
+            extra={
+                "backtest_id": self.backtest_id,
+                "previous_status": self.status.value,
+                "new_status": BacktestStatus.CANCELLED.value,
+            },
+        )
+
+        return dataclasses.replace(
+            self,
+            status=BacktestStatus.CANCELLED,
+            completed_at=datetime.now(timezone.utc),
+        )
 
     def get_duration(self) -> Optional[float]:
         """
@@ -135,9 +223,16 @@ class Backtest:
         Get return on investment.
 
         Returns:
-            ROI as decimal or None if no results
+            ROI as decimal or None if no results or initial_capital is zero
+
+        Raises:
+            ValueError: If initial_capital is zero or negative
         """
         if self.result and self.result.initial_capital and self.result.final_capital:
+            if self.result.initial_capital <= 0:
+                raise ValueError(
+                    f"initial_capital must be positive, got {self.result.initial_capital}"
+                )
             return (
                 self.result.final_capital - self.result.initial_capital
             ) / self.result.initial_capital

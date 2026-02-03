@@ -11,7 +11,7 @@ import sqlite3
 class DatabaseHealthCheckerProtocol(Protocol):
     """Protocol for database health checking."""
 
-    def check_health(self, db_path: str, timeout: float = 5.0) -> Dict[str, Any]:
+    def check_health(self, db_path: str | None = None, timeout: float | None = None) -> Dict[str, Any]:
         """Check database connectivity and integrity."""
         ...
 

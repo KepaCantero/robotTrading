@@ -460,19 +460,19 @@ class RobustnessScorer:
 
     def print_robustness_report(self, report: RobustnessReport) -> None:
         """Print human-readable robustness report."""
-        print("\n" + "=" * 90)
-        print("ROBUSTNESS ASSESSMENT REPORT")
-        print("=" * 90)
-        print(f"Analysis Date: {report.analysis_date.isoformat()}")
-        print(f"Summary Score: {report.summary_score:.1f}/100")
-        print("\nDeployment Status:")
-        print(f"  ✓ PASS (Ready):   {report.deployable_count}")
-        print(f"  ⚠ WARN (Caution): {report.warning_count}")
-        print(f"  ✗ FAIL (Too risky): {report.failed_count}")
+        logger.debug("\n" + "=" * 90)
+        logger.debug("ROBUSTNESS ASSESSMENT REPORT")
+        logger.debug("=" * 90)
+        logger.debug(f"Analysis Date: {report.analysis_date.isoformat()}")
+        logger.debug(f"Summary Score: {report.summary_score:.1f}/100")
+        logger.debug("\nDeployment Status:")
+        logger.debug(f"  ✓ PASS (Ready):   {report.deployable_count}")
+        logger.debug(f"  ⚠ WARN (Caution): {report.warning_count}")
+        logger.debug(f"  ✗ FAIL (Too risky): {report.failed_count}")
 
-        print("\n" + "-" * 90)
-        print("PARAMETER ASSESSMENTS")
-        print("-" * 90)
+        logger.debug("\n" + "-" * 90)
+        logger.debug("PARAMETER ASSESSMENTS")
+        logger.debug("-" * 90)
 
         for param_name, result in sorted(report.results.items()):
             status_icon = (
@@ -492,7 +492,7 @@ class RobustnessScorer:
 
             if result.score_details:
                 details = result.score_details
-                print("  Breakdown:")
+                logger.debug("  Breakdown:")
                 print(
                     f"    - Consistency: {details.consistency_score:6.1f} " "(% windows profitable)"
                 )
@@ -503,19 +503,19 @@ class RobustnessScorer:
                     f"    - Sensitivity: {details.sensitivity_score:6.1f} "
                     "(robustness to changes)"
                 )
-                print(f"    - Overfitting: {details.overfitting_penalty:6.1f} (IS/OOS gap)")
+                logger.debug(f"    - Overfitting: {details.overfitting_penalty:6.1f} (IS/OOS gap)")
                 print(
                     f"    - Regime Robust: {details.regime_robustness_score:6.1f} " "(cross-regime)"
                 )
 
             if result.risk_factors:
-                print("  Risk Factors:")
+                logger.debug("  Risk Factors:")
                 for factor in result.risk_factors:
-                    print(f"    [{factor.severity.value}] {factor.name}: {factor.description}")
+                    logger.debug(f"    [{factor.severity.value}] {factor.name}: {factor.description}")
 
             if result.recommendations:
-                print("  Recommendations:")
+                logger.debug("  Recommendations:")
                 for rec in result.recommendations:
-                    print(f"    {rec}")
+                    logger.debug(f"    {rec}")
 
-        print("\n" + "=" * 90)
+        logger.debug("\n" + "=" * 90)

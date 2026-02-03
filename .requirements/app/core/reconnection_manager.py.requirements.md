@@ -1,242 +1,383 @@
-# reconnection_manager.py
+# reconnection_manager.py Requirements
+
+**File Path:** `app/core/reconnection_manager.py`  
+**Last Updated:** 2025-02-06  
+**Audit Status:** NEEDS_AUDIT
 
 ## Purpose
-Manages reconnection logic with exponential backoff, jitter, and configurable retry limits for resilient 24/7 trading operations.
 
----
+Robust, lock-free, thread-safe reconnection manager for automatic connection recovery with exponential backoff, circuit breaker pattern, and comprehensive state tracking.
 
-## Type Definitions / Data Classes
+## Type Definitions
 
-⚠️ **CRITICAL:** This file uses dataclasses for configuration and statistics.
-
-### ReconnectionConfig Class
+### Classes
 ```python
-@dataclass
+class ConnectionState:
+    """Thread-safe connection state tracking without locks."""
+    def __init__(self, name: str)
+    def record_success(self) -> None
+    def record_failure(self) -> None
+    def get_state(self) -> Dict[str, Any]
+
 class ReconnectionConfig:
-    max_attempts: int = 10                      # REQUIRED - Maximum retry attempts before giving up
-    base_delay_seconds: float = 1.0             # REQUIRED - Initial backoff delay (first retry)
-    max_delay_seconds: float = 60.0             # REQUIRED - Maximum backoff cap (prevents excessive waits)
-    exponential_base: float = 2.0               # REQUIRED - Backoff multiplier (delay doubles each retry)
-    jitter: bool = True                         # OPTIONAL - Add random jitter to prevent thundering herd
-    jitter_factor: float = 0.1                  # OPTIONAL - Jitter amount (±10% of delay)
-    on_attempt: Optional[Callable[[int], None]] = None      # Callback on each attempt (attempt_number)
-    on_success: Optional[Callable[[int], None]] = None      # Callback on successful connection
-    on_failure: Optional[Callable[[], None]] = None         # Callback after all attempts fail
-    alert_after_attempts: int = 3               # Alert threshold - trigger alert after N failures
-    alert_callback: Optional[Callable[[int], None]] = None  # Alert callback (attempt_number)
-```
+    """Reconnection policy configuration."""
+    def __init__(
+        self,
+        max_attempts: int = 5,
+        initial_delay: float = 1.0,
+        max_delay: float = 60.0,
+        backoff_multiplier: float = 2.0,
+        circuit_breaker_threshold: int = 3,
+        circuit_breaker_timeout: float = 60.0,
+        success_threshold: int = 2,
+    )
 
-### ReconnectionStats Class
-```python
-@dataclass
-class ReconnectionStats:
-    total_attempts: int = 0                     # Total connection attempts (success + failure)
-    successful_connections: int = 0             # Counter for successful connections
-    failed_connections: int = 0                 # Counter for failed connection batches
-    last_connection_time: Optional[datetime] = None  # Timestamp of most recent successful connection
-    last_failure_time: Optional[datetime] = None    # Timestamp of most recent failed batch
-    current_backoff_seconds: float = 0.0        # Current backoff delay (for monitoring)
-
-    @property
-    def success_rate(self) -> float:            # Calculated: successful_connections / total_attempts
-                                                # Returns 0.0 if total_attempts == 0
-```
-
-### ReconnectionManager Class
-```python
 class ReconnectionManager:
-    service_name: str                           # REQUIRED - Name of service being reconnected (for logging)
-    config: ReconnectionConfig                  # REQUIRED - Reconnection behavior configuration
-    stats: ReconnectionStats                    # COMPOSED - Connection statistics tracking
+    """Manage reconnection logic with exponential backoff and circuit breaker."""
+    def __init__(self, name: str, config: Optional[ReconnectionConfig] = None)
 ```
 
----
+## Function Signatures
 
-## Function Signatures (Contracts)
-
-### `ReconnectionManager.__init__(service_name: str, config: Optional[ReconnectionConfig] = None) -> None`
-**Pre:** service_name is non-empty string
-**Post:** Manager initialized with default config if none provided, stats at zero
-**Raises:** ❌ No
-**Retry:** ❌ No
-**Side Effects:** Logs initialization message
-
-### `ReconnectionManager.calculate_backoff(attempt: int) -> float`
-**Pre:** attempt >= 0 (zero-indexed: 0 = first retry, 1 = second retry, etc.)
-**Post:** Returns delay in seconds following exponential backoff with jitter
-**Raises:** ❌ No
-**Retry:** ❌ No
-**Side Effects:** Updates stats.current_backoff_seconds
-
-**Formula:**
+### ReconnectionManager
+```python
+def should_reconnect(self) -> bool:
+    """Check if should attempt reconnection."""
+    
+def record_attempt(self, success: bool) -> None:
+    """Record connection attempt result."""
+    
+def record_success(self) -> None:
+    """Record successful connection."""
+    
+def record_failure(self) -> None:
+    """Record failed connection."""
+    
+def reset(self) -> None:
+    """Reset to initial state."""
+    
+def get_state(self) -> Dict[str, Any]:
+    """Get current state."""
+    
+def get_next_delay(self) -> float:
+    """Calculate delay before next attempt."""
+    
+def is_circuit_open(self) -> bool:
+    """Check if circuit breaker is open."""
+    
+def update_config(self, **kwargs) -> None:
+    """Update configuration parameters."""
+    
+def calculate_backoff(self, attempt: int) -> float:
+    """Calculate exponential backoff delay."""
 ```
-delay = min(base_delay * (exponential_base ^ attempt), max_delay)
-if jitter_enabled:
-    jitter_amount = delay * jitter_factor
-    delay = delay + random.uniform(-jitter_amount, jitter_amount)
-delay = max(0, delay)  # Ensure non-negative
-return delay
+
+### Decorators
+```python
+def with_reconnect_retry(
+    max_attempts: int = 3,
+    initial_delay: float = 1.0,
+    max_delay: float = 10.0,
+    backoff_multiplier: float = 2.0,
+):
+    """Decorator for automatic retry with reconnection."""
+    
+def with_connection_check(
+    connection_manager: ReconnectionManager,
+    reconnect_func: Optional[Callable] = None,
+):
+    """Decorator that checks connection before execution."""
 ```
 
-### `async ReconnectionManager.connect_with_backoff(connect_func: Callable[[], Any]) -> Optional[Any]`
-**Pre:** connect_func is async callable that returns connection object or raises exception
-**Post:** Returns connection object if successful, None if all attempts exhausted
-**Raises:** ❌ No (catches and logs all exceptions)
-**Retry:** ✅ Yes - Up to max_attempts with exponential backoff
-**Side Effects:**
-- Updates stats (total_attempts, successful_connections, last_connection_time)
-- Calls on_attempt callback before each attempt
-- Calls on_success callback after successful connection
-- Calls on_failure callback after all attempts fail
-- Calls alert_callback after alert_after_attempts threshold
-- Logs each attempt, success, failure
-
-### `async ReconnectionManager.maintain_connection(connect_func: Callable[[], Any], check_func: Optional[Callable[[], bool]] = None, reconnect_delay: float = 1.0) -> None`
-**Pre:** connect_func is async callable, check_func returns bool if provided
-**Post:** Runs forever, maintaining connection and reconnecting if lost
-**Raises:** asyncio.CancelledError if task is cancelled
-**Retry:** ✅ Yes - Infinite reconnection attempts
-**Side Effects:**
-- Calls connect_with_backoff for initial connection
-- Monitors connection health via check_func every 5 seconds
-- Reconnects after reconnect_delay if connection lost
-- Logs connection loss and reconnection attempts
-
-### `ReconnectionManager.get_stats() -> Dict[str, Any]`
-**Pre:** None
-**Post:** Returns dict with all statistics and computed success_rate
-**Raises:** ❌ No
-**Retry:** ❌ No
-**Side Effects:** None
-
----
+### Context Manager
+```python
+@contextmanager
+def managed_connection(
+    manager: ReconnectionManager,
+    connect_func: Callable[[], bool],
+    reconnect_func: Optional[Callable[[], bool]] = None,
+):
+    """Context manager for managed connection lifecycle."""
+```
 
 ## Acceptance Criteria
-- [ ] calculate_backoff(0) returns base_delay (1.0s by default)
-- [ ] calculate_backoff(1) returns 2.0s (1.0 * 2^1)
-- [ ] calculate_backoff(2) returns 4.0s (1.0 * 2^2)
-- [ ] calculate_backoff(10) caps at max_delay (60.0s)
-- [ ] Jitter adds ±10% random variation when enabled
-- [ ] Jitter is disabled when jitter=False
-- [ ] connect_with_backoff attempts connection up to max_attempts times
-- [ ] connect_with_backoff returns connection object on success
-- [ ] connect_with_backoff returns None after all attempts fail
-- [ ] connect_with_backoff calls on_attempt callback before each attempt
-- [ ] connect_with_backoff calls on_success callback on successful connection
-- [ ] connect_with_backoff calls on_failure callback after all attempts fail
-- [ ] connect_with_backoff calls alert_callback after alert_after_attempts failures
-- [ ] connect_with_backoff updates stats correctly
-- [ ] connect_with_backoff logs each attempt with attempt number
-- [ ] connect_with_backoff catches asyncio.TimeoutError
-- [ ] connect_with_backoff catches ConnectionError and OSError
-- [ ] connect_with_backoff catches generic Exception
-- [ ] connect_with_backoff uses 30 second timeout for connection attempts
-- [ ] maintain_connection runs indefinitely until cancelled
-- [ ] maintain_connection calls check_func every 5 seconds if provided
-- [ ] maintain_connection reconnects after reconnect_delay if connection lost
-- [ ] get_stats returns dict with all stats fields
-- [ ] get_stats includes calculated success_rate
-- [ ] get_stats serializes datetime objects to ISO format strings
-- [ ] stats.success_rate returns 0.0 when total_attempts is 0
 
----
+### AC-RECON-001: Exponential Backoff
+```bash
+# Test: Backoff increases exponentially
+python -c "
+from app.core.reconnection_manager import ReconnectionManager
+mgr = ReconnectionManager('test')
+assert mgr.get_next_delay() == 1.0  # Initial
+mgr.record_failure()
+assert mgr.get_next_delay() == 2.0  # 2x
+mgr.record_failure()
+assert mgr.get_next_delay() == 4.0  # 4x
+"
+```
 
-## Critical Rules (MUST NOT BREAK)
+### AC-RECON-002: Circuit Breaker Activation
+```bash
+# Test: Circuit breaker opens after threshold
+python -c "
+from app.core.reconnection_manager import ReconnectionManager
+config = ReconnectionConfig(circuit_breaker_threshold=3)
+mgr = ReconnectionManager('test', config)
+for _ in range(3):
+    mgr.record_failure()
+assert mgr.is_circuit_open() == True
+assert mgr.should_reconnect() == False
+"
+```
 
-**Reglas universales:** Ver `../../BASE_RULES.md` (96+ rules organized by priority)
+### AC-RECON-003: Circuit Breaker Recovery
+```bash
+# Test: Circuit breaker closes after success threshold
+python -c "
+from app.core.reconnection_manager import ReconnectionManager
+config = ReconnectionConfig(
+    circuit_breaker_threshold=2,
+    success_threshold=2,
+    circuit_breaker_timeout=1.0,
+)
+mgr = ReconnectionManager('test', config)
+# Open circuit
+mgr.record_failure()
+mgr.record_failure()
+assert mgr.is_circuit_open() == True
+# Simulate timeout and recovery
+import time
+time.sleep(1.1)
+mgr.record_success()
+mgr.record_success()
+assert mgr.is_circuit_open() == False
+"
+```
 
-### Reglas ESPECÍFICAS de este archivo:
+### AC-RECON-004: Thread-Safe State Access
+```bash
+# Test: Concurrent state access doesn't corrupt
+python -c "
+from app.core.reconnection_manager import ReconnectionManager
+import threading
+mgr = ReconnectionManager('test')
+results = []
+def access_state():
+    for _ in range(100):
+        state = mgr.get_state()
+        results.append(state.get('attempts', 0))
+threads = [threading.Thread(target=access_state) for _ in range(10)]
+for t in threads:
+    t.start()
+for t in threads:
+    t.join()
+assert len(results) == 1000
+"
+```
 
-| Rule | Source | Requirement | Current Status |
-|------|--------|-------------|----------------|
-| ASYNC-001 | BASE_RULES.md | Use async def for async functions | ✅ OK |
-| ASYNC-002 | BASE_RULES.md | Await async calls | ✅ OK |
-| ASYNC-003 | BASE_RULES.md | Use async context managers for async resources | ⚠️ NOT APPLIED - No async resources used |
-| ASYNC-004 | BASE_RULES.md | No blocking in async functions | ✅ OK - No time.sleep() |
-| ASYNC-005 | BASE_RULES.md | Set timeouts for external calls | ✅ OK - 30s timeout on connect_func |
-| ASYNC-006 | BASE_RULES.md | Handle asyncio.TimeoutError | ✅ OK |
-| LOG-003 | BASE_RULES.md | Appropriate log levels | ✅ OK |
-| LOG-004 | BASE_RULES.md | Log exceptions with stack traces | ⚠️ PARTIAL - Logs exception message, not full traceback |
-| CC-006 | BASE_RULES.md | Explicit error handling | ✅ OK - All exceptions caught |
-| CC-007 | BASE_RULES.md | Small functions (< 20 lines) | ⚠️ PARTIAL - Some functions exceed 20 lines |
-| TYP-001 | BASE_RULES.md | 100% type coverage | ✅ OK |
+## Critical Rules
 
-### Resilience-Specific Rules
+### Rule RECON-001: No Locks Required
+**Priority:** P0  
+**Description:** `ConnectionState` uses atomic operations (counters, timestamps) and is lock-free. No need for threading locks.
 
-| Rule | Requirement | Current Status |
-|------|-------------|----------------|
-| RES-001 | Exponential backoff prevents server overload | ✅ OK |
-| RES-002 | Jitter prevents thundering herd | ✅ OK |
-| RES-003 | Max delay cap prevents excessive waits | ✅ OK |
-| RES-004 | Timeouts prevent hanging connections | ✅ OK |
-| RES-005 | All exceptions are caught and logged | ✅ OK |
-| RES-006 | Stats tracking enables monitoring | ✅ OK |
-| RES-007 | Callbacks enable custom alerting | ✅ OK |
-| RES-008 | Infinite retry for maintain_connection | ✅ OK |
+### Rule RECON-002: Idempotent Operations
+**Priority:** P0  
+**Description:** All methods should be idempotent where possible. Calling `record_success()` multiple times should have same effect as calling once.
 
----
+### Rule RECON-003: Config Validation
+**Priority:** P0  
+**Description:** All configuration values must be validated:
+- `max_attempts > 0`
+- `initial_delay > 0`
+- `max_delay >= initial_delay`
+- `backoff_multiplier > 1.0`
+- `circuit_breaker_threshold > 0`
+- `success_threshold > 0`
+
+### Rule RECON-004: State Immutability
+**Priority:** P1  
+**Description:** `get_state()` returns a new dictionary each time to prevent external modification.
+
+### Rule RECON-005: Backoff Cap
+**Priority:** P1  
+**Description:** Exponential backoff must be capped at `max_delay` to prevent unbounded delays.
 
 ## Dependencies
-- **External:** None (standard library only)
-- **Internal:** `app.core.timezone_utils.utc_now` (for timestamp tracking)
-- **Standard Library:** `asyncio`, `logging`, `random`, `datetime`, `dataclasses`, `typing`
 
----
+### Internal Dependencies
+```python
+from app.core.logging_config import get_logger
+```
+
+### External Dependencies
+```python
+import time
+from collections import deque
+from contextlib import contextmanager
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from functools import wraps
+from typing import Any, Callable, Dict, Optional
+```
 
 ## Required Tests
-- **tests/core/test_reconnection_manager.py:**
-  - Test calculate_backoff(0) returns base_delay
-  - Test calculate_backoff(1) returns base_delay * 2
-  - Test calculate_backoff(2) returns base_delay * 4
-  - Test calculate_backoff(10) caps at max_delay
-  - Test calculate_backoff with jitter adds random variation
-  - Test calculate_backoff without jitter is deterministic
-  - Test calculate_backoff updates stats.current_backoff_seconds
-  - Test connect_with_backoff succeeds on first attempt
-  - Test connect_with_backoff retries on failure
-  - Test connect_with_backoff returns None after max_attempts
-  - Test connect_with_backoff calls on_attempt callback
-  - Test connect_with_backoff calls on_success callback
-  - Test connect_with_backoff calls on_failure callback
-  - Test connect_with_backoff calls alert_callback after threshold
-  - Test connect_with_backoff updates stats.total_attempts
-  - Test connect_with_backoff updates stats.successful_connections
-  - Test connect_with_backoff updates stats.last_connection_time
-  - Test connect_with_backoff handles asyncio.TimeoutError
-  - Test connect_with_backoff handles ConnectionError
-  - Test connect_with_backoff handles OSError
-  - Test connect_with_backoff handles generic Exception
-  - Test connect_with_backoff uses 30 second timeout
-  - Test maintain_connection runs until cancelled
-  - Test maintain_connection calls check_func every 5 seconds
-  - Test maintain_connection reconnects after check_func returns False
-  - Test maintain_connection reconnects after reconnect_delay
-  - Test maintain_connection handles asyncio.CancelledError
-  - Test get_stats returns dict with all fields
-  - Test get_stats includes calculated success_rate
-  - Test get_stats serializes datetimes to ISO format
-  - Test stats.success_rate returns 0.0 when total_attempts is 0
-  - Test stats.success_rate calculates correctly for various totals
-  - Edge case: max_attempts = 0 (no attempts)
-  - Edge case: max_attempts = 1 (single attempt)
-  - Edge case: base_delay = 0 (no initial delay)
-  - Edge case: max_delay < base_delay (immediate cap)
-  - Edge case: jitter_factor = 0 (no jitter even if enabled)
-  - Edge case: jitter_factor = 1 (100% variation)
-  - Edge case: alert_after_attempts > max_attempts (never called)
 
----
+### Unit Tests (app/tests/core/test_reconnection_manager.py)
+```python
+def test_connection_state_initialization():
+    """Test ConnectionState initialization."""
+    
+def test_connection_state_record_success():
+    """Test recording successful connection."""
+    
+def test_connection_state_record_failure():
+    """Test recording failed connection."""
+    
+def test_connection_state_get_state():
+    """Test getting state snapshot."""
+    
+def test_reconnection_config_defaults():
+    """Test default configuration values."""
+    
+def test_reconnection_config_validation():
+    """Test configuration validation."""
+    
+def test_reconnection_manager_initialization():
+    """Test ReconnectionManager initialization."""
+    
+def test_should_reconnect_initially_true():
+    """Test should reconnect initially true."""
+    
+def test_should_reconnect_after_max_attempts():
+    """Test should reconnect false after max attempts."""
+    
+def test_should_reconnect_when_circuit_open():
+    """Test should reconnect false when circuit open."""
+    
+def test_record_success_resets_attempts():
+    """Test success resets attempt counter."""
+    
+def test_record_failure_increments_attempts():
+    """Test failure increments attempt counter."""
+    
+def test_record_success_closes_circuit():
+    """Test success closes circuit breaker."""
+    
+def test_record_failure_opens_circuit():
+    """Test failures open circuit breaker."""
+    
+def test_reset_clears_state():
+    """Test reset clears all state."""
+    
+def test_get_state_returns_snapshot():
+    """Test get_state returns immutable snapshot."""
+    
+def test_get_next_delay_calculates_backoff():
+    """Test next delay calculation with backoff."""
+    
+def test_get_next_delay_capped_at_max():
+    """Test next delay capped at max_delay."""
+    
+def test_is_circuit_open():
+    """Test circuit breaker state."""
+    
+def test_update_config():
+    """Test configuration update."""
+    
+def test_calculate_backoff():
+    """Test exponential backoff calculation."""
+```
 
-## Notes
-- **Exponential Backoff:** Default sequence is 1s, 2s, 4s, 8s, 16s, 32s, 60s, 60s, 60s, 60s (capped at 60s).
-- **Jitter Purpose:** Random variation prevents multiple clients from retrying simultaneously (thundering herd problem).
-- **Timeout:** 30 second timeout is hardcoded. Consider making configurable via ReconnectionConfig for production.
-- **Callback Safety:** Callbacks are called from async context. Ensure they don't perform blocking operations.
-- **Stats Thread Safety:** stats object is not thread-safe. If used from multiple tasks, add locking.
-- **Maintain Connection:** Runs forever. Must be cancelled via asyncio.Task.cancel() or wrapped in asyncio.TaskGroup.
-- **Logging Level:** Connection failures are logged as WARNING, not ERROR. This prevents log spam during transient outages.
-- **Production Tuning:** For production, consider:
-  - Increase max_attempts to 20-30 for longer outages
-  - Set alert_after_attempts to 5 for earlier alerting
-  - Use monitoring service with alert_callback to page on-call
-  - Increase timeout to 60s for slow connections
+### Decorator Tests
+```python
+def test_with_reconnect_retry_success():
+    """Test retry decorator on success."""
+    
+def test_with_reconnect_retry_failure():
+    """Test retry decorator on failure."""
+    
+def test_with_reconnect_retry_max_attempts():
+    """Test retry decorator max attempts."""
+    
+def test_with_connection_check():
+    """Test connection check decorator."""
+```
+
+### Integration Tests
+```python
+def test_concurrent_state_access():
+    """Test thread-safe concurrent access."""
+    
+def test_full_reconnection_workflow():
+    """Test complete reconnection workflow."""
+    
+def test_circuit_breaker_recovery():
+    """Test circuit breaker recovery."""
+```
+
+## File-Specific Rules
+
+### Rule RECON-FS-001: UTC Timestamps
+**Priority:** P1  
+**Description:** All timestamps must use UTC timezone (from `timezone.utc`). No naive datetime objects.
+
+### Rule RECON-FS-002: Deque for History
+**Priority:** P2  
+**Description:** Use `collections.deque` with `maxlen` for connection history to automatically limit size.
+
+### Rule RECON-FS-003: Warning Logging
+**Priority:** P2  
+**Description:** Log warnings when circuit breaker state changes, successes after failures, and approaching max attempts.
+
+## Usage Examples
+
+### Basic Usage
+```python
+from app.core.reconnection_manager import ReconnectionManager
+
+manager = ReconnectionManager("database")
+
+while manager.should_reconnect():
+    try:
+        # Attempt connection
+        if connect():
+            manager.record_success()
+            break
+        else:
+            manager.record_failure()
+    except Exception as e:
+        manager.record_failure()
+    
+    # Wait before next attempt
+    delay = manager.get_next_delay()
+    time.sleep(delay)
+```
+
+### Using Decorator
+```python
+from app.core.reconnection_manager import with_reconnect_retry
+
+@with_reconnect_retry(max_attempts=3, initial_delay=1.0)
+def fetch_data():
+    # May fail due to connection issues
+    return database.query("SELECT * FROM data")
+```
+
+## References
+
+- **BASE_RULES.md:** See ../../BASE_RULES.md for universal rules
+  - LOG-001: Structured logging
+  - LOG-002: Correlation ID
+  - TYP-001: Type hints
+- **Related Files:**
+  - `app/core/timezone_utils.py` - UTC timestamp utilities
+  - `app/core/logging_config.py` - Logging utilities
+
+## Changelog
+
+### 2025-02-06
+- Initial requirements documentation created
+- Documented lock-free thread-safe design
+- Documented exponential backoff and circuit breaker
+- Audit Status: NEEDS_AUDIT

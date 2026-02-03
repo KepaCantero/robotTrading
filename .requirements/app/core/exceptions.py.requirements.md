@@ -1,166 +1,256 @@
-# exceptions.py
+# exceptions.py Requirements
 
-## Purpose
-Core exception hierarchy for AlgoTrading system. Independent exception definitions to avoid circular imports. Provides specific exception types for different error domains.
+**File:** `app/core/exceptions.py`  
+**Purpose:** Core Exceptions for AlgoTrading  
+**Audit Status:** NEEDS_AUDIT
 
 ---
 
-## Type Definitions / Data Classes
+## References
+- **BASE_RULES:** See ../../BASE_RULES.md for universal rules
+- **Related Files:** All modules that raise exceptions
 
-### Exception Hierarchy
+---
+
+## Purpose & Scope
+
+This module provides independent exception definitions to avoid circular imports. All AlgoTrading-specific exceptions inherit from `AlgoTradingError` with structured error information.
+
+**Critical for Production:** Consistent error handling prevents crashes and enables proper error recovery.
+
+---
+
+## Classes & Functions
+
+### Classes
+
+| Class | Purpose | Attributes |
+|-------|---------|------------|
+| `AlgoTradingError` | Base exception for all AlgoTrading errors | `message`, `error_code`, `details` |
+| `ConfigurationError` | Configuration-related errors | Inherits from `AlgoTradingError` |
+| `ValidationError` | Validation errors | Inherits from `AlgoTradingError` |
+| `BusinessLogicError` | Business logic errors | Inherits from `AlgoTradingError` |
+| `MarketDataError` | Market data errors | Inherits from `AlgoTradingError` |
+| `TradingError` | Trading-related errors | Inherits from `AlgoTradingError` |
+| `PortfolioError` | Portfolio-related errors | Inherits from `AlgoTradingError` |
+| `SignalError` | Signal-related errors | Inherits from `AlgoTradingError` |
+| `BacktestError` | Backtesting errors | Inherits from `AlgoTradingError` |
+| `AlgoTradingDatabaseError` | Database errors | Inherits from `AlgoTradingError` |
+| `APIError` | API errors | Inherits from `AlgoTradingError` |
+| `AuthenticationError` | Authentication errors | Inherits from `AlgoTradingError` |
+
+### Functions
+
+| Function | Purpose | Return Type |
+|----------|---------|-------------|
+| `raise_configuration_error()` | Raise configuration error | `NoReturn` |
+| `raise_validation_error()` | Raise validation error | `NoReturn` |
+| `raise_business_logic_error()` | Raise business logic error | `NoReturn` |
+| `raise_market_data_error()` | Raise market data error | `NoReturn` |
+| `raise_trading_error()` | Raise trading error | `NoReturn` |
+| `raise_database_error()` | Raise database error | `NoReturn` |
+| `raise_authentication_error()` | Raise authentication error | `NoReturn` |
+
+---
+
+## File-Specific Requirements
+
+### EXC-001: Structured Error Information
+**Priority:** P1 (High - Debugging)
+
+**Requirement:** All exceptions must include message, error_code, and details.
+
+**Acceptance Criteria:**
 ```python
-class AlgoTradingError(Exception)
-    message: str                          # REQUIRED - Error message
-    error_code: Optional[str] = None      # OPTIONAL - Error code for categorization
-    details: Optional[Dict[str, Any]] = None  # OPTIONAL - Additional context
-
-class ConfigurationError(AlgoTradingError)
-    # Configuration-related errors
-
-class ValidationError(AlgoTradingError)
-    # Data validation errors
-
-class BusinessLogicError(AlgoTradingError)
-    # Business logic errors
-
-class MarketDataError(AlgoTradingError)
-    # Market data errors
-
-class TradingError(AlgoTradingError)
-    # Trading operation errors
-
-class PortfolioError(AlgoTradingError)
-    # Portfolio management errors
-
-class SignalError(AlgoTradingError)
-    # Signal generation errors
-
-class BacktestError(AlgoTradingError)
-    # Backtesting errors
-
-class DatabaseError(AlgoTradingError)
-    # Database operation errors
-    # Note: Conflicts with sqlalchemy.exc.DatabaseError import
-
-class APIError(AlgoTradingError)
-    # External API errors
+try:
+    raise ConfigurationError("Invalid config", error_code="CFG-001", details={"field": "port"})
+except AlgoTradingError as e:
+    assert e.message == "Invalid config"
+    assert e.error_code == "CFG-001"
+    assert e.details == {"field": "port"}
 ```
 
-**Validation Rules:**
-- message is required
-- error_code is optional for categorization
-- details can contain any additional context
-- All exceptions are picklable (for multiprocessing)
+**Check:** AlgoTradingError.__init__ accepts all params
 
 ---
 
-## Function Signatures (Contracts)
+### EXC-002: Message Validation
+**Priority:** P2 (Medium - Error quality)
 
-### `raise_configuration_error(message: str, error_code: Optional[str] = None, details: Optional[Dict[str, Any]] = None) -> None`
-**Pre:** message is non-empty
-**Post:** Never returns (raises ConfigurationError)
-**Raises:** ConfigurationError
-**Retry:** No
-**Side Effects:** None
+**Requirement:** Helper functions must validate message is non-empty.
 
-### `raise_validation_error(message: str, error_code: Optional[str] = None, details: Optional[Dict[str, Any]] = None) -> None`
-**Pre:** message is non-empty
-**Post:** Never returns (raises ValidationError)
-**Raises:** ValidationError
-**Retry:** No
-**Side Effects:** None
+**Acceptance Criteria:**
+```python
+try:
+    raise_configuration_error("")
+    assert False, "Should raise ValueError"
+except ValueError as e:
+    assert "non-empty" in str(e)
+```
 
-### `raise_business_logic_error(message: str, error_code: Optional[str] = None, details: Optional[Dict[str, Any]] = None) -> None`
-**Pre:** message is non-empty
-**Post:** Never returns (raises BusinessLogicError)
-**Raises:** BusinessLogicError
-**Retry:** No
-**Side Effects:** None
-
-### `raise_market_data_error(message: str, error_code: Optional[str] = None, details: Optional[Dict[str, Any]] = None) -> None`
-**Pre:** message is non-empty
-**Post:** Never returns (raises MarketDataError)
-**Raises:** MarketDataError
-**Retry:** No
-**Side Effects:** None
-
-### `raise_trading_error(message: str, error_code: Optional[str] = None, details: Optional[Dict[str, Any]] = None) -> None`
-**Pre:** message is non-empty
-**Post:** Never returns (raises TradingError)
-**Raises:** TradingError
-**Retry:** No
-**Side Effects:** None
-
-### `raise_database_error(message: str, error_code: Optional[str] = None, details: Optional[Dict[str, Any]] = None) -> None`
-**Pre:** message is non-empty
-**Post:** Never returns (raises DatabaseError)
-**Raises:** DatabaseError
-**Retry:** No
-**Side Effects:** None
+**Check:** Helper functions validate message
 
 ---
 
-## Acceptance Criteria
-- [ ] All custom exceptions inherit from AlgoTradingError
-- [ ] AlgoTradingError inherits from Exception
-- [ ] Each exception type has specific domain
-- [ ] Exception hierarchy supports selective catching
-- [ ] All exceptions are picklable (for multiprocessing)
-- [ ] AlgoTradingError carries message, error_code, details
-- [ ] Helper functions raise appropriate exceptions
-- [ ] No circular imports (independent definitions)
+### EXC-003: Exception Hierarchy
+**Priority:** P1 (High - Error handling)
+
+**Requirement:** All exceptions inherit from AlgoTradingError.
+
+**Acceptance Criteria:**
+```python
+assert issubclass(ConfigurationError, AlgoTradingError)
+assert issubclass(ValidationError, AlgoTradingError)
+assert issubclass(TradingError, AlgoTradingError)
+```
+
+**Check:** All exceptions inherit properly
 
 ---
 
-## Critical Rules (MUST NOT BREAK)
+### EXC-004: No Circular Imports
+**Priority:** P0 (Critical - Module loading)
 
-**Reglas universales:** Ver `../../BASE_RULES.md` (96+ rules organized by priority)
+**Requirement:** This module must not import from other app modules to avoid circular imports.
 
-### Reglas ESPECÍFICAS de este archivo:
+**Acceptance Criteria:**
+```bash
+# Check no imports from app/
+grep -h "^from app\." app/core/exceptions.py | wc -l == 0
+```
 
-| Rule | Source | Requirement | Current Status |
-|------|--------|-------------|----------------|
-| CC-006 | BASE_RULES.md | Explicit error handling | ✅ OK - Specific exceptions |
-| LOG-004 | BASE_RULES.md | Error logging with stack traces | ⚠️ NOT APPLIED - Exceptions carry context |
-| TYP-001 | BASE_RULES.md | Type coverage | ✅ OK - All functions typed |
-| TYP-002 | BASE_RULES.md | Modern syntax | ✅ OK - Uses Optional, Dict |
-| ARCH-001 | BASE_RULES.md | Layered architecture | ✅ OK - Core infrastructure |
-| SOL-001 | BASE_RULES.md | Single Responsibility | ✅ OK - Only exception definitions |
+**Check:** Module only uses stdlib and typing
 
-**POTENTIAL ISSUES:**
-1. **Name conflict**: `DatabaseError` conflicts with `sqlalchemy.exc.DatabaseError` (line 8 imports it but doesn't use it)
-2. **Missing validation**: Helper functions don't validate message is non-empty
-3. **Overengineering**: Helper functions just raise exceptions - could use direct raising
+---
+
+### EXC-005: Helper Function Type Safety
+**Priority:** P2 (Medium - Type safety)
+
+**Requirement:** Helper functions should have proper type hints.
+
+**Acceptance Criteria:**
+```python
+from typing import reveal_type
+
+# Helper functions return NoReturn (never returns)
+reveal_type(raise_configuration_error("test"))  # NoReturn
+```
+
+**Check:** Type hints are accurate
+
+---
+
+### EXC-006: Error Code Consistency
+**Priority:** P2 (Medium - Error tracking)
+
+**Requirement:** Error codes should follow consistent format (PREFIX-NUMBER).
+
+**Acceptance Criteria:**
+```python
+# Error codes should be strings like "CFG-001", "VAL-001", etc.
+# This is convention, not enforced
+```
+
+**Check:** Documentation and examples
+
+---
+
+## BASE_RULES Compliance
+
+### Critical Rules (P0)
+- **CC-006:** Explicit error handling ✅ (structured exceptions)
+- **EXC-004:** No circular imports ✅ (stdlib only)
+
+### High Priority (P1)
+- **TYP-001:** Type hints present ✅
+- **CC-001:** Descriptive names ✅
+- **LOG-004:** Error context provided ✅ (details dict)
+
+### Medium Priority (P2)
+- **CC-007:** Small classes ✅
+- **QL-001:** Low complexity ✅
+
+---
+
+## Known Issues & Technical Debt
+
+### Issues
+1. **No error code registry** - Error codes are ad-hoc
+2. **No internationalization** - Error messages are English only
+3. **No error recovery hints** - Exceptions don't suggest fixes
+
+### Technical Debt
+1. **Add error code registry** - Centralized error code definitions
+2. **Add error documentation** - List all possible errors and resolutions
+3. **Add error context** - Include more debugging information
+
+---
+
+## Testing Requirements
+
+### Unit Tests
+- [ ] Test all exception types can be raised
+- [ ] Test structured error information
+- [ ] Test helper functions validate messages
+- [ ] Test exception hierarchy
+- [ ] Test no circular imports
+
+### Integration Tests
+- [ ] Test exceptions are caught properly
+- [ ] Test error details are logged
+- [ ] Test error codes are meaningful
+
+---
+
+## Security Considerations
+
+1. **No sensitive data in messages** ⚠️ (caller's responsibility)
+2. **No code injection** ✅ (messages are strings)
+3. **No information leakage** ⚠️ (details may contain sensitive info)
+
+---
+
+## Performance Considerations
+
+1. **Exception overhead** - Minimal (simple classes)
+2. **Memory usage** - Minimal (small objects)
+3. **No performance impact** ✅
 
 ---
 
 ## Dependencies
-- **External:** typing
-- **Internal:** None (intentionally independent to avoid circular imports)
 
-**Note:** sqlalchemy.exc.DatabaseError is imported but shadows the custom DatabaseError class
+**External:**
+- `typing` (stdlib)
 
----
-
-## Required Tests
-- **tests/core/test_exceptions.py:**
-  - Test all exceptions can be raised and caught
-  - Test exception hierarchy (catching base catches derived)
-  - Test exceptions are picklable
-  - Test exception messages are preserved
-  - Test AlgoTradingError carries message, error_code, details
-  - Test helper functions raise correct exceptions
-  - Test selective catching (catch ValidationError without catching TradingError)
+**Internal:**
+- None (standalone module by design)
 
 ---
 
-## Notes
-- **Simple exception hierarchy** - No additional attributes beyond base AlgoTradingError
-- **Independent definitions** - Avoids circular imports
-- **Helper functions** - Convenience for raising exceptions with consistent format
-- **Name conflict warning** - DatabaseError conflicts with sqlalchemy.exc.DatabaseError
-- **Consider adding:**
-  - Error codes for machine-readable error types
-  - Retry hints (for transient failures)
-  - Context information (request ID, user ID, etc.)
-  - HTTP status codes (for API errors)
+## Migration Notes
+
+**From standard exceptions:**
+1. Replace `raise ValueError()` with `raise ValidationError()`
+2. Replace `raise RuntimeError()` with `raise TradingError()`
+3. Add error_code and details to exceptions
+
+**To AlgoTrading exceptions:**
+1. Update exception handling to catch AlgoTradingError
+2. Use helper functions for raising errors
+3. Add error codes for tracking
+
+---
+
+## Changelog
+
+### Version 1.0.0 (Initial)
+- AlgoTradingError base class
+- Specialized exception types
+- Helper functions for raising errors
+- Structured error information
+
+---
+
+**Last Updated:** 2026-02-06  
+**Next Review:** After error system rollout

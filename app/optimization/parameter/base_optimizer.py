@@ -5,15 +5,13 @@ Provides the abstract base class for all optimizers and shared functionality.
 """
 
 import logging
-import time
 from abc import ABC, abstractmethod
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from .models import ParameterGrid, ParameterScale, ParameterType
+from .models import ParameterGrid
 from .trial import TrialContext, TrialHistory, TrialResult, TrialStatus, create_trial_id
 
 logger = logging.getLogger(__name__)

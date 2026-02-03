@@ -12,7 +12,7 @@ Reference: Rule 03-solid-principles.md, Rule 05-architecture.md
 
 import logging
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 from app.core.di_container import DIContainer
 from app.domain.entities.portfolio import Portfolio
@@ -73,7 +73,7 @@ class PortfolioServiceV2:
         """
         try:
             return await self._repository.get(portfolio_id)
-        except Exception as e:
+        except (ValueError, KeyError, AttributeError) as e:
             # Log error with stack trace but don't crash
             logger.error(
                 "Error getting portfolio",
@@ -95,11 +95,23 @@ class PortfolioServiceV2:
         Args:
             portfolio_id: Portfolio identifier
             initial_capital: Initial capital amount
-            currency: Currency code
+            currency: Currency code (ISO 4217 format)
 
         Returns:
             Created portfolio
+
+        Raises:
+            ValueError: If validation fails
         """
+        if not portfolio_id or not isinstance(portfolio_id, str):
+            raise ValueError("portfolio_id must be a non-empty string")
+
+        if initial_capital <= 0:
+            raise ValueError("initial_capital must be positive")
+
+        if not currency or len(currency) != 3:
+            raise ValueError("currency must be a valid ISO 4217 code")
+
         portfolio = self._factory.create_portfolio(
             portfolio_id=portfolio_id,
             initial_capital=initial_capital,
@@ -112,7 +124,7 @@ class PortfolioServiceV2:
     async def update_portfolio_weights(
         self,
         portfolio_id: str,
-        new_weights: Dict[str, Decimal],
+        new_weights: dict[str, Decimal],
     ) -> bool:
         """
         Update portfolio weights.
@@ -133,7 +145,7 @@ class PortfolioServiceV2:
         await self._repository.update(portfolio)
         return True
 
-    def get_dependency_summary(self) -> Dict[str, str]:
+    def get_dependency_summary(self) -> dict[str, str]:
         """
         Get summary of injected dependencies (for debugging).
 

@@ -139,6 +139,7 @@ def do_run_migrations(connection):
 async def run_async_migrations():
     """Run migrations in async mode."""
     connectable = None
+    connection = None
     try:
         logger.info("Starting async migrations")
         configuration = config.get_section(config.config_ini_section)
@@ -154,9 +155,9 @@ async def run_async_migrations():
         )
 
         logger.info("Establishing async connection")
-        async with connectable.connect() as connection:
-            logger.info("Running migrations in async mode")
-            await connection.run_sync(do_run_migrations)
+        connection = await connectable.connect()
+        logger.info("Running migrations in async mode")
+        await connection.run_sync(do_run_migrations)
 
         logger.info("Async migrations completed successfully")
 
@@ -188,6 +189,16 @@ async def run_async_migrations():
         )
         raise
     finally:
+        if connection is not None:
+            try:
+                logger.info("Closing async connection")
+                await connection.close()
+            except Exception as e:
+                logger.error(
+                    "Error closing async connection",
+                    exc_info=True,
+                    extra={"error_message": str(e)}
+                )
         if connectable is not None:
             try:
                 logger.info("Disposing async engine")
@@ -211,6 +222,11 @@ def run_migrations_online() -> None:
         logger.info("Starting online migration")
         # Check if using async driver
         db_url = config.get_main_option("sqlalchemy.url")
+
+        if db_url is None:
+            logger.error("Database URL not configured for online migration")
+            raise ValueError("sqlalchemy.url is not configured in Alembic config")
+
         is_async = "asyncpg" in db_url or "aiosqlite" in db_url
 
         if is_async:

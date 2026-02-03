@@ -20,6 +20,8 @@ import logging
 from decimal import Decimal
 from typing import Optional
 
+import structlog
+
 from app.core.models.input_profile import (
     InputProfile,
     ObjectivoInversion,
@@ -31,7 +33,7 @@ from app.domain.models.strategy_type import StrategyType
 from app.domain.models.system_configuration import SystemConfiguration
 from app.domain.models.tax_config import TaxConfig
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class InputProfileRouter:
@@ -40,15 +42,15 @@ class InputProfileRouter:
     This router implements the critical mapping from user inputs to system
     configuration, addressing Brecha #1: NO hay routing InputProfile -> Estrategia.
 
-    Usage:
-        router = InputProfileRouter()
-        config = router(profile)
-
     The router follows SOLID principles:
     - SRP: Only responsible for routing/profile mapping
     - OCP: Can be extended with new strategies without modification
     - DIP: Depends on abstractions (domain models), not concrete implementations
     """
+
+    def __init__(self) -> None:
+        """Initialize the router with structured logging."""
+        self._logger = structlog.get_logger(__name__)
 
     def __call__(self, profile: InputProfile) -> SystemConfiguration:
         """Generate complete system config from InputProfile.
@@ -62,7 +64,10 @@ class InputProfileRouter:
         Raises:
             ValueError: If profile validation fails
         """
-        logger.info(
+        if profile is None:
+            raise ValueError("profile cannot be None")
+
+        self._logger.info(
             "Routing profile",
             objetivo=profile.objetivo_inversion.value,
             risk=profile.risk_tolerance.value,
@@ -91,7 +96,7 @@ class InputProfileRouter:
             rebalance_frequency_days=rebalance_days,
         )
 
-        logger.info(
+        self._logger.info(
             "Generated configuration",
             strategy=strategy_type.value,
             max_drawdown=str(risk_config.max_drawdown),
@@ -137,7 +142,7 @@ class InputProfileRouter:
             )
 
         strategy = strategies[objetivo]
-        logger.debug(
+        self._logger.debug(
             "Mapped objetivo to strategy",
             objetivo=objetivo.value,
             strategy=strategy.value,
@@ -223,7 +228,7 @@ class InputProfileRouter:
             )
 
         config = configs[tolerance]
-        logger.debug(
+        self._logger.debug(
             "Mapped risk tolerance",
             tolerance=tolerance.value,
             max_dd=str(config.max_drawdown),
@@ -245,7 +250,7 @@ class InputProfileRouter:
             TaxConfig: Tax optimization parameters, or None if not provided
         """
         if tax_residence is None:
-            logger.debug("No tax residence provided, tax optimization disabled")
+            self._logger.debug("No tax residence provided, tax optimization disabled")
             return None
 
         config = TaxConfig(
@@ -268,7 +273,7 @@ class InputProfileRouter:
             hedging_instruments=["FX_FORWARDS", "CURRENCY_FUTURES"],
         )
 
-        logger.debug(
+        self._logger.debug(
             "Created tax config",
             country=tax_residence.country_code,
             prefer_long_term=config.prefer_long_term,
@@ -355,6 +360,6 @@ class InputProfileRouter:
         is_valid = len(warnings) == 0
 
         if not is_valid:
-            logger.warning("Configuration validation warnings", warnings=warnings)
+            self._logger.warning("Configuration validation warnings", warnings=warnings)
 
         return is_valid, warnings

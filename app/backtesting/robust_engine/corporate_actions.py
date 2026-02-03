@@ -596,46 +596,10 @@ class CorporateActionHandler:
             else:
                 df["declaration_date"] = df["ex_date"]  # Default to ex_date
 
-            count = 0
-
-            # Use itertuples instead of iterrows for better performance
-            for row in df.itertuples():
-                action_type = str(row.action_type).lower()
-
-                if action_type == "split":
-                    self.add_split(
-                        symbol=str(row.symbol),
-                        split_ratio=Decimal(str(row.ratio)),
-                        ex_date=row.ex_date,
-                        declaration_date=row.declaration_date,
-                    )
-                    count += 1
-
-                elif action_type in ("merger", "acquisition"):
-                    # Handle optional cash column
-                    cash_consideration = None
-                    if "cash" in df.columns and hasattr(row, "cash") and pd.notna(row.cash):
-                        cash_consideration = Decimal(str(row.cash))
-
-                    self.add_merger(
-                        target=str(row.symbol),
-                        acquirer=str(row.target),
-                        exchange_ratio=Decimal(str(row.ratio)),
-                        ex_date=row.ex_date,
-                        cash_consideration=cash_consideration,
-                        declaration_date=row.declaration_date,
-                    )
-                    count += 1
-
-                elif action_type == "spinoff":
-                    self.add_spinoff(
-                        parent=str(row.symbol),
-                        spinoff=str(row.target),
-                        distribution_ratio=Decimal(str(row.ratio)),
-                        ex_date=row.ex_date,
-                        declaration_date=row.declaration_date,
-                    )
-                    count += 1
+            # Use generator for memory-efficient processing
+            count = sum(
+                1 for _ in self._generate_and_load_actions(df)
+            )
 
             logger.info(f"Loaded {count} corporate actions from {filepath}")
             return count
@@ -643,3 +607,59 @@ class CorporateActionHandler:
         except Exception as e:
             logger.error(f"Error loading corporate actions from {filepath}: {e}")
             return 0
+
+    def _generate_and_load_actions(
+        self,
+        df: pd.DataFrame,
+    ):
+        """
+        Generate and load corporate actions from a DataFrame.
+
+        This is a generator that processes each row and loads
+        the corresponding corporate action, yielding True for
+        each successfully loaded action.
+
+        Args:
+            df: DataFrame with corporate action data
+
+        Yields:
+            True for each successfully loaded action
+        """
+        # Use itertuples instead of iterrows for better performance
+        for row in df.itertuples():
+            action_type = str(row.action_type).lower()
+
+            if action_type == "split":
+                self.add_split(
+                    symbol=str(row.symbol),
+                    split_ratio=Decimal(str(row.ratio)),
+                    ex_date=row.ex_date,
+                    declaration_date=row.declaration_date,
+                )
+                yield True
+
+            elif action_type in ("merger", "acquisition"):
+                # Handle optional cash column
+                cash_consideration = None
+                if "cash" in df.columns and hasattr(row, "cash") and pd.notna(row.cash):
+                    cash_consideration = Decimal(str(row.cash))
+
+                self.add_merger(
+                    target=str(row.symbol),
+                    acquirer=str(row.target),
+                    exchange_ratio=Decimal(str(row.ratio)),
+                    ex_date=row.ex_date,
+                    cash_consideration=cash_consideration,
+                    declaration_date=row.declaration_date,
+                )
+                yield True
+
+            elif action_type == "spinoff":
+                self.add_spinoff(
+                    parent=str(row.symbol),
+                    spinoff=str(row.target),
+                    distribution_ratio=Decimal(str(row.ratio)),
+                    ex_date=row.ex_date,
+                    declaration_date=row.declaration_date,
+                )
+                yield True

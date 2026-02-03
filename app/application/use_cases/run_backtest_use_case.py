@@ -9,9 +9,11 @@ It's part of the application layer in Clean Architecture.
 from __future__ import annotations
 
 import logging
+import uuid
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
+from ...core.exceptions import BacktestError, ValidationError
 from ...domain.entities.backtest import Backtest, BacktestStatus
 from ...domain.repositories.backtest_repository import BacktestRepository
 from ...domain.value_objects.backtest_config import BacktestConfigValue
@@ -72,14 +74,14 @@ class RunBacktestUseCase:
             logger.info(f"Backtest {backtest.backtest_id} completed successfully")
             return backtest
 
-        except Exception as e:
+        except (BacktestError, ValidationError, ValueError) as e:
             # Mark as failed
             backtest.fail(str(e))
             self._backtest_repository.save(backtest)
-            logger.error(f"Backtest {backtest.backtest_id} failed: {e}")
+            logger.error(f"Backtest {backtest.backtest_id} failed: {e}", exc_info=True)
             raise
 
-    def execute_batch(self, configs: List[BacktestConfigValue]) -> List[Backtest]:
+    def execute_batch(self, configs: list[BacktestConfigValue]) -> list[Backtest]:
         """
         Execute multiple backtests.
 
@@ -94,8 +96,8 @@ class RunBacktestUseCase:
             try:
                 backtest = self.execute(config)
                 backtests.append(backtest)
-            except Exception as e:
-                logger.error(f"Failed to execute backtest: {e}")
+            except (BacktestError, ValidationError, ValueError) as e:
+                logger.error(f"Failed to execute backtest: {e}", exc_info=True)
                 # Continue with other backtests
 
         return backtests
@@ -112,7 +114,7 @@ class RunBacktestUseCase:
         """
         return self._backtest_repository.find_by_id(backtest_id)
 
-    def get_backtests_by_status(self, status: BacktestStatus) -> List[Backtest]:
+    def get_backtests_by_status(self, status: BacktestStatus) -> list[Backtest]:
         """
         Get backtests by status.
 
@@ -124,7 +126,7 @@ class RunBacktestUseCase:
         """
         return self._backtest_repository.find_by_status(status)
 
-    def get_recent_backtests(self, limit: int = 10) -> List[Backtest]:
+    def get_recent_backtests(self, limit: int = 10) -> list[Backtest]:
         """
         Get recently completed backtests.
 
@@ -144,7 +146,8 @@ class RunBacktestUseCase:
             Unique backtest identifier
         """
         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-        return f"bt_{timestamp}"
+        unique_suffix = uuid.uuid4().hex[:8]
+        return f"bt_{timestamp}_{unique_suffix}"
 
     def _execute_backtest(self, config: BacktestConfigValue) -> BacktestResultValue:
         """

@@ -19,7 +19,6 @@ from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Deque, Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -32,6 +31,11 @@ from app.market_microstructure.ofi.models import (
 from app.market_microstructure.ofi.ofi_calculator import OFICalculator, OFIResult
 
 logger = logging.getLogger(__name__)
+
+
+class InvalidPriceError(ValueError):
+    """Raised when an invalid price is provided."""
+    pass
 
 
 @dataclass
@@ -113,32 +117,76 @@ class OrderBookState:
 
     symbol: str
     timestamp: datetime
-    bids: Dict[Decimal, int] = field(default_factory=dict)
-    asks: Dict[Decimal, int] = field(default_factory=dict)
+    bids: dict[Decimal, int] = field(default_factory=dict)
+    asks: dict[Decimal, int] = field(default_factory=dict)
     last_update: str = "init"
 
+    def _validate_price(self, price: Decimal) -> None:
+        """
+        Validate price for order book updates.
+
+        Args:
+            price: Price to validate
+
+        Raises:
+            InvalidPriceError: If price is invalid (negative, zero, or NaN)
+        """
+        # Check if price is negative
+        if price < 0:
+            raise InvalidPriceError(f"Price cannot be negative: {price}")
+
+        # Check if price is zero
+        if price == 0:
+            raise InvalidPriceError(f"Price cannot be zero")
+
+        # Check if price is NaN (using comparison with itself)
+        if price != price:  # NaN != NaN is True
+            raise InvalidPriceError(f"Price cannot be NaN: {price}")
+
     def update_bid(self, price: Decimal, quantity: int) -> None:
-        """Update bid level."""
+        """
+        Update bid level.
+
+        Args:
+            price: Bid price
+            quantity: Bid quantity
+
+        Raises:
+            InvalidPriceError: If price is invalid
+        """
+        self._validate_price(price)
+
         if quantity == 0:
             self.bids.pop(price, None)
         else:
             self.bids[price] = quantity
 
     def update_ask(self, price: Decimal, quantity: int) -> None:
-        """Update ask level."""
+        """
+        Update ask level.
+
+        Args:
+            price: Ask price
+            quantity: Ask quantity
+
+        Raises:
+            InvalidPriceError: If price is invalid
+        """
+        self._validate_price(price)
+
         if quantity == 0:
             self.asks.pop(price, None)
         else:
             self.asks[price] = quantity
 
-    def get_best_bid(self) -> Optional[Tuple[Decimal, int]]:
+    def get_best_bid(self) -> tuple[Decimal, int] | None:
         """Get best bid (highest price)."""
         if not self.bids:
             return None
         price = max(self.bids.keys())
         return (price, self.bids[price])
 
-    def get_best_ask(self) -> Optional[Tuple[Decimal, int]]:
+    def get_best_ask(self) -> tuple[Decimal, int] | None:
         """Get best ask (lowest price)."""
         if not self.asks:
             return None
@@ -156,7 +204,7 @@ class OrderBookState:
             asks=[(p, q) for p, q in ask_list],
         )
 
-    def get_depth(self, levels: int = 5) -> Tuple[int, int]:
+    def get_depth(self, levels: int = 5) -> tuple[int, int]:
         """Get total depth at top N levels."""
         bid_prices = sorted(self.bids.keys(), reverse=True)[:levels]
         ask_prices = sorted(self.asks.keys())[:levels]
@@ -185,7 +233,7 @@ class TickLevelOFIProcessor:
         >>> print(f"Tick OFI: {result.tick_ofi:.3f}")
     """
 
-    def __init__(self, window_size: int = 100, calculator: Optional[OFICalculator] = None):
+    def __init__(self, window_size: int = 100, calculator: OFICalculator | None = None):
         """
         Initialize tick-level OFI processor.
 
@@ -197,10 +245,10 @@ class TickLevelOFIProcessor:
         self.calculator = calculator or OFICalculator()
 
         # Tick buffer
-        self.tick_buffer: Deque[TickData] = deque(maxlen=window_size)
+        self.tick_buffer: deque[TickData] = deque(maxlen=window_size)
 
         # Order book state
-        self.order_book: Optional[OrderBookState] = None
+        self.order_book: OrderBookState | None = None
 
         # Aggressive trade tracking
         self.market_buy_volume: int = 0
@@ -209,9 +257,12 @@ class TickLevelOFIProcessor:
 
         # OFI tracking
         self.current_ofi: float = 0.0
-        self.ofi_history: Deque[float] = deque(maxlen=window_size)
+        self.ofi_history: deque[float] = deque(maxlen=window_size)
 
-        logger.info(f"TickLevelOFIProcessor initialized with window_size={window_size}")
+        logger.info(
+            "TickLevelOFIProcessor initialized",
+            extra={"window_size": window_size},
+        )
 
     def process_tick(self, tick: TickData) -> TickOFIResult:
         """
@@ -344,7 +395,7 @@ class TickLevelOFIProcessor:
             return result.ofi
         return 0.0
 
-    def _calculate_rolling_ofi(self, window: Optional[int] = None) -> float:
+    def _calculate_rolling_ofi(self, window: int | None = None) -> float:
         """
         Calculate rolling OFI from recent tick contributions.
 
@@ -370,7 +421,7 @@ class TickLevelOFIProcessor:
         weighted_ofi = float(np.average(recent_ofi, weights=weights))
         return weighted_ofi
 
-    def calculate_tick_ofi(self, ticks: List[TickData]) -> float:
+    def calculate_tick_ofi(self, ticks: list[TickData]) -> float:
         """
         Calculate OFI from a list of tick trades.
 
@@ -509,7 +560,10 @@ class TickLevelOFIProcessor:
         self.total_aggressive_volume = 0
         self.current_ofi = 0.0
         self.ofi_history.clear()
-        logger.info("TickLevelOFIProcessor reset")
+        logger.info(
+            "TickLevelOFIProcessor reset",
+            extra={"window_size": self.window_size},
+        )
 
     def get_statistics(self) -> dict:
         """

@@ -11,14 +11,13 @@ import asyncio
 import logging
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
-from decimal import Decimal
 from itertools import product
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from tqdm import tqdm
 
 from .base_optimizer import BaseOptimizer, OptimizationConfig, OptimizationResult
-from .models import ParameterGrid, ParameterType
+from .models import ParameterGrid
 from .trial import TrialHistory, TrialResult, TrialStatus, create_trial_id
 
 logger = logging.getLogger(__name__)
@@ -60,8 +59,8 @@ class GridSearchOptimizer(BaseOptimizer):
             return backtest_strategy(params)["sharpe_ratio"]
 
         result = await optimizer.optimize(objective, param_grid)
-        print(f"Best params: {result.best_params}")
-        print(f"Best score: {result.best_score}")
+        logger.debug(f"Best params: {result.best_params}")
+        logger.debug(f"Best score: {result.best_score}")
         ```
     """
 

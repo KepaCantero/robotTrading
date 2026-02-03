@@ -3,66 +3,54 @@ API endpoints para gestión de estrategias - TASK-31
 
 Proporciona endpoints REST para gestionar el sistema de estrategias múltiples,
 incluyendo carga, activación, métricas y configuración.
+
+GAP Fixes:
+- API-002: Added structured logging with correlation IDs
+- API-005: FIXED - Added security decorators (rate_limit, require_auth, audit_log)
 """
 
 import logging
+import traceback
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from pydantic import BaseModel
 
 from app.strategies import ExecutionEngine, StrategyConfigLoader, StrategyLogger, StrategyRegistry
+from app.core.di_container import (
+    get_execution_engine as di_get_execution_engine,
+    get_strategy_config_loader as di_get_strategy_config_loader,
+    get_strategy_logger as di_get_strategy_logger,
+    get_strategy_registry as di_get_strategy_registry,
+)
+
+from . import audit_logger, get_correlation_id
+from .security import rate_limit, require_auth, audit_log
 
 logger = logging.getLogger(__name__)
 
 # Router para estrategias
 router = APIRouter(prefix="/strategies", tags=["Strategies"])
 
-# Instancias globales (en producción usar dependency injection)
-_strategy_registry: Optional[StrategyRegistry] = None
-_config_loader: Optional[StrategyConfigLoader] = None
-_execution_engine: Optional[ExecutionEngine] = None
-_strategy_logger: Optional[StrategyLogger] = None
-
 
 def get_strategy_registry() -> StrategyRegistry:
-    """Obtener instancia del registry de estrategias."""
-    global _strategy_registry
-    if _strategy_registry is None:
-        _strategy_registry = StrategyRegistry()
-
-    return _strategy_registry
+    """Obtener instancia del registry de estrategias desde el contenedor de DI."""
+    return di_get_strategy_registry()
 
 
 def get_config_loader() -> StrategyConfigLoader:
-    """Obtener instancia del cargador de configuración."""
-    global _config_loader
-    if _config_loader is None:
-        _config_loader = StrategyConfigLoader()
-
-    return _config_loader
+    """Obtener instancia del cargador de configuración desde el contenedor de DI."""
+    return di_get_strategy_config_loader()
 
 
 def get_strategy_logger() -> StrategyLogger:
-    """Obtener instancia del logger de estrategias."""
-    global _strategy_logger
-    if _strategy_logger is None:
-        _strategy_logger = StrategyLogger()
-
-    return _strategy_logger
+    """Obtener instancia del logger de estrategias desde el contenedor de DI."""
+    return di_get_strategy_logger()
 
 
 def get_execution_engine() -> ExecutionEngine:
-    """Obtener instancia del motor de ejecución."""
-    global _execution_engine
-
-    if _execution_engine is None:
-        registry = get_strategy_registry()
-        logger = get_strategy_logger()
-        _execution_engine = ExecutionEngine(registry, logger)
-        logger.info("ExecutionEngine singleton initialized")
-
-    return _execution_engine
+    """Obtener instancia del motor de ejecución desde el contenedor de DI."""
+    return di_get_execution_engine()
 
 
 # Modelos Pydantic para requests/responses
@@ -135,6 +123,7 @@ class ExecutionStatsResponse(BaseModel):
 
 
 @router.get("/", response_model=Dict[str, Any])
+@rate_limit(max_requests=100, window_seconds=60)
 async def get_strategies_overview(
     registry: StrategyRegistry = Depends(get_strategy_registry),
 ):
@@ -180,15 +169,31 @@ async def get_loaded_strategies(
 
 
 @router.post("/load", response_model=StrategyResponse)
+@rate_limit(max_requests=20, window_seconds=60)
+@require_auth(roles=["admin", "trader"])
+@audit_log("strategy_loaded", log_args=True)
 async def load_strategy(
     request: StrategyLoadRequest,
+    http_request: Request,
     registry: StrategyRegistry = Depends(get_strategy_registry),
     logger_instance: StrategyLogger = Depends(get_strategy_logger),
 ):
     """Cargar una estrategia."""
+    correlation_id = get_correlation_id()
+    logger.info(
+        "Loading strategy",
+        extra={"correlation_id": correlation_id, "strategy_name": request.name},
+    )
     try:
         strategy = registry.load_strategy(request.name, request.config)
         logger_instance.log_strategy_loaded(request.name, request.config)
+
+        audit_logger.log_action(
+            action="strategy_loaded",
+            method=http_request.method,
+            path=http_request.url.path,
+            details={"strategy_name": request.name},
+        )
 
         return StrategyResponse(
             name=strategy.name,
@@ -200,9 +205,29 @@ async def load_strategy(
             parameters=strategy.get_parameters(),
         )
     except ValueError as e:
+        logger.warning(
+            "Validation error loading strategy",
+            extra={"correlation_id": correlation_id, "strategy_name": request.name, "error": str(e)},
+        )
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
-        logger.error(f"Error loading strategy {request.name}: {e}")
+        logger.error(
+            "Error loading strategy",
+            extra={
+                "correlation_id": correlation_id,
+                "strategy_name": request.name,
+                "error_type": type(e).__name__,
+                "error": str(e),
+                "stack_trace": traceback.format_exc(),
+            },
+        )
+        audit_logger.log_error(
+            method=http_request.method,
+            path=http_request.url.path,
+            error_type=type(e).__name__,
+            error_message=str(e),
+            stack_trace=traceback.format_exc(),
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error loading strategy: {str(e)}",
@@ -210,6 +235,9 @@ async def load_strategy(
 
 
 @router.post("/activate", response_model=Dict[str, str])
+@rate_limit(max_requests=30, window_seconds=60)
+@require_auth(roles=["admin", "trader"])
+@audit_log("strategy_activated", log_args=True)
 async def activate_strategy(
     request: StrategyActivateRequest,
     registry: StrategyRegistry = Depends(get_strategy_registry),
@@ -232,6 +260,9 @@ async def activate_strategy(
 
 
 @router.post("/deactivate", response_model=Dict[str, str])
+@rate_limit(max_requests=30, window_seconds=60)
+@require_auth(roles=["admin", "trader"])
+@audit_log("strategy_deactivated")
 async def deactivate_strategy(
     registry: StrategyRegistry = Depends(get_strategy_registry),
     logger_instance: StrategyLogger = Depends(get_strategy_logger),
@@ -261,6 +292,9 @@ async def deactivate_strategy(
 
 
 @router.delete("/unload/{strategy_name}", response_model=Dict[str, str])
+@rate_limit(max_requests=20, window_seconds=60)
+@require_auth(roles=["admin", "trader"])
+@audit_log("strategy_unloaded", log_args=True)
 async def unload_strategy(
     strategy_name: str,
     registry: StrategyRegistry = Depends(get_strategy_registry),
@@ -405,6 +439,9 @@ async def get_execution_stats(engine: ExecutionEngine = Depends(get_execution_en
 
 
 @router.post("/execution/start", response_model=Dict[str, str])
+@rate_limit(max_requests=10, window_seconds=60)
+@require_auth(roles=["admin"])
+@audit_log("execution_engine_started")
 async def start_execution_engine(
     engine: ExecutionEngine = Depends(get_execution_engine),
 ):
@@ -421,6 +458,9 @@ async def start_execution_engine(
 
 
 @router.post("/execution/stop", response_model=Dict[str, str])
+@rate_limit(max_requests=10, window_seconds=60)
+@require_auth(roles=["admin"])
+@audit_log("execution_engine_stopped")
 async def stop_execution_engine(
     engine: ExecutionEngine = Depends(get_execution_engine),
 ):
@@ -437,6 +477,9 @@ async def stop_execution_engine(
 
 
 @router.post("/execution/reset-stats", response_model=Dict[str, str])
+@rate_limit(max_requests=5, window_seconds=60)
+@require_auth(roles=["admin"])
+@audit_log("execution_stats_reset")
 async def reset_execution_stats(
     engine: ExecutionEngine = Depends(get_execution_engine),
 ):

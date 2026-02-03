@@ -13,8 +13,6 @@ References:
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import List, Optional
-
 import numpy as np
 
 from app.market_microstructure.ofi.models import (
@@ -29,6 +27,16 @@ from app.market_microstructure.ofi.ofi_calculator import OFICalculator, OFIResul
 from app.market_microstructure.ofi.ofi_predictor import OFIPredictor
 
 logger = logging.getLogger(__name__)
+
+
+class SignalGenerationError(RuntimeError):
+    """Raised when signal generation fails unexpectedly."""
+    pass
+
+
+class InvalidOFIError(ValueError):
+    """Raised when OFI value is invalid."""
+    pass
 
 
 class OFISignalGenerator:
@@ -56,9 +64,9 @@ class OFISignalGenerator:
 
     def __init__(
         self,
-        config: Optional[OFISignalConfig] = None,
-        calculator: Optional[OFICalculator] = None,
-        predictor: Optional[OFIPredictor] = None,
+        config: OFISignalConfig | None = None,
+        calculator: OFICalculator | None = None,
+        predictor: OFIPredictor | None = None,
     ):
         """
         Initialize OFI Signal Generator.
@@ -77,15 +85,15 @@ class OFISignalGenerator:
         self.confidence_scale = self.config.confidence_scale
 
         # Track recent signals for rate limiting
-        self._recent_signals: List[datetime] = []
+        self._recent_signals: list[datetime] = []
 
     def generate_signal(
         self,
         order_book: OrderBookSnapshot,
-        historical_ofi: List[float],
-        historical_returns: Optional[List[float]] = None,
-        cofi_tracker: Optional[CumulativeOFI] = None,
-    ) -> Optional[OFISignal]:
+        historical_ofi: list[float],
+        historical_returns: list[float] | None = None,
+        cofi_tracker: CumulativeOFI | None = None,
+    ) -> OFISignal | None:
         """
         Generate trading signal from order book.
 
@@ -109,7 +117,13 @@ class OFISignalGenerator:
         # Calculate OFI
         ofi_result = self.calculator.calculate_ofi(order_book)
         if not ofi_result.is_valid:
-            logger.debug(f"Invalid OFI: {ofi_result.reason}")
+            logger.debug(
+                "Invalid OFI",
+                extra={
+                    "symbol": order_book.symbol,
+                    "reason": ofi_result.reason,
+                },
+            )
             return None
 
         ofi = ofi_result.ofi
@@ -134,10 +148,10 @@ class OFISignalGenerator:
     def _generate_threshold_signal(
         self,
         order_book: OrderBookSnapshot,
-        historical_ofi: List[float],
-        historical_returns: Optional[List[float]],
+        historical_ofi: list[float],
+        historical_returns: list[float] | None,
         ofi_result: OFIResult,
-    ) -> Optional[OFISignal]:
+    ) -> OFISignal | None:
         """
         Generate threshold-based signal.
 
@@ -171,8 +185,16 @@ class OFISignalGenerator:
                     historical_returns=historical_returns,
                     horizon=self.config.signal_horizon,
                 )
-            except Exception as e:
-                logger.warning(f"Prediction failed: {e}")
+            except (ValueError, AttributeError, TypeError) as e:
+                logger.warning(
+                    "Prediction failed",
+                    exc_info=True,
+                    extra={
+                        "symbol": order_book.symbol,
+                        "ofi": ofi,
+                        "error_type": type(e).__name__,
+                    },
+                )
 
         # Generate reasoning
         reasoning = self._generate_reasoning(ofi, action, ofi_result, prediction)
@@ -197,7 +219,7 @@ class OFISignalGenerator:
         order_book: OrderBookSnapshot,
         cofi_tracker: CumulativeOFI,
         ofi_result: OFIResult,
-    ) -> Optional[OFISignal]:
+    ) -> OFISignal | None:
         """
         Generate mean reversion signal from extreme COFI.
 
@@ -241,9 +263,9 @@ class OFISignalGenerator:
     def _generate_momentum_signal(
         self,
         order_book: OrderBookSnapshot,
-        historical_ofi: List[float],
+        historical_ofi: list[float],
         ofi_result: OFIResult,
-    ) -> Optional[OFISignal]:
+    ) -> OFISignal | None:
         """
         Generate momentum-based signal from OFI momentum.
 
@@ -317,7 +339,7 @@ class OFISignalGenerator:
         ofi: float,
         action: str,
         ofi_result: OFIResult,
-        prediction: Optional[OFIPrediction],
+        prediction: OFIPrediction | None,
     ) -> str:
         """Generate human-readable reasoning for signal."""
         parts = []
@@ -349,7 +371,7 @@ class OFISignalGenerator:
 
         return ". ".join(parts) + "."
 
-    def _determine_horizon(self, ofi: float, historical_ofi: List[float]) -> str:
+    def _determine_horizon(self, ofi: float, historical_ofi: list[float]) -> str:
         """
         Determine expected holding period for signal.
 
@@ -373,10 +395,10 @@ class OFISignalGenerator:
 
     def generate_batch_signals(
         self,
-        order_books: List[OrderBookSnapshot],
-        historical_ofi: List[List[float]],
-        historical_returns: Optional[List[List[float]]] = None,
-    ) -> List[OFISignal]:
+        order_books: list[OrderBookSnapshot],
+        historical_ofi: List[list[float]],
+        historical_returns: Optional[List[list[float]]] = None,
+    ) -> list[OFISignal]:
         """
         Generate signals for multiple symbols.
 
@@ -402,14 +424,21 @@ class OFISignalGenerator:
                 signal = self.generate_signal(order_book, ofi_hist, ret_hist)
                 if signal:
                     signals.append(signal)
-            except Exception as e:
-                logger.error(f"Signal generation failed for {order_book.symbol}: {e}")
+            except (ValueError, AttributeError, TypeError) as e:
+                logger.error(
+                    "Signal generation failed",
+                    exc_info=True,
+                    extra={
+                        "symbol": order_book.symbol,
+                        "error_type": type(e).__name__,
+                    },
+                )
 
         return signals
 
     def filter_signals(
-        self, signals: List[OFISignal], min_confidence: Optional[float] = None
-    ) -> List[OFISignal]:
+        self, signals: list[OFISignal], min_confidence: float | None = None
+    ) -> list[OFISignal]:
         """
         Filter signals by confidence.
 
@@ -423,7 +452,7 @@ class OFISignalGenerator:
         threshold = min_confidence or self.config.min_confidence
         return [s for s in signals if s.confidence >= threshold]
 
-    def rank_signals(self, signals: List[OFISignal]) -> List[OFISignal]:
+    def rank_signals(self, signals: list[OFISignal]) -> list[OFISignal]:
         """
         Rank signals by confidence.
 
@@ -464,7 +493,7 @@ class OFISignalGenerator:
 
         return True
 
-    def get_signal_summary(self, signals: List[OFISignal]) -> dict:
+    def get_signal_summary(self, signals: list[OFISignal]) -> dict:
         """
         Get summary statistics for a list of signals.
 
@@ -518,4 +547,7 @@ class OFISignalGenerator:
         if "confidence_scale" in kwargs:
             self.confidence_scale = kwargs["confidence_scale"]
 
-        logger.info(f"Configuration updated: {kwargs}")
+        logger.info(
+            "Configuration updated",
+            extra={"updated_keys": list(kwargs.keys())},
+        )

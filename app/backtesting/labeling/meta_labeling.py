@@ -32,6 +32,31 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
+# Custom exceptions for meta-labeling (CC-006: Specific exception types)
+class MetaLabelingError(Exception):
+    """Base exception for meta-labeling errors."""
+
+    pass
+
+
+class ModelNotFittedError(MetaLabelingError):
+    """Raised when attempting to predict before fitting the model."""
+
+    pass
+
+
+class DataValidationError(MetaLabelingError):
+    """Raised when input data validation fails."""
+
+    pass
+
+
+class BetSizingValidationError(MetaLabelingError):
+    """Raised when bet sizing validation fails (TRD-001)."""
+
+    pass
+
+
 @dataclass
 class MetaLabelingConfig:
     """Configuration for meta-labeling."""
@@ -175,9 +200,14 @@ class MetaLabeling:
         if isinstance(y, pd.Series):
             y = y.values
 
-        # Validate inputs
+        # Validate inputs (CC-006: Specific exception types)
         if len(X) != len(y):
-            raise ValueError(f"X and y must have same length: {len(X)} != {len(y)}")
+            raise DataValidationError(
+                f"X and y must have same length: {len(X)} != {len(y)}"
+            )
+
+        if len(X) == 0:
+            raise DataValidationError("X and y must have at least one sample")
 
         # Step 1: Train primary model
         logger.info("Training primary model...")
@@ -249,11 +279,22 @@ class MetaLabeling:
             >>> print(f"Bet sizes: {result.bet_sizes}")
         """
         if not self._is_fitted:
-            raise ValueError("Model must be fitted before prediction")
+            raise ModelNotFittedError(
+                "Model must be fitted before prediction. Call fit() first."
+            )
 
         # Convert to numpy array
         if isinstance(X, pd.DataFrame):
             X = X.values
+
+        # Validate input
+        if len(X) == 0:
+            raise DataValidationError("X must have at least one sample")
+
+        if X.shape[1] != self.n_features_:
+            raise DataValidationError(
+                f"X has {X.shape[1]} features but model expects {self.n_features_}"
+            )
 
         # Primary model predictions
         primary_pred = self.primary_model.predict(X)
@@ -268,6 +309,9 @@ class MetaLabeling:
 
         # Calculate bet sizes from meta probabilities
         bet_sizes = self._calculate_bet_sizes(meta_proba)
+
+        # TRD-001: Validate bet sizes
+        self._validate_bet_sizes(bet_sizes)
 
         return MetaLabelingResult(
             primary_predictions=primary_pred,
@@ -372,7 +416,11 @@ class MetaLabeling:
                     eval_metric="logloss",
                 )
             except ImportError:
-                logger.warning("XGBoost not available, falling back to RandomForest")
+                # LOG-004: Add exc_info=True for stack traces
+                logger.warning(
+                    "XGBoost not available, falling back to RandomForest",
+                    exc_info=True,
+                )
                 return self._create_model("rf")
 
         elif model_type == "lgb":
@@ -388,7 +436,11 @@ class MetaLabeling:
                     verbose=-1,
                 )
             except ImportError:
-                logger.warning("LightGBM not available, falling back to RandomForest")
+                # LOG-004: Add exc_info=True for stack traces
+                logger.warning(
+                    "LightGBM not available, falling back to RandomForest",
+                    exc_info=True,
+                )
                 return self._create_model("rf")
 
         elif model_type == "logistic":
@@ -401,7 +453,7 @@ class MetaLabeling:
             )
 
         else:
-            raise ValueError(f"Unknown model type: {model_type}")
+            raise DataValidationError(f"Unknown model type: {model_type}")
 
     def _get_proba(self, model: Any, X: np.ndarray) -> np.ndarray:
         """
@@ -451,7 +503,10 @@ class MetaLabeling:
             bet_size = (meta_proba >= self.config.meta_threshold).astype(float)
 
         else:
-            raise ValueError(f"Unknown bet sizing method: {self.config.bet_sizing_method}")
+            logger.error(f"Unknown bet sizing method: {self.config.bet_sizing_method}")
+            raise DataValidationError(
+                f"Unknown bet sizing method: {self.config.bet_sizing_method}"
+            )
 
         # Clip to [min_bet_size, max_bet_size]
         bet_size = np.clip(bet_size, self.config.min_bet_size, self.config.max_bet_size)
@@ -461,6 +516,42 @@ class MetaLabeling:
         bet_size[~mask] = 0.0
 
         return bet_size
+
+    def _validate_bet_sizes(self, bet_sizes: np.ndarray) -> None:
+        """
+        Validate bet sizes (TRD-001: Trading system validation).
+
+        Args:
+            bet_sizes: Array of bet sizes to validate
+
+        Raises:
+            BetSizingValidationError: If bet sizes are invalid
+        """
+        # Check for NaN or Inf
+        if np.any(np.isnan(bet_sizes)):
+            raise BetSizingValidationError("Bet sizes contain NaN values")
+
+        if np.any(np.isinf(bet_sizes)):
+            raise BetSizingValidationError("Bet sizes contain infinite values")
+
+        # Check bounds
+        if np.any(bet_sizes < self.config.min_bet_size):
+            raise BetSizingValidationError(
+                f"Bet sizes below minimum: {bet_sizes.min()} < {self.config.min_bet_size}"
+            )
+
+        if np.any(bet_sizes > self.config.max_bet_size):
+            raise BetSizingValidationError(
+                f"Bet sizes above maximum: {bet_sizes.max()} > {self.config.max_bet_size}"
+            )
+
+        # Check total exposure (TRD-001)
+        total_exposure = np.abs(bet_sizes).sum()
+        if total_exposure > 1.0:
+            logger.warning(
+                f"Total bet size exposure exceeds 1.0: {total_exposure:.4f}. "
+                f"This may lead to over-leveraging.",
+            )
 
 
 def apply_meta_labeling(

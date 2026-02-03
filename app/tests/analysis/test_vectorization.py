@@ -8,6 +8,8 @@ Tests cover:
 - Model validation and data structures
 """
 
+import logging
+
 from __future__ import annotations
 
 import ast
@@ -647,7 +649,7 @@ df['col'].apply(lambda x: x * 2)
         """Test detection of .iterrows() calls."""
         code = """
 for idx, row in df.iterrows():
-    print(row['col'])
+    logger.debug(row['col'])
 """
         issues = auditor.audit_code_snippet(code)
         assert any(issue.issue_type == "iterrows" for issue in issues)

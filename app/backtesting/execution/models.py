@@ -141,7 +141,7 @@ class FillReason(str, Enum):
     EXCEEDS_ADV = "exceeds_adv"
 
 
-@dataclass
+@dataclass(frozen=True)
 class MarketSnapshot:
     """
     Snapshot of market conditions at a point in time.
@@ -316,7 +316,7 @@ class Order:
         return True
 
 
-@dataclass
+@dataclass(frozen=True)
 class CostBreakdown:
     """
     Detailed breakdown of execution costs.
@@ -363,7 +363,7 @@ class CostBreakdown:
         )
 
 
-@dataclass
+@dataclass(frozen=True)
 class FillResult:
     """
     Result of an order execution attempt.
@@ -432,7 +432,7 @@ class FillResult:
             return -self.total_cost
 
 
-@dataclass
+@dataclass(frozen=True)
 class ExecutionResult:
     """
     Complete execution result for a trade.

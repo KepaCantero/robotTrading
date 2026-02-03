@@ -7,10 +7,12 @@ Implementa una estrategia de pairs trading que identifica pares de activos
 cointegrados y comercia cuando el spread entre ellos se desvía significativamente.
 """
 
+from __future__ import annotations
+
 import logging
 from collections import defaultdict, deque
 from decimal import Decimal
-from typing import Any, Dict, List
+from typing import Any
 
 import numpy as np
 
@@ -32,7 +34,7 @@ logger = logging.getLogger(__name__)
 class PairsTradingStrategy(BaseStrategy):
     """Estrategia de trading de pares basada en cointegración."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]) -> None:
         """
         Inicializar estrategia de pairs trading.
 
@@ -155,7 +157,7 @@ class PairsTradingStrategy(BaseStrategy):
         logger.info(f"Trading pair: {self.pair_symbols}")
         logger.info(f"Max trades per day: {self.max_trades_per_day}")
 
-    def get_required_parameters(self) -> List[str]:
+    def get_required_parameters(self) -> list[str]:
         """
         Obtener parámetros requeridos para la estrategia.
 
@@ -171,7 +173,7 @@ class PairsTradingStrategy(BaseStrategy):
             "pair_symbols",
         ]
 
-    def generate_signals(self, market_data: Quote) -> List[Signal]:
+    def generate_signals(self, market_data: Quote) -> list[Signal]:
         """
         Generar señales de trading basadas en pairs trading.
 
@@ -767,7 +769,7 @@ class PairsTradingStrategy(BaseStrategy):
             and abs(spread) < self.max_spread_deviation  # Spread no extremo
         )
 
-    def _create_pair_signals(self, market_data: Quote, spread: Decimal) -> List[Signal]:
+    def _create_pair_signals(self, market_data: Quote, spread: Decimal) -> list[Signal]:
         """
         Crear señales para ambos activos del par.
 

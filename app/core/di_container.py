@@ -173,3 +173,218 @@ def reset_container() -> None:
     """Reset global container (mainly for testing)."""
     global _container
     _container = None
+
+
+# Portfolio service factory for FastAPI dependency injection
+_portfolio_service_instance = None
+
+
+def get_portfolio_service():
+    """
+    Get PortfolioService instance as a FastAPI dependency.
+
+    This is a convenience function for use with FastAPI's Depends().
+    It implements lazy singleton pattern - the service is created on first use.
+
+    Returns:
+        PortfolioService: Singleton instance of PortfolioService
+
+    Example:
+        ```python
+        from fastapi import Depends
+        from app.core.di_container import get_portfolio_service
+
+        @router.get("/")
+        async def get_portfolio(service: PortfolioService = Depends(get_portfolio_service)):
+            return await service.get_portfolio()
+        ```
+    """
+    global _portfolio_service_instance
+    if _portfolio_service_instance is None:
+        from app.providers.paper_trading import PaperTradingPortfolioProvider
+        from app.services.portfolio_service import PortfolioService
+
+        provider = PaperTradingPortfolioProvider()
+        _portfolio_service_instance = PortfolioService(provider)
+    return _portfolio_service_instance
+
+
+def reset_portfolio_service() -> None:
+    """Reset portfolio service singleton (mainly for testing)."""
+    global _portfolio_service_instance
+    _portfolio_service_instance = None
+
+
+# Signal scorer service factory for FastAPI dependency injection
+_signal_scorer_service_instance = None
+
+
+def get_signal_scorer_service():
+    """
+    Get SignalScorerService instance as a FastAPI dependency.
+
+    This is a convenience function for use with FastAPI's Depends().
+    It implements lazy singleton pattern - the service is created on first use.
+    The SignalScorerService depends on PortfolioService.
+
+    Returns:
+        SignalScorerService: Singleton instance of SignalScorerService
+
+    Example:
+        ```python
+        from fastapi import Depends
+        from app.core.di_container import get_signal_scorer_service
+
+        @router.post("/evaluate")
+        async def evaluate_signal(service: SignalScorerService = Depends(get_signal_scorer_service)):
+            return await service.evaluate_signal(...)
+        ```
+    """
+    global _signal_scorer_service_instance
+    if _signal_scorer_service_instance is None:
+        from app.services.signal_scorer import SignalScorerService
+
+        portfolio_service = get_portfolio_service()
+        _signal_scorer_service_instance = SignalScorerService(portfolio_service)
+    return _signal_scorer_service_instance
+
+
+def reset_signal_scorer_service() -> None:
+    """Reset signal scorer service singleton (mainly for testing)."""
+    global _signal_scorer_service_instance
+    _signal_scorer_service_instance = None
+
+
+# ============================================================================
+# Strategy Services - Factory Functions
+# ============================================================================
+
+_strategy_registry_instance = None
+_strategy_config_loader_instance = None
+_strategy_logger_instance = None
+_execution_engine_instance = None
+
+
+def get_strategy_registry() -> "StrategyRegistry":
+    """
+    Get StrategyRegistry singleton as a FastAPI dependency.
+
+    This is a convenience function for use with FastAPI's Depends().
+    It implements lazy singleton pattern - the service is created on first use.
+
+    Returns:
+        StrategyRegistry: Singleton instance of StrategyRegistry
+
+    Example:
+        ```python
+        from fastapi import Depends
+        from app.core.di_container import get_strategy_registry
+
+        @router.get("/")
+        async def get_strategies(registry: StrategyRegistry = Depends(get_strategy_registry)):
+            return registry.list_available_strategies()
+        ```
+    """
+    global _strategy_registry_instance
+    if _strategy_registry_instance is None:
+        from app.strategies import StrategyRegistry
+        _strategy_registry_instance = StrategyRegistry()
+    return _strategy_registry_instance
+
+
+def get_strategy_config_loader() -> "StrategyConfigLoader":
+    """
+    Get StrategyConfigLoader singleton as a FastAPI dependency.
+
+    This is a convenience function for use with FastAPI's Depends().
+    It implements lazy singleton pattern - the service is created on first use.
+
+    Returns:
+        StrategyConfigLoader: Singleton instance of StrategyConfigLoader
+
+    Example:
+        ```python
+        from fastapi import Depends
+        from app.core.di_container import get_strategy_config_loader
+
+        @router.post("/load")
+        async def load_strategy(config_loader: StrategyConfigLoader = Depends(get_strategy_config_loader)):
+            return config_loader.load_config()
+        ```
+    """
+    global _strategy_config_loader_instance
+    if _strategy_config_loader_instance is None:
+        from app.strategies import StrategyConfigLoader
+        _strategy_config_loader_instance = StrategyConfigLoader()
+    return _strategy_config_loader_instance
+
+
+def get_strategy_logger() -> "StrategyLogger":
+    """
+    Get StrategyLogger singleton as a FastAPI dependency.
+
+    This is a convenience function for use with FastAPI's Depends().
+    It implements lazy singleton pattern - the service is created on first use.
+
+    Returns:
+        StrategyLogger: Singleton instance of StrategyLogger
+
+    Example:
+        ```python
+        from fastapi import Depends
+        from app.core.di_container import get_strategy_logger
+
+        @router.get("/metrics")
+        async def get_metrics(logger: StrategyLogger = Depends(get_strategy_logger)):
+            return logger.get_all_metrics()
+        ```
+    """
+    global _strategy_logger_instance
+    if _strategy_logger_instance is None:
+        from app.strategies import StrategyLogger
+        _strategy_logger_instance = StrategyLogger()
+    return _strategy_logger_instance
+
+
+def get_execution_engine() -> "ExecutionEngine":
+    """
+    Get ExecutionEngine singleton as a FastAPI dependency.
+
+    This is a convenience function for use with FastAPI's Depends().
+    It implements lazy singleton pattern - the engine is created on first use
+    with its dependencies (StrategyRegistry and StrategyLogger) resolved from
+    the DI container.
+
+    Returns:
+        ExecutionEngine: Singleton instance of ExecutionEngine
+
+    Example:
+        ```python
+        from fastapi import Depends
+        from app.core.di_container import get_execution_engine
+
+        @router.post("/start")
+        async def start_engine(engine: ExecutionEngine = Depends(get_execution_engine)):
+            engine.start()
+            return {"message": "Engine started"}
+        ```
+    """
+    global _execution_engine_instance
+    if _execution_engine_instance is None:
+        from app.strategies import ExecutionEngine
+        registry = get_strategy_registry()
+        logger = get_strategy_logger()
+        _execution_engine_instance = ExecutionEngine(registry, logger)
+    return _execution_engine_instance
+
+
+def reset_strategy_services() -> None:
+    """Reset all strategy service singletons (mainly for testing)."""
+    global _strategy_registry_instance
+    global _strategy_config_loader_instance
+    global _strategy_logger_instance
+    global _execution_engine_instance
+    _strategy_registry_instance = None
+    _strategy_config_loader_instance = None
+    _strategy_logger_instance = None
+    _execution_engine_instance = None

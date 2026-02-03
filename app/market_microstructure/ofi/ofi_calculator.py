@@ -15,9 +15,8 @@ References:
 import logging
 from collections import deque
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Deque, List, Optional, Tuple
 
 import numpy as np
 from scipy import signal as scipy_signal
@@ -30,6 +29,11 @@ from app.market_microstructure.ofi.models import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+class InvalidPriceError(ValueError):
+    """Raised when an invalid price is provided."""
+    pass
 
 
 @dataclass
@@ -53,7 +57,7 @@ class OFIResult:
     total_volume: int
     timestamp: datetime
     is_valid: bool
-    reason: Optional[str] = None
+    reason: str | None = None
 
     def to_dict(self) -> dict:
         """Convert to dictionary."""
@@ -95,7 +99,7 @@ class OFICalculator:
         >>> cofi = calculator.calculate_cumulative_ofi([0.1, 0.2, 0.15])
     """
 
-    def __init__(self, config: Optional[OFIConfig] = None):
+    def __init__(self, config: OFIConfig | None = None):
         """
         Initialize OFI Calculator.
 
@@ -103,8 +107,8 @@ class OFICalculator:
             config: OFI configuration (uses defaults if None)
         """
         self.config = config or OFIConfig()
-        self._ofi_history: Deque[float] = deque(maxlen=self.config.lookback_periods)
-        self._cofi_tracker: Optional[CumulativeOFI] = None
+        self._ofi_history: deque[float] = deque(maxlen=self.config.lookback_periods)
+        self._cofi_tracker: CumulativeOFI | None = None
 
     def calculate_ofi(self, order_book: OrderBookSnapshot) -> OFIResult:
         """
@@ -182,7 +186,32 @@ class OFICalculator:
             is_valid=True,
         )
 
-    def _calculate_weighted_volumes(self, order_book: OrderBookSnapshot) -> Tuple[int, int]:
+    def _validate_price(self, price: Decimal | None) -> None:
+        """
+        Validate price for OFI calculations.
+
+        Args:
+            price: Price to validate
+
+        Raises:
+            InvalidPriceError: If price is invalid (negative, zero, or NaN)
+        """
+        if price is None:
+            return  # None is handled separately by callers
+
+        # Check if price is negative
+        if price < 0:
+            raise InvalidPriceError(f"Price cannot be negative: {price}")
+
+        # Check if price is zero
+        if price == 0:
+            raise InvalidPriceError(f"Price cannot be zero")
+
+        # Check if price is NaN (using comparison with itself)
+        if price != price:  # NaN != NaN is True
+            raise InvalidPriceError(f"Price cannot be NaN: {price}")
+
+    def _calculate_weighted_volumes(self, order_book: OrderBookSnapshot) -> tuple[int, int]:
         """
         Calculate volume-weighted bid and ask volumes.
 
@@ -194,14 +223,21 @@ class OFICalculator:
 
         Returns:
             Tuple of (weighted_bid_volume, weighted_ask_volume)
+
+        Raises:
+            InvalidPriceError: If mid_price is invalid
         """
         mid_price = order_book.mid_price
+        if mid_price is not None:
+            self._validate_price(mid_price)
+
         if mid_price is None or mid_price == 0:
             return order_book.bid_volume, order_book.ask_volume
 
         # Weight bids by proximity to mid (closer = higher weight)
         weighted_bid_vol = 0
         for price, qty in order_book.bids[: self.config.top_levels]:
+            self._validate_price(price)
             distance = float((mid_price - price) / mid_price)
             weight = max(0.1, 1.0 - distance * 10)  # Decay weight with distance
             weighted_bid_vol += int(qty * weight)
@@ -209,13 +245,14 @@ class OFICalculator:
         # Weight asks by proximity to mid
         weighted_ask_vol = 0
         for price, qty in order_book.asks[: self.config.top_levels]:
+            self._validate_price(price)
             distance = float((price - mid_price) / mid_price)
             weight = max(0.1, 1.0 - distance * 10)
             weighted_ask_vol += int(qty * weight)
 
         return weighted_bid_vol, weighted_ask_vol
 
-    def calculate_top_level_ofi(self, order_book: OrderBookSnapshot) -> Optional[float]:
+    def calculate_top_level_ofi(self, order_book: OrderBookSnapshot) -> float | None:
         """
         Calculate OFI using only top-level (best bid/ask) volumes.
 
@@ -239,7 +276,7 @@ class OFICalculator:
 
         return (best_bid_vol - best_ask_vol) / total
 
-    def calculate_cumulative_ofi(self, ofi_history: List[float]) -> List[float]:
+    def calculate_cumulative_ofi(self, ofi_history: list[float]) -> list[float]:
         """
         Calculate cumulative OFI (COFI).
 
@@ -270,7 +307,7 @@ class OFICalculator:
 
         return cofi
 
-    def calculate_ofi_momentum(self, ofi_history: List[float], window: int = 10) -> float:
+    def calculate_ofi_momentum(self, ofi_history: list[float], window: int = 10) -> float:
         """
         Calculate OFI momentum (rate of change).
 
@@ -297,7 +334,7 @@ class OFICalculator:
 
         return float(recent - previous)
 
-    def calculate_ofi_velocity(self, ofi_history: List[float], window: int = 5) -> float:
+    def calculate_ofi_velocity(self, ofi_history: list[float], window: int = 5) -> float:
         """
         Calculate OFI velocity (first derivative).
 
@@ -320,8 +357,8 @@ class OFICalculator:
             return ofi_history[-1] - ofi_history[0]
 
     def calculate_smoothed_ofi(
-        self, ofi_history: List[float], window: Optional[int] = None
-    ) -> List[float]:
+        self, ofi_history: list[float], window: int | None = None
+    ) -> list[float]:
         """
         Calculate exponentially-weighted moving average of OFI.
 
@@ -352,7 +389,7 @@ class OFICalculator:
 
         return smoothed.tolist()
 
-    def calculate_ofi_std_score(self, ofi: float, ofi_history: List[float]) -> Optional[float]:
+    def calculate_ofi_std_score(self, ofi: float, ofi_history: list[float]) -> float | None:
         """
         Calculate z-score of OFI relative to history.
 
@@ -374,7 +411,7 @@ class OFICalculator:
 
         return (ofi - mean) / std
 
-    def detect_ofi_regime(self, ofi_history: List[float], window: int = 20) -> str:
+    def detect_ofi_regime(self, ofi_history: list[float], window: int = 20) -> str:
         """
         Detect the current OFI regime.
 
@@ -408,8 +445,8 @@ class OFICalculator:
             return "balanced"
 
     def calculate_ofi_autocorrelation(
-        self, ofi_history: List[float], max_lag: int = 10
-    ) -> List[float]:
+        self, ofi_history: list[float], max_lag: int = 10
+    ) -> list[float]:
         """
         Calculate autocorrelation of OFI at various lags.
 
@@ -440,12 +477,12 @@ class OFICalculator:
 
     def calculate_ofi_statistics(
         self,
-        ofi_history: List[float],
-        returns_history: Optional[List[float]] = None,
+        ofi_history: list[float],
+        returns_history: Optional[list[float]] = None,
         symbol: str = "",
-        period_start: Optional[datetime] = None,
-        period_end: Optional[datetime] = None,
-    ) -> Optional[OFIStatistics]:
+        period_start: datetime | None = None,
+        period_end: datetime | None = None,
+    ) -> OFIStatistics | None:
         """
         Calculate comprehensive OFI statistics.
 
@@ -513,8 +550,8 @@ class OFICalculator:
 
             return OFIStatistics(
                 symbol=symbol,
-                period_start=period_start or datetime.utcnow(),
-                period_end=period_end or datetime.utcnow(),
+                period_start=period_start or datetime.now(timezone.utc),
+                period_end=period_end or datetime.now(timezone.utc),
                 mean_ofi=mean_ofi,
                 std_ofi=std_ofi,
                 max_ofi=max_ofi,
@@ -566,13 +603,16 @@ class OFICalculator:
             Updated cumulative OFI value
         """
         if self._cofi_tracker is None:
-            logger.warning("COFI tracker not initialized. Call get_cofi_tracker first.")
+            logger.warning(
+                "COFI tracker not initialized. Call get_cofi_tracker first.",
+                extra={"ofi_value": ofi_value},
+            )
             return 0.0
 
-        self._cofi_tracker.update(ofi_value, timestamp)
+        self._cofi_tracker = self._cofi_tracker.update(ofi_value, timestamp)
         return self._cofi_tracker.current_cofi
 
-    def get_ofi_history(self) -> List[float]:
+    def get_ofi_history(self) -> list[float]:
         """
         Get current OFI history.
 
@@ -585,10 +625,13 @@ class OFICalculator:
         """Reset OFI history."""
         self._ofi_history.clear()
         self._cofi_tracker = None
-        logger.info("OFI history reset")
+        logger.info(
+            "OFI history reset",
+            extra={"had_tracker": self._cofi_tracker is not None},
+        )
 
     def calculate_predictive_power(
-        self, ofi_history: List[float], returns_history: List[float]
+        self, ofi_history: list[float], returns_history: list[float]
     ) -> dict:
         """
         Calculate the predictive power of OFI for returns.

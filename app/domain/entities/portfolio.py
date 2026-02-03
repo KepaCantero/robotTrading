@@ -9,16 +9,19 @@ Reference: Rule 05-architecture.md, Rule 03-solid-principles.md
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, Iterator, List, Optional
+from typing import Any, Dict, Iterator, List, Optional
 
 from app.domain.entities.position import Position, PositionSide, PositionStatus
 from app.domain.value_objects.capital import Capital
 from app.domain.value_objects.money import Money
 from app.domain.value_objects.risk_parameters import RiskParameters
+
+logger = logging.getLogger(__name__)
 
 
 class PortfolioStatus(str, Enum):
@@ -62,6 +65,9 @@ class Portfolio:
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
 
+    # Optional logger for audit logging (dependency injection)
+    _audit_logger: Optional[logging.Logger] = None
+
     def __post_init__(self):
         """Validate portfolio invariants."""
         if not self.portfolio_id:
@@ -77,6 +83,36 @@ class Portfolio:
     # Position Management
     # ==========================================================================
 
+    def set_audit_logger(self, audit_logger: logging.Logger) -> None:
+        """
+        Set the audit logger for this portfolio instance.
+
+        Args:
+            audit_logger: Logger instance to use for audit logging
+        """
+        self._audit_logger = audit_logger
+
+    def _audit_log(self, action: str, details: Dict[str, Any]) -> None:
+        """
+        Log audit trail for trading operations.
+
+        Args:
+            action: Action being performed (e.g., "ADD_POSITION", "REMOVE_POSITION")
+            details: Dictionary containing operation details
+        """
+        log_data = {
+            "portfolio_id": self.portfolio_id,
+            "action": action,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            **details,
+        }
+
+        if self._audit_logger:
+            self._audit_logger.info("Portfolio audit: %s", log_data)
+        else:
+            # Fallback to module logger if no audit logger is set
+            logger.info("Portfolio audit: %s", log_data)
+
     def add_position(self, position: Position) -> None:
         """
         Add a position to the portfolio.
@@ -90,6 +126,15 @@ class Portfolio:
         # Business rule: Check if adding position would exceed risk limits
         allowed, reason = self.can_add_position(position)
         if not allowed:
+            self._audit_log(
+                "ADD_POSITION_REJECTED",
+                {
+                    "symbol": position.symbol,
+                    "quantity": str(position.quantity),
+                    "price": str(position.avg_entry_price),
+                    "reason": reason,
+                },
+            )
             raise ValueError(f"Position {position.symbol} exceeds risk parameters. {reason}")
 
         # Check if position already exists
@@ -97,9 +142,27 @@ class Portfolio:
             # Add to existing position
             existing = self.positions[position.symbol]
             existing.add_shares(position.quantity, position.avg_entry_price)
+            self._audit_log(
+                "ADD_TO_POSITION",
+                {
+                    "symbol": position.symbol,
+                    "added_quantity": str(position.quantity),
+                    "price": str(position.avg_entry_price),
+                    "new_total_quantity": str(existing.quantity),
+                },
+            )
         else:
             # Add new position
             self.positions[position.symbol] = position
+            self._audit_log(
+                "NEW_POSITION",
+                {
+                    "symbol": position.symbol,
+                    "quantity": str(position.quantity),
+                    "price": str(position.avg_entry_price),
+                    "side": position.side.value,
+                },
+            )
 
         self._mark_updated()
 
@@ -116,18 +179,44 @@ class Portfolio:
         """
         if symbol not in self.positions:
             # Silently return if position doesn't exist (no-op)
+            self._audit_log(
+                "REMOVE_POSITION_NOT_FOUND",
+                {
+                    "symbol": symbol,
+                    "quantity": str(quantity) if quantity else "FULL",
+                    "note": "Position not found, no-op performed",
+                },
+            )
             return
 
         position = self.positions[symbol]
 
         if quantity is None or quantity >= position.quantity:
             # Full exit
+            self._audit_log(
+                "CLOSE_POSITION",
+                {
+                    "symbol": symbol,
+                    "quantity": str(position.quantity),
+                    "price": str(position.current_price),
+                    "exit_type": "full",
+                },
+            )
             position.quantity = Decimal("0")
             position.status = PositionStatus.CLOSED
-            position.exit_date = datetime.utcnow()
+            position.exit_date = datetime.now(timezone.utc)
             del self.positions[symbol]
         else:
             # Partial exit
+            self._audit_log(
+                "REDUCE_POSITION",
+                {
+                    "symbol": symbol,
+                    "removed_quantity": str(quantity),
+                    "price": str(position.current_price),
+                    "previous_quantity": str(position.quantity),
+                },
+            )
             position.remove_shares(quantity, position.current_price)
 
         self._mark_updated()
@@ -144,9 +233,29 @@ class Portfolio:
             ValueError: If symbol not found or price invalid
         """
         if symbol not in self.positions:
+            self._audit_log(
+                "UPDATE_PRICE_FAILED",
+                {
+                    "symbol": symbol,
+                    "new_price": str(new_price),
+                    "error": f"Position {symbol} not found in portfolio",
+                },
+            )
             raise ValueError(f"Position {symbol} not found in portfolio")
 
+        old_price = self.positions[symbol].current_price
         self.positions[symbol].update_price(new_price)
+
+        self._audit_log(
+            "UPDATE_POSITION_PRICE",
+            {
+                "symbol": symbol,
+                "old_price": str(old_price),
+                "new_price": str(new_price),
+                "quantity": str(self.positions[symbol].quantity),
+            },
+        )
+
         self._mark_updated()
 
     def get_position(self, symbol: str) -> Optional[Position]:
@@ -177,7 +286,9 @@ class Portfolio:
         """
         # Total value = initial capital + positions value
         # This tracks: starting capital + unrealized P&L
-        return Money(amount=self.capital.amount + self.get_positions_value(), currency=self.currency)
+        return Money(
+            amount=self.capital.amount + self.get_positions_value(), currency=self.currency
+        )
 
     def get_cash(self) -> Decimal:
         """
@@ -404,7 +515,7 @@ class Portfolio:
         for position in self.positions.values():
             if position.is_open():
                 position.status = PositionStatus.CLOSED
-                position.exit_date = datetime.utcnow()
+                position.exit_date = datetime.now(timezone.utc)
         self._mark_updated()
 
     # ==========================================================================
@@ -431,7 +542,7 @@ class Portfolio:
 
     def _mark_updated(self) -> None:
         """Mark portfolio as updated."""
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(timezone.utc)
 
     # ==========================================================================
     # Factory Methods & Serialization

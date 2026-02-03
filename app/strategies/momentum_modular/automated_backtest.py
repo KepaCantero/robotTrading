@@ -661,5 +661,5 @@ if __name__ == "__main__":
         initial_capital=Decimal("100000"),
     )
 
-    print("\n✅ Backtest automatizado completado!")
-    print("Resultados guardados en: docs/BACKTEST_RESULTS/")
+    logger.debug("\n✅ Backtest automatizado completado!")
+    logger.debug("Resultados guardados en: docs/BACKTEST_RESULTS/")

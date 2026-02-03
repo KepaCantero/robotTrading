@@ -174,15 +174,15 @@ class CarverRobustRulesStrategy(BaseStrategy):
 
             # Check if we should execute (fixed timestamp rule)
             if not self._should_execute_at_fixed_timestamp():
-                logger.debug(f"CARVER {market_data.symbol}: Skipping - not at fixed execution time")
+                logger.debug("CARVER skipping - not at fixed execution time", symbol=market_data.symbol)
                 return []
 
             # Need sufficient history
             if len(self.price_history) < self.lookback_period:
                 logger.debug(
-                    f"CARVER {market_data.symbol}: Insufficient history "
-                    f"({len(self.price_history)} < {self.lookback_period})"
-                )
+            f"CARVER {market_data.symbol}: Insufficient history "
+            f"({len(self.price_history)} < {self.lookback_period})"
+        )
                 return []
 
             # Calculate simple robust indicator (Carver uses carry or trend)
@@ -228,7 +228,7 @@ class CarverRobustRulesStrategy(BaseStrategy):
                     f"price={current_price:.2f}, ma={ma:.2f}"
                 )
 
-        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
+        except (ValueError, KeyError, AttributeError, TypeError) as e:
             logger.error(
                 f"CARVER Error generating signals for {market_data.symbol}: {e}",
                 exc_info=True,

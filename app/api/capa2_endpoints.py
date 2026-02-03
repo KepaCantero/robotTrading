@@ -1,17 +1,20 @@
 import asyncio
 import logging
+import traceback
 import uuid
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from pydantic import BaseModel, Field
 from requests.exceptions import HTTPError, RequestException
 
 from app.core.models.input_profile import InputProcessor, InputProfile
 from app.services.configuration_persistence.configuration_repository import ConfigurationRepository
 from app.services.deployment.deploy_decision_orchestrator import DeployDecisionOrchestrator
+
+from . import audit_logger, get_correlation_id
 
 # import asyncio  # F811 duplicate from line 10
 """
@@ -28,6 +31,12 @@ Exposes the complete CAPA 2 parametrization pipeline:
 8. RiskScalingApplication (T8.1)
 9. ReportingGenerator (T9.1)
 10. DeployDecisionOrchestrator (T10.1)
+
+GAP Fixes:
+- API-002: Added structured logging with correlation IDs
+- API-005: TODO: Rate limiting on expensive workflow endpoints
+- API-006: Added correlation ID tracking
+- API-009: Added audit logging for workflow operations
 """
 
 # Import all CAPA 2 services
@@ -219,13 +228,23 @@ class CompleteWorkflowResponse(BaseModel):
 
 
 @router.post("/process-input", response_model=ProcessInputResponse)
-async def process_input(request: ProcessInputRequest):
+async def process_input(request: ProcessInputRequest, http_request: Request):
     """
     Process user investment profile input.
 
     Validates capital, objective, risk tolerance, and investment horizon.
     Creates InputProfile for downstream processing.
     """
+    correlation_id = get_correlation_id()
+    logger.info(
+        "Processing input profile",
+        extra={
+            "correlation_id": correlation_id,
+            "capital_initial": float(request.capital_initial),
+            "objetivo_inversion": request.objetivo_inversion,
+            "risk_tolerance": request.risk_tolerance,
+        },
+    )
     try:
         input_profile = InputProfile(
             capital_initial=request.capital_initial,
@@ -238,7 +257,17 @@ async def process_input(request: ProcessInputRequest):
         # Generate unique ID
         input_id = f"input_{uuid.uuid4().hex[:8]}_{int(datetime.now().timestamp())}"
 
-        logger.info(f"✅ Processed input: {input_id}")
+        audit_logger.log_action(
+            action="input_processed",
+            method=http_request.method,
+            path=http_request.url.path,
+            details={"input_id": input_id, "capital_tier": "MEDIUM"},
+        )
+
+        logger.info(
+            f"✅ Processed input: {input_id}",
+            extra={"correlation_id": correlation_id, "input_id": input_id},
+        )
 
         return ProcessInputResponse(
             input_id=input_id,
@@ -251,7 +280,22 @@ async def process_input(request: ProcessInputRequest):
         )
 
     except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
-        logger.error(f"❌ Error processing input: {e}")
+        logger.error(
+            f"❌ Error processing input: {e}",
+            extra={
+                "correlation_id": correlation_id,
+                "error_type": type(e).__name__,
+                "error": str(e),
+                "stack_trace": traceback.format_exc(),
+            },
+        )
+        audit_logger.log_error(
+            method=http_request.method,
+            path=http_request.url.path,
+            error_type=type(e).__name__,
+            error_message=str(e),
+            stack_trace=traceback.format_exc(),
+        )
         raise HTTPException(status_code=400, detail=str(e))
 
 

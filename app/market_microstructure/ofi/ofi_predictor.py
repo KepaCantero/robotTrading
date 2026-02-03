@@ -17,11 +17,10 @@ The predictor implements multiple approaches:
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
-from typing import List, Optional, Tuple
-
 import numpy as np
+from numpy.linalg import LinAlgError
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.preprocessing import StandardScaler
 
@@ -32,6 +31,21 @@ from app.market_microstructure.ofi.models import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+class ModelNotTrainedError(RuntimeError):
+    """Raised when prediction is attempted but model is not trained."""
+    pass
+
+
+class InvalidDataError(ValueError):
+    """Raised when input data is invalid for training or prediction."""
+    pass
+
+
+class PredictionError(RuntimeError):
+    """Raised when prediction fails unexpectedly."""
+    pass
 
 
 class OFIPredictor:
@@ -60,7 +74,7 @@ class OFIPredictor:
         >>> print(f"Confidence: {prediction.confidence:.2%}")
     """
 
-    def __init__(self, config: Optional[OFIConfig] = None):
+    def __init__(self, config: OFIConfig | None = None):
         """
         Initialize OFI Predictor.
 
@@ -72,9 +86,9 @@ class OFIPredictor:
         self.threshold = self.config.ofi_threshold
 
         # Trained models
-        self._linear_model: Optional[LinearRegression] = None
-        self._logistic_model: Optional[LogisticRegression] = None
-        self._scaler: Optional[StandardScaler] = None
+        self._linear_model: LinearRegression | None = None
+        self._logistic_model: LogisticRegression | None = None
+        self._scaler: StandardScaler | None = None
         self._ofi_returns_correlation: float = 0.0
 
         # Model metadata
@@ -85,8 +99,8 @@ class OFIPredictor:
     def predict_direction(
         self,
         ofi: float,
-        historical_ofi: List[float],
-        historical_returns: List[float],
+        historical_ofi: list[float],
+        historical_returns: list[float],
         horizon: OFIHorizon = OFIHorizon.SHORT,
     ) -> OFIPrediction:
         """
@@ -117,7 +131,7 @@ class OFIPredictor:
             >>> print(f"Expected move: {prediction.expected_move_bps} bps")
         """
         symbol = "UNKNOWN"  # Would be passed in real implementation
-        timestamp = datetime.utcnow()
+        timestamp = datetime.now(timezone.utc)
 
         # Get signals from different methods
         threshold_signal = self._get_threshold_signal(ofi)
@@ -177,7 +191,7 @@ class OFIPredictor:
         else:
             return 0.0  # Neutral
 
-    def _get_model_signal(self, ofi: float) -> Optional[float]:
+    def _get_model_signal(self, ofi: float) -> float | None:
         """
         Get signal from trained linear model.
 
@@ -201,11 +215,18 @@ class OFIPredictor:
                 return max(-1.0, predicted_return * 1000)
             else:
                 return 0.0
-        except Exception as e:
-            logger.warning(f"Model prediction failed: {e}")
+        except (ValueError, AttributeError) as e:
+            logger.warning(
+                "Model prediction failed",
+                exc_info=True,
+                extra={
+                    "ofi": ofi,
+                    "error_type": type(e).__name__,
+                },
+            )
             return None
 
-    def _get_momentum_signal(self, historical_ofi: List[float]) -> float:
+    def _get_momentum_signal(self, historical_ofi: list[float]) -> float:
         """
         Get signal from OFI momentum.
 
@@ -236,9 +257,9 @@ class OFIPredictor:
     def _combine_signals(
         self,
         threshold_signal: float,
-        model_signal: Optional[float],
+        model_signal: float | None,
         momentum_signal: float,
-    ) -> Tuple[str, float]:
+    ) -> tuple[str, float]:
         """
         Combine signals into final direction and confidence.
 
@@ -278,8 +299,8 @@ class OFIPredictor:
     def _calculate_expected_move(
         self,
         ofi: float,
-        historical_ofi: List[float],
-        historical_returns: List[float],
+        historical_ofi: list[float],
+        historical_returns: list[float],
     ) -> Decimal:
         """
         Calculate expected price move in basis points.
@@ -326,8 +347,17 @@ class OFIPredictor:
 
             return expected_bps
 
-        except Exception as e:
-            logger.warning(f"Expected move calculation failed: {e}")
+        except (ValueError, TypeError, ZeroDivisionError) as e:
+            logger.warning(
+                "Expected move calculation failed",
+                exc_info=True,
+                extra={
+                    "ofi": ofi,
+                    "ofi_history_length": len(historical_ofi),
+                    "returns_history_length": len(historical_returns) if historical_returns else 0,
+                    "error_type": type(e).__name__,
+                },
+            )
             return Decimal("0")
 
     def _get_horizon_string(self, horizon: OFIHorizon) -> str:
@@ -341,8 +371,8 @@ class OFIPredictor:
 
     def train_model(
         self,
-        ofi_history: List[float],
-        returns_history: List[float],
+        ofi_history: list[float],
+        returns_history: list[float],
     ) -> None:
         """
         Train OFI prediction model.
@@ -354,16 +384,27 @@ class OFIPredictor:
             ofi_history: Historical OFI values
             returns_history: Corresponding future returns
 
+        Raises:
+            InvalidDataError: If data lengths mismatch or insufficient data
+
         Example:
             >>> predictor = OFIPredictor()
             >>> predictor.train_model(ofi_history, returns_history)
             >>> print(f"Correlation: {predictor._ofi_returns_correlation:.3f}")
         """
         if len(ofi_history) != len(returns_history):
-            raise ValueError("OFI history and returns must have same length")
+            raise InvalidDataError(
+                f"OFI history ({len(ofi_history)}) and returns history ({len(returns_history)}) must have same length"
+            )
 
         if len(ofi_history) < 10:
-            logger.warning("Insufficient data for training")
+            logger.warning(
+                "Insufficient data for training",
+                extra={
+                    "ofi_history_length": len(ofi_history),
+                    "minimum_required": 10,
+                },
+            )
             return
 
         try:
@@ -401,15 +442,27 @@ class OFIPredictor:
             }
 
             logger.info(
-                f"Model trained on {self._training_samples} samples, "
-                f"R²: {self._feature_importance['r_squared']:.3f}"
+                "Model trained successfully",
+                extra={
+                    "training_samples": self._training_samples,
+                    "r_squared": self._feature_importance["r_squared"],
+                    "correlation": self._ofi_returns_correlation,
+                },
             )
 
-        except Exception as e:
-            logger.error(f"Model training failed: {e}")
+        except (ValueError, LinAlgError) as e:
+            logger.error(
+                "Model training failed",
+                exc_info=True,
+                extra={
+                    "ofi_history_length": len(ofi_history),
+                    "error_type": type(e).__name__,
+                },
+            )
             self._is_trained = False
+            raise PredictionError(f"Failed to train model: {e}") from e
 
-    def predict_with_model(self, ofi: float) -> Optional[float]:
+    def predict_with_model(self, ofi: float) -> float | None:
         """
         Predict return using trained model.
 
@@ -425,11 +478,18 @@ class OFIPredictor:
         try:
             ofi_scaled = self._scaler.transform([[ofi]])
             return float(self._linear_model.predict(ofi_scaled)[0])
-        except Exception as e:
-            logger.warning(f"Prediction failed: {e}")
+        except (ValueError, AttributeError) as e:
+            logger.warning(
+                "Prediction failed",
+                exc_info=True,
+                extra={
+                    "ofi": ofi,
+                    "error_type": type(e).__name__,
+                },
+            )
             return None
 
-    def predict_direction_with_model(self, ofi: float) -> Optional[str]:
+    def predict_direction_with_model(self, ofi: float) -> str | None:
         """
         Predict direction using logistic model.
 
@@ -446,8 +506,15 @@ class OFIPredictor:
             ofi_scaled = self._scaler.transform([[ofi]])
             prediction = self._logistic_model.predict(ofi_scaled)[0]
             return "up" if prediction == 1 else "down"
-        except Exception as e:
-            logger.warning(f"Direction prediction failed: {e}")
+        except (ValueError, AttributeError) as e:
+            logger.warning(
+                "Direction prediction failed",
+                exc_info=True,
+                extra={
+                    "ofi": ofi,
+                    "error_type": type(e).__name__,
+                },
+            )
             return None
 
     def get_model_confidence(self, ofi: float) -> float:
@@ -470,12 +537,12 @@ class OFIPredictor:
             ofi_scaled = self._scaler.transform([[ofi]])
             proba = self._logistic_model.predict_proba(ofi_scaled)[0]
             return float(max(proba))
-        except Exception:
+        except (ValueError, AttributeError):
             return min(1.0, abs(ofi) * 2)
 
     def calculate_prediction_intervals(
         self, ofi: float, confidence_level: float = 0.95
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         """
         Calculate prediction intervals for expected return.
 
@@ -511,13 +578,21 @@ class OFIPredictor:
 
             return (lower, upper)
 
-        except Exception as e:
-            logger.warning(f"Prediction interval calculation failed: {e}")
+        except (ValueError, AttributeError, ImportError) as e:
+            logger.warning(
+                "Prediction interval calculation failed",
+                exc_info=True,
+                extra={
+                    "ofi": ofi,
+                    "confidence_level": confidence_level,
+                    "error_type": type(e).__name__,
+                },
+            )
             return (0.0, 0.0)
 
     def detect_regime_change(
-        self, historical_ofi: List[float], window: int = 20
-    ) -> Tuple[bool, str]:
+        self, historical_ofi: list[float], window: int = 20
+    ) -> tuple[bool, str]:
         """
         Detect if OFI regime has changed.
 
@@ -594,4 +669,7 @@ class OFIPredictor:
         self._training_samples = 0
         self._ofi_returns_correlation = 0.0
         self._feature_importance = {}
-        logger.info("Model reset")
+        logger.info(
+            "Model reset",
+            extra={"was_trained": self._is_trained},
+        )

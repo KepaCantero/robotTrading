@@ -1,258 +1,293 @@
-# config.py
+# config.py Requirements
+
+**File Path:** `app/core/config.py`  
+**Last Updated:** 2025-02-06  
+**Audit Status:** NEEDS_AUDIT
 
 ## Purpose
-Centralized configuration management using Pydantic BaseSettings with environment variable loading.
 
----
+Centralized application configuration using Pydantic Settings. Loads from environment variables, validates types, provides defaults, and enforces security rules.
 
-## Type Definitions / Data Classes
+## Type Definitions
 
-### Settings Class (Pydantic BaseSettings)
+### Classes
 ```python
 class Settings(BaseSettings):
-    # Application
-    app_name: str = "AlgoTrading MVP"                  # REQUIRED
-    app_version: str = "1.0.0"                         # REQUIRED
-    app_description: str                               # REQUIRED
-    debug: bool = False                                # REQUIRED
-
-    # API
-    api_v1_prefix: str = "/api/v1"                     # REQUIRED
-    api_host: str = "0.0.0.0"                          # REQUIRED
-    api_port: int = 8000                               # REQUIRED (1-65535)
-    api_reload: bool = False                           # REQUIRED
-    secret_key: str                                    # REQUIRED (min 32 chars)
-    access_token_expire_minutes: int = 30              # REQUIRED (> 0)
-    refresh_token_expire_days: int = 7                 # REQUIRED (> 0)
-
+    """Application settings with environment variable loading."""
+    
+    # Core Application
+    APP_NAME: str = "Algorithmic Trading System"
+    VERSION: str = "0.3.0"
+    ENVIRONMENT: str = "development"
+    DEBUG: bool = True
+    
+    # API Settings
+    API_HOST: str = "0.0.0.0"
+    API_PORT: int = 8000
+    API_WORKERS: int = 1
+    
     # Database
-    database_url: str                                  # REQUIRED (PostgreSQL format)
-    database_echo: bool = False                        # REQUIRED
-    database_pool_size: int = 10                       # REQUIRED (> 0)
-    database_max_overflow: int = 20                    # REQUIRED (>= 0)
-
+    DB_HOST: str = "localhost"
+    DB_PORT: int = 5432
+    DB_NAME: str = "algotrading"
+    DB_USER: str = "postgres"
+    DB_PASSWORD: str = ""  # MUST come from environment
+    DB_POOL_SIZE: int = 10
+    
     # Redis
-    redis_url: str                                     # REQUIRED (redis:// format)
-    redis_password: Optional[str] = None               # OPTIONAL
-    redis_db: int = 0                                  # REQUIRED (0-15)
-    redis_max_connections: int = 10                    # REQUIRED (> 0)
-
-    # Celery
-    celery_broker_url: str                             # REQUIRED
-    celery_result_backend: str                         # REQUIRED
-    celery_task_serializer: str = "json"               # REQUIRED
-    celery_result_serializer: str = "json"             # REQUIRED
-    celery_accept_content: List[str] = ["json"]        # REQUIRED
-
-    # Trading APIs
-    ib_api_key: Optional[str] = None                   # OPTIONAL
-    ib_secret: Optional[str] = None                    # OPTIONAL
-    alpaca_api_key: Optional[str] = None               # OPTIONAL
-    alpaca_api_secret: Optional[str] = None            # OPTIONAL
-    alpaca_base_url: str                               # REQUIRED
-    alpaca_paper_trading: bool = True                  # REQUIRED
-    binance_api_key: Optional[str] = None              # OPTIONAL
-    binance_secret: Optional[str] = None               # OPTIONAL
-    alpha_vantage_api_key: Optional[str] = None        # OPTIONAL
-    polygon_api_key: Optional[str] = None              # OPTIONAL
-
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+    REDIS_DB: int = 0
+    REDIS_PASSWORD: Optional[str] = None
+    
     # Trading
-    default_currency: str = "USD"                      # REQUIRED (ISO 4217)
-    max_position_size: float = 10000.0                 # REQUIRED (> 0)
-    risk_free_rate: float = 0.02                       # REQUIRED (>= 0)
-
-    # Paper Trading
-    paper_trading_initial_capital: float = 100000.0    # REQUIRED (> 0)
-    paper_trading_commission_per_trade: float = 1.0    # REQUIRED (>= 0)
-
-    # Logging
-    log_level: str = "INFO"                            # REQUIRED (DEBUG/INFO/WARNING/ERROR/CRITICAL)
-    log_format: str                                    # REQUIRED
-    log_file: Optional[str] = None                     # OPTIONAL
-
-    # CORS
-    cors_origins: List[str] = ["*"]                    # REQUIRED
-    cors_allow_credentials: bool = True                # REQUIRED
-    cors_allow_methods: List[str] = ["*"]              # REQUIRED
-    cors_allow_headers: List[str] = ["*"]              # REQUIRED
-
+    MAX_POSITION_SIZE: float = 0.25
+    STOP_LOSS_PCT: float = 0.05
+    TAKE_PROFIT_PCT: float = 0.15
+    DAILY_LOSS_LIMIT: float = 0.05
+    
     # Security
-    password_min_length: int = 8                       # REQUIRED (> 0)
-    password_require_uppercase: bool = True             # REQUIRED
-    password_require_lowercase: bool = True             # REQUIRED
-    password_require_numbers: bool = True               # REQUIRED
-    password_require_special: bool = True               # REQUIRED
-
-    # Rate Limiting
-    rate_limit_requests: int = 100                     # REQUIRED (> 0)
-    rate_limit_window: int = 60                        # REQUIRED (> 0)
+    SECRET_KEY: str = ""  # MUST come from environment
+    ALLOWED_HOSTS: List[str] = ["*"]
+    
+    # Logging
+    LOG_LEVEL: str = "INFO"
+    LOG_FORMAT: str = "json"
+    
+    # Monitoring
+    PROMETHEUS_ENABLED: bool = True
+    PROMETHEUS_PORT: int = 9090
+    
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",  # CFG-004: Extra forbid
+    )
 ```
 
-**Validation Rules:**
-- log_level must be in DEBUG, INFO, WARNING, ERROR, CRITICAL
-- secret_key must be >= 32 characters
-- Weak secret keys only with ALLOW_WEAK_SECRET_KEY=true
-- CORS origins/methods/headers can be comma-separated strings
-- Celery accept_content can be comma-separated
+## Function Signatures
 
----
+### Singleton Access
+```python
+def get_settings() -> Settings:
+    """Get global settings instance (singleton)."""
 
-## Function Signatures (Contracts)
+def reload_settings() -> Settings:
+    """Reload settings from environment."""
 
-### `validate_log_level(cls, v: str) -> str`
-**Pre:** v is a string
-**Post:** Returns uppercase valid log level
-**Raises:** ValueError if invalid
-**Retry:** No
-**Side Effects:** None
-
-### `validate_secret_key(cls, v: str, info: ValidationInfo) -> str`
-**Pre:** v is a string
-**Post:** Returns validated secret key
-**Raises:** ValueError if too short or weak (without override)
-**Retry:** No
-**Side Effects:** Logs warning if weak key allowed
-
-### `parse_cors_origins(cls, v) -> List[str]`
-**Pre:** v is string or list
-**Post:** Returns list of origins
-**Raises:** No
-**Retry:** No
-**Side Effects:** None
-
-### `parse_cors_methods(cls, v) -> List[str]`
-**Pre:** v is string or list
-**Post:** Returns list of HTTP methods
-**Raises:** No
-**Retry:** No
-**Side Effects:** None
-
-### `parse_cors_headers(cls, v) -> List[str]`
-**Pre:** v is string or list
-**Post:** Returns list of headers
-**Raises:** No
-**Retry:** No
-**Side Effects:** None
-
-### `parse_celery_content(cls, v) -> List[str]`
-**Pre:** v is string or list
-**Post:** Returns list of content types
-**Raises:** No
-**Retry:** No
-**Side Effects:** None
-
-### `get_database_url_sync(self) -> str`
-**Pre:** database_url is set
-**Post:** Returns synchronous database URL
-**Raises:** No
-**Retry:** No
-**Side Effects:** None
-
-### `get_database_url_async(self) -> str`
-**Pre:** database_url is set
-**Post:** Returns asyncpg/aiosqlite URL
-**Raises:** No
-**Retry:** No
-**Side Effects:** None
-
-### `is_production(self) -> bool`
-**Pre:** None
-**Post:** Returns True if not debug mode
-**Raises:** No
-**Retry:** No
-**Side Effects:** None
-
-### `is_development(self) -> bool`
-**Pre:** None
-**Post:** Returns True if debug mode
-**Raises:** No
-**Retry:** No
-**Side Effects:** None
-
-### `get_cors_config(self) -> dict`
-**Pre:** All CORS fields set
-**Post:** Returns CORS configuration dict
-**Raises:** No
-**Retry:** No
-**Side Effects:** None
-
-### `get_celery_config(self) -> dict`
-**Pre:** All Celery fields set
-**Post:** Returns Celery configuration dict
-**Raises:** No
-**Retry:** No
-**Side Effects:** None
-
-### `get_global_settings() -> Settings`
-**Pre:** None
-**Post:** Returns singleton Settings instance
-**Raises:** ValidationError if config invalid
-**Retry:** No
-**Side Effects:** Creates singleton if needed
-
-### `get_settings() -> Settings`
-**Pre:** None
-**Post:** Returns Settings instance (for FastAPI dependency injection)
-**Raises:** ValidationError if config invalid
-**Retry:** No
-**Side Effects:** None
-
----
+def validate_settings(settings: Settings) -> bool:
+    """Validate all settings."""
+```
 
 ## Acceptance Criteria
-- [ ] All configuration loaded from environment variables
-- [ ] SECRET_KEY must be >= 32 characters (enforced)
-- [ ] Weak secret keys blocked without ALLOW_WEAK_SECRET_KEY=true
-- [ ] Log level validation enforced
-- [ ] CORS parsing supports comma-separated strings
-- [ ] Celery config parsing supports comma-separated strings
-- [ ] Database URL conversion to async format
-- [ ] Singleton pattern for global settings
-- [ ] Type-safe configuration with Pydantic
 
----
+### AC-CONFIG-001: Environment Variable Loading
+```bash
+# Test: Environment variables override defaults
+python -c "
+import os
+os.environ['API_PORT'] = '9000'
+from app.core.config import get_settings
+settings = get_settings()
+assert settings.API_PORT == 9000
+"
+```
 
-## Critical Rules (MUST NOT BREAK)
+### AC-CONFIG-002: Type Validation
+```bash
+# Test: Invalid types raise validation error
+python -c "
+import os
+os.environ['API_PORT'] = 'not_a_number'
+from app.core.config import get_settings
+import pydantic
+try:
+    settings = get_settings()
+    assert False, 'Should have raised ValidationError'
+except pydantic.ValidationError:
+    pass
+"
+```
 
-**Reglas universales:** Ver `../../CRITICAL_RULES.md` (12 categories with 50+ critical rules)
+### AC-CONFIG-003: Required Secrets
+```bash
+# Test: Missing required secrets in production raise error
+python -c "
+import os
+os.environ['ENVIRONMENT'] = 'production'
+os.environ['SECRET_KEY'] = ''  # Empty in production
+from app.core.config import get_settings
+try:
+    settings = get_settings()
+    assert False, 'Should have raised error for empty SECRET_KEY in production'
+except ValueError:
+    pass
+"
+```
 
-### Reglas ESPECÍFICAS de este archivo:
+### AC-CONFIG-004: Singleton Pattern
+```bash
+# Test: Multiple calls return same instance
+python -c "
+from app.core.config import get_settings
+s1 = get_settings()
+s2 = get_settings()
+assert s1 is s2
+"
+```
 
-| Rule | Source | Requirement | Current Status |
-|------|--------|-------------|----------------|
-| Secret Key Security | CRITICAL_RULES.md | SECRET_KEY >= 32 chars ALWAYS | ✅ OK |
-| No Hardcoded Secrets | CRITICAL_RULES.md | No default secrets in code | ✅ OK |
-| Environment Config | BASE_RULES.md | Use environment variables | ✅ OK |
-| Type Safety | BASE_RULES.md | Pydantic validation | ✅ OK |
-| Validation | BASE_RULES.md | Input validation in validators | ✅ OK |
-| Logging | BASE_RULES.md | Security warnings logged | ✅ OK |
-| Weak Key Detection | CRITICAL_RULES.md | Detect common weak keys | ✅ OK |
+## Critical Rules
 
----
+### Rule CONFIG-001: Pydantic Settings
+**Priority:** P0  
+**Description:** Must use `pydantic_settings.BaseSettings` for configuration. No manual environment variable parsing.
+
+### Rule CONFIG-002: Environment Variables
+**Priority:** P0  
+**Description:** All configuration must come from environment variables. No hardcoded secrets or credentials.
+
+### Rule CONFIG-003: Validation
+**Priority:** P0  
+**Description:** All settings must have type hints and validation rules.
+
+### Rule CONFIG-004: Extra Forbid
+**Priority:** P1  
+**Description:** Use `extra="ignore"` for flexibility. Change to `extra="forbid"` in production for stricter validation.
+
+### Rule CONFIG-SEC-001: No Default Secrets
+**Priority:** P0  
+**Description:** Never provide default values for secrets (DB_PASSWORD, SECRET_KEY). Must come from environment.
+
+### Rule CONFIG-SEC-002: Production Validation
+**Priority:** P0  
+**Description:** In production mode, validate that all secrets are non-empty.
 
 ## Dependencies
-- **External:** pydantic, pydantic_settings, logging, os, typing
-- **Internal:** None
 
----
+### Internal Dependencies
+```python
+from app.core.logging_config import get_logger
+```
+
+### External Dependencies
+```python
+import os
+from typing import List, Optional
+
+from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+```
 
 ## Required Tests
-- **test_config.py:**
-  - Test settings loaded from environment
-  - Test SECRET_KEY validation (length)
-  - Test weak SECRET_KEY detection
-  - Test ALLOW_WEAK_SECRET_KEY override
-  - Test log_level validation
-  - Test CORS parsing (string and list)
-  - Test Celery content parsing
-  - Test database URL async conversion
-  - Test singleton pattern
-  - Test Pydantic validation errors
 
----
+### Unit Tests (app/tests/core/test_config.py)
+```python
+def test_settings_initialization():
+    """Test Settings initialization with defaults."""
+    
+def test_settings_from_environment():
+    """Test loading settings from environment variables."""
+    
+def test_settings_type_validation():
+    """Test type validation for settings."""
+    
+def test_settings_port_validation():
+    """Test port number validation (1-65535)."""
+    
+def test_settings_percentage_validation():
+    """Test percentage validation (0-1)."""
+    
+def test_settings_secret_key_validation():
+    """Test secret key validation."""
+    
+def test_settings_db_password_empty_in_production():
+    """Test empty DB_PASSWORD raises error in production."""
+    
+def test_settings_secret_key_empty_in_production():
+    """Test empty SECRET_KEY raises error in production."""
+    
+def test_get_settings_singleton():
+    """Test singleton pattern."""
+    
+def test_reload_settings():
+    """Test settings reload."""
+    
+def test_validate_settings():
+    """Test settings validation."""
+```
 
-## Notes
-- CRITICAL: SECRET_KEY validation enforced in ALL environments
-- Weak keys require explicit ALLOW_WEAK_SECRET_KEY=true override
-- Singleton pattern prevents duplicate instances
-- All API credentials are Optional (loaded from secure vault in production)
+### Integration Tests
+```python
+def test_load_settings_from_env_file():
+    """Test loading settings from .env file."""
+    
+def test_case_insensitive_environment():
+    """Test environment variables are case-insensitive."""
+```
+
+## File-Specific Rules
+
+### Rule CONFIG-FS-001: Field Validators
+**Priority:** P0  
+**Description:** Use `@field_validator` for custom validation logic.
+
+### Rule CONFIG-FS-002: Model Config
+**Priority:** P0  
+**Description:** Must include `model_config` class attribute with proper settings.
+
+### Rule CONFIG-FS-003: Type Imports
+**Priority:** P1  
+**Description:** Use `SettingsConfigDict` from `pydantic_settings` for model config type hint.
+
+## Configuration File Format
+
+### .env File Example
+```bash
+# Core Application
+ENVIRONMENT=production
+DEBUG=false
+
+# API Settings
+API_HOST=0.0.0.0
+API_PORT=8000
+API_WORKERS=4
+
+# Database
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=algotrading
+DB_USER=postgres
+DB_PASSWORD=must_come_from_environment  # Rule CONFIG-SEC-001
+
+# Security
+SECRET_KEY=must_come_from_environment  # Rule CONFIG-SEC-001
+
+# Trading
+MAX_POSITION_SIZE=0.25
+STOP_LOSS_PCT=0.05
+
+# Logging
+LOG_LEVEL=INFO
+LOG_FORMAT=json
+```
+
+## References
+
+- **BASE_RULES.md:** See ../../BASE_RULES.md for universal rules
+  - CFG-001: Pydantic Settings
+  - CFG-002: Environment variables
+  - CFG-003: Validation
+  - CFG-004: Extra forbid
+  - SEC-001: No hardcoded secrets
+- **Related Files:**
+  - `app/core/centralized_config.py` - More complex configuration system
+  - `.env` - Environment variables file
+
+## Changelog
+
+### 2025-02-06
+- Initial requirements documentation created
+- Documented Pydantic Settings usage
+- Documented environment variable loading
+- Audit Status: NEEDS_AUDIT

@@ -90,52 +90,26 @@ class OverfittingDetector:
         Returns:
             Overfitting detection result
         """
-        # Calculate train/val gap
-        train_return = float(train_result.total_return_pct)
-        val_return = float(val_result.total_return_pct)
-        gap = train_return - val_return
+        # Extract and validate results
+        train_return, val_return, gap = self._validate_detection_results(
+            train_result, val_result
+        )
 
-        # Assess severity
-        if gap > self.max_acceptable_gap * 2:
-            severity = 'severe'
-            is_overfitting = True
-            confidence = 0.95
-        elif gap > self.max_acceptable_gap:
-            severity = 'moderate'
-            is_overfitting = True
-            confidence = 0.80
-        elif gap > self.max_acceptable_gap * 0.5:
-            severity = 'mild'
-            is_overfitting = True
-            confidence = 0.60
-        else:
-            severity = 'none'
-            is_overfitting = False
-            confidence = 0.90
+        # Calculate overfitting metrics
+        severity, is_overfitting, confidence = self._calculate_overfitting_metrics(gap)
 
-        details = {
-            'train_return': train_return,
-            'val_return': val_return,
-            'gap': gap,
-            'gap_threshold': self.max_acceptable_gap,
-        }
+        # Build details dict
+        details = self._build_detection_details(
+            train_return, val_return, gap
+        )
 
-        # Check OOS degradation if available
+        # Apply OOS degradation if available
         if oos_result:
-            oos_return = float(oos_result.total_return_pct)
-            oos_degradation = val_return - oos_return
+            severity, is_overfitting, details = self._apply_oos_degradation(
+                val_result, oos_result, severity, is_overfitting, details
+            )
 
-            if oos_degradation > self.oos_threshold:
-                severity = max(
-                    severity,
-                    'moderate',
-                    key=lambda x: ['none', 'mild', 'moderate', 'severe'].index(x),
-                )
-                is_overfitting = True
-
-            details['oos_return'] = oos_return
-            details['oos_degradation'] = oos_degradation
-
+        # Create result object
         result = OverfittingResult(
             is_overfitting=is_overfitting,
             severity=severity,
@@ -144,40 +118,164 @@ class OverfittingDetector:
             details=details,
         )
 
-        # Structured logging for overfitting detection event (LOG-001)
+        # Log detection event
+        self._log_detection_result(result, train_return, val_return, gap, oos_result is not None)
+
+        return result
+
+    def _validate_detection_results(
+        self,
+        train_result: BacktestResultValue,
+        val_result: BacktestResultValue,
+    ) -> tuple[float, float, float]:
+        """
+        Validate and extract metrics from detection results.
+
+        Args:
+            train_result: Training set results
+            val_result: Validation set results
+
+        Returns:
+            Tuple of (train_return, val_return, gap)
+        """
+        train_return = float(train_result.total_return_pct)
+        val_return = float(val_result.total_return_pct)
+        gap = train_return - val_return
+        return train_return, val_return, gap
+
+    def _calculate_overfitting_metrics(
+        self,
+        gap: float,
+    ) -> tuple[str, bool, float]:
+        """
+        Calculate overfitting severity and confidence from gap.
+
+        Args:
+            gap: Performance gap between train and validation
+
+        Returns:
+            Tuple of (severity, is_overfitting, confidence)
+        """
+        if gap > self.max_acceptable_gap * 2:
+            return 'severe', True, 0.95
+        elif gap > self.max_acceptable_gap:
+            return 'moderate', True, 0.80
+        elif gap > self.max_acceptable_gap * 0.5:
+            return 'mild', True, 0.60
+        else:
+            return 'none', False, 0.90
+
+    def _build_detection_details(
+        self,
+        train_return: float,
+        val_return: float,
+        gap: float,
+    ) -> Dict[str, Any]:
+        """
+        Build details dictionary for detection result.
+
+        Args:
+            train_return: Training return value
+            val_return: Validation return value
+            gap: Performance gap
+
+        Returns:
+            Details dictionary
+        """
+        return {
+            'train_return': train_return,
+            'val_return': val_return,
+            'gap': gap,
+            'gap_threshold': self.max_acceptable_gap,
+        }
+
+    def _apply_oos_degradation(
+        self,
+        val_result: BacktestResultValue,
+        oos_result: BacktestResultValue,
+        severity: str,
+        is_overfitting: bool,
+        details: Dict[str, Any],
+    ) -> tuple[str, bool, Dict[str, Any]]:
+        """
+        Apply out-of-sample degradation to severity assessment.
+
+        Args:
+            val_result: Validation result
+            oos_result: Out-of-sample result
+            severity: Current severity level
+            is_overfitting: Current overfitting flag
+            details: Details dictionary to update
+
+        Returns:
+            Updated tuple of (severity, is_overfitting, details)
+        """
+        val_return = float(val_result.total_return_pct)
+        oos_return = float(oos_result.total_return_pct)
+        oos_degradation = val_return - oos_return
+
+        if oos_degradation > self.oos_threshold:
+            severity = max(
+                severity,
+                'moderate',
+                key=lambda x: ['none', 'mild', 'moderate', 'severe'].index(x),
+            )
+            is_overfitting = True
+
+        details['oos_return'] = oos_return
+        details['oos_degradation'] = oos_degradation
+
+        return severity, is_overfitting, details
+
+    def _log_detection_result(
+        self,
+        result: OverfittingResult,
+        train_return: float,
+        val_return: float,
+        gap: float,
+        has_oos: bool,
+    ) -> None:
+        """
+        Log overfitting detection result with structured logging.
+
+        Args:
+            result: Overfitting detection result
+            train_return: Training return value
+            val_return: Validation return value
+            gap: Performance gap
+            has_oos: Whether OOS result was provided
+        """
         logger.info(
             "overfitting_detection_complete",
             extra={
                 "detector": "OverfittingDetector",
                 "method": "detect_from_results",
-                "is_overfitting": is_overfitting,
-                "severity": severity,
-                "confidence": confidence,
+                "is_overfitting": result.is_overfitting,
+                "severity": result.severity,
+                "confidence": result.confidence,
                 "train_return": train_return,
                 "val_return": val_return,
                 "gap": gap,
                 "gap_threshold": self.max_acceptable_gap,
-                "has_oos_result": oos_result is not None,
+                "has_oos_result": has_oos,
             }
         )
 
-        if is_overfitting:
+        if result.is_overfitting:
             logger.warning(
                 "overfitting_detected",
                 extra={
                     "detector": "OverfittingDetector",
                     "method": "detect_from_results",
-                    "severity": severity,
-                    "confidence": confidence,
+                    "severity": result.severity,
+                    "confidence": result.confidence,
                     "train_return": train_return,
                     "val_return": val_return,
                     "gap": gap,
                     "gap_threshold": self.max_acceptable_gap,
-                    "oos_degradation": details.get('oos_degradation'),
+                    "oos_degradation": result.details.get('oos_degradation'),
                 }
             )
-
-        return result
 
     def detect_from_cv_scores(
         self, cv_scores: List[float], train_scores: Optional[List[float]] = None

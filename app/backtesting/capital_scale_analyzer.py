@@ -321,7 +321,7 @@ class CapitalScaleAnalyzer:
                     )
 
             except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-                logger.error(f"Error simulating capital level {capital_level}: {e}")
+                logger.error(f"Error simulating capital level {capital_level}: {e}", exc_info=True)
                 warnings.append(f"€{capital_level:,.0f}: Simulation failed - {str(e)}")
 
         if not results:

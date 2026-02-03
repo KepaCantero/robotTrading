@@ -5,12 +5,15 @@ This module provides tools for analyzing correlations between trading
 strategies to identify redundancy and improve diversification.
 """
 
+import logging
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 
 from app.ensemble.models import CorrelationMetrics
+
+logger = logging.getLogger(__name__)
 
 
 class CorrelationAnalyzer:
@@ -62,6 +65,7 @@ class CorrelationAnalyzer:
             self.method = method
 
         except (TypeError, AttributeError) as e:
+            logger.error("CorrelationAnalyzer initialization failed", exc_info=True)
             raise ValueError(f"Invalid parameters: {e}") from e
 
     def analyze_correlations(self, returns_data: Dict[str, np.ndarray]) -> CorrelationMetrics:
@@ -114,6 +118,7 @@ class CorrelationAnalyzer:
             )
 
         except Exception as e:
+            logger.error("Correlation analysis failed", exc_info=True)
             raise RuntimeError(f"Correlation analysis failed: {e}") from e
 
     def _validate_returns_data(self, returns_data: Dict[str, np.ndarray]) -> None:
@@ -179,6 +184,7 @@ class CorrelationAnalyzer:
             return corr_matrix
 
         except Exception:
+            logger.error("Correlation matrix calculation failed", exc_info=True)
             # Fallback to identity matrix on error
             return np.eye(len(self.strategies))
 
@@ -213,6 +219,7 @@ class CorrelationAnalyzer:
             return mean_corr, median_corr, max_corr, min_corr
 
         except Exception:
+            logger.error("Correlation stats calculation failed", exc_info=True)
             return 0.0, 0.0, 0.0, 0.0
 
     def _detect_redundant_pairs(self, corr_matrix: np.ndarray) -> List[Tuple[str, str, float]]:
@@ -241,6 +248,7 @@ class CorrelationAnalyzer:
             return redundant
 
         except Exception:
+            logger.error("Redundant pair detection failed", exc_info=True)
             return []
 
     def _calculate_effective_number_bets(self, corr_matrix: np.ndarray) -> float:
@@ -274,6 +282,7 @@ class CorrelationAnalyzer:
             return float(effective_n)
 
         except Exception:
+            logger.error("Effective number of bets calculation failed", exc_info=True)
             return float(len(self.strategies))
 
     def _calculate_eigenvalues(self, corr_matrix: np.ndarray) -> List[float]:
@@ -291,6 +300,7 @@ class CorrelationAnalyzer:
             return [float(ev) for ev in eigenvalues]
 
         except Exception:
+            logger.error("Eigenvalue calculation failed", exc_info=True)
             return [1.0] * len(self.strategies)
 
     def _calculate_condition_number(self, eigenvalues: List[float]) -> float:
@@ -312,6 +322,7 @@ class CorrelationAnalyzer:
             return eigenvalues[0] / eigenvalues[-1]
 
         except Exception:
+            logger.error("Condition number calculation failed", exc_info=True)
             return 1.0
 
     def _matrix_to_dict(self, matrix: np.ndarray) -> Dict[str, Dict[str, Decimal]]:
@@ -376,6 +387,7 @@ class CorrelationAnalyzer:
             return None
 
         except Exception:
+            logger.error("Least correlated pair lookup failed", exc_info=True)
             return None
 
     def suggest_strategy_removal(
@@ -410,6 +422,7 @@ class CorrelationAnalyzer:
             return [s[0] for s in sorted_strategies[:max_to_remove]]
 
         except Exception:
+            logger.error("Redundant pair detection failed", exc_info=True)
             return []
 
     def calculate_portfolio_correlation(
@@ -446,6 +459,7 @@ class CorrelationAnalyzer:
             return weighted_sum / weight_sum
 
         except Exception:
+            logger.error("Portfolio correlation calculation failed", exc_info=True)
             return 0.0
 
     def calculate_partial_correlation(
@@ -490,6 +504,7 @@ class CorrelationAnalyzer:
             return float(partial_corr)
 
         except Exception:
+            logger.error("Portfolio correlation calculation failed", exc_info=True)
             return 0.0
 
     def calculate_rolling_correlation(
@@ -543,6 +558,7 @@ class CorrelationAnalyzer:
             return rolling_correlations
 
         except Exception:
+            logger.error("Rolling correlation calculation failed", exc_info=True)
             return {}
 
     def get_correlation_summary(self, metrics: CorrelationMetrics) -> Dict[str, Any]:
@@ -575,6 +591,7 @@ class CorrelationAnalyzer:
             }
 
         except Exception:
+            logger.error("Rolling correlation calculation failed", exc_info=True)
             return {}
 
     def test_stability(

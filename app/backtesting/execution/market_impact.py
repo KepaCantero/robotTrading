@@ -44,7 +44,7 @@ class ImpactType(str, Enum):
     TOTAL = "total"  # Combined permanent + temporary
 
 
-@dataclass
+@dataclass(frozen=True)
 class AlmgrenChrissConfig:
     """
     Configuration for Almgren-Chriss market impact model.
@@ -71,7 +71,7 @@ class AlmgrenChrissConfig:
     max_impact_bps: Decimal = Decimal("100")  # Max 100 bps (1%) impact
 
 
-@dataclass
+@dataclass(frozen=True)
 class MarketImpact:
     """
     Result of market impact calculation.
@@ -122,7 +122,7 @@ class MarketImpact:
         }
 
 
-@dataclass
+@dataclass(frozen=True)
 class ImpactConfig:
     """
     Configuration for market impact model.
@@ -186,8 +186,8 @@ class MarketImpactModel:
             side="buy"
         )
 
-        print(f"Total impact: {impact.total_impact_bps} bps")
-        print(f"Estimated fill price: ${impact.estimated_price}")
+        logger.debug(f"Total impact: {impact.total_impact_bps} bps")
+        logger.debug(f"Estimated fill price: ${impact.estimated_price}")
     """
 
     # Typical coefficient ranges (from empirical studies)

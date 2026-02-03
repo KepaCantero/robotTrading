@@ -9,6 +9,7 @@ Reference: Rule 05-architecture.md, Rule 03-solid-principles.md
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Dict, List, Optional
@@ -16,6 +17,8 @@ from typing import Dict, List, Optional
 from app.domain.entities.portfolio import Portfolio
 from app.domain.entities.position import Position
 from app.domain.value_objects.percentage import Percentage
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -68,7 +71,7 @@ class Rebalancer:
     - Minimizing transaction costs
     """
 
-    def __init__(self, config: Optional[RebalanceConfig] = None):
+    def __init__(self, config: Optional[RebalanceConfig] = None) -> None:
         """
         Initialize rebalancer.
 
@@ -96,17 +99,28 @@ class Rebalancer:
         total_value = portfolio.get_total_value().amount
 
         if total_value == 0:
+            logger.warning("Cannot calculate drift: portfolio total value is zero")
             return drift
 
         for symbol, target_weight in target_weights.items():
             position = portfolio.get_position(symbol)
             if position:
+                # P0-2: Explicit zero-check before division (total_value already validated)
                 current_weight = position.get_value().amount / total_value
             else:
                 current_weight = Decimal("0")
 
             # Drift = current - target (in percentage points)
             drift[symbol] = (current_weight - target_weight) * Decimal("100")
+
+        logger.debug(
+            "Calculated drift for portfolio",
+            extra={
+                "portfolio_id": str(id(portfolio)),
+                "total_value": str(total_value),
+                "num_symbols": len(drift),
+            }
+        )
 
         return drift
 
@@ -124,11 +138,29 @@ class Rebalancer:
 
         Returns:
             RebalancePlan with required trades
+
+        Raises:
+            ValueError: If target_weights sum is not approximately 1.0
         """
+        # P1-2: Validate target_weights sum BEFORE creating plan
+        weights_sum = sum(target_weights.values())
+        if not Decimal("0.99") <= weights_sum <= Decimal("1.01"):
+            logger.error(
+                "Invalid target weights: must sum to 1.0",
+                extra={
+                    "weights_sum": str(weights_sum),
+                    "num_targets": len(target_weights),
+                }
+            )
+            raise ValueError(
+                f"Target weights must sum to 1.0 (got {weights_sum:.4f})"
+            )
+
         total_value = portfolio.get_total_value().amount
         cash = portfolio.get_cash()
 
         if total_value == 0:
+            logger.warning("Cannot create rebalance plan: portfolio total value is zero")
             return RebalancePlan(
                 total_value=Decimal("0"),
                 cash_available=Decimal("0"),
@@ -150,10 +182,24 @@ class Rebalancer:
                 current_qty = position.quantity
                 current_price = position.current_price
             else:
+                # P0-1: Cannot create trade for missing positions without price data
+                # Log warning and skip this symbol (will show up in drift calculation)
+                logger.debug(
+                    f"Skipping rebalance trade for {symbol}: no position or price data available",
+                    extra={
+                        "symbol": symbol,
+                        "target_value": str(target_value),
+                    }
+                )
+                # Still calculate drift (which will be 100% underweight)
                 current_value = Decimal("0")
                 current_qty = Decimal("0")
-                # Need to get price from elsewhere - placeholder
-                current_price = Decimal("100")  # Placeholder
+                value_diff = target_value - current_value
+                drift_pct = (
+                    (value_diff / total_value * Decimal("100")) if total_value > 0 else Decimal("0")
+                )
+                total_drift += abs(drift_pct)
+                continue
 
             # Calculate drift
             value_diff = target_value - current_value
@@ -174,6 +220,14 @@ class Rebalancer:
                 # Check minimum trade size
                 trade_value = abs(trade_qty * current_price)
                 if trade_value < self._config.min_trade_size:
+                    logger.debug(
+                        f"Skipping trade for {symbol}: below minimum trade size",
+                        extra={
+                            "symbol": symbol,
+                            "trade_value": str(trade_value),
+                            "min_trade_size": str(self._config.min_trade_size),
+                        }
+                    )
                     continue
 
                 # Calculate average price for validation (handle zero quantity case)
@@ -198,6 +252,17 @@ class Rebalancer:
 
         # Estimate costs
         estimated_cost = Decimal(str(len(trades))) * self._config.cost_per_trade
+
+        logger.info(
+            "Created rebalance plan",
+            extra={
+                "portfolio_id": str(id(portfolio)),
+                "total_value": str(total_value),
+                "num_trades": len(trades),
+                "total_drift": str(total_drift),
+                "estimated_cost": str(estimated_cost),
+            }
+        )
 
         return RebalancePlan(
             total_value=total_value,
@@ -234,7 +299,18 @@ class Rebalancer:
         buys.sort(key=lambda t: t.drift_pct, reverse=True)
 
         # Execute sells first, then buys
-        return sells + buys
+        optimized = sells + buys
+
+        logger.debug(
+            "Optimized rebalance order",
+            extra={
+                "num_sells": len(sells),
+                "num_buys": len(buys),
+                "total_trades": len(trades),
+            }
+        )
+
+        return optimized
 
     def validate_rebalance_plan(
         self,
@@ -286,6 +362,25 @@ class Rebalancer:
                 )
 
         is_valid = len(issues) == 0
+
+        if issues:
+            logger.warning(
+                "Rebalance plan validation failed",
+                extra={
+                    "portfolio_id": str(id(portfolio)),
+                    "num_issues": len(issues),
+                    "issues": issues,
+                }
+            )
+        else:
+            logger.debug(
+                "Rebalance plan validation passed",
+                extra={
+                    "portfolio_id": str(id(portfolio)),
+                    "num_trades": len(plan.trades),
+                }
+            )
+
         return is_valid, issues
 
     def get_rebalance_summary(self, plan: RebalancePlan) -> Dict[str, str]:

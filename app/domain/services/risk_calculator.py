@@ -140,12 +140,8 @@ class RiskCalculator:
         """
         position_value = position.get_value().amount
 
-        # Position as percentage of portfolio
-        position_pct = (
-            (position_value / portfolio_value * Decimal("100"))
-            if portfolio_value > 0
-            else Decimal("0")
-        )
+        # Position as percentage of portfolio (with zero-division protection)
+        position_pct = self._safe_divide(position_value * Decimal("100"), portfolio_value)
 
         # Position risk (simplified - uses unrealized P&L as proxy)
         unrealized_pnl = position.get_unrealized_pnl().amount
@@ -279,6 +275,26 @@ class RiskCalculator:
     # Private Helper Methods
     # ==========================================================================
 
+    @staticmethod
+    def _safe_divide(numerator: Decimal, denominator: Decimal, default: Decimal = Decimal("0")) -> Decimal:
+        """
+        Perform safe division with zero-division protection.
+
+        Args:
+            numerator: Value to divide
+            denominator: Value to divide by
+            default: Default value if denominator is zero
+
+        Returns:
+            Result of division or default value
+        """
+        if denominator == 0:
+            return default
+        try:
+            return numerator / denominator
+        except (ZeroDivisionError, ArithmeticError):
+            return default
+
     def _calculate_concentration(self, portfolio: Portfolio) -> Decimal:
         """Calculate highest position concentration."""
         if not portfolio.get_open_positions():
@@ -378,10 +394,7 @@ class RiskCalculator:
         max_exposure = portfolio.risk_parameters.max_portfolio_exposure
         current_exposure = portfolio.get_gross_exposure()
 
-        if max_exposure == 0:
-            return Decimal("0")
-
-        utilisation = (current_exposure / max_exposure) * Decimal("100")
+        utilisation = self._safe_divide(current_exposure * Decimal("100"), max_exposure)
         return min(utilisation, Decimal("100"))  # Cap at 100%
 
     def get_risk_summary(self, metrics: RiskMetrics) -> Dict[str, str]:
@@ -418,11 +431,10 @@ class RiskCalculator:
         else:
             util_level = "High utilisation"
 
-        # Calculate VaR as percentage of portfolio value
-        var_95_percentage = (
-            (metrics.var_95 / metrics.portfolio_value * 100)
-            if metrics.portfolio_value > 0
-            else Decimal("0")
+        # Calculate VaR as percentage of portfolio value (with zero-division protection)
+        var_95_percentage = self._safe_divide(
+            metrics.var_95 * Decimal("100"),
+            metrics.portfolio_value
         )
 
         return {

@@ -10,13 +10,16 @@ Reference: Tax optimization for algorithmic trading
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
-from decimal import Decimal
 from datetime import date, datetime, timedelta
+from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
 class TaxMethod(str, Enum):
@@ -131,16 +134,23 @@ class TaxOptimizer:
     def configure_for_residence(
         self,
         country: str,
-    ) -> Dict[str, any]:
+    ) -> dict[str, object]:
         """
         Get tax configuration for residence.
 
         Args:
-            country: Country code
+            country: Country code (ISO 3166-1 alpha-2 format)
 
         Returns:
             Dictionary with tax configuration
+
+        Raises:
+            ValueError: If country code is invalid or empty
         """
+        if not country or not isinstance(country, str):
+            raise ValueError("country must be a non-empty string")
+
+        logger.info("Configuring tax residence", country=country)
         try:
             jurisdiction = TaxJurisdiction(country.lower())
         except ValueError:
@@ -169,25 +179,43 @@ class TaxOptimizer:
 
     def calculate_tax_liability(
         self,
-        tax_lots: List[TaxLot],
+        tax_lots: list[TaxLot],
         sold_quantity: Decimal,
         sale_price: Decimal,
         jurisdiction: TaxJurisdiction = TaxJurisdiction.DEFAULT,
         method: TaxMethod = TaxMethod.FIFO,
-    ) -> Tuple[TaxCalculation, List[TaxLot]]:
+    ) -> tuple[TaxCalculation, list[TaxLot]]:
         """
         Calculate tax liability for a sale using specified method.
 
         Args:
             tax_lots: Available tax lots
-            sold_quantity: Quantity to sell
-            sale_price: Sale price per share
+            sold_quantity: Quantity to sell (must be positive)
+            sale_price: Sale price per share (must be positive)
             jurisdiction: Tax jurisdiction
             method: Tax lot accounting method
 
         Returns:
             Tuple of (TaxCalculation, remaining_lots)
+
+        Raises:
+            ValueError: If validation fails
         """
+        if sold_quantity <= 0:
+            raise ValueError("sold_quantity must be positive")
+
+        if sale_price <= 0:
+            raise ValueError("sale_price must be positive")
+
+        if not tax_lots:
+            raise ValueError("tax_lots cannot be empty")
+
+        logger.info(
+            "Calculating tax liability",
+            jurisdiction=jurisdiction.value,
+            method=method.value,
+            quantity=str(sold_quantity),
+        )
         # Select lots to sell based on method
         lots_to_sell, remaining_lots = self._select_lots(tax_lots, sold_quantity, method)
 
@@ -236,10 +264,10 @@ class TaxOptimizer:
 
     def _select_lots(
         self,
-        tax_lots: List[TaxLot],
+        tax_lots: list[TaxLot],
         quantity: Decimal,
         method: TaxMethod,
-    ) -> Tuple[List[TaxLot], List[TaxLot]]:
+    ) -> tuple[list[TaxLot], list[TaxLot]]:
         """
         Select tax lots to sell based on method.
 
@@ -336,10 +364,10 @@ class TaxOptimizer:
 
     def find_tax_loss_harvesting_opportunities(
         self,
-        tax_lots: List[TaxLot],
+        tax_lots: list[TaxLot],
         jurisdiction: TaxJurisdiction = TaxJurisdiction.DEFAULT,
         min_loss: Decimal = Decimal("1000"),
-    ) -> List[Tuple[TaxLot, Decimal]]:
+    ) -> list[tuple[TaxLot, Decimal]]:
         """
         Find tax loss harvesting opportunities.
 

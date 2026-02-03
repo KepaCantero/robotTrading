@@ -4,8 +4,9 @@ Data models for parameter optimization.
 Defines the core data structures used across all optimization algorithms.
 """
 
+import logging
+
 from dataclasses import dataclass, field
-from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import (
@@ -14,12 +15,10 @@ from typing import (
     Dict,
     List,
     Optional,
-    Tuple,
-    TypeVar,
     Union,
 )
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class ParameterType(str, Enum):
@@ -307,7 +306,7 @@ class ParameterGrid:
 
         # Generate all combinations
         for params in param_grid.generate_combinations():
-            print(params)
+            logger.debug(params)
 
         # Sample random parameters
         params = param_grid.sample_random()

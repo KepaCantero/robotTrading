@@ -20,7 +20,6 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -69,9 +68,9 @@ class Order:
     timestamp: datetime
     side: OrderSide
     order_type: OrderType
-    price: Optional[Decimal]
+    price: Decimal | None
     size: Decimal
-    trader_type: Optional[TraderType] = None
+    trader_type: TraderType | None = None
 
     def __post_init__(self):
         if isinstance(self.side, str):
@@ -132,7 +131,7 @@ class InformationAsymmetryMetrics:
     information_asymmetry_index: float
     adverse_selection_risk: str
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary for serialization"""
         return {
             'timestamp': self.timestamp.isoformat(),
@@ -162,7 +161,7 @@ class OrderFlowForecast:
     expected_buy_volume: Decimal
     expected_sell_volume: Decimal
     expected_imbalance: Decimal
-    confidence_interval: Tuple[Decimal, Decimal]
+    confidence_interval: tuple[Decimal, Decimal]
     forecast_method: str
 
 
@@ -190,7 +189,7 @@ class OrderFlowAnalyzer:
         """
         self.lookback_seconds = lookback_seconds
         self.alpha_threshold = alpha_threshold
-        self._order_history: List[Order] = []
+        self._order_history: list[Order] = []
 
     def add_order(self, order: Order) -> None:
         """Add an order to the history"""
@@ -199,7 +198,7 @@ class OrderFlowAnalyzer:
         cutoff = datetime.now() - timedelta(seconds=self.lookback_seconds * 2)
         self._order_history = [o for o in self._order_history if o.timestamp > cutoff]
 
-    def calculate_order_imbalance(self, window_seconds: Optional[int] = None) -> Decimal:
+    def calculate_order_imbalance(self, window_seconds: int | None = None) -> Decimal:
         """
         Calculate current order flow imbalance
 
@@ -279,7 +278,7 @@ class OrderFlowAnalyzer:
 
     def calculate_probability_of_informed_trading(
         self,
-        order_snapshots: List[OrderFlowSnapshot],
+        order_snapshots: list[OrderFlowSnapshot],
         price_volatility: float,
     ) -> float:
         """
@@ -339,9 +338,9 @@ class OrderFlowAnalyzer:
 
     def detect_informed_trading(
         self,
-        current_orders: List[Order],
+        current_orders: list[Order],
         price_history: pd.DataFrame,
-    ) -> Tuple[bool, float, str]:
+    ) -> tuple[bool, float, str]:
         """
         Detect presence of informed trading in current order flow
 
@@ -392,7 +391,7 @@ class OrderFlowAnalyzer:
         self,
         executions: pd.DataFrame,
         subsequent_prices: pd.Series,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Measure cost of adverse selection
 
@@ -582,9 +581,9 @@ class OrderFlowAnalyzer:
 
     def calculate_information_content(
         self,
-        orders: List[Order],
+        orders: list[Order],
         market_price: Decimal,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Calculate information content of order flow
 
@@ -652,9 +651,9 @@ class OrderFlowAnalyzer:
 
     def generate_order_flow_report(
         self,
-        current_orders: List[Order],
+        current_orders: list[Order],
         price_history: pd.DataFrame,
-    ) -> Dict:
+    ) -> dict:
         """
         Generate comprehensive order flow analysis report
 
@@ -717,8 +716,8 @@ class OrderFlowAnalyzer:
         self,
         imbalance: float,
         is_informed: bool,
-        info_metrics: Dict,
-    ) -> List[str]:
+        info_metrics: dict,
+    ) -> list[str]:
         """Generate trading recommendations based on order flow analysis"""
         recommendations = []
 
@@ -772,7 +771,7 @@ class OrderFlowSimulator:
         base_price: float,
         price_impact: float = 0.001,
         spread_bps: float = 1.0,
-    ) -> List[Order]:
+    ) -> list[Order]:
         """
         Generate simulated order flow
 
@@ -843,8 +842,8 @@ class OrderFlowSimulator:
 
 
 # Singleton instances
-_order_flow_analyzer: Optional[OrderFlowAnalyzer] = None
-_order_flow_simulator: Optional[OrderFlowSimulator] = None
+_order_flow_analyzer: OrderFlowAnalyzer | None = None
+_order_flow_simulator: OrderFlowSimulator | None = None
 
 
 def get_order_flow_analyzer(

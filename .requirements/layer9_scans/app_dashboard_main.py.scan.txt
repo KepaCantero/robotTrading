@@ -1,0 +1,5 @@
+## Scan: app/dashboard/main.py
+Lines: 1356
+Functions: 2
+Classes: 0
+Status: Processed

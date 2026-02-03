@@ -30,6 +30,17 @@ Performance Considerations (PERF-001):
   - Using numba_metrics.calculate_max_drawdown_numba() for drawdown analysis
   - Parallelizing window processing with concurrent.futures
 
+Concurrency Design (PERF-006):
+- This module uses SYNCHRONOUS execution (not async/await) by design
+- This is a CPU-bound workload, not I/O-bound:
+  - No external I/O operations (no database, network, file I/O, or API calls)
+  - Primary work: grid search optimization, backtesting loops, NumPy/SciPy calculations
+  - Async/await provides NO benefit for CPU-bound workloads (limited by Python's GIL)
+- For true parallelization of CPU-intensive operations, use multiprocessing:
+  - ProcessPoolExecutor for parallel window processing
+  - multiprocessing.Pool for parameter grid search
+  - Do NOT convert to async/await - it would add complexity without performance benefit
+
 Domain Design (DOM-001):
 - This module uses dataclasses (ParameterHistory, ParameterStabilityMetrics, etc.)
   instead of domain value objects for serialization simplicity
@@ -71,7 +82,7 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 
 
-@dataclass
+@dataclass(frozen=True)
 class ParameterHistory:
     """Track parameter evolution across walk-forward windows."""
 
@@ -100,7 +111,7 @@ class ParameterHistory:
         }
 
 
-@dataclass
+@dataclass(frozen=True)
 class ParameterStabilityMetrics:
     """Metrics for parameter stability analysis."""
 
@@ -133,7 +144,7 @@ class ParameterStabilityMetrics:
         }
 
 
-@dataclass
+@dataclass(frozen=True)
 class TomasiniWindowResult:
     """Results from a single Tomasini walk-forward window."""
 
@@ -220,7 +231,7 @@ class TomasiniWindowResult:
         }
 
 
-@dataclass
+@dataclass(frozen=True)
 class TomasiniWalkForwardResult:
     """Complete results from Tomasini walk-forward validation."""
 

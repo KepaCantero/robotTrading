@@ -78,7 +78,7 @@ except ImportError:
             return hist
 
         except Exception as e:
-            logger.error(f"yfinance fallback failed for {ticker}: {e}")
+            logger.error(f"yfinance fallback failed for {ticker}: {e}", exc_info=True)
             # Return empty DataFrame on failure
             return pd.DataFrame()
 
@@ -86,7 +86,7 @@ except ImportError:
 class DataLoader:
     """Loader for historical market data from various sources."""
 
-    def __init__(self, base_path: Optional[Path] = None):
+    def __init__(self, base_path: Optional[Path] = None) -> None:
         """
         Initialize the data loader.
 
@@ -94,7 +94,7 @@ class DataLoader:
             base_path: Base path for CSV files (default: data/historical/)
         """
         self.base_path = base_path or Path("data/historical")
-        self.cache = {}
+        self.cache: Dict[str, Any] = {}
 
     def load_market_data(
         self,
@@ -116,6 +116,9 @@ class DataLoader:
 
         Returns:
             List of Quote objects
+
+        Raises:
+            ValueError: If source is not supported
         """
         if source == "csv":
             return self._load_from_csv(symbol, start_date, end_date)
@@ -129,7 +132,7 @@ class DataLoader:
         file_path = self.base_path / f"{symbol}.csv"
 
         if not file_path.exists():
-            logger.error(f"CSV file not found: {file_path}")
+            logger.error(f"CSV file not found: {file_path}", exc_info=True)
             raise FileNotFoundError(f"CSV file not found: {file_path}")
 
         try:
@@ -146,46 +149,14 @@ class DataLoader:
             # Filter by date range
             df = df[(df[date_col] >= start_date) & (df[date_col] <= end_date)]
 
-            # VECTORIZED: Convert DataFrame to Quotes using vectorized operations (100-1000x faster than iterrows)
-            # Convert timestamps using pandas vectorized operations
-            timestamps = df[date_col].apply(
-                lambda x: x if isinstance(x, datetime) else pd.to_datetime(x).to_pydatetime()
-            )
-
-            # Vectorized volume capping at 10B
-            max_volume = Decimal("10000000000")
-            volumes = df["volume"].apply(
-                lambda v: min(Decimal(str(v)), max_volume) if v > 0 else Decimal("0")
-            )
-
-            # Convert all numeric columns to Decimal using vectorized operations
-            closes = df["close"].apply(lambda x: Decimal(str(x)))
-            highs = df["high"].apply(lambda x: Decimal(str(x)))
-            lows = df["low"].apply(lambda x: Decimal(str(x)))
-            opens = df["open"].apply(lambda x: Decimal(str(x)))
-
-            # Create quotes list using list comprehension (much faster than iterrows)
-            quotes = [
-                Quote(
-                    symbol=symbol,
-                    bid=closes.iloc[i],
-                    ask=closes.iloc[i],
-                    last=closes.iloc[i],
-                    volume=volumes.iloc[i],
-                    timestamp=timestamps.iloc[i],
-                    high=highs.iloc[i],
-                    low=lows.iloc[i],
-                    open=opens.iloc[i],
-                    close=closes.iloc[i],
-                )
-                for i in range(len(df))
-            ]
+            # VECTORIZED: Convert DataFrame to Quotes using vectorized operations
+            quotes = self._convert_dataframe_to_quotes(df, symbol)
 
             logger.info(f"Loaded {len(quotes)} quotes from CSV for {symbol}")
             return quotes
 
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-            logger.error(f"Error loading CSV for {symbol}: {e}")
+            logger.error(f"Error loading CSV for {symbol}: {e}", exc_info=True)
             raise
 
     def _load_from_yfinance(
@@ -245,7 +216,7 @@ class DataLoader:
                 logger.info(f"Loaded {len(quotes)} quotes from yahoo_fin for {symbol}")
                 return quotes
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-            logger.debug(f"yahoo_fin failed for {symbol}: {e}")
+            logger.debug(f"yahoo_fin failed for {symbol}: {e}", exc_info=True)
 
         # All methods failed - raise error instead of returning empty list
         raise RuntimeError(f"No data available from Yahoo Finance for {symbol}")
@@ -374,7 +345,7 @@ class DataLoader:
             return quotes
 
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-            logger.debug(f"Yahoo Finance v8 API failed for {symbol}: {e}")
+            logger.debug(f"Yahoo Finance v8 API failed for {symbol}: {e}", exc_info=True)
             return []
 
     def _convert_yfinance_to_quotes(self, hist: pd.DataFrame, symbol: str) -> List[Quote]:

@@ -6,8 +6,11 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional, Protocol
 
 import pandas as pd
+import structlog
 
 from app.domain.entities.portfolio import Portfolio
+
+logger = structlog.get_logger(__name__)
 
 
 class BasePortfolioOptimizer(Protocol):
@@ -64,18 +67,45 @@ class RebalancePortfolioUseCase:
         Returns:
             List of rebalancing actions taken
         """
+        logger.info(
+            "rebalance_check_started",
+            portfolio_id=str(portfolio.id) if hasattr(portfolio, 'id') else 'unknown',
+            target_weights={k: float(v) for k, v in target_weights.items()},
+            rebalance_threshold=float(rebalance_threshold),
+        )
+
         if not self._optimizer:
+            logger.warning(
+                "rebalance_validation_failed",
+                reason="No optimizer configured",
+            )
             return ["No optimizer configured"]
 
         # Calculate current weights
         current_weights = self._get_current_weights(portfolio)
+        logger.debug(
+            "current_weights_calculated",
+            current_weights={k: float(v) for k, v in current_weights.items()},
+        )
 
         # Check if rebalance is needed
         if not self._needs_rebalance(current_weights, target_weights, rebalance_threshold):
+            logger.info(
+                "rebalance_not_needed",
+                reason="Current weights within threshold",
+                current_weights={k: float(v) for k, v in current_weights.items()},
+                target_weights={k: float(v) for k, v in target_weights.items()},
+            )
             return ["No rebalance needed"]
 
         # Generate rebalancing orders
-        return self._generate_rebalance_orders(current_weights, target_weights)
+        orders = self._generate_rebalance_orders(current_weights, target_weights)
+        logger.info(
+            "rebalance_orders_generated",
+            order_count=len(orders),
+            orders=orders,
+        )
+        return orders
 
     def _get_current_weights(self, portfolio: Portfolio) -> Dict[str, Decimal]:
         """

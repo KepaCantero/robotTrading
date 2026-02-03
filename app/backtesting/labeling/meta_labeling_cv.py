@@ -270,27 +270,63 @@ class PurgedKFold:
         if "bars_to_barrier" not in labels.columns:
             return train_mask
 
-        # Convert events to indices if they're timestamps
-        if isinstance(events.iloc[0], pd.Timestamp):
-            # Events are already in the dataframe index
-            event_indices = np.arange(len(events))
-        else:
-            event_indices = events.values
+        # Convert events to indices (ARCH-004: Extract to helper method)
+        event_indices = self._get_event_indices(events)
 
         # For each training sample, check if its label overlaps with test set
         for i in np.where(train_mask)[0]:
             if i >= len(event_indices):
                 continue
 
-            event_idx = event_indices[i]
-            holding_period = labels["bars_to_barrier"].iloc[i]
-            label_end = event_idx + int(holding_period)
-
-            # Check if label overlaps with test set
-            if label_end > test_start and event_idx < test_end:
+            if self._label_overlaps_test(i, event_indices, labels, test_start, test_end):
                 train_mask[i] = False
 
         return train_mask
+
+    def _get_event_indices(self, events: pd.Series) -> np.ndarray:
+        """
+        Get event indices from events series (ARCH-004: Extract helper method).
+
+        Args:
+            events: Event timestamps
+
+        Returns:
+            Array of event indices
+        """
+        # Convert events to indices if they're timestamps
+        if isinstance(events.iloc[0], pd.Timestamp):
+            # Events are already in the dataframe index
+            return np.arange(len(events))
+        else:
+            return events.values
+
+    def _label_overlaps_test(
+        self,
+        i: int,
+        event_indices: np.ndarray,
+        labels: pd.DataFrame,
+        test_start: int,
+        test_end: int,
+    ) -> bool:
+        """
+        Check if a label overlaps with the test period (ARCH-004: Extract helper method).
+
+        Args:
+            i: Sample index
+            event_indices: Array of event indices
+            labels: DataFrame with 'bars_to_barrier' column
+            test_start: Test set start index
+            test_end: Test set end index
+
+        Returns:
+            True if label overlaps with test set
+        """
+        event_idx = event_indices[i]
+        holding_period = labels["bars_to_barrier"].iloc[i]
+        label_end = event_idx + int(holding_period)
+
+        # Check if label overlaps with test set
+        return label_end > test_start and event_idx < test_end
 
 
 class MetaLabelingCV:

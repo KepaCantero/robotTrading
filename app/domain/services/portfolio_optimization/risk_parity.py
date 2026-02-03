@@ -17,7 +17,6 @@ import numpy as np
 from scipy.optimize import minimize
 
 from app.domain.services.portfolio_optimization._validation import (
-    TRADING_DAYS,
     validate_covariance_matrix,
     sanitize_covariance_matrix,
     log_optimization_failure,
@@ -33,7 +32,7 @@ DEFAULT_RISK_FREE_RATE = 0.02  # Annual risk-free rate
 DEFAULT_MIN_WEIGHT = 0.0  # Minimum weight per asset (no short)
 DEFAULT_MAX_WEIGHT = 1.0  # Maximum weight per asset
 DEFAULT_OPTIMIZATION_TOLERANCE = 1e-9  # Optimization tolerance
-DEFAULT_DIVERSE_RISK_PARRY_KAPPA = 1.0  # Diversification parameter
+DEFAULT_DIVERSE_RISK_PARITY_KAPPA = 1.0  # Diversification parameter
 DEFAULT_DIV_RETURN_THRESHOLD = 1.0  # Default return if portfolio_vol == 0
 
 
@@ -334,7 +333,7 @@ class RiskParityOptimizer:
         self,
         cov_matrix: np.ndarray,
         symbols: Optional[List[str]] = None,
-        kappa: float = DEFAULT_DIVERSE_RISK_PARRY_KAPPA,
+        kappa: float = DEFAULT_DIVERSE_RISK_PARITY_KAPPA,
     ) -> RiskParityResult:
         """
         Compute Diversified Risk Parity weights.
@@ -512,8 +511,6 @@ def cluster_based_risk_parity(
     symbols = symbols or [f"Asset_{i}" for i in range(n_assets)]
 
     unique_clusters = np.unique(cluster_labels)
-    n_clusters = len(unique_clusters)
-
     final_weights = np.zeros(n_assets)
 
     # Calculate cluster covariances and weights

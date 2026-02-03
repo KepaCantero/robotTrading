@@ -15,12 +15,10 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from decimal import Decimal
 from datetime import datetime, time
+from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
-
-import numpy as np
+from typing import Optional
 
 
 class SlippageType(str, Enum):

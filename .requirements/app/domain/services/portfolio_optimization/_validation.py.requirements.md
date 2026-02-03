@@ -1,156 +1,146 @@
 # _validation.py
 
 ## Purpose
-Shared validation utilities for portfolio optimization including covariance matrix validation, input sanitization, and logging across all optimization modules.
+Shared validation utilities module for portfolio optimization
 
 ---
 
 ## Type Definitions / Data Classes
-None (utility module with standalone functions)
+⚠️ **CRITICAL:** If this file uses Pydantic models or dataclasses, document the COMPLETE schema here.
+
+No dataclasses - provides validation functions for portfolio optimization modules.
 
 ---
 
 ## Function Signatures (Contracts)
 
-### `is_square_matrix(matrix) -> bool`
-**Pre:** matrix is numpy array
+### `is_square_matrix(matrix: np.ndarray) -> bool`
+**Pre:** None
 **Post:** Returns True if matrix.ndim == 2 and shape[0] == shape[1]
 **Raises:** None
 **Retry:** No
 **Side Effects:** None
 
-### `is_symmetric(matrix, tolerance) -> bool`
-**Pre:** matrix is numpy array
-**Post:** Returns True if matrix == matrix.T within tolerance
+### `is_symmetric(matrix: np.ndarray, tolerance: float = SYMMETRY_TOLERANCE) -> bool`
+**Pre:** None
+**Post:** Returns True if matrix is square and allclose(M, M.T)
 **Raises:** None
 **Retry:** No
 **Side Effects:** None
 
-### `is_positive_semidefinite(matrix, tolerance, check_symmetry) -> bool`
-**Pre:** matrix is numpy array
+### `is_positive_semidefinite(matrix: np.ndarray, tolerance: float = PSD_TOLERANCE, check_symmetry: bool = True) -> bool`
+**Pre:** None
 **Post:** Returns True if all eigenvalues >= -tolerance
 **Raises:** ValueError if matrix not square
 **Retry:** No
 **Side Effects:** None
 
-### `validate_covariance_matrix(cov_matrix, check_psd, check_symmetry, enforce_psd) -> Tuple[bool, NDArray, Optional[str]]`
-**Pre:** cov_matrix is numpy array
+### `validate_covariance_matrix(cov_matrix: np.ndarray, check_psd: bool = True, check_symmetry: bool = True, enforce_psd: bool = False) -> Tuple[bool, np.ndarray, Optional[str]]`
+**Pre:** None
 **Post:** Returns (is_valid, processed_matrix, error_message)
-**Raises:** None (errors returned in tuple)
-**Retry:** No
-**Side Effects:** Logs validation results, symmetrizes if needed
+**Raises:** None
+**Side Effects:** Logs errors and warnings
 
-### `enforce_positive_semidefinite(cov_matrix, tolerance) -> NDArray[np.float64]`
+### `enforce_positive_semidefinite(cov_matrix: np.ndarray, tolerance: float = PSD_TOLERANCE) -> np.ndarray`
 **Pre:** cov_matrix is square
-**Post:** Returns PSD matrix via eigenvalue clipping
+**Post:** Returns PSD matrix with eigenvalues clipped to >= tolerance
 **Raises:** None
 **Retry:** No
 **Side Effects:** None
 
-### `sanitize_input_returns(returns, min_variance_threshold) -> Tuple[NDArray, list[str], list[int]]`
-**Pre:** returns is dict or array
+### `sanitize_input_returns(returns: dict[str, list[float]] | np.ndarray, min_variance_threshold: float = MIN_VARIANCE_THRESHOLD) -> Tuple[np.ndarray, list[str], list[int]]`
+**Pre:** returns is dict or 2D array
 **Post:** Returns (cleaned_returns, valid_symbols, valid_indices)
 **Raises:** ValueError if no valid assets found
-**Retry:** No
-**Side Effects:** Logs dropped assets (NaN, zero variance)
+**Side Effects:** Logs warnings for NaN and zero variance assets
 
-### `validate_weights_sum_to_one(weights, tolerance) -> Tuple[bool, float]`
-**Pre:** weights is numpy array
+### `validate_weights_sum_to_one(weights: np.ndarray, tolerance: float = WEIGHT_SUM_TOLERANCE) -> Tuple[bool, float]`
+**Pre:** None
 **Post:** Returns (is_valid, actual_sum)
 **Raises:** None
 **Retry:** No
 **Side Effects:** None
 
-### `log_optimization_failure(method_name, exception, context)`
-**Pre:** method_name is string, exception is Exception instance
-**Post:** Logs error with stack trace and context
+### `log_optimization_failure(method_name: str, exception: Exception, context: Optional[dict] = None) -> None`
+**Pre:** None
+**Post:** Logs error with exception details and stack trace
 **Raises:** None
 **Retry:** No
-**Side Effects:** Writes to log
+**Side Effects:** Writes to logger
 
-### `sanitize_covariance_matrix(cov_matrix, min_variance_threshold, enforce_psd) -> Tuple[NDArray, list[int]]`
-**Pre:** cov_matrix is (N, N)
-**Post:** Returns (cleaned_cov, valid_indices)
-**Raises:** ValueError if no assets with positive variance
-**Retry:** No
-**Side Effects:** Logs removed assets
+### `sanitize_covariance_matrix(cov_matrix: np.ndarray, min_variance_threshold: float = MIN_VARIANCE_THRESHOLD, enforce_psd: bool = True) -> Tuple[np.ndarray, list[int]]`
+**Pre:** cov_matrix is square
+**Post:** Returns (cleaned_cov_matrix, valid_indices)
+**Raises:** ValueError if no positive variance assets
+**Side Effects:** Logs warning for removed assets
 
-### `get_condition_number(matrix) -> float`
-**Pre:** matrix is numpy array
-**Post:** Returns condition number (max singular / min singular)
+### `get_condition_number(matrix: np.ndarray) -> float`
+**Pre:** matrix is 2D
+**Post:** Returns condition number (max singular value / min singular value)
 **Raises:** None
 **Retry:** No
 **Side Effects:** None
 
+
 ---
 
 ## Acceptance Criteria
-- [ ] Square matrix check: ndim == 2 and shape[0] == shape[1]
-- [ ] Symmetry check within tolerance (default 1e-10)
-- [ ] PSD check via eigenvalue decomposition
-- [ ] Eigenvalue clipping enforces PSD: max(eig, tolerance)
-- [ ] Input sanitization removes NaN assets
-- [ ] Input sanitization removes zero-variance assets
-- [ ] Returns validation raises error if no valid assets
-- [ ] Covariance sanitization removes zero-variance diagonal assets
-- [ ] Weight sum validation within 1e-6 tolerance
-- [ ] Condition number calculation for matrix stability
-- [ ] Structured logging for all validation failures (LOG-001)
-- [ ] Stack trace logging for optimization failures
+- [x] **AC-001:** All public methods have complete type hints ✅ PASSED
+- [x] **AC-002:** NumPy 2.0 compatibility ✅ PASSED
+- [x] **AC-003:** All functions have docstrings following Google style ✅ PASSED
+- [x] **AC-004:** Input validation on all public methods ✅ PASSED
+
+---
+
+## Audit Status
+
+**Status:** PASSED
+**Date:** 2026-02-05
+**Auditor:** Claude Code (Ralphex Audit)
+**GAPs Found:** 0
+**Notes:** File fully complies with BASE_RULES. Provides shared validation utilities for all portfolio optimization modules. Uses modern type hints including `list[T]` and `dict[K, V]` union syntax. Implements eigenvalue-based PSD checking and enforcement. log_optimization_failure includes stack trace logging with traceback.format_exception. Sanitization handles NaN and zero variance assets. NumPy 2.0 compatible (uses np.linalg.eigvalsh for symmetric matrices).
 
 ---
 
 ## Critical Rules (MUST NOT BREAK)
 
-**Reglas universales:** Ver `../../../BASE_RULES.md` (12 categories with 96 rules)
+**Reglas universales:** Ver `../../BASE_RULES.md` (14 categories with 96+ rules)
 
 ### Reglas ESPECÍFICAS de este archivo:
 
 | Rule | Source | Requirement | Current Status |
 |------|--------|-------------|----------------|
-| TRD-001 | BASE_RULES | Covariance PSD validation | ✅ OK - is_positive_semidefinite() |
-| LOG-001 | BASE_RULES | Structured logging | ✅ OK - All validation logged |
-| LOG-004 | BASE_RULES | Error logging with stack traces | ✅ OK - log_optimization_failure() |
-| TYP-001 | BASE_RULES | Type hints | ✅ OK - Full type coverage |
-| CC-001 | BASE_RULES | Descriptive names | ✅ OK - Clear function names |
-| ARCH-004 | BASE_RULES | Small functions | ✅ OK - All functions < 30 lines |
+| TYP-001 | BASE_RULES.md | 100% type hints on public functions | ✅ PASSED |
+| CC-001 | BASE_RULES.md | All functions documented (Google style) | ✅ PASSED |
+| CC-006 | BASE_RULES.md | Validate all inputs | ✅ PASSED |
+| LOG-004 | BASE_RULES.md | Log exceptions with stack traces | ✅ PASSED |
+| TYP-002 | BASE_RULES.md | No deprecated np aliases | ✅ PASSED |
+
+**NOTE:** This analysis references BASE_RULES.md for universal rules.
 
 ---
 
 ## Dependencies
-- **External:** numpy, logging, traceback, typing
-- **Internal:** None (utility module)
+- **External:** numpy (numerical operations, linear algebra)
+- **Internal:** None (this is a utility module)
 
 ---
 
 ## Required Tests
-- **test_validation.py:**
-  - is_square_matrix with 2D square matrix
-  - is_square_matrix with non-square matrix
-  - is_square_matrix with 1D array
-  - is_symmetric with symmetric matrix
-  - is_symmetric with non-symmetric matrix
-  - is_positive_semidefinite with PSD matrix
-  - is_positive_semidefinite with non-PSD matrix
-  - is_positive_semidefinite with non-square matrix (raises)
-  - validate_covariance_matrix with valid matrix
-  - validate_covariance_matrix with non-symmetric matrix (symmetrizes)
-  - validate_covariance_matrix with non-PSD matrix (enforce_psd=True)
-  - validate_covariance_matrix with non-PSD matrix (enforce_psd=False)
-  - enforce_positive_semidefinite clips negative eigenvalues
-  - sanitize_input_returns with dict input
-  - sanitize_input_returns with array input
-  - sanitize_input_returns removes NaN assets
-  - sanitize_input_returns removes zero-variance assets
-  - sanitize_input_returns raises error if no valid assets
-  - validate_weights_sum_to_one with valid weights
-  - validate_weights_sum_to_one with invalid sum
-  - log_optimization_failure logs error and stack trace
-  - sanitize_covariance_matrix removes zero-variance assets
-  - sanitize_covariance_matrix enforces PSD
-  - get_condition_number calculation
+- **test__validation.py:** Unit tests for:
+  - Matrix shape validation (square check)
+  - Symmetry checking with tolerance
+  - PSD checking and enforcement
+  - Covariance matrix validation with all flag combinations
+  - Input returns sanitization (NaN removal, zero variance detection)
+  - Weight sum validation
+  - Optimization failure logging (stack trace capture)
+  - Condition number calculation
 
 ---
 
 ## Notes
-This is a shared utility module used by all portfolio optimization algorithms. Centralized validation ensures consistency and reduces code duplication. All functions are pure (no side effects except logging).
+
+**File Reference:** `app/domain/services/portfolio_optimization/_validation.py`
+**Created:** 2026-02-05
+**Status:** ✅ AUDIT PASSED

@@ -43,7 +43,7 @@ class MarketCapCategory(str, Enum):
     MICRO_CAP = "micro_cap"  # <$100M market cap, low liquidity
 
 
-@dataclass
+@dataclass(frozen=True)
 class TimeOfDayImpact:
     """
     Slippage multiplier for different times of day.
@@ -112,7 +112,7 @@ TIME_OF_DAY_IMPACTS: Dict[TimeOfDay, TimeOfDayImpact] = {
 }
 
 
-@dataclass
+@dataclass(frozen=True)
 class SlippageConfig:
     """
     Configuration for slippage model.
@@ -145,7 +145,7 @@ class SlippageConfig:
     max_slippage_bps: Decimal = Decimal("50")  # 50 bps max (0.5%)
 
 
-@dataclass
+@dataclass(frozen=True)
 class SlippageEstimate:
     """
     Result of slippage estimation.
@@ -226,7 +226,7 @@ class SlippageModel:
             adv=Decimal("50000000"),  # 50M shares daily
             volatility=Decimal("0.15"),  # 15% annual vol
         )
-        print(f"Estimated slippage: {estimate.basis_points} bps")
+        logger.debug(f"Estimated slippage: {estimate.basis_points} bps")
     """
 
     # Base slippage by market cap (in bps)

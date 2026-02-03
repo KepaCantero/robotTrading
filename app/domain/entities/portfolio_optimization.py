@@ -9,10 +9,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Any, Dict, Optional
+from typing import Any
 
 
-@dataclass
+@dataclass(frozen=True)
 class PortfolioOptimization:
     """
     Portfolio optimization result.
@@ -23,7 +23,7 @@ class PortfolioOptimization:
     Invariant: weights must sum to approximately 1.0 (portfolio constraint).
     """
 
-    weights: Dict[str, Decimal]
+    weights: dict[str, Decimal]
     expected_return: float
     expected_risk: float
     sharpe_ratio: float
@@ -32,10 +32,10 @@ class PortfolioOptimization:
     regime: str = "UNKNOWN"
 
     # Narang - Factor exposures
-    factor_exposures: Dict[str, float] = field(default_factory=dict)
+    factor_exposures: dict[str, float] = field(default_factory=dict)
 
     # Hull - Risk metrics
-    var_95: Optional[float] = None
+    var_95: float | None = None
 
     def __post_init__(self) -> None:
         """
@@ -56,11 +56,10 @@ class PortfolioOptimization:
         tolerance = Decimal("0.01")
         if abs(total_weight - Decimal("1.0")) > tolerance:
             raise ValueError(
-                f"Portfolio weights must sum to 1.0 (±{tolerance}), "
-                f"got {total_weight:.4f}"
+                f"Portfolio weights must sum to 1.0 (±{tolerance}), " f"got {total_weight:.4f}"
             )
 
-    def get_weight_summary(self) -> Dict[str, str]:
+    def get_weight_summary(self) -> dict[str, str]:
         """Get a formatted summary of portfolio weights."""
         return {symbol: f"{weight:.4f}" for symbol, weight in self.weights.items()}
 
@@ -69,7 +68,7 @@ class PortfolioOptimization:
         sorted_positions = sorted(self.weights.items(), key=lambda x: x[1], reverse=True)
         return sorted_positions[:n]
 
-    def get_risk_metrics(self) -> Dict[str, float]:
+    def get_risk_metrics(self) -> dict[str, float]:
         """Get all risk metrics in one summary."""
         return {
             "expected_return": self.expected_return,
@@ -78,7 +77,7 @@ class PortfolioOptimization:
             "var_95": self.var_95 or 0.0,
         }
 
-    def get_regime_info(self) -> Dict[str, Any]:
+    def get_regime_info(self) -> dict[str, Any]:
         """Get regime-related information."""
         return {
             "regime": self.regime,

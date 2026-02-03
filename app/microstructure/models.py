@@ -25,7 +25,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -68,7 +67,7 @@ class ModelParameters:
     epsilon: float  # Uninformed trader intensity
     sigma: float  # Informed trader size
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             'alpha': self.alpha,
@@ -103,7 +102,7 @@ class GlostenMilgromResult:
     adverse_selection_component: float
     informed_trading_probability: float
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             'timestamp': self.timestamp.isoformat(),
@@ -139,7 +138,7 @@ class KyleModelResult:
     price_impact: float
     information_revelation: float
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             'timestamp': self.timestamp.isoformat(),
@@ -175,7 +174,7 @@ class OrderFlowImpactResult:
     information_content: float
     adjustment_speed: float
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             'timestamp': self.timestamp.isoformat(),
@@ -209,7 +208,7 @@ class RollSpreadResult:
     spread_std_error: float
     is_significant: bool
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             'timestamp': self.timestamp.isoformat(),
@@ -242,9 +241,9 @@ class StollDecompositionResult:
     order_processing_bps: float
     inventory_holding_bps: float
     adverse_selection_bps: float
-    component_weights: Dict[str, float]
+    component_weights: dict[str, float]
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             'timestamp': self.timestamp.isoformat(),
@@ -352,7 +351,7 @@ class GlostenMilgromModel:
     def simulate_trade_sequence(
         self,
         num_trades: int,
-        information_event: Optional[InformationEvent] = None,
+        information_event: InformationEvent | None = None,
     ) -> pd.DataFrame:
         """
         Simulate a sequence of trades
@@ -443,7 +442,7 @@ class GlostenMilgromModel:
 
         return pd.DataFrame(trades)
 
-    def calculate_spread_components(self) -> Dict[str, float]:
+    def calculate_spread_components(self) -> dict[str, float]:
         """
         Decompose spread into components
 
@@ -831,13 +830,13 @@ class StollSpreadDecomposer:
 
         # Calculate weights
         if observed_spread_bps > 0:
-            weights = {
+            weights: dict[str, float] = {
                 'order_processing': order_processing / observed_spread_bps,
                 'inventory_holding': inventory_holding / observed_spread_bps,
                 'adverse_selection': adverse_selection / observed_spread_bps,
             }
         else:
-            weights = {
+            weights: dict[str, float] = {
                 'order_processing': 0.0,
                 'inventory_holding': 0.0,
                 'adverse_selection': 0.0,
@@ -868,8 +867,8 @@ class MicrostructureModelComparator:
     def analyze_market(
         self,
         price_history: pd.DataFrame,
-        order_flow: Optional[pd.Series] = None,
-    ) -> Dict:
+        order_flow: pd.Series | None = None,
+    ) -> dict:
         """
         Run comprehensive microstructure model analysis
 
@@ -931,12 +930,12 @@ class MicrostructureModelComparator:
 
 
 # Singleton instances
-_gm_model: Optional[GlostenMilgromModel] = None
-_kyle_model: Optional[KyleModel] = None
-_mrr_model: Optional[MadhavanRichardsonModel] = None
-_roll_estimator: Optional[RollSpreadEstimator] = None
-_stoll_decomposer: Optional[StollSpreadDecomposer] = None
-_model_comparator: Optional[MicrostructureModelComparator] = None
+_gm_model: GlostenMilgromModel | None = None
+_kyle_model: KyleModel | None = None
+_mrr_model: MadhavanRichardsonModel | None = None
+_roll_estimator: RollSpreadEstimator | None = None
+_stoll_decomposer: StollSpreadDecomposer | None = None
+_model_comparator: MicrostructureModelComparator | None = None
 
 
 def get_glosten_milgrom_model(

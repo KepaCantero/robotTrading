@@ -20,7 +20,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -103,7 +102,7 @@ class SpreadDecomposition:
     adverse_selection_bps: float
     dominant_component: SpreadComponent
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             'timestamp': self.timestamp.isoformat(),
@@ -130,13 +129,13 @@ class DepthProfile:
     """
 
     timestamp: datetime
-    bid_levels: List[Tuple[Decimal, Decimal]]
-    ask_levels: List[Tuple[Decimal, Decimal]]
+    bid_levels: list[tuple[Decimal, Decimal]]
+    ask_levels: list[tuple[Decimal, Decimal]]
     total_bid_depth: Decimal
     total_ask_depth: Decimal
     imbalance_ratio: float
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             'timestamp': self.timestamp.isoformat(),
@@ -163,9 +162,9 @@ class LiquidityRisk:
     execution_shortfall_risk: float
     market_impact_estimate: float
     risk_level: str
-    recommendations: List[str]
+    recommendations: list[str]
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             'timestamp': self.timestamp.isoformat(),
@@ -198,12 +197,12 @@ class LiquidityAnalyzer:
         """
         self.lookback_periods = lookback_periods
         self.depth_levels = depth_levels
-        self._historical_metrics: List[LiquidityMetrics] = []
+        self._historical_metrics: list[LiquidityMetrics] = []
 
     def measure_market_depth(
         self,
-        order_book: Dict[str, List[Tuple[Decimal, Decimal]]],
-        target_size: Optional[Decimal] = None,
+        order_book: dict[str, list[tuple[Decimal, Decimal]]],
+        target_size: Decimal | None = None,
     ) -> DepthProfile:
         """
         Measure market depth at multiple price levels
@@ -434,7 +433,7 @@ class LiquidityAnalyzer:
     def measure_market_resilience(
         self,
         price_history: pd.DataFrame,
-        shock_times: List[datetime],
+        shock_times: list[datetime],
         recovery_window_seconds: int = 60,
     ) -> float:
         """
@@ -572,16 +571,16 @@ class LiquidityAnalyzer:
             execution_shortfall_risk=shortfall_risk,
             market_impact_estimate=market_impact,
             risk_level=risk_level,
-            recommendations=recommendations,
+            recommendations=list(recommendations),
         )
 
     def calculate_liquidity_metrics(
         self,
         symbol: str,
-        order_book: Dict[str, List[Tuple[Decimal, Decimal]]],
+        order_book: dict[str, list[tuple[Decimal, Decimal]]],
         price_history: pd.DataFrame,
         volume: float,
-        target_size: Optional[Decimal] = None,
+        target_size: Decimal | None = None,
     ) -> LiquidityMetrics:
         """
         Calculate comprehensive liquidity metrics
@@ -672,7 +671,7 @@ class LiquidityAnalyzer:
 
     def _calculate_effective_spread_for_size(
         self,
-        order_book: Dict[str, List[Tuple[Decimal, Decimal]]],
+        order_book: dict[str, list[tuple[Decimal, Decimal]]],
         target_size: Decimal,
         midpoint: float,
     ) -> float:
@@ -763,11 +762,11 @@ class LiquidityAnalyzer:
     def generate_liquidity_report(
         self,
         symbol: str,
-        order_book: Dict[str, List[Tuple[Decimal, Decimal]]],
+        order_book: dict[str, list[tuple[Decimal, Decimal]]],
         price_history: pd.DataFrame,
         volume: float,
-        required_size: Optional[Decimal] = None,
-    ) -> Dict:
+        required_size: Decimal | None = None,
+    ) -> dict:
         """
         Generate comprehensive liquidity report
 
@@ -833,7 +832,7 @@ class LiquidityAnalyzer:
         metrics: LiquidityMetrics,
         spread_decomp: SpreadDecomposition,
         risk: LiquidityRisk,
-    ) -> List[str]:
+    ) -> list[str]:
         """Generate trading recommendations based on liquidity analysis"""
         recommendations = []
 
@@ -883,12 +882,12 @@ class LiquidityMonitor:
         """
         self.liquidity_threshold = liquidity_threshold
         self.alert_window_minutes = alert_window_minutes
-        self._alerts: List[Dict] = []
+        self._alerts: list[dict] = []
 
     def check_liquidity_alert(
         self,
         current_metrics: LiquidityMetrics,
-    ) -> Optional[Dict]:
+    ) -> dict | None:
         """
         Check if liquidity alert should be triggered
 
@@ -929,8 +928,8 @@ class LiquidityMonitor:
 
 
 # Singleton instances
-_liquidity_analyzer: Optional[LiquidityAnalyzer] = None
-_liquidity_monitor: Optional[LiquidityMonitor] = None
+_liquidity_analyzer: LiquidityAnalyzer | None = None
+_liquidity_monitor: LiquidityMonitor | None = None
 
 
 def get_liquidity_analyzer(

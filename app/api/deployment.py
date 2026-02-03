@@ -3,20 +3,31 @@ Deployment decision API endpoints.
 
 Provides REST API for validating strategies, making deployment decisions,
 and accessing deployment status information.
+
+GAP Fixes:
+- API-002: Added structured logging with correlation IDs
+- API-005: FIXED - Added security decorators (rate_limit, require_auth, audit_log)
+- API-006: Added correlation ID tracking
+- API-009: Added audit logging
 """
 
 from __future__ import annotations
 
+import asyncio
 import logging
+import traceback
 from datetime import datetime
 from typing import Dict
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from requests.exceptions import HTTPError, RequestException
 
 from app.models.deployment import DeploymentInput
 from app.services.deploy_decision_orchestrator import get_deploy_orchestrator
 from app.services.external_integrations.health_check_manager import get_health_check_manager
+
+from . import audit_logger, get_correlation_id
+from .security import rate_limit, require_auth, audit_log
 
 logger = logging.getLogger(__name__)
 
@@ -24,21 +35,49 @@ router = APIRouter(prefix="/deployment", tags=["deployment"])
 
 
 @router.post("/validate-strategy")
+@rate_limit(max_requests=20, window_seconds=60)
+@require_auth(roles=["admin", "trader"])
+@audit_log("strategy_validated", log_args=True)
 async def validate_strategy(
     deployment_input: DeploymentInput,
+    http_request: Request,
 ) -> Dict:
     """
     Validate a strategy and make deployment decision.
 
     Args:
         deployment_input: Complete deployment input with strategy details
+        http_request: FastAPI Request object
 
     Returns:
         Deployment decision with approval status and rationale
     """
+    correlation_id = get_correlation_id()
+    logger.info(
+        "Validating strategy for deployment",
+        extra={
+            "correlation_id": correlation_id,
+            "strategy_name": deployment_input.strategy_name,
+            "profile_id": str(deployment_input.profile_id),
+        },
+    )
     try:
         orchestrator = get_deploy_orchestrator()
-        decision = await orchestrator.make_decision(deployment_input)
+        decision = await asyncio.wait_for(
+            orchestrator.make_decision(deployment_input),
+            timeout=60.0,  # API-010: Add timeout configuration
+        )
+
+        audit_logger.log_action(
+            action="strategy_validated",
+            method=http_request.method,
+            path=http_request.url.path,
+            details={
+                "strategy_name": deployment_input.strategy_name,
+                "decision_id": decision.decision_id,
+                "status": decision.status,
+            },
+        )
 
         return {
             "success": decision.success,
@@ -69,8 +108,42 @@ async def validate_strategy(
             "timestamp": datetime.utcnow().isoformat(),
         }
 
+    except asyncio.TimeoutError as e:
+        logger.error(
+            "Timeout validating strategy",
+            extra={
+                "correlation_id": correlation_id,
+                "strategy_name": deployment_input.strategy_name,
+                "error": str(e),
+                "stack_trace": traceback.format_exc(),
+            },
+        )
+        audit_logger.log_error(
+            method=http_request.method,
+            path=http_request.url.path,
+            error_type="TimeoutError",
+            error_message=str(e),
+            stack_trace=traceback.format_exc(),
+        )
+        raise HTTPException(status_code=504, detail=f"Validation timeout: {str(e)}")
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-        logger.error(f"❌ Error validating strategy: {str(e)}")
+        logger.error(
+            "Error validating strategy",
+            extra={
+                "correlation_id": correlation_id,
+                "strategy_name": deployment_input.strategy_name,
+                "error_type": type(e).__name__,
+                "error": str(e),
+                "stack_trace": traceback.format_exc(),
+            },
+        )
+        audit_logger.log_error(
+            method=http_request.method,
+            path=http_request.url.path,
+            error_type=type(e).__name__,
+            error_message=str(e),
+            stack_trace=traceback.format_exc(),
+        )
         raise HTTPException(status_code=500, detail=f"Validation failed: {str(e)}")
 
 

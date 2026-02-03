@@ -9,7 +9,7 @@ import logging
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Callable, Dict, List, Optional, Protocol, TypeVar
 
 import pandas as pd
 
@@ -18,6 +18,31 @@ from app.backtesting.core.executor import BacktestExecutorFactory
 from app.backtesting.core.orchestrator import BoundedResults
 
 logger = logging.getLogger(__name__)
+
+
+class StrategyProtocol(Protocol):
+    """Protocol for trading strategies."""
+
+    def generate_signals(self, quotes: List[pd.DataFrame]) -> List[Dict]:
+        """Generate trading signals from market data."""
+        ...
+
+    @property
+    def name(self) -> str:
+        """Strategy name."""
+        ...
+
+
+class DataLoaderProtocol(Protocol):
+    """Protocol for data loaders."""
+
+    async def load_data(self, start_date: datetime, end_date: datetime) -> List:
+        """Load market data for date range."""
+        ...
+
+
+T = TypeVar('T')
+StrategyFactory = Callable[..., StrategyProtocol]
 
 
 class BacktestRunnerFacade:
@@ -47,10 +72,16 @@ class BacktestRunnerFacade:
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
         # Data loading (delegated)
-        self.quotes: List[Any] = []
-        self.data_loader = None
+        self.quotes: List[pd.DataFrame] = []
+        self.data_loader: Optional[DataLoaderProtocol] = None
 
-        logger.info(f"BacktestRunnerFacade initialized with config: {config_path}")
+        logger.info(
+            "BacktestRunnerFacade initialized",
+            extra={
+                "operation": "facade_init",
+                "config_path": str(config_path),
+            }
+        )
 
     async def load_data(
         self, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None
@@ -74,11 +105,19 @@ class BacktestRunnerFacade:
         self.data_loader = DataLoader()
         self.quotes = await self._load_portfolio_market_data(start_date, end_date)
 
-        logger.info(f"Loaded {len(self.quotes)} quotes for backtesting")
+        logger.info(
+            "Market data loaded for backtesting",
+            extra={
+                "operation": "load_data",
+                "quotes_count": len(self.quotes),
+                "start_date": start_date.isoformat() if start_date else None,
+                "end_date": end_date.isoformat() if end_date else None,
+            }
+        )
 
     async def _load_portfolio_market_data(
         self, start_date: datetime, end_date: datetime
-    ) -> List[Any]:
+    ) -> List[pd.DataFrame]:
         """Load market data for portfolio symbols."""
         from app.services.portfolio_builder import PortfolioBuilder
         from app.services.portfolio_config_manager import get_portfolio_config_manager
@@ -92,7 +131,7 @@ class BacktestRunnerFacade:
             start_date=start_date, end_date=end_date
         )
 
-    def run_baseline(self, strategy: Any, strategy_name: Optional[str] = None) -> Dict[str, Any]:
+    def run_baseline(self, strategy: StrategyProtocol, strategy_name: Optional[str] = None) -> Dict[str, float | int | str]:
         """
         Run baseline backtest.
 
@@ -111,35 +150,63 @@ class BacktestRunnerFacade:
 
         strategy_class = strategy.__class__.__name__
 
-        # Audit trail: execution start with structured context
-        config_summary = {
-            'initial_capital': float(self.backtest_config.initial_capital),
-            'commission': float(self.backtest_config.commission_per_trade),
-        }
+        self._log_backtest_start(timestamp, 'baseline', strategy_name, strategy_class)
 
+        executor = BacktestExecutorFactory.create(self.backtest_config)
+        result = executor.execute(self.quotes, strategy, strategy_name=strategy_name)
+
+        result_dict = self._result_to_dict(result, 'baseline', strategy_name)
+        self._store_result(result_dict, result)
+
+        execution_time = time.perf_counter() - start_time
+        self._log_backtest_complete(execution_time, 'baseline', strategy_name, result_dict)
+
+        return result_dict
+
+    def _log_backtest_start(
+        self, timestamp: str, test_type: str, strategy_name: str, strategy_class: str
+    ) -> None:
+        """Log backtest execution start with structured context."""
+        config_summary = self._get_config_summary()
         logger.info(
             "Backtest execution started",
             extra={
                 'audit_type': 'backtest_start',
                 'timestamp': timestamp,
-                'test_type': 'baseline',
+                'test_type': test_type,
                 'strategy_name': strategy_name,
                 'strategy_class': strategy_class,
                 'config_summary': config_summary,
             },
         )
 
-        executor = BacktestExecutorFactory.create(self.backtest_config)
-        result = executor.execute(self.quotes, strategy, strategy_name=strategy_name)
+    def _log_backtest_complete(
+        self, execution_time: float, test_type: str, strategy_name: str, result_dict: Dict[str, float | int | str]
+    ) -> None:
+        """Log backtest execution completion with results summary."""
+        results_summary = self._get_results_summary(result_dict)
+        logger.info(
+            "Backtest execution completed",
+            extra={
+                'audit_type': 'backtest_complete',
+                'timestamp': datetime.now(timezone.utc).isoformat(),
+                'test_type': test_type,
+                'strategy_name': strategy_name,
+                'execution_time_seconds': round(execution_time, 3),
+                'results_summary': results_summary,
+            },
+        )
 
-        result_dict = self._result_to_dict(result, 'baseline', strategy_name)
-        self.results.add(result_dict)
-        self.backtest_results_objects.append((result_dict['test_name'], result))
+    def _get_config_summary(self) -> Dict[str, float]:
+        """Get configuration summary for logging."""
+        return {
+            'initial_capital': float(self.backtest_config.initial_capital),
+            'commission': float(self.backtest_config.commission_per_trade),
+        }
 
-        execution_time = time.perf_counter() - start_time
-
-        # Audit trail: execution completion with results summary
-        results_summary = {
+    def _get_results_summary(self, result_dict: Dict[str, float | int | str]) -> Dict[str, float | int]:
+        """Get results summary for logging."""
+        return {
             'total_pnl': float(result_dict['total_pnl']),
             'return_pct': float(result_dict['return_pct']),
             'sharpe_ratio': float(result_dict['sharpe_ratio']),
@@ -148,23 +215,14 @@ class BacktestRunnerFacade:
             'max_drawdown': float(result_dict['max_drawdown']),
         }
 
-        logger.info(
-            "Backtest execution completed",
-            extra={
-                'audit_type': 'backtest_complete',
-                'timestamp': datetime.now(timezone.utc).isoformat(),
-                'test_type': 'baseline',
-                'strategy_name': strategy_name,
-                'execution_time_seconds': round(execution_time, 3),
-                'results_summary': results_summary,
-            },
-        )
-
-        return result_dict
+    def _store_result(self, result_dict: Dict[str, float | int | str], result) -> None:
+        """Store result in both storage containers."""
+        self.results.add(result_dict)
+        self.backtest_results_objects.append((result_dict['test_name'], result))
 
     def run_strategy_test(
-        self, strategy: Any, test_name: str, test_type: str = 'custom', **metadata
-    ) -> Dict[str, Any]:
+        self, strategy: StrategyProtocol, test_name: str, test_type: str = 'custom', **metadata: str | int | float
+    ) -> Dict[str, float | int | str]:
         """
         Run custom strategy backtest.
 
@@ -182,7 +240,25 @@ class BacktestRunnerFacade:
         strategy_class = strategy.__class__.__name__
         metadata_keys = list(metadata.keys()) if metadata else []
 
-        # Audit trail: execution start with structured context
+        self._log_custom_backtest_start(timestamp, test_type, test_name, strategy_class, metadata_keys)
+
+        executor = BacktestExecutorFactory.create(self.backtest_config)
+        result = executor.execute(self.quotes, strategy, strategy_name=test_name)
+
+        result_dict = self._result_to_dict(result, test_type, test_name)
+        result_dict.update(metadata)
+
+        self._store_result(result_dict, result)
+
+        execution_time = time.perf_counter() - start_time
+        self._log_backtest_complete(execution_time, test_type, test_name, result_dict)
+
+        return result_dict
+
+    def _log_custom_backtest_start(
+        self, timestamp: str, test_type: str, test_name: str, strategy_class: str, metadata_keys: List[str]
+    ) -> None:
+        """Log custom backtest execution start with metadata context."""
         logger.info(
             "Backtest execution started",
             extra={
@@ -196,47 +272,12 @@ class BacktestRunnerFacade:
             },
         )
 
-        executor = BacktestExecutorFactory.create(self.backtest_config)
-        result = executor.execute(self.quotes, strategy, strategy_name=test_name)
-
-        result_dict = self._result_to_dict(result, test_type, test_name)
-        result_dict.update(metadata)
-
-        self.results.add(result_dict)
-        self.backtest_results_objects.append((test_name, result))
-
-        execution_time = time.perf_counter() - start_time
-
-        # Audit trail: execution completion with results summary
-        results_summary = {
-            'total_pnl': float(result_dict['total_pnl']),
-            'return_pct': float(result_dict['return_pct']),
-            'sharpe_ratio': float(result_dict['sharpe_ratio']),
-            'total_trades': int(result_dict['total_trades']),
-            'win_rate': float(result_dict['win_rate']),
-            'max_drawdown': float(result_dict['max_drawdown']),
-        }
-
-        logger.info(
-            "Backtest execution completed",
-            extra={
-                'audit_type': 'backtest_complete',
-                'timestamp': datetime.now(timezone.utc).isoformat(),
-                'test_type': test_type,
-                'test_name': test_name,
-                'execution_time_seconds': round(execution_time, 3),
-                'results_summary': results_summary,
-            },
-        )
-
-        return result_dict
-
     def run_parameter_sweep(
         self,
-        strategy_factory: Any,
-        parameters: Dict[str, List[Any]],
+        strategy_factory: StrategyFactory,
+        parameters: Dict[str, List[str | int | float]],
         test_name_prefix: str = 'param_sweep',
-    ) -> List[Dict[str, Any]]:
+    ) -> List[Dict[str, float | int | str]]:
         """
         Run parameter sweep across multiple parameter combinations.
 
@@ -253,12 +294,26 @@ class BacktestRunnerFacade:
         start_time = time.perf_counter()
         timestamp = datetime.now(timezone.utc).isoformat()
 
-        results = []
         param_names = list(parameters.keys())
         param_values = [parameters[k] for k in param_names]
         total_combinations = len(list(itertools.product(*param_values)))
 
-        # Audit trail: parameter sweep start with structured context
+        self._log_parameter_sweep_start(timestamp, test_name_prefix, total_combinations, parameters)
+
+        results = self._execute_parameter_combinations(
+            strategy_factory, param_names, param_values, test_name_prefix, total_combinations
+        )
+
+        execution_time = time.perf_counter() - start_time
+        self._log_parameter_sweep_complete(execution_time, test_name_prefix, results)
+
+        return results
+
+    def _log_parameter_sweep_start(
+        self, timestamp: str, test_name_prefix: str, total_combinations: int, parameters: Dict[str, List[str | int | float]]
+    ) -> None:
+        """Log parameter sweep start with structured context."""
+        param_names = list(parameters.keys())
         logger.info(
             "Parameter sweep started",
             extra={
@@ -271,33 +326,46 @@ class BacktestRunnerFacade:
             },
         )
 
+    def _execute_parameter_combinations(
+        self,
+        strategy_factory: StrategyFactory,
+        param_names: List[str],
+        param_values: List[List[str | int | float]],
+        test_name_prefix: str,
+        total_combinations: int,
+    ) -> List[Dict[str, float | int | str]]:
+        """Execute all parameter combinations and return results."""
+        import itertools
+
+        results = []
         for i, combination in enumerate(itertools.product(*param_values)):
             params = dict(zip(param_names, combination))
-            logger.info(f"Testing combination {i+1}/{total_combinations}: {params}")
+            logger.info(
+                "Testing parameter combination",
+                extra={
+                    'combination_index': i + 1,
+                    'total_combinations': total_combinations,
+                    'parameters': params,
+                },
+            )
 
             strategy = strategy_factory(**params)
             param_str = "_".join(f"{k}={v}" for k, v in params.items())
             test_name = f"{test_name_prefix}_{param_str}"
 
             result_dict = self.run_strategy_test(
-                strategy, test_name, test_type='parameter_sweep', parameters=params
+                strategy, test_name, test_type='parameter_sweep', **params  # type: ignore
             )
             results.append(result_dict)
 
-        execution_time = time.perf_counter() - start_time
+        return results
 
-        # Audit trail: parameter sweep completion with summary
+    def _log_parameter_sweep_complete(
+        self, execution_time: float, test_name_prefix: str, results: List[Dict[str, float | int | str]]
+    ) -> None:
+        """Log parameter sweep completion with summary."""
         best_result = max(results, key=lambda r: r.get('sharpe_ratio', 0)) if results else None
-
-        best_result_summary = None
-        if best_result:
-            best_result_summary = {
-                'test_name': best_result.get('test_name'),
-                'sharpe_ratio': float(best_result.get('sharpe_ratio', 0)),
-                'total_pnl': float(best_result.get('total_pnl', 0)),
-                'return_pct': float(best_result.get('return_pct', 0)),
-                'parameters': best_result.get('parameters', {}),
-            }
+        best_result_summary = self._get_best_result_summary(best_result) if best_result else None
 
         logger.info(
             "Parameter sweep completed",
@@ -311,7 +379,15 @@ class BacktestRunnerFacade:
             },
         )
 
-        return results
+    def _get_best_result_summary(self, result: Dict[str, float | int | str]) -> Dict[str, float | int | str | Dict]:
+        """Get summary of best result for logging."""
+        return {
+            'test_name': result.get('test_name'),
+            'sharpe_ratio': float(result.get('sharpe_ratio', 0)),
+            'total_pnl': float(result.get('total_pnl', 0)),
+            'return_pct': float(result.get('return_pct', 0)),
+            'parameters': result.get('parameters', {}),
+        }
 
     def get_results(self) -> pd.DataFrame:
         """
@@ -363,16 +439,19 @@ class BacktestRunnerFacade:
                 json.dump(self.results.get_all(), f, indent=2, default=str)
             logger.info(f"Results saved to JSON: {json_path}")
 
-    def _result_to_dict(self, result: Any, test_type: str, test_name: str) -> Dict[str, Any]:
+    def _result_to_dict(
+        self, result, test_type: str, test_name: str
+    ) -> Dict[str, float | int | str]:
         """Convert BacktestResult to dictionary."""
         from app.backtesting.models import BacktestResult
+        from app.backtesting.core.error_handling import BacktestResultError
 
         if not isinstance(result, BacktestResult):
-            return {
-                'test_type': test_type,
-                'test_name': test_name,
-                'error': 'Invalid result type',
-            }
+            raise BacktestResultError(
+                f"Expected BacktestResult, got {type(result).__name__}",
+                test_type=test_type,
+                test_name=test_name,
+            )
 
         initial_capital = float(self.backtest_config.initial_capital)
         final_capital = float(result.final_capital)
@@ -382,33 +461,49 @@ class BacktestRunnerFacade:
             'test_name': test_name,
             'strategy_name': result.strategy_name,
             'total_pnl': final_capital - initial_capital,
-            'return_pct': (
-                ((final_capital - initial_capital) / initial_capital * 100)
-                if initial_capital > 0
-                else 0.0
-            ),
+            'return_pct': self._calculate_return_pct(initial_capital, final_capital),
             'final_capital': final_capital,
-            'total_trades': result.performance.total_trades if result.performance else 0,
-            'win_rate': float(result.performance.win_rate) if result.performance else 0.0,
-            'sharpe_ratio': (
-                float(result.performance.sharpe_ratio)
-                if result.performance and result.performance.sharpe_ratio
-                else 0.0
-            ),
-            'sortino_ratio': (
-                float(result.performance.sortino_ratio)
-                if result.performance and result.performance.sortino_ratio
-                else 0.0
-            ),
-            'max_drawdown': (
-                float(result.performance.max_drawdown_percentage) if result.performance else 0.0
-            ),
-            'avg_trade_pnl': (
-                (final_capital - initial_capital) / result.performance.total_trades
-                if result.performance and result.performance.total_trades > 0
-                else 0.0
-            ),
+            'total_trades': self._get_total_trades(result),
+            'win_rate': self._get_win_rate(result),
+            'sharpe_ratio': self._get_sharpe_ratio(result),
+            'sortino_ratio': self._get_sortino_ratio(result),
+            'max_drawdown': self._get_max_drawdown(result),
+            'avg_trade_pnl': self._calculate_avg_trade_pnl(initial_capital, final_capital, result),
         }
+
+    def _calculate_return_pct(self, initial_capital: float, final_capital: float) -> float:
+        """Calculate return percentage."""
+        return ((final_capital - initial_capital) / initial_capital * 100) if initial_capital > 0 else 0.0
+
+    def _get_total_trades(self, result) -> int:
+        """Get total trades from result."""
+        return result.performance.total_trades if result.performance else 0
+
+    def _get_win_rate(self, result) -> float:
+        """Get win rate from result."""
+        return float(result.performance.win_rate) if result.performance else 0.0
+
+    def _get_sharpe_ratio(self, result) -> float:
+        """Get Sharpe ratio from result."""
+        if result.performance and result.performance.sharpe_ratio:
+            return float(result.performance.sharpe_ratio)
+        return 0.0
+
+    def _get_sortino_ratio(self, result) -> float:
+        """Get Sortino ratio from result."""
+        if result.performance and result.performance.sortino_ratio:
+            return float(result.performance.sortino_ratio)
+        return 0.0
+
+    def _get_max_drawdown(self, result) -> float:
+        """Get max drawdown from result."""
+        return float(result.performance.max_drawdown_percentage) if result.performance else 0.0
+
+    def _calculate_avg_trade_pnl(self, initial_capital: float, final_capital: float, result) -> float:
+        """Calculate average trade PnL."""
+        if result.performance and result.performance.total_trades > 0:
+            return (final_capital - initial_capital) / result.performance.total_trades
+        return 0.0
 
     def get_best_result(self, metric: str = 'sharpe_ratio') -> Optional[Dict[str, Any]]:
         """

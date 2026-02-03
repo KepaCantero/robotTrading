@@ -41,6 +41,15 @@ from app.models.optimization import (  # noqa: E402
 from app.services.cost_analysis_service import CostAnalysisService  # noqa: E402
 from app.services.parameter_optimization_service import ParameterOptimizationService  # noqa: E402
 
+# Constants
+DEFAULT_VALUE_12 = 12
+DEFAULT_VALUE_200 = 200
+DEFAULT_VALUE_31 = 31
+DEFAULT_VALUE_400 = 400
+DEFAULT_VALUE_404 = 404
+DEFAULT_VALUE_500 = 500
+
+
 router = APIRouter(prefix="/optimization", tags=["Parameter Optimization"])
 
 
@@ -88,11 +97,11 @@ async def optimize_parameters(
         return result
 
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=DEFAULT_VALUE_400, detail=str(e))
     except RuntimeError as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=DEFAULT_VALUE_500, detail=str(e))
     except (ValueError, TypeError, KeyError, AttributeError) as e:
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        raise HTTPException(status_code=DEFAULT_VALUE_500, detail=f"Unexpected error: {str(e)}")
 
 
 @router.post("/out-of-sample-test", response_model=OutOfSampleResult)
@@ -121,11 +130,11 @@ async def perform_out_of_sample_test(
         return result
 
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=DEFAULT_VALUE_400, detail=str(e))
     except RuntimeError as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=DEFAULT_VALUE_500, detail=str(e))
     except (ValueError, TypeError, KeyError, AttributeError) as e:
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        raise HTTPException(status_code=DEFAULT_VALUE_500, detail=f"Unexpected error: {str(e)}")
 
 
 @router.get("/artifacts", response_model=List[OptimizationArtifact])
@@ -148,7 +157,7 @@ async def get_optimization_artifacts(
         return artifacts
 
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        raise HTTPException(status_code=DEFAULT_VALUE_500, detail=f"Unexpected error: {str(e)}")
 
 
 @router.get("/artifacts/{artifact_id}", response_model=OptimizationArtifact)
@@ -174,14 +183,14 @@ async def get_optimization_artifact(
         artifact = next((a for a in artifacts if a.artifact_id == artifact_id), None)
 
         if not artifact:
-            raise HTTPException(status_code=404, detail="Artifact not found")
+            raise HTTPException(status_code=DEFAULT_VALUE_404, detail="Artifact not found")
 
         return artifact
 
     except HTTPException:
         raise
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        raise HTTPException(status_code=DEFAULT_VALUE_500, detail=f"Unexpected error: {str(e)}")
 
 
 @router.get("/summary", response_model=OptimizationSummary)
@@ -202,7 +211,7 @@ async def get_optimization_summary(
         return summary
 
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        raise HTTPException(status_code=DEFAULT_VALUE_500, detail=f"Unexpected error: {str(e)}")
 
 
 @router.get("/artifacts/{artifact_id}/metrics", response_model=OptimizationMetrics)
@@ -228,7 +237,7 @@ async def get_optimization_metrics(
         artifact = next((a for a in artifacts if a.artifact_id == artifact_id), None)
 
         if not artifact:
-            raise HTTPException(status_code=404, detail="Artifact not found")
+            raise HTTPException(status_code=DEFAULT_VALUE_404, detail="Artifact not found")
 
         metrics = await service.calculate_optimization_metrics(artifact)
         return metrics
@@ -236,7 +245,7 @@ async def get_optimization_metrics(
     except HTTPException:
         raise
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        raise HTTPException(status_code=DEFAULT_VALUE_500, detail=f"Unexpected error: {str(e)}")
 
 
 @router.get("/methods", response_model=List[str])
@@ -293,21 +302,23 @@ async def validate_optimization_config(
             ],
             optimization_config=config,
             data_start_date=date(2020, 1, 1),
-            data_end_date=date(2023, 12, 31),
+            data_end_date=date(2023, 12, DEFAULT_VALUE_31),
         )
 
         await service._validate_optimization_request(mock_request)
 
         return JSONResponse(
-            status_code=200,
+            status_code=DEFAULT_VALUE_200,
             content={"message": "Configuration is valid", "valid": True},
         )
 
     except ValueError as e:
-        return JSONResponse(status_code=400, content={"message": str(e), "valid": False})
+        return JSONResponse(status_code=DEFAULT_VALUE_400,
+            content={"message": str(e),
+            "valid": False})
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         return JSONResponse(
-            status_code=500,
+            status_code=DEFAULT_VALUE_500,
             content={"message": f"Unexpected error: {str(e)}", "valid": False},
         )
 
@@ -335,7 +346,7 @@ async def get_best_parameters(
 
         if not artifacts:
             raise HTTPException(
-                status_code=404,
+                status_code=DEFAULT_VALUE_404,
                 detail=f"No optimization artifacts found for strategy: {strategy_name}",
             )
 
@@ -353,7 +364,7 @@ async def get_best_parameters(
     except HTTPException:
         raise
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        raise HTTPException(status_code=DEFAULT_VALUE_500, detail=f"Unexpected error: {str(e)}")
 
 
 @router.delete("/artifacts/{artifact_id}")
@@ -380,16 +391,16 @@ async def delete_optimization_artifact(
             service.optimization_summary.artifacts_count = len(service.optimization_artifacts)
 
             return JSONResponse(
-                status_code=200,
+                status_code=DEFAULT_VALUE_200,
                 content={"message": f"Artifact {artifact_id} deleted successfully"},
             )
         else:
-            raise HTTPException(status_code=404, detail="Artifact not found")
+            raise HTTPException(status_code=DEFAULT_VALUE_404, detail="Artifact not found")
 
     except HTTPException:
         raise
     except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        raise HTTPException(status_code=DEFAULT_VALUE_500, detail=f"Unexpected error: {str(e)}")
 
 
 @router.get("/health")
@@ -401,7 +412,7 @@ async def health_check():
         Health status
     """
     return JSONResponse(
-        status_code=200,
+        status_code=DEFAULT_VALUE_200,
         content={
             "status": "healthy",
             "service": "parameter_optimization",

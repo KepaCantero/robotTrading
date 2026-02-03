@@ -3,16 +3,24 @@ API endpoints for parameter optimization and overfitting prevention.
 
 This module provides FastAPI endpoints for walk-forward analysis, out-of-sample testing,
 and parameter optimization to prevent overfitting in trading strategies.
+
+GAP Fixes:
+- API-002: Added structured logging with correlation IDs
+- API-005: FIXED - Added security decorators (rate_limit, require_auth, audit_log)
+- API-008: Added error logging with stack traces
+- API-009: Added audit logging
+- API-010: Added timeout configuration
 """
 
 from __future__ import annotations
 
 import asyncio
 import logging
+import traceback
 from datetime import date, datetime
 from typing import List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import (
     DatabaseError,
@@ -21,6 +29,9 @@ from sqlalchemy.exc import (
     OperationalError,
     ProgrammingError,
 )
+
+from . import audit_logger, get_correlation_id
+from .security import rate_limit, require_auth, audit_log
 
 logger = logging.getLogger(__name__)
 
@@ -52,9 +63,13 @@ def get_optimization_service() -> ParameterOptimizationService:
 
 
 @router.post("/optimize-parameters", response_model=OptimizationResult)
+@rate_limit(max_requests=10, window_seconds=60)
+@require_auth(roles=["admin", "trader"])
+@audit_log("parameters_optimized", log_args=True)
 async def optimize_parameters(
     request: ParameterOptimizationRequest,
     background_tasks: BackgroundTasks,
+    http_request: Request,
     service: ParameterOptimizationService = Depends(get_optimization_service),
 ):
     """
@@ -69,6 +84,7 @@ async def optimize_parameters(
     Args:
         request: Parameter optimization request
         background_tasks: FastAPI background tasks
+        http_request: FastAPI Request object
         service: Parameter optimization service
 
     Returns:
@@ -77,21 +93,112 @@ async def optimize_parameters(
     Raises:
         HTTPException: If optimization fails
     """
+    correlation_id = get_correlation_id()
+    logger.info(
+        "Starting parameter optimization",
+        extra={
+            "correlation_id": correlation_id,
+            "strategy_name": request.strategy_name,
+            "method": request.optimization_config.method.value,
+        },
+    )
     try:
-        result = await service.optimize_parameters(request)
+        result = await asyncio.wait_for(
+            service.optimize_parameters(request),
+            timeout=300.0,  # API-010: 5 minute timeout for optimization
+        )
 
         # Store result in background for persistence
         background_tasks.add_task(
             _store_optimization_result, service, request.strategy_name, result
         )
 
+        audit_logger.log_action(
+            action="optimization_completed",
+            method=http_request.method,
+            path=http_request.url.path,
+            details={
+                "strategy_name": request.strategy_name,
+                "method": request.optimization_config.method.value,
+                "best_score": float(result.best_score),
+            },
+        )
+
+        logger.info(
+            "Parameter optimization completed",
+            extra={
+                "correlation_id": correlation_id,
+                "strategy_name": request.strategy_name,
+                "best_score": float(result.best_score),
+            },
+        )
+
         return result
 
+    except asyncio.TimeoutError as e:
+        logger.error(
+            "Timeout during parameter optimization",
+            extra={
+                "correlation_id": correlation_id,
+                "strategy_name": request.strategy_name,
+                "error": str(e),
+                "stack_trace": traceback.format_exc(),
+            },
+        )
+        audit_logger.log_error(
+            method=http_request.method,
+            path=http_request.url.path,
+            error_type="TimeoutError",
+            error_message=str(e),
+            stack_trace=traceback.format_exc(),
+        )
+        raise HTTPException(status_code=504, detail=f"Optimization timeout: {str(e)}")
     except ValueError as e:
+        logger.warning(
+            "Validation error during optimization",
+            extra={
+                "correlation_id": correlation_id,
+                "strategy_name": request.strategy_name,
+                "error": str(e),
+            },
+        )
         raise HTTPException(status_code=400, detail=str(e))
     except RuntimeError as e:
+        logger.error(
+            "Runtime error during optimization",
+            extra={
+                "correlation_id": correlation_id,
+                "strategy_name": request.strategy_name,
+                "error": str(e),
+                "stack_trace": traceback.format_exc(),
+            },
+        )
+        audit_logger.log_error(
+            method=http_request.method,
+            path=http_request.url.path,
+            error_type="RuntimeError",
+            error_message=str(e),
+            stack_trace=traceback.format_exc(),
+        )
         raise HTTPException(status_code=500, detail=str(e))
     except (ValueError, TypeError, KeyError, AttributeError) as e:
+        logger.error(
+            "Unexpected error during optimization",
+            extra={
+                "correlation_id": correlation_id,
+                "strategy_name": request.strategy_name,
+                "error_type": type(e).__name__,
+                "error": str(e),
+                "stack_trace": traceback.format_exc(),
+            },
+        )
+        audit_logger.log_error(
+            method=http_request.method,
+            path=http_request.url.path,
+            error_type=type(e).__name__,
+            error_message=str(e),
+            stack_trace=traceback.format_exc(),
+        )
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 
@@ -357,6 +464,9 @@ async def get_best_parameters(
 
 
 @router.delete("/artifacts/{artifact_id}")
+@rate_limit(max_requests=20, window_seconds=60)
+@require_auth(roles=["admin"])
+@audit_log("optimization_artifact_deleted", log_args=True)
 async def delete_optimization_artifact(
     artifact_id: str,
     service: ParameterOptimizationService = Depends(get_optimization_service),

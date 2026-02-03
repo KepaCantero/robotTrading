@@ -1037,11 +1037,11 @@ def grangercausalitytests(x, maxlag, addconst=True, verbose=True):
             results[lag] = result
 
             if verbose:
-                print("\nGranger Causality")
-                print(f"number of lags (no zero): {lag}")
-                print(f"  ssr based F test:         {f_stat:.4f}")
-                print(f"  p-value:                  {p_value:.4f}")
-                print(f"  df denominator:           {nobs - df_ur}")
+                logger.debug("\nGranger Causality")
+                logger.debug(f"number of lags (no zero): {lag}")
+                logger.debug(f"  ssr based F test:         {f_stat:.4f}")
+                logger.debug(f"  p-value:                  {p_value:.4f}")
+                logger.debug(f"  df denominator:           {nobs - df_ur}")
 
         except Exception as e:
             logger.warning(f"Granger causality test failed for lag {lag}: {e}")

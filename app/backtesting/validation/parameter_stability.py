@@ -60,8 +60,8 @@ class ParameterStabilityAnalyzer:
         )
 
         for result in results:
-            print(f"{result.parameter_name}: {result.stability_level}")
-            print(f"  Recommendation: {result.recommendation}")
+            logger.debug(f"{result.parameter_name}: {result.stability_level}")
+            logger.debug(f"  Recommendation: {result.recommendation}")
         ```
     """
 

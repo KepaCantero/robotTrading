@@ -1,398 +1,425 @@
-# compliance_engine.py
+# compliance_engine.py Requirements
+
+**File Path:** `app/core/compliance_engine.py`  
+**Last Updated:** 2025-02-06  
+**Audit Status:** NEEDS_AUDIT
 
 ## Purpose
-UNIFIED compliance engine integrating 17 systems (8 main + 12 compliance rules) for pre-trade analysis, post-trade analysis, and portfolio optimization with kill switch protection.
 
-## ASYNC-005 Timeout Handling
-**Status:** ✅ RESOLVED - Timeouts delegated to subsystems
+THE Compliance Engine - Unified single engine that integrates ALL existing functionality and ALL 12 compliance rule systems. This is the ONLY engine that should be used in the entire system.
 
-ComplianceEngine is a **synchronous façade** that orchestrates 17 subsystems but makes no direct external calls (network, file I/O, database). All I/O operations are delegated to subsystems which handle their own timeouts:
+## Type Definitions
 
-- **HarrisIntegrator**: Handles its own timeouts for market data calls
-- **AlphaModel**: Computational only (no external I/O)
-- **RegimeDetector**: Computational only (no external I/O)
-- **Other subsystems**: Each handles its own timeouts as appropriate
+### Configuration
+```python
+class ComplianceConfig(BaseModel):
+    """Configuration for compliance engine thresholds and limits."""
+    max_position_ratio: float = Field(default=0.10, ge=0.01, le=1.0)
+    max_drawdown_ratio: float = Field(default=0.25, ge=0.01, le=1.0)
+    max_leverage_ratio: float = Field(default=2.0, ge=1.0, le=10.0)
+    kill_switch_threshold: float = Field(default=-0.05, ge=-1.0, le=0.0)
+    min_data_quality_score: float = Field(default=80.0, ge=0.0, le=100.0)
+    max_data_age_days: float = Field(default=1.0, ge=0.0)
+    max_portfolio_volatility: float = Field(default=0.30, ge=0.0, le=1.0)
+    max_daily_var_95: float = Field(default=0.05, ge=0.0, le=1.0)
+    slo_latency_ms: float = Field(default=100.0, ge=1.0)
+    data_quality_nan_penalty: float = Field(default=15.0, ge=0.0, le=100.0)
+    data_quality_stale_penalty: float = Field(default=20.0, ge=0.0, le=100.0)
+```
 
-When async refactoring is implemented (ASYNC-001), timeout parameters will be added at the façade level.
-
----
-
-## Type Definitions / Data Classes
-
-⚠️ **CRITICAL:** This file uses domain entities from `app.domain.entities`.
-
-### SystemAvailability Class
+### Classes
 ```python
 class SystemAvailability:
-    enable_logging: bool           # REQUIRED - Enable detailed system check logging
-    _systems: Dict[str, bool]      # INTERNAL - Availability status of 17 systems
-```
+    """Track availability of all 17 systems."""
+    def __init__(self, enable_logging: bool = False)
+    def get_availability(self) -> Dict[str, bool]
+    def is_available(self, system_name: str) -> bool
+    def get_summary(self) -> Dict[str, Any]
 
-### ComplianceConfig Class (Pydantic BaseModel)
-```python
-class ComplianceConfig:
-    max_position_ratio: float = 0.10           # Max position size as ratio of portfolio (Chan Rule 1)
-    max_drawdown_ratio: float = 0.25           # Max drawdown ratio (Chan Rule 1)
-    max_leverage_ratio: float = 2.0            # Max gross leverage ratio
-    kill_switch_threshold: float = -0.05       # Daily loss threshold (Hull Rule 13.1)
-    min_data_quality_score: float = 80.0       # Minimum data quality score
-    max_data_age_days: float = 1.0             # Maximum age of price data in days
-    max_portfolio_volatility: float = 0.30     # Maximum annualized portfolio volatility
-    max_daily_var_95: float = 0.05             # Maximum 1-day 95% VaR
-    slo_latency_ms: float = 100.0              # Maximum acceptable latency in milliseconds
-    data_quality_nan_penalty: float = 15.0     # Quality score deduction for NaN values
-    data_quality_stale_penalty: float = 20.0   # Quality score deduction for stale data
-```
+class SystemBus:
+    """System Bus pattern for orchestrating ALL 17 systems."""
+    def execute_pre_trade_analysis(...) -> PreTradeAnalysis
 
-### ComplianceEngine Class (Singleton)
-```python
 class ComplianceEngine:
-    asset_class: str                            # REQUIRED - "equity", "etf", "forex", "crypto", "futures"
-    strict_mode: bool                           # REQUIRED - Enforce all checks strictly
-    enable_logging: bool                        # REQUIRED - Enable detailed logging
-    availability: SystemAvailability            # COMPOSED - System availability tracker
-    _subsystems: Dict[str, Any]                 # INTERNAL - Lazy-loaded subsystems
-    _system_bus: SystemBus                      # COMPOSED - Orchestrator for 17 systems
-    _active_orders: Dict[str, Dict[str, Any]]   # INTERNAL - Pending order tracking
-    _completed_trades: List[Dict[str, Any]]     # INTERNAL - Executed trade tracking
-    _daily_pnl_tracking: List[Dict[str, Any]]   # INTERNAL - Kill switch P&L tracking
-    _starting_capital: float = 100000.0         # Hull Rule 13.1 - Starting capital reference
+    """THE ONLY ENGINE that should be used."""
+    def __init__(self, asset_class: str = "equity", strict_mode: bool = False, 
+                 enable_logging: bool = True, config: Optional[ComplianceConfig] = None)
 ```
 
----
+## Function Signatures
 
-## Function Signatures (Contracts)
+### ComplianceEngine - Main API
+```python
+def analyze_pre_trade(
+    self,
+    symbol: str,
+    side: str,
+    quantity: Decimal,
+    price: Decimal,
+    price_history: Optional[pd.DataFrame] = None,
+    urgency: float = 0.5,
+    signal_time: Optional[datetime] = None,
+) -> PreTradeAnalysis:
+    """THE main pre-trade analysis method."""
 
-### `ComplianceEngine.__new__(cls) -> ComplianceEngine`
-**Pre:** None
-**Post:** Returns singleton instance (only one instance ever created)
-**Raises:** ❌ No
-**Retry:** ❌ No
-**Side Effects:** Sets cls._instance if first call
+def analyze_post_trade(
+    self,
+    order_id: str,
+    symbol: str,
+    side: str,
+    quantity: Decimal,
+    execution_price: Decimal,
+    signal_price: Optional[Decimal],
+    signal_time: Optional[datetime],
+    submission_time: datetime,
+    execution_time: datetime,
+    nbbo: Optional[Tuple[Decimal, Decimal]] = None,
+) -> PostTradeAnalysis:
+    """THE main post-trade analysis method."""
 
-### `ComplianceEngine.analyze_pre_trade(symbol: str, side: str, quantity: Decimal, price: Decimal, price_history: Optional[pd.DataFrame], urgency: float, signal_time: Optional[datetime]) -> PreTradeAnalysis`
-**Pre:** symbol is valid trading symbol, side is "BUY" or "SELL", quantity > 0, price > 0
-**Post:** Returns PreTradeAnalysis with can_execute flag, confidence score, and reasons from all 17 systems
-**Raises:** ❌ No (returns analysis with can_execute=False on errors)
-**Retry:** ❌ No
-**Side Effects:** Checks kill switch, runs all 17 systems via SystemBus
+def optimize_portfolio(
+    self,
+    symbols: List[str],
+    returns: pd.DataFrame,
+    current_prices: Dict[str, Decimal],
+) -> PortfolioOptimization:
+    """THE ONLY portfolio optimization method."""
+```
 
-### `ComplianceEngine.analyze_post_trade(order_id: str, symbol: str, side: str, quantity: Decimal, execution_price: Decimal, signal_price: Optional[Decimal], signal_time: Optional[datetime], submission_time: datetime, execution_time: datetime, nbbo: Optional[Tuple[Decimal, Decimal]]) -> PostTradeAnalysis`
-**Pre:** order_id is unique, submission_time < execution_time
-**Post:** Returns PostTradeAnalysis with latency, implementation shortfall, market impact
-**Raises:** ❌ No
-**Retry:** ❌ No
-**Side Effects:** None
+### Kill Switch (Hull Rule 13.1)
+```python
+def check_kill_switch(self) -> bool:
+    """Check if kill switch is triggered."""
 
-### `ComplianceEngine.optimize_portfolio(symbols: List[str], returns: pd.DataFrame, current_prices: Dict[str, Decimal]) -> PortfolioOptimization`
-**Pre:** symbols length equals returns columns, all prices > 0
-**Post:** Returns PortfolioOptimization with optimal weights, expected return/risk, Sharpe ratio
-**Raises:** ❌ No (returns equal weights on error)
-**Retry:** ❌ No
-**Side Effects:** None
+def track_daily_pnl(
+    self,
+    symbol: str,
+    side: str,
+    quantity: Decimal,
+    entry_price: Decimal,
+    exit_price: Optional[Decimal] = None,
+    realized_pnl: Optional[float] = None,
+) -> None:
+    """Track daily P&L for kill switch monitoring."""
 
-### `ComplianceEngine.check_kill_switch() -> bool`
-**Pre:** None
-**Post:** Returns True if daily loss > 5% of starting capital (Hull Rule 13.1)
-**Raises:** ❌ No
-**Retry:** ❌ No
-**Side Effects:** Logs critical message if triggered
+def reset_daily_tracking(self, new_starting_capital: Optional[float] = None) -> None:
+    """Reset daily tracking at start of new trading day."""
 
-### `ComplianceEngine.track_daily_pnl(symbol: str, side: str, quantity: Decimal, entry_price: Decimal, exit_price: Optional[Decimal], realized_pnl: Optional[float]) -> None`
-**Pre:** quantity > 0, entry_price > 0
-**Post:** Appends P&L record to _daily_pnl_tracking
-**Raises:** ❌ No
-**Retry:** ❌ No
-**Side Effects:** Updates _daily_pnl_tracking, logs if enable_logging=True
+def set_starting_capital(self, capital: float) -> None:
+    """Set the starting capital for kill switch calculations."""
 
-### `ComplianceEngine.reset_daily_tracking(new_starting_capital: Optional[float]) -> None`
-**Pre:** new_starting_capital must be > 0 if provided
-**Post:** Clears _daily_pnl_tracking, optionally updates _starting_capital
-**Raises:** ❌ No
-**Retry:** ❌ No
-**Side Effects:** Clears tracking list, logs previous day summary
+def get_daily_pnl_summary(self) -> Dict[str, Any]:
+    """Get summary of daily P&L for kill switch monitoring."""
+```
 
-### `ComplianceEngine.set_starting_capital(capital: float) -> None`
-**Pre:** capital > 0
-**Post:** Updates _starting_capital
-**Raises:** ValueError if capital <= 0
-**Retry:** ❌ No
-**Side Effects:** Logs capital change
+### Tracking
+```python
+def track_order_submission(
+    self,
+    order_id: str,
+    symbol: str,
+    side: str,
+    quantity: Decimal,
+    submission_time: datetime,
+) -> None:
+    """Track order submission for SLO monitoring."""
 
----
+def track_order_completion(
+    self,
+    order_id: str,
+    execution_price: Decimal,
+    execution_time: datetime,
+    filled_quantity: Optional[Decimal] = None,
+) -> None:
+    """Track order completion for SLO monitoring."""
+
+def get_slo_metrics(self) -> Dict[str, Any]:
+    """Get current SLO metrics."""
+```
+
+### Singleton Access
+```python
+def get_compliance_engine(
+    asset_class: str = "equity",
+    strict_mode: bool = False,
+    enable_logging: bool = True,
+    config: Optional[ComplianceConfig] = None,
+) -> ComplianceEngine:
+    """Get THE ONLY Compliance Engine instance."""
+
+def quick_check(
+    symbol: str,
+    side: str,
+    quantity: Decimal,
+    price: Decimal,
+) -> Tuple[bool, str]:
+    """Quick pre-trade check."""
+
+def get_execution_plan(
+    symbol: str,
+    quantity: Decimal,
+    price: Decimal,
+) -> Dict[str, Any]:
+    """Get execution plan."""
+```
 
 ## Acceptance Criteria
-- [ ] Kill switch triggers when daily loss exceeds configured threshold (Hull Rule 13.1)
-- [ ] Kill switch blocks ALL trades when triggered
-- [ ] Pre-trade analysis runs ALL 17 systems via SystemBus
-- [ ] Position limit check: max configured ratio of portfolio per position (default 10%, Chan Rule 1)
-- [ ] Drawdown limit check: max configured ratio drawdown (default 25%, Chan Rule 1)
-- [ ] Leverage check: max configured leverage ratio (default 2.0x)
-- [ ] Data quality check: minimum configured quality score (default 80%)
-- [ ] Harris microstructure analysis provides venue/algorithm recommendations
-- [ ] Post-trade analysis calculates implementation shortfall
-- [ ] Portfolio optimization integrates Chan + Narang + Hull methods
-- [ ] Singleton pattern ensures only one ComplianceEngine instance
-- [ ] Lazy initialization of subsystems (not loaded until first use)
-- [ ] All exceptions in system handlers are caught and logged
-- [ ] Daily P&L tracking includes win rate, avg win, avg loss statistics
-- [ ] SLO metrics track latency violations (configured threshold, default 100ms)
-- [ ] Timeout handling is delegated to subsystems (ASYNC-005 resolved)
 
----
-
-## Critical Rules (MUST NOT BREAK)
-
-**Reglas universales:** Ver `../../BASE_RULES.md` (96+ rules organized by priority)
-
-### Reglas ESPECÍFICAS de este archivo:
-
-| Rule | Source | Requirement | Current Status |
-|------|--------|-------------|----------------|
-| SOL-001 | BASE_RULES.md | Single Responsibility | ⚠️ NOT APPLIED - Façade pattern for unified entry point (see GAP analysis) |
-| SOL-002 | BASE_RULES.md | Open/Closed Principle | ⚠️ DEFERRED - Requires plugin architecture (see GAP analysis) |
-| SOL-005 | BASE_RULES.md | Dependency Inversion | ⚠️ PARTIAL - Some direct imports, should use Protocol |
-| ASYNC-001 | BASE_RULES.md | Use async def | ⚠️ DEFERRED - Sync methods acceptable for single-threaded (see GAP analysis) |
-| ASYNC-005 | BASE_RULES.md | Set timeouts for external calls | ✅ OK - Timeouts delegated to subsystems (see GAP analysis) |
-| LOG-004 | BASE_RULES.md | Log exceptions with stack traces | ✅ OK |
-| LOG-005 | BASE_RULES.md | No sensitive data in logs | ⚠️ NOT ENFORCED - May log trade details |
-| SEC-005 | BASE_RULES.md | Audit logging for all trading operations | ✅ OK - _completed_trades tracks all |
-| TRD-002 | BASE_RULES.md | Validate orders before execution | ✅ OK - analyze_pre_trade validates |
-| TRD-003 | BASE_RULES.md | Position limits enforcement | ✅ OK - 10% limit checked |
-| RSK-003 | BASE_RULES.md | Drawdown control implementation | ✅ OK - 25% limit checked |
-| CC-006 | BASE_RULES.md | Explicit error handling | ✅ OK - All handlers catch exceptions |
-| ARCH-001 | BASE_RULES.md | Layered architecture | ⚠️ PARTIAL - Domain entities imported, but some infra leakage |
-| DP-004 | BASE_RULES.md | Dependency injection | ⚠️ DEFERRED - Direct imports instead of DI (see GAP analysis) |
-
-### Trading-Specific Rules
-
-| Rule | Requirement | Current Status |
-|------|-------------|----------------|
-| TRD-KILL-001 | Kill switch at configurable daily loss (default -5%, Hull 13.1) | ✅ OK - ComplianceConfig.kill_switch_threshold |
-| TRD-POS-001 | Max configurable position ratio (default 10%, Chan Rule 1) | ✅ OK - ComplianceConfig.max_position_ratio |
-| TRD-DD-001 | Max configurable drawdown (default 25%, Chan Rule 1) | ✅ OK - ComplianceConfig.max_drawdown_ratio |
-| TRD-LEV-001 | Max configurable leverage (default 2.0x) | ✅ OK - ComplianceConfig.max_leverage_ratio |
-| TRD-DATA-001 | Min configurable data quality (default 80%) | ✅ OK - ComplianceConfig.min_data_quality_score |
-| TRD-AUDIT-001 | Log all trade decisions | ✅ OK |
-| TRD-SLO-001 | Configurable latency threshold (default 100ms) | ✅ OK - ComplianceConfig.slo_latency_ms |
-| TRD-TIMEOUT-001 | Timeouts delegated to subsystems | ✅ OK - ASYNC-005 resolved |
-| TRD-17SYS-001 | ALL 17 systems must execute | ✅ OK - SystemBus orchestrates |
-| TRD-LAZY-001 | Lazy subsystem initialization | ✅ OK |
-
----
-
-## GAP Analysis - Remaining Architectural Issues
-
-### Summary of Remaining GAPs
-
-| GAP ID | Rule | Status | Category | Impact |
-|--------|------|--------|----------|--------|
-| SOL-001 | Single Responsibility | ⚠️ NOT APPLIED | Intentional Design | LOW |
-| SOL-002 | Open/Closed Principle | ⚠️ DEFERRED | Requires Plugin Architecture | MEDIUM |
-| ASYNC-001 | Missing Async Variants | ⚠️ DEFERRED | Significant Refactor | MEDIUM |
-| ASYNC-005 | Timeouts for External Calls | ✅ RESOLVED | Delegated to Subsystems | NONE |
-| DP-004 | Dependency Injection | ⚠️ DEFERRED | Architecture Change | LOW |
-
-### Detailed GAP Analysis
-
-#### GAP-SOL-001: God Object (Single Responsibility Principle)
-
-**Status:** ⚠️ NOT APPLIED - Intentional Design Decision
-
-**Rationale:**
-- The file header explicitly states "THE ONLY ENGINE" - this is a unified entry point
-- ComplianceEngine is designed as a **Façade pattern** providing a single, simplified interface to a complex subsystem
-- The file header (lines 1-30) explicitly documents this as "THE ONLY ENGINE" - intentional architectural decision
-- Refactoring to separate classes would be a **major architectural change** affecting all consumers
-- The complexity is managed through the **SystemBus pattern** which orchestrates the 17 systems
-- This is a documented trade-off: simplicity of API vs. pure SOLID adherence
-
-**Impact:** LOW - The design is intentional and documented
-
-**Recommendation:** Keep as-is. The God Object pattern is acceptable here as it's a **Façade**, not a violation. The SystemBus class handles the orchestration complexity.
-
-**Reference:** Lines 1-30 in compliance_engine.py document this design decision
-
----
-
-#### GAP-SOL-002: Open/Closed Principle
-
-**Status:** ⚠️ DEFERRED - Requires Plugin Architecture
-
-**Current State:** Adding new system requires modifying `_load_subsystem` with new `elif` branches (lines 1608-1749)
-
-**Rationale:**
-- Current implementation uses explicit `if/elif` chains for subsystem loading
-- Proper fix would require a **plugin registration system** or **dependency injection container**
-- This is a significant refactoring that would affect the lazy initialization pattern
-- The 17 systems are relatively stable (not frequently added/removed)
-
-**Impact:** MEDIUM - New systems require code modification, but systems are stable
-
-**Recommendation:** DEFER to future major version. Implement a plugin registry:
-```python
-# Future design:
-subsystem_registry = {
-    "risk_engine": lambda: RiskEngine(),
-    "portfolio_engine": lambda: PortfolioEngine(),
-    # ...
-}
+### AC-COMP-001: Kill Switch Activation
+```bash
+# Test: Kill switch triggers at threshold
+python -c "
+from app.core.compliance_engine import get_compliance_engine, ComplianceConfig
+config = ComplianceConfig(kill_switch_threshold=-0.03)
+engine = get_compliance_engine(config=config)
+engine.set_starting_capital(100000)
+engine.track_daily_pnl('AAPL', 'BUY', Decimal('100'), Decimal('150'), 
+                        exit_price=Decimal('145'), realized_pnl=-500)
+engine.track_daily_pnl('AAPL', 'SELL', Decimal('100'), Decimal('145'),
+                        exit_price=Decimal('140'), realized_pnl=-500)
+engine.track_daily_pnl('AAPL', 'BUY', Decimal('100'), Decimal('140'),
+                        exit_price=Decimal('135'), realized_pnl=-500)
+# Total: -1500, -1.5% of 100k = -0.015, not triggered yet
+assert engine.check_kill_switch() == False
+# More losses needed to trigger
+"
 ```
 
-**Estimated Effort:** 2-3 days (design + implementation + testing)
-
----
-
-#### GAP-ASYNC-001: Missing Async Variants
-
-**Status:** ⚠️ DEFERRED - Significant Refactor
-
-**Current State:** Main methods (`analyze_pre_trade`, `analyze_post_trade`) are synchronous but perform I/O across 17 subsystems
-
-**Rationale:**
-- Adding async variants would require **breaking changes to public API**
-- All 17 subsystem interfaces would need async versions
-- Significant testing effort for all integration points
-- Current synchronous approach is acceptable for **single-threaded usage**
-- The SystemBus orchestration would need complete redesign for async/await
-
-**Impact:** MEDIUM - Performance bottleneck only under high concurrency
-
-**Recommendation:** DEFER to v2.0. Add async variants as separate methods:
-```python
-# Future API:
-async def analyze_pre_trade_async(...) -> PreTradeAnalysis:
-    # asyncio.gather for parallel system execution
+### AC-COMP-002: Position Limit Enforcement
+```bash
+# Test: Position limit check blocks oversized orders
+python -c "
+from app.core.compliance_engine import get_compliance_engine
+engine = get_compliance_engine()
+analysis = engine.analyze_pre_trade(
+    symbol='AAPL',
+    side='BUY',
+    quantity=Decimal('1000000'),  # Very large
+    price=Decimal('150'),
+)
+assert analysis.position_limit_ok == False
+assert analysis.can_execute == False
+"
 ```
 
-**Estimated Effort:** 3-5 days (async variants + comprehensive testing)
-
----
-
-#### GAP-ASYNC-005: Timeouts for External Calls
-
-**Status:** ✅ RESOLVED - Delegated to Subsystems
-
-**Current State:** ComplianceEngine makes no direct external calls. All I/O operations are delegated to subsystems which handle their own timeouts.
-
-**Rationale:**
-- ComplianceEngine is a **synchronous façade** pattern - it orchestrates but doesn't execute I/O
-- No direct network calls, file I/O, or database operations in ComplianceEngine
-- All external operations are delegated to 17 subsystems:
-  - `_handle_harris`: HarrisIntegrator.pre_trade_check() - handles its own timeouts
-  - `_handle_narang`: AlphaModel.generate_alpha() - computational, no network I/O
-  - `_handle_ernest_chan`: RegimeDetector.detect_regimes() - computational, no network I/O
-  - `_handle_hull`: calculate_var() - pure computation
-  - Portfolio optimization: optimizer.optimize() - pure computation
-- Each subsystem is responsible for its own timeout handling
-- When ASYNC-001 is implemented (async variants), timeouts can be added at the façade level using `asyncio.wait_for()`
-
-**Impact:** NONE - Current architecture is correct for synchronous façade pattern
-
-**Documentation Added:**
-- Timeout responsibility clarified in subsystem handler documentation
-- When async refactoring occurs (ASYNC-001), add `timeout` parameter to main methods:
-```python
-# Future async design:
-async def analyze_pre_trade_async(
-    ...,
-    timeout: float = 30.0
-) -> PreTradeAnalysis:
-    return await asyncio.wait_for(
-        self._system_bus.execute_pre_trade_analysis_async(...),
-        timeout=timeout
-    )
+### AC-COMP-003: Data Quality Validation
+```bash
+# Test: Low data quality blocks trading
+python -c "
+import pandas as pd
+import numpy as np
+from app.core.compliance_engine import get_compliance_engine
+engine = get_compliance_engine()
+price_history = pd.DataFrame({'close': [np.nan, np.nan, np.nan]})
+analysis = engine.analyze_pre_trade(
+    symbol='AAPL',
+    side='BUY',
+    quantity=Decimal('100'),
+    price=Decimal('150'),
+    price_history=price_history,
+)
+assert analysis.can_execute == False
+assert 'data quality' in str(analysis.reasons).lower()
+"
 ```
 
-**Recommendation:** Keep as-is. Each subsystem handles its own timeouts. When implementing async variants (ASYNC-001), add timeout parameters at the façade level.
-
----
-
-#### GAP-DP-004: Dependency Injection
-
-**Status:** ⚠️ DEFERRED - Architecture Change Required
-
-**Current State:** Direct imports in `_load_subsystem` instead of dependency injection (lines 1616-1738)
-
-**Rationale:**
-- Current implementation uses lazy loading with direct imports
-- Proper DI would require a **DI container** (e.g., dependency-injector, pins)
-- The singleton pattern makes DI more complex
-- Would break backward compatibility with existing consumers
-
-**Impact:** LOW - Tight coupling exists, but systems are stable
-
-**Recommendation:** DEFER to v2.0. Implement DI container:
-```python
-# Future design:
-class ComplianceEngine:
-    def __init__(self, container: DIContainer):
-        self._container = container
-
-    def _get_subsystem(self, name: str):
-        return self._container.get(name)
+### AC-COMP-004: System Availability Tracking
+```bash
+# Test: System availability correctly tracked
+python -c "
+from app.core.compliance_engine import get_compliance_engine
+engine = get_compliance_engine()
+status = engine.get_system_status()
+assert 'availability' in status
+assert status['availability']['total_systems'] == 17
+"
 ```
 
-**Estimated Effort:** 2-3 days (DI container + refactoring + testing)
+## Critical Rules
 
----
+### Rule COMP-001: Single Engine Pattern
+**Priority:** P0  
+**Description:** ComplianceEngine must be a singleton. Only one instance per process.  
+**Enforcement:** Using `__new__` method for singleton pattern.
+
+### Rule COMP-002: Kill Switch Priority
+**Priority:** P0  
+**Description:** Kill switch check MUST be first in `analyze_pre_trade()`. Blocks all trading if triggered.
+
+### Rule COMP-003: Configuration Centralization
+**Priority:** P0  
+**Description:** All trading thresholds must come from `ComplianceConfig`, not hardcoded. Addresses GAP-CFG-002.
+
+### Rule COMP-004: System Bus Orchestration
+**Priority:** P1  
+**Description:** All 17 systems must execute through SystemBus in optimal order with failure handling.
+
+### Rule COMP-005: Lazy Subsystem Loading
+**Priority:** P2  
+**Description:** Subsystems loaded lazily on first use to reduce startup time.
 
 ## Dependencies
-- **External:** `pandas` (DataFrame operations), `Decimal` (precise financial calculations)
-- **Internal:**
-  - `app.domain.entities.portfolio_optimization.PortfolioOptimization`
-  - `app.domain.entities.post_trade_analysis.PostTradeAnalysis`
-  - `app.domain.entities.pre_trade_analysis.PreTradeAnalysis`
-  - `app.core.timezone_utils.utc_now`
-- **Standard Library:** `datetime`, `decimal.Decimal`, `logging`, `pathlib.Path`, `typing`, `dataclasses`, `asyncio`, `random`
 
----
+### Internal Dependencies
+```python
+from app.domain.entities.portfolio_optimization import PortfolioOptimization
+from app.domain.entities.post_trade_analysis import PostTradeAnalysis
+from app.domain.entities.pre_trade_analysis import PreTradeAnalysis
+```
+
+### External Dependencies
+```python
+import logging
+import sys
+from datetime import datetime
+from decimal import Decimal
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+import pandas as pd
+from pydantic import BaseModel, Field, field_validator
+```
 
 ## Required Tests
-- **tests/core/test_compliance_engine.py:**
-  - Test singleton pattern returns same instance
-  - Test kill switch triggers at -5% daily return
-  - Test kill switch blocks trade when triggered
-  - Test position limit check (10% of portfolio)
-  - Test position limit exceeded sets can_execute=False
-  - Test drawdown limit check (25% from peak)
-  - Test drawdown exceeded sets can_execute=False
-  - Test leverage ratio calculation (gross exposure / capital)
-  - Test leverage > 2.0x sets can_execute=False
-  - Test data quality score calculation
-  - Test data quality < 80% sets can_execute=False
-  - Test track_daily_pnl records P&L correctly
-  - Test reset_daily_tracking clears list
-  - Test set_starting_capital updates value
-  - Test set_starting_capital raises ValueError for <= 0
-  - Test get_daily_pnl_summary returns correct statistics
-  - Test analyze_pre_trade calls all 17 systems
-  - Test analyze_pre_trade respects kill switch
-  - Test analyze_post_trade calculates latency
-  - Test analyze_post_trade calculates implementation shortfall
-  - Test optimize_portfolio returns equal weights on error
-  - Test SystemBus executes systems in correct order
-  - Test SystemBus handles critical failures
-  - Test SystemAvailability checks all 17 systems
-  - Test lazy initialization of subsystems
-  - Test ComplianceConfig validation (negative kill switch threshold)
-  - Test configurable thresholds are used in checks
-  - Edge case: Zero starting capital
-  - Edge case: Empty price history
-  - Edge case: NaN values in price history
-  - Security: No sensitive data in logs (passwords, API keys)
 
----
+### Unit Tests (app/tests/core/test_compliance_engine.py)
+```python
+def test_compliance_config_validation():
+    """Test ComplianceConfig field validation."""
+    
+def test_compliance_config_kill_switch_must_be_negative():
+    """Test kill switch threshold validation."""
+    
+def test_system_availability_initialization():
+    """Test SystemAvailability checks all systems."""
+    
+def test_system_availability_summary():
+    """Test SystemAvailability summary calculation."""
+    
+def test_system_bus_execution_order():
+    """Test SystemBus executes systems in correct order."""
+    
+def test_system_bus_critical_failure_handling():
+    """Test SystemBus handles critical system failures."""
+    
+def test_kill_switch_not_triggered_below_threshold():
+    """Test kill switch not triggered below threshold."""
+    
+def test_kill_switch_triggered_above_threshold():
+    """Test kill switch triggered above threshold."""
+    
+def test_daily_pnl_tracking():
+    """Test daily P&L tracking."""
+    
+def test_daily_tracking_reset():
+    """Test daily tracking reset."""
+    
+def test_starting_capital_validation():
+    """Test starting capital must be positive."""
+    
+def test_position_limit_check():
+    """Test position limit enforcement."""
+    
+def test_drawdown_limit_check():
+    """Test drawdown limit enforcement."""
+    
+def test_leverage_ratio_check():
+    """Test leverage ratio enforcement."""
+    
+def test_data_quality_nan_penalty():
+    """Test NaN values reduce quality score."""
+    
+def test_data_quality_stale_penalty():
+    """Test stale data reduces quality score."""
+    
+def test_data_quality_blocks_trading():
+    """Test low quality blocks trading."""
+    
+def test_analyze_pre_trade_checks_kill_switch_first():
+    """Test kill switch checked first."""
+    
+def test_analyze_pre_trade_returns_analysis():
+    """Test pre-trade analysis returns complete object."""
+    
+def test_analyze_post_trade_calculates_latency():
+    """Test post-trade calculates latency."""
+    
+def test_optimize_portfolio_returns_weights():
+    """Test portfolio optimization returns weights."""
+    
+def test_track_order_submission():
+    """Test order submission tracking."""
+    
+def test_track_order_completion():
+    """Test order completion tracking."""
+    
+def test_slo_violation_logged():
+    """Test SLO violations are logged."""
+    
+def test_singleton_pattern():
+    """Test only one engine instance exists."""
+```
 
-## Notes
-- **GOD OBJECT WARNING:** ComplianceEngine violates SRP (orchestration + validation + tracking + kill switch). Consider splitting into:
-  1. `ComplianceEngine` (orchestration only)
-  2. `KillSwitchManager` (P&L tracking and kill switch logic)
-  3. `TradeTracker` (SLO tracking and audit trail)
-- **Synchronous Bottlenecks:** Most methods are synchronous. Pre-trade analysis blocks on 17 system calls. Consider async/await for production (ASYNC-001).
-- **Timeout Handling (ASYNC-005):** ComplianceEngine is a synchronous façade with no direct external calls. All timeout handling is delegated to subsystems. When async variants are implemented, timeout parameters will be added at the façade level.
-- **Error Resilience:** All system handlers catch exceptions. This prevents cascading failures but may hide issues. Monitor warning logs.
-- **Lazy Initialization:** Subsystems loaded on first use. This speeds startup but may cause latency spikes on first call.
-- **Configurable Thresholds:** All trading thresholds are now configurable via ComplianceConfig (GAP-CFG-002 resolved). Defaults: 5% kill switch, 10% position limit, 25% drawdown, 2.0x leverage, 80% data quality.
-- **Hull Rule 13.1:** Kill switch is critical safety mechanism. Test thoroughly in integration tests.
-- **17 Systems Integration:** SystemBus is complex. Add integration tests for all system combinations.
+### Integration Tests
+```python
+def test_full_pre_trade_workflow():
+    """Test complete pre-trade analysis workflow."""
+    
+def test_full_post_trade_workflow():
+    """Test complete post-trade analysis workflow."""
+    
+def test_kill_switch_blocks_all_trading():
+    """Test activated kill switch blocks all trades."""
+    
+def test_concurrent_engine_access():
+    """Test thread-safe concurrent access."""
+    
+def test_all_17_systems_executed():
+    """Test all 17 systems contribute to analysis."""
+```
+
+## File-Specific Rules
+
+### Rule COMP-FS-001: Timeout Handling Delegation
+**Priority:** P1  
+**Description:** Timeout handling is delegated to individual subsystems. Each subsystem handles its own timeouts. When async refactoring is implemented (ASYNC-001), timeouts will be added at façade level using `asyncio.wait_for()`.
+
+### Rule COMP-FS-002: Configuration Injection
+**Priority:** P0  
+**Description:** `ComplianceConfig` must be injectable via constructor parameter, not hardcoded.
+
+### Rule COMP-FS-003: Initialization Order
+**Priority:** P1  
+**Description:** Must initialize simple attributes before complex ones to avoid attribute errors during `__init__`.
+
+## Compliance Rules Integrated
+
+### 12 Compliance Rule Systems
+1. **Ernest Chan (Rule 1)** - Factor Models, Portfolio Optimization, Regime Detection
+2. **Narang (Rule 2)** - Alpha Models, Risk Models, Transaction Costs
+3. **López de Prado (Rule 3)** - Sample Weights, Purged CV, Meta-Labeling
+4. **Tomasini (Rule 4)** - Trading Systems Architecture
+5. **Hastie (Rule 5)** - Statistical Learning
+6. **Harris (Rule 6)** - Order Book, Bid-Ask Bounce, Market Impact
+7. **O'Hara (Rule 7)** - Order Flow, Liquidity, Price Discovery
+8. **Percival (Rule 8)** - Architecture Patterns
+9. **Hull (Rule 13)** - Greeks, VaR, Stress Scenarios
+10. **Google SRE (Rule 20)** - Golden Signals, SLOs
+11. **Beck TDD (Rule 21)** - Test-Driven Development
+12. **Martin Clean Arch (Rule 18)** - Clean Architecture
+
+## References
+
+- **BASE_RULES.md:** See ../../BASE_RULES.md for universal rules
+- **Related Files:**
+  - `app/domain/entities/pre_trade_analysis.py` - Pre-trade result entity
+  - `app/domain/entities/post_trade_analysis.py` - Post-trade result entity
+  - `app/domain/entities/portfolio_optimization.py` - Portfolio optimization entity
+
+## Changelog
+
+### 2025-02-06
+- Initial requirements documentation created
+- Documented kill switch implementation (Hull Rule 13.1)
+- Documented configuration centralization (addresses GAP-CFG-002)
+- Audit Status: NEEDS_AUDIT

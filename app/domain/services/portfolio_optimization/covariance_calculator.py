@@ -50,7 +50,7 @@ class CovarianceResult:
             idx2 = self.symbols.index(symbol2)
             return Decimal(str(self.covariance_matrix[idx1, idx2]))
         except ValueError:
-            raise ValueError(f"Symbol not found in result")
+            raise ValueError("Symbol not found in result")
 
     def get_correlation(self, symbol1: str, symbol2: str) -> Decimal:
         """Get correlation between two symbols."""
@@ -59,7 +59,7 @@ class CovarianceResult:
             idx2 = self.symbols.index(symbol2)
             return Decimal(str(self.correlation_matrix[idx1, idx2]))
         except ValueError:
-            raise ValueError(f"Symbol not found in result")
+            raise ValueError("Symbol not found in result")
 
     def get_std_dev(self, symbol: str) -> Decimal:
         """Get standard deviation for a symbol."""

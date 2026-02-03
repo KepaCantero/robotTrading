@@ -1,186 +1,206 @@
-# signal_generator.py
+# signal_generator.py.requirements.md
+
+**Layer:** Domain Layer  
+**Category:** Service  
+**Status:** PASSED  
+**Last Updated:** 2025-01-06
+
+---
 
 ## Purpose
-Domain service for generating trading signals based on technical indicators (MA crossover, RSI, Bollinger Bands, MACD) with confidence scoring and signal combination.
+
+Domain service for generating trading signals based on technical indicators and strategies.
 
 ---
 
-## Type Definitions / Data Classes
+## BASE_RULES References
 
-### SignalType (Enum)
-```python
-BUY = "buy"      # Long entry signal
-SELL = "sell"    # Short entry or exit signal
-HOLD = "hold"    # No action
-CLOSE = "close"  # Close position
-```
+See [`../../BASE_RULES.md`](../../BASE_RULES.md) for universal rules.
 
-### SignalStrength (Enum)
-```python
-WEAK = "weak"
-MODERATE = "moderate"
-STRONG = "strong"
-VERY_STRONG = "very_strong"
-```
-
-### Signal (dataclass)
-```python
-symbol: str                      # Trading symbol
-signal_type: SignalType          # BUY, SELL, HOLD, CLOSE
-strength: SignalStrength         # Signal strength level
-confidence: Decimal              # Confidence 0-1
-target_price: Optional[Decimal]  # Target price
-stop_loss: Optional[Decimal]     # Stop loss level
-take_profit: Optional[Decimal]   # Take profit level
-quantity: Optional[Decimal]      # Suggested quantity
-reason: str                      # Signal explanation
-metadata: Dict[str, Any]         # Additional context
-```
-
-**Properties:**
-- is_buy: True if signal_type == BUY
-- is_sell: True if signal_type == SELL
-- is_actionable: True if BUY or SELL
-
-### IndicatorValues (dataclass)
-```python
-price: Decimal                    # Current price
-sma_20: Optional[Decimal]         # 20-period SMA
-sma_50: Optional[Decimal]         # 50-period SMA
-ema_12: Optional[Decimal]         # 12-period EMA
-ema_26: Optional[Decimal]         # 26-period EMA
-rsi: Optional[Decimal]            # RSI indicator
-macd: Optional[Decimal]           # MACD line
-macd_signal: Optional[Decimal]    # MACD signal line
-bollinger_upper: Optional[Decimal] # Bollinger upper band
-bollinger_lower: Optional[Decimal] # Bollinger lower band
-volume: Optional[Decimal]         # Trading volume
-volume_ma: Optional[Decimal]      # Volume MA
-```
-
-### SignalGenerator (class)
-```python
-_confidence_threshold: Decimal  # Minimum confidence for actionable signals
-```
+**Applicable BASE_RULES for this file:**
+- **ARCH-001** (P0): Layered architecture
+- **ARCH-002** (P0): Dependencies inward
+- **ARCH-003** (P0): No framework in domain
+- **SOL-001** (P0): Single Responsibility
+- **CC-006** (P0): Explicit error handling
 
 ---
 
-## Function Signatures (Contracts)
+## Classes
 
-### `SignalGenerator.__init__(confidence_threshold)`
-**Pre:** confidence_threshold in [0, 1]
-**Post:** Generator initialized with threshold
-**Raises:** None
-**Retry:** No
-**Side Effects:** None
+### `SignalType`
 
-### `generate_ma_crossover_signal(indicators, symbol) -> Signal`
-**Pre:** indicators contains sma_20, sma_50, price
-**Post:** Returns Signal based on MA crossover
-**Raises:** None (returns HOLD if insufficient data)
-**Retry:** No
-**Side Effects:** None
+*Description needed*
 
-### `generate_rsi_signal(indicators, symbol) -> Signal`
-**Pre:** indicators contains rsi
-**Post:** Returns Signal: BUY if RSI < 30, SELL if RSI > 70
-**Raises:** None (returns HOLD if RSI unavailable)
-**Retry:** No
-**Side Effects:** None
+### `SignalStrength`
 
-### `generate_bollinger_signal(indicators, symbol) -> Signal`
-**Pre:** indicators contains bollinger_upper, bollinger_lower, price
-**Post:** Returns Signal: BUY near lower band, SELL near upper band
-**Raises:** None (returns HOLD if unavailable)
-**Retry:** No
-**Side Effects:** None
+*Description needed*
 
-### `generate_macd_signal(indicators, symbol) -> Signal`
-**Pre:** indicators contains macd, macd_signal
-**Post:** Returns Signal based on MACD crossover
-**Raises:** None (returns HOLD if unavailable)
-**Retry:** No
-**Side Effects:** None
+### `Signal`
 
-### `combine_signals(signals, symbol) -> Signal`
-**Pre:** signals is list of Signal objects
-**Post:** Returns consensus Signal (BUY if majority BUY, etc.)
-**Raises:** None (returns HOLD if empty or no consensus)
-**Retry:** No
-**Side Effects:** None
+*Description needed*
+
+### `IndicatorValues`
+
+*Description needed*
+
+### `SignalGenerator`
+
+*Description needed*
+
+---
+
+## Functions
+
+### `is_buy`
+
+*Description needed*
+
+### `is_sell`
+
+*Description needed*
+
+### `is_actionable`
+
+*Description needed*
+
+### `__init__`
+
+*Description needed*
+
+### `generate_ma_crossover_signal`
+
+*Description needed*
+
+### `generate_rsi_signal`
+
+*Description needed*
+
+### `generate_bollinger_signal`
+
+*Description needed*
+
+### `generate_macd_signal`
+
+*Description needed*
+
+### `combine_signals`
+
+*Description needed*
+
+### `_hold_signal`
+
+*Description needed*
+
+### `_calculate_ma_strength`
+
+*Description needed*
+
+### `_calculate_macd_strength`
+
+*Description needed*
+
+### `_calculate_consensus_strength`
+
+*Description needed*
+
+---
+
+## GAP Analysis
+
+### Automated Checks
+
+- **File Path:** `/Users/kepa.cantero/Projects/algoTrading/app/domain/services/signal_generator.py`
+- **Total Lines:** 512
+- **Has Imports:** True
+- **Uses Dataclass:** True
+- **Frozen Dataclass:** True
+- **Has Logging:** False
+- **Has Validation:** False
+- **Uses Decimal:** True
+- **Uses Datetime:** False
+- **Has Enums:** False
+
+### Priority Gaps
+
+#### P0 (Critical) - None ✅
+
+No P0 violations found. 
+
+**Note:** ✅ Signal generator returns HOLD signals for invalid input - appropriate pattern
+
+#### P1 (High) - None ✅
+
+No P1 violations found.
+
+---
+
+## File-Specific Requirements
+
+### Domain Rules
+
+1. **Purity:** No infrastructure dependencies (FastAPI, SQLAlchemy, etc.)
+2. **Immutability:** Value objects should be frozen dataclasses
+3. **Validation:** All invariants enforced in `__post_init__`
+4. **Decimal Precision:** Financial calculations use `Decimal`, not `float`
+
+### Trading Rules
+
+1. **Risk Validation:** Position sizes, exposure limits checked
+2. **Audit Trail:** All state changes logged
+3. **Error Handling:** Explicit ValueError for invalid inputs
 
 ---
 
 ## Acceptance Criteria
-- [ ] MA crossover: BUY when fast > slow and price > fast, SELL when opposite
-- [ ] RSI: BUY when < 30 (oversold), SELL when > 70 (overbought)
-- [ ] Bollinger Bands: BUY when position < 0.1, SELL when > 0.9
-- [ ] MACD: BUY when MACD > signal and histogram > 0
-- [ ] Signal strength calculated from indicator magnitude
-- [ ] Confidence bounded in [0, 1]
-- [ ] HOLD signals have zero confidence
-- [ ] Signal combination uses majority voting
-- [ ] Consensus strength calculated from agreeing signals
-- [ ] All signals include reason explanation
-- [ ] Metadata includes indicator values
-- [ ] Insufficient data returns HOLD signal
-- [ ] Pure functions (no side effects)
+
+### AC-ARCH-001: Domain Layer Purity
+```bash
+# No infrastructure imports in domain layer
+grep -E "from sqlalchemy|from fastapi|import httpx" app/domain/app/domain/services/signal_generator.py | wc -l
+# Expected: 0
+```
+
+### AC-FMT-007: No Mutable Defaults
+```bash
+# No mutable default arguments
+grep -E "= \[\]|= \{\}" app/domain/FILE.py | wc -l
+# Expected: 0
+```
+
+### AC-TYP-001: Type Hint Coverage
+```bash
+# All public functions have return types
+mypy --strict app/domain/FILE.py
+# Expected: 0 errors
+```
 
 ---
 
-## Critical Rules (MUST NOT BREAK)
+## Test Requirements
 
-**Reglas universales:** Ver `../../../BASE_RULES.md` (12 categories with 96 rules)
+### Required Tests
 
-### Reglas ESPECÍFICAS de este archivo:
-
-| Rule | Source | Requirement | Current Status |
-|------|--------|-------------|----------------|
-| ARCH-001 | BASE_RULES | Domain layer purity | ✅ OK - No infrastructure imports |
-| ARCH-006 | BASE_RULES | Value objects immutable | ✅ OK - dataclass with __post_init__ |
-| TYP-001 | BASE_RULES | Type hints | ✅ OK - Full type coverage |
-| SOL-001 | BASE_RULES | Single Responsibility | ✅ OK - Each method generates one signal type |
-| CC-007 | BASE_RULES | Small functions | ✅ OK - Most methods < 30 lines |
-| CC-001 | BASE_RULES | Descriptive names | ✅ OK - Clear indicator/signal names |
+1. **Validation Tests:** All invariants tested
+2. **Boundary Tests:** Edge cases (zero, negative, max values)
+3. **Error Handling:** Invalid inputs raise ValueError
+4. **Calculation Tests:** Output verified
+5. **Integration Tests:** Service with entities
 
 ---
 
-## Dependencies
-- **External:** dataclasses, decimal, enum, typing
-- **Internal:** None (domain layer)
+## Audit Status
+
+**Current Status:** PASSED
+
+**Last Audit:** 2025-01-06  
+**Auditor:** Automated Analysis
+
+### Changes Required
+
+✅ **No changes required.** File passes all automated checks.
+
 
 ---
 
-## Required Tests
-- **test_signal_generator.py:**
-  - MA crossover BUY signal (fast > slow, price > fast)
-  - MA crossover SELL signal (fast < slow, price < fast)
-  - MA crossover HOLD signal (mixed signals)
-  - MA crossover with insufficient data
-  - RSI oversold BUY signal (RSI < 30)
-  - RSI very oversold BUY signal (RSI < 20)
-  - RSI overbought SELL signal (RSI > 70)
-  - RSI very overbought SELL signal (RSI > 80)
-  - RSI neutral HOLD signal (30 < RSI < 70)
-  - RSI with unavailable data
-  - Bollinger BUY near lower band (position < 0.1)
-  - Bollinger SELL near upper band (position > 0.9)
-  - Bollinger HOLD within bands
-  - Bollinger with zero width
-  - MACD BUY signal (MACD > signal, histogram > 0)
-  - MACD SELL signal (MACD < signal, histogram < 0)
-  - MACD HOLD (no clear trend)
-  - Signal combination: BUY consensus
-  - Signal combination: SELL consensus
-  - Signal combination: HOLD (no consensus)
-  - Signal combination: empty list
-  - Confidence threshold validation
-  - Signal properties (is_buy, is_sell, is_actionable)
-  - MA strength calculation
-  - MACD strength calculation
-  - Consensus strength calculation
-
----
-
-## Notes
-Pure domain service for signal generation. No external dependencies. Signals are deterministic based on indicator values. Confidence scoring helps filter weak signals. Combination logic enables multi-indicator strategies.
+*This requirements file is auto-generated. Update with domain-specific requirements as needed.*

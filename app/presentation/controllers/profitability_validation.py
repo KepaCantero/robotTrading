@@ -27,6 +27,19 @@ from app.models.profitability_validation import (
 )
 from app.services.profitability_validation_service import ProfitabilityValidationService
 
+# Constants
+DEFAULT_VALUE_200 = 200
+DEFAULT_VALUE_400 = 400
+DEFAULT_VALUE_404 = 404
+DEFAULT_VALUE_50 = 50
+DEFAULT_VALUE_500 = 500
+DEFAULT_VALUE_503 = 503
+MAX_15 = 15
+MAX_50 = 50
+MIN_5 = 5
+MIN_50 = 50
+
+
 logger = logging.getLogger(__name__)
 
 # Crear router
@@ -62,15 +75,17 @@ async def validate_strategy_profitability(
         # Validar datos de entrada
         if not request.trades_data:
             raise HTTPException(
-                status_code=400,
+                status_code=DEFAULT_VALUE_400,
                 detail="Trades data is required for profitability validation",
             )
 
         if request.initial_capital <= 0:
-            raise HTTPException(status_code=400, detail="Initial capital must be positive")
+            raise HTTPException(status_code=DEFAULT_VALUE_400,
+                detail="Initial capital must be positive")
 
         if request.period_start >= request.period_end:
-            raise HTTPException(status_code=400, detail="Period start must be before period end")
+            raise HTTPException(status_code=DEFAULT_VALUE_400,
+                detail="Period start must be before period end")
 
         # Ejecutar validación
         result = profitability_service.validate_strategy_profitability(request)
@@ -86,7 +101,7 @@ async def validate_strategy_profitability(
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         logger.error(f"Error validating strategy profitability: {str(e)}")
         raise HTTPException(
-            status_code=500,
+            status_code=DEFAULT_VALUE_500,
             detail=f"Internal error during profitability validation: {str(e)}",
         )
 
@@ -115,13 +130,13 @@ async def validate_multiple_strategies(
 
         if not requests:
             raise HTTPException(
-                status_code=400, detail="At least one validation request is required"
+                status_code=DEFAULT_VALUE_400, detail="At least one validation request is required"
             )
 
-        if len(requests) > 50:  # Límite de seguridad
+        if len(requests) > DEFAULT_VALUE_50:  # Límite de seguridad
             raise HTTPException(
-                status_code=400,
-                detail="Maximum 50 strategies can be validated in a single batch",
+                status_code=DEFAULT_VALUE_400,
+                detail="Maximum MAX_50 strategies can be validated in a single batch",
             )
 
         results = []
@@ -143,7 +158,8 @@ async def validate_multiple_strategies(
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"Error in batch profitability validation: {str(e)}")
         raise HTTPException(
-            status_code=500, detail=f"Internal error during batch validation: {str(e)}"
+            status_code=DEFAULT_VALUE_500,
+                detail=f"Internal error during batch validation: {str(e)}"
         )
 
 
@@ -171,13 +187,13 @@ async def compare_strategies(
 
         if not validations:
             raise HTTPException(
-                status_code=400,
+                status_code=DEFAULT_VALUE_400,
                 detail="At least one validation is required for comparison",
             )
 
         if len(validations) < 2:
             raise HTTPException(
-                status_code=400,
+                status_code=DEFAULT_VALUE_400,
                 detail="At least two validations are required for comparison",
             )
 
@@ -193,7 +209,7 @@ async def compare_strategies(
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         logger.error(f"Error comparing strategies: {str(e)}")
         raise HTTPException(
-            status_code=500,
+            status_code=DEFAULT_VALUE_500,
             detail=f"Internal error during strategy comparison: {str(e)}",
         )
 
@@ -224,7 +240,7 @@ async def analyze_historical_performance(
 
         if not validations:
             raise HTTPException(
-                status_code=400,
+                status_code=DEFAULT_VALUE_400,
                 detail="At least one validation is required for historical analysis",
             )
 
@@ -233,7 +249,7 @@ async def analyze_historical_performance(
 
         if not strategy_validations:
             raise HTTPException(
-                status_code=404,
+                status_code=DEFAULT_VALUE_404,
                 detail=f"No validations found for strategy: {strategy_name}",
             )
 
@@ -251,7 +267,7 @@ async def analyze_historical_performance(
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         logger.error(f"Error analyzing historical performance: {str(e)}")
         raise HTTPException(
-            status_code=500,
+            status_code=DEFAULT_VALUE_500,
             detail=f"Internal error during historical analysis: {str(e)}",
         )
 
@@ -286,7 +302,7 @@ async def generate_validation_report(
 
         if not validations:
             raise HTTPException(
-                status_code=400,
+                status_code=DEFAULT_VALUE_400,
                 detail="At least one validation is required for report generation",
             )
 
@@ -304,7 +320,8 @@ async def generate_validation_report(
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Error generating validation report: {str(e)}")
         raise HTTPException(
-            status_code=500, detail=f"Internal error during report generation: {str(e)}"
+            status_code=DEFAULT_VALUE_500,
+                detail=f"Internal error during report generation: {str(e)}"
         )
 
 
@@ -328,11 +345,11 @@ async def get_default_validation_criteria() -> ValidationCriteria:
         # Crear criterios basados en configuración
         criteria = ValidationCriteria(
             min_net_profit=Decimal("100"),
-            min_profit_margin=Decimal("5"),
+            min_profit_margin=Decimal("MIN_5"),
             min_roi=Decimal("10"),
             min_sharpe_ratio=Decimal("1.0"),
-            max_drawdown_limit=Decimal("15"),
-            min_win_rate=Decimal("50"),
+            max_drawdown_limit=Decimal("MAX_15"),
+            min_win_rate=Decimal("MIN_50"),
             min_profit_factor=Decimal("1.5"),
             max_cost_impact_ratio=Decimal("0.3"),
         )
@@ -342,7 +359,7 @@ async def get_default_validation_criteria() -> ValidationCriteria:
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"Error retrieving default criteria: {str(e)}")
         raise HTTPException(
-            status_code=500,
+            status_code=DEFAULT_VALUE_500,
             detail=f"Internal error retrieving default criteria: {str(e)}",
         )
 
@@ -360,7 +377,7 @@ async def health_check() -> JSONResponse:
         ValidationCriteria()
 
         return JSONResponse(
-            status_code=200,
+            status_code=DEFAULT_VALUE_200,
             content={
                 "status": "healthy",
                 "service": "profitability-validation",
@@ -372,7 +389,7 @@ async def health_check() -> JSONResponse:
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Health check failed: {str(e)}")
         return JSONResponse(
-            status_code=503,
+            status_code=DEFAULT_VALUE_503,
             content={
                 "status": "unhealthy",
                 "service": "profitability-validation",
@@ -423,11 +440,11 @@ async def get_metrics_summary() -> JSONResponse:
             "risk_levels": ["low", "medium", "high"],
         }
 
-        return JSONResponse(status_code=200, content=summary)
+        return JSONResponse(status_code=DEFAULT_VALUE_200, content=summary)
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Error retrieving metrics summary: {str(e)}")
         raise HTTPException(
-            status_code=500,
+            status_code=DEFAULT_VALUE_500,
             detail=f"Internal error retrieving metrics summary: {str(e)}",
         )

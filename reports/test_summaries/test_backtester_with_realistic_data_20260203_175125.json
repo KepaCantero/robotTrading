@@ -1,0 +1,81 @@
+{
+  "metadata": {
+    "test_name": "test_backtester_with_realistic_data",
+    "test_description": "Basic backtest with GBM data and SMA crossover strategy",
+    "test_file": "test_backtest_basic.py",
+    "test_type": "integration",
+    "test_id": "test_20260203_175125",
+    "author": null,
+    "tags": [],
+    "created_at": "2026-02-03T17:51:25.664941"
+  },
+  "input_data": {
+    "symbols": [
+      "AAPL"
+    ],
+    "date_range": [
+      "2023-01-01T00:00:00",
+      "2024-05-14T00:00:00"
+    ],
+    "data_points": 500,
+    "market_regime": "bullish",
+    "data_source": "GBM simulation (drift=5%, vol=20%)",
+    "price_range": [
+      "85.39",
+      "128.15"
+    ],
+    "volume_stats": null,
+    "volatility": null,
+    "notes": []
+  },
+  "config": {
+    "initial_capital": "100000",
+    "commission": "1.0",
+    "slippage": "0.1",
+    "strategy": "SMA Crossover (20/50)",
+    "strategy_params": {
+      "fast_period": 20,
+      "slow_period": 50,
+      "min_slope": 0.001
+    },
+    "risk_management": null,
+    "additional_params": {}
+  },
+  "output": {
+    "final_capital": "100595.5196049129208251132246",
+    "total_pnl": "595.5196049129208251132246",
+    "total_pnl_percentage": "0.595519604912920825113224600",
+    "sharpe_ratio": "-5.663231995845570427879825768",
+    "sortino_ratio": null,
+    "max_drawdown": "-1501.15954039174321123610986",
+    "max_drawdown_percentage": null,
+    "win_rate": "80.0",
+    "total_trades": 5,
+    "winning_trades": 4,
+    "losing_trades": 1,
+    "calmar_ratio": null,
+    "omega_ratio": null,
+    "profit_factor": null,
+    "expectancy": null,
+    "additional_metrics": {}
+  },
+  "validation_criteria": [
+    {
+      "criteria_name": "Final capital in range",
+      "expected_value": "50000-150000",
+      "actual_value": "100595.5196049129208251132246",
+      "passed": true,
+      "tolerance": null,
+      "reason": "Final capital $100,595.52 is within realistic range"
+    }
+  ],
+  "passed": true,
+  "pass_reason": "All assertions passed, backtest executed successfully",
+  "warnings": [],
+  "anomalies": [],
+  "start_time": "2026-02-03T17:51:25.664948",
+  "end_time": "2026-02-03T17:51:25.697546",
+  "duration_seconds": 0.032598,
+  "notes": [],
+  "attachments": []
+}

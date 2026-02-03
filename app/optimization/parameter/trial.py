@@ -4,12 +4,10 @@ Trial tracking for parameter optimization.
 Tracks individual optimization trials, their status, and results.
 """
 
-import time
 import traceback
 from dataclasses import dataclass, field
 from datetime import datetime
-from decimal import Decimal
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from .models import TrialStatus
 

@@ -1,6 +1,6 @@
 """
 Trading Error Handler API
-TASK-14: Unificación de Error Handling
+TASK-DEFAULT_VALUE_14: Unificación de Error Handling
 
 API endpoints para gestionar el manejo unificado de errores del trading.
 """
@@ -15,6 +15,10 @@ from requests.exceptions import HTTPError, RequestException
 
 from app.exceptions.trading_exceptions import ErrorCategory
 from app.services.trading_error_handler import (
+
+# Constants
+DEFAULT_VALUE_14 = 14
+
     ErrorAction,
     ErrorContext,
     get_error_statistics,
@@ -90,7 +94,7 @@ async def handle_error_endpoint(request: ErrorHandlingRequest):
         # Create a mock error for demonstration
         # In real implementation, this would be the actual error
         class MockError(Exception):
-            def __init__(self, message: str):
+            def __init__(self, message: str) -> Dict[str, Any]:
                 self.message = message
                 super().__init__(message)
 

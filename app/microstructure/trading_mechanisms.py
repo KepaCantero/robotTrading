@@ -22,7 +22,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
 
 
 class MarketMechanism(Enum):
@@ -72,7 +71,7 @@ class LimitOrder:
     price: Decimal
     size: Decimal
     is_hidden: bool = False
-    participant_id: Optional[str] = None
+    participant_id: str | None = None
 
     def __lt__(self, other):
         """For priority queue ordering"""
@@ -87,7 +86,7 @@ class LimitOrder:
                 return self.price < other.price
             return self.timestamp < other.timestamp
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             'order_id': self.order_id,
@@ -118,12 +117,12 @@ class AuctionResult:
     auction_time: datetime
     clearing_price: Decimal
     total_volume: Decimal
-    matched_orders: List[Tuple[str, str, Decimal]]
-    unfilled_buys: List[LimitOrder]
-    unfilled_sells: List[LimitOrder]
+    matched_orders: list[tuple[str, str, Decimal]]
+    unfilled_buys: list[LimitOrder]
+    unfilled_sells: list[LimitOrder]
     execution_efficiency: float
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             'auction_time': self.auction_time.isoformat(),
@@ -155,9 +154,9 @@ class DealerInventoryState:
     inventory: Decimal
     inventory_value: Decimal
     inventory_risk: float
-    optimal_quotes: Tuple[Decimal, Decimal]
+    optimal_quotes: tuple[Decimal, Decimal]
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             'timestamp': self.timestamp.isoformat(),
@@ -190,7 +189,7 @@ class ExecutionQuality:
     market_impact: float  # In bps
     quality_score: float
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             'mechanism': self.mechanism.value,
@@ -226,8 +225,8 @@ class CallAuction:
         """
         self.price_tick = price_tick
         self.min_price_increment = min_price_increment
-        self.buy_orders: List[LimitOrder] = []
-        self.sell_orders: List[LimitOrder] = []
+        self.buy_orders: list[LimitOrder] = []
+        self.sell_orders: list[LimitOrder] = []
 
     def submit_order(self, order: LimitOrder) -> None:
         """Submit order to auction"""
@@ -236,7 +235,7 @@ class CallAuction:
         else:
             heapq.heappush(self.sell_orders, order)
 
-    def calculate_clearing_price(self) -> Tuple[Optional[Decimal], Decimal]:
+    def calculate_clearing_price(self) -> tuple[Decimal | None, Decimal]:
         """
         Calculate market-clearing price
 
@@ -402,11 +401,11 @@ class ContinuousDoubleAuction:
             price_tick: Minimum price variation
         """
         self.price_tick = price_tick
-        self.buy_book: List[LimitOrder] = []
-        self.sell_book: List[LimitOrder] = []
-        self.trade_history: List[Dict] = []
+        self.buy_book: list[LimitOrder] = []
+        self.sell_book: list[LimitOrder] = []
+        self.trade_history: list[dict] = []
 
-    def submit_limit_order(self, order: LimitOrder) -> List[Dict]:
+    def submit_limit_order(self, order: LimitOrder) -> list[dict]:
         """
         Submit limit order and immediately execute if possible
 
@@ -484,7 +483,7 @@ class ContinuousDoubleAuction:
         side: str,
         size: Decimal,
         order_id: str,
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """
         Submit market order (executes immediately)
 
@@ -548,7 +547,7 @@ class ContinuousDoubleAuction:
         self.trade_history.extend(trades)
         return trades
 
-    def get_market_state(self) -> Dict:
+    def get_market_state(self) -> dict:
         """
         Get current market state
 
@@ -608,14 +607,14 @@ class DealerMarket:
         self.inventory_limit = inventory_limit
         self.inventory = Decimal('0')
         self.inventory_value = Decimal('0')
-        self.trade_history: List[Dict] = []
+        self.trade_history: list[dict] = []
 
     def calculate_optimal_quotes(
         self,
         current_price: Decimal,
         volatility: float,
         order_flow_imbalance: float,
-    ) -> Tuple[Decimal, Decimal]:
+    ) -> tuple[Decimal, Decimal]:
         """
         Calculate optimal bid and ask quotes
 
@@ -756,7 +755,7 @@ class TradingMechanismComparator:
 
     def __init__(self):
         """Initialize comparator"""
-        self.execution_history: Dict[MarketMechanism, List[ExecutionQuality]] = {
+        self.execution_history: Dict[MarketMechanism, list[ExecutionQuality]] = {
             mechanism: [] for mechanism in MarketMechanism
         }
 
@@ -833,7 +832,7 @@ class TradingMechanismComparator:
         order_size: Decimal,
         current_price: Decimal,
         volatility: float,
-    ) -> Dict[str, Dict]:
+    ) -> dict:
         """
         Compare expected execution quality across mechanisms
 
@@ -897,7 +896,7 @@ class TradingMechanismComparator:
         self,
         order_size: Decimal,
         volatility: float,
-        comparison: Dict,
+        comparison: dict,
     ) -> str:
         """Generate recommendation for mechanism selection"""
         size_value = float(order_size)
@@ -913,10 +912,10 @@ class TradingMechanismComparator:
 
 
 # Singleton instances
-_call_auction: Optional[CallAuction] = None
-_continuous_auction: Optional[ContinuousDoubleAuction] = None
-_dealer_market: Optional[DealerMarket] = None
-_mechanism_comparator: Optional[TradingMechanismComparator] = None
+_call_auction: CallAuction | None = None
+_continuous_auction: ContinuousDoubleAuction | None = None
+_dealer_market: DealerMarket | None = None
+_mechanism_comparator: TradingMechanismComparator | None = None
 
 
 def get_call_auction(

@@ -38,7 +38,7 @@ from .transaction_cost import CostConfig, TransactionCost, TransactionCostCalcul
 logger = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class FillConstraints:
     """
     Constraints on order fills.
@@ -58,7 +58,7 @@ class FillConstraints:
     allow_partial_fills: bool = True
 
 
-@dataclass
+@dataclass(frozen=True)
 class SimulatorConfig:
     """
     Configuration for order fill simulator.
@@ -144,7 +144,7 @@ class OrderFillSimulator:
         self.slippage_model = slippage_model or SlippageModel(self.config.slippage_config)
         self.impact_model = impact_model or MarketImpactModel(self.config.impact_config)
 
-    async def simulate_fill(
+    def simulate_fill(
         self,
         order: Order,
         market_snapshot: MarketSnapshot,
@@ -362,7 +362,7 @@ class OrderFillSimulator:
             warnings=[message] if message else [],
         )
 
-    async def simulate_fill_sequence(
+    def simulate_fill_sequence(
         self,
         order: Order,
         market_snapshots: List[MarketSnapshot],
@@ -398,7 +398,7 @@ class OrderFillSimulator:
                 created_at=order.created_at,
             )
 
-            result = await self.simulate_fill(partial_order, snapshot)
+            result = self.simulate_fill(partial_order, snapshot)
             results.append(result)
 
             if result.filled:

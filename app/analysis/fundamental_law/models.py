@@ -13,7 +13,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import List, Optional, Tuple
 
 
 @dataclass(frozen=True)
@@ -206,9 +205,9 @@ class ICMetrics:
 
     ic: Decimal
     ic_rank: Decimal
-    ic_decay: List[Decimal]
+    ic_decay: list[Decimal]
     statistical_significance: float
-    confidence_interval: Tuple[Decimal, Decimal]
+    confidence_interval: tuple[Decimal, Decimal]
 
     def is_significant(self, alpha: float = 0.05) -> bool:
         """
@@ -426,7 +425,7 @@ class StrategyAnalysis:
     components: FundamentalLawComponents
     skill_level: str
     breadth_assessment: str
-    improvement_suggestions: List[str] = field(default_factory=list)
+    improvement_suggestions: list[str] = field(default_factory=list)
 
     def get_improvement_plan(self) -> str:
         """

@@ -50,7 +50,7 @@ class StrategyRegistry:
             return strategy
 
         except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
-            logger.error(f"Failed to load strategy '{name}': {str(e)}")
+            logger.error("Failed to load strategy", name=name, error=str(e), exc_info=True)
             raise ValueError(f"Failed to load strategy '{name}': {str(e)}")
 
     def unload_strategy(self, name: str) -> None:
@@ -220,7 +220,7 @@ class StrategyRegistry:
             return strategy
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-            logger.error(f"Failed to reload strategy '{name}': {str(e)}")
+            logger.error("Failed to reload strategy", name=name, error=str(e), exc_info=True)
             raise ValueError(f"Failed to reload strategy '{name}': {str(e)}")
 
     def clear_all_strategies(self) -> None:

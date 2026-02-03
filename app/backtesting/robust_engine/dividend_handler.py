@@ -424,8 +424,34 @@ class DividendHandler:
         Returns:
             List of DividendActions processed
         """
-        actions = []
+        # Use generator for memory-efficient processing
+        actions = list(
+            self._generate_dividend_actions(dividend_data, positions, prices)
+        )
 
+        logger.info(f"Processed {len(actions)} dividend payments")
+        return actions
+
+    def _generate_dividend_actions(
+        self,
+        dividend_data: pd.DataFrame,
+        positions: Dict[str, Decimal],
+        prices: Dict[str, Decimal],
+    ) -> DividendAction:
+        """
+        Generate DividendAction objects from dividend data.
+
+        This is a generator that yields DividendAction objects for
+        memory-efficient processing of large dividend datasets.
+
+        Args:
+            dividend_data: DataFrame with dividend data
+            positions: Current positions (symbol -> shares)
+            prices: Current prices (symbol -> price)
+
+        Yields:
+            DividendAction objects for each eligible dividend payment
+        """
         # Use itertuples instead of iterrows for better performance
         for row in dividend_data.itertuples():
             symbol = row.symbol
@@ -458,10 +484,7 @@ class DividendHandler:
                 qualified=qualified,
             )
 
-            actions.append(action)
-
-        logger.info(f"Processed {len(actions)} dividend payments")
-        return actions
+            yield action
 
     def reset(self) -> None:
         """Reset the dividend handler state."""

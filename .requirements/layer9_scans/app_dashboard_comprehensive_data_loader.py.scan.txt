@@ -1,0 +1,5 @@
+## Scan: app/dashboard/comprehensive_data_loader.py
+Lines: 426
+Functions: 9
+Classes: 1
+Status: Processed

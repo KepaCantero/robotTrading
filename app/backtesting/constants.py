@@ -10,10 +10,46 @@ All values are configurable and documented for easy maintenance.
 
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, TypedDict, Union
 
 
-@dataclass
+# ============================================================================
+# TYPED DICT DEFINITIONS
+# ============================================================================
+
+class FixedCommissionModel(TypedDict):
+    """Fixed commission model."""
+    type: str
+    cost: Decimal
+    description: str
+
+
+class HybridCommissionModel(TypedDict):
+    """Hybrid commission model."""
+    type: str
+    min_cost: Decimal
+    rate: Decimal
+    description: str
+
+
+class TierBracket(TypedDict):
+    """Single tier bracket for tiered commission."""
+    volume_max: Union[int, float]
+    rate: Decimal
+    min: Decimal
+
+
+class TieredCommissionModel(TypedDict):
+    """Tiered commission model."""
+    type: str
+    brackets: List[TierBracket]
+    description: str
+
+
+CommissionModel = Union[FixedCommissionModel, HybridCommissionModel, TieredCommissionModel]
+
+
+@dataclass(frozen=True)
 class CapitalScaleConstants:
     """Constants for capital scale analyzer."""
 
@@ -44,7 +80,7 @@ class CapitalScaleConstants:
 
     # Commission models by capital level (€ per trade or %)
     # Each model has: type, cost/rate, description
-    COMMISSION_MODELS: Dict[Decimal, Dict[str, Any]] = field(
+    COMMISSION_MODELS: Dict[Decimal, CommissionModel] = field(
         default_factory=lambda: {
             Decimal("1000"): {
                 "type": "fixed",
@@ -105,7 +141,7 @@ class CapitalScaleConstants:
     WIN_RATE_STABILITY_PENALTY_FACTOR: Decimal = Decimal("100")  # Multiplier for std dev penalty
 
 
-@dataclass
+@dataclass(frozen=True)
 class ExecutionEngineConstants:
     """Constants for pessimistic execution engine."""
 
@@ -121,7 +157,7 @@ class ExecutionEngineConstants:
     ENABLE_NEXT_DAY_EXECUTION: bool = True  # Signal at close t, execute at open t+1
 
 
-@dataclass
+@dataclass(frozen=True)
 class BacktestingConstants:
     """
     Main container for all backtesting constants.
@@ -150,7 +186,7 @@ def get_default_capital_levels() -> List[Decimal]:
     return BACKTESTING_CONSTANTS.capital_scale.DEFAULT_CAPITAL_LEVELS.copy()
 
 
-def get_commission_models() -> Dict[Decimal, Dict[str, Any]]:
+def get_commission_models() -> Dict[Decimal, CommissionModel]:
     """Get commission models by capital level."""
     return BACKTESTING_CONSTANTS.capital_scale.COMMISSION_MODELS.copy()
 

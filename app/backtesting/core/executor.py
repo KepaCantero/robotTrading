@@ -140,7 +140,13 @@ class BacktestExecutor(ABC):
             raise ValueError(f"Initial capital must be positive: {self.config.initial_capital}")
 
         logger.debug(
-            f"Inputs validated: {len(quotes)} quotes, " f"strategy: {type(strategy).__name__}"
+            "Inputs validated",
+            extra={
+                "operation": "validate_inputs",
+                "quotes_count": len(quotes),
+                "strategy_class": type(strategy).__name__,
+                "initial_capital": float(self.config.initial_capital),
+            }
         )
 
     def _pre_execute(
@@ -162,7 +168,15 @@ class BacktestExecutor(ABC):
 
         Override in subclasses for custom post-execution logic.
         """
-        logger.debug(f"Execution #{self._execution_count} completed: {result.final_capital}")
+        logger.debug(
+            "Backtest execution completed",
+            extra={
+                "operation": "post_execute",
+                "execution_count": self._execution_count,
+                "final_capital": float(result.final_capital),
+                "total_return": float(result.total_return),
+            }
+        )
 
     @property
     def execution_count(self) -> int:
@@ -274,12 +288,33 @@ class ParallelBacktestExecutor(BacktestExecutor):
         results: List[BacktestResult] = []
         max_workers = self.max_workers or min(len(strategies), 4)
 
+        logger.info(
+            "Starting parallel batch execution",
+            extra={
+                "operation": "parallel_batch_start",
+                "strategies_count": len(strategies),
+                "max_workers": max_workers,
+                "quotes_count": len(quotes),
+            }
+        )
+
         def run_single(strategy: StrategyType) -> Optional[BacktestResult]:
             """Run single backtest."""
+            strategy_name = getattr(strategy, 'name', 'unknown')
             try:
                 return self.execute(quotes, strategy, **kwargs)
             except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-                logger.error(f"Error in parallel execution: {e}", exc_info=True)
+                logger.error(
+                    "Error in parallel execution",
+                    extra={
+                        "operation": "parallel_execute",
+                        "strategy_name": strategy_name,
+                        "strategy_class": type(strategy).__name__,
+                        "error_type": type(e).__name__,
+                        "error_message": str(e),
+                    },
+                    exc_info=True
+                )
                 return None
 
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -289,6 +324,16 @@ class ParallelBacktestExecutor(BacktestExecutor):
                 result = future.result()
                 if result:
                     results.append(result)
+
+        logger.info(
+            "Parallel batch execution completed",
+            extra={
+                "operation": "parallel_batch_complete",
+                "total_strategies": len(strategies),
+                "successful_results": len(results),
+                "failed": len(strategies) - len(results),
+            }
+        )
 
         return results
 
@@ -356,7 +401,32 @@ class ProcessPoolBacktestExecutor(BacktestExecutor):
         Returns:
             BacktestResult with performance metrics
         """
-        return self._execute_in_process(quotes, strategy, **kwargs)
+        strategy_name = kwargs.get('strategy_name', getattr(strategy, 'name', 'unknown'))
+
+        logger.info(
+            "Starting process-isolated backtest execution",
+            extra={
+                "operation": "process_execute_start",
+                "strategy_name": strategy_name,
+                "strategy_class": type(strategy).__name__,
+                "quotes_count": len(quotes),
+                "timeout_seconds": 300,
+            }
+        )
+
+        result = self._execute_in_process(quotes, strategy, **kwargs)
+
+        logger.info(
+            "Process-isolated backtest execution completed",
+            extra={
+                "operation": "process_execute_complete",
+                "strategy_name": strategy_name,
+                "final_capital": float(result.final_capital),
+                "total_return": float(result.total_return),
+            }
+        )
+
+        return result
 
     def _execute_in_process(
         self,

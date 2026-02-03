@@ -35,9 +35,9 @@ async def example_1_crypto_monitoring():
     Crypto markets run 24/7, so monitoring tasks should run continuously.
     """
 
-    print("\n" + "=" * 70)
-    print("EXAMPLE 1: 24/7 Crypto Monitoring")
-    print("=" * 70 + "\n")
+    logger.debug("\n" + "=" * 70)
+    logger.debug("EXAMPLE 1: 24/7 Crypto Monitoring")
+    logger.debug("=" * 70 + "\n")
 
     scheduler = MarketScheduler(check_interval_24_7=5.0)
 
@@ -66,12 +66,12 @@ async def example_1_crypto_monitoring():
     await scheduler.start()
 
     # Run for 30 seconds (in production, run indefinitely)
-    print("Running crypto monitoring for 30 seconds...")
+    logger.debug("Running crypto monitoring for 30 seconds...")
     await asyncio.sleep(30)
 
     # Stop the scheduler
     await scheduler.stop()
-    print("Crypto monitoring stopped\n")
+    logger.debug("Crypto monitoring stopped\n")
 
 
 # ============================================================================
@@ -86,9 +86,9 @@ async def example_2_multi_market_strategy():
     Demonstrates how to schedule different tasks for different markets.
     """
 
-    print("\n" + "=" * 70)
-    print("EXAMPLE 2: Multi-Market Strategy")
-    print("=" * 70 + "\n")
+    logger.debug("\n" + "=" * 70)
+    logger.debug("EXAMPLE 2: Multi-Market Strategy")
+    logger.debug("=" * 70 + "\n")
 
     scheduler = MarketScheduler(
         check_interval_24_7=5.0,
@@ -136,12 +136,12 @@ async def example_2_multi_market_strategy():
     await scheduler.start()
 
     # Run for 30 seconds
-    print("Running multi-market strategy for 30 seconds...")
+    logger.debug("Running multi-market strategy for 30 seconds...")
     await asyncio.sleep(30)
 
     # Stop scheduler
     await scheduler.stop()
-    print("Multi-market strategy stopped\n")
+    logger.debug("Multi-market strategy stopped\n")
 
 
 # ============================================================================
@@ -156,9 +156,9 @@ async def example_3_maintenance_tasks():
     Useful for data synchronization, health checks, etc.
     """
 
-    print("\n" + "=" * 70)
-    print("EXAMPLE 3: Maintenance Tasks")
-    print("=" * 70 + "\n")
+    logger.debug("\n" + "=" * 70)
+    logger.debug("EXAMPLE 3: Maintenance Tasks")
+    logger.debug("=" * 70 + "\n")
 
     scheduler = MarketScheduler(
         check_interval_scheduled=5.0,
@@ -194,11 +194,11 @@ async def example_3_maintenance_tasks():
 
     await scheduler.start()
 
-    print("Running maintenance tasks for 20 seconds...")
+    logger.debug("Running maintenance tasks for 20 seconds...")
     await asyncio.sleep(20)
 
     await scheduler.stop()
-    print("Maintenance tasks stopped\n")
+    logger.debug("Maintenance tasks stopped\n")
 
 
 # ============================================================================
@@ -213,9 +213,9 @@ async def example_4_dynamic_task_management():
     Demonstrates how to manage tasks while the scheduler is running.
     """
 
-    print("\n" + "=" * 70)
-    print("EXAMPLE 4: Dynamic Task Management")
-    print("=" * 70 + "\n")
+    logger.debug("\n" + "=" * 70)
+    logger.debug("EXAMPLE 4: Dynamic Task Management")
+    logger.debug("=" * 70 + "\n")
 
     scheduler = MarketScheduler(check_interval_24_7=3.0)
 
@@ -232,11 +232,11 @@ async def example_4_dynamic_task_management():
 
     await scheduler.start()
 
-    print("Running with Task 1 for 10 seconds...")
+    logger.debug("Running with Task 1 for 10 seconds...")
     await asyncio.sleep(10)
 
     # Add another task while running
-    print("Adding Task 2...")
+    logger.debug("Adding Task 2...")
     scheduler.schedule_task(
         task_id="task_2",
         name="Task 2",
@@ -244,25 +244,25 @@ async def example_4_dynamic_task_management():
         handler=task_handler,
     )
 
-    print("Running with Task 1 and Task 2 for 10 seconds...")
+    logger.debug("Running with Task 1 and Task 2 for 10 seconds...")
     await asyncio.sleep(10)
 
     # Disable Task 1
-    print("Disabling Task 1...")
+    logger.debug("Disabling Task 1...")
     scheduler.disable_task("task_1")
 
-    print("Running with only Task 2 for 10 seconds...")
+    logger.debug("Running with only Task 2 for 10 seconds...")
     await asyncio.sleep(10)
 
     # Re-enable Task 1
-    print("Re-enabling Task 1...")
+    logger.debug("Re-enabling Task 1...")
     scheduler.enable_task("task_1")
 
-    print("Running with both tasks again for 10 seconds...")
+    logger.debug("Running with both tasks again for 10 seconds...")
     await asyncio.sleep(10)
 
     await scheduler.stop()
-    print("Dynamic task management demo stopped\n")
+    logger.debug("Dynamic task management demo stopped\n")
 
 
 # ============================================================================
@@ -277,9 +277,9 @@ async def example_5_market_status_monitoring():
     Demonstrates how to check if markets are open, closed, on holiday, etc.
     """
 
-    print("\n" + "=" * 70)
-    print("EXAMPLE 5: Market Status Monitoring")
-    print("=" * 70 + "\n")
+    logger.debug("\n" + "=" * 70)
+    logger.debug("EXAMPLE 5: Market Status Monitoring")
+    logger.debug("=" * 70 + "\n")
 
     scheduler = MarketScheduler()
 
@@ -292,24 +292,24 @@ async def example_5_market_status_monitoring():
         MarketType.STOCKS_ASIA,
     ]
 
-    print("Current market statuses:")
+    logger.debug("Current market statuses:")
     for market in markets:
         status = await scheduler.get_market_status(market)
         schedule = scheduler.get_market_schedule(market)
 
-        print(f"\n{market.value.upper()}:")
-        print(f"  Status: {status.value}")
+        logger.debug(f"\n{market.value.upper()}:")
+        logger.debug(f"  Status: {status.value}")
 
         if schedule.open_time:
-            print(f"  Hours: {schedule.open_time} - {schedule.close_time}")
-            print(f"  Timezone: {schedule.timezone_str}")
+            logger.debug(f"  Hours: {schedule.open_time} - {schedule.close_time}")
+            logger.debug(f"  Timezone: {schedule.timezone_str}")
         else:
-            print("  Hours: 24/7")
+            logger.debug("  Hours: 24/7")
 
         if schedule.holidays:
-            print(f"  Holidays: {len(schedule.holidays)} configured")
+            logger.debug(f"  Holidays: {len(schedule.holidays)} configured")
 
-    print("\n")
+    logger.debug("\n")
 
 
 # ============================================================================
@@ -324,9 +324,9 @@ async def example_6_holiday_management():
     Demonstrates how to add and remove holidays for markets.
     """
 
-    print("\n" + "=" * 70)
-    print("EXAMPLE 6: Holiday Management")
-    print("=" * 70 + "\n")
+    logger.debug("\n" + "=" * 70)
+    logger.debug("EXAMPLE 6: Holiday Management")
+    logger.debug("=" * 70 + "\n")
 
     scheduler = MarketScheduler()
 
@@ -335,26 +335,26 @@ async def example_6_holiday_management():
     christmas = date(2024, 12, 25)
     new_year = date(2025, 1, 1)
 
-    print("Adding holidays for US market...")
+    logger.debug("Adding holidays for US market...")
     scheduler.add_holiday(MarketType.STOCKS_US, independence_day)
     scheduler.add_holiday(MarketType.STOCKS_US, christmas)
     scheduler.add_holiday(MarketType.STOCKS_US, new_year)
 
     # Check added holidays
     us_schedule = scheduler.get_market_schedule(MarketType.STOCKS_US)
-    print(f"\nUS Market holidays configured: {len(us_schedule.holidays)}")
+    logger.debug(f"\nUS Market holidays configured: {len(us_schedule.holidays)}")
     for holiday in sorted(us_schedule.holidays):
-        print(f"  - {holiday}")
+        logger.debug(f"  - {holiday}")
 
     # Remove a holiday
-    print(f"\nRemoving {new_year} from holidays...")
+    logger.debug(f"\nRemoving {new_year} from holidays...")
     scheduler.remove_holiday(MarketType.STOCKS_US, new_year)
 
-    print(f"Remaining holidays: {len(us_schedule.holidays)}")
+    logger.debug(f"Remaining holidays: {len(us_schedule.holidays)}")
     for holiday in sorted(us_schedule.holidays):
-        print(f"  - {holiday}")
+        logger.debug(f"  - {holiday}")
 
-    print("\n")
+    logger.debug("\n")
 
 
 # ============================================================================
@@ -369,9 +369,9 @@ async def example_7_task_metrics():
     Demonstrates how to monitor task performance and execution counts.
     """
 
-    print("\n" + "=" * 70)
-    print("EXAMPLE 7: Task Execution Metrics")
-    print("=" * 70 + "\n")
+    logger.debug("\n" + "=" * 70)
+    logger.debug("EXAMPLE 7: Task Execution Metrics")
+    logger.debug("=" * 70 + "\n")
 
     scheduler = MarketScheduler(check_interval_24_7=2.0)
 
@@ -391,26 +391,26 @@ async def example_7_task_metrics():
 
     await scheduler.start()
 
-    print("Running task for 10 seconds...")
+    logger.debug("Running task for 10 seconds...")
     await asyncio.sleep(10)
 
     # Get task information
     task_info = scheduler.get_task_info("monitored_task")
 
-    print("\nTask Metrics:")
-    print(f"  Task ID: {task_info['task_id']}")
-    print(f"  Name: {task_info['name']}")
-    print(f"  Executions: {task_info['run_count']}")
-    print(f"  Errors: {task_info['error_count']}")
-    print(f"  Last Run: {task_info['last_run']}")
-    print(f"  Enabled: {task_info['enabled']}")
+    logger.debug("\nTask Metrics:")
+    logger.debug(f"  Task ID: {task_info['task_id']}")
+    logger.debug(f"  Name: {task_info['name']}")
+    logger.debug(f"  Executions: {task_info['run_count']}")
+    logger.debug(f"  Errors: {task_info['error_count']}")
+    logger.debug(f"  Last Run: {task_info['last_run']}")
+    logger.debug(f"  Enabled: {task_info['enabled']}")
 
     # List all tasks
-    print(f"\nTotal Tasks: {scheduler.get_task_count()}")
-    print(f"Enabled Tasks: {scheduler.get_enabled_task_count()}")
+    logger.debug(f"\nTotal Tasks: {scheduler.get_task_count()}")
+    logger.debug(f"Enabled Tasks: {scheduler.get_enabled_task_count()}")
 
     await scheduler.stop()
-    print("\n")
+    logger.debug("\n")
 
 
 # ============================================================================
@@ -425,16 +425,16 @@ async def example_8_wait_for_market_open():
     Demonstrates how to wait until a market opens before executing logic.
     """
 
-    print("\n" + "=" * 70)
-    print("EXAMPLE 8: Waiting for Market Open")
-    print("=" * 70 + "\n")
+    logger.debug("\n" + "=" * 70)
+    logger.debug("EXAMPLE 8: Waiting for Market Open")
+    logger.debug("=" * 70 + "\n")
 
     scheduler = MarketScheduler()
 
     # For 24/7 markets, this returns immediately
-    print("Waiting for crypto market to open...")
+    logger.debug("Waiting for crypto market to open...")
     await scheduler.wait_until_market_open(MarketType.CRYPTO)
-    print("Crypto market is open (24/7)")
+    logger.debug("Crypto market is open (24/7)")
 
     # For scheduled markets, this would wait until opening time
     # (commented out to avoid long wait in demo)
@@ -442,7 +442,7 @@ async def example_8_wait_for_market_open():
     # await scheduler.wait_until_market_open(MarketType.STOCKS_US)
     # print("US stock market is now open")
 
-    print("\n")
+    logger.debug("\n")
 
 
 # ============================================================================
@@ -453,9 +453,9 @@ async def example_8_wait_for_market_open():
 async def main():
     """Run all examples."""
 
-    print("\n" + "=" * 70)
-    print("MARKET SCHEDULER USAGE EXAMPLES")
-    print("=" * 70)
+    logger.debug("\n" + "=" * 70)
+    logger.debug("MARKET SCHEDULER USAGE EXAMPLES")
+    logger.debug("=" * 70)
 
     # Run examples
     await example_1_crypto_monitoring()
@@ -467,9 +467,9 @@ async def main():
     await example_7_task_metrics()
     await example_8_wait_for_market_open()
 
-    print("=" * 70)
-    print("ALL EXAMPLES COMPLETED")
-    print("=" * 70 + "\n")
+    logger.debug("=" * 70)
+    logger.debug("ALL EXAMPLES COMPLETED")
+    logger.debug("=" * 70 + "\n")
 
 
 if __name__ == "__main__":

@@ -1,215 +1,373 @@
-# symbol_mapper.py
+# symbol_mapper.py Requirements
 
-## Purpose
-Centralized symbol mapping for multi-broker FIFO tax compliance. Normalizes different broker symbol formats to internal standard format.
-
----
-
-## Type Definitions / Data Classes
-
-### MappingStatus Enum
-```python
-class MappingStatus(str, Enum):
-    ACTIVE = "active"              # Mapping is active
-    DEPRECATED = "deprecated"      # Mapping is deprecated
-    PENDING_REVIEW = "pending_review"  # Mapping needs review
-    AUTO_DETECTED = "auto_detected"    # Mapping was auto-detected
-```
-
-### SymbolMapping DataClass
-```python
-@dataclass
-class SymbolMapping:
-    id: UUID                               # REQUIRED - Unique identifier
-    internal_symbol: str                   # REQUIRED - Standardized symbol (e.g., "BTC")
-    broker_symbol: str                     # REQUIRED - Broker-specific symbol (e.g., "BTCUSDT")
-    broker_name: str                       # REQUIRED - Broker name (e.g., "binance")
-    broker_type: BrokerType                # REQUIRED - Type of broker
-    asset_class: str                       # REQUIRED - Asset class (crypto, forex, stock, etf)
-    status: MappingStatus                  # REQUIRED - Current status
-    created_at: datetime                   # REQUIRED - Creation timestamp
-    updated_at: datetime                   # REQUIRED - Last update timestamp
-    is_verified: bool                      # REQUIRED - Verification status
-    metadata: Dict                         # OPTIONAL - Additional information
-```
-
-**Validation Rules:**
-- All symbols normalized to uppercase
-- All broker names normalized to lowercase
-- internal_symbol cannot be empty
-- broker_symbol cannot be empty
-- broker_name cannot be empty
-
-### BrokerMappingTables Class
-```python
-class BrokerMappingTables:
-    BINANCE_CRYPTO: Dict[str, str]        # Binance cryptocurrency mappings
-    OANDA_FOREX: Dict[str, str]           # OANDA forex mappings
-    IBKR_STOCKS_US: Dict[str, str]        # Interactive Brokers US stocks
-    DEGIRO_STOCKS_EU: Dict[str, str]      # Degiro European stocks
-    KRAKEN_CRYPTO: Dict[str, str]         # Kraken cryptocurrency mappings
-    COINBASE_CRYPTO: Dict[str, str]       # Coinbase cryptocurrency mappings
-```
-
-### SymbolValidator Class Patterns
-```python
-PATTERNS = {
-    'binance_crypto': r'^[A-Z]{3,10}USDT$'
-    'binance_forex': r'^[A-Z]{6}USDT$'
-    'oanda_forex': r'^[A-Z]{3}_[A-Z]{3}$'
-    'oanda_crypto': r'^[A-Z]{3,10}_USD$'
-    'ibkr_stock': r'^[A-Z]{1,5}$'
-    'ibkr_crypto': r'^IBKR:[A-Z]{3,10}$'
-    'degiro_stock': r'^[A-Z]{4,5}$'
-    'kraken_crypto': r'^X?[A-Z]{3,10}ZUSD$'
-    'coinbase_crypto': r'^[A-Z]{3,10}-USD$'
-}
-```
+**File:** `app/core/symbol_mapper.py`  
+**Purpose:** Centralized Symbol Mapping for Multi-Broker FIFO Tax Compliance  
+**Author:** Backend Developer (SRE Integration)  
+**Date:** 2026-01-25  
+**Status:** PRODUCTION - Critical for Tax Compliance  
+**Audit Status:** NEEDS_AUDIT
 
 ---
 
-## Function Signatures (Contracts)
-
-### `SymbolMapper.__init__(self, db_session: Optional[AsyncSession] = None) -> None`
-**Pre:** None
-**Post:** SymbolMapper initialized with empty caches
-**Raises:** No
-**Retry:** No
-**Side Effects:** Initializes caches, logs initialization
-
-### `SymbolMapper.map_internal_to_broker(self, internal_symbol: str, broker_name: str, use_default: bool = True) -> str`
-**Pre:** internal_symbol is non-empty, broker_name is supported
-**Post:** Returns broker-specific symbol format
-**Raises:** UnknownSymbolError, ValidationError
-**Retry:** No
-**Side Effects:** Logs mapping, may update cache
-
-### `SymbolMapper.map_broker_to_internal(self, broker_symbol: str, broker_name: str, use_default: bool = True) -> str`
-**Pre:** broker_symbol is non-empty, broker_name is supported
-**Post:** Returns normalized internal symbol
-**Raises:** UnknownSymbolError, ValidationError, AmbiguousSymbolError
-**Retry:** No
-**Side Effects:** Logs mapping, may update cache
-
-### `SymbolMapper.add_mapping(self, internal_symbol: str, broker_symbol: str, broker_name: str, broker_type: BrokerType, asset_class: str = "crypto", is_verified: bool = False, metadata: Optional[Dict] = None) -> SymbolMapping`
-**Pre:** All symbols valid, broker_type valid
-**Post:** Returns created SymbolMapping object
-**Raises:** ValidationError, SymbolMappingError
-**Retry:** No
-**Side Effects:** Updates caches, logs for audit trail
-
-### `SymbolMapper.get_all_brokers_for_symbol(self, internal_symbol: str) -> Dict[str, str]`
-**Pre:** internal_symbol is valid
-**Post:** Returns dict of broker_name -> broker_symbol
-**Raises:** ValidationError
-**Retry:** No
-**Side Effects:** Logs number of mappings found
-
-### `SymbolMapper.validate_mapping(self, internal_symbol: str, broker_symbol: str, broker_name: str) -> Tuple[bool, Optional[str]]`
-**Pre:** All inputs non-empty
-**Post:** Returns (is_valid, error_message)
-**Raises:** No (returns validation result)
-**Retry:** No
-**Side Effects:** Logs validation result
-
-### `SymbolValidator.validate_internal_symbol(cls, symbol: str) -> bool`
-**Pre:** symbol is non-empty
-**Post:** Returns True if valid format
-**Raises:** ValidationError if invalid
-**Retry:** No
-**Side Effects:** None
-
-### `SymbolValidator.validate_broker_symbol(cls, symbol: str, broker_name: str) -> bool`
-**Pre:** symbol and broker_name are non-empty
-**Post:** Returns True if valid for broker
-**Raises:** ValidationError if invalid
-**Retry:** No
-**Side Effects:** None
-
-### `SymbolValidator.extract_internal_from_broker(cls, broker_symbol: str, broker_name: str) -> str`
-**Pre:** broker_symbol and broker_name are non-empty
-**Post:** Returns extracted internal symbol
-**Raises:** ValidationError if extraction fails
-**Retry:** No
-**Side Effects:** None
-
-### `BrokerMappingTables.get_default_mapping(cls, broker_name: str, internal_symbol: str) -> Optional[str]`
-**Pre:** broker_name is supported
-**Post:** Returns broker symbol or None
-**Raises:** No
-**Retry:** No
-**Side Effects:** None
+## References
+- **BASE_RULES:** See ../../BASE_RULES.md for universal rules
+- **Related Files:**
+  - `app/core/interfaces/broker_base.py` (BrokerType interface)
+  - FIFO tax calculation modules
+  - Broker adapter modules
 
 ---
 
-## Acceptance Criteria
-- [ ] All symbols normalized to uppercase
-- [ ] All broker names normalized to lowercase
-- [ ] Internal symbols validated (2-10 uppercase letters)
-- [ ] Broker symbols validated against broker-specific patterns
-- [ ] Two-way mapping: internal <-> broker
-- [ ] Cache hit improves performance
-- [ ] Validation errors raised for invalid symbols
-- [ ] UnknownSymbolError for unmapped symbols (when use_default=False)
-- [ ] BrokerMappingTables provide fallback mappings
-- [ ] Audit logging for all mapping operations
-- [ ] Bidirectional validation in validate_mapping()
-- [ ] Support for 6 brokers: binance, oanda, ibkr, degiro, kraken, coinbase
+## Purpose & Scope
+
+This module provides centralized symbol mapping for multi-broker FIFO tax compliance. Different brokers use different symbol formats:
+
+- Binance: BTCUSDT, ETHUSDT
+- OANDA: BTC_USD, ETH_USD
+- IBKR: IBKR:BTC, IBKR:ETH
+- Degiro: Various formats
+
+**Critical for Production:** Ensures FIFO calculations work across multiple brokers and Modelo 721 tax reporting is accurate.
 
 ---
 
-## Critical Rules (MUST NOT BREAK)
+## Classes & Functions
 
-**Reglas universales:** Ver `../../BASE_RULES.md` (96+ rules organized by priority)
+### Classes
 
-### Reglas ESPECÍFICAS de este archivo:
+| Class | Purpose | Attributes/Methods |
+|-------|---------|---------------------|
+| `MappingStatus` | Status of symbol mapping | ACTIVE, DEPRECATED, PENDING_REVIEW, AUTO_DETECTED |
+| `SymbolMappingError` | Base exception | Base for symbol mapping errors |
+| `AmbiguousSymbolError` | Ambiguous mapping error | Raised when symbol maps to multiple internal symbols |
+| `UnknownSymbolError` | Unknown symbol error | Raised when broker symbol cannot be mapped |
+| `ValidationError` | Validation error | Raised when symbol validation fails |
+| `SymbolMapping` | Symbol mapping data class | id, internal_symbol, broker_symbol, broker_name, broker_type, etc. |
+| `BrokerMappingTables` | Pre-defined broker mappings | Static mapping tables for common brokers |
+| `SymbolValidator` | Validates symbol formats | Pattern validation for each broker |
+| `SymbolMapper` | Main symbol mapper | Two-way conversion, caching, database operations |
+| `SymbolMapperMixin` | Mixin for broker adapters | Convenience methods for adapters |
 
-| Rule | Source | Requirement | Current Status |
-|------|--------|-------------|----------------|
-| SEC-001 | BASE_RULES.md | No hardcoded secrets | ✅ OK - No secrets in this module |
-| TYP-001 | BASE_RULES.md | Type coverage | ✅ OK - All functions typed |
-| TYP-002 | BASE_RULES.md | Modern syntax | ✅ OK - Uses Dict, Optional, Tuple |
-| CC-006 | BASE_RULES.md | Explicit error handling | ✅ OK - Custom exceptions |
-| LOG-004 | BASE_RULES.md | Error logging with stack traces | ✅ OK - All errors logged |
-| LOG-005 | BASE_RULES.md | No sensitive data in logs | ✅ OK - No broker credentials logged |
-| ARCH-001 | BASE_RULES.md | Layered architecture | ✅ OK - Core infrastructure layer |
-| SOL-001 | BASE_RULES.md | Single Responsibility | ✅ OK - Only handles symbol mapping |
-| CFG-003 | BASE_RULES.md | Validation | ✅ OK - Input validation on all methods |
+### Functions
+
+| Function | Purpose | Return Type |
+|----------|---------|-------------|
+| `create_symbol_mapper()` | Factory for SymbolMapper | `SymbolMapper` |
+| `get_or_create_mapping()` | Get or create symbol mapping | `SymbolMapping` |
+
+---
+
+## File-Specific Requirements
+
+### SYM-001: Bidirectional Mapping Accuracy
+**Priority:** P0 (Critical - Tax compliance)
+
+**Requirement:** Internal -> Broker -> Internal conversion must be lossless.
+
+**Acceptance Criteria:**
+```python
+mapper = SymbolMapper()
+
+# Forward mapping
+broker_symbol = mapper.map_internal_to_broker("BTC", "binance")
+assert broker_symbol == "BTCUSDT"
+
+# Reverse mapping
+internal_symbol = mapper.map_broker_to_internal("BTCUSDT", "binance")
+assert internal_symbol == "BTC"  # Must be lossless
+```
+
+**Check:** Bidirectional validation passes
+
+---
+
+### SYM-002: Symbol Format Validation
+**Priority:** P0 (Critical - Data integrity)
+
+**Requirement:** All broker symbols must match expected format patterns.
+
+**Acceptance Criteria:**
+```python
+# Binance format: XXXUSDT
+SymbolValidator.validate_broker_symbol("BTCUSDT", "binance")  # Pass
+SymbolValidator.validate_broker_symbol("BTC-USD", "binance")  # Fail
+
+# OANDA format: XXX_YYY
+SymbolValidator.validate_broker_symbol("BTC_USD", "oanda")  # Pass
+SymbolValidator.validate_broker_symbol("BTCUSDT", "oanda")  # Fail
+```
+
+**Check:** Regex patterns validate correctly
+
+---
+
+### SYM-003: Broker-Specific Extraction
+**Priority:** P0 (Critical - Correct mapping)
+
+**Requirement:** Internal symbol extraction must be broker-specific.
+
+**Acceptance Criteria:**
+```python
+# Binance: Remove USDT suffix
+assert SymbolValidator.extract_internal_from_broker("BTCUSDT", "binance") == "BTC"
+
+# OANDA: Extract base from pair
+assert SymbolValidator.extract_internal_from_broker("BTC_USD", "oanda") == "BTC"
+
+# IBKR: Remove IBKR: prefix
+assert SymbolValidator.extract_internal_from_broker("IBKR:BTC", "ibkr") == "BTC"
+```
+
+**Check:** Extraction logic per broker
+
+---
+
+### SYM-004: Mapping Consistency
+**Priority:** P0 (Critical - Audit trail)
+
+**Requirement:** All mappings must be bidirectionally consistent.
+
+**Acceptance Criteria:**
+```python
+mapper = SymbolMapper()
+is_valid, error = mapper.validate_mapping("BTC", "BTCUSDT", "binance")
+assert is_valid == True
+assert error is None
+```
+
+**Check:** Validation catches inconsistencies
+
+---
+
+### SYM-005: Cache Performance
+**Priority:** P1 (High - Performance)
+
+**Requirement:** Mappings must be cached to avoid repeated lookups.
+
+**Acceptance Criteria:**
+```python
+mapper = SymbolMapper()
+mapper.map_internal_to_broker("BTC", "binance")  # First call - cache miss
+mapper.map_internal_to_broker("BTC", "binance")  # Second call - cache hit
+assert len(mapper._cache) > 0  # Cache populated
+```
+
+**Check:** Cache hit/miss tracking
+
+---
+
+### SYM-006: Transaction Safety
+**Priority:** P0 (Critical - Audit trail)
+
+**Requirement:** All mapping operations must be logged for audit.
+
+**Acceptance Criteria:**
+```python
+# Log message should include:
+# - Internal symbol
+# - Broker symbol
+# - Broker name
+# - Operation type (add, map, validate)
+```
+
+**Check:** Logging in all mapping methods
+
+---
+
+### SYM-007: Error Handling
+**Priority:** P1 (High - Robustness)
+
+**Requirement:** Invalid mappings must raise appropriate exceptions.
+
+**Acceptance Criteria:**
+```python
+mapper = SymbolMapper()
+try:
+    mapper.map_broker_to_internal("INVALID", "binance")
+except UnknownSymbolError as e:
+    # Expected behavior
+    pass
+
+try:
+    SymbolValidator.validate_internal_symbol("")
+except ValidationError as e:
+    # Expected behavior
+    pass
+```
+
+**Check:** Exceptions are raised correctly
+
+---
+
+### SYM-008: Multi-Broker Support
+**Priority:** P1 (High - Flexibility)
+
+**Requirement:** Must support all configured brokers.
+
+**Acceptance Criteria:**
+```python
+brokers = mapper.get_supported_brokers()
+assert "binance" in brokers
+assert "oanda" in brokers
+assert "ibkr" in brokers
+assert "degiro" in brokers
+assert "kraken" in brokers
+assert "coinbase" in brokers
+```
+
+**Check:** All brokers in supported list
+
+---
+
+### SYM-009: Symbol Normalization
+**Priority:** P2 (Medium - Data consistency)
+
+**Requirement:** All symbols must be normalized (uppercase, trimmed).
+
+**Acceptance Criteria:**
+```python
+mapping = SymbolMapping(
+    internal_symbol="  btc  ",  # Has spaces and lowercase
+    broker_symbol="  btcusdt  ",
+    broker_name="binance"
+)
+assert mapping.internal_symbol == "BTC"  # Normalized
+assert mapping.broker_symbol == "BTCUSDT"  # Normalized
+```
+
+**Check:** __post_init__ normalizes symbols
+
+---
+
+### SYM-010: Fallback Construction
+**Priority:** P2 (Medium - Robustness)
+
+**Requirement:** When mapping doesn't exist, construct using broker-specific rules.
+
+**Acceptance Criteria:**
+```python
+mapper = SymbolMapper()
+symbol = mapper.map_internal_to_broker("NEWCOIN", "binance", use_default=True)
+assert symbol == "NEWCOINUSDT"  # Constructed
+```
+
+**Check:** Fallback logic in place
+
+---
+
+## BASE_RULES Compliance
+
+### Critical Rules (P0)
+- **TRD-004:** Audit trail ✅ (logging for all operations)
+- **CC-006:** Explicit error handling ✅ (specific exceptions)
+- **DP-004:** Dependency injection ✅ (db_session optional)
+
+### High Priority (P1)
+- **TYP-001:** Type hints present ✅
+- **CC-001:** Descriptive names ✅
+- **LOG-002:** Context in logs ✅
+
+### Medium Priority (P2)
+- **QL-001:** Complexity reasonable ✅
+- **CC-007:** Small methods ✅
+
+---
+
+## Known Issues & Technical Debt
+
+### Issues
+1. **No database persistence** - Mappings are in-memory only
+2. **No distributed cache** - Multi-instance deployments don't share cache
+3. **Hardcoded mapping tables** - Should be in configuration
+
+### Technical Debt
+1. **Add database backend** - Persist mappings to database
+2. **Add Redis cache** - Share cache across instances
+3. **Add mapping API** - REST API for CRUD operations
+4. **Add automatic discovery** - Learn mappings from broker data
+
+---
+
+## Testing Requirements
+
+### Unit Tests
+- [ ] Test bidirectional mapping accuracy
+- [ ] Test symbol format validation
+- [ ] Test broker-specific extraction
+- [ ] Test mapping consistency validation
+- [ ] Test cache performance
+- [ ] Test error handling
+- [ ] Test symbol normalization
+- [ ] Test fallback construction
+
+### Integration Tests
+- [ ] Test with real broker data
+- [ ] Test FIFO tax calculation with mapped symbols
+- [ ] Test multi-broker scenarios
+- [ ] Test audit trail logging
+
+---
+
+## Security Considerations
+
+1. **No injection attacks** ✅ (symbol validation)
+2. **Audit logging** ✅ (all operations logged)
+3. **No unauthorized access** ⚠️ (no authentication yet)
+
+---
+
+## Performance Considerations
+
+1. **Cache hit rate** - Should be > 95% for hot symbols
+2. **Mapping lookup** - O(1) with cache ✅
+3. **Database queries** - Minimized with caching ✅
 
 ---
 
 ## Dependencies
-- **External:** logging, re, dataclasses, datetime, enum, typing, uuid, sqlalchemy
-- **Internal:** app.core.interfaces.broker_base (BrokerType)
+
+**External:**
+- `logging` (stdlib)
+- `re` (stdlib)
+- `dataclasses` (stdlib)
+- `datetime` (stdlib)
+- `enum` (stdlib)
+- `typing` (stdlib)
+- `uuid` (stdlib)
+- `sqlalchemy` (for AsyncSession type hint)
+
+**Internal:**
+- `app.core.interfaces.broker_base` (BrokerType)
 
 ---
 
-## Required Tests
-- **tests/core/test_symbol_mapper.py:**
-  - Test map_internal_to_broker() for all 6 brokers
-  - Test map_broker_to_internal() for all 6 brokers
-  - Test symbol normalization (uppercase, lowercase)
-  - Test ValidationError for invalid internal symbols
-  - Test ValidationError for invalid broker symbols
-  - Test UnknownSymbolError when use_default=False
-  - Test cache hit improves performance
-  - Test validate_mapping() bidirectional validation
-  - Test get_all_brokers_for_symbol() returns all brokers
-  - Test add_mapping() creates and caches mapping
-  - Test extract_internal_from_broker() for each broker format
-  - Test SymbolValidator patterns for all brokers
-  - Test BrokerMappingTables fallback mappings
+## Migration Notes
+
+**From unmapped code:**
+1. Identify all broker symbol usage
+2. Add symbol mapping for all symbols
+3. Replace direct symbols with mapped symbols
+4. Test FIFO calculations
+
+**To symbol-mapped code:**
+1. Import SymbolMapper
+2. Use mapper for all broker symbols
+3. Enable audit logging
+4. Monitor mapping errors
 
 ---
 
-## Notes
-- **CRITICAL for FIFO tax compliance** - Different brokers use different symbol formats
-- **Transaction safety** - All mappings logged for audit purposes
-- **Multi-broker support** - Binance, OANDA, IBKR, Degiro, Kraken, Coinbase
-- **Symbol formats:**
-  - Binance: BTCUSDT, ETHUSDT
-  - OANDA: BTC_USD, EUR_USD
-  - IBKR: IBKR:BTC, AAPL
-  - Kraken: XXBTZUSD
-  - Coinbase: BTC-USD
-- Internal format: Uppercase, 2-10 characters (e.g., BTC, ETH, AAPL)
+## Changelog
+
+### Version 1.0.0 (2026-01-25)
+- Initial implementation
+- Multi-broker support
+- Bidirectional mapping
+- Symbol validation
+- Caching layer
+- Audit logging
+
+---
+
+**Last Updated:** 2026-02-06  
+**Next Review:** After database persistence added

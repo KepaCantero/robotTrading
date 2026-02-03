@@ -7,13 +7,14 @@ including performance metrics, risk assessment, and comparison.
 
 from __future__ import annotations
 
-import logging
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any
+
+import structlog
 
 from ...domain.repositories.backtest_repository import BacktestRepository
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class AnalyzeBacktestResultsUseCase:
@@ -33,7 +34,7 @@ class AnalyzeBacktestResultsUseCase:
         """
         self._backtest_repository = backtest_repository
 
-    def get_performance_summary(self, backtest_id: str) -> Optional[Dict[str, Any]]:
+    def get_performance_summary(self, backtest_id: str) -> dict[str, Any] | None:
         """
         Get performance summary for a backtest.
 
@@ -43,13 +44,16 @@ class AnalyzeBacktestResultsUseCase:
         Returns:
             Performance summary dictionary or None
         """
+        logger = structlog.get_logger(__name__)
+        logger.info("get_performance_summary.entry", backtest_id=backtest_id)
+
         backtest = self._backtest_repository.find_by_id(backtest_id)
         if not backtest or not backtest.result:
+            logger.warning("get_performance_summary.backtest_not_found", backtest_id=backtest_id)
             return None
 
         result = backtest.result
-
-        return {
+        summary = {
             'backtest_id': backtest_id,
             'total_return': str(result.total_return_pct),
             'sharpe_ratio': str(result.sharpe_ratio) if result.sharpe_ratio else None,
@@ -58,8 +62,10 @@ class AnalyzeBacktestResultsUseCase:
             'total_trades': result.total_trades,
             'is_profitable': result.is_profitable,
         }
+        logger.info("get_performance_summary.success", backtest_id=backtest_id)
+        return summary
 
-    def compare_backtests(self, backtest_ids: List[str]) -> Optional[Dict[str, Any]]:
+    def compare_backtests(self, backtest_ids: list[str]) -> dict[str, Any] | None:
         """
         Compare multiple backtests.
 
@@ -69,6 +75,9 @@ class AnalyzeBacktestResultsUseCase:
         Returns:
             Comparison dictionary or None if backtests not found
         """
+        logger = structlog.get_logger(__name__)
+        logger.info("compare_backtests.entry", backtest_ids=backtest_ids)
+
         backtests = []
         for backtest_id in backtest_ids:
             backtest = self._backtest_repository.find_by_id(backtest_id)
@@ -76,6 +85,7 @@ class AnalyzeBacktestResultsUseCase:
                 backtests.append(backtest)
 
         if not backtests:
+            logger.warning("compare_backtests.no_valid_backtests", backtest_ids=backtest_ids)
             return None
 
         # Calculate comparison metrics
@@ -83,7 +93,7 @@ class AnalyzeBacktestResultsUseCase:
         sharpe_ratios = [bt.result.sharpe_ratio for bt in backtests if bt.result.sharpe_ratio]
         drawdowns = [bt.result.max_drawdown for bt in backtests if bt.result.max_drawdown]
 
-        return {
+        comparison = {
             'backtest_count': len(backtests),
             'avg_return': str(sum(returns) / len(returns)),
             'best_return': str(max(returns)),
@@ -95,8 +105,10 @@ class AnalyzeBacktestResultsUseCase:
                 key=lambda bid: backtests[backtest_ids.index(bid)].result.total_return_pct,
             ),
         }
+        logger.info("compare_backtests.success", backtest_count=len(backtests))
+        return comparison
 
-    def get_risk_metrics(self, backtest_id: str) -> Optional[Dict[str, Any]]:
+    def get_risk_metrics(self, backtest_id: str) -> dict[str, Any] | None:
         """
         Get risk metrics for a backtest.
 
@@ -106,13 +118,16 @@ class AnalyzeBacktestResultsUseCase:
         Returns:
             Risk metrics dictionary or None
         """
+        logger = structlog.get_logger(__name__)
+        logger.info("get_risk_metrics.entry", backtest_id=backtest_id)
+
         backtest = self._backtest_repository.find_by_id(backtest_id)
         if not backtest or not backtest.result:
+            logger.warning("get_risk_metrics.backtest_not_found", backtest_id=backtest_id)
             return None
 
         result = backtest.result
-
-        return {
+        risk_metrics = {
             'backtest_id': backtest_id,
             'max_drawdown': str(result.max_drawdown) if result.max_drawdown else None,
             'volatility': str(result.volatility) if result.volatility else None,
@@ -121,10 +136,12 @@ class AnalyzeBacktestResultsUseCase:
             'calmar_ratio': str(result.calmar_ratio) if result.calmar_ratio else None,
             'tail_ratio': str(result.tail_ratio) if result.tail_ratio else None,
         }
+        logger.info("get_risk_metrics.success", backtest_id=backtest_id)
+        return risk_metrics
 
     def assess_acceptable_risk(
         self, backtest_id: str, max_drawdown_threshold: Decimal = Decimal('0.20')
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Assess if backtest results are within acceptable risk parameters.
 
@@ -135,17 +152,28 @@ class AnalyzeBacktestResultsUseCase:
         Returns:
             Risk assessment dictionary or None
         """
+        logger = structlog.get_logger(__name__)
+        logger.info("assess_acceptable_risk.entry", backtest_id=backtest_id, max_drawdown_threshold=str(max_drawdown_threshold))
+
         backtest = self._backtest_repository.find_by_id(backtest_id)
         if not backtest or not backtest.result:
+            logger.warning("assess_acceptable_risk.backtest_not_found", backtest_id=backtest_id)
             return None
 
         result = backtest.result
-
-        return {
+        is_acceptable = result.has_acceptable_drawdown(max_drawdown_threshold)
+        assessment = {
             'backtest_id': backtest_id,
-            'is_acceptable': result.has_acceptable_drawdown(max_drawdown_threshold),
+            'is_acceptable': is_acceptable,
             'max_drawdown': str(result.max_drawdown) if result.max_drawdown else None,
             'threshold': str(max_drawdown_threshold),
             'is_profitable': result.is_profitable,
             'sharpe_ratio': str(result.sharpe_ratio) if result.sharpe_ratio else None,
         }
+        logger.info(
+            "assess_acceptable_risk.success",
+            backtest_id=backtest_id,
+            is_acceptable=is_acceptable,
+            is_profitable=result.is_profitable,
+        )
+        return assessment

@@ -67,9 +67,9 @@ class WalkForwardValidator:
             optimizer=optimizer
         )
 
-        print(f"IS Sharpe: {result.is_performance['sharpe_ratio']}")
-        print(f"OS Sharpe: {result.os_performance['sharpe_ratio']}")
-        print(f"Degradation: {result.is_os_ratio}")
+        logger.debug(f"IS Sharpe: {result.is_performance['sharpe_ratio']}")
+        logger.debug(f"OS Sharpe: {result.os_performance['sharpe_ratio']}")
+        logger.debug(f"Degradation: {result.is_os_ratio}")
         ```
     """
 

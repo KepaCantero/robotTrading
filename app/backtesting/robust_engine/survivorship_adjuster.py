@@ -392,20 +392,41 @@ class SurvivorshipAdjuster:
         backtest_end: date,
     ) -> Dict[str, float]:
         """Get returns for delisted stocks during the period."""
+        # Use generator to process delisted stocks efficiently
         delisted_returns = {}
+        for symbol, total_return in self._generate_delisted_returns(backtest_start, backtest_end):
+            delisted_returns[symbol] = total_return
+        return delisted_returns
 
+    def _generate_delisted_returns(
+        self,
+        backtest_start: date,
+        backtest_end: date,
+    ) -> Tuple[str, float]:
+        """
+        Generate returns for delisted stocks during the period.
+
+        This is a generator that yields (symbol, total_return) tuples
+        for memory-efficient processing of large delisted stock datasets.
+
+        Args:
+            backtest_start: Start date of backtest period
+            backtest_end: End date of backtest period
+
+        Yields:
+            Tuple of (symbol, total_return) for each delisted stock
+        """
         for symbol, stock in self._delisted_stocks.items():
             if backtest_start <= stock.delisting_date <= backtest_end:
                 # Calculate return from listing to delisting
                 if stock.returns_daily:
                     daily_returns = [float(r) for _, r in stock.returns_daily]
                     total_return = np.prod([1 + r for r in daily_returns]) - 1
-                    delisted_returns[symbol] = total_return
                 else:
                     # Use estimated return based on recovery rate
-                    delisted_returns[symbol] = float(stock.recovery_rate) - 1.0
+                    total_return = float(stock.recovery_rate) - 1.0
 
-        return delisted_returns
+                yield symbol, total_return
 
     def create_point_in_time_universe(
         self,

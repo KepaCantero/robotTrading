@@ -3,16 +3,24 @@ Paper Trading API Endpoints
 
 This module provides FastAPI endpoints for paper trading management,
 portfolio simulation, and trade execution for the algorithmic trading system.
+
+GAP Fixes:
+- API-002: Added structured logging with correlation IDs
+- API-005: FIXED - Added security decorators (rate_limit, require_auth, audit_log)
+- API-009: Added audit logging for trade operations
 """
 
 from __future__ import annotations
 
+import asyncio
+import logging
+import traceback
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 from sqlalchemy.exc import (
     DatabaseError,
@@ -35,7 +43,11 @@ from app.models.paper_trading import (
 )
 from app.services.paper_trading_service import PaperTradingService, get_paper_trading_service
 
+from . import audit_logger, get_correlation_id
+from .security import rate_limit, require_auth, audit_log
+
 router = APIRouter(prefix="/paper-trading", tags=["Paper Trading"])
+logger = logging.getLogger(__name__)
 
 
 # Request/Response Models
@@ -127,6 +139,9 @@ class MarketUpdateResponse(BaseModel):
 
 # Portfolio Management Endpoints
 @router.post("/portfolios", response_model=PortfolioResponse)
+@rate_limit(max_requests=20, window_seconds=60)
+@require_auth()
+@audit_log("portfolio_created", log_args=True)
 async def create_portfolio(
     request: CreatePortfolioRequest,
     service: PaperTradingService = Depends(get_paper_trading_service),
@@ -228,27 +243,97 @@ async def list_sessions(
 
 # Trade Execution Endpoints
 @router.post("/portfolios/{portfolio_id}/trades", response_model=TradeResponse)
+@rate_limit(max_requests=100, window_seconds=60)
+@require_auth(roles=["admin", "trader"])
+@audit_log("trade_executed", log_args=True, sensitive_params=["api_key"])
 async def execute_trade(
     portfolio_id: UUID,
     request: ExecuteTradeRequest,
     session_id: Optional[UUID] = Query(None, description="Session ID"),
     service: PaperTradingService = Depends(get_paper_trading_service),
+    http_request: Request = None,
 ) -> TradeResponse:
     """Execute a paper trade."""
+    correlation_id = get_correlation_id()
+    logger.info(
+        "Executing paper trade",
+        extra={
+            "correlation_id": correlation_id,
+            "portfolio_id": str(portfolio_id),
+            "symbol": request.symbol,
+            "side": request.side.value,
+            "order_type": request.order_type.value,
+            "quantity": float(request.quantity),
+        },
+    )
     try:
-        trade = await service.execute_trade(
-            portfolio_id=portfolio_id,
-            symbol=request.symbol,
-            side=request.side,
-            order_type=request.order_type,
-            quantity=request.quantity,
-            price=request.price,
-            session_id=session_id,
-            strategy_id=request.strategy_id,
-            signal_id=request.signal_id,
+        trade = await asyncio.wait_for(
+            service.execute_trade(
+                portfolio_id=portfolio_id,
+                symbol=request.symbol,
+                side=request.side,
+                order_type=request.order_type,
+                quantity=request.quantity,
+                price=request.price,
+                session_id=session_id,
+                strategy_id=request.strategy_id,
+                signal_id=request.signal_id,
+            ),
+            timeout=15.0,  # API-010: Add timeout configuration
         )
+
+        audit_logger.log_action(
+            action="trade_executed",
+            method="POST",
+            path="/portfolios/{portfolio_id}/trades",
+            details={
+                "portfolio_id": str(portfolio_id),
+                "symbol": request.symbol,
+                "side": request.side.value,
+                "quantity": float(request.quantity),
+                "trade_id": str(trade.id) if trade else None,
+            },
+        )
+
         return TradeResponse(trade=trade)
+    except asyncio.TimeoutError as e:
+        logger.error(
+            "Timeout executing trade",
+            extra={
+                "correlation_id": correlation_id,
+                "portfolio_id": str(portfolio_id),
+                "symbol": request.symbol,
+                "error": str(e),
+                "stack_trace": traceback.format_exc(),
+            },
+        )
+        audit_logger.log_error(
+            method="POST",
+            path="/portfolios/{portfolio_id}/trades",
+            error_type="TimeoutError",
+            error_message=str(e),
+            stack_trace=traceback.format_exc(),
+        )
+        raise HTTPException(status_code=504, detail=f"Trade execution timeout: {str(e)}")
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
+        logger.error(
+            "Error executing trade",
+            extra={
+                "correlation_id": correlation_id,
+                "portfolio_id": str(portfolio_id),
+                "symbol": request.symbol,
+                "error_type": type(e).__name__,
+                "error": str(e),
+                "stack_trace": traceback.format_exc(),
+            },
+        )
+        audit_logger.log_error(
+            method="POST",
+            path="/portfolios/{portfolio_id}/trades",
+            error_type=type(e).__name__,
+            error_message=str(e),
+            stack_trace=traceback.format_exc(),
+        )
         raise HTTPException(status_code=400, detail=str(e))
 
 

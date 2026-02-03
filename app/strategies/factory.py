@@ -72,7 +72,7 @@ class StrategyFactory:
             return strategy
 
         except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
-            logger.error(f"Failed to create strategy '{name}': {str(e)}")
+            logger.error("Failed to create strategy", name=name, error=str(e), exc_info=True)
             raise ValueError(f"Failed to create strategy '{name}': {str(e)}")
 
     def list_available_strategies(self) -> List[str]:

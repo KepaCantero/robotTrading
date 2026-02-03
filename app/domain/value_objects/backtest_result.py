@@ -87,7 +87,6 @@ class BacktestResultValue:
         """Check if backtest was profitable."""
         return self.total_return > 0
 
-    @property
     def has_acceptable_drawdown(self, threshold: Decimal = Decimal('0.20')) -> bool:
         """
         Check if drawdown is within acceptable threshold.

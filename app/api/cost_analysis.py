@@ -3,20 +3,31 @@ Cost Analysis API endpoints.
 
 This module provides FastAPI endpoints for cost analysis functionality
 including cost breakdown, profitability validation, and Cost Impact Ratio (CIR) analysis.
+
+GAP Fixes:
+- API-002: Added structured logging with correlation IDs
+- API-004: TODO: Test coverage requires creating test files
+- API-005: TODO: Rate limiting requires JWT infrastructure
 """
 
 from __future__ import annotations
 
+import asyncio
+import logging
+import traceback
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.backtesting.models import Trade, TradeStatus
 from app.services.cost_analysis_service import CostAnalysisResult, CostAnalysisService
 
+from . import audit_logger, get_correlation_id
+
 router = APIRouter(prefix="/cost-analysis", tags=["cost-analysis"])
+logger = logging.getLogger(__name__)
 
 
 def get_cost_analysis_service() -> CostAnalysisService:
@@ -27,9 +38,19 @@ def get_cost_analysis_service() -> CostAnalysisService:
 @router.post("/analyze-trade")
 async def analyze_trade_costs(
     trade_data: Dict[str, Any],
+    http_request: Request,
     service: CostAnalysisService = Depends(get_cost_analysis_service),
 ):
     """Analyze costs for a single trade."""
+    correlation_id = get_correlation_id()
+    logger.info(
+        "Analyzing trade costs",
+        extra={
+            "correlation_id": correlation_id,
+            "trade_id": trade_data.get("id"),
+            "symbol": trade_data.get("symbol"),
+        },
+    )
     try:
         # Convert trade data to Trade object
         trade = Trade(
@@ -49,7 +70,21 @@ async def analyze_trade_costs(
 
         market_data = trade_data.get("market_data", {})
 
-        breakdown = service.analyze_trade_costs(trade, market_data)
+        breakdown = await asyncio.wait_for(
+            asyncio.to_thread(service.analyze_trade_costs, trade, market_data),
+            timeout=10.0,  # API-010: Add timeout configuration
+        )
+
+        audit_logger.log_action(
+            action="trade_costs_analyzed",
+            method=http_request.method,
+            path=http_request.url.path,
+            details={
+                "trade_id": breakdown.trade_id,
+                "symbol": breakdown.symbol,
+                "total_cost": float(breakdown.total_cost),
+            },
+        )
 
         return {
             "trade_id": breakdown.trade_id,
@@ -72,7 +107,42 @@ async def analyze_trade_costs(
             "timestamp": breakdown.timestamp.isoformat(),
         }
 
+    except asyncio.TimeoutError as e:
+        logger.error(
+            "Timeout analyzing trade costs",
+            extra={
+                "correlation_id": correlation_id,
+                "trade_id": trade_data.get("id"),
+                "error": str(e),
+                "stack_trace": traceback.format_exc(),
+            },
+        )
+        audit_logger.log_error(
+            method=http_request.method,
+            path=http_request.url.path,
+            error_type="TimeoutError",
+            error_message=str(e),
+            stack_trace=traceback.format_exc(),
+        )
+        raise HTTPException(status_code=504, detail=f"Timeout analyzing trade costs: {str(e)}")
     except (ValueError, TypeError, KeyError, AttributeError) as e:
+        logger.error(
+            "Error analyzing trade costs",
+            extra={
+                "correlation_id": correlation_id,
+                "trade_id": trade_data.get("id"),
+                "error_type": type(e).__name__,
+                "error": str(e),
+                "stack_trace": traceback.format_exc(),
+            },
+        )
+        audit_logger.log_error(
+            method=http_request.method,
+            path=http_request.url.path,
+            error_type=type(e).__name__,
+            error_message=str(e),
+            stack_trace=traceback.format_exc(),
+        )
         raise HTTPException(status_code=400, detail=f"Error analyzing trade costs: {str(e)}")
 
 

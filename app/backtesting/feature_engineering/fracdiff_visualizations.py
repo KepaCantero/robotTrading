@@ -5,6 +5,8 @@ This module provides plotting functions to visualize the effects of fractional
 differentiation on time series data, including memory preservation and stationarity.
 """
 
+import logging
+
 import warnings
 from typing import List, Optional, Tuple
 
@@ -628,6 +630,6 @@ def create_summary_report(
 
     if save_path:
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        print(f"Report saved to {save_path}")
+        logger.debug(f"Report saved to {save_path}")
 
     return fig

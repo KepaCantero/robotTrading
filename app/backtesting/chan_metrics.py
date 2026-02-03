@@ -156,47 +156,25 @@ class ChanSharpeRatioCalculator:
             >>> print(f"Annualized Sharpe: {result.annualized_sharpe:.2f}")
         """
         try:
-            # Convert to numpy array
-            if isinstance(returns, (list, pd.Series)):
-                returns_array = np.array(returns, dtype=np.float64)
-            else:
-                returns_array = returns.astype(np.float64)
-
-            # Remove NaN
-            returns_array = returns_array[~np.isnan(returns_array)]
-
+            returns_array = self._convert_and_clean_returns(returns)
             if len(returns_array) < 2:
                 logger.warning("Insufficient data for Sharpe ratio calculation")
                 return self._empty_sharpe_result()
 
-            # Calculate daily statistics
-            daily_mean = float(np.mean(returns_array))
-            daily_std = float(np.std(returns_array, ddof=1))
+            daily_mean, daily_std = self._calculate_daily_statistics(returns_array)
+            daily_sharpe, annualized_sharpe = self._calculate_sharpe_values(
+                daily_mean, daily_std
+            )
 
-            # Daily risk-free rate
-            daily_rf = self.risk_free_rate / self.trading_days
-
-            # Daily Sharpe ratio
-            if daily_std == 0:
-                daily_sharpe = 0.0
-            else:
-                daily_sharpe = (daily_mean - daily_rf) / daily_std
-
-            # Annualized Sharpe ratio
-            annualized_sharpe = daily_sharpe * np.sqrt(self.trading_days)
-
-            # Calculate skewness and kurtosis
             skewness = float(self._calculate_skewness(returns_array))
             excess_kurtosis = float(self._calculate_excess_kurtosis(returns_array))
 
-            # Calculate confidence interval
             ci_low, ci_high = self._calculate_sharpe_confidence_interval(
                 daily_sharpe,
                 len(returns_array),
                 confidence_level,
             )
 
-            # Test statistical significance
             is_significant = self._test_sharpe_significance(
                 daily_sharpe,
                 len(returns_array),
@@ -218,6 +196,39 @@ class ChanSharpeRatioCalculator:
         except (ValueError, TypeError) as e:
             logger.error(f"Error calculating Sharpe ratio: {e}")
             return self._empty_sharpe_result()
+
+    def _convert_and_clean_returns(
+        self,
+        returns: Union[pd.Series, np.ndarray, List[float]],
+    ) -> np.ndarray:
+        """Convert returns to numpy array and remove NaN values."""
+        if isinstance(returns, (list, pd.Series)):
+            returns_array = np.array(returns, dtype=np.float64)
+        else:
+            returns_array = returns.astype(np.float64)
+        return returns_array[~np.isnan(returns_array)]
+
+    def _calculate_daily_statistics(self, returns_array: np.ndarray) -> Tuple[float, float]:
+        """Calculate daily mean and standard deviation."""
+        daily_mean = float(np.mean(returns_array))
+        daily_std = float(np.std(returns_array, ddof=1))
+        return daily_mean, daily_std
+
+    def _calculate_sharpe_values(
+        self,
+        daily_mean: float,
+        daily_std: float,
+    ) -> Tuple[float, float]:
+        """Calculate daily and annualized Sharpe ratios."""
+        daily_rf = self.risk_free_rate / self.trading_days
+
+        if daily_std == 0:
+            daily_sharpe = 0.0
+        else:
+            daily_sharpe = (daily_mean - daily_rf) / daily_std
+
+        annualized_sharpe = daily_sharpe * np.sqrt(self.trading_days)
+        return daily_sharpe, annualized_sharpe
 
     def _calculate_skewness(self, returns: np.ndarray) -> float:
         """Calculate skewness of returns."""
@@ -269,7 +280,7 @@ class ChanSharpeRatioCalculator:
         Ernest Chan uses the standard error approach:
         SE = sqrt((1 + 0.5 * Sharpe^2) / n)
 
-        CI = Sharpe ± z * SE
+        CI = Sharpe +/- z * SE
         """
         try:
             # Standard error
@@ -369,57 +380,24 @@ class ChanDrawdownAnalyzer:
             >>> print(f"Max DD: {result.max_drawdown_percentage:.2f}%")
         """
         try:
-            # Convert to numpy array
-            if isinstance(equity_curve, (list, pd.Series)):
-                equity_array = np.array(equity_curve, dtype=np.float64)
-            else:
-                equity_array = equity_curve.astype(np.float64)
-
-            # Remove NaN
-            equity_array = equity_array[~np.isnan(equity_array)]
-
+            equity_array = self._convert_and_clean_equity(equity_curve)
             if len(equity_array) < 2:
                 logger.warning("Insufficient data for drawdown analysis")
                 return self._empty_drawdown_result()
 
-            # Calculate running peak
-            running_peak = np.maximum.accumulate(equity_array)
+            drawdown, running_peak = self._calculate_drawdown_from_peak(equity_array)
+            max_dd, max_dd_pct, max_dd_idx, peak_idx = self._find_max_drawdown(
+                drawdown, equity_array
+            )
+            duration_days = self._calculate_drawdown_duration(
+                dates, max_dd_idx, peak_idx
+            )
+            avg_drawdown = self._calculate_average_drawdown(drawdown)
+            recovery_factor = self._calculate_recovery_factor(
+                equity_array, running_peak, max_dd
+            )
 
-            # Calculate drawdown
-            drawdown = (equity_array - running_peak) / running_peak
-
-            # Maximum drawdown
-            max_dd = float(drawdown.min())
-            max_dd_pct = max_dd * 100
-
-            # Find max drawdown period
-            max_dd_idx = int(np.argmin(drawdown))
-            peak_idx = int(np.argmax(equity_array[: max_dd_idx + 1]))
-
-            # Calculate duration
-            if dates is not None and len(dates) > max_dd_idx:
-                if isinstance(dates, pd.DatetimeIndex):
-                    peak_date = dates[peak_idx]
-                    trough_date = dates[max_dd_idx]
-                    duration_days = (trough_date - peak_date).days
-                else:
-                    duration_days = max_dd_idx - peak_idx
-            else:
-                duration_days = max_dd_idx - peak_idx
-
-            # Average drawdown
-            negative_drawdowns = drawdown[drawdown < 0]
-            avg_drawdown = float(negative_drawdowns.mean()) if len(negative_drawdowns) > 0 else 0.0
-
-            # Recovery factor (final value / max drawdown)
-            final_value = equity_array[-1]
-            peak_value = running_peak.max()
-            recovery_factor = (final_value - peak_value) / abs(max_dd) if max_dd != 0 else 0.0
-
-            # Drawdown distribution
             dd_distribution = self._calculate_drawdown_distribution(drawdown)
-
-            # Drawdown periods
             drawdown_periods = self._identify_drawdown_periods(drawdown, dates)
 
             return DrawdownResult(
@@ -435,6 +413,74 @@ class ChanDrawdownAnalyzer:
         except (ValueError, TypeError) as e:
             logger.error(f"Error analyzing drawdown: {e}")
             return self._empty_drawdown_result()
+
+    def _convert_and_clean_equity(
+        self,
+        equity_curve: Union[pd.Series, np.ndarray, List[float]],
+    ) -> np.ndarray:
+        """Convert equity curve to numpy array and remove NaN values."""
+        if isinstance(equity_curve, (list, pd.Series)):
+            equity_array = np.array(equity_curve, dtype=np.float64)
+        else:
+            equity_array = equity_curve.astype(np.float64)
+        return equity_array[~np.isnan(equity_array)]
+
+    def _calculate_drawdown_from_peak(
+        self,
+        equity_array: np.ndarray,
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """Calculate drawdown from running peak."""
+        running_peak = np.maximum.accumulate(equity_array)
+        drawdown = (equity_array - running_peak) / running_peak
+        return drawdown, running_peak
+
+    def _find_max_drawdown(
+        self,
+        drawdown: np.ndarray,
+        equity_array: np.ndarray,
+    ) -> Tuple[float, float, int, int]:
+        """Find maximum drawdown and its location."""
+        max_dd = float(drawdown.min())
+        max_dd_pct = max_dd * 100
+        max_dd_idx = int(np.argmin(drawdown))
+        peak_idx = int(np.argmax(equity_array[: max_dd_idx + 1]))
+        return max_dd, max_dd_pct, max_dd_idx, peak_idx
+
+    def _calculate_drawdown_duration(
+        self,
+        dates: Optional[Union[pd.DatetimeIndex, List[datetime]]],
+        max_dd_idx: int,
+        peak_idx: int,
+    ) -> int:
+        """Calculate duration of maximum drawdown in days."""
+        if dates is not None and len(dates) > max_dd_idx:
+            if isinstance(dates, pd.DatetimeIndex):
+                peak_date = dates[peak_idx]
+                trough_date = dates[max_dd_idx]
+                return (trough_date - peak_date).days
+            else:
+                return max_dd_idx - peak_idx
+        return max_dd_idx - peak_idx
+
+    def _calculate_average_drawdown(self, drawdown: np.ndarray) -> float:
+        """Calculate average of negative drawdowns."""
+        negative_drawdowns = drawdown[drawdown < 0]
+        if len(negative_drawdowns) > 0:
+            return float(negative_drawdowns.mean())
+        return 0.0
+
+    def _calculate_recovery_factor(
+        self,
+        equity_array: np.ndarray,
+        running_peak: np.ndarray,
+        max_dd: float,
+    ) -> float:
+        """Calculate recovery factor."""
+        final_value = equity_array[-1]
+        peak_value = running_peak.max()
+        if max_dd != 0:
+            return (final_value - peak_value) / abs(max_dd)
+        return 0.0
 
     def _calculate_drawdown_distribution(self, drawdown: np.ndarray) -> Dict[str, float]:
         """Calculate distribution of drawdowns."""
@@ -482,16 +528,9 @@ class ChanDrawdownAnalyzer:
                     peak_idx = int(np.argmax(drawdown[start_idx:i])) + start_idx
                     trough_idx = int(np.argmin(drawdown[start_idx:i])) + start_idx
 
-                    if dates is not None and len(dates) > trough_idx:
-                        start_date = dates[peak_idx]
-                        end_date = dates[trough_idx]
-                        duration = (
-                            (end_date - start_date).days
-                            if hasattr(end_date - start_date, 'days')
-                            else trough_idx - peak_idx
-                        )
-                    else:
-                        duration = trough_idx - peak_idx
+                    duration = self._calculate_period_duration(
+                        dates, peak_idx, trough_idx, start_idx, i
+                    )
 
                     periods.append(
                         {
@@ -506,6 +545,24 @@ class ChanDrawdownAnalyzer:
 
         except (ValueError, IndexError):
             return []
+
+    def _calculate_period_duration(
+        self,
+        dates: Optional[pd.DatetimeIndex],
+        peak_idx: int,
+        trough_idx: int,
+        start_idx: int,
+        end_idx: int,
+    ) -> int:
+        """Calculate duration of a drawdown period."""
+        if dates is not None and len(dates) > trough_idx:
+            start_date = dates[peak_idx]
+            end_date = dates[trough_idx]
+            if hasattr(end_date - start_date, "days"):
+                return (end_date - start_date).days
+            else:
+                return trough_idx - peak_idx
+        return trough_idx - peak_idx
 
     def _empty_drawdown_result(self) -> DrawdownResult:
         """Return empty drawdown result."""
@@ -560,61 +617,15 @@ class ChanCalmarRatioCalculator:
             >>> print(f"Calmar: {result.calmar_ratio:.2f}")
         """
         try:
-            # Convert returns to numpy array
-            if isinstance(returns, (list, pd.Series)):
-                returns_array = np.array(returns, dtype=np.float64)
-            else:
-                returns_array = returns.astype(np.float64)
-
-            returns_array = returns_array[~np.isnan(returns_array)]
-
+            returns_array = self._convert_and_clean_returns(returns)
             if len(returns_array) < 2:
                 logger.warning("Insufficient data for Calmar ratio")
-                return CalmarRatioResult(
-                    calmar_ratio=0.0,
-                    annual_return=0.0,
-                    max_drawdown=0.0,
-                    interpretation="Insufficient data",
-                )
+                return self._insufficient_data_result()
 
-            # Calculate annual return
-            mean_daily_return = float(np.mean(returns_array))
-            annual_return = mean_daily_return * self.trading_days
-
-            # Calculate max drawdown
-            if equity_curve is not None:
-                if isinstance(equity_curve, (list, pd.Series)):
-                    equity_array = np.array(equity_curve, dtype=np.float64)
-                else:
-                    equity_array = equity_curve.astype(np.float64)
-
-                equity_array = equity_array[~np.isnan(equity_array)]
-
-                running_peak = np.maximum.accumulate(equity_array)
-                drawdown = (equity_array - running_peak) / running_peak
-                max_dd = float(drawdown.min())
-            else:
-                # Calculate from returns
-                cumulative = (1 + returns_array).cumprod()
-                running_peak = np.maximum.accumulate(cumulative)
-                drawdown = (cumulative - running_peak) / running_peak
-                max_dd = float(drawdown.min())
-
-            # Calculate Calmar ratio
-            if max_dd == 0:
-                calmar_ratio = 0.0
-            else:
-                calmar_ratio = annual_return / abs(max_dd)
-
-            # Interpretation
-            if calmar_ratio > 3:
-                interpretation = "Excellent (Calmar > 3)"
-            elif calmar_ratio > 1:
-                interpretation = "Good (Calmar > 1)"
-            elif calmar_ratio > 0.5:
-                interpretation = "Fair (Calmar > 0.5)"
-            else:
-                interpretation = "Poor (Calmar < 0.5)"
+            annual_return = self._calculate_annual_return(returns_array)
+            max_dd = self._calculate_max_drawdown(returns_array, equity_curve)
+            calmar_ratio = self._compute_calmar_ratio(annual_return, max_dd)
+            interpretation = self._interpret_calmar_ratio(calmar_ratio)
 
             return CalmarRatioResult(
                 calmar_ratio=float(calmar_ratio),
@@ -631,6 +642,76 @@ class ChanCalmarRatioCalculator:
                 max_drawdown=0.0,
                 interpretation=f"Calculation error: {e}",
             )
+
+    def _convert_and_clean_returns(
+        self,
+        returns: Union[pd.Series, np.ndarray, List[float]],
+    ) -> np.ndarray:
+        """Convert returns to numpy array and remove NaN values."""
+        if isinstance(returns, (list, pd.Series)):
+            returns_array = np.array(returns, dtype=np.float64)
+        else:
+            returns_array = returns.astype(np.float64)
+        return returns_array[~np.isnan(returns_array)]
+
+    def _calculate_annual_return(self, returns_array: np.ndarray) -> float:
+        """Calculate annualized return."""
+        mean_daily_return = float(np.mean(returns_array))
+        return mean_daily_return * self.trading_days
+
+    def _calculate_max_drawdown(
+        self,
+        returns_array: np.ndarray,
+        equity_curve: Optional[Union[pd.Series, np.ndarray, List[float]]],
+    ) -> float:
+        """Calculate maximum drawdown from equity curve or returns."""
+        if equity_curve is not None:
+            equity_array = self._convert_equity_array(equity_curve)
+            running_peak = np.maximum.accumulate(equity_array)
+            drawdown = (equity_array - running_peak) / running_peak
+            return float(drawdown.min())
+        else:
+            cumulative = (1 + returns_array).cumprod()
+            running_peak = np.maximum.accumulate(cumulative)
+            drawdown = (cumulative - running_peak) / running_peak
+            return float(drawdown.min())
+
+    def _convert_equity_array(
+        self,
+        equity_curve: Union[pd.Series, np.ndarray, List[float]],
+    ) -> np.ndarray:
+        """Convert equity curve to numpy array."""
+        if isinstance(equity_curve, (list, pd.Series)):
+            equity_array = np.array(equity_curve, dtype=np.float64)
+        else:
+            equity_array = equity_curve.astype(np.float64)
+        return equity_array[~np.isnan(equity_array)]
+
+    def _compute_calmar_ratio(self, annual_return: float, max_dd: float) -> float:
+        """Compute Calmar ratio from annual return and max drawdown."""
+        if max_dd == 0:
+            return 0.0
+        return annual_return / abs(max_dd)
+
+    def _interpret_calmar_ratio(self, calmar_ratio: float) -> str:
+        """Interpret Calmar ratio value."""
+        if calmar_ratio > 3:
+            return "Excellent (Calmar > 3)"
+        elif calmar_ratio > 1:
+            return "Good (Calmar > 1)"
+        elif calmar_ratio > 0.5:
+            return "Fair (Calmar > 0.5)"
+        else:
+            return "Poor (Calmar < 0.5)"
+
+    def _insufficient_data_result(self) -> CalmarRatioResult:
+        """Return result for insufficient data case."""
+        return CalmarRatioResult(
+            calmar_ratio=0.0,
+            annual_return=0.0,
+            max_drawdown=0.0,
+            interpretation="Insufficient data",
+        )
 
 
 class ChanReturnDistributionAnalyzer:
@@ -661,74 +742,21 @@ class ChanReturnDistributionAnalyzer:
             ReturnDistributionMetrics with comprehensive analysis
         """
         try:
-            if isinstance(returns, (list, pd.Series)):
-                returns_array = np.array(returns, dtype=np.float64)
-            else:
-                returns_array = returns.astype(np.float64)
-
-            returns_array = returns_array[~np.isnan(returns_array)]
-
+            returns_array = self._convert_and_clean_returns(returns)
             if len(returns_array) < 2:
                 logger.warning("Insufficient data for distribution analysis")
                 return self._empty_distribution_result()
 
-            # Basic statistics
-            mean_return = float(np.mean(returns_array))
-            median_return = float(np.median(returns_array))
-            std_return = float(np.std(returns_array, ddof=1))
-
-            # Win/Loss analysis
-            positive_returns = returns_array[returns_array > 0]
-            negative_returns = returns_array[returns_array < 0]
-
-            positive_pct = (
-                len(positive_returns) / len(returns_array) if len(returns_array) > 0 else 0
+            mean_return, median_return, std_return = self._calculate_basic_statistics(
+                returns_array
             )
-            negative_pct = (
-                len(negative_returns) / len(returns_array) if len(returns_array) > 0 else 0
+            positive_pct, negative_pct = self._calculate_win_loss_ratios(returns_array)
+            best_day, worst_day = self._calculate_extreme_returns(returns_array)
+
+            up_capture, down_capture = self._calculate_capture_ratios(
+                returns_array, benchmark_returns
             )
-
-            # Best and worst days
-            best_day = float(returns_array.max())
-            worst_day = float(returns_array.min())
-
-            # Capture ratios (if benchmark provided)
-            up_capture = 0.0
-            down_capture = 0.0
-
-            if benchmark_returns is not None:
-                if isinstance(benchmark_returns, (list, pd.Series)):
-                    bench_array = np.array(benchmark_returns, dtype=np.float64)
-                else:
-                    bench_array = benchmark_returns.astype(np.float64)
-
-                # Align series
-                min_len = min(len(returns_array), len(bench_array))
-                returns_aligned = returns_array[:min_len]
-                bench_aligned = bench_array[:min_len]
-
-                # Up capture: strategy return / benchmark return when benchmark > 0
-                up_mask = bench_aligned > 0
-                if up_mask.sum() > 0:
-                    up_capture = float(
-                        returns_aligned[up_mask].mean() / bench_aligned[up_mask].mean()
-                        if bench_aligned[up_mask].mean() != 0
-                        else 0
-                    )
-
-                # Down capture: strategy return / benchmark return when benchmark < 0
-                down_mask = bench_aligned < 0
-                if down_mask.sum() > 0:
-                    down_capture = float(
-                        returns_aligned[down_mask].mean() / bench_aligned[down_mask].mean()
-                        if bench_aligned[down_mask].mean() != 0
-                        else 0
-                    )
-
-            # Tail ratio: percentile 95 / percentile 5
-            p95 = float(np.percentile(returns_array, 95))
-            p5 = float(np.percentile(returns_array, 5))
-            tail_ratio = abs(p95 / p5) if p5 != 0 else 0.0
+            tail_ratio = self._calculate_tail_ratio(returns_array)
 
             return ReturnDistributionMetrics(
                 mean_return=mean_return,
@@ -746,6 +774,118 @@ class ChanReturnDistributionAnalyzer:
         except (ValueError, TypeError) as e:
             logger.error(f"Error analyzing return distribution: {e}")
             return self._empty_distribution_result()
+
+    def _convert_and_clean_returns(
+        self,
+        returns: Union[pd.Series, np.ndarray, List[float]],
+    ) -> np.ndarray:
+        """Convert returns to numpy array and remove NaN values."""
+        if isinstance(returns, (list, pd.Series)):
+            returns_array = np.array(returns, dtype=np.float64)
+        else:
+            returns_array = returns.astype(np.float64)
+        return returns_array[~np.isnan(returns_array)]
+
+    def _calculate_basic_statistics(
+        self,
+        returns_array: np.ndarray,
+    ) -> Tuple[float, float, float]:
+        """Calculate basic return statistics."""
+        mean_return = float(np.mean(returns_array))
+        median_return = float(np.median(returns_array))
+        std_return = float(np.std(returns_array, ddof=1))
+        return mean_return, median_return, std_return
+
+    def _calculate_win_loss_ratios(
+        self,
+        returns_array: np.ndarray,
+    ) -> Tuple[float, float]:
+        """Calculate win/loss ratios."""
+        positive_returns = returns_array[returns_array > 0]
+        negative_returns = returns_array[returns_array < 0]
+
+        positive_pct = (
+            len(positive_returns) / len(returns_array) if len(returns_array) > 0 else 0
+        )
+        negative_pct = (
+            len(negative_returns) / len(returns_array) if len(returns_array) > 0 else 0
+        )
+        return positive_pct, negative_pct
+
+    def _calculate_extreme_returns(
+        self,
+        returns_array: np.ndarray,
+    ) -> Tuple[float, float]:
+        """Calculate best and worst day returns."""
+        best_day = float(returns_array.max())
+        worst_day = float(returns_array.min())
+        return best_day, worst_day
+
+    def _calculate_capture_ratios(
+        self,
+        returns_array: np.ndarray,
+        benchmark_returns: Optional[Union[pd.Series, np.ndarray, List[float]]],
+    ) -> Tuple[float, float]:
+        """Calculate up/down capture ratios."""
+        up_capture = 0.0
+        down_capture = 0.0
+
+        if benchmark_returns is not None:
+            returns_aligned, bench_aligned = self._align_benchmark_returns(
+                returns_array, benchmark_returns
+            )
+            up_capture = self._calculate_up_capture(returns_aligned, bench_aligned)
+            down_capture = self._calculate_down_capture(returns_aligned, bench_aligned)
+
+        return up_capture, down_capture
+
+    def _align_benchmark_returns(
+        self,
+        returns_array: np.ndarray,
+        benchmark_returns: Union[pd.Series, np.ndarray, List[float]],
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """Align returns with benchmark returns."""
+        if isinstance(benchmark_returns, (list, pd.Series)):
+            bench_array = np.array(benchmark_returns, dtype=np.float64)
+        else:
+            bench_array = benchmark_returns.astype(np.float64)
+
+        min_len = min(len(returns_array), len(bench_array))
+        return returns_array[:min_len], bench_array[:min_len]
+
+    def _calculate_up_capture(
+        self,
+        returns_aligned: np.ndarray,
+        bench_aligned: np.ndarray,
+    ) -> float:
+        """Calculate up capture ratio."""
+        up_mask = bench_aligned > 0
+        if up_mask.sum() > 0:
+            if bench_aligned[up_mask].mean() != 0:
+                return float(
+                    returns_aligned[up_mask].mean() / bench_aligned[up_mask].mean()
+                )
+        return 0.0
+
+    def _calculate_down_capture(
+        self,
+        returns_aligned: np.ndarray,
+        bench_aligned: np.ndarray,
+    ) -> float:
+        """Calculate down capture ratio."""
+        down_mask = bench_aligned < 0
+        if down_mask.sum() > 0:
+            if bench_aligned[down_mask].mean() != 0:
+                return float(
+                    returns_aligned[down_mask].mean() / bench_aligned[down_mask].mean()
+                )
+        return 0.0
+
+    def _calculate_tail_ratio(self, returns_array: np.ndarray) -> float:
+        """Calculate tail ratio (95th percentile / 5th percentile)."""
+        p95 = float(np.percentile(returns_array, 95))
+        p5 = float(np.percentile(returns_array, 5))
+        return abs(p95 / p5) if p5 != 0 else 0.0
 
     def _empty_distribution_result(self) -> ReturnDistributionMetrics:
         """Return empty distribution result."""
@@ -792,34 +932,18 @@ class ChanStrategyComparator:
             StrategyComparisonResult with comparison metrics
         """
         try:
-            sharpe_calc = ChanSharpeRatioCalculator()
-
-            # Calculate Sharpe ratios
-            sharpe1_result = sharpe_calc.calculate_sharpe_ratio(returns1)
-            sharpe2_result = sharpe_calc.calculate_sharpe_ratio(returns2)
-
-            sharpe1 = sharpe1_result.annualized_sharpe
-            sharpe2 = sharpe2_result.annualized_sharpe
-
-            # Difference
+            sharpe1, sharpe2 = self._calculate_strategy_sharpe(returns1, returns2)
             sharpe_diff = sharpe1 - sharpe2
 
-            # Test significance
-            is_significant = self._test_sharpe_difference(returns1, returns2, confidence_level)
-
-            # Tracking error
+            is_significant = self._test_sharpe_difference(
+                returns1, returns2, confidence_level
+            )
             tracking_error = self._calculate_tracking_error(returns1, returns2)
-
-            # Information ratio
             info_ratio = self._calculate_information_ratio(returns1, returns2)
 
-            # Recommendation
-            if sharpe1 > sharpe2 and is_significant:
-                recommended = "Strategy 1"
-            elif sharpe2 > sharpe1 and is_significant:
-                recommended = "Strategy 2"
-            else:
-                recommended = "No significant difference"
+            recommended = self._determine_recommended_strategy(
+                sharpe1, sharpe2, is_significant
+            )
 
             return StrategyComparisonResult(
                 strategy1_sharpe=float(sharpe1),
@@ -843,6 +967,33 @@ class ChanStrategyComparator:
                 recommended_strategy="Error",
             )
 
+    def _calculate_strategy_sharpe(
+        self,
+        returns1: Union[pd.Series, np.ndarray, List[float]],
+        returns2: Union[pd.Series, np.ndarray, List[float]],
+    ) -> Tuple[float, float]:
+        """Calculate Sharpe ratios for both strategies."""
+        sharpe_calc = ChanSharpeRatioCalculator()
+
+        sharpe1_result = sharpe_calc.calculate_sharpe_ratio(returns1)
+        sharpe2_result = sharpe_calc.calculate_sharpe_ratio(returns2)
+
+        return sharpe1_result.annualized_sharpe, sharpe2_result.annualized_sharpe
+
+    def _determine_recommended_strategy(
+        self,
+        sharpe1: float,
+        sharpe2: float,
+        is_significant: bool,
+    ) -> str:
+        """Determine recommended strategy based on Sharpe comparison."""
+        if sharpe1 > sharpe2 and is_significant:
+            return "Strategy 1"
+        elif sharpe2 > sharpe1 and is_significant:
+            return "Strategy 2"
+        else:
+            return "No significant difference"
+
     def _test_sharpe_difference(
         self,
         returns1: np.ndarray,
@@ -851,14 +1002,12 @@ class ChanStrategyComparator:
     ) -> bool:
         """Test if Sharpe ratio difference is significant."""
         try:
-            # Simplified test: check if confidence intervals overlap
             sharpe_calc = ChanSharpeRatioCalculator()
 
             result1 = sharpe_calc.calculate_sharpe_ratio(returns1, confidence_level)
             result2 = sharpe_calc.calculate_sharpe_ratio(returns2, confidence_level)
 
             # Check for overlap
-            # Strategy 1 is better if its CI lower bound > Strategy 2's CI upper bound
             return (
                 result1.confidence_interval_low > result2.confidence_interval_high
                 or result2.confidence_interval_low > result1.confidence_interval_high
@@ -874,14 +1023,12 @@ class ChanStrategyComparator:
     ) -> float:
         """Calculate tracking error between strategies."""
         try:
-            # Align series
             min_len = min(len(returns1), len(returns2))
             r1 = returns1[:min_len]
             r2 = returns2[:min_len]
 
-            # Tracking error = std of difference
             diff = r1 - r2
-            return float(np.std(diff, ddof=1) * np.sqrt(252))  # Annualized
+            return float(np.std(diff, ddof=1) * np.sqrt(252))
 
         except (ValueError, TypeError):
             return 0.0
@@ -893,22 +1040,19 @@ class ChanStrategyComparator:
     ) -> float:
         """Calculate information ratio (Strategy 1 vs Strategy 2)."""
         try:
-            # Align series
             min_len = min(len(returns1), len(returns2))
             r1 = returns1[:min_len]
             r2 = returns2[:min_len]
 
-            # Excess return
             excess = r1 - r2
 
-            # IR = mean(excess) / std(excess)
             mean_excess = np.mean(excess)
             std_excess = np.std(excess, ddof=1)
 
             if std_excess == 0:
                 return 0.0
 
-            return float(mean_excess / std_excess * np.sqrt(252))  # Annualized
+            return float(mean_excess / std_excess * np.sqrt(252))
 
         except (ValueError, TypeError, ZeroDivisionError):
             return 0.0

@@ -104,6 +104,21 @@ class AdvancedVisualizer:
 
 ---
 
+
+## Audit Status
+
+**Status:** FAILED - Empty/Minimal File
+**Date:** 2026-02-06
+**Auditor:** Claude Code (Automated Check)
+**Reason:** File does not exist
+**Action Required:** Implement proper code or remove file.
+## Audit Status
+
+**Status:** FAILED - Empty/Minimal File
+**Date:** 2026-02-06
+**Auditor:** Claude Code (Automated Check)
+**Reason:** File does not exist
+**Action Required:** Implement proper code or remove file.
 ## Critical Rules (MUST NOT BREAK)
 
 **Reglas universales:** Ver `../../BASE_RULES.md` (96 rules with 23 P0 critical)
@@ -113,7 +128,7 @@ class AdvancedVisualizer:
 | Rule | Source | Requirement | Current Status |
 |------|--------|-------------|----------------|
 | TYP-001 | BASE_RULES.md | 100% type coverage on all functions | ✅ OK |
-| TYP-003 | BASE_RULES.md | No Any without justification | ❌ GAP - Uses `Optional[Any]` return types |
+| TYP-003 | BASE_RULES.md | No Any without justification | ✅ FIXED - 2026-02-03 - Replaced `Optional[Any]` with `Optional[Figure]` for matplotlib return types |
 | LOG-004 | BASE_RULES.md | Log exceptions with stack traces | ✅ OK |
 | LOG-001 | BASE_RULES.md | Structured logging with context | ✅ OK |
 | SEC-001 | BASE_RULES.md | No hardcoded secrets | ✅ OK |
@@ -124,35 +139,18 @@ class AdvancedVisualizer:
 
 **GAP Violations Found:**
 
-1. **TYP-003** (P1 - High): Uses `Any` type in return values
-   - **Location 1**: Line 106: `def plot_correlation_network(...) -> Optional[Any]`
-   - **Location 2**: Line 351: `def plot_underwater_drawdown(...) -> Optional[Any]`
-   - **Location 3**: Line 420: `def plot_rolling_metrics(...) -> Optional[Any]`
-   - **Fix**: Use more specific type:
-   ```python
-   from matplotlib.figure import Figure
+1. **TYP-003** (P1 - High): ~~Uses `Any` type in return values~~ ✅ FIXED - 2026-02-03
+   - ~~**Location 1**: Line 106: `def plot_correlation_network(...) -> Optional[Any]`~~
+   - ~~**Location 2**: Line 351: `def plot_underwater_drawdown(...) -> Optional[Any]`~~
+   - ~~**Location 3**: Line 420: `def plot_rolling_metrics(...) -> Optional[Any]`~~
+   - **Fix Applied**: Replaced all `Optional[Any]` with `Optional[Figure]` using TYPE_CHECKING import
 
-   def plot_correlation_network(...) -> Optional[Figure]:
-   ```
+2. **Missing Return Statement** (P0 - Critical): ~~Several functions don't return on error path~~ ✅ FIXED - 2026-02-03
+   - All exception handlers now properly return None
+   - All validation warnings now properly return None
 
-2. **Missing Return Statement** (P0 - Critical): Several functions don't return on error path
-   - **Location 1**: Line 177 - `plot_correlation_network` missing return after exception
-   - **Location 2**: Line 241 - `plot_parallel_coordinates` missing return after exception
-   - **Location 3**: Line 332 - `plot_3d_scatter` missing return after exception
-   - **Location 4**: Line 400 - `plot_underwater_drawdown` missing return after exception
-   - **Location 5**: Line 483 - `plot_rolling_metrics` missing return after exception
-   - **Location 6**: Line 600 - `plot_regime_performance` missing return after exception
-   - **Location 7**: Line 686 - `plot_seasonality_heatmap` missing return after exception
-   - **Location 8**: Line 749 - `generate_interactive_dashboard` missing return after exception
-   - **Fix**: Add `return None` after each `logger.error(...)` call in except blocks
-
-3. **Silent Warnings** (P2 - Medium): Some validation warnings don't return early
-   - **Location 1**: Line 205 - `plot_parallel_coordinates` logs warning but continues
-   - **Location 2**: Line 276 - `plot_3d_scatter` logs warning but continues
-   - **Location 3**: Line 429 - `plot_rolling_metrics` logs warning but continues
-   - **Location 4**: Line 513 - `plot_regime_performance` logs warning but continues
-   - **Location 5**: Line 627 - `plot_seasonality_heatmap` logs warning but continues
-   - **Fix**: Add `return None` after validation warnings
+3. **Silent Warnings** (P2 - Medium): ~~Some validation warnings don't return early~~ ✅ FIXED - 2026-02-03
+   - All validation warnings now properly return None
 
 ---
 
@@ -189,7 +187,7 @@ class AdvancedVisualizer:
 ## Notes
 - **Optional Dependencies**: All plotting libraries are optional with graceful fallbacks
 - **Export Constants**: `MATPLOTLIB_AVAILABLE`, `PLOTLY_AVAILABLE`, `NETWORKX_AVAILABLE` for testing
-- **Return Type Issue**: Many functions have `Optional[Any]` return type should be `Optional[Figure]`
-- **Missing Returns**: Critical bug - exception handlers don't return None, causing implicit None returns
+- **Return Type Issue**: ✅ FIXED - All matplotlib functions now use `Optional[Figure]` with TYPE_CHECKING
+- **Missing Returns**: ✅ FIXED - All exception handlers and validation warnings now properly return None
 - **Style Configuration**: Uses `seaborn-v0_8-darkgrid` style, handles FileNotFoundError gracefully
 - **Output Formats**: Static plots (PNG via matplotlib) and interactive plots (HTML via plotly)
