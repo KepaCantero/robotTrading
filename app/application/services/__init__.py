@@ -30,7 +30,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Callable, Dict, Generic, List, Optional, TypeVar
 
-from app.domain.entities.order import Order
+from app.domain.entities.order import Order, OrderSide, OrderType
 from app.domain.entities.portfolio import Portfolio, Position
 from app.domain.repositories.unit_of_work import AbstractUnitOfWork
 
@@ -306,7 +306,7 @@ class GetPortfolioOrdersQuery(Query[List[Order]]):
 
     async def execute(self, uow: AbstractUnitOfWork) -> List[Order]:
         """Execute query to find portfolio orders."""
-        return await uow.orders.find_by_portfolio(self.portfolio_id)
+        return await uow.orders.find_by_portfolio(self.portfolio_id)  # type: ignore[attr-defined]
 
 
 # Service
@@ -375,8 +375,8 @@ class OrderApplicationService(ApplicationService):
                 symbol=command.symbol,
                 quantity=command.quantity,
                 price=command.price,
-                order_type=Order.OrderType[command.order_type.upper()],
-                side=Order.OrderSide[command.side.upper()],
+                order_type=OrderType[command.order_type.upper()],
+                side=OrderSide[command.side.upper()],
             )
 
             # Domain validates business rules
@@ -521,13 +521,11 @@ class PortfolioApplicationService(ApplicationService):
 
             # Create portfolio entity
             # pylint: disable=no-value-for-parameter
+            capital = Capital.from_amount(amount=initial_capital, currency=currency)
             portfolio = Portfolio(
                 portfolio_id=portfolio_id,
-                capital=Capital(amount=initial_capital, currency=currency),
-                risk_parameters=RiskParameters(
-                    max_position_size=initial_capital * Decimal('0.2'),
-                    max_portfolio_exposure=initial_capital * Decimal('0.8'),
-                ),
+                capital=capital,
+                risk_parameters=RiskParameters.for_tier(tier=capital.tier.value),
             )
             # pylint: enable=no-value-for-parameter
 
@@ -575,7 +573,7 @@ class PortfolioApplicationService(ApplicationService):
 
             # Save changes
             await uow.portfolios.update(portfolio)
-            await uow.positions.save(portfolio_id, position)
+            await uow.positions.save(portfolio_id, position)  # type: ignore[attr-defined]
             logger.info(f"Added position {symbol} to portfolio {portfolio_id}")
 
         await self._execute_in_transaction(_add)

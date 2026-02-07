@@ -46,6 +46,20 @@ except ImportError:
 
     STATSMODELS_AVAILABLE = False
 
+# Import adfuller and kpss from statsmodels or fallback
+try:
+    from statsmodels.tsa.stattools import adfuller, kpss
+except ImportError:
+    from app.core.statsmodels_fallback import adfuller, kpss
+
+# Optional ARCH/GARCH library
+try:
+    from arch import arch_model
+    ARCH_AVAILABLE = True
+except ImportError:
+    ARCH_AVAILABLE = False
+    arch_model = None
+
 
 class StockMetrics(BaseModel):
     """Metrics for a single stock."""

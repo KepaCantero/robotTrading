@@ -1,0 +1,58 @@
+================================================================================
+TEST SUMMARY REPORT: TEST_NO_GAPS_IN_TIMESTAMPS
+================================================================================
+
+## METADATA
+----------------------------------------
+Test Name:        test_no_gaps_in_timestamps
+Description:      Verify no gaps in timestamps with realistic GBM data
+Test File:        test_strategy_validation.py
+Test Type:        unit
+Test ID:          test_20260207_212818
+Created:          2026-02-07 21:28:18
+
+## TEST STATUS
+----------------------------------------
+✓ Status:          PASSED
+Reason:           No timestamp gaps detected
+Duration:         0.02 seconds
+
+## INPUT DATA
+----------------------------------------
+Symbols:          AAPL
+Date Range:       2023-01-01 to 2024-05-14
+Data Points:      500
+Market Regime:    neutral
+Data Source:      GBM simulation (drift=5%, vol=20%)
+
+## CONFIGURATION
+----------------------------------------
+Initial Capital:  $100,000.00
+Commission:       $0.00 per trade
+Slippage:         0.00%
+Strategy:         N/A (data validation test)
+
+## OUTPUT METRICS
+----------------------------------------
+
+### Financial Performance
+Final Capital:     $0.00
+Total P&L:        $0.00
+
+### Risk Metrics
+
+### Trade Statistics
+Total Trades:      0
+Winning Trades:    0
+Losing Trades:     0
+
+## VALIDATION CRITERIA
+----------------------------------------
+✓ No gaps > 2 days: PASSED
+   Expected: 0
+   Actual:   0
+   Reason: No gaps found
+
+================================================================================
+End of Report - Generated 2026-02-07 21:28:18
+================================================================================

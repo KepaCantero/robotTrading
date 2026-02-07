@@ -594,6 +594,19 @@ def setup_module_loggers(use_json: bool = False) -> None:
         logger.setLevel(logging.WARNING)  # Only warnings and above for these
 
 
+class LogService:
+    """Service identifiers for structured logging."""
+
+    FASTAPI = "fastapi"
+    TRADING = "trading"
+    PORTFOLIO = "portfolio"
+    MARKET_DATA = "market_data"
+    BACKTESTING = "backtesting"
+    COMPLIANCE = "compliance"
+    RISK = "risk"
+    DEPLOYMENT = "deployment"
+
+
 # Initialize logging on import
 # This ensures logging is configured as soon as this module is imported
 

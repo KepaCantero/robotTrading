@@ -505,8 +505,8 @@ class MultiAssetAllocator:
             }
 
     def _adjust_for_time_horizon(
-        self, weights: Dict[str, Decimal], time_horizon: int
-    ) -> Dict[str, Decimal]:
+        self, weights: dict[str | AssetClassType, Decimal], time_horizon: int
+    ) -> dict[str | AssetClassType, Decimal]:
         """Adjust weights for time horizon."""
         # Longer horizon = more equities, less bonds
         # Shorter horizon = more bonds, less equities
@@ -522,7 +522,7 @@ class MultiAssetAllocator:
         else:
             return weights
 
-        adjusted = {}
+        adjusted: dict[str | AssetClassType, Decimal] = {}
         for asset_class, weight in weights.items():
             if asset_class == AssetClassType.EQUITY:
                 adjusted[asset_class] = max(Decimal("0"), min(Decimal("1"), weight + equity_shift))
@@ -534,8 +534,8 @@ class MultiAssetAllocator:
         return adjusted
 
     def _adjust_for_income_need(
-        self, weights: Dict[str, Decimal], income_need: Decimal
-    ) -> Dict[str, Decimal]:
+        self, weights: dict[str | AssetClassType, Decimal], income_need: Decimal
+    ) -> dict[str | AssetClassType, Decimal]:
         """Adjust weights for income need."""
         # Higher income need = more bonds/dividend stocks
         if income_need <= Decimal("0.03"):
@@ -545,7 +545,7 @@ class MultiAssetAllocator:
         income_factor = (income_need - Decimal("0.03")) / Decimal("0.05")  # 0 to 1
         bond_shift = income_factor * Decimal("0.10")  # Up to 10% shift
 
-        adjusted = {}
+        adjusted: dict[str | AssetClassType, Decimal] = {}
         for asset_class, weight in weights.items():
             if asset_class == AssetClassType.FIXED_INCOME:
                 adjusted[asset_class] = min(Decimal("1"), weight + bond_shift)
@@ -573,7 +573,7 @@ class MultiAssetAllocator:
         if total_reduce == 0:
             return weights
 
-        adjusted = {}
+        adjusted: Dict[str, Decimal] = {}
         for asset_class, weight in weights.items():
             if asset_class == AssetClassType.CASH:
                 adjusted[asset_class] = liquidity_need

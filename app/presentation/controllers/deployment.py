@@ -14,7 +14,7 @@ from typing import Dict
 from fastapi import APIRouter, HTTPException, Query
 from requests.exceptions import HTTPError, RequestException
 
-from app.models.deployment import DeploymentInput
+from app.services.deploy_decision_orchestrator.models import DeploymentInput
 from app.services.deploy_decision_orchestrator import get_deploy_orchestrator
 from app.services.external_integrations.health_check_manager import get_health_check_manager
 

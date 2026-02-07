@@ -9,7 +9,7 @@ rather than concrete classes. This improves testability and maintainability.
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Protocol
+from typing import Any, Optional, Protocol
 
 from app.models.signal import Signal
 

@@ -742,7 +742,7 @@ class SLOTracker:
                     ),
                 )
 
-                rows = await cursor.fetchall()
+                rows = list(await cursor.fetchall())
                 total_measurements = len(rows)
 
                 # Convert to SLIMetric objects

@@ -170,7 +170,6 @@ class ASQuote:
     """
 
     symbol: str = Field(..., description="Trading symbol")
-    timestamp: Optional[datetime] = Field(default=None, description="Quote generation time")
     mid_price: Decimal = Field(..., gt=Decimal("0"), description="Mid price")
     reservation_price: Decimal = Field(..., gt=Decimal("0"), description="Inventory-adjusted price")
     optimal_bid: Decimal = Field(..., gt=Decimal("0"), description="Optimal bid quote")
@@ -185,6 +184,7 @@ class ASQuote:
     )
     is_bid_enabled: bool = Field(default=True, description="Whether bid is enabled")
     is_ask_enabled: bool = Field(default=True, description="Whether ask is enabled")
+    timestamp: Optional[datetime] = Field(default=None, description="Quote generation time")
 
     def get_full_spread_bps(self) -> Decimal:
         """Calculate full spread in basis points."""

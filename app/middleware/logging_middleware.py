@@ -32,19 +32,9 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         start_time = time.time()
 
         # Log request
-        centralized_logger.info(
-            LogService.FASTAPI,
-            f"Request started: {request.method} {request.url.path}",
-            metadata={
-                "request_id": request_id,
-                "method": request.method,
-                "path": request.url.path,
-                "query_params": str(request.query_params),
-                "client_ip": request.client.host if request.client else None,
-                "user_agent": request.headers.get("user-agent"),
-                "content_type": request.headers.get("content-type"),
-                "content_length": request.headers.get("content-length"),
-            },
+        centralized_logger.info(  # type: ignore[call-arg]
+            f"[{LogService.FASTAPI}] Request started: {request.method} {request.url.path} | "
+            f"request_id={request_id} client={request.client.host if request.client else None}"
         )
 
         # Process request
@@ -55,17 +45,9 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             duration = (time.time() - start_time) * 1000
 
             # Log response
-            centralized_logger.info(
-                LogService.FASTAPI,
-                f"Request completed: {request.method} {request.url.path}",
-                metadata={
-                    "request_id": request_id,
-                    "method": request.method,
-                    "path": request.url.path,
-                    "status_code": response.status_code,
-                    "duration_ms": duration,
-                    "response_size": response.headers.get("content-length"),
-                },
+            centralized_logger.info(  # type: ignore[call-arg]
+                f"[{LogService.FASTAPI}] Request completed: {request.method} {request.url.path} | "
+                f"request_id={request_id} status={response.status_code} duration_ms={duration:.2f}"
             )
 
             # Add request ID to response headers
@@ -78,17 +60,10 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             duration = (time.time() - start_time) * 1000
 
             # Log error with stack trace (LOG-004)
-            centralized_logger.error(
-                LogService.FASTAPI,
-                f"Request failed: {request.method} {request.url.path}",
-                metadata={
-                    "request_id": request_id,
-                    "method": request.method,
-                    "path": request.url.path,
-                    "duration_ms": duration,
-                    "error_type": type(e).__name__,
-                },
-                error_message=str(e),
+            centralized_logger.error(  # type: ignore[call-arg]
+                f"[{LogService.FASTAPI}] Request failed: {request.method} {request.url.path} | "
+                f"request_id={request_id} error_type={type(e).__name__} duration_ms={duration:.2f} | "
+                f"error={str(e)}",
                 exc_info=True,  # LOG-004: Include stack trace
             )
 
@@ -102,16 +77,8 @@ class TradingLoggingMiddleware(BaseHTTPMiddleware):
         """Log trading-specific requests."""
         # Check if this is a trading endpoint
         if request.url.path.startswith("/api/trading/"):
-            # Log trading request
-            centralized_logger.info(
-                LogService.TRADING,
-                f"Trading request: {request.method} {request.url.path}",
-                metadata={
-                    "method": request.method,
-                    "path": request.url.path,
-                    "query_params": str(request.query_params),
-                    "client_ip": request.client.host if request.client else None,
-                },
+            centralized_logger.info(  # type: ignore[call-arg]
+                f"[{LogService.TRADING}] Trading request: {request.method} {request.url.path}"
             )
 
         # Process request
@@ -119,14 +86,8 @@ class TradingLoggingMiddleware(BaseHTTPMiddleware):
 
         # Log trading response
         if request.url.path.startswith("/api/trading/"):
-            centralized_logger.info(
-                LogService.TRADING,
-                f"Trading response: {request.method} {request.url.path}",
-                metadata={
-                    "method": request.method,
-                    "path": request.url.path,
-                    "status_code": response.status_code,
-                },
+            centralized_logger.info(  # type: ignore[call-arg]
+                f"[{LogService.TRADING}] Trading response: {request.method} {request.url.path} status={response.status_code}"
             )
 
         return response
@@ -139,16 +100,8 @@ class PortfolioLoggingMiddleware(BaseHTTPMiddleware):
         """Log portfolio-specific requests."""
         # Check if this is a portfolio endpoint
         if request.url.path.startswith("/api/portfolio/"):
-            # Log portfolio request
-            centralized_logger.info(
-                LogService.PORTFOLIO,
-                f"Portfolio request: {request.method} {request.url.path}",
-                metadata={
-                    "method": request.method,
-                    "path": request.url.path,
-                    "query_params": str(request.query_params),
-                    "client_ip": request.client.host if request.client else None,
-                },
+            centralized_logger.info(  # type: ignore[call-arg]
+                f"[{LogService.PORTFOLIO}] Portfolio request: {request.method} {request.url.path}"
             )
 
         # Process request
@@ -156,14 +109,8 @@ class PortfolioLoggingMiddleware(BaseHTTPMiddleware):
 
         # Log portfolio response
         if request.url.path.startswith("/api/portfolio/"):
-            centralized_logger.info(
-                LogService.PORTFOLIO,
-                f"Portfolio response: {request.method} {request.url.path}",
-                metadata={
-                    "method": request.method,
-                    "path": request.url.path,
-                    "status_code": response.status_code,
-                },
+            centralized_logger.info(  # type: ignore[call-arg]
+                f"[{LogService.PORTFOLIO}] Portfolio response: {request.method} {request.url.path} status={response.status_code}"
             )
 
         return response
@@ -176,16 +123,8 @@ class MarketDataLoggingMiddleware(BaseHTTPMiddleware):
         """Log market data requests."""
         # Check if this is a market data endpoint
         if request.url.path.startswith("/api/market-data/"):
-            # Log market data request
-            centralized_logger.info(
-                LogService.MARKET_DATA,
-                f"Market data request: {request.method} {request.url.path}",
-                metadata={
-                    "method": request.method,
-                    "path": request.url.path,
-                    "query_params": str(request.query_params),
-                    "client_ip": request.client.host if request.client else None,
-                },
+            centralized_logger.info(  # type: ignore[call-arg]
+                f"[{LogService.MARKET_DATA}] Market data request: {request.method} {request.url.path}"
             )
 
         # Process request
@@ -193,14 +132,8 @@ class MarketDataLoggingMiddleware(BaseHTTPMiddleware):
 
         # Log market data response
         if request.url.path.startswith("/api/market-data/"):
-            centralized_logger.info(
-                LogService.MARKET_DATA,
-                f"Market data response: {request.method} {request.url.path}",
-                metadata={
-                    "method": request.method,
-                    "path": request.url.path,
-                    "status_code": response.status_code,
-                },
+            centralized_logger.info(  # type: ignore[call-arg]
+                f"[{LogService.MARKET_DATA}] Market data response: {request.method} {request.url.path} status={response.status_code}"
             )
 
         return response
@@ -216,20 +149,15 @@ def log_trading_performance(operation: str):
             try:
                 result = await func(*args, **kwargs)
                 duration = (time.time() - start_time) * 1000
-                centralized_logger.info(
-                    LogService.TRADING,
-                    f"{operation} completed",
-                    metadata={"duration_ms": duration},
+                centralized_logger.info(  # type: ignore[call-arg]
+                    f"[{LogService.TRADING}] {operation} completed | duration_ms={duration:.2f}"
                 )
                 return result
             except Exception as e:
                 duration = (time.time() - start_time) * 1000
-                centralized_logger.error(
-                    LogService.TRADING,
-                    f"{operation} failed",
-                    metadata={"duration_ms": duration, "error_type": type(e).__name__},
-                    error_message=str(e),
-                    exc_info=True,  # LOG-004: Include stack trace
+                centralized_logger.error(  # type: ignore[call-arg]
+                    f"[{LogService.TRADING}] {operation} failed | error_type={type(e).__name__} duration_ms={duration:.2f} | error={str(e)}",
+                    exc_info=True,
                 )
                 raise
 
@@ -247,20 +175,15 @@ def log_portfolio_performance(operation: str):
             try:
                 result = await func(*args, **kwargs)
                 duration = (time.time() - start_time) * 1000
-                centralized_logger.info(
-                    LogService.PORTFOLIO,
-                    f"{operation} completed",
-                    metadata={"duration_ms": duration},
+                centralized_logger.info(  # type: ignore[call-arg]
+                    f"[{LogService.PORTFOLIO}] {operation} completed | duration_ms={duration:.2f}"
                 )
                 return result
             except Exception as e:
                 duration = (time.time() - start_time) * 1000
-                centralized_logger.error(
-                    LogService.PORTFOLIO,
-                    f"{operation} failed",
-                    metadata={"duration_ms": duration, "error_type": type(e).__name__},
-                    error_message=str(e),
-                    exc_info=True,  # LOG-004: Include stack trace
+                centralized_logger.error(  # type: ignore[call-arg]
+                    f"[{LogService.PORTFOLIO}] {operation} failed | error_type={type(e).__name__} duration_ms={duration:.2f} | error={str(e)}",
+                    exc_info=True,
                 )
                 raise
 
@@ -278,20 +201,15 @@ def log_market_data_performance(operation: str):
             try:
                 result = await func(*args, **kwargs)
                 duration = (time.time() - start_time) * 1000
-                centralized_logger.info(
-                    LogService.MARKET_DATA,
-                    f"{operation} completed",
-                    metadata={"duration_ms": duration},
+                centralized_logger.info(  # type: ignore[call-arg]
+                    f"[{LogService.MARKET_DATA}] {operation} completed | duration_ms={duration:.2f}"
                 )
                 return result
             except Exception as e:
                 duration = (time.time() - start_time) * 1000
-                centralized_logger.error(
-                    LogService.MARKET_DATA,
-                    f"{operation} failed",
-                    metadata={"duration_ms": duration, "error_type": type(e).__name__},
-                    error_message=str(e),
-                    exc_info=True,  # LOG-004: Include stack trace
+                centralized_logger.error(  # type: ignore[call-arg]
+                    f"[{LogService.MARKET_DATA}] {operation} failed | error_type={type(e).__name__} duration_ms={duration:.2f} | error={str(e)}",
+                    exc_info=True,
                 )
                 raise
 
@@ -309,20 +227,15 @@ def log_fastapi_performance(operation: str):
             try:
                 result = await func(*args, **kwargs)
                 duration = (time.time() - start_time) * 1000
-                centralized_logger.info(
-                    LogService.FASTAPI,
-                    f"{operation} completed",
-                    metadata={"duration_ms": duration},
+                centralized_logger.info(  # type: ignore[call-arg]
+                    f"[{LogService.FASTAPI}] {operation} completed | duration_ms={duration:.2f}"
                 )
                 return result
             except Exception as e:
                 duration = (time.time() - start_time) * 1000
-                centralized_logger.error(
-                    LogService.FASTAPI,
-                    f"{operation} failed",
-                    metadata={"duration_ms": duration, "error_type": type(e).__name__},
-                    error_message=str(e),
-                    exc_info=True,  # LOG-004: Include stack trace
+                centralized_logger.error(  # type: ignore[call-arg]
+                    f"[{LogService.FASTAPI}] {operation} failed | error_type={type(e).__name__} duration_ms={duration:.2f} | error={str(e)}",
+                    exc_info=True,
                 )
                 raise
 

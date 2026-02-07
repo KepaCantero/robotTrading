@@ -5,7 +5,7 @@ Tests the integration between different context engine components
 including regime detectors, correlation analyzers, and volatility analyzers.
 """
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import numpy as np
 import pytest

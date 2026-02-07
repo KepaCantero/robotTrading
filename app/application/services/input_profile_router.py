@@ -23,7 +23,7 @@ class StrategyType(str, Enum):
     """Strategy types mapped from investment objectives."""
 
     MOMENTUM = "momentum"  # MAXIMIZAR_CAPITAL
-    DIVIDEND = "dividend"  # MAXIMIZAR_DIVIDENDOS
+    DIVIDEND = "dividend"  # MAXIMIZE_DIVIDENDS
     LOW_VOLATILITY = "low_volatility"  # CAPITAL_PRESERVATION
     MULTI_FACTOR = "multi_factor"  # BALANCED_GROWTH
     MEAN_REVERSION = "mean_reversion"  # Neutral/Balanced
@@ -169,15 +169,15 @@ class InputProfileRouter:
         Select strategy type from investment objective.
 
         Mapping:
-        - MAXIMIZAR_CAPITAL -> Momentum (aggressive growth)
-        - MAXIMIZAR_DIVIDENDOS -> Dividend
+        - MAXIMIZE_CAPITAL -> Momentum (aggressive growth)
+        - MAXIMIZE_DIVIDENDS -> Dividend
         - CAPITAL_PRESERVATION -> Low Volatility
         - BALANCED_GROWTH -> Multi-Factor
         - INCOME_GENERATION -> Covered Call
         """
         strategy_map = {
-            InvestmentObjective.MAXIMIZAR_CAPITAL: StrategyType.MOMENTUM,
-            InvestmentObjective.MAXIMIZAR_DIVIDENDOS: StrategyType.DIVIDEND,
+            InvestmentObjective.MAXIMIZE_CAPITAL: StrategyType.MOMENTUM,
+            InvestmentObjective.MAXIMIZE_DIVIDENDS: StrategyType.DIVIDEND,
             InvestmentObjective.CAPITAL_PRESERVATION: StrategyType.LOW_VOLATILITY,
             InvestmentObjective.BALANCED_GROWTH: StrategyType.MULTI_FACTOR,
             InvestmentObjective.INCOME_GENERATION: StrategyType.COVERED_CALL,
@@ -189,11 +189,11 @@ class InputProfileRouter:
         Select risk configuration from risk tolerance.
 
         Mapping:
-        - BAJO -> 15% max drawdown, no leverage, 5% max position
-        - MEDIO -> 25% max drawdown, 1.5x leverage, 10% max position
-        - ALTO -> 40% max drawdown, 2x leverage, 20% max position
+        - LOW -> 15% max drawdown, no leverage, 5% max position
+        - MEDIUM -> 25% max drawdown, 1.5x leverage, 10% max position
+        - HIGH -> 40% max drawdown, 2x leverage, 20% max position
         """
-        if tolerance == RiskTolerance.BAJO:
+        if tolerance == RiskTolerance.LOW:
             return RiskConfig(
                 max_drawdown=Decimal("0.15"),  # 15%
                 max_volatility=Decimal("0.20"),  # 20%
@@ -205,7 +205,7 @@ class InputProfileRouter:
                 var_confidence=0.95,
                 expected_shortfall_confidence=0.95,
             )
-        elif tolerance == RiskTolerance.MEDIO:
+        elif tolerance == RiskTolerance.MEDIUM:
             return RiskConfig(
                 max_drawdown=Decimal("0.25"),  # 25%
                 max_volatility=Decimal("0.30"),  # 30%
@@ -217,7 +217,7 @@ class InputProfileRouter:
                 var_confidence=0.95,
                 expected_shortfall_confidence=0.95,
             )
-        else:  # ALTO
+        else:  # HIGH
             return RiskConfig(
                 max_drawdown=Decimal("0.40"),  # 40%
                 max_volatility=Decimal("0.50"),  # 50%
@@ -259,11 +259,11 @@ class InputProfileRouter:
             opt_type = OptimizationType.MEAN_VARIANCE
 
         # Adjust for risk tolerance
-        if tolerance == RiskTolerance.BAJO:
+        if tolerance == RiskTolerance.LOW:
             opt_type = OptimizationType.RISK_PARITY
             min_weight = Decimal("0.01")
             max_weight = Decimal("0.05")
-        elif tolerance == RiskTolerance.ALTO:
+        elif tolerance == RiskTolerance.HIGH:
             min_weight = Decimal("0.02")
             max_weight = Decimal("0.20")
         else:
@@ -289,7 +289,7 @@ class InputProfileRouter:
         - USA: LIFO/HIFO, 15-20% dividend tax, 15-20% capital gains
         - UK: FIFO, 0-38.1% dividend tax, 10-28% capital gains
         """
-        country = residence.country
+        country = residence.country_name
 
         if country == "Spain":
             return TaxConfig(
@@ -356,12 +356,12 @@ class InputProfileRouter:
 
         # Sector diversification
         sector_diversification = profile.risk_tolerance in (
-            RiskTolerance.BAJO,
-            RiskTolerance.MEDIO,
+            RiskTolerance.LOW,
+            RiskTolerance.MEDIUM,
         )
 
         # Sector exposure limits
-        if profile.risk_tolerance == RiskTolerance.BAJO:
+        if profile.risk_tolerance == RiskTolerance.LOW:
             max_sector = Decimal("0.25")  # 25% max per sector
         else:
             max_sector = Decimal("0.40")  # 40% max per sector
@@ -369,7 +369,7 @@ class InputProfileRouter:
         # Long-only for capital preservation and dividend objectives
         long_only = profile.objective in (
             InvestmentObjective.CAPITAL_PRESERVATION,
-            InvestmentObjective.MAXIMIZAR_DIVIDENDOS,
+            InvestmentObjective.MAXIMIZE_DIVIDENDS,
         )
 
         return {
@@ -397,7 +397,7 @@ class InputProfileRouter:
         strategy_type = config.strategy_type
 
         # Base configuration
-        strategy_config = {
+        strategy_config: Dict[str, Any] = {
             "strategy_type": strategy_type.value,
             "risk_tolerance": profile.risk_tolerance.value,
             "investment_horizon_months": profile.horizon.months,

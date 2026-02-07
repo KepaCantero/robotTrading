@@ -388,7 +388,7 @@ class TestEquilibriumReturns:
         self, sample_covariance: NDArray[np.float64]
     ) -> None:
         """Test that market caps are properly normalized to weights."""
-        caps = np.array([1000.0, 500.0, 500.0])
+        caps = np.array([1000.0, 500.0, 500.0], dtype=np.float64)
         cov = np.eye(3) * 0.04
 
         pi1 = EquilibriumReturns.from_market_caps(cov, caps, 3.0)

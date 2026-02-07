@@ -502,6 +502,17 @@ class MultiAssetPortfolio:
                 total_return=Decimal("0"),
                 annualized_return=Decimal("0"),
                 volatility=Decimal("0"),
+                sharpe_ratio=None,
+                sortino_ratio=None,
+                max_drawdown=None,
+                beta=None,
+                alpha=None,
+                information_ratio=None,
+                tracking_error=None,
+                var_95=None,
+                cvar_95=None,
+                skewness=None,
+                kurtosis=None,
             )
 
         # Calculate weights array
@@ -536,6 +547,15 @@ class MultiAssetPortfolio:
             volatility=volatility,
             sharpe_ratio=sharpe,
             max_drawdown=max_dd,
+            sortino_ratio=None,
+            beta=None,
+            alpha=None,
+            information_ratio=None,
+            tracking_error=None,
+            var_95=None,
+            cvar_95=None,
+            skewness=None,
+            kurtosis=None,
         )
 
     def to_dict(self) -> Dict[str, Any]:

@@ -1060,15 +1060,22 @@ class SystemBus:
                 signal_time=signal_time,
             )
 
+            # Map PreTradeCheckResult fields to PreTradeAnalysis fields
+            # Note: Field names differ between HarrisIntegrator.PreTradeCheckResult and PreTradeAnalysis
             result.harris_order_book_depth_ok = harris_check.order_book_depth_ok
-            result.harris_liquidity_score = harris_check.liquidity_score
-            result.harris_vpin = harris_check.vpin if hasattr(harris_check, 'vpin') else 0.0
-            result.harris_pin = harris_check.pin if hasattr(harris_check, 'pin') else 0.0
-            result.market_impact_bps = harris_check.estimated_market_impact_bps
-            result.timing_cost_bps = harris_check.estimated_timing_cost_bps
-            result.venue = harris_check.recommended_venue
-            result.algorithm = harris_check.recommended_order_type
-            result.limit_price = harris_check.recommended_limit_price
+            # liquidity_score doesn't exist in PreTradeCheckResult, use liquidity_sufficient as proxy
+            result.harris_liquidity_score = 100.0 if harris_check.liquidity_sufficient else 0.0
+            result.harris_vpin = getattr(harris_check, 'vpin', 0.0)
+            result.harris_pin = getattr(harris_check, 'pin', 0.0)
+            # PreTradeCheckResult has estimated_cost_bps, not separate market_impact/timing_cost
+            # Use estimated_cost_bps as market_impact_bps for now
+            result.market_impact_bps = getattr(harris_check, 'estimated_cost_bps', 0.0)
+            # timing_cost_bps not available in PreTradeCheckResult, estimate as portion of cost
+            result.timing_cost_bps = getattr(harris_check, 'estimated_cost_bps', 0.0) * 0.3
+            # Map venue names
+            result.venue = getattr(harris_check, 'recommended_venue', 'lit_exchange')
+            result.algorithm = getattr(harris_check, 'recommended_order_type', 'LIMIT')
+            result.limit_price = getattr(harris_check, 'recommended_limit_price', None)
 
             if not harris_check.can_execute:
                 result.can_execute = False
@@ -1435,6 +1442,50 @@ class ComplianceEngine:
             logger.info(f"  {status} {system}")
 
         logger.info("=" * 80)
+
+    # ==========================================================================
+    # PICKLE SUPPORT (for multiprocessing)
+    # ==========================================================================
+
+    def __getstate__(self) -> Dict[str, Any]:
+        """
+        Get state for pickling (excludes unpicklable objects).
+
+        The ComplianceEngine uses a singleton pattern and contains references
+        to SystemBus and other objects that may not be picklable. This method
+        extracts the serializable state for multiprocessing support.
+
+        Note: Each worker process will get a fresh engine instance with
+        the same configuration but independent state.
+        """
+        # Extract only the essential configuration
+        state = {
+            'asset_class': self.asset_class,
+            'strict_mode': self.strict_mode,
+            'enable_logging': False,  # Disable logging in worker processes
+            'config': self.config,
+            '_starting_capital': self._starting_capital,
+            # Clear trade tracking state - each worker has its own trades
+            '_active_orders': {},
+            '_completed_trades': [],
+            '_daily_pnl_tracking': [],
+        }
+        return state
+
+    def __setstate__(self, state: Dict[str, Any]) -> None:
+        """
+        Restore state from pickling (reinitializes engine in worker process).
+
+        Creates a fresh ComplianceEngine instance in the worker process with
+        the same configuration but independent state.
+        """
+        # Create a new instance with the same configuration
+        self.__dict__.update(state)
+        # Reinitialize the engine components
+        self.availability = SystemAvailability(enable_logging=self.enable_logging)
+        self._subsystems: Dict[str, Any] = {}
+        self._system_bus = SystemBus(self)
+        self._initialized = True
 
     # ==========================================================================
     # KILL SWITCH - Hull Rule 13.1

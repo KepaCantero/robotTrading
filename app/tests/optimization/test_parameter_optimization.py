@@ -15,7 +15,7 @@ import json
 import tempfile
 import time
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Callable, Dict
 from unittest.mock import patch
 
 import pytest
@@ -188,7 +188,7 @@ def optimization_config() -> OptimizationConfig:
 
 
 @pytest.fixture
-def simple_objective() -> callable:
+def simple_objective() -> Callable:
     """Simple objective function for testing."""
 
     def objective(params: Dict[str, Any]) -> float:
@@ -199,7 +199,7 @@ def simple_objective() -> callable:
 
 
 @pytest.fixture
-def mock_objective() -> callable:
+def mock_objective() -> Callable:
     """Mock objective that returns predictable values."""
 
     def objective(params: Dict[str, Any]) -> float:
@@ -211,7 +211,7 @@ def mock_objective() -> callable:
 
 
 @pytest.fixture
-def slow_objective() -> callable:
+def slow_objective() -> Callable:
     """Objective function with deliberate delay."""
 
     def objective(params: Dict[str, Any]) -> float:

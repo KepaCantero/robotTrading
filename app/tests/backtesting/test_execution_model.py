@@ -36,8 +36,8 @@ from app.backtesting.execution.models import (
     Order,
     OrderSide,
     OrderType,
-    TimeOfDay,
 )
+from app.backtesting.execution.slippage_model import TimeOfDay
 
 # ============================================================================
 # FIXTURES
@@ -808,7 +808,7 @@ class TestOrderFillSimulator:
     ):
         """Test fill simulation for liquid stock."""
 
-        result = asyncio.run(simulator.simulate_fill(sample_order, liquid_market_snapshot))
+        result = simulator.simulate_fill(sample_order, liquid_market_snapshot)
 
         assert result.filled is True
         assert result.filled_shares > 0
@@ -825,7 +825,7 @@ class TestOrderFillSimulator:
     ):
         """Test fill simulation for illiquid stock."""
 
-        result = asyncio.run(simulator.simulate_fill(sample_order, illiquid_market_snapshot))
+        result = simulator.simulate_fill(sample_order, illiquid_market_snapshot)
 
         # Illiquid stock may partially fill or reject
         assert result.fill_reason in (
@@ -847,7 +847,7 @@ class TestOrderFillSimulator:
 
         closed_snapshot = replace(liquid_market_snapshot, is_market_open=False)
 
-        result = asyncio.run(simulator.simulate_fill(sample_order, closed_snapshot))
+        result = simulator.simulate_fill(sample_order, closed_snapshot)
 
         assert result.filled is False
         assert result.fill_reason == FillReason.MARKET_CLOSED
@@ -865,7 +865,7 @@ class TestOrderFillSimulator:
 
         halted_snapshot = replace(liquid_market_snapshot, is_trading_halt=True)
 
-        result = asyncio.run(simulator.simulate_fill(sample_order, halted_snapshot))
+        result = simulator.simulate_fill(sample_order, halted_snapshot)
 
         assert result.filled is False
         assert result.fill_reason == FillReason.MARKET_CLOSED

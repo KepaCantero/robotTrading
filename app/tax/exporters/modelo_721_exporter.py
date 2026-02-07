@@ -40,7 +40,7 @@ from typing import Dict, List, Optional
 
 import aiohttp
 import aiosqlite
-from requests.exceptions import HTTPError, RequestException
+from requests.exceptions import HTTPError, RequestException  # type: ignore[import-untyped]
 
 logger = logging.getLogger(__name__)
 

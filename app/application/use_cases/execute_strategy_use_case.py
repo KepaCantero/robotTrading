@@ -275,7 +275,7 @@ class ExecuteStrategyUseCase:
         Validate strategy configuration.
 
         Args:
-            config: Strategy configuration dictionary
+            config: Strategy configuration dictionary (not used, strategy already has config)
 
         Returns:
             True if configuration is valid
@@ -283,4 +283,4 @@ class ExecuteStrategyUseCase:
         if not self._strategy:
             return False
 
-        return self._strategy.validate_config(config)
+        return self._strategy.validate_config()

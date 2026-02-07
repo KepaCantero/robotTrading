@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 
@@ -269,7 +269,7 @@ class RiskConfigurator:
         Returns:
             Tuple of (lower_bound, upper_bound)
         """
-        var_estimates = []
+        var_estimates: list[float] = []
 
         for _ in range(n_bootstrap):
             # Bootstrap sample
@@ -281,9 +281,9 @@ class RiskConfigurator:
             var_estimates.append(abs(var_daily))
 
         # Calculate percentile-based CI
-        var_estimates = np.array(var_estimates)
-        lower = np.percentile(var_estimates, 2.5)  # 2.5th percentile
-        upper = np.percentile(var_estimates, 97.5)  # 97.5th percentile
+        var_estimates_array = np.array(var_estimates)
+        lower = np.percentile(var_estimates_array, 2.5)  # 2.5th percentile
+        upper = np.percentile(var_estimates_array, 97.5)  # 97.5th percentile
 
         return (Decimal(str(lower)) * capital, Decimal(str(upper)) * capital)
 

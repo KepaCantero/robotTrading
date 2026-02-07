@@ -138,7 +138,7 @@ async def create_portfolio(
             config_id=request.config_id,
             initial_cash=request.initial_cash,
         )
-        return PortfolioResponse(portfolio=portfolio)
+        return PortfolioResponse(success=True, portfolio=portfolio)
     except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -153,7 +153,7 @@ async def get_portfolio(
     if not portfolio:
         raise HTTPException(status_code=404, detail="Portfolio not found")
 
-    return PortfolioResponse(portfolio=portfolio)
+    return PortfolioResponse(success=True, portfolio=portfolio)
 
 
 @router.get("/portfolios", response_model=List[PortfolioResponse])
@@ -162,7 +162,7 @@ async def list_portfolios(
 ) -> List[PortfolioResponse]:
     """List all portfolios."""
     portfolios = list(service.portfolios.values())
-    return [PortfolioResponse(portfolio=p) for p in portfolios]
+    return [PortfolioResponse(success=True, portfolio=p) for p in portfolios]
 
 
 # Session Management Endpoints
@@ -179,7 +179,7 @@ async def create_session(
             description=request.description,
             config_id=request.config_id,
         )
-        return SessionResponse(session=session)
+        return SessionResponse(success=True, session=session)
     except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -193,7 +193,7 @@ async def get_session(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    return SessionResponse(session=session)
+    return SessionResponse(success=True, session=session)
 
 
 @router.post("/sessions/{session_id}/close", response_model=SessionResponse)
@@ -203,7 +203,7 @@ async def close_session(
     """Close a trading session."""
     try:
         session = await service.close_session(session_id)
-        return SessionResponse(session=session)
+        return SessionResponse(success=True, session=session)
     except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -223,7 +223,7 @@ async def list_sessions(
     if is_active is not None:
         sessions = [s for s in sessions if s.is_active == is_active]
 
-    return [SessionResponse(session=s) for s in sessions]
+    return [SessionResponse(success=True, session=s) for s in sessions]
 
 
 # Trade Execution Endpoints
@@ -247,7 +247,7 @@ async def execute_trade(
             strategy_id=request.strategy_id,
             signal_id=request.signal_id,
         )
-        return TradeResponse(trade=trade)
+        return TradeResponse(success=True, trade=trade)
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -269,7 +269,7 @@ async def get_trades(
     # Apply limit
     trades = trades[:limit]
 
-    return TradesResponse(trades=trades, count=len(trades))
+    return TradesResponse(success=True, trades=trades, count=len(trades))
 
 
 @router.get("/trades/{trade_id}", response_model=TradeResponse)
@@ -281,7 +281,7 @@ async def get_trade(
     if not trade:
         raise HTTPException(status_code=404, detail="Trade not found")
 
-    return TradeResponse(trade=trade)
+    return TradeResponse(success=True, trade=trade)
 
 
 # Position Management Endpoints
@@ -292,7 +292,7 @@ async def get_positions(
 ) -> PositionsResponse:
     """Get all positions for a portfolio."""
     positions = await service.get_positions(portfolio_id)
-    return PositionsResponse(positions=positions, count=len(positions))
+    return PositionsResponse(success=True, positions=positions, count=len(positions))
 
 
 @router.get("/portfolios/{portfolio_id}/positions/{symbol}", response_model=PositionsResponse)
@@ -305,7 +305,7 @@ async def get_position(
     positions = await service.get_positions(portfolio_id)
     symbol_positions = [p for p in positions if p.symbol == symbol]
 
-    return PositionsResponse(positions=symbol_positions, count=len(symbol_positions))
+    return PositionsResponse(success=True, positions=symbol_positions, count=len(symbol_positions))
 
 
 # Market Data Endpoints
@@ -318,7 +318,7 @@ async def update_market_prices(
     try:
         await service.update_market_prices(request.quotes)
         updated_symbols = list(request.quotes.keys())
-        return MarketUpdateResponse(updated_symbols=updated_symbols, count=len(updated_symbols))
+        return MarketUpdateResponse(success=True, updated_symbols=updated_symbols, count=len(updated_symbols))
     except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
         raise HTTPException(status_code=400, detail=str(e))
 

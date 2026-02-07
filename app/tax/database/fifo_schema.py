@@ -176,7 +176,7 @@ class Transaction(Base):  # type: ignore[valid-type]
     # Account
     account_id: UUID = sa.Column(PGUUID(as_uuid=True), sa.ForeignKey('accounts.id'), nullable=False)
     account = sa.orm.relationship(
-        "Account", back_populates="transactions", foreign_keys=[account_id]
+        "Account", back_populates="transactions", foreign_keys="Transaction.account_id"
     )
 
     # Asset
@@ -216,7 +216,7 @@ class Transaction(Base):  # type: ignore[valid-type]
     lot_id: Optional[UUID] = sa.Column(
         PGUUID(as_uuid=True), sa.ForeignKey('lots.id'), nullable=True
     )
-    lot = sa.orm.relationship("Lot", back_populates="transactions", foreign_keys=[lot_id])
+    lot = sa.orm.relationship("Lot", back_populates="transactions", foreign_keys="Transaction.lot_id")
 
     # Tax-related fields
     is_taxable: bool = sa.Column(sa.Boolean, default=True)
@@ -324,7 +324,7 @@ class Lot(Base):  # type: ignore[valid-type]
 
     # Relationships
     transactions = sa.orm.relationship(
-        "Transaction", back_populates="lot", foreign_keys=[Transaction.lot_id]
+        "Transaction", back_populates="lot", foreign_keys="Transaction.lot_id"
     )
 
     # Metadata
@@ -664,9 +664,9 @@ class Modelo721Generator:
                 self.session.query(BalanceSnapshot)
                 .filter(
                     BalanceSnapshot.account_id == account.id,
-                    sa.extract('year', BalanceSnapshot.captured_at) == year,
+                    sa.extract('year', BalanceSnapshot.captured_at) == year,  # type: ignore[arg-type]
                 )
-                .order_by(sa.desc(BalanceSnapshot.captured_at))
+                .order_by(sa.desc(BalanceSnapshot.captured_at))  # type: ignore[arg-type]
                 .first()
             )
 

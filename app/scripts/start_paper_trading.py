@@ -28,7 +28,7 @@ import uvicorn
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from app.core.config import get_global_settings
+from app.core.config import get_settings
 from app.models.market_data import DataFeedConfig, DataFeedType
 from app.models.paper_trading import PaperTradingSession
 from app.services.market_data_service import MarketDataService
@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 
 def setup_logging():
     """Configure logging for paper trading."""
-    settings = get_global_settings()
+    settings = get_settings()
     log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     logging.basicConfig(
         level=getattr(logging, settings.log_level.upper()),
@@ -51,7 +51,7 @@ def setup_logging():
     )
 
 
-def create_paper_trading_session(
+async def create_paper_trading_session(
     service: PaperTradingService,
     name: str,
     initial_capital: Decimal,
@@ -73,14 +73,21 @@ def create_paper_trading_session(
     logger.info(f"  Initial Capital: €{initial_capital:,.2f}")
     logger.info(f"  Commission: €{commission_per_trade}")
 
-    session = service.create_session(
-        name=name,
-        initial_capital=initial_capital,
-        commission_per_trade=commission_per_trade,
+    # First create a portfolio with the initial capital
+    portfolio = await service.create_portfolio(
+        name=f"{name}_portfolio",
+        initial_cash=initial_capital,
     )
 
-    logger.info(f"✅ Session created: {session.session_id}")
-    logger.info(f"   Account: {session.account_id}")
+    # Then create a session for the portfolio
+    session = await service.create_session(
+        portfolio_id=portfolio.id,
+        name=name,
+        description=f"Paper trading session with €{initial_capital:,.2f} initial capital",
+    )
+
+    logger.info(f"✅ Session created: {session.id}")
+    logger.info(f"   Portfolio: {portfolio.id}")
     logger.info(f"   Status: {session.status}")
 
     return session
@@ -95,13 +102,14 @@ async def start_market_data_service() -> MarketDataService:
     """
     logger.info("Initializing market data service...")
 
-    settings = get_global_settings()
+    settings = get_settings()
     service = MarketDataService()
 
     # Configure data feed with priority: Polygon > Alpha Vantage > Yahoo Finance
     data_feed_name = "Unknown"
     if settings.polygon_api_key and settings.polygon_api_key != "your_polygon_api_key_here":
         logger.info("   Configuring Polygon.io for real-time market data")
+        from datetime import datetime as dt
         polygon_config = DataFeedConfig(
             name="Polygon.io",
             feed_type=DataFeedType.POLYGON,
@@ -110,6 +118,7 @@ async def start_market_data_service() -> MarketDataService:
             rate_limit=5,  # Adjust based on your Polygon plan
             timeout_seconds=30,
             is_active=True,
+            last_updated=dt.utcnow(),
         )
         await service.add_feed_config(polygon_config)
         await service.connect_feed(polygon_config.id)
@@ -120,6 +129,7 @@ async def start_market_data_service() -> MarketDataService:
         and settings.alpha_vantage_api_key != "your_alpha_vantage_key_here"
     ):
         logger.info("   Configuring Alpha Vantage for market data")
+        from datetime import datetime as dt
         alpha_vantage_config = DataFeedConfig(
             name="Alpha Vantage",
             feed_type=DataFeedType.ALPHA_VANTAGE,
@@ -128,6 +138,7 @@ async def start_market_data_service() -> MarketDataService:
             rate_limit=5,  # Alpha Vantage free tier: 5 calls/minute
             timeout_seconds=30,
             is_active=True,
+            last_updated=dt.utcnow(),
         )
         await service.add_feed_config(alpha_vantage_config)
         await service.connect_feed(alpha_vantage_config.id)
@@ -139,8 +150,7 @@ async def start_market_data_service() -> MarketDataService:
 
     # Subscribe to popular symbols
     symbols = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "META", "NVDA", "AMD"]
-    for symbol in symbols:
-        await service.subscribe_symbol(symbol)
+    await service.subscribe_to_symbols(symbols)
 
     logger.info(f"✅ Market data service started with {len(symbols)} symbols using {data_feed_name}")
 
@@ -164,17 +174,15 @@ def print_banner():
 
 def print_info(session: PaperTradingSession):
     """Print session information."""
-    settings = get_global_settings()
+    settings = get_settings()
     info = f"""
 ╔══════════════════════════════════════════════════════════════════════╗
 ║  SESSION INFO                                                          ║
 ╠══════════════════════════════════════════════════════════════════════╣
-║  Session ID:   {session.session_id:<50} ║
-║  Account:      {session.account_id:<50} ║
+║  Session ID:   {str(session.id):<50} ║
+║  Portfolio ID: {str(session.portfolio_id):<50} ║
 ║  Name:         {session.name:<50} ║
-║  Capital:      €{float(session.initial_capital):>48,.2f} ║
-║  Commission:   €{float(session.commission_per_trade):>48,.2f} ║
-║  Status:       {session.status.value:<50} ║
+║  Status:       {session.status:<50} ║
 ╠══════════════════════════════════════════════════════════════════════╣
 ║  ENDPOINTS                                                             ║
 ╠══════════════════════════════════════════════════════════════════════╣
@@ -241,7 +249,7 @@ async def main_async(args):
     paper_trading_service = PaperTradingService(market_data_service=market_data_service)
 
     # Create session
-    session = create_paper_trading_session(
+    session = await create_paper_trading_session(
         service=paper_trading_service,
         name=args.session_name or f"PaperTrading_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
         initial_capital=Decimal(str(args.capital)),
@@ -253,7 +261,7 @@ async def main_async(args):
     print_next_steps()
 
     # Start API server
-    settings = get_global_settings()
+    settings = get_settings()
     logger.info("Starting API server...")
     logger.info(f"   Host: {settings.api_host}")
     logger.info(f"   Port: {settings.api_port}")
@@ -282,7 +290,7 @@ async def main_async(args):
 
 def main():
     """Main entry point."""
-    settings = get_global_settings()
+    settings = get_settings()
 
     parser = argparse.ArgumentParser(
         description="Start AlgoTrading Paper Trading System",

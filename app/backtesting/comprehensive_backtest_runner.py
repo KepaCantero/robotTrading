@@ -14,6 +14,7 @@ Integración Fase 3: Migración a nueva arquitectura modular
 from __future__ import annotations
 
 import logging
+import math
 from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -117,7 +118,11 @@ class ComprehensiveBacktestRunner:
         self.quotes = self._load_market_data()
 
         # Configuración de paralelización
-        self.parallel_enabled = self.raw_config.get('parallelization', {}).get('enabled', True)
+        # DISABLE parallelization on macOS due to spawn/serialization issues
+        # macOS uses 'spawn' which requires pickling all objects (including thread locks)
+        import platform
+        default_parallel = platform.system() != 'Darwin'  # Disable on macOS
+        self.parallel_enabled = self.raw_config.get('parallelization', {}).get('enabled', default_parallel)
         self.max_workers = self.raw_config.get('parallelization', {}).get('max_workers', None)
 
         # Integrar meta_analyzer si está habilitado
@@ -149,6 +154,7 @@ class ComprehensiveBacktestRunner:
             )
             self.audit_trail = meta['audit_trail']
             self.learning_storage = meta['storage']
+            self.meta_analyzer = meta['analyzer']  # Store analyzer instance
             self.audit_hash = meta['audit_hash']
 
             if self.audit_hash:
@@ -172,9 +178,11 @@ class ComprehensiveBacktestRunner:
         end_date = datetime.strptime(self.raw_config['input']['end_date'], "%Y-%m-%d")
 
         all_symbols = self.raw_config['input']['symbols']
+        data_source = self.raw_config['input'].get('source', 'csv')  # Get source from config, default to csv
 
         logger.info(f"Loading market data from {start_date.date()} to {end_date.date()}")
         logger.info(f"Symbols: {all_symbols}")
+        logger.info(f"Data source: {data_source}")
 
         quotes = []
         for symbol in all_symbols:
@@ -182,11 +190,41 @@ class ComprehensiveBacktestRunner:
                 symbol=symbol,
                 start_date=start_date,
                 end_date=end_date,
+                source=data_source,  # Use the source from config
             )
             quotes.extend(symbol_quotes)
             logger.info(f"  Loaded {len(symbol_quotes)} quotes for {symbol}")
 
         return quotes
+
+
+    def _get_actual_data_bounds(self):
+        '''Get actual start and end dates from loaded quotes.'''
+        if not self.quotes:
+            return None, None
+        
+        actual_start = min(q.timestamp for q in self.quotes)
+        actual_end = max(q.timestamp for q in self.quotes)
+        return actual_start, actual_end
+    
+    def _get_safe_split_dates(self, config_start, config_end):
+        '''Get safe dates for splitting, using actual bounds if config exceeds available data.'''
+        actual_start, actual_end = self._get_actual_data_bounds()
+        
+        if actual_start is None or actual_end is None:
+            logger.error("Cannot determine data bounds: no quotes available")
+            raise ValueError("No market data loaded")
+        
+        # Check if config dates exceed available data
+        if config_start < actual_start or config_end > actual_end:
+            logger.warning(
+                f"Config dates ({config_start.date()} to {config_end.date()}) "
+                f"exceed available data ({actual_start.date()} to {actual_end.date()}). "
+                f"Using actual data bounds to prevent empty dataset error."
+            )
+            return actual_start, actual_end
+        
+        return config_start, config_end
 
     def run_all_backtests(self) -> List[Dict[str, Any]]:
         """
@@ -373,7 +411,8 @@ class ComprehensiveBacktestRunner:
         strategy = ModularMomentumStrategy(strategy_config)
 
         # Use loaded YAML config (not hardcoded defaults)
-        initial_capital = Decimal(str(self.raw_config['input']['initial_capital']))
+        # Get initial_capital from backtest_config (already configured)
+        initial_capital = self.backtest_config.initial_capital
         backtest_config = BacktestConfig(
             initial_capital=initial_capital,
             commission_per_trade=self.backtest_config.commission_per_trade,
@@ -438,8 +477,15 @@ class ComprehensiveBacktestRunner:
         results = []
         learning_engines_config = self.raw_config.get('learning_engines', {})
 
-        # Learning engines a probar
-        engine_types = ['supervised', 'deep', 'reinforcement', 'transformer']
+        # Opción 2: Solo Supervised Learning (Deep/Transformer/Reinforcement deshabilitados por mutex blocking)
+        logger.info("Learning Engines Policy: Only 'supervised' is supported (scikit-learn)")
+        logger.info("  - supervised: ✅ ENABLED (scikit-learn - no mutex issues)")
+        logger.info("  - deep: ❌ DISABLED (PyTorch causes mutex.cc blocking)")
+        logger.info("  - transformer: ❌ DISABLED (PyTorch causes mutex.cc blocking)")
+        logger.info("  - reinforcement: ❌ DISABLED (stable-baselines3/gymnasium causes mutex.cc blocking)")
+
+        # Only test supervised learning engine
+        engine_types = ['supervised']
 
         for engine_type in engine_types:
             if not learning_engines_config.get(engine_type, {}).get('enabled', False):
@@ -467,14 +513,43 @@ class ComprehensiveBacktestRunner:
             Resultado del backtest o None si falló
         """
         try:
+            # Get the learning engine config from raw_config
+            learning_engines_config = self.raw_config.get('learning_engines', {})
+            engine_config = learning_engines_config.get(engine_type, {})
+
+            # Build adaptive_learning config with full engine configuration
+            adaptive_learning_config = {
+                'enabled': engine_config.get('enabled', True),
+                'engine_type': engine_type,
+            }
+
+            # Add default config for supervised learning engine
+            if engine_type == 'supervised':
+                adaptive_learning_config.update({
+                    'algorithm': 'random_forest',
+                    'feature_columns': [],
+                    'target_column': 'trade_success',
+                    'model_parameters': {},
+                    'optimize_thresholds': False,
+                    'threshold_parameters': {},
+                })
+
+            # Add any additional config parameters for the specific engine
+            if 'config' in engine_config:
+                adaptive_learning_config.update(engine_config['config'])
+
             strategy_config = self._create_strategy_config()
+            strategy_config['adaptive_learning'] = adaptive_learning_config
             strategy = ModularMomentumStrategy(strategy_config)
+
+            # Initialize the learning engine (lazy initialization)
+            strategy._initialize_learning_engine()
 
             # Usar train_with_retry (Fase 3)
             training_successful = train_with_retry(
                 strategy=strategy,
                 engine_type=engine_type,
-                use_subprocess=True,  # Usar multiprocessing como fallback
+                use_subprocess=False,  # Usar multiprocessing como fallback
             )
 
             if not training_successful:
@@ -482,7 +557,8 @@ class ComprehensiveBacktestRunner:
                 return None
 
             # Ejecutar backtest
-            initial_capital = Decimal(str(self.raw_config['input']['initial_capital']))
+            # Use initial_capital from backtest_config (already configured)
+            initial_capital = self.backtest_config.initial_capital
             backtest_config = BacktestConfig(
                 initial_capital=initial_capital,
                 commission_per_trade=self.backtest_config.commission_per_trade,
@@ -502,7 +578,7 @@ class ComprehensiveBacktestRunner:
             result_dict = {
                 'test_type': f'learning_engine_{engine_type}',
                 'test_name': f'Learning Engine - {engine_type.capitalize()}',
-                'modules_active': list(self.raw_config['modules']['filters'].keys()),
+                'modules_active': list(strategy_config.get('modules', {}).keys()),
                 'learning_engine': engine_type,
                 'thresholds': self._extract_thresholds(strategy_config),
                 'total_pnl': consistent_metrics['total_pnl'],
@@ -724,7 +800,7 @@ class ComprehensiveBacktestRunner:
         # Parámetros de ventana con valores default desde López de Prado
         train_pct = wf_config.get('train_pct', 0.70)  # 70% training
         test_pct = wf_config.get('test_pct', 0.30)  # 30% test
-        min_train_days = wf_config.get('min_train_days', 252)  # 1 año mínimo
+        min_train_days = wf_config.get('min_train_days', 100)  # REDUCIDO: 100 días (era 252)
         step_size_days = wf_config.get('step_size_days', 63)  # Quarterly (3 meses)
 
         logger.info(
@@ -743,7 +819,8 @@ class ComprehensiveBacktestRunner:
 
         # Crear ventanas walk-forward
         # Siguiendo TimeSeriesSplit de sklearn (nunca romper orden temporal)
-        window_size = int(min_train_days / train_pct)  # Tamaño total de ventana
+        # Usar ceil para asegurar mínimo de días (evitar pérdida por redondeo)
+        window_size = math.ceil(min_train_days / train_pct)  # Tamaño total de ventana
 
         # Calcular número de ventanas
         num_windows = 0
@@ -759,8 +836,8 @@ class ComprehensiveBacktestRunner:
             # Extraer ventana
             window_quotes = sorted_quotes[start_idx:end_idx]
 
-            # Verificar mínimo de training days
-            train_size = int(len(window_quotes) * train_pct)
+            # Verificar mínimo de training days (usar ceil para asegurar mínimo)
+            train_size = math.ceil(len(window_quotes) * train_pct)
             if train_size < min_train_days:
                 logger.warning(
                     f"Window {num_windows+1}: Insufficient training data "
@@ -820,7 +897,7 @@ class ComprehensiveBacktestRunner:
 
                 # Ejecutar backtest en test period
                 # NO usar training period para validación (data leakage)
-                initial_capital = Decimal(str(self.raw_config['input']['initial_capital']))
+                initial_capital = self.backtest_config.initial_capital
                 backtest_config = BacktestConfig(
                     initial_capital=initial_capital,
                     commission_per_trade=self.backtest_config.commission_per_trade,
@@ -998,17 +1075,21 @@ class ComprehensiveBacktestRunner:
                 logger.info("Transformer learning engine disabled, skipping optimization")
                 return []
 
-            # Step 1: Split data into train/validation/test (60%/20%/20%)
+            # Step 1: Determine safe date bounds for splitting
+            config_start = datetime.strptime(self.raw_config['input']['start_date'], "%Y-%m-%d")
+            config_end = datetime.strptime(self.raw_config['input']['end_date'], "%Y-%m-%d")
+            split_start, split_end = self._get_safe_split_dates(config_start, config_end)
+            
+            # Step 2: Split data into train/validation/test (60%/20%/20%)
+            from app.backtesting.data_split import DataSplit
             splitter = TrainValTestSplitter(
-                train_ratio=0.6,
-                val_ratio=0.2,
-                test_ratio=0.2,
+                DataSplit(train_pct=0.6, val_pct=0.2, test_pct=0.2)
             )
 
             train_quotes, val_quotes, test_quotes = splitter.split_data(
-                quotes=self.quotes,
-                start_date=datetime.strptime(self.raw_config['input']['start_date'], "%Y-%m-%d"),
-                end_date=datetime.strptime(self.raw_config['input']['end_date'], "%Y-%m-%d"),
+                market_data=self.quotes,
+                start_date=split_start,
+                end_date=split_end,
             )
 
             logger.info(
@@ -1023,7 +1104,7 @@ class ComprehensiveBacktestRunner:
             baseline_train_success = train_with_retry(
                 strategy=baseline_strategy,
                 engine_type='transformer',
-                use_subprocess=True,
+                use_subprocess=False,
             )
 
             if not baseline_train_success:
@@ -1036,7 +1117,7 @@ class ComprehensiveBacktestRunner:
             )
 
             # Step 4: Run baseline backtest on test set
-            initial_capital = Decimal(str(self.raw_config['input']['initial_capital']))
+            initial_capital = self.backtest_config.initial_capital
             baseline_test_result = self._run_backtest_with_quotes(
                 baseline_strategy, test_quotes, initial_capital
             )
@@ -1065,7 +1146,7 @@ class ComprehensiveBacktestRunner:
             optimized_train_success = train_with_retry(
                 strategy=optimized_strategy,
                 engine_type='transformer',
-                use_subprocess=True,
+                use_subprocess=False,
             )
 
             if not optimized_train_success:
@@ -1234,7 +1315,7 @@ class ComprehensiveBacktestRunner:
         baseline_config = self._create_strategy_config()
         baseline_strategy = ModularMomentumStrategy(baseline_config)
 
-        initial_capital = Decimal(str(self.raw_config['input']['initial_capital']))
+        initial_capital = self.backtest_config.initial_capital
         backtest_config = BacktestConfig(
             initial_capital=initial_capital,
             commission_per_trade=self.backtest_config.commission_per_trade,
@@ -1565,17 +1646,41 @@ class ComprehensiveBacktestRunner:
                 param_dict = dict(zip(param_names, combination))
                 param_combinations.append(param_dict)
 
-            # Step 3: Split data into train/validation/test
+            # Step 3: Determine actual data bounds and validate against config
+            config_start = datetime.strptime(self.raw_config['input']['start_date'], "%Y-%m-%d")
+            config_end = datetime.strptime(self.raw_config['input']['end_date'], "%Y-%m-%d")
+            
+            # Get actual data bounds from loaded quotes
+            if self.quotes:
+                actual_start = min(q.timestamp for q in self.quotes)
+                actual_end = max(q.timestamp for q in self.quotes)
+                
+                # Use actual bounds if config exceeds available data
+                if config_start < actual_start or config_end > actual_end:
+                    logger.warning(
+                        f"Grid Search: Config dates ({config_start.date()} to {config_end.date()}) "
+                        f"exceed available data ({actual_start.date()} to {actual_end.date()}). "
+                        f"Using actual data bounds to prevent empty dataset error."
+                    )
+                    split_start = actual_start
+                    split_end = actual_end
+                else:
+                    split_start = config_start
+                    split_end = config_end
+            else:
+                logger.error("Grid Search: No quotes available for splitting")
+                raise ValueError("Cannot run grid search: no market data loaded")
+            
+            # Step 4: Split data into train/validation/test
+            from app.backtesting.data_split import DataSplit
             splitter = TrainValTestSplitter(
-                train_ratio=0.6,
-                val_ratio=0.2,
-                test_ratio=0.2,
+                DataSplit(train_pct=0.6, val_pct=0.2, test_pct=0.2)
             )
 
             train_quotes, val_quotes, test_quotes = splitter.split_data(
-                quotes=self.quotes,
-                start_date=datetime.strptime(self.raw_config['input']['start_date'], "%Y-%m-%d"),
-                end_date=datetime.strptime(self.raw_config['input']['end_date'], "%Y-%m-%d"),
+                market_data=self.quotes,
+                start_date=split_start,
+                end_date=split_end,
             )
 
             logger.info(
@@ -1655,7 +1760,7 @@ class ComprehensiveBacktestRunner:
                         return None
 
                     # Backtest on validation set
-                    initial_capital = Decimal(str(self.raw_config['input']['initial_capital']))
+                    initial_capital = self.backtest_config.initial_capital
                     val_result = self._run_backtest_with_quotes(
                         strategy=strategy,
                         quotes=val_quotes,
@@ -1780,7 +1885,7 @@ class ComprehensiveBacktestRunner:
 
             best_strategy = ModularMomentumStrategy(strategy_config)
 
-            initial_capital = Decimal(str(self.raw_config['input']['initial_capital']))
+            initial_capital = self.backtest_config.initial_capital
             test_result = self._run_backtest_with_quotes(
                 strategy=best_strategy,
                 quotes=test_quotes,
@@ -1998,10 +2103,15 @@ class ComprehensiveBacktestRunner:
         in_sample_quotes = [q for q in all_quotes if q.timestamp <= split_date]
         out_of_sample_quotes = [q for q in all_quotes if q.timestamp > split_date]
 
-        if len(in_sample_quotes) < 100 or len(out_of_sample_quotes) < 50:
+        # Use config values instead of hardcoded
+        min_test_size = oos_config.get('min_test_size', 100)
+        min_train_size = oos_config.get('min_train_size', 100)
+
+        if len(in_sample_quotes) < min_train_size or len(out_of_sample_quotes) < min_test_size:
             logger.error(
                 f"Insufficient data for OOS test: "
-                f"in-sample={len(in_sample_quotes)}, out-of-sample={len(out_of_sample_quotes)}"
+                f"in-sample={len(in_sample_quotes)} (min {min_train_size}), "
+                f"out-of-sample={len(out_of_sample_quotes)} (min {min_test_size})"
             )
             return []
 
@@ -2102,7 +2212,7 @@ class ComprehensiveBacktestRunner:
         # Paso 6: Backtest in-sample (para obtener baseline de performance)
         logger.info("\nRunning in-sample backtest...")
 
-        initial_capital = Decimal(str(self.raw_config['input']['initial_capital']))
+        initial_capital = self.backtest_config.initial_capital
         backtest_config = BacktestConfig(
             initial_capital=initial_capital,
             commission_per_trade=self.backtest_config.commission_per_trade,
@@ -2957,7 +3067,7 @@ class ComprehensiveBacktestRunner:
             strategy = ModularMomentumStrategy(strategy_config)
 
             # Backtest configuration
-            initial_capital = Decimal(str(self.raw_config['input']['initial_capital']))
+            initial_capital = self.backtest_config.initial_capital
             backtest_config = BacktestConfig(
                 initial_capital=initial_capital,
                 commission_per_trade=self.backtest_config.commission_per_trade,
@@ -3229,17 +3339,21 @@ class ComprehensiveBacktestRunner:
         )
 
         # Initialize data splitter
+        from app.backtesting.data_split import DataSplit
         splitter = TrainValTestSplitter(
-            train_ratio=0.6,
-            val_ratio=0.2,
-            test_ratio=0.2,
+            DataSplit(train_pct=0.6, val_pct=0.2, test_pct=0.2)
         )
 
+        # Determine safe date bounds for splitting
+        config_start = datetime.strptime(self.raw_config['input']['start_date'], "%Y-%m-%d")
+        config_end = datetime.strptime(self.raw_config['input']['end_date'], "%Y-%m-%d")
+        split_start, split_end = self._get_safe_split_dates(config_start, config_end)
+        
         # Split data
         train_quotes, val_quotes, test_quotes = splitter.split_data(
-            quotes=self.quotes,
-            start_date=datetime.strptime(self.raw_config['input']['start_date'], "%Y-%m-%d"),
-            end_date=datetime.strptime(self.raw_config['input']['end_date'], "%Y-%m-%d"),
+            market_data=self.quotes,
+            start_date=split_start,
+            end_date=split_end,
         )
 
         logger.info(
@@ -3369,7 +3483,7 @@ class ComprehensiveBacktestRunner:
         Returns:
             Dictionary with backtest results
         """
-        initial_capital = Decimal(str(self.raw_config['input']['initial_capital']))
+        initial_capital = self.backtest_config.initial_capital
         backtest_config = BacktestConfig(
             initial_capital=initial_capital,
             commission_per_trade=self.backtest_config.commission_per_trade,
@@ -3580,6 +3694,113 @@ class ComprehensiveBacktestRunner:
                 json.dump(results, f, indent=2, default=str)
             logger.info(f"Results saved to JSON: {json_path}")
 
+
+    async def _save_weights_async(self, engine_type: str, strategy: Any, result_dict: Dict[str, Any]) -> Optional[str]:
+        """
+        Save learning engine weights asynchronously for better performance.
+
+        Args:
+            engine_type: Type of learning engine (e.g., 'supervised', 'deep', 'transformer')
+            strategy: Strategy instance with learning_engine
+            result_dict: Test result dictionary
+
+        Returns:
+            Path to saved weights or None
+        """
+        if not self.learning_storage:
+            return None
+
+        try:
+            weights_path = await self.learning_storage.save_weights_async(
+                engine_name=engine_type,
+                weights=strategy.learning_engine.model,
+                test_id=result_dict['test_name'],
+                metadata={
+                    'test_type': result_dict.get('test_type', 'unknown'),
+                    'timestamp': result_dict.get('timestamp'),
+                    'metrics': {
+                        'total_pnl': result_dict.get('total_pnl'),
+                        'sharpe_ratio': result_dict.get('sharpe_ratio'),
+                        'total_trades': result_dict.get('total_trades'),
+                    }
+                }
+            )
+            logger.info(f"Weights saved asynchronously: {weights_path}")
+            return weights_path
+        except Exception as e:
+            logger.warning(f"Could not save weights async: {e}")
+            return None
+
+    async def _finalize_meta_analysis(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Finalize meta-analysis after all backtests complete.
+
+        This method loads all backtest results into the MetaAnalyzer and runs
+        comprehensive analysis including performance metrics, outlier detection,
+        and optimization suggestions.
+
+        Args:
+            results: List of all backtest result dictionaries
+
+        Returns:
+            Meta-analysis summary dictionary
+        """
+        if not self.meta_enabled or not hasattr(self, 'meta_analyzer') or self.meta_analyzer is None:
+            logger.info("Meta-analysis not enabled, skipping")
+            return {}
+
+        try:
+            logger.info("Starting meta-analysis of all backtest results...")
+
+            # Load results into analyzer
+            logger.info(f"Loading results from {self.output_dir}...")
+            num_loaded = await self.meta_analyzer.load_results(str(self.output_dir))
+            logger.info(f"Loaded {num_loaded} results into MetaAnalyzer")
+
+            if num_loaded == 0:
+                logger.warning("No results to analyze")
+                return {}
+
+            # Run performance analysis
+            logger.info("Running performance analysis...")
+            performance = self.meta_analyzer.analyze_performance()
+
+            # Detect outliers
+            logger.info("Detecting outliers...")
+            outliers = self.meta_analyzer.detect_outliers()
+
+            # Generate suggestions
+            logger.info("Generating optimization suggestions...")
+            suggestions = self.meta_analyzer.generate_suggestions()
+
+            # Compile summary
+            summary = {
+                'total_results_analyzed': num_loaded,
+                'performance_summary': performance,
+                'outliers': outliers,
+                'suggestions': suggestions,
+                'analysis_timestamp': datetime.now().isoformat(),
+                'output_directory': str(self.output_dir)
+            }
+
+            # Save analysis to file
+            import json
+            analysis_path = self.output_dir / f"meta_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            with open(analysis_path, 'w') as f:
+                json.dump(summary, f, indent=2, default=str)
+
+            logger.info(f"Meta-analysis complete: {analysis_path}")
+            logger.info(f"  - Total results: {num_loaded}")
+            logger.info(f"  - Performance metrics: {len(performance)} categories")
+            logger.info(f"  - Outliers detected: {len(outliers.get('outliers', []))}")
+            logger.info(f"  - Suggestions generated: {len(suggestions)}")
+
+            return summary
+
+        except Exception as e:
+            logger.error(f"Error during meta-analysis: {e}", exc_info=True)
+            return {}
+
     def get_results(self) -> List[Dict[str, Any]]:
         """
         Obtener todos los resultados almacenados.
@@ -3683,14 +3904,14 @@ class ComprehensiveBacktestRunner:
             train_success = train_with_retry(
                 strategy=strategy,
                 engine_type='transformer',
-                use_subprocess=True,
+                use_subprocess=False,
             )
 
             if not train_success:
                 continue
 
             # Evaluate on validation set
-            initial_capital = Decimal(str(self.raw_config['input']['initial_capital']))
+            initial_capital = self.backtest_config.initial_capital
             val_result = self._run_backtest_with_quotes(strategy, val_quotes, initial_capital)
 
             # Score: Sharpe ratio (or other metric)

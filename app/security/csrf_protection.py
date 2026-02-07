@@ -235,7 +235,7 @@ class DoubleSubmitCookieCSRF:
                 httponly=True,
                 secure=True,  # HTTPS only
                 samesite="strict",
-                maxage=self.token_manager.token_expiry,
+                max_age=self.token_manager.token_expiry,
                 path="/",
             )
 

@@ -248,9 +248,9 @@ class ComplianceAwareBacktester:
         impact_bps = analysis.total_cost_bps
 
         if side == "BUY":
-            execution_price = price * (1 + impact_bps / 10000)
+            execution_price = price * (Decimal("1") + Decimal(str(impact_bps)) / Decimal("10000"))
         else:  # SELL
-            execution_price = price * (1 - impact_bps / 10000)
+            execution_price = price * (Decimal("1") - Decimal(str(impact_bps)) / Decimal("10000"))
 
         return execution_price, impact_bps
 
@@ -605,11 +605,11 @@ class ComplianceAwarePaperTrader:
 
             if side == "BUY":
                 execution_price = base_price * (
-                    1 + (self._default_spread_bps / 2 + impact_bps) / 10000
+                    Decimal("1") + (Decimal(str(self._default_spread_bps)) / Decimal("2") + Decimal(str(impact_bps))) / Decimal("10000")
                 )
             else:  # SELL
                 execution_price = base_price * (
-                    1 - (self._default_spread_bps / 2 + impact_bps) / 10000
+                    Decimal("1") - (Decimal(str(self._default_spread_bps)) / Decimal("2") + Decimal(str(impact_bps))) / Decimal("10000")
                 )
 
             logger.info(

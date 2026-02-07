@@ -553,7 +553,7 @@ class BlackLittermanOptimizer:
             cov_matrix = self._shrink_covariance(recent_returns)
         else:
             # Sample covariance
-            cov_matrix = np.cov(recent_returns, rowvar=False) * 252  # Annualize
+            cov_matrix = np.asarray(np.cov(recent_returns, rowvar=False) * 252, dtype=np.float64)  # Annualize
 
         # Ensure positive semi-definite
         cov_matrix = self._ensure_psd(cov_matrix)
@@ -683,10 +683,10 @@ class BlackLittermanOptimizer:
         # E[R] = M^(-1) * [(τΣ)^(-1)Π + P'Ω^(-1)Q]
         prior_term = tau_Sigma_inv @ equilibrium_returns
         view_term = P.T @ Ω_inv @ Q
-        bl_returns = M_inv @ (prior_term + view_term)
+        bl_returns: NDArray[np.float64] = np.asarray(M_inv @ (prior_term + view_term), dtype=np.float64)
 
         # Posterior covariance
-        posterior_covariance = M_inv
+        posterior_covariance: NDArray[np.float64] = np.asarray(M_inv, dtype=np.float64)
 
         logger.info(
             f"BL returns calculated: mean={bl_returns.mean():.4f}, "

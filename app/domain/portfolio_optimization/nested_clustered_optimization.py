@@ -470,8 +470,8 @@ class NestedClusteredOptimization:
         n_clusters = len(unique_clusters)
 
         # Compute cluster statistics
-        cluster_volatilities = []
-        cluster_returns = []
+        cluster_volatilities: list[float] = []
+        cluster_returns: list[float] = []
 
         for cluster_id in unique_clusters:
             cluster_assets_mask = cluster_labels == cluster_id
@@ -500,10 +500,10 @@ class NestedClusteredOptimization:
             logger.warning("No clusters with valid volatilities. Using equal weights.")
             return np.ones(n_clusters) / n_clusters
 
-        cluster_volatilities = np.array(cluster_volatilities)
+        cluster_volatilities_array = np.array(cluster_volatilities)
 
         # Risk parity allocation: weight proportional to 1/volatility
-        inv_vols = 1.0 / cluster_volatilities
+        inv_vols = 1.0 / cluster_volatilities_array
         cluster_weights = inv_vols / np.sum(inv_vols)
 
         logger.info(

@@ -20,7 +20,11 @@ from unittest.mock import MagicMock
 import psutil
 import pytest
 
-from app.services.emergency_handler.emergency_closer import EmergencyCloser, EmergencyTrigger
+from app.services.emergency_handler.emergency_closer import (
+    EmergencyCloser,
+    EmergencyCloseResult,
+    EmergencyTrigger,
+)
 from app.services.position_monitor import MonitoredPosition, PositionMonitor, PositionMonitorConfig
 
 

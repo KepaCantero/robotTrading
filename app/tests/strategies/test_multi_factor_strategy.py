@@ -85,6 +85,7 @@ def sample_factor_profiles() -> List[FactorProfile]:
             symbol=symbol,
             company_name=f"Test Company {i}",
             sector=sector,
+            industry=f"Test Industry {i % 3}",
             current_price=Decimal(str(100 + i)),
             market_cap=Decimal("500") if is_small_cap else Decimal("5000"),
             shares_outstanding=Decimal(str(1000000 + i * 10000)),
@@ -93,25 +94,45 @@ def sample_factor_profiles() -> List[FactorProfile]:
             book_to_market=Decimal("0.8") if is_value else Decimal("0.3"),
             pe_ratio=Decimal(str(15 + i)),
             pb_ratio=Decimal(str(2 + i * 0.1)),
+            ps_ratio=Decimal(str(3 + i * 0.1)),
+            ev_ebitda=Decimal(str(12 + i)),
             # Profitability metrics
             revenue=Decimal(str(1000 + i * 100)),
+            ebitda=Decimal(str(200 + i * 10)),
+            operating_income=Decimal(str(150 + i * 10)),
             net_income=Decimal(str(100 + i * 10)),
             roe=Decimal(str(15)) if is_profitable else Decimal(str(5)),
             roa=Decimal(str(10)) if is_profitable else Decimal(str(2)),
+            roic=Decimal(str(12)) if is_profitable else Decimal(str(4)),
+            gross_margin=Decimal(str(40)) if is_profitable else Decimal(str(15)),
             operating_margin=Decimal(str(20)) if is_profitable else Decimal(str(5)),
             net_margin=Decimal(str(15)) if is_profitable else Decimal(str(3)),
             # Investment metrics
             total_assets=Decimal(str(5000 + i * 100)),
             total_assets_py=Decimal(str(4800 + i * 100)),
             asset_growth=Decimal(str(5)) if is_small_cap else Decimal(str(2)),
+            capex=Decimal(str(100 + i * 10)),
+            capex_py=Decimal(str(90 + i * 10)),
             # Price history for momentum
             price_12m_ago=Decimal(str(80 + i)),
             price_6m_ago=Decimal(str(90 + i)),
             price_3m_ago=Decimal(str(95 + i)),
             price_1m_ago=Decimal(str(98 + i)),
+            # Momentum calculations
+            momentum_1m=Decimal(str(2)),
+            momentum_3m=Decimal(str(5)),
+            momentum_6m=Decimal(str(10)),
+            momentum_12m=Decimal(str(20)),
             # Volatility
             beta=Decimal(str(1.0 + i * 0.02)),
             volatility_1y=Decimal(str(0.2 + i * 0.005)),
+            max_drawdown_1y=Decimal(str(-0.15 - i * 0.005)),
+            # Factor scores (optional)
+            factor_scores=None,
+            overall_factor_score=Decimal(str(60)),
+            quality_score=Decimal(str(65)),
+            value_score=Decimal(str(55)),
+            growth_score=Decimal(str(70)),
         )
 
         profiles.append(profile)

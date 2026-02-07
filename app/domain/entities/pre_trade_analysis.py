@@ -12,7 +12,7 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 
-@dataclass(frozen=True)
+@dataclass
 class PreTradeAnalysis:
     """
     Complete pre-trade analysis from ALL 17 systems (8 main + 12 compliance).
@@ -20,6 +20,9 @@ class PreTradeAnalysis:
     This is a domain entity that contains the results of comprehensive
     pre-trade analysis across all trading systems without any infrastructure
     dependencies.
+
+    NOTE: Changed from frozen=True to allow mutation by SystemBus handlers.
+    TODO: Consider refactoring to use dataclasses.replace() for immutability.
     """
 
     # Basic decision

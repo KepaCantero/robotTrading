@@ -94,7 +94,7 @@ class TaxCalculator:
         logger.debug(
             "Calculating trade tax",
             extra={
-                "trade_id": str(trade.id),
+                "trade_id": str(trade.trade_id),
                 "symbol": trade.symbol,
                 "gross_profit": str(gross_profit),
                 "holding_period_days": holding_period,
@@ -124,7 +124,7 @@ class TaxCalculator:
         logger.info(
             "Trade tax calculated",
             extra={
-                "trade_id": str(trade.id),
+                "trade_id": str(trade.trade_id),
                 "symbol": trade.symbol,
                 "gross_profit": str(gross_profit),
                 "taxable_profit": str(profit),
